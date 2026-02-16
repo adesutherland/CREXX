@@ -63,6 +63,15 @@ void emit_proc(ASTNode *node, void *pl) {
             else node->output = output_fs(buf);
             free(buf);
 
+            /* Add class metadata from all files/namespaces at the top level header */
+            n = child1;
+            while (n) {
+                if (n->node_type == PROGRAM_FILE || n->node_type == IMPORTED_FILE) {
+                    add_all_class_metadata(n, node);
+                }
+                n = n->sibling;
+            }
+
             n = child1;
             while (n) {
                 if (n->output) output_concat(node->output, n->output);
@@ -99,6 +108,7 @@ void emit_proc(ASTNode *node, void *pl) {
 
         case CLASS_DEF:
             if (!node->output) node->output = output_f();
+
             n = child1;
             while (n) {
                 if (n->output) output_concat(node->output, n->output);
@@ -126,31 +136,20 @@ void emit_proc(ASTNode *node, void *pl) {
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 } else {
                     proc_label = sym_mngd_frnm(node->symbolNode->symbol);
-                    proc_expose = sym_mngd_frnm(node->symbolNode->symbol);
+                    /* For class methods/factory stubs, expose must use the unmangled fully-qualified name */
+                    proc_expose = sym_frnm(node->symbolNode->symbol);
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 }
                 char* buf;
-                if (node->symbolNode->symbol->exposed) {
-                    buf = mprintf("\n%s() .expose=%s\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
-                                  proc_label,
-                                  proc_expose,
-                                  proc_fqn,
-                                  type,
-                                  proc_label,
-                                  args
-                    );
-                }
-                else {
-                    buf = mprintf("\n%s()\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
-                                  proc_label,
-                                  proc_fqn,
-                                  type,
-                                  proc_label,
-                                  args
-                    );
-                }
+                buf = mprintf("\n%s() .expose=%s\n"
+                              "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
+                              proc_label,
+                              proc_expose,
+                              proc_fqn,
+                              type,
+                              proc_label,
+                              args
+                );
                 if (node->output) output_prepend_text(buf, node->output);
                 else node->output = output_fs(buf);
                 free(type);
@@ -176,7 +175,8 @@ void emit_proc(ASTNode *node, void *pl) {
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 } else {
                     proc_label = sym_mngd_frnm(node->symbolNode->symbol);
-                    proc_expose = sym_mngd_frnm(node->symbolNode->symbol);
+                    /* For class methods/factory definitions, exposed symbol must use unmangled FQN */
+                    proc_expose = sym_frnm(node->symbolNode->symbol);
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 }
                 char* buf;

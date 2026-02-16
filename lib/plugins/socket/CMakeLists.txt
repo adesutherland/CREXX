@@ -22,7 +22,15 @@ plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 # -------------------------------------------------------------------------------------------
 # Link OpenSSL to the plugin (after target exists)
 # -------------------------------------------------------------------------------------------
+
+option(CREXX_FORCE_SYSTEM_OPENSSL
+       "Force use of system OpenSSL without local override"
+       OFF)
+
+if(NOT CREXX_FORCE_SYSTEM_OPENSSL)
 set(OPENSSL_ROOT_DIR "C:/msys64/mingw64")
+endif()
+
 set(OPENSSL_USE_STATIC_LIBS FALSE)
 find_package(OpenSSL REQUIRED)
 

@@ -186,6 +186,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->bool_value = 0;
     node->float_value = 0;
     node->decimal_value = 0; /* Decimal value as a string - malloced */
+    node->exit_obj_reg = -1;
     node->register_num = -1;
     node->register_type = 'r';
     node->additional_registers = -1;
@@ -754,6 +755,8 @@ const char *ast_ndtp(NodeType type) {
             return "ABS_POS";
         case ADDRESS:
             return "ADDRESS";
+        case IMPLICIT_CMD:
+            return "IMPLICIT_CMD";
         case ARG:
             return "ARG";
         case ARGS:
@@ -1504,12 +1507,14 @@ void ast_svtn(ASTNode* node, ASTNode* from_node) {
     }
 
     if (node->value_class) free(node->value_class);
+    if (node->target_class) free(node->target_class);
     if (from_node->target_class) {
         node->value_class = malloc(strlen(from_node->target_class) + 1);
         strcpy(node->value_class, from_node->target_class);
-    } else node->value_class = 0;
-    if (node->target_class) {
-        free(node->target_class);
+        node->target_class = malloc(strlen(from_node->target_class) + 1);
+        strcpy(node->target_class, from_node->target_class);
+    } else {
+        node->value_class = 0;
         node->target_class = 0;
     }
 }
@@ -1585,4 +1590,13 @@ ASTNode* ast_nsib(ASTNode* node) {
     }
 
     return 0;
+}
+
+
+void ast_set_file_name(Context *context, char *file_name) {
+    ASTNode *t = context->free_list;
+    while (t) {
+        t->file_name = file_name;
+        t = t->free_list;
+    }
 }

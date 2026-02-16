@@ -4,7 +4,7 @@
 #ifndef CREXX_RXASASSM_H
 #define CREXX_RXASASSM_H
 
-#define rxversion "crexx-DEV2507"
+#define rxversion "crexx-dev-260110"
 
 #include "rxas.h"
 #include "rxasgrmr.h"
@@ -27,6 +27,10 @@ void rxasqmfu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
 void rxasqmre(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
 /* Constant Metadata */
 void rxasqmct(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *constant);
+/* Class Metadata */
+void rxasqmclss(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type);
+/* Attribute Metadata */
+void rxasqmattr(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
 /* Clear Metadata */
 void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol);
 
@@ -60,6 +64,10 @@ void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
 void rxasmere(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
 /* Constant Metadata */
 void rxasmect(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *constant);
+/* Class Metadata */
+void rxasmeclss(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type);
+/* Attribute Metadata */
+void rxasmeattr(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
 /* Clear Metadata */
 void rxasmecl(Assembler_Context *context, Assembler_Token *symbol);
 

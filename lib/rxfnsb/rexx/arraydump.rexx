@@ -49,7 +49,7 @@ arraydump: procedure=.int
   /* N: make non-printables visible */
      if showN then v = _vis_np(v)
      out = ""
-     if showI then out = out || right(i, 6)||" "
+     if showI then out = out || right(i, 6,'0')||" "
      if showL then out = out || "len="right(length(v),5)||" "
      if showT then do
         raw = v

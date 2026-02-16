@@ -63,7 +63,7 @@ static void normalize_line(char *str) {
 /* Function to check if a line is volatile metadata */
 static int is_volatile(const char *line) {
     if (line[0] == ';' || line[0] == '*' || (line[0] == '/' && line[1] == '*')) {
-        if (strstr(line, "Version") || strstr(line, "Time") ||
+        if (strstr(line, "Version") || strstr(line, "VERSION") || strstr(line, "Time") ||
             strstr(line, "Date") || strstr(line, "Timestamp") ||
             strstr(line, "BUILT") || strstr(line, "SOURCE")) {
             return 1;

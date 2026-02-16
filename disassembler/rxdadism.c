@@ -377,6 +377,26 @@ static void output_meta_pre_proc(FILE *stream, module_file *module, bin_space *p
             }
             break;
 
+            case META_CLASS: {
+                /* META class */
+                meta_class_constant *mentry = ((meta_class_constant *) (module->constant + m));
+                if (mentry->base.address == address) {
+                    m = mentry->base.next;
+                }
+                else m = -1;
+            }
+            break;
+
+            case META_ATTR: {
+                /* META attribute */
+                meta_attr_constant *mentry = ((meta_attr_constant *) (module->constant + m));
+                if (mentry->base.address == address) {
+                    m = mentry->base.next;
+                }
+                else m = -1;
+            }
+            break;
+
             case META_FILE: {
                 /* META file - .srcfile="scratch" */
                 meta_file_constant *mentry = ((meta_file_constant *) (module->constant + m));
@@ -473,6 +493,38 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
                     m = mentry->base.next;
                 }
                 else m =  -1;
+            }
+            break;
+
+            case META_CLASS: {
+                /* META class */
+                meta_class_constant *mentry = ((meta_class_constant *) (module->constant + m));
+                if (mentry->base.address == address) {
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
+                    fprintf(stream, "                .meta %s=", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->option);
+                    fprintf(stream, "%s", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
+                    fprintf(stream, " %s .class\n", line_buffer);
+                    m = mentry->base.next;
+                }
+                else m = -1;
+            }
+            break;
+
+            case META_ATTR: {
+                /* META attribute */
+                meta_attr_constant *mentry = ((meta_attr_constant *) (module->constant + m));
+                if (mentry->base.address == address) {
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
+                    fprintf(stream, "                .meta %s=", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->option);
+                    fprintf(stream, "%s", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
+                    fprintf(stream, " %s .attr %d\n", line_buffer, (int)mentry->reg);
+                    m = mentry->base.next;
+                }
+                else m = -1;
             }
             break;
 
@@ -586,6 +638,38 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
                     m = mentry->base.next;
                 }
                 else m =  -1;
+            }
+            break;
+
+            case META_CLASS: {
+                /* META class */
+                meta_class_constant *mentry = ((meta_class_constant *) (module->constant + m));
+                if (mentry->base.address == address) {
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
+                    fprintf(stream, "                .meta %s=", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->option);
+                    fprintf(stream, "%s", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
+                    fprintf(stream, " %s .class\n", line_buffer);
+                    m = mentry->base.next;
+                }
+                else m = -1;
+            }
+            break;
+
+            case META_ATTR: {
+                /* META attribute */
+                meta_attr_constant *mentry = ((meta_attr_constant *) (module->constant + m));
+                if (mentry->base.address == address) {
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
+                    fprintf(stream, "                .meta %s=", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->option);
+                    fprintf(stream, "%s", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
+                    fprintf(stream, " %s .attr %d\n", line_buffer, (int)mentry->reg);
+                    m = mentry->base.next;
+                }
+                else m = -1;
             }
             break;
 
@@ -808,6 +892,35 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->inliner);
                     fprintf(stream, " %s\n",line_buffer);
 
+                }
+                break;
+
+            case META_CLASS:
+                if (print_all_constant_pool) {
+                    /* META class */
+                    meta_class_constant *mentry = (meta_class_constant *)entry;
+                    fprintf(stream, "* 0x%.6lx META-CLASS @0x%.6lx", i, mentry->base.address);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
+                    fprintf(stream, " %s", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->option);
+                    fprintf(stream, " %s", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
+                    fprintf(stream, " %s\n", line_buffer);
+                }
+                break;
+
+            case META_ATTR:
+                if (print_all_constant_pool) {
+                    /* META attribute */
+                    meta_attr_constant *mentry = (meta_attr_constant *)entry;
+                    fprintf(stream, "* 0x%.6lx META-ATTR @0x%.6lx", i, mentry->base.address);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
+                    fprintf(stream, " %s", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->option);
+                    fprintf(stream, " %s", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
+                    fprintf(stream, " %s", line_buffer);
+                    fprintf(stream, " %d\n", (int)mentry->reg);
                 }
                 break;
 

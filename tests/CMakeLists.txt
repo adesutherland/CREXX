@@ -10,7 +10,7 @@ set(CMAKE_C_STANDARD 90)
 enable_testing()
 
 set(ASMTESTBINS ascommon.rxbin asutf.rxbin)
-set(REXXTESTBINS basic.rxbin loop.rxbin levelbfunc.rxbin)
+set(REXXTESTBINS basic.rxbin loop.rxbin levelbfunc.rxbin 17_string_arrays.rxbin)
 
 unset(_prev_dependency) # Clear the previous dependency (just in case)
 foreach(_binfile ${ASMTESTBINS})

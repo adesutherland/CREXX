@@ -45,27 +45,40 @@ walker_result build_symbols_walker(walker_direction direction,
     if (direction == in) {
 
         /* IN - TOP DOWN */
-        if (node->scope) {
+
+        if (node->scope && node->node_type != PROGRAM_FILE && node->node_type != IMPORTED_FILE && node->node_type != REXX_UNIVERSE) {
             context->current_scope = node->scope;
             return result_normal; /* Skip if we have already processed this node */
         }
 
         if (node->node_type == REXX_UNIVERSE) {
-            /* This top level scope will contain the project file scope & imported file scopes */
-            context->current_scope = scp_f(context, context->current_scope, node, 0);
-            node->scope = context->current_scope;
+            if (node->scope) {
+                context->current_scope = node->scope;
+            } else {
+                /* This top level scope will contain the project file scope & imported file scopes */
+                context->current_scope = scp_f(context, context->current_scope, node, 0);
+                node->scope = context->current_scope;
+            }
         }
 
-        else if (node->node_type == PROGRAM_FILE) {
+        else if (node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE) {
             /* Now create the namespace symbol and scope */
             /* Make the new symbol */
-            symbol = sym_f(context->current_scope, node);
+            if (context->namespace) {
+                symbol = sym_f(context->current_scope, context->namespace);
+            } else {
+                symbol = sym_f(context->current_scope, node);
+            }
             symbol->symbol_type = NAMESPACE_SYMBOL;
             sym_adnd(symbol, node, 1, 1);
             if (context->namespace) sym_adnd(symbol, context->namespace, 0, 1);
 
             /* Move down to the project file scope */
-            context->current_scope = scp_f(context, context->current_scope, node, symbol);
+            if (symbol->defines_scope) {
+                context->current_scope = symbol->defines_scope;
+            } else {
+                context->current_scope = scp_f(context, context->current_scope, node, symbol);
+            }
             node->scope = context->current_scope;
         }
 
@@ -76,12 +89,13 @@ walker_result build_symbols_walker(walker_direction direction,
 
             /* Check for duplicated */
             symbol = sym_rslv(context->current_scope, node);
-            if (symbol) {
-                if (symbol->scope == context->current_scope) {
-                    /* Error */
+            if (symbol && symbol->scope == context->current_scope) {
+                /* If it's a different node, then it's a duplicate */
+                if (sym_trnd(symbol, 0)->node != node) {
                     mknd_err(node, "DUPLICATE_SYMBOL");
                 }
-                else symbol = 0;
+            } else {
+                symbol = 0;
             }
 
             /* Make a new symbol */
@@ -93,7 +107,11 @@ walker_result build_symbols_walker(walker_direction direction,
             sym_adnd(symbol, node, 0, 1);
 
             /* Move down to the class scope */
-            context->current_scope = scp_f(context, context->current_scope, node, symbol);
+            if (symbol->defines_scope) {
+                context->current_scope = symbol->defines_scope;
+            } else {
+                context->current_scope = scp_f(context, context->current_scope, node, symbol);
+            }
             node->scope = context->current_scope;
         }
 
@@ -105,7 +123,7 @@ walker_result build_symbols_walker(walker_direction direction,
             /* Set the return value node value_type */
             n = ast_chld(node, CLASS, VOID);
             if (n) {
-                n->value_type = node_to_type(n,
+                n->value_type = node_to_type(context, n,
                                              &(n->value_dims), &(n->value_dim_base), &(n->value_dim_elements),
                                              &(n->value_class));
 
@@ -115,12 +133,13 @@ walker_result build_symbols_walker(walker_direction direction,
 
             /* Check for duplicated */
             symbol = sym_rslv(context->current_scope, node);
-            if (symbol) {
-                if (symbol->scope == context->current_scope) {
-                    /* Error */
+            if (symbol && symbol->scope == context->current_scope) {
+                /* If it's a different node, then it's a duplicate */
+                if (sym_trnd(symbol, 0)->node != node) {
                     mknd_err(node, "DUPLICATE_SYMBOL");
                 }
-                else symbol = 0;
+            } else {
+                symbol = 0;
             }
 
             /* Make a new symbol */
@@ -136,7 +155,11 @@ walker_result build_symbols_walker(walker_direction direction,
             sym_adnd(symbol, node, 0, 1);
 
             /* Move down to the procedure scope */
-            context->current_scope = scp_f(context, context->current_scope, node, symbol);
+            if (symbol->defines_scope) {
+                context->current_scope = symbol->defines_scope;
+            } else {
+                context->current_scope = scp_f(context, context->current_scope, node, symbol);
+            }
             node->scope = context->current_scope;
 
             /* Level B Class Instance Support */
@@ -177,7 +200,11 @@ walker_result build_symbols_walker(walker_direction direction,
                 sym_adnd(symbol, node->child, 0, 1);
 
                 /* New scope scope */
-                context->current_scope = scp_f(context, namespaces, node->child, symbol);
+                if (symbol->defines_scope) {
+                    context->current_scope = symbol->defines_scope;
+                } else {
+                    context->current_scope = scp_f(context, namespaces, node->child, symbol);
+                }
                 node->scope = context->current_scope;
             }
             else {
@@ -378,6 +405,16 @@ walker_result resolve_functions_walker(walker_direction direction,
     return result_normal;
 }
 
+static void expose_class_symbols_worker(Symbol *symbol, void *payload) {
+    ASTNode *n = (ASTNode*)payload;
+    if (symbol->symbol_type == FUNCTION_SYMBOL) {
+        if (symbol->exposed == 0) {
+            symbol->exposed = 1;
+            sym_adnd(symbol, n, 0, 0);
+        }
+    }
+}
+
 /* Step 2c
  * - Resolve Exposed Namespace Symbols
  */
@@ -445,6 +482,17 @@ walker_result exposed_symbols_walker(walker_direction direction,
                                 mknd_err(n, "IMPORTED_FUNCTION");
                         }
                     }
+                    else if (symbol->symbol_type ==  CLASS_SYMBOL) {
+                        if (symbol->exposed == 0) {
+                            /* Requirement: If the class is exposed, then all methods are exposed. */
+                            symbol->exposed = 1;
+                            sym_adnd(symbol, n, 1, 1);
+                            /* Now expose all methods/factories in the class scope */
+                            if (symbol->defines_scope) {
+                                scp_4all(symbol->defines_scope, expose_class_symbols_worker, n);
+                            }
+                        }
+                    }
                     else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
                         /* Add a warning - if it has not already errored/warned */
                         if (!context->after_rewrite && ast_chld(n, ERROR, WARNING) == 0)
@@ -464,12 +512,12 @@ walker_result exposed_symbols_walker(walker_direction direction,
                 ASTNode* n = node->child;
                 while (n) {
                     /* Check if it is a global symbol (already) */
-                    symbol = sym_rvfc(context->ast, n); /* Is this is a procedure/function? */
-                    if (!symbol) {
-                        /* It is not global yet, so we should be exposing one of the procedure's variables */
-                        symbol = sym_lrsv(node->parent->scope, n); /* find it */
-                        if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
-                            if (symbol->exposed == 0) { /* Avoid double processing */
+                        symbol = sym_rvfc(context->ast, n); /* Is this is a procedure/function? */
+                        if (!symbol) {
+                            /* It is not global yet, so we should be exposing one of the procedure's variables */
+                            symbol = sym_lrsv(node->parent->scope, n); /* find it */
+                            if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
+                                if (symbol->exposed == 0) { /* Avoid double processing */
                                 /* We found a variable to expose - so expose it by moving its scope */
                                 merged_symbol = sym_merg(symbol->scope ? symbol->scope->parent : 0, symbol);
                                 /* Link to the exposed node */
@@ -545,10 +593,17 @@ walker_result exposed_symbols_walker(walker_direction direction,
     return result_normal;
 }
 
+struct val_sym_payload {
+    Context *context;
+    Scope *scope;
+};
+
 /* Step 3 - Validate Symbols
    This is called for every symbol */
 static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
-    Scope* scope = (Scope*)payload;
+    struct val_sym_payload *pld = (struct val_sym_payload*)payload;
+    Context *context = pld->context;
+    Scope* scope = pld->scope;
     SymbolNode *defining_node_link;
     ASTNode *proc, *p, *p_type;
     char *buffer;
@@ -619,7 +674,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                     ast_svtp(defining_node_link->node, symbol);
                 } else {
                     p_type = ast_chld(defining_node_link->node, CLASS, VOID);
-                    symbol->type = node_to_type(p_type,
+                    symbol->type = node_to_type(context, p_type,
                                                 &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                                 &(symbol->value_class));
 
@@ -630,7 +685,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             }
 
             if (defining_node_link->node->node_type == VAR_REFERENCE) {
-                symbol->type = node_to_type(defining_node_link->node->sibling,
+                symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                             &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                             &(symbol->value_class));
                 ast_svtp(defining_node_link->node, symbol);
@@ -639,12 +694,12 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             }
 
             if (defining_node_link->node->node_type == VAR_TARGET) {
-                symbol->type = node_to_type(defining_node_link->node->sibling,
+                symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                             &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                             &(symbol->value_class));
 
                 /* The dimensions can be defined on the left-hand side (lhs) or rhs but not both and not if the rhs is a class */
-                /* node_to_type() above has checked the rhs - so now we look at the lhs */
+                /* node_to_type(context, ) above has checked the rhs - so now we look at the lhs */
                 if (symbol->value_dims == 0 && defining_node_link->node->sibling->node_type != CLASS)
                     node_to_dims(defining_node_link->node, &(symbol->value_dims),
                                  &(symbol->dim_base), &(symbol->dim_elements));
@@ -681,7 +736,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 ast_svtp(defining_node_link->node, symbol);
             } else {
                 p_type = ast_chld(defining_node_link->node, CLASS, VOID);
-                symbol->type = node_to_type(p_type,
+                symbol->type = node_to_type(context, p_type,
                                             &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                             &(symbol->value_class));
 
@@ -692,7 +747,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
 
         else if (defining_node_link->node->node_type == VAR_REFERENCE) {
             /* This set the variable type */
-            symbol->type = node_to_type(defining_node_link->node->sibling,
+            symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                         &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                         &(symbol->value_class));
             ast_svtp(defining_node_link->node, symbol);
@@ -701,12 +756,12 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
 
         else if (defining_node_link->node->node_type == VAR_TARGET) {
             /* This set the variable type */
-            symbol->type = node_to_type(defining_node_link->node->sibling,
+            symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                         &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                         &(symbol->value_class));
 
             /* The dimensions can be defined on the left-hand side (lhs) or rhs but not both and not if the rhs is a class */
-            /* node_to_type() above has checked the rhs - so now we look at the lhs */
+            /* node_to_type(context, ) above has checked the rhs - so now we look at the lhs */
             if (symbol->value_dims == 0 && defining_node_link->node->sibling->node_type != CLASS)
                 node_to_dims(defining_node_link->node, &(symbol->value_dims),
                              &(symbol->dim_base), &(symbol->dim_elements));
@@ -781,18 +836,22 @@ static void variable_initiation(Symbol *symbol, void *payload) {
     }
 }
 
-void validate_symbols(Scope* scope) {
+void validate_symbols(Context *context, Scope* scope) {
     int i;
+    struct val_sym_payload payload;
     if (!scope) return;
 
+    payload.context = context;
+    payload.scope = scope;
+
     /* Validate Symbol */
-    scp_4all(scope, validate_symbol_in_scope, scope);
+    scp_4all(scope, validate_symbol_in_scope, &payload);
 
     /* Handle variable implicit initiation */
     scp_4all(scope, variable_initiation, scope);
 
     /* Do sub scopes */
     for (i=0; i < (int)scp_noch(scope); i++) {
-        validate_symbols(scp_chd(scope, i));
+        validate_symbols(context, scp_chd(scope, i));
     }
 }

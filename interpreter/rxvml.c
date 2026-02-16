@@ -7,9 +7,16 @@
 #include "rxastree.h"
 #include "rxvmplugin.h"
 
+typedef struct rxvml_registry_entry {
+    value* obj;
+    char class_name[256];
+} rxvml_registry_entry;
+
 struct rxvml_context {
     rxvm_context vm;
     const char* last_error;
+    rxvml_registry_entry* registry;
+    size_t registry_size;
 };
 
 /* rxvml_value is defined as an alias to value in the public header */
@@ -23,6 +30,8 @@ static proc_constant* find_procedure(rxvm_context* ctx, const char* name) {
     return NULL;
 }
 
+int rxvm_link(rxvm_context* ctx);
+
 rxvml_context* rxvml_create(const char* location, unsigned flags) {
     rxvml_context* ctx;
 
@@ -33,13 +42,25 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     if (!ctx) return NULL;
     rxinimod(&ctx->vm);
     if (location) ctx->vm.location = strdup(location);
-    ctx->vm.debug_mode = (flags & 1);
+    ctx->vm.debug_mode = flags;
     ctx->last_error = NULL;
+    ctx->registry = NULL;
+    ctx->registry_size = 0;
     return ctx;
 }
 
 void rxvml_destroy(rxvml_context* ctx) {
+    size_t i;
     if (!ctx) return;
+    if (ctx->registry) {
+        for (i = 0; i < ctx->registry_size; i++) {
+            if (ctx->registry[i].obj) {
+                clear_value(ctx->registry[i].obj);
+                free(ctx->registry[i].obj);
+            }
+        }
+        free(ctx->registry);
+    }
     rxfremod(&ctx->vm);
     free(ctx);
 }
@@ -69,6 +90,13 @@ int rxvml_array_set(rxvml_context* ctx, rxvml_value* arr, size_t index1, rxvml_v
     /* Copy into the pre-allocated attribute slot to avoid pointer aliasing */
     copy_value(v_arr->attributes[index1 - 1], v_elem);
     return 0;
+}
+
+void rxvml_value_free(rxvml_value* v) {
+    if (v) {
+        clear_value((value*)v);
+        free(v);
+    }
 }
 
 rxvml_value* rxvml_make_token(rxvml_context* ctx, const rxvml_token_desc* d) {
@@ -114,38 +142,199 @@ rxvml_value* rxvml_make_token(rxvml_context* ctx, const rxvml_token_desc* d) {
     return (rxvml_value*)v;
 }
 
+int rxvml_reg_alloc(rxvml_context* ctx, rxvml_value* v, const char* class_name) {
+    size_t i;
+    if (!v) return -1;
+    for (i = 0; i < ctx->registry_size; i++) {
+        if (ctx->registry[i].obj == NULL) {
+            ctx->registry[i].obj = (value*)v;
+            if (class_name) strncpy(ctx->registry[i].class_name, class_name, 255);
+            else ctx->registry[i].class_name[0] = 0;
+            ctx->registry[i].class_name[255] = 0;
+            return (int)i;
+        }
+    }
+    {
+        size_t new_size = ctx->registry_size == 0 ? 8 : ctx->registry_size * 2;
+        int idx;
+        rxvml_registry_entry* new_registry = realloc(ctx->registry, sizeof(rxvml_registry_entry) * new_size);
+        if (!new_registry) return -1;
+        ctx->registry = new_registry;
+        for (i = ctx->registry_size; i < new_size; i++) {
+            ctx->registry[i].obj = NULL;
+            ctx->registry[i].class_name[0] = 0;
+        }
+        idx = (int)ctx->registry_size;
+        ctx->registry[idx].obj = (value*)v;
+        if (class_name) strncpy(ctx->registry[idx].class_name, class_name, 255);
+        else ctx->registry[idx].class_name[0] = 0;
+        ctx->registry[idx].class_name[255] = 0;
+        ctx->registry_size = new_size;
+        return idx;
+    }
+}
+
+void rxvml_reg_free(rxvml_context* ctx, int reg_idx) {
+    if (reg_idx >= 0 && reg_idx < (int)ctx->registry_size) {
+        if (ctx->registry[reg_idx].obj) {
+            clear_value(ctx->registry[reg_idx].obj);
+            free(ctx->registry[reg_idx].obj);
+            ctx->registry[reg_idx].obj = NULL;
+            ctx->registry[reg_idx].class_name[0] = 0;
+        }
+    }
+}
+
+rxvml_value* rxvml_reg_get(rxvml_context* ctx, int reg_idx, char* out_class_name) {
+    if (reg_idx >= 0 && reg_idx < (int)ctx->registry_size) {
+        if (out_class_name) strcpy(out_class_name, ctx->registry[reg_idx].class_name);
+        return (rxvml_value*)ctx->registry[reg_idx].obj;
+    }
+    return NULL;
+}
+
+int rxvml_discover_classes(rxvml_context* ctx, const char* ns, rxvml_class_info** out_classes, size_t* out_count) {
+    size_t count = 0;
+    size_t capacity = 8;
+    rxvml_class_info* classes = malloc(sizeof(rxvml_class_info) * capacity);
+    size_t ns_len = strlen(ns);
+    size_t m;
+
+    for (m = 0; m < ctx->vm.num_modules; m++) {
+        module* mod = ctx->vm.modules[m];
+        if (mod->meta_head == -1) continue;
+
+        {
+            int meta_off = mod->meta_head;
+            while (meta_off != -1) {
+                chameleon_constant* c = (chameleon_constant*)(mod->segment.const_pool + meta_off);
+                if (c->type == META_CLASS) {
+                    meta_class_constant* mc = (meta_class_constant*)c;
+                    string_constant* sc = (string_constant*)(mod->segment.const_pool + mc->symbol);
+                    
+                    if (strncmp(sc->string, ns, ns_len) == 0 && sc->string[ns_len] == '.') {
+                        if (count >= capacity) {
+                            capacity *= 2;
+                            classes = realloc(classes, sizeof(rxvml_class_info) * capacity);
+                        }
+                        strncpy(classes[count].class_name, sc->string, 255);
+                        classes[count].class_name[255] = 0;
+                        
+                        /* Factory name pattern: namespace.classname.§factory */
+                        snprintf(classes[count].factory_proc, 511, "%s.§factory", sc->string);
+                        classes[count].factory_proc[511] = 0;
+                        
+                        count++;
+                    }
+                }
+                meta_off = ((meta_entry*)c)->next;
+            }
+        }
+    }
+
+    *out_classes = classes;
+    *out_count = count;
+    return 0;
+}
+
+int rxvml_call_method(
+    rxvml_context* ctx,
+    rxvml_value* obj,
+    const char* class_name,
+    const char* method_name,
+    rxvml_value* args,
+    rxvml_value** response_out) {
+
+    char full_method_name[1024];
+    snprintf(full_method_name, sizeof(full_method_name), "%s.%s", class_name, method_name);
+
+    if (ctx->vm.num_modules > 0) {
+        rxvm_link(&ctx->vm);
+    }
+    proc_constant* p = find_procedure(&ctx->vm, full_method_name);
+    if (!p) {
+        ctx->last_error = "Method not found";
+        return -1;
+    }
+
+    /* Set up the external call context */
+    ctx->vm.ext_proc = p;
+    ctx->vm.ext_argc = 2;
+    ctx->vm.ext_args = malloc(sizeof(value*) * 2);
+    ctx->vm.ext_args[0] = (value*)obj;
+    ctx->vm.ext_args[1] = (value*)args;
+
+    ctx->vm.ext_ret = value_f();
+
+    /* Run the VM */
+    {
+        char* dummy_argv[] = {"rxc_plugin_method"};
+        rxvm_prepare(&ctx->vm);
+        run(&ctx->vm, 0, dummy_argv);
+    }
+
+    if (response_out) {
+        *response_out = (rxvml_value*)ctx->vm.ext_ret;
+    } else {
+        rxvml_value_free((rxvml_value*)ctx->vm.ext_ret);
+    }
+
+    /* Clear the ext call fields */
+    ctx->vm.ext_proc = 0;
+    ctx->vm.ext_argc = 0;
+    if (ctx->vm.ext_args) free(ctx->vm.ext_args);
+    ctx->vm.ext_args = 0;
+    ctx->vm.ext_ret = 0;
+
+    return 0;
+}
+
 int rxvml_call_plugin(
     rxvml_context* ctx,
     const char* proc_name,
     rxvml_value* token_array,
     rxvml_value** response_out) {
 
+    if (ctx->vm.num_modules > 0) {
+        rxvm_link(&ctx->vm);
+    }
     proc_constant* p = find_procedure(&ctx->vm, proc_name);
     if (!p) {
+        if (ctx->vm.debug_mode) fprintf(stderr, "DEBUG_EXIT: Procedure %s not found in bridge VM (%zu modules)\n", proc_name, ctx->vm.num_modules);
         ctx->last_error = "Procedure not found";
         return -1;
     }
 
     /* Set up the external call context */
     ctx->vm.ext_proc = p;
-    ctx->vm.ext_argc = 1;
-    ctx->vm.ext_args = (value**)&token_array;
+    if (token_array) {
+        ctx->vm.ext_argc = 1;
+        ctx->vm.ext_args = malloc(sizeof(value*));
+        ctx->vm.ext_args[0] = (value*)token_array;
+    } else {
+        ctx->vm.ext_argc = 0;
+        ctx->vm.ext_args = NULL;
+    }
 
     ctx->vm.ext_ret = value_f();
 
     /* Run the VM */
     {
         char* dummy_argv[] = {"rxc_plugin"};
-        rxvm_run(&ctx->vm, 0, dummy_argv);
+        rxvm_prepare(&ctx->vm);
+        run(&ctx->vm, 0, dummy_argv);
     }
 
     if (response_out) {
         *response_out = (rxvml_value*)ctx->vm.ext_ret;
+    } else {
+        rxvml_value_free((rxvml_value*)ctx->vm.ext_ret);
     }
 
     /* Clear the ext call fields */
     ctx->vm.ext_proc = 0;
     ctx->vm.ext_argc = 0;
+    if (ctx->vm.ext_args) free(ctx->vm.ext_args);
     ctx->vm.ext_args = 0;
     ctx->vm.ext_ret = 0;
 
@@ -154,8 +343,14 @@ int rxvml_call_plugin(
 
 const char* rxvml_get_replacement_code(rxvml_context* ctx, rxvml_value* response) {
     value* v = (value*)response;
+    if (!v) return NULL;
+    /* If it's a string, return it directly */
+    if (v->status.type_string || (v->string_length > 0 && v->string_value && v->status.all_type_flags == 0)) {
+        null_terminate_string_buffer(v);
+        return v->string_value;
+    }
     /* Assume rxc.response has code at attribute 1 */
-    if (v && v->num_attributes >= 1 && v->attributes[0]->status.type_string) {
+    if (v->num_attributes >= 1 && (v->attributes[0]->status.type_string || (v->attributes[0]->string_length > 0 && v->attributes[0]->string_value))) {
         null_terminate_string_buffer(v->attributes[0]);
         return v->attributes[0]->string_value;
     }
@@ -165,7 +360,7 @@ const char* rxvml_get_replacement_code(rxvml_context* ctx, rxvml_value* response
 const char* rxvml_get_error_message(rxvml_context* ctx, rxvml_value* response) {
     value* v = (value*)response;
     /* Assume rxc.response has error at attribute 2 */
-    if (v && v->num_attributes >= 2 && v->attributes[1]->status.type_string) {
+    if (v && v->num_attributes >= 2 && (v->attributes[1]->status.type_string || (v->attributes[1]->string_length > 0 && v->attributes[1]->string_value))) {
         null_terminate_string_buffer(v->attributes[1]);
         return v->attributes[1]->string_value;
     }
@@ -203,4 +398,13 @@ int rxvml_to_str(rxvml_context* ctx, const rxvml_value* v, const char** out_s, s
 int rxvml_last_error(rxvml_context* ctx, const char** out_msg) {
     if (out_msg) *out_msg = ctx->last_error;
     return ctx->last_error ? -1 : 0;
+}
+
+unsigned int rxvml_get_debug_mode(rxvml_context* ctx) {
+    if (!ctx) return 0;
+    return ctx->vm.debug_mode;
+}
+
+void rxvml_set_say_exit(rxvml_say_exit_func say_exit) {
+    rxvm_setsayexit((say_exit_func)say_exit);
 }

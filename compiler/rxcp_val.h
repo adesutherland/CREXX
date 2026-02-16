@@ -39,7 +39,7 @@
 int is_node_string(ASTNode* node, const char* value);
 int node_to_integer(ASTNode* node);
 void node_to_dims(ASTNode* node, size_t *dims, int** dim_base, int** dim_elements);
-ValueType node_to_type(ASTNode *node, size_t *dims, int **dim_base, int **dim_elements, char **class_name);
+ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_base, int **dim_elements, char **class_name);
 void validate_node_promotion(ASTNode* node);
 void validate_node_promotion_for_ref(ASTNode* node);
 
@@ -53,7 +53,7 @@ Context* rxcp_parse_buffer(char* source_string, int options);
 walker_result build_symbols_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result resolve_functions_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result exposed_symbols_walker(walker_direction direction, ASTNode* node, void *payload);
-void validate_symbols(Scope *scope);
+void validate_symbols(Context *context, Scope *scope);
 
 /* type */
 walker_result set_node_types_walker(walker_direction direction, ASTNode* node, void *payload);
@@ -73,7 +73,7 @@ walker_result rxcp_fixup_walker(walker_direction direction, ASTNode* node, void 
 /* check */
 walker_result initial_checks_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result decimal_parameters_walker(walker_direction direction, ASTNode* node, void *payload);
-walker_result plugin_dispatch_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result exit_dispatch_walker(walker_direction direction, ASTNode* node, void *payload);
 
 /* misc */
 walker_result set_node_ordinals_walker(walker_direction direction, ASTNode* node, void *payload);

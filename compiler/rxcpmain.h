@@ -42,4 +42,10 @@ void rxcp_val(Context *context);
 void rxcp_bvl(Context *context);
 void ast_dump_text(FILE* out, ASTNode* node, int indent);
 
+/* Import scanning API */
+int rxcp_scan_imports(Context *context);
+
+/* Exit Bridge API */
+int rxcp_exit_bridge_invoke(Context* context, ASTNode* node);
+
 #endif //CREXX_RXCPMAIN_H

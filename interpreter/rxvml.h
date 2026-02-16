@@ -42,6 +42,7 @@ int rxvml_load_module_buffer(rxvml_context* ctx, const void* buf, size_t len);
 rxvml_value* rxvml_make_token(rxvml_context* ctx, const rxvml_token_desc* d);
 rxvml_value* rxvml_array_new(rxvml_context* ctx, size_t length);
 int          rxvml_array_set(rxvml_context* ctx, rxvml_value* arr, size_t index1, rxvml_value* elem);
+void         rxvml_value_free(rxvml_value* v);
 
 /* Introspection / extraction */
 int      rxvml_to_int      (rxvml_context* ctx, const rxvml_value* v, rxinteger* out_v);
@@ -59,7 +60,35 @@ const char* rxvml_get_replacement_code(rxvml_context* ctx, rxvml_value* response
 const char* rxvml_get_error_message(rxvml_context* ctx, rxvml_value* response);
 int rxvml_get_token_negotiation(rxvml_context* ctx, rxvml_value* token, int* out_new_type, int* out_is_updated);
 
+/* Persistent Registry for Stateful Exits */
+int          rxvml_reg_alloc(rxvml_context* ctx, rxvml_value* v, const char* class_name);
+void         rxvml_reg_free(rxvml_context* ctx, int reg_idx);
+rxvml_value* rxvml_reg_get(rxvml_context* ctx, int reg_idx, char* out_class_name);
+
+/* Discovery & Advanced Invocation */
+typedef struct rxvml_class_info {
+    char class_name[256];
+    char factory_proc[512];
+} rxvml_class_info;
+
+int rxvml_discover_classes(rxvml_context* ctx, const char* ns, rxvml_class_info** out_classes, size_t* out_count);
+
+int rxvml_call_method(
+    rxvml_context* ctx,
+    rxvml_value* obj,
+    const char* class_name,
+    const char* method_name,
+    rxvml_value* args,
+    rxvml_value** response_out);
+
+/* Say Exit */
+typedef void (*rxvml_say_exit_func)(char* message);
+void rxvml_set_say_exit(rxvml_say_exit_func say_exit);
+
 /* Error reporting */
 int  rxvml_last_error(rxvml_context* ctx, const char** out_msg);
+
+/* Introspection */
+unsigned int rxvml_get_debug_mode(rxvml_context* ctx);
 
 #endif /* CREXX_RXVML_H */

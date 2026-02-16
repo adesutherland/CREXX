@@ -25,7 +25,7 @@ The `validate_ast` function (in `rxcp_val_orch.c`) orchestrates the following se
 --- 
 ### The Fixpoint Loop (`do...while(context->changed)`)
 
-5.  **Plugin Dispatch (`plugin_dispatch_walker` - Pass A)**: 
+5.  **Exit Dispatch (`exit_dispatch_walker` - Pass A)**: 
     *   Consults the Bridge for `IMPLICIT_CMD` nodes. 
     *   Performs **Code Injection** if the plugin returns a Rexx string.
     *   Splices injected AST nodes and sets `context->changed = 1`.
@@ -50,7 +50,7 @@ The `validate_ast` function (in `rxcp_val_orch.c`) orchestrates the following se
 11. **Symbol Validation (`validate_symbols`)**: 
     *   Checks for duplicate definitions and semantic symbol errors.
 
-12. **Plugin Dispatch (`plugin_dispatch_walker` - Pass B)**:
+12. **Exit Dispatch (`exit_dispatch_walker` - Pass B)**:
     *   Allows plugins to react to resolved symbols or types.
 
 13. **Type Inference (`set_node_types_walker`)**: 

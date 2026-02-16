@@ -1080,6 +1080,30 @@ function_name(N)       ::= TK_STRING(S).
                            { N = ast_f(context, FUNCTION, S); }
 call(I) ::= TK_CALL(T) function_name(F) expression_list(E).
         { I = ast_f(context, CALL, T); add_ast(I,F); if (E) add_ast(F,E); }
+call(I) ::= TK_CALL(T) TK_VAR_SYMBOL(S) function_parameters(P). [TK_VAR_SYMBOL]
+        { I = ast_f(context, CALL, T); ASTNode *F = ast_f(context, FUNCTION, S); add_ast(I, F); if (P) add_ast(F, P); }
+/* Support member calls: CALL obj.method(args...) */
+call(I) ::= TK_CALL(T) TK_STEM(S) stemparts(P) function_parameters(PP).
+        {
+           ASTNode *F;
+           ASTNode *last = P;
+           ASTNode *prev = NULL;
+           while (last->sibling) { prev = last; last = last->sibling; }
+           if (prev) { prev->sibling = NULL; } else { P = NULL; }
+           F = ast_f(context, MEMBER_CALL, last->token);
+           if (F->node_string && F->node_string[0] == '.') {
+               memmove(F->node_string, F->node_string + 1, F->node_string_length);
+               F->node_string_length--;
+           }
+           {
+               ASTNode *lhs = ast_f(context, VAR_SYMBOL, S);
+               if (P) add_ast(lhs, P);
+               add_ast(F, lhs);
+               if (PP) add_ast(F, PP);
+           }
+           I = ast_f(context, CALL, T);
+           add_ast(I, F);
+        }
 call(I) ::= TK_CALL(T) ANYTHING(E).
         { I = ast_f(context, CALL, T); add_ast(I,ast_err(context, "EXPECTED_PROCEDURE", E)); }
 

@@ -69,6 +69,7 @@ struct ASTNode {
     int bool_value;
     double float_value;
     char* decimal_value; /* Decimal value as a string - malloced */
+    int exit_obj_reg; /* VM register index of the attached Exit object, initialized to -1 */
     /* These are only valid after the set_source_location walker has run */
     Token *token_start, *token_end;
     char *source_start, *source_end;
@@ -206,4 +207,5 @@ void ast_sttn(ASTNode* node, ASTNode* from_node);
 /* Set Node Value (and Target) Type from the from_node target type */
 void ast_svtn(ASTNode* node, ASTNode* from_node);
 
+void ast_set_file_name(Context *context, char *file_name);
 #endif //CREXX_RXCP_AST_H

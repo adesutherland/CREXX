@@ -19,6 +19,8 @@ add_subdirectory(treemap)
 add_subdirectory(id)
 add_subdirectory(recv390)
 add_subdirectory(map)
+add_subdirectory(rxtcp)
+add_subdirectory(socket)
 
 #
 # These are the plugins that are additionally built for Linux
@@ -45,7 +47,7 @@ if(WIN32)
 #	add_subdirectory(pegparser)
 	add_subdirectory(fileio)
 	add_subdirectory(matrix)
-	add_subdirectory(rxtcp)
+#	add_subdirectory(rxtcp)
 #	add_subdirectory(rxshm)
 	add_subdirectory(system)
 #	add_subdirectory(pick)

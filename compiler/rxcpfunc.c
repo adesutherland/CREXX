@@ -47,9 +47,22 @@ struct tree_wrapper {
     struct avl_tree_node index_node;
 };
 
-#define GET_INDEX(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func->fqname
+/* Internal Tree node structure for classes */
+struct class_tree_wrapper {
+    struct imported_class *cls;
+    struct avl_tree_node index_node;
+};
 
+typedef struct {
+    Context *parent_context;
+    Context *import_context;
+} class_import_payload;
+
+#define GET_INDEX(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func->fqname
 #define GET_VALUE(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func
+
+#define GET_CLASS_INDEX(i) avl_tree_entry((i), struct class_tree_wrapper, index_node)->cls->fqname
+#define GET_CLASS_VALUE(i) avl_tree_entry((i), struct class_tree_wrapper, index_node)->cls
 
 static int compare_node_node(const struct avl_tree_node *node1,
                              const struct avl_tree_node *node2)
@@ -59,9 +72,23 @@ static int compare_node_node(const struct avl_tree_node *node1,
     return strcmp(n1,n2);
 }
 
+static int compare_class_node_node(const struct avl_tree_node *node1,
+                                   const struct avl_tree_node *node2)
+{
+    char* n1 = GET_CLASS_INDEX(node1);
+    char* n2 = GET_CLASS_INDEX(node2);
+    return strcmp(n1,n2);
+}
+
 static int compare_node_value(const void *value,
                               const struct avl_tree_node *nodeptr) {
     char* node = GET_INDEX(nodeptr);
+    return strcmp((char*)value,node);
+}
+
+static int compare_class_node_value(const void *value,
+                                    const struct avl_tree_node *nodeptr) {
+    char* node = GET_CLASS_INDEX(nodeptr);
     return strcmp((char*)value,node);
 }
 
@@ -112,6 +139,90 @@ static int src_nsfu(Context *context, char* namespace, char* name, imported_func
     return 0;
 }
 
+// Search for a class from fqname in the master context
+// Returns 1 if found and sets value
+// Returns 0 if not found
+static int src_class(Context *context, char* fqname, struct imported_class **cls) {
+    struct avl_tree_node *result;
+    struct avl_tree_node *root = context->master_context->importable_class_tree;
+
+    if (!root) return 0;
+    result = avl_tree_lookup(root, fqname, compare_class_node_value);
+
+    if (result) {
+        *cls = GET_CLASS_VALUE(result);
+        return 1;
+    }
+    else return 0;
+}
+
+// Search for a class from namespace and name in the master context
+// Returns 1 if found and sets value
+// Returns 0 if not found
+static int src_nscl(Context *context, char* namespace, char* name, struct imported_class **cls) {
+    struct avl_tree_node *result;
+    struct avl_tree_node *root;
+    char *fqname;
+
+    if (!context || !context->master_context) return 0;
+    root = context->master_context->importable_class_tree;
+    if (!root) return 0;
+
+    if (!namespace || !name) return 0;
+
+    fqname = malloc(strlen(namespace) + strlen(name) + 2);
+    strcpy(fqname,namespace);
+    strcat(fqname, ".");
+    strcat(fqname, name);
+
+    result = avl_tree_lookup(root, fqname, compare_class_node_value);
+
+    if (result) {
+        *cls = GET_CLASS_VALUE(result);
+        free(fqname);
+        return 1;
+    }
+
+    free(fqname);
+    return 0;
+}
+
+// Search for a class from name (checking for imported namespaces in the context)
+// Returns 1 if found and sets value
+// Returns 0 if not found
+static int src_fqcl(Context *context, char* name, struct imported_class **cls) {
+    char *namespace;
+    size_t i;
+    Scope *scope;
+
+    if (!context || !context->ast || !context->ast->scope) return 0;
+    scope = context->ast->scope;
+
+    if (context->debug_mode >= 2) fprintf(stderr, "Searching for Class %s in namespaces (context file: %s):\n", name, context->file_name);
+
+    /* Check the module namespace */
+    if (scp_noch(scope) > 0) {
+        Scope *s0 = scp_chd(scope, 0);
+        if (s0) {
+            namespace = s0->name;
+            if (context->debug_mode >= 2) fprintf(stderr, " - namespace: %s\n", namespace);
+            if (src_nscl(context, namespace, name, cls)) return 1;
+        }
+    }
+
+    /* Check imported namespaces */
+    for (i = 1; i < scp_noch(scope); i++) {
+        Scope *si = scp_chd(scope, i);
+        if (si) {
+            namespace = si->name;
+            if (context->debug_mode >= 2) fprintf(stderr, " - namespace: %s\n", namespace);
+            if (src_nscl(context, namespace, name, cls)) return 1;
+        }
+    }
+
+    return 0;
+}
+
 // Search for a function / variable from name (checking for imported namespaces in the context)
 // if only_namespace is set then the search only covers the file namespace not imported ones
 // (this is for global variables)
@@ -125,11 +236,14 @@ static int src_fqfu(Context *context, int only_namespace, char* name, imported_f
     if (!context || !context->ast || !context->ast->scope) return 0;
     scope = context->ast->scope;
 
+    if (context->debug_mode >= 2) fprintf(stderr, "Searching for Procedure %s in namespaces (context file: %s):\n", name, context->file_name);
+
     /* Check the module namespace */
     if (scp_noch(scope) > 0) {
         Scope *s0 = scp_chd(scope, 0);
         if (s0) {
             namespace = s0->name;
+            if (context->debug_mode >= 2) fprintf(stderr, " - namespace: %s\n", namespace);
             if (src_nsfu(context, namespace, name, func)) return 1;
         }
     }
@@ -140,6 +254,7 @@ static int src_fqfu(Context *context, int only_namespace, char* name, imported_f
             Scope *si = scp_chd(scope, i);
             if (si) {
                 namespace = si->name;
+                if (context->debug_mode >= 2) fprintf(stderr, " - namespace: %s\n", namespace);
                 if (src_nsfu(context, namespace, name, func)) return 1;
             }
         }
@@ -170,6 +285,7 @@ static int safe_strcmp(const char *s1, const char* s2) {
  * If it is a duplicate this function either calls freimpfc(func) or stashes it in the duplicate list
  * (the caller does not need to worry (should not worry) about freeing it if it is a duplicate) */
 static int add_func(Context *context, imported_func *func) {
+    if (context->debug_mode >= 2) fprintf(stderr, "Importing Procedure %s from %s (into context file: %s)\n", func->fqname, func->file_name, context->file_name);
     struct avl_tree_node **root = (struct avl_tree_node **)&(context->master_context->importable_function_tree);
     imported_func *existing_func;
     /* Does the function already exist? */
@@ -213,6 +329,97 @@ static int add_func(Context *context, imported_func *func) {
     return 0;
 }
 
+/* Adds a class to the master context*/
+/* Returns 0 on success, 1 on duplicate */
+static int add_class(Context *context, struct imported_class *cls) {
+    if (context->debug_mode >= 2) fprintf(stderr, "Importing Class %s from %s (into context file: %s)\n", cls->fqname, cls->file_name, context->file_name);
+    struct avl_tree_node **root = (struct avl_tree_node **)&(context->master_context->importable_class_tree);
+    struct imported_class *existing_cls;
+    /* Does the class already exist? */
+    if ( src_class(context, cls->fqname, &existing_cls) ) {
+        /* Yes a duplicate - we don't care if it's consistent for now, just free the new one */
+        free(cls->name);
+        free(cls->fqname);
+        free(cls->namespace);
+        free(cls->file_name);
+        if (cls->context) fre_cntx(cls->context);
+        free(cls);
+        return 1;
+    }
+
+    struct class_tree_wrapper *i = malloc(sizeof(struct class_tree_wrapper));
+    i->cls = cls;
+    if (avl_tree_insert(root, &i->index_node, compare_class_node_node)) {
+        /* Duplicate */
+        fprintf(stderr, "Internal Error: Unexpected duplicate class symbol\n");
+        free(i);
+        free(cls->name);
+        free(cls->fqname);
+        free(cls->namespace);
+        free(cls->file_name);
+        if (cls->context) fre_cntx(cls->context);
+        free(cls);
+        return 1;
+    }
+    return 0;
+}
+
+/* Free Class Tree and classes */
+void fre_ctre(Context *context) {
+    struct class_tree_wrapper *i;
+    struct avl_tree_node **root = (struct avl_tree_node **)&(context->importable_class_tree);
+
+    if (!root || !*root) return;
+
+    /* This walks the tree in post order which allows each node be freed */
+    avl_tree_for_each_in_postorder(i, *root, struct class_tree_wrapper, index_node) {
+        free(i->cls->name);
+        free(i->cls->fqname);
+        free(i->cls->namespace);
+        free(i->cls->file_name);
+        if (i->cls->context) fre_cntx(i->cls->context);
+        free(i->cls);
+        free(i);
+    }
+    *root = 0;
+}
+
+/* imported_class factory */
+static struct imported_class *rximpcl_f(Context* context, char* file_name, char *fqname, Context *stub_ctx) {
+    struct imported_class *cls;
+    char *dot;
+
+    if (!context || !fqname || !file_name) return 0;
+
+    cls = malloc(sizeof(struct imported_class));
+    cls->file_name = strdup(file_name);
+    cls->fqname = strdup(fqname);
+    cls->context = stub_ctx;
+    if (stub_ctx) {
+        stub_ctx->file_name = cls->file_name;
+        ast_set_file_name(stub_ctx, cls->file_name);
+    }
+    cls->class_node = 0;
+
+    dot = strrchr(cls->fqname, '.');
+    if (dot) {
+        cls->namespace = malloc(dot - cls->fqname + 1);
+        memcpy(cls->namespace, cls->fqname, dot - cls->fqname);
+        cls->namespace[dot - cls->fqname] = 0;
+        cls->name = strdup(dot + 1);
+    } else {
+        cls->namespace = strdup("");
+        cls->name = strdup(cls->fqname);
+    }
+
+    if (add_class(context, cls)) {
+        /* Duplicate - add_class already freed it */
+        return 0;
+    }
+
+    return cls;
+}
+
 /* Free Func Tree and functions */
 void fre_ftre(Context *context) {
     struct tree_wrapper *i;
@@ -242,6 +449,188 @@ static char error_in_node(ASTNode* node) {  // NOLINT
         node = node->sibling;
     }
     return 0;
+}
+
+/* Forward declaration for local parser used by import stubs */
+static Context *parseRexx(Context* parent_context, char *location, char* file_name, RexxLevel level, int debug_mode, char* rexx_source, size_t bytes);
+
+/* Returns Argument source from the ARGS Node as a malloced string */
+static char *generate_arg_source(ASTNode *node) {
+    size_t args;
+    size_t i;
+    char *buffer;
+    ASTNode *a;
+
+    if (!node || node->node_type != ARGS) return strdup("");
+    args = ast_nchd(node);
+    if (!args) return strdup("");
+
+    buffer = strdup("");
+    for (i=0; i<args; i++) {
+        a = ast_chdn(node, i);
+        char *type_str = 0;
+        char *name_str = 0;
+
+        if (a->child->node_type == VARG || a->child->node_type == VARG_REFERENCE) {
+            type_str = ast_n2tp(a->child->sibling);
+            name_str = strdup("...");
+        }
+        else {
+            /* Try to get type from symbol */
+            if (a->child->symbolNode && a->child->symbolNode->symbol) {
+                type_str = sym_2tp(a->child->symbolNode->symbol);
+                name_str = strdup(a->child->symbolNode->symbol->name);
+            }
+            /* Fallback to AST nodes if symbol resolution is incomplete or .unknown */
+            if (!type_str || strcmp(type_str, ".unknown") == 0) {
+                if (type_str) free(type_str);
+                /* a is ARG, a->child is VAR_SYMBOL, a->child->sibling is CLASS */
+                if (a->child && a->child->sibling && a->child->sibling->node_type == CLASS) {
+                    ASTNode *type_node = a->child->sibling;
+                    if (type_node->node_string) {
+                        type_str = malloc(type_node->node_string_length + 1);
+                        memcpy(type_str, type_node->node_string, type_node->node_string_length);
+                        type_str[type_node->node_string_length] = 0;
+                    } else type_str = strdup(".unknown");
+                } else type_str = strdup(".unknown");
+            }
+            if (!name_str) {
+                if (a->child && a->child->node_type == VAR_SYMBOL) {
+                    name_str = malloc(a->child->node_string_length + 1);
+                    memcpy(name_str, a->child->node_string, a->child->node_string_length);
+                    name_str[a->child->node_string_length] = 0;
+                } else name_str = strdup("unknown");
+            }
+        }
+
+        char *tmp;
+        if (i == 0) tmp = mprintf("%s%s = %s", buffer, name_str, type_str);
+        else tmp = mprintf("%s, %s = %s", buffer, name_str, type_str);
+
+        free(buffer);
+        buffer = tmp;
+        free(type_str);
+        free(name_str);
+    }
+
+    return buffer;
+}
+
+/* Build a minimal class stub source for an exposed class */
+static char* generate_class_stub_source(ASTNode *class_node) {
+    Symbol *cls_sym;
+    char *fq = 0;
+    char *ns = 0;
+    char *buffer = 0;
+
+    if (!class_node || class_node->node_type != CLASS_DEF) return 0;
+    if (!class_node->symbolNode || !class_node->symbolNode->symbol) return 0;
+
+    cls_sym = class_node->symbolNode->symbol;
+
+    /* Get namespace and short class name from FQ name */
+    fq = sym_frnm(cls_sym);
+    if (!fq) return 0;
+
+    size_t len = strlen(fq);
+    size_t dot = len;
+    while (dot) {
+        dot--;
+        if (fq[dot] == '.') break;
+    }
+    if (dot == 0 || fq[dot] != '.') { /* No namespace - skip (not importable) */
+        free(fq);
+        return 0;
+    }
+
+    ns = (char*)malloc(dot + 1);
+    memcpy(ns, fq, dot);
+    ns[dot] = 0;
+
+    const char *cls_name = fq + dot + 1;
+
+    /* Start stub source */
+    buffer = mprintf("options levelb\nnamespace %s\n%s: class\n", ns, cls_name);
+
+    /* Iterate class members for FACTORY/METHOD signatures */
+    ASTNode *m;
+    for (m = class_node->child; m; m = m->sibling) {
+        if (m->node_type == FACTORY) {
+            char *tmp = mprintf("%s  *: factory\n", buffer);
+            free(buffer);
+            buffer = tmp;
+
+            ASTNode *args_node = ast_chld(m, ARGS, 0);
+            if (args_node) {
+                char *args = generate_arg_source(args_node);
+                if (args && args[0]) {
+                    tmp = mprintf("%s  arg %s\n", buffer, args);
+                    free(buffer);
+                    buffer = tmp;
+                }
+                if (args) free(args);
+            }
+        }
+        else if (m->node_type == METHOD) {
+            /* Method name */
+            char *mname = (char*)malloc(m->node_string_length + 1);
+            memcpy(mname, m->node_string, m->node_string_length);
+            mname[m->node_string_length] = 0;
+
+            /* Return type (default .void added by grammar) */
+            ASTNode *ret = ast_chld(m, CLASS, VOID);
+            char *rtype = ast_n2tp(ret);
+
+            char *tmp = mprintf("%s  %s: method = %s\n", buffer, mname, rtype);
+            free(buffer);
+            buffer = tmp;
+
+            ASTNode *args_node = ast_chld(m, ARGS, 0);
+            if (args_node) {
+                char *args = generate_arg_source(args_node);
+                if (args && args[0]) {
+                    tmp = mprintf("%s  arg %s\n", buffer, args);
+                    free(buffer);
+                    buffer = tmp;
+                }
+                if (args) free(args);
+            }
+            free(mname);
+            free(rtype);
+        }
+    }
+
+    free(ns);
+    free(fq);
+    return buffer;
+}
+
+static walker_result class_signature_walker(walker_direction direction,
+                                            ASTNode* node,
+                                            void *pl) {
+    /* Walk entire imported AST and register exposed classes in the class tree */
+    if (direction == out && node->node_type == CLASS_DEF) {
+        class_import_payload *p = (class_import_payload*)pl;
+        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->exposed) {
+            char *fqname = sym_frnm(node->symbolNode->symbol);
+            if (fqname) {
+                char *stub_source = generate_class_stub_source(node);
+                if (stub_source) {
+                    Context *stub_ctx = parseRexx(p->parent_context, p->import_context->location, p->import_context->file_name,
+                                                  LEVELB, p->parent_context->debug_mode, stub_source, strlen(stub_source));
+                    if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
+                        if (stub_ctx->ast->child) stub_ctx->ast->child->node_type = IMPORTED_FILE;
+                        rximpcl_f(p->parent_context, p->import_context->file_name, fqname, stub_ctx);
+                    } else {
+                        if (stub_ctx) fre_cntx(stub_ctx);
+                        else free(stub_source);
+                    }
+                }
+                free(fqname);
+            }
+        }
+    }
+    return result_normal;
 }
 
 #pragma clang diagnostic push
@@ -319,6 +708,66 @@ static char* get_const_string(void* constpool, size_t ix) {
     return result;
 }
 
+/* Simple aggregator for class stubs extracted from metadata */
+typedef struct class_meta_agg {
+    char *fq;        /* fully-qualified class name: namespace.class */
+    char *ns;        /* namespace */
+    char *name;      /* short class name */
+    char *methods;   /* accumulated method/factory signature lines */
+    struct class_meta_agg *next;
+} class_meta_agg;
+
+static class_meta_agg* agg_find_or_add(class_meta_agg **head, const char *fq) {
+    class_meta_agg *it = *head;
+    while (it) {
+        if (strcmp(it->fq, fq) == 0) return it;
+        it = it->next;
+    }
+    /* Create */
+    class_meta_agg *n = calloc(1, sizeof(class_meta_agg));
+    n->fq = strdup(fq);
+    /* Split namespace and name by last '.' */
+    const char *dot = strrchr(fq, '.');
+    if (dot) {
+        size_t nslen = (size_t)(dot - fq);
+        n->ns = malloc(nslen + 1);
+        memcpy(n->ns, fq, nslen);
+        n->ns[nslen] = 0;
+        n->name = strdup(dot + 1);
+    } else {
+        n->ns = strdup("");
+        n->name = strdup(fq);
+    }
+    n->methods = 0;
+    n->next = *head;
+    *head = n;
+    return n;
+}
+
+static void agg_append_line(class_meta_agg *agg, const char *line) {
+    if (!line || !*line) return;
+    if (!agg->methods) {
+        agg->methods = strdup(line);
+    } else {
+        char *tmp = mprintf("%s%s", agg->methods, line);
+        free(agg->methods);
+        agg->methods = tmp;
+    }
+}
+
+static void agg_free_all(class_meta_agg *head) {
+    class_meta_agg *n = head;
+    while (n) {
+        class_meta_agg *nx = n->next;
+        if (n->fq) free(n->fq);
+        if (n->ns) free(n->ns);
+        if (n->name) free(n->name);
+        if (n->methods) free(n->methods);
+        free(n);
+        n = nx;
+    }
+}
+
 /* Get the global variable type by reading metadata */
 /* name is null terminated fqname of the variable */
 /* returns found meta_reg_constant entry - or 0 if not found */
@@ -361,12 +810,15 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
     char* args = 0;
     char* inliner = 0;
 
+    /* Aggregator for class metadata to synthesize class stubs */
+    class_meta_agg *class_aggs = 0;
+
     /* Loop through all the constant entries */
     i = 0;
     while (i < constant_size) {
         entry = (chameleon_constant *) (constant + i);
 
-        /* A function definition */
+        /* A function/method definition */
         if (entry->type == META_FUNC) {
             meta_func_constant *mentry = (meta_func_constant *) entry;
 
@@ -383,7 +835,55 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                     args = get_const_string(constant, mentry->args);
                     inliner = get_const_string(constant, mentry->inliner);
 
+                    /* Always register as importable function (methods too) */
                     rximpf_f(context, full_file_name, fqname, option, type, args, inliner, 0);
+
+                    /* If this looks like a class method (fqname contains namespace.class.method) then
+                     * accumulate a signature line for later class stub synthesis */
+                    if (fqname) {
+                        const char *last_dot = strrchr(fqname, '.');
+                        if (last_dot) {
+                            /* Ensure there is at least another dot before last to separate namespace and class */
+                            char *class_fq = 0;
+                            size_t class_len = (size_t)(last_dot - fqname);
+                            if (memchr(fqname, '.', class_len) != 0) {
+                                class_fq = malloc(class_len + 1);
+                                memcpy(class_fq, fqname, class_len);
+                                class_fq[class_len] = 0;
+                                class_meta_agg *agg = agg_find_or_add(&class_aggs, class_fq);
+
+                                /* method name is after last dot */
+                                const char *mname = last_dot + 1;
+                                if (strcmp(mname, "§factory") == 0) {
+                                    /* Factory: no return type in stub, only optional args */
+                                    if (args && *args) {
+                                        char *ln = mprintf("  *: factory\n  arg %s\n", args);
+                                        agg_append_line(agg, ln);
+                                        free(ln);
+                                    } else {
+                                        agg_append_line(agg, "  *: factory\n");
+                                    }
+                                } else {
+                                    /* Normal method with return type */
+                                    if (type && *type) {
+                                        char *ln = mprintf("  %s: method = %s\n", mname, type);
+                                        agg_append_line(agg, ln);
+                                        free(ln);
+                                    } else {
+                                        char *ln = mprintf("  %s: method\n", mname);
+                                        agg_append_line(agg, ln);
+                                        free(ln);
+                                    }
+                                    if (args && *args) {
+                                        char *ln2 = mprintf("  arg %s\n", args);
+                                        agg_append_line(agg, ln2);
+                                        free(ln2);
+                                    }
+                                }
+                                free(class_fq);
+                            }
+                        }
+                    }
 
                     if (option) {
                         free(option);
@@ -402,6 +902,15 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                         inliner = 0;
                     }
                 }
+            }
+        }
+        else if (entry->type == META_CLASS) {
+            /* Record class presence so that a stub is synthesized even if it has no methods */
+            meta_class_constant *mentry = (meta_class_constant *) entry;
+            char *cls_sym = get_const_string(constant, mentry->symbol);
+            if (cls_sym) {
+                agg_find_or_add(&class_aggs, cls_sym);
+                free(cls_sym);
             }
         }
 
@@ -427,6 +936,27 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
         }
 
         i += entry->size_in_pool;
+    }
+
+    /* Synthesize and register class stubs from aggregated metadata */
+    if (class_aggs) {
+        class_meta_agg *a = class_aggs;
+        while (a) {
+            if (a->methods && *a->methods) {
+                const char *meth = a->methods;
+                char *stub_source = mprintf("options levelb\nnamespace %s\n%s: class\n%s", a->ns, a->name, meth);
+                Context *stub_ctx = parseRexx(context, context->location, full_file_name, LEVELB, context->debug_mode, stub_source, strlen(stub_source));
+                if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
+                    if (stub_ctx->ast->child) stub_ctx->ast->child->node_type = IMPORTED_FILE;
+                    rximpcl_f(context, full_file_name, a->fq, stub_ctx);
+                } else {
+                    if (stub_ctx) fre_cntx(stub_ctx);
+                    else free(stub_source);
+                }
+            }
+            a = a->next;
+        }
+        agg_free_all(class_aggs);
     }
 }
 
@@ -553,7 +1083,7 @@ static void parseRxasFileForFunctions(Context *context, char* file_name, char* l
     memset(&scanner, 0, sizeof(Assembler_Context));
 
     /* scanner context parameter */
-    scanner.debug_mode = context->debug_mode;
+    scanner.debug_mode = 0;
     scanner.quiet = 1;
     scanner.traceFile = 0;
     scanner.optimise = 0;
@@ -611,6 +1141,7 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
                 if (file_module_section) free_module(file_module_section);
                 if (!modules_processed) {
                     if (context->debug_mode >= 2) printf("Importing Procedures - Empty file\n");
+                    fclose(fp);
                     return;
                 }
                 break;
@@ -618,6 +1149,7 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
             default: /* error */
                 if (file_module_section) free_module(file_module_section);
                 if (context->debug_mode >= 2) printf("Importing Procedures - Error reading file\n");
+                fclose(fp);
                 return;
         }
     }
@@ -703,7 +1235,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     for (i = 0; i < parent_context->master_context->loading_files_count; i++) {
         if (strcmp(parent_context->master_context->loading_files[i], file_name) == 0) {
             if (parent_context->debug_mode >= 2) printf("Importing Procedures - File %s already being loaded - skipping to avoid recursion\n", file_name);
-            return;
+            goto finish;
         }
     }
 
@@ -727,6 +1259,14 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
 #endif
 
     ast_wlkr(context->ast, procedure_signature_walker, context);
+
+    /* Extract Exposed Classes (signatures only) and register in the on-demand registry via a full AST walk */
+    {
+        class_import_payload pl;
+        pl.parent_context = parent_context;
+        pl.import_context = context;
+        ast_wlkr(context->ast, class_signature_walker, &pl);
+    }
 
     /* Extract Global Variables */
     /* Returns all the symbols in the scope of the PROGRAM_FILE node */
@@ -829,7 +1369,7 @@ static Context *parseRexx(Context* parent_context, char *location, char* file_na
 static int load_another_file(Context *context) {
     size_t f;
     Context *master_context;
-    
+
     if (!context) return 0;
     master_context = context->master_context;
     if (!master_context) return 0;
@@ -841,12 +1381,22 @@ static int load_another_file(Context *context) {
         return 0;
     }
 
+    if (context->debug_mode >= 2) {
+        fprintf(stderr, "Importable file list state (context file: %s):\n", context->file_name);
+        for (f = 0; master_context->importable_file_list[f]; f++) {
+            fprintf(stderr, " - file %zu: %s (imported: %d)\n", f, master_context->importable_file_list[f]->name, master_context->importable_file_list[f]->imported);
+        }
+    }
+
     for (f = 0; master_context->importable_file_list[f]; f++) {
         /* Already imported? */
         if (!master_context->importable_file_list[f]->imported) {
             master_context->importable_file_list[f]->imported = 1;
 
             /* Import File */
+            if (context->debug_mode >= 2) fprintf(stderr, "Importing Procedure/Classes - Loading file %s from %s\n",
+                                                  master_context->importable_file_list[f]->name,
+                                                  master_context->importable_file_list[f]->location);
             switch (master_context->importable_file_list[f]->type) {
                 case REXX_FILE:
                     parseRexxFileForFunctions(context,
@@ -889,6 +1439,7 @@ static int load_another_file(Context *context) {
         return 1;
     }
 
+    if (context->debug_mode >= 2) fprintf(stderr, "Importing Procedure/Classes - No more files to load\n");
     return 0; /* No file was loaded */
 }
 
@@ -905,6 +1456,71 @@ static ValueType type_from_string(char* type) {
     return TP_OBJECT;
 }
 
+/* Try and import an external class - return its symbol if successful */
+Symbol *sym_imcls(Context *context, ASTNode *node) {
+    struct imported_class *found_cls = 0;
+    Symbol *found_symbol = 0;
+    char *name;
+
+    /* Make a null terminated string */
+    if (node->node_string[0] == '.') {
+        name = (char*)malloc(node->node_string_length);
+        memcpy(name, node->node_string + 1, node->node_string_length - 1);
+        name[node->node_string_length - 1] = 0;
+    } else {
+        name = (char*)malloc(node->node_string_length + 1);
+        memcpy(name, node->node_string, node->node_string_length);
+        name[node->node_string_length] = 0;
+    }
+
+    /* Lowercase symbol name */
+#ifdef NUTF8
+    char *c;
+    for (c = name; *c; ++c) *c = (char)tolower(*c);
+#else
+    utf8lwr(name);
+#endif
+
+    /* Check if the class is already in the master AST */
+    found_symbol = sym_rvfn(context->ast, name);
+    if (found_symbol && found_symbol->symbol_type == CLASS_SYMBOL && found_symbol->exposed) {
+        free(name);
+        return found_symbol;
+    }
+
+    if (context->debug_mode >= 2) fprintf(stderr, "Importing Class for file %s Looking for Class %s\n", context->file_name, name);
+
+    /* Process all the unread files */
+    do {
+        /* Check if the class has been loaded */
+        if (src_fqcl(context, name, &found_cls)) {
+            if (context->debug_mode >= 2)
+                fprintf(stderr, "Importing Classes - Found Class %s in file %s\n", found_cls->fqname, found_cls->file_name);
+            break;
+        }
+    } while (load_another_file(context));
+
+    if (context->debug_mode >= 2) fprintf(stderr, "Finished Importing files needed for file %s when Looking for Class %s\n", context->file_name, name);
+
+    if (found_cls) {
+        ASTNode *new_stub = add_dast(context->ast, found_cls->context->ast->child);
+        context->changed = 1;
+
+        /* Build symbols for the new stub immediately so it can be resolved */
+        Scope *old_scope = context->current_scope;
+        context->current_scope = context->ast->scope;
+        ast_wlkr(new_stub, build_symbols_walker, context);
+        context->current_scope = old_scope;
+
+        /* Resolution of the FQN in the main AST should now work */
+        found_symbol = sym_rfqn(context->ast, found_cls->fqname);
+        if (found_symbol) found_symbol->exposed = 1;
+    }
+
+    free(name);
+    return found_symbol;
+}
+
 /* Try and import an external function - return its symbol if successful */
 Symbol *sym_imfn(Context *context, ASTNode *node) {
     Symbol *symbol;
@@ -918,10 +1534,18 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
     ValueType tp;
     char error = 0;
     char* defining_file = context->file_name;
+    char *name;
 
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
+    /* Make a null terminated string */
+    if (node->node_string[0] == '.') {
+        name = (char*)malloc(node->node_string_length);
+        memcpy(name, node->node_string + 1, node->node_string_length - 1);
+        name[node->node_string_length - 1] = 0;
+    } else {
+        name = (char*)malloc(node->node_string_length + 1);
+        memcpy(name, node->node_string, node->node_string_length);
+        name[node->node_string_length] = 0;
+    }
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -930,6 +1554,13 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
 #else
     utf8lwr(name);
 #endif
+
+    /* Check if the function is already in the master AST */
+    found_symbol = sym_rvfn(context->ast, name);
+    if (found_symbol && found_symbol->symbol_type == FUNCTION_SYMBOL && found_symbol->exposed) {
+        free(name);
+        return found_symbol;
+    }
 
     if (context->debug_mode >= 2) printf("Importing Procedures for file %s Looking for Procedure %s\n", defining_file, name);
 
@@ -1223,7 +1854,7 @@ static importable_file* importable_file_f(char* name, file_type type, char *loca
 }
 
 /* Get a list of files if a type in a directory (can be null), skipping skip_name (can be null) */
-static void list_files_in_dir(char *directory, file_type type, char* skip_name, importable_file ***list, size_t *number) {
+static void list_files_in_dir(char *directory, file_type type, char* skip_name, importable_file ***list, size_t *number, int debug_mode) {
 
     void *dir_ptr;
     char* name;
@@ -1250,6 +1881,7 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
     name = dirfstfl(directory,  file_prefix, type_name, &dir_ptr);
     if (name) {
         if (!skip_name || strcmp(name, skip_name) != 0 ) { // Skip if the same name as the file
+            if (debug_mode >= 2) fprintf(stderr, "Found importable %s file: %s in %s\n", type_name, name, directory);
             file = importable_file_f(name, type, directory);
             add_file_to_list(file, number, list);
         }
@@ -1257,6 +1889,7 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
             name = dirnxtfl(&dir_ptr);
             if (name) {
                 if (!skip_name || strcmp(name, skip_name) != 0 ) { // Skip if the same name as the file
+                    if (debug_mode >= 2) fprintf(stderr, "Found importable %s file: %s in %s\n", type_name, name, directory);
                     file = importable_file_f(name, type, directory);
                     add_file_to_list(file, number, list);
                 }
@@ -1278,51 +1911,55 @@ importable_file **rxfl_lst(Context *context) {
     list[0] = 0;
     exe_dir = exepath();
 
+    if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files in current location: %s\n", context->location ? context->location : ".");
     /* Read REXX files in the current directory */
-    list_files_in_dir(context->location, REXX_FILE, context->file_name, &list, &number);
+    list_files_in_dir(context->location, REXX_FILE, context->file_name, &list, &number, context->debug_mode);
 
     /* Read RXAS files in the current directory */
-    list_files_in_dir(context->location, RXAS_FILE, 0, &list, &number);
+    list_files_in_dir(context->location, RXAS_FILE, 0, &list, &number, context->debug_mode);
 
     /* Read RXBIN files in the current directory */
-    list_files_in_dir(context->location, RXBIN_FILE, 0, &list, &number);
+    list_files_in_dir(context->location, RXBIN_FILE, 0, &list, &number, context->debug_mode);
 
     /* Read in native plugins  in the current directory */
-    list_files_in_dir(context->location, NATIVE_FILE, 0, &list, &number);
+    list_files_in_dir(context->location, NATIVE_FILE, 0, &list, &number, context->debug_mode);
 
     /* Look in the imported location */
     if (context->import_locations) {
         for (d = 0; context->import_locations[d]; d++) {
+            if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files in: %s\n", context->import_locations[d]);
             /* Read in REXX files in the directory */
-            list_files_in_dir(context->import_locations[d], REXX_FILE, 0, &list, &number);
+            list_files_in_dir(context->import_locations[d], REXX_FILE, 0, &list, &number, context->debug_mode);
 
             /* Read in RXAS files in the directory */
-            list_files_in_dir(context->import_locations[d], RXAS_FILE, 0, &list, &number);
+            list_files_in_dir(context->import_locations[d], RXAS_FILE, 0, &list, &number, context->debug_mode);
 
             /* Read in RXBIN files in the directory */
-            list_files_in_dir(context->import_locations[d], RXBIN_FILE, 0, &list, &number);
+            list_files_in_dir(context->import_locations[d], RXBIN_FILE, 0, &list, &number, context->debug_mode);
 
             /* Read in native plugins in the directory */
-            list_files_in_dir(context->import_locations[d], NATIVE_FILE, 0, &list, &number);
+            list_files_in_dir(context->import_locations[d], NATIVE_FILE, 0, &list, &number, context->debug_mode);
         }
     }
 
     if (exe_dir) {
+        if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files in compiler location: %s\n", exe_dir);
         /* Read in REXX files in the directory holding the compiler */
-        list_files_in_dir(exe_dir, REXX_FILE, 0, &list, &number);
+        list_files_in_dir(exe_dir, REXX_FILE, 0, &list, &number, context->debug_mode);
 
         /* Read in RXAS files in the directory holding the compiler */
-        list_files_in_dir(exe_dir, RXAS_FILE, 0, &list, &number);
+        list_files_in_dir(exe_dir, RXAS_FILE, 0, &list, &number, context->debug_mode);
 
         /* Read in RXBIN files in the directory holding the compiler */
-        list_files_in_dir(exe_dir, RXBIN_FILE, 0, &list, &number);
+        list_files_in_dir(exe_dir, RXBIN_FILE, 0, &list, &number, context->debug_mode);
 
         /* Read in native plugins in the directory holding the compiler */
-        list_files_in_dir(exe_dir, NATIVE_FILE, 0, &list, &number);
+        list_files_in_dir(exe_dir, NATIVE_FILE, 0, &list, &number, context->debug_mode);
 
         free(exe_dir);
     }
 
+    if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files finished. Found %zu files.\n", number);
     return list;
 }
 
@@ -1334,4 +1971,14 @@ void free_static_linked_functions()
         free(static_linked_functions);
         static_linked_functions = next;
     }
+}
+
+/* Public API: eagerly scan importable files to populate functions and register classes */
+int rxcp_scan_imports(Context *context)
+{
+    int loaded = 0;
+    if (!context) return 0;
+    if (context->debug_mode >= 2) fprintf(stderr, "Scanning all imports for file: %s\n", context->file_name);
+    while (load_another_file(context)) { /* keep loading until exhausted */ loaded = 1; }
+    return loaded;
 }

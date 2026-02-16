@@ -30,7 +30,19 @@ int rxasmble(Assembler_Context *scanner) {
 
     /* Opening and Assemble file */
     if (scanner->debug_mode) printf("Assembling %s\n", scanner->file_name);
-    if (rxasinfl(scanner,0)) return -1;
+
+    /* Determine if the provided file name already contains an extension */
+    int has_ext = 0;
+    if (scanner->file_name) {
+        char *base = strrchr(scanner->file_name, '/');
+#ifdef _WIN32
+        char *bsl = strrchr(scanner->file_name, '\\');
+        if (!base || (bsl && bsl > base)) base = bsl;
+#endif
+        const char *fname = base ? base + 1 : scanner->file_name;
+        if (strchr(fname, '.') != NULL) has_ext = 1;
+    }
+    if (rxasinfl(scanner, has_ext)) return -1;
 
     /* Parse & Process */
     rxaspars(scanner);
@@ -130,20 +142,48 @@ int rxasinfl(Assembler_Context *scanner, int file_name_includes_type_extension) 
     FILE *fp;
     size_t bytes;
 
+    /* Determine if the provided file name already contains an extension */
+    int has_ext = file_name_includes_type_extension;
+    if (!has_ext && scanner->file_name) {
+        char *base = strrchr(scanner->file_name, '/');
+#ifdef _WIN32
+        char *bsl = strrchr(scanner->file_name, '\\');
+        if (!base || (bsl && bsl > base)) base = bsl;
+#endif
+        const char *fname = base ? base + 1 : scanner->file_name;
+        if (strchr(fname, '.') != NULL) has_ext = 1;
+    }
+
     /* Open input file */
-    if (file_name_includes_type_extension) fp = openfile(scanner->file_name, "", scanner->location, "r");
-    else fp = openfile(scanner->file_name, "rxas", scanner->location, "r");
+    const char *type_in = has_ext ? "" : "rxas";
+    fp = openfile(scanner->file_name, (char*)type_in, scanner->location, "r");
     if (fp == NULL) {
-        if (!scanner->quiet) fprintf(stderr, "Can't open input file %s\n", scanner->file_name);
+        if (!scanner->quiet) {
+            /* Build the exact path we tried to open for clearer diagnostics */
+            size_t len = (scanner->location ? strlen(scanner->location) + 1 : 0)
+                       + strlen(scanner->file_name)
+                       + (type_in[0] ? (1 + strlen(type_in)) : 0) + 1;
+            char *full_name = (char*)malloc(len);
+            if (type_in[0]) {
+                if (scanner->location) snprintf(full_name, len, "%s/%s.%s", scanner->location, scanner->file_name, type_in);
+                else snprintf(full_name, len, "%s.%s", scanner->file_name, type_in);
+            }
+            else {
+                if (scanner->location) snprintf(full_name, len, "%s/%s", scanner->location, scanner->file_name);
+                else snprintf(full_name, len, "%s", scanner->file_name);
+            }
+            fprintf(stderr, "Can't open input file %s\n", full_name);
+            free(full_name);
+        }
         return -1;
     }
 
     scanner->buff = file2buf(fp, &bytes);
+    fclose(fp);
     if (scanner->buff == NULL) {
         if (!scanner->quiet) fprintf(stderr, "Can't read input file %s\n", scanner->file_name);
         return -1;
     }
-    fclose(fp);
     /* Pointer to the end of the buffer */
     scanner->buff_end = (char*) (((char*)scanner->buff) + bytes);
 
@@ -161,7 +201,15 @@ int rxaspars(Assembler_Context *scanner) {
     /* Parse & Process */
     while((token_type = rx_scan(scanner, scanner->buff_end))) {
         // Skip Scanner Errors
-        if (token_type < 0) continue;
+        if (token_type < 0) {
+            rxaserrf(scanner, scanner->line, 0, 1, "Scanner Error");
+            continue;
+        }
+        if (token_type == ERROR) {
+            rxaserrf(scanner, scanner->line, 0, 1, "Illegal Character");
+            continue;
+        }
+        if (scanner->debug_mode) printf("DEBUG: Token %d (%s) at line %zu\n", token_type, rxas_tpn(token_type), (size_t)scanner->line);
         // EOS Special Processing
         if(token_type == EOS) {
             // Send a NEWLINE
@@ -205,9 +253,34 @@ int rxasoutf(Assembler_Context *scanner) {
 
         if (scanner->debug_mode) printf("Writing to %s\n", scanner->output_file_name);
 
-        outFile = openfile(scanner->output_file_name, "rxbin", scanner->location, "wb");
+        /* Determine if output file name already has an extension */
+        int out_has_ext = 0;
+        if (scanner->output_file_name) {
+            char *base = strrchr(scanner->output_file_name, '/');
+#ifdef _WIN32
+            char *bsl = strrchr(scanner->output_file_name, '\\');
+            if (!base || (bsl && bsl > base)) base = bsl;
+#endif
+            const char *fname = base ? base + 1 : scanner->output_file_name;
+            if (strchr(fname, '.') != NULL) out_has_ext = 1;
+        }
+        const char *type_out = out_has_ext ? "" : "rxbin";
+        outFile = openfile(scanner->output_file_name, (char*)type_out, scanner->location, "wb");
         if (outFile == NULL) {
-            fprintf(stderr, "Can't open output file: %s\n", scanner->output_file_name);
+            /* Best effort to show the full path attempted */
+            size_t len = (scanner->location ? strlen(scanner->location) + 1 : 0)
+                       + strlen(scanner->output_file_name)
+                       + (type_out[0] ? (1 + strlen(type_out)) : 0) + 1;
+            char *full_name = (char*)malloc(len);
+            if (type_out[0]) {
+                if (scanner->location) snprintf(full_name, len, "%s/%s.%s", scanner->location, scanner->output_file_name, type_out);
+                else snprintf(full_name, len, "%s.%s", scanner->output_file_name, type_out);
+            } else {
+                if (scanner->location) snprintf(full_name, len, "%s/%s", scanner->location, scanner->output_file_name);
+                else snprintf(full_name, len, "%s", scanner->output_file_name);
+            }
+            fprintf(stderr, "Can't open output file: %s\n", full_name);
+            free(full_name);
             return -1;
         }
 

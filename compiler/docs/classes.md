@@ -173,7 +173,7 @@ stem: class
 ### Phase 1: Physical Interop (COMPLETED)
 
 **Goal:** Enable Compiler Plugins (Tokens, AST Nodes).
-**Status:** Integrated via the Bridge Plugin and `plugin_dispatch_walker`.
+**Status:** Integrated via the Exit Bridge and `exit_dispatch_walker`.
 **Scope:**
 
 1. `CLASS`, `FACTORY`, `METHOD` keywords.

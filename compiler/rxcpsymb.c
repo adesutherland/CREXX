@@ -31,7 +31,6 @@
 #include <ctype.h>
 #include "platform.h"
 #include "rxcpmain.h"
-#include "rxcp_poc_plug.h"
 #include "../avl_tree/avl_tree.h"
 #include "rxcpdary.h"
 
@@ -102,7 +101,7 @@ Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol) {
         scope->name = malloc(strlen(name) + 1);
         strcpy(scope->name, name);
         /* Update Symbol */
-        symbol->defines_scope = scope;
+        if (!symbol->defines_scope) symbol->defines_scope = scope;
     }
     else scope->name = 0;
     if (node) node->scope = scope;
@@ -386,8 +385,12 @@ char* sym_2tp(Symbol *symbol) {
     char *buffer = 0;
     char *array;
     char *result;
+    int free_buffer = 0;
 
-    if (symbol->value_class) buffer = symbol->value_class;
+    if (symbol->value_class) {
+        buffer = mprintf(".%s", symbol->value_class);
+        free_buffer = 1;
+    }
     else buffer = type_nm(symbol->type);
 
     array = ast_astr(symbol->value_dims, symbol->dim_base, symbol->dim_elements);
@@ -397,6 +400,7 @@ char* sym_2tp(Symbol *symbol) {
     strcat(result, array);
 
     free(array);
+    if (free_buffer) free(buffer);
 
     return result;
 }
@@ -450,7 +454,6 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->is_ref_arg = 0;
     symbol->is_const_arg = 0;
     symbol->is_opt_arg = 0;
-    symbol->compiler_plugin = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -463,8 +466,9 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     /* Returns 1 on duplicate */
     if (add_symbol_to_tree((struct avl_tree_node **)&(scope->symbols_tree),
                            symbol)) {
+        Symbol *existing = src_symbol((struct avl_tree_node *)(scope->symbols_tree), symbol->name);
         free_sym(symbol);
-        return NULL;
+        return existing;
     }
 
     return symbol;
@@ -486,15 +490,13 @@ Symbol *sym_rvfn(ASTNode *root, char* name) {
 
     if (!root || !root->scope) return 0;
 
-    /* Process top layer - files */
+    /* Process top layer - files and imported namespaces */
     for (i = 0; i < scp_noch(root->scope); i++) {
         s = scp_chd(root->scope, i);
 
+        /* Search symbols directly under the file or namespace scope */
         result = src_symbol((struct avl_tree_node *)(s->symbols_tree), name);
-        if (result) {
-            return result;
-        }
-        /* TODO Process second level - Classes */
+        if (result) return result;
     }
     return 0;
 }
@@ -612,11 +614,18 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
 Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
     Symbol *result;
     char *c;
+    char *name;
 
     /* Make a null terminated string */
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
+    if (node->node_string[0] == '.') {
+        name = (char*)malloc(node->node_string_length);
+        memcpy(name, node->node_string + 1, node->node_string_length - 1);
+        name[node->node_string_length - 1] = 0;
+    } else {
+        name = (char*)malloc(node->node_string_length + 1);
+        memcpy(name, node->node_string, node->node_string_length);
+        name[node->node_string_length] = 0;
+    }
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -753,13 +762,13 @@ int sym_lord(Symbol *symbol) {
     return ord;
 }
 
-/* Returns the PROCEDURE ASTNode of a Symbol */
+/* Returns the PROCEDURE, METHOD or FACTORY ASTNode of a Symbol */
 ASTNode* sym_proc(Symbol *symbol) {
     size_t i;
     SymbolNode* sn;
     for (i=0; i < sym_nond(symbol); i++) {
         sn = sym_trnd(symbol, i);
-        if (sn->node->node_type == PROCEDURE) return sn->node;
+        if (sn->node->node_type == PROCEDURE || sn->node->node_type == METHOD || sn->node->node_type == FACTORY) return sn->node;
     }
     return 0;
 }
@@ -778,7 +787,12 @@ int symislnk(ASTNode *node, Symbol *symbol) {
 /* Connect a ASTNode to a Symbol */
 void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
               unsigned int writeAccess) {
-    SymbolNode *connector = malloc(sizeof(SymbolNode));
+    SymbolNode *connector;
+
+    /* Check if already added */
+    if (node->symbolNode && node->symbolNode->symbol == symbol) return;
+
+    connector = malloc(sizeof(SymbolNode));
     connector->symbol = symbol;
     connector->node = node;
     connector->readUsage = readAccess;
@@ -959,48 +973,3 @@ char* ast_frnm(ASTNode *node) {
     return result;
 }
 
-/* PoC Plugins */
-void sym_init(Context *context) {
-/*
-    ASTNode *file_node;
-    Scope *scope;
-    Symbol *s;
-
-    if (!context->ast || !context->ast->child) return;
-*/
-    /* Target the first file scope */
-/*
-    file_node = context->ast->child;
-    if (!file_node) {
-        printf("DEBUG: sym_init - No file node\n");
-        return;
-    }
-    scope = file_node->scope;
-
-    if (!scope) {
-        printf("DEBUG: sym_init - No scope for file node\n");
-        return;
-    }
-*/
-    /* Register POCABS */
-/*
-    s = sym_fn(scope, "pocabs", 6);
-    if (s) {
-        s->symbol_type = FUNCTION_SYMBOL;
-        s->compiler_plugin = plugin_poc_math;
-        s->fixed_args = 1;
-        s->has_vargs = 0;
-    } else {
-    }
-*/
-    /* Register POCSQUARE */
-/*
-    s = sym_fn(scope, "pocsquare", 9);
-    if (s) {
-        s->symbol_type = FUNCTION_SYMBOL;
-        s->compiler_plugin = plugin_poc_math;
-        s->fixed_args = 1;
-        s->has_vargs = 0;
-    }
-*/
-}

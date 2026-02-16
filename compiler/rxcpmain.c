@@ -32,7 +32,6 @@
 #include <string.h>
 #include "platform.h"
 #include "rxcpmain.h"
-#include "rxcp_plugin.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
 #include "rxvmplugin_framework.h"
@@ -127,6 +126,10 @@ void cntx_buf(Context *context, char* buff_start, size_t bytes) {
         fre_ftre(context);
         context->importable_function_tree  = 0;
     }
+    if (context->importable_class_tree) {
+        fre_ctre(context);
+        context->importable_class_tree  = 0;
+    }
 
     /* Reset importable_file_list */
     if (context->importable_file_list) {
@@ -152,6 +155,10 @@ void fre_cntx(Context *context)  {
     fre_ftre(context);
     context->importable_function_tree  = 0;
 
+    /* Deallocate importable_class_tree */
+    if (context->importable_class_tree) fre_ctre(context);
+    context->importable_class_tree  = 0;
+
     /* Deallocate importable_file_list */
     if (context->importable_file_list) {
         rxfl_fre(context->importable_file_list);
@@ -161,6 +168,12 @@ void fre_cntx(Context *context)  {
     /* Deallocate Tokens */
     free_tok(context);
 
+    /* Deallocate VM Bridge */
+    if (context->rxvml_bridge) {
+        rxvml_destroy((rxvml_context*)context->rxvml_bridge);
+        context->rxvml_bridge = 0;
+    }
+
     if (context->master_context && context == context->master_context) {
         if (context->loading_files) {
             for (i = 0; i < context->loading_files_count; i++) free(context->loading_files[i]);
@@ -169,6 +182,11 @@ void fre_cntx(Context *context)  {
     }
 
     free(context->buff_start);
+
+    if (context->extra_buffers) {
+        for (i = 0; i < context->extra_buffers_count; i++) free(context->extra_buffers[i]);
+        free(context->extra_buffers);
+    }
 
     if (context->traceFile) fclose(context->traceFile);
 
@@ -302,6 +320,13 @@ int rxcmain(int argc, char *argv[]) {
             context->import_locations[num_import_locations] = import_locations + ix + 1;
         }
         context->import_locations[++num_import_locations] = 0;
+        if (debug_mode >= 2) {
+            // for debugging print the import locations
+            int di;
+            for (di = 0; di < num_import_locations; di++) {
+                fprintf(stderr, "Import location %d: %s\n", di, context->import_locations[di]);
+            }
+        }
     }
 
     /* Open input file */
@@ -345,8 +370,8 @@ int rxcmain(int argc, char *argv[]) {
     context->debug_mode = debug_mode;
     context->stop_after_parse = stop_after_parse;
     context->optimise = do_optimise;
-    if (file_directory) context->location = file_directory;
-    else context->location = location;
+    if (file_directory) context->location = strdup(file_directory);
+    else context->location = location ? strdup(location) : 0;
 
     /* Load VM Plugins */
     // Manually initialize the plugins that are statically linked with manual initializers (hardcoded)
@@ -483,7 +508,8 @@ int rxcmain(int argc, char *argv[]) {
     if (outFile) fclose(outFile);
 
     /* Free context */
-    free(context->file_name);
+    if (context->file_name) free(context->file_name);
+    if (context->location) free(context->location);
     fre_cntx(context);
 
     if (file_directory) free(file_directory);

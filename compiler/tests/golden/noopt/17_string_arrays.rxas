@@ -1,0 +1,42 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : 17_string_arrays.rexx
+ * BUILT                  : 2026-02-13 21:04:20
+ */
+
+.srcfile="17_string_arrays.rexx"
+.globals=0
+
+main() .locals=3
+   .meta "17_string_arrays.main"="b" ".int" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "17_string_arrays.main.ary"="b" ".string[5]" r0
+   .src 3:1="ary = .string[5"
+   null r0
+   .src 4:1="ary[1] = \"Hello\""
+   setattrs r0,5
+   linkattr1 r1,r0,1
+   load r1,"Hello"
+   unlink r1
+   .src 5:1="ary[2] = \"World\""
+   setattrs r0,5
+   linkattr1 r1,r0,2
+   load r1,"World"
+   unlink r1
+   .src 6:1="say ary[1] || \" \" || ary[2"
+   setattrs r0,5
+   linkattr1 r1,r0,1
+   concat r2,r1," "
+   unlink r1
+   setattrs r0,5
+   linkattr1 r1,r0,2
+   concat r2,r2,r1
+   unlink r1
+   say r2
+   .src 7:1="return 0"
+   ret 0
+   .meta "17_string_arrays.main.ary"

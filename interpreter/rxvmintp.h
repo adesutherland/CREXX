@@ -7,7 +7,7 @@
 #include "rxvalue.h"
 #include "rxsignal.h"
 
-#define rxversion "crexx-DEV2507"
+#define rxversion "crexx-dev-260110"
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
 
@@ -306,6 +306,8 @@ void arr2redr(value* redirect_reg, value* string_reg);
 void nullredr(value* redirect_reg);
 
 /* EXIT Function Support */
+void rxvm_setsayexit(say_exit_func sayExitFunc);
+void rxvm_resetsayexit();
 void rxvm_mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
 
 /**

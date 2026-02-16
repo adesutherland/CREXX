@@ -59,6 +59,7 @@ struct Context {
     ASTNode* temp_node; /* Temporary node store to pass node between functions */
     Scope *current_scope;
     void* importable_function_tree;
+    void* importable_class_tree;
     char after_rewrite; /* To avoid duplicate processing / warnings after the compiler rewrites */
     char changed; /* Flag Used to see if a walker has made a change */
     /* Do we need to import _rxsysb */
@@ -82,14 +83,20 @@ struct Context {
     char comments_hash_specified;    /* 1 - hash/no hash specified - for checking inconsistent options   */
     /* Plugins */
     void *decimal_plugin; /* Pointer to the decimal plugin */
+    void *rxvml_bridge;   /* Pointer to the VM bridge */
     /* Optimiser Options */
     int optimise;
     int iterations;
     int in_factory;
+    char in_exit_bridge;
 
     /* Recursion Guard for Imports */
     char** loading_files;
     size_t loading_files_count;
+
+    /* Extra buffers to be freed with the context */
+    char** extra_buffers;
+    size_t extra_buffers_count;
 };
 
 #include "rxcp_emit.h"
@@ -108,6 +115,16 @@ struct imported_func {
     char is_variable; /* 0=function, 1=global variable */
     char *error_state; /* Pointer to a constant string with error code (or null). Not malloced/freed */
     struct imported_func *duplicate;
+};
+
+/*  Importable Classes */
+struct imported_class {
+    char *namespace;
+    char *file_name;
+    char *fqname;
+    char *name;
+    Context *context; /* parsed import context providing the AST */
+    ASTNode *class_node; /* pointer into import AST for signature extraction */
 };
 
 /*  Importable Files */
@@ -150,6 +167,8 @@ char* encdstrg(const char* string, size_t length);
 
 /* Try and import an external function - return its symbol if successful */
 Symbol *sym_imfn(Context *context, ASTNode *node);
+/* Try and import an external class - return its symbol if successful */
+Symbol *sym_imcls(Context *context, ASTNode *node);
 
 /* Set the type of a symbol from imported modules */
 void sym_imva(Context *context, Symbol *symbol);
@@ -195,6 +214,9 @@ imported_func *rximpf_f(Context*  context, char* file_name, char *fqname, char *
 
 /* Free Func Tree and functions */
 void fre_ftre(Context *context);
+
+/* Free Class Tree and classes */
+void fre_ctre(Context *context);
 
 /* Free an imported_func */
 void freimpfc(imported_func *func);
