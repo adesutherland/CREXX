@@ -2,25 +2,76 @@ options levelb
 namespace rxcp expose dumpexit
 
 dumpexit: class
+    _node_id = .int with register.1
+    _replacement = .string with register.2
+    _error_token = .int with register.3
+    _error_message = .string with register.4
+    _status = .string with register.5
+
     *: factory
-        return
+        arg nid = .int
+        _node_id = nid
+        _replacement = ""
+        _error_token = 0
+        _error_message = ""
+        _status = "EMPTY"
 
     process: method = .string
         arg tokens = .token[]
 
-        if tokens.0 < 1 then return ""
-        t = tokens.1
-
-        cmd = t.get_text()
-        if cmd \= "dump" then return ""
-
-        out_code = "options levelb; do; "
-        do i = 2 to tokens.0
-            t_text = tokens[i].get_text()
-            if t_text \= "" then do
-                out_code = out_code || "say '" || t_text || "=' || " || t_text || ";"
-            end
+        if tokens.0 < 1 then do
+            _status = "REJECT"
+            return _status
         end
-        out_code = out_code || " end;"
+        t1 = .token
+        t1 = tokens.1
 
-        return out_code
+        if t1.get_text() \= "dump" then do
+            _status = "REJECT"
+            return _status
+        end
+
+        SAY "DUMP PLUGIN - ACCEPTED"
+
+        /* Check tokens */
+        _status = "REPLACE"
+        do i = 2 to tokens.0
+            ti = .token
+            ti = tokens[i]
+            if ti.get_type() \= "IDENTIFIER" & ti.get_type() \= "STRING_LITERAL" then do
+                _status = "ERROR"
+                _error_token = i
+                _error_message = "Variable or String expected"
+                return _status
+            end
+            if ti.get_value_type() = "VOID" then _status = "PENDING"
+        end
+
+        SAY "DUMP PLUGIN - STATUS IS" _status
+
+        if _status = "REPLACE" then do
+            _replacement = "options levelb; do; say 'DUMP:'; "
+            do i = 2 to tokens.0
+                tj = .token
+                tj = tokens[i]
+                t_text = tj.get_text()
+                if t_text \= "" then do
+                    t_type = tj.get_value_type()
+                    _replacement = _replacement || "say '" || t_text || " (" || t_type || ") = ' || " || t_text || ";"
+                end
+            end
+            _replacement = _replacement || " end;"
+
+            SAY "DUMP PLUGIN - REPLACEMENT IS" get_replacement()
+        end
+
+        return _status
+
+    get_replacement: method = .string
+        return _replacement
+
+    get_error_token: method = .int
+        return _error_token
+
+    get_error_message: method = .string
+        return _error_message

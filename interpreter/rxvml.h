@@ -78,7 +78,8 @@ int rxvml_call_method(
     rxvml_value* obj,
     const char* class_name,
     const char* method_name,
-    rxvml_value* args,
+    size_t argc,
+    rxvml_value** args,
     rxvml_value** response_out);
 
 /* Say Exit */

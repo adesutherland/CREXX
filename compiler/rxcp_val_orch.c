@@ -441,10 +441,6 @@ void validate_ast(Context *context) {
         /* Validate Symbols */
         validate_symbols(context, context->ast->scope);
 
-        /* Exit Dispatch */
-        context->current_scope = 0;
-        ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
-
         /* Set Node Types */
         context->current_scope = 0;
         ast_wlkr(context->ast, set_node_types_walker, (void *) context);
@@ -462,6 +458,11 @@ void validate_ast(Context *context) {
         if (context->iterations == 1) context->after_rewrite = 1;
 
     } while (context->changed && context->iterations < 16);
+
+    if (context->debug_mode && context == context->master_context) {
+        rxcp_debug_header("FINAL_AST", -1);
+        rxcp_print_ast_recursive(context->ast, 0);
+    }
 
     /* Type Safety checks */
     context->current_scope = 0;

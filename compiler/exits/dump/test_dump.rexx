@@ -1,6 +1,7 @@
 options levelb
 import rxfnsb
-/* This test verifies the dump exit */
+
+main: procedure
 x = 100
 y = "Hello World"
 

@@ -242,7 +242,8 @@ int rxvml_call_method(
     rxvml_value* obj,
     const char* class_name,
     const char* method_name,
-    rxvml_value* args,
+    size_t argc,
+    rxvml_value** args,
     rxvml_value** response_out) {
 
     char full_method_name[1024];
@@ -259,10 +260,12 @@ int rxvml_call_method(
 
     /* Set up the external call context */
     ctx->vm.ext_proc = p;
-    ctx->vm.ext_argc = 2;
-    ctx->vm.ext_args = malloc(sizeof(value*) * 2);
+    ctx->vm.ext_argc = argc + 1;
+    ctx->vm.ext_args = malloc(sizeof(value*) * (argc + 1));
     ctx->vm.ext_args[0] = (value*)obj;
-    ctx->vm.ext_args[1] = (value*)args;
+    for (size_t i = 0; i < argc; i++) {
+        ctx->vm.ext_args[i + 1] = (value*)args[i];
+    }
 
     ctx->vm.ext_ret = value_f();
 
@@ -386,7 +389,7 @@ int rxvml_to_int(rxvml_context* ctx, const rxvml_value* v, rxinteger* out_v) {
 
 int rxvml_to_str(rxvml_context* ctx, const rxvml_value* v, const char** out_s, size_t* out_len) {
     value* val = (value*)v;
-    if (val && val->status.type_string) {
+    if (val && (val->status.type_string || val->string_value)) {
         null_terminate_string_buffer(val);
         if (out_s) *out_s = val->string_value;
         if (out_len) *out_len = val->string_length;
