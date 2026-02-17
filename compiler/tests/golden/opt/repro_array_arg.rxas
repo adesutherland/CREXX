@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : repro_array_arg.rexx
- * BUILT                  : 2026-02-17 20:31:49
+ * BUILT                  : 2026-02-17 21:20:19
  */
 
 .srcfile="repro_array_arg.rexx"
@@ -29,8 +29,8 @@ main() .locals=5
    linkattr1 r3,r1,1
    concat r2,"Before: [",r3
    unlink r3
-   concat r3,r2,"]"
-   say r3
+   concat r2,r2,"]"
+   say r2
    .src 8:1="c = upper(s.i)"
    .meta "repro_array_arg.main.c"="b" ".string" r0
    load r2,1
@@ -49,8 +49,8 @@ main() .locals=5
    linkattr1 r4,r1,1
    concat r3,"After:  [",r4
    unlink r4
-   concat r4,r3,"]"
-   say r4
+   concat r3,r3,"]"
+   say r3
    .src 12:0="if s.i \= \"first\""
    minattrs r1,1
    linkattr1 r4,r1,1

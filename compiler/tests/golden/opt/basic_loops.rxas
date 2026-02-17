@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : basic_loops.rexx
- * BUILT                  : 2026-02-17 12:43:51
+ * BUILT                  : 2026-02-17 21:20:29
  */
 
 .srcfile="basic_loops.rexx"
 .globals=0
 
-main() .locals=6
+main() .locals=9
    .meta "basic_loops.main"="b" ".void" main() "" ""
    setnumdgts 18
    setnumfuz 0
@@ -22,27 +22,27 @@ main() .locals=6
    .meta "basic_loops.main.i"="b" ".int" r1
    load r1,1
    .src 3:10="to 5"
-   load r2,5
+   load r4,5
 l7dostart:
    .src 3:10="to 5"
-   igt r3,r1,r2
-   brt l7doend,r3
+   igt r5,r1,r4
+   brt l7doend,r5
    .src 4:2="if i % 2 = 0"
-   imod r4,r1,2
-   ieq r4,r4,0
-   brf l27iffalse,r4
+   imod r6,r1,2
+   ieq r6,r6,0
+   brf l27iffalse,r6
    .src 4:16="then"
    .src 4:21="say i || \" is even\""
    itos r1
-   concat r5,r1," is even"
-   say r5
+   concat r7,r1," is even"
+   say r7
    br l27ifend
    .src 5:3="else"
 l27iffalse:
    .src 5:8="say i || \" is odd\""
    itos r1
-   concat r5,r1," is odd"
-   say r5
+   concat r8,r1," is odd"
+   say r8
 l27ifend:
    .src 6:3="count = count + 1"
    iadd r0,r0,1
@@ -53,19 +53,19 @@ l7doinc:
    br l7dostart
 l7doend:
    .src 9:1="j = 3"
-   .meta "basic_loops.main.j"="b" ".int" r5
-   load r5,3
+   .meta "basic_loops.main.j"="b" ".int" r2
+   load r2,3
    .src 10:1="do"
 l37dostart:
    .src 10:4="while j > 0"
-   igt r4,r5,0
-   brf l37doend,r4
+   igt r8,r2,0
+   brf l37doend,r8
    .src 11:3="say \"j=\" || j"
-   itos r5
-   concat r3,"j=",r5
-   say r3
+   itos r2
+   concat r7,"j=",r2
+   say r7
    .src 12:3="j = j - 1"
-   isub r5,r5,1
+   isub r2,r2,1
    .src 13:3="count = count + 1"
    iadd r0,r0,1
 l37doinc:
@@ -73,29 +73,29 @@ l37doinc:
    br l37dostart
 l37doend:
    .src 16:1="k = 1"
-   .meta "basic_loops.main.k"="b" ".int" r4
-   load r4,1
+   .meta "basic_loops.main.k"="b" ".int" r3
+   load r3,1
    .src 17:1="do"
 l61dostart:
    .src 18:3="say \"k=\" || k"
-   itos r4
-   concat r2,"k=",r4
-   say r2
+   itos r3
+   concat r7,"k=",r3
+   say r7
    .src 19:3="k = k + 1"
-   iadd r4,r4,1
+   iadd r3,r3,1
    .src 20:3="count = count + 1"
    iadd r0,r0,1
 l61doinc:
    .src 17:4="until k = 3"
-   ieq r3,r4,3
-   brt l61doend,r3
+   ieq r8,r3,3
+   brt l61doend,r8
    .src 21:1="end"
    br l61dostart
 l61doend:
    .src 22:1="say \"Total: \" || count"
    itos r0
-   concat r3,"Total: ",r0
-   say r3
+   concat r8,"Total: ",r0
+   say r8
    .src 23:1="return"
    ret
    .meta "basic_loops.main.count"

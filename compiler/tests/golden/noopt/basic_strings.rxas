@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : basic_strings.rexx
- * BUILT                  : 2026-02-17 12:43:56
+ * BUILT                  : 2026-02-17 21:20:34
  */
 
 .srcfile="basic_strings.rexx"
@@ -22,8 +22,8 @@ main() .locals=10
    load r1,"World"
    .src 5:1="c = a || \" \" || b"
    .meta "basic_strings.main.c"="b" ".string" r2
-   concat r3,r0," "
-   concat r2,r3,r1
+   concat r4,r0," "
+   concat r2,r4,r1
    .src 6:1="say c"
    say r2
    .src 8:1="d = a \" \" b"
@@ -43,7 +43,7 @@ main() .locals=10
    load r4,4
    load r6,1
    load r7,5
-   settp r2,0
+   settp r2,1
    swap r5,r2
    settp r7,1
    settp r8,2
@@ -53,8 +53,8 @@ main() .locals=10
    .src 13:1="say pos(\"World\", c)"
    load r6,3
    load r7,"World"
-   settp r7,2
-   settp r2,0
+   settp r7,3
+   settp r2,1
    swap r8,r2
    settp r9,0
    call r5,pos(),r6
@@ -71,14 +71,14 @@ main() .locals=10
 /* Imported Declaration from file: length@library.rxbin */
 
 length() .expose=rxfnsb.length
-   .meta "rxfnsb.length"="b" ".int" length() "expose string1=.string"
+   .meta "rxfnsb.length"="b" ".int" length() "expose string1=.string" ""
 
 /* Imported Declaration from file: substr@library.rxbin */
 
 substr() .expose=rxfnsb.substr
-   .meta "rxfnsb.substr"="b" ".string" substr() "string1=.string,start=.int,?len=.int,?pad=.string"
+   .meta "rxfnsb.substr"="b" ".string" substr() "string1=.string,start=.int,?len=.int,?pad=.string" ""
 
 /* Imported Declaration from file: pos@library.rxbin */
 
 pos() .expose=rxfnsb.pos
-   .meta "rxfnsb.pos"="b" ".int" pos() "needle=.string,haystack=.string,?start=.int"
+   .meta "rxfnsb.pos"="b" ".int" pos() "needle=.string,haystack=.string,?start=.int" ""

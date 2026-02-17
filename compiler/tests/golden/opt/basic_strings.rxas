@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : basic_strings.rexx
- * BUILT                  : 2026-02-17 12:43:57
+ * BUILT                  : 2026-02-17 21:20:38
  */
 
 .srcfile="basic_strings.rexx"
@@ -35,7 +35,7 @@ main() .locals=7
    load r1,4
    load r3,1
    load r4,5
-   settp r0,0
+   settp r0,1
    swap r2,r0
    settp r4,1
    settp r5,2
@@ -45,8 +45,8 @@ main() .locals=7
    .src 13:1="say pos(\"World\", c)"
    load r3,3
    load r4,"World"
-   settp r4,2
-   settp r0,0
+   settp r4,3
+   settp r0,1
    swap r5,r0
    settp r6,0
    call r2,pos(),r3
@@ -63,14 +63,14 @@ main() .locals=7
 /* Imported Declaration from file: length@library.rxbin */
 
 length() .expose=rxfnsb.length
-   .meta "rxfnsb.length"="b" ".int" length() "expose string1=.string"
+   .meta "rxfnsb.length"="b" ".int" length() "expose string1=.string" ""
 
 /* Imported Declaration from file: substr@library.rxbin */
 
 substr() .expose=rxfnsb.substr
-   .meta "rxfnsb.substr"="b" ".string" substr() "string1=.string,start=.int,?len=.int,?pad=.string"
+   .meta "rxfnsb.substr"="b" ".string" substr() "string1=.string,start=.int,?len=.int,?pad=.string" ""
 
 /* Imported Declaration from file: pos@library.rxbin */
 
 pos() .expose=rxfnsb.pos
-   .meta "rxfnsb.pos"="b" ".int" pos() "needle=.string,haystack=.string,?start=.int"
+   .meta "rxfnsb.pos"="b" ".int" pos() "needle=.string,haystack=.string,?start=.int" ""

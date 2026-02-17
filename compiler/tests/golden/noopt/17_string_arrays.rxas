@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 17_string_arrays.rexx
- * BUILT                  : 2026-02-13 21:04:20
+ * BUILT                  : 2026-02-17 21:18:36
  */
 
 .srcfile="17_string_arrays.rexx"
 .globals=0
 
-main() .locals=3
+main() .locals=4
    .meta "17_string_arrays.main"="b" ".int" main() "" ""
    setnumdgts 18
    setnumfuz 0
@@ -20,23 +20,25 @@ main() .locals=3
    .src 4:1="ary[1] = \"Hello\""
    setattrs r0,5
    linkattr1 r1,r0,1
-   load r1,"Hello"
+   load r2,"Hello"
+   scopy r1,r2
    unlink r1
    .src 5:1="ary[2] = \"World\""
    setattrs r0,5
-   linkattr1 r1,r0,2
+   linkattr1 r2,r0,2
    load r1,"World"
-   unlink r1
+   scopy r2,r1
+   unlink r2
    .src 6:1="say ary[1] || \" \" || ary[2"
    setattrs r0,5
-   linkattr1 r1,r0,1
-   concat r2,r1," "
-   unlink r1
+   linkattr1 r2,r0,1
+   concat r1,r2," "
+   unlink r2
    setattrs r0,5
-   linkattr1 r1,r0,2
-   concat r2,r2,r1
-   unlink r1
-   say r2
+   linkattr1 r3,r0,2
+   concat r1,r1,r3
+   unlink r3
+   say r1
    .src 7:1="return 0"
    ret 0
    .meta "17_string_arrays.main.ary"
