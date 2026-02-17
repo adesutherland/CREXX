@@ -27,14 +27,14 @@ macro(add_crexx_compiler_test NAME SOURCE_FILE)
              COMMAND crexx_test_driver
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/noopt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt.rxas
-             $<TARGET_FILE:rxc> ${COMPILER_NOOPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+             $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/lib/rxfnsb ${COMPILER_NOOPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
 
     # Test 2 (Opt)
     add_test(NAME ${NAME}_opt
              COMMAND crexx_test_driver
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/opt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt.rxas
-             $<TARGET_FILE:rxc> ${COMPILER_OPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+             $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/lib/rxfnsb ${COMPILER_OPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
 endmacro()
 
 # Macro to add a compiler failure test
@@ -104,6 +104,35 @@ add_crexx_parsing_test(16_classes rexx_src/16_classes.rexx)
 # Negative tests
 add_crexx_compiler_fail_test(err_01_type rexx_src/err_01_type.rexx err_01_type.txt)
 add_crexx_compiler_fail_test(err_02_syntax rexx_src/err_02_syntax.rexx err_02_syntax.txt)
+
+# Regression tests for rxpp issue
+add_crexx_compiler_test(repro_dotted_index repro_dotted_index.rexx)
+add_crexx_compiler_test(repro_expand_until repro_expand_until.rexx)
+add_crexx_compiler_test(repro_array_arg repro_array_arg.rexx)
+add_crexx_compiler_test(repro_opt_args repro_opt_args.rexx)
+add_crexx_compiler_test(basic_loops basic_loops.rexx)
+add_crexx_compiler_test(basic_strings basic_strings.rexx)
+add_crexx_compiler_test(basic_arrays basic_arrays.rexx)
+
+# Macro to add a run test
+macro(add_crexx_run_test NAME SOURCE_FILE)
+    add_test(NAME ${NAME}_run
+             COMMAND bash -c "$<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/lib/rxfnsb -o ${NAME}_run ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} && $<TARGET_FILE:rxas> -o ${NAME}_run.rxbin ${NAME}_run.rxas && $<TARGET_FILE:rxvm> ${CMAKE_BINARY_DIR}/lib/rxfnsb/library.rxbin ${NAME}_run.rxbin | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endmacro()
+
+add_crexx_run_test(repro_dotted_index repro_dotted_index.rexx)
+add_crexx_run_test(repro_expand_until repro_expand_until.rexx)
+add_crexx_run_test(repro_array_arg repro_array_arg.rexx)
+add_crexx_run_test(repro_opt_args repro_opt_args.rexx)
+add_crexx_run_test(basic_loops basic_loops.rexx)
+add_crexx_run_test(basic_strings basic_strings.rexx)
+add_crexx_run_test(basic_arrays basic_arrays.rexx)
+
+# RXPP smoke integration test (runs native rxpp on a tiny .rxpp)
+add_test(NAME rxpp_smoke_precomp
+         COMMAND bash -c "${CMAKE_BINARY_DIR}/bin/rxpp rxprecomp -I ${CMAKE_CURRENT_SOURCE_DIR}/rxpp_smoke.rxpp -o rxpp_smoke.out.rexx -m ${CMAKE_SOURCE_DIR}/lib/plugins/precomp/maclib.rexx && grep -q 'say \"Hello\"' rxpp_smoke.out.rexx && grep -q 'say 3\\*3' rxpp_smoke.out.rexx"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Parsing Tests
 add_crexx_parsing_test(expr_abut_01 parsing_src/expr_abut_01.rexx)

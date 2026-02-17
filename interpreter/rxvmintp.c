@@ -792,7 +792,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
     DEBUG("Create first Stack Frame\n");
     if (context->ext_proc) {
-        current_frame = frame_f(procedure, context->ext_argc, 0, 0, 0);
+        current_frame = frame_f(procedure, context->ext_argc, 0, 0, context->ext_ret);
         /* Arguments (passed as individual objects) */
         {
             int i;
@@ -1557,6 +1557,12 @@ START_OF_INSTRUCTIONS
                             set_num_attributes(op1R->attributes[j], 1);
                             x = (rxinteger) ((meta_clear_constant *) (pool + i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
+                            break;
+                        case META_CLASS:
+                            /* TODO: Implement META_CLASS */
+                            break;
+                        case META_ATTR:
+                            /* TODO: Implement META_ATTR */
                             break;
                         case STRING_CONST:
                         case PROC_CONST:
@@ -2703,6 +2709,17 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 current_frame = current_frame->parent;
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
+                    /* Copy back arguments for external calls */
+                    if (context->ext_proc && context->ext_args) {
+                        int k, m;
+                        int nargs = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                                temp_frame->procedure->locals]->int_value;
+                        for (k = 0, m = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                             k < nargs && k < context->ext_argc;
+                             k++, m++) {
+                            copy_value(context->ext_args[k], temp_frame->locals[m]);
+                        }
+                    }
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -2745,12 +2762,22 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                                    op1R); /* ... the faster move deletes the source which is ok for locals going out of scope */
                 }
                 /* back to the parents stack frame */
-                if (!current_frame->parent && context->ext_ret) copy_value(context->ext_ret, op1R);
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     rc = (int) (temp_frame->locals[(pc + 1)->index])->int_value; /* Exiting - grab the int rc */
+                    /* Copy back arguments for external calls */
+                    if (context->ext_proc && context->ext_args) {
+                        int k, m;
+                        int nargs = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                                temp_frame->procedure->locals]->int_value;
+                        for (k = 0, m = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                             k < nargs && k < context->ext_argc;
+                             k++, m++) {
+                            copy_value(context->ext_args[k], temp_frame->locals[m]);
+                        }
+                    }
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -2793,14 +2820,21 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 if (current_frame->return_reg)
                     current_frame->return_reg->int_value = op1I;
                 /* back to the parents stack frame */
-                if (!current_frame->parent && context->ext_ret) {
-                    set_int(context->ext_ret, op1I);
-                    set_type_int(context->ext_ret);
-                }
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
+                    /* Copy back arguments for external calls */
+                    if (context->ext_proc && context->ext_args) {
+                        int k, m;
+                        int nargs = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                                temp_frame->procedure->locals]->int_value;
+                        for (k = 0, m = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                             k < nargs && k < context->ext_argc;
+                             k++, m++) {
+                            copy_value(context->ext_args[k], temp_frame->locals[m]);
+                        }
+                    }
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -2847,14 +2881,21 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 if (current_frame->return_reg)
                     current_frame->return_reg->float_value = op1F;
                 /* back to the parents stack frame */
-                if (!current_frame->parent && context->ext_ret) {
-                    set_float(context->ext_ret, op1F);
-                    set_type_float(context->ext_ret);
-                }
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
+                    /* Copy back arguments for external calls */
+                    if (context->ext_proc && context->ext_args) {
+                        int k, m;
+                        int nargs = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                                temp_frame->procedure->locals]->int_value;
+                        for (k = 0, m = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                             k < nargs && k < context->ext_argc;
+                             k++, m++) {
+                            copy_value(context->ext_args[k], temp_frame->locals[m]);
+                        }
+                    }
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -2900,15 +2941,21 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 if (current_frame->return_reg)
                     set_const_string(current_frame->return_reg, CONSTSTRING_OP(1));
                 /* back to the parents stack frame */
-                if (!current_frame->parent && context->ext_ret) {
-                    string_constant *sc = CONSTSTRING_OP(1);
-                    set_string(context->ext_ret, sc->string, sc->string_len);
-                    set_type_string(context->ext_ret);
-                }
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
+                    /* Copy back arguments for external calls */
+                    if (context->ext_proc && context->ext_args) {
+                        int k, m;
+                        int nargs = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                                temp_frame->procedure->locals]->int_value;
+                        for (k = 0, m = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                             k < nargs && k < context->ext_argc;
+                             k++, m++) {
+                            copy_value(context->ext_args[k], temp_frame->locals[m]);
+                        }
+                    }
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */

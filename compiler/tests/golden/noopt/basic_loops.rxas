@@ -1,0 +1,104 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : basic_loops.rexx
+ * BUILT                  : 2026-02-17 12:43:51
+ */
+
+.srcfile="basic_loops.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "basic_loops.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 2:1="count = 0"
+   .meta "basic_loops.main.count"="b" ".int" r0
+   load r0,0
+   .src 3:1="do"
+   .src 3:4="i = 1"
+   .meta "basic_loops.main.i"="b" ".int" r1
+   load r1,1
+   .src 3:10="to 5"
+   load r2,5
+l7dostart:
+   .src 3:10="to 5"
+   igt r3,r1,r2
+   brt l7doend,r3
+   .src 4:2="if i % 2 = 0"
+   imod r4,r1,2
+   ieq r4,r4,0
+   brf l27iffalse,r4
+   .src 4:16="then"
+   .src 4:21="say i || \" is even\""
+   itos r1
+   concat r5,r1," is even"
+   say r5
+   br l27ifend
+   .src 5:3="else"
+l27iffalse:
+   .src 5:8="say i || \" is odd\""
+   itos r1
+   concat r5,r1," is odd"
+   say r5
+l27ifend:
+   .src 6:3="count = count + 1"
+   iadd r0,r0,1
+l7doinc:
+   .src 3:4="i"
+   inc r1
+   .src 7:1="end"
+   br l7dostart
+l7doend:
+   .src 9:1="j = 3"
+   .meta "basic_loops.main.j"="b" ".int" r5
+   load r5,3
+   .src 10:1="do"
+l37dostart:
+   .src 10:4="while j > 0"
+   igt r4,r5,0
+   brf l37doend,r4
+   .src 11:3="say \"j=\" || j"
+   itos r5
+   concat r3,"j=",r5
+   say r3
+   .src 12:3="j = j - 1"
+   isub r5,r5,1
+   .src 13:3="count = count + 1"
+   iadd r0,r0,1
+l37doinc:
+   .src 14:1="end"
+   br l37dostart
+l37doend:
+   .src 16:1="k = 1"
+   .meta "basic_loops.main.k"="b" ".int" r4
+   load r4,1
+   .src 17:1="do"
+l61dostart:
+   .src 18:3="say \"k=\" || k"
+   itos r4
+   concat r2,"k=",r4
+   say r2
+   .src 19:3="k = k + 1"
+   iadd r4,r4,1
+   .src 20:3="count = count + 1"
+   iadd r0,r0,1
+l61doinc:
+   .src 17:4="until k = 3"
+   ieq r3,r4,3
+   brt l61doend,r3
+   .src 21:1="end"
+   br l61dostart
+l61doend:
+   .src 22:1="say \"Total: \" || count"
+   itos r0
+   concat r3,"Total: ",r0
+   say r3
+   .src 23:1="return"
+   ret
+   .meta "basic_loops.main.count"
+   .meta "basic_loops.main.i"
+   .meta "basic_loops.main.j"
+   .meta "basic_loops.main.k"

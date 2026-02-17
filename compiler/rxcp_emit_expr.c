@@ -90,22 +90,21 @@ void emit_expression(ASTNode *node, void *payload) {
                 k = 0; /* 1 if we need to settp */
                 j = 0; /* The required value of settp */
 
+                /* Set value provided flag */
+                if (n->node_type != NOVAL) j |= REGTP_VAL;
+
                 /* Used for "pass be value" large (strings, objects) registers ONLY
                  * set (2) means that it is not a symbol so its value does not need
                  * preserving */
                 if (!n->is_ref_arg &&
                     (n->value_dims || n->target_type == TP_STRING || n->target_type == TP_OBJECT || n->target_type == TP_BINARY)) {
                     k = 1; /* This means we will settp */
-                    if (!n->symbolNode) j = REGTP_NOTSYM; /* Mark it as not a symbol */
+                    if (!n->symbolNode) j |= REGTP_NOTSYM; /* Mark it as not a symbol */
                 }
 
                 /* Optional arguments need to use the settp flag */
                 if (n->is_opt_arg) {
                     k = 1; /* means we have to settp */
-                    if (n->node_type != NOVAL) {
-                        /* If it is an optional parameter with a value we need to set the type flag */
-                        j = j | REGTP_VAL;
-                    }
                 }
                 if (k) { /* We need to settp */
                     temp1 = mprintf("   settp %c%d,%d\n",

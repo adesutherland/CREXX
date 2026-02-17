@@ -43,6 +43,41 @@ static int use_symbol_reg(ASTNode* node) {
     else return 0;
 }
 
+static int defer_reg_return(ASTNode* node);
+
+static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
+    walker_payload *pl = (walker_payload*)payload;
+    if (symbol->symbol_type == VARIABLE_SYMBOL) {
+        if (symbol->register_num == UNSET_REGISTER) {
+            if (symbol->exposed) {
+                symbol->register_num = pl->globals++;
+                symbol->register_type = 'g';
+            } else if (!(symbol->scope &&
+                         symbol->scope->defining_node &&
+                         symbol->scope->defining_node->node_type == CLASS_DEF)) {
+                symbol->register_num = get_reg_perm(symbol->scope);
+                symbol->register_type = 'r';
+            }
+        }
+    }
+}
+
+/* Returns a child's register to the pool, potentially deferring it if linked */
+static void return_child_reg(ASTNode* child) {
+    if (!child || child->register_num == DONT_ASSIGN_REGISTER || child->register_num == UNSET_REGISTER) return;
+    if (use_symbol_reg(child)) return;
+    ret_reg_later(child->scope, child->register_num);
+}
+
+/* Returns a child's register ONLY if it is not deferred */
+static void return_child_reg_now(ASTNode* child) {
+    if (!child || child->register_num == DONT_ASSIGN_REGISTER || child->register_num == UNSET_REGISTER) return;
+    if (use_symbol_reg(child)) return;
+    if (!defer_reg_return(child)) {
+        ret_reg(child->scope, child->register_num);
+    }
+}
+
 /* This function returns 1 if the node register should not be used by the parent (it should be returned AFTER the
  * parent has finished with it) */
 static int defer_reg_return(ASTNode* node) {
@@ -86,6 +121,11 @@ walker_result register_walker(walker_direction direction,
     if (direction == in) {
         /* IN - TOP DOWN */
         switch (node->node_type) {
+            case PROGRAM_FILE:
+            case IMPORTED_FILE:
+                if (node->scope) scp_4all(node->scope, assign_symbol_registers_worker, payload);
+                break;
+
             case FACTORY:
             case METHOD:
             case PROCEDURE:
@@ -101,7 +141,7 @@ walker_result register_walker(walker_direction direction,
                     star_node.node_string_length = 9;
                     Symbol *star_sym = sym_lrsv(node->scope, &star_node);
                     if (star_sym && star_sym->register_num == UNSET_REGISTER) {
-                        star_sym->register_num = get_reg(node->scope);
+                        star_sym->register_num = get_reg_perm(node->scope);
                         star_sym->register_type = 'r';
                     }
                 } else if (node->node_type == METHOD) {
@@ -116,6 +156,11 @@ walker_result register_walker(walker_direction direction,
                         this_sym->register_type = 'a';
                     }
                 }
+
+                /* Pre-assign registers to all symbols in this scope to avoid clobbering by temporaries.
+                 * ARGS will override these with 'a' registers for arguments. */
+                scp_4all(node->scope, assign_symbol_registers_worker, payload);
+
                 break;
 
             case ARGS:
@@ -150,7 +195,7 @@ walker_result register_walker(walker_direction direction,
                  * it to the target register on the way out (bottom up) and save
                  * a copy instruction
                  */
-                if (!use_symbol_reg(child2) || is_constant(child2))
+                if (use_symbol_reg(child1) && (!use_symbol_reg(child2) || is_constant(child2)))
                     child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
                 break;
 
@@ -348,10 +393,8 @@ walker_result register_walker(walker_direction direction,
             case OP_SCONCAT:
 
                 /* If it is a temporary mark the register for reuse - if the register CAN be resued by this node */
-                if (!defer_reg_return(child1) && !use_symbol_reg(child1))
-                    ret_reg(node->scope, child1->register_num);
-                if (!defer_reg_return(child2) && !use_symbol_reg(child2))
-                    ret_reg(node->scope, child2->register_num);
+                return_child_reg_now(child1);
+                return_child_reg_now(child2);
 
                 /* Set result temporary register */
                 /* DONT_ASSIGN_REGISTER means that the register number will be set later  but this must be overrider
@@ -362,10 +405,8 @@ walker_result register_walker(walker_direction direction,
                         node->register_num = get_reg(node->scope);
 
                 /* If it is a temporary mark the register for reuse - if the register CANNOT be resued by this node */
-                if (defer_reg_return(child1) && !use_symbol_reg(child1))
-                    ret_reg(node->scope, child1->register_num);
-                if (defer_reg_return(child2) && !use_symbol_reg(child2))
-                    ret_reg(node->scope, child2->register_num);
+                return_child_reg(child1);
+                return_child_reg(child2);
 
                 break;
 
@@ -403,21 +444,12 @@ walker_result register_walker(walker_direction direction,
                     node->register_num = get_reg(node->scope);
 
                 /* If it is a temporary mark the register for reuse */
-                if (!use_symbol_reg(child1))
-                    ret_reg(node->scope, child1->register_num);
+                return_child_reg(child1);
                 break;
 
             case OP_ARG_EXISTS:
                 /* This node needs an array for the result but we also have to make sure the symbol has a register */
-                /* Set the symbols register */
-                if (node->symbolNode->symbol->register_num == UNSET_REGISTER) {
-                    if (node->symbolNode->symbol->exposed) {
-                        /* Should never happen - as its an arg but in case this changes */
-                        node->symbolNode->symbol->register_num = payload->globals++;
-                        node->symbolNode->symbol->register_type = 'g';
-                    }
-                    else node->symbolNode->symbol->register_num = get_reg(node->scope);
-                }
+                /* Symbol register should have been assigned already by PROCEDURE entry */
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later */
@@ -427,19 +459,7 @@ walker_result register_walker(walker_direction direction,
             case VAR_SYMBOL:
             case VAR_TARGET:
             case VAR_REFERENCE:
-                /* Set the symbols register */
-                if (node->symbolNode && node->symbolNode->symbol &&
-                    node->symbolNode->symbol->register_num == UNSET_REGISTER) {
-                    if (node->symbolNode->symbol->exposed) {
-                        node->symbolNode->symbol->register_num = payload->globals++;
-                        node->symbolNode->symbol->register_type = 'g';
-                    }
-                    else if (!(node->symbolNode->symbol->scope &&
-                               node->symbolNode->symbol->scope->defining_node &&
-                               node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF)) {
-                        node->symbolNode->symbol->register_num = get_reg(node->scope);
-                    }
-                }
+                /* Symbol register should have been assigned already by PROCEDURE entry */
 
                 /* If we are a define no code is generated so no registers needed */
                 if (node->parent->node_type == DEFINE) break;
@@ -497,8 +517,7 @@ walker_result register_walker(walker_direction direction,
                     c = node->child;
                     while (c) {
                         /* release the temporary register */
-                        if (!use_symbol_reg(c))
-                            ret_reg(node->scope, c->register_num);
+                        return_child_reg(c);
                         c = c->sibling;
                     }
                 }
@@ -525,7 +544,7 @@ walker_result register_walker(walker_direction direction,
                 node->register_num = get_reg(node->scope);
 
                 /* Release child registers */
-                if (!use_symbol_reg(child1)) ret_reg(node->scope, child1->register_num);
+                return_child_reg(child1);
                 break;
 
             case OP_ARG_IX_EXISTS:
@@ -534,7 +553,7 @@ walker_result register_walker(walker_direction direction,
                     node->register_num = get_reg(node->scope);
 
                 /* Release child registers */
-                if (!use_symbol_reg(child1)) ret_reg(node->scope, child1->register_num);
+                return_child_reg(child1);
                 break;
 
             case NOVAL:
@@ -616,6 +635,10 @@ walker_result register_walker(walker_direction direction,
                            c->symbolNode->symbol->register_type == 'r') )
                         ret_reg(node->scope, i);
 
+                    if (c->register_num != i) {
+                        return_child_reg(c);
+                    }
+
                     i++;
                     c = c->sibling;
                 }
@@ -623,19 +646,25 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case DEFINE:
-            case ASSIGN:
+            case ASSIGN: {
+                int propagated = 0;
                 if (child2->register_num == DONT_ASSIGN_REGISTER) {
-                    /* Marked earlier so set the register to the target register */
+                    /* Move the RHS temporary register to the target symbol register */
                     child2->register_num = child1->register_num;
                     child2->register_type = child1->register_type;
+                    propagated = 1;
                 }
-                else if (!use_symbol_reg(child2))
-                    ret_reg(node->scope, child2->register_num);
+                else {
+                    return_child_reg(child2);
+                }
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
-                if (!use_symbol_reg(child1))
-                    if (node->parent->node_type != REPEAT) ret_reg(node->scope, child1->register_num);
+                /* IMPORTANT: if we propagated the RHS temp to the LHS symbol, do NOT free it */
+                if (!propagated) {
+                    if (node->parent->node_type != REPEAT) return_child_reg(child1);
+                }
                 break;
+            }
 
             case ARG:
                 if (child2->register_num == DONT_ASSIGN_REGISTER) {
@@ -643,8 +672,9 @@ walker_result register_walker(walker_direction direction,
                     child2->register_num = child1->register_num;
                     child2->register_type = child1->register_type;
                 }
-                else if (!use_symbol_reg(child2))
-                    ret_reg(node->scope, child2->register_num);
+                else {
+                    return_child_reg(child2);
+                }
                 break;
 
             case ADDRESS: // TODO Does Address make it here - I think it is rewritten to a function call earlier
@@ -652,8 +682,7 @@ walker_result register_walker(walker_direction direction,
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
                 /* Return temporary registers */
-                if (!use_symbol_reg(child1))
-                    ret_reg(node->scope, child1->register_num);
+                return_child_reg(child1);
                 break;
 
             case RETURN:
@@ -663,9 +692,7 @@ walker_result register_walker(walker_direction direction,
                     /* If a register is needed at all ... */
                     if (node->register_num != DONT_ASSIGN_REGISTER) {
                         /* Then if it is a temporary mark the register for reuse */
-                        if (!use_symbol_reg(child1))
-                            ret_reg(node->scope,
-                                    child1->register_num);
+                        return_child_reg(child1);
                     }
                 }
                 break;
@@ -674,8 +701,7 @@ walker_result register_walker(walker_direction direction,
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
                 /* If it is a temporary mark the register for reuse */
-                if (!use_symbol_reg(child1))
-                    ret_reg(node->scope, child1->register_num);
+                return_child_reg(child1);
                 break;
 
             case TO:
@@ -745,6 +771,11 @@ walker_result register_walker(walker_direction direction,
              * than need returning as they are either symbols or constants,
              * so we do not have a case ASSEMBLER: */
             default:;
+        }
+
+        /* If this is a statement level node, return all deferred registers */
+        if (node->parent && node->parent->node_type == INSTRUCTIONS) {
+            ret_reg_all_deferred(node->scope);
         }
     }
 

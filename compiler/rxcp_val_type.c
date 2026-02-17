@@ -86,7 +86,12 @@ static const ValueType promotion[9][9] = {
 /* Returns the value_type of a node - arrays changes to TP_OBJECT */
 static ValueType node_type(ASTNode* node) {
     if (node->value_dims) return TP_OBJECT;
-    return node->value_type;
+    if (node->value_type != TP_UNKNOWN) return node->value_type;
+    if (node->node_type == INTEGER || node->node_type == OP_ARGS) return TP_INTEGER;
+    if (node->node_type == FLOAT) return TP_FLOAT;
+    if (node->node_type == DECIMAL) return TP_DECIMAL;
+    if (node->node_type == STRING || node->node_type == CONSTANT) return TP_STRING;
+    return TP_UNKNOWN;
 }
 
 /* Returns the highest value_type of the node's children nodes */
@@ -96,7 +101,8 @@ static ValueType max_type(ASTNode* node) {
 
     child = node->child;
     while (child) {
-        if (child->value_type > max_type) max_type = node_type(child);
+        ValueType type = node_type(child);
+        if (type > max_type) max_type = type;
         child = child->sibling;
     }
 
@@ -145,7 +151,6 @@ walker_result set_node_types_walker(walker_direction direction,
     if (direction == in) {
         /* IN - TOP DOWN */
         context->current_scope = node->scope;
-        if (node->node_type == NODE_REGISTER) return request_skip;
     }
     else {
         /* OUT - BOTTOM UP */
@@ -190,14 +195,16 @@ walker_result set_node_types_walker(walker_direction direction,
             case OP_POWER:
                 if (node->value_type == TP_UNKNOWN) {
                     context->changed = 1;
-                    set_node_type(node, promotion[child1->value_type][child2->value_type]);
+                    ValueType type = promotion[node_type(child1)][node_type(child2)];
+                    if (type == TP_UNKNOWN) type = TP_INTEGER; /* Default to integer */
+                    set_node_type(node, type);
                 }
                 break;
 
             case OP_DIV:
                 if (node->value_type == TP_UNKNOWN) {
                     context->changed = 1;
-                    ValueType type = promotion[child1->value_type][child2->value_type];
+                    ValueType type = promotion[node_type(child1)][node_type(child2)];
                     type = promotion[type][TP_FLOAT]; /* Ensure at least FLOAT */
                     set_node_type(node, type);
                 }
@@ -206,7 +213,7 @@ walker_result set_node_types_walker(walker_direction direction,
             case OP_MOD:
             case OP_IDIV:
                 if (node->value_type == TP_UNKNOWN) {
-                    ValueType type = promotion[child1->value_type][child2->value_type];
+                    ValueType type = promotion[node_type(child1)][node_type(child2)];
                     type = promotion[type][TP_INTEGER]; /* Ensure at least INTEGER */
                     if (type != TP_UNKNOWN) {
                         set_node_type(node, type);
@@ -226,7 +233,7 @@ walker_result set_node_types_walker(walker_direction direction,
             case OP_NEG:
                 if (node->value_type == TP_UNKNOWN) {
                     context->changed = 1;
-                    set_node_type(node, promotion[child1->value_type][TP_VOID]);
+                    set_node_type(node, promotion[node_type(child1)][TP_VOID]);
                 }
                 break;
 
@@ -384,7 +391,7 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case VAR_SYMBOL:
             case VAR_TARGET:
-                if (node->value_type == TP_UNKNOWN) {
+                if (node->value_type == TP_UNKNOWN && node->symbolNode) {
                     ast_svtp(node, node->symbolNode->symbol);
                     if (node->value_type != TP_UNKNOWN) {
                         context->changed = 1;
@@ -493,6 +500,21 @@ walker_result set_node_types_walker(walker_direction direction,
                 }
                 break;
 
+            case INTEGER:
+            case OP_ARGS:
+                if (node->value_type == TP_UNKNOWN && node->parent->node_type != NODE_REGISTER) {
+                    context->changed = 1;
+                    set_node_type(node, TP_INTEGER);
+                }
+                break;
+
+            case STRING:
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_STRING);
+                }
+                break;
+
             case FLOAT:
                 if (node->value_type == TP_UNKNOWN) {
                     context->changed = 1;
@@ -507,21 +529,7 @@ walker_result set_node_types_walker(walker_direction direction,
                 }
                 break;
 
-            case INTEGER:
-            case OP_ARGS:
-                if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, TP_INTEGER);
-                }
-                break;
-
-            case STRING:
-                if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, TP_STRING);
-                }
-                break;
-
+            case VOID:
             case NOVAL:
             case RANGE:
                 if (node->value_type == TP_UNKNOWN) {
@@ -631,7 +639,6 @@ walker_result type_safety_walker(walker_direction direction,
     if (direction == in) {
         /* IN - TOP DOWN */
         context->current_scope = node->scope;
-        if (node->node_type == NODE_REGISTER) return request_skip;
     }
     else {
         /* OUT - BOTTOM UP */
@@ -695,10 +702,14 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case VAR_SYMBOL:
-                if (node->value_type == TP_UNKNOWN) ast_svtp(node, node->symbolNode->symbol);
-                if (node->value_type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
+                if (node->parent->node_type != NODE_REGISTER) {
+                    if (node->symbolNode && node->symbolNode->symbol) {
+                        if (node->value_type == TP_UNKNOWN) ast_svtp(node, node->symbolNode->symbol);
+                    }
+                    if (node->value_type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
+                }
 
-                if (ast_nchd(node) && !node->symbolNode->symbol->value_dims) {
+                if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->type != TP_UNKNOWN && ast_nchd(node) && !node->symbolNode->symbol->value_dims) {
                     mknd_err(node, "NOT_AN_ARRAY");
                 }
                 else if (child1) {
@@ -713,9 +724,20 @@ walker_result type_safety_walker(walker_direction direction,
                             break;
                         }
 
+                        if (n1->node_type == INTEGER && !ast_nsib(n1) &&
+                            node->symbolNode && node->symbolNode->symbol &&
+                            node->symbolNode->symbol->dim_base &&
+                            node->symbolNode->symbol->dim_base[ast_chdi(n1)] == 1 &&
+                            node_to_integer(n1) == 0) {
+                            /* Special case - last parameter and 1-base and is "0"
+                             * this is a syntax candy for VOID - returning the number of elements as an integer */
+                            n1->value_type = TP_VOID;
+                            break;
+                        }
+
                         set_node_target_type(n1, TP_INTEGER);
 
-                        if (n1->node_type == INTEGER) {
+                        if (n1->node_type == INTEGER && n1->parent->symbolNode && n1->parent->symbolNode->symbol && n1->parent->symbolNode->symbol->dim_base) {
                             /* As a constant integer we can check it is in range */
                             val = node_to_integer(n1);
                             ix = ast_chdi(n1);
@@ -739,16 +761,18 @@ walker_result type_safety_walker(walker_direction direction,
                          * are returning the number of elements as an integer */
 
                         /* We can have fewer parameters when we are getting the number of elements */
-                        if (node->symbolNode->symbol->value_dims < ast_nchd(node))
+                        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->value_dims < ast_nchd(node))
                             mknd_err(node, "ARRAY_DIMS_MISMATCH");
+
+                        set_node_type(node, TP_INTEGER);
                     }
 
                     else {
                         /* We are returning the array element */
-                        if (node->symbolNode->symbol->value_dims < ast_nchd(node))
+                        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->value_dims < ast_nchd(node))
                             mknd_err(node, "ARRAY_DIMS_MISMATCH");
 
-                        if (node->symbolNode->symbol->value_dims > ast_nchd(node)) {
+                        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->value_dims > ast_nchd(node)) {
                             node->value_dims = node->symbolNode->symbol->value_dims - ast_nchd(node);
                         } else {
                             node->value_dims = 0;

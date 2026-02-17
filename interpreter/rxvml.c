@@ -132,8 +132,8 @@ rxvml_value* rxvml_make_token(rxvml_context* ctx, const rxvml_token_desc* d) {
     else set_null_string(v->attributes[10], "");
     /* 12. symbolType */
     set_int(v->attributes[11], d->sym_type);
-    /* 13. isUpdated (negotiation) */
-    set_int(v->attributes[12], 0);
+    /* 13. valueType */
+    set_int(v->attributes[12], d->value_type);
     /* 14. requestedTokenType */
     set_int(v->attributes[13], 0);
     /* 15. requestedSymbolType */
@@ -237,6 +237,59 @@ int rxvml_discover_classes(rxvml_context* ctx, const char* ns, rxvml_class_info*
     return 0;
 }
 
+int rxvml_call_procedure(
+    rxvml_context* ctx,
+    const char* proc_name,
+    size_t argc,
+    rxvml_value** args,
+    rxvml_value** response_out) {
+
+    if (ctx->vm.num_modules > 0) {
+        rxvm_link(&ctx->vm);
+    }
+    proc_constant* p = find_procedure(&ctx->vm, proc_name);
+    if (!p) {
+        ctx->last_error = "Procedure not found";
+        return -1;
+    }
+
+    /* Set up the external call context */
+    ctx->vm.ext_proc = p;
+    ctx->vm.ext_argc = argc;
+    if (argc > 0) {
+        ctx->vm.ext_args = malloc(sizeof(value*) * argc);
+        for (size_t i = 0; i < argc; i++) {
+            ctx->vm.ext_args[i] = (value*)args[i];
+        }
+    } else {
+        ctx->vm.ext_args = NULL;
+    }
+
+    ctx->vm.ext_ret = value_f();
+
+    /* Run the VM */
+    {
+        char* dummy_argv[] = {"rxc_bridge_proc"};
+        rxvm_prepare(&ctx->vm);
+        run(&ctx->vm, 0, dummy_argv);
+    }
+
+    if (response_out) {
+        *response_out = (rxvml_value*)ctx->vm.ext_ret;
+    } else {
+        rxvml_value_free((rxvml_value*)ctx->vm.ext_ret);
+    }
+
+    /* Clear the ext call fields */
+    ctx->vm.ext_proc = 0;
+    ctx->vm.ext_argc = 0;
+    if (ctx->vm.ext_args) free(ctx->vm.ext_args);
+    ctx->vm.ext_args = 0;
+    ctx->vm.ext_ret = 0;
+
+    return 0;
+}
+
 int rxvml_call_method(
     rxvml_context* ctx,
     rxvml_value* obj,
@@ -247,12 +300,24 @@ int rxvml_call_method(
     rxvml_value** response_out) {
 
     char full_method_name[1024];
-    snprintf(full_method_name, sizeof(full_method_name), "%s.%s", class_name, method_name);
+    snprintf(full_method_name, sizeof(full_method_name), "§%s.%s", class_name, method_name);
 
     if (ctx->vm.num_modules > 0) {
         rxvm_link(&ctx->vm);
     }
     proc_constant* p = find_procedure(&ctx->vm, full_method_name);
+    if (!p) {
+        snprintf(full_method_name, sizeof(full_method_name), "%s.%s", class_name, method_name);
+        p = find_procedure(&ctx->vm, full_method_name);
+    }
+    if (!p) {
+        snprintf(full_method_name, sizeof(full_method_name), "%s.§%s", class_name, method_name);
+        p = find_procedure(&ctx->vm, full_method_name);
+    }
+    if (!p) {
+        snprintf(full_method_name, sizeof(full_method_name), "§%s.§%s", class_name, method_name);
+        p = find_procedure(&ctx->vm, full_method_name);
+    }
     if (!p) {
         ctx->last_error = "Method not found";
         return -1;

@@ -127,6 +127,7 @@ static walker_result emit_walker(walker_direction direction,
 
             case ARGS:
             case INSTRUCTIONS:
+            case EXIT_OWNED:
                 emit_flow(node, pl);
                 break;
 
@@ -531,7 +532,9 @@ static walker_result emit_walker(walker_direction direction,
                         if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
                             ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
                             if (nr) {
-                                index = (int)nr->int_value;
+                                ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                                if (idx) index = node_to_integer(idx);
+                                else if (nr->int_value) index = (int)nr->int_value;
                             }
                         }
                     }
@@ -555,6 +558,7 @@ static walker_result emit_walker(walker_direction direction,
                     temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
                     node->cleanup = output_fs(temp1);
                     free(temp1);
+                    break;
                 } else if (child1) {
                     /* We are an array */
                     /* Essentially, we are linking the found array element as the nodes result - which will need unlinking later */
@@ -632,7 +636,7 @@ static walker_result emit_walker(walker_direction direction,
 
                         /* This is the logic to get the register attribute for this parameter (child1) */
 
-                        /* We might need a string of the index number later (we need it twice) */
+                        /* Make temp2 the base 1 element index number */
                         if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
                             /* Make temp2 the base 1 element index number */
                             temp2 = format_constant(child1->value_type, child1);
@@ -853,7 +857,9 @@ static walker_result emit_walker(walker_direction direction,
                         if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
                             ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
                             if (nr) {
-                                index = (int)nr->int_value;
+                                ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                                if (idx) index = node_to_integer(idx);
+                                else if (nr->int_value) index = (int)nr->int_value;
                             }
                         }
                     }

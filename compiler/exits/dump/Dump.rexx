@@ -23,7 +23,6 @@ dumpexit: class
             _status = "REJECT"
             return _status
         end
-        t1 = .token
         t1 = tokens.1
 
         if t1.get_text() \= "dump" then do
@@ -33,36 +32,24 @@ dumpexit: class
 
         SAY "DUMP PLUGIN - ACCEPTED"
 
-        /* Check tokens */
+        /* Check types are determined - we need strings and identifiers */
         _status = "REPLACE"
         do i = 2 to tokens.0
-            ti = .token
             ti = tokens[i]
             if ti.get_type() \= "IDENTIFIER" & ti.get_type() \= "STRING_LITERAL" then do
-                _status = "ERROR"
-                _error_token = i
-                _error_message = "Variable or String expected"
-                return _status
+                _status = "PENDING"
+                leave
             end
-            if ti.get_value_type() = "VOID" then _status = "PENDING"
         end
 
-        SAY "DUMP PLUGIN - STATUS IS" _status
-
         if _status = "REPLACE" then do
-            _replacement = "options levelb; do; say 'DUMP:'; "
+            _replacement = ""
             do i = 2 to tokens.0
-                tj = .token
-                tj = tokens[i]
-                t_text = tj.get_text()
-                if t_text \= "" then do
-                    t_type = tj.get_value_type()
-                    _replacement = _replacement || "say '" || t_text || " (" || t_type || ") = ' || " || t_text || ";"
-                end
+                ti = tokens[i]
+                t_text = ti.get_text()
+                t_type = ti.get_value_type()
+                _replacement = _replacement || "say '" || t_text || " (" || t_type || ") = ' || " || t_text || ";"
             end
-            _replacement = _replacement || " end;"
-
-            SAY "DUMP PLUGIN - REPLACEMENT IS" get_replacement()
         end
 
         return _status

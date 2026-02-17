@@ -28,6 +28,7 @@ typedef struct rxvml_token_desc {
     /* Symbol Info (Optional) */
     const char* sym_name;
     int sym_type;
+    int value_type;
 } rxvml_token_desc;
 
 /* Context lifecycle */
