@@ -2751,6 +2751,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
                 unsigned char is_interrupt = current_frame->is_interrupt;
+                int return_rc = (int)op1R->int_value;
                 /* Set the result register */
                 if (current_frame->return_reg) {
                     if (REG_IDX(1) >= current_frame->procedure->locals || /* Not a local */
@@ -2766,7 +2767,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 current_frame = current_frame->parent;
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
-                    rc = (int) (temp_frame->locals[(pc + 1)->index])->int_value; /* Exiting - grab the int rc */
+                    /* Exiting - grab the int rc */
+                    if (temp_frame->return_reg) rc = (int) (temp_frame->return_reg->int_value);
+                    else rc = return_rc;
+
                     /* Copy back arguments for external calls */
                     if (context->ext_proc && context->ext_args) {
                         int k, m;
