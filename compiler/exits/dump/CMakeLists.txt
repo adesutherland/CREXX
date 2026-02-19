@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.24)
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Dump.rxbin
     COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -n -i ${CMAKE_CURRENT_SOURCE_DIR}/.. -o Dump ${CMAKE_CURRENT_SOURCE_DIR}/Dump.rexx
-    COMMAND $<TARGET_FILE:rxas> -o Dump.rxbin Dump
+    COMMAND $<TARGET_FILE:rxas> -o Dump Dump
     DEPENDS rxc rxas ${CMAKE_CURRENT_SOURCE_DIR}/Dump.rexx ${CMAKE_CURRENT_BINARY_DIR}/../token.rxbin
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building Dump.rxbin"
@@ -23,7 +23,7 @@ add_custom_command(
 
 add_custom_command(
     OUTPUT test_dump.rxbin
-    COMMAND $<TARGET_FILE:rxas> -o test_dump.rxbin test_dump
+    COMMAND $<TARGET_FILE:rxas> -o test_dump test_dump
     DEPENDS rxas test_dump.rxas
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Assembling test_dump.rxas"
