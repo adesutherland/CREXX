@@ -177,11 +177,23 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     Context* root = ctx->master_context ? ctx->master_context : ctx;
     if (root->rxvml_bridge) return (rxvml_context*)root->rxvml_bridge;
 
-    if (root->debug_mode >= 2) {
-        fprintf(stderr, "DEBUG_EXIT: Initializing compiler exit bridge, location=%s\n", root->location ? root->location : "NULL");
+    char *exe_dir = exepath();
+    char *combined_loc = NULL;
+    if (root->location) {
+        combined_loc = malloc(strlen(exe_dir) + strlen(root->location) + 2);
+        sprintf(combined_loc, "%s;%s", exe_dir, root->location);
+    } else {
+        combined_loc = strdup(exe_dir);
     }
 
-    rxvml_context* vctx = rxvml_create(root->location, root->debug_mode);
+    if (root->debug_mode >= 2) {
+        fprintf(stderr, "DEBUG_EXIT: Initializing compiler exit bridge, combined_loc=%s\n", combined_loc);
+    }
+
+    rxvml_context* vctx = rxvml_create(combined_loc, root->debug_mode);
+    free(combined_loc);
+    if (exe_dir) free(exe_dir);
+
     if (!vctx) {
         fprintf(stderr, "DEBUG_EXIT: Failed to create bridge VM context\n");
         return NULL;
@@ -190,18 +202,8 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     /* Set say exit to print to stderr */
     rxvml_set_say_exit(rxcp_say_exit);
 
-    /* Load library.rxbin */
     if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Loading library.rxbin into bridge VM\n");
-    if (rxvml_load_module_file(vctx, "library") <= 0) {
-        char *exe_path = exepath();
-        if (exe_path && *exe_path) {
-            char path[MAXFILEPATH];
-            snprintf(path, sizeof(path), "%s/library", exe_path);
-            if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Fallback: Loading library from %s\n", path);
-            rxvml_load_module_file(vctx, path);
-        }
-        if (exe_path) free(exe_path);
-    }
+    rxvml_load_module_file(vctx, "library");
 
     const char* mod = getenv("RXCP_EXIT_MODULE");
     if (!mod) mod = "rxcexits";
@@ -209,16 +211,6 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Loading %s into bridge VM\n", mod);
     int rc = rxvml_load_module_file(vctx, mod);
     if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: rxvml_load_module_file(%s) returned %d\n", mod, rc);
-    if (rc <= 0) {
-        char *exe_path = exepath();
-        if (exe_path && *exe_path) {
-            char path[MAXFILEPATH];
-            snprintf(path, sizeof(path), "%s/%s", exe_path, mod);
-            if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Fallback: Loading %s from %s\n", mod, path);
-            rc = rxvml_load_module_file(vctx, path);
-        }
-        if (exe_path) free(exe_path);
-    }
 
     if (rc <= 0) {
         fprintf(stderr, "DEBUG_EXIT: Failed to load %s into bridge VM (rc=%d)\n", mod, rc);
@@ -394,10 +386,11 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
 
         if (classes) {
             size_t i;
+            rxvml_value* nid_val = rxvml_value_new(vctx);
+            rxvml_set_int(nid_val, node->node_number);
+
             for (i = 0; i < class_count; i++) {
                 rxvml_value* obj = NULL;
-                rxvml_value* nid_val = rxvml_value_new(vctx);
-                rxvml_set_int(nid_val, node->node_number);
 
                 if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Trying class %s\n", classes[i].class_name);
 
@@ -433,6 +426,7 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
                     }
                 }
             }
+            rxvml_value_free(nid_val);
             free(classes);
         }
     }

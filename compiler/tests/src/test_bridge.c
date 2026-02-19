@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
     printf("Starting Bridge Test...\n");
 
     /* 1. Initialize Context */
-    ctx = rxvml_create(NULL, 1);
+    ctx = rxvml_create(NULL, 0);
     if (!ctx) {
         fprintf(stderr, "Failed to create rxvml context\n");
         return 1;
@@ -86,6 +86,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    if (response) rxvml_value_free(response);
+    rxvml_value_free(tok_array);
     rxvml_destroy(ctx);
     return 0;
 }

@@ -1141,6 +1141,7 @@ void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
     }
 
     /* Proc Entry has a pointer to the external entry */
+    pentry = (proc_constant*)(context->binary.const_pool + pentry_index); /* It might have moved */
     pentry->exposed = entry_index;
 }
 

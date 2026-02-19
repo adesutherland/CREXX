@@ -172,6 +172,7 @@ walker_result build_symbols_walker(walker_direction direction,
                     star->symbol_type = VARIABLE_SYMBOL;
                     star->type = TP_OBJECT;
                     if (context->current_scope->parent && context->current_scope->parent->defining_node && context->current_scope->parent->defining_node->node_type == CLASS_DEF) {
+                        if (star->value_class) free(star->value_class);
                         star->value_class = malloc(strlen(context->current_scope->parent->name) + 1);
                         strcpy(star->value_class, context->current_scope->parent->name);
                     }
@@ -183,6 +184,7 @@ walker_result build_symbols_walker(walker_direction direction,
                     this_sym->symbol_type = VARIABLE_SYMBOL;
                     this_sym->type = TP_OBJECT;
                     if (context->current_scope->parent && context->current_scope->parent->defining_node && context->current_scope->parent->defining_node->node_type == CLASS_DEF) {
+                        if (this_sym->value_class) free(this_sym->value_class);
                         this_sym->value_class = malloc(strlen(context->current_scope->parent->name) + 1);
                         strcpy(this_sym->value_class, context->current_scope->parent->name);
                     }
@@ -653,6 +655,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         symbol->symbol_type = VARIABLE_SYMBOL;
         symbol->value_dims = 0;
         if (scope->parent && scope->parent->defining_node && scope->parent->defining_node->node_type == CLASS_DEF) {
+            if (symbol->value_class) free(symbol->value_class);
             symbol->value_class = malloc(strlen(scope->parent->name) + 1);
             strcpy(symbol->value_class, scope->parent->name);
         }
@@ -664,6 +667,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         symbol->symbol_type = VARIABLE_SYMBOL;
         symbol->value_dims = 0;
         if (scope->parent && scope->parent->defining_node && scope->parent->defining_node->node_type == CLASS_DEF) {
+            if (symbol->value_class) free(symbol->value_class);
             symbol->value_class = malloc(strlen(scope->parent->name) + 1);
             strcpy(symbol->value_class, scope->parent->name);
         }
