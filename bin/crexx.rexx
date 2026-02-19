@@ -64,6 +64,10 @@
    lastSegment=lastpos(dirsep,rxpath)
    rxpath=substr(rxpath,1,lastSegment-1)
  end
+ else do
+   if verbose>3 then say 'relpath set from environment CREXX_HOME'
+ end
+ 
  rxpath=rxpath||dirsep /* to avoid having to start -l with a slash */
  
  libraries='/lib/rxfnsb'
@@ -136,7 +140,7 @@
 if version then call logo nocolor
 
     
-  if verbose>1 then say esc||ANSI_GREEN'using CREXX_HOME:'esc||ANSI_RESET rxpath
+  if verbose>1 then say esc||ANSI_GREEN'using relpath   :'esc||ANSI_RESET rxpath
 
 lpath = libraries
 

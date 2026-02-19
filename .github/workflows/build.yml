@@ -159,7 +159,9 @@ jobs:
         pacboy: >-
           toolchain:p
           cmake:p
-          ninja:p    
+          ninja:p
+          openssl:p
+          pkgconf:p
 
     - name: Determine Release Name
       run: |
@@ -184,13 +186,13 @@ jobs:
     - name: Build Debug
       shell: msys2 {0}
       run: |
-        cmake -G Ninja -B "${{ runner.temp }}/debug" -DCMAKE_BUILD_TYPE=Debug
+        cmake -G Ninja -B "${{ runner.temp }}/debug" -DCMAKE_BUILD_TYPE=Debug -DCREXX_FORCE_SYSTEM_OPENSSL=ON
         cmake --build "${{ runner.temp }}/debug"
 
     - name: Build Release
       shell: msys2 {0}
       run: |
-        cmake -G Ninja -B "${{ runner.temp }}/release" -DCMAKE_BUILD_TYPE=MinSizeRel
+        cmake -G Ninja -B "${{ runner.temp }}/release" -DCMAKE_BUILD_TYPE=MinSizeRel -DCREXX_FORCE_SYSTEM_OPENSSL=ON
         cmake --build "${{ runner.temp }}/release"
 
     - name: Get Executable
