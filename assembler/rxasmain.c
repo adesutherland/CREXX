@@ -117,7 +117,9 @@ static void help() {
         "  -d              Debug/Verbose Mode\n"
         "  -l location     Working Location (directory)\n"
         "  -o output_file  Binary Output File\n"
-        "  -n              No Optimising\n";
+        "  -n              No Optimising\n"
+        "Notes   :\n"
+        "- source_file : The source file to be assembled; filetype (rxas) is added to the name.\n";
 
     printf("%s",helpMessage);
 }

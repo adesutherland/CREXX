@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.24)
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin
     COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -n -o token ${CMAKE_CURRENT_SOURCE_DIR}/token.rexx
-    COMMAND $<TARGET_FILE:rxas> -o token.rxbin token.rxas
+    COMMAND $<TARGET_FILE:rxas> -o token.rxbin token
     DEPENDS rxc rxas ${CMAKE_CURRENT_SOURCE_DIR}/token.rexx
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building token.rxbin"
