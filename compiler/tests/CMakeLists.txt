@@ -164,4 +164,4 @@ target_include_directories(test_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter $
 add_dependencies(test_bridge stub_plugin_bin)
 
 # Commented out until fix found for multiple calls to the VM
-# add_test(NAME BridgeConnectivity COMMAND test_bridge)
+add_test(NAME BridgeConnectivity COMMAND test_bridge)

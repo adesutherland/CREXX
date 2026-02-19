@@ -81,36 +81,50 @@ static void collect_tokens(rxvml_context *ctx, ASTNode *node, rxvml_value *token
             child = child->sibling;
         }
     } else {
-        /* Layout (rxvml_make_token compatible):
-           Register 1: Type (.int) -> attributes[0]
-           Register 2: Subtype (.int) -> attributes[1]
-           Register 3: Text (.string) -> attributes[2]
-           Register 4: Line (.int) -> attributes[3]
-           Register 5: Column (.int) -> attributes[4]
-           Register 6: Length (.int) -> attributes[5]
-           Register 7: File (.string) -> attributes[6]
-           Register 8: Node Type (.int) -> attributes[7]
+        /* Layout (rxcp_intern.token factory compatible):
+           Arg 1: Type (.int)
+           Arg 2: Subtype (.int)
+           Arg 3: Text (.string)
+           Arg 4: Line (.int)
+           Arg 5: Column (.int)
+           Arg 6: Length (.int)
+           Arg 7: File (.string)
+           Arg 8: Node Type (.int)
+           Arg 9: Value Type (.int)
         */
 
-        rxvml_token_desc d;
-        memset(&d, 0, sizeof(d));
-        d.type = node->token ? node->token->token_type : 0;
-        d.text = node->token ? node->token->token_string : node->node_string;
-        d.text_len = node->token ? node->token->length : node->node_string_length;
-        d.line = node->line;
-        d.column = node->column;
-        d.length = node->token ? node->token->length : node->node_string_length;
-        d.node_type = node->node_type;
-        d.node_number = node->node_number;
-        d.value_type = node->value_type;
+        rxvml_value* args[9];
+        int i;
+        args[0] = rxvml_value_new(ctx);
+        rxvml_set_int(args[0], node->token ? node->token->token_type : 0);
+        args[1] = rxvml_value_new(ctx);
+        rxvml_set_int(args[1], 0); /* subtype */
+        args[2] = rxvml_value_new(ctx);
+        rxvml_set_str(args[2], node->token ? node->token->token_string : node->node_string, node->token ? node->token->length : node->node_string_length);
+        args[3] = rxvml_value_new(ctx);
+        rxvml_set_int(args[3], node->line);
+        args[4] = rxvml_value_new(ctx);
+        rxvml_set_int(args[4], node->column);
+        args[5] = rxvml_value_new(ctx);
+        rxvml_set_int(args[5], node->token ? node->token->length : node->node_string_length);
+        args[6] = rxvml_value_new(ctx);
+        rxvml_set_str(args[6], "", 0); /* file */
+        args[7] = rxvml_value_new(ctx);
+        rxvml_set_int(args[7], node->node_type);
+        args[8] = rxvml_value_new(ctx);
+        rxvml_set_int(args[8], node->value_type);
 
-        rxvml_value *tok_obj = rxvml_make_token(ctx, &d);
-        if (!tok_obj) return;
+        rxvml_value *tok_obj = NULL;
+        if (rxvml_call_factory(ctx, "rxcp_intern.token", 9, args, &tok_obj) == 0 && tok_obj) {
+            rxvml_array_set(ctx, token_array, *count + 1, tok_obj);
+            if (node_map) node_map[*count] = node;
+            (*count)++;
+            rxvml_value_free(tok_obj);
+        }
 
-        rxvml_array_set(ctx, token_array, *count + 1, tok_obj);
-        if (node_map) node_map[*count] = node;
-        (*count)++;
-        rxvml_value_free(tok_obj);
+        for (i = 0; i < 9; i++) {
+            rxvml_value_free(args[i]);
+        }
     }
 }
 
@@ -217,31 +231,39 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
 
 static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context* vctx, rxvml_value* obj, const char* class_name, rxvml_value* response, ASTNode **node_map, size_t num_tokens) {
     if (ctx->debug_mode >= 2) {
-        fprintf(stderr, "DEBUG_EXIT: handle_response enter class=%s obj=%p attrs=%zu\n", class_name, (void*)obj, obj ? ((value*)obj)->num_attributes : 0UL);
+        fprintf(stderr, "DEBUG_EXIT: handle_response enter class=%s obj=%p\n", class_name, (void*)obj);
     }
     const char* status = NULL;
     size_t status_len = 0;
+    rxvml_value* status_val = NULL;
+
     if (obj && (rxvml_to_str(vctx, response, &status, &status_len) != 0 || status_len == 0)) {
-        /* Fallback to status property if return value is empty (attribute 4 / register 5) */
-        if (((value*)obj)->num_attributes > 4) {
-            rxvml_to_str(vctx, ((value*)obj)->attributes[4], &status, &status_len);
+        /* Fallback to get_status() method if return value is empty */
+        if (rxvml_call_method(vctx, obj, class_name, "get_status", 0, NULL, &status_val) == 0 && status_val) {
+            rxvml_to_str(vctx, status_val, &status, &status_len);
         }
     }
 
-    if (!status) return 0;
+    if (!status) {
+        if (status_val) rxvml_value_free(status_val);
+        return 0;
+    }
 
     if (strncmp(status, "REJECT", status_len) == 0) {
+        if (status_val) rxvml_value_free(status_val);
         return 0;
     }
 
     if (strncmp(status, "ACCEPT", status_len) == 0) {
         if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: status=ACCEPT\n");
+        if (status_val) rxvml_value_free(status_val);
         return 1;
     }
 
     if (strncmp(status, "PENDING", status_len) == 0) {
         if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: status=PENDING\n");
         ctx->changed = 1; /* Ensure another pass */
+        if (status_val) rxvml_value_free(status_val);
         return 1;
     }
 
@@ -283,6 +305,7 @@ static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context*
         } else {
             mknd_err(err_node, "EXIT_BRIDGE_ERROR");
         }
+        if (status_val) rxvml_value_free(status_val);
         return -1;
     }
 
@@ -310,14 +333,17 @@ static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context*
         if (replacement_code) {
             int rc = ast_grft(ctx, node, replacement_code);
             if (val) rxvml_value_free(val);
+            if (status_val) rxvml_value_free(status_val);
             return rc < 0 ? -1 : -1; /* Node was replaced */
         }
 
         if (val) rxvml_value_free(val);
+        if (status_val) rxvml_value_free(status_val);
         mknd_err(node, "EXIT_BRIDGE_REPLACE_MISSING_TEXT");
         return -1;
     }
 
+    if (status_val) rxvml_value_free(status_val);
     return 0;
 }
 
@@ -370,11 +396,18 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
             size_t i;
             for (i = 0; i < class_count; i++) {
                 rxvml_value* obj = NULL;
-                rxvml_value* nid_val = value_f();
-                set_int(nid_val, node->node_number);
+                rxvml_value* nid_val = rxvml_value_new(vctx);
+                rxvml_set_int(nid_val, node->node_number);
 
                 if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Trying class %s\n", classes[i].class_name);
-                if (rxvml_call_plugin(vctx, classes[i].factory_proc, nid_val, &obj) == 0 && obj) {
+
+                /* Skip internal token class if it somehow ended up in the discovery namespace */
+                if (strstr(classes[i].class_name, ".token")) {
+                    if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Skipping internal class %s\n", classes[i].class_name);
+                    continue;
+                }
+
+                if (rxvml_call_factory(vctx, classes[i].class_name, 1, &nid_val, &obj) == 0 && obj) {
                     if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Factory created object for %s\n", classes[i].class_name);
                     if (rxvml_call_method(vctx, obj, classes[i].class_name, "process", 1, &tok_array, &response) == 0) {
                         if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: process called successfully\n");

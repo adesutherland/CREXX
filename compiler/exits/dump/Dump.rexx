@@ -1,5 +1,6 @@
 options levelb
 namespace rxcp expose dumpexit
+import rxcp_intern
 
 dumpexit: class
     _node_id = .int with register.1
@@ -62,3 +63,9 @@ dumpexit: class
 
     get_error_message: method = .string
         return _error_message
+
+    get_status: method = .string
+        return _status
+
+    get_node_id: method = .int
+        return _node_id
