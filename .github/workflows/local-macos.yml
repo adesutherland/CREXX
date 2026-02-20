@@ -39,105 +39,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           mkdir -p "${{ runner.temp }}/exe/bin"
-          mkdir -p "${{ runner.temp }}/exe/lib"
-          mkdir -p "${{ runner.temp }}/exe/lib/rxfnsb"	  
           mkdir -p "${{ runner.temp }}/exe/examples"
 
-          # Helper: copy if the file exists
-          cp_if() { [[ -f "$1" ]] && cp "$1" "$2" || true; }
-
-          # Release binaries (try .exe and non-.exe)
-          cp_if "${{ runner.temp }}/release/compiler/rxc.exe"       "${{ runner.temp }}/exe/bin/"
-          cp_if "${{ runner.temp }}/release/compiler/rxc"           "${{ runner.temp }}/exe/bin/"
-
-          cp_if "${{ runner.temp }}/release/assembler/rxas.exe"     "${{ runner.temp }}/exe/bin/"
-          cp_if "${{ runner.temp }}/release/assembler/rxas"         "${{ runner.temp }}/exe/bin/"
-
-          cp_if "${{ runner.temp }}/release/disassembler/rxdas.exe" "${{ runner.temp }}/exe/bin/"
-          cp_if "${{ runner.temp }}/release/disassembler/rxdas"     "${{ runner.temp }}/exe/bin/"
-
-          cp_if "${{ runner.temp }}/release/debugger/rxdb.exe"      "${{ runner.temp }}/exe/bin/"
-          cp_if "${{ runner.temp }}/release/debugger/rxdb"          "${{ runner.temp }}/exe/bin/"
-
-          cp_if "${{ runner.temp }}/release/interpreter/rxvm.exe"   "${{ runner.temp }}/exe/bin/"
-          cp_if "${{ runner.temp }}/release/interpreter/rxvm"       "${{ runner.temp }}/exe/bin/"
-
-          cp_if "${{ runner.temp }}/release/interpreter/rxbvm.exe"  "${{ runner.temp }}/exe/bin/"
-          cp_if "${{ runner.temp }}/release/interpreter/rxbvm"      "${{ runner.temp }}/exe/bin/"
-
-          cp_if "${{ runner.temp }}/release/interpreter/rxvme.exe"  "${{ runner.temp }}/exe/bin/"
-          cp_if "${{ runner.temp }}/release/interpreter/rxvme"      "${{ runner.temp }}/exe/bin/"
-
-          cp_if "${{ runner.temp }}/release/interpreter/rxbvme.exe" "${{ runner.temp }}/exe/bin/"
-          cp_if "${{ runner.temp }}/release/interpreter/rxbvme"     "${{ runner.temp }}/exe/bin/"
-
-          cp_if "${{ runner.temp }}/release/bin/crexx.exe"          "${{ runner.temp }}/exe/bin/"
-          cp_if "${{ runner.temp }}/release/bin/crexx"              "${{ runner.temp }}/exe/bin/"
-
-          cp_if "${{ runner.temp }}/release/bin/rxpp.exe"           "${{ runner.temp }}/exe/bin/"
-          cp_if "${{ runner.temp }}/release/bin/rxpp"               "${{ runner.temp }}/exe/bin/"
-
-
-          # Release libs BIF
-          cp_if "${{ runner.temp }}/release/lib/rxfnsb/library.rxbin" "${{ runner.temp }}/exe/lib/rxfnsb"
-
-
-          # Release libs (if present)
-          cp_if "${{ runner.temp }}/release/lib/plugins/strings/rx_strings.rxplugin"      "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/getpi/rx_getpi.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/cipher/rx_cipher.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/system/rx_system.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/map/rx_map.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/odbc/rx_odbc_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/odbc/rx_odbc.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/arrays/rx_arrays.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/rxmath/rx_rxmath_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/rxmath/rx_rxmath.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/sysinfo/rx_sysinfo_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/sysinfo/rx_sysinfo.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/keyaccess/rx_keyaccess.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/keyaccess/rx_keyaccess_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/id/rx_id_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/id/rx_id.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/stack/rx_stack.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/recv390/rx_recv390.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/llist/rx_llist_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/llist/rx_llist.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/treemap/rx_treemap.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/console/rx_console.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/console/rx_console_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/fileio/rx_fileio.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/fileio/rx_fileio_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/gui/rx_gui.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/gui/rx_gui_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/matrix/rx_matrix.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/matrix/rx_matrix_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/pick/rx_pick.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/pick/rx_pick_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/process/rx_process.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/process/rx_process_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/regex/rx_regex.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/regex/rx_regex_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/rxml/rx_rxml.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/rxml/rx_rxml_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/rxtcp/rx_rxtcp.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/rxtcp/rx_rxtcp_static.a"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/socket/rx_socket.rxplugin"     "${{ runner.temp }}/exe/lib/"
-          cp_if "${{ runner.temp }}/release/lib/plugins/socket/rx_socket_static.a"     "${{ runner.temp }}/exe/lib/"
-
-          # other libraries
-          cp_if "${{ runner.temp }}/release/lib/veclib/veclib.rxbin"                     "${{ runner.temp }}/exe/lib/"
+          # Copy everything from unified bin to staging bin
+          cp ${{ runner.temp }}/release/bin/* "${{ runner.temp }}/exe/bin/"
 
           # examples
           cp tests/demo/* "${{ runner.temp }}/exe/examples/"
           	  
           # Docs
-          cp_if LICENSE         "${{ runner.temp }}/exe/"
-          cp_if  README.md      "${{ runner.temp }}/exe/"
-          cp_if  SECURITY.md    "${{ runner.temp }}/exe/"
-          cp_if  INSTALL-RUN.md "${{ runner.temp }}/exe/"
+          cp LICENSE README.md SECURITY.md INSTALL-RUN.md "${{ runner.temp }}/exe/"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
