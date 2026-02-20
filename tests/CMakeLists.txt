@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.24)
+project(tests C)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 add_subdirectory(native_signals)
 add_subdirectory(levelb)
 add_subdirectory(rxpa)
-
-project(tests C)
 
 set(CMAKE_C_STANDARD 90)
 

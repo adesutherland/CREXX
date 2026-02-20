@@ -18,6 +18,7 @@ set_target_properties(decnumber PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_executable(decnumber_test
         decnumber_test.c
 )
+set_target_properties(decnumber_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 target_include_directories(decnumber_test PRIVATE decnumber)
 target_link_libraries(decnumber_test decnumber)
 
@@ -37,6 +38,7 @@ target_link_libraries(mc_decimal decnumber)
 
 # Add the static test harness executable - with auto linking and initialising of the plugin
 add_executable(mc_decimal_test_harness mc_decimal_sanity_harness_test.c)
+set_target_properties(mc_decimal_test_harness PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 target_include_directories(mc_decimal_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(mc_decimal_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
 # Ensure the linker includes the plugin
@@ -45,6 +47,7 @@ target_link_libraries(mc_decimal_test_harness rxvmplugin mc_decimal m)
 
 # Add the dynamic test harness executable
 add_executable(mc_decimal_dyn_test_harness mc_decimal_sanity_harness_test.c)
+set_target_properties(mc_decimal_dyn_test_harness PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 # Add a DYNAMIC define to pass to the compile
 target_compile_definitions(mc_decimal_dyn_test_harness PRIVATE DYNAMIC)
 target_include_directories(mc_decimal_dyn_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
@@ -60,6 +63,7 @@ target_compile_definitions(mc_decimal_manual PRIVATE MANUAL_PLUGIN_LINK)
 
 # Add the static test harness executable - with auto linking and initialising of the plugin
 add_executable(mc_decimal_manual_test_harness mc_decimal_sanity_harness_test.c)
+set_target_properties(mc_decimal_manual_test_harness PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 target_include_directories(mc_decimal_manual_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(mc_decimal_manual_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
 target_link_libraries(mc_decimal_manual_test_harness rxvmplugin mc_decimal_manual m)
@@ -68,6 +72,7 @@ add_dependencies(mc_decimal_manual_test_harness mc_decimal_manual)
 
 # Add the dynamic test2 executable
 add_executable(mc_decimal_full_tests mc_decimal_full_tests.c)
+set_target_properties(mc_decimal_full_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 # Add a DYNAMIC define to pass to the compile
 target_compile_definitions(mc_decimal_full_tests PRIVATE DYNAMIC)
 target_include_directories(mc_decimal_full_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
@@ -105,6 +110,7 @@ set_tests_properties(mc_decimal_test3 PROPERTIES PASS_REGULAR_EXPRESSION
         "ADD:111111111011111111101111111110111111111011111111100:.*SUB:-86419753208641975320864197532086419753208641975320:.*MUL:1219326311370217952261850327338667885945115073915611949397448712086533622923332237463801111263526900:.*DIV:0.1249999988609375000142382812498220214843772247314452846908569339413642883257329463959283381700508958:")
 
 add_test(NAME mc_decimal_dyn_test1 COMMAND mc_decimal_dyn_test_harness 32 1 2)
+set_tests_properties(mc_decimal_dyn_test1 PROPERTIES WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set_tests_properties(mc_decimal_dyn_test1 PROPERTIES PASS_REGULAR_EXPRESSION
         "ADD:3:.*SUB:-1:.*MUL:2:.*DIV:0\\.5:")
 
@@ -114,3 +120,4 @@ set_tests_properties(mc_decimal_manual_test1 PROPERTIES PASS_REGULAR_EXPRESSION
 
 # Decimal Test 2
 add_test(NAME mc_decimal_full_tests COMMAND mc_decimal_full_tests)
+set_tests_properties(mc_decimal_full_tests PROPERTIES WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")

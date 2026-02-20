@@ -21,6 +21,7 @@ target_compile_definitions(db_decimal_manual PRIVATE MANUAL_PLUGIN_LINK)
 
 # Add the test executable
 add_executable(db_decimal_tests db_decimal_tests.c)
+set_target_properties(db_decimal_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 # Add a DYNAMIC define to pass to the compile
 target_compile_definitions(db_decimal_tests PRIVATE DYNAMIC)
 target_include_directories(db_decimal_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
@@ -33,3 +34,4 @@ target_link_libraries(db_decimal_tests rxvmplugin db_decimal_manual m)
 enable_testing()
 
 add_test(NAME db_decimal_tests COMMAND db_decimal_tests)
+set_tests_properties(db_decimal_tests PROPERTIES WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")

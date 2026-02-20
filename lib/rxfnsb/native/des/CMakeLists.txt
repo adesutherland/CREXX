@@ -11,6 +11,7 @@ add_dynamic_plugin_target(des rxdes.c desbase.c desbase.h)
 
 # Test for desbase.c
 add_executable(desbase_test desbase_test.c desbase.c desbase.h)
+set_target_properties(desbase_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
 # Rexx Test
 add_custom_target(DESRexxTest ALL
