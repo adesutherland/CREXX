@@ -1,7 +1,6 @@
 options levelb
 namespace rxcp expose dumpexit
 import rxcp_intern
-import rxfnsb
 
 dumpexit: class
     _node_id = .int with register.1
@@ -35,8 +34,6 @@ dumpexit: class
         /* Check Errors */
         do i = 2 to tokens.0
             ti = tokens[i]
-            /* BIF smoke-test: ensure library lookup works from bin */
-            _ = left(ti.get_text(), 2)
             if ti.get_type() \= "IDENTIFIER" then do
                 _error_token = i
                 _error_message = "Not an identifier"

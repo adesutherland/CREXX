@@ -9,12 +9,12 @@ add_custom_command(
         COMMAND $<TARGET_FILE:rxas> crexx
         COMMAND $<TARGET_FILE:rxcpack> crexx ${CMAKE_BINARY_DIR}/bin/library
         DEPENDS rxas rxc crexx.rexx library rxcpack rxpa _sysinfo
-        OUTPUT crexx.c
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/crexx.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "cREXX compile, assemble and package crexx ..."
 )
 
-add_executable(crexx crexx.c)
+add_executable(crexx ${CMAKE_CURRENT_BINARY_DIR}/crexx.c)
 
 configure_linker_for_static_lib_rel(crexx sysinfo _sysinfo)
 
