@@ -18,6 +18,6 @@ add_executable(crexx crexx.c)
 
 configure_linker_for_static_lib_rel(crexx sysinfo _sysinfo)
 
-target_link_libraries(crexx rxvml rxpa avl_tree platform rxpashim m)
+target_link_libraries(crexx rxvml rxpashim)
 
 add_dependencies(crexx rxvml rxpa avl_tree platform _sysinfo)

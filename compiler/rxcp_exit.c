@@ -227,7 +227,7 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     int rc = rxvml_load_module_file(vctx, mod);
     if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: rxvml_load_module_file(%s) returned %d\n", mod, rc);
 
-    if (rc <= 0) {
+    if (rc <= 0 && root->debug_mode >= 2) {
         fprintf(stderr, "DEBUG_EXIT: Failed to load %s into bridge VM (rc=%d)\n", mod, rc);
     }
 

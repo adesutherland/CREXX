@@ -141,14 +141,14 @@ int rxcmain(int argc, char *argv[]);
 /* functions to interface the lemon parser */
 /* OPTIONS Parser */
 void *Opts_Alloc(void *(*mallocProc)(size_t));
-void Opts_();
-void Opts_Free();
+void Opts_(void *parser, int token, Token *minor, Context *context);
+void Opts_Free(void *parser, void (*freeProc)(void*));
 void Opts_Trace(FILE *stream, char *zPrefix);
 
 /* Level B Parser */
 void *RexxBAlloc(void *(*mallocProc)(size_t));
-void RexxB();
-void RexxBFree();
+void RexxB(void *parser, int token, Token *minor, Context *context);
+void RexxBFree(void *parser, void (*freeProc)(void*));
 void RexxBTrace(FILE *stream, char *zPrefix);
 
 /* Context Factory */

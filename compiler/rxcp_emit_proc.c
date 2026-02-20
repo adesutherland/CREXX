@@ -47,6 +47,8 @@ void emit_proc(ASTNode *node, void *pl) {
     else child3 = NULL;
 
     switch (node->node_type) {
+        default:
+            break;
         case REXX_UNIVERSE:
         {
             char *buf = mprintf("/*\n"

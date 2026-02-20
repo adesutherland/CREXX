@@ -47,7 +47,7 @@ add_library(rxclib STATIC
 
 add_dependencies(rxclib re2c lemon avl_tree platform rxaslib rxpa)
 
-target_link_libraries(rxclib avl_tree platform rxaslib rxpa rxbvml m)
+target_link_libraries(rxclib rxaslib rxbvml)
 
 target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_SOURCE_DIR}/assembler ${CMAKE_SOURCE_DIR}/avl_tree
@@ -56,7 +56,10 @@ target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CU
         ${CMAKE_SOURCE_DIR}/binutils/include)
 
 add_executable(rxc rxc_main.c)
-target_link_libraries(rxc rxclib avl_tree platform rxaslib rxpa rxvmplugin mc_decimal_manual rxbvml m)
+# Link only what is not already linked transitively by rxclib to reduce duplicate library warnings
+# rxclib already links: avl_tree, platform, rxaslib, rxpa, rxbvml, m
+# rxc additionally needs the VM plugin framework and decimal plugin
+target_link_libraries(rxc PRIVATE rxclib)
 
 add_subdirectory(tests)
 add_subdirectory(exits)

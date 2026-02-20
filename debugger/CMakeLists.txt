@@ -16,6 +16,6 @@ add_custom_command(
 
 add_executable(rxdb rxdb.c)
 
-target_link_libraries(rxdb rxvml avl_tree rxpa platform rxpashim m)
+target_link_libraries(rxdb rxvml rxpashim)
 
 add_dependencies(rxdb rxc rxas rxcpack library)

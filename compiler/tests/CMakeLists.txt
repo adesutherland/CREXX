@@ -159,7 +159,7 @@ add_custom_command(
 add_custom_target(stub_plugin_bin DEPENDS stub_plugin.rxbin)
 
 add_executable(test_bridge src/test_bridge.c)
-target_link_libraries(test_bridge rxvml avl_tree platform rxpa mc_decimal_manual m)
+target_link_libraries(test_bridge PRIVATE rxvml rxpashim)
 target_include_directories(test_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 add_dependencies(test_bridge stub_plugin_bin)
 

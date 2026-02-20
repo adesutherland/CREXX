@@ -193,7 +193,7 @@ int XMIT_INIT(const char *filename)
     extern FILE *fin;
     fin = fopen(fn, "rb");
     if (!fin) {
-        MSGE(500, "cannot open\n", fn);
+        MSGE(500, "cannot open %s\n", fn);
         return 4;
     }
 
@@ -273,8 +273,8 @@ char extract_member[FILENAME_MAX]="";
 char zsinglemem[9] = "";                 // eho 20071202
 char zsinglemempath[FILENAME_MAX] = "";  // eho 20071202
 char exportpath[512] = "";  // eho 20071202
-int zsinglebyteswritten = 0;             // eho 20071202
-int zsinglerecswritten = 0;              // eho 20071202
+long zsinglebyteswritten = 0;             // eho 20071202
+long zsinglerecswritten = 0;              // eho 20071202
 int zsingleorc = 0;                      // eho 20071202
 char zxpath[FILENAME_MAX] = "";          // eho 20071206
 char ztranmap[FILENAME_MAX] = "RECV390.MAP"; // eho 20071206
@@ -285,7 +285,7 @@ char *pmem = NULL;            // ptr to ASCII member name
 char membername[9] = "";      // ASCII member name from assocmem
 
 unsigned char *makeRecordptr;           // record buffer for makerec
-unsigned char datestr[80];    // ispf date as char string from ispfdate()
+char datestr[80];    // ispf date as char string from ispfdate()
 
 int recpos = 0;               // position in rec for makerec
 unsigned char *block = 0;     // instorage current IEBCOPY block
@@ -299,9 +299,9 @@ int direntries = 0;
 int ispfstats = 0;            // ISPF stats available (procdir/parsemem)
 
 int fileswritten = 0;
-int databytesread = 0;        // total bytes of data read
-int databyteswritten = 0;
-int datarecswritten = 0;
+long databytesread = 0;        // total bytes of data read
+long databyteswritten = 0;
+long datarecswritten = 0;
 int outmembytes = 0;
 int outrecbytes = 0;          // # bytes output for record (writemem/makerec)
 int membyteswritten = 0;      // # bytes written for member
@@ -454,10 +454,10 @@ const	int		eyepdse = 0x01ca6d0f;		// IEBCOPY PDSE eyecatcher (someday)
         return fatal;
     }
 
-    dsorg	= getvbin(&block[4], 2);
-    blksize = getvbin(&block[6], 2);
-    lrecl	= getvbin(&block[8], 2);					// lrecl from 1st IEBCOPY block
-    recfm   = getvbin(&block[10], 1);
+    dsorg	= getvbin((char *)&block[4], 2);
+    blksize = getvbin((char *)&block[6], 2);
+    lrecl	= getvbin((char *)&block[8], 2);					// lrecl from 1st IEBCOPY block
+    recfm   = getvbin((char *)&block[10], 1);
 
     unsupported = 1;									// assume unsupported dataset
     if (dsorg & 0x8000)	strcpy(txtdsorg, "ISAM");
@@ -581,7 +581,7 @@ int writemem( ) {
     nextmem();
     openout();
     while (! (segflag & 0x20)) {						// have Data segment
-        bytesinblock = getvbin(&block[9], 3);			// # data bytes in IEBCOPY block
+        bytesinblock = getvbin((char *)&block[9], 3);			// # data bytes in IEBCOPY block
         if (vbfile) {
             pos += 4;									// account for VB BDW
             bytesinblock -= 4;
@@ -601,7 +601,7 @@ int writemem( ) {
             makerec(NULL, 0, 0);						// clear output record
             outrecbytes = 0;							// # bytes output for rec
             if (vbfile) {
-                lrecl = getvbin(&block[pos], 2);		// record length for V[B]
+                lrecl = getvbin((char *)&block[pos], 2);		// record length for V[B]
                 lrecl -= 4;
                 pos += 4;
                 if (pos >= maxpos)
@@ -627,12 +627,12 @@ int writemem( ) {
                     bytesleftinblock = maxpos - pos;	// # bytes avail in block
                     if (outlen > bytesleftinblock)
                         outlen = bytesleftinblock;		// all we can output for now
-                    makerec(&block[pos], outlen, 0);	// queue [partial] record
+                    makerec((char *)&block[pos], outlen, 0);	// queue [partial] record
                 }
             }
 
             memrecswritten++;
-            bytes = makerec(makeRecordptr, 0, prtoutrec);			// [list &] output rec
+            bytes = makerec((char *)makeRecordptr, 0, prtoutrec);			// [list &] output rec
             if (fatal)
                 return fatal;
             membyteswritten += bytes;					// accum bytes written for mem
@@ -670,7 +670,7 @@ int makerec(char *ptxt, int len, int showrec ) {
         }
     }
     if (ptxt == NULL) {
-        memset(makeRecordptr, 0, sizeof(makeRecordptr));				// clear record buffer
+        memset(makeRecordptr, 0, lrecl);				// clear record buffer
         recpos = 0;
         return 0;
     }
@@ -772,7 +772,7 @@ int zwritebin( ) {
 
 
     while (! (segflag & 0x20)) {						// have Data segment
-        zzbytesinblock = getvbin(&block[9], 3);	// # data bytes in IEBCOPY block
+        zzbytesinblock = getvbin((char *)&block[9], 3);	// # data bytes in IEBCOPY block
 
         databytesread += zzbytesinblock;
         if (zzbytesinblock < 1) {						// member EOF block
@@ -998,7 +998,7 @@ int closeout(int prthdr) {
         if (outdirpos == 0xff)
             printf(" open err\n");
         else {
-            dircurlines = getvbin(&dir[outdirpos+14], 2);	// # lines ISPF says in member
+            dircurlines = getvbin((char *)&dir[outdirpos+14], 2);	// # lines ISPF says in member
             if (dircurlines == memrecswritten)
                 printf(" OK\n");
             else
@@ -1056,7 +1056,7 @@ int zcloseoutsingle() {
         }
             // eho 20071205 binary. no stats check for binary ************************
         else {
-            dircurlines = getvbin(&dir[dirpos+14], 2);	// # lines ISPF says in member. Here dirpos !!!
+            dircurlines = getvbin((char *)&dir[dirpos+14], 2);	// # lines ISPF says in member. Here dirpos !!!
             if (dircurlines == memrecswritten)
                 printf(" OK\n");
             else {
@@ -1096,9 +1096,9 @@ char *assocmem(unsigned int memttr) {
 
     assocpos = 0;
     for (scanpos = 0; scanpos < dirlen; scanpos += FIXED_ENTRY_LENGTH) {
-        curttr = getvbin( &dir[scanpos+8], 3);
+        curttr = getvbin((char *)&dir[scanpos+8], 3);
         if (curttr == memttr) {
-            p = &dir[scanpos];
+            p = (char *)&dir[scanpos];
             memcpy(membername, p, 8);			// copy member name to return
             ebcdic2ascii( membername, 8);
             membername[8] = '\0';
@@ -1127,13 +1127,13 @@ void nextmem() {
     //
 
     unsigned int zzi = 0;
-    zzi = getvbin(&dir[dirpos+11], 1);
+    zzi = getvbin((char *)&dir[dirpos+11], 1);
 
     while (zzi & 0x80 ) {					 				// zzi == 0x80 || zzi == 0x8F
         char zzalias[sizeof(membername)];
         char zztrue[sizeof(membername)];
 
-        int zzttr = getvbin(&dir[dirpos+8], 3);				// get TTR to compare
+        int zzttr = getvbin((char *)&dir[dirpos+8], 3);				// get TTR to compare
 
         memcpy(zzalias,membername,8);
         memcpy(zztrue,membername,8);
@@ -1153,7 +1153,7 @@ void nextmem() {
         ebcdic2ascii(membername, 8);						// convert to ASCII
         membername[8] = '\0';
 
-        zzi = getvbin(&dir[dirpos+11], 1);					// Indicator byte
+        zzi = getvbin((char *)&dir[dirpos+11], 1);					// Indicator byte
     }
     // eho 20071204 Alias **************************************************************************
 
@@ -1174,12 +1174,12 @@ char *zbasemem(char *remem,unsigned int memttr) {
 
     //assocpos = 0;
     for (zzpos = 0; zzpos < dirlen; zzpos += FIXED_ENTRY_LENGTH) {
-        zzttr = getvbin( &dir[zzpos+8], 3);
-        zzib  = getvbin( &dir[zzpos+11], 1);      	 // Indicator Byte
+        zzttr = getvbin((char *)&dir[zzpos+8], 3);
+        zzib  = getvbin((char *)&dir[zzpos+11], 1);      	 // Indicator Byte
         if (zzttr == memttr ) {
             if ( zzib & 80 ) continue;				// 0x80 || 0x8F
 
-            zzp = &dir[zzpos];
+            zzp = (char *)&dir[zzpos];
             memcpy(remem, zzp, 8);					// copy member name to return
             ebcdic2ascii(remem, 8);
             remem[8] = '\0';
@@ -1295,7 +1295,7 @@ int parsedirblk(int phase ) {
     int		deadbytes;			// # unused bytes at end of 256 byte blk
     int		entlen;
 
-    usedbytes = getvbin( &block[pos], 2);		// how many bytes in block used
+    usedbytes = getvbin((char *)&block[pos], 2);		// how many bytes in block used
     if (usedbytes > 254) {
         printf("Fatal error; parsedirblk found invalid PDS directory block\n");
         snap(&block[pos], 256, "invalid directory block");
@@ -1333,7 +1333,7 @@ int  parsemem(int phase ) {
     x = memcmp( &block[pos], lastmem, 8);			// x'ff..ff' member name?
     if (x == 0)
         return 0;
-    x = getvbin( &block[pos + 8 + 3], 1);
+    x = getvbin((char *)&block[pos + 8 + 3], 1);
     x = x & 0x1f;									// isolate x'1f' bits
     x = x * 2;										// # bytes userdata in entry
     entlen = x + 8 + 3 + 1;			// user data length, member, ttr, indicator byte
@@ -1383,46 +1383,46 @@ int printdirmem() {
         memcpy(work, &block[pos], 8);				// MEMBER
         ebcdic2ascii(work, 8);					// convert to ascii
         strcpy(msg, work);
-        temp = getvbin(&block[pos+8], 3);			// TTR
+        temp = getvbin((char *)&block[pos+8], 3);			// TTR
         sprintf(work, " %.6X", temp);				// make display hex, use upper case letters
         strcat(msg, work);
-        temp = getvbin(&block[pos+11], 1);			// Indicator byte
+        temp = getvbin((char *)&block[pos+11], 1);			// Indicator byte
         sprintf(work, " %.2X", temp);
         strcat(msg, work);
 
         if (!entispfstats) {						// not ISPF stats
-            temp = getvbin(&block[pos+11], 1);
+            temp = getvbin((char *)&block[pos+11], 1);
             strcat(msg, " ");
             temp = temp & 0x1f;						// mask out all but length bits
             temp = temp * 2;						// user data is counted in halfwords
             for (i = 0; i < temp; i++) {
-                scr = getvbin(&block[pos+12+i], 1);
+                scr = getvbin((char *)&block[pos+12+i], 1);
                 sprintf(work, "%.2X", scr);			// list userdata
                 strcat(msg, work);
             }
         } else {
-            temp = getvbin(&block[pos+12], 1);			// VERS
+            temp = getvbin((char *)&block[pos+12], 1);			// VERS
             sprintf(work, " %.2d.", temp);
             strcat(msg, work);
-            temp = getvbin(&block[pos+13], 1);			// MOD
+            temp = getvbin((char *)&block[pos+13], 1);			// MOD
             sprintf(work, "%.2d", temp);
             strcat(msg, work);
 
-            strcat(msg, ispfdate(&block[pos]));			// Creation & modification dates
+            strcat(msg, ispfdate((char *)&block[pos]));			// Creation & modification dates
 
-            temp = getvbin(&block[pos+24], 1);			// modified HH time
+            temp = getvbin((char *)&block[pos+24], 1);			// modified HH time
             sprintf(work, " %.2x", temp);
             strcat(msg, work);
-            temp = getvbin(&block[pos+25], 1);			// modified MM time
+            temp = getvbin((char *)&block[pos+25], 1);			// modified MM time
             sprintf(work, ":%.2x", temp);
             strcat(msg, work);
-            temp = getvbin(&block[pos+26], 2);			// Current # lines
+            temp = getvbin((char *)&block[pos+26], 2);			// Current # lines
             sprintf(work, " %5d", temp);
             strcat(msg, work);
-            temp = getvbin(&block[pos+28], 2);			// Initial # lines
+            temp = getvbin((char *)&block[pos+28], 2);			// Initial # lines
             sprintf(work, " %5d", temp);
             strcat(msg, work);
-            temp = getvbin(&block[pos+30], 2);			// Modified # lines
+            temp = getvbin((char *)&block[pos+30], 2);			// Modified # lines
             sprintf(work, " %5d ", temp);
             strcat(msg, work);
             memset(work, 0, sizeof(work));
@@ -1483,7 +1483,7 @@ char *ispfdate(char *pdirent) {
 void unpackdate(unsigned char *packed, int *xyear, int *xjulian) {
     int		century, year, day, temp, x, y, junk;
 
-    junk = getvbin(packed, 4);	// debug aid
+    junk = getvbin((char *)packed, 4);	// debug aid
     temp = packed[0]; century = (unpack(temp) * 100) + 1900;
 
     temp = packed[1];
@@ -2055,7 +2055,7 @@ void cleanup( ) {
         }
         else {
             MSGW(120,"Member %s . Extract Done. File %s .\n",zza,zsinglemempath);
-            MSGI(130,"Member %s . Stats: %d Bytes, %d Recs.\n",zza,databyteswritten,datarecswritten);
+            MSGI(130,"Member %s . Stats: %ld Bytes, %ld Recs.\n",zza,databyteswritten,datarecswritten);
         }
         MSGI(999,"Report/Extract on %s completed\n\n",dsn);
     }
@@ -2064,13 +2064,13 @@ void cleanup( ) {
     if (fatal == 0) {
         //  printf("\n");
         if(optmember != '+') {
-            printf("Read %d bytes of %s\n", segbytesread, FNin);
-            printf("Read %d bytes of %s data\n", databytesread, dsn);
+            printf("Read %ld bytes of %s\n", segbytesread, FNin);
+            printf("Read %ld bytes of %s data\n", databytesread, dsn);
             if ((fileswritten == 0) || (fileswritten > 1))
-                printf("Wrote %d files, %d bytes, %d records\n",
+                printf("Wrote %d files, %ld bytes, %ld records\n",
                        fileswritten, databyteswritten, datarecswritten);
             else
-                printf("Wrote %d file, %d bytes, %d records\n",
+                printf("Wrote %d file, %ld bytes, %ld records\n",
                        fileswritten, databyteswritten, datarecswritten);
             if ((dirlen / FIXED_ENTRY_LENGTH) != fileswritten)
                 printf("Warning - # PDS members vs. # files written mismatch\n");
@@ -2216,7 +2216,7 @@ void snaplong( void * p, int len, char * title) {
 //-----------------------------------------------------------------------------
 //
 
-#define prt(x)   printf(x)         // use ANSI C printf
+#define prt(x)   printf("%s", x)         // use ANSI C printf
 
 //-----------------------------------------------------------------------------
 //
@@ -2264,7 +2264,7 @@ int jmmsnap( void *ptr, int len, int offset, char *title)
         //-----------------------------------------------------------------------
 
         if (showsnapaddr)
-            x = sprintf(prtbuf, "%.8X %.4x  ", (intptr_t) (ptr+ i), i + offset);
+            x = sprintf(prtbuf, "%.8lX %.4x  ", (unsigned long)(intptr_t) (ptr+ i), i + offset);
         else
             x = sprintf(prtbuf, "%.4x  ", i + offset);
         for (j = 0; j < 16; j = j + 4) {

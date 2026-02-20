@@ -454,8 +454,8 @@ ENDPROC
 
 // Function to display a linked list
 PROCEDURE(listnode) {
-    int nodeindx=GETINT(ARG0);
-    printf("Linked List %d:\n",GETINT(ARG0));
+    rxinteger nodeindx=GETINT(ARG0);
+    printf("Linked List %lld:\n",(long long)GETINT(ARG0));
     if (llEntryStub[nodeindx].sStackFirst== NULL) {
         printf("Empty list\n");
         RETURNINTX(0);
@@ -472,7 +472,7 @@ ENDPROC
 
 // Function to free memory of a linked list
 PROCEDURE(freellist) {
-    int nodeIndex = GETINT(ARG0);
+    rxinteger nodeIndex = GETINT(ARG0);
 
     // Check if the list is already empty
     if (llEntryStub[nodeIndex].sStackFirst == NULL) {
@@ -504,7 +504,7 @@ PROCEDURE(freellist) {
 
 
 PROCEDURE(nextnode) {
-    int qname = GETINT(ARG0);
+    rxinteger qname = GETINT(ARG0);
 
     // Retrieve the current node
     struct NodeEntry *currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackCurrent;
@@ -515,7 +515,7 @@ PROCEDURE(nextnode) {
     // Check if we've reached the end of the list
     if (currentEntry == NULL) {
         char endOfListMessage[32];
-        sprintf(endOfListMessage, "$END-OF-LLIST-%d$", qname);
+        sprintf(endOfListMessage, "$END-OF-LLIST-%d$", (int)qname);
         RETURNSTRX(endOfListMessage);
     }
 
@@ -534,7 +534,7 @@ PROCEDURE(nextnode) {
 
 
 PROCEDURE(currentnode) {
-    int qname = GETINT(ARG0);
+    rxinteger qname = GETINT(ARG0);
 
     // Retrieve the current node; default to the first node if current is NULL
     struct NodeEntry *currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackCurrent;
@@ -545,7 +545,7 @@ PROCEDURE(currentnode) {
     // Check if the list is empty
     if (currentEntry == NULL) {
         char emptyListMsg[32];
-        sprintf(emptyListMsg, "$EMPTY-LLIST-%d$", qname);
+        sprintf(emptyListMsg, "$EMPTY-LLIST-%d$", (int)qname);
         RETURNSTRX(emptyListMsg);  // Return empty list marker
     }
 
@@ -582,14 +582,14 @@ PROCEDURE(prevnode) {
     struct NodeEntry *currentEntry = (struct NodeEntry *) llEntryStub[qname].sStackCurrent;
     if (currentEntry == NULL) {
         char EOLL[16];
-        sprintf(EOLL, "$%s%d$", "TOP-OF-LLIST-",qname);
+        sprintf(EOLL, "$%s%d$", "TOP-OF-LLIST-",(int)qname);
         RETURNSTR(EOLL);
     }
     
     currentEntry = (struct NodeEntry *) currentEntry->sPrev;
     if (currentEntry == NULL) {
         char EOLL[16];
-        sprintf(EOLL, "$%s%d$", "TOP-OF-LLIST-",qname);
+        sprintf(EOLL, "$%s%d$", "TOP-OF-LLIST-",(int)qname);
         RETURNSTR(EOLL);
     } else {
         RETURNSTR(currentEntry->String);

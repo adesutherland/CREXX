@@ -526,7 +526,7 @@ static size_t add_binary_to_pool(Assembler_Context *context, char* hex) {
         sentry->string_len = bin_len;
 
         // Convert the hex string to binary
-        unsigned char *b = sentry->string;
+        unsigned char *b = (unsigned char *)sentry->string;
         char *h = hex;
         while (*h) {
             int val = hexchar2int(*h);
