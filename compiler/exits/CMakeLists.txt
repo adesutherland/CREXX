@@ -15,15 +15,13 @@ add_subdirectory(dump)
 
 # Build the bundle by concatenating all exit components
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxcexits.rxbin
-    COMMAND ${CMAKE_COMMAND} -E cat token.rxbin dump/Dump.rxbin > rxcexits.rxbin
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/rxcexits.rxbin ${CMAKE_BINARY_DIR}/bin/
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/rxcexits.rxbin ${CMAKE_BINARY_DIR}/compiler/
+    OUTPUT ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
+    COMMAND ${CMAKE_COMMAND} -E cat token.rxbin dump/Dump.rxbin > ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
     DEPENDS rxc rxas
             ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin 
             ${CMAKE_CURRENT_BINARY_DIR}/dump/Dump.rxbin
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building rxcexits.rxbin (bundled via concatenation)"
 )
-add_custom_target(compiler_exit_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/rxcexits.rxbin)
+add_custom_target(compiler_exit_bin ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin)
 add_dependencies(compiler_exit_bin token_bin exit_dump_bin)

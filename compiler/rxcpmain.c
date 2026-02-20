@@ -207,6 +207,8 @@ int rxcmain(int argc, char *argv[]) {
     char *file_name;
     char *location = 0;
     char *import_locations = 0;
+    char *exe_path = 0;
+    char *combined_import_locations = 0;
     int num_import_locations;
     size_t ix;
     char c;
@@ -280,6 +282,19 @@ int rxcmain(int argc, char *argv[]) {
     if (i == argc) {
         error_and_exit(2, "Missing input source file");
     }
+
+    /* Add current and executable path to import locations */
+    exe_path = exepath();
+    if (import_locations) {
+        combined_import_locations = malloc(strlen(import_locations) + strlen(exe_path) + 5);
+        sprintf(combined_import_locations, ".;%s;%s", import_locations, exe_path);
+        import_locations = combined_import_locations;
+    } else {
+        combined_import_locations = malloc(strlen(exe_path) + 5);
+        sprintf(combined_import_locations, ".;%s", exe_path);
+        import_locations = combined_import_locations;
+    }
+    free(exe_path);
 
     file_name = argv[i++];
 
@@ -516,6 +531,8 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Free statically linked functions */
    free_static_linked_functions();
+
+    if (combined_import_locations) free(combined_import_locations);
 
     if (errors) return(2);
     if (warnings) return(1);

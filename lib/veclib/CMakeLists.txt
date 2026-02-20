@@ -13,8 +13,8 @@ unset(_prev_target)
 foreach(_binfile ${VECBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
 	add_custom_command(
-		  COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i ${CMAKE_BINARY_DIR}/lib/rxfnsb -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
-		  COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
+		  COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+		  COMMAND $<TARGET_FILE:rxas> ${_basename}
 		  OUTPUT ${_binfile}
 		  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		  COMMENT "cREXX compile and assemble ${_basename} ..."

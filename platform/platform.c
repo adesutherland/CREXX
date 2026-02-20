@@ -56,71 +56,135 @@ char* file2buf(FILE *file, size_t *bytes) {
     return buff;
 }
 
+#include <ctype.h>
+
+/*
+ * Function checks if a file name has a specific extension
+ */
+static int has_extension(const char *name, const char *type) {
+    size_t name_len, type_len;
+    if (!type || !type[0]) return 1;
+    name_len = strlen(name);
+    type_len = strlen(type);
+    if (name_len >= type_len + 1 && name[name_len - type_len - 1] == '.' &&
+        strcmp(name + name_len - type_len, type) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
 /*
  * Function checks if a file exists
- * dir can be null
+ * dir can be null, and can contain multiple directories separated by ;
  * returns 1 if the file exists
  */
 int fileexists(char *name, char *type, char *dir) {
     size_t len;
     char *file_name;
-    int result;
+    int result = 0;
+    char *dir_copy;
+    char *token;
+    char *next_token;
 
-    /* Create the full file name */
-    if (dir) len = strlen(name) + strlen(type) + strlen(dir) + 3;
-    else len = strlen(name) + strlen(type) + 2;
-
-    file_name = malloc(len);
-    if (type[0] == 0) {
-        if (dir) snprintf(file_name, len, "%s/%s", dir, name);
-        else snprintf(file_name, len, "%s", name);
+    /* If name already contains a directory separator, ignore dir */
+    if (name && (strchr(name, '/') || strchr(name, '\\'))) {
+        dir = 0;
     }
-    else {
-        if (dir) snprintf(file_name, len, "%s/%s.%s", dir, name, type);
+
+    if (!dir || !*dir) {
+        /* Single attempt with current directory */
+        len = strlen(name) + strlen(type) + 2;
+        file_name = malloc(len);
+        if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s", name);
         else snprintf(file_name, len, "%s.%s", name, type);
+#if defined(__linux__) || defined(__APPLE__)
+        result = access(file_name, F_OK) != -1;
+#elif defined(_WIN32)
+        DWORD dwAttrib = GetFileAttributes(file_name);
+        result = (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+#endif
+        free(file_name);
+        return result;
     }
 
-    /* Check if the file exists */
-#if defined(__linux__) || defined(__APPLE__)
-    result = access(file_name, F_OK) != -1;
-#elif defined(_WIN32)
-    DWORD dwAttrib = GetFileAttributes(file_name);
-    result =  (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
-    #else
-    result =0; // Unsupported platform
-#endif
+    /* Multiple directories support */
+    dir_copy = strdup(dir);
+    token = dir_copy;
+    while (token) {
+        next_token = strchr(token, ';');
+        if (next_token) *next_token = 0;
 
-    free(file_name);
+        if (*token) {
+            len = strlen(name) + strlen(type) + strlen(token) + 3;
+            file_name = malloc(len);
+            if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s/%s", token, name);
+            else snprintf(file_name, len, "%s/%s.%s", token, name, type);
+#if defined(__linux__) || defined(__APPLE__)
+            result = access(file_name, F_OK) != -1;
+#elif defined(_WIN32)
+            DWORD dwAttrib = GetFileAttributes(file_name);
+            result = (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+#endif
+            free(file_name);
+            if (result) break;
+        }
+
+        token = next_token ? next_token + 1 : 0;
+    }
+    free(dir_copy);
 
     return result;
 }
 
 /*
  * Function opens and returns a file handle
- * dir can be null
+ * dir can be null, and can contain multiple directories separated by ;
  * mode - is the fopen() file mode
  */
 FILE *openfile(char *name, char *type, char *dir, char *mode) {
     size_t len;
     char *file_name;
-    FILE *stream;
+    FILE *stream = NULL;
+    char *dir_copy;
+    char *token;
+    char *next_token;
 
-    if (dir) len = strlen(name) + strlen(type) + strlen(dir) + 3;
-    else len = strlen(name) + strlen(type) + 2;
-
-    file_name = malloc(len);
-    if (type[0] == 0) {
-        if (dir) snprintf(file_name, len, "%s/%s", dir, name);
-        else snprintf(file_name, len, "%s", name);
+    /* If name already contains a directory separator, ignore dir */
+    if (name && (strchr(name, '/') || strchr(name, '\\'))) {
+        dir = 0;
     }
-    else {
-        if (dir) snprintf(file_name, len, "%s/%s.%s", dir, name, type);
+
+    if (!dir || !*dir) {
+        /* Single attempt with current directory */
+        len = strlen(name) + strlen(type) + 2;
+        file_name = malloc(len);
+        if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s", name);
         else snprintf(file_name, len, "%s.%s", name, type);
+        stream = fopen(file_name, mode);
+        free(file_name);
+        return stream;
     }
 
-    stream = fopen(file_name, mode);
+    /* Multiple directories support */
+    dir_copy = strdup(dir);
+    token = dir_copy;
+    while (token) {
+        next_token = strchr(token, ';');
+        if (next_token) *next_token = 0;
 
-    free(file_name);
+        if (*token) {
+            len = strlen(name) + strlen(type) + strlen(token) + 3;
+            file_name = malloc(len);
+            if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s/%s", token, name);
+            else snprintf(file_name, len, "%s/%s.%s", token, name, type);
+            stream = fopen(file_name, mode);
+            free(file_name);
+            if (stream) break;
+        }
+
+        token = next_token ? next_token + 1 : 0;
+    }
+    free(dir_copy);
 
     return stream;
 }

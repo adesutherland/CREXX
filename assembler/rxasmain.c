@@ -159,6 +159,8 @@ static void error_and_exit(int rc, char* message) {
 
 int main(int argc, char *argv[]) {
     Assembler_Context scanner;
+    char *combined_location = 0;
+    char *exe_path = 0;
     int i;
 
     /* Load Instruction Database */
@@ -237,6 +239,19 @@ int main(int argc, char *argv[]) {
     if (i == argc) {
         error_and_exit(2, "Missing input source file");
     }
+
+    /* Add current and executable path to location */
+    exe_path = exepath();
+    if (scanner.location) {
+        combined_location = malloc(strlen(scanner.location) + strlen(exe_path) + 5);
+        sprintf(combined_location, ".;%s;%s", scanner.location, exe_path);
+        scanner.location = combined_location;
+    } else {
+        combined_location = malloc(strlen(exe_path) + 5);
+        sprintf(combined_location, ".;%s", exe_path);
+        scanner.location = combined_location;
+    }
+    free(exe_path);
 
     scanner.file_name = argv[i++];
 

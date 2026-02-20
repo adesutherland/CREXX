@@ -27,14 +27,14 @@ macro(add_crexx_compiler_test NAME SOURCE_FILE)
              COMMAND crexx_test_driver
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/noopt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt.rxas
-             $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/lib/rxfnsb ${COMPILER_NOOPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+             $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${COMPILER_NOOPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
 
     # Test 2 (Opt)
     add_test(NAME ${NAME}_opt
              COMMAND crexx_test_driver
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/opt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt.rxas
-             $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/lib/rxfnsb ${COMPILER_OPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+             $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${COMPILER_OPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
 endmacro()
 
 # Macro to add a compiler failure test
@@ -117,7 +117,7 @@ add_crexx_compiler_test(basic_arrays basic_arrays.rexx)
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
     add_test(NAME ${NAME}_run
-             COMMAND bash -c "$<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/lib/rxfnsb -o ${NAME}_run ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} && $<TARGET_FILE:rxas> -o ${NAME}_run.rxbin ${NAME}_run && $<TARGET_FILE:rxvm> ${CMAKE_BINARY_DIR}/lib/rxfnsb/library.rxbin ${NAME}_run.rxbin | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
+             COMMAND bash -c "$<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${NAME}_run ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} && $<TARGET_FILE:rxas> -o ${NAME}_run.rxbin ${NAME}_run && $<TARGET_FILE:rxvm> ${CMAKE_BINARY_DIR}/bin/library.rxbin ${NAME}_run.rxbin | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endmacro()
 

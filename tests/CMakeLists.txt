@@ -17,7 +17,7 @@ foreach(_binfile ${ASMTESTBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
   add_custom_target(${_basename} ALL DEPENDS ${_binfile}) # Create a "virtual target"
   add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+        COMMAND $<TARGET_FILE:rxas> -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
         DEPENDS ${_basename}.rxas rxas rxvm rxbvm library ${_prev_dependency}
         OUTPUT ${_binfile}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -33,8 +33,8 @@ foreach(_binfile ${REXXTESTBINS})
    # Create a "virtual target" using add_custom_target
    add_custom_target(${_basename} ALL DEPENDS ${_binfile})
    add_custom_command(
-           COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
-           COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
+           COMMAND $<TARGET_FILE:rxc> -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+           COMMAND $<TARGET_FILE:rxas> ${_basename}
            DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm library ${_prev_dependency}
            OUTPUT ${_binfile}
            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

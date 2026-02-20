@@ -10,6 +10,9 @@
 #include <windows.h>
 #else
 #include <dlfcn.h> // Linux/OSX
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 #endif
 #include "rxvmplugin_framework.h"
 #include "platform.h"
@@ -25,28 +28,60 @@ int load_rxvmplugin(char* dir, char *name) {
     int rc = 0;
     char *file_name;
     char *full_file_name = NULL;
+    char *exe_dir = NULL;
+    char *dir_copy = NULL;
+    char *token;
+    char *next_token;
+    char *combined_dir = NULL;
 
-    /* Load the plugin - and run the plugin initialization function */
     /* Create the filename by appending ".rxvmplugin" to the file name */
     file_name = malloc(strlen(name) + strlen(".rxvmplugin") + 1);
     if (!file_name) return -1;
     sprintf(file_name, "%s.rxvmplugin", name);
 
+    exe_dir = exepath();
     if (dir) {
-        full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
+        combined_dir = malloc(strlen(dir) + strlen(exe_dir) + 2);
+        sprintf(combined_dir, "%s;%s", dir, exe_dir);
+    } else {
+        combined_dir = strdup(exe_dir);
+    }
+    free(exe_dir);
+
+    dir_copy = strdup(combined_dir);
+    token = dir_copy;
+    while (token) {
+        next_token = strchr(token, ';');
+        if (next_token) *next_token = 0;
+
+        if (full_file_name) free(full_file_name);
+        full_file_name = malloc(strlen(token) + strlen(file_name) + 2);
         if (full_file_name) {
 #ifdef _WIN32
-            sprintf(full_file_name, "%s\\%s", dir, file_name);
+            sprintf(full_file_name, "%s\\%s", token, file_name);
 #else
-            sprintf(full_file_name, "%s/%s", dir, file_name);
+            sprintf(full_file_name, "%s/%s", token, file_name);
 #endif
         }
-    }
-    else {
-        full_file_name = malloc(strlen(file_name) + 1);
+
         if (full_file_name) {
-            sprintf(full_file_name, "%s", file_name);
+#ifdef _WIN32
+            DWORD dwAttrib = GetFileAttributes(full_file_name);
+            if (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)) break;
+#else
+            if (access(full_file_name, F_OK) == 0) break;
+#endif
         }
+
+        token = next_token ? next_token + 1 : 0;
+    }
+    free(dir_copy);
+    free(combined_dir);
+
+    if (!token) {
+        /* Not found in any directory, try one last time with bare filename */
+        if (full_file_name) free(full_file_name);
+        full_file_name = strdup(file_name);
     }
 
     if (!full_file_name) {
@@ -54,7 +89,7 @@ int load_rxvmplugin(char* dir, char *name) {
         return -1;
     }
 
-/* Windows Version */
+    /* Windows Version */
 #ifdef _WIN32
     {
         HMODULE hDll;

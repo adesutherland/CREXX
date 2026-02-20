@@ -15,6 +15,6 @@ echo "rxdas $1"
 ../cmake-build-debug/disassembler/rxdas $1
 
 echo "rxvm $1"
-../cmake-build-debug/interpreter/rxvm $1 ../cmake-build-debug/lib/rxfnsb/library -a $2 $3 $4
+../cmake-build-debug/interpreter/rxvm $1.rxbin ../cmake-build-debug/lib/rxfnsb/library -a $2 $3 $4
 echo rc=$?
 #../cmake-build-debug/interpreter/rxvm $1

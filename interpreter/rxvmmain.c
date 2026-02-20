@@ -80,6 +80,8 @@ static void license() {
 int main(int argc, char *argv[]) {
 
     char *file_name;
+    char *combined_location = 0;
+    char *exe_path = 0;
     int i, j;
     int rc;
     rxvm_context context;
@@ -176,6 +178,19 @@ int main(int argc, char *argv[]) {
     if (!num_modules) {
         error_and_exit("No input files");
     }
+
+    /* Add current and executable path to location */
+    exe_path = exepath();
+    if (context.location) {
+        combined_location = malloc(strlen(context.location) + strlen(exe_path) + 5);
+        sprintf(combined_location, ".;%s;%s", context.location, exe_path);
+        context.location = combined_location;
+    } else {
+        combined_location = malloc(strlen(exe_path) + 5);
+        sprintf(combined_location, ".;%s", exe_path);
+        context.location = combined_location;
+    }
+    free(exe_path);
 
     for (j=0; j<num_modules; j++) {
 

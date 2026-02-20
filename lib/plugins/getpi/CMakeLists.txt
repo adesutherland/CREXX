@@ -11,10 +11,10 @@ add_dynamic_plugin_target(_getpi getpi.c)
 
 # Build Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-            -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
+        COMMAND $<TARGET_FILE:rxc>
+            -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
             -o getpi_test \"${CMAKE_CURRENT_SOURCE_DIR}/getpi_test\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas getpi_test
+        $<TARGET_FILE:rxas> getpi_test
 
         DEPENDS rxas rxc library _getpi ${CMAKE_CURRENT_SOURCE_DIR}/getpi_test.rexx
         OUTPUT getpi_test.rxbin
@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run getpi_test.rxbin with the getpi plugin
 add_test(NAME getpi_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm getpi_test rx_getpi ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> getpi_test rx_getpi ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

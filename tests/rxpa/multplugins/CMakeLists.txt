@@ -16,7 +16,7 @@ add_dependencies(_plugin2 rxpa library rxvm rxc) # The test (not plugin) depends
 
 # Build Dynamic Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_mult_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxpa_mult_test\" && ${CMAKE_BINARY_DIR}/assembler/rxas rxpa_mult_test
+        COMMAND $<TARGET_FILE:rxc> -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_mult_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxpa_mult_test\" && $<TARGET_FILE:rxas> rxpa_mult_test
         DEPENDS rxas rxc library _plugin1 _plugin2 ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_mult_test.rexx
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxpa_mult_test.rxbin ${CMAKE_CURRENT_BINARY_DIR}/rxpa_mult_test.rxas
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -30,7 +30,7 @@ enable_testing()
 
 # Multiplugin test
 add_test(NAME rxpa_mult_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm rxpa_mult_test rx_plugin1 rx_plugin2 ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> rxpa_mult_test rx_plugin1 rx_plugin2 ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Set the property to check for expected output

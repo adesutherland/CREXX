@@ -491,7 +491,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
             current_rxpa_context->plugin_being_loaded->header.meta_head = -1;
 
             // Load the plugin
-            int rc = load_plugin(&rxpa_functions, context->location, full_file_name);
+            int rc = load_plugin(&rxpa_functions, found_location[0] ? found_location : 0, full_file_name);
             free(full_file_name);
 
             // Check Result

@@ -177,22 +177,37 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     Context* root = ctx->master_context ? ctx->master_context : ctx;
     if (root->rxvml_bridge) return (rxvml_context*)root->rxvml_bridge;
 
-    char *exe_dir = exepath();
     char *combined_loc = NULL;
-    if (root->location) {
-        combined_loc = malloc(strlen(exe_dir) + strlen(root->location) + 2);
-        sprintf(combined_loc, "%s;%s", exe_dir, root->location);
-    } else {
-        combined_loc = strdup(exe_dir);
+    size_t len = 0;
+    int i;
+    if (root->location) len += strlen(root->location) + 1;
+    if (root->import_locations) {
+        for (i = 0; root->import_locations[i]; i++) {
+            len += strlen(root->import_locations[i]) + 1;
+        }
+    }
+
+    if (len > 0) {
+        combined_loc = malloc(len + 1);
+        combined_loc[0] = 0;
+        if (root->location) {
+            strcat(combined_loc, root->location);
+            if (root->import_locations && root->import_locations[0]) strcat(combined_loc, ";");
+        }
+        if (root->import_locations) {
+            for (i = 0; root->import_locations[i]; i++) {
+                strcat(combined_loc, root->import_locations[i]);
+                if (root->import_locations[i+1]) strcat(combined_loc, ";");
+            }
+        }
     }
 
     if (root->debug_mode >= 2) {
-        fprintf(stderr, "DEBUG_EXIT: Initializing compiler exit bridge, combined_loc=%s\n", combined_loc);
+        fprintf(stderr, "DEBUG_EXIT: Initializing compiler exit bridge, combined_loc=%s\n", combined_loc ? combined_loc : "NULL");
     }
 
     rxvml_context* vctx = rxvml_create(combined_loc, root->debug_mode);
-    free(combined_loc);
-    if (exe_dir) free(exe_dir);
+    if (combined_loc) free(combined_loc);
 
     if (!vctx) {
         fprintf(stderr, "DEBUG_EXIT: Failed to create bridge VM context\n");

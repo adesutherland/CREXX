@@ -31,8 +31,15 @@ option(ENABLE_ODBC "Enable ODBC support" OFF)
 option(ENABLE_GTK  "Enable GTK support"  OFF)
 
 include(CTest)
+
 add_subdirectory(re2c)
 add_subdirectory(lemon)
+
+# Set global output directory for all binaries and libraries
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 add_subdirectory(platform)
 add_subdirectory(avl_tree)
 add_subdirectory(cpacker)

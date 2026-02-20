@@ -14,10 +14,10 @@ add_static_plugin_target(_keyaccess keyaccess.c)
 
 # Build Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
+        COMMAND $<TARGET_FILE:rxc>
+        -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o keyaccess_test \"${CMAKE_CURRENT_SOURCE_DIR}/keyaccess_test\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas keyaccess_test
+        $<TARGET_FILE:rxas> keyaccess_test
 
         DEPENDS rxas rxc library _keyaccess ${CMAKE_CURRENT_SOURCE_DIR}/keyaccess_test.rexx
         OUTPUT keyaccess_test.rxbin
@@ -32,6 +32,6 @@ enable_testing()
 
 # Basic test to run keyaccess_test.rxbin with the keyaccess plugin
 add_test(NAME keyaccess_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm keyaccess_test rx_keyaccess ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> keyaccess_test rx_keyaccess ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

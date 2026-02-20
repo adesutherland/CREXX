@@ -67,6 +67,8 @@ int main(int argc, char *argv[]) {
     bin_space pgm;
     char *file_name;
     char *location = 0;
+    char *combined_location = 0;
+    char *exe_path = 0;
     char *output_file_name = 0;
     FILE *output = stdout;
     int i;
@@ -129,6 +131,19 @@ int main(int argc, char *argv[]) {
         error_and_exit(2, "Missing input file");
     }
 
+    /* Add current and executable path to location */
+    exe_path = exepath();
+    if (location) {
+        combined_location = malloc(strlen(location) + strlen(exe_path) + 5);
+        sprintf(combined_location, ".;%s;%s", location, exe_path);
+        location = combined_location;
+    } else {
+        combined_location = malloc(strlen(exe_path) + 5);
+        sprintf(combined_location, ".;%s", exe_path);
+        location = combined_location;
+    }
+    free(exe_path);
+
     file_name = argv[i++];
 
     if (i < argc) {
@@ -187,6 +202,8 @@ int main(int argc, char *argv[]) {
     if (output_file_name) {
         fclose(output);
     }
+
+    if (combined_location) free(combined_location);
 
     /* free_ops(); - NO LONGER NEEDED */
 

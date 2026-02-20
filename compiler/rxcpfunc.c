@@ -1018,7 +1018,7 @@ void rxpa_resetsayexit()  /* Reset Say exit function */
 // oir is called during initialising a statically linked plugin
 void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args) {
     if (plugin_being_loaded_context) {
-        if (plugin_being_loaded_context->debug_mode) printf("Importing Procedures - Loading %s\n", name);
+        if (plugin_being_loaded_context->debug_mode >= 2) printf("Importing Procedures - Loading %s\n", name);
         rximpf_f(plugin_being_loaded_context, plugin_being_loaded, name, option, type, args, 0, 0);
     }
     else {

@@ -32,5 +32,4 @@ target_link_libraries(db_decimal_tests rxvmplugin db_decimal_manual m)
 # Enable Testing
 enable_testing()
 
-# DB Decimal Test
-add_test(db_decimal_tests db_decimal_tests)
+add_test(NAME db_decimal_tests COMMAND db_decimal_tests)
