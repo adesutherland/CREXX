@@ -47,11 +47,11 @@ jobs:
         run: |
           mkdir -p "${{ runner.temp }}/exe/bin"
           mkdir -p "${{ runner.temp }}/exe/debug"
-          # Copy everything from unified bin to staging bin
-          cp ${{ runner.temp }}/release/bin/* "${{ runner.temp }}/exe/bin/"
+          # Copy everything from release bin to staging bin
+          cp "${{ runner.temp }}/release/bin/"* "${{ runner.temp }}/exe/bin/"
           # Copy everything from debug bin to debug staging
-          cp ${{ runner.temp }}/debug/bin/* "${{ runner.temp }}/exe/debug/"
-          cp LICENSE README.md SECURITY.md "${{ runner.temp }}/exe/"
+          cp "${{ runner.temp }}/debug/bin/"* "${{ runner.temp }}/exe/debug/"
+          cp LICENSE README.md SECURITY.md INSTALL-RUN.md "${{ runner.temp }}/exe/"
         shell: bash
 
       - name: Upload Executable
@@ -168,16 +168,16 @@ jobs:
         cmake -G Ninja -B "${{ runner.temp }}/release" -DCMAKE_BUILD_TYPE=MinSizeRel -DCREXX_FORCE_SYSTEM_OPENSSL=ON
         cmake --build "${{ runner.temp }}/release"
 
-    - name: Get Executable
+    - name: Get Executables
+      shell: msys2 {0}
       run: |
         mkdir -p "${{ runner.temp }}/exe/bin"
         mkdir -p "${{ runner.temp }}/exe/debug"
-        # Copy everything from unified bin to staging bin
-        cp ${{ runner.temp }}/release/bin/* "${{ runner.temp }}/exe/bin/"
+        # Copy everything from release bin to staging bin
+        cp "${{ runner.temp }}/release/bin/"* "${{ runner.temp }}/exe/bin/"
         # Copy everything from debug bin to debug staging
-        cp ${{ runner.temp }}/debug/bin/* "${{ runner.temp }}/exe/debug/"
-        cp LICENSE README.md SECURITY.md "${{ runner.temp }}/exe/"
-      shell: bash
+        cp "${{ runner.temp }}/debug/bin/"* "${{ runner.temp }}/exe/debug/"
+        cp LICENSE README.md SECURITY.md INSTALL-RUN.md "${{ runner.temp }}/exe/"
 
     - name: Upload Executable
       if: env.RELEASE_ID
@@ -226,15 +226,15 @@ jobs:
           cmakeBuildType: MinSizeRel # optional, default is Debug
           buildDirectory: "${{ runner.temp }}/release"
 
-      - name: Get Executable
+      - name: Get Executables
         run: |
           mkdir -p "${{ runner.temp }}/exe/bin"
           mkdir -p "${{ runner.temp }}/exe/debug"
-          # Copy everything from unified bin to staging bin
-          cp ${{ runner.temp }}/release/bin/* "${{ runner.temp }}/exe/bin/"
+          # Copy everything from release bin to staging bin
+          cp "${{ runner.temp }}/release/bin/"* "${{ runner.temp }}/exe/bin/"
           # Copy everything from debug bin to debug staging
-          cp ${{ runner.temp }}/debug/bin/* "${{ runner.temp }}/exe/debug/"
-          cp LICENSE README.md SECURITY.md "${{ runner.temp }}/exe/"
+          cp "${{ runner.temp }}/debug/bin/"* "${{ runner.temp }}/exe/debug/"
+          cp LICENSE README.md SECURITY.md INSTALL-RUN.md "${{ runner.temp }}/exe/"
         shell: bash
 
       - name: Upload Executable
