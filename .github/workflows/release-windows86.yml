@@ -57,8 +57,8 @@ jobs:
           mkdir -p "${{ runner.temp }}/exe/bin"
           mkdir -p "${{ runner.temp }}/exe/examples"
 
-          # Copy everything from unified bin to staging bin
-          cp ${{ runner.temp }}/release/bin/* "${{ runner.temp }}/exe/bin/"
+          # Copy everything from release bin to staging bin
+          cp "${{ runner.temp }}/release/bin/"* "${{ runner.temp }}/exe/bin/"
 
           # examples
           cp tests/demo/* "${{ runner.temp }}/exe/examples/"
