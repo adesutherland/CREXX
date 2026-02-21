@@ -22,7 +22,7 @@ foreach(_binfile ${ASMTESTBINS})
   add_custom_target(${_basename} ALL DEPENDS ${_binfile}) # Create a "virtual target"
   add_custom_command(
         COMMAND $<TARGET_FILE:rxas> -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
-        DEPENDS ${_basename}.rxas rxas rxvm rxbvm library ${_prev_dependency}
+        DEPENDS ${_basename}.rxas rxas rxvm rxbvm library compiler_exit_bin ${_prev_dependency}
         OUTPUT ${_binfile}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "cREXX Assemble Test ${_basename} ..."
@@ -39,7 +39,7 @@ foreach(_binfile ${REXXTESTBINS})
    add_custom_command(
            COMMAND $<TARGET_FILE:rxc> -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
            COMMAND $<TARGET_FILE:rxas> ${_basename}
-           DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm library ${_prev_dependency}
+           DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm library compiler_exit_bin ${_prev_dependency}
            OUTPUT ${_binfile}
            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
            COMMENT "cREXX Assemble Test ${_basename} ..."

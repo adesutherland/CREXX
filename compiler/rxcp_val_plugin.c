@@ -34,6 +34,7 @@ walker_result exit_dispatch_walker(walker_direction direction, ASTNode *node, vo
     Context *context = (Context *)payload;
 
     if (direction == in) {
+        if (context->disable_exits) return result_normal;
         if (node->scope) {
             context->current_scope = node->scope;
         }

@@ -92,7 +92,7 @@ foreach(_binfile ${REXXBINS})
     add_custom_target(${_basename} DEPENDS ${_binfile}) # Create a "virtual target"
 
     add_custom_command(
-            COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${_basename} ${_rexx_file}
+            COMMAND $<TARGET_FILE:rxc> -x -i ${CMAKE_BINARY_DIR}/bin -o ${_basename} ${_rexx_file}
             COMMAND $<TARGET_FILE:rxas> ${_basename}
             DEPENDS rxas rxc library ${_rexx_dep} ${_prev_target}
             OUTPUT ${_binfile}

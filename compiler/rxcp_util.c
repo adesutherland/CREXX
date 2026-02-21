@@ -554,6 +554,7 @@ int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code) {
     frag->file_name = "exit_fragment";
     frag->level = ctx->level;
     frag->debug_mode = ctx->debug_mode;
+    frag->disable_exits = ctx->disable_exits;
 
     /* Wrap fragment in 'options levelb' to ensure it parses correctly */
     char* wrapped_replacement = malloc(strlen(rexx_code) + 32);

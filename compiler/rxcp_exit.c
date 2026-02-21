@@ -170,11 +170,12 @@ static void rxcp_say_exit(char* message) {
 }
 
 static rxvml_context* rxcp_init_bridge(Context* ctx) {
-    if (ctx->disable_exits) return NULL;
-    if (ctx->rxvml_bridge) return (rxvml_context*)ctx->rxvml_bridge;
-
     /* Use master context if available */
     Context* root = ctx->master_context ? ctx->master_context : ctx;
+
+    if (root->disable_exits) return NULL;
+    if (ctx->rxvml_bridge) return (rxvml_context*)ctx->rxvml_bridge;
+
     if (root->rxvml_bridge) return (rxvml_context*)root->rxvml_bridge;
 
     char *combined_loc = NULL;

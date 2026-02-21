@@ -111,7 +111,7 @@ unset(_prev_target)
 foreach(_binfile ${REXXBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
 	add_custom_command(
-		  COMMAND $<TARGET_FILE:rxc> -o ${_basename} -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+		  COMMAND $<TARGET_FILE:rxc> -x -o ${_basename} -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
 		  COMMAND $<TARGET_FILE:rxas> ${_basename}
 		  DEPENDS rxas rxc ../rxas/library-rxas.rxbin ${REXXSRC} ${_prev_target}
 		  OUTPUT ${_binfile}

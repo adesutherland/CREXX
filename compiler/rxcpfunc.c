@@ -1197,6 +1197,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     context->debug_mode = parent_context->debug_mode;
     context->location = parent_context->location;
     context->file_name = (char*) filename(file_name);
+    context->disable_exits = parent_context->disable_exits;
 
     /* Propagate the master_context */
     context->master_context = parent_context->master_context;
@@ -1336,6 +1337,7 @@ static Context *parseRexx(Context* parent_context, char *location, char* file_na
             context->level = level;
             context->debug_mode = debug_mode;
             context->master_context = parent_context->master_context;
+            context->disable_exits = parent_context->disable_exits;
 
             rexbpars(context);
             break;
