@@ -210,8 +210,9 @@ do i=1 to words(filenames)
     if verbose>3 then do
       call printFileToSTDout filename'.rxas'
     end
-    
-  'rxas' filename
+
+  binfile = chop_suffix(filename)  
+  'rxas -o' binfile filename
   if verbose then do
     if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
     else res = esc||ANSI_RED||RC||esc||ANSI_RESET
@@ -267,7 +268,7 @@ do i=1 to words(filenames)
     if RC>0 then exit  
     end
   else do
-    ex_command = 'rxvme' filename modules
+    ex_command = 'rxvme' binfile modules
 
     if verbose>1 then do
       if execute then say 'crexx executes:' ex_command
@@ -367,3 +368,16 @@ return 'done'
   /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  bin/CMakeFiles/crexx.dir/crexx.c.o -o bin/crexx  -Wl,-force_load,"/Users/rvjansen/apps/crexx_release/lib/plugins/sysinfo/rx_sysinfo_static.a"  interpreter/librxvml.a  rxpa/librxpa.a  avl_tree/libavl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a
   */
 
+chop_suffix: procedure = .string
+arg fn = .string
+-- we want to use parse when it is available
+lp=lastpos('.',fn)
+if lp >0 then
+  do
+    return left(fn,lp-1)
+  end
+  else do
+    return fn
+  end
+  return 'error in chop_suffix'
+  
