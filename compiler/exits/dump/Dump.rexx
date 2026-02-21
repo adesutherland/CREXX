@@ -1,6 +1,6 @@
 options levelb
-namespace rxcp expose dumpexit
-import rxcp_intern
+namespace rxcpexits expose dumpexit
+import rxcp
 
 dumpexit: class
     _node_id = .int with register.1

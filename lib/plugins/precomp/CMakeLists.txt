@@ -28,5 +28,5 @@ add_executable(rxpp rxpp.c)
 # First, inject the whole-archive of precomp_static so its objects come before providers
 configure_linker_for_static_lib(rxpp precomp)
 # Now link other required libraries. Place rxpashim (which provides rxpa_* symbols) AFTER the precomp objects.
-target_link_libraries(rxpp rxvml rxpashim)
+target_link_libraries(rxpp precomp_static rxvml rxpashim)
 add_dependencies(rxpp rxvml rxpa avl_tree platform)

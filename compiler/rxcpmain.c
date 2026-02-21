@@ -54,7 +54,8 @@ static void help() {
             "  -l location     Working Location (directory)\n"
             "  -i import       Locations to import file - \";\" delimited list\n"
             "  -o output_file  REXX Assembler Output File\n"
-            "  -n              No Optimising\n";
+            "  -n              No Optimising\n"
+            "  -x              Disable compiler exits\n";
 
     printf("%s",helpMessage);
 }
@@ -213,6 +214,7 @@ int rxcmain(int argc, char *argv[]) {
     size_t ix;
     char c;
     int do_optimise = 1;
+    int disable_exits = 0;
     char *file_directory = 0;
 
     /* Parse arguments  */
@@ -259,6 +261,10 @@ int rxcmain(int argc, char *argv[]) {
 
             case 'n': /* No Optimisation */
                 do_optimise = 0;
+                break;
+
+            case 'x': /* Disable Exits */
+                disable_exits = 1;
                 break;
 
             case 'v': /* Version */
@@ -385,6 +391,7 @@ int rxcmain(int argc, char *argv[]) {
     context->debug_mode = debug_mode;
     context->stop_after_parse = stop_after_parse;
     context->optimise = do_optimise;
+    context->disable_exits = disable_exits || (getenv("RXCP_DISABLE_EXIT") != NULL);
     if (file_directory) context->location = strdup(file_directory);
     else context->location = location ? strdup(location) : 0;
 

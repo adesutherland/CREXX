@@ -89,6 +89,7 @@ struct Context {
     int iterations;
     int in_factory;
     char in_exit_bridge;
+    char disable_exits;
 
     /* Recursion Guard for Imports */
     char** loading_files;

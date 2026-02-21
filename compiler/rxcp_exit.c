@@ -115,7 +115,7 @@ static void collect_tokens(rxvml_context *ctx, ASTNode *node, rxvml_value *token
         rxvml_set_int(args[8], node->value_type);
 
         rxvml_value *tok_obj = NULL;
-        if (rxvml_call_factory(ctx, "rxcp_intern.token", 9, args, &tok_obj) == 0 && tok_obj) {
+        if (rxvml_call_factory(ctx, "rxcp.token", 9, args, &tok_obj) == 0 && tok_obj) {
             rxvml_array_set(ctx, token_array, *count + 1, tok_obj);
             if (node_map) node_map[*count] = node;
             (*count)++;
@@ -170,7 +170,7 @@ static void rxcp_say_exit(char* message) {
 }
 
 static rxvml_context* rxcp_init_bridge(Context* ctx) {
-    if (getenv("RXCP_DISABLE_EXIT")) return NULL;
+    if (ctx->disable_exits) return NULL;
     if (ctx->rxvml_bridge) return (rxvml_context*)ctx->rxvml_bridge;
 
     /* Use master context if available */
@@ -210,15 +210,18 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     if (combined_loc) free(combined_loc);
 
     if (!vctx) {
-        fprintf(stderr, "DEBUG_EXIT: Failed to create bridge VM context\n");
-        return NULL;
+        fprintf(stderr, "ERROR: Failed to create bridge VM context for compiler exits\n");
+        exit(-1);
     }
 
     /* Set say exit to print to stderr */
     rxvml_set_say_exit(rxcp_say_exit);
 
     if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Loading library.rxbin into bridge VM\n");
-    rxvml_load_module_file(vctx, "library");
+    if (rxvml_load_module_file(vctx, "library") <= 0) {
+        fprintf(stderr, "ERROR: Failed to load library.rxbin into bridge VM\n");
+        exit(-1);
+    }
 
     const char* mod = getenv("RXCP_EXIT_MODULE");
     if (!mod) mod = "rxcexits";
@@ -227,8 +230,9 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     int rc = rxvml_load_module_file(vctx, mod);
     if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: rxvml_load_module_file(%s) returned %d\n", mod, rc);
 
-    if (rc <= 0 && root->debug_mode >= 2) {
-        fprintf(stderr, "DEBUG_EXIT: Failed to load %s into bridge VM (rc=%d)\n", mod, rc);
+    if (rc <= 0) {
+        fprintf(stderr, "ERROR: Failed to load exit module %s into bridge VM (rc=%d)\n", mod, rc);
+        exit(-1);
     }
 
     root->rxvml_bridge = vctx;
@@ -397,7 +401,7 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
     if (!handled) {
         rxvml_class_info* classes = NULL;
         size_t class_count = 0;
-        rxvml_discover_classes(vctx, "rxcp", &classes, &class_count);
+        rxvml_discover_classes(vctx, "rxcpexits", &classes, &class_count);
 
         if (classes) {
             size_t i;

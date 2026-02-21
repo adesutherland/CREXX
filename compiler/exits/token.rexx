@@ -1,5 +1,5 @@
 options levelb
-namespace rxcp_intern expose token
+namespace rxcp expose token
 
 token: class
     _type = .int with register.1
