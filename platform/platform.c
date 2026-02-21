@@ -73,6 +73,30 @@ static int has_extension(const char *name, const char *type) {
     return 0;
 }
 
+/* Checks if a file has any extension */
+int has_any_extension(const char *name) {
+    const char *last_slash = strrchr(name, '/');
+#ifdef _WIN32
+    const char *last_bsl = strrchr(name, '\\');
+    if (!last_slash || (last_bsl && last_bsl > last_slash)) last_slash = last_bsl;
+#endif
+    const char *fname = last_slash ? last_slash + 1 : name;
+    return strchr(fname, '.') != NULL;
+}
+
+/* Strips the rightmost extension from a filename if it matches the provided extension */
+char *strip_rightmost_extension_if(const char *name, const char *ext) {
+    if (has_extension(name, ext)) {
+        size_t name_len = strlen(name);
+        size_t ext_len = strlen(ext);
+        char *new_name = malloc(name_len - ext_len); /* -ext_len - 1 (for dot) + 1 (for null) = -ext_len */
+        strncpy(new_name, name, name_len - ext_len - 1);
+        new_name[name_len - ext_len - 1] = 0;
+        return new_name;
+    }
+    return strdup(name);
+}
+
 /*
  * Function checks if a file exists
  * dir can be null, and can contain multiple directories separated by ;

@@ -150,7 +150,8 @@ int main(int argc, char *argv[]) {
         error_and_exit(2, "Unexpected Arguments");
     }
 
-    fp = openfile(file_name, "rxbin", location, "rb");
+    const char *type_bin = has_any_extension(file_name) ? "" : "rxbin";
+    fp = openfile(file_name, (char*)type_bin, location, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR: opening file %s\n", file_name);
         exit (-1);

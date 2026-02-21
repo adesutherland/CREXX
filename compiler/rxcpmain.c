@@ -308,7 +308,11 @@ int rxcmain(int argc, char *argv[]) {
         error_and_exit(2, "Unexpected Arguments");
     }
 
-    if (!output_file_name) output_file_name = file_name;
+    char *allocated_output_file_name = 0;
+    if (!output_file_name) {
+        allocated_output_file_name = strip_rightmost_extension_if(file_name, "rexx");
+        output_file_name = allocated_output_file_name;
+    }
 
     /* Context Structure */
     context = cntx_f();
@@ -540,6 +544,8 @@ int rxcmain(int argc, char *argv[]) {
    free_static_linked_functions();
 
     if (combined_import_locations) free(combined_import_locations);
+
+    if (allocated_output_file_name) free(allocated_output_file_name);
 
     if (errors) return(2);
     if (warnings) return(1);

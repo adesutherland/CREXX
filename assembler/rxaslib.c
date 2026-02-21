@@ -30,7 +30,7 @@ int rxasmble(Assembler_Context *scanner) {
 
     /* Opening and Assemble file */
     if (scanner->debug_mode) printf("Assembling %s\n", scanner->file_name);
-    if (rxasinfl(scanner,0)) return -1;
+    if (rxasinfl(scanner, has_any_extension(scanner->file_name))) return -1;
 
     /* Parse & Process */
     rxaspars(scanner);
@@ -209,13 +209,19 @@ int rxasoutf(Assembler_Context *scanner) {
 
     if (scanner->severity == 0) {
         /* Output File */
-        if (scanner->output_file_name == 0) scanner->output_file_name = scanner->file_name;
+        char *effective_output_file_name = scanner->output_file_name;
+        char *allocated_output_file_name = 0;
+        if (effective_output_file_name == 0) {
+            allocated_output_file_name = strip_rightmost_extension_if(scanner->file_name, "rxas");
+            effective_output_file_name = allocated_output_file_name;
+        }
 
-        if (scanner->debug_mode) printf("Writing to %s\n", scanner->output_file_name);
+        if (scanner->debug_mode) printf("Writing to %s\n", effective_output_file_name);
 
-        outFile = openfile(scanner->output_file_name, "rxbin", scanner->location, "wb");
+        outFile = openfile(effective_output_file_name, "rxbin", scanner->location, "wb");
         if (outFile == NULL) {
-            fprintf(stderr, "Can't open output file: %s\n", scanner->output_file_name);
+            fprintf(stderr, "Can't open output file: %s\n", effective_output_file_name);
+            if (allocated_output_file_name) free(allocated_output_file_name);
             return -1;
         }
 
@@ -235,6 +241,7 @@ int rxasoutf(Assembler_Context *scanner) {
         module.constant = pgm->const_pool;
         write_module(&module,outFile);
         fclose(outFile);
+        if (allocated_output_file_name) free(allocated_output_file_name);
     }
     else {
         fprintf(stderr, "Errors in assembler can't generate output file: %s\n", scanner->output_file_name);

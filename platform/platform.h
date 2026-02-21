@@ -110,4 +110,10 @@ const char *filename(const char *path);
 /* returns null if there is no directory part */
 char *file_dir(const char *path);
 
+/* Checks if a file has any extension */
+int has_any_extension(const char *name);
+
+/* Strips the rightmost extension from a filename if it matches the provided extension */
+char *strip_rightmost_extension_if(const char *name, const char *ext);
+
 #endif //CREXX_PLATFORM_H
