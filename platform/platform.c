@@ -366,11 +366,15 @@ char* exepath()
 
     if (!len) return name;
 
-    for (i = len - 1; i; i--)
+    for (i = len; i > 0; i--)
     {
-        if ( name[i] == '\\' || name[i] == '/' )
+        if ( name[i-1] == '\\' || name[i-1] == '/' )
         {
-            name[i] = 0;
+            if (i == 1) {
+                name[1] = 0; /* Keep the root separator */
+            } else {
+                name[i-1] = 0;
+            }
             break;
         }
     }
@@ -426,9 +430,10 @@ char* exefqname()
 }
 
 /* Gets the file extention of a path */
-const char *filenext(const char *filename) {
-    const char *dot = strrchr(filename, '.');
-    if(!dot || dot == filename) return "";
+const char *filenext(const char *filename_in) {
+    const char *fname = filename(filename_in);
+    const char *dot = strrchr(fname, '.');
+    if(!dot || dot == fname) return "";
     return dot + 1;
 }
 
@@ -439,12 +444,11 @@ const char *filename(const char *path)
     size_t i;
     if (!len) return "";
 
-    for (i = len - 1; i; i--)
+    for (i = len; i > 0; i--)
     {
-        if ( path[i] == '\\' || path[i] == '/' )
+        if ( path[i-1] == '\\' || path[i-1] == '/' )
         {
-            path = path + i + 1;
-            break;
+            return path + i;
         }
     }
     return path;
@@ -455,16 +459,23 @@ const char *filename(const char *path)
 char *file_dir(const char *path)
 {
     size_t len = strlen(path);
+    size_t i;
     if (!len) return 0;
     char* result;
 
-    for (len--; len; len--)
+    for (i = len; i > 0; i--)
     {
-        if ( path[len] == '\\' || path[len] == '/' )
+        if ( path[i-1] == '\\' || path[i-1] == '/' )
         {
-            result = malloc(len + 1);
-            result[len] = 0;
-            memcpy(result, path, len);
+            if (i == 1) {
+                result = malloc(2);
+                result[0] = path[0];
+                result[1] = 0;
+                return result;
+            }
+            result = malloc(i);
+            result[i-1] = 0;
+            memcpy(result, path, i-1);
             return result;
         }
     }
