@@ -62,10 +62,10 @@ set_target_properties(_odbc PROPERTIES
 
 # Build Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
+        COMMAND $<TARGET_FILE:rxc>
+        -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o odbc_test \"${CMAKE_CURRENT_SOURCE_DIR}/odbc_test\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas odbc_test
+        $<TARGET_FILE:rxas> odbc_test
 
         DEPENDS rxas rxc library _odbc ${CMAKE_CURRENT_SOURCE_DIR}/odbc_test.rexx
         OUTPUT odbc_test.rxbin
@@ -80,7 +80,7 @@ enable_testing()
 
 # Basic test to run odbc_test.rxbin with the odbc plugin
 add_test(NAME odbc_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm odbc_test rx_odbc ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> odbc_test rx_odbc ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
 

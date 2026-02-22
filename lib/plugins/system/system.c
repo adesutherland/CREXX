@@ -338,7 +338,7 @@ PROCEDURE(rxbin_modules) {
 
     // Scan for components
     long pos = 0, modnum=0;
-    printf("List Library content\n",modnum);
+    printf("List Library content\n");
     printf("--------------------------------------------------------------------------------\n");
     while (pos < filesize - MARKER_LEN) {
         if (memcmp(&buffer[pos], MARKER, MARKER_LEN) == 0) {
@@ -357,10 +357,13 @@ PROCEDURE(rxbin_modules) {
             if (component_length > NAME_OFFSET) {
                 char raw_name[256+ 1] = {0};
                 long name_pos = component_start + NAME_OFFSET;
-             // Copy and null-terminate
-                strcpy(raw_name, &buffer[name_pos]);
-             // Normalize path separators
-                for (int i = 0; i < MAX_NAME_LEN; i++) {
+             // Copy bounded and null-terminate
+                size_t avail = (component_length > NAME_OFFSET) ? (size_t)(component_length - NAME_OFFSET) : 0;
+                size_t copy_len = (avail < 256) ? avail : 256;
+                memcpy(raw_name, (const char *)&buffer[name_pos], copy_len);
+                raw_name[copy_len] = '\0';
+             // Normalize path separators (limit to expected name length)
+                for (int i = 0; raw_name[i] && i < MAX_NAME_LEN; i++) {
                     if (raw_name[i] == '\\') raw_name[i] = '/';
                 }
 

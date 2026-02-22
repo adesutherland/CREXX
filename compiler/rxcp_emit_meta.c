@@ -382,7 +382,15 @@ void add_class_symbol(Symbol *symbol, void *payload) {
                         if (sn->parent && sn->parent->node_type == DEFINE) {
                             ASTNode *nr = ast_chld(sn->parent, NODE_REGISTER, 0);
                             if (nr) {
-                                int reg_index = (int)nr->int_value;
+                                int reg_index = 0;
+                                /* Prefer child INTEGER value for robustness */
+                                ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                                if (idx) reg_index = node_to_integer(idx);
+                                else if (nr->int_value) reg_index = (int)nr->int_value;
+                                else if (nr->child && nr->child->token) {
+                                    /* Fallback: parse from token text */
+                                    reg_index = (int)strtol(nr->child->token->token_string, NULL, 10);
+                                }
                                 char *attr_fqn = sym_frnm(s);
                                 char *type_str = type_nm(s->type);
                                 char *buf2 = mprintf(".meta \"%s\"=\"b\" \"%s\" .attr %d\n",

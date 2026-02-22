@@ -15,6 +15,7 @@ function(add_dynamic_plugin_target plugin_name)
     target_compile_definitions(${plugin_name} PRIVATE "PLUGIN_ID=rx${plugin_name}")
     set_target_properties(${plugin_name} PROPERTIES PREFIX "rx")
     set_target_properties(${plugin_name} PROPERTIES SUFFIX ".rxplugin")
+    set_target_properties(${plugin_name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
     # Virtual target rx{plugin_name} to rx{plugin_name}.rxplugin
     # add_custom_target(rx${plugin_name} ALL DEPENDS ${plugin_name})
@@ -60,10 +61,10 @@ function(configure_linker_for_decl_lib target pluginId)
         set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_init")
     elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
         # For GCC
-        target_link_libraries(${target} "-Wl,--whole-archive \"${CMAKE_CURRENT_BINARY_DIR}/rx${pluginId}_decl.a\" -Wl,--no-whole-archive")
+        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}_decl>\" -Wl,--no-whole-archive")
     elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         # For Clang
-        target_link_libraries(${target} "-Wl,-force_load,\"${CMAKE_CURRENT_BINARY_DIR}/rx${pluginId}_decl.a\"")
+        target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}_decl>\"")
     endif()
 endfunction()
 
@@ -74,10 +75,10 @@ function(configure_linker_for_static_lib target pluginId)
         set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_init")
     elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
         # For GCC
-        target_link_libraries(${target} "-Wl,--whole-archive \"${CMAKE_CURRENT_BINARY_DIR}/rx${pluginId}_static.a\" -Wl,--no-whole-archive")
+        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}_static>\" -Wl,--no-whole-archive")
     elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         # For Clang
-        target_link_libraries(${target} "-Wl,-force_load,\"${CMAKE_CURRENT_BINARY_DIR}/rx${pluginId}_static.a\"")
+        target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}_static>\"")
     endif()
 endfunction()
 
@@ -89,10 +90,10 @@ function(configure_linker_for_static_lib_rel target dirId pluginId)
         set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_init")
     elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
         # For GCC
-        target_link_libraries(${target} "-Wl,--whole-archive \"${CMAKE_BINARY_DIR}/lib/plugins/${dirId}/rx${pluginId}_static.a\" -Wl,--no-whole-archive")
+        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}_static>\" -Wl,--no-whole-archive")
     elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         # For Clang
-        target_link_libraries(${target} "-Wl,-force_load,\"${CMAKE_BINARY_DIR}/lib/plugins/${dirId}/rx${pluginId}_static.a\"")
+        target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}_static>\"")
     endif()
 endfunction()
 

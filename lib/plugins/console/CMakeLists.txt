@@ -11,10 +11,10 @@ add_dynamic_plugin_target(_console console.c)
 
 # Build Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
+        COMMAND $<TARGET_FILE:rxc>
+        -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o console_test \"${CMAKE_CURRENT_SOURCE_DIR}/console_test\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas console_test
+        $<TARGET_FILE:rxas> console_test
 
         DEPENDS rxas rxc library _console ${CMAKE_CURRENT_SOURCE_DIR}/console_test.rexx
         OUTPUT console_test.rxbin
@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run console_test.rxbin with the console plugin
 add_test(NAME console_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm console_test rx_console ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> console_test rx_console ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

@@ -6,9 +6,8 @@
 
 int main(int argc, char** argv) {
     rxvml_context* ctx;
-    rxvml_token_desc d;
     rxvml_value* tok_array;
-    rxvml_value* tok_obj;
+    rxvml_value* tok_obj = NULL;
     rxvml_value* response = NULL;
     const char* code;
 
@@ -17,7 +16,7 @@ int main(int argc, char** argv) {
     printf("Starting Bridge Test...\n");
 
     /* 1. Initialize Context */
-    ctx = rxvml_create(NULL, 1);
+    ctx = rxvml_create(NULL, 0);
     if (!ctx) {
         fprintf(stderr, "Failed to create rxvml context\n");
         return 1;
@@ -32,23 +31,35 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    /* 3. Manually construct a token array (Simulating rxcp_marshal_implicit_cmd) */
+    /* 3. Manually construct a token array */
     tok_array = rxvml_array_new(ctx, 1);
     
-    memset(&d, 0, sizeof(d));
-    d.type = 100; /* DUMMY_TYPE */
-    d.text = "PARSE";
-    d.text_len = 5;
-    d.line = 10;
-    d.column = 1;
-    d.file = "test.rexx";
+    rxvml_value* args[9];
+    int i;
+    for (i=0; i<9; i++) args[i] = rxvml_value_new(ctx);
+    rxvml_set_int(args[0], 100); /* DUMMY_TYPE */
+    rxvml_set_int(args[1], 0);
+    rxvml_set_str(args[2], "PARSE", 5);
+    rxvml_set_int(args[3], 10);
+    rxvml_set_int(args[4], 1);
+    rxvml_set_int(args[5], 5);
+    rxvml_set_str(args[6], "test.rexx", 9);
+    rxvml_set_int(args[7], 0);
+    rxvml_set_int(args[8], 0);
     
-    tok_obj = rxvml_make_token(ctx, &d);
-    rxvml_array_set(ctx, tok_array, 1, tok_obj);
+    if (rxvml_call_factory(ctx, "stub.token", 9, args, &tok_obj) != 0 || !tok_obj) {
+        fprintf(stderr, "Failed to call factory for stub.token\n");
+        return 1;
+    }
+    for (i=0; i<9; i++) rxvml_value_free(args[i]);
 
-    /* 4. Call the plugin */
+    rxvml_array_set(ctx, tok_array, 1, tok_obj);
+    rxvml_value_free(tok_obj);
+
+    /* 4. Call the plugin (procedure) */
     printf("Calling stub.stub_plugin...\n");
-    if (rxvml_call_plugin(ctx, "stub.stub_plugin", tok_array, &response) != 0) {
+    rxvml_value* call_args[1] = { tok_array };
+    if (rxvml_call_procedure(ctx, "stub.stub_plugin", 1, call_args, &response) != 0) {
         const char* err;
         rxvml_last_error(ctx, &err);
         fprintf(stderr, "Failed to call stub_plugin: %s\n", err ? err : "unknown error");
@@ -64,8 +75,8 @@ int main(int argc, char** argv) {
     if (rxvml_to_str(ctx, response, &code, NULL) == 0) {
         printf("Plugin returned code (string): %s\n", code ? code : "NULL");
     } else {
-        code = rxvml_get_replacement_code(ctx, response);
-        printf("Plugin returned code (object): %s\n", code ? code : "NULL");
+        printf("Plugin returned non-string result\n");
+        return 1;
     }
 
     if (code && strcmp(code, "SAY 'HELLO FROM BRIDGE'") == 0) {
@@ -75,6 +86,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    if (response) rxvml_value_free(response);
+    rxvml_value_free(tok_array);
     rxvml_destroy(ctx);
     return 0;
 }

@@ -19,6 +19,7 @@ function(add_dynamic_rxvmplugin_target plugin_name)
     target_compile_definitions(${plugin_name} PRIVATE BUILD_DLL)
     set_target_properties(${plugin_name} PROPERTIES PREFIX "rxvm_")
     set_target_properties(${plugin_name} PROPERTIES SUFFIX ".rxvmplugin")
+    set_target_properties(${plugin_name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 endfunction()
 
 # Create a static link module
@@ -46,13 +47,13 @@ endfunction()
 function(configure_linker_for_static_rxvmplugin target pluginId)
     if(MSVC)
         # For Visual Studio Compiler
-        target_link_libraries(${target} "${CMAKE_CURRENT_BINARY_DIR}/rxvm_${pluginId}.lib")
+        target_link_libraries(${target} "$<TARGET_FILE:${pluginId}>")
         set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_register_rxvm_plugin")
     elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
         # For GCC
-        target_link_libraries(${target} "-Wl,--whole-archive \"${CMAKE_CURRENT_BINARY_DIR}/rxvm_${pluginId}.a\" -Wl,--no-whole-archive")
+        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}>\" -Wl,--no-whole-archive")
     elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         # For Clang
-        target_link_libraries(${target} "-Wl,-force_load,\"${CMAKE_CURRENT_BINARY_DIR}/rxvm_${pluginId}.a\"")
+        target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}>\"")
     endif()
 endfunction()

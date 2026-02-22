@@ -10,5 +10,6 @@ add_subdirectory(rxvmplugins)
 # Add the rxvmplugin support library
 add_library(rxvmplugin rxvmplugin_framework.c rxvmplugin.h rxvmplugin_framework.h)
 target_include_directories(rxvmplugin PRIVATE .. ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/binutils/include)
+target_link_libraries(rxvmplugin PUBLIC platform)
 
 

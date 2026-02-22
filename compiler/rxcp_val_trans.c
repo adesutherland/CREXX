@@ -97,6 +97,7 @@ walker_result rewrite_address_walker(walker_direction direction,
         switch (node->node_type) {
 
             case ADDRESS:
+                if (node->exit_obj_reg != -1) return result_normal;
                 if (context->debug_mode >= 2) fprintf(stderr, "Lowering ADDRESS Instruction at line %d\n", node->line);
                 /* Rewrite to an assignment from a function */
                 context->changed = 1;
@@ -304,6 +305,7 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
     ASTNode *env_node;
  
     if (direction == in && node->node_type == IMPLICIT_CMD) {
+        if (node->exit_obj_reg != -1) return result_normal;
         /* Create explicit environment "SYSTEM" */
         env_node = ast_ft(context, STRING);
         ast_str(env_node, "SYSTEM");

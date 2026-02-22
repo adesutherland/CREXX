@@ -1018,7 +1018,7 @@ void rxpa_resetsayexit()  /* Reset Say exit function */
 // oir is called during initialising a statically linked plugin
 void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args) {
     if (plugin_being_loaded_context) {
-        if (plugin_being_loaded_context->debug_mode) printf("Importing Procedures - Loading %s\n", name);
+        if (plugin_being_loaded_context->debug_mode >= 2) printf("Importing Procedures - Loading %s\n", name);
         rximpf_f(plugin_being_loaded_context, plugin_being_loaded, name, option, type, args, 0, 0);
     }
     else {
@@ -1172,8 +1172,9 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     /* Open input file */
     context->file_pointer = openfile(file_name, "", location, "r");
     if (context->file_pointer == NULL) {
-        fprintf(stderr, "Panic Importing Procedures - Can't open input file: %s\n", file_name);
-        exit(-1);
+        if (parent_context->debug_mode >= 2) fprintf(stderr, "Warning: Importing Procedures - Can't open input file: %s from %s\n", file_name, location ? location : ".");
+        free(context);
+        return;
     }
 
     /* Propagate trace file */
@@ -1196,6 +1197,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     context->debug_mode = parent_context->debug_mode;
     context->location = parent_context->location;
     context->file_name = (char*) filename(file_name);
+    context->disable_exits = parent_context->disable_exits;
 
     /* Propagate the master_context */
     context->master_context = parent_context->master_context;
@@ -1335,6 +1337,7 @@ static Context *parseRexx(Context* parent_context, char *location, char* file_na
             context->level = level;
             context->debug_mode = debug_mode;
             context->master_context = parent_context->master_context;
+            context->disable_exits = parent_context->disable_exits;
 
             rexbpars(context);
             break;
@@ -1629,13 +1632,23 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
                 printf("Importing Procedures - Found Procedure %s\n", found_func->fqname);
 
             /* Splice the ASTs together */
-            add_dast(context->ast, func->context->ast->child);
+            ASTNode *new_stub = add_dast(context->ast, func->context->ast->child);
+            context->changed = 1;
+
+            /* Build symbols for the new stub immediately so it can be resolved */
+            Scope *old_scope = context->current_scope;
+            context->current_scope = context->ast->scope;
+            ast_wlkr(new_stub, build_symbols_walker, context);
+            context->current_scope = old_scope;
+
             found_symbol = sym_rfqn(context->ast, found_func->fqname);
-            found_symbol->exposed = 1; /* Exposed by definition! */
-            found_symbol->is_arg = 0; /* Can't expose args */
-            found_symbol->is_opt_arg = 0;
-            found_symbol->is_ref_arg = 0;
-            found_symbol->is_const_arg = 0;
+            if (found_symbol) {
+                found_symbol->exposed = 1; /* Exposed by definition! */
+                found_symbol->is_arg = 0; /* Can't expose args */
+                found_symbol->is_opt_arg = 0;
+                found_symbol->is_ref_arg = 0;
+                found_symbol->is_const_arg = 0;
+            }
         }
     }
 
@@ -1978,7 +1991,8 @@ int rxcp_scan_imports(Context *context)
 {
     int loaded = 0;
     if (!context) return 0;
-    if (context->debug_mode >= 2) fprintf(stderr, "Scanning all imports for file: %s\n", context->file_name);
-    while (load_another_file(context)) { /* keep loading until exhausted */ loaded = 1; }
+    while (load_another_file(context)) {
+        loaded = 1;
+    }
     return loaded;
 }

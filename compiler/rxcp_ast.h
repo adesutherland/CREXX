@@ -101,6 +101,11 @@ ASTNode *ast_ft(Context* context, NodeType type);
 ASTNode *ast_ftt(Context* context, NodeType type, char *string);
 /* ASTNode Factory - With node type and string value copied from another node */
 ASTNode *ast_fstk(Context* context, ASTNode *source_node);
+ASTNode *ast_dup_subtree(Context* new_context, ASTNode *node);
+/* Find first node of a certain type in a tree */
+ASTNode *ast_fndn(Context* ctx, ASTNode* node, NodeType type);
+/* Graft a Rexx source fragment into the AST replacing target_node */
+int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code);
 /* Factory to create a duplicated AST node into a new context
  * - context is the target context
  * - node is the node to be duplicated

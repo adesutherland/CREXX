@@ -47,6 +47,8 @@ void emit_proc(ASTNode *node, void *pl) {
     else child3 = NULL;
 
     switch (node->node_type) {
+        default:
+            break;
         case REXX_UNIVERSE:
         {
             char *buf = mprintf("/*\n"
@@ -142,7 +144,7 @@ void emit_proc(ASTNode *node, void *pl) {
                 }
                 char* buf;
                 buf = mprintf("\n%s() .expose=%s\n"
-                              "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
+                              "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\" \"\"\n",
                               proc_label,
                               proc_expose,
                               proc_fqn,
@@ -223,10 +225,38 @@ void emit_proc(ASTNode *node, void *pl) {
                 /* Level B Class Preamble */
                 if (node->node_type == FACTORY) {
                     int n_attrs = 0;
-                    ASTNode *attr = node->parent->child;
-                    while (attr) {
-                        if (attr->node_type == DEFINE) n_attrs++;
-                        attr = attr->sibling;
+                    ASTNode *cls = node->parent;
+                    /* Ensure we are looking at the CLASS_DEF */
+                    while (cls && cls->node_type != CLASS_DEF) cls = cls->parent;
+                    if (cls) {
+                        ASTNode *attr = cls->child;
+                        while (attr) {
+                            if (attr->node_type == DEFINE) {
+                                int index = -1;
+                                ASTNode *nr = ast_chld(attr, NODE_REGISTER, 0);
+                                if (nr) {
+                                    ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                                    if (idx) {
+                                        /* Basic inline node_to_integer logic */
+                                        char *s = idx->node_string;
+                                        size_t l = idx->node_string_length;
+                                        if (s && l) {
+                                            while (l && (*s == '.' || *s == ' ')) { s++; l--; }
+                                            if (l) {
+                                                char *buffer = malloc(l + 1);
+                                                memcpy(buffer, s, l); buffer[l] = 0;
+                                                index = atoi(buffer);
+                                                free(buffer);
+                                            }
+                                        }
+                                    }
+                                    else if (nr->int_value) index = (int)nr->int_value;
+                                }
+                                if (index >= n_attrs) n_attrs = index + 1;
+                                else if (index == -1) n_attrs++;
+                            }
+                            attr = attr->sibling;
+                        }
                     }
 
                     /* Assign r_this from symbol §factory */

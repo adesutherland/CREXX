@@ -11,10 +11,10 @@ add_dynamic_plugin_target(_rxml rxml.c)
 
 # Build test2 Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
+        COMMAND $<TARGET_FILE:rxc>
+        -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o rxml_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxml_test\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas rxml_test
+        $<TARGET_FILE:rxas> rxml_test
 
         DEPENDS rxas rxc library _rxml ${CMAKE_CURRENT_SOURCE_DIR}/rxml_test.rexx
         OUTPUT rxml_test.rxbin
@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run rxml_test.rxbin with the rxml plugin
 add_test(NAME rxml_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm rxml_test rx_rxml ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> rxml_test rx_rxml ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

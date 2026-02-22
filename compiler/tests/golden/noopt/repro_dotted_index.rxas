@@ -1,0 +1,58 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : repro_dotted_index.rexx
+ * BUILT                  : 2026-02-17 21:19:35
+ */
+
+.srcfile="repro_dotted_index.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "repro_dotted_index.main"="b" ".int" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "repro_dotted_index.main.outbuf"="b" ".string[10]" r1
+   .src 2:1="outbuf = .string[10"
+   null r1
+   .src 3:1="lino = 0"
+   .meta "repro_dotted_index.main.lino"="b" ".int" r0
+   load r0,0
+   .src 4:1="lino = lino + 1"
+   iadd r0,r0,1
+   .src 5:1="outbuf.lino = \"Line A\""
+   setattrs r1,10
+   linkattr1 r2,r1,r0
+   load r3,"Line A"
+   scopy r2,r3
+   unlink r2
+   .src 6:1="lino = lino + 1"
+   iadd r0,r0,1
+   .src 7:1="outbuf.lino = \"Line B\""
+   setattrs r1,10
+   linkattr1 r3,r1,r0
+   load r2,"Line B"
+   scopy r3,r2
+   unlink r3
+   .src 8:1="say \"Count: \" || lino"
+   itos r0
+   concat r3,"Count: ",r0
+   say r3
+   .src 9:1="say \"Buf 1: \" || outbuf.1"
+   setattrs r1,10
+   linkattr1 r3,r1,1
+   concat r2,"Buf 1: ",r3
+   unlink r3
+   say r2
+   .src 10:1="say \"Buf 2: \" || outbuf.2"
+   setattrs r1,10
+   linkattr1 r3,r1,2
+   concat r2,"Buf 2: ",r3
+   unlink r3
+   say r2
+   .src 11:1="return 0"
+   ret 0
+   .meta "repro_dotted_index.main.lino"
+   .meta "repro_dotted_index.main.outbuf"

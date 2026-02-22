@@ -25,10 +25,10 @@ target_link_libraries(_pick PRIVATE ${GTK3_LIBRARIES})
 
 # Build Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
+        COMMAND $<TARGET_FILE:rxc>
+        -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o pick_test \"${CMAKE_CURRENT_SOURCE_DIR}/pick_test\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas pick_test
+        $<TARGET_FILE:rxas> pick_test
 
         DEPENDS rxas rxc library _pick ${CMAKE_CURRENT_SOURCE_DIR}/pick_test.rexx
         OUTPUT pick_test.rxbin
@@ -43,6 +43,6 @@ enable_testing()
 
 # Basic test to run pick_test.rxbin with the pick plugin
 add_test(NAME pick_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm pick_test rx_pick ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> pick_test rx_pick ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

@@ -1,8 +1,9 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : class_import_main.rexx
- * BUILT                  : 2026-02-12 18:32:23
+ * BUILT                  : 2026-02-17 21:19:30
  */
+
 .meta "class_import_lib.counter"="b" ".unknown" .class
 .srcfile="class_import_main.rexx"
 .globals=0
@@ -20,13 +21,13 @@ main() .locals=5
    call r0,§class_import_lib.counter.§factory(),r1
    .src 6:1="call c.inc"
    load r1,1
-   settp r0,0
+   settp r0,1
    swap r2,r0
    call r3,§class_import_lib.counter.inc(),r1
    swap r0,r2
    .src 7:1="say c.value"
    load r1,1
-   settp r0,0
+   settp r0,1
    swap r2,r0
    call r4,§class_import_lib.counter.value(),r1
    swap r0,r2
@@ -37,11 +38,12 @@ main() .locals=5
    .meta "class_import_main.main.c"
 
 /* Imported Declaration from file: class_import_lib.rexx */
+
 §class_import_lib.counter.§factory() .expose=class_import_lib.counter.§factory
-   .meta "class_import_lib.counter.§factory"="b" ".void" §class_import_lib.counter.§factory() ""
+   .meta "class_import_lib.counter.§factory"="b" ".void" §class_import_lib.counter.§factory() "" ""
 
 §class_import_lib.counter.inc() .expose=class_import_lib.counter.inc
-   .meta "class_import_lib.counter.inc"="b" ".void" §class_import_lib.counter.inc() ""
+   .meta "class_import_lib.counter.inc"="b" ".void" §class_import_lib.counter.inc() "" ""
 
 §class_import_lib.counter.value() .expose=class_import_lib.counter.value
-   .meta "class_import_lib.counter.value"="b" ".int" §class_import_lib.counter.value() ""
+   .meta "class_import_lib.counter.value"="b" ".int" §class_import_lib.counter.value() "" ""

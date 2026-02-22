@@ -34,6 +34,9 @@
 #include "rxcp_util.h"
 #include "rxcp_token.h"
 #include "rxcpbgmr.h"
+#include "rxcp_ast.h"
+#include "rxcp_sym.h"
+#include "rxcp_ctx.h"
 
 void error_and_exit(int rc, char* message) {
     fprintf(stderr, "ERROR: %s - try \"rxc -h\"\n", message);
@@ -515,8 +518,122 @@ const char* token_to_string(int token_id) {
         case TK_ELLIPSIS: return "TK_ELLIPSIS";
         case TK_OPTIONAL: return "TK_OPTIONAL";
         case TK_NUMERIC: return "TK_NUMERIC";
+        case EXIT_OWNED: return "EXIT_OWNED";
         default: return "UNKNOWN";
     }
+}
+
+ASTNode* ast_fndn(Context* ctx, ASTNode* node, NodeType type) {
+    if (!node) return NULL;
+    if (node->node_type == type) return node;
+    ASTNode* found = ast_fndn(ctx, node->child, type);
+    if (found) return found;
+    return ast_fndn(ctx, node->sibling, type);
+}
+
+static walker_result fragment_fixup_walker(walker_direction direction, ASTNode *node, void *payload) {
+    if (direction == in) {
+        if (node->node_string && !node->free_node_string) {
+            char *s = malloc(node->node_string_length + 1);
+            memcpy(s, node->node_string, node->node_string_length);
+            s[node->node_string_length] = 0;
+            node->node_string = s;
+            node->free_node_string = 1;
+        }
+    }
+    return result_normal;
+}
+
+int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code) {
+    Context* frag = cntx_f();
+    if (!frag) return -1;
+
+    frag->in_exit_bridge = 1;
+    frag->master_context = ctx->master_context;
+    frag->location = ctx->location;
+    frag->file_name = "exit_fragment";
+    frag->level = ctx->level;
+    frag->debug_mode = ctx->debug_mode;
+    frag->disable_exits = ctx->disable_exits;
+
+    /* Wrap fragment in 'options levelb' to ensure it parses correctly */
+    char* wrapped_replacement = malloc(strlen(rexx_code) + 32);
+    sprintf(wrapped_replacement, "options levelb\n%s", rexx_code);
+
+    if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Parsing replacement code: %s\n", wrapped_replacement);
+    cntx_buf(frag, wrapped_replacement, strlen(wrapped_replacement));
+    if (rexbpars(frag)) {
+        if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Parsing FAILED\n");
+        mknd_err(target_node, "EXIT_BRIDGE_PARSE_FAILED");
+        fre_cntx(frag);
+        free(wrapped_replacement);
+        return -1;
+    }
+    if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Parsing successful, fixing up fragment\n");
+
+    /* Ensure strings are copied since frag context will be destroyed */
+    ast_wlkr(frag->ast, fragment_fixup_walker, NULL);
+
+    if (frag->ast) {
+        /* Find the instructions list in the parsed fragment */
+        ASTNode *search = ast_fndn(ctx, frag->ast, INSTRUCTIONS);
+
+        if (search && search->child) {
+            /* Create EXIT_OWNED node to hold the replacement */
+            ASTNode *exit_owned = ast_f(ctx, EXIT_OWNED, target_node->token);
+            exit_owned->parent = target_node->parent;
+            exit_owned->scope = NULL; /* Let build_symbols_walker create the scope with correct parent */
+
+            /* Replace the node with EXIT_OWNED node */
+            if (target_node->parent) {
+                if (target_node->parent->child == target_node) {
+                    target_node->parent->child = exit_owned;
+                } else {
+                    ASTNode *p = target_node->parent->child;
+                    while (p && p->sibling != target_node) p = p->sibling;
+                    if (p) p->sibling = exit_owned;
+                }
+            }
+            exit_owned->sibling = target_node->sibling;
+
+            /* Add instructions from fragment to EXIT_OWNED */
+            ASTNode *instr = search->child;
+            while (instr) {
+                ASTNode *next_instr = instr->sibling;
+                if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Grafting instruction node type %s\n", node_type_to_string(instr->node_type));
+                add_dast(exit_owned, instr);
+                instr = next_instr;
+            }
+            ctx->changed = 1;
+        }
+        /* Avoid double free when frag is destroyed */
+        frag->ast = NULL;
+    }
+
+    /* Move tokens from frag to ctx to keep them alive */
+    if (frag->token_head) {
+        if (ctx->token_tail) {
+            ctx->token_tail->token_next = frag->token_head;
+            ctx->token_tail = frag->token_tail;
+        } else {
+            ctx->token_head = frag->token_head;
+            ctx->token_tail = frag->token_tail;
+        }
+        ctx->token_counter += frag->token_counter;
+        frag->token_head = frag->token_tail = NULL;
+        frag->token_counter = 0;
+    }
+
+    /* Transfer buffer ownership to ctx (frag->buff_start IS wrapped_replacement) */
+    if (frag->buff_start) {
+        ctx->extra_buffers_count++;
+        ctx->extra_buffers = realloc(ctx->extra_buffers, sizeof(char*) * ctx->extra_buffers_count);
+        ctx->extra_buffers[ctx->extra_buffers_count - 1] = frag->buff_start;
+        frag->buff_start = NULL;
+    }
+
+    fre_cntx(frag);
+    return 0;
 }
 
 const char* node_type_to_string(NodeType type) {
@@ -634,6 +751,7 @@ const char* node_type_to_string(NodeType type) {
         case CLASS_DEF: return "CLASS_DEF";
         case MEMBER_CALL: return "MEMBER_CALL";
         case FACTORY_CALL: return "FACTORY_CALL";
+        case EXIT_OWNED: return "EXIT_OWNED";
     }
     return "UNKNOWN";
 }

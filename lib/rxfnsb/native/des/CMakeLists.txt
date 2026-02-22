@@ -11,11 +11,12 @@ add_dynamic_plugin_target(des rxdes.c desbase.c desbase.h)
 
 # Test for desbase.c
 add_executable(desbase_test desbase_test.c desbase.c desbase.h)
+set_target_properties(desbase_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
 # Rexx Test
 add_custom_target(DESRexxTest ALL
         BYPRODUCTS RxDesTst.rxbin
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTst ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTst && ${CMAKE_BINARY_DIR}/assembler/rxas RxDesTst
+        COMMAND $<TARGET_FILE:rxc> -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTst ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTst && $<TARGET_FILE:rxas> RxDesTst
         DEPENDS rxas rxc library des RxDesTst.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -23,7 +24,7 @@ add_custom_target(DESRexxTest ALL
 # Rexx Error Test
 add_custom_target(DESRexxInvalidTest ALL
         BYPRODUCTS RxDesTstInvalid.rxbin
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTstInvalid ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTstInvalid && ${CMAKE_BINARY_DIR}/assembler/rxas RxDesTstInvalid
+        COMMAND $<TARGET_FILE:rxc> -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTstInvalid ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTstInvalid && $<TARGET_FILE:rxas> RxDesTstInvalid
         DEPENDS rxas rxc library des RxDesTstInvalid.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -36,12 +37,12 @@ add_test(NAME DESBaseTest COMMAND desbase_test)
 
 # Test with Rexx
 add_test(NAME DESRexxTest
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm RxDesTst rxdes ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        COMMAND $<TARGET_FILE:rxvm> RxDesTst rxdes ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Test with Rexx with invalid input
 add_test(NAME DESRexxInvalidTest
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm RxDesTstInvalid rxdes ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        COMMAND $<TARGET_FILE:rxvm> RxDesTstInvalid rxdes ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 # Check for "Signal 10" in the output
 set_tests_properties(DESRexxInvalidTest PROPERTIES PASS_REGULAR_EXPRESSION ".*Signal 10.*")

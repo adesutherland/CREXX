@@ -25,10 +25,10 @@ target_link_libraries(_gui PRIVATE ${GTK3_LIBRARIES})
 
 # Build Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
+        COMMAND $<TARGET_FILE:rxc>
+        -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o gui_test \"${CMAKE_CURRENT_SOURCE_DIR}/gui_test\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas gui_test
+        $<TARGET_FILE:rxas> gui_test
 
         DEPENDS rxas rxc library _gui ${CMAKE_CURRENT_SOURCE_DIR}/gui_test.rexx
         OUTPUT gui_test.rxbin
@@ -43,6 +43,6 @@ enable_testing()
 
 # Basic test to run gui_test.rxbin with the gui plugin
 add_test(NAME gui_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm gui_test rx_gui ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> gui_test rx_gui ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

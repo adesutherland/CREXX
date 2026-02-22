@@ -52,8 +52,14 @@ int is_node_string(ASTNode* node, const char* value) {
 int node_to_integer(ASTNode* node) {
     int result;
     if (!node) return 0;
+
+    /* If int_value is set, use it */
+    if (node->int_value) return (int)node->int_value;
+
     char *s = node->node_string;
     size_t l = node->node_string_length;
+
+    if (!s || !l) return 0;
 
     /* Skip leading dot or spaces */
     while (l && (*s == '.' || *s == ' ')) {
@@ -61,11 +67,11 @@ int node_to_integer(ASTNode* node) {
         l--;
     }
 
-    char *buffer = malloc(l + 1);
+    if (!l) return 0;
 
-    /* Null terminated buffer - {sigh} */
-    buffer[l] = 0;
+    char *buffer = malloc(l + 1);
     memcpy(buffer, s, l);
+    buffer[l] = 0;
 
     result = atoi(buffer);
 
@@ -80,51 +86,51 @@ int node_to_integer(ASTNode* node) {
  *      dim_base and dim_elements are malloced and set as appropriately
  */
 void node_to_dims(ASTNode* node, size_t *dims, int** dim_base, int** dim_elements) {
-    *dims = 0;
+    size_t local_dims = 0;
+    int *local_dim_base = 0;
+    int *local_dim_elements = 0;
     int i;
     ASTNode* n;
-    ASTNode* temp;
     ASTNode* min;
     ASTNode* max;
 
-    if (*dim_base) free(*dim_base);
-    *dim_base = 0;
+    if (!node) {
+        if (*dim_base) free(*dim_base); *dim_base = 0;
+        if (*dim_elements) free(*dim_elements); *dim_elements = 0;
+        *dims = 0;
+        return;
+    }
 
-    if (*dim_elements) free(*dim_elements);
-    *dim_elements = 0;
-
-    if (!node) return;
-
-    *dims = ast_nchd(node);
-    if (*dims) {
-        *dim_base = malloc(sizeof(int) * (*dims));
-        *dim_elements = malloc(sizeof(int) * (*dims));
+    local_dims = ast_nchd(node);
+    if (local_dims) {
+        local_dim_base = malloc(sizeof(int) * (local_dims));
+        local_dim_elements = malloc(sizeof(int) * (local_dims));
 
         /* We are an array - determine the array bounds */
         if (node->node_type == CLASS) {
             /* Type definition - can have specific bounds */
             n = ast_chdn(node,0); /* n is a RANGE for that dimension */
-            for (i = 0; i < *dims; i++) {
+            for (i = 0; i < (int)local_dims; i++) {
                 /* Child 1 - n->child - is the base */
                 min = ast_chdn(n,0);
-                if (min->node_type == NOVAL) (*dim_base)[i] = 1;
-                else if (min->node_type == OP_NEG) (*dim_base)[i] = -node_to_integer(ast_chdn(min, 0));
-                else (*dim_base)[i] = node_to_integer(min);
+                if (min->node_type == NOVAL) local_dim_base[i] = 1;
+                else if (min->node_type == OP_NEG) local_dim_base[i] = -node_to_integer(ast_chdn(min, 0));
+                else local_dim_base[i] = node_to_integer(min);
 
                 /* Child 2 - n->child->sibling - is the max index value (which we convert to number of elements) */
                 max = ast_chdn(n,1);
-                if (max->node_type == NOVAL) (*dim_elements)[i] = 0; /* Infinity */
+                if (max->node_type == NOVAL) local_dim_elements[i] = 0; /* Infinity */
 
-                else if ((*dim_base)[i] == 1 && max->node_type == INTEGER && node_to_integer(max) == 0)
-                    (*dim_elements)[i] = 0; /* Syntax candy to make 0 Infinity for base 1 */
+                else if (local_dim_base[i] == 1 && max->node_type == INTEGER && node_to_integer(max) == 0)
+                    local_dim_elements[i] = 0; /* Syntax candy to make 0 Infinity for base 1 */
 
                 else {
                     if (max->node_type == OP_NEG)
-                        (*dim_elements)[i] =
-                                -node_to_integer(ast_chdn(max, 0)) - (*dim_base)[i] + 1;
-                    else (*dim_elements)[i] = node_to_integer(max) - (*dim_base)[i] + 1;
+                        local_dim_elements[i] =
+                                -node_to_integer(ast_chdn(max, 0)) - local_dim_base[i] + 1;
+                    else local_dim_elements[i] = node_to_integer(max) - local_dim_base[i] + 1;
 
-                    if ((*dim_elements)[i] < 1) {
+                    if (local_dim_elements[i] < 1) {
                         if (max->node_type == OP_NEG) {
                             /* One child expected for the INTEGER otherwise an error MUST have been added already */
                             if (ast_nchd(max) == 1) mknd_err(max, "LESS_THAN_BASE");
@@ -139,12 +145,20 @@ void node_to_dims(ASTNode* node, size_t *dims, int** dim_base, int** dim_element
             }
         } else {
             /* Implicit definition - default bounds */
-            for (i = 0; i < *dims; i++) {
-                (*dim_base)[i] = 1;
-                (*dim_elements)[i] = 0; /* Infinity */
+            for (i = 0; i < (int)local_dims; i++) {
+                local_dim_base[i] = 1;
+                local_dim_elements[i] = 0; /* Infinity */
             }
         }
     }
+
+    if (*dim_base) free(*dim_base);
+    *dim_base = local_dim_base;
+
+    if (*dim_elements) free(*dim_elements);
+    *dim_elements = local_dim_elements;
+
+    *dims = local_dims;
 }
 
 /*
@@ -159,73 +173,94 @@ ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_
     ASTNode *n;
     ASTNode* min;
     ASTNode* max;
+    size_t local_dims = 0;
+    int *local_dim_base = 0;
+    int *local_dim_elements = 0;
+    char *local_class_name = 0;
+    ValueType result;
 
-    *dims = 0;
-
-    if (*class_name) free(*class_name);
-    *class_name = 0;
-
-    if (*dim_base) free(*dim_base);
-    *dim_base = 0;
-
-    if (*dim_elements) free(*dim_elements);
-    *dim_elements = 0;
-
-    if (!node) return TP_VOID;
+    if (!node) {
+        if (*class_name) free(*class_name); *class_name = 0;
+        if (*dim_base) free(*dim_base); *dim_base = 0;
+        if (*dim_elements) free(*dim_elements); *dim_elements = 0;
+        *dims = 0;
+        return TP_VOID;
+    }
 
     if (node->value_type != TP_UNKNOWN) {
         /* The Node Type has already been determined */
-        *dims = node->value_dims;
+        local_dims = node->value_dims;
 
-        if (*dims) {
-            *dim_base = malloc(sizeof(int) * (*dims));
-            memcpy(*dim_base, node->value_dim_base, sizeof(int) * (*dims));
+        if (local_dims) {
+            local_dim_base = malloc(sizeof(int) * (local_dims));
+            memcpy(local_dim_base, node->value_dim_base, sizeof(int) * (local_dims));
 
-            *dim_elements = malloc(sizeof(int) * (*dims));
-            memcpy(*dim_elements, node->value_dim_elements, sizeof(int) * (*dims));
+            local_dim_elements = malloc(sizeof(int) * (local_dims));
+            memcpy(local_dim_elements, node->value_dim_elements, sizeof(int) * (local_dims));
         }
 
         if (node->value_class) {
-            *class_name = malloc(strlen(node->value_class) + 1);
-            strcpy(*class_name, node->value_class);
+            local_class_name = malloc(strlen(node->value_class) + 1);
+            strcpy(local_class_name, node->value_class);
         }
-        return node->value_type;
+        result = node->value_type;
+        goto exit;
+    }
+
+    /* If we don't know the node type, let's see if we can determine it from the symbol */
+    if (node->node_type == FUNCTION) {
+        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->type != TP_UNKNOWN) {
+            Symbol *s = node->symbolNode->symbol;
+            local_dims = s->value_dims;
+            if (local_dims) {
+                local_dim_base = malloc(sizeof(int) * (local_dims));
+                memcpy(local_dim_base, s->dim_base, sizeof(int) * (local_dims));
+                local_dim_elements = malloc(sizeof(int) * (local_dims));
+                memcpy(local_dim_elements, s->dim_elements, sizeof(int) * (local_dims));
+            }
+            if (s->value_class) {
+                local_class_name = malloc(strlen(s->value_class) + 1);
+                strcpy(local_class_name, s->value_class);
+            }
+            result = s->type;
+            goto exit;
+        }
     }
 
     /* If we don't let's see if we can determine it now */
     if (node->node_type == CLASS) {
         /* Class and Class Arrays */
-        *dims = ast_nchd(node);
-        if (*dims) {
-            *dim_base = malloc(sizeof(int) * (*dims));
-            *dim_elements = malloc(sizeof(int) * (*dims));
+        local_dims = ast_nchd(node);
+        if (local_dims) {
+            local_dim_base = malloc(sizeof(int) * (local_dims));
+            local_dim_elements = malloc(sizeof(int) * (local_dims));
 
             /* We are an array - determine the array bounds */
             /* Type definition - can have specific bounds */
             /* n is a RANGE for that dimension */
             n = ast_chdn(node, 0);
-            for (i = 0; i < *dims; i++) {
+            for (i = 0; i < (int)local_dims; i++) {
 
                 /* Child 1 - n->child - is the base */
                 min = ast_chdn(n, 0);
-                if (min->node_type == NOVAL) (*dim_base)[i] = 1;
-                else if (min->node_type == OP_NEG) (*dim_base)[i] = -node_to_integer(ast_chdn(min, 0));
-                else (*dim_base)[i] = node_to_integer(min);
+                if (min->node_type == NOVAL) local_dim_base[i] = 1;
+                else if (min->node_type == OP_NEG) local_dim_base[i] = -node_to_integer(ast_chdn(min, 0));
+                else local_dim_base[i] = node_to_integer(min);
 
                 /* Child 2 - n->child->sibling - is the max index value (which we convert to number of elements) */
                 max = ast_chdn(n, 1);
-                if (max->node_type == NOVAL) (*dim_elements)[i] = 0; /* Infinity */
+                if (max->node_type == NOVAL) local_dim_elements[i] = 0; /* Infinity */
 
-                else if ((*dim_base)[i] == 1 && max->node_type == INTEGER && node_to_integer(max) == 0)
-                    (*dim_elements)[i] = 0; /* Syntax candy to make 0 Infinity for base 1 */
+                else if (local_dim_base[i] == 1 && max->node_type == INTEGER && node_to_integer(max) == 0)
+                    local_dim_elements[i] = 0; /* Syntax candy to make 0 Infinity for base 1 */
 
                 else {
                     if (max->node_type == OP_NEG)
-                        (*dim_elements)[i] =
-                                -node_to_integer(ast_chdn(max, 0)) - (*dim_base)[i] + 1;
-                    else (*dim_elements)[i] = node_to_integer(max) - (*dim_base)[i] + 1;
+                        local_dim_elements[i] =
+                                -node_to_integer(ast_chdn(max, 0)) - local_dim_base[i] + 1;
+                    else local_dim_elements[i] = node_to_integer(max) - local_dim_base[i] + 1;
 
-                    if ((*dim_elements)[i] < 1) {
+                    if (local_dim_elements[i] < 1) {
                         if (max->node_type == OP_NEG) {
                             /* One child expected for the INTEGER otherwise an error MUST have been added already */
                             if (ast_nchd(max) == 1) mknd_err(max, "LESS_THAN_BASE");
@@ -240,54 +275,97 @@ ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_
             }
         }
 
-        if (is_node_string(node, ".int")) return TP_INTEGER;
-        if (is_node_string(node, ".float")) return TP_FLOAT;
-        if (is_node_string(node, ".decimal")) return TP_DECIMAL;
-        if (is_node_string(node, ".string")) return TP_STRING;
-        if (is_node_string(node, ".boolean")) return TP_BOOLEAN;
-        if (is_node_string(node, ".binary")) return TP_BINARY;
-        if (is_node_string(node, ".void")) return TP_VOID;
+        if (is_node_string(node, ".int")) {
+            result = TP_INTEGER;
+            goto exit;
+        }
+        if (is_node_string(node, ".float")) {
+            result = TP_FLOAT;
+            goto exit;
+        }
+        if (is_node_string(node, ".decimal")) {
+            result = TP_DECIMAL;
+            goto exit;
+        }
+        if (is_node_string(node, ".string")) {
+            result = TP_STRING;
+            goto exit;
+        }
+        if (is_node_string(node, ".boolean")) {
+            result = TP_BOOLEAN;
+            goto exit;
+        }
+        if (is_node_string(node, ".binary")) {
+            result = TP_BINARY;
+            goto exit;
+        }
+        if (is_node_string(node, ".void")) {
+            result = TP_VOID;
+            goto exit;
+        }
 
         /* TODO Class Support */
         if (node->node_string[0] == '.') {
-            *class_name = malloc(node->node_string_length);
+            local_class_name = malloc(node->node_string_length);
             for (i = 1; i < (int)node->node_string_length; i++) {
-                (*class_name)[i-1] = (char)tolower(node->node_string[i]);
+                local_class_name[i-1] = (char)tolower(node->node_string[i]);
             }
-            (*class_name)[node->node_string_length - 1] = 0;
+            local_class_name[node->node_string_length - 1] = 0;
         } else {
-            *class_name = malloc(node->node_string_length + 1);
+            local_class_name = malloc(node->node_string_length + 1);
             for (i = 0; i < (int)node->node_string_length; i++) {
-                (*class_name)[i] = (char)tolower(node->node_string[i]);
+                local_class_name[i] = (char)tolower(node->node_string[i]);
             }
-            (*class_name)[node->node_string_length] = 0;
+            local_class_name[node->node_string_length] = 0;
         }
 
         /* Try and import the class on-demand if it's not already known */
-        if (context->ast && !sym_rvfn(context->ast, *class_name)) {
+        if (context->ast && !sym_rvfn(context->ast, local_class_name)) {
             sym_imcls(context, node);
         }
 
-        return TP_OBJECT;
+        result = TP_OBJECT;
+        goto exit;
     }
 
+    local_dims = 0;
     switch (node->node_type) {
         case INTEGER:
         case OP_ARGS:
-            return TP_INTEGER;
+            result = TP_INTEGER;
+            break;
         case FLOAT:
-            return TP_FLOAT;
+            result = TP_FLOAT;
+            break;
         case DECIMAL:
-            return TP_DECIMAL;
+            result = TP_DECIMAL;
+            break;
         case STRING:
-            return TP_STRING;
+            result = TP_STRING;
+            break;
         case BINARY:
-            return TP_BINARY;
+            result = TP_BINARY;
+            break;
         case VOID:
-            return TP_VOID;
+            result = TP_VOID;
+            break;
         default:
-            return TP_UNKNOWN;
+            result = TP_UNKNOWN;
+            break;
     }
+
+exit:
+    if (*class_name) free(*class_name);
+    *class_name = local_class_name;
+
+    if (*dim_base) free(*dim_base);
+    *dim_base = local_dim_base;
+
+    if (*dim_elements) free(*dim_elements);
+    *dim_elements = local_dim_elements;
+
+    *dims = local_dims;
+    return result;
 }
 
 /* Validates a node promotion is correct adding error nodes if not */
@@ -441,10 +519,6 @@ void validate_ast(Context *context) {
         /* Validate Symbols */
         validate_symbols(context, context->ast->scope);
 
-        /* Exit Dispatch */
-        context->current_scope = 0;
-        ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
-
         /* Set Node Types */
         context->current_scope = 0;
         ast_wlkr(context->ast, set_node_types_walker, (void *) context);
@@ -463,6 +537,7 @@ void validate_ast(Context *context) {
 
     } while (context->changed && context->iterations < 16);
 
+
     /* Type Safety checks */
     context->current_scope = 0;
     ast_wlkr(context->ast, type_safety_walker, (void *)context);
@@ -474,6 +549,10 @@ void validate_ast(Context *context) {
     /* Set Scope Decimal parameters */
     context->current_scope = 0;
     ast_wlkr(context->ast, decimal_parameters_walker, (void *)context);
+
+    if (context->ast->node_type == REXX_UNIVERSE) {
+        context->ast->value_type = TP_VOID;
+    }
 }
 
 void rxcp_val(Context *context) {

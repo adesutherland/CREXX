@@ -129,7 +129,9 @@ Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol) {
     /* Procedures now default to standard numeric context unless explicitly set */
     scope->num_registers = 0; /* Changed from 1 - r0 is no longer a hardcoded temp register */
     scope->free_registers_array = dpa_f();
+    scope->deferred_registers_array = dpa_f();
     scope->child_array  = dpa_f();
+    scope->temp_flag = 0;
     if (parent) dpa_add((dpa*)(parent->child_array), scope);
 
     return scope;
@@ -205,6 +207,7 @@ void scp_free(Scope *scope) {
 
     free_dpa(scope->child_array);
     free_dpa(scope->free_registers_array);
+    free_dpa(scope->deferred_registers_array);
     free(scope);
 }
 
@@ -259,6 +262,11 @@ int get_reg(Scope *scope) {
     return reg;
 }
 
+/* Get a permanent register from scope (not reused) */
+int get_reg_perm(Scope *scope) {
+    return (int)((scope->num_registers)++);
+}
+
 /* Return a no longer used register to the scope */
 void ret_reg(Scope *scope, int reg) {
     size_t i;
@@ -281,6 +289,36 @@ void ret_reg(Scope *scope, int reg) {
 //    printf(" - free array is now ");
 //    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);}
 //    printf("\n");
+}
+
+/* Return a linked register later (end of statement) */
+void ret_reg_later(Scope *scope, int reg) {
+    size_t i;
+    dpa *deferred_array;
+    deferred_array = (dpa*)(scope->deferred_registers_array);
+
+    if (reg < 0) {
+        return;
+    }
+
+    for (i=0; i<deferred_array->size; i++) {
+        if (reg == (size_t)deferred_array->pointers[i]) {
+            return;
+        }
+    }
+    dpa_add(deferred_array, (void*)(size_t)reg);
+}
+
+/* Return all deferred registers */
+void ret_reg_all_deferred(Scope *scope) {
+    size_t i;
+    dpa *deferred_array;
+    deferred_array = (dpa*)(scope->deferred_registers_array);
+
+    for (i=0; i<deferred_array->size; i++) {
+        ret_reg(scope, (int)(size_t)deferred_array->pointers[i]);
+    }
+    deferred_array->size = 0;
 }
 
 /* Get number of free register from scope - returns the start of a sequence
@@ -501,6 +539,40 @@ Symbol *sym_rvfn(ASTNode *root, char* name) {
     return 0;
 }
 
+/* Resolve a Function Symbol recursively through child namespaces */
+Symbol *sym_rvfn_deep(ASTNode *root, char* name) {
+    Symbol *result;
+    size_t i, j;
+    Scope *s, *ns;
+    Symbol **syms;
+
+    if (!root || !root->scope) return 0;
+
+    /* Process top layer - files and imported namespaces */
+    for (i = 0; i < scp_noch(root->scope); i++) {
+        s = scp_chd(root->scope, i);
+
+        /* Search symbols directly under the file or namespace scope */
+        result = src_symbol((struct avl_tree_node *)(s->symbols_tree), name);
+        if (result) return result;
+
+        /* Search child namespaces if this is an imported file */
+        syms = scp_syms(s);
+        for (j = 0; syms && syms[j]; j++) {
+            if (syms[j]->symbol_type == NAMESPACE_SYMBOL && syms[j]->defines_scope) {
+                ns = syms[j]->defines_scope;
+                result = src_symbol((struct avl_tree_node *)(ns->symbols_tree), name);
+                if (result) {
+                    free(syms);
+                    return result;
+                }
+            }
+        }
+        if (syms) free(syms);
+    }
+    return 0;
+}
+
 /*
  * Resolve a Symbol via a fully qualified Name
  * the root parameter should the AST root
@@ -634,7 +706,7 @@ Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
     utf8lwr(name);
 #endif
 
-    result = sym_rvfn(root, name);
+    result = sym_rvfn_deep(root, name);
     free(name);
     return result;
 }
@@ -659,6 +731,35 @@ Symbol *sym_rslv(Scope *scope, ASTNode *node) {
     do {
         result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
         if (result) {
+            free(name);
+            return result;
+        }
+        scope = scope->parent;
+    } while (scope);
+    free(name);
+    return 0;
+}
+
+/* Resolve a Symbol of a specific type - including parent scope */
+Symbol *sym_rslv_type(Scope *scope, ASTNode *node, SymbolType type) {
+    Symbol *result;
+    char *c;
+    /* Sadly we are making a null terminated string */
+    char *name = (char*)malloc(node->node_string_length + 1);
+    memcpy(name, node->node_string, node->node_string_length);
+    name[node->node_string_length] = 0;
+
+    /* Lowercase symbol name */
+#ifdef NUTF8
+    for (c = name ; *c; ++c) *c = (char)tolower(*c);
+#else
+    utf8lwr(name);
+#endif
+
+    /* Look for the symbol - looking up in each parent scope */
+    do {
+        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
+        if (result && (result->symbol_type == type || type == UNKNOWN_SYMBOL)) {
             free(name);
             return result;
         }

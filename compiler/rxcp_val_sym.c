@@ -46,11 +46,6 @@ walker_result build_symbols_walker(walker_direction direction,
 
         /* IN - TOP DOWN */
 
-        if (node->scope && node->node_type != PROGRAM_FILE && node->node_type != IMPORTED_FILE && node->node_type != REXX_UNIVERSE) {
-            context->current_scope = node->scope;
-            return result_normal; /* Skip if we have already processed this node */
-        }
-
         if (node->node_type == REXX_UNIVERSE) {
             if (node->scope) {
                 context->current_scope = node->scope;
@@ -64,14 +59,14 @@ walker_result build_symbols_walker(walker_direction direction,
         else if (node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE) {
             /* Now create the namespace symbol and scope */
             /* Make the new symbol */
-            if (context->namespace) {
+            if (node->node_type == PROGRAM_FILE && context->namespace) {
                 symbol = sym_f(context->current_scope, context->namespace);
             } else {
                 symbol = sym_f(context->current_scope, node);
             }
             symbol->symbol_type = NAMESPACE_SYMBOL;
             sym_adnd(symbol, node, 1, 1);
-            if (context->namespace) sym_adnd(symbol, context->namespace, 0, 1);
+            if (node->node_type == PROGRAM_FILE && context->namespace) sym_adnd(symbol, context->namespace, 0, 1);
 
             /* Move down to the project file scope */
             if (symbol->defines_scope) {
@@ -113,6 +108,13 @@ walker_result build_symbols_walker(walker_direction direction,
                 context->current_scope = scp_f(context, context->current_scope, node, symbol);
             }
             node->scope = context->current_scope;
+        }
+
+        else if (node->node_type == EXIT_OWNED) {
+            if (!node->scope) {
+                node->scope = scp_f(context, context->current_scope, node, 0);
+            }
+            context->current_scope = node->scope;
         }
 
         else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
@@ -170,6 +172,7 @@ walker_result build_symbols_walker(walker_direction direction,
                     star->symbol_type = VARIABLE_SYMBOL;
                     star->type = TP_OBJECT;
                     if (context->current_scope->parent && context->current_scope->parent->defining_node && context->current_scope->parent->defining_node->node_type == CLASS_DEF) {
+                        if (star->value_class) free(star->value_class);
                         star->value_class = malloc(strlen(context->current_scope->parent->name) + 1);
                         strcpy(star->value_class, context->current_scope->parent->name);
                     }
@@ -181,6 +184,7 @@ walker_result build_symbols_walker(walker_direction direction,
                     this_sym->symbol_type = VARIABLE_SYMBOL;
                     this_sym->type = TP_OBJECT;
                     if (context->current_scope->parent && context->current_scope->parent->defining_node && context->current_scope->parent->defining_node->node_type == CLASS_DEF) {
+                        if (this_sym->value_class) free(this_sym->value_class);
                         this_sym->value_class = malloc(strlen(context->current_scope->parent->name) + 1);
                         strcpy(this_sym->value_class, context->current_scope->parent->name);
                     }
@@ -372,34 +376,47 @@ walker_result resolve_functions_walker(walker_direction direction,
 
     if (direction == in) {
         /* IN - TOP DOWN */
+        if (node->scope) context->current_scope = node->scope;
     }
     else {
         if (node->node_type == FUNCTION || node->node_type == FUNC_SYMBOL) {
-            if (node->symbolNode) return result_normal; /* Already Processed */
-            if (ast_chld(node,ERROR,0)) return result_normal; /* Has an error - already processed */
-
             /* Find the symbol */
-            symbol = sym_rvfc(context->ast, node);
+            Symbol *local_symbol = sym_rslv(node->scope ? node->scope : context->current_scope, node);
 
-            /* If there is a symbol and it's a function - found  */
-            if (symbol && symbol->symbol_type == FUNCTION_SYMBOL ) {
-                sym_adnd(symbol, node, 1, 0);
-            }
-
-            /* If there is a symbol (and it's not a function) - error */
-            else if (symbol) {
-                mknd_err(node, "NOT_A_FUNCTION");
-            }
-
-            /* We have to try and import the function  */
-            else {
-                symbol = sym_imfn(context, node);
-                if (!symbol) mknd_err(node, "FUNCTION_NOT_FOUND");
-                else {
-                    sym_adnd(symbol, node, 1, 0);
+            if (local_symbol && local_symbol->symbol_type == FUNCTION_SYMBOL ) {
+                if (!node->symbolNode) {
+                    sym_adnd(local_symbol, node, 1, 0);
+                    context->changed = 1;
+                }
+            } else {
+                /* Try global search */
+                symbol = sym_rvfc(context->ast, node);
+                if (symbol && symbol->symbol_type == FUNCTION_SYMBOL ) {
+                    if (!node->symbolNode) {
+                        sym_adnd(symbol, node, 1, 0);
+                        context->changed = 1;
+                    }
+                } else {
+                    /* Try BIFs */
+                    symbol = sym_imfn(context, node);
+                    if (symbol) {
+                        if (!node->symbolNode) {
+                            sym_adnd(symbol, node, 1, 0);
+                            context->changed = 1;
+                        }
+                    } else if (local_symbol) {
+                        /* Found something locally but it's not a function, and no global function found */
+                        if (!ast_chld(node, ERROR, 0)) mknd_err(node, "NOT_A_FUNCTION");
+                    } else {
+                        /* Not found anywhere */
+                        if (!ast_chld(node, ERROR, 0)) mknd_err(node, "FUNCTION_NOT_FOUND");
+                    }
                 }
             }
         }
+
+        if (node->parent) context->current_scope = node->parent->scope;
+        else context->current_scope = 0;
     }
 
     return result_normal;
@@ -429,6 +446,8 @@ walker_result exposed_symbols_walker(walker_direction direction,
 
     if (direction == in) {
         /* IN - TOP DOWN */
+        if (node->scope) context->current_scope = node->scope;
+
         if (node->node_type == EXPOSED) {
             if (node->parent && node->parent->node_type == NAMESPACE) {
                 /* We are exposing functions / variables globally to user functions */
@@ -455,6 +474,7 @@ walker_result exposed_symbols_walker(walker_direction direction,
                                         ASTNode *instr = ast_chld(proc_node, INSTRUCTIONS, NOP);
                                         if (instr) sym_adnd(merged_symbol, instr, 0, 0);
                                         merged_symbol->exposed = 1;
+                                        context->changed = 1;
                                     }
                                     found = 1;
                                 }
@@ -474,6 +494,7 @@ walker_result exposed_symbols_walker(walker_direction direction,
                                 /* Link and expose - if not already processed */
                                 sym_adnd(symbol, n, 1, 1);
                                 symbol->exposed = 1;
+                                context->changed = 1;
                             }
                         }
                         else {
@@ -491,6 +512,7 @@ walker_result exposed_symbols_walker(walker_direction direction,
                             if (symbol->defines_scope) {
                                 scp_4all(symbol->defines_scope, expose_class_symbols_worker, n);
                             }
+                            context->changed = 1;
                         }
                     }
                     else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
@@ -518,16 +540,17 @@ walker_result exposed_symbols_walker(walker_direction direction,
                             symbol = sym_lrsv(node->parent->scope, n); /* find it */
                             if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
                                 if (symbol->exposed == 0) { /* Avoid double processing */
-                                /* We found a variable to expose - so expose it by moving its scope */
-                                merged_symbol = sym_merg(symbol->scope ? symbol->scope->parent : 0, symbol);
-                                /* Link to the exposed node */
-                                sym_adnd(merged_symbol, n, 1, 1);
-                                /* Link to the Procedure's INSTRUCTION node */
-                                ASTNode *instr = ast_chld(node->parent, INSTRUCTIONS, NOP);
-                                if (instr) sym_adnd(merged_symbol, instr, 0, 0);
-                                merged_symbol->exposed = 1;
+                                    /* We found a variable to expose - so expose it by moving its scope */
+                                    merged_symbol = sym_merg(symbol->scope ? symbol->scope->parent : 0, symbol);
+                                    /* Link to the exposed node */
+                                    sym_adnd(merged_symbol, n, 1, 1);
+                                    /* Link to the Procedure's INSTRUCTION node */
+                                    ASTNode *instr = ast_chld(node->parent, INSTRUCTIONS, NOP);
+                                    if (instr) sym_adnd(merged_symbol, instr, 0, 0);
+                                    merged_symbol->exposed = 1;
+                                    context->changed = 1;
+                                }
                             }
-                        }
                         else {
                             /* Add an error - if it has not already errored */
                             if (ast_chld(n, ERROR, 0) == 0) {
@@ -557,6 +580,7 @@ walker_result exposed_symbols_walker(walker_direction direction,
                                     /* Link to the Procedure's INSTRUCTION node */
                                     sym_adnd(merged_symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
                                     merged_symbol->exposed = 1;
+                                    context->changed = 1;
                                 }
                             }
                         }
@@ -588,6 +612,10 @@ walker_result exposed_symbols_walker(walker_direction direction,
                 }
             }
         }
+    } else {
+        /* OUT - BOTTOM UP */
+        if (node->parent) context->current_scope = node->parent->scope;
+        else context->current_scope = 0;
     }
 
     return result_normal;
@@ -609,8 +637,10 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     char *buffer;
     size_t length;
     size_t i, nix;
+    ValueType old_type = symbol->type;
+    size_t old_dims = symbol->value_dims;
 
-    if (symbol->type != TP_UNKNOWN) return; /* Already processed */
+    if (symbol->type != TP_UNKNOWN) goto exit;
 
     /* Process special symbols */
     if (strcmp(symbol->name,"rc") == 0) {
@@ -625,6 +655,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         symbol->symbol_type = VARIABLE_SYMBOL;
         symbol->value_dims = 0;
         if (scope->parent && scope->parent->defining_node && scope->parent->defining_node->node_type == CLASS_DEF) {
+            if (symbol->value_class) free(symbol->value_class);
             symbol->value_class = malloc(strlen(scope->parent->name) + 1);
             strcpy(symbol->value_class, scope->parent->name);
         }
@@ -636,6 +667,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         symbol->symbol_type = VARIABLE_SYMBOL;
         symbol->value_dims = 0;
         if (scope->parent && scope->parent->defining_node && scope->parent->defining_node->node_type == CLASS_DEF) {
+            if (symbol->value_class) free(symbol->value_class);
             symbol->value_class = malloc(strlen(scope->parent->name) + 1);
             strcpy(symbol->value_class, scope->parent->name);
         }
@@ -734,6 +766,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                     strcpy(symbol->value_class, scope->name);
                 }
                 ast_svtp(defining_node_link->node, symbol);
+                context->changed = 1;
             } else {
                 p_type = ast_chld(defining_node_link->node, CLASS, VOID);
                 symbol->type = node_to_type(context, p_type,
@@ -742,6 +775,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
 
                 ast_svtp(defining_node_link->node, symbol);
                 ast_svtp(p_type, symbol);
+                if (symbol->type != TP_UNKNOWN) context->changed = 1;
             }
         }
 
@@ -752,6 +786,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                                         &(symbol->value_class));
             ast_svtp(defining_node_link->node, symbol);
             ast_svtn(defining_node_link->node->parent, defining_node_link->node);
+            if (symbol->type != TP_UNKNOWN) context->changed = 1;
         }
 
         else if (defining_node_link->node->node_type == VAR_TARGET) {
@@ -768,6 +803,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
 
             ast_svtp(defining_node_link->node, symbol);
             ast_svtn(defining_node_link->node->parent, defining_node_link->node);
+            if (symbol->type != TP_UNKNOWN) context->changed = 1;
         }
 
         else if (symbol->symbol_type != NAMESPACE_SYMBOL && symbol->symbol_type != FUNCTION_SYMBOL && symbol->symbol_type != CLASS_SYMBOL) {
@@ -790,8 +826,14 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 buffer = malloc(length);
                 memcpy(buffer, symbol->name, length);
                 ast_sstr(defining_node_link->node, buffer, length);
+                ast_svtp(defining_node_link->node, symbol);
             }
         }
+    }
+
+exit:
+    if (symbol->type != old_type || symbol->value_dims != old_dims) {
+        context->changed = 1;
     }
 }
 

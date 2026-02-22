@@ -220,7 +220,9 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define EXPAND_AND_CONCATENATE(a, b) CONCATENATE(a, b)
 // Now create the function name
 #define UNIQUE_INIT_FUNCTION_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _init)
-// Define the LOADFUNCS macro
+// Create a unique anchor symbol name for static libraries
+#define UNIQUE_ANCHOR_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _anchor)
+// Define the LOADFUNCS macro (function prologue)
 #define LOADFUNCS INITIALIZER(UNIQUE_INIT_FUNCTION_NAME(PLUGIN_ID))
 
 // Helper functions provided by the REXX interpreter
@@ -305,7 +307,17 @@ SETSARRAY(pnum,indx,value);};
 #define REGISTER rxpa_attribute_value
 
 // End of LOADFUNCS
+// Also define a global anchor symbol to ensure the object provides at least one global
+// This avoids empty-TOC warnings when creating static archives on some toolchains
+#ifdef BUILD_DLL
 #define ENDLOADFUNCS }
+#else
+  #if defined(_MSC_VER)
+    #define ENDLOADFUNCS } __declspec(selectany) int UNIQUE_ANCHOR_NAME(PLUGIN_ID) = 0;
+  #else
+    #define ENDLOADFUNCS } __attribute__((used)) int UNIQUE_ANCHOR_NAME(PLUGIN_ID) = 0;
+  #endif
+#endif
 
 // Macro to set the SIGNAL ATTR
 #define RETURNSIGNAL(signal, details) {SETINT(SIGNAL,(signal)); SETSTRING(SIGNAL,(details)); return;}

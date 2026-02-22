@@ -49,10 +49,13 @@ void emit_flow(ASTNode *node, void *pl) {
     if (node->value_dims) tp_prefix = "";
     else tp_prefix = type_to_prefix(node->value_type);
 
+    if (tp_prefix[0] == 's' && (node->node_type == TO || node->node_type == BY)) tp_prefix = "f";
+
     switch (node->node_type) {
 
         case ARGS:
         case INSTRUCTIONS:
+        case EXIT_OWNED:
             if (!node->output) node->output = output_f();
             n = child1;
             while (n) {

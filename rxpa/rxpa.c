@@ -84,6 +84,7 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
     }
     void* hDll = dlopen(full_file_name, RTLD_LAZY);
     if (!hDll) {
+        fprintf(stderr, "Failed to load dylib %s: %s\n", full_file_name, dlerror());
         if (free_full_file_name) free(full_file_name);
         return -1;
     }
@@ -103,7 +104,7 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
     // A special case for linux - if it is not an absolute path, load it as a relative path by
     // prepending "./" to the file name
     if (full_file_name[0] != '/' && full_file_name[0] != '.') {
-        char* relative_path = malloc(strlen("./") + strlen(file_name) + 1);
+        char* relative_path = malloc(strlen("./") + strlen(full_file_name) + 1);
         sprintf(relative_path, "./%s", full_file_name);
         if (free_full_file_name) free(full_file_name);
         full_file_name = relative_path;
@@ -111,6 +112,7 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
     }
     void* hDll = dlopen(full_file_name, RTLD_LAZY);
     if (!hDll) {
+        fprintf(stderr, "Failed to load so %s: %s\n", full_file_name, dlerror());
         if (free_full_file_name) free(full_file_name);
         return -1;
     }

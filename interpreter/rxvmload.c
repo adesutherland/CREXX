@@ -327,7 +327,10 @@ int rxldmod(rxvm_context *context, char *file_name) {
     // if context->location is not set we need to first check the file_name as an absolute path
     // then if not found try as a relative path from the current working directory ('.')
     char *location = context->location;
+    char found_location[MAXFILEPATH];
     int file_exists = 0;
+
+    found_location[0] = 0;
 
     /* Determine if provided file_name already contains an extension */
     int has_ext = 0;
@@ -345,23 +348,34 @@ int rxldmod(rxvm_context *context, char *file_name) {
     // Check if the file exists as an absolute path
     if (fileexists(file_name, (char*)type_bin, 0)) {
         if (context->debug_mode) fprintf(stderr, "DEBUG_EXIT: Found module %s (as absolute path)\n", file_name);
-        location = 0; // Absolute path, no location needed
         file_exists = 1;
     } else if (location) {
-        if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for module %s in location %s\n", file_name, location);
-        file_exists = fileexists(file_name, (char*)type_bin, location);
+        char *loc_copy = strdup(location);
+        char *token = strtok(loc_copy, ";");
+        while (token) {
+            if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for module %s in location %s\n", file_name, token);
+            if (fileexists(file_name, (char*)type_bin, token)) {
+                strncpy(found_location, token, MAXFILEPATH - 1);
+                found_location[MAXFILEPATH - 1] = 0;
+                file_exists = 1;
+                break;
+            }
+            token = strtok(NULL, ";");
+        }
+        free(loc_copy);
     } else {
         // Try as a relative path from the current working directory
         if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for module %s in current directory\n", file_name);
-        location = ".";
-        if (fileexists(file_name, (char*)type_bin, location)) {
+        if (fileexists(file_name, (char*)type_bin, ".")) {
+            strncpy(found_location, ".", MAXFILEPATH - 1);
+            found_location[MAXFILEPATH - 1] = 0;
             file_exists = 1;
         }
     }
 
     if (file_exists) {
         DEBUG("CREXX Module file\n");
-        fp = openfile(file_name, (char*)type_bin, location, "rb");
+        fp = openfile(file_name, (char*)type_bin, found_location[0] ? found_location : 0, "rb");
         if (!fp) return 0;
 
         loaded_rc = 0;
@@ -399,31 +413,43 @@ int rxldmod(rxvm_context *context, char *file_name) {
         // if context->location is not set we need to first check the file_name as an absolute path
         // then if not found try as a relative path from the current working directory ('.')
         location = context->location;
+        found_location[0] = 0;
         file_exists = 0;
         /* For plugins, also avoid appending extension if one is already provided */
         const char *type_plugin = has_ext ? "" : "rxplugin";
-        if (!location) {
-            // Check if the file exists as an absolute path
-            if (fileexists(file_name, (char*)type_plugin, 0)) {
-                if (context->debug_mode) fprintf(stderr, "DEBUG_EXIT: Found plugin %s (as absolute path)\n", file_name);
-                location = 0; // Absolute path, no location needed
-                file_exists = 1;
-            } else {
-                // Try as a relative path from the current working directory
-                if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for plugin %s in current directory\n", file_name);
-                location = ".";
-                if (fileexists(file_name, (char*)type_plugin, location)) {
+
+        // Check if the file exists as an absolute path
+        if (fileexists(file_name, (char*)type_plugin, 0)) {
+            if (context->debug_mode) fprintf(stderr, "DEBUG_EXIT: Found plugin %s (as absolute path)\n", file_name);
+            file_exists = 1;
+        } else if (location) {
+            char *loc_copy = strdup(location);
+            char *token = strtok(loc_copy, ";");
+            while (token) {
+                if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for plugin %s in location %s\n", file_name, token);
+                if (fileexists(file_name, (char*)type_plugin, token)) {
+                    strncpy(found_location, token, MAXFILEPATH - 1);
+                    found_location[MAXFILEPATH - 1] = 0;
                     file_exists = 1;
+                    break;
                 }
+                token = strtok(NULL, ";");
             }
-        }
-        else {
-            if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for plugin %s in location %s\n", file_name, location);
-            file_exists = fileexists(file_name, (char*)type_plugin, location);
+            free(loc_copy);
+        } else {
+            // Try as a relative path from the current working directory
+            if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for plugin %s in current directory\n", file_name);
+            if (fileexists(file_name, (char*)type_plugin, ".")) {
+                strncpy(found_location, ".", MAXFILEPATH - 1);
+                found_location[MAXFILEPATH - 1] = 0;
+                file_exists = 1;
+            }
         }
 
         if (file_exists) {
             DEBUG("CREXX Native Plugin file\n");
+            // Check if the file exists
+            fp = openfile(file_name, (char*)type_plugin, found_location[0] ? found_location : 0, "rb");
 
             // Create the rxpa_initctxptr context
             struct rxpa_initctxptr rxpa_functions;
@@ -465,7 +491,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
             current_rxpa_context->plugin_being_loaded->header.meta_head = -1;
 
             // Load the plugin
-            int rc = load_plugin(&rxpa_functions, context->location, full_file_name);
+            int rc = load_plugin(&rxpa_functions, found_location[0] ? found_location : 0, full_file_name);
             free(full_file_name);
 
             // Check Result

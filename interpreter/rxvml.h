@@ -9,27 +9,6 @@
 typedef struct rxvml_context rxvml_context;
 typedef value   rxvml_value;
 
-/* Hydration: Builds an rxc.token from AST and Symbol info */
-typedef struct rxvml_token_desc {
-    /* Token Info */
-    int type;
-    int subtype;
-    const char* text;
-    size_t text_len;
-    int line;
-    int column;
-    int length;
-    /* AST Info */
-    const char* file;
-    int node_type;
-    int node_number;
-    int ord_low;
-    int ord_high;
-    /* Symbol Info (Optional) */
-    const char* sym_name;
-    int sym_type;
-} rxvml_token_desc;
-
 /* Context lifecycle */
 rxvml_context* rxvml_create(const char* location, unsigned flags);
 void           rxvml_destroy(rxvml_context* ctx);
@@ -38,27 +17,38 @@ void           rxvml_destroy(rxvml_context* ctx);
 int rxvml_load_module_file(rxvml_context* ctx, const char* rxbin_path);
 int rxvml_load_module_buffer(rxvml_context* ctx, const void* buf, size_t len);
 
-/* Object construction */
-rxvml_value* rxvml_make_token(rxvml_context* ctx, const rxvml_token_desc* d);
+/* Value construction & setting */
+rxvml_value* rxvml_value_new(rxvml_context* ctx);
+void         rxvml_set_int(rxvml_value* v, rxinteger i);
+void         rxvml_set_str(rxvml_value* v, const char* s, size_t len);
+void         rxvml_value_free(rxvml_value* v);
+
+/* Object & Array construction */
+rxvml_value* rxvml_object_new(rxvml_context* ctx, size_t num_attrs);
+int          rxvml_set_attribute(rxvml_context* ctx, rxvml_value* obj, size_t index1, rxvml_value* val);
+rxvml_value* rxvml_get_attribute(rxvml_context* ctx, rxvml_value* obj, size_t index1);
+
 rxvml_value* rxvml_array_new(rxvml_context* ctx, size_t length);
 int          rxvml_array_set(rxvml_context* ctx, rxvml_value* arr, size_t index1, rxvml_value* elem);
-void         rxvml_value_free(rxvml_value* v);
 
 /* Introspection / extraction */
 int      rxvml_to_int      (rxvml_context* ctx, const rxvml_value* v, rxinteger* out_v);
 int      rxvml_to_str      (rxvml_context* ctx, const rxvml_value* v, const char** out_s, size_t* out_len);
 
 /* Invocation */
-int rxvml_call_plugin(
+int rxvml_call_procedure(
     rxvml_context* ctx,
     const char* proc_name,
-    rxvml_value* token_array,
+    size_t argc,
+    rxvml_value** args,
     rxvml_value** response_out);
 
-/* Result Extraction */
-const char* rxvml_get_replacement_code(rxvml_context* ctx, rxvml_value* response);
-const char* rxvml_get_error_message(rxvml_context* ctx, rxvml_value* response);
-int rxvml_get_token_negotiation(rxvml_context* ctx, rxvml_value* token, int* out_new_type, int* out_is_updated);
+int rxvml_call_factory(
+    rxvml_context* ctx,
+    const char* class_name,
+    size_t argc,
+    rxvml_value** args,
+    rxvml_value** response_out);
 
 /* Persistent Registry for Stateful Exits */
 int          rxvml_reg_alloc(rxvml_context* ctx, rxvml_value* v, const char* class_name);
@@ -78,7 +68,8 @@ int rxvml_call_method(
     rxvml_value* obj,
     const char* class_name,
     const char* method_name,
-    rxvml_value* args,
+    size_t argc,
+    rxvml_value** args,
     rxvml_value** response_out);
 
 /* Say Exit */

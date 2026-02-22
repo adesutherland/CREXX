@@ -65,8 +65,8 @@ foreach(_binfile ${REXXBINS})
     get_filename_component(_basename ${_binfile} NAME_WE)
 
     add_custom_command(
-            COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i ${CMAKE_BINARY_DIR}/lib/rxfnsc -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
-            COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
+            COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+            COMMAND $<TARGET_FILE:rxas> ${_basename}
             DEPENDS rxas rxc rxfnsc ${_basename}.rexx ${_prev_target}
             OUTPUT ${_binfile}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

@@ -1,0 +1,81 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : repro_opt_args.rexx
+ * BUILT                  : 2026-02-17 20:32:09
+ */
+
+.srcfile="repro_opt_args.rexx"
+.globals=0
+
+main() .locals=7
+   .meta "repro_opt_args.main"="b" ".int" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="call test_opt 1, , 3"
+   load r0,3
+   load r1,1
+   load r3,3
+   settp r1,1
+   settp r2,0
+   settp r3,1
+   call r4,test_opt(),r0
+   .src 4:1="call test_opt 1, 2"
+   load r0,3
+   load r1,1
+   load r2,2
+   settp r1,1
+   settp r2,1
+   settp r3,0
+   call r5,test_opt(),r0
+   .src 5:1="call test_opt , 2, 3"
+   load r0,3
+   load r2,2
+   load r3,3
+   settp r1,0
+   settp r2,1
+   settp r3,1
+   call r6,test_opt(),r0
+   .src 6:1="return 0"
+   ret 0
+
+test_opt() .locals=4
+   .meta "repro_opt_args.test_opt"="b" ".void" test_opt() "?a=.int,?b=.int,?c=.int" ""
+   .src 8:1="test_opt: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 9:7="a=10"
+   .meta "repro_opt_args.test_opt.a"="b" ".int" a1
+   brtpandt l22a,a1,1
+   load a1,10
+l22a:
+   .src 9:13="b=20"
+   .meta "repro_opt_args.test_opt.b"="b" ".int" a2
+   brtpandt l26a,a2,1
+   load a2,20
+l26a:
+   .src 9:19="c=30"
+   .meta "repro_opt_args.test_opt.c"="b" ".int" a3
+   brtpandt l29a,a3,1
+   load a3,30
+l29a:
+   .src 10:3="say \"a=\" a \"b=\" b \"c=\" c"
+   itos a1
+   sconcat r3,"a=",a1
+   sconcat r3,r3,"b="
+   itos a2
+   sconcat r3,r3,a2
+   sconcat r3,r3,"c="
+   itos a3
+   sconcat r3,r3,a3
+   say r3
+   .src 11:3="return"
+   ret
+   .meta "repro_opt_args.test_opt.a"
+   .meta "repro_opt_args.test_opt.b"
+   .meta "repro_opt_args.test_opt.c"

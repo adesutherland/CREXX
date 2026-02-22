@@ -14,10 +14,10 @@ add_static_plugin_target(_sysinfo sysinfo.c)
 
 # Build Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-            -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
+        COMMAND $<TARGET_FILE:rxc>
+            -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
             -o sysinfo_test \"${CMAKE_CURRENT_SOURCE_DIR}/sysinfo_test\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas sysinfo_test
+        $<TARGET_FILE:rxas> sysinfo_test
 
         DEPENDS rxas rxc library _sysinfo ${CMAKE_CURRENT_SOURCE_DIR}/sysinfo_test.rexx
         OUTPUT sysinfo_test.rxbin
@@ -32,7 +32,7 @@ enable_testing()
 
 # Basic test to run sysinfo_test.rxbin with the sysinfo plugin
 add_test(NAME sysinfo_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm sysinfo_test rx_sysinfo ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> sysinfo_test rx_sysinfo ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 

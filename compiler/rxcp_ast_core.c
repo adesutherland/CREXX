@@ -222,8 +222,13 @@ ASTNode *ast_ft(Context* context, NodeType type) {
 ASTNode *ast_f(Context* context, NodeType type, Token *token) {
     ASTNode *node = ast_ft(context, type);
     node->token = token;
-    node->node_string = token->token_string;
-    node->node_string_length = token->length;
+    if (token) {
+        node->node_string = token->token_string;
+        node->node_string_length = token->length;
+    } else {
+        node->node_string = "";
+        node->node_string_length = 0;
+    }
     return node;
 }
 
@@ -977,6 +982,8 @@ const char *ast_ndtp(NodeType type) {
             return "MEMBER_CALL";
         case FACTORY_CALL:
             return "FACTORY_CALL";
+        case EXIT_OWNED:
+            return "EXIT_OWNED";
         default: return "*UNKNOWN*";
     }
 }
@@ -1599,4 +1606,14 @@ void ast_set_file_name(Context *context, char *file_name) {
         t->file_name = file_name;
         t = t->free_list;
     }
+}
+ASTNode *ast_dup_subtree(Context* new_context, ASTNode *node) {
+    if (!node) return NULL;
+    ASTNode *new_node = ast_dup(new_context, node);
+    ASTNode *child = node->child;
+    while (child) {
+        add_ast(new_node, ast_dup_subtree(new_context, child));
+        child = child->sibling;
+    }
+    return new_node;
 }

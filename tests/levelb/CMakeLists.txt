@@ -14,8 +14,8 @@ unset(_prev_target)
 foreach(_binfile ${REXXBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
   add_custom_command(
-          COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
-          COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
+          COMMAND $<TARGET_FILE:rxc> -x -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+          COMMAND $<TARGET_FILE:rxas> ${_basename}
           DEPENDS rxas rxc ${REXXSRC} ${_prev_target}
           OUTPUT ${_binfile}
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -26,8 +26,8 @@ foreach(_binfile ${REXXBINS})
   add_custom_target(${_basename}_artifact ALL DEPENDS ${_binfile})
 
   # Add the tests (rxvm and rxbvm)
-  add_test(NAME test-${_basename}-rxvm COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  add_test(NAME test-${_basename}-rxbvm COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME test-${_basename}-rxvm COMMAND $<TARGET_FILE:rxvm> ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME test-${_basename}-rxbvm COMMAND $<TARGET_FILE:rxbvm> ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
   set(_prev_target ${_binfile})
 endforeach()

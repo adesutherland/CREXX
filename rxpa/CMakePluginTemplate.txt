@@ -3,7 +3,7 @@ function(plugin_template plugin_name test_rexx use_precomp)
   set(src "${plugin_name}.c")
 
 
-set(rx_include "\"${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}\"")
+set(rx_include "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}\"")
 
 # Create dynamic plugin module
   add_dynamic_plugin_target(_${plugin_name} ${src})
@@ -13,11 +13,8 @@ set(rx_include "\"${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}\"")
   if(use_precomp)
      # Define paths
      set(build "${CMAKE_SOURCE_DIR}")        # Build path
-     set(pluglib "${CMAKE_BINARY_DIR}/lib/plugins/precomp")               # Plugin library path
+     set(lib "${CMAKE_BINARY_DIR}/bin/library")                    # Runtime library path
      set(sourcelib "${CMAKE_SOURCE_DIR}/lib/plugins/precomp")  # Source library path
-     set(lib "${CMAKE_BINARY_DIR}/lib/rxfnsb/library")                    # Runtime library path
-     set(rxvm "${CMAKE_BINARY_DIR}/interpreter")                          # rxvm direcory
-     set(rxpre "${pluglib}/rxpp")                              # Precompiler executable and location
 
      # input, output files
      set(REXX_PRE ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rxpp)
@@ -27,22 +24,22 @@ set(rx_include "\"${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}\"")
 
      add_custom_command(
             OUTPUT ${REXX_SRC}
-            COMMAND ${rxvm}/rxvm ${rxpre} rxprecomp ${lib} -a
+            COMMAND $<TARGET_FILE:rxpp> rxprecomp ${lib} -a
             -I ${REXX_PRE}
             -o ${REXX_SRC}
             -m ${REXX_MACLIB}  > ${REXX_LOG} 2>&1
             DEPENDS ${REXX_PRE} ${REXX_MACLIB} rxpp
-            WORKING_DIRECTORY ${pluglib}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
      )
   endif()
 # ---------------------------------------------------------------------------------------
 # Compile and ASM
 # ---------------------------------------------------------------------------------------
     add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
+        COMMAND $<TARGET_FILE:rxc>
             -i "${rx_include}"
             -o ${test_rexx} "${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}" &&
-            ${CMAKE_BINARY_DIR}/assembler/rxas ${test_rexx}
+            $<TARGET_FILE:rxas> ${test_rexx}
         DEPENDS rxas rxc library _${plugin_name} "${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rexx"
         OUTPUT ${test_rexx}.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

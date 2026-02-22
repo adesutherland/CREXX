@@ -110,9 +110,9 @@ Assembler_Token* rxas_tid(Assembler_Context* context, Assembler_Token *from_toke
 int rx_scan(Assembler_Context* s, char *buff_end);
 
 /* Interface the Lemon parser */
-void *RxasmAlloc();
-void Rxasm();
-void RxasmFree();
+void *RxasmAlloc(void *(*mallocProc)(size_t));
+void Rxasm(void *parser, int token, Assembler_Token *minor, Assembler_Context *context);
+void RxasmFree(void *parser, void (*freeProc)(void*));
 void RxasmTrace(FILE *stream, char *zPrefix);
 
 /* Error Functions */

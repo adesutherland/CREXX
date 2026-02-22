@@ -34,15 +34,28 @@ walker_result exit_dispatch_walker(walker_direction direction, ASTNode *node, vo
     Context *context = (Context *)payload;
 
     if (direction == in) {
-        if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: exit_dispatch_walker visiting node type %d (%s)\n", node->node_type, ast_ndtp(node->node_type));
+        if (context->disable_exits) return result_normal;
+        if (node->scope) {
+            context->current_scope = node->scope;
+        }
+        if (node->node_type == EXIT_OWNED) {
+            return request_skip;
+        }
         if (node->node_type == IMPLICIT_CMD || node->node_type == ADDRESS) {
+            if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: exit_dispatch_walker hitting node type %d at line %d\n", node->node_type, node->line);
             int old_changed = context->changed;
-            if (rxcp_exit_bridge_invoke(context, node) < 0) {
+            int rc = rxcp_exit_bridge_invoke(context, node);
+            if (rc < 0) {
+                if (rc == -1) return request_skip; /* Node replaced */
                 return result_error;
             }
             if (context->changed > old_changed) {
                 return request_skip;
             }
+        }
+    } else {
+        if (node->scope && node->scope->parent) {
+            context->current_scope = node->scope->parent;
         }
     }
     return result_normal;

@@ -31,8 +31,32 @@ option(ENABLE_ODBC "Enable ODBC support" OFF)
 option(ENABLE_GTK  "Enable GTK support"  OFF)
 
 include(CTest)
+
 add_subdirectory(re2c)
 add_subdirectory(lemon)
+
+# Suppress warnings for external dependencies (re2c, lemon) across compilers
+# We do this here (top-level) so it applies regardless of how their subdirs are configured
+if (TARGET lemon)
+    target_compile_options(lemon PRIVATE
+        $<$<C_COMPILER_ID:MSVC>:/w>
+        $<$<NOT:$<C_COMPILER_ID:MSVC>>:-w>
+    )
+endif()
+foreach(ext_tgt IN ITEMS re2c re2go)
+    if (TARGET ${ext_tgt})
+        target_compile_options(${ext_tgt} PRIVATE
+            $<$<C_COMPILER_ID:MSVC>:/w>
+            $<$<NOT:$<C_COMPILER_ID:MSVC>>:-w>
+        )
+    endif()
+endforeach()
+
+# Set global output directory for all binaries and libraries
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 add_subdirectory(platform)
 add_subdirectory(avl_tree)
 add_subdirectory(cpacker)
@@ -44,7 +68,7 @@ add_subdirectory(interpreter)
 add_subdirectory(rxpa)
 add_subdirectory(lib)
 add_subdirectory(tests)
-add_subdirectory(bin)
+add_subdirectory(bin crexx_driver)
 
 set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 

@@ -3,7 +3,60 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxvml.h"
+#include "rxbin.h"
+#include "rxvmvars.h"
 #include "platform.h"
+
+static const char* token_type_to_string(int type) {
+    switch (type) {
+        case TK_VAR_SYMBOL: return "IDENTIFIER";
+        case TK_STRING:     return "STRING_LITERAL";
+        case TK_INTEGER:    return "INT_LITERAL";
+        case TK_FLOAT:      return "FLOAT_LITERAL";
+        case TK_DECIMAL:    return "DECIMAL_LITERAL";
+        case TK_PLUS:
+        case TK_MINUS:
+        case TK_MULT:
+        case TK_DIV:
+        case TK_IDIV:
+        case TK_MOD:
+        case TK_POWER_L:
+        case TK_POWER_R:    return "OPERATOR";
+        case TK_EQUAL:      return "ASSIGNMENT";
+        case TK_IF:
+        case TK_THEN:
+        case TK_ELSE:
+        case TK_DO:
+        case TK_END:
+        case TK_SAY:
+        case TK_RETURN:
+        case TK_EXIT:
+        case TK_CALL:
+        case TK_PROCEDURE:
+        case TK_NAMESPACE:
+        case TK_IMPORT:
+        case TK_EXPOSE:
+        case TK_OPTIONS:    return "KEYWORD";
+        case TK_COMMA:      return "COMMA";
+        case TK_OPEN_BRACKET:
+        case TK_CLOSE_BRACKET:
+        case TK_OPEN_SBRACKET:
+        case TK_CLOSE_SBRACKET: return "BRACKET";
+        case TK_LABEL:      return "LABEL";
+        default:            return "OTHER";
+    }
+}
+
+static const char* node_value_type_to_string(ValueType type) {
+    switch (type) {
+        case TP_INTEGER: return "INT";
+        case TP_STRING:  return "STRING";
+        case TP_FLOAT:   return "FLOAT";
+        case TP_DECIMAL: return "DECIMAL";
+        case TP_BOOLEAN: return "BOOLEAN";
+        default:         return "VOID";
+    }
+}
 
 static void count_tokens(ASTNode *node, size_t *count) {
     if (!node) return;
@@ -18,65 +71,72 @@ static void count_tokens(ASTNode *node, size_t *count) {
     }
 }
 
-static void collect_tokens(rxvml_context *ctx, ASTNode *node, rxvml_value *token_array, size_t *count) {
+static void collect_tokens(rxvml_context *ctx, ASTNode *node, rxvml_value *token_array, ASTNode **node_map, size_t *count) {
     if (!node) return;
 
     if (node->node_type == OP_CONCAT || node->node_type == OP_SCONCAT) {
         ASTNode *child = node->child;
         while (child) {
-            collect_tokens(ctx, child, token_array, count);
+            collect_tokens(ctx, child, token_array, node_map, count);
             child = child->sibling;
         }
     } else {
-        rxvml_token_desc d;
-        memset(&d, 0, sizeof(d));
+        /* Layout (rxcp_intern.token factory compatible):
+           Arg 1: Type (.int)
+           Arg 2: Subtype (.int)
+           Arg 3: Text (.string)
+           Arg 4: Line (.int)
+           Arg 5: Column (.int)
+           Arg 6: Length (.int)
+           Arg 7: File (.string)
+           Arg 8: Node Type (.int)
+           Arg 9: Value Type (.int)
+        */
 
-        if (node->token) {
-            d.type = node->token->token_type;
-            d.subtype = node->token->token_subtype;
-            d.text = node->token->token_string;
-            d.text_len = (size_t)node->token->length;
-            d.line = node->token->line;
-            d.column = node->token->column;
-            d.length = node->token->length;
-        } else {
-            d.text = node->node_string;
-            d.text_len = node->node_string_length;
-            d.line = node->line;
-            d.column = node->column;
-        }
+        rxvml_value* args[9];
+        int i;
+        args[0] = rxvml_value_new(ctx);
+        rxvml_set_int(args[0], node->token ? node->token->token_type : 0);
+        args[1] = rxvml_value_new(ctx);
+        rxvml_set_int(args[1], 0); /* subtype */
+        args[2] = rxvml_value_new(ctx);
+        rxvml_set_str(args[2], node->token ? node->token->token_string : node->node_string, node->token ? node->token->length : node->node_string_length);
+        args[3] = rxvml_value_new(ctx);
+        rxvml_set_int(args[3], node->line);
+        args[4] = rxvml_value_new(ctx);
+        rxvml_set_int(args[4], node->column);
+        args[5] = rxvml_value_new(ctx);
+        rxvml_set_int(args[5], node->token ? node->token->length : node->node_string_length);
+        args[6] = rxvml_value_new(ctx);
+        rxvml_set_str(args[6], "", 0); /* file */
+        args[7] = rxvml_value_new(ctx);
+        rxvml_set_int(args[7], node->node_type);
+        args[8] = rxvml_value_new(ctx);
+        rxvml_set_int(args[8], node->value_type);
 
-        d.file = node->file_name;
-        d.node_type = (int)node->node_type;
-        d.node_number = node->node_number;
-        d.ord_low = node->low_ordinal;
-        d.ord_high = node->high_ordinal;
-
-        if (node->symbolNode && node->symbolNode->symbol) {
-            d.sym_name = node->symbolNode->symbol->name;
-            d.sym_type = (int)node->symbolNode->symbol->type;
-        }
-
-        rxvml_value *tok_obj = rxvml_make_token(ctx, &d);
-        if (tok_obj) {
+        rxvml_value *tok_obj = NULL;
+        if (rxvml_call_factory(ctx, "rxcp.token", 9, args, &tok_obj) == 0 && tok_obj) {
+            rxvml_array_set(ctx, token_array, *count + 1, tok_obj);
+            if (node_map) node_map[*count] = node;
             (*count)++;
-            if (rxvml_get_debug_mode(ctx) >= 2) {
-                fprintf(stderr, "DEBUG_EXIT: Marshaled token %zu: type=%d, text=\"%.*s\"\n",
-                        *count, d.type, (int)d.text_len, d.text);
-            }
-            rxvml_array_set(ctx, token_array, *count, tok_obj);
             rxvml_value_free(tok_obj);
+        }
+
+        for (i = 0; i < 9; i++) {
+            rxvml_value_free(args[i]);
         }
     }
 }
 
-rxvml_value* rxcp_marshal_implicit_cmd(rxvml_context *ctx, ASTNode *cmd_node) {
+rxvml_value* rxcp_marshal_implicit_cmd(rxvml_context *ctx, ASTNode *cmd_node, ASTNode ***node_map_out, size_t *num_tokens_out) {
     size_t num_tokens = 0;
     size_t count = 0;
     rxvml_value *token_array;
-    ASTNode *command_expression = cmd_node->child;
+    ASTNode *command_expression;
 
     if (!cmd_node) return NULL;
+
+    command_expression = cmd_node->child;
 
     if (cmd_node->node_type == ADDRESS) {
         // First child is environment, second is command
@@ -95,7 +155,11 @@ rxvml_value* rxcp_marshal_implicit_cmd(rxvml_context *ctx, ASTNode *cmd_node) {
     token_array = rxvml_array_new(ctx, num_tokens);
     if (!token_array) return NULL;
 
-    collect_tokens(ctx, command_expression, token_array, &count);
+    ASTNode **node_map = malloc(sizeof(ASTNode*) * num_tokens);
+    collect_tokens(ctx, command_expression, token_array, node_map, &count);
+
+    if (node_map_out) *node_map_out = node_map;
+    if (num_tokens_out) *num_tokens_out = num_tokens;
 
     return token_array;
 }
@@ -106,189 +170,204 @@ static void rxcp_say_exit(char* message) {
 }
 
 static rxvml_context* rxcp_init_bridge(Context* ctx) {
-    if (ctx->rxvml_bridge) return (rxvml_context*)ctx->rxvml_bridge;
-
     /* Use master context if available */
     Context* root = ctx->master_context ? ctx->master_context : ctx;
+
+    if (root->disable_exits) return NULL;
+    if (ctx->rxvml_bridge) return (rxvml_context*)ctx->rxvml_bridge;
+
     if (root->rxvml_bridge) return (rxvml_context*)root->rxvml_bridge;
 
-    if (root->debug_mode >= 2) {
-        fprintf(stderr, "DEBUG_EXIT: Initializing compiler exit bridge, location=%s\n", root->location ? root->location : "NULL");
+    char *combined_loc = NULL;
+    size_t len = 0;
+    int i;
+    if (root->location) len += strlen(root->location) + 1;
+    if (root->import_locations) {
+        for (i = 0; root->import_locations[i]; i++) {
+            len += strlen(root->import_locations[i]) + 1;
+        }
     }
 
-    rxvml_context* vctx = rxvml_create(root->location, root->debug_mode);
+    if (len > 0) {
+        combined_loc = malloc(len + 1);
+        combined_loc[0] = 0;
+        if (root->location) {
+            strcat(combined_loc, root->location);
+            if (root->import_locations && root->import_locations[0]) strcat(combined_loc, ";");
+        }
+        if (root->import_locations) {
+            for (i = 0; root->import_locations[i]; i++) {
+                strcat(combined_loc, root->import_locations[i]);
+                if (root->import_locations[i+1]) strcat(combined_loc, ";");
+            }
+        }
+    }
+
+    if (root->debug_mode >= 2) {
+        fprintf(stderr, "DEBUG_EXIT: Initializing compiler exit bridge, combined_loc=%s\n", combined_loc ? combined_loc : "NULL");
+    }
+
+    rxvml_context* vctx = rxvml_create(combined_loc, root->debug_mode);
+    if (combined_loc) free(combined_loc);
+
     if (!vctx) {
-        if (root->debug_mode) fprintf(stderr, "DEBUG_EXIT: Failed to create bridge VM context\n");
-        return NULL;
+        fprintf(stderr, "ERROR: Failed to create bridge VM context for compiler exits\n");
+        exit(-1);
     }
 
     /* Set say exit to print to stderr */
     rxvml_set_say_exit(rxcp_say_exit);
 
-    /* Load library.rxbin */
     if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Loading library.rxbin into bridge VM\n");
     if (rxvml_load_module_file(vctx, "library") <= 0) {
-        char *exe_path = exepath();
-        if (exe_path && *exe_path) {
-            char path[MAXFILEPATH];
-            snprintf(path, sizeof(path), "%s/library", exe_path);
-            if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Fallback: Loading library from %s\n", path);
-            rxvml_load_module_file(vctx, path);
-        }
-        if (exe_path) free(exe_path);
+        fprintf(stderr, "ERROR: Failed to load library.rxbin into bridge VM\n");
+        exit(-1);
     }
 
     const char* mod = getenv("RXCP_EXIT_MODULE");
-    if (!mod) mod = "compiler_exit";
+    if (!mod) mod = "rxcexits";
 
     if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Loading %s into bridge VM\n", mod);
     int rc = rxvml_load_module_file(vctx, mod);
-    if (rc <= 0) {
-        char *exe_path = exepath();
-        if (exe_path && *exe_path) {
-            char path[MAXFILEPATH];
-            snprintf(path, sizeof(path), "%s/%s", exe_path, mod);
-            if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Fallback: Loading %s from %s\n", mod, path);
-            rc = rxvml_load_module_file(vctx, path);
-        }
-        if (exe_path) free(exe_path);
-    }
+    if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: rxvml_load_module_file(%s) returned %d\n", mod, rc);
 
     if (rc <= 0) {
-        if (root->debug_mode) fprintf(stderr, "DEBUG_EXIT: Failed to load %s into bridge VM (rc=%d)\n", mod, rc);
+        fprintf(stderr, "ERROR: Failed to load exit module %s into bridge VM (rc=%d)\n", mod, rc);
+        exit(-1);
     }
 
     root->rxvml_bridge = vctx;
     return vctx;
 }
 
-static ASTNode* find_node(ASTNode* node, NodeType type) {
-    if (!node) return NULL;
-    if (node->node_type == type) return node;
-    ASTNode* found = find_node(node->child, type);
-    if (found) return found;
-    return find_node(node->sibling, type);
-}
 
-static walker_result fragment_fixup_walker(walker_direction direction, ASTNode *node, void *payload) {
-    if (direction == in) {
-        if (node->node_string && !node->free_node_string) {
-            char *s = malloc(node->node_string_length + 1);
-            memcpy(s, node->node_string, node->node_string_length);
-            s[node->node_string_length] = 0;
-            node->node_string = s;
-            node->free_node_string = 1;
-        }
-    }
-    return result_normal;
-}
-
-static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context* vctx, rxvml_value* response) {
-    const char* replacement_code = rxvml_get_replacement_code(vctx, response);
+static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context* vctx, rxvml_value* obj, const char* class_name, rxvml_value* response, ASTNode **node_map, size_t num_tokens) {
     if (ctx->debug_mode >= 2) {
-        fprintf(stderr, "DEBUG_EXIT: Replacement code: %s\n", replacement_code ? replacement_code : "NULL");
+        fprintf(stderr, "DEBUG_EXIT: handle_response enter class=%s obj=%p\n", class_name, (void*)obj);
     }
-    if (!replacement_code) {
-        const char* err_msg = rxvml_get_error_message(vctx, response);
-        if (err_msg) {
-            mknd_err(node, (char*)err_msg);
-            return -1;
+    const char* status = NULL;
+    size_t status_len = 0;
+    rxvml_value* status_val = NULL;
+
+    if (obj && (rxvml_to_str(vctx, response, &status, &status_len) != 0 || status_len == 0)) {
+        /* Fallback to get_status() method if return value is empty */
+        if (rxvml_call_method(vctx, obj, class_name, "get_status", 0, NULL, &status_val) == 0 && status_val) {
+            rxvml_to_str(vctx, status_val, &status, &status_len);
         }
+    }
+
+    if (!status) {
+        if (status_val) rxvml_value_free(status_val);
         return 0;
     }
 
-    /* Parse replacement code */
-    Context* frag = cntx_f();
-    if (!frag) {
-        return -1;
+    if (strncmp(status, "REJECT", status_len) == 0) {
+        if (status_val) rxvml_value_free(status_val);
+        return 0;
     }
-    frag->in_exit_bridge = 1;
-    frag->master_context = ctx->master_context;
-    frag->location = ctx->location;
-    frag->file_name = "exit_fragment";
-    frag->level = LEVELB;
-    frag->debug_mode = ctx->debug_mode;
 
-    char* code_copy = strdup(replacement_code);
-    cntx_buf(frag, code_copy, strlen(code_copy));
-    if (rexbpars(frag)) {
-        mknd_err(node, "EXIT_BRIDGE_PARSE_FAILED");
-        fre_cntx(frag);
-        return -1;
+    if (strncmp(status, "ACCEPT", status_len) == 0) {
+        if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: status=ACCEPT\n");
+        if (status_val) rxvml_value_free(status_val);
+        return 1;
     }
-    ast_wlkr(frag->ast, fragment_fixup_walker, NULL);
 
-    if (frag->ast) {
-        /* Find the instructions list in the parsed fragment */
-        ASTNode *search = find_node(frag->ast, INSTRUCTIONS);
+    if (strncmp(status, "PENDING", status_len) == 0) {
+        if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: status=PENDING\n");
+        ctx->changed = 1; /* Ensure another pass */
+        if (status_val) rxvml_value_free(status_val);
+        return 1;
+    }
 
-        if (search && search->child) {
-            /* Replace the IMPLICIT_CMD with the instructions from fragment */
-            ASTNode *instr = search->child;
-            ASTNode *first_graft = NULL;
-            ASTNode *prev_graft = NULL;
+    if (status_len >= 5 && strncmp(status, "ERROR", 5) == 0) {
+        rxinteger error_token_idx = 0;
+        char* err_msg_copy = NULL;
+        const char* err_msg = NULL;
+        size_t err_msg_len = 0;
+        rxvml_value *val = NULL;
 
-            while (instr) {
-                ASTNode *next_instr = instr->sibling;
-                ASTNode *graft = add_dast(node->parent, instr);
-                if (graft) {
-                    ast_del(graft); /* Detach from end of parent's child list */
-                    if (prev_graft) {
-                        /* Link to previous graft */
-                        prev_graft->sibling = graft;
-                        graft->parent = node->parent;
-                    } else {
-                        first_graft = graft;
-                    }
-                    prev_graft = graft;
-                }
-                instr = next_instr;
-            }
-
-            if (first_graft) {
-                /* Ensure the end of the new chain is linked to original siblings */
-                prev_graft->sibling = node->sibling;
-                /* Replace the original node with the head of our new chain */
-                ast_rpl(node, first_graft);
-                ctx->changed = 1;
-            }
+        if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: status=ERROR, calling get_error_token\n");
+        /* get_error_token */
+        if (rxvml_call_method(vctx, obj, class_name, "get_error_token", 0, NULL, &val) == 0 && val) {
+            rxvml_to_int(vctx, val, &error_token_idx);
+            rxvml_value_free(val);
+            val = NULL;
         }
-        /* Avoid double free when frag is destroyed */
-        frag->ast = NULL;
-    }
 
-    /* Move tokens from frag to ctx to keep them alive */
-    if (frag->token_head) {
-        if (ctx->token_tail) {
-            ctx->token_tail->token_next = frag->token_head;
-            ctx->token_tail = frag->token_tail;
+        if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: calling get_error_message\n");
+        /* get_error_message */
+        if (rxvml_call_method(vctx, obj, class_name, "get_error_message", 0, NULL, &val) == 0 && val) {
+            if (rxvml_to_str(vctx, val, &err_msg, &err_msg_len) == 0 && err_msg) {
+                err_msg_copy = malloc(err_msg_len + 1);
+                memcpy(err_msg_copy, err_msg, err_msg_len);
+                err_msg_copy[err_msg_len] = 0;
+            }
+            rxvml_value_free(val);
+            val = NULL;
+        }
+
+        ASTNode *err_node = node;
+        if (error_token_idx > 0 && (size_t)error_token_idx <= num_tokens && node_map) {
+            err_node = node_map[error_token_idx - 1];
+        }
+
+        if (err_msg_copy) {
+            mknd_err(err_node, "%s", err_msg_copy);
+            free(err_msg_copy);
         } else {
-            ctx->token_head = frag->token_head;
-            ctx->token_tail = frag->token_tail;
+            mknd_err(err_node, "EXIT_BRIDGE_ERROR");
         }
-        ctx->token_counter += frag->token_counter;
-        frag->token_head = frag->token_tail = NULL;
-        frag->token_counter = 0;
+        if (status_val) rxvml_value_free(status_val);
+        return -1;
     }
 
-    /* Transfer buffer ownership to ctx */
-    if (frag->buff_start) {
-        ctx->extra_buffers_count++;
-        ctx->extra_buffers = realloc(ctx->extra_buffers, sizeof(char*) * ctx->extra_buffers_count);
-        ctx->extra_buffers[ctx->extra_buffers_count - 1] = frag->buff_start;
-        frag->buff_start = NULL;
+    char* replacement_copy = NULL;
+    rxvml_value *val = NULL;
+
+    if (status_len >= 7 && strncmp(status, "REPLACE", 7) == 0) {
+        if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: status=REPLACE, calling get_replacement\n");
+        const char* replacement_code = NULL;
+        size_t replacement_len = 0;
+
+        /* get_replacement */
+        if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: calling get_replacement, obj attrs=%zu\n", (size_t)((value*)obj)->num_attributes);
+        if (rxvml_call_method(vctx, obj, class_name, "get_replacement", 0, NULL, &val) == 0 && val) {
+            rxvml_to_str(vctx, val, &replacement_code, &replacement_len);
+            if (ctx->debug_mode >= 2) {
+                if (replacement_code) {
+                    fprintf(stderr, "DEBUG_EXIT: get_replacement returned code (len=%zu): %.50s...\n", replacement_len, replacement_code);
+                } else {
+                    fprintf(stderr, "DEBUG_EXIT: get_replacement returned NULL code\n");
+                }
+            }
+        }
+
+        if (replacement_code) {
+            int rc = ast_grft(ctx, node, replacement_code);
+            if (val) rxvml_value_free(val);
+            if (status_val) rxvml_value_free(status_val);
+            return rc < 0 ? -1 : -1; /* Node was replaced */
+        }
+
+        if (val) rxvml_value_free(val);
+        if (status_val) rxvml_value_free(status_val);
+        mknd_err(node, "EXIT_BRIDGE_REPLACE_MISSING_TEXT");
+        return -1;
     }
 
-    fre_cntx(frag);
-    return 1;
+    if (status_val) rxvml_value_free(status_val);
+    return 0;
 }
 
 int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
     rxvml_context* vctx;
     rxvml_value* tok_array;
     rxvml_value* response = NULL;
+    ASTNode **node_map = NULL;
+    size_t num_tokens = 0;
     int handled = 0;
 
+    if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: rxcp_exit_bridge_invoke node type %d\n", node->node_type);
     if (ctx->in_exit_bridge) return 0;
     ctx->in_exit_bridge = 1;
 
@@ -298,7 +377,7 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
         return 0;
     }
 
-    tok_array = rxcp_marshal_implicit_cmd(vctx, node);
+    tok_array = rxcp_marshal_implicit_cmd(vctx, node, &node_map, &num_tokens);
     if (!tok_array) {
         ctx->in_exit_bridge = 0;
         return 0;
@@ -310,9 +389,11 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
         rxvml_value* obj = rxvml_reg_get(vctx, node->exit_obj_reg, class_name);
         if (obj) {
             if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Using attached exit object (class=%s)\n", class_name);
-            if (rxvml_call_method(vctx, obj, class_name, "process", tok_array, &response) == 0) {
-                handled = rxcp_exit_handle_response(ctx, node, vctx, response);
-                if (response) rxvml_value_free(response);
+            if (rxvml_call_method(vctx, obj, class_name, "process", 1, &tok_array, &response) == 0) {
+            handled = rxcp_exit_handle_response(ctx, node, vctx, obj, class_name, response, node_map, num_tokens);
+            if (response) rxvml_value_free(response);
+        } else {
+                fprintf(stderr, "DEBUG_EXIT: Attached process call failed\n");
             }
         }
     }
@@ -321,20 +402,37 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
     if (!handled) {
         rxvml_class_info* classes = NULL;
         size_t class_count = 0;
-        rxvml_discover_classes(vctx, "rxcp", &classes, &class_count);
+        rxvml_discover_classes(vctx, "rxcpexits", &classes, &class_count);
 
         if (classes) {
             size_t i;
+            rxvml_value* nid_val = rxvml_value_new(vctx);
+            rxvml_set_int(nid_val, node->node_number);
+
             for (i = 0; i < class_count; i++) {
                 rxvml_value* obj = NULL;
-                
-                if (rxvml_call_plugin(vctx, classes[i].factory_proc, NULL, &obj) == 0 && obj) {
-                    if (rxvml_call_method(vctx, obj, classes[i].class_name, "process", tok_array, &response) == 0) {
-                        handled = rxcp_exit_handle_response(ctx, node, vctx, response);
-                        if (handled > 0) {
-                            /* Accept/Pending: Attach object */
-                            if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Exit class %s ACCEPTED node\n", classes[i].class_name);
-                            node->exit_obj_reg = rxvml_reg_alloc(vctx, obj, classes[i].class_name);
+
+                if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Trying class %s\n", classes[i].class_name);
+
+                /* Skip internal token class if it somehow ended up in the discovery namespace */
+                if (strstr(classes[i].class_name, ".token")) {
+                    if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Skipping internal class %s\n", classes[i].class_name);
+                    continue;
+                }
+
+                if (rxvml_call_factory(vctx, classes[i].class_name, 1, &nid_val, &obj) == 0 && obj) {
+                    if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Factory created object for %s\n", classes[i].class_name);
+                    if (rxvml_call_method(vctx, obj, classes[i].class_name, "process", 1, &tok_array, &response) == 0) {
+                        if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: process called successfully\n");
+                        handled = rxcp_exit_handle_response(ctx, node, vctx, obj, classes[i].class_name, response, node_map, num_tokens);
+                        if (handled != 0) {
+                            if (handled > 0) {
+                                /* Accept/Pending: Attach object */
+                                node->exit_obj_reg = rxvml_reg_alloc(vctx, obj, classes[i].class_name);
+                            } else {
+                                /* Error/Replace: Destroy object as it's no longer needed for this node */
+                                rxvml_value_free(obj);
+                            }
                             if (response) rxvml_value_free(response);
                             break;
                         } else {
@@ -348,11 +446,13 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
                     }
                 }
             }
+            rxvml_value_free(nid_val);
             free(classes);
         }
     }
 
     rxvml_value_free(tok_array);
+    if (node_map) free(node_map);
     ctx->in_exit_bridge = 0;
     return handled;
 }

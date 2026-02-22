@@ -73,11 +73,44 @@ int rxvml_load_module_buffer(rxvml_context* ctx, const void* buf, size_t len) {
     return rxldmodm(&ctx->vm, (char*)buf, len);
 }
 
-rxvml_value* rxvml_array_new(rxvml_context* ctx, size_t length) {
+rxvml_value* rxvml_value_new(rxvml_context* ctx) {
+    return (rxvml_value*)value_f();
+}
+
+void rxvml_set_int(rxvml_value* v, rxinteger i) {
+    set_int((value*)v, i);
+}
+
+void rxvml_set_str(rxvml_value* v, const char* s, size_t len) {
+    if (s) set_string((value*)v, (char*)s, len);
+    else set_null_string((value*)v, "");
+}
+
+rxvml_value* rxvml_object_new(rxvml_context* ctx, size_t num_attrs) {
     value* v = value_f();
-    set_num_attributes(v, length);
+    set_num_attributes(v, num_attrs);
     v->status.type_object = 1;
     return (rxvml_value*)v;
+}
+
+int rxvml_set_attribute(rxvml_context* ctx, rxvml_value* obj, size_t index1, rxvml_value* val) {
+    value* v_obj = (value*)obj;
+    value* v_val = (value*)val;
+    if (index1 == 0 || index1 > v_obj->num_attributes) return -1;
+    copy_value(v_obj->attributes[index1 - 1], v_val);
+    return 0;
+}
+
+rxvml_value* rxvml_get_attribute(rxvml_context* ctx, rxvml_value* obj, size_t index1) {
+    value* v_obj = (value*)obj;
+    if (index1 == 0 || index1 > v_obj->num_attributes) return NULL;
+    value* v_ret = value_f();
+    copy_value(v_ret, v_obj->attributes[index1 - 1]);
+    return (rxvml_value*)v_ret;
+}
+
+rxvml_value* rxvml_array_new(rxvml_context* ctx, size_t length) {
+    return rxvml_object_new(ctx, length);
 }
 
 int rxvml_array_set(rxvml_context* ctx, rxvml_value* arr, size_t index1, rxvml_value* elem) {
@@ -99,48 +132,6 @@ void rxvml_value_free(rxvml_value* v) {
     }
 }
 
-rxvml_value* rxvml_make_token(rxvml_context* ctx, const rxvml_token_desc* d) {
-    value* v = value_f();
-    /* Attributes: 1..12 per reasoning note */
-    set_num_attributes(v, 15);
-    v->status.type_object = 1;
-
-    /* 1. type */
-    set_int(v->attributes[0], d->type);
-    /* 2. subtype */
-    set_int(v->attributes[1], d->subtype);
-    /* 3. text */
-    if (d->text) set_string(v->attributes[2], (char*)d->text, d->text_len);
-    else set_null_string(v->attributes[2], "");
-    /* 4. line */
-    set_int(v->attributes[3], d->line);
-    /* 5. column */
-    set_int(v->attributes[4], d->column);
-    /* 6. length */
-    set_int(v->attributes[5], d->length);
-    /* 7. file */
-    if (d->file) set_null_string(v->attributes[6], d->file);
-    else set_null_string(v->attributes[6], "");
-    /* 8. nodeType */
-    set_int(v->attributes[7], d->node_type);
-    /* 9. ordinalLow */
-    set_int(v->attributes[8], d->ord_low);
-    /* 10. ordinalHigh */
-    set_int(v->attributes[9], d->ord_high);
-    /* 11. symbolName */
-    if (d->sym_name) set_null_string(v->attributes[10], d->sym_name);
-    else set_null_string(v->attributes[10], "");
-    /* 12. symbolType */
-    set_int(v->attributes[11], d->sym_type);
-    /* 13. isUpdated (negotiation) */
-    set_int(v->attributes[12], 0);
-    /* 14. requestedTokenType */
-    set_int(v->attributes[13], 0);
-    /* 15. requestedSymbolType */
-    set_int(v->attributes[14], 0);
-
-    return (rxvml_value*)v;
-}
 
 int rxvml_reg_alloc(rxvml_context* ctx, rxvml_value* v, const char* class_name) {
     size_t i;
@@ -237,21 +228,87 @@ int rxvml_discover_classes(rxvml_context* ctx, const char* ns, rxvml_class_info*
     return 0;
 }
 
+int rxvml_call_procedure(
+    rxvml_context* ctx,
+    const char* proc_name,
+    size_t argc,
+    rxvml_value** args,
+    rxvml_value** response_out) {
+
+    if (ctx->vm.num_modules > 0) {
+        rxvm_link(&ctx->vm);
+    }
+    proc_constant* p = find_procedure(&ctx->vm, proc_name);
+    if (!p) {
+        ctx->last_error = "Procedure not found";
+        return -1;
+    }
+
+    /* Set up the external call context */
+    ctx->vm.ext_proc = p;
+    ctx->vm.ext_argc = argc;
+    if (argc > 0) {
+        ctx->vm.ext_args = malloc(sizeof(value*) * argc);
+        for (size_t i = 0; i < argc; i++) {
+            ctx->vm.ext_args[i] = (value*)args[i];
+        }
+    } else {
+        ctx->vm.ext_args = NULL;
+    }
+
+    ctx->vm.ext_ret = value_f();
+
+    /* Run the VM */
+    {
+        char* dummy_argv[] = {"rxc_bridge_proc"};
+        rxvm_prepare(&ctx->vm);
+        run(&ctx->vm, 0, dummy_argv);
+    }
+
+    if (response_out) {
+        *response_out = (rxvml_value*)ctx->vm.ext_ret;
+    } else {
+        rxvml_value_free((rxvml_value*)ctx->vm.ext_ret);
+    }
+
+    /* Clear the ext call fields */
+    ctx->vm.ext_proc = 0;
+    ctx->vm.ext_argc = 0;
+    if (ctx->vm.ext_args) free(ctx->vm.ext_args);
+    ctx->vm.ext_args = 0;
+    ctx->vm.ext_ret = 0;
+
+    return 0;
+}
+
 int rxvml_call_method(
     rxvml_context* ctx,
     rxvml_value* obj,
     const char* class_name,
     const char* method_name,
-    rxvml_value* args,
+    size_t argc,
+    rxvml_value** args,
     rxvml_value** response_out) {
 
     char full_method_name[1024];
-    snprintf(full_method_name, sizeof(full_method_name), "%s.%s", class_name, method_name);
+    snprintf(full_method_name, sizeof(full_method_name), "§%s.%s", class_name, method_name);
 
     if (ctx->vm.num_modules > 0) {
         rxvm_link(&ctx->vm);
     }
     proc_constant* p = find_procedure(&ctx->vm, full_method_name);
+    if (!p) {
+        snprintf(full_method_name, sizeof(full_method_name), "%s.%s", class_name, method_name);
+        p = find_procedure(&ctx->vm, full_method_name);
+    }
+    if (!p) {
+        snprintf(full_method_name, sizeof(full_method_name), "%s.§%s", class_name, method_name);
+        p = find_procedure(&ctx->vm, full_method_name);
+    }
+    if (!p) {
+        snprintf(full_method_name, sizeof(full_method_name), "§%s.§%s", class_name, method_name);
+        p = find_procedure(&ctx->vm, full_method_name);
+    }
     if (!p) {
         ctx->last_error = "Method not found";
         return -1;
@@ -259,10 +316,12 @@ int rxvml_call_method(
 
     /* Set up the external call context */
     ctx->vm.ext_proc = p;
-    ctx->vm.ext_argc = 2;
-    ctx->vm.ext_args = malloc(sizeof(value*) * 2);
+    ctx->vm.ext_argc = argc + 1;
+    ctx->vm.ext_args = malloc(sizeof(value*) * (argc + 1));
     ctx->vm.ext_args[0] = (value*)obj;
-    ctx->vm.ext_args[1] = (value*)args;
+    for (size_t i = 0; i < argc; i++) {
+        ctx->vm.ext_args[i + 1] = (value*)args[i];
+    }
 
     ctx->vm.ext_ret = value_f();
 
@@ -289,91 +348,19 @@ int rxvml_call_method(
     return 0;
 }
 
-int rxvml_call_plugin(
+int rxvml_call_factory(
     rxvml_context* ctx,
-    const char* proc_name,
-    rxvml_value* token_array,
+    const char* class_name,
+    size_t argc,
+    rxvml_value** args,
     rxvml_value** response_out) {
 
-    if (ctx->vm.num_modules > 0) {
-        rxvm_link(&ctx->vm);
-    }
-    proc_constant* p = find_procedure(&ctx->vm, proc_name);
-    if (!p) {
-        if (ctx->vm.debug_mode) fprintf(stderr, "DEBUG_EXIT: Procedure %s not found in bridge VM (%zu modules)\n", proc_name, ctx->vm.num_modules);
-        ctx->last_error = "Procedure not found";
-        return -1;
-    }
+    char factory_proc[1024];
+    snprintf(factory_proc, sizeof(factory_proc), "%s.§factory", class_name);
 
-    /* Set up the external call context */
-    ctx->vm.ext_proc = p;
-    if (token_array) {
-        ctx->vm.ext_argc = 1;
-        ctx->vm.ext_args = malloc(sizeof(value*));
-        ctx->vm.ext_args[0] = (value*)token_array;
-    } else {
-        ctx->vm.ext_argc = 0;
-        ctx->vm.ext_args = NULL;
-    }
-
-    ctx->vm.ext_ret = value_f();
-
-    /* Run the VM */
-    {
-        char* dummy_argv[] = {"rxc_plugin"};
-        rxvm_prepare(&ctx->vm);
-        run(&ctx->vm, 0, dummy_argv);
-    }
-
-    if (response_out) {
-        *response_out = (rxvml_value*)ctx->vm.ext_ret;
-    } else {
-        rxvml_value_free((rxvml_value*)ctx->vm.ext_ret);
-    }
-
-    /* Clear the ext call fields */
-    ctx->vm.ext_proc = 0;
-    ctx->vm.ext_argc = 0;
-    if (ctx->vm.ext_args) free(ctx->vm.ext_args);
-    ctx->vm.ext_args = 0;
-    ctx->vm.ext_ret = 0;
-
-    return 0;
+    return rxvml_call_procedure(ctx, factory_proc, argc, args, response_out);
 }
 
-const char* rxvml_get_replacement_code(rxvml_context* ctx, rxvml_value* response) {
-    value* v = (value*)response;
-    if (!v) return NULL;
-    /* If it's a string, return it directly */
-    if (v->status.type_string || (v->string_length > 0 && v->string_value && v->status.all_type_flags == 0)) {
-        null_terminate_string_buffer(v);
-        return v->string_value;
-    }
-    /* Assume rxc.response has code at attribute 1 */
-    if (v->num_attributes >= 1 && (v->attributes[0]->status.type_string || (v->attributes[0]->string_length > 0 && v->attributes[0]->string_value))) {
-        null_terminate_string_buffer(v->attributes[0]);
-        return v->attributes[0]->string_value;
-    }
-    return NULL;
-}
-
-const char* rxvml_get_error_message(rxvml_context* ctx, rxvml_value* response) {
-    value* v = (value*)response;
-    /* Assume rxc.response has error at attribute 2 */
-    if (v && v->num_attributes >= 2 && (v->attributes[1]->status.type_string || (v->attributes[1]->string_length > 0 && v->attributes[1]->string_value))) {
-        null_terminate_string_buffer(v->attributes[1]);
-        return v->attributes[1]->string_value;
-    }
-    return NULL;
-}
-
-int rxvml_get_token_negotiation(rxvml_context* ctx, rxvml_value* token, int* out_new_type, int* out_is_updated) {
-    value* v = (value*)token;
-    if (!v || v->num_attributes < 15) return -1;
-    if (out_new_type) *out_new_type = (int)v->attributes[13]->int_value;
-    if (out_is_updated) *out_is_updated = (int)v->attributes[12]->int_value;
-    return 0;
-}
 
 int rxvml_to_int(rxvml_context* ctx, const rxvml_value* v, rxinteger* out_v) {
     value* val = (value*)v;
@@ -386,7 +373,7 @@ int rxvml_to_int(rxvml_context* ctx, const rxvml_value* v, rxinteger* out_v) {
 
 int rxvml_to_str(rxvml_context* ctx, const rxvml_value* v, const char** out_s, size_t* out_len) {
     value* val = (value*)v;
-    if (val && val->status.type_string) {
+    if (val && (val->status.type_string || val->string_value)) {
         null_terminate_string_buffer(val);
         if (out_s) *out_s = val->string_value;
         if (out_len) *out_len = val->string_length;

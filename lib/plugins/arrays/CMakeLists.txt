@@ -11,10 +11,10 @@ add_dynamic_plugin_target(_arrays arrays.c)
 
 # Build Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
+        COMMAND $<TARGET_FILE:rxc>
+        -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o arrays_test \"${CMAKE_CURRENT_SOURCE_DIR}/arrays_test\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas arrays_test
+        $<TARGET_FILE:rxas> arrays_test
 
         DEPENDS rxas rxc library _arrays ${CMAKE_CURRENT_SOURCE_DIR}/arrays_test.rexx
         OUTPUT arrays_test.rxbin
@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run arrays_test.rxbin with the arrays plugin
 add_test(NAME arrays_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm arrays_test rx_arrays ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> arrays_test rx_arrays ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

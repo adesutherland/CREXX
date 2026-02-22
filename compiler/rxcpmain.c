@@ -54,7 +54,8 @@ static void help() {
             "  -l location     Working Location (directory)\n"
             "  -i import       Locations to import file - \";\" delimited list\n"
             "  -o output_file  REXX Assembler Output File\n"
-            "  -n              No Optimising\n";
+            "  -n              No Optimising\n"
+            "  -x              Disable compiler exits\n";
 
     printf("%s",helpMessage);
 }
@@ -207,10 +208,13 @@ int rxcmain(int argc, char *argv[]) {
     char *file_name;
     char *location = 0;
     char *import_locations = 0;
+    char *exe_path = 0;
+    char *combined_import_locations = 0;
     int num_import_locations;
     size_t ix;
     char c;
     int do_optimise = 1;
+    int disable_exits = 0;
     char *file_directory = 0;
 
     /* Parse arguments  */
@@ -259,6 +263,10 @@ int rxcmain(int argc, char *argv[]) {
                 do_optimise = 0;
                 break;
 
+            case 'x': /* Disable Exits */
+                disable_exits = 1;
+                break;
+
             case 'v': /* Version */
                 printf("%s\n", rxversion);
                 exit(0);
@@ -281,13 +289,30 @@ int rxcmain(int argc, char *argv[]) {
         error_and_exit(2, "Missing input source file");
     }
 
+    /* Add current and executable path to import locations */
+    exe_path = exepath();
+    if (import_locations) {
+        combined_import_locations = malloc(strlen(import_locations) + strlen(exe_path) + 5);
+        sprintf(combined_import_locations, ".;%s;%s", import_locations, exe_path);
+        import_locations = combined_import_locations;
+    } else {
+        combined_import_locations = malloc(strlen(exe_path) + 5);
+        sprintf(combined_import_locations, ".;%s", exe_path);
+        import_locations = combined_import_locations;
+    }
+    free(exe_path);
+
     file_name = argv[i++];
 
     if (i < argc) {
         error_and_exit(2, "Unexpected Arguments");
     }
 
-    if (!output_file_name) output_file_name = file_name;
+    char *allocated_output_file_name = 0;
+    if (!output_file_name) {
+        allocated_output_file_name = strip_rightmost_extension_if(file_name, "rexx");
+        output_file_name = allocated_output_file_name;
+    }
 
     /* Context Structure */
     context = cntx_f();
@@ -370,6 +395,7 @@ int rxcmain(int argc, char *argv[]) {
     context->debug_mode = debug_mode;
     context->stop_after_parse = stop_after_parse;
     context->optimise = do_optimise;
+    context->disable_exits = disable_exits || (getenv("RXCP_DISABLE_EXIT") != NULL);
     if (file_directory) context->location = strdup(file_directory);
     else context->location = location ? strdup(location) : 0;
 
@@ -516,6 +542,10 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Free statically linked functions */
    free_static_linked_functions();
+
+    if (combined_import_locations) free(combined_import_locations);
+
+    if (allocated_output_file_name) free(allocated_output_file_name);
 
     if (errors) return(2);
     if (warnings) return(1);

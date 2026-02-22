@@ -29,7 +29,7 @@ int aTestFromToInt(char* expected, int64_t int_input) {
     /* Make a string buffer to hold the result as a string */
     output = malloc(plugin->getRequiredStringSize(plugin));
 
-    printf("\nTesting with %ld\n", int_input);
+    printf("\nTesting with %lld\n", (long long)int_input);
     plugin->decimalFromInt(plugin, &a, int_input);
 
     plugin->decimalToString(plugin, &a, output);

@@ -41,6 +41,7 @@ struct Scope {
     void *symbols_tree;
     size_t num_registers;
     void *free_registers_array;
+    void *deferred_registers_array;
     size_t temp_flag;
 };
 
@@ -107,8 +108,17 @@ void scp_rmsy(Scope *scope, Symbol *symbol);
 /* Get a free register from scope */
 int get_reg(Scope *scope);
 
+/* Get a permanent register from scope (not reused) */
+int get_reg_perm(Scope *scope);
+
 /* Return a no longer used register to the scope */
 void ret_reg(Scope *scope, int reg);
+
+/* Return a linked register later (end of statement) */
+void ret_reg_later(Scope *scope, int reg);
+
+/* Return all deferred registers */
+void ret_reg_all_deferred(Scope *scope);
 
 /* Get number of free register from scope - returns the start of a sequence
  * n, n+1, n+2, ... n+number */
@@ -137,6 +147,9 @@ void free_sym(Symbol *symbol);
 
 /* Resolve a Symbol - including parent scopes */
 Symbol *sym_rslv(Scope *scope, ASTNode *node);
+
+/* Resolve a Symbol of a specific type - including parent scopes */
+Symbol *sym_rslv_type(Scope *scope, ASTNode *node, SymbolType type);
 
 /* Local Resolve a Symbol - current scope only */
 Symbol *sym_lrsv(Scope *scope, ASTNode *node);

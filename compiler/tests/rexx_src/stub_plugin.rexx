@@ -1,16 +1,16 @@
 options levelb
-namespace stub expose stub_plugin
+namespace stub expose stub_plugin token
 
 /* The Token class used for mapping */
 token: class
     val_type = .int with register.1
     val_text = .string with register.3
 
-    /* Factory only needed for internal testing */
+    /* Factory for the test */
     *: factory
-        arg t_val = .int, txt_val = .string
-        val_type = t_val
-        val_text = txt_val
+        arg t=.int, st=.int, txt=.string, l=.int, c=.int, len=.int, f=.string, nt=.int, vt=.int
+        val_type = t
+        val_text = txt
         return
 
     get_type: method = .int

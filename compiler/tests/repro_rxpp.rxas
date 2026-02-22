@@ -1,0 +1,58 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : repro_rxpp.rexx
+ * BUILT                  : 2026-02-17 12:09:38
+ */
+
+.srcfile="repro_rxpp.rexx"
+.globals=0
+
+main() .locals=5
+   .meta "repro_rxpp.main"="b" ".int" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "repro_rxpp.main.outbuf"="b" ".string[10]" r0
+   .src 2:1="outbuf = .string[10"
+   null r0
+   .src 3:1="lino = 1"
+   .meta "repro_rxpp.main.lino"="b" ".int" r1
+   load r1,1
+   .src 5:1="outbuf[lino] = text"
+   .meta "repro_rxpp.main.text"="b" ".string" "Line 1"
+   setattrs r0,10
+   linkattr1 r2,r0,r1
+   load r3,"Line 1"
+   scopy r2,r3
+   unlink r2
+   .src 6:1="lino = lino + 1"
+   iadd r1,r1,1
+   .src 7:1="outbuf[lino] = \"Line 2\""
+   setattrs r0,10
+   linkattr1 r2,r0,r1
+   load r4,"Line 2"
+   scopy r2,r4
+   unlink r2
+   .src 8:1="say \"Count: \" || lino"
+   itos r1
+   concat r4,"Count: ",r1
+   say r4
+   .src 9:1="say \"Buf 1: \" || outbuf[1"
+   setattrs r0,10
+   linkattr1 r4,r0,1
+   concat r2,"Buf 1: ",r4
+   unlink r4
+   say r2
+   .src 10:1="say \"Buf 2: \" || outbuf[2"
+   setattrs r0,10
+   linkattr1 r4,r0,2
+   concat r2,"Buf 2: ",r4
+   unlink r4
+   say r2
+   .src 11:1="return 0"
+   ret 0
+   .meta "repro_rxpp.main.lino"
+   .meta "repro_rxpp.main.outbuf"
+   .meta "repro_rxpp.main.text"

@@ -74,7 +74,7 @@ Assembler_Token* rxast_f(Assembler_Context* context, int type) {
         case FLOAT:
             memcpy(token->token_value.string, token->token_source, token->length);
             token->token_value.string[token->length] = 0;
-            token->token_value.real = atof(token->token_value.string); // NOLINT
+            token->token_value.real = atof((char*)token->token_value.string); // NOLINT
             break;
         case LABEL:
             memcpy(token->token_value.string, token->token_source, token->length);
