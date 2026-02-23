@@ -1,6 +1,7 @@
 options levelb
 namespace rxcpexits expose dumpexit
 import rxcp
+import rxfnsb
 
 dumpexit: class
     _node_id = .int with register.1
@@ -34,7 +35,7 @@ dumpexit: class
         /* Check Errors */
         do i = 2 to tokens.0
             ti = tokens[i]
-            if ti.get_type() \= "IDENTIFIER" then do
+            if ti.get_type() \= "identifier" then do
                 _status = "ERROR"
                 _error_token = i
                 _error_message = "Not an identifier"
@@ -46,7 +47,7 @@ dumpexit: class
         _status = "REPLACE"
         do i = 2 to tokens.0
             ti = tokens[i]
-            if ti.get_value_type() = "UNKNOWN" then do
+            if ti.get_value_type() = ".unknown" then do
                 _status = "PENDING"
                 return _status
             end
@@ -58,7 +59,13 @@ dumpexit: class
                 ti = tokens[i]
                 t_text = ti.get_text()
                 t_type = ti.get_value_type()
-                _replacement = _replacement || "say '" || t_text || " (" || t_type || ") = ' || {" || i || "};"
+                /* If the token is an array, loop through its elements and print each one */
+                if pos("[", t_type) > 0 then do
+                    _replacement = _replacement || "__rxcpx_dump_i = 1; do while __rxcpx_dump_i <= {" || i || "}[0]; say '" || t_text || " (" || t_type || ")[" || "' || __rxcpx_dump_i || '" || "] = ' || {" || i || "}[__rxcpx_dump_i]; __rxcpx_dump_i = __rxcpx_dump_i + 1; end;"
+                end
+                else do
+                    _replacement = _replacement || "say '" || t_text || " (" || t_type || ") = ' || {" || i || "};"
+                end
             end
         end
 

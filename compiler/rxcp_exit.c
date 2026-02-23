@@ -171,11 +171,11 @@ int rxcp_is_exit_additional(Context *ctx, const char *keyword, size_t len) {
 
 static const char* token_type_to_string(int type) {
     switch (type) {
-        case TK_VAR_SYMBOL: return "IDENTIFIER";
-        case TK_STRING:     return "STRING_LITERAL";
-        case TK_INTEGER:    return "INT_LITERAL";
-        case TK_FLOAT:      return "FLOAT_LITERAL";
-        case TK_DECIMAL:    return "DECIMAL_LITERAL";
+        case TK_VAR_SYMBOL: return "identifier";
+        case TK_STRING:     return "string_literal";
+        case TK_INTEGER:    return "int_literal";
+        case TK_FLOAT:      return "float_literal";
+        case TK_DECIMAL:    return "decimal_literal";
         case TK_PLUS:
         case TK_MINUS:
         case TK_MULT:
@@ -183,8 +183,8 @@ static const char* token_type_to_string(int type) {
         case TK_IDIV:
         case TK_MOD:
         case TK_POWER_L:
-        case TK_POWER_R:    return "OPERATOR";
-        case TK_EQUAL:      return "ASSIGNMENT";
+        case TK_POWER_R:    return "operator";
+        case TK_EQUAL:      return "assignment";
         case TK_IF:
         case TK_THEN:
         case TK_ELSE:
@@ -198,29 +198,19 @@ static const char* token_type_to_string(int type) {
         case TK_NAMESPACE:
         case TK_IMPORT:
         case TK_EXPOSE:
-        case TK_OPTIONS:    return "KEYWORD";
-        case TK_EXIT_PRIMARY: return "EXIT_PRIMARY";
-        case TK_EXIT_TOKEN:   return "EXIT_KEYWORD";
-        case TK_COMMA:      return "COMMA";
+        case TK_OPTIONS:    return "keyword";
+        case TK_EXIT_PRIMARY: return "exit_primary";
+        case TK_EXIT_TOKEN:   return "exit_keyword";
+        case TK_COMMA:      return "comma";
         case TK_OPEN_BRACKET:
         case TK_CLOSE_BRACKET:
         case TK_OPEN_SBRACKET:
-        case TK_CLOSE_SBRACKET: return "BRACKET";
-        case TK_LABEL:      return "LABEL";
-        default:            return "OTHER";
+        case TK_CLOSE_SBRACKET: return "bracket";
+        case TK_LABEL:      return "label";
+        default:            return "other";
     }
 }
 
-static const char* node_value_type_to_string(ValueType type) {
-    switch (type) {
-        case TP_INTEGER: return "INT";
-        case TP_STRING:  return "STRING";
-        case TP_FLOAT:   return "FLOAT";
-        case TP_DECIMAL: return "DECIMAL";
-        case TP_BOOLEAN: return "BOOLEAN";
-        default:         return "VOID";
-    }
-}
 
 static void count_tokens(ASTNode *node, size_t *count) {
     if (!node) return;
@@ -268,7 +258,9 @@ static void marshal_single_token(rxvml_context *ctx, ASTNode *node, rxvml_value 
     args[7] = rxvml_value_new(ctx);
     rxvml_set_int(args[7], node->node_type);
     args[8] = rxvml_value_new(ctx);
-    rxvml_set_int(args[8], node->value_type);
+    char *vt_str = ast_n2tp(node);
+    rxvml_set_str(args[8], vt_str, strlen(vt_str));
+    free(vt_str);
     args[9] = rxvml_value_new(ctx);
     rxvml_set_str(args[9], token_type_to_string(t_type), strlen(token_type_to_string(t_type)));
 

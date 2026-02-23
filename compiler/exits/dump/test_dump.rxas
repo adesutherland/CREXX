@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : test_dump.rexx
- * BUILT                  : 2026-02-23 15:12:33
+ * BUILT                  : 2026-02-23 16:48:16
  */
 
 .srcfile="test_dump.rexx"
@@ -23,10 +23,10 @@ main() .locals=4
    load r1,"Hello World"
    .src 2:1="say"
    itos r0
-   concat r2,"x (INTEGER) = ",r0
+   concat r2,"x (.int) = ",r0
    say r2
-   .src 2:27="say"
-   concat r3,"y (STRING) = ",r1
+   .src 2:24="say"
+   concat r3,"y (.string) = ",r1
    say r3
    .src 9:9=""
    ret

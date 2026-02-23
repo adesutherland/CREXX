@@ -1,0 +1,53 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : test_array_dump.rexx
+ * BUILT                  : 2026-02-23 17:17:38
+ */
+
+.srcfile="test_array_dump.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "test_array_dump.main"="b" ".void" main() "" ""
+   .src 4:1="main: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "test_array_dump.main.a"="b" ".int[5]" r1
+   .src 5:1="a = .int[5"
+   null r1
+   .src 6:1="a[1] = 42"
+   setattrs r1,5
+   linkattr1 r2,r1,1
+   load r3,42
+   icopy r2,r3
+   unlink r2
+   .src 2:16="="
+   .meta "test_array_dump.main.__rxcpx_dump_i"="b" ".int" r0
+   load r0,1
+l31dostart:
+   .src 2:24="while"
+   load r2,5
+   ilte r2,r0,r2
+   brf l31doend,r2
+   .src 2:54="say"
+   itos r0
+   concat r4,"a (.int[5])[",r0
+   concat r4,r4,"] = "
+   setattrs r1,5
+   linkattr1 r5,r1,r0
+   itos r5
+   concat r4,r4,r5
+   unlink r5
+   say r4
+   .src 2:138="="
+   iadd r0,r0,1
+l31doinc:
+   br l31dostart
+l31doend:
+   .src 8:7=""
+   ret
+   .meta "test_array_dump.main.__rxcpx_dump_i"
+   .meta "test_array_dump.main.a"
