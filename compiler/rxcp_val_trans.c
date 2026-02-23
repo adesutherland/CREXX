@@ -285,7 +285,7 @@ walker_result needs_rxsysb_walker(walker_direction direction,
 
     if (direction == out) {
         /* Bottom Up */
-        if (node->node_type == ADDRESS || node->node_type == IMPLICIT_CMD) {
+        if (node->node_type == ADDRESS || node->node_type == IMPLICIT_CMD || node->node_type == EXIT_EXTENDED) {
             context->need_rxsysb = 1;
         }
         else if (node->node_type == EXIT) {
@@ -303,9 +303,10 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
                                           ASTNode* node, void *payload) {
     Context *context = (Context *) payload;
     ASTNode *env_node;
- 
+
     if (direction == in && node->node_type == IMPLICIT_CMD) {
         if (node->exit_obj_reg != -1) return result_normal;
+        if (ast_hase(node)) return result_normal;
         /* Create explicit environment "SYSTEM" */
         env_node = ast_ft(context, STRING);
         ast_str(env_node, "SYSTEM");

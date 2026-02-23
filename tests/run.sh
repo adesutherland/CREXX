@@ -15,6 +15,6 @@ echo "rxdas $1"
 ../cmake-build-debug/bin/rxdas $1
 
 echo "rxvm $1"
-../cmake-build-debug/bin/rxvm $1 -a $2 $3 $4
+../cmake-build-debug/bin/rxvm $1 library -a $2 $3 $4
+
 echo rc=$?
-#../cmake-build-debug/interpreter/rxvm $1

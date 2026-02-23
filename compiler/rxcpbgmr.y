@@ -45,11 +45,13 @@
 #include "rxcpmain.h"
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN.
 %wildcard ANYTHING.
 
 /* Low precedence */
-%left ANYTHING.
+%left EXIT_REDUCE.
+%right ANYTHING.
+%left TK_EOC.
 %left IMPLICIT_CONCAT.
 %left TK_DOT TK_CLASS_TYPE.
 
@@ -356,8 +358,29 @@ instruction(E)         ::= error.
 
 single_instruction(I)  ::= assignment(B). { I = B; }
 single_instruction(I)  ::= define(B). { I = B; }
+single_instruction(I)  ::= exit_extended(B). { I = B; }
 single_instruction(I)  ::= command(B). { I = B; }
 single_instruction(I)  ::= keyword_instruction(B). { I = B; }
+
+exit_extended(I) ::= TK_EXIT_PRIMARY(P) exit_tokens(L). [EXIT_REDUCE]
+{
+    I = ast_f(context, EXIT_EXTENDED, P);
+    add_ast(I, L);
+}
+
+exit_tokens(L) ::= exit_tokens(L1) exit_token(T). [ANYTHING]
+{
+    if (L1) {
+        L = L1;
+        add_sbtr(L, T);
+    } else {
+        L = T;
+    }
+}
+exit_tokens(L) ::= . { L = 0; }
+
+exit_token(T) ::= TK_EXIT_TOKEN(K). { T = ast_f(context, EXIT_TOKEN, K); }
+exit_token(T) ::= ANYTHING(A).       { T = ast_f(context, EXIT_TOKEN, A); }
 
 /* Assignments trying to assign to a keywords */
 assignment(G)     ::= TK_DO(K) TK_EQUAL(T) expression(E).
@@ -417,6 +440,10 @@ assignment(G)     ::= TK_RETURN(K) TK_EQUAL(T) expression(E).
 assignment(G)     ::= TK_NOP(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_CALL(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_EXIT_PRIMARY(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_EXIT_TOKEN(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 
 /* Defines trying to assign to a keywords */
@@ -1397,7 +1424,6 @@ expression_in_list(P) ::= and_expression(E). { P = E; }
 
 /* Finally set the nodes with the highest precedence */
 %left TK_BADCOMMENT.
-%left TK_EOC.
 
 /* Classes / Factories / Methods */
 

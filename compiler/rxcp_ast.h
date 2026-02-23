@@ -106,6 +106,7 @@ ASTNode *ast_dup_subtree(Context* new_context, ASTNode *node);
 ASTNode *ast_fndn(Context* ctx, ASTNode* node, NodeType type);
 /* Graft a Rexx source fragment into the AST replacing target_node */
 int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code);
+int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_code, ASTNode **node_map, size_t num_tokens);
 /* Factory to create a duplicated AST node into a new context
  * - context is the target context
  * - node is the node to be duplicated

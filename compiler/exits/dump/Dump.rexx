@@ -17,16 +17,16 @@ dumpexit: class
         _error_message = ""
         _status = "EMPTY"
 
+    get_primary_keyword: method = .string
+        return "dump"
+
+    get_additional_keywords: method = .string
+        return ""
+
     process: method = .string
         arg tokens = .token[]
 
         if tokens.0 < 1 then do
-            _status = "REJECT"
-            return _status
-        end
-        t1 = tokens.1
-
-        if t1.get_text() \= "dump" then do
             _status = "REJECT"
             return _status
         end
@@ -35,6 +35,7 @@ dumpexit: class
         do i = 2 to tokens.0
             ti = tokens[i]
             if ti.get_type() \= "IDENTIFIER" then do
+                _status = "ERROR"
                 _error_token = i
                 _error_message = "Not an identifier"
                 return _status
@@ -57,7 +58,7 @@ dumpexit: class
                 ti = tokens[i]
                 t_text = ti.get_text()
                 t_type = ti.get_value_type()
-                _replacement = _replacement || "say '" || t_text || " (" || t_type || ") = ' || " || t_text || ";"
+                _replacement = _replacement || "say '" || t_text || " (" || t_type || ") = ' || {" || i || "};"
             end
         end
 

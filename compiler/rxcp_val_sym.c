@@ -295,7 +295,7 @@ walker_result build_symbols_walker(walker_direction direction,
         }
 
 
-        else if (node->node_type == VAR_SYMBOL) {
+        else if (node->node_type == VAR_SYMBOL || (node->node_type == EXIT_TOKEN && node->token && node->token->token_type == TK_VAR_SYMBOL)) {
             if (node->symbolNode) {
                 node->scope = context->current_scope;
             } else {

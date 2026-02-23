@@ -391,6 +391,7 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case VAR_SYMBOL:
             case VAR_TARGET:
+            case EXIT_TOKEN:
                 if (node->value_type == TP_UNKNOWN && node->symbolNode) {
                     ast_svtp(node, node->symbolNode->symbol);
                     if (node->value_type != TP_UNKNOWN) {

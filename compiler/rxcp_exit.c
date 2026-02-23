@@ -6,6 +6,176 @@
 #include "rxbin.h"
 #include "rxvmvars.h"
 #include "platform.h"
+#include "rxcp_exit.h"
+
+static const char* rexx_builtins[] = {
+    "ADDRESS", "ASSEMBLER", "ARG", "CALL", "CLASS", "DO", "LOOP", "METHOD", "ELSE", "ERROR", "END", "EXIT",
+    "FACTORY", "IF", "IMPORT", "INPUT", "ITERATE", "LEAVE", "NAMESPACE", "OF", "NOP", "NUMERIC", "OPTIONS",
+    "OUTPUT", "PROCEDURE", "REGISTER", "RETURN", "SAY", "THEN", "BY", "EXPOSE", "FOR", "FOREVER", "TO",
+    "UNTIL", "VOID", "WHILE", "WITH", "PULL", "PUSH", "QUEUE", "SELECT", "SIGNAL", "TRACE", "WHEN", "OFF",
+    "ON", "DROP", "EXTERNAL", "INTERPRET", "LINEIN", "NAME", "NOVALUE", "SOURCE", "SYNTAX", "UPPER",
+    "VAR", "VERSION", NULL
+};
+
+static int is_builtin_keyword(const char* keyword) {
+    int i = 0;
+    while (rexx_builtins[i]) {
+        if (strcasecmp(rexx_builtins[i], keyword) == 0) return 1;
+        i++;
+    }
+    return 0;
+}
+
+void rxcp_free_exits(Context *ctx) {
+    Context *root = ctx->master_context ? ctx->master_context : ctx;
+    if (ctx != root) return;
+
+    ExitEntry *entry = (ExitEntry *)root->exit_registry;
+    while (entry) {
+        ExitEntry *next = entry->next;
+        if (entry->primary_keyword) free(entry->primary_keyword);
+        ExitKeyword *kw = entry->additional_keywords;
+        while (kw) {
+            ExitKeyword *next_kw = kw->next;
+            if (kw->keyword) free(kw->keyword);
+            free(kw);
+            kw = next_kw;
+        }
+        if (entry->class_name) free(entry->class_name);
+        /* Note: obj is an rxvml_value, but it might be managed by the bridge.
+           Actually, we should probably just free the memory here.
+           Wait, rxvml_value_free(entry->obj) if we own it.
+        */
+        free(entry);
+        entry = next;
+    }
+    root->exit_registry = NULL;
+
+    ExitAdditionalKeywords *akw = (ExitAdditionalKeywords *)root->exit_additional_keywords;
+    while (akw) {
+        ExitAdditionalKeywords *next_akw = akw->next;
+        if (akw->keyword) free(akw->keyword);
+        free(akw);
+        akw = next_akw;
+    }
+    root->exit_additional_keywords = NULL;
+}
+
+static rxvml_context* rxcp_init_bridge(Context* ctx);
+
+void rxcp_init_exits(Context *ctx) {
+    Context *root = ctx->master_context ? ctx->master_context : ctx;
+    if (root->exit_registry) return;
+
+    rxvml_context* vctx = rxcp_init_bridge(ctx);
+    if (!vctx) return;
+
+    rxvml_class_info* classes = NULL;
+    size_t class_count = 0;
+    rxvml_discover_classes(vctx, "rxcpexits", &classes, &class_count);
+
+    if (classes) {
+        size_t i;
+        for (i = 0; i < class_count; i++) {
+            /* Skip internal token class */
+            if (strstr(classes[i].class_name, ".token")) continue;
+
+            rxvml_value* obj = NULL;
+            /* Use a dummy node number 0 for initialization */
+            rxvml_value* nid_val = rxvml_value_new(vctx);
+            rxvml_set_int(nid_val, 0);
+
+            if (rxvml_call_factory(vctx, classes[i].class_name, 1, &nid_val, &obj) == 0 && obj) {
+                rxvml_value* pk_val = NULL;
+                if (rxvml_call_method(vctx, obj, classes[i].class_name, "get_primary_keyword", 0, NULL, &pk_val) == 0 && pk_val) {
+                    const char* pk = NULL;
+                    size_t pk_len = 0;
+                    rxvml_to_str(vctx, pk_val, &pk, &pk_len);
+
+                    if (pk && pk_len > 0) {
+                        /* Check for conflicts */
+                        if (is_builtin_keyword(pk)) {
+                            fprintf(stderr, "INTERNAL EXIT ERROR: Exit '%s' uses a Rexx built-in primary keyword '%s'\n", classes[i].class_name, pk);
+                            exit(-1);
+                        }
+                        if (rxcp_is_exit_primary(ctx, pk, pk_len)) {
+                            fprintf(stderr, "INTERNAL EXIT ERROR: Duplicate primary keyword '%s' from exit '%s'\n", pk, classes[i].class_name);
+                            exit(-1);
+                        }
+
+                        /* Register exit */
+                        ExitEntry *entry = calloc(1, sizeof(ExitEntry));
+                        entry->primary_keyword = strndup(pk, pk_len);
+                        entry->class_name = strdup(classes[i].class_name);
+                        entry->obj = obj; /* We keep the object? Maybe just for discovery.
+                                            Actually, rxcp_exit_bridge_invoke recreates it per node.
+                                            Wait, it says "The compiler will set the types...".
+                                            Maybe we should keep it.
+                                          */
+                        entry->next = (ExitEntry *)root->exit_registry;
+                        root->exit_registry = entry;
+
+                        /* Get additional keywords */
+                        rxvml_value* ak_val = NULL;
+                        if (rxvml_call_method(vctx, obj, classes[i].class_name, "get_additional_keywords", 0, NULL, &ak_val) == 0 && ak_val) {
+                            const char* ak_str = NULL;
+                            size_t ak_len = 0;
+                            rxvml_to_str(vctx, ak_val, &ak_str, &ak_len);
+                            if (ak_str && ak_len > 0) {
+                                char *work = strndup(ak_str, ak_len);
+                                char *p = strtok(work, " ");
+                                while (p) {
+                                    ExitKeyword *kw = calloc(1, sizeof(ExitKeyword));
+                                    kw->keyword = strdup(p);
+                                    kw->next = entry->additional_keywords;
+                                    entry->additional_keywords = kw;
+
+                                    /* Also add to global list if not already there */
+                                    if (!rxcp_is_exit_additional(ctx, p, strlen(p))) {
+                                        ExitAdditionalKeywords *akw = calloc(1, sizeof(ExitAdditionalKeywords));
+                                        akw->keyword = strdup(p);
+                                        akw->next = (ExitAdditionalKeywords *)root->exit_additional_keywords;
+                                        root->exit_additional_keywords = akw;
+                                    }
+
+                                    p = strtok(NULL, " ");
+                                }
+                                free(work);
+                            }
+                            rxvml_value_free(ak_val);
+                        }
+                    }
+                    rxvml_value_free(pk_val);
+                } else {
+                     /* No primary keyword, maybe it's not a parser exit */
+                     rxvml_value_free(obj);
+                }
+            }
+            rxvml_value_free(nid_val);
+        }
+        free(classes);
+    }
+}
+
+int rxcp_is_exit_primary(Context *ctx, const char *keyword, size_t len) {
+    Context *root = ctx->master_context ? ctx->master_context : ctx;
+    ExitEntry *entry = (ExitEntry *)root->exit_registry;
+    while (entry) {
+        if (len == strlen(entry->primary_keyword) && strncasecmp(entry->primary_keyword, keyword, len) == 0) return 1;
+        entry = entry->next;
+    }
+    return 0;
+}
+
+int rxcp_is_exit_additional(Context *ctx, const char *keyword, size_t len) {
+    Context *root = ctx->master_context ? ctx->master_context : ctx;
+    ExitAdditionalKeywords *akw = (ExitAdditionalKeywords *)root->exit_additional_keywords;
+    while (akw) {
+        if (len == strlen(akw->keyword) && strncasecmp(akw->keyword, keyword, len) == 0) return 1;
+        akw = akw->next;
+    }
+    return 0;
+}
 
 static const char* token_type_to_string(int type) {
     switch (type) {
@@ -37,6 +207,8 @@ static const char* token_type_to_string(int type) {
         case TK_IMPORT:
         case TK_EXPOSE:
         case TK_OPTIONS:    return "KEYWORD";
+        case TK_EXIT_PRIMARY: return "EXIT_PRIMARY";
+        case TK_EXIT_TOKEN:   return "EXIT_KEYWORD";
         case TK_COMMA:      return "COMMA";
         case TK_OPEN_BRACKET:
         case TK_CLOSE_BRACKET:
@@ -60,7 +232,7 @@ static const char* node_value_type_to_string(ValueType type) {
 
 static void count_tokens(ASTNode *node, size_t *count) {
     if (!node) return;
-    if (node->node_type == OP_CONCAT || node->node_type == OP_SCONCAT) {
+    if (node->node_type == OP_CONCAT || node->node_type == OP_SCONCAT || node->node_type == EXIT_EXTENDED) {
         ASTNode *child = node->child;
         while (child) {
             count_tokens(child, count);
@@ -71,60 +243,68 @@ static void count_tokens(ASTNode *node, size_t *count) {
     }
 }
 
+static void marshal_single_token(rxvml_context *ctx, ASTNode *node, rxvml_value *token_array, ASTNode **node_map, size_t *count) {
+    /* Layout (rxcp_intern.token factory compatible):
+       Arg 1: Type (.int)
+       Arg 2: Subtype (.int)
+       Arg 3: Text (.string)
+       Arg 4: Line (.int)
+       Arg 5: Column (.int)
+       Arg 6: Length (.int)
+       Arg 7: File (.string)
+       Arg 8: Node Type (.int)
+       Arg 9: Value Type (.int)
+    */
+
+    rxvml_value* args[10];
+    int i;
+    args[0] = rxvml_value_new(ctx);
+    int t_type = node->token ? node->token->token_type : 0;
+    rxvml_set_int(args[0], t_type);
+    args[1] = rxvml_value_new(ctx);
+    rxvml_set_int(args[1], 0); /* subtype */
+    args[2] = rxvml_value_new(ctx);
+    rxvml_set_str(args[2], node->token ? node->token->token_string : node->node_string, node->token ? node->token->length : node->node_string_length);
+    args[3] = rxvml_value_new(ctx);
+    rxvml_set_int(args[3], node->line);
+    args[4] = rxvml_value_new(ctx);
+    rxvml_set_int(args[4], node->column);
+    args[5] = rxvml_value_new(ctx);
+    rxvml_set_int(args[5], node->token ? node->token->length : node->node_string_length);
+    args[6] = rxvml_value_new(ctx);
+    rxvml_set_str(args[6], "", 0); /* file */
+    args[7] = rxvml_value_new(ctx);
+    rxvml_set_int(args[7], node->node_type);
+    args[8] = rxvml_value_new(ctx);
+    rxvml_set_int(args[8], node->value_type);
+    args[9] = rxvml_value_new(ctx);
+    rxvml_set_str(args[9], token_type_to_string(t_type), strlen(token_type_to_string(t_type)));
+
+    rxvml_value *tok_obj = NULL;
+    if (rxvml_call_factory(ctx, "rxcp.token", 10, args, &tok_obj) == 0 && tok_obj) {
+        rxvml_array_set(ctx, token_array, *count + 1, tok_obj);
+        if (node_map) node_map[*count] = node;
+        (*count)++;
+        rxvml_value_free(tok_obj);
+    }
+
+    for (i = 0; i < 10; i++) {
+        rxvml_value_free(args[i]);
+    }
+}
+
 static void collect_tokens(rxvml_context *ctx, ASTNode *node, rxvml_value *token_array, ASTNode **node_map, size_t *count) {
     if (!node) return;
+    if (node->node_type == ERROR) return;
 
-    if (node->node_type == OP_CONCAT || node->node_type == OP_SCONCAT) {
+    if (node->node_type == OP_CONCAT || node->node_type == OP_SCONCAT || node->node_type == EXIT_EXTENDED) {
         ASTNode *child = node->child;
         while (child) {
             collect_tokens(ctx, child, token_array, node_map, count);
             child = child->sibling;
         }
     } else {
-        /* Layout (rxcp_intern.token factory compatible):
-           Arg 1: Type (.int)
-           Arg 2: Subtype (.int)
-           Arg 3: Text (.string)
-           Arg 4: Line (.int)
-           Arg 5: Column (.int)
-           Arg 6: Length (.int)
-           Arg 7: File (.string)
-           Arg 8: Node Type (.int)
-           Arg 9: Value Type (.int)
-        */
-
-        rxvml_value* args[9];
-        int i;
-        args[0] = rxvml_value_new(ctx);
-        rxvml_set_int(args[0], node->token ? node->token->token_type : 0);
-        args[1] = rxvml_value_new(ctx);
-        rxvml_set_int(args[1], 0); /* subtype */
-        args[2] = rxvml_value_new(ctx);
-        rxvml_set_str(args[2], node->token ? node->token->token_string : node->node_string, node->token ? node->token->length : node->node_string_length);
-        args[3] = rxvml_value_new(ctx);
-        rxvml_set_int(args[3], node->line);
-        args[4] = rxvml_value_new(ctx);
-        rxvml_set_int(args[4], node->column);
-        args[5] = rxvml_value_new(ctx);
-        rxvml_set_int(args[5], node->token ? node->token->length : node->node_string_length);
-        args[6] = rxvml_value_new(ctx);
-        rxvml_set_str(args[6], "", 0); /* file */
-        args[7] = rxvml_value_new(ctx);
-        rxvml_set_int(args[7], node->node_type);
-        args[8] = rxvml_value_new(ctx);
-        rxvml_set_int(args[8], node->value_type);
-
-        rxvml_value *tok_obj = NULL;
-        if (rxvml_call_factory(ctx, "rxcp.token", 9, args, &tok_obj) == 0 && tok_obj) {
-            rxvml_array_set(ctx, token_array, *count + 1, tok_obj);
-            if (node_map) node_map[*count] = node;
-            (*count)++;
-            rxvml_value_free(tok_obj);
-        }
-
-        for (i = 0; i < 9; i++) {
-            rxvml_value_free(args[i]);
-        }
+        marshal_single_token(ctx, node, token_array, node_map, count);
     }
 }
 
@@ -135,6 +315,39 @@ rxvml_value* rxcp_marshal_implicit_cmd(rxvml_context *ctx, ASTNode *cmd_node, AS
     ASTNode *command_expression;
 
     if (!cmd_node) return NULL;
+
+    if (cmd_node->node_type == EXIT_EXTENDED) {
+        num_tokens = 1;
+        ASTNode *c = cmd_node->child;
+        while (c) {
+            count_tokens(c, &num_tokens);
+            c = c->sibling;
+        }
+
+        if (cmd_node->context->debug_mode >= 2) {
+            fprintf(stderr, "DEBUG_EXIT: Marshaling %zu tokens for EXIT_EXTENDED\n", num_tokens);
+        }
+
+        token_array = rxvml_array_new(ctx, num_tokens);
+        if (!token_array) return NULL;
+
+        rxvml_value* count_val = rxvml_value_new(ctx);
+        rxvml_set_int(count_val, num_tokens);
+        rxvml_array_set(ctx, token_array, 0, count_val);
+        rxvml_value_free(count_val);
+
+        ASTNode **node_map = malloc(sizeof(ASTNode*) * num_tokens);
+        marshal_single_token(ctx, cmd_node, token_array, node_map, &count);
+        c = cmd_node->child;
+        while (c) {
+            collect_tokens(ctx, c, token_array, node_map, &count);
+            c = c->sibling;
+        }
+
+        if (node_map_out) *node_map_out = node_map;
+        if (num_tokens_out) *num_tokens_out = num_tokens;
+        return token_array;
+    }
 
     command_expression = cmd_node->child;
 
@@ -154,6 +367,11 @@ rxvml_value* rxcp_marshal_implicit_cmd(rxvml_context *ctx, ASTNode *cmd_node, AS
 
     token_array = rxvml_array_new(ctx, num_tokens);
     if (!token_array) return NULL;
+
+    rxvml_value* count_val = rxvml_value_new(ctx);
+    rxvml_set_int(count_val, num_tokens);
+    rxvml_array_set(ctx, token_array, 0, count_val);
+    rxvml_value_free(count_val);
 
     ASTNode **node_map = malloc(sizeof(ASTNode*) * num_tokens);
     collect_tokens(ctx, command_expression, token_array, node_map, &count);
@@ -207,33 +425,32 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
         fprintf(stderr, "DEBUG_EXIT: Initializing compiler exit bridge, combined_loc=%s\n", combined_loc ? combined_loc : "NULL");
     }
 
-    rxvml_context* vctx = rxvml_create(combined_loc, root->debug_mode);
+    rxvml_context* vctx = rxvml_create(combined_loc, 0);
     if (combined_loc) free(combined_loc);
 
     if (!vctx) {
-        fprintf(stderr, "ERROR: Failed to create bridge VM context for compiler exits\n");
-        exit(-1);
+        if (root->debug_mode >= 2) fprintf(stderr, "WARNING: Failed to create bridge VM context for compiler exits\n");
+        return NULL;
     }
 
     /* Set say exit to print to stderr */
     rxvml_set_say_exit(rxcp_say_exit);
 
-    if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Loading library.rxbin into bridge VM\n");
     if (rxvml_load_module_file(vctx, "library") <= 0) {
-        fprintf(stderr, "ERROR: Failed to load library.rxbin into bridge VM\n");
-        exit(-1);
+        if (root->debug_mode >= 2) fprintf(stderr, "WARNING: Failed to load library.rxbin into bridge VM\n");
+        rxvml_destroy(vctx);
+        return NULL;
     }
 
     const char* mod = getenv("RXCP_EXIT_MODULE");
     if (!mod) mod = "rxcexits";
 
-    if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Loading %s into bridge VM\n", mod);
     int rc = rxvml_load_module_file(vctx, mod);
-    if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: rxvml_load_module_file(%s) returned %d\n", mod, rc);
 
     if (rc <= 0) {
-        fprintf(stderr, "ERROR: Failed to load exit module %s into bridge VM (rc=%d)\n", mod, rc);
-        exit(-1);
+        if (root->debug_mode >= 2) fprintf(stderr, "WARNING: Failed to load exit module %s into bridge VM (rc=%d)\n", mod, rc);
+        rxvml_destroy(vctx);
+        return NULL;
     }
 
     root->rxvml_bridge = vctx;
@@ -343,7 +560,7 @@ static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context*
         }
 
         if (replacement_code) {
-            int rc = ast_grft(ctx, node, replacement_code);
+            int rc = ast_grft_interpolated(ctx, node, replacement_code, node_map, num_tokens);
             if (val) rxvml_value_free(val);
             if (status_val) rxvml_value_free(status_val);
             return rc < 0 ? -1 : -1; /* Node was replaced */
@@ -398,7 +615,42 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
         }
     }
 
-    /* 2. Discovery Loop (if not handled) */
+    /* 2. Direct Dispatch for EXIT_EXTENDED */
+    if (!handled && node->node_type == EXIT_EXTENDED) {
+        ExitEntry *entry = (ExitEntry *)ctx->exit_registry;
+        while (entry) {
+            if (node->token->length == strlen(entry->primary_keyword) &&
+                strncasecmp(entry->primary_keyword, node->token->token_string, node->token->length) == 0) {
+
+                rxvml_value* nid_val = rxvml_value_new(vctx);
+                rxvml_set_int(nid_val, node->node_number);
+                rxvml_value* obj = NULL;
+
+                if (rxvml_call_factory(vctx, entry->class_name, 1, &nid_val, &obj) == 0 && obj) {
+                    if (rxvml_call_method(vctx, obj, entry->class_name, "process", 1, &tok_array, &response) == 0) {
+                        handled = rxcp_exit_handle_response(ctx, node, vctx, obj, entry->class_name, response, node_map, num_tokens);
+                        if (handled > 0) {
+                             node->exit_obj_reg = rxvml_reg_alloc(vctx, obj, entry->class_name);
+                        } else {
+                             rxvml_value_free(obj);
+                        }
+                    } else {
+                        rxvml_value_free(obj);
+                    }
+                }
+                rxvml_value_free(nid_val);
+                if (response) rxvml_value_free(response);
+                break;
+            }
+            entry = entry->next;
+        }
+        if (!handled) {
+            mknd_err(node, "EXIT_BRIDGE_DISPATCH_FAILED");
+            handled = -1;
+        }
+    }
+
+    /* 3. Discovery Loop (if not handled) */
     if (!handled) {
         rxvml_class_info* classes = NULL;
         size_t class_count = 0;

@@ -50,10 +50,27 @@ int rexbpars(Context *context) {
 
     peek_token = token_f(context, rexbscan(context));
     last_token_type = TK_EOC;
+    int in_exit_instruction = 0;
     while (1) {
         token = peek_token;
         if (token->token_type == TK_EOL) token->token_type = TK_EOC;
         token_type = token->token_type;
+
+        if (token_type == TK_EOC) {
+            in_exit_instruction = 0;
+        }
+
+        // Promotion
+        if (token_type == TK_VAR_SYMBOL) {
+            if (last_token_type == TK_EOC && rxcp_is_exit_primary(context, token->token_string, token->length)) {
+                token_type = TK_EXIT_PRIMARY;
+                token->token_type = TK_EXIT_PRIMARY;
+                in_exit_instruction = 1;
+            } else if (in_exit_instruction && rxcp_is_exit_additional(context, token->token_string, token->length)) {
+                token_type = TK_EXIT_TOKEN;
+                token->token_type = TK_EXIT_TOKEN;
+            }
+        }
 
         // EOS Special Processing
         if (token_type == TK_EOS || token_type == TK_BADCOMMENT) {

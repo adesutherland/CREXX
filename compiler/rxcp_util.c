@@ -508,6 +508,8 @@ const char* token_to_string(int token_id) {
         case TK_OF: return "TK_OF";
         case TK_MULT_LABEL: return "TK_MULT_LABEL";
         case TK_DOT: return "TK_DOT";
+        case TK_EXIT_PRIMARY: return "TK_EXIT_PRIMARY";
+        case TK_EXIT_TOKEN: return "TK_EXIT_TOKEN";
         case TK_ARG: return "TK_ARG";
         case TK_ADDRESS: return "TK_ADDRESS";
         case TK_OUTPUT: return "TK_OUTPUT";
@@ -531,7 +533,33 @@ ASTNode* ast_fndn(Context* ctx, ASTNode* node, NodeType type) {
     return ast_fndn(ctx, node->sibling, type);
 }
 
+typedef struct SourceMapEntry {
+    size_t start;
+    size_t end;
+    int line;
+    int column;
+} SourceMapEntry;
+
+typedef struct SourceMap {
+    SourceMapEntry *entries;
+    size_t count;
+    size_t capacity;
+} SourceMap;
+
+static void add_source_map_entry(SourceMap *map, size_t start, size_t end, int line, int column) {
+    if (map->count == map->capacity) {
+        map->capacity = map->capacity == 0 ? 8 : map->capacity * 2;
+        map->entries = realloc(map->entries, sizeof(SourceMapEntry) * map->capacity);
+    }
+    map->entries[map->count].start = start;
+    map->entries[map->count].end = end;
+    map->entries[map->count].line = line;
+    map->entries[map->count].column = column;
+    map->count++;
+}
+
 static walker_result fragment_fixup_walker(walker_direction direction, ASTNode *node, void *payload) {
+    SourceMap *map = (SourceMap *)payload;
     if (direction == in) {
         if (node->node_string && !node->free_node_string) {
             char *s = malloc(node->node_string_length + 1);
@@ -540,13 +568,81 @@ static walker_result fragment_fixup_walker(walker_direction direction, ASTNode *
             node->node_string = s;
             node->free_node_string = 1;
         }
+        /* Update line/column from map if possible */
+        if (map && node->token) {
+            size_t pos = node->token->token_string - node->context->buff_start;
+            size_t i;
+            for (i = 0; i < map->count; i++) {
+                if (pos >= map->entries[i].start && pos < map->entries[i].end) {
+                    node->line = map->entries[i].line;
+                    node->column = map->entries[i].column;
+                    if (node->token) {
+                        node->token->line = map->entries[i].line;
+                        node->token->column = map->entries[i].column;
+                    }
+                    break;
+                }
+            }
+        }
     }
     return result_normal;
 }
 
-int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code) {
+int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_code, ASTNode **node_map, size_t num_tokens) {
+    SourceMap map = {NULL, 0, 0};
+    size_t code_len = strlen(rexx_code);
+    char *interpolated = malloc(code_len * 2 + 1024); /* Conservative buffer */
+    size_t int_pos = 0;
+    size_t i = 0;
+
+    /* Add "options levelb\n" offset */
+    const char* prefix = "options levelb\n";
+    size_t prefix_len = strlen(prefix);
+    strcpy(interpolated, prefix);
+    int_pos = prefix_len;
+
+    while (i < code_len) {
+        if (rexx_code[i] == '{' && isdigit(rexx_code[i+1])) {
+            size_t start = i;
+            i++;
+            int n = 0;
+            while (isdigit(rexx_code[i])) {
+                n = n * 10 + (rexx_code[i] - '0');
+                i++;
+            }
+            if (rexx_code[i] == '}' && n > 0 && (size_t)n <= num_tokens && node_map[n-1]) {
+                i++;
+                ASTNode *token_node = node_map[n-1];
+                /* Get raw text of the token */
+                const char *text = token_node->node_string;
+                size_t text_len = token_node->node_string_length;
+                if (!text && token_node->token) {
+                    text = token_node->token->token_string;
+                    text_len = token_node->token->length;
+                }
+
+                if (text) {
+                    add_source_map_entry(&map, int_pos, int_pos + text_len, token_node->line, token_node->column);
+                    memcpy(interpolated + int_pos, text, text_len);
+                    int_pos += text_len;
+                }
+            } else {
+                /* Not a valid {n} or n out of range, copy literally */
+                interpolated[int_pos++] = '{';
+                i = start + 1;
+            }
+        } else {
+            interpolated[int_pos++] = rexx_code[i++];
+        }
+    }
+    interpolated[int_pos] = 0;
+
     Context* frag = cntx_f();
-    if (!frag) return -1;
+    if (!frag) {
+        free(interpolated);
+        if (map.entries) free(map.entries);
+        return -1;
+    }
 
     frag->in_exit_bridge = 1;
     frag->master_context = ctx->master_context;
@@ -556,39 +652,29 @@ int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code) {
     frag->debug_mode = ctx->debug_mode;
     frag->disable_exits = ctx->disable_exits;
 
-    /* Wrap fragment in 'options levelb' to ensure it parses correctly */
-    char* wrapped_replacement = malloc(strlen(rexx_code) + 32);
-    sprintf(wrapped_replacement, "options levelb\n%s", rexx_code);
-
-    if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Parsing replacement code: %s\n", wrapped_replacement);
-    cntx_buf(frag, wrapped_replacement, strlen(wrapped_replacement));
+    if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Parsing replacement code: %s\n", interpolated);
+    cntx_buf(frag, interpolated, int_pos);
     if (rexbpars(frag)) {
         if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Parsing FAILED\n");
         mknd_err(target_node, "EXIT_BRIDGE_PARSE_FAILED");
         fre_cntx(frag);
-        free(wrapped_replacement);
+        if (map.entries) free(map.entries);
         return -1;
     }
-    if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Parsing successful, fixing up fragment\n");
 
-    /* Ensure strings are copied since frag context will be destroyed */
-    ast_wlkr(frag->ast, fragment_fixup_walker, NULL);
+    /* Fix up fragment: copy strings and apply source map */
+    ast_wlkr(frag->ast, fragment_fixup_walker, &map);
 
     if (frag->ast) {
-        /* Find the instructions list in the parsed fragment */
         ASTNode *search = ast_fndn(ctx, frag->ast, INSTRUCTIONS);
-
         if (search && search->child) {
-            /* Create EXIT_OWNED node to hold the replacement */
             ASTNode *exit_owned = ast_f(ctx, EXIT_OWNED, target_node->token);
             exit_owned->parent = target_node->parent;
-            exit_owned->scope = NULL; /* Let build_symbols_walker create the scope with correct parent */
+            exit_owned->scope = NULL;
 
-            /* Replace the node with EXIT_OWNED node */
             if (target_node->parent) {
-                if (target_node->parent->child == target_node) {
-                    target_node->parent->child = exit_owned;
-                } else {
+                if (target_node->parent->child == target_node) target_node->parent->child = exit_owned;
+                else {
                     ASTNode *p = target_node->parent->child;
                     while (p && p->sibling != target_node) p = p->sibling;
                     if (p) p->sibling = exit_owned;
@@ -596,21 +682,17 @@ int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code) {
             }
             exit_owned->sibling = target_node->sibling;
 
-            /* Add instructions from fragment to EXIT_OWNED */
             ASTNode *instr = search->child;
             while (instr) {
                 ASTNode *next_instr = instr->sibling;
-                if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Grafting instruction node type %s\n", node_type_to_string(instr->node_type));
                 add_dast(exit_owned, instr);
                 instr = next_instr;
             }
             ctx->changed = 1;
         }
-        /* Avoid double free when frag is destroyed */
         frag->ast = NULL;
     }
 
-    /* Move tokens from frag to ctx to keep them alive */
     if (frag->token_head) {
         if (ctx->token_tail) {
             ctx->token_tail->token_next = frag->token_head;
@@ -621,10 +703,8 @@ int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code) {
         }
         ctx->token_counter += frag->token_counter;
         frag->token_head = frag->token_tail = NULL;
-        frag->token_counter = 0;
     }
 
-    /* Transfer buffer ownership to ctx (frag->buff_start IS wrapped_replacement) */
     if (frag->buff_start) {
         ctx->extra_buffers_count++;
         ctx->extra_buffers = realloc(ctx->extra_buffers, sizeof(char*) * ctx->extra_buffers_count);
@@ -633,7 +713,12 @@ int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code) {
     }
 
     fre_cntx(frag);
+    if (map.entries) free(map.entries);
     return 0;
+}
+
+int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code) {
+    return ast_grft_interpolated(ctx, target_node, rexx_code, NULL, 0);
 }
 
 const char* node_type_to_string(NodeType type) {
@@ -752,6 +837,8 @@ const char* node_type_to_string(NodeType type) {
         case MEMBER_CALL: return "MEMBER_CALL";
         case FACTORY_CALL: return "FACTORY_CALL";
         case EXIT_OWNED: return "EXIT_OWNED";
+        case EXIT_EXTENDED: return "EXIT_EXTENDED";
+        case EXIT_TOKEN: return "EXIT_TOKEN";
     }
     return "UNKNOWN";
 }

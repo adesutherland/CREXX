@@ -984,6 +984,10 @@ const char *ast_ndtp(NodeType type) {
             return "FACTORY_CALL";
         case EXIT_OWNED:
             return "EXIT_OWNED";
+        case EXIT_EXTENDED:
+            return "EXIT_EXTENDED";
+        case EXIT_TOKEN:
+            return "EXIT_TOKEN";
         default: return "*UNKNOWN*";
     }
 }

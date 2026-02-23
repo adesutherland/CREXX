@@ -90,6 +90,8 @@ struct Context {
     int in_factory;
     char in_exit_bridge;
     char disable_exits;
+    void *exit_registry; /* Pointer to the list of registered exits (primary and additional keywords) */
+    void *exit_additional_keywords; /* Pointer to the list of all additional keywords across all exits */
 
     /* Recursion Guard for Imports */
     char** loading_files;

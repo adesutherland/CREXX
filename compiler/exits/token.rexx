@@ -11,9 +11,10 @@ token: class
     _file = .string with register.7
     _node_type = .int with register.8
     _value_type = .int with register.13
+    _type_string = .string with register.14
 
     *: factory
-        arg t=.int, st=.int, txt=.string, l=.int, c=.int, len=.int, f=.string, nt=.int, vt=.int
+        arg t=.int, st=.int, txt=.string, l=.int, c=.int, len=.int, f=.string, nt=.int, vt=.int, ts=.string
         _type = t
         _subtype = st
         _text = txt
@@ -23,6 +24,7 @@ token: class
         _file = f
         _node_type = nt
         _value_type = vt
+        _type_string = ts
         return
 
     get_id: method = .int
@@ -32,14 +34,7 @@ token: class
         return _type
 
     get_type: method = .string
-        /* Todo: convert int type to string if needed, or just return int */
-        /* These values should match TK_ constants in the compiler */
-        if _type = 14 then return "IDENTIFIER"
-        if _type = 27 then return "STRING_LITERAL"
-        if _type = 28 then return "INT_LITERAL"
-        if _type = 29 then return "FLOAT_LITERAL"
-        if _type = 30 then return "DECIMAL_LITERAL"
-        return "OTHER"
+        return _type_string
 
     get_value_type_int: method = .int
         return _value_type

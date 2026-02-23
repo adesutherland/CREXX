@@ -489,7 +489,7 @@ void validate_ast(Context *context) {
 
         /* Exit Dispatch */
         context->current_scope = 0;
-        ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
+        if (ast_wlkr(context->ast, exit_dispatch_walker, (void *) context) == result_error) break;
 
         /* Re-write IMPLICIT_CMD Instructions */
         context->current_scope = 0;

@@ -22,31 +22,33 @@
  * SOFTWARE.
  */
 
-/**
- * Compiler Main Header
- */
+#ifndef CREXX_RXCP_EXIT_H
+#define CREXX_RXCP_EXIT_H
 
-#ifndef CREXX_RXCPMAIN_H
-#define CREXX_RXCPMAIN_H
-
-#include "rxcp_types.h"
-#include "rxcp_util.h"
-#include "rxcp_token.h"
-#include "rxcp_sym.h"
-#include "rxcp_ast.h"
 #include "rxcp_ctx.h"
-#include "rxcp_exit.h"
 
-/* Validation API */
-void validate_ast(Context *context);
-void rxcp_val(Context *context);
-void rxcp_bvl(Context *context);
-void ast_dump_text(FILE* out, ASTNode* node, int indent);
+typedef struct ExitKeyword {
+    char *keyword;
+    struct ExitKeyword *next;
+} ExitKeyword;
 
-/* Import scanning API */
-int rxcp_scan_imports(Context *context);
+typedef struct ExitEntry {
+    char *primary_keyword;
+    ExitKeyword *additional_keywords;
+    void *obj; /* rxvml_value pointer to the exit object */
+    char *class_name; /* the class name of the exit object */
+    struct ExitEntry *next;
+} ExitEntry;
 
-/* Exit Bridge API */
-int rxcp_exit_bridge_invoke(Context* context, ASTNode* node);
+/* Registry for all additional keywords across all exits */
+typedef struct ExitAdditionalKeywords {
+    char *keyword;
+    struct ExitAdditionalKeywords *next;
+} ExitAdditionalKeywords;
 
-#endif //CREXX_RXCPMAIN_H
+void rxcp_init_exits(Context *ctx);
+void rxcp_free_exits(Context *ctx);
+int rxcp_is_exit_primary(Context *ctx, const char *keyword, size_t len);
+int rxcp_is_exit_additional(Context *ctx, const char *keyword, size_t len);
+
+#endif

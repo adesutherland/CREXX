@@ -175,6 +175,8 @@ void fre_cntx(Context *context)  {
         context->rxvml_bridge = 0;
     }
 
+    rxcp_free_exits(context);
+
     if (context->master_context && context == context->master_context) {
         if (context->loading_files) {
             for (i = 0; i < context->loading_files_count; i++) free(context->loading_files[i]);
@@ -432,6 +434,7 @@ int rxcmain(int argc, char *argv[]) {
         case LEVELG:
         case LEVELL:
             if (debug_mode >= 2) fprintf(stderr, "REXX Level B/G/L (cREXX)\n");
+            rxcp_init_exits(context);
             rexbpars(context); // Built AST
             if (context->debug_mode) {
                 rxcp_debug_header("STAGE_RAW", -1);
