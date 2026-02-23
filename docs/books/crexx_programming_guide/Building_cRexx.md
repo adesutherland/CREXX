@@ -163,7 +163,7 @@ directory that is already on the `PATH`.
 
 ### Production and debug builds
 
-Production builds are optimized, while debug builds are slower in exection time but deliver support for the analysis and debugging of problems in the code. The standard distribution is an optimized production build, while a debug build can be produced with the Debug CMake build option.
+Production builds are optimized, while debug builds are slower in execution time but deliver support for the analysis and debugging of problems in the code. The standard distribution is an optimized production build, while a debug build can be produced with the Debug CMake build option.
 
 | Name    | Function                                        |
 |---------|-------------------------------------------------|
