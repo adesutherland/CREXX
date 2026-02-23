@@ -1,0 +1,34 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : test_dump.rexx
+ * BUILT                  : 2026-02-23 15:12:33
+ */
+
+.srcfile="test_dump.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "test_dump.main"="b" ".void" main() "" ""
+   .src 4:1="main: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 5:1="x = 100"
+   .meta "test_dump.main.x"="b" ".int" r0
+   load r0,100
+   .src 6:1="y = \"Hello World\""
+   .meta "test_dump.main.y"="b" ".string" r1
+   load r1,"Hello World"
+   .src 2:1="say"
+   itos r0
+   concat r2,"x (INTEGER) = ",r0
+   say r2
+   .src 2:27="say"
+   concat r3,"y (STRING) = ",r1
+   say r3
+   .src 9:9=""
+   ret
+   .meta "test_dump.main.x"
+   .meta "test_dump.main.y"

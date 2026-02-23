@@ -35,7 +35,6 @@ typedef struct ExitKeyword {
 typedef struct ExitEntry {
     char *primary_keyword;
     ExitKeyword *additional_keywords;
-    void *obj; /* rxvml_value pointer to the exit object */
     char *class_name; /* the class name of the exit object */
     struct ExitEntry *next;
 } ExitEntry;

@@ -22,13 +22,13 @@ add_custom_command(
 )
 
 add_custom_command(
-    OUTPUT test_dump.rxbin
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_dump.rxbin
     COMMAND $<TARGET_FILE:rxas> -o test_dump test_dump
-    DEPENDS rxas test_dump.rxas
+    DEPENDS rxas ${CMAKE_CURRENT_BINARY_DIR}/test_dump.rxas
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Assembling test_dump.rxas"
 )
 
-add_custom_target(test_dump_bin ALL DEPENDS test_dump.rxbin)
+add_custom_target(test_dump_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_dump.rxbin)
 
 add_test(NAME test_dump COMMAND rxvm test_dump.rxbin WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

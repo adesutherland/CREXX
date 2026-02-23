@@ -110,12 +110,6 @@ walker_result build_symbols_walker(walker_direction direction,
             node->scope = context->current_scope;
         }
 
-        else if (node->node_type == EXIT_OWNED) {
-            if (!node->scope) {
-                node->scope = scp_f(context, context->current_scope, node, 0);
-            }
-            context->current_scope = node->scope;
-        }
 
         else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
             if (node->node_string_length > 0 && node->node_string[node->node_string_length - 1] == ':') {

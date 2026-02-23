@@ -42,10 +42,6 @@ void rxcp_free_exits(Context *ctx) {
             kw = next_kw;
         }
         if (entry->class_name) free(entry->class_name);
-        /* Note: obj is an rxvml_value, but it might be managed by the bridge.
-           Actually, we should probably just free the memory here.
-           Wait, rxvml_value_free(entry->obj) if we own it.
-        */
         free(entry);
         entry = next;
     }
@@ -107,11 +103,6 @@ void rxcp_init_exits(Context *ctx) {
                         ExitEntry *entry = calloc(1, sizeof(ExitEntry));
                         entry->primary_keyword = strndup(pk, pk_len);
                         entry->class_name = strdup(classes[i].class_name);
-                        entry->obj = obj; /* We keep the object? Maybe just for discovery.
-                                            Actually, rxcp_exit_bridge_invoke recreates it per node.
-                                            Wait, it says "The compiler will set the types...".
-                                            Maybe we should keep it.
-                                          */
                         entry->next = (ExitEntry *)root->exit_registry;
                         root->exit_registry = entry;
 
@@ -146,6 +137,7 @@ void rxcp_init_exits(Context *ctx) {
                         }
                     }
                     rxvml_value_free(pk_val);
+                    rxvml_value_free(obj);
                 } else {
                      /* No primary keyword, maybe it's not a parser exit */
                      rxvml_value_free(obj);
@@ -561,6 +553,8 @@ static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context*
 
         if (replacement_code) {
             int rc = ast_grft_interpolated(ctx, node, replacement_code, node_map, num_tokens);
+            /* Mark context changed to force recompilation pass (locals/regs recalculation) */
+            ctx->changed = 1;
             if (val) rxvml_value_free(val);
             if (status_val) rxvml_value_free(status_val);
             return rc < 0 ? -1 : -1; /* Node was replaced */
