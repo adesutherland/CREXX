@@ -217,10 +217,16 @@ walker_result build_symbols_walker(walker_direction direction,
             } else {
                 node->scope = context->current_scope;
                 /* Find the symbol */
-                if (node->parent->node_type == ARG) /* Only search current scope */
+                if (node->parent->node_type == ARG) {
+                    /* Arguments are local to the current scope */
                     symbol = sym_lrsv(context->current_scope, node);
-                else /* Search parent scopes */
+                } else if (node->parent->node_type == DEFINE) {
+                    /* Typed declarations always bind in the current scope (allowing shadowing) */
+                    symbol = sym_lrsv(context->current_scope, node);
+                } else {
+                    /* Untyped usage resolves outward; if not found, will create in current scope */
                     symbol = sym_rslv(context->current_scope, node);
+                }
 
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
@@ -347,6 +353,23 @@ walker_result build_symbols_walker(walker_direction direction,
         else if (node->node_type == EXIT_OWNED) {
             context->current_scope = scp_f(context, context->current_scope, node, 0);
             node->scope = context->current_scope;
+        }
+
+        else if (node->node_type == DO) {
+            /* Counted/conditional DO: no new scope yet (handled in future work) */
+            node->scope = context->current_scope;
+        }
+
+        else if (node->node_type == INSTRUCTIONS) {
+            /* Simple DO grouping is represented as a nested INSTRUCTIONS block (no DO ancestor).
+             * Create a child scope for any nested INSTRUCTIONS whose parent is INSTRUCTIONS
+             * (i.e., not the top-level procedure body) and whose parent is not a DO. */
+            if (node->parent && node->parent->node_type == INSTRUCTIONS) {
+                context->current_scope = scp_f(context, context->current_scope, node, 0);
+                node->scope = context->current_scope;
+            } else {
+                node->scope = context->current_scope;
+            }
         }
 
         else {

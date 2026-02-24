@@ -1,0 +1,76 @@
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      PROCEDURE : "main:" (-1:-1) [Type: .unknown]
+        VOID : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+        SAY : "say" (-1:-1) [Type: .unknown]
+          STRING : "in" (-1:-1) [Type: .unknown]
+      RETURN : "return" (-1:-1) [Type: .unknown]
+
+--- STAGE_FIXUP ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "do_simple_parse" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main:" (2:0) [Type: .unknown]
+      VOID : "" (2:5) [Type: .unknown]
+      ARGS : "" (2:5) [Type: .unknown]
+      INSTRUCTIONS : "" (4:4) [Type: .unknown]
+        INSTRUCTIONS : "" (4:4) [Type: .unknown]
+          SAY : "say" (4:4) [Type: .unknown]
+            STRING : "in" (4:8) [Type: .unknown]
+        RETURN : "return" (6:2) [Type: .unknown]
+
+--- STAGE_SYMBOLS (Iteration 0) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "do_simple_parse" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main:" (2:0) [Type: .unknown]
+      VOID : "" (2:5) [Type: .unknown]
+      ARGS : "" (2:5) [Type: .unknown]
+      INSTRUCTIONS : "" (4:4) [Type: .unknown]
+        INSTRUCTIONS : "" (4:4) [Type: .unknown]
+          SAY : "say" (4:4) [Type: .unknown]
+            STRING : "in" (4:8) [Type: .unknown]
+        RETURN : "return" (6:2) [Type: .unknown]
+
+--- STAGE_SYMBOLS (Iteration 1) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "do_simple_parse" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (2:5) [Type: .void]
+      ARGS : "" (2:5) [Type: .unknown]
+      INSTRUCTIONS : "" (4:4) [Type: .unknown]
+        INSTRUCTIONS : "" (4:4) [Type: .unknown]
+          SAY : "say" (4:4) [Type: .unknown]
+            STRING : "in" (4:8) [Type: .string]
+        RETURN : "return" (6:2) [Type: .unknown]
+Scope [0]: Unnamed
+  do_simple_parse (Namespace) -> .unknown
+  Scope [1]: do_simple_parse
+    main (Function) -> .void
+    Scope [2]: main
+      Scope [3]: Unnamed
+
+--- STAGE_FINAL ---
+REXX_UNIVERSE : "" (0:1) [Type: .void]
+  PROGRAM_FILE : "do_simple_parse" (0:1) [Type: .void]
+    REXX_OPTIONS : "options" (0:1) [Type: .void]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (2:5) [Type: .void]
+      ARGS : "" (2:5) [Type: .unknown]
+      INSTRUCTIONS : "" (4:4) [Type: .void]
+        INSTRUCTIONS : "" (4:4) [Type: .void]
+          SAY : "say" (4:4) [Type: .void]
+            CONSTANT : "in" (4:8) [Type: .string]
+        RETURN : "return" (6:2) [Type: .void]
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

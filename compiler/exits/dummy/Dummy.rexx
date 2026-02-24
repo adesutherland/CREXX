@@ -50,6 +50,7 @@ dummyexit: class
         /* Generate a replacement that declares a typed local with the same name
            as the argument and assigns/prints it. This will be wrapped by the
            compiler in an EXIT_OWNED block, so the declaration must not leak. */
+        name = .string
         name = ti.get_text()
         _replacement = "say '" || name || " (' || {" || 2 || "}.get_value_type() || ') = ' || {" || 2 || "}; " || name || " = .int; " || name || " = 1; say 'in-exit ' || " || name || "; "
         _status = "REPLACE"
