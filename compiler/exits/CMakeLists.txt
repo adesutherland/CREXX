@@ -6,6 +6,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -n -o token ${CMAKE_CURRENT_SOURCE_DIR}/token.rexx
     COMMAND $<TARGET_FILE:rxas> -o token token
     DEPENDS rxc rxas ${CMAKE_CURRENT_SOURCE_DIR}/token.rexx
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/token.rxas
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building token.rxbin"
 )
@@ -23,6 +24,7 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin 
             ${CMAKE_CURRENT_BINARY_DIR}/dump/Dump.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/query/Query.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/dummy/Dummy.rxbin
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building rxcexits.rxbin (bundled via concatenation)"
 )

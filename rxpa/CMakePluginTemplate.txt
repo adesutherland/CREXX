@@ -18,8 +18,8 @@ set(rx_include "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}\"")
 
      # input, output files
      set(REXX_PRE ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rxpp)
-     set(REXX_LOG ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.log)
-     set(REXX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rexx)
+     set(REXX_LOG ${CMAKE_CURRENT_BINARY_DIR}/${test_rexx}.log)
+     set(REXX_SRC ${CMAKE_CURRENT_BINARY_DIR}/${test_rexx}.rexx)
      set(REXX_MACLIB ${sourcelib}/maclib.rexx)
 
      add_custom_command(
@@ -31,6 +31,11 @@ set(rx_include "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}\"")
             DEPENDS ${REXX_PRE} ${REXX_MACLIB} rxpp
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
      )
+     # When precompiling, use the generated .rexx from the build tree
+     set(TEST_REXX_INPUT ${REXX_SRC})
+  else()
+     # Without precomp, use the authored .rexx from the source tree
+     set(TEST_REXX_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rexx)
   endif()
 # ---------------------------------------------------------------------------------------
 # Compile and ASM
@@ -38,9 +43,9 @@ set(rx_include "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}\"")
     add_custom_command(
         COMMAND $<TARGET_FILE:rxc>
             -i "${rx_include}"
-            -o ${test_rexx} "${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}" &&
+            -o ${test_rexx} "${TEST_REXX_INPUT}" &&
             $<TARGET_FILE:rxas> ${test_rexx}
-        DEPENDS rxas rxc library _${plugin_name} "${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rexx"
+        DEPENDS rxas rxc library _${plugin_name} "${TEST_REXX_INPUT}"
         OUTPUT ${test_rexx}.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )

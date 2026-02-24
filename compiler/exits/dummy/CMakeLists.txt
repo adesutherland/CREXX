@@ -8,6 +8,8 @@ add_custom_command(
     COMMENT "Building Dummy.rxbin"
 )
 add_custom_target(exit_dummy_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Dummy.rxbin)
+# Ensure the token class bundle is built before Dummy
+add_dependencies(exit_dummy_bin token_bin)
 
 # Test: compile a small program using the dummy exit
 add_custom_command(
@@ -18,8 +20,9 @@ add_custom_command(
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Compiling test_dummy.rexx with exit"
 )
-add_custom_target(test_dummy_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_dummy.rxbin)
+add_custom_target(test_dummy_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_dummy.rxbin)
+add_dependencies(test_dummy_bin rxvm)
 
 add_test(NAME test_dummy
          COMMAND $<TARGET_FILE:rxvm> ${CMAKE_CURRENT_BINARY_DIR}/test_dummy.rxbin
-         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

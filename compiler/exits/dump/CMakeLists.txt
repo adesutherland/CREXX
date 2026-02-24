@@ -7,10 +7,13 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -n -i "\"${CMAKE_CURRENT_SOURCE_DIR}/..;${CMAKE_CURRENT_BINARY_DIR}/..\"" -o Dump ${CMAKE_CURRENT_SOURCE_DIR}/Dump.rexx
     COMMAND $<TARGET_FILE:rxas> -o Dump Dump
     DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/Dump.rexx ${CMAKE_CURRENT_BINARY_DIR}/../token.rxbin
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Dump.rxas
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building Dump.rxbin"
 )
 add_custom_target(exit_dump_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Dump.rxbin)
+# Ensure the token class bundle is built before Dump
+add_dependencies(exit_dump_bin token_bin)
 
 # Test the dump exit
 add_custom_command(
@@ -30,5 +33,6 @@ add_custom_command(
 )
 
 add_custom_target(test_dump_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_dump.rxbin)
+add_dependencies(test_dump_bin rxvm)
 
-add_test(NAME test_dump COMMAND rxvm test_dump.rxbin WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME test_dump COMMAND $<TARGET_FILE:rxvm> ${CMAKE_CURRENT_BINARY_DIR}/test_dump.rxbin WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
