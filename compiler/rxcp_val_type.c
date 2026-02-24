@@ -1243,6 +1243,7 @@ walker_result func_type_safety_walker(walker_direction direction,
             case CLASS_DEF:
             case METHOD:
             case FACTORY:
+            case EXIT_OWNED:
                 if (node->value_type == TP_UNKNOWN) {
                     set_node_type(node, TP_VOID);
                     context->changed = 1;
