@@ -209,5 +209,105 @@ following the `END`.
 with the instruction following the `OTHERWISE`.
 
 `OTHERWISE` is essentially the `SELECT`-equivalent of `ELSE`. If there is any
+
+## Looping with DO
+
+The `DO` instruction also controls iteration. There are three common forms:
+
+- Simple `DO … END` (grouping only; runs once)
+- Counted `DO` (with a control variable and optional `TO`/`BY`/`FOR`)
+- Conditional `DO WHILE` / `DO UNTIL`
+
+### Simple DO (grouping only)
+```rexx
+options levelb
+if cond then do
+  say "A"
+  say "B"
+end
+```
+This does not loop; it groups multiple instructions into one block.
+
+### Counted DO
+```rexx
+options levelb
+sum = .int
+/* i counts from 1 to 5 by 1 */
+do i = 1 to 5
+  sum = sum + i
+end
+say sum  /* 15 */
+```
+
+Syntax:
+```
+DO i = expr_start [ TO expr_stop ] [ BY expr_step ] [ FOR expr_count ]
+  ...
+END
+```
+- `TO` sets the inclusive upper bound (when present).
+- `BY` sets the step (defaults to 1 if omitted; negative steps count down).
+- `FOR` limits the number of iterations (optional), stopping earlier even if `TO` would allow more.
+
+### Conditional DO
+```rexx
+options levelb
+/* while-loop */
+do while i < 10
+  i = i + 1
+end
+
+/* until-loop */
+do until ready
+  call work
+end
+```
+- `DO WHILE e` executes the body as long as `e` is true.
+- `DO UNTIL e` executes until `e` becomes true (i.e., repeats while `\e`).
+
+### LEAVE and ITERATE
+- `ITERATE` restarts the current loop at the next iteration (optionally naming a control variable to target an outer loop).
+- `LEAVE` exits the current loop immediately (optionally naming a control variable to target an outer loop).
+
+### Variable shadowing in DO blocks (planned Level B behavior)
+The following scoping rules are planned for DO blocks and will be implemented next. They are documented here so you can write code that will continue to work when the change lands.
+
+- A typed declaration inside a `DO` block creates a block-local that shadows any outer variable of the same name for the duration of the block:
+  ```rexx
+  options levelb
+  main: procedure
+    x = .int; x = 1
+    do
+      x = .int  /* block-local, shadows outer x */
+      x = 9
+    end
+    say x  /* 1 */
+  ```
+- An untyped assignment inside a `DO` block uses an existing variable if one exists; otherwise it creates a new loop-scoped variable that goes out of scope at `END`:
+  ```rexx
+  options levelb
+  main: procedure
+    do
+      y = 3  /* no prior y => creates loop-scoped y */
+    end
+    /* y is out of scope here */
+  ```
+- Counted `DO` header: the control variable behaves the same way — if an outer variable with that name exists, it is reused; otherwise a loop-local control variable is created:
+  ```rexx
+  options levelb
+  main: procedure
+    i = .int; i = 100
+    do i = 1 to 3   /* reuses outer i */
+      /* ... */
+    end
+    /* i is still visible here (outer one) */
+
+    do j = 1 to 3   /* creates loop-local j */
+      /* ... */
+    end
+    /* j is not visible here */
+  ```
+
+Rationale: typed declarations always define intent and should introduce a new local; untyped uses favor existing bindings to reduce surprises, while remaining safe by creating a loop-local when none exists.
 possibility that all the `WHEN` expressions could be *false*, there must be an
 `OTHERWISE` clause.
