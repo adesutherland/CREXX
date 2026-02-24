@@ -211,8 +211,8 @@ do i=1 to words(filenames)
       call printFileToSTDout filename'.rxas'
     end
 
-  binfile = chop_suffix(filename)  
-  'rxas -o' binfile filename
+    binfile = chop_suffix(filename)
+  'rxas -o' binfile binfile
   if verbose then do
     if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
     else res = esc||ANSI_RED||RC||esc||ANSI_RESET
