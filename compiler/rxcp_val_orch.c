@@ -475,7 +475,7 @@ void validate_ast(Context *context) {
         rxcp_print_ast_recursive(context->ast, 0);
     }
 
-    /* Fixed Point Iteration Loop */
+    /* fixed point validation - Converge all exits */
     context->iterations = 0;
     context->after_rewrite = 0;
     do {
@@ -536,6 +536,10 @@ void validate_ast(Context *context) {
         if (context->iterations == 1) context->after_rewrite = 1;
 
     } while (context->changed && context->iterations < 16);
+
+    /* Set Ordinals again after normalisation - not needed if normalisation is once at start */
+    ordinal_counter = 0;
+    ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
 
 
     /* Type Safety checks */

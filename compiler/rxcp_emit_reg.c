@@ -62,6 +62,18 @@ static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
     }
 }
 
+static void assign_registers_in_scope(Scope *scope, walker_payload *payload) {
+    size_t i;
+    if (!scope) return;
+    scp_4all(scope, assign_symbol_registers_worker, payload);
+    for (i = 0; i < scp_noch(scope); i++) {
+        Scope *child = scp_chd(scope, i);
+        if (child && child->defining_node && child->defining_node->node_type == EXIT_OWNED) {
+            assign_registers_in_scope(child, payload);
+        }
+    }
+}
+
 /* Returns a child's register to the pool, potentially deferring it if linked */
 static void return_child_reg(ASTNode* child) {
     if (!child || child->register_num == DONT_ASSIGN_REGISTER || child->register_num == UNSET_REGISTER) return;
@@ -159,7 +171,7 @@ walker_result register_walker(walker_direction direction,
 
                 /* Pre-assign registers to all symbols in this scope to avoid clobbering by temporaries.
                  * ARGS will override these with 'a' registers for arguments. */
-                scp_4all(node->scope, assign_symbol_registers_worker, payload);
+                assign_registers_in_scope(node->scope, payload);
 
                 break;
 

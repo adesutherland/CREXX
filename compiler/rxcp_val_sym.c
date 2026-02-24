@@ -344,6 +344,11 @@ walker_result build_symbols_walker(walker_direction direction,
             return request_skip;
         }
 
+        else if (node->node_type == EXIT_OWNED) {
+            context->current_scope = scp_f(context, context->current_scope, node, 0);
+            node->scope = context->current_scope;
+        }
+
         else {
             node->scope = context->current_scope;
         }

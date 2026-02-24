@@ -61,7 +61,7 @@ dumpexit: class
                 t_type = ti.get_value_type()
                 /* If the token is an array, loop through its elements and print each one */
                 if pos("[", t_type) > 0 then do
-                    _replacement = _replacement || "__rxcpx_dump_i = 1; do while __rxcpx_dump_i <= {" || i || "}[0]; say '" || t_text || " (" || t_type || ")[" || "' || __rxcpx_dump_i || '" || "] = ' || {" || i || "}[__rxcpx_dump_i]; __rxcpx_dump_i = __rxcpx_dump_i + 1; end;"
+                    _replacement = _replacement || "do __rxcpx_dump_i = 1 to {" || i || "}[0]; say '" || t_text || " (" || t_type || ")[' || __rxcpx_dump_i || '] = ' || {" || i || "}[__rxcpx_dump_i]; end;"
                 end
                 else do
                     _replacement = _replacement || "say '" || t_text || " (" || t_type || ") = ' || {" || i || "};"

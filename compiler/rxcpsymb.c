@@ -134,6 +134,12 @@ Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol) {
     scope->temp_flag = 0;
     if (parent) dpa_add((dpa*)(parent->child_array), scope);
 
+    if (node && node->node_type == EXIT_OWNED) {
+        scope->reg_scope = parent ? parent->reg_scope : scope;
+    } else {
+        scope->reg_scope = scope;
+    }
+
     return scope;
 }
 
@@ -247,8 +253,9 @@ void scp_stmp(Scope *scope, size_t temp_flag) {
 int get_reg(Scope *scope) {
     dpa *free_array;
     int reg;
+    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
 
-    free_array = (dpa*)(scope->free_registers_array);
+    free_array = (dpa*)(rs->free_registers_array);
 
     /* Check the free list */
     if (free_array->size) {
@@ -256,7 +263,7 @@ int get_reg(Scope *scope) {
         reg = (int)(size_t)(free_array->pointers[free_array->size]);
     }
     else {
-        reg = (int)((scope->num_registers)++);
+        reg = (int)((rs->num_registers)++);
     }
 
     return reg;
@@ -264,14 +271,16 @@ int get_reg(Scope *scope) {
 
 /* Get a permanent register from scope (not reused) */
 int get_reg_perm(Scope *scope) {
-    return (int)((scope->num_registers)++);
+    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
+    return (int)((rs->num_registers)++);
 }
 
 /* Return a no longer used register to the scope */
 void ret_reg(Scope *scope, int reg) {
     size_t i;
     dpa *free_array;
-    free_array = (dpa*)(scope->free_registers_array);
+    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
+    free_array = (dpa*)(rs->free_registers_array);
 
     if (reg < 0) {
         return;
@@ -295,7 +304,8 @@ void ret_reg(Scope *scope, int reg) {
 void ret_reg_later(Scope *scope, int reg) {
     size_t i;
     dpa *deferred_array;
-    deferred_array = (dpa*)(scope->deferred_registers_array);
+    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
+    deferred_array = (dpa*)(rs->deferred_registers_array);
 
     if (reg < 0) {
         return;
@@ -313,10 +323,11 @@ void ret_reg_later(Scope *scope, int reg) {
 void ret_reg_all_deferred(Scope *scope) {
     size_t i;
     dpa *deferred_array;
-    deferred_array = (dpa*)(scope->deferred_registers_array);
+    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
+    deferred_array = (dpa*)(rs->deferred_registers_array);
 
     for (i=0; i<deferred_array->size; i++) {
-        ret_reg(scope, (int)(size_t)deferred_array->pointers[i]);
+        ret_reg(rs, (int)(size_t)deferred_array->pointers[i]);
     }
     deferred_array->size = 0;
 }
@@ -327,10 +338,11 @@ int get_regs(Scope *scope, size_t number) {
     dpa *free_array;
     int reg, r, top, i;
     size_t seq;
+    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
 
-    if (number == 1) return get_reg(scope);
+    if (number == 1) return get_reg(rs);
 
-    free_array = (dpa*)(scope->free_registers_array);
+    free_array = (dpa*)(rs->free_registers_array);
 
     /* Check the free list - how many could be used */
     if (free_array->size) {
@@ -358,13 +370,13 @@ int get_regs(Scope *scope, size_t number) {
         /* top is the first register which may be useful */
         /* Can we use these plus some new ones */
         r = (int)(size_t)(free_array->pointers[free_array->size - 1]) + 1;
-        if (r == (int)(scope->num_registers)) {
+        if (r == (int)(rs->num_registers)) {
             /* Yes we can because the next unused register adds to the sequence */
             reg = top; /* Result is the beginning of the sequence */
             /* Now remove them from the free list */
             free_array->size -= seq;
             /* Now assign some brand ne ones */
-            scope->num_registers += number - seq;
+            rs->num_registers += number - seq;
 //            printf("  b-returned %d-%d - free array is now ", reg, reg+(int)number - 1);
 //            {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
             return reg;
@@ -372,8 +384,8 @@ int get_regs(Scope *scope, size_t number) {
         /* No we can't so just assign new ones */
     }
 
-    reg = (int)(scope->num_registers); /* Assign brand-new registers */
-    scope->num_registers += number;
+    reg = (int)(rs->num_registers); /* Assign brand-new registers */
+    rs->num_registers += number;
 //    printf("  c-returned %d-%d - free array is now ", reg, reg+(int)number - 1);
 //    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
     return reg;

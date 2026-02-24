@@ -37,6 +37,7 @@
 #include "rxcp_ast.h"
 #include "rxcp_sym.h"
 #include "rxcp_ctx.h"
+#include "rxcp_val.h"
 
 void error_and_exit(int rc, char* message) {
     fprintf(stderr, "ERROR: %s - try \"rxc -h\"\n", message);
@@ -651,6 +652,12 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
     frag->level = ctx->level;
     frag->debug_mode = ctx->debug_mode;
     frag->disable_exits = ctx->disable_exits;
+    frag->floats_decimal = ctx->floats_decimal;
+    frag->floats_binary = ctx->floats_binary;
+    frag->numeric_standard = ctx->numeric_standard;
+    frag->comments_hash = ctx->comments_hash;
+    frag->comments_slash = ctx->comments_slash;
+    frag->comments_dash = ctx->comments_dash;
 
     if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Parsing replacement code: %s\n", interpolated);
     cntx_buf(frag, interpolated, int_pos);
@@ -660,6 +667,16 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
         fre_cntx(frag);
         if (map.entries) free(map.entries);
         return -1;
+    }
+
+    /* Normalise fragment */
+    ast_wlkr(frag->ast, initial_checks_walker, (void *) frag);
+    ast_wlkr(frag->ast, rxcp_fixup_walker, (void *) frag);
+
+    if (frag->floats_decimal)  {
+        ast_wlkr(frag->ast, float2decimal_walker, (void *) frag);
+    } else if (frag->floats_binary) {
+        ast_wlkr(frag->ast, decimal2float_walker, (void *) frag);
     }
 
     /* Fix up fragment: copy strings and apply source map */

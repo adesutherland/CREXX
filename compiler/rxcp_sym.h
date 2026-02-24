@@ -43,6 +43,7 @@ struct Scope {
     void *free_registers_array;
     void *deferred_registers_array;
     size_t temp_flag;
+    struct Scope *reg_scope;
 };
 
 /* Symbol-ASTNode Connector */
