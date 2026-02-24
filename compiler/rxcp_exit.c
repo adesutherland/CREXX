@@ -648,10 +648,9 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
             }
             entry = entry->next;
         }
-        if (!handled) {
-            mknd_err(node, "EXIT_BRIDGE_DISPATCH_FAILED");
-            handled = -1;
-        }
+        /* If not found in the registered list, fall back to discovery below. */
+        /* Do not raise an error here; allow the discovery loop to try dynamic exits. */
+        /* handled remains 0 so the discovery phase can run. */
     }
 
     /* 3. Discovery Loop (if not handled) */
@@ -704,6 +703,11 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
             }
             rxvml_value_free(nid_val);
             free(classes);
+        }
+
+        if (!handled) {
+            mknd_err(node, "EXIT_BRIDGE_DISPATCH_FAILED");
+            handled = -1;
         }
     }
 

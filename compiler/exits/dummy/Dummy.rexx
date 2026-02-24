@@ -25,7 +25,34 @@ dummyexit: class
 
     process: method = .string
         arg tokens = .token[]
-        _status = "ACCEPT"
+
+        /* Require exactly one identifier argument to shadow */
+        if tokens.0 \< 1 then do
+            _status = "REJECT"
+            return _status
+        end
+
+        /* Only accept identifiers */
+        ti = tokens[2]
+        if ti.get_type() \= "identifier" then do
+            _status = "ERROR"
+            _error_token = 2
+            _error_message = "Not an identifier"
+            return _status
+        end
+
+        /* Wait until the identifier has a known type to avoid premature lowering */
+        if ti.get_value_type() = ".unknown" then do
+            _status = "PENDING"
+            return _status
+        end
+
+        /* Generate a replacement that declares a typed local with the same name
+           as the argument and assigns/prints it. This will be wrapped by the
+           compiler in an EXIT_OWNED block, so the declaration must not leak. */
+        name = ti.get_text()
+        _replacement = "say '" || name || " (' || {" || 2 || "}.get_value_type() || ') = ' || {" || 2 || "}; " || name || " = .int; " || name || " = 1; say 'in-exit ' || " || name || "; "
+        _status = "REPLACE"
         return _status
 
     get_replacement: method = .string
