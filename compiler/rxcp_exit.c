@@ -16,6 +16,24 @@ static const char* rexx_builtins[] = {
     "ON", "DROP", "EXTERNAL", "INTERPRET", "LINEIN", "NAME", "NOVALUE", "SOURCE", "SYNTAX", "UPPER",
     "VAR", "VERSION", NULL
 };
+/* ----------------------------------------------------------------------
+ * strndup() is POSIX and not available in MSVCRT (MinGW/Windows).
+ * Provide a small C99 fallback and map strndup to it on _WIN32
+ * to preserve portability without changing call sites.
+ * ----------------------------------------------------------------------
+ */
+#if defined(_WIN32) && !defined(HAVE_STRNDUP)
+char *strndup_windows(const char *s, size_t n) {
+    if (!s) return NULL;
+    size_t len = strnlen(s, n);
+    char *out = (char *)malloc(len + 1);
+    if (!out) return NULL;
+    memcpy(out, s, len);
+    out[len] = '\0';
+    return out;
+}
+#define strndup strndup_windows     // register strndup to windows
+#endif
 
 static int is_builtin_keyword(const char* keyword) {
     int i = 0;
