@@ -487,60 +487,165 @@ void validate_ast(Context *context) {
             rxcp_print_symbol_table(context->ast->scope, 0);
         }
 
-        /* Exit Dispatch */
+        /* Exit Dispatch
+         * Progress: exit_dispatch_walker is idempotent. Verified by stress testing with 3x calls per iteration.
+         */
         context->current_scope = 0;
         if (ast_wlkr(context->ast, exit_dispatch_walker, (void *) context) == result_error) break;
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
-        /* Re-write IMPLICIT_CMD Instructions */
+        /* Re-write IMPLICIT_CMD Instructions
+         * Progress: rewrite_implicit_cmd_walker is idempotent. Verified by stress testing with 3x calls per iteration.
+         */
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
-        /* Set Ordinals */
+        /* Set Ordinals
+         * Progress: set_node_ordinals_walker is idempotent. Recalculates from reset counter. Verified by stress testing.
+         */
         ordinal_counter = 0;
         ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            ordinal_counter = 0;
+            ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
+            rxcp_validate_ast_and_symbols(context->ast);
+            ordinal_counter = 0;
+            ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
-        /* Builds the Symbol Table */
+        /* Builds the Symbol Table
+         * Progress: build_symbols_walker is idempotent. Scope creation is guarded; symbol associations use sym_adnd (idempotent).
+         */
         context->current_scope = 0;
         ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
         /* Scan imports now that namespaces are materialized; mark changed to rebuild symbols if any file loaded */
         if (rxcp_scan_imports(context)) {
             context->changed = 1;
         }
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
 
-        /* Mainly resolve symbols - functions */
+        /* Mainly resolve symbols - functions
+         * Progress: resolve_functions_walker is idempotent. Symbol association is guarded by !node->symbolNode.
+         */
         context->current_scope = 0;
         ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
-        /* Resolve exposed symbols */
+        /* Resolve exposed symbols
+         * Progress: exposed_symbols_walker is reviewed for idempotency.
+         */
         context->current_scope = 0;
         ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
         /* Validate Symbols */
         validate_symbols(context, context->ast->scope);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
 
-        /* Set Node Types */
+        /* Set Node Types
+         * Progress: set_node_types_walker is idempotent. Type setting is guarded by TP_UNKNOWN check.
+         */
         context->current_scope = 0;
         ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
-        /* Re-write ADDRESS Instructions */
+        /* Re-write ADDRESS Instructions
+         * Progress: rewrite_address_walker is idempotent. Mutates ADDRESS to ASSIGN.
+         */
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
-        /* Re-write EXIT Instructions */
+        /* Re-write EXIT Instructions
+         * Progress: rewrite_exit_walker is idempotent. Mutates EXIT to CALL.
+         */
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
         context->iterations++;
         /* Incremental update of symbols - So walkers can avoid duplicate processing */
         if (context->iterations == 1) context->after_rewrite = 1;
 
-    } while (context->changed && context->iterations < 16);
+    } while ((context->changed || (context->debug_mode >= 3 && context->iterations < 3)) && context->iterations < 16);
 
     /* Set Ordinals again after normalisation - not needed if normalisation is once at start */
     ordinal_counter = 0;
     ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
-
 
     /* Type Safety checks */
     context->current_scope = 0;

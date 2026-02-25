@@ -435,7 +435,7 @@ int rxcmain(int argc, char *argv[]) {
         case LEVELL:
             if (debug_mode >= 2) fprintf(stderr, "REXX Level B/G/L (cREXX)\n");
             rxcp_init_exits(context);
-            rexbpars(context); // Built AST
+            rexbpars(context); // Build AST
             if (context->debug_mode) {
                 rxcp_debug_header("STAGE_RAW", -1);
                 rxcp_print_ast_recursive(context->ast, 0);

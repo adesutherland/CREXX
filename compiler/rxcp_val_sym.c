@@ -351,8 +351,12 @@ walker_result build_symbols_walker(walker_direction direction,
         }
 
         else if (node->node_type == EXIT_OWNED) {
-            context->current_scope = scp_f(context, context->current_scope, node, 0);
-            node->scope = context->current_scope;
+            if (node->scope) {
+                context->current_scope = node->scope;
+            } else {
+                context->current_scope = scp_f(context, context->current_scope, node, 0);
+                node->scope = context->current_scope;
+            }
         }
 
         else if (node->node_type == DO) {
@@ -365,8 +369,12 @@ walker_result build_symbols_walker(walker_direction direction,
              * Create a child scope for any nested INSTRUCTIONS whose parent is INSTRUCTIONS
              * (i.e., not the top-level procedure body) and whose parent is not a DO. */
             if (node->parent && node->parent->node_type == INSTRUCTIONS) {
-                context->current_scope = scp_f(context, context->current_scope, node, 0);
-                node->scope = context->current_scope;
+                if (node->scope) {
+                    context->current_scope = node->scope;
+                } else {
+                    context->current_scope = scp_f(context, context->current_scope, node, 0);
+                    node->scope = context->current_scope;
+                }
             } else {
                 node->scope = context->current_scope;
             }

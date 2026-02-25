@@ -214,4 +214,5 @@ void ast_sttn(ASTNode* node, ASTNode* from_node);
 void ast_svtn(ASTNode* node, ASTNode* from_node);
 
 void ast_set_file_name(Context *context, char *file_name);
+void rxcp_validate_ast_and_symbols(ASTNode *root);
 #endif //CREXX_RXCP_AST_H
