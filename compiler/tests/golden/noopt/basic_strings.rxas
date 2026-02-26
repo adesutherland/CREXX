@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : basic_strings.rexx
- * BUILT                  : 2026-02-17 21:20:34
+ * BUILT                  : 2026-02-26 20:48:17
  */
 
 .srcfile="basic_strings.rexx"
@@ -22,34 +22,34 @@ main() .locals=10
    load r1,"World"
    .src 5:1="c = a || \" \" || b"
    .meta "basic_strings.main.c"="b" ".string" r2
-   concat r4,r0," "
-   concat r2,r4,r1
+   concat r3,r0," "
+   concat r2,r3,r1
    .src 6:1="say c"
    say r2
    .src 8:1="d = a \" \" b"
-   .meta "basic_strings.main.d"="b" ".string" r3
-   sconcat r4,r0," "
-   sconcat r3,r4,r1
+   .meta "basic_strings.main.d"="b" ".string" r4
+   sconcat r3,r0," "
+   sconcat r4,r3,r1
    .src 9:1="say d"
-   say r3
+   say r4
    .src 11:1="say length(c)"
-   load r4,1
-   swap r5,r2
-   call r6,length(),r4
-   swap r2,r5
-   itos r6
-   say r6
+   load r5,1
+   swap r6,r2
+   call r3,length(),r5
+   swap r2,r6
+   itos r3
+   say r3
    .src 12:1="say substr(c, 1, 5)"
-   load r4,4
-   load r6,1
-   load r7,5
+   load r5,4
+   load r7,1
+   load r8,5
    settp r2,1
-   swap r5,r2
-   settp r7,1
-   settp r8,2
-   call r9,substr(),r4
-   swap r2,r5
-   say r9
+   swap r6,r2
+   settp r8,1
+   settp r9,2
+   call r3,substr(),r5
+   swap r2,r6
+   say r3
    .src 13:1="say pos(\"World\", c)"
    load r6,3
    load r7,"World"

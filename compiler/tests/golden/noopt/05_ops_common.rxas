@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 05_ops_common.rexx
- * BUILT                  : 2026-02-17 21:16:24
+ * BUILT                  : 2026-02-26 20:48:12
  */
 
 .srcfile="05_ops_common.rexx"
@@ -16,19 +16,19 @@ main() .locals=3
    setnumstd 1
    .src 3:1="res1 = -3**2"
    .meta "05_ops_common.main.res1"="b" ".int" r0
-   load r2,2
-   ipow r2,3,r2
-   isub r0,0,r2
+   load r1,2
+   ipow r1,3,r1
+   isub r0,0,r1
    .src 6:1="res2 = 2**2**3"
-   .meta "05_ops_common.main.res2"="b" ".int" r1
-   load r2,3
-   ipow r2,2,r2
-   ipow r1,2,r2
+   .meta "05_ops_common.main.res2"="b" ".int" r2
+   load r1,3
+   ipow r1,2,r1
+   ipow r2,2,r1
    .src 8:1="say res1 res2"
    itos r0
-   itos r1
-   sconcat r2,r0,r1
-   say r2
+   itos r2
+   sconcat r1,r0,r2
+   say r1
    .src 8:14=""
    ret
    .meta "05_ops_common.main.res1"

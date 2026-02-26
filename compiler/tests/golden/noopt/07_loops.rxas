@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 07_loops.rexx
- * BUILT                  : 2026-02-17 21:17:58
+ * BUILT                  : 2026-02-26 20:48:12
  */
 
 .srcfile="07_loops.rexx"
@@ -19,36 +19,36 @@ main() .locals=5
    .meta "07_loops.main.i"="b" ".int" r0
    load r0,1
    .src 4:10="to 5"
-   load r2,5
+   load r1,5
    .src 4:15="by 2"
-   load r4,2
+   load r3,2
 l3dostart:
    .src 4:10="to 5"
-   igt r3,r0,r2
-   brt l3doend,r3
+   igt r2,r0,r1
+   brt l3doend,r2
    .src 5:5="say i"
    itos r0
    say r0
 l3doinc:
    .src 4:15="by 2"
- iadd r0,r4,r0
+ iadd r0,r3,r0
    .src 6:1="end"
    br l3dostart
 l3doend:
    .src 9:1="j = 0"
-   .meta "07_loops.main.j"="b" ".int" r1
-   load r1,0
+   .meta "07_loops.main.j"="b" ".int" r4
+   load r4,0
    .src 10:1="do"
 l19dostart:
    .src 10:4="while j < 3"
-   ilt r4,r1,3
-   brf l19doend,r4
+   ilt r3,r4,3
+   brf l19doend,r3
    .src 11:5="say \"While\" j"
-   itos r1
-   sconcat r3,"While",r1
-   say r3
+   itos r4
+   sconcat r2,"While",r4
+   say r2
    .src 12:5="j = j + 1"
-   iadd r1,r1,1
+   iadd r4,r4,1
 l19doinc:
    .src 13:1="end"
    br l19dostart

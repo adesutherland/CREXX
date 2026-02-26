@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : repro_opt_args.rexx
- * BUILT                  : 2026-02-17 20:32:09
+ * BUILT                  : 2026-02-26 20:48:17
  */
 
 .srcfile="repro_opt_args.rexx"
@@ -41,7 +41,7 @@ main() .locals=7
    .src 6:1="return 0"
    ret 0
 
-test_opt() .locals=4
+test_opt() .locals=1
    .meta "repro_opt_args.test_opt"="b" ".void" test_opt() "?a=.int,?b=.int,?c=.int" ""
    .src 8:1="test_opt: procedure"
    setnumdgts 18
@@ -66,14 +66,14 @@ l26a:
 l29a:
    .src 10:3="say \"a=\" a \"b=\" b \"c=\" c"
    itos a1
-   sconcat r3,"a=",a1
-   sconcat r3,r3,"b="
+   sconcat r0,"a=",a1
+   sconcat r0,r0,"b="
    itos a2
-   sconcat r3,r3,a2
-   sconcat r3,r3,"c="
+   sconcat r0,r0,a2
+   sconcat r0,r0,"c="
    itos a3
-   sconcat r3,r3,a3
-   say r3
+   sconcat r0,r0,a3
+   say r0
    .src 11:3="return"
    ret
    .meta "repro_opt_args.test_opt.a"

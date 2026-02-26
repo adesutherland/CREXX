@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : val_magic_02.rexx
- * BUILT                  : 2026-02-17 21:19:04
+ * BUILT                  : 2026-02-26 20:48:15
  */
 
 .srcfile="val_magic_02.rexx"
@@ -18,14 +18,14 @@ main() .locals=4
    say "Testing Implicit Rewrites..."
    .src 13:1="a = 'Hello' || 'World'"
    .meta "val_magic_02.main.a"="b" ".string" r0
-   load r3,"World"
-   concat r0,"Hello",r3
+   load r1,"World"
+   concat r0,"Hello",r1
    .src 14:1="say 'CONCAT test (a = \"Hello\" || \"World\"): ' || a"
-   concat r3,"CONCAT test (a = \"Hello\" || \"World\"): ",r0
-   say r3
+   concat r1,"CONCAT test (a = \"Hello\" || \"World\"): ",r0
+   say r1
    .src 15:0="if a \= 'HelloWorld'"
-   sne r3,r0,"HelloWorld"
-   brf l23iffalse,r3
+   sne r1,r0,"HelloWorld"
+   brf l23iffalse,r1
    .src 15:22="then"
    .src 16:5="say 'FAILED: CONCAT should result in \"HelloWorld\"'"
    say "FAILED: CONCAT should result in \"HelloWorld\""
@@ -33,15 +33,15 @@ main() .locals=4
    ret 1
 l23iffalse:
    .src 20:1="b = 'Hello' 'World'"
-   .meta "val_magic_02.main.b"="b" ".string" r1
-   load r3,"World"
-   sconcat r1,"Hello",r3
+   .meta "val_magic_02.main.b"="b" ".string" r2
+   load r1,"World"
+   sconcat r2,"Hello",r1
    .src 21:1="say 'SCONCAT test (b = \"Hello\" \"World\"): ' || b"
-   concat r3,"SCONCAT test (b = \"Hello\" \"World\"): ",r1
-   say r3
+   concat r1,"SCONCAT test (b = \"Hello\" \"World\"): ",r2
+   say r1
    .src 22:0="if b \= 'Hello World'"
-   sne r3,r1,"Hello World"
-   brf l41iffalse,r3
+   sne r1,r2,"Hello World"
+   brf l41iffalse,r1
    .src 22:23="then"
    .src 23:5="say 'FAILED: SCONCAT should result in \"Hello World\"'"
    say "FAILED: SCONCAT should result in \"Hello World\""
@@ -49,17 +49,17 @@ l23iffalse:
    ret 1
 l41iffalse:
    .src 30:1="c = \"Hello\"'World'"
-   .meta "val_magic_02.main.c"="b" ".string" r2
-   load r3,"World"
-   concat r2,"Hello",r3
+   .meta "val_magic_02.main.c"="b" ".string" r3
+   load r1,"World"
+   concat r3,"Hello",r1
    .src 31:1="say 'SCONCAT (diff quotes) test (c = \"Hello\"' || \"'World'): \" || c"
-   load r3,"\'World\'): "
-   concat r3,"SCONCAT (diff quotes) test (c = \"Hello\"",r3
-   concat r3,r3,r2
-   say r3
+   load r1,"\'World\'): "
+   concat r1,"SCONCAT (diff quotes) test (c = \"Hello\"",r1
+   concat r1,r1,r3
+   say r1
    .src 32:0="if c \= 'HelloWorld'"
-   sne r3,r2,"HelloWorld"
-   brf l61iffalse,r3
+   sne r1,r3,"HelloWorld"
+   brf l61iffalse,r1
    .src 32:22="then"
    .src 33:5="say 'FAILED: SCONCAT (diff quotes) should result in \"HelloWorld\"'"
    say "FAILED: SCONCAT (diff quotes) should result in \"HelloWorld\""

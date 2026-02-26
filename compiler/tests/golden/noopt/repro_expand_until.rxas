@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : repro_expand_until.rexx
- * BUILT                  : 2026-02-17 21:19:48
+ * BUILT                  : 2026-02-26 20:48:16
  */
 
 .srcfile="repro_expand_until.rexx"
@@ -15,35 +15,35 @@ main() .locals=4
    setnumcas 1
    setnumstd 1
    .src 2:1="line = \"A\""
-   .meta "repro_expand_until.main.line"="b" ".string" r1
-   load r1,"A"
+   .meta "repro_expand_until.main.line"="b" ".string" r0
+   load r0,"A"
    .src 3:1="old = \"\""
-   .meta "repro_expand_until.main.old"="b" ".string" r2
-   load r2,""
+   .meta "repro_expand_until.main.old"="b" ".string" r1
+   load r1,""
    .src 4:1="count = 0"
-   .meta "repro_expand_until.main.count"="b" ".int" r0
-   load r0,0
+   .meta "repro_expand_until.main.count"="b" ".int" r2
+   load r2,0
    .src 5:1="do"
 l13dostart:
    .src 6:3="count = count + 1"
-   iadd r0,r0,1
+   iadd r2,r2,1
    .src 7:3="old = line"
-   scopy r2,r1
+   scopy r1,r0
    .src 8:3="line = ''"
-   load r1,""
+   load r0,""
 l13doinc:
    .src 5:4="until old = line | line = ''"
-   seq r3,r2,r1
+   seq r3,r1,r0
    brt l20orend,r3
-   seq r3,r1,""
+   seq r3,r0,""
 l20orend:
    brt l13doend,r3
    .src 9:1="end"
    br l13dostart
 l13doend:
    .src 10:1="say \"Count: \" || count"
-   itos r0
-   concat r3,"Count: ",r0
+   itos r2
+   concat r3,"Count: ",r2
    say r3
    .src 11:1="return 0"
    ret 0

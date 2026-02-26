@@ -169,10 +169,6 @@ walker_result register_walker(walker_direction direction,
                     }
                 }
 
-                /* Pre-assign registers to all symbols in this scope to avoid clobbering by temporaries.
-                 * ARGS will override these with 'a' registers for arguments. */
-                assign_registers_in_scope(node->scope, payload);
-
                 break;
 
             case ARGS:
@@ -358,6 +354,26 @@ walker_result register_walker(walker_direction direction,
 
             case VAR_SYMBOL:
             case VAR_TARGET:
+            case VAR_REFERENCE:
+                /* On-demand register allocation for symbols */
+                if (node->symbolNode && node->symbolNode->symbol) {
+                    Symbol *symbol = node->symbolNode->symbol;
+                    if (symbol->register_num == UNSET_REGISTER && symbol->register_type != 'a') {
+                        /* Check if it's an attribute */
+                        if (!(symbol->scope &&
+                              symbol->scope->defining_node &&
+                              symbol->scope->defining_node->node_type == CLASS_DEF)) {
+                            if (symbol->exposed) {
+                                symbol->register_num = payload->globals++;
+                                symbol->register_type = 'g';
+                            } else {
+                                symbol->register_num = get_reg_perm(symbol->scope);
+                                symbol->register_type = 'r';
+                            }
+                        }
+                    }
+                }
+
                 for (c=child1; c; c = c->sibling) {
                     if (is_constant(c)) c->register_num = DONT_ASSIGN_REGISTER; /* Don't assign register */
                 }

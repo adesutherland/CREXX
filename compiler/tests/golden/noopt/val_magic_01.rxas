@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : val_magic_01.rexx
- * BUILT                  : 2026-02-17 21:18:55
+ * BUILT                  : 2026-02-26 20:48:15
  */
 
 .srcfile="val_magic_01.rexx"
@@ -17,25 +17,25 @@ main() .locals=8
    .meta "val_magic_01.main.a"="b" ".int[10]" r0
    .src 6:1="a = .int[10"
    null r0
-   .meta "val_magic_01.main.b"="b" ".string[5]" r1
+   .meta "val_magic_01.main.b"="b" ".string[5]" r4
    .src 14:1="b = .string[5"
-   null r1
-   .meta "val_magic_01.main.c"="b" ".int[3,4]" r2
+   null r4
+   .meta "val_magic_01.main.c"="b" ".int[3,4]" r6
    .src 22:1="c = .int[3, 4"
-   null r2
+   null r6
    .src 4:1="say \"Testing Array Intrinsics...\""
    say "Testing Array Intrinsics..."
    .src 7:1="len = a"
-   .meta "val_magic_01.main.len"="b" ".int" r3
-   load r7,10
-   icopy r3,r7
+   .meta "val_magic_01.main.len"="b" ".int" r1
+   load r3,10
+   icopy r1,r3
    .src 8:1="say \"Length of a[10] (a[]):\" len"
-   itos r3
-   sconcat r7,"Length of a[10] (a[]):",r3
-   say r7
+   itos r1
+   sconcat r3,"Length of a[10] (a[]):",r1
+   say r3
    .src 9:0="if len \= 10"
-   ine r7,r3,10
-   brf l28iffalse,r7
+   ine r3,r1,10
+   brf l28iffalse,r3
    .src 9:14="then"
    .src 10:5="say \"FAILED: a[] should be 10\""
    say "FAILED: a[] should be 10"
@@ -43,16 +43,16 @@ main() .locals=8
    ret 1
 l28iffalse:
    .src 15:1="len_b = b[0"
-   .meta "val_magic_01.main.len_b"="b" ".int" r4
-   load r6,5
-   icopy r4,r6
+   .meta "val_magic_01.main.len_b"="b" ".int" r5
+   load r2,5
+   icopy r5,r2
    .src 16:1="say \"Length of b[5] (b[0]):\" len_b"
-   itos r4
-   sconcat r7,"Length of b[5] (b[0]):",r4
-   say r7
+   itos r5
+   sconcat r3,"Length of b[5] (b[0]):",r5
+   say r3
    .src 17:0="if len_b \= 5"
-   ine r7,r4,5
-   brf l51iffalse,r7
+   ine r3,r5,5
+   brf l51iffalse,r3
    .src 17:15="then"
    .src 18:5="say \"FAILED: b[0] should be 5\""
    say "FAILED: b[0] should be 5"
@@ -60,19 +60,19 @@ l28iffalse:
    ret 1
 l51iffalse:
    .src 23:1="len_c = c[1"
-   .meta "val_magic_01.main.len_c"="b" ".int" r5
-   setattrs r2,3
-   linkattr1 r6,r2,1
-   unlink r6
-   load r6,4
-   icopy r5,r6
+   .meta "val_magic_01.main.len_c"="b" ".int" r7
+   setattrs r6,3
+   linkattr1 r2,r6,1
+   unlink r2
+   load r2,4
+   icopy r7,r2
    .src 24:1="say \"Length of c[3, 4] second dimension at index 1 (c[1, ]):\" len_c"
-   itos r5
-   sconcat r7,"Length of c[3, 4] second dimension at index 1 (c[1, ]):",r5
-   say r7
+   itos r7
+   sconcat r3,"Length of c[3, 4] second dimension at index 1 (c[1, ]):",r7
+   say r3
    .src 25:0="if len_c \= 4"
-   ine r7,r5,4
-   brf l78iffalse,r7
+   ine r3,r7,4
+   brf l78iffalse,r3
    .src 25:15="then"
    .src 26:5="say \"FAILED: c[1, ] should be 4\""
    say "FAILED: c[1, ] should be 4"
