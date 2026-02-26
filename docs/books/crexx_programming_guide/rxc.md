@@ -31,5 +31,32 @@
 \end{shaded}
 \lstinputlisting[language=rxas,label=fpow_example_rxas,caption=optimization]{examples/fpowtest.rxas}
 \fontspec{TeX Gyre Pagella}
+ 
+ This works because, for a large number of operations, the \code{rxc} compiler can assume the result is never going to be different, and will determine that result during compile time. In the same vein, results from operations that are not displayed or handled further in the program, will lead to the operation being skipped entirely.
 
-This works because, for a large number of operations, the \code{rxc} compiler can assume the result is never going to be different, and will determine that result during compile time. In the same vein, results from operations that are not displayed or handled further in the program, will lead to the operation being skipped entirely.
+## Debugging and Validation
+
+For compiler developers and advanced users, `rxc` provides debug modes that enable internal validation of the AST and Symbol table and stress‑test the fixpoint loop.
+
+- `-d2` — Structural Validator
+  - Runs the built‑in AST/Symbol validator between passes.
+  - Catches parent/child inconsistencies, broken bi‑directional symbol links, and illegal scope parentage.
+
+- `-d3` — Validator + Idempotency Stress Test
+  - Everything in `-d2`, plus: the fixpoint loop is forced to run extra iterations and selected walkers are invoked multiple times per iteration.
+  - Proves walker idempotency and overall convergence.
+
+Example:
+
+```sh
+# Validate (structure only)
+rxc -d2 -o out input.rexx
+
+# Stress idempotency and convergence
+rxc -d3 -o out input.rexx
+```
+
+Notes:
+- These modes are for diagnostics and do not change user‑visible semantics.
+- All walkers inside the fixpoint loop are designed to be idempotent.
+- See also: `compiler/docs/fixpoint_idempotency_and_scope.md` for design details.

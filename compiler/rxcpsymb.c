@@ -697,6 +697,9 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
 Symbol *sym_rslv_local(Scope *scope, ASTNode *node) {
     Symbol *result;
     char *c;
+
+    if (!scope) return 0;
+
     /* Sadly we are making a null terminated string */
     char *name = (char*)malloc(node->node_string_length + 1);
     memcpy(name, node->node_string, node->node_string_length);
@@ -710,7 +713,7 @@ Symbol *sym_rslv_local(Scope *scope, ASTNode *node) {
 #endif
 
     /* Look for the symbol - looking up in each parent scope until we hit a PROCEDURE or CLASS */
-    do {
+    while (scope) {
         result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
         if (result) {
             free(name);
@@ -718,7 +721,7 @@ Symbol *sym_rslv_local(Scope *scope, ASTNode *node) {
         }
         if (scope->type == SCOPE_PROCEDURE || scope->type == SCOPE_CLASS) break;
         scope = scope->parent;
-    } while (scope);
+    }
     free(name);
     return 0;
 }
@@ -727,6 +730,9 @@ Symbol *sym_rslv_local(Scope *scope, ASTNode *node) {
 Symbol *sym_rslv_attribute(Scope *scope, ASTNode *node) {
     Symbol *result;
     char *c;
+
+    if (!scope) return 0;
+
     /* Sadly we are making a null terminated string */
     char *name = (char*)malloc(node->node_string_length + 1);
     memcpy(name, node->node_string, node->node_string_length);
@@ -758,6 +764,9 @@ Symbol *sym_rslv_attribute(Scope *scope, ASTNode *node) {
 Symbol *sym_rslv_global(Scope *scope, ASTNode *node) {
     Symbol *result;
     char *c;
+
+    if (!scope) return 0;
+
     /* Sadly we are making a null terminated string */
     char *name = (char*)malloc(node->node_string_length + 1);
     memcpy(name, node->node_string, node->node_string_length);
@@ -789,6 +798,17 @@ Symbol *sym_rslv_global(Scope *scope, ASTNode *node) {
     return 0;
 }
 
+/* Resolve a Symbol - Tiered Search: Local -> Attribute -> Global */
+Symbol *sym_rslv_tiered(Scope *scope, ASTNode *node) {
+    Symbol *result;
+    if (!scope) return 0;
+    result = sym_rslv_local(scope, node);
+    if (result) return result;
+    result = sym_rslv_attribute(scope, node);
+    if (result) return result;
+    return sym_rslv_global(scope, node);
+}
+
 /* Resolve a Function Symbol
  * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
  */
@@ -818,64 +838,6 @@ Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
     result = sym_rvfn_deep(root, name);
     free(name);
     return result;
-}
-
-/* Resolve a Symbol - including parent scope */
-Symbol *sym_rslv(Scope *scope, ASTNode *node) {
-    Symbol *result;
-    char *c;
-    /* Sadly we are making a null terminated string */
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
-
-    /* Lowercase symbol name */
-#ifdef NUTF8
-    for (c = name ; *c; ++c) *c = (char)tolower(*c);
-#else
-    utf8lwr(name);
-#endif
-
-    /* Look for the symbol - looking up in each parent scope */
-    do {
-        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
-        if (result) {
-            free(name);
-            return result;
-        }
-        scope = scope->parent;
-    } while (scope);
-    free(name);
-    return 0;
-}
-
-/* Resolve a Symbol of a specific type - including parent scope */
-Symbol *sym_rslv_type(Scope *scope, ASTNode *node, SymbolType type) {
-    Symbol *result;
-    char *c;
-    /* Sadly we are making a null terminated string */
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
-
-    /* Lowercase symbol name */
-#ifdef NUTF8
-    for (c = name ; *c; ++c) *c = (char)tolower(*c);
-#else
-    utf8lwr(name);
-#endif
-
-    /* Look for the symbol - looking up in each parent scope */
-    do {
-        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
-        if (result && (result->symbol_type == type || type == UNKNOWN_SYMBOL)) {
-            free(name);
-            return result;
-        }
-        scope = scope->parent;
-    } while (scope);
-    free(name);
-    return 0;
 }
 
 /* Local Resolve a Symbol - current scope only */
@@ -929,6 +891,31 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
     free(symbol);
 
     return new_symbol;
+}
+
+/* Hoist a symbol to a namespace scope (EXPOSE) */
+Symbol *sym_hoist_to_namespace(Symbol *symbol, Scope *target_namespace) {
+    if (!symbol || !target_namespace) return symbol;
+
+    /* Ensure target is a namespace or universe */
+    while (target_namespace && target_namespace->type != SCOPE_NAMESPACE && target_namespace->type != SCOPE_UNIVERSE) {
+        target_namespace = target_namespace->parent;
+    }
+
+    if (!target_namespace) return symbol;
+
+    /* Precondition: symbol must not be an argument */
+    if (symbol->is_arg) return symbol;
+
+    /* If already in that scope or above, do nothing */
+    Scope *s = target_namespace;
+    while (s) {
+        if (s == symbol->scope) return symbol;
+        s = s->parent;
+    }
+
+    /* Merge into the target namespace */
+    return sym_merg(target_namespace, symbol);
 }
 
 /* Frees a symbol */
@@ -999,8 +986,15 @@ void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
               unsigned int writeAccess) {
     SymbolNode *connector;
 
+    if (!symbol || !node) return;
+
     /* Check if already added */
     if (node->symbolNode && node->symbolNode->symbol == symbol) return;
+
+    /* If it points to a DIFFERENT symbol, disconnect it first */
+    if (node->symbolNode) {
+        sym_dno(node->symbolNode->symbol, node);
+    }
 
     connector = malloc(sizeof(SymbolNode));
     connector->symbol = symbol;

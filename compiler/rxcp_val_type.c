@@ -264,7 +264,7 @@ walker_result set_node_types_walker(walker_direction direction,
                                 context->changed = 1;
                             } else if (!context->changed) {
                                 /* DOT-AS-INDEX MUTATION: transform tokens.i -> tokens[i] */
-                                Symbol *index_sym = sym_rslv(context->current_scope, node);
+                                Symbol *index_sym = sym_rslv_tiered(context->current_scope, node);
                                 if (index_sym && index_sym->symbol_type == VARIABLE_SYMBOL &&
                                     instance->value_dims > 0) {
 
@@ -289,17 +289,24 @@ walker_result set_node_types_walker(walker_direction direction,
                                     /* Disconnect from any previous symbols if any */
                                     if (node->symbolNode) sym_dno(node->symbolNode->symbol, node);
 
-                                    /* Link to the same symbol as instance */
-                                    sym_adnd(instance->symbolNode->symbol, node, 1, 0);
+                                    /* Link to the same symbol as instance if it has one */
+                                    if (instance->symbolNode) sym_adnd(instance->symbolNode->symbol, node, 1, 0);
 
                                     /* Set scalar element type */
-                                    node->value_type = instance->symbolNode->symbol->type;
+                                    if (instance->symbolNode && instance->symbolNode->symbol) {
+                                        node->value_type = instance->symbolNode->symbol->type;
+                                    } else {
+                                        node->value_type = instance->value_type;
+                                    }
                                     node->value_dims = 0;
                                     node->target_dims = 0;
                                     if (node->value_class) { free(node->value_class); node->value_class = 0; }
-                                    if (instance->symbolNode->symbol->value_class) {
+                                    if (instance->symbolNode && instance->symbolNode->symbol && instance->symbolNode->symbol->value_class) {
                                         node->value_class = malloc(strlen(instance->symbolNode->symbol->value_class) + 1);
                                         strcpy(node->value_class, instance->symbolNode->symbol->value_class);
+                                    } else if (instance->value_class) {
+                                        node->value_class = malloc(strlen(instance->value_class) + 1);
+                                        strcpy(node->value_class, instance->value_class);
                                     }
                                     ast_rttp(node);
 
@@ -648,11 +655,13 @@ walker_result type_safety_walker(walker_direction direction,
 
         switch (node->node_type) {
             case PROCEDURE:
-                if (strcmp(node->symbolNode->symbol->name,"main") == 0) {
+                if (node->symbolNode && node->symbolNode->symbol && strcmp(node->symbolNode->symbol->name,"main") == 0) {
                     /* Validate main() return values */
                     if (node->value_type != TP_VOID && node->value_type != TP_INTEGER) {
                         /* Must be an string array */
-                        mknd_err(ast_chld(node,CLASS,0),"MAIN_RETURNS_INTEGER");
+                        ASTNode *cls = ast_chld(node, CLASS, 0);
+                        if (cls) mknd_err(cls, "MAIN_RETURNS_INTEGER");
+                        else mknd_err(node, "MAIN_RETURNS_INTEGER");
                     }
                 }
                 break;
@@ -931,14 +940,17 @@ walker_result type_safety_walker(walker_direction direction,
                 ast_svtn(node, child1);
                 ast_rttp(node);
 
-                if (ast_chld(node->parent->parent, INSTRUCTIONS, NOP)->node_type == INSTRUCTIONS) {
-                    /* In a function implementation - in this case the optional flag '?' is invalid for a class type as a
-                     * definition needs to know the default value that can only be defined by the expression on the
-                     * right-hand-side */
-                    if (child2->node_type == CLASS && node->is_opt_arg && !node->value_dims) {
-                        /* Optional but the CLASS doesn't give the needed default value */
-                        /* NOTE Arrays are an exception - their default value is a "blank" array */
-                        mknd_err(node, "NO_DEFAULT_VALUE");
+                {
+                    ASTNode *inst = (node->parent && node->parent->parent) ? ast_chld(node->parent->parent, INSTRUCTIONS, NOP) : NULL;
+                    if (inst && inst->node_type == INSTRUCTIONS) {
+                        /* In a function implementation - in this case the optional flag '?' is invalid for a class type as a
+                         * definition needs to know the default value that can only be defined by the expression on the
+                         * right-hand-side */
+                        if (child2->node_type == CLASS && node->is_opt_arg && !node->value_dims) {
+                            /* Optional but the CLASS doesn't give the needed default value */
+                            /* NOTE Arrays are an exception - their default value is a "blank" array */
+                            mknd_err(node, "NO_DEFAULT_VALUE");
+                        }
                     }
                 }
                 break;

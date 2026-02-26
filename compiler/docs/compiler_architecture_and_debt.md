@@ -38,6 +38,8 @@ The previously identified technical debt regarding monolithic files has been **R
 ### 3.1 AST & Symbols
 *   `rxcp_ast.h`: Defines the `ASTNode` structure and AST-related constants.
 *   `rxcp_sym.h`: Defines `Symbol`, `Scope`, and Symbol Table management.
+    *   **Scope Hierarchy**: Explicitly typed scopes (`SCOPE_UNIVERSE`, `SCOPE_NAMESPACE`, `SCOPE_CLASS`, `SCOPE_PROCEDURE`, `SCOPE_LOCAL`).
+    *   **Specialized Resolvers**: Tiered symbol resolution (`sym_rslv_tiered`) using specialized helpers for Local, Attribute, and Global resolution to ensure predictable linkage.
 *   `rxcp_types.h`: Centralized `ValueType` definitions.
 
 ### 3.2 Validation Pipeline
@@ -47,6 +49,9 @@ The semantic validation logic (formerly `rxcpbval.c`) is now split into a multi-
 *   `rxcp_val_sym.c`: Symbol resolution and scope population.
 *   `rxcp_val_type.c`: Type inference and type checking.
 *   `rxcp_val_trans.c`: AST transformations (e.g., adding implicit conversions).
+
+**Architectural Rule: Idempotency**
+Every walker in the fixpoint loop must be **Idempotent**. This ensures that the compiler converges to a stable state regardless of how many times it processes the tree, which is critical for supporting code injection and interdependent symbol resolution.
 
 ### 3.3 Modular Emitter
 The code generator (formerly `rxcpemit.c`) is now split into 6 functional modules:

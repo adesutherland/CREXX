@@ -147,12 +147,6 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length);
 /* Frees a symbol - does not remove symbol from scope see scp_rmsy() which probably should be used as well */
 void free_sym(Symbol *symbol);
 
-/* Resolve a Symbol - including parent scopes */
-Symbol *sym_rslv(Scope *scope, ASTNode *node);
-
-/* Resolve a Symbol of a specific type - including parent scopes */
-Symbol *sym_rslv_type(Scope *scope, ASTNode *node, SymbolType type);
-
 /* Local Resolve a Symbol - current scope only */
 Symbol *sym_lrsv(Scope *scope, ASTNode *node);
 
@@ -164,6 +158,9 @@ Symbol *sym_rslv_attribute(Scope *scope, ASTNode *node);
 
 /* Resolve a Symbol - search for global symbols in namespaces */
 Symbol *sym_rslv_global(Scope *scope, ASTNode *node);
+
+/* Resolve a Symbol - Tiered Search: Local -> Attribute -> Global */
+Symbol *sym_rslv_tiered(Scope *scope, ASTNode *node);
 
 /* Resolve a Function Symbol
  * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
@@ -177,6 +174,9 @@ Symbol *sym_rvfn(ASTNode *root, char* name);
 
 /* Move (via a merge) a Symbol into a new Scope - returns the target symbol */
 Symbol *sym_merg(Scope *new_scope, Symbol *symbol);
+
+/* Hoist a symbol to a namespace scope (EXPOSE) */
+Symbol *sym_hoist_to_namespace(Symbol *symbol, Scope *target_namespace);
 
 /* Returns the index'th SymbolNode connector attached to a symbol */
 SymbolNode* sym_trnd(Symbol *symbol, size_t index);

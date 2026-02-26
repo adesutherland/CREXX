@@ -83,7 +83,7 @@ walker_result build_symbols_walker(walker_direction direction,
             }
 
             /* Check for duplicated */
-            symbol = sym_rslv(context->current_scope, node);
+            symbol = sym_rslv_global(context->current_scope, node);
             if (symbol && symbol->scope == context->current_scope) {
                 /* If it's a different node, then it's a duplicate */
                 if (sym_trnd(symbol, 0)->node != node) {
@@ -128,7 +128,7 @@ walker_result build_symbols_walker(walker_direction direction,
             }
 
             /* Check for duplicated */
-            symbol = sym_rslv(context->current_scope, node);
+            symbol = sym_rslv_global(context->current_scope, node);
             if (symbol && symbol->scope == context->current_scope) {
                 /* If it's a different node, then it's a duplicate */
                 if (sym_trnd(symbol, 0)->node != node) {
@@ -225,7 +225,7 @@ walker_result build_symbols_walker(walker_direction direction,
                     symbol = sym_lrsv(context->current_scope, node);
                 } else {
                     /* Untyped usage resolves outward; if not found, will create in current scope */
-                    symbol = sym_rslv(context->current_scope, node);
+                    symbol = sym_rslv_tiered(context->current_scope, node);
                 }
 
                 /* Make a new symbol if it does not exist */
@@ -270,7 +270,7 @@ walker_result build_symbols_walker(walker_direction direction,
             } else {
                 node->scope = context->current_scope;
                 /* Find the symbol */
-                symbol = sym_rslv(context->current_scope, node);
+                symbol = sym_rslv_local(context->current_scope, node);
 
                 /* At this point the arguments will have been processed so no need to attempt to add a symbol */
                 if (!symbol) {
@@ -301,7 +301,7 @@ walker_result build_symbols_walker(walker_direction direction,
             } else {
                 node->scope = context->current_scope;
                 /* Find the symbol */
-                symbol = sym_rslv(context->current_scope, node);
+                symbol = sym_rslv_tiered(context->current_scope, node);
 
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
@@ -411,7 +411,7 @@ walker_result resolve_functions_walker(walker_direction direction,
     else {
         if (node->node_type == FUNCTION || node->node_type == FUNC_SYMBOL) {
             /* Find the symbol */
-            Symbol *local_symbol = sym_rslv(node->scope ? node->scope : context->current_scope, node);
+            Symbol *local_symbol = sym_rslv_tiered(node->scope ? node->scope : context->current_scope, node);
 
             if (local_symbol && local_symbol->symbol_type == FUNCTION_SYMBOL ) {
                 if (!node->symbolNode) {
@@ -487,7 +487,9 @@ walker_result exposed_symbols_walker(walker_direction direction,
                     if (!symbol) {
                         /* Procedure Symbol not found so it "must" be a variable we need to expose from our procedures */
                         found = 0;
-                        /* We need to loop through all the procedures in the program_file in order */
+                        /* We need to loop through all the procedures in the program_file in order.
+                         * The AST has been restructured by the initial_checks_walker, so procedures
+                         * are now siblings of the REXX_OPTIONS node under PROGRAM_FILE. */
                         if (context->ast && context->ast->child && context->ast->child->child) {
                             for (proc_node = context->ast->child->child; proc_node; proc_node = proc_node->sibling) {
                                 if (proc_node->node_type != PROCEDURE) continue;
@@ -497,7 +499,7 @@ walker_result exposed_symbols_walker(walker_direction direction,
                                 if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
                                     if (symbol->exposed == 0) { /* Avoid double processing */
                                         /* We found a variable to expose - so expose it by moving its scope */
-                                        merged_symbol = sym_merg(symbol->scope ? symbol->scope->parent : 0, symbol);
+                                        merged_symbol = sym_hoist_to_namespace(symbol, symbol->scope ? symbol->scope->parent : 0);
                                         /* Link to the exposed node */
                                         sym_adnd(merged_symbol, n, 1, 1);
                                         /* Link to the Procedure's INSTRUCTION node */
@@ -571,7 +573,7 @@ walker_result exposed_symbols_walker(walker_direction direction,
                             if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
                                 if (symbol->exposed == 0) { /* Avoid double processing */
                                     /* We found a variable to expose - so expose it by moving its scope */
-                                    merged_symbol = sym_merg(symbol->scope ? symbol->scope->parent : 0, symbol);
+                                    merged_symbol = sym_hoist_to_namespace(symbol, symbol->scope ? symbol->scope->parent : 0);
                                     /* Link to the exposed node */
                                     sym_adnd(merged_symbol, n, 1, 1);
                                     /* Link to the Procedure's INSTRUCTION node */
@@ -604,7 +606,7 @@ walker_result exposed_symbols_walker(walker_direction direction,
                                 /* Expose it */
                                 if (proc_symbol->exposed == 0) { /* Avoid double processing */
                                     /* We need to promote this symbol to the parent scope */
-                                    merged_symbol = sym_merg(proc_symbol->scope->parent, proc_symbol);
+                                    merged_symbol = sym_hoist_to_namespace(proc_symbol, proc_symbol->scope->parent);
                                     /* Link to the exposed node */
                                     sym_adnd(merged_symbol, n, 1, 1);
                                     /* Link to the Procedure's INSTRUCTION node */
@@ -624,10 +626,10 @@ walker_result exposed_symbols_walker(walker_direction direction,
                                     mknd_war(n, "DUPLICATE_SYMBOL");
                             }
                             else {
-                                /* Must be unused */
-                                /* Add an error - if it has not already errored */
-                                if (ast_chld(n, ERROR, 0) == 0)
-                                    mknd_err(n, "UNKNOWN_SYMBOL");
+                                /* Not yet linked to this procedure's instructions - so link it now */
+                                sym_adnd(symbol, n, 1, 1);
+                                sym_adnd(symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
+                                context->changed = 1;
                             }
                         }
                     }
@@ -704,8 +706,8 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         return;
     }
 
-    /* This sees if we are looking at exposed (global) variables by looking at the scope defining node type */
-    if (scope->defining_node && scope->defining_node->node_type == PROGRAM_FILE && symbol->symbol_type == VARIABLE_SYMBOL) {
+    /* This sees if we are looking at exposed (global) variables by looking at the scope type */
+    if (scope->type == SCOPE_NAMESPACE && symbol->symbol_type == VARIABLE_SYMBOL) {
 
         proc = 0;
         /* An Exposed Symbol needs special processing */
@@ -885,7 +887,7 @@ static void variable_initiation(Symbol *symbol, void *payload) {
     }
 
     /* Is this a global variable? */
-    if (scope->defining_node && scope->defining_node->node_type == PROGRAM_FILE) {
+    if (scope->type == SCOPE_NAMESPACE) {
         /* Global variable unlike locals these registers are initialised by the VM
          * and for complex cases (objects) the initialisation is done by the constructor,
          * so this is a NOP */

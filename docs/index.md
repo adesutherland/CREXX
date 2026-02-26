@@ -65,6 +65,18 @@ Type
 
 for command format / options
 
+### Recent Compiler Changes (crexx-dev-260110)
+
+- Fixpoint validation loop hardened for idempotency. All walkers inside the loop are validated to be idempotent; under `-d3` the compiler stress‑tests by multi‑invoking walkers and forcing extra iterations.
+- Built‑in AST/Symbol validator integrated under debug flags:
+  - `-d2`: structural validator runs between passes.
+  - `-d3`: validator + stress testing (multiple walker invocations and extra loop iterations).
+- Explicit Scope Hierarchy introduced (`SCOPE_UNIVERSE`, `SCOPE_NAMESPACE`, `SCOPE_CLASS`, `SCOPE_PROCEDURE`, `SCOPE_LOCAL`) with invariant checks to prevent wrongly linked symbols.
+- Specialized symbol resolution APIs adopted (Local → Attribute → Global) to make name binding predictable and resilient across passes.
+- EXPOSE/hoisting made robust and idempotent; globals exposed from procedures are consistently promoted to the namespace scope.
+- Import duplication fixed to preserve original scope types when copying AST from imported files (procedures remain procedures, etc.).
+- Level B AST restructuring clarified: initial post‑parse fixer re‑nests procedures and normalizes nodes; documentation comments added in the code to avoid confusion with the raw Lemon parser shape.
+
 ## Assembler
 
 See [REXX Assembler Specification](assembler).

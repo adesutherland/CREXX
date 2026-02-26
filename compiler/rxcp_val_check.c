@@ -44,7 +44,11 @@ static OperandType nodetype_to_operandtype(NodeType ntype) {
 }
 
 /* Step 1
- * - Fixes up procedure / class tree structures
+ * - Fixes up procedure / class tree structures.
+ *   Note: This stage is critical for Level B Rexx as the single-lookahead Lemon parser
+ *   initially produces a flat AST for routines and their bodies. This walker restructures
+ *   the AST into a hierarchical form where ARGS and INSTRUCTIONS are children of the
+ *   PROCEDURE node. It essentially fixes parsing weaknesses of the single lookahead parser.
  * - Sets the token and source start / finish position for each node
  * - Fixes SCONCAT to CONCAT
  * - Removes excess NOPs
