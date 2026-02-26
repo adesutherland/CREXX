@@ -445,7 +445,11 @@ walker_result set_node_ordinals_walker(walker_direction direction,
 void validate_ast(Context *context) {
     int ordinal_counter;
 
-    /* AST fixups */
+    /* AST fixups 
+     * The Lemon parser only has a single lookahead and produces an unfinished flat AST.
+     * These walkers restructure the AST into a proper logical hierarchy (e.g., nesting 
+     * instructions under procedures and classes) and propagate source locations.
+     */
     context->current_scope = 0;
     context->in_factory = 0;
     ast_wlkr(context->ast, initial_checks_walker, (void *) context);

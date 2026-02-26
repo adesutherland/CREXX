@@ -899,7 +899,8 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case ARGS:
-                if (strcmp(node->parent->symbolNode->symbol->name,"main") == 0) {
+                n1 = ast_proc(node);
+                if (n1 && n1->symbolNode && n1->symbolNode->symbol && strcmp(n1->symbolNode->symbol->name,"main") == 0) {
                     /* Validate the signature of the main() functions */
                     if (ast_nchd(node) == 0) break; /* A main() can ignore arguments */
                     if (ast_nchd(node) != 1) {
@@ -941,7 +942,8 @@ walker_result type_safety_walker(walker_direction direction,
                 ast_rttp(node);
 
                 {
-                    ASTNode *inst = (node->parent && node->parent->parent) ? ast_chld(node->parent->parent, INSTRUCTIONS, NOP) : NULL;
+                    n1 = ast_proc(node);
+                    ASTNode *inst = n1 ? ast_chld(n1, INSTRUCTIONS, NOP) : NULL;
                     if (inst && inst->node_type == INSTRUCTIONS) {
                         /* In a function implementation - in this case the optional flag '?' is invalid for a class type as a
                          * definition needs to know the default value that can only be defined by the expression on the
@@ -984,9 +986,10 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case RETURN:
-                /* Type is the scope > procedure > type */
-                if (context->current_scope->defining_node && context->current_scope->defining_node->symbolNode) {
-                    ast_svtp(node, context->current_scope->defining_node->symbolNode->symbol);
+                /* Type is the procedure's return type */
+                n1 = ast_proc(node);
+                if (n1 && n1->symbolNode && n1->symbolNode->symbol) {
+                    ast_svtp(node, n1->symbolNode->symbol);
                 } else {
                     /* Fallback to VOID if no defining node or symbol */
                     set_node_type(node, TP_VOID);
@@ -1031,7 +1034,7 @@ walker_result type_safety_walker(walker_direction direction,
                 /* Link to relevant DO */
                 if (node->child) {
                     /* Symbol specified - so we need to find it */
-                    n1 = node->parent;
+                    n1 = ast_do(node);
                     while (1) {
                         if (!n1) {
                             mknd_err(node, "INVALID_CONTROL_VARIABLE"); /* 28.3 */
@@ -1054,23 +1057,15 @@ walker_result type_safety_walker(walker_direction direction,
                                 n2 = n2->sibling; /* Next REPEAT Child */
                             }
                         }
-                        n1 = n1->parent;
+                        n1 = ast_do(n1->parent);
                     }
                     found:;
                 }
                 else {
                     /* Symbol not specified - just find inner DO */
-                    n1 = node->parent;
-                    while (1) {
-                        if (!n1) {
-                            mknd_err(node, "NOT_IN_LOOP"); /* 28.1, 28.2 */
-                            break;
-                        }
-                        else if (n1->node_type == DO) {
-                            node->association = n1;
-                            break;
-                        }
-                        n1 = n1->parent;
+                    node->association = ast_do(node);
+                    if (!node->association) {
+                        mknd_err(node, "NOT_IN_LOOP"); /* 28.1, 28.2 */
                     }
                 }
                 break;

@@ -749,8 +749,58 @@ size_t ast_nchd(ASTNode* node) {
 
 /* Returns the PROCEDURE, METHOD or FACTORY ASTNode of an AST node */
 ASTNode* ast_proc(ASTNode *node) {
+    /* Prefer Scope hierarchy if available and linked to a defining node */
+    if (node && node->scope) {
+        Scope *s = node->scope;
+        while (s) {
+            if (s->type == SCOPE_PROCEDURE) return s->defining_node;
+            s = s->parent;
+        }
+    }
+    /* Fallback to AST hierarchy */
     while (node) {
         if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) return node;
+        node = node->parent;
+    }
+    return 0;
+}
+
+/* Returns the nearest enclosing CLASS ASTNode */
+ASTNode* ast_class(ASTNode *node) {
+    if (node && node->scope) {
+        Scope *s = node->scope;
+        while (s) {
+            if (s->type == SCOPE_CLASS) return s->defining_node;
+            s = s->parent;
+        }
+    }
+    while (node) {
+        if (node->node_type == CLASS_DEF) return node;
+        node = node->parent;
+    }
+    return 0;
+}
+
+/* Returns the nearest enclosing NAMESPACE ASTNode */
+ASTNode* ast_ns(ASTNode *node) {
+    if (node && node->scope) {
+        Scope *s = node->scope;
+        while (s) {
+            if (s->type == SCOPE_NAMESPACE) return s->defining_node;
+            s = s->parent;
+        }
+    }
+    while (node) {
+        if (node->node_type == NAMESPACE || node->node_type == PROGRAM_FILE) return node;
+        node = node->parent;
+    }
+    return 0;
+}
+
+/* Returns the nearest enclosing DO ASTNode */
+ASTNode* ast_do(ASTNode *node) {
+    while (node) {
+        if (node->node_type == DO) return node;
         node = node->parent;
     }
     return 0;

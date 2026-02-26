@@ -165,6 +165,9 @@ void ast_del(ASTNode* node);
 char* ast_frnm(ASTNode* node);
 /* Returns the PROCEDURE ASTNode procedure of an AST node */
 ASTNode* ast_proc(ASTNode *node);
+ASTNode* ast_class(ASTNode *node);
+ASTNode* ast_ns(ASTNode *node);
+ASTNode* ast_do(ASTNode *node);
 /* Get the child node of a certain type1 or type2 (or null) */
 ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2);
 /* Returns 1 if the node is an error or warning node, or has any descendant error or warning node */

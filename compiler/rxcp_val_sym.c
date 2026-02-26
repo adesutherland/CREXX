@@ -165,10 +165,11 @@ walker_result build_symbols_walker(walker_direction direction,
                 if (star) {
                     star->symbol_type = VARIABLE_SYMBOL;
                     star->type = TP_OBJECT;
-                    if (context->current_scope->parent && context->current_scope->parent->defining_node && context->current_scope->parent->defining_node->node_type == CLASS_DEF) {
+                    ASTNode *class_node = ast_class(node);
+                    if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
                         if (star->value_class) free(star->value_class);
-                        star->value_class = malloc(strlen(context->current_scope->parent->name) + 1);
-                        strcpy(star->value_class, context->current_scope->parent->name);
+                        star->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
+                        strcpy(star->value_class, class_node->symbolNode->symbol->name);
                     }
                 }
             } else if (node->node_type == METHOD) {
@@ -177,10 +178,11 @@ walker_result build_symbols_walker(walker_direction direction,
                 if (this_sym) {
                     this_sym->symbol_type = VARIABLE_SYMBOL;
                     this_sym->type = TP_OBJECT;
-                    if (context->current_scope->parent && context->current_scope->parent->defining_node && context->current_scope->parent->defining_node->node_type == CLASS_DEF) {
+                    ASTNode *class_node = ast_class(node);
+                    if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
                         if (this_sym->value_class) free(this_sym->value_class);
-                        this_sym->value_class = malloc(strlen(context->current_scope->parent->name) + 1);
-                        strcpy(this_sym->value_class, context->current_scope->parent->name);
+                        this_sym->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
+                        strcpy(this_sym->value_class, class_node->symbolNode->symbol->name);
                     }
                 }
             }

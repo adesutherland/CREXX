@@ -53,6 +53,9 @@ The parser defines the structural grammar of the language.
     *   At this stage, the AST is relatively flat; procedure bodies are not yet nested under their procedure nodes.
     *   *Example*: `if(I) ::= TK_IF ... else(F). { I = ast_f(...); add_ast(I, F); }`
 
+#### 3.3.1 Unfinished vs. Hierarchical AST
+It is critical to understand that the AST produced by the Lemon parser is **unfinished**. Due to the single-lookahead nature of the grammar, some relationships (especially procedure and class bodies) cannot be established during initial parsing. The compiler relies on subsequent "fixup" walkers to restructure the flat list of instructions into a proper logical hierarchy. Developers must not assume the AST is hierarchical until after the fixup stage (Step 3.4).
+
 ### 3.4 Semantic Analysis & AST Stitching (Initial Walker)
 **Source**: `compiler/rxcp_val_check.c` (`initial_checks_walker`)
 

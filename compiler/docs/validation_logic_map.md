@@ -9,7 +9,7 @@ The `validate_ast` function (in `rxcp_val_orch.c`) orchestrates the following se
 ### 1. Pre-Loop Setup
 1.  **Initial Checks (`initial_checks_walker`)**: 
     *   Sets source location pointers for error reporting.
-    *   Restructures procedures and classes into a logical hierarchy (e.g., hoisting procedures from the flat parser list to become children of the file/namespace).
+    *   **AST Restructuring**: Fixes the unfinished flat AST produced by the parser into a logical hierarchy (e.g., hoisting procedures from the flat parser list to become children of the file/namespace and nesting their instruction bodies).
     *   Converts `OP_SCONCAT` to `OP_CONCAT` when no physical whitespace exists.
     *   Removes redundant `NOP` instructions.
     *   Validates `ASSEMBLER` mnemonics and operands.
