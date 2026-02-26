@@ -46,6 +46,14 @@ typedef struct OutputFragment OutputFragment;
 typedef struct importable_file importable_file;
 typedef struct imported_func imported_func;
 
+typedef enum ScopeType {
+    SCOPE_UNIVERSE,     /* Rexx Universe (top-level) */
+    SCOPE_NAMESPACE,    /* Namespace (from PROGRAM_FILE/IMPORTED_FILE/NAMESPACE) */
+    SCOPE_CLASS,        /* Class definition */
+    SCOPE_PROCEDURE,    /* Procedure, Method, or Factory */
+    SCOPE_LOCAL         /* Local scope for code blocks like DO loops, etc. */
+} ScopeType;
+
 typedef enum RexxLevel {
     UNKNOWN, LEVELA, LEVELB, LEVELC, LEVELD, LEVELG, LEVELL
 } RexxLevel;

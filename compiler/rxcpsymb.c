@@ -92,10 +92,11 @@ static Symbol* src_symbol(struct avl_tree_node *root, const char* index) {
 }
 
 /* Scope Factory */
-Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol) {
+Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol, ScopeType type) {
     char* name;
     Scope *scope = (Scope*) malloc(sizeof(Scope));
     scope->defining_node = node;
+    scope->type = type;
     if (symbol) {
         name = symbol->name;
         scope->name = malloc(strlen(name) + 1);
@@ -659,7 +660,7 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
                 if (!result) {
                     /* Create scope */
                     result = sym_fn(scope, search_name, len);
-                    scope = scp_f(root->context, scope, 0, result);
+                    scope = scp_f(root->context, scope, 0, result, SCOPE_NAMESPACE);
                     result->symbol_type = NAMESPACE_SYMBOL;
                     result->defines_scope = scope;
                 }
@@ -689,6 +690,102 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
     }
 
     /* Empty parameter */
+    return 0;
+}
+
+/* Resolve a Symbol - only in the current procedure (and nested local scopes) */
+Symbol *sym_rslv_local(Scope *scope, ASTNode *node) {
+    Symbol *result;
+    char *c;
+    /* Sadly we are making a null terminated string */
+    char *name = (char*)malloc(node->node_string_length + 1);
+    memcpy(name, node->node_string, node->node_string_length);
+    name[node->node_string_length] = 0;
+
+    /* Lowercase symbol name */
+#ifdef NUTF8
+    for (c = name ; *c; ++c) *c = (char)tolower(*c);
+#else
+    utf8lwr(name);
+#endif
+
+    /* Look for the symbol - looking up in each parent scope until we hit a PROCEDURE or CLASS */
+    do {
+        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
+        if (result) {
+            free(name);
+            return result;
+        }
+        if (scope->type == SCOPE_PROCEDURE || scope->type == SCOPE_CLASS) break;
+        scope = scope->parent;
+    } while (scope);
+    free(name);
+    return 0;
+}
+
+/* Resolve a Symbol - search for class attributes */
+Symbol *sym_rslv_attribute(Scope *scope, ASTNode *node) {
+    Symbol *result;
+    char *c;
+    /* Sadly we are making a null terminated string */
+    char *name = (char*)malloc(node->node_string_length + 1);
+    memcpy(name, node->node_string, node->node_string_length);
+    name[node->node_string_length] = 0;
+
+    /* Lowercase symbol name */
+#ifdef NUTF8
+    for (c = name ; *c; ++c) *c = (char)tolower(*c);
+#else
+    utf8lwr(name);
+#endif
+
+    /* Find the nearest CLASS scope */
+    while (scope && scope->type != SCOPE_CLASS) {
+        scope = scope->parent;
+    }
+
+    if (scope) {
+        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
+        free(name);
+        return result;
+    }
+
+    free(name);
+    return 0;
+}
+
+/* Resolve a Symbol - search for global symbols in namespaces */
+Symbol *sym_rslv_global(Scope *scope, ASTNode *node) {
+    Symbol *result;
+    char *c;
+    /* Sadly we are making a null terminated string */
+    char *name = (char*)malloc(node->node_string_length + 1);
+    memcpy(name, node->node_string, node->node_string_length);
+    name[node->node_string_length] = 0;
+
+    /* Lowercase symbol name */
+#ifdef NUTF8
+    for (c = name ; *c; ++c) *c = (char)tolower(*c);
+#else
+    utf8lwr(name);
+#endif
+
+    /* Find the nearest NAMESPACE or UNIVERSE scope */
+    while (scope && scope->type != SCOPE_NAMESPACE && scope->type != SCOPE_UNIVERSE) {
+        scope = scope->parent;
+    }
+
+    /* Look for the symbol - looking up in each parent scope (namespaces can be nested) */
+    while (scope) {
+        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
+        if (result) {
+            free(name);
+            return result;
+        }
+        scope = scope->parent;
+    }
+
+    free(name);
     return 0;
 }
 

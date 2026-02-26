@@ -547,11 +547,20 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
-        /* Scan imports now that namespaces are materialized; mark changed to rebuild symbols if any file loaded */
+        /* Scan imports now that namespaces are materialized; mark changed to rebuild symbols if any file loaded
+         * Progress: rxcp_scan_imports is idempotent. Uses 'imported' flag in the global importable_file_list.
+         */
         if (rxcp_scan_imports(context)) {
             context->changed = 1;
         }
         if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            rxcp_scan_imports(context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            rxcp_scan_imports(context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
         /* Mainly resolve symbols - functions
          * Progress: resolve_functions_walker is idempotent. Symbol association is guarded by !node->symbolNode.
@@ -585,9 +594,18 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
-        /* Validate Symbols */
+        /* Validate Symbols
+         * Progress: validate_symbols is idempotent. Symbols with types already resolved are skipped.
+         */
         validate_symbols(context, context->ast->scope);
         if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            validate_symbols(context, context->ast->scope);
+            rxcp_validate_ast_and_symbols(context->ast);
+            validate_symbols(context, context->ast->scope);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
         /* Set Node Types
          * Progress: set_node_types_walker is idempotent. Type setting is guarded by TP_UNKNOWN check.

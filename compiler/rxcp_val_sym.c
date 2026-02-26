@@ -51,7 +51,7 @@ walker_result build_symbols_walker(walker_direction direction,
                 context->current_scope = node->scope;
             } else {
                 /* This top level scope will contain the project file scope & imported file scopes */
-                context->current_scope = scp_f(context, context->current_scope, node, 0);
+                context->current_scope = scp_f(context, context->current_scope, node, 0, SCOPE_UNIVERSE);
                 node->scope = context->current_scope;
             }
         }
@@ -72,7 +72,7 @@ walker_result build_symbols_walker(walker_direction direction,
             if (symbol->defines_scope) {
                 context->current_scope = symbol->defines_scope;
             } else {
-                context->current_scope = scp_f(context, context->current_scope, node, symbol);
+                context->current_scope = scp_f(context, context->current_scope, node, symbol, SCOPE_NAMESPACE);
             }
             node->scope = context->current_scope;
         }
@@ -105,7 +105,7 @@ walker_result build_symbols_walker(walker_direction direction,
             if (symbol->defines_scope) {
                 context->current_scope = symbol->defines_scope;
             } else {
-                context->current_scope = scp_f(context, context->current_scope, node, symbol);
+                context->current_scope = scp_f(context, context->current_scope, node, symbol, SCOPE_CLASS);
             }
             node->scope = context->current_scope;
         }
@@ -154,7 +154,7 @@ walker_result build_symbols_walker(walker_direction direction,
             if (symbol->defines_scope) {
                 context->current_scope = symbol->defines_scope;
             } else {
-                context->current_scope = scp_f(context, context->current_scope, node, symbol);
+                context->current_scope = scp_f(context, context->current_scope, node, symbol, SCOPE_PROCEDURE);
             }
             node->scope = context->current_scope;
 
@@ -201,7 +201,7 @@ walker_result build_symbols_walker(walker_direction direction,
                 if (symbol->defines_scope) {
                     context->current_scope = symbol->defines_scope;
                 } else {
-                    context->current_scope = scp_f(context, namespaces, node->child, symbol);
+                    context->current_scope = scp_f(context, namespaces, node->child, symbol, SCOPE_NAMESPACE);
                 }
                 node->scope = context->current_scope;
             }
@@ -354,7 +354,7 @@ walker_result build_symbols_walker(walker_direction direction,
             if (node->scope) {
                 context->current_scope = node->scope;
             } else {
-                context->current_scope = scp_f(context, context->current_scope, node, 0);
+                context->current_scope = scp_f(context, context->current_scope, node, 0, SCOPE_LOCAL);
                 node->scope = context->current_scope;
             }
         }
@@ -372,7 +372,7 @@ walker_result build_symbols_walker(walker_direction direction,
                 if (node->scope) {
                     context->current_scope = node->scope;
                 } else {
-                    context->current_scope = scp_f(context, context->current_scope, node, 0);
+                    context->current_scope = scp_f(context, context->current_scope, node, 0, SCOPE_LOCAL);
                     node->scope = context->current_scope;
                 }
             } else {

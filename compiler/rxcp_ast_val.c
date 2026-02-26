@@ -75,6 +75,60 @@ static void validate_scope(Scope *scope, int *errors) {
         }
     }
 
+    /* Check hierarchy */
+    switch (scope->type) {
+        case SCOPE_UNIVERSE:
+            if (scope->parent) {
+                fprintf(stderr, "Scope Hierarchy Error: UNIVERSE scope %p has parent\n", (void*)scope);
+                (*errors)++;
+            }
+            if (scope->defining_node && scope->defining_node->node_type != REXX_UNIVERSE) {
+                fprintf(stderr, "Scope Hierarchy Error: UNIVERSE scope %p has wrong defining node type %s\n",
+                        (void*)scope, ast_ndtp(scope->defining_node->node_type));
+                (*errors)++;
+            }
+            break;
+        case SCOPE_NAMESPACE:
+            if (!scope->parent || (scope->parent->type != SCOPE_UNIVERSE && scope->parent->type != SCOPE_NAMESPACE)) {
+                fprintf(stderr, "Scope Hierarchy Error: NAMESPACE scope %p has invalid parent type %d\n",
+                        (void*)scope, scope->parent ? scope->parent->type : -1);
+                (*errors)++;
+            }
+            break;
+        case SCOPE_CLASS:
+            if (!scope->parent || scope->parent->type != SCOPE_NAMESPACE) {
+                fprintf(stderr, "Scope Hierarchy Error: CLASS scope %p has invalid parent type %d\n",
+                        (void*)scope, scope->parent ? scope->parent->type : -1);
+                (*errors)++;
+            }
+            if (scope->defining_node && scope->defining_node->node_type != CLASS_DEF) {
+                fprintf(stderr, "Scope Hierarchy Error: CLASS scope %p has wrong defining node type %s\n",
+                        (void*)scope, ast_ndtp(scope->defining_node->node_type));
+                (*errors)++;
+            }
+            break;
+        case SCOPE_PROCEDURE:
+            if (!scope->parent || (scope->parent->type != SCOPE_NAMESPACE && scope->parent->type != SCOPE_CLASS)) {
+                fprintf(stderr, "Scope Hierarchy Error: PROCEDURE scope %p has invalid parent type %d\n",
+                        (void*)scope, scope->parent ? scope->parent->type : -1);
+                (*errors)++;
+            }
+            if (scope->defining_node && scope->defining_node->node_type != PROCEDURE &&
+                scope->defining_node->node_type != METHOD && scope->defining_node->node_type != FACTORY) {
+                fprintf(stderr, "Scope Hierarchy Error: PROCEDURE scope %p has wrong defining node type %s\n",
+                        (void*)scope, ast_ndtp(scope->defining_node->node_type));
+                (*errors)++;
+            }
+            break;
+        case SCOPE_LOCAL:
+            if (!scope->parent || (scope->parent->type != SCOPE_PROCEDURE && scope->parent->type != SCOPE_LOCAL)) {
+                fprintf(stderr, "Scope Hierarchy Error: LOCAL scope %p has invalid parent type %d\n",
+                        (void*)scope, scope->parent ? scope->parent->type : -1);
+                (*errors)++;
+            }
+            break;
+    }
+
     /* Check symbols in this scope */
     Symbol **symbols = scp_syms(scope);
     if (symbols) {

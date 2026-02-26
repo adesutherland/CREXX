@@ -35,6 +35,7 @@
 struct Scope {
     ASTNode *defining_node;
     Scope *parent;
+    ScopeType type;
     char *name; /* Note that the name is free()'d by the destructor */
     numeric_context num_context; /* Numeric context - digite, fuzz, form, case */
     void *child_array;
@@ -86,7 +87,7 @@ char* type_nm(ValueType type);
 char* stype_nm(SymbolType type);
 
 /* Scope Factory */
-Scope *scp_f(Context *context, Scope *parent, ASTNode *node, Symbol* symbol);
+Scope *scp_f(Context *context, Scope *parent, ASTNode *node, Symbol* symbol, ScopeType type);
 
 /* Calls the handler for each symbol in scope */
 void scp_4all(Scope *scope, symbol_worker worker, void *payload);
@@ -154,6 +155,15 @@ Symbol *sym_rslv_type(Scope *scope, ASTNode *node, SymbolType type);
 
 /* Local Resolve a Symbol - current scope only */
 Symbol *sym_lrsv(Scope *scope, ASTNode *node);
+
+/* Resolve a Symbol - only in the current procedure (and nested local scopes) */
+Symbol *sym_rslv_local(Scope *scope, ASTNode *node);
+
+/* Resolve a Symbol - search for class attributes */
+Symbol *sym_rslv_attribute(Scope *scope, ASTNode *node);
+
+/* Resolve a Symbol - search for global symbols in namespaces */
+Symbol *sym_rslv_global(Scope *scope, ASTNode *node);
 
 /* Resolve a Function Symbol
  * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
