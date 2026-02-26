@@ -62,7 +62,6 @@ static void license() {
 }
 
 int main(int argc, char *argv[]) {
-
     FILE *fp;
     bin_space pgm;
     char *file_name;
@@ -75,6 +74,8 @@ int main(int argc, char *argv[]) {
     int print_all_constant_pool = 0;
     module_file *module;
     size_t modules_processed = 0;
+
+    platform_install_signal_handlers();
 
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);

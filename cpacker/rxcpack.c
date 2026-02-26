@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "platform.h"
 
 #define rxversion "crexx-dev-260110"
 
@@ -76,6 +77,8 @@ int main(int argc, char *argv[])
     char n_input[NAME_BUFFER_SIZE], n_output[NAME_BUFFER_SIZE];
     FILE *f_input, *f_output;
     char *output_file_name = 0;
+
+    platform_install_signal_handlers();
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {

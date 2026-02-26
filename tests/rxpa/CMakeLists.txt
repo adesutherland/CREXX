@@ -17,6 +17,7 @@ add_dependencies(_rxpa_dynlink rxpa library rxvm rxc) # The test (not plugin) de
 add_decl_plugin_target(_rxpalink rxpa_staticlink.c)
 # The static link test - a version of rxc that statically links the _rxpa_decl library
 add_executable(rxc_staticlink "${CMAKE_SOURCE_DIR}/compiler/rxc_main.c")
+target_include_directories(rxc_staticlink PRIVATE ${CMAKE_SOURCE_DIR}/platform)
 # Ensure the linker includes the plugin
 configure_linker_for_decl_lib(rxc_staticlink _rxpalink)
 # Add the dependencies and link libraries

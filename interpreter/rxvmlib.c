@@ -7,6 +7,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include "platform.h"
 #include "rxvmintp.h"
 #include "rxvmplugin_framework.h"
 #include "rxvm.h"
@@ -47,7 +48,7 @@ static void error_and_exit(char* message) {
 static void license() {
     char *message =
             "cREXX License (MIT)\n"
-            "Copyright (c) 2020-2025 Adrian Sutherland\n\n"
+            "Copyright (c) 2020-2026 Adrian Sutherland\n\n"
 
             "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
             "of this software and associated documentation files (the \"Software\"), to deal\n"
@@ -72,11 +73,12 @@ static void license() {
 }
 
 int main(int argc, char *argv[]) {
-
     char *file_name;
     int i, j;
     int rc;
     rxvm_context context;
+
+    platform_install_signal_handlers();
 
 #ifdef _WIN32
     /* Enable UTF-8 Processes */

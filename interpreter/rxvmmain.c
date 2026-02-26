@@ -7,6 +7,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include "platform.h"
 #include "rxvmintp.h"
 #include "rxvmplugin_framework.h"
 #include "rxvm.h"
@@ -78,7 +79,6 @@ static void license() {
 }
 
 int main(int argc, char *argv[]) {
-
     char *file_name;
     char *combined_location = 0;
     char *exe_path = 0;
@@ -86,6 +86,8 @@ int main(int argc, char *argv[]) {
     int rc;
     rxvm_context context;
     size_t num_modules;
+
+    platform_install_signal_handlers();
 
 #ifdef _WIN32
     /* Enable UTF-8 Processes */

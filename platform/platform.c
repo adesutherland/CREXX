@@ -97,6 +97,57 @@ char *strip_rightmost_extension_if(const char *name, const char *ext) {
     return strdup(name);
 }
 
+#if !defined(_WIN32) && !defined(__CMS__)
+#include <termios.h>
+#include <unistd.h>
+#include <signal.h>
+
+static struct termios orig_termios;
+static int termios_saved = 0;
+
+void platform_term_save() {
+    if (!termios_saved) {
+        if (isatty(STDIN_FILENO)) {
+            if (tcgetattr(STDIN_FILENO, &orig_termios) == 0) {
+                termios_saved = 1;
+            }
+        }
+    }
+}
+
+void platform_term_restore() {
+    if (termios_saved) {
+        tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
+    }
+}
+
+static void signal_handler(int sig) {
+    platform_term_restore();
+    /* Re-raise the signal or exit */
+    signal(sig, SIG_DFL);
+    raise(sig);
+}
+
+void platform_install_signal_handlers() {
+    platform_term_save();
+    if (termios_saved) {
+        atexit(platform_term_restore);
+        signal(SIGSEGV, signal_handler);
+        signal(SIGILL, signal_handler);
+        signal(SIGFPE, signal_handler);
+        signal(SIGBUS, signal_handler);
+        signal(SIGABRT, signal_handler);
+        signal(SIGINT, signal_handler);
+        signal(SIGTERM, signal_handler);
+    }
+}
+#else
+/* Stub for Windows or other platforms if not needed */
+void platform_term_save() {}
+void platform_term_restore() {}
+void platform_install_signal_handlers() {}
+#endif
+
 /*
  * Function checks if a file exists
  * dir can be null, and can contain multiple directories separated by ;

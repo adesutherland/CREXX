@@ -56,6 +56,7 @@ target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CU
         ${CMAKE_SOURCE_DIR}/binutils/include)
 
 add_executable(rxc rxc_main.c)
+target_include_directories(rxc PRIVATE ${CMAKE_SOURCE_DIR}/platform)
 # Link only what is not already linked transitively by rxclib to reduce duplicate library warnings
 # rxclib already links: avl_tree, platform, rxaslib, rxpa, rxbvml, m
 # rxc additionally needs the VM plugin framework and decimal plugin

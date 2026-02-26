@@ -163,6 +163,8 @@ int main(int argc, char *argv[]) {
     char *exe_path = 0;
     int i;
 
+    platform_install_signal_handlers();
+
     /* Load Instruction Database */
     /* init_ops(); - NO LONGER NEEDED */
 

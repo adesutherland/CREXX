@@ -116,4 +116,11 @@ int has_any_extension(const char *name);
 /* Strips the rightmost extension from a filename if it matches the provided extension */
 char *strip_rightmost_extension_if(const char *name, const char *ext);
 
+/*
+ * Terminal management functions for ensuring sane terminal state on exit/crash
+ */
+void platform_term_save(void);
+void platform_term_restore(void);
+void platform_install_signal_handlers(void);
+
 #endif //CREXX_PLATFORM_H
