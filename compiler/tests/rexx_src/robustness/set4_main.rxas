@@ -1,0 +1,49 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : set4_main.rexx
+ * BUILT                  : 2026-02-27 10:04:41
+ */
+
+.srcfile="set4_main.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "set4_main.main"="b" ".int" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 5:1="say \"Call mid_func:\" mid_func"
+   load r0,0
+   call r1,mid_func(),r0
+   sconcat r1,"Call mid_func:",r1
+   say r1
+   .src 9:1="say \"mid_func variable:\" mid_func"
+   .meta "set4_main.main.mid_func"="b" ".string" "Local Shadow"
+   say "mid_func variable: Local Shadow"
+   .src 12:1="say \"Word 2 of 'A B C' is:\" word(\"A B C\", 2)"
+   load r0,2
+   load r1,"A B C"
+   load r2,2
+   settp r1,3
+   call r3,word(),r0
+   sconcat r3,"Word 2 of \'A B C\' is:",r3
+   say r3
+   .src 16:1="say \"word variable:\" word"
+   .meta "set4_main.main.word"="b" ".string" "Shadowed BIF"
+   say "word variable: Shadowed BIF"
+   .src 18:1="return 0"
+   ret 0
+   .meta "set4_main.main.mid_func"
+   .meta "set4_main.main.word"
+
+/* Imported Declaration from file: set4_mid.rxas */
+
+mid_func() .expose=set4_mid.mid_func
+   .meta "set4_mid.mid_func"="b" ".string" mid_func() "" ""
+
+/* Imported Declaration from file: word@library.rxbin */
+
+word() .expose=rxfnsb.word
+   .meta "rxfnsb.word"="b" ".string" word() "string=.string,wordnum=.int" ""

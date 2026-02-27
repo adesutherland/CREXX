@@ -1,0 +1,76 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : set1_lib.rexx
+ * BUILT                  : 2026-02-27 10:04:40
+ */
+
+.srcfile="set1_lib.rexx"
+.globals=2
+g0 .expose=set1_lib.glob_int
+g1 .expose=set1_lib.glob_string
+
+main() .locals=0
+   .meta "set1_lib.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:1="glob_int = 42"
+   load g0,42
+   .src 5:1="glob_string = \"Hello\""
+   load g1,"Hello"
+   .src 5:22=""
+   ret
+   .meta "set1_lib.glob_string"
+
+get_val() .locals=0 .expose=set1_lib.get_val
+   .meta "set1_lib.get_val"="b" ".int" get_val() "" ""
+   .src 7:1="get_val: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 8:3="return glob_int"
+   ret g0
+   .meta "set1_lib.glob_int"
+
+set_val() .locals=0 .expose=set1_lib.set_val
+   .meta "set1_lib.set_val"="b" ".void" set_val() "x=.int" ""
+   .src 10:1="set_val: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 11:7="x = .int"
+   .meta "set1_lib.set_val.x"="b" ".int" a1
+   .src 12:3="glob_int = x"
+   icopy g0,a1
+   .src 13:3="return"
+   ret
+   .meta "set1_lib.set_val.x"
+   .meta "set1_lib.glob_int"
+
+is_true() .locals=0 .expose=set1_lib.is_true
+   .meta "set1_lib.is_true"="b" ".boolean" is_true() "" ""
+   .src 15:1="is_true: procedure = .boolean"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 16:3="return 1"
+   ret 1
+
+is_false() .locals=0 .expose=set1_lib.is_false
+   .meta "set1_lib.is_false"="b" ".boolean" is_false() "" ""
+   .src 18:1="is_false: procedure = .boolean"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 19:3="return 0"
+   ret 0

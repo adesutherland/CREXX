@@ -79,6 +79,35 @@ macro(add_crexx_parsing_test NAME SOURCE_FILE)
              $<TARGET_FILE:rxc> -dp ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
 endmacro()
 
+# Robustness tests
+macro(add_crexx_robustness_test NAME MAIN_FILE)
+    # The list of dependencies are passed as additional arguments
+    set(DEPS ${ARGN})
+    set(DEP_BINS "")
+    set(BUILD_DEPS_CMD "")
+    foreach(DEP ${DEPS})
+        # Extract lib name from filename
+        get_filename_component(DEP_NAME ${DEP} NAME_WE)
+        set(BUILD_DEPS_CMD "${BUILD_DEPS_CMD} && $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness -o ${DEP_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness/${DEP}")
+        set(BUILD_DEPS_CMD "${BUILD_DEPS_CMD} && $<TARGET_FILE:rxas> -o ${DEP_NAME}.rxbin ${DEP_NAME}")
+        set(DEP_BINS "${DEP_BINS} ${DEP_NAME}.rxbin")
+    endforeach()
+
+    add_test(NAME robustness_${NAME}
+             COMMAND bash -c "$<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness -i ${CMAKE_BINARY_DIR}/bin -o ${NAME} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness/${MAIN_FILE} && $<TARGET_FILE:rxas> -o ${NAME}.rxbin ${NAME} ${BUILD_DEPS_CMD} && $<TARGET_FILE:rxvm> ${NAME}.rxbin ${DEP_BINS} ${CMAKE_BINARY_DIR}/bin/library.rxbin | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endmacro()
+
+add_crexx_robustness_test(set1_main set1_main.rexx set1_lib.rexx)
+add_crexx_robustness_test(set2_main set2_main.rexx set2_lib.rexx)
+add_crexx_robustness_test(set3_main set3_main.rexx set3_lib.rexx)
+add_crexx_robustness_test(set4_main set4_main.rexx set4_mid.rexx set4_base.rexx)
+
+# Set 5 - Encapsulation (Expected to fail compilation)
+add_test(NAME robustness_set5_encapsulation
+         COMMAND bash -c "! $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness -o set5_main ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness/set5_main.rexx"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 # Example tests
 add_crexx_compiler_test(01_assign rexx_src/01_assign.rexx)
 add_crexx_compiler_test(02_flow rexx_src/02_flow.rexx)

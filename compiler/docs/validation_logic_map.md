@@ -51,10 +51,12 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
     *   Constructs the Symbol Table and defines Scopes for the current tree state.
     *   *Idempotency*: Uses existing scopes if already created; `sym_adnd` prevents duplicate symbols.
     *   *Resolution*: Uses **Specialized Resolvers** (`sym_rslv_local`, `sym_rslv_attribute`, `sym_rslv_global`) to prevent "accidental" linkage.
+    *   **Shadowing Fix**: Defers creation of local `VARIABLE_SYMBOL` entries for `VAR_SYMBOL` and `EXIT_TOKEN` nodes in the first iteration if they potentially refer to a global function or BIF. This prevents early local placeholders from shadowing global imports.
 
 9.  **Function Resolution (`resolve_functions_walker`)**: 
     *   Links function calls to their definitions (including newly injected code).
     *   *Idempotency*: Guarded by `!node->symbolNode`.
+    *   *Global Search*: If not found locally, it searches across all PROGRAM_FILE and IMPORTED_FILE roots (`sym_rvfc`).
 
 10. **Exposed Symbol Resolution (`exposed_symbols_walker`)**: 
     *   Handles variable exposure across procedure boundaries using `sym_hoist_to_namespace`.
@@ -112,6 +114,25 @@ The AST/Symbol validator (`rxcp_validate_ast_and_symbols`) asserts these rules i
 *   `SCOPE_CLASS` parent must be `SCOPE_NAMESPACE`.
 *   `SCOPE_NAMESPACE` parent must be `SCOPE_UNIVERSE` or `SCOPE_NAMESPACE`.
 *   `node->symbolNode->symbol->node == node` (Bi-directional linkage).
+
+## Namespace and Import Behavior
+
+### 1. The `import` Instruction
+*   `import` brings an entire **namespace** into the local resolution scope.
+*   It does **not** simply include a file; it populates the `importable_function_tree` in the `master_context` with all symbols exposed by that namespace.
+*   **Resolution Order**: Local -> Attribute (if in class) -> Current Namespace -> Imported Namespaces.
+*   **Qualified Names**: Qualified access (e.g., `Namespace.Function()`) is **NOT supported**. All calls must be direct.
+
+### 2. Exposing Symbols
+*   Only symbols explicitly listed in the `expose` clause of a `namespace` instruction are visible to other files.
+*   **Syntax**: `namespace name expose sym1 sym2 sym3` (Space-separated, commas are **NOT** used).
+*   **Surprises**:
+    *   **Variables**: Currently, global variables from imported namespaces are **NOT** resolved automatically by the `import` instruction because `sym_imva` (which handles global variables) is restricted to searching the current file's namespace (`only_namespace = 1`).
+    *   **Runtime**: `rxvm` requires all involved `.rxbin` files to be provided on the command line to resolve symbols at runtime.
+
+### 3. Class Imports
+*   Classes are imported as **Stubs**. The compiler parses the imported file, extracts the class signature (methods, factories), and injects a stub definition into the `master_context`'s AST.
+*   **On-Demand Import**: Currently, class stubs are only imported if the class name is **explicitly referenced** in the source code (e.g., via a factory call `.ClassName()` or a typed variable definition). Merely having a function return an object of that class does **not** automatically trigger the class stub import, which may lead to unresolved method calls at the call site.
 
 ## Business Rule Inventory ("The Magic")
 

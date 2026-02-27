@@ -1,0 +1,111 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : set3_lib.rexx
+ * BUILT                  : 2026-02-27 10:04:41
+ */
+
+.meta "set3_lib.item"="b" ".unknown" .class
+.meta "set3_lib.item.val"="b" ".string" .attr 1
+.srcfile="set3_lib.rexx"
+.globals=0
+
+§set3_lib.item.§factory() .locals=2 .expose=set3_lib.item.§factory
+   .meta "set3_lib.item.§factory"="b" ".void" §set3_lib.item.§factory() "v=.string" ""
+   .src 6:3="*: factory"
+   setattrs r0,2
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 7:9="v = .string"
+   .meta "set3_lib.item.§factory.v"="b" ".string" a1
+   .src 8:5="val = v"
+   linkattr1 r1,r0,1
+   scopy r1,a1
+   unlink r1
+   .src 9:5="return"
+   .meta "set3_lib.item.§factory.§factory"="b" ".item" r0
+   ret r0
+   .meta "set3_lib.item.§factory.v"
+   .meta "set3_lib.item.§factory.§factory"
+
+§set3_lib.item.get_val() .locals=1 .expose=set3_lib.item.get_val
+   .meta "set3_lib.item.get_val"="b" ".string" §set3_lib.item.get_val() "" ""
+   .src 10:3="get_val: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 11:5="return val"
+   .meta "set3_lib.item.get_val.§this"="b" ".item" a1
+   linkattr1 r0,a1,1
+   ret r0
+   .meta "set3_lib.item.get_val.§this"
+
+get_int_array() .locals=3 .expose=set3_lib.get_int_array
+   .meta "set3_lib.get_int_array"="b" ".int[*]" get_int_array() "" ""
+   .src 13:1="get_int_array: procedure = .int[]"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "set3_lib.get_int_array.a"="b" ".int[3]" r0
+   .src 14:3="a = .int[3"
+   null r0
+   .src 15:3="a[1] = 10"
+   setattrs r0,3
+   linkattr1 r1,r0,1
+   load r2,10
+   icopy r1,r2
+   unlink r1
+   .src 16:3="a[2] = 20"
+   setattrs r0,3
+   linkattr1 r2,r0,2
+   load r1,20
+   icopy r2,r1
+   unlink r2
+   .src 17:3="a[3] = 30"
+   setattrs r0,3
+   linkattr1 r2,r0,3
+   load r1,30
+   icopy r2,r1
+   unlink r2
+   .src 18:3="return a"
+   ret r0
+   .meta "set3_lib.get_int_array.a"
+
+get_person_array() .locals=5 .expose=set3_lib.get_person_array
+   .meta "set3_lib.get_person_array"="b" ".item[*]" get_person_array() "" ""
+   .src 20:1="get_person_array: procedure = .Item[]"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "set3_lib.get_person_array.a"="b" ".item[2]" r0
+   .src 21:3="a = .Item[2"
+   null r0
+   .src 22:3="a[1] = Item((\"First\")"
+   setattrs r0,2
+   linkattr1 r1,r0,1
+   load r2,1
+   load r3,"First"
+   settp r3,3
+   call r4,§set3_lib.item.§factory(),r2
+   copy r1,r4
+   unlink r1
+   .src 23:3="a[2] = Item((\"Second\")"
+   setattrs r0,2
+   linkattr1 r4,r0,2
+   load r2,1
+   load r3,"Second"
+   settp r3,3
+   call r1,§set3_lib.item.§factory(),r2
+   copy r4,r1
+   unlink r4
+   .src 24:3="return a"
+   ret r0
+   .meta "set3_lib.get_person_array.a"

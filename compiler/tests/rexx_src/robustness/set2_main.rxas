@@ -1,0 +1,64 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : set2_main.rexx
+ * BUILT                  : 2026-02-27 10:04:40
+ */
+
+.meta "set2_lib.person"="b" ".unknown" .class
+.srcfile="set2_main.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "set2_main.main"="b" ".int" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:1="p = Person((\"Alice\", 30"
+   .meta "set2_main.main.p"="b" ".person" r0
+   load r1,2
+   load r2,"Alice"
+   load r3,30
+   settp r2,3
+   call r0,§set2_lib.person.§factory(),r1
+   .src 5:1="say \"Name:\" p.get_name"
+   load r2,1
+   settp r0,1
+   swap r3,r0
+   call r1,§set2_lib.person.get_name(),r2
+   swap r0,r3
+   sconcat r3,"Name:",r1
+   say r3
+   .src 6:1="say \"Age:\" p.get_age"
+   load r2,1
+   settp r0,1
+   swap r3,r0
+   call r1,§set2_lib.person.get_age(),r2
+   swap r0,r3
+   itos r1
+   sconcat r3,"Age:",r1
+   say r3
+   .src 7:1="call p.say_hello"
+   load r2,1
+   settp r0,1
+   swap r3,r0
+   call r1,§set2_lib.person.say_hello(),r2
+   swap r0,r3
+   .src 9:1="return 0"
+   ret 0
+   .meta "set2_main.main.p"
+
+/* Imported Declaration from file: set2_lib.rxas */
+
+§set2_lib.person.§factory() .expose=set2_lib.person.§factory
+   .meta "set2_lib.person.§factory"="b" ".void" §set2_lib.person.§factory() "n=.string,a=.int" ""
+
+§set2_lib.person.get_name() .expose=set2_lib.person.get_name
+   .meta "set2_lib.person.get_name"="b" ".string" §set2_lib.person.get_name() "" ""
+
+§set2_lib.person.get_age() .expose=set2_lib.person.get_age
+   .meta "set2_lib.person.get_age"="b" ".int" §set2_lib.person.get_age() "" ""
+
+§set2_lib.person.say_hello() .expose=set2_lib.person.say_hello
+   .meta "set2_lib.person.say_hello"="b" ".void" §set2_lib.person.say_hello() "" ""

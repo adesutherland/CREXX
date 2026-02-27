@@ -1,0 +1,90 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : set2_lib.rexx
+ * BUILT                  : 2026-02-27 10:04:40
+ */
+
+.meta "set2_lib.person"="b" ".unknown" .class
+.meta "set2_lib.person.age"="b" ".int" .attr 2
+.meta "set2_lib.person.name"="b" ".string" .attr 1
+.srcfile="set2_lib.rexx"
+.globals=0
+
+§set2_lib.person.§factory() .locals=2 .expose=set2_lib.person.§factory
+   .meta "set2_lib.person.§factory"="b" ".void" §set2_lib.person.§factory() "n=.string,a=.int" ""
+   .src 8:3="*: factory"
+   setattrs r0,3
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 9:9="n = .string"
+   .meta "set2_lib.person.§factory.n"="b" ".string" a1
+   .src 9:22="a = .int"
+   .meta "set2_lib.person.§factory.a"="b" ".int" a2
+   .src 10:5="name = n"
+   linkattr1 r1,r0,1
+   scopy r1,a1
+   unlink r1
+   .src 11:5="age = a"
+   linkattr1 r1,r0,2
+   icopy r1,a2
+   unlink r1
+   .src 12:5="return"
+   .meta "set2_lib.person.§factory.§factory"="b" ".person" r0
+   ret r0
+   .meta "set2_lib.person.§factory.a"
+   .meta "set2_lib.person.§factory.n"
+   .meta "set2_lib.person.§factory.§factory"
+
+§set2_lib.person.get_name() .locals=1 .expose=set2_lib.person.get_name
+   .meta "set2_lib.person.get_name"="b" ".string" §set2_lib.person.get_name() "" ""
+   .src 14:3="get_name: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 15:5="return name"
+   .meta "set2_lib.person.get_name.§this"="b" ".person" a1
+   linkattr1 r0,a1,1
+   ret r0
+   .meta "set2_lib.person.get_name.§this"
+
+§set2_lib.person.get_age() .locals=1 .expose=set2_lib.person.get_age
+   .meta "set2_lib.person.get_age"="b" ".int" §set2_lib.person.get_age() "" ""
+   .src 17:3="get_age: method = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 18:5="return age"
+   .meta "set2_lib.person.get_age.§this"="b" ".person" a1
+   linkattr1 r0,a1,2
+   ret r0
+   .meta "set2_lib.person.get_age.§this"
+
+§set2_lib.person.say_hello() .locals=3 .expose=set2_lib.person.say_hello
+   .meta "set2_lib.person.say_hello"="b" ".void" §set2_lib.person.say_hello() "" ""
+   .src 20:3="say_hello: method"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 21:5="say \"Hello, my name is\" name \"and I am\" age \"years old.\""
+   .meta "set2_lib.person.say_hello.§this"="b" ".person" a1
+   linkattr1 r0,a1,1
+   sconcat r1,"Hello, my name is",r0
+   unlink r0
+   sconcat r1,r1,"and I am"
+   linkattr1 r2,a1,2
+   sconcat r1,r1,r2
+   unlink r2
+   sconcat r1,r1,"years old."
+   say r1
+   .src 22:5="return"
+   ret
+   .meta "set2_lib.person.say_hello.§this"
