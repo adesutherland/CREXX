@@ -69,6 +69,44 @@ char* mprintf(const char* format, ...) {
     return buffer;
 }
 
+/* Collect and Prune diagnostics walker */
+static walker_result collect_diagnostics_walker(walker_direction direction,
+                                                ASTNode* node,
+                                                void *payload) {
+    Context *context = (Context*)payload;
+    if (direction == in) {
+        ASTNode *child = node->child;
+        ASTNode *prev = NULL;
+        while (child) {
+            if (child->node_type == ERROR || child->node_type == WARNING) {
+                ASTNode *diagnostic = child;
+
+                /* Detach from AST */
+                if (prev) prev->sibling = diagnostic->sibling;
+                else node->child = diagnostic->sibling;
+
+                /* Add to Side List (lifo) */
+                diagnostic->sibling = (ASTNode*)context->diagnostics_list;
+                context->diagnostics_list = diagnostic;
+
+                /* Continue with next child (don't update prev) */
+                child = prev ? prev->sibling : node->child;
+            } else {
+                prev = child;
+                child = child->sibling;
+            }
+        }
+    }
+    return result_normal;
+}
+
+/* Public API to prune diagnostics from AST and store in side list for safe emission */
+void rxcp_collect_and_prune_diagnostics(Context *context) {
+    if (context->ast) {
+        ast_wlkr(context->ast, collect_diagnostics_walker, context);
+    }
+}
+
 #define ADD_CHAR_TO_BUFFER(ch) {out_len++; if (buffer_len) { *(buffer++) = (ch); buffer_len--; }}
 
 static size_t encode_print(char* buffer, size_t buffer_len, const char* string, size_t length) {

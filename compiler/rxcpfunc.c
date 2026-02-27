@@ -1517,11 +1517,54 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
 
         /* Resolution of the FQN in the main AST should now work */
         found_symbol = sym_rfqn(context->ast, found_cls->fqname);
-        if (found_symbol) found_symbol->exposed = 1;
+        if (found_symbol) {
+            found_symbol->exposed = 1;
+            found_symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
+        }
     }
 
     free(name);
     return found_symbol;
+}
+
+/* Check if a symbol is importable (Function or Variable) - return 1 if it is, 0 otherwise */
+int sym_is_glob(Context *context, ASTNode *node) {
+    imported_func *func;
+    char *name;
+    int found = 0;
+
+    /* Make a null terminated string */
+    if (node->node_string[0] == '.') {
+        name = (char*)malloc(node->node_string_length);
+        memcpy(name, node->node_string + 1, node->node_string_length - 1);
+        name[node->node_string_length - 1] = 0;
+    } else {
+        name = (char*)malloc(node->node_string_length + 1);
+        memcpy(name, node->node_string, node->node_string_length);
+        name[node->node_string_length] = 0;
+    }
+
+    /* Lowercase symbol name */
+#ifdef NUTF8
+    char *c;
+    for (c = name; *c; ++c) *c = (char)tolower(*c);
+#else
+    utf8lwr(name);
+#endif
+
+    /* Check if the symbol is already in the master AST */
+    if (sym_rvfn(context->ast, name)) {
+        free(name);
+        return 1;
+    }
+
+    /* Check unread files */
+    if (src_fqfu(context, 0, name, &func)) {
+        found = 1;
+    }
+
+    free(name);
+    return found;
 }
 
 /* Check if a function is importable - return 1 if it is a function, 0 otherwise */
@@ -1684,6 +1727,7 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
             found_symbol = sym_rfqn(context->ast, found_func->fqname);
             if (found_symbol) {
                 found_symbol->exposed = 1; /* Exposed by definition! */
+                found_symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
                 found_symbol->is_arg = 0; /* Can't expose args */
                 found_symbol->is_opt_arg = 0;
                 found_symbol->is_ref_arg = 0;
@@ -1713,7 +1757,7 @@ void sym_imva(Context *context, Symbol *symbol) {
     do {
         if (!found_var) {
             /* Check if the function has been loaded */
-            if (src_fqfu(context, 1, symbol->name, &var)) {
+            if (src_fqfu(context, 0, symbol->name, &var)) {
                 if (context->debug_mode >= 2) printf("Importing Globals - Found Global Symbol %s\n", var->fqname);
                 found_var = var;
             }
@@ -1755,6 +1799,7 @@ void sym_imva(Context *context, Symbol *symbol) {
         }
         if (!error) {
             symbol->type = tp;
+            symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
         }
     }
 }

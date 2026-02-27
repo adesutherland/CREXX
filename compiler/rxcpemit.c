@@ -137,7 +137,7 @@ static walker_result emit_walker(walker_direction direction,
                 if (node->output) output_prepend_text(comment_meta, node->output);
                 else node->output = output_fs(comment_meta);
                 free(comment_meta);
-                if (node->child->node_type == VAR_TARGET || node->child->node_type == VAR_REFERENCE) {
+                if (child1->node_type == VAR_TARGET || child1->node_type == VAR_REFERENCE) {
                     /* Add Variable Metadata */
                     add_variable_metadata(node);
 

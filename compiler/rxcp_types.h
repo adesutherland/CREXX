@@ -86,6 +86,16 @@ typedef enum SymbolType {
     UNKNOWN_SYMBOL=0, CONSTANT_SYMBOL, VARIABLE_SYMBOL, FUNCTION_SYMBOL, CLASS_SYMBOL, NAMESPACE_SYMBOL
 } SymbolType;
 
+typedef enum SymbolStatus {
+    SYM_STATUS_UNRESOLVED,     /* Initial state: Name encountered but definition/linkage not yet attempted. */
+    SYM_STATUS_LOCAL_DEF,      /* Explicitly defined in the current unit (e.g., PROCEDURE, CLASS). */
+    SYM_STATUS_LOCAL_VAR,      /* Inferred as a local variable (e.g., via assignment or typed declaration). */
+    SYM_STATUS_RESOLVED_GLOBAL, /* Successfully linked to a global definition (Imported Function/Variable or BIF). */
+    SYM_STATUS_PENDING_STUB,   /* Name identified as a required external class stub not yet loaded. */
+    SYM_STATUS_AMBIGUOUS,      /* Resolution failed due to multiple conflicting definitions. */
+    SYM_STATUS_NOT_FOUND       /* Final state: Name could not be resolved after all attempts. */
+} SymbolStatus;
+
 typedef enum walker_direction { in, out } walker_direction;
 typedef enum walker_result {
     result_normal, result_abort, result_error, request_skip

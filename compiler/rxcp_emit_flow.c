@@ -61,7 +61,7 @@ void emit_flow(ASTNode *node, void *pl) {
             while (n) {
                 if (n->output) output_concat(node->output, n->output);
                 if (n->cleanup) output_concat(node->output, n->cleanup);
-                n = n->sibling;
+                n = ast_nsib(n);
             }
             break;
 
@@ -321,20 +321,20 @@ void emit_flow(ASTNode *node, void *pl) {
             n = node->parent->child; /* First sibling */
             while (n) {
                 if (n->node_type == BY) {
-                    if (n->child) {
-                        if (is_constant(n->child)) {
-                            if (n->child->value_type == n->child->target_type) {
+                    if (ast_chdn(n, 0)) {
+                        if (is_constant(ast_chdn(n, 0))) {
+                            if (ast_chdn(n, 0)->value_type == ast_chdn(n, 0)->target_type) {
                                 /* Is a constant */
-                                if (n->child->value_type == TP_INTEGER) {
-                                    if (n->child->int_value >= 0) j = 1;
+                                if (ast_chdn(n, 0)->value_type == TP_INTEGER) {
+                                    if (ast_chdn(n, 0)->int_value >= 0) j = 1;
                                     else j = -1;
                                 }
-                                else if (n->child->value_type == TP_FLOAT) {
-                                    if (n->child->float_value >= 0.0) j = 1;
+                                else if (ast_chdn(n, 0)->value_type == TP_FLOAT) {
+                                    if (ast_chdn(n, 0)->float_value >= 0.0) j = 1;
                                     else j = -1;
                                 }
-                                else if (n->child->value_type == TP_DECIMAL) {
-                                    if (n->child->decimal_value[0] == '-') j = -1;
+                                else if (ast_chdn(n, 0)->value_type == TP_DECIMAL) {
+                                    if (ast_chdn(n, 0)->decimal_value[0] == '-') j = -1;
                                     else j = 1;
                                 }
                                 else j = 1;
@@ -360,8 +360,8 @@ void emit_flow(ASTNode *node, void *pl) {
                                     node->additional_registers,
                                     node->parent->register_type,
                                     node->parent->register_num,
-                                    node->child->register_type,
-                                    node->child->register_num,
+                                    child1->register_type,
+                                    child1->register_num,
                                     node->parent->parent->node_number,
                                     node->additional_registers);
                     break;
@@ -371,8 +371,8 @@ void emit_flow(ASTNode *node, void *pl) {
                                     node->additional_registers,
                                     node->parent->register_type,
                                     node->parent->register_num,
-                                    node->child->register_type,
-                                    node->child->register_num,
+                                    child1->register_type,
+                                    child1->register_num,
                                     node->parent->parent->node_number,
                                     node->additional_registers);
                     break;
@@ -395,8 +395,8 @@ void emit_flow(ASTNode *node, void *pl) {
 
                             tp_prefix,
                             node->additional_registers,
-                            n->child->register_type,
-                            n->child->register_num,
+                            ast_chdn(n, 0)->register_type,
+                            ast_chdn(n, 0)->register_num,
                             op,
                             node->parent->parent->node_number,
                             node->additional_registers,
@@ -405,8 +405,8 @@ void emit_flow(ASTNode *node, void *pl) {
                             node->additional_registers,
                             node->parent->register_type,
                             node->parent->register_num,
-                            node->child->register_type,
-                            node->child->register_num,
+                            child1->register_type,
+                            child1->register_num,
                             node->parent->parent->node_number,
                             node->parent->parent->node_number,
                             node->additional_registers,
@@ -416,8 +416,8 @@ void emit_flow(ASTNode *node, void *pl) {
                             node->additional_registers,
                             node->parent->register_type,
                             node->parent->register_num,
-                            node->child->register_type,
-                            node->child->register_num,
+                            child1->register_type,
+                            child1->register_num,
                             node->parent->parent->node_number,
                             node->additional_registers,
 

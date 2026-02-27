@@ -660,6 +660,7 @@ void validate_ast(Context *context) {
         }
 
         context->iterations++;
+        if (context->debug_mode >= 2) fprintf(stderr, "DEBUG: Iteration %d finished, changed=%d\n", context->iterations, context->changed);
         /* Incremental update of symbols - So walkers can avoid duplicate processing */
         if (context->iterations == 1) context->after_rewrite = 1;
 

@@ -496,6 +496,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->name[name_length] = 0;
     symbol->register_type = 'r';
     symbol->symbol_type = VARIABLE_SYMBOL;
+    symbol->status = SYM_STATUS_UNRESOLVED;
     symbol->meta_emitted = 0;
     symbol->init_emitted = 0;
     symbol->fixed_args = 0;
@@ -662,6 +663,7 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
                     result = sym_fn(scope, search_name, len);
                     scope = scp_f(root->context, scope, 0, result, SCOPE_NAMESPACE);
                     result->symbol_type = NAMESPACE_SYMBOL;
+                    result->status = SYM_STATUS_LOCAL_DEF;
                     result->defines_scope = scope;
                 }
                 else if (!result->defines_scope) {

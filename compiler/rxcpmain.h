@@ -41,6 +41,7 @@
 void validate_ast(Context *context);
 void rxcp_val(Context *context);
 void rxcp_bvl(Context *context);
+void rxcp_collect_and_prune_diagnostics(Context *context);
 void ast_dump_text(FILE* out, ASTNode* node, int indent);
 
 /* Import scanning API */

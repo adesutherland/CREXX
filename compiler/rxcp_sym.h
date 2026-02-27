@@ -67,6 +67,7 @@ struct Symbol {
     int *dim_elements;    /* Array of max number of elements for array dimension (0=infinite) - malloced or zero */
     char* value_class;    /* Value class name - malloced or zero */
     SymbolType symbol_type;
+    SymbolStatus status;
     int register_num;
     char register_type;
     size_t fixed_args; /* Number of fixed arguments (for a procedure) */

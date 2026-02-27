@@ -364,9 +364,18 @@ walker_result add_dast_walker_handler1(walker_direction direction,
                 /* Need to make a new symbol */
                 new_symbol = sym_afqn(context->dest, fqname);
                 new_node->scope = scp_f(new_node->context, new_node->parent->scope, new_node, new_symbol, node->scope->type);
-                if (node->scope->type == SCOPE_NAMESPACE) new_symbol->symbol_type = NAMESPACE_SYMBOL;
-                else if (node->scope->type == SCOPE_CLASS) new_symbol->symbol_type = CLASS_SYMBOL;
-                else new_symbol->symbol_type = FUNCTION_SYMBOL;
+                if (node->scope->type == SCOPE_NAMESPACE) {
+                    new_symbol->symbol_type = NAMESPACE_SYMBOL;
+                    new_symbol->status = SYM_STATUS_LOCAL_DEF;
+                }
+                else if (node->scope->type == SCOPE_CLASS) {
+                    new_symbol->symbol_type = CLASS_SYMBOL;
+                    new_symbol->status = SYM_STATUS_LOCAL_DEF;
+                }
+                else {
+                    new_symbol->symbol_type = FUNCTION_SYMBOL;
+                    new_symbol->status = SYM_STATUS_LOCAL_DEF;
+                }
                 new_symbol->defines_scope = new_node->scope;
                 //new_symbol->scope->defining_node
             }
@@ -384,6 +393,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
             }
             if (new_symbol) {
                 new_symbol->symbol_type = symbol->symbol_type;
+                new_symbol->status = symbol->status;
                 new_symbol->type = symbol->type;
                 new_symbol->exposed = symbol->exposed;
                 new_symbol->fixed_args = symbol->fixed_args;
@@ -639,6 +649,7 @@ ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
     size_t buffer_size = 200;
     size_t needed;
     ASTNode *errNode;
+    ASTNode *target;
     char *buffer = malloc(buffer_size);
 
     /* Write to buffer as sized */
@@ -659,6 +670,14 @@ ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
     errNode->node_string = buffer;
     errNode->node_string_length = strlen(buffer);
     errNode->free_node_string = 1;
+
+    /* Copy location info */
+    errNode->line = node->line;
+    errNode->column = node->column;
+    errNode->file_name = node->file_name;
+    errNode->source_start = node->source_start;
+    errNode->source_end = node->source_end;
+
     add_ast(node, errNode);
 
     return node;
@@ -690,6 +709,14 @@ ASTNode* mknd_war(ASTNode* node, char *error_string, ...) {
     warNode->node_string = buffer;
     warNode->node_string_length = strlen(buffer);
     warNode->free_node_string = 1;
+
+    /* Copy location info */
+    warNode->line = node->line;
+    warNode->column = node->column;
+    warNode->file_name = node->file_name;
+    warNode->source_start = node->source_start;
+    warNode->source_end = node->source_end;
+
     add_ast(node, warNode);
 
     return node;

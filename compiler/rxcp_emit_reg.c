@@ -124,6 +124,8 @@ walker_result register_walker(walker_direction direction,
     ASTNode *child1, *child2, *child3, *c;
     int a, i;
 
+    if (payload->context->debug_mode >= 2) fprintf(stderr, "DEBUG: register_walker %s %s \"%.*s\"\n", direction == in ? "IN" : "OUT", ast_ndtp(node->node_type), (int)node->node_string_length, node->node_string);
+
     child1 = node->child;
     if (child1) child2 = child1->sibling;
     else child2 = NULL;

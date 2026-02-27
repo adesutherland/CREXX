@@ -461,6 +461,7 @@ int rxcmain(int argc, char *argv[]) {
     }
 
     rxcp_val(context);
+    rxcp_collect_and_prune_diagnostics(context);
 #ifndef __CMS__
     if (debug_mode >= 2) {
         // pdot_tree(context->ast, "astgraph1", context->file_name);
@@ -551,6 +552,5 @@ int rxcmain(int argc, char *argv[]) {
     if (allocated_output_file_name) free(allocated_output_file_name);
 
     if (errors) return(2);
-    if (warnings) return(1);
     return(0);
 }

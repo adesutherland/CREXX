@@ -149,14 +149,35 @@ static walker_result print_warning_walker(walker_direction direction,
 /* Prints errors and returns the number of errors in the AST Tree */
 int prnterrs(Context *context) {
     int errors = 0;
-    ast_wlkr(context->ast, print_error_walker, &errors);
+    ASTNode *diag;
+    if (context->ast) {
+        ast_wlkr(context->ast, print_error_walker, &errors);
+    }
+    diag = (ASTNode*)context->diagnostics_list;
+    while (diag) {
+        if (diag->node_type == ERROR) {
+            print_error(diag, stderr, "Error");
+            errors++;
+        }
+        diag = diag->sibling;
+    }
     return errors;
 }
 
-/* Prints errors and returns the number of errors in the AST Tree */
 int prntwars(Context *context) {
     int errors = 0;
-    ast_wlkr(context->ast, print_warning_walker, &errors);
+    ASTNode *diag;
+    if (context->ast) {
+        ast_wlkr(context->ast, print_warning_walker, &errors);
+    }
+    diag = (ASTNode*)context->diagnostics_list;
+    while (diag) {
+        if (diag->node_type == WARNING) {
+            print_error(diag, stderr, "Warning");
+            errors++;
+        }
+        diag = diag->sibling;
+    }
     return errors;
 }
 

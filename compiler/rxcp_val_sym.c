@@ -65,6 +65,7 @@ walker_result build_symbols_walker(walker_direction direction,
                 symbol = sym_f(context->current_scope, node);
             }
             symbol->symbol_type = NAMESPACE_SYMBOL;
+            symbol->status = SYM_STATUS_LOCAL_DEF;
             sym_adnd(symbol, node, 1, 1);
             if (node->node_type == PROGRAM_FILE && context->namespace) sym_adnd(symbol, context->namespace, 0, 1);
 
@@ -97,6 +98,7 @@ walker_result build_symbols_walker(walker_direction direction,
             if (!symbol) {
                 symbol = sym_f(context->current_scope, node);
                 symbol->symbol_type = CLASS_SYMBOL;
+                symbol->status = SYM_STATUS_LOCAL_DEF;
             }
 
             sym_adnd(symbol, node, 0, 1);
@@ -146,6 +148,7 @@ walker_result build_symbols_walker(walker_direction direction,
                     symbol = sym_f(context->current_scope, node);
                 }
                 symbol->symbol_type = FUNCTION_SYMBOL;
+                symbol->status = SYM_STATUS_LOCAL_DEF;
             }
 
             sym_adnd(symbol, node, 0, 1);
@@ -197,6 +200,7 @@ walker_result build_symbols_walker(walker_direction direction,
             symbol = sym_f(namespaces, node->child);
             if (symbol) {
                 symbol->symbol_type = NAMESPACE_SYMBOL;
+                symbol->status = SYM_STATUS_LOCAL_DEF;
                 sym_adnd(symbol, node->child, 0, 1);
 
                 /* New scope scope */
@@ -233,6 +237,7 @@ walker_result build_symbols_walker(walker_direction direction,
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
                     symbol = sym_f(context->current_scope, node);
+                    symbol->status = SYM_STATUS_LOCAL_VAR;
                 } else if (symbol->symbol_type == FUNCTION_SYMBOL) {
                     mknd_err(node, "IS_A_FUNCTION");
                 } else if (symbol->symbol_type == CLASS_SYMBOL) {
@@ -307,12 +312,8 @@ walker_result build_symbols_walker(walker_direction direction,
 
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
-                    /* Check if it might be a global function or BIF */
-                    if (context->iterations == 0 && !node->child && (sym_rvfc(context->ast, node) || sym_is_imfn(context, node))) {
-                        context->changed = 1;
-                        return result_normal;
-                    }
                     symbol = sym_f(context->current_scope, node);
+                    symbol->status = SYM_STATUS_UNRESOLVED;
                 } else if (symbol->symbol_type == FUNCTION_SYMBOL) {
                     mknd_err(node, "IS_A_FUNCTION");
                 } else if (symbol->symbol_type == CLASS_SYMBOL) {
@@ -420,7 +421,7 @@ walker_result resolve_functions_walker(walker_direction direction,
             /* Find the symbol */
             Symbol *local_symbol = sym_rslv_tiered(node->scope ? node->scope : context->current_scope, node);
 
-            if (local_symbol && local_symbol->symbol_type == FUNCTION_SYMBOL ) {
+            if (local_symbol && local_symbol->status == SYM_STATUS_LOCAL_DEF && local_symbol->symbol_type == FUNCTION_SYMBOL ) {
                 if (!node->symbolNode) {
                     sym_adnd(local_symbol, node, 1, 0);
                     context->changed = 1;
@@ -429,6 +430,10 @@ walker_result resolve_functions_walker(walker_direction direction,
                 /* Try global search */
                 symbol = sym_rvfc(context->ast, node);
                 if (symbol && symbol->symbol_type == FUNCTION_SYMBOL ) {
+                    /* Option A: Redirect if already linked to an UNRESOLVED local symbol */
+                    if (node->symbolNode && node->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED) {
+                        sym_dno(node->symbolNode->symbol, node);
+                    }
                     if (!node->symbolNode) {
                         sym_adnd(symbol, node, 1, 0);
                         context->changed = 1;
@@ -437,14 +442,18 @@ walker_result resolve_functions_walker(walker_direction direction,
                     /* Try BIFs */
                     symbol = sym_imfn(context, node);
                     if (symbol) {
+                        /* Option A: Redirect if already linked to an UNRESOLVED local symbol */
+                        if (node->symbolNode && node->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED) {
+                            sym_dno(node->symbolNode->symbol, node);
+                        }
                         if (!node->symbolNode) {
                             sym_adnd(symbol, node, 1, 0);
                             context->changed = 1;
                         }
-                    } else if (local_symbol) {
+                    } else if (local_symbol && local_symbol->status != SYM_STATUS_UNRESOLVED) {
                         /* Found something locally but it's not a function, and no global function found */
                         if (!ast_chld(node, ERROR, 0)) mknd_err(node, "NOT_A_FUNCTION");
-                    } else {
+                    } else if (context->after_rewrite) {
                         /* Not found anywhere */
                         if (!ast_chld(node, ERROR, 0)) mknd_err(node, "FUNCTION_NOT_FOUND");
                     }
@@ -679,7 +688,30 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     ValueType old_type = symbol->type;
     size_t old_dims = symbol->value_dims;
 
+    if (symbol->status == SYM_STATUS_LOCAL_VAR && context->after_rewrite) {
+        /* Check for shadowing a Global or BIF */
+        if (sym_nond(symbol) > 0) {
+            ASTNode *rep_node = sym_trnd(symbol, 0)->node;
+            if (rep_node && rep_node->node_string && rep_node->node_string_length > 0) {
+                if (sym_rvfc(context->ast, rep_node) || sym_is_glob(context, rep_node)) {
+                    /* Only warn if it's not already linked to an ERROR node */
+                    if (!ast_chld(rep_node, ERROR, 0))
+                        mknd_war(rep_node, "SHADOWING_GLOBAL");
+                }
+            }
+        }
+    }
+
     if (symbol->type != TP_UNKNOWN) goto exit;
+
+    /* Transition UNRESOLVED to LOCAL_VAR/CONSTANT if we are in finalization */
+    if (symbol->status == SYM_STATUS_UNRESOLVED && context->after_rewrite) {
+        /* Final attempt at global resolution (e.g. global variables) */
+        sym_imva(context, symbol);
+        if (symbol->status == SYM_STATUS_UNRESOLVED) {
+            symbol->status = SYM_STATUS_LOCAL_VAR;
+        }
+    }
 
     /* Process special symbols */
     if (strcmp(symbol->name,"rc") == 0) {
@@ -850,6 +882,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
             symbol->type = TP_STRING;
             symbol->symbol_type = CONSTANT_SYMBOL;
+            if (symbol->status == SYM_STATUS_UNRESOLVED) symbol->status = SYM_STATUS_LOCAL_VAR;
             symbol->value_dims = 0;
             /* Update all the attached AST Nodes to be constants */
             for (i = 0; i < sym_nond(symbol); i++) {
