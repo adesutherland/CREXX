@@ -12,6 +12,7 @@ The testing infrastructure consists of:
     - `run/`: Expected standard output when running the compiled program in the VM.
     - `parsing/`: Expected AST output for parsing tests.
     - `errors/`: Expected compiler error messages for negative tests.
+    - `robustness/`: Comprehensive scenarios for symbol resolution and cross-module linkage (functional tests).
 - **`src/test_driver.c`**: A custom C program that runs the compiler, captures its output, and compares it against the golden files.
 - **`CMakeLists.txt`**: Defines the tests and how they are run using `ctest`.
 
@@ -67,6 +68,7 @@ ctest -R "_noopt|_opt" -VV | grep "crexx_test_driver" | sed 's/.*Test command: /
 2. Add the test to `compiler/tests/CMakeLists.txt` using one of the provided macros:
    - `add_crexx_compiler_test(NAME SOURCE)`: Adds both `_noopt` and `_opt` assembly comparison tests.
    - `add_crexx_run_test(NAME SOURCE)`: Adds a functional test that runs the program and compares its output.
+   - `add_crexx_robustness_test(NAME MAIN_FILE [DEPS...])`: Adds a multi-file functional test verifying complex resolution scenarios.
 3. Run the test. It will fail because the golden file is missing.
 4. Use `--update-gold` (as described above) to create the initial golden file.
 5. Verify the created golden file and commit it.

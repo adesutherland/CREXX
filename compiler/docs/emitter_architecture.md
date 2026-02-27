@@ -71,8 +71,15 @@ The register allocation logic is isolated in `rxcp_emit_reg.c`. It performs the 
 
 | Risk | Description | Mitigation |
 | :--- | :--- | :--- |
+| **Structural Interference** | `WARNING` or `ERROR` nodes attached to expressions would break child-count assumptions in the Emitter. | Resolved: `rxcp_collect_and_prune_diagnostics` removes all diagnostic nodes from the AST before emission. |
 | **Memory Leak** | `f_output` only frees a single fragment node, failing to traverse the `after` chain. | Update `f_output` to recursively free or iterate the chain. |
 | **Validator Coupling** | Emitter depends on `target_type` and other fields being correctly set by the Validator. | Add assertions or validation checks in Emitter "in" passes. |
 | **Manual Formatting** | Hardcoded `mprintf` strings for assembly templates are brittle. | Resolved: Potential bridge collisions avoided by renaming interpreter symbols to `rxvm_mprintf`. |
 | **Label Collisions** | Relies on `node_number` and suffix conventions. | Formalize label generation into a dedicated utility. |
 | **Duplication** | Operator emission is duplicated for constant vs. register cases. | Refactor into a unified `emit_op(op, target, left, right)` helper. |
+
+## 6. AST Assumptions
+The Emitter operates on a "clean" AST. Following the validation finalization phase, the tree is guaranteed to have:
+*   All symbols resolved to their final definitions (no `UNRESOLVED` symbols remain).
+*   All diagnostic nodes (`WARNING`, `ERROR`) removed and stashed in the `Context`.
+*   All high-level system instructions (like `ADDRESS` or `EXIT`) rewritten to internal calls.

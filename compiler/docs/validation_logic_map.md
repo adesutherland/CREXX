@@ -51,12 +51,14 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
     *   Constructs the Symbol Table and defines Scopes for the current tree state.
     *   *Idempotency*: Uses existing scopes if already created; `sym_adnd` prevents duplicate symbols.
     *   *Resolution*: Uses **Specialized Resolvers** (`sym_rslv_local`, `sym_rslv_attribute`, `sym_rslv_global`) to prevent "accidental" linkage.
-    *   **Shadowing Fix**: Defers creation of local `VARIABLE_SYMBOL` entries for `VAR_SYMBOL` and `EXIT_TOKEN` nodes in the first iteration if they potentially refer to a global function or BIF. This prevents early local placeholders from shadowing global imports.
+    *   **Symbol Lifecycle**: Every name encountered in the AST is assigned a `Symbol` with an explicit `SymbolStatus` (e.g., `SYM_STATUS_UNRESOLVED`, `SYM_STATUS_LOCAL_DEF`).
+    *   **Shadowing Protection**: This replaces the previous "deferred creation" hack. By tracking `UNRESOLVED` vs. `LOCAL` status, the compiler can safely prioritize global resolution in later passes while respecting intentional local definitions.
 
 9.  **Function Resolution (`resolve_functions_walker`)**: 
     *   Links function calls to their definitions (including newly injected code).
     *   *Idempotency*: Guarded by `!node->symbolNode`.
     *   *Global Search*: If not found locally, it searches across all PROGRAM_FILE and IMPORTED_FILE roots (`sym_rvfc`).
+    *   **Status Transition**: Transitions `SYM_STATUS_UNRESOLVED` symbols to `SYM_STATUS_RESOLVED_GLOBAL` and redirects the AST node to the global symbol if a match is found.
 
 10. **Exposed Symbol Resolution (`exposed_symbols_walker`)**: 
     *   Handles variable exposure across procedure boundaries using `sym_hoist_to_namespace`.
@@ -65,6 +67,7 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 11. **Symbol Validation (`validate_symbols`)**: 
     *   Checks for duplicate definitions and semantic symbol errors.
     *   *Idempotency*: Skips symbols whose type is already resolved (`TP_UNKNOWN`).
+    *   **Shadowing Warnings**: Emits `#SHADOWING_GLOBAL` warnings if an implicit local variable shadows an imported global or BIF.
 
 12. **Exit Dispatch (`exit_dispatch_walker` - Pass B)**:
     *   Allows plugins to react to resolved symbols or types.
@@ -80,13 +83,17 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 ---
 ### 3. Post-Loop Finalization
 
-15. **Type Safety (`type_safety_walker`)**: 
+15. **Diagnostic Pruning (`rxcp_collect_and_prune_diagnostics`)**:
+    *   Collects all `WARNING` and `ERROR` nodes from the AST and moves them to a detached list in the `Context`.
+    *   This ensures the AST remains structurally clean for the emitter, while preserving all reported diagnostic information.
+
+16. **Type Safety (`type_safety_walker`)**: 
     *   Final verification of type compatibility using the promotion matrix.
 
-16. **Function Call Type Safety (`func_type_safety_walker`)**: 
+17. **Function Call Type Safety (`func_type_safety_walker`)**: 
     *   Validates arguments and reference parameters.
 
-17. **Decimal Configuration (`decimal_parameters_walker`)**: 
+18. **Decimal Configuration (`decimal_parameters_walker`)**: 
     *   Sets precision and format parameters per scope.
 
 ---
@@ -127,7 +134,7 @@ The AST/Symbol validator (`rxcp_validate_ast_and_symbols`) asserts these rules i
 *   Only symbols explicitly listed in the `expose` clause of a `namespace` instruction are visible to other files.
 *   **Syntax**: `namespace name expose sym1 sym2 sym3` (Space-separated, commas are **NOT** used).
 *   **Surprises**:
-    *   **Variables**: Currently, global variables from imported namespaces are **NOT** resolved automatically by the `import` instruction because `sym_imva` (which handles global variables) is restricted to searching the current file's namespace (`only_namespace = 1`).
+    *   **Variables**: Global variables are eagerly resolved across all imported namespaces. However, they must be explicitly promoted to the namespace scope via an `expose` or `namespace ... expose` clause in the defining file to be visible to importers (due to late hoisting).
     *   **Runtime**: `rxvm` requires all involved `.rxbin` files to be provided on the command line to resolve symbols at runtime.
 
 ### 3. Class Imports
