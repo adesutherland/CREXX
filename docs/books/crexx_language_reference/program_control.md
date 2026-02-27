@@ -219,7 +219,7 @@ The `DO` instruction also controls iteration. There are three common forms:
 - Conditional `DO WHILE` / `DO UNTIL`
 
 ### Simple DO (grouping only)
-```rexx
+```rexx <!--simpledo.rexx-->
 options levelb
 if cond then do
   say "A"
@@ -229,7 +229,7 @@ end
 This does not loop; it groups multiple instructions into one block.
 
 ### Counted DO
-```rexx
+```rexx <!--countedo.rexx-->
 options levelb
 sum = .int
 /* i counts from 1 to 5 by 1 */
@@ -240,7 +240,7 @@ say sum  /* 15 */
 ```
 
 Syntax:
-```
+```rexx <!--dosyntax.rexx-->
 DO i = expr_start [ TO expr_stop ] [ BY expr_step ] [ FOR expr_count ]
   ...
 END
@@ -250,7 +250,8 @@ END
 - `FOR` limits the number of iterations (optional), stopping earlier even if `TO` would allow more.
 
 ### Conditional DO
-```rexx
+
+```rexx <!--conditionaldo.rexx-->
 options levelb
 /* while-loop */
 do while i < 10
@@ -273,7 +274,7 @@ end
 The following scoping rules are planned for DO blocks and will be implemented next. They are documented here so you can write code that will continue to work when the change lands.
 
 - A typed declaration inside a `DO` block creates a block-local that shadows any outer variable of the same name for the duration of the block:
-  ```rexx
+  ```rexx <!--shadowingdo.rexx-->
   options levelb
   main: procedure
     x = .int; x = 1
@@ -284,7 +285,7 @@ The following scoping rules are planned for DO blocks and will be implemented ne
     say x  /* 1 */
   ```
 - An untyped assignment inside a `DO` block uses an existing variable if one exists; otherwise it creates a new loop-scoped variable that goes out of scope at `END`:
-  ```rexx
+  ```rexx <!--newscopedo.rexx-->
   options levelb
   main: procedure
     do
@@ -293,7 +294,7 @@ The following scoping rules are planned for DO blocks and will be implemented ne
     /* y is out of scope here */
   ```
 - Counted `DO` header: the control variable behaves the same way — if an outer variable with that name exists, it is reused; otherwise a loop-local control variable is created:
-  ```rexx
+  ```rexx <!--counteddoheader.rexx-->
   options levelb
   main: procedure
     i = .int; i = 100
@@ -309,5 +310,4 @@ The following scoping rules are planned for DO blocks and will be implemented ne
   ```
 
 Rationale: typed declarations always define intent and should introduce a new local; untyped uses favor existing bindings to reduce surprises, while remaining safe by creating a loop-local when none exists.
-possibility that all the `WHEN` expressions could be *false*, there must be an
-`OTHERWISE` clause.
+possibility that all the `WHEN` expressions could be *false*, there must be an `OTHERWISE` clause.
