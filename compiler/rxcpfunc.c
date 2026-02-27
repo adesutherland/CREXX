@@ -1524,6 +1524,46 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
     return found_symbol;
 }
 
+/* Check if a function is importable - return 1 if it is a function, 0 otherwise */
+int sym_is_imfn(Context *context, ASTNode *node) {
+    imported_func *func;
+    char *name;
+    int found = 0;
+
+    /* Make a null terminated string */
+    if (node->node_string[0] == '.') {
+        name = (char*)malloc(node->node_string_length);
+        memcpy(name, node->node_string + 1, node->node_string_length - 1);
+        name[node->node_string_length - 1] = 0;
+    } else {
+        name = (char*)malloc(node->node_string_length + 1);
+        memcpy(name, node->node_string, node->node_string_length);
+        name[node->node_string_length] = 0;
+    }
+
+    /* Lowercase symbol name */
+#ifdef NUTF8
+    char *c;
+    for (c = name; *c; ++c) *c = (char)tolower(*c);
+#else
+    utf8lwr(name);
+#endif
+
+    /* Check if the function is already in the master AST */
+    if (sym_rvfn(context->ast, name)) {
+        free(name);
+        return 1;
+    }
+
+    /* Check unread files */
+    if (src_fqfu(context, 0, name, &func)) {
+        if (!func->is_variable) found = 1;
+    }
+
+    free(name);
+    return found;
+}
+
 /* Try and import an external function - return its symbol if successful */
 Symbol *sym_imfn(Context *context, ASTNode *node) {
     Symbol *symbol;

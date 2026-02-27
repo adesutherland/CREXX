@@ -307,6 +307,11 @@ walker_result build_symbols_walker(walker_direction direction,
 
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
+                    /* Check if it might be a global function or BIF */
+                    if (context->iterations == 0 && !node->child && (sym_rvfc(context->ast, node) || sym_is_imfn(context, node))) {
+                        context->changed = 1;
+                        return result_normal;
+                    }
                     symbol = sym_f(context->current_scope, node);
                 } else if (symbol->symbol_type == FUNCTION_SYMBOL) {
                     mknd_err(node, "IS_A_FUNCTION");

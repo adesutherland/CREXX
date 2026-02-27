@@ -170,6 +170,8 @@ char* encdstrg(const char* string, size_t length);
 
 /* Try and import an external function - return its symbol if successful */
 Symbol *sym_imfn(Context *context, ASTNode *node);
+/* Check if a function is importable - return 1 if it is a function, 0 otherwise */
+int sym_is_imfn(Context *context, ASTNode *node);
 /* Try and import an external class - return its symbol if successful */
 Symbol *sym_imcls(Context *context, ASTNode *node);
 
