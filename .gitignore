@@ -98,3 +98,6 @@ _deps
 .DS_Store
 docs/.DS_Store
 docs/books/.DS_Store
+
+# Gemini CLI
+/.gemini/settings.json

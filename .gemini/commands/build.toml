@@ -1,0 +1,5 @@
+description = "Builds the crexx project using CMake (debug mode) and access the logs"
+prompt = """
+Run the following command: `cmake --build cmake-build-debug -j 4`
+If the build fails, analyze the compiler errors/warnings from the terminal output. Report the key failures and do not attempt to fix them unless instructed.
+"""

@@ -1,0 +1,5 @@
+description = "Run the project's CTests and review the output"
+prompt = """
+Run the following command: `ctest --test-dir cmake-build-debug --output-on-failure`
+Review any test failures and their logs, and report the findings back to the user.
+"""

@@ -1,0 +1,5 @@
+description = "Create a REXX program and investigate the AST produced and the debug logs."
+prompt = """
+Run the command: `./cmake-build-debug/bin/rxc -d2 {{args}}`
+Capture the terminal output. Analyze the dumped AST tree for the provided REXX file. Identify any malformed branches, missing scope boundaries, or incorrect token types based on the Lemon grammar rules.
+"""

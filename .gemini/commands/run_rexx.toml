@@ -1,0 +1,8 @@
+description = "Compile and run a given REXX program using the crexx toolchain."
+prompt = """
+Using the provided REXX file in {{args}}:
+1. Compile it: `./cmake-build-debug/bin/rxc {{args}}` (Produces a `.rxas` file).
+2. Assemble it: `./cmake-build-debug/bin/rxas <filename>.rxas` (Produces a `.rxbin` file).
+3. Run it: `./cmake-build-debug/bin/rxvm <filename>.rxbin`
+Ensure the REXX script starts with `OPTIONS LEVELB` if it is a modern script. Report the final output to the user.
+"""
