@@ -29,17 +29,18 @@ namespace rxfnsb expose arraysort
  *     to avoid dependency on numeric mode semantics
  *
  * RETURNS
- *   The sorted array a[]
+ *   The number of sorted elements, if <0 an error occurred
  * ----------------------------------------------------------------------
  */
-arraysort: procedure=.string[]
-  arg a=.string[], offset=1, order='ASC'
+arraysort: procedure=.int
+  arg expose a=.string[], offset=1, order='ASC',debug=1
 
   n = a[0]
-  if n < 2 then return a
+  if n <= 1 then return a[0]
   if offset < 1 then offset = 1
 
   order = upper(order)
+  if debug=1 then say 'ArraySort Debug offset='offset', order='order', items='a[0]
   asc = (substr(order,1,3) = 'ASC')
   gap = n
   assembler idiv gap, gap, 2
@@ -69,4 +70,4 @@ arraysort: procedure=.string[]
      end
      assembler idiv gap, gap, 2
   end
-  return a
+return a[0]
