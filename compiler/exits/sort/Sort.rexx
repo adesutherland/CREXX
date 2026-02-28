@@ -57,9 +57,9 @@ sortexit: class
        * ----------------------------------------------------------------------
        */
       rule[2] = "identifier[]"                 /* must be an array identifier */
-      rule[3] = "identifier int_literal"       /* identifier or int literal*/
-      rule[4] = "identifier string_literal"    /* identifier or string literal*/
-      rule[5] = "identifier int_literal"       /* optional, see min-arg check below */
+      rule[3] = "identifier/int_literal"       /* identifier or int literal*/
+      rule[4] = "identifier/string_literal"    /* identifier or string literal*/
+      rule[5] = "identifier/int_literal"       /* optional, see min-arg check below */
 
       /* ----------------------------------------------------------------------
        * Check 0: Minimal argument count.
@@ -99,15 +99,13 @@ sortexit: class
        * ----------------------------------------------------------------------
        */
         do i = 2 to tokens.0
-            if rule[i] = "" then iterate
-            ti = tokens[i]
-            t_lex = strip(ti.get_type())
-            if t_lex = "identifier" then do
-               if ti.get_value_type() = ".unknown" then do
-                  _status = "PENDING"
-                  return _status
-               end
-            end
+           if rule[i] = "" then iterate
+           ti = tokens[i]
+           t_lex = strip(ti.get_type())
+           if t_lex = "identifier" then do
+              _status = "PENDING"
+              if ti.get_value_type() = ".unknown" then return _status
+           end
         end
       /* ---------------------------------------------------------------------
        * Check 3: Semantic constraints.
@@ -155,7 +153,9 @@ sortexit: class
 /* Helper: test if token type is allowed by the rule string */
 _type_allowed: procedure = .int
    arg t_type = .string, allowed = .string
+   allowed=translate(allowed,,'/\')
    do j = 1 to words(allowed)
+
       if t_type     = word(allowed, j) then return 1
       if t_type"[]" = word(allowed, j) then return 1  /* check if an array is requested */
    end

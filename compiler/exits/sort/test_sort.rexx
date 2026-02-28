@@ -26,5 +26,5 @@ return
 test:procedure=.int
   arg expose a=.string[],offset=1,order='ASC'
   debug=1
-  Sort a offset order 'ABC'
+  Sort a offset order 1
 return 0
