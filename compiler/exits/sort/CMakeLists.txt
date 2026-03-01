@@ -22,9 +22,7 @@ add_custom_command(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling test_sort.rexx with exit"
 )
-execute_process(
-        COMMAND cmd /c "echo Debug breakpoint reached & pause"
-)
+
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_sort.rxbin
         COMMAND $<TARGET_FILE:rxas> -o test_sort test_sort

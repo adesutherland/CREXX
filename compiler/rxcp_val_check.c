@@ -301,7 +301,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 }
 
                 if (last) { /* If there are no instructions at all it is a declaration */
-                    if (last->node_type != RETURN) {
+                    if (last->node_type != RETURN && !context->in_exit_bridge) {
                         /* We need to add a return */
                         new_child = ast_ft(context,RETURN);
                         add_ast(last->parent,new_child); /* Adds as the last sibling */

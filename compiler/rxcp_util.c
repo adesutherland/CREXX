@@ -653,11 +653,14 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
                 i++;
                 ASTNode *token_node = node_map[n-1];
                 /* Get raw text of the token */
-                const char *text = token_node->node_string;
-                size_t text_len = token_node->node_string_length;
-                if (!text && token_node->token) {
+                const char *text = NULL;
+                size_t text_len = 0;
+                if (token_node->token) {
                     text = token_node->token->token_string;
                     text_len = token_node->token->length;
+                } else if (token_node->node_string) {
+                    text = token_node->node_string;
+                    text_len = token_node->node_string_length;
                 }
 
                 if (text) {

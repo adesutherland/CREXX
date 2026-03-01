@@ -7,23 +7,28 @@ This document maps the validation passes and "magic" logic within `compiler/rxcp
 The `validate_ast` function (in `rxcp_val_orch.c`) orchestrates the following sequence. Passes 5-13 run within a **Fixpoint Iteration Loop** (up to 16 iterations).
 
 ### 1. Pre-Loop Setup
-1.  **Initial Checks (`initial_checks_walker`)**: 
-    *   Sets source location pointers for error reporting.
+1.  **AST Structure Fixup (`ast_structure_fixup_walker`)**:
     *   **AST Restructuring**: Fixes the unfinished flat AST produced by the parser into a logical hierarchy (e.g., hoisting procedures from the flat parser list to become children of the file/namespace and nesting their instruction bodies).
+    *   *Note on Exits*: Suppresses the generation of implicit `RETURN` nodes for AST fragments coming from the exit framework to avoid `RETVAL_MISSING` conflicts when grafted into typed procedures.
+
+2.  **Source Location Tracking (`source_location_walker`)**:
+    *   Sets token boundary pointers and source location metadata bottom-up for accurate error reporting.
+
+3.  **Syntax Validation (`syntax_validation_walker`)**:
     *   Converts `OP_SCONCAT` to `OP_CONCAT` when no physical whitespace exists.
     *   Removes redundant `NOP` instructions.
-    *   Validates `ASSEMBLER` mnemonics and operands.
+    *   Validates `ASSEMBLER` mnemonics, operands, and `REPEAT` loops.
 
-2.  **Float/Decimal Conversion (`float2decimal_walker` / `decimal2float_walker`)**: 
+4.  **Float/Decimal Conversion (`float2decimal_walker` / `decimal2float_walker`)**: 
     *   Literal type normalization based on `OPTIONS` (Classic vs. Common).
 
-3.  **Library Requirement Check (`needs_rxsysb_walker`)**: 
+5.  **Library Requirement Check (`needs_rxsysb_walker`)**: 
     *   Flags if the `_rxsysb` system library is needed (for `ADDRESS`, `EXIT`, or `IMPLICIT_CMD`).
 
-4.  **Library Injection (`add_rxsysb_walker`)**: 
+6.  **Library Injection (`add_rxsysb_walker`)**: 
     *   Injects `IMPORT _rxsysb` into the `PROGRAM_FILE` if needed.
 
-5.  **Import Scanning (`rxcp_scan_imports`)**:
+7.  **Import Scanning (`rxcp_scan_imports`)**:
     *   Loads and parses imported files. This is **Idempotent**; once a file is imported, it is marked and subsequent calls return immediately.
 
 --- 
@@ -150,7 +155,7 @@ The AST/Symbol validator (`rxcp_validate_ast_and_symbols`) asserts these rules i
 | **Implicit IMPORT Injection** | `add_rxsysb_walker` | Automatically adds `import _rxsysb` if `ADDRESS` or `EXIT` is used, ensuring system functions are available. |
 | **ADDRESS Instruction Rewrite** | `rewrite_address_walker` | Transforms `ADDRESS` into a standard function call and assignment to `rc`. |
 | **EXIT Instruction Rewrite** | `rewrite_exit_walker` | Transforms `EXIT` into a call to the internal `_exit` function. |
-| **SCONCAT Normalization** | `initial_checks_walker` | Converts "space concatenation" tokens to standard concatenation if no physical space exists. |
+| **SCONCAT Normalization** | `syntax_validation_walker` | Converts "space concatenation" tokens to standard concatenation if no physical space exists. |
 | **Automatic Type Inference** | `set_node_types_walker` | Variables are typed upon first assignment; subsequent assignments to different types trigger errors. |
 | **Type Promotion** | `validate_node_promotion` | Uses a hardcoded `promotion` matrix to determine if one type can be implicitly cast to another. |
 

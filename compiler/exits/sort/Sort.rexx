@@ -130,7 +130,9 @@ sortexit: class
        *   IMPORTANT: only return REPLACE when replacement is non-empty.
        * ---------------------------------------------------------------------
        */
-        _replacement = "__rc=arraysort({2},{3},{4},{5});"
+        if tokens.0 >= 5 then _replacement = "__rc=arraysort({2},{3},{4},{5});"
+        else if tokens.0 = 4 then _replacement = "__rc=arraysort({2},{3},{4});"
+        else _replacement = "__rc=arraysort({2},{3});"
         _status = "REPLACE"
         call log "replacement=" _replacement
         return _status

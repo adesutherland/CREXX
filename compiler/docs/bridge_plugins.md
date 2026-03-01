@@ -124,3 +124,8 @@ The `token` class maps the following fields via `WITH REGISTER.x`:
 | `ord_high` | 10 | `.int` | Token order (high). |
 | `sym_name` | 11 | `.string` | Resolved symbol name (if any). |
 | `sym_type` | 12 | `.int` | Symbol type (Variable, Function, etc). |
+
+### 4.4 String Interpolation Mechanics
+When a plugin returns a string containing placeholder tokens like `{1}`, `{2}`, the compiler bridge (`rxcp_util.c`) replaces these with the literal source code of the corresponding tokens.
+*   **Quotes Preservation**: The framework explicitly prefers the raw lexical `token->token_string` over the evaluated `node_string` to ensure that string literals maintain their quote marks in the generated fragment. Without this, a parameter like `'ASC'` would be injected as an unquoted, undefined variable `ASC`.
+*   **Fragment Restructuring**: Parsed fragments are routed through the early-stage validation walkers but have special `in_exit_bridge` context flags. This specifically instructs `ast_structure_fixup_walker` to omit injecting implicit `RETURN VOID` nodes, which would otherwise fatally conflict with explicitly typed methods when the fragment is grafted back into the main AST.
