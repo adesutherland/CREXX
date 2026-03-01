@@ -654,7 +654,7 @@ walker_result type_safety_walker(walker_direction direction,
 
         switch (node->node_type) {
             case PROCEDURE:
-                if (node->symbolNode && node->symbolNode->symbol && strcmp(node->symbolNode->symbol->name,"main") == 0) {
+                if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->is_main) {
                     /* Validate main() return values */
                     if (node->value_type != TP_VOID && node->value_type != TP_INTEGER) {
                         /* Must be an string array */
@@ -925,7 +925,7 @@ walker_result type_safety_walker(walker_direction direction,
 
             case ARGS:
                 n1 = ast_proc(node);
-                if (n1 && n1->symbolNode && n1->symbolNode->symbol && strcmp(n1->symbolNode->symbol->name,"main") == 0) {
+                if (n1 && n1->symbolNode && n1->symbolNode->symbol && n1->symbolNode->symbol->is_main) {
                     /* Validate the signature of the main() functions */
                     if (ast_nchd(node) == 0) break; /* A main() can ignore arguments */
                     if (ast_nchd(node) != 1) {

@@ -506,6 +506,10 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->is_ref_arg = 0;
     symbol->is_const_arg = 0;
     symbol->is_opt_arg = 0;
+    symbol->is_main = 0;
+    symbol->is_rc = 0;
+    symbol->is_this = 0;
+    symbol->is_factory = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -513,6 +517,13 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
 #else
     utf8lwr(symbol->name);
 #endif
+
+    /* Set special symbol flags based on lowercased name */
+    if (strcmp(symbol->name, "main") == 0) symbol->is_main = 1;
+    else if (strcmp(symbol->name, "rc") == 0) symbol->is_rc = 1;
+    else if (strcmp(symbol->name, "\xc2\xa7" "this") == 0) symbol->is_this = 1;
+    else if (strcmp(symbol->name, "\xc2\xa7" "factory") == 0) symbol->is_factory = 1;
+
     symbol->ast_node_array = dpa_f();
 
     /* Returns 1 on duplicate */
@@ -1132,7 +1143,7 @@ char* sym_mngd_frnm(Symbol *symbol) {
     char *result = sym_frnm(symbol);
 
     /* Top level main is not mangled or prefixed */
-    if (strcmp(result, "main") == 0 && symbol->scope && symbol->scope->parent &&
+    if (symbol->is_main && symbol->scope && symbol->scope->parent &&
         symbol->scope->parent->defining_node && symbol->scope->parent->defining_node->node_type == REXX_UNIVERSE)
         return result;
 

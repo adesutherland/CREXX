@@ -708,7 +708,9 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
     }
 
     /* Normalise fragment */
-    ast_wlkr(frag->ast, initial_checks_walker, (void *) frag);
+    ast_wlkr(frag->ast, ast_structure_fixup_walker, (void *) frag);
+    ast_wlkr(frag->ast, source_location_walker, (void *) frag);
+    ast_wlkr(frag->ast, syntax_validation_walker, (void *) frag);
     ast_wlkr(frag->ast, rxcp_fixup_walker, (void *) frag);
 
     if (frag->floats_decimal)  {

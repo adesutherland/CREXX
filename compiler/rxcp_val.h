@@ -71,7 +71,9 @@ walker_result add_rxsysb_walker(walker_direction direction, ASTNode* node, void 
 walker_result rxcp_fixup_walker(walker_direction direction, ASTNode* node, void *payload);
 
 /* check */
-walker_result initial_checks_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result ast_structure_fixup_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result source_location_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result syntax_validation_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result decimal_parameters_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result exit_dispatch_walker(walker_direction direction, ASTNode* node, void *payload);
 

@@ -452,7 +452,9 @@ void validate_ast(Context *context) {
      */
     context->current_scope = 0;
     context->in_factory = 0;
-    ast_wlkr(context->ast, initial_checks_walker, (void *) context);
+    ast_wlkr(context->ast, ast_structure_fixup_walker, (void *) context);
+    ast_wlkr(context->ast, source_location_walker, (void *) context);
+    ast_wlkr(context->ast, syntax_validation_walker, (void *) context);
     ast_wlkr(context->ast, rxcp_fixup_walker, (void *) context);
 
     // Initial checks walker will have set the options
@@ -710,7 +712,9 @@ void rxcp_bvl(Context *context) {
      * - Fixes SCONCAT to CONCAT
      * - Other AST fixups (TBC)
      */
-    ast_wlkr(context->ast, initial_checks_walker, (void *) context);
+    ast_wlkr(context->ast, ast_structure_fixup_walker, (void *) context);
+    ast_wlkr(context->ast, source_location_walker, (void *) context);
+    ast_wlkr(context->ast, syntax_validation_walker, (void *) context);
 
     /* 1b - set node ordinal values */
     ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);

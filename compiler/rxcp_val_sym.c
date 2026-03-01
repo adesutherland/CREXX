@@ -714,14 +714,14 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     }
 
     /* Process special symbols */
-    if (strcmp(symbol->name,"rc") == 0) {
+    if (symbol->is_rc) {
         symbol->type = TP_INTEGER;
         symbol->symbol_type = VARIABLE_SYMBOL;
         symbol->value_dims = 0;
         return;
     }
 
-    if (strcmp(symbol->name, "\xc2\xa7" "factory") == 0 && scope->defining_node && scope->defining_node->node_type == FACTORY) {
+    if (symbol->is_factory && scope->defining_node && scope->defining_node->node_type == FACTORY) {
         symbol->type = TP_OBJECT;
         symbol->symbol_type = VARIABLE_SYMBOL;
         symbol->value_dims = 0;
@@ -733,7 +733,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         return;
     }
 
-    if (strcmp(symbol->name, "\xc2\xa7" "this") == 0 && scope->defining_node && scope->defining_node->node_type == METHOD) {
+    if (symbol->is_this && scope->defining_node && scope->defining_node->node_type == METHOD) {
         symbol->type = TP_OBJECT;
         symbol->symbol_type = VARIABLE_SYMBOL;
         symbol->value_dims = 0;

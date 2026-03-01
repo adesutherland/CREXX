@@ -57,22 +57,16 @@ static OperandType nodetype_to_operandtype(NodeType ntype) {
  * - Validate ASSEMBLER instructions
  */
 
-walker_result initial_checks_walker(walker_direction direction,
-                                           ASTNode* node, __attribute__((unused)) void *payload) {
 
-    ASTNode *child, *next_child, *new_child, *next, *last, *n;
-    int has_to;
-    int has_for;
-    int has_by;
-    int has_assign;
-    Token *left, *right;
-    char *buffer;
-    char *c;
-
+/*
+ * ast_structure_fixup_walker
+ * - Fixes up procedure / class tree structures.
+ */
+walker_result ast_structure_fixup_walker(walker_direction direction,
+                                         ASTNode* node, __attribute__((unused)) void *payload) {
+    ASTNode *child, *new_child, *next, *last, *n;
     Context *context = (Context*)payload;
 
-    /* Top down - Move instructions under the right procedure    */
-    /* For this walker the top down is used to re-order children */
     if (direction == in) {
 
         if (node->node_type == PROGRAM_FILE) {
@@ -316,7 +310,21 @@ walker_result initial_checks_walker(walker_direction direction,
             }
         }
 
-    } else {
+        }
+
+    return result_normal;
+}
+
+/*
+ * source_location_walker
+ * - Sets the token and source start / finish position for each node
+ */
+walker_result source_location_walker(walker_direction direction,
+                                     ASTNode* node, __attribute__((unused)) void *payload) {
+    ASTNode *child, *n;
+    Token *left, *right;
+    
+    if (direction == out) {
         /* Bottom up - source code positions, concat, etc */
         if (node->token) {
             node->token_start = node->token;
@@ -441,7 +449,22 @@ walker_result initial_checks_walker(walker_direction direction,
                 }
             }
         }
+    }
+    return result_normal;
+}
 
+/*
+ * syntax_validation_walker
+ * - Fixes SCONCAT to CONCAT, removes NOPs, options, etc.
+ */
+walker_result syntax_validation_walker(walker_direction direction,
+                                       ASTNode* node, __attribute__((unused)) void *payload) {
+    ASTNode *child, *next_child;
+    int has_to = 0, has_for = 0, has_by = 0, has_assign = 0;
+    char *buffer, *c;
+    Context *context = (Context*)payload;
+
+    if (direction == out) {
         if (node->node_type == PROGRAM_FILE) {
             /* Set namespace if not already set */
             if (!context->namespace) {
@@ -769,15 +792,10 @@ walker_result initial_checks_walker(walker_direction direction,
                 node->node_type = OP_ARGS;
             }
         }
-
     }
     return result_normal;
 }
 
-/* decimal_parameters_walker - this walker sets the decimal parameters for each scope
- *
- * This is run after all type processing is complete
- */
 walker_result decimal_parameters_walker(walker_direction direction,
                                                ASTNode* node,
                                                void *payload) {
