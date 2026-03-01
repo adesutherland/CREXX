@@ -191,6 +191,24 @@ walker_result build_symbols_walker(walker_direction direction,
             }
         }
 
+        else if (node->node_type == NAMESPACE) {
+            if (direction == out) {
+                ASTNode *expose = ast_chld(node, EXPOSED, 0);
+                if (expose) {
+                    ASTNode *var = expose->child;
+                    while (var) {
+                        if (var->node_type == VAR_REFERENCE || var->node_type == VAR_SYMBOL) {
+                            SymbolNode *sn = var->symbolNode;
+                            if (sn && sn->symbol) {
+                                sn->symbol->exposed = 1;
+                            }
+                        }
+                        var = var->sibling;
+                    }
+                }
+            }
+        }
+
         else if (node->node_type == IMPORT) {
             /* Get the toplevel scope that contains all the namespaces */
             Scope* namespaces = context->ast->scope;
@@ -229,6 +247,13 @@ walker_result build_symbols_walker(walker_direction direction,
                 } else if (node->parent->node_type == DEFINE) {
                     /* Typed declarations always bind in the current scope (allowing shadowing) */
                     symbol = sym_lrsv(context->current_scope, node);
+                    if (!symbol) {
+                        /* Auto-expose: If it's an exposed global, let's type the global, not shadow it */
+                        Symbol *glob = sym_rslv_global(context->current_scope, node);
+                        if (glob && glob->symbol_type == VARIABLE_SYMBOL && glob->exposed) {
+                            symbol = glob;
+                        }
+                    }
                 } else {
                     /* Untyped usage resolves outward; if not found, will create in current scope */
                     symbol = sym_rslv_tiered(context->current_scope, node);
@@ -688,15 +713,37 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     ValueType old_type = symbol->type;
     size_t old_dims = symbol->value_dims;
 
-    if (symbol->status == SYM_STATUS_LOCAL_VAR && context->after_rewrite) {
-        /* Check for shadowing a Global or BIF */
-        if (sym_nond(symbol) > 0) {
-            ASTNode *rep_node = sym_trnd(symbol, 0)->node;
-            if (rep_node && rep_node->node_string && rep_node->node_string_length > 0) {
-                if (sym_rvfc(context->ast, rep_node) || sym_is_glob(context, rep_node)) {
-                    /* Only warn if it's not already linked to an ERROR node */
-                    if (!ast_chld(rep_node, ERROR, 0))
+    if (context->after_rewrite && !symbol->exposed && sym_nond(symbol) > 0) {
+        ASTNode *rep_node = sym_trnd(symbol, 0)->node;
+        if (rep_node && rep_node->node_string && rep_node->node_string_length > 0) {
+            if (symbol->status == SYM_STATUS_LOCAL_VAR) {
+                /* Rule: Warn on variables shadowing variables (local or global) */
+                int shadows_var = 0;
+                Symbol *parent_sym = 0;
+                if (symbol->scope && symbol->scope->parent) {
+                    parent_sym = sym_rslv_local(symbol->scope->parent, rep_node);
+                    if (!parent_sym) parent_sym = sym_rslv_global(symbol->scope->parent, rep_node);
+                }
+                if (parent_sym && parent_sym->symbol_type == VARIABLE_SYMBOL) {
+                    shadows_var = 1;
+                } else if (sym_is_glob_var(context, rep_node)) {
+                    shadows_var = 1;
+                }
+                if (shadows_var && !ast_chld(rep_node, ERROR, 0)) {
+                    if (rep_node->file_name && context->ast->file_name && strcmp(rep_node->file_name, context->ast->file_name) == 0)
                         mknd_war(rep_node, "SHADOWING_GLOBAL");
+                }
+            } else if (symbol->status == SYM_STATUS_LOCAL_DEF) {
+                if (symbol->symbol_type == FUNCTION_SYMBOL) {
+                    if (sym_is_imfn(context, rep_node) && !ast_chld(rep_node, ERROR, 0)) {
+                        if (rep_node->file_name && context->ast->file_name && strcmp(rep_node->file_name, context->ast->file_name) == 0)
+                            mknd_war(rep_node, "SHADOWING_GLOBAL");
+                    }
+                } else if (symbol->symbol_type == CLASS_SYMBOL) {
+                    if (sym_is_imcls(context, rep_node) && !ast_chld(rep_node, ERROR, 0)) {
+                        if (rep_node->file_name && context->ast->file_name && strcmp(rep_node->file_name, context->ast->file_name) == 0)
+                            mknd_war(rep_node, "SHADOWING_GLOBAL");
+                    }
                 }
             }
         }

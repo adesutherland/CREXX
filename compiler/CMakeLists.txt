@@ -5,7 +5,7 @@ project(Compiler C)
 set(CMAKE_C_STANDARD 90)
 
 add_custom_command(
-        COMMAND $<TARGET_FILE:lemon> -p -s -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.y
+        COMMAND $<TARGET_FILE:lemon> -p -q -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.y
         DEPENDS rxcpopgr.y lemon
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h
         COMMENT "Create Options Parser..."
@@ -19,7 +19,7 @@ add_custom_command(
 )
 
 add_custom_command(
-        COMMAND $<TARGET_FILE:lemon> -p -s -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbgmr.y
+        COMMAND $<TARGET_FILE:lemon> -p -q -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbgmr.y
         DEPENDS rxcpbgmr.y lemon
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h
         COMMENT "Create REXX B Parser..."

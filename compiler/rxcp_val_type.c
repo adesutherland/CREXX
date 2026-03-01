@@ -714,9 +714,6 @@ walker_result type_safety_walker(walker_direction direction,
                 if (node->parent->node_type != NODE_REGISTER) {
                     if (node->symbolNode && node->symbolNode->symbol) {
                         if (node->value_type == TP_UNKNOWN) {
-                            if (node->node_string_length > 0 && strncmp(node->node_string, "macros_margs", 12) == 0) {
-                                fprintf(stderr, "DEBUG_TSW: VAR_SYMBOL macros_margs at %d, symbol type=%d, value_type before=%d\n", node->token ? node->token->line : 0, node->symbolNode->symbol->type, node->value_type);
-                            }
                             ast_svtp(node, node->symbolNode->symbol);
                         }
                     }

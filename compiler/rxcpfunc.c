@@ -1527,8 +1527,8 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
     return found_symbol;
 }
 
-/* Check if a symbol is importable (Function or Variable) - return 1 if it is, 0 otherwise */
-int sym_is_glob(Context *context, ASTNode *node) {
+/* Check if a symbol is an importable Variable - return 1 if it is, 0 otherwise */
+int sym_is_glob_var(Context *context, ASTNode *node) {
     imported_func *func;
     char *name;
     int found = 0;
@@ -1552,14 +1552,39 @@ int sym_is_glob(Context *context, ASTNode *node) {
     utf8lwr(name);
 #endif
 
-    /* Check if the symbol is already in the master AST */
-    if (sym_rvfn(context->ast, name)) {
-        free(name);
-        return 1;
-    }
-
     /* Check unread files */
     if (src_fqfu(context, 0, name, &func)) {
+        if (func->is_variable) found = 1;
+    }
+
+    free(name);
+    return found;
+}
+
+/* Check if a class is importable - return 1 if it is, 0 otherwise */
+int sym_is_imcls(Context *context, ASTNode *node) {
+    struct imported_class *found_cls = 0;
+    char *name;
+    int found = 0;
+
+    if (node->node_string[0] == '.') {
+        name = (char*)malloc(node->node_string_length);
+        memcpy(name, node->node_string + 1, node->node_string_length - 1);
+        name[node->node_string_length - 1] = 0;
+    } else {
+        name = (char*)malloc(node->node_string_length + 1);
+        memcpy(name, node->node_string, node->node_string_length);
+        name[node->node_string_length] = 0;
+    }
+
+#ifdef NUTF8
+    char *c;
+    for (c = name; *c; ++c) *c = (char)tolower(*c);
+#else
+    utf8lwr(name);
+#endif
+
+    if (src_fqcl(context, name, &found_cls)) {
         found = 1;
     }
 
@@ -1592,11 +1617,7 @@ int sym_is_imfn(Context *context, ASTNode *node) {
     utf8lwr(name);
 #endif
 
-    /* Check if the function is already in the master AST */
-    if (sym_rvfn(context->ast, name)) {
-        free(name);
-        return 1;
-    }
+    /* sym_rvfn check removed: locally defined functions should not trigger shadowing warnings for themselves */
 
     /* Check unread files */
     if (src_fqfu(context, 0, name, &func)) {

@@ -358,7 +358,7 @@ return source[0]
  * ------------------------------------------------------------------
  */
 GetPrecomp: procedure
-   arg lino=.int
+   arg line_no=.int
    lineNo = 0
    do while lineNo < source.0      ## array might grow, so while is more reliable
       LineNo=LineNo+1
@@ -406,8 +406,8 @@ return
  * ------------------------------------------------------------------
  */
 CMD_define: procedure=.int
-   arg lino=.int,line=.string
-   nlino=lino
+   arg line_no=.int,line=.string
+   nlino=line_no
    name    = ''
    arglist = ''
    body    = ''
@@ -517,8 +517,8 @@ return '/* rxpp: 'line' U*/'
  * ------------------------------------------------------------------
  */
 CMD_set: procedure
-  arg lino=.int,incl=.string
-  stype.lino= 'S'
+  arg line_no=.int,incl=.string
+  stype.line_no= 'S'
   varn=word(incl,2)
   vind=setvar(varn,DropComment(subword(incl,3)))
   if varn='cflags' then cflags=word(lower(macros_varvalue.vind),1) ## set cflags additionally directly will be used often
@@ -540,8 +540,8 @@ return strip(varvalue)
  * ------------------------------------------------------------------
  */
 CMD_unset: procedure
-  arg lino=.int,incl=.string
-  stype.lino= 'S'
+  arg line_no=.int,incl=.string
+  stype.line_no= 'S'
   varn=word(incl,2)
   varn=lower(varn)
   if varn='printgen'  then return
@@ -554,8 +554,8 @@ return
  * ------------------------------------------------------------------
  */
 CMD_include: procedure
-  arg lino=.int,incl=.string,mode=.int
-  stype.lino= 'I'
+  arg line_no=.int,incl=.string,mode=.int
+  stype.line_no= 'I'
   file=word(incl,2)
   file=normalisepath(syspath'/'file)
   include=.string[]
@@ -568,7 +568,7 @@ CMD_include: procedure
   if push_unique(included_files,file)=0 then return      /* already part of the included list */
 
   if mode=1 then do
-     rc= insert_source(lino+1,new)
+     rc= insert_source(line_no+1,new)
      insertat=lino
   end
   else do
@@ -586,8 +586,8 @@ return
  * ------------------------------------------------------------------
  */
 CMD_array: procedure
-   arg lino=.int,line=.string
-   stype.lino= 'ARRAY'
+   arg line_no=.int,line=.string
+   stype.line_no= 'ARRAY'
    line=translate(line,,',')
    line=DropComment(line,3)
    atype=word(line,2)
@@ -595,7 +595,7 @@ CMD_array: procedure
    defs=subword(line,3)
    new=words(defs)                       ## check how many arrays have been defined
    if new=0 then return
-   rc= insert_source(lino+1,new)    ## insert new lines, shift buffer
+   rc= insert_source(line_no+1,new)    ## insert new lines, shift buffer
    do i=1 to new                         ## now add the statements
       def=word(defs,i)
       source[lino+i]=def'='atype'[];'
@@ -606,8 +606,8 @@ return
  * ------------------------------------------------------------------
  */
 CMD_global: procedure
-   arg lino=.int,line=.string
-   stype.lino= 'GLOBAL'
+   arg line_no=.int,line=.string
+   stype.line_no= 'GLOBAL'
    line=translate(line,,',')
    line=DropComment(line,3)
    atype=upper(word(line,2))
@@ -617,7 +617,7 @@ CMD_global: procedure
    defs=subword(line,3)
    new=words(defs)                       ## check how many arrays have been defined
    if new=0 then return
-   rc= insert_source(lino+1,new)    ## insert new lines, shift buffer
+   rc= insert_source(line_no+1,new)    ## insert new lines, shift buffer
    do i=1 to new                         ## now add the statements
       def=word(defs,i)
       vtemp=translate(def,,'=')
@@ -712,10 +712,10 @@ return nlino
  * ------------------------------------------------------------------
  */
 CMD_for: procedure
-  arg lino=.int,line=.string
+  arg line_no=.int,line=.string
   line=subword(line,2)
-  stype.lino= 'FOR'
-  nlino=lino+1
+  stype.line_no= 'FOR'
+  nlino=line_no+1
   line=qstripcomment('/*','*/',line)
   parts=qsplit(line,';')
   from=parts.1
@@ -735,7 +735,7 @@ CMD_for: procedure
   call insert_source nlino,6         ## insert new lines, shift buffer
 
   select_count=select_count+1
-  source[lino+1]='__first_'select_count'=1'
+  source[line_no+1]='__first_'select_count'=1'
   source[lino+2]=start
   source[lino+3]='do forever'
   source[lino+4]='   if __first_'select_count'=1 then __first_'select_count'=0'
@@ -750,10 +750,10 @@ return
  * ------------------------------------------------------------------
  */
 CMD_data: procedure
-  arg lino=.int,line=.string,array=.string
-  stype.lino= 'D'
+  arg line_no=.int,line=.string,array=.string
+  stype.line_no= 'D'
   j=0
-  do i=lino+1 to source.0
+  do i=line_no+1 to source.0
      line=source.i
      if upper(word(line,1))='##END' then leave
      j=j+1
@@ -1269,7 +1269,7 @@ return 1
  * ------------------------------------------------------------------------
  */
 parsevar: Procedure=.int
-  arg lino=.int, parseLine=.string
+  arg line_no=.int, parseLine=.string
  ## 1. strip off PARSE VAR variable template or PARSE VALUE 'string'/variable [WITH] template
  ##                1w  2w   3w     4w            1w    2w     3w                4w
  ## 2. strip off PARSE variable template or PARSE 'string'/variable [WITH] template
@@ -1390,9 +1390,9 @@ parsevar: Procedure=.int
   end
   insert_count = j
   imax=insert_count*2+15        ## add 15 lines to handle all generated lines, maybe too much, but empty lines will be dropped anyway
-  rc= insert_source(lino+1,imax)
+  rc= insert_source(line_no+1,imax)
 
-   inew=inject2Source(lino+1,0,'/* PARSE 'parseSTMT' */')
+   inew=inject2Source(line_no+1,0,'/* PARSE 'parseSTMT' */')
    inew=inject2Source(inew+1,3,"_pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */ ")
    inew=inject2Source(inew+1,3,'_string2Parse='lhs)
    inew=inject2Source(inew+1,3,'_parsetemplate='embed(template))
@@ -1641,8 +1641,8 @@ return normalised
  * hit=1 if ANY portion of this line is in a /* */ block comment
  * --------------------------------------------------------------- */
 CommentScan: procedure=.int
-  arg lino=.int, depth=.int, expose hit=.int
-  line = source[lino]
+  arg line_no=.int, depth=.int, expose hit=.int
+  line = source[line_no]
   pos  = 1
   hit = (depth > 0)          /* already inside a comment at BOL */
   do forever

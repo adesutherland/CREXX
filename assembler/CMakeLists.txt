@@ -5,7 +5,7 @@ project(Assembler C)
 set(CMAKE_C_STANDARD 90)
 
 add_custom_command(
-        COMMAND $<TARGET_FILE:lemon> -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxasgrmr.y
+        COMMAND $<TARGET_FILE:lemon> -q -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxasgrmr.y
         DEPENDS rxasgrmr.y lemon
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.h
         COMMENT "Create REXX ASSEMBLER Parser..."

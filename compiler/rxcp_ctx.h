@@ -175,8 +175,10 @@ char* encdstrg(const char* string, size_t length);
 Symbol *sym_imfn(Context *context, ASTNode *node);
 /* Check if a function is importable - return 1 if it is a function, 0 otherwise */
 int sym_is_imfn(Context *context, ASTNode *node);
-/* Check if a symbol is importable (Function or Variable) - return 1 if it is, 0 otherwise */
-int sym_is_glob(Context *context, ASTNode *node);
+/* Check if a symbol is an importable Variable - return 1 if it is, 0 otherwise */
+int sym_is_glob_var(Context *context, ASTNode *node);
+/* Check if a class is importable - return 1 if it is, 0 otherwise */
+int sym_is_imcls(Context *context, ASTNode *node);
 /* Try and import an external class - return its symbol if successful */
 Symbol *sym_imcls(Context *context, ASTNode *node);
 
