@@ -21,6 +21,7 @@ The pipeline of transforming REXX source code into executable bytecode is struct
    - The primary data structure bridging the parser and the code emitter.
    - Built using a hierarchical structure of `ASTNode` C structs that capture operations, scopes, typing, and tree associations.
    - Contains the **Exit Bridge Framework** (`rxcp_exit.c`), which intercepts unrecognized `IMPLICIT_CMD` nodes, invokes user-provided `rxplugin` macros to generate replacement source code, parses the interpolated strings (preserving literal quotes), and surgically grafts the resulting AST back into the main tree without violating return-type constraints.
+   - **Auto-Expose Mechanics**: Implements automatic scope resolution that allows `namespace ... expose` global variables to implicitly bind into local `PROCEDURE` scopes, eliminating legacy `PROCEDURE EXPOSE` boilerplate.
 
 4. **Emitter (IR -> Assembly)**
    - AST walkers (e.g., `rxcp_ast_walk.c`, `rxcp_emit_*.c`) traverse the tree.

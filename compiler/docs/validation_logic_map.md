@@ -59,6 +59,7 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
     *   *Resolution*: Uses **Specialized Resolvers** (`sym_rslv_local`, `sym_rslv_attribute`, `sym_rslv_global`) to prevent "accidental" linkage.
     *   **Symbol Lifecycle**: Every name encountered in the AST is assigned a `Symbol` with an explicit `SymbolStatus` (e.g., `SYM_STATUS_UNRESOLVED`, `SYM_STATUS_LOCAL_DEF`).
     *   **Shadowing Protection**: This replaces the previous "deferred creation" hack. By tracking `UNRESOLVED` vs. `LOCAL` status, the compiler can safely prioritize global resolution in later passes while respecting intentional local definitions.
+    *   **Auto-Expose Mechanics**: `NAMESPACE` nodes are now explicitly processed. When a variable is listed in `namespace ... expose X`, the `X` symbol is instantly tagged as `exposed = 1`. Subsequent local uses or `DEFINE` statements (`X = .int`) automatically bind directly to the namespace global, eliminating the need for boilerplate `PROCEDURE EXPOSE X` declarations.
 
 9.  **Function Resolution (`resolve_functions_walker`)**: 
     *   Links function calls to their definitions (including newly injected code).
@@ -73,7 +74,12 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 11. **Symbol Validation (`validate_symbols`)**: 
     *   Checks for duplicate definitions and semantic symbol errors.
     *   *Idempotency*: Skips symbols whose type is already resolved (`TP_UNKNOWN`).
-    *   **Shadowing Warnings**: Emits `#SHADOWING_GLOBAL` warnings if an implicit local variable shadows an imported global or BIF.
+    *   **Shadowing Matrix**:
+        *   *Variables shadowing variables* (e.g. from parent block scopes or globals): **Warning** (`#SHADOWING_GLOBAL`).
+        *   *Variables shadowing functions* (e.g. `pos`, `length`): **Silent** (allowed for developer ergonomics).
+        *   *Functions shadowing imported functions*: **Warning**.
+        *   *Classes shadowing imported classes*: **Warning**.
+        *   *Same-namespace collisions*: Hard Error (`#DUPLICATE_SYMBOL`).
 
 12. **Exit Dispatch (`exit_dispatch_walker` - Pass B)**:
     *   Allows plugins to react to resolved symbols or types.

@@ -51,6 +51,7 @@ These replace broad, error-prone queries and are used by the walkers (e.g., `bui
 ## Robust EXPOSE (hoisting)
 - Hoisting uses `sym_hoist_to_namespace` to promote a symbol from a procedure to its namespace scope with precondition checks and idempotence guards.
 - Prevents duplicate hoisting or accidental promotion of invalid symbol kinds (e.g., arguments).
+- **Auto-Exposing:** Variables defined in the top-level `namespace ... expose` statement are now automatically mapped into the local scope of all procedures in that file, meaning developers no longer need to write `PROCEDURE EXPOSE` unless they are explicitly passing variables between dynamic caller scopes.
 
 ## Import duplication fix (scope preservation)
 - When importing/duplicating AST from other files (e.g., via `add_dast`), original scope types are preserved (procedures remain `SCOPE_PROCEDURE`, classes remain `SCOPE_CLASS`, etc.).

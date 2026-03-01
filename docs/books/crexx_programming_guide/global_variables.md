@@ -2,17 +2,21 @@
 
 Global variables are shared among modules and are linked to the namespace of the modules, similar to exposed procedures.
 
-Variables can be exposed through the module namespace instruction like procedures, making them accessible across all procedures within the module file.
+**Auto-Exposing (Recommended):** Variables exposed through the module `namespace` instruction are automatically mapped into the local scope of all procedures within the module file. This eliminates the need to repeatedly `expose` the variable in every procedure.
 
 *EXAMPLE:*
 
-Namespace myproject expose global\_var
+```rexx
+namespace myproject expose global_var
+```
 
-Alternatively, the expose keyword in the procedure instruction can be used to make variables available only within that specific procedure.
+Alternatively, the `expose` keyword in the `procedure` instruction can be used to explicitly import variables from a dynamic caller or when managing variables not declared in the top-level namespace.
 
 *EXAMPLE:*
 
-proc: procedure expose global\_var
+```rexx
+proc: procedure expose caller_var
+```
 
 The availability of global variables is limited to modules within the same namespace, excluding imported namespaces. To access a variable from a module in a different namespace (via importing), a wrapping variable access procedure is required.
 
