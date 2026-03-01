@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 18_array_class_main.rexx
- * BUILT                  : 2026-02-26 20:48:14
+ * BUILT                  : 2026-03-01 10:33:39
  */
 
 .meta "array_class_lib.item"="b" ".unknown" .class
@@ -15,38 +15,38 @@ main() .locals=5
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .meta "18_array_class_main.main.ary"="b" ".item[1]" r3
+   .meta "18_array_class_main.main.ary"="b" ".item[1]" r0
    .src 8:1="ary = .Item[1"
-   null r3
+   null r0
    .src 4:1="say \"Start\""
    say "Start"
    .src 5:1="say \"Main\""
    say "Main"
    .src 6:1="it1 = Item((\"Hello\")"
-   .meta "18_array_class_main.main.it1"="b" ".item" r0
-   load r1,1
-   load r2,"Hello"
-   settp r2,3
-   call r0,§array_class_lib.item.§factory(),r1
+   .meta "18_array_class_main.main.it1"="b" ".item" r1
+   load r2,1
+   load r3,"Hello"
+   settp r3,3
+   call r1,§array_class_lib.item.§factory(),r2
    .src 7:1="say \"Created it1\""
    say "Created it1"
    .src 9:1="say \"Created ary\""
    say "Created ary"
    .src 10:1="ary[1] = it1"
-   setattrs r3,1
-   linkattr1 r2,r3,1
-   copy r2,r0
-   unlink r2
+   setattrs r0,1
+   linkattr1 r3,r0,1
+   copy r3,r1
+   unlink r3
    .src 11:1="say \"Assigned ary[1]\""
    say "Assigned ary[1]"
    .src 12:1="say \"Calling process\""
    say "Calling process"
    .src 13:1="say process(ary)"
-   load r1,1
-   settp r3,1
-   swap r2,r3
-   call r4,process(),r1
-   swap r3,r2
+   load r2,1
+   settp r0,1
+   swap r3,r0
+   call r4,process(),r2
+   swap r0,r3
    say r4
    .src 14:1="say \"Done\""
    say "Done"
@@ -55,7 +55,7 @@ main() .locals=5
    .meta "18_array_class_main.main.ary"
    .meta "18_array_class_main.main.it1"
 
-process() .locals=12
+process() .locals=11
    .meta "18_array_class_main.process"="b" ".string" process() "items=.item[*]" ""
    .src 17:1="process: procedure = .string"
    setnumdgts 18
@@ -64,67 +64,67 @@ process() .locals=12
    setnumcas 1
    setnumstd 1
    .src 18:9="items = .Item"
-   .meta "18_array_class_main.process.items"="b" ".item[*]" r0
+   .meta "18_array_class_main.process.items"="b" ".item[*]" r3
    brtpandt l41c,a1,2
-   copy r0,a1
+   copy r3,a1
    br l41d
 l41c:
-   swap r0,a1
+   swap r3,a1
 l41d:
    .src 19:5="say \"Inside process, Items.0 =\" items.0"
-   getattrs r2,r0,0
-   itos r2
-   sconcat r2,"Inside process, Items.0 =",r2
-   say r2
+   getattrs r7,r3,0
+   itos r7
+   sconcat r7,"Inside process, Items.0 =",r7
+   say r7
    .src 20:4="if items.0 < 1"
-   getattrs r1,r0,0
-   ilt r1,r1,1
-   brf l59iffalse,r1
+   getattrs r6,r3,0
+   ilt r6,r6,1
+   brf l59iffalse,r6
    .src 20:20="then"
    .src 20:25="return \"\""
    ret ""
 l59iffalse:
    .src 22:5="it = items.1"
-   .meta "18_array_class_main.process.it"="b" ".item" r3
-   minattrs r0,1
-   linkattr1 r2,r0,1
-   copy r3,r2
-   unlink r2
+   .meta "18_array_class_main.process.it"="b" ".item" r1
+   minattrs r3,1
+   linkattr1 r7,r3,1
+   copy r1,r7
+   unlink r7
    .src 23:5="val = it.get_val"
    .meta "18_array_class_main.process.val"="b" ".string" r4
-   load r1,1
-   settp r3,1
-   swap r2,r3
-   call r4,§array_class_lib.item.get_val(),r1
-   swap r3,r2
+   load r6,1
+   settp r1,1
+   swap r7,r1
+   call r4,§array_class_lib.item.get_val(),r6
+   swap r1,r7
    .src 25:5="do"
    .src 25:8="i = 1"
-   .meta "18_array_class_main.process.i"="b" ".int" r5
-   load r5,1
+   .meta "18_array_class_main.process.i"="b" ".int" r0
+   load r0,1
    .src 25:14="to items.0"
-   getattrs r1,r0,0
+   getattrs r6,r3,0
 l70dostart:
    .src 25:14="to items.0"
-   igt r6,r5,r1
-   brt l70doend,r6
+   igt r8,r0,r6
+   brt l70doend,r8
    .src 26:9="it_i = items[i"
-   .meta "18_array_class_main.process.it_i"="b" ".item" r7
-   minattrs r0,r5,0
-   linkattr1 r8,r0,r5
-   copy r7,r8
-   unlink r8
+   .meta "18_array_class_main.process.it_i"="b" ".item" r2
+   minattrs r3,r0,0
+   linkattr1 r9,r3,r0
+   copy r2,r9
+   unlink r9
    .src 27:9="val_i = it_i.get_val"
-   .meta "18_array_class_main.process.val_i"="b" ".string" r9
-   load r10,1
-   settp r7,1
-   swap r11,r7
-   call r9,§array_class_lib.item.get_val(),r10
-   swap r7,r11
+   .meta "18_array_class_main.process.val_i"="b" ".string" r5
+   load r9,1
+   settp r2,1
+   swap r10,r2
+   call r5,§array_class_lib.item.get_val(),r9
+   swap r2,r10
    .src 28:9="say val_i"
-   say r9
+   say r5
 l70doinc:
    .src 25:8="i"
-   inc r5
+   inc r0
    .src 29:5="end"
    br l70dostart
 l70doend:

@@ -135,7 +135,7 @@ Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol, Sco
     scope->temp_flag = 0;
     if (parent) dpa_add((dpa*)(parent->child_array), scope);
 
-    if (node && node->node_type == EXIT_OWNED) {
+    if (type == SCOPE_LOCAL || (node && node->node_type == EXIT_OWNED)) {
         scope->reg_scope = parent ? parent->reg_scope : scope;
     } else {
         scope->reg_scope = scope;
@@ -875,6 +875,34 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
     if (!new_symbol) {
         new_symbol = sym_fn(new_scope, symbol->name, strlen(symbol->name));
         new_symbol->symbol_type = symbol->symbol_type;
+        new_symbol->status = symbol->status;
+        new_symbol->type = symbol->type;
+        new_symbol->value_dims = symbol->value_dims;
+        if (symbol->dim_base) {
+            new_symbol->dim_base = malloc(sizeof(int) * symbol->value_dims);
+            memcpy(new_symbol->dim_base, symbol->dim_base, sizeof(int) * symbol->value_dims);
+        }
+        if (symbol->dim_elements) {
+            new_symbol->dim_elements = malloc(sizeof(int) * symbol->value_dims);
+            memcpy(new_symbol->dim_elements, symbol->dim_elements, sizeof(int) * symbol->value_dims);
+        }
+        if (symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
+    } else {
+        /* Merge status and type if the incoming symbol has more info */
+        if (new_symbol->status == SYM_STATUS_UNRESOLVED) new_symbol->status = symbol->status;
+        if (new_symbol->type == TP_UNKNOWN) {
+            new_symbol->type = symbol->type;
+            new_symbol->value_dims = symbol->value_dims;
+            if (symbol->dim_base && !new_symbol->dim_base) {
+                new_symbol->dim_base = malloc(sizeof(int) * symbol->value_dims);
+                memcpy(new_symbol->dim_base, symbol->dim_base, sizeof(int) * symbol->value_dims);
+            }
+            if (symbol->dim_elements && !new_symbol->dim_elements) {
+                new_symbol->dim_elements = malloc(sizeof(int) * symbol->value_dims);
+                memcpy(new_symbol->dim_elements, symbol->dim_elements, sizeof(int) * symbol->value_dims);
+            }
+            if (symbol->value_class && !new_symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
+        }
     }
 
     /* Move all the node/symbol connectors */

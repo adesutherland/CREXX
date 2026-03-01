@@ -49,8 +49,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
   PROGRAM_FILE : "do_counted_parse" (0:1) [Type: .unknown]
     REXX_OPTIONS : "options" (0:1) [Type: .unknown]
       LITERAL : "levelb" (0:9) [Type: .unknown]
-    PROCEDURE : "main:" (2:0) [Type: .unknown]
-      VOID : "" (2:5) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .unknown]
+      VOID : "" (2:5) [Type: .void]
       ARGS : "" (2:5) [Type: .unknown]
       INSTRUCTIONS : "" (3:2) [Type: .unknown]
         DO : "do" (3:2) [Type: .unknown]
@@ -66,6 +66,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             SAY : "say" (4:4) [Type: .unknown]
               VAR_SYMBOL : "i" (4:8) [Type: .unknown]
         RETURN : "return" (6:2) [Type: .unknown]
+Scope [0]: Unnamed
+  do_counted_parse (Namespace) -> .unknown
+  Scope [1]: do_counted_parse
+    main (Function) -> .unknown
+    Scope [2]: main
+      i (Variable) -> .unknown
 
 --- STAGE_SYMBOLS (Iteration 1) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]

@@ -479,6 +479,11 @@ void validate_ast(Context *context) {
         rxcp_print_ast_recursive(context->ast, 0);
     }
 
+    /* Pre-Loop Initialization: Prime the symbol table and imports */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+    rxcp_scan_imports(context);
+
     /* fixed point validation - Converge all exits */
     context->iterations = 0;
     context->after_rewrite = 0;
@@ -665,6 +670,10 @@ void validate_ast(Context *context) {
         if (context->iterations == 1) context->after_rewrite = 1;
 
     } while ((context->changed || (context->debug_mode >= 3 && context->iterations < 3)) && context->iterations < 16);
+
+    /* Final pass to mutate remaining taken constants to STRING nodes */
+    context->after_rewrite = 2;
+    validate_symbols(context, context->ast->scope);
 
     /* Set Ordinals again after normalisation - not needed if normalisation is once at start */
     ordinal_counter = 0;

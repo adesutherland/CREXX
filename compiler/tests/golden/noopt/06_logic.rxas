@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 06_logic.rexx
- * BUILT                  : 2026-02-26 20:48:12
+ * BUILT                  : 2026-03-01 10:33:39
  */
 
 .srcfile="06_logic.rexx"
@@ -15,14 +15,14 @@ main() .locals=3
    setnumcas 1
    setnumstd 1
    .src 2:1="t = 1"
-   .meta "06_logic.main.t"="b" ".int" r0
-   load r0,1
+   .meta "06_logic.main.t"="b" ".int" r1
+   load r1,1
    .src 3:1="f = 0"
-   .meta "06_logic.main.f"="b" ".int" r1
-   load r1,0
+   .meta "06_logic.main.f"="b" ".int" r0
+   load r0,0
    .src 4:1="say t & f"
-   brf l12andfalse,r0
-   icopy r2,r1
+   brf l12andfalse,r1
+   icopy r2,r0
    br l12andend
 l12andfalse:
    load r2,0
@@ -30,8 +30,8 @@ l12andend:
    btos r2
    say r2
    .src 5:1="say t | f"
-   brt l16ortrue,r0
-   icopy r2,r1
+   brt l16ortrue,r1
+   icopy r2,r0
    br l16orend
 l16ortrue:
    load r2,1
@@ -39,7 +39,7 @@ l16orend:
    btos r2
    say r2
    .src 6:1="say \t"
-   not r2,r0
+   not r2,r1
    btos r2
    say r2
    .src 6:7=""

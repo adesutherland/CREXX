@@ -106,8 +106,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
   PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
     REXX_OPTIONS : "options" (0:1) [Type: .unknown]
       LITERAL : "levelb" (0:9) [Type: .unknown]
-    PROCEDURE : "main:" (2:0) [Type: .unknown]
-      VOID : "" (-1:-1) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .void]
       ARGS : "" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .unknown]
@@ -119,15 +119,15 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_SYMBOL : "var" (3:4) [Type: .unknown]
             NOVAL : "" (3:7) [Type: .unknown]
         RETURN : "return" (5:0) [Type: .unknown]
-    CLASS_DEF : "myclass:" (7:0) [Type: .unknown]
+    CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .unknown]
         VAR_TARGET : "val" (8:4) [Type: .unknown]
         CLASS : ".int" (8:10) [Type: .unknown]
         NODE_REGISTER : "register" (8:20) [Type: .unknown]
           INTEGER : "1" (8:28) [Type: .unknown]
           VAR_SYMBOL : "int" (8:30) [Type: .unknown]
-      FACTORY : "*:" (10:4) [Type: .unknown]
-        VOID : "" (10:6) [Type: .unknown]
+      FACTORY : "*" (10:4) [Type: .unknown]
+        VOID : "" (10:6) [Type: .void]
         ARGS : "" (11:12) [Type: .unknown]
           ARG : "" (11:12) [Type: .unknown]
             VAR_TARGET : "initial_value" (11:12) [Type: .unknown]
@@ -138,14 +138,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .unknown]
           RETURN : "return" (13:8) [Type: .unknown]
             VAR_SYMBOL : "\xc2\xa7factory" (13:14) [Type: .unknown]
-      METHOD : "getvalue:" (15:4) [Type: .unknown]
-        CLASS : ".int" (15:23) [Type: .unknown]
+      METHOD : "getvalue" (15:4) [Type: .unknown]
+        CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
         INSTRUCTIONS : "" (16:8) [Type: .unknown]
           RETURN : "return" (16:8) [Type: .unknown]
             VAR_SYMBOL : "val" (16:15) [Type: .unknown]
-      METHOD : "setvalue:" (18:4) [Type: .unknown]
-        VOID : "" (18:13) [Type: .unknown]
+      METHOD : "setvalue" (18:4) [Type: .unknown]
+        VOID : "" (18:13) [Type: .void]
         ARGS : "" (19:12) [Type: .unknown]
           ARG : "" (19:12) [Type: .unknown]
             VAR_TARGET : "new_val" (19:12) [Type: .unknown]
@@ -155,6 +155,26 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (20:8) [Type: .unknown]
             VAR_SYMBOL : "new_val" (20:14) [Type: .unknown]
           RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .unknown
+    myclass (Class) -> .unknown
+    Scope [2]: main
+      var (Variable) -> .unknown
+    Scope [2]: myclass
+      getvalue (Function) -> .unknown
+      setvalue (Function) -> .unknown
+      val (Variable) -> .unknown
+      §factory (Function) -> .unknown
+      Scope [3]: §factory
+        initial_value (Variable) -> .unknown
+        §factory (Variable) -> .myclass
+      Scope [3]: getvalue
+        §this (Variable) -> .myclass
+      Scope [3]: setvalue
+        new_val (Variable) -> .unknown
+        §this (Variable) -> .myclass
 
 --- STAGE_SYMBOLS (Iteration 1) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]

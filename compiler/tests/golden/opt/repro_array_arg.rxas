@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : repro_array_arg.rexx
- * BUILT                  : 2026-02-26 20:48:16
+ * BUILT                  : 2026-03-01 10:33:40
  */
 
 .srcfile="repro_array_arg.rexx"
@@ -14,49 +14,49 @@ main() .locals=5
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .meta "repro_array_arg.main.s"="b" ".string[*]" r0
+   .meta "repro_array_arg.main.s"="b" ".string[*]" r1
    .src 4:1="s.1 = \"first\""
-   null r0
+   null r1
    .src 4:1="s.1 = \"first\""
-   minattrs r0,1
-   linkattr1 r1,r0,1
-   load r2,"first"
-   scopy r1,r2
-   unlink r1
+   minattrs r1,1
+   linkattr1 r2,r1,1
+   load r3,"first"
+   scopy r2,r3
+   unlink r2
    .src 6:1="say \"Before: [\"s.i\"]\""
    .meta "repro_array_arg.main.i"="b" ".int" "1"
-   minattrs r0,1
-   linkattr1 r2,r0,1
-   concat r1,"Before: [",r2
-   unlink r2
-   concat r1,r1,"]"
-   say r1
+   minattrs r1,1
+   linkattr1 r3,r1,1
+   concat r2,"Before: [",r3
+   unlink r3
+   concat r2,r2,"]"
+   say r2
    .src 8:1="c = upper(s.i)"
-   .meta "repro_array_arg.main.c"="b" ".string" r3
-   load r1,1
-   minattrs r0,1
-   linkattr1 r4,r0,1
-   swap r2,r4
-   call r3,upper(),r1
-   swap r4,r2
+   .meta "repro_array_arg.main.c"="b" ".string" r0
+   load r2,1
+   minattrs r1,1
+   linkattr1 r4,r1,1
+   swap r3,r4
+   call r0,upper(),r2
+   swap r4,r3
    unlink r4
    .src 9:1="say \"Upper:  [\"c\"]\""
-   concat r4,"Upper:  [",r3
+   concat r4,"Upper:  [",r0
    concat r4,r4,"]"
    say r4
    .src 10:1="say \"After:  [\"s.i\"]\""
-   minattrs r0,1
-   linkattr1 r4,r0,1
-   concat r2,"After:  [",r4
+   minattrs r1,1
+   linkattr1 r4,r1,1
+   concat r3,"After:  [",r4
    unlink r4
-   concat r2,r2,"]"
-   say r2
+   concat r3,r3,"]"
+   say r3
    .src 12:0="if s.i \= \"first\""
-   minattrs r0,1
-   linkattr1 r4,r0,1
-   sne r2,r4,"first"
+   minattrs r1,1
+   linkattr1 r4,r1,1
+   sne r3,r4,"first"
    unlink r4
-   brf l46iffalse,r2
+   brf l46iffalse,r3
    .src 12:19="then"
    .src 12:24="say \"BUG: original stem element changed!\""
    say "BUG: original stem element changed!"

@@ -30,3 +30,12 @@ Whenever we investigate, refactor, or improve this codebase, you must proactivel
 
 **Execution:**
 Do not ask for permission to update documentation—consider it a mandatory, parallel step to any code changes. Use the provided MCP file manipulation tools (`replace_text_in_file`, `create_new_file`, etc.) to apply these documentation updates directly.
+
+**Standing Instruction: Periodic Progress Updates & Task Planning**
+
+To ensure transparency during long-running tasks, investigations, or refactoring, you must adhere to the following workflow:
+
+1. **Explicit Planning:** Before executing any complex task, output a numbered, step-by-step plan.
+2. **Periodic Check-ins:** You must not execute more than 3 to 4 tool calls in a row without providing a brief text update to the user.
+3. **Milestone Summaries:** After completing a major step in your plan (e.g., finishing a search, successfully compiling, or modifying a file), pause to explain what was just done and what step you are starting next.
+4. **Pause for Feedback:** If you encounter unexpected complexity, an error, or are about to make a massive destructive change, stop and explicitly ask the user for permission to proceed.

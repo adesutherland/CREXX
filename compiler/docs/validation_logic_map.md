@@ -49,6 +49,7 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 
 8.  **Symbol Harvesting (`build_symbols_walker`)**: 
     *   Constructs the Symbol Table and defines Scopes for the current tree state.
+    *   **Block Scoping**: Creates `SCOPE_LOCAL` for simple `DO` groups and `IF` branches (confinement).
     *   *Idempotency*: Uses existing scopes if already created; `sym_adnd` prevents duplicate symbols.
     *   *Resolution*: Uses **Specialized Resolvers** (`sym_rslv_local`, `sym_rslv_attribute`, `sym_rslv_global`) to prevent "accidental" linkage.
     *   **Symbol Lifecycle**: Every name encountered in the AST is assigned a `Symbol` with an explicit `SymbolStatus` (e.g., `SYM_STATUS_UNRESOLVED`, `SYM_STATUS_LOCAL_DEF`).

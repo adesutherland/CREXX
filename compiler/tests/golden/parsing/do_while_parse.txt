@@ -61,8 +61,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
   PROGRAM_FILE : "do_while_parse" (0:1) [Type: .unknown]
     REXX_OPTIONS : "options" (0:1) [Type: .unknown]
       LITERAL : "levelb" (0:9) [Type: .unknown]
-    PROCEDURE : "main:" (2:0) [Type: .unknown]
-      VOID : "" (2:5) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .unknown]
+      VOID : "" (2:5) [Type: .void]
       ARGS : "" (2:5) [Type: .unknown]
       INSTRUCTIONS : "" (3:2) [Type: .unknown]
         DEFINE : "=" (3:2) [Type: .unknown]
@@ -84,6 +84,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
                 VAR_SYMBOL : "i" (6:8) [Type: .unknown]
                 INTEGER : "1" (6:12) [Type: .unknown]
         RETURN : "return" (8:2) [Type: .unknown]
+Scope [0]: Unnamed
+  do_while_parse (Namespace) -> .unknown
+  Scope [1]: do_while_parse
+    main (Function) -> .unknown
+    Scope [2]: main
+      i (Variable) -> .unknown
 
 --- STAGE_SYMBOLS (Iteration 1) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]

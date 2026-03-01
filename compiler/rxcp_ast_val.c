@@ -50,6 +50,14 @@ static void validate_node(ASTNode *node, int *errors) {
     }
 
     /* Check scope consistency */
+    if (node->node_type == INSTRUCTIONS && node->parent && (node->parent->node_type == INSTRUCTIONS || node->parent->node_type == IF)) {
+        if (node->parent->scope && !node->scope) {
+            fprintf(stderr, "AST Error: Node %d (%s) under %s missing SCOPE_LOCAL\n",
+                    node->node_number, ast_ndtp(node->node_type), ast_ndtp(node->parent->node_type));
+            (*errors)++;
+        }
+    }
+
     if (node->scope) {
         if (!node->scope->defining_node) {
             fprintf(stderr, "AST Error: Node %d (%s) points to scope %p which has no defining node\n",

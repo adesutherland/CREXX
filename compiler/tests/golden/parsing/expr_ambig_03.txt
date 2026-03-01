@@ -34,8 +34,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
   PROGRAM_FILE : "expr_ambig_03" (0:1) [Type: .unknown]
     REXX_OPTIONS : "options" (0:1) [Type: .unknown]
       LITERAL : "levelb" (0:9) [Type: .unknown]
-    PROCEDURE : "main:" (1:0) [Type: .unknown]
-      VOID : "" (-1:-1) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .void]
       ARGS : "" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (1:0) [Type: .unknown]
         ASSIGN : "=" (1:0) [Type: .unknown]
@@ -45,6 +45,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             OP_PLUS : "+" (1:8) [Type: .unknown]
               VAR_SYMBOL : "c" (1:10) [Type: .unknown]
         RETURN : "" (1:11) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_ambig_03 (Namespace) -> .unknown
+  Scope [1]: expr_ambig_03
+    main (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .unknown
+      b (Variable) -> .unknown
+      c (Variable) -> .unknown
 
 --- STAGE_SYMBOLS (Iteration 1) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]

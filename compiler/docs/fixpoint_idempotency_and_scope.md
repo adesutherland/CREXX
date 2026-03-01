@@ -6,6 +6,7 @@ This document summarizes an important change to the cREXX compiler (crexx-dev-26
 - Every walker that runs inside the fixpoint loop is now idempotent. Re-running the loop or an individual walker produces a stable AST and Symbol table with no duplication or drift.
 - A built-in AST/Symbol validator runs (under debug) between passes to catch structural and linkage issues early.
 - Scopes are explicitly typed (`SCOPE_UNIVERSE`, `SCOPE_NAMESPACE`, `SCOPE_CLASS`, `SCOPE_PROCEDURE`, `SCOPE_LOCAL`) and validated; this prevents “wrongly linked symbols.”
+- Block-local scoping is now supported for simple `DO ... END` groups and `IF ... THEN/ELSE` branches (confinement of variables to their lexical block).
 - Name resolution now uses tiered, specialized resolvers (Local → Attribute → Global) to avoid accidental cross-scope binding.
 - EXPOSE/hoisting of variables from procedures to the namespace scope is robust and idempotent.
 - Import duplication preserves original scope types (procedures remain procedures, etc.), avoiding misclassification of local symbols as globals.

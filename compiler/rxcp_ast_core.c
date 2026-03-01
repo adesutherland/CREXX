@@ -650,6 +650,11 @@ ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
     size_t needed;
     ASTNode *errNode;
     ASTNode *target;
+
+    if (strcmp(error_string, "EXPECTING_ARRAY") == 0) {
+        fprintf(stderr, "DEBUG_ERROR: Creating EXPECTING_ARRAY on node %d (%s) at %d:%d, value_dims=%d, target_dims=%d\n", 
+                node->node_number, ast_ndtp(node->node_type), node->token ? node->token->line : -1, node->token ? node->token->column : -1, node->value_dims, node->target_dims);
+    }
     char *buffer = malloc(buffer_size);
 
     /* Write to buffer as sized */

@@ -68,7 +68,7 @@ static void assign_registers_in_scope(Scope *scope, walker_payload *payload) {
     scp_4all(scope, assign_symbol_registers_worker, payload);
     for (i = 0; i < scp_noch(scope); i++) {
         Scope *child = scp_chd(scope, i);
-        if (child && child->defining_node && child->defining_node->node_type == EXIT_OWNED) {
+        if (child && (child->type == SCOPE_LOCAL || (child->defining_node && child->defining_node->node_type == EXIT_OWNED))) {
             assign_registers_in_scope(child, payload);
         }
     }
@@ -124,8 +124,6 @@ walker_result register_walker(walker_direction direction,
     ASTNode *child1, *child2, *child3, *c;
     int a, i;
 
-    if (payload->context->debug_mode >= 2) fprintf(stderr, "DEBUG: register_walker %s %s \"%.*s\"\n", direction == in ? "IN" : "OUT", ast_ndtp(node->node_type), (int)node->node_string_length, node->node_string);
-
     child1 = node->child;
     if (child1) child2 = child1->sibling;
     else child2 = NULL;
@@ -146,6 +144,9 @@ walker_result register_walker(walker_direction direction,
                 /* Return Type */
                 c = ast_chld(node, CLASS, VOID);
                 if (c) c->register_num = DONT_ASSIGN_REGISTER;
+
+                /* Pre-assign registers for all locals in this procedure, including nested SCOPE_LOCAL blocks */
+                if (node->scope) assign_registers_in_scope(node->scope, payload);
 
                 if (node->node_type == FACTORY) {
                     /* Assign r_this from symbol §factory */

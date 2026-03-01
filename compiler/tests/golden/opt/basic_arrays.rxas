@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : basic_arrays.rexx
- * BUILT                  : 2026-02-26 20:48:17
+ * BUILT                  : 2026-03-01 10:33:40
  */
 
 .srcfile="basic_arrays.rexx"
@@ -14,78 +14,78 @@ main() .locals=6
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .meta "basic_arrays.main.s"="b" ".string[10]" r0
+   .meta "basic_arrays.main.s"="b" ".string[10]" r1
    .src 2:1="s = .string[10"
-   null r0
+   null r1
    .src 3:1="do"
    .src 3:4="i = 1"
-   .meta "basic_arrays.main.i"="b" ".int" r1
-   load r1,1
+   .meta "basic_arrays.main.i"="b" ".int" r0
+   load r0,1
    .src 3:10="to 3"
    load r2,3
 l10dostart:
    .src 3:10="to 3"
-   igt r3,r1,r2
+   igt r3,r0,r2
    brt l10doend,r3
    .src 4:3="s[i] = \"Item \" || i"
-   setattrs r0,10
-   linkattr1 r4,r0,r1
-   itos r1
-   concat r5,"Item ",r1
+   setattrs r1,10
+   linkattr1 r4,r1,r0
+   itos r0
+   concat r5,"Item ",r0
    scopy r4,r5
    unlink r4
 l10doinc:
    .src 3:4="i"
-   inc r1
+   inc r0
    .src 5:1="end"
    br l10dostart
 l10doend:
    .src 7:1="do"
    .src 7:4="i = 1"
-   load r1,1
+   load r0,1
    .src 7:10="to 3"
    load r5,3
 l24dostart:
    .src 7:10="to 3"
-   igt r4,r1,r5
+   igt r4,r0,r5
    brt l24doend,r4
    .src 8:3="say \"Arr \" || i || \": \" || s[i"
-   itos r1
-   concat r3,"Arr ",r1
+   itos r0
+   concat r3,"Arr ",r0
    concat r3,r3,": "
-   setattrs r0,10
-   linkattr1 r2,r0,r1
+   setattrs r1,10
+   linkattr1 r2,r1,r0
    concat r3,r3,r2
    unlink r2
    say r3
 l24doinc:
    .src 7:4="i"
-   inc r1
+   inc r0
    .src 8:33="]"
    br l24dostart
 l24doend:
    .src 13:1="s.idx = \"Item 4\""
    .meta "basic_arrays.main.idx"="b" ".int" "4"
-   setattrs r0,10
-   linkattr1 r5,r0,4
+   setattrs r1,10
+   linkattr1 r5,r1,4
    load r4,"Item 4"
    scopy r5,r4
    unlink r5
    .src 14:1="say \"Arr 4: \" || s.4"
-   setattrs r0,10
-   linkattr1 r5,r0,4
+   setattrs r1,10
+   linkattr1 r5,r1,4
    concat r4,"Arr 4: ",r5
    unlink r5
    say r4
    .src 17:1="s.5 = \"Item 5\""
-   setattrs r0,10
-   linkattr1 r5,r0,5
+   setattrs r1,10
+   linkattr1 r5,r1,5
    load r4,"Item 5"
    scopy r5,r4
    unlink r5
    .src 18:1="say \"Arr 5: \" || s.5"
-   setattrs r0,10
-   linkattr1 r5,r0,5
+   setattrs r1,10
+   linkattr1 r5,r1,5
    concat r4,"Arr 5: ",r5
    unlink r5
    say r4

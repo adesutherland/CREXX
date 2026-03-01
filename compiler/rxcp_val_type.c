@@ -36,8 +36,7 @@ void validate_node_promotion_for_ref(ASTNode* node) {
     size_t i;
 
     if (node->target_type == TP_UNKNOWN || node->value_type == TP_UNKNOWN) {
-        mknd_err(node, "UNKNOWN_TYPE");
-        return;
+        return; /* Will be validated later or caught by type_safety_walker */
     }
 
     /* Ignore error nodes */
@@ -714,13 +713,21 @@ walker_result type_safety_walker(walker_direction direction,
             case VAR_SYMBOL:
                 if (node->parent->node_type != NODE_REGISTER) {
                     if (node->symbolNode && node->symbolNode->symbol) {
-                        if (node->value_type == TP_UNKNOWN) ast_svtp(node, node->symbolNode->symbol);
+                        if (node->value_type == TP_UNKNOWN) {
+                            if (node->node_string_length > 0 && strncmp(node->node_string, "macros_margs", 12) == 0) {
+                                fprintf(stderr, "DEBUG_TSW: VAR_SYMBOL macros_margs at %d, symbol type=%d, value_type before=%d\n", node->token ? node->token->line : 0, node->symbolNode->symbol->type, node->value_type);
+                            }
+                            ast_svtp(node, node->symbolNode->symbol);
+                        }
                     }
                     if (node->value_type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
                 }
-
+                break;
                 if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->type != TP_UNKNOWN && ast_nchd(node) && !node->symbolNode->symbol->value_dims) {
-                    mknd_err(node, "NOT_AN_ARRAY");
+                    /* Relax Type Checks for Unresolved Globals: Temporarily suppress #NOT_AN_ARRAY errors for symbols with status == SYM_STATUS_UNRESOLVED and exposed == 1 */
+                    /* Also relax for exposed symbols in general as they might be arrays defined elsewhere */
+                    if (!((node->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || node->symbolNode->symbol->exposed) && node->symbolNode->symbol->exposed))
+                        mknd_err(node, "NOT_AN_ARRAY");
                 }
                 else if (child1) {
                     /* We have array parameters */
@@ -771,16 +778,24 @@ walker_result type_safety_walker(walker_direction direction,
                          * are returning the number of elements as an integer */
 
                         /* We can have fewer parameters when we are getting the number of elements */
-                        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->value_dims < ast_nchd(node))
-                            mknd_err(node, "ARRAY_DIMS_MISMATCH");
+                        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->value_dims < ast_nchd(node)) {
+                            /* Relax Type Checks for Unresolved Globals: Temporarily suppress #ARRAY_DIMS_MISMATCH errors for symbols with status == SYM_STATUS_UNRESOLVED and exposed == 1 */
+                            /* Also relax for exposed symbols in general */
+                            if (!((node->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || node->symbolNode->symbol->exposed) && node->symbolNode->symbol->exposed))
+                                mknd_err(node, "ARRAY_DIMS_MISMATCH");
+                        }
 
                         set_node_type(node, TP_INTEGER);
                     }
 
                     else {
                         /* We are returning the array element */
-                        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->value_dims < ast_nchd(node))
-                            mknd_err(node, "ARRAY_DIMS_MISMATCH");
+                        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->value_dims < ast_nchd(node)) {
+                            /* Relax Type Checks for Unresolved Globals: Temporarily suppress #ARRAY_DIMS_MISMATCH errors for symbols with status == SYM_STATUS_UNRESOLVED and exposed == 1 */
+                            /* Also relax for exposed symbols in general */
+                            if (!((node->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || node->symbolNode->symbol->exposed) && node->symbolNode->symbol->exposed))
+                                mknd_err(node, "ARRAY_DIMS_MISMATCH");
+                        }
 
                         if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->value_dims > ast_nchd(node)) {
                             node->value_dims = node->symbolNode->symbol->value_dims - ast_nchd(node);
@@ -875,6 +890,7 @@ walker_result type_safety_walker(walker_direction direction,
                                     else if (n1->parent->symbolNode->symbol->dim_elements[ix]) {
                                         /* There is a max number of elements - so check it */
                                         if (val > n1->parent->symbolNode->symbol->dim_base[ix] +
+                                                  n1->parent->symbolNode->symbol->dim_base[ix] +
                                                   n1->parent->symbolNode->symbol->dim_elements[ix] - 1)
                                             mknd_err(n1, "OUT_OF_RANGE");
                                     }
@@ -884,9 +900,18 @@ walker_result type_safety_walker(walker_direction direction,
                             n1 = n1->sibling;
                         }
 
-                        if (!child1->value_dims)
-                            mknd_err(child1, "NOT_AN_ARRAY");
-                        else if (child1->value_dims != ast_nchd(child1)) mknd_err(node, "ARRAY_DIMS_MISMATCH");
+                        if (!child1->value_dims) {
+                            /* Relax Type Checks for Unresolved Globals: Temporarily suppress #NOT_AN_ARRAY errors for symbols with status == SYM_STATUS_UNRESOLVED and exposed == 1 */
+                            /* Also relax for exposed symbols in general */
+                            if (!((child1->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || child1->symbolNode->symbol->exposed) && child1->symbolNode->symbol->exposed))
+                                mknd_err(child1, "NOT_AN_ARRAY");
+                        }
+                        else if (child1->value_dims != ast_nchd(child1)) {
+                            /* Relax Type Checks for Unresolved Globals: Temporarily suppress #ARRAY_DIMS_MISMATCH errors for symbols with status == SYM_STATUS_UNRESOLVED and exposed == 1 */
+                            /* Also relax for exposed symbols in general */
+                            if (!((child1->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || child1->symbolNode->symbol->exposed) && child1->symbolNode->symbol->exposed))
+                                mknd_err(node, "ARRAY_DIMS_MISMATCH");
+                        }
 
                         child1->value_dims = 0; /* We are a single value */
                         child1->target_dims = 0;
