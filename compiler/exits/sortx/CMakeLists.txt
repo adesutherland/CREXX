@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 3.24)
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 
 add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sortx.rxbin
-        COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -n -i "\"${CMAKE_CURRENT_SOURCE_DIR}/..;${CMAKE_CURRENT_BINARY_DIR}/..\"" -o sortx ${CMAKE_CURRENT_SOURCE_DIR}/sortx.rexx
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Sortx.rxbin
+        COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -n -i "\"${CMAKE_CURRENT_SOURCE_DIR}/..;${CMAKE_CURRENT_BINARY_DIR}/..\"" -o Sortx ${CMAKE_CURRENT_SOURCE_DIR}/Sortx.rexx
         COMMAND $<TARGET_FILE:rxas> -o Sortx Sortx
         DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/Sortx.rexx ${CMAKE_CURRENT_BINARY_DIR}/../token.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
