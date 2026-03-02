@@ -15,17 +15,19 @@ add_custom_target(token_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin)
 add_subdirectory(dump)
 add_subdirectory(query)
 add_subdirectory(sort)
+add_subdirectory(sortx)
 add_subdirectory(dummy)
 
 # Build the bundle by concatenating all exit components
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
-    COMMAND ${CMAKE_COMMAND} -E cat token.rxbin dump/Dump.rxbin query/Query.rxbin sort/Sort.rxbin dummy/Dummy.rxbin > ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
+    COMMAND ${CMAKE_COMMAND} -E cat token.rxbin dump/Dump.rxbin query/Query.rxbin sort/Sort.rxbin sortx/Sortx.rxbin dummy/Dummy.rxbin > ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
     DEPENDS rxc rxas
             ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin 
             ${CMAKE_CURRENT_BINARY_DIR}/dump/Dump.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/query/Query.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/sort/Sort.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/sortx/Sortx.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/dummy/Dummy.rxbin
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building rxcexits.rxbin (bundled via concatenation)"
