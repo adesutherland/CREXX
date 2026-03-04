@@ -25,7 +25,6 @@ arraydump: procedure=.int
   n = array[0]
   if from < 1 then from = 1
   if tto <= 0 | tto > n then tto = n
-  if from > tto then return 0
 
   uflags = upper(flags)
 
@@ -42,6 +41,10 @@ arraydump: procedure=.int
   if showC then say prefix||hdr||" (count="n", range="from"-"tto"), flags="uflags
   else          say prefix||hdr||" (range="from"-"tto"), flags="uflags
 
+   if from > tto then do
+      say '  *** empty ***'
+      return 0
+   end
   printed = 0
   do i = from to tto
      v = array[i]
