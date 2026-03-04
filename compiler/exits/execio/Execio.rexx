@@ -119,7 +119,6 @@ process: method = .string
     else countEmit = countExpr
  /* operation always literal => quoted */
     opEmit = tokens[opPos].get_text()                /* to do: there seems to be a spurious whitespace/char which can be dropped by strio function */
-    call log 999 opEmit
  /* ddname/fname in command form is literal => quoted unless already string_literal */
     fnameTok = tokens[opPos+1]
     if strip(fnameTok.get_type()) = "string_literal" then fnameEmit = fnameTok.get_text()
@@ -174,19 +173,14 @@ process: method = .string
     * ------------------------------------------------------------
     */
     opEmit=upper(strip(opEmit))
-    call log 999 opEmit
- /*
+ /*  ++++ defined variables don't survive compiler exit end
     if opEmit='DISKR' then _replacement = stemEmit"=.string[];"
     else _replacement=''
   */
     _replacement=''
-    call log 111' '_replacement
     _replacement = _replacement||"__rc=_execio("countEmit",'"opEmit"',"fnameEmit
-    call log 222' '_replacement
     if stemPresent then _replacement = _replacement||", "stemEmit
     _replacement = _replacement||")"    /* close execio function call */
-    call log 333' '_replacement
-    call log _replacement
     _status = "REPLACE"
     return _status
 
@@ -213,4 +207,5 @@ process: method = .string
  */
 log: procedure = .int
   arg logtxt = .string
+  return 0
 return lineout("c:\temp\pluginlog.txt", time()" "logtxt)
