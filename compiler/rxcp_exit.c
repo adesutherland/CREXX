@@ -493,7 +493,7 @@ static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context*
 
     if (strncmp(status, "PENDING", status_len) == 0) {
         if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: status=PENDING\n");
-        ctx->changed = 1; /* Ensure another pass */
+        ctx->changed_flags |= FLAG_EXIT; /* Ensure another pass */
         if (status_val) rxvml_value_free(status_val);
         return 1;
     }
@@ -564,7 +564,7 @@ static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context*
         if (replacement_code) {
             int rc = ast_grft_interpolated(ctx, node, replacement_code, node_map, num_tokens);
             /* Mark context changed to force recompilation pass (locals/regs recalculation) */
-            ctx->changed = 1;
+            ctx->changed_flags |= FLAG_EXIT;
             if (val) rxvml_value_free(val);
             if (status_val) rxvml_value_free(status_val);
             return rc < 0 ? -1 : -1; /* Node was replaced */

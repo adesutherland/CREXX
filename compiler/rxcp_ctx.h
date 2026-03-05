@@ -33,6 +33,17 @@
 #include "rxcp_token.h"
 #include "rxcp_ast.h"
 #include "rxcp_sym.h"
+#include <stdint.h>
+
+/* Walker Flags */
+#define FLAG_VAL_TRANS   (1 << 0)
+#define FLAG_VAL_SYM     (1 << 1)
+#define FLAG_UTIL        (1 << 2)
+#define FLAG_EXIT        (1 << 3)
+#define FLAG_VAL_PLUGIN  (1 << 4)
+#define FLAG_VAL_TYPE    (1 << 5)
+#define FLAG_ORCH        (1 << 6)
+#define FLAG_FUNC        (1 << 7)
 
 /* Compiler Context Object */
 struct Context {
@@ -61,7 +72,7 @@ struct Context {
     void* importable_function_tree;
     void* importable_class_tree;
     char after_rewrite; /* To avoid duplicate processing / warnings after the compiler rewrites */
-    char changed; /* Flag Used to see if a walker has made a change */
+    uint32_t changed_flags; /* Bitmask used to see which walkers have made changes */
     /* Do we need to import _rxsysb */
     char need_rxsysb;
     char has_rxsysb;

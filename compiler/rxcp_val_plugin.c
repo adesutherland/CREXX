@@ -43,13 +43,13 @@ walker_result exit_dispatch_walker(walker_direction direction, ASTNode *node, vo
         }
         if (node->node_type == IMPLICIT_CMD || node->node_type == ADDRESS || node->node_type == EXIT_EXTENDED) {
             if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: exit_dispatch_walker hitting node type %d at line %d\n", node->node_type, node->line);
-            int old_changed = context->changed;
+            int old_changed = context->changed_flags;
             int rc = rxcp_exit_bridge_invoke(context, node);
             if (rc < 0) {
                 if (rc == -1) return request_skip; /* Node replaced */
                 return result_error;
             }
-            if (context->changed > old_changed) {
+            if (context->changed_flags > old_changed) {
                 return request_skip;
             }
         }

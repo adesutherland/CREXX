@@ -748,7 +748,7 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
                 add_dast(exit_owned, instr);
                 instr = next_instr;
             }
-            ctx->changed = 1;
+            ctx->changed_flags |= FLAG_UTIL;
         }
         frag->ast = NULL;
     }

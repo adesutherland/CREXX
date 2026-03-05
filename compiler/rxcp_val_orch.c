@@ -490,7 +490,7 @@ void validate_ast(Context *context) {
     context->iterations = 0;
     context->after_rewrite = 0;
     do {
-        context->changed = 0;
+        context->changed_flags = 0;
 
         if (context->debug_mode && context == context->master_context) {
             rxcp_debug_header("STAGE_SYMBOLS", context->iterations);
@@ -562,7 +562,7 @@ void validate_ast(Context *context) {
          * Progress: rxcp_scan_imports is idempotent. Uses 'imported' flag in the global importable_file_list.
          */
         if (rxcp_scan_imports(context)) {
-            context->changed = 1;
+            context->changed_flags |= FLAG_ORCH;
         }
         if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
         if (context->debug_mode >= 3) {
@@ -667,11 +667,16 @@ void validate_ast(Context *context) {
         }
 
         context->iterations++;
-        if (context->debug_mode >= 2) fprintf(stderr, "DEBUG: Iteration %d finished, changed=%d\n", context->iterations, context->changed);
+        if (context->debug_mode >= 2) fprintf(stderr, "DEBUG: Iteration %d finished, changed_flags=0x%04X\n", context->iterations, context->changed_flags);
         /* Incremental update of symbols - So walkers can avoid duplicate processing */
         if (context->iterations == 1) context->after_rewrite = 1;
 
-    } while ((context->changed || (context->debug_mode >= 3 && context->iterations < 3)) && context->iterations < 16);
+    } while ((context->changed_flags || (context->debug_mode >= 3 && context->iterations < 3)) && context->iterations < 16);
+
+    if (context->changed_flags && context->iterations >= 16) {
+        fprintf(stderr, "INTERNAL_CONVERGENCE_ERROR: Loop failed to converge. Active flags: 0x%04X\n", context->changed_flags);
+        exit(255);
+    }
 
     /* Final pass to mutate remaining taken constants to STRING nodes */
     context->after_rewrite = 2;

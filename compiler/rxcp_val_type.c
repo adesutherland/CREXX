@@ -175,16 +175,14 @@ walker_result set_node_types_walker(walker_direction direction,
             case OP_ARG_EXISTS:
             case OP_ARG_IX_EXISTS:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, TP_BOOLEAN);
+                    context->changed_flags |= FLAG_VAL_TYPE; set_node_type(node, TP_BOOLEAN);
                 }
                 break;
 
             case OP_CONCAT:
             case OP_SCONCAT:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, TP_STRING);
+                    context->changed_flags |= FLAG_VAL_TYPE; set_node_type(node, TP_STRING);
                 }
                 break;
 
@@ -193,8 +191,7 @@ walker_result set_node_types_walker(walker_direction direction,
             case OP_MULT:
             case OP_POWER:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    ValueType type = promotion[node_type(child1)][node_type(child2)];
+                    context->changed_flags |= FLAG_VAL_TYPE; ValueType type = promotion[node_type(child1)][node_type(child2)];
                     if (type == TP_UNKNOWN) type = TP_INTEGER; /* Default to integer */
                     set_node_type(node, type);
                 }
@@ -202,8 +199,7 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case OP_DIV:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    ValueType type = promotion[node_type(child1)][node_type(child2)];
+                    context->changed_flags |= FLAG_VAL_TYPE; ValueType type = promotion[node_type(child1)][node_type(child2)];
                     type = promotion[type][TP_FLOAT]; /* Ensure at least FLOAT */
                     set_node_type(node, type);
                 }
@@ -216,31 +212,27 @@ walker_result set_node_types_walker(walker_direction direction,
                     type = promotion[type][TP_INTEGER]; /* Ensure at least INTEGER */
                     if (type != TP_UNKNOWN) {
                         set_node_type(node, type);
-                        context->changed = 1;
-                    }
+                        context->changed_flags |= FLAG_VAL_TYPE; }
                 }
                 break;
 
             case OP_NOT:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, TP_BOOLEAN);
+                    context->changed_flags |= FLAG_VAL_TYPE; set_node_type(node, TP_BOOLEAN);
                 }
                 break;
 
             case OP_PLUS:
             case OP_NEG:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, promotion[node_type(child1)][TP_VOID]);
+                    context->changed_flags |= FLAG_VAL_TYPE; set_node_type(node, promotion[node_type(child1)][TP_VOID]);
                 }
                 break;
 
             case FUNCTION:
                 if (node->symbolNode) { /* Otherwise, an error node will have been added */
                     if (node->value_type == TP_UNKNOWN) {
-                        context->changed = 1;
-                        ast_svtp(node, node->symbolNode->symbol);
+                        context->changed_flags |= FLAG_VAL_TYPE; ast_svtp(node, node->symbolNode->symbol);
                     }
                 }
                 break;
@@ -260,8 +252,7 @@ walker_result set_node_types_walker(walker_direction direction,
                             if (method_sym && method_sym->symbol_type == FUNCTION_SYMBOL) {
                                 sym_adnd(method_sym, node, 1, 0);
                                 ast_svtp(node, method_sym);
-                                context->changed = 1;
-                            } else if (!context->changed) {
+                                context->changed_flags |= FLAG_VAL_TYPE; } else if (!context->changed_flags) {
                                 /* DOT-AS-INDEX MUTATION: transform tokens.i -> tokens[i] */
                                 Symbol *index_sym = sym_rslv_tiered(context->current_scope, node);
                                 if (index_sym && index_sym->symbol_type == VARIABLE_SYMBOL &&
@@ -319,9 +310,8 @@ walker_result set_node_types_walker(walker_direction direction,
                                     /* Add the resolved variable as the index child (subscript) */
                                     add_ast(node, new_index_node);
 
-                                    context->changed = 1;
-                                    return result_normal;
-                                } else if (!context->changed) {
+                                    context->changed_flags |= FLAG_VAL_TYPE; return result_normal;
+                                } else if (!context->changed_flags) {
                                     /* Try and import the class */
                                     Symbol *import_cls = sym_imcls(context, node);
                                     if (import_cls) {
@@ -331,15 +321,15 @@ walker_result set_node_types_walker(walker_direction direction,
                                 }
                                 if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                                     /* continue with method resolution below */
-                                } else if (!context->changed) {
+                                } else if (!context->changed_flags) {
                                     /* Defer error if imports may provide class stubs */
                                     int has_import = 0;
                                     if (context->ast && context->ast->child && context->ast->child->node_type == PROGRAM_FILE) {
                                         ASTNode *pfch = context->ast->child->child;
                                         while (pfch) { if (pfch->node_type == IMPORT) { has_import = 1; break; } pfch = pfch->sibling; }
                                     }
-                                    if (has_import) {
-                                        context->changed = 1;
+                                    if (has_import && !context->after_rewrite) {
+                                        /* defer error on first pass */
                                     } else {
                                         mknd_err(node, "CLASS_NOT_FOUND");
                                     }
@@ -369,24 +359,22 @@ walker_result set_node_types_walker(walker_direction direction,
                             node->value_class = malloc(strlen(class_sym->name) + 1);
                             strcpy(node->value_class, class_sym->name);
                             ast_rttp(node);
-                            context->changed = 1;
-                        } else if (!context->changed) {
+                            context->changed_flags |= FLAG_VAL_TYPE; } else if (!context->changed_flags) {
                             mknd_err(node, "FACTORY_NOT_FOUND");
                         }
-                    } else if (!context->changed) {
+                    } else if (!context->changed_flags) {
                         /* Try and import the class */
                         Symbol *import_cls = sym_imcls(context, node);
                         if (import_cls) {
-                            context->changed = 1;
-                        } else {
+                            context->changed_flags |= FLAG_VAL_TYPE; } else {
                             /* Defer error if imports may provide class stubs */
                             int has_import = 0;
                             if (context->ast && context->ast->child && context->ast->child->node_type == PROGRAM_FILE) {
                                 ASTNode *pfch = context->ast->child->child;
                                 while (pfch) { if (pfch->node_type == IMPORT) { has_import = 1; break; } pfch = pfch->sibling; }
                             }
-                            if (has_import) {
-                                context->changed = 1;
+                            if (has_import && !context->after_rewrite) {
+                                /* defer error on first pass */
                             } else {
                                 mknd_err(node, "CLASS_NOT_FOUND");
                             }
@@ -399,10 +387,9 @@ walker_result set_node_types_walker(walker_direction direction,
             case VAR_TARGET:
             case EXIT_TOKEN:
                 if (node->value_type == TP_UNKNOWN && node->symbolNode) {
+                    ValueType old_type = node->value_type;
+                    int old_dims = node->value_dims;
                     ast_svtp(node, node->symbolNode->symbol);
-                    if (node->value_type != TP_UNKNOWN) {
-                        context->changed = 1;
-                    }
 
                     if (node->node_type == VAR_SYMBOL && child1) {
                         /* We have array parameters (subscript or stem-style) */
@@ -457,16 +444,17 @@ walker_result set_node_types_walker(walker_direction direction,
                                 /* Reset Node Target Type to be the same as the node value type */
                                 ast_rttp(node);
                             }
-                            context->changed = 1;
                         }
                     }
+
+                    if (node->value_type != old_type || node->value_dims != old_dims) { context->changed_flags |= FLAG_VAL_TYPE; }
                 }
                 break;
 
             case ASSIGN:
                 if (node->value_type == TP_UNKNOWN) {
                     set_node_type(node, TP_VOID);
-                    context->changed = 1;
+                    
                 }
                 if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
                     /* If the symbol does not have a known type yet - then determine it */
@@ -477,8 +465,7 @@ walker_result set_node_types_walker(walker_direction direction,
                         child1->symbolNode->symbol->value_class = 0;
                         child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
                         if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
-                            context->changed = 1;
-                            ast_svtp(child1, child1->symbolNode->symbol);
+                            context->changed_flags |= FLAG_VAL_TYPE; ast_svtp(child1, child1->symbolNode->symbol);
                         }
                     } else {
                         child1->symbolNode->symbol->type =
@@ -493,8 +480,7 @@ walker_result set_node_types_walker(walker_direction direction,
                                          &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
 
                         if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
-                            context->changed = 1;
-                            ast_svtp(child1, child1->symbolNode->symbol);
+                            context->changed_flags |= FLAG_VAL_TYPE; ast_svtp(child1, child1->symbolNode->symbol);
                         }
                     }
                 }
@@ -502,37 +488,32 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case CONST_SYMBOL:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, TP_STRING);
+                    context->changed_flags |= FLAG_VAL_TYPE; set_node_type(node, TP_STRING);
                 }
                 break;
 
             case INTEGER:
             case OP_ARGS:
                 if (node->value_type == TP_UNKNOWN && node->parent->node_type != NODE_REGISTER) {
-                    context->changed = 1;
-                    set_node_type(node, TP_INTEGER);
+                    context->changed_flags |= FLAG_VAL_TYPE; set_node_type(node, TP_INTEGER);
                 }
                 break;
 
             case STRING:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, TP_STRING);
+                    context->changed_flags |= FLAG_VAL_TYPE; set_node_type(node, TP_STRING);
                 }
                 break;
 
             case FLOAT:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, TP_FLOAT);
+                    context->changed_flags |= FLAG_VAL_TYPE; set_node_type(node, TP_FLOAT);
                 }
                 break;
 
             case DECIMAL:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, TP_DECIMAL);
+                    context->changed_flags |= FLAG_VAL_TYPE; set_node_type(node, TP_DECIMAL);
                 }
                 break;
 
@@ -540,16 +521,13 @@ walker_result set_node_types_walker(walker_direction direction,
             case NOVAL:
             case RANGE:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, TP_VOID);
+                    context->changed_flags |= FLAG_VAL_TYPE; set_node_type(node, TP_VOID);
                 }
                 break;
 
             case CLASS:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-
-                    node->value_type = node_to_type(context, node, &(node->value_dims),
+                    context->changed_flags |= FLAG_VAL_TYPE; node->value_type = node_to_type(context, node, &(node->value_dims),
                                                     &(node->value_dim_base), &(node->value_dim_elements),
                                                     &(node->value_class));
 
@@ -561,7 +539,7 @@ walker_result set_node_types_walker(walker_direction direction,
             case DEFINE:
                 if (node->value_type == TP_UNKNOWN) {
                     set_node_type(node, TP_VOID);
-                    context->changed = 1;
+                    
                 }
                 if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
                     /* If the symbol does not have a known type yet - then determine it */
@@ -572,8 +550,7 @@ walker_result set_node_types_walker(walker_direction direction,
                                          &(child1->symbolNode->symbol->dim_elements),
                                          &(child1->symbolNode->symbol->value_class));
                     if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
-                        context->changed = 1;
-                        ast_svtp(child1, child1->symbolNode->symbol);
+                        context->changed_flags |= FLAG_VAL_TYPE; ast_svtp(child1, child1->symbolNode->symbol);
                     }
                 }
                 break;
@@ -582,8 +559,7 @@ walker_result set_node_types_walker(walker_direction direction,
                 if (node->value_type == TP_UNKNOWN) {
                     if (node->child->node_type == VARG || node->child->node_type == VARG_REFERENCE) {
                         /* Ellipse */
-                        context->changed = 1;
-                        child1->value_type = node_to_type(context, child2,
+                        context->changed_flags |= FLAG_VAL_TYPE; child1->value_type = node_to_type(context, child2,
                                                           &(child1->value_dims),
                                                           &(child1->value_dim_base),
                                                           &(child1->value_dim_elements),
@@ -594,8 +570,7 @@ walker_result set_node_types_walker(walker_direction direction,
                     else {
                         /* Normal Arg */
                         if (child1->symbolNode) {
-                            context->changed = 1;
-                            if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                            context->changed_flags |= FLAG_VAL_TYPE; if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
                                 /* If the symbol does not have a known type yet */
                                 child1->symbolNode->symbol->type = node_to_type(context, child2,
                                                                                 &(child1->symbolNode->symbol->value_dims),
@@ -622,8 +597,7 @@ walker_result set_node_types_walker(walker_direction direction,
 
                     n1 = n1->sibling; /* This is the CLASS of the VARGS */
                     ast_svtn(node, n1);
-                    context->changed = 1;
-                }
+                    context->changed_flags |= FLAG_VAL_TYPE; }
                 break;
 
             default:;
@@ -1275,7 +1249,7 @@ walker_result func_type_safety_walker(walker_direction direction,
             case EXIT_OWNED:
                 if (node->value_type == TP_UNKNOWN) {
                     set_node_type(node, TP_VOID);
-                    context->changed = 1;
+                    
                 }
                 break;
 
@@ -1302,15 +1276,13 @@ walker_result float2decimal_walker(walker_direction direction,
         /* OUT - BOTTOM UP */
         switch (node->node_type) {
             case FLOAT:
-                context->changed = 1;
-                node->node_type = DECIMAL;
+                context->changed_flags |= FLAG_VAL_TYPE; node->node_type = DECIMAL;
                 break;
             case CLASS:
                 if (node->node_string_length == strlen(".float")) {
                     if (strncmp(node->node_string, ".float", node->node_string_length) == 0) {
                         /* This is a .float class - convert to decimal */
-                        context->changed = 1;
-                        ast_str(node, ".decimal");
+                        context->changed_flags |= FLAG_VAL_TYPE; ast_str(node, ".decimal");
                     }
                 }
                 break;
@@ -1339,15 +1311,13 @@ walker_result decimal2float_walker(walker_direction direction,
         switch (node->node_type) {
             /* TODO remove digits instructons -> NOP as these are irrelevant for float - consider a warning */
             case DECIMAL:
-                context->changed = 1;
-                node->node_type = FLOAT;
+                context->changed_flags |= FLAG_VAL_TYPE; node->node_type = FLOAT;
                 break;
             case CLASS:
                 if (node->node_string_length == strlen(".decimal")) {
                     if (strncmp(node->node_string, ".decimal", node->node_string_length) == 0) {
                         /* This is a .decimal class - convert to float */
-                        context->changed = 1;
-                        ast_str(node, ".float");
+                        context->changed_flags |= FLAG_VAL_TYPE; ast_str(node, ".float");
                     }
                 }
                 break;

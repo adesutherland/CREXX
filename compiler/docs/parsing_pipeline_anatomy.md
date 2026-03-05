@@ -73,9 +73,9 @@ After the parser builds the initial "raw" AST, the `initial_checks_walker` perfo
 
 The final stage of the front-end is the Validation Orchestrator. Unlike previous stages, this stage employs a **Fixpoint Iteration Loop** to handle interdependent symbol resolution and code injection.
 
-*   **Fixed Point Iteration**: The orchestrator wraps subsequent validation passes in a `do { ... } while (context->changed)` loop.
+*   **Fixed Point Iteration**: The orchestrator wraps subsequent validation passes in a `do { ... } while (context->changed_flags)` loop. The `changed_flags` context variable uses bitmasks (like `FLAG_VAL_TYPE`) to identify exactly which walker forces another iteration, which provides immediate diagnostic convergence paths upon failure.
 *   **Explicit Symbol Lifecycle**: The pipeline uses a state-driven approach for symbol resolution. Every name is assigned an explicit `SymbolStatus` (e.g., `SYM_STATUS_UNRESOLVED`), allowing walkers to cleanly transition names from tentative placeholders to global imports or local variables across loop iterations.
-*   **Idempotency & Stress Testing**: Every walker in the fixpoint loop is designed to be **Idempotent**. In debug mode `-d3`, the compiler forces 3 iterations and multiple calls per walker to prove this and ensure the AST and Symbol table converge to a stable state.
+*   **Idempotency & Stress Testing**: Every walker in the fixpoint loop is designed to be **Idempotent**. In debug mode `-d3`, the compiler forces 3 iterations and multiple calls per walker to prove this and ensure the AST and Symbol table converge to a stable state. Furthermore, a strict max iterations threshold exists (16 passes); if breached and `changed_flags` is non-zero, it triggers a hard bypass abort with the active bits logged.
 *   **AST Validation**: An integrated validator (`rxcp_ast_val.c`) runs between passes (in `-d2`) to assert AST structural integrity and Symbol↔Node linkage consistency.
 *   **Plugin Dispatch**: Intercepts `IMPLICIT_CMD` nodes and consults the **Bridge Plugin** (see `rxcp_val_plugin.c` and [Bridge Plugins](bridge_plugins.md)).
 *   **Code Injection**: Plugins can return Rexx source strings which are parsed into AST fragments and grafted into the main tree. This sets the `changed` flag, triggering another loop iteration to resolve symbols in the new code.

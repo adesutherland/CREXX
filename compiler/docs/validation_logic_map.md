@@ -32,14 +32,14 @@ The `validate_ast` function (in `rxcp_val_orch.c`) orchestrates the following se
     *   Loads and parses imported files. This is **Idempotent**; once a file is imported, it is marked and subsequent calls return immediately.
 
 --- 
-### 2. The Fixpoint Loop (`do...while(context->changed)`)
+### 2. The Fixpoint Loop (`do...while(context->changed_flags)`)
 
 All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the compiler forces at least 3 iterations and multiple calls per walker to verify this property and ensure AST/Symbol stability.
 
 5.  **Exit Dispatch (`exit_dispatch_walker` - Pass A)**: 
     *   Consults the Bridge for `IMPLICIT_CMD` nodes. 
     *   Performs **Code Injection** if the plugin returns a Rexx string.
-    *   Splices injected AST nodes and sets `context->changed = 1`.
+    *   Splices injected AST nodes and sets `context->changed_flags |= FLAG_VAL_PLUGIN`.
     *   *Idempotency*: Guarded by `node->exit_obj_reg` to prevent re-processing.
 
 6.  **Implicit Command Transformation (`rewrite_implicit_cmd_walker`)**:
@@ -86,7 +86,7 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 
 13. **Type Inference (`set_node_types_walker`)**: 
     *   Propagates types through the tree. Handles first-assignment inference.
-    *   *Idempotency*: Skips nodes that already have a resolved type.
+    *   *Idempotency*: Skips nodes that already have a resolved type. Crucially, when resolving fallback types (e.g., assigning `TP_VOID` to a `TP_UNKNOWN` assignment target), it **does not** set the `changed_flags` convergence signal. This prevents infinite ping-pong idempotency violations between `type_safety_walker` and `set_node_types_walker`.
 
 14. **System Instruction Rewriting (`rewrite_address_walker` / `rewrite_exit_walker`)**: 
     *   Transforms `ADDRESS` and `EXIT` into internal system function calls.

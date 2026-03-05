@@ -13,9 +13,10 @@ This document summarizes an important change to the cREXX compiler (crexx-dev-26
 
 ## Fixpoint validation loop (validate_ast)
 - Location: `compiler/rxcp_val_orch.c` (`validate_ast`).
-- Property: All walkers in the loop are idempotent. Under `-d3`, the compiler stress-tests by:
+- Property: All walkers in the loop are idempotent. The `changed_flags` context variable is a bitmask used to identify exactly which walker forces another iteration, ensuring that non-converging phases can be instantly pinpointed and fixed. Under `-d3`, the compiler stress-tests by:
   - Invoking selected walkers multiple times per iteration.
-  - Forcing extra loop iterations even when `context->changed == 0`.
+  - Forcing extra loop iterations even when `context->changed_flags == 0`.
+- Diagnostic Override: If the loop does hit its maximum pass limit (16 iterations), it bypasses the standard AST error logger to instantly abort via `exit(255)` while dumping the unhandled walker flags.
 - Benefit: Safer future enhancements (e.g., block-scoped shadowing in DO blocks) without introducing order/iteration bugs.
 
 ## AST/Symbol validator (debug-only)

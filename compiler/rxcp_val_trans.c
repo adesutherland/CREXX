@@ -69,7 +69,7 @@ walker_result rewrite_exit_walker(walker_direction direction,
 
                 /* Add Function */
                 add_ast(node, function_node);
-                context->changed = 1;
+                context->changed_flags |= FLAG_VAL_TRANS;
                 break;
 
             default: ;
@@ -100,7 +100,7 @@ walker_result rewrite_address_walker(walker_direction direction,
                 if (node->exit_obj_reg != -1) return result_normal;
                 if (context->debug_mode >= 2) fprintf(stderr, "Lowering ADDRESS Instruction at line %d\n", node->line);
                 /* Rewrite to an assignment from a function */
-                context->changed = 1;
+                context->changed_flags |= FLAG_VAL_TRANS;
 
                 ASTNode *env = NULL;
                 ASTNode *cmd = NULL;
@@ -319,7 +319,7 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
 
         node->node_type = ADDRESS;
         /* node->node_string = "SYSTEM"; // Not strictly needed by walker but good for debug */
-        context->changed = 1;
+        context->changed_flags |= FLAG_VAL_TRANS;
     }
     return result_normal;
 }

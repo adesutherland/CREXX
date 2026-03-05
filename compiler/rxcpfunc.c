@@ -1507,7 +1507,7 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
 
     if (found_cls) {
         ASTNode *new_stub = add_dast(context->ast, found_cls->context->ast->child);
-        context->changed = 1;
+        context->changed_flags |= FLAG_FUNC;
 
         /* Build symbols for the new stub immediately so it can be resolved */
         Scope *old_scope = context->current_scope;
@@ -1737,7 +1737,7 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
 
             /* Splice the ASTs together */
             ASTNode *new_stub = add_dast(context->ast, func->context->ast->child);
-            context->changed = 1;
+            context->changed_flags |= FLAG_FUNC;
 
             /* Build symbols for the new stub immediately so it can be resolved */
             Scope *old_scope = context->current_scope;
