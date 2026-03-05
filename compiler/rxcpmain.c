@@ -461,18 +461,28 @@ int rxcmain(int argc, char *argv[]) {
     }
 
     rxcp_val(context);
-    rxcp_collect_and_prune_diagnostics(context);
-#ifndef __CMS__
-    if (debug_mode >= 2) {
-        // pdot_tree(context->ast, "astgraph1", context->file_name);
+
+    /* Print all warnings and errors after the fixed loop but before optimising/emitting */
+    warnings = prntwars(context);
+    if (warnings) {
+        fprintf(stderr,"%d warning(s) in source file\n", warnings);
     }
-#endif
+
     errors = prnterrs(context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
         if (context->stop_after_parse) goto dp_stop;
         goto finish;
     }
+
+    /* Remove all warnings and errors from the tree so they don't break the emitter */
+    rxcp_collect_and_prune_diagnostics(context);
+
+#ifndef __CMS__
+    if (debug_mode >= 2) {
+        // pdot_tree(context->ast, "astgraph1", context->file_name);
+    }
+#endif
 
     /* Optimise AST Tree */
     if (context->optimise) {
@@ -528,11 +538,6 @@ int rxcmain(int argc, char *argv[]) {
     if (debug_mode >= 2) fprintf(stderr, "Compiler Exiting - Success\n");
 
     finish:
-
-    warnings = prntwars(context);
-    if (warnings) {
-        fprintf(stderr,"%d warning(s) in source file\n", warnings);
-    }
 
     /* Close outfile */
     if (outFile) fclose(outFile);

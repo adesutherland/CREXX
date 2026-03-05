@@ -442,6 +442,18 @@ walker_result set_node_ordinals_walker(walker_direction direction,
 }
 
 /* Validate AST */
+/* Shadowing warning walker */
+static walker_result shadowing_warning_walker(walker_direction direction,
+                                              ASTNode* node,
+                                              __attribute__((unused)) void *payload) {
+    if (direction == in) {
+        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->is_shadowing) {
+            mknd_war(node, "SHADOWING_GLOBAL");
+        }
+    }
+    return result_normal;
+}
+
 void validate_ast(Context *context) {
     int ordinal_counter;
 
@@ -701,6 +713,10 @@ void validate_ast(Context *context) {
     if (context->ast->node_type == REXX_UNIVERSE) {
         context->ast->value_type = TP_VOID;
     }
+
+    /* Add shadowing warnings to all nodes referencing shadowed symbols */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, shadowing_warning_walker, (void *)context);
 }
 
 void rxcp_val(Context *context) {

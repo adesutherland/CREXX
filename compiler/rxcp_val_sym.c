@@ -733,22 +733,22 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 } else if (sym_is_glob_var(context, rep_node)) {
                     shadows_var = 1;
                 }
-                if (shadows_var && !ast_chld(rep_node, ERROR, 0)) {
-                    if (rep_node->file_name && context->ast->file_name && strcmp(rep_node->file_name, context->ast->file_name) == 0)
-                        mknd_war(rep_node, "SHADOWING_GLOBAL");
+                if (shadows_var) {
+                    symbol->is_shadowing = 1;
                 }
             } else if (symbol->status == SYM_STATUS_LOCAL_DEF) {
                 if (symbol->symbol_type == FUNCTION_SYMBOL) {
-                    if (sym_is_imfn(context, rep_node) && !ast_chld(rep_node, ERROR, 0)) {
-                        if (rep_node->file_name && context->ast->file_name && strcmp(rep_node->file_name, context->ast->file_name) == 0)
-                            mknd_war(rep_node, "SHADOWING_GLOBAL");
+                    if (sym_is_imfn(context, rep_node)) {
+                        symbol->is_shadowing = 1;
                     }
                 } else if (symbol->symbol_type == CLASS_SYMBOL) {
-                    if (sym_is_imcls(context, rep_node) && !ast_chld(rep_node, ERROR, 0)) {
-                        if (rep_node->file_name && context->ast->file_name && strcmp(rep_node->file_name, context->ast->file_name) == 0)
-                            mknd_war(rep_node, "SHADOWING_GLOBAL");
+                    if (sym_is_imcls(context, rep_node)) {
+                        symbol->is_shadowing = 1;
                     }
                 }
+            }
+            if (symbol->is_shadowing) {
+                /* No warning emitted here, just flag the symbol */
             }
         }
     }

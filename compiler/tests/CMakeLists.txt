@@ -176,6 +176,9 @@ endmacro()
 # Shadowing behavior in simple DO blocks
 add_crexx_run_test(do_scope_typed_shadows rexx_src/do_scope_typed_shadows.rexx)
 
+# Hoisting and effective scopes tests
+add_crexx_run_test(test_global_subscopes rexx_src/test_global_subscopes.rexx)
+
 
 # Parsing Tests
 add_crexx_parsing_test(expr_abut_01 parsing_src/expr_abut_01.rexx)

@@ -83,6 +83,7 @@ struct Symbol {
     char is_rc;        /* Is the system rc variable */
     char is_this;      /* Is the §this instance reference */
     char is_factory;   /* Is the §factory reference */
+    char is_shadowing; /* Set if this symbol is incorrectly shadowing a global variable */
 };
 
 /* Returns string name of a Value type */
