@@ -482,6 +482,11 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     char *c;
     Symbol *symbol = (Symbol*)malloc(sizeof(Symbol));
 
+    /* Normalise stem variables by stripping the trailing dot */
+    if (name_length > 0 && name[name_length - 1] == '.') {
+        name_length--;
+    }
+
     symbol->scope = scope;
     symbol->defines_scope = 0;
     symbol->type = TP_UNKNOWN;
@@ -710,13 +715,19 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
 Symbol *sym_rslv_local(Scope *scope, ASTNode *node) {
     Symbol *result;
     char *c;
+    size_t len = node->node_string_length;
 
     if (!scope) return 0;
 
+    /* Normalise stem variables by stripping the trailing dot */
+    if (len > 0 && node->node_string[len - 1] == '.') {
+        len--;
+    }
+
     /* Sadly we are making a null terminated string */
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
+    char *name = (char*)malloc(len + 1);
+    memcpy(name, node->node_string, len);
+    name[len] = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -743,13 +754,19 @@ Symbol *sym_rslv_local(Scope *scope, ASTNode *node) {
 Symbol *sym_rslv_attribute(Scope *scope, ASTNode *node) {
     Symbol *result;
     char *c;
+    size_t len = node->node_string_length;
 
     if (!scope) return 0;
 
+    /* Normalise stem variables by stripping the trailing dot */
+    if (len > 0 && node->node_string[len - 1] == '.') {
+        len--;
+    }
+
     /* Sadly we are making a null terminated string */
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
+    char *name = (char*)malloc(len + 1);
+    memcpy(name, node->node_string, len);
+    name[len] = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -777,13 +794,19 @@ Symbol *sym_rslv_attribute(Scope *scope, ASTNode *node) {
 Symbol *sym_rslv_global(Scope *scope, ASTNode *node) {
     Symbol *result;
     char *c;
+    size_t len = node->node_string_length;
 
     if (!scope) return 0;
 
+    /* Normalise stem variables by stripping the trailing dot */
+    if (len > 0 && node->node_string[len - 1] == '.') {
+        len--;
+    }
+
     /* Sadly we are making a null terminated string */
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
+    char *name = (char*)malloc(len + 1);
+    memcpy(name, node->node_string, len);
+    name[len] = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8

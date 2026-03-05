@@ -39,10 +39,17 @@
  * NOTE value MUST be in lower case! */
 int is_node_string(ASTNode* node, const char* value) {
     int i;
-    /* If it is a different length it can't be the same! */
-    if (strlen(value) != node->node_string_length) return 0;
+    size_t len = node->node_string_length;
 
-    for (i=0; i < (int)node->node_string_length; i++) {
+    /* Ignore trailing dot on node_string for stem variable matching */
+    if (len > 0 && node->node_string[len - 1] == '.') {
+        len--;
+    }
+
+    /* If it is a different length it can't be the same! */
+    if (strlen(value) != len) return 0;
+
+    for (i=0; i < (int)len; i++) {
         if (tolower(node->node_string[i]) != value[i]) return 0;
     }
     return 1;
@@ -449,6 +456,16 @@ static walker_result shadowing_warning_walker(walker_direction direction,
     if (direction == in) {
         if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->is_shadowing) {
             mknd_war(node, "SHADOWING_GLOBAL");
+            /* mknd_war returns the parent node, so we find the newly created WARNING child */
+            ASTNode *warn = node->child;
+            while (warn && warn->sibling) warn = warn->sibling; /* The warning is added at the end */
+            if (warn && warn->node_type == WARNING && node->source_start) {
+                warn->source_start = node->source_start;
+                /* Lock the bounds to exactly the node's identifier, avoiding array index expansion */
+                size_t len = node->node_string_length;
+                if (len > 0 && node->node_string[len - 1] == '.') len--; /* Ignore trailing dot */
+                warn->source_end = node->source_start + len - 1;
+            }
         }
     }
     return result_normal;
