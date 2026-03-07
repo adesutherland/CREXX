@@ -50,10 +50,9 @@ void rxcp_bvl(Context *context);
 Context* rxcp_parse_buffer(char* source_string, int options);
 
 /* sym */
-walker_result structure_symbols_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result build_symbols_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result resolve_functions_walker(walker_direction direction, ASTNode* node, void *payload);
-/* exposed_symbols_walker removed */
+walker_result exposed_symbols_walker(walker_direction direction, ASTNode* node, void *payload);
 void validate_symbols(Context *context, Scope *scope);
 
 /* type */

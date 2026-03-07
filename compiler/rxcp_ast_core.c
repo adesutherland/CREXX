@@ -1468,7 +1468,6 @@ int nodeis(ASTNode *node, const char* value) {
 
 /* Set Node Value and Target Type from Symbol */
 void ast_svtp(ASTNode* node, Symbol* symbol) {
-    if (symbol && symbol->name && strcmp(symbol->name, "a") == 0) 
     node->value_type = symbol->type;
     node->value_dims = symbol->value_dims;
     node->target_type = symbol->type;

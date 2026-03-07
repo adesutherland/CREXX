@@ -691,7 +691,7 @@ walker_result type_safety_walker(walker_direction direction,
                             ast_svtp(node, node->symbolNode->symbol);
                         }
                     }
-                    if (context->after_rewrite && node->value_type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
+                    if (node->value_type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
                 }
                 break;
                 if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->type != TP_UNKNOWN && ast_nchd(node) && !node->symbolNode->symbol->value_dims) {
@@ -796,7 +796,6 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case DEFINE:
-                
                 if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
                     /* If the symbol does not have a known type yet - then determine it */
                     child1->symbolNode->symbol->type =
