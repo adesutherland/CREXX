@@ -386,10 +386,38 @@ void validate_node_promotion(ASTNode* node) {
     if (node->node_type == WARNING) return;
 
     if (node->value_dims != node->target_dims) {
-        if (!node->value_dims) mknd_err(node, "EXPECTING_ARRAY");
-        else if (!node->target_dims)
-            mknd_err(node, "UNEXPECTED_ARRAY");
-        else mknd_err(node, "ARRAY_DIMS_MISMATCH");
+        /* SAFE DIMENSION ADOPTION: If target is an EXPOSED variable and currently has 0 dimensions, adopt value dims */
+        int adopted = 0;
+        if (node->parent && (node->parent->node_type == ASSIGN || node->parent->node_type == DEFINE) &&
+            node->parent->child->symbolNode && node->parent->child->symbolNode->symbol &&
+            node->parent->child->symbolNode->symbol->exposed &&
+            node->target_dims == 0 && node->value_dims > 0) {
+
+            Symbol *s = node->parent->child->symbolNode->symbol;
+            s->value_dims = node->value_dims;
+            if (s->dim_base) free(s->dim_base);
+            if (s->dim_elements) free(s->dim_elements);
+            s->dim_base = malloc(sizeof(int) * s->value_dims);
+            s->dim_elements = malloc(sizeof(int) * s->value_dims);
+            memcpy(s->dim_base, node->value_dim_base, sizeof(int) * s->value_dims);
+            memcpy(s->dim_elements, node->value_dim_elements, sizeof(int) * s->value_dims);
+
+            node->target_dims = node->value_dims;
+            if (node->target_dim_base) free(node->target_dim_base);
+            if (node->target_dim_elements) free(node->target_dim_elements);
+            node->target_dim_base = malloc(sizeof(int) * node->target_dims);
+            node->target_dim_elements = malloc(sizeof(int) * node->target_dims);
+            memcpy(node->target_dim_base, node->value_dim_base, sizeof(int) * node->target_dims);
+            memcpy(node->target_dim_elements, node->value_dim_elements, sizeof(int) * node->target_dims);
+            adopted = 1;
+        }
+
+        if (!adopted) {
+            if (!node->value_dims) mknd_err(node, "EXPECTING_ARRAY");
+            else if (!node->target_dims)
+                mknd_err(node, "UNEXPECTED_ARRAY");
+            else mknd_err(node, "ARRAY_DIMS_MISMATCH");
+        }
     }
     else if (node->value_dims) {
         /* Check Dimension base/values */
@@ -510,10 +538,19 @@ void validate_ast(Context *context) {
         rxcp_print_ast_recursive(context->ast, 0);
     }
 
-    /* Pre-Loop Initialization: Prime the symbol table and imports */
+    /* Pre-Loop Initialization: Prime the structure symbols, imports, and variables */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
+    rxcp_scan_imports(context);
+    rxcp_init_exits(context);
+
+    /* After imports, we might have new files or compiler exits.
+     * We need to harvest their structure (Pass 1) before building variables (Pass 3) */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
+
     context->current_scope = 0;
     ast_wlkr(context->ast, build_symbols_walker, (void *) context);
-    rxcp_scan_imports(context);
 
     /* fixed point validation - Converge all exits */
     context->iterations = 0;
@@ -575,6 +612,12 @@ void validate_ast(Context *context) {
          * Progress: build_symbols_walker is idempotent. Scope creation is guarded; symbol associations use sym_adnd (idempotent).
          */
         context->current_scope = 0;
+        ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
+        if (rxcp_scan_imports(context)) {
+            rxcp_init_exits(context);
+            context->changed_flags |= FLAG_ORCH;
+        }
+        context->current_scope = 0;
         ast_wlkr(context->ast, build_symbols_walker, (void *) context);
         if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
         if (context->debug_mode >= 3) {
@@ -584,21 +627,6 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
             context->current_scope = 0;
             ast_wlkr(context->ast, build_symbols_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
-        }
-
-        /* Scan imports now that namespaces are materialized; mark changed to rebuild symbols if any file loaded
-         * Progress: rxcp_scan_imports is idempotent. Uses 'imported' flag in the global importable_file_list.
-         */
-        if (rxcp_scan_imports(context)) {
-            context->changed_flags |= FLAG_ORCH;
-        }
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
-        if (context->debug_mode >= 3) {
-            /* Stress test idempotency */
-            rxcp_scan_imports(context);
-            rxcp_validate_ast_and_symbols(context->ast);
-            rxcp_scan_imports(context);
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
@@ -761,6 +789,8 @@ void rxcp_bvl(Context *context) {
      * - Builds the Symbol Table
      */
     /* Mainly build symbols - procedures, members */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
     context->current_scope = 0;
     ast_wlkr(context->ast, build_symbols_walker, (void *) context);
 }

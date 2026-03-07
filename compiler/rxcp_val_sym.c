@@ -32,11 +32,12 @@
 #include "rxcp_val.h"
 
 /* Step 2a
- * - Builds the Symbol Table
+ * - Builds the Structure Symbol Table (Pass 1)
+ *   Handles Namespaces, Classes, and Procedures.
  */
-walker_result build_symbols_walker(walker_direction direction,
-                                          ASTNode* node,
-                                          void *payload) {
+walker_result structure_symbols_walker(walker_direction direction,
+                                              ASTNode* node,
+                                              void *payload) {
 
     Context *context = (Context*)payload;
     Symbol *symbol;
@@ -153,6 +154,22 @@ walker_result build_symbols_walker(walker_direction direction,
 
             sym_adnd(symbol, node, 0, 1);
 
+            /* Pass 1 Varargs Detection */
+            ASTNode *args = ast_chld(node, ARGS, 0);
+            if (args) {
+                ASTNode *arg = args->child;
+                while (arg) {
+                    if (arg->node_type == ARG) {
+                        ASTNode *varg = ast_chld(arg, VARG, 0);
+                        if (!varg) varg = ast_chld(arg, VARG_REFERENCE, 0);
+                        if (varg) {
+                            symbol->has_vargs = 1;
+                        }
+                    }
+                    arg = arg->sibling;
+                }
+            }
+
             /* Move down to the procedure scope */
             if (symbol->defines_scope) {
                 context->current_scope = symbol->defines_scope;
@@ -160,54 +177,6 @@ walker_result build_symbols_walker(walker_direction direction,
                 context->current_scope = scp_f(context, context->current_scope, node, symbol, SCOPE_PROCEDURE);
             }
             node->scope = context->current_scope;
-
-            /* Level B Class Instance Support */
-            if (node->node_type == FACTORY) {
-                /* Add instance symbol '§factory' */
-                Symbol *star = sym_fn(context->current_scope, "\xc2\xa7" "factory", 9);
-                if (star) {
-                    star->symbol_type = VARIABLE_SYMBOL;
-                    star->type = TP_OBJECT;
-                    ASTNode *class_node = ast_class(node);
-                    if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
-                        if (star->value_class) free(star->value_class);
-                        star->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
-                        strcpy(star->value_class, class_node->symbolNode->symbol->name);
-                    }
-                }
-            } else if (node->node_type == METHOD) {
-                /* Add instance symbol '§this' */
-                Symbol *this_sym = sym_fn(context->current_scope, "\xc2\xa7" "this", 6);
-                if (this_sym) {
-                    this_sym->symbol_type = VARIABLE_SYMBOL;
-                    this_sym->type = TP_OBJECT;
-                    ASTNode *class_node = ast_class(node);
-                    if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
-                        if (this_sym->value_class) free(this_sym->value_class);
-                        this_sym->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
-                        strcpy(this_sym->value_class, class_node->symbolNode->symbol->name);
-                    }
-                }
-            }
-        }
-
-        else if (node->node_type == NAMESPACE) {
-            if (direction == out) {
-                ASTNode *expose = ast_chld(node, EXPOSED, 0);
-                if (expose) {
-                    ASTNode *var = expose->child;
-                    while (var) {
-                        if (var->node_type == VAR_REFERENCE || var->node_type == VAR_SYMBOL) {
-                            SymbolNode *sn = var->symbolNode;
-                            if (sn && sn->symbol) {
-                                sn->symbol->exposed = 1;
-                                sn->symbol->is_global_var = 1;
-                            }
-                        }
-                        var = var->sibling;
-                    }
-                }
-            }
         }
 
         else if (node->node_type == IMPORT) {
@@ -236,6 +205,132 @@ walker_result build_symbols_walker(walker_direction direction,
             }
         }
 
+        else if (node->node_type == EXIT_OWNED) {
+            if (node->scope) {
+                context->current_scope = node->scope;
+            } else {
+                context->current_scope = scp_f(context, context->current_scope, node, 0, SCOPE_LOCAL);
+                node->scope = context->current_scope;
+            }
+        }
+
+        else {
+            node->scope = context->current_scope;
+        }
+    }
+
+    else {
+        /* OUT - BOTTOM UP */
+        if (node->parent) context->current_scope = node->parent->scope;
+        else context->current_scope = 0;
+    }
+
+    return result_normal;
+}
+
+/* Step 2b
+ * - Builds the full Symbol Table (Pass 3)
+ *   Handles Instructions, Variables, and Exposed lists.
+ */
+walker_result build_symbols_walker(walker_direction direction,
+                                          ASTNode* node,
+                                          void *payload) {
+
+    Context *context = (Context*)payload;
+    Symbol *symbol;
+    ASTNode *n;
+
+    if (direction == in) {
+
+        /* IN - TOP DOWN */
+
+        if (node->node_type == REXX_UNIVERSE || node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE ||
+            node->node_type == CLASS_DEF || node->node_type == PROCEDURE || node->node_type == METHOD ||
+            node->node_type == FACTORY || node->node_type == IMPORT) {
+            /* Pass 1 has already created these scopes and symbols. Just navigate. */
+            if (node->scope) {
+                context->current_scope = node->scope;
+            }
+            /* Level B Class Instance Support (Idempotent) */
+            if (node->node_type == FACTORY) {
+                /* Add instance symbol '§factory' */
+                Symbol *star = sym_fn(context->current_scope, "\xc2\xa7" "factory", 9);
+                if (star && star->symbol_type == UNKNOWN_SYMBOL) {
+                    star->symbol_type = VARIABLE_SYMBOL;
+                    star->type = TP_OBJECT;
+                    ASTNode *class_node = ast_class(node);
+                    if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
+                        if (star->value_class) free(star->value_class);
+                        star->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
+                        strcpy(star->value_class, class_node->symbolNode->symbol->name);
+                    }
+                }
+            } else if (node->node_type == METHOD) {
+                /* Add instance symbol '§this' */
+                Symbol *this_sym = sym_fn(context->current_scope, "\xc2\xa7" "this", 6);
+                if (this_sym && this_sym->symbol_type == UNKNOWN_SYMBOL) {
+                    this_sym->symbol_type = VARIABLE_SYMBOL;
+                    this_sym->type = TP_OBJECT;
+                    ASTNode *class_node = ast_class(node);
+                    if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
+                        if (this_sym->value_class) free(this_sym->value_class);
+                        this_sym->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
+                        strcpy(this_sym->value_class, class_node->symbolNode->symbol->name);
+                    }
+                }
+            }
+        }
+
+        else if (node->node_type == EXPOSED) {
+            /* Pass 3: Sophisticated Seeding
+             * If the variable is in an EXPOSED list, we ensure it's seeded as a global
+             * VARIABLE_SYMBOL in the namespace scope before it's encountered as a local.
+             */
+            n = node->child;
+            while (n) {
+                if (n->symbolNode) {
+                    n = n->sibling;
+                    continue; /* Idempotency Guard */
+                }
+
+                /* Try to find it as a global function or variable */
+                symbol = sym_rslv_global(context->current_scope, n);
+
+                if (!symbol) {
+                    /* Seed as global variable if not found anywhere */
+                    Scope *namespace_scope = context->current_scope;
+                    while (namespace_scope && namespace_scope->type != SCOPE_NAMESPACE) {
+                        namespace_scope = namespace_scope->parent;
+                    }
+                    if (namespace_scope) {
+                        symbol = sym_f(namespace_scope, n);
+                        symbol->symbol_type = VARIABLE_SYMBOL;
+                        symbol->status = SYM_STATUS_LOCAL_VAR;
+                        symbol->exposed = 1;
+                        symbol->is_global_var = 1;
+                        context->changed_flags |= FLAG_VAL_SYM;
+                    }
+                }
+
+                if (symbol) {
+                    sym_adnd(symbol, n, 1, 0);
+                    if (symbol->exposed == 0) {
+                        symbol->exposed = 1;
+                        symbol->is_global_var = 1;
+                        context->changed_flags |= FLAG_VAL_SYM;
+                    }
+                    /* Link to the Procedure's INSTRUCTIONS if applicable */
+                    ASTNode *proc = ast_proc(node);
+                    if (proc) {
+                        ASTNode *instr = ast_chld(proc, INSTRUCTIONS, NOP);
+                        if (instr) sym_adnd(symbol, instr, 0, 0);
+                    }
+                }
+                n = n->sibling;
+            }
+            return request_skip;
+        }
+
         else if (node->node_type == VAR_TARGET || node->node_type == VAR_REFERENCE) {
             if (node->symbolNode) {
                 node->scope = context->current_scope;
@@ -254,23 +349,27 @@ walker_result build_symbols_walker(walker_direction direction,
                         if (glob && glob->symbol_type == VARIABLE_SYMBOL && glob->exposed) {
                             symbol = glob;
                         }
+                    } else if (symbol->type != TP_UNKNOWN) {
+                        /* Already has a type - so this is a duplicate declaration */
+                        mknd_err(node, "ALREADY_DECLARED");
                     }
+                    /* If found but TP_UNKNOWN, we allow it (e.g. seeded via EXPOSE) */
                 } else {
                     /* Untyped usage resolves outward; if not found, will create in current scope */
                     symbol = sym_rslv_tiered(context->current_scope, node);
+                    if (symbol && symbol->symbol_type != VARIABLE_SYMBOL) {
+                        /* This is a function or class shadowing candidate.
+                         * In REXX, a variable can shadow a function of the same name.
+                         * So we ignore the non-variable symbol and force a new local variable. */
+                        symbol = NULL;
+                    }
                 }
 
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
                     symbol = sym_f(context->current_scope, node);
                     symbol->status = SYM_STATUS_LOCAL_VAR;
-                } else if (symbol->symbol_type == FUNCTION_SYMBOL) {
-                    mknd_err(node, "IS_A_FUNCTION");
-                } else if (symbol->symbol_type == CLASS_SYMBOL) {
-                    mknd_err(node, "IS_A_CLASS");
-                } else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
-                    mknd_err(node, "IS_A_NAMESPACE");
-                } else if (node->parent->node_type == DEFINE) {
+                } else if (node->parent->node_type == DEFINE && symbol->type != TP_UNKNOWN) {
                     mknd_err(node, "ALREADY_DECLARED");
                 }
 
@@ -335,17 +434,15 @@ walker_result build_symbols_walker(walker_direction direction,
                 node->scope = context->current_scope;
                 /* Find the symbol */
                 symbol = sym_rslv_tiered(context->current_scope, node);
+                if (symbol && symbol->symbol_type != VARIABLE_SYMBOL) {
+                    /* Shadowing: Ignore existing non-variable symbols */
+                    symbol = NULL;
+                }
 
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
                     symbol = sym_f(context->current_scope, node);
                     symbol->status = SYM_STATUS_UNRESOLVED;
-                } else if (symbol->symbol_type == FUNCTION_SYMBOL) {
-                    mknd_err(node, "IS_A_FUNCTION");
-                } else if (symbol->symbol_type == CLASS_SYMBOL) {
-                    mknd_err(node, "IS_A_CLASS");
-                } else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
-                    mknd_err(node, "IS_A_NAMESPACE");
                 }
 
                 if (node->parent->node_type == ASSEMBLER) {
@@ -885,7 +982,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             defining_node_link = sym_trnd(symbol, nix);
 
             p = ast_proc(defining_node_link->node);
-            if (p == proc) continue; /* We have already looked at this proc so skip */
+            if (p == proc && symbol->type != TP_UNKNOWN) continue; /* We have already looked at this proc and have a type */
             proc = p;
 
             /* Ok we are the first usage in this proc */

@@ -79,7 +79,6 @@ static rxvml_context* rxcp_init_bridge(Context* ctx);
 
 void rxcp_init_exits(Context *ctx) {
     Context *root = ctx->master_context ? ctx->master_context : ctx;
-    if (root->exit_registry) return;
 
     rxvml_context* vctx = rxcp_init_bridge(ctx);
     if (!vctx) return;
