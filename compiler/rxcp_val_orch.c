@@ -512,8 +512,10 @@ void validate_ast(Context *context) {
 
     /* Pre-Loop Initialization: Prime the symbol table and imports */
     context->current_scope = 0;
-    ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+    ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
     rxcp_scan_imports(context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, build_symbols_walker, (void *) context);
 
     /* fixed point validation - Converge all exits */
     context->iterations = 0;
@@ -618,21 +620,7 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
-        /* Resolve exposed symbols
-         * Progress: exposed_symbols_walker is reviewed for idempotency.
-         */
-        context->current_scope = 0;
-        ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
-        if (context->debug_mode >= 3) {
-            /* Stress test idempotency */
-            context->current_scope = 0;
-            ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
-            context->current_scope = 0;
-            ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
-        }
+/* exposed_symbols_walker removed */
 
         /* Validate Symbols
          * Progress: validate_symbols is idempotent. Symbols with types already resolved are skipped.
@@ -761,6 +749,8 @@ void rxcp_bvl(Context *context) {
      * - Builds the Symbol Table
      */
     /* Mainly build symbols - procedures, members */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
     context->current_scope = 0;
     ast_wlkr(context->ast, build_symbols_walker, (void *) context);
 }
