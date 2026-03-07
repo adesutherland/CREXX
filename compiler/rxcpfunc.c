@@ -228,7 +228,7 @@ static int src_fqcl(Context *context, char* name, struct imported_class **cls) {
 // (this is for global variables)
 // Returns 1 if found and sets value
 // Returns 0 if not found
-static int src_fqfu(Context *context, int only_namespace, char* name, imported_func **func) {
+int src_fqfu(Context *context, int only_namespace, char* name, imported_func **func) {
     char *namespace;
     size_t i;
     Scope *scope;

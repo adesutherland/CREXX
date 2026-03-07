@@ -880,12 +880,21 @@ Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
 Symbol *sym_lrsv(Scope *scope, ASTNode *node) {
     Symbol *result = 0;
     char *c;
-    /* Sadly we are making a null terminated string */
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
+    size_t len = node->node_string_length;
 
-    /* Uppercase symbol name */
+    if (!scope) return 0;
+
+    /* Normalise stem variables by stripping the trailing dot */
+    if (len > 0 && node->node_string[len - 1] == '.') {
+        len--;
+    }
+
+    /* Sadly we are making a null terminated string */
+    char *name = (char*)malloc(len + 1);
+    memcpy(name, node->node_string, len);
+    name[len] = 0;
+
+    /* Lowercase symbol name */
 #ifdef NUTF8
     for (c = name ; *c; ++c) *c = (char)tolower(*c);
 #else

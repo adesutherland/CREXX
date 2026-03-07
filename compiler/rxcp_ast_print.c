@@ -621,7 +621,11 @@ void rxcp_print_symbol_table(Scope *scope, int depth) {
             int j;
             for (j = 0; j < depth + 1; j++) fprintf(stderr, "  ");
             char *type_str = sym_2tp(symbols[i]);
-            fprintf(stderr, "%s (%s) -> %s\n", symbols[i]->name, stype_nm(symbols[i]->symbol_type), type_str);
+            fprintf(stderr, "%s (%s) -> %s", symbols[i]->name, stype_nm(symbols[i]->symbol_type), type_str);
+            if (symbols[i]->is_global_var) fprintf(stderr, " [GLOBAL]");
+            if (symbols[i]->is_shadowing) fprintf(stderr, " [SHADOWS_GLOBAL]");
+            if (symbols[i]->exposed) fprintf(stderr, " [EXPOSED]");
+            fprintf(stderr, "\n");
             free(type_str);
         }
         free(symbols);

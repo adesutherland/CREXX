@@ -227,6 +227,8 @@ int prntwars(Context *context);
 /* Emit Assembler */
 void emit(Context *context, FILE *output_file);
 
+/* Internal search exposed function (used in sym module) */
+int src_fqfu(Context *context, int only_namespace, char* name, imported_func **func);
 
 /* printf - but returns a malloced buffer with the result */
 char* mprintf(const char* format, ...);

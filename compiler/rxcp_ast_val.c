@@ -147,6 +147,19 @@ static void validate_scope(Scope *scope, int *errors) {
                         sym->name, (void*)scope, scope->name ? scope->name : "unnamed", (void*)sym->scope);
                 (*errors)++;
             }
+
+            /* Sanity check for global var and shadowing flags */
+            if (sym->is_global_var && (scope->type == SCOPE_PROCEDURE || scope->type == SCOPE_LOCAL || scope->type == SCOPE_CLASS)) {
+                fprintf(stderr, "Symbol Error: Symbol %s is marked as a global variable but exists in a local/class scope (%d)\n",
+                        sym->name, scope->type);
+                (*errors)++;
+            }
+            if (sym->is_global_var && sym->is_shadowing) {
+                fprintf(stderr, "Symbol Error: Symbol %s is marked as both a global variable and a shadowing variable\n",
+                        sym->name);
+                (*errors)++;
+            }
+
             /* Check SymbolNode links */
             size_t j;
             for (j = 0; j < sym_nond(sym); j++) {

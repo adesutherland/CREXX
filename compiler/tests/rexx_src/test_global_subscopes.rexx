@@ -1,11 +1,17 @@
 options levelb
-namespace test_global_subscopes expose x y arr
+namespace test_global_subscopes expose x y z arr
 
 main: procedure
+  /* Typed declarations in top procedure scope bind to and type the global variables */
   arr = .string[10]
+  x = .int
+  y = .int
+  z = .int
+  
   x = 0
   y = 0
-  
+  z = 0
+
   call test_simple_no_subscope
   if y = 5 then say "test_simple_no_subscope OK"
   else say "test_simple_no_subscope FAIL: y="||y
@@ -28,6 +34,10 @@ main: procedure
   if arr[5] = "changed again" then say "test_shadowing (array index) OK"
   else say "test_shadowing (array index) FAIL: arr[5]="||arr[5]
   
+  call test_top_level_typed
+  if z = 88 then say "test_top_level_typed OK"
+  else say "test_top_level_typed FAIL: z="||z
+
   return
 
 test_simple_no_subscope: procedure
@@ -64,4 +74,10 @@ test_shadowing: procedure
     x = 5
     arr[x] = "changed again"
   end
+  return
+
+test_top_level_typed: procedure
+  /* Typed declaration at the top level of a procedure scope BIND to the global */
+  z = .int
+  z = 88
   return

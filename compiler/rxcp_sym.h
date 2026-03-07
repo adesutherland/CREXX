@@ -84,6 +84,7 @@ struct Symbol {
     char is_this;      /* Is the §this instance reference */
     char is_factory;   /* Is the §factory reference */
     char is_shadowing; /* Set if this symbol is incorrectly shadowing a global variable */
+    char is_global_var; /* Set if this symbol is an exposed global variable */
 };
 
 /* Returns string name of a Value type */
