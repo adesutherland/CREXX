@@ -201,6 +201,7 @@ walker_result build_symbols_walker(walker_direction direction,
                             SymbolNode *sn = var->symbolNode;
                             if (sn && sn->symbol) {
                                 sn->symbol->exposed = 1;
+                                sn->symbol->is_global_var = 1;
                             }
                         }
                         var = var->sibling;
@@ -526,33 +527,66 @@ walker_result exposed_symbols_walker(walker_direction direction,
                 while (n) {
                     symbol = sym_rvfc(context->ast, n); /* Is this a procedure? */
                     if (!symbol) {
+                         /* Is it already a global variable? */
+                         symbol = sym_rslv_global(context->current_scope, n);
+                    }
+
+                    if (!symbol) {
                         /* Procedure Symbol not found so it "must" be a variable we need to expose from our procedures */
                         found = 0;
-                        /* We need to loop through all the procedures in the program_file in order.
-                         * The AST has been restructured by the initial_checks_walker, so procedures
-                         * are now siblings of the REXX_OPTIONS node under PROGRAM_FILE. */
+                        /* We need to loop through all the procedures in the program_file in order. */
                         if (context->ast && context->ast->child && context->ast->child->child) {
                             for (proc_node = context->ast->child->child; proc_node; proc_node = proc_node->sibling) {
                                 if (proc_node->node_type != PROCEDURE) continue;
 
                                 /* We might be exposing one of the procedure's variables */
-                                symbol = sym_lrsv(proc_node->scope, n); /* find it */
+                                symbol = sym_drsv(proc_node->scope, n); /* find it deep */
                                 if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
-                                    if (symbol->exposed == 0) { /* Avoid double processing */
-                                        /* We found a variable to expose - so expose it by moving its scope */
-                                        merged_symbol = sym_hoist_to_namespace(symbol, symbol->scope ? symbol->scope->parent : 0);
-                                        /* Link to the exposed node */
-                                        sym_adnd(merged_symbol, n, 1, 1);
-                                        /* Link to the Procedure's INSTRUCTION node */
-                                        ASTNode *instr = ast_chld(proc_node, INSTRUCTIONS, NOP);
-                                        if (instr) sym_adnd(merged_symbol, instr, 0, 0);
+                                    /* We found a variable to expose - so expose it by moving its scope */
+                                    merged_symbol = sym_hoist_to_namespace(symbol, symbol->scope ? symbol->scope->parent : 0);
+
+                                    /* IDEMPOTENT LINKING */
+                                    sym_adnd(merged_symbol, n, 1, 1);
+                                    
+                                    /* Link to the Procedure's INSTRUCTION node for visibility check */
+                                    ASTNode *instr = ast_chld(proc_node, INSTRUCTIONS, NOP);
+                                    if (instr) sym_adnd(merged_symbol, instr, 0, 0);
+
+                                    if (merged_symbol->exposed == 0) {
                                         merged_symbol->exposed = 1;
+                                        merged_symbol->is_global_var = 1;
                                         context->changed_flags |= FLAG_VAL_SYM;
                                     }
                                     found = 1;
                                 }
                             }
                         }
+                        
+                        if (!found) {
+                             /* Still not found. Seed it in the namespace! */
+                             Scope *namespace_scope = context->current_scope;
+                             while (namespace_scope && namespace_scope->type != SCOPE_NAMESPACE) {
+                                 namespace_scope = namespace_scope->parent;
+                             }
+                             if (namespace_scope) {
+                                 symbol = sym_f(namespace_scope, n);
+                                 if (symbol && symbol->symbol_type == UNKNOWN_SYMBOL) {
+                                     symbol->symbol_type = VARIABLE_SYMBOL;
+                                     symbol->status = SYM_STATUS_LOCAL_VAR;
+                                     context->changed_flags |= FLAG_VAL_SYM;
+                                 }
+                                 if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
+                                     if (symbol->exposed == 0) {
+                                         symbol->exposed = 1;
+                                         symbol->is_global_var = 1;
+                                         context->changed_flags |= FLAG_VAL_SYM;
+                                     }
+                                     sym_adnd(symbol, n, 1, 1);
+                                 }
+                                 found = 1;
+                             }
+                        }
+
                         if (!found) {
                             /* Add an error - if it has not already errored */
                             if (ast_chld(n, ERROR, 0) == 0)
@@ -589,9 +623,13 @@ walker_result exposed_symbols_walker(walker_direction direction,
                         }
                     }
                     else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
-                        /* Add a warning - if it has not already errored/warned */
-                        if (!context->after_rewrite && ast_chld(n, ERROR, WARNING) == 0)
-                            mknd_war(n, "DUPLICATE_SYMBOL");
+                        /* Already global variable, just mark as exposed and global */
+                        if (symbol->exposed == 0 || symbol->is_global_var == 0) {
+                            symbol->exposed = 1;
+                            symbol->is_global_var = 1;
+                            context->changed_flags |= FLAG_VAL_SYM;
+                        }
+                        sym_adnd(symbol, n, 1, 1);
                     }
                     else {
                         /* Add an error - if it has not already errored */
@@ -607,35 +645,71 @@ walker_result exposed_symbols_walker(walker_direction direction,
                 ASTNode* n = node->child;
                 while (n) {
                     /* Check if it is a global symbol (already) */
-                        symbol = sym_rvfc(context->ast, n); /* Is this is a procedure/function? */
-                        if (!symbol) {
-                            /* It is not global yet, so we should be exposing one of the procedure's variables */
-                            symbol = sym_lrsv(node->parent->scope, n); /* find it */
-                            if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
-                                if (symbol->exposed == 0) { /* Avoid double processing */
-                                    /* We found a variable to expose - so expose it by moving its scope */
-                                    merged_symbol = sym_hoist_to_namespace(symbol, symbol->scope ? symbol->scope->parent : 0);
-                                    /* Link to the exposed node */
-                                    sym_adnd(merged_symbol, n, 1, 1);
-                                    /* Link to the Procedure's INSTRUCTION node */
-                                    ASTNode *instr = ast_chld(node->parent, INSTRUCTIONS, NOP);
-                                    if (instr) sym_adnd(merged_symbol, instr, 0, 0);
+                    symbol = sym_rvfc(context->ast, n); /* Is this is a procedure/function? */
+                    if (!symbol) {
+                         /* Is it already a global variable? */
+                         symbol = sym_rslv_global(context->current_scope, n);
+                    }
+
+                    if (!symbol) {
+                        /* It is not global yet, so we should be exposing one of the procedure's variables */
+                        symbol = sym_drsv(node->parent->scope, n); /* find it deep */
+                        if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
+                            if (symbol->exposed == 0) { /* Avoid double processing */
+                                /* We found a variable to expose - so expose it by moving its scope */
+                                merged_symbol = sym_hoist_to_namespace(symbol, symbol->scope ? symbol->scope->parent : 0);
+                                /* Link to the exposed node */
+                                sym_adnd(merged_symbol, n, 1, 1);
+                                /* Link to the Procedure's INSTRUCTION node */
+                                ASTNode *instr = ast_chld(node->parent, INSTRUCTIONS, NOP);
+                                if (instr) sym_adnd(merged_symbol, instr, 0, 0);
+
+                                if (merged_symbol->exposed == 0) {
                                     merged_symbol->exposed = 1;
+                                    merged_symbol->is_global_var = 1;
                                     context->changed_flags |= FLAG_VAL_SYM;
                                 }
                             }
+                        }
                         else {
-                            /* Add an error - if it has not already errored */
-                            if (ast_chld(n, ERROR, 0) == 0) {
-                                if (symbol && symbol->is_arg) mknd_err(n, "CANNOT_EXPOSED_ARG");
-                                else mknd_err(n, "UNKNOWN_SYMBOL");
+                            /* Not found locally. Seed it in the namespace! */
+                            Scope *namespace_scope = context->current_scope;
+                            while (namespace_scope && namespace_scope->type != SCOPE_NAMESPACE) {
+                                namespace_scope = namespace_scope->parent;
+                            }
+                            if (namespace_scope) {
+                                symbol = sym_f(namespace_scope, n);
+                                if (symbol && symbol->symbol_type == UNKNOWN_SYMBOL) {
+                                    symbol->symbol_type = VARIABLE_SYMBOL;
+                                    symbol->status = SYM_STATUS_LOCAL_VAR;
+                                    context->changed_flags |= FLAG_VAL_SYM;
+                                }
+                                if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
+                                    if (symbol->exposed == 0) {
+                                        symbol->exposed = 1;
+                                        symbol->is_global_var = 1;
+                                        context->changed_flags |= FLAG_VAL_SYM;
+                                    }
+                                    /* Link to the exposed node */
+                                    sym_adnd(symbol, n, 1, 1);
+                                    /* Link to the Procedure's INSTRUCTION node */
+                                    ASTNode *instr = ast_chld(node->parent, INSTRUCTIONS, NOP);
+                                    if (instr) sym_adnd(symbol, instr, 0, 0);
+                                }
+                            }
+                            else {
+                                /* Add an error - if it has not already errored */
+                                if (ast_chld(n, ERROR, 0) == 0) {
+                                    if (symbol && symbol->is_arg) mknd_err(n, "CANNOT_EXPOSED_ARG");
+                                    else mknd_err(n, "UNKNOWN_SYMBOL");
+                                }
                             }
                         }
                     }
 
                     else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
                         /* Already a global symbol - does it exist in the procedure? */
-                        Symbol *proc_symbol = node->parent ? sym_lrsv(node->parent->scope, n) : 0;
+                        Symbol *proc_symbol = node->parent ? sym_drsv(node->parent->scope, n) : 0;
                         if (proc_symbol) {
                             if (proc_symbol->is_arg) {
                                 /* If it is an arg it can't b e exposed */
@@ -645,21 +719,22 @@ walker_result exposed_symbols_walker(walker_direction direction,
                             }
                             else {
                                 /* Expose it */
-                                if (proc_symbol->exposed == 0) { /* Avoid double processing */
-                                    /* We need to promote this symbol to the parent scope */
-                                    merged_symbol = sym_hoist_to_namespace(proc_symbol, proc_symbol->scope->parent);
-                                    /* Link to the exposed node */
-                                    sym_adnd(merged_symbol, n, 1, 1);
-                                    /* Link to the Procedure's INSTRUCTION node */
-                                    sym_adnd(merged_symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
+                                merged_symbol = sym_hoist_to_namespace(proc_symbol, proc_symbol->scope->parent);
+                                /* Link to the exposed node */
+                                sym_adnd(merged_symbol, n, 1, 1);
+                                /* Link to the Procedure's INSTRUCTION node */
+                                ASTNode *instr = ast_chld(node->parent, INSTRUCTIONS, NOP);
+                                if (instr) sym_adnd(merged_symbol, instr, 0, 0);
+
+                                if (merged_symbol->exposed == 0) {
                                     merged_symbol->exposed = 1;
+                                    merged_symbol->is_global_var = 1;
                                     context->changed_flags |= FLAG_VAL_SYM;
                                 }
                             }
                         }
                         else {
                             /* Either we have already processed this symbol (duplicate) or it is not used in the proc at all */
-
                             ASTNode *instr = ast_chld(node->parent, INSTRUCTIONS, NOP);
                             if (instr && symislnk(instr, symbol)) {
                                 /* It's linked to the procedure's instructions - therefore a duplicate */
@@ -667,14 +742,15 @@ walker_result exposed_symbols_walker(walker_direction direction,
                                 if (!context->after_rewrite && ast_chld(n, ERROR, WARNING) == 0)
                                     mknd_war(n, "DUPLICATE_SYMBOL");
                             }
-                            else if (symislnk(n, symbol)) {
-                                /* Already linked this specific node */
-                            }
                             else {
                                 /* Not yet linked to this procedure's instructions - so link it now */
                                 sym_adnd(symbol, n, 1, 1);
                                 if (instr) sym_adnd(symbol, instr, 0, 0);
-                                context->changed_flags |= FLAG_VAL_SYM;
+                                if (symbol->exposed == 0 || symbol->is_global_var == 0) {
+                                    symbol->exposed = 1;
+                                    symbol->is_global_var = 1;
+                                    context->changed_flags |= FLAG_VAL_SYM;
+                                }
                             }
                         }
                     }

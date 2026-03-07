@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : test_global_subscopes.rexx
- * BUILT                  : 2026-03-06 18:45:17
+ * BUILT                  : 2026-03-07 09:54:43
  */
 
 .srcfile="test_global_subscopes.rexx"
@@ -169,7 +169,7 @@ test_simple_no_subscope() .locals=0
    ret
    .meta "test_global_subscopes.y"
 
-test_simple() .locals=1
+test_simple() .locals=0
    .meta "test_global_subscopes.test_simple"="b" ".void" test_simple() "" ""
    .src 48:1="test_simple: procedure"
    setnumdgts 18
@@ -178,12 +178,12 @@ test_simple() .locals=1
    setnumcas 1
    setnumstd 1
    .src 51:5="y = 10"
-   .meta "test_global_subscopes.test_simple.y"="b" ".int" r0
-   load r0,10
+   load g2,10
    .src 53:3="return"
    ret
+   .meta "test_global_subscopes.y"
 
-test_array() .locals=3
+test_array() .locals=2
    .meta "test_global_subscopes.test_array"="b" ".void" test_array() "" ""
    .src 55:1="test_array: procedure"
    setnumdgts 18
@@ -191,19 +191,17 @@ test_array() .locals=3
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .meta "test_global_subscopes.test_array.arr"="b" ".string[*]" r0
    .src 57:5="arr[1] = \"changed\""
-   null r0
-   .src 57:5="arr[1] = \"changed\""
-   minattrs r0,1
-   linkattr1 r1,r0,1
-   load r2,"changed"
-   scopy r1,r2
-   unlink r1
+   setattrs g0,10
+   linkattr1 r0,g0,1
+   load r1,"changed"
+   scopy r0,r1
+   unlink r0
    .src 59:3="return"
    ret
+   .meta "test_global_subscopes.arr"
 
-test_nested() .locals=1
+test_nested() .locals=0
    .meta "test_global_subscopes.test_nested"="b" ".void" test_nested() "" ""
    .src 61:1="test_nested: procedure"
    setnumdgts 18
@@ -212,12 +210,12 @@ test_nested() .locals=1
    setnumcas 1
    setnumstd 1
    .src 65:7="x = 99"
-   .meta "test_global_subscopes.test_nested.x"="b" ".int" r0
-   load r0,99
+   load g1,99
    .src 68:3="return"
    ret
+   .meta "test_global_subscopes.x"
 
-test_shadowing() .locals=4
+test_shadowing() .locals=2
    .meta "test_global_subscopes.test_shadowing"="b" ".void" test_shadowing() "" ""
    .src 70:1="test_shadowing: procedure"
    setnumdgts 18
@@ -225,22 +223,17 @@ test_shadowing() .locals=4
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .meta "test_global_subscopes.test_shadowing.arr"="b" ".string[*]" r0
-   .src 75:5="arr[x] = \"changed again\""
-   null r0
-   .meta "test_global_subscopes.test_shadowing.x"="b" ".int" r1
-   .src 73:5="x = .int"
-   null r1
    .src 74:5="x = 5"
-   load r1,5
+   load g1,5
    .src 75:5="arr[x] = \"changed again\""
-   minattrs r0,r1,0
-   linkattr1 r2,r0,r1
-   load r3,"changed again"
-   scopy r2,r3
-   unlink r2
+   setattrs g0,10
+   linkattr1 r0,g0,g1
+   load r1,"changed again"
+   scopy r0,r1
+   unlink r0
    .src 77:3="return"
    ret
+   .meta "test_global_subscopes.arr"
 
 test_top_level_typed() .locals=0
    .meta "test_global_subscopes.test_top_level_typed"="b" ".void" test_top_level_typed() "" ""

@@ -18,9 +18,8 @@ Alternatively, the `expose` keyword in the `procedure` instruction can be used t
 proc: procedure expose caller_var
 ```
 
-The availability of global variables is limited to modules within the same namespace, excluding imported namespaces. To access a variable from a module in a different namespace (via importing), a wrapping variable access procedure is required.
-
-The compiler determines global variable types from rexx, rxas, and rxbin files within the same search paths as exposed procedures. However, only modules in the same namespace are processed. Inconsistency across module files results in an error.
+**Physical Placement and Hoisting:**
+To ensure robust scoping, global variables physically reside in the **Namespace Scope** of the module. During the compilation process, when a variable is identified as global (either via the `namespace expose` list or a `procedure expose` list), the compiler physically **hoists** the variable symbol from its local discovery scope up to the Namespace Scope. This ensures that standard tiered resolution (Local -> Namespace -> Universe) correctly identifies the variable across all procedures and blocks within the module. This hoisting is strictly upward; the compiler never demotes a namespace-level variable to a local scope.
 
 **Namespace Isolation of Global Variables:**
 Unlike exposed functions, which can be called across imported modules, **exposed global variables are strictly isolated to their originating module's namespace**. The compiler explicitly prevents cross-namespace variable resolution. To read or write a global variable from a module in a different namespace, you must wrap the variable access in an exposed function (a getter/setter) and import that function.

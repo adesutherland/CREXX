@@ -157,6 +157,9 @@ void free_sym(Symbol *symbol);
 /* Local Resolve a Symbol - current scope only */
 Symbol *sym_lrsv(Scope *scope, ASTNode *node);
 
+/* Deep Resolve a Symbol - current scope and all its sub-scopes (e.g. nested DO blocks) */
+Symbol *sym_drsv(Scope *scope, ASTNode *node);
+
 /* Resolve a Symbol - only in the current procedure (and nested local scopes) */
 Symbol *sym_rslv_local(Scope *scope, ASTNode *node);
 

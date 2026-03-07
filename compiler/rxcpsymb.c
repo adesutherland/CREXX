@@ -906,6 +906,19 @@ Symbol *sym_lrsv(Scope *scope, ASTNode *node) {
     return result;
 }
 
+/* Deep Resolve a Symbol - current scope and all its sub-scopes (e.g. nested DO blocks) */
+Symbol *sym_drsv(Scope *scope, ASTNode *node) {
+    Symbol *result = sym_lrsv(scope, node);
+    if (result) return result;
+
+    size_t i;
+    for (i = 0; i < scp_noch(scope); i++) {
+        result = sym_drsv(scp_chd(scope, i), node);
+        if (result) return result;
+    }
+    return 0;
+}
+
 /* Move (via a merge) a Symbol into a new Scope - returns the target symbol */
 Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
     size_t i;
