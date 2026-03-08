@@ -85,4 +85,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
       ARGS : "" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (1:0) [Type: .void]
         RETURN : "" (1:7) [Type: .void]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    Scope [2]: main
+      a (Constant) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

@@ -304,4 +304,24 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
             VAR_TARGET : "val" (20:8) [Type: .int]
             VAR_SYMBOL : "new_val" (20:14) [Type: .int]
           RETURN : "return" (21:8) [Type: .void]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    myclass (Class) -> .unknown
+    Scope [2]: main
+      var (Variable) -> .myclass
+    Scope [2]: myclass
+      getvalue (Function) -> .int
+      setvalue (Function) -> .void
+      val (Variable) -> .int
+      §factory (Function) -> .myclass
+      Scope [3]: §factory
+        initial_value (Variable) -> .int
+        §factory (Variable) -> .myclass
+      Scope [3]: getvalue
+        §this (Variable) -> .myclass
+      Scope [3]: setvalue
+        new_val (Variable) -> .int
+        §this (Variable) -> .myclass
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

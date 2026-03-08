@@ -79,4 +79,10 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
           SAY : "say" (4:4) [Type: .void]
             CONSTANT : "in" (4:8) [Type: .string]
         RETURN : "return" (6:2) [Type: .void]
+Scope [0]: Unnamed
+  do_simple_parse (Namespace) -> .unknown
+  Scope [1]: do_simple_parse
+    main (Function) -> .void
+    Scope [2]: main
+      Scope [3]: Unnamed
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

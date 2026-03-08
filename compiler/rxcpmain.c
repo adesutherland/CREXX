@@ -505,6 +505,7 @@ int rxcmain(int argc, char *argv[]) {
     if (context->debug_mode) {
         rxcp_debug_header("STAGE_FINAL", -1);
         rxcp_print_ast_recursive(context->ast, 0);
+        rxcp_print_symbol_table(context->ast->scope, 0);
     }
 
     dp_stop:

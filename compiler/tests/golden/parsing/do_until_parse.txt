@@ -144,4 +144,10 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
               VAR_TARGET : "ready" (6:4) [Type: .int]
               CONSTANT : "1" (6:12) [Type: .int]
         RETURN : "return" (8:2) [Type: .void]
+Scope [0]: Unnamed
+  do_until_parse (Namespace) -> .unknown
+  Scope [1]: do_until_parse
+    main (Function) -> .void
+    Scope [2]: main
+      ready (Variable) -> .int
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

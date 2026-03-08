@@ -124,4 +124,10 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
             SAY : "say" (4:4) [Type: .void]
               VAR_SYMBOL : "i" (4:8) [Type: .int]
         RETURN : "return" (6:2) [Type: .void]
+Scope [0]: Unnamed
+  do_counted_parse (Namespace) -> .unknown
+  Scope [1]: do_counted_parse
+    main (Function) -> .void
+    Scope [2]: main
+      i (Variable) -> .int
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).
