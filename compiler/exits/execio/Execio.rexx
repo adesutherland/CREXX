@@ -17,20 +17,16 @@ execioexit: class
         _error_token = 0
         _error_message = ""
         _status = "EMPTY"
+        return
 
     get_primary_keyword: method = .string
         return "execio"
 
     get_additional_keywords: method = .string
         return ""
-/* execioexit: compiler exit to translate
- *   EXECIO <count-expr> <mode> <fname> ( STEM <stem> [FINIS] ... )
- * into:
- *   __rc=_execio(<count>, '<mode>', '<fname>', expose stem=<stem>);
- */
 
-process: method = .string
-    arg tokens = .token[]
+    process: method = .string
+        arg tokens = .token[]
 
     /* reset per-call state */
     _replacement = ""

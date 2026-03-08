@@ -356,9 +356,14 @@ int rxvml_call_factory(
     rxvml_value** response_out) {
 
     char factory_proc[1024];
-    snprintf(factory_proc, sizeof(factory_proc), "%s.§factory", class_name);
+    snprintf(factory_proc, sizeof(factory_proc), "§%s.§factory", class_name);
 
-    return rxvml_call_procedure(ctx, factory_proc, argc, args, response_out);
+    int rc = rxvml_call_procedure(ctx, factory_proc, argc, args, response_out);
+    if (rc != 0) {
+        snprintf(factory_proc, sizeof(factory_proc), "%s.§factory", class_name);
+        rc = rxvml_call_procedure(ctx, factory_proc, argc, args, response_out);
+    }
+    return rc;
 }
 
 

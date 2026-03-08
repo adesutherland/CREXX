@@ -18,18 +18,16 @@ sortexit2: class
         _error_token = 0
         _error_message = ""
         _status = "EMPTY"
+        return
 
     get_primary_keyword: method = .string
         return "sortx"
 
     get_additional_keywords: method = .string
         return ""
-/* ---------------------------------------------------------------------
- * Process sortx <stem>,<expr>,<order>
- * --------------------------------------------------------------------
- */
-process: method = .string
-    arg tokens = .token[]
+
+    process: method = .string
+        arg tokens = .token[]
 
   /* reset per-call state */
     _replacement = ""

@@ -87,7 +87,7 @@ _execio: procedure=.int
   arg mmax=.string,mode='R',fname=.string, expose stem=.string[]
   maxrec=0
   mode=upper(strip(mode))
-  say 'EXECIO Debug mode='mode', file='fname', records='mmax
+  /* say 'EXECIO Debug mode='mode', file='fname', records='mmax */
   count=0
   if mode='DISKR'       then omode='r'
   else if mode='READ'   then omode='r'

@@ -17,6 +17,7 @@ pprintexit: class
         _error_token = 0
         _error_message = ""
         _status = "EMPTY"
+        return
 
     get_primary_keyword: method = .string
         return "pprint"

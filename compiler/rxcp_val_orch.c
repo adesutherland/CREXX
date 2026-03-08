@@ -793,4 +793,8 @@ void rxcp_bvl(Context *context) {
     ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
     context->current_scope = 0;
     ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
 }

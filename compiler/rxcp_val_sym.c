@@ -144,7 +144,7 @@ walker_result structure_symbols_walker(walker_direction direction,
             /* Make a new symbol */
             if (!symbol) { /* If there is a symbol we are in an error condition but are pressing on */
                 if (node->node_type == FACTORY) {
-                    symbol = sym_fn(context->current_scope, "\xc2\xa7" "factory", 9);
+                    symbol = sym_fn(context->current_scope, "§factory", 9);
                 } else {
                     symbol = sym_f(context->current_scope, node);
                 }
@@ -214,6 +214,27 @@ walker_result structure_symbols_walker(walker_direction direction,
             }
         }
 
+        else if (node->node_type == DO) {
+            /* Counted/conditional DO: no new scope yet (handled in future work) */
+            node->scope = context->current_scope;
+        }
+
+        else if (node->node_type == INSTRUCTIONS) {
+            /* Simple DO grouping is represented as a nested INSTRUCTIONS block (no DO ancestor).
+             * Create a child scope for any nested INSTRUCTIONS whose parent is INSTRUCTIONS
+             * (i.e., not the top-level procedure body) and whose parent is not a DO. */
+            if (node->parent && node->parent->node_type == INSTRUCTIONS) {
+                if (node->scope) {
+                    context->current_scope = node->scope;
+                } else {
+                    context->current_scope = scp_f(context, context->current_scope, node, 0, SCOPE_LOCAL);
+                    node->scope = context->current_scope;
+                }
+            } else {
+                node->scope = context->current_scope;
+            }
+        }
+
         else {
             node->scope = context->current_scope;
         }
@@ -254,8 +275,8 @@ walker_result build_symbols_walker(walker_direction direction,
             /* Level B Class Instance Support (Idempotent) */
             if (node->node_type == FACTORY) {
                 /* Add instance symbol '§factory' */
-                Symbol *star = sym_fn(context->current_scope, "\xc2\xa7" "factory", 9);
-                if (star && star->symbol_type == UNKNOWN_SYMBOL) {
+                Symbol *star = sym_fn(context->current_scope, "§factory", 9);
+                if (star && star->type == TP_UNKNOWN) {
                     star->symbol_type = VARIABLE_SYMBOL;
                     star->type = TP_OBJECT;
                     ASTNode *class_node = ast_class(node);
@@ -267,8 +288,8 @@ walker_result build_symbols_walker(walker_direction direction,
                 }
             } else if (node->node_type == METHOD) {
                 /* Add instance symbol '§this' */
-                Symbol *this_sym = sym_fn(context->current_scope, "\xc2\xa7" "this", 6);
-                if (this_sym && this_sym->symbol_type == UNKNOWN_SYMBOL) {
+                Symbol *this_sym = sym_fn(context->current_scope, "§this", 6);
+                if (this_sym && this_sym->type == TP_UNKNOWN) {
                     this_sym->symbol_type = VARIABLE_SYMBOL;
                     this_sym->type = TP_OBJECT;
                     ASTNode *class_node = ast_class(node);
@@ -314,10 +335,12 @@ walker_result build_symbols_walker(walker_direction direction,
 
                 if (symbol) {
                     sym_adnd(symbol, n, 1, 0);
-                    if (symbol->exposed == 0) {
-                        symbol->exposed = 1;
-                        symbol->is_global_var = 1;
-                        context->changed_flags |= FLAG_VAL_SYM;
+                    if (symbol->symbol_type == VARIABLE_SYMBOL || symbol->symbol_type == UNKNOWN_SYMBOL) {
+                        if (symbol->exposed == 0) {
+                            symbol->exposed = 1;
+                            symbol->is_global_var = 1;
+                            context->changed_flags |= FLAG_VAL_SYM;
+                        }
                     }
                     /* Link to the Procedure's INSTRUCTIONS if applicable */
                     ASTNode *proc = ast_proc(node);
@@ -345,9 +368,11 @@ walker_result build_symbols_walker(walker_direction direction,
                     symbol = sym_lrsv(context->current_scope, node);
                     if (!symbol) {
                         /* Auto-expose: If it's an exposed global, let's type the global, not shadow it */
-                        Symbol *glob = sym_rslv_global(context->current_scope, node);
-                        if (glob && glob->symbol_type == VARIABLE_SYMBOL && glob->exposed) {
-                            symbol = glob;
+                        if (context->current_scope->type != SCOPE_LOCAL) {
+                            Symbol *glob = sym_rslv_global(context->current_scope, node);
+                            if (glob && glob->symbol_type == VARIABLE_SYMBOL && glob->exposed) {
+                                symbol = glob;
+                            }
                         }
                     } else if (symbol->type != TP_UNKNOWN) {
                         /* Already has a type - so this is a duplicate declaration */
