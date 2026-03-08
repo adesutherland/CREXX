@@ -948,15 +948,31 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             if (symbol->status == SYM_STATUS_LOCAL_VAR) {
                 /* Rule: Warn on variables shadowing variables (local or global) */
                 int shadows_var = 0;
-                Symbol *parent_sym = 0;
+                Symbol *shadowed = 0;
+
+                /* Check if it shadows a variable in a parent local scope within the same procedure */
                 if (symbol->scope && symbol->scope->parent) {
-                    parent_sym = sym_rslv_local(symbol->scope->parent, rep_node);
-                    if (!parent_sym) parent_sym = sym_rslv_global(symbol->scope->parent, rep_node);
+                    /* Tiered search but STOP at Procedure level */
+                    Scope *search_scope = symbol->scope->parent;
+                    while (search_scope) {
+                        shadowed = sym_lrsv(search_scope, rep_node);
+                        if (shadowed && (shadowed->symbol_type == VARIABLE_SYMBOL || shadowed->symbol_type == CONSTANT_SYMBOL)) {
+                            shadows_var = 1;
+                            symbol->shadowed_symbol = shadowed;
+                            break;
+                        }
+                        if (search_scope->type == SCOPE_PROCEDURE || search_scope->type == SCOPE_CLASS) break;
+                        search_scope = search_scope->parent;
+                    }
                 }
-                if (parent_sym && (parent_sym->symbol_type == VARIABLE_SYMBOL || parent_sym->symbol_type == CONSTANT_SYMBOL)) {
-                    shadows_var = 1;
-                } else if (sym_is_glob_var(context, rep_node)) {
-                    shadows_var = 1;
+
+                if (!shadows_var) {
+                    /* Check if it shadows a global/namespace variable */
+                    Symbol *glob_sym = sym_rslv_global(symbol->scope, rep_node);
+                    if (glob_sym && glob_sym != symbol && (glob_sym->symbol_type == VARIABLE_SYMBOL || glob_sym->symbol_type == CONSTANT_SYMBOL)) {
+                        shadows_var = 1;
+                        symbol->shadowed_symbol = glob_sym;
+                    }
                 }
                 if (shadows_var) {
                     /* Suppress shadowing warning for symbols in signature-only procedures (declarations) */
@@ -972,10 +988,12 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 if (symbol->symbol_type == FUNCTION_SYMBOL) {
                     if (sym_is_imfn(context, rep_node)) {
                         symbol->is_shadowing = 1;
+                        symbol->shadowed_symbol = sym_imfn(context, rep_node);
                     }
                 } else if (symbol->symbol_type == CLASS_SYMBOL) {
                     if (sym_is_imcls(context, rep_node)) {
                         symbol->is_shadowing = 1;
+                        symbol->shadowed_symbol = sym_imcls(context, rep_node);
                     }
                 }
             }

@@ -488,7 +488,19 @@ static walker_result shadowing_warning_walker(walker_direction direction,
                 node->node_type == VAR_REFERENCE || node->node_type == FUNC_SYMBOL ||
                 node->node_type == FUNCTION || node->node_type == CLASS_DEF) {
 
-                mknd_war(node, "SHADOWING");
+                Symbol *symbol = node->symbolNode->symbol;
+                Symbol *shadowed = symbol->shadowed_symbol;
+                if (shadowed && sym_nond(shadowed) > 0) {
+                    ASTNode *def = sym_trnd(shadowed, 0)->node;
+                    if (def && def->line != -1) {
+                        mknd_war(node, "SHADOWING, original definition @ %d:%d", def->line + 1, def->column + 1);
+                    } else {
+                        mknd_war(node, "SHADOWING, original definition is global");
+                    }
+                } else {
+                    mknd_war(node, "SHADOWING");
+                }
+
                 /* mknd_war returns the parent node, so we find the newly created WARNING child */
                 ASTNode *warn = node->child;
                 while (warn && warn->sibling) warn = warn->sibling; /* The warning is added at the end */
