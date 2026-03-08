@@ -54,7 +54,8 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 
 8.  **Symbol Harvesting (`build_symbols_walker`)**: 
     *   Constructs the Symbol Table and defines Scopes for the current tree state.
-    *   **Block Scoping**: Creates `SCOPE_LOCAL` for simple `DO` groups and `IF` branches (confinement).
+    *   **Block Scoping**: Creates `SCOPE_LOCAL` for simple `DO` groups and `IF` branches that use a `DO` block (confinement).
+        *   *Intentional Inconsistency*: Single-instruction `IF` branches (e.g., `if cond then x = 1`) execute in the parent scope, whereas `DO` blocks (e.g., `if cond then do; x = 1; end`) create a local scope. This is as designed.
     *   *Idempotency*: Uses existing scopes if already created; `sym_adnd` prevents duplicate symbols.
     *   *Resolution*: Uses **Specialized Resolvers** (`sym_rslv_local`, `sym_rslv_attribute`, `sym_rslv_global`) to prevent "accidental" linkage.
     *   **Symbol Lifecycle**: Every name encountered in the AST is assigned a `Symbol` with an explicit `SymbolStatus` (e.g., `SYM_STATUS_UNRESOLVED`, `SYM_STATUS_LOCAL_DEF`).
@@ -75,7 +76,8 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
     *   Checks for duplicate definitions and semantic symbol errors.
     *   *Idempotency*: Skips symbols whose type is already resolved (`TP_UNKNOWN`).
     *   **Shadowing Matrix**:
-        *   *Variables shadowing variables* (e.g. from parent block scopes or globals): **Warning** (`#SHADOWING_GLOBAL`).
+        *   *Variables shadowing variables* (e.g. from parent block scopes or globals): **Warning** (`#SHADOWING`).
+            *Note*: This warning can be triggered by "forward shadowing" (a local created in a branch before a procedure-level variable is used later). Investigating these warnings is crucial as they may indicate that a variable intended to be global/procedure-wide is actually being isolated in a subscope.
         *   *Variables shadowing functions* (e.g. `pos`, `length`): **Silent** (allowed for developer ergonomics).
         *   *Functions shadowing imported functions*: **Warning**.
         *   *Classes shadowing imported classes*: **Warning**.

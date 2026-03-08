@@ -16,6 +16,9 @@ return rxc
  */
 __REGEXMATCH: PROCEDURE=.int
   arg s=string, p=.string
+  i = 0
+  a = 0
+  q = ""
 
   rxlite_start = 0
   rxlite_len   = 0
@@ -69,6 +72,10 @@ return 0
  */
 REGEXFIND: PROCEDURE=.int
   arg s=string, p=.string, fromPos=.int
+  i = 0
+  a = 0
+  q = ""
+
   if fromPos = '' then fromPos = 1
 
   rxlite_start = 0
@@ -165,6 +172,8 @@ return 0
  */
 REGEXSPLIT: PROCEDURE=.string[]
   arg s=.string, pat=.string, opts='', limit=0
+  piece = ""
+  count = 0
   /* defaults */
   keepEmpty = 1
   doTrim    = 0
@@ -344,6 +353,7 @@ return
  * ----------------------------------------------------------------------------
  */
 REGEXDETAILS: PROCEDURE=.int[]
+  outStem=.int[]
   call regexfinalizeLen ''          /* finalize internally */
 
   if rxlite_start = 0 then do
@@ -373,6 +383,11 @@ return substr(buffer, rxlite_start, rxlite_len)
  */
 __expandRepl: PROCEDURE=.string
   arg repl=.string, s=.string
+  m = ""
+  out = ""
+  i = 0
+  c = ""
+  d = ""
 
   /* finalize length first; rxlite_len may not be set yet */
   call regexfinalizeLen ''
@@ -543,6 +558,7 @@ return 0
  */
 __matchOne: PROCEDURE=.int
   arg s=.string, i=.int, atom=.string, type=.string
+  ch = ""
   L = length(s)
   if i > L then return 0
   if type = 'CLASS' then do

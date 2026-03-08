@@ -270,10 +270,25 @@ end
 - `ITERATE` restarts the current loop at the next iteration (optionally naming a control variable to target an outer loop).
 - `LEAVE` exits the current loop immediately (optionally naming a control variable to target an outer loop).
 
-### Variable shadowing in DO blocks (planned Level B behavior)
-The following scoping rules are planned for DO blocks and will be implemented next. They are documented here so you can write code that will continue to work when the change lands.
+### Variable shadowing and Scoping (Level B)
 
-- A typed declaration inside a `DO` block creates a block-local that shadows any outer variable of the same name for the duration of the block:
+cREXX Level B introduces block-level scoping for certain control structures. It is important to distinguish between single-instruction branches and grouped instructions (DO blocks).
+
+- **Single-instruction branches**: These execute in the current (procedure) scope.
+  ```rexx
+  if condition then x = 10 /* x is in procedure scope */
+  ```
+- **Grouped instructions (DO blocks)**: These create a `SCOPE_LOCAL` (block scope). New untyped variables created inside these blocks are local to the block and are destroyed at `END`.
+  ```rexx
+  if condition then do
+    y = 20 /* y is local to this DO block */
+  end
+  /* y is not visible here */
+  ```
+
+This difference in behavior between single-instruction branches and `DO` blocks is an intentional architectural design choice in Level B to balance REXX compatibility with modern structured scoping.
+
+- A typed declaration inside a `DO` block always creates a block-local that shadows any outer variable of the same name for the duration of the block:
   ```rexx <!--shadowingdo.rexx-->
   options levelb
   main: procedure

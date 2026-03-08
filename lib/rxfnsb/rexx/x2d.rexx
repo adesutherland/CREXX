@@ -12,6 +12,7 @@ x2d: procedure = .int
   dec=0
   sign=0
   offset=0
+  len = 0
   if slen=0 then return 0      /* no hex input return 0    */
   if slen>20 then slen=20      /* may be up to 20 chars, inluding sign */
   assembler strlen hlen,hex    /* get length of hex string */

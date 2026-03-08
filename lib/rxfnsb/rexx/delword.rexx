@@ -16,6 +16,7 @@ delword: procedure = .string
   wdel=0
   wlen=0
   slen=0
+  wpos=0
 
   if wcount<0 then do
      wpos=wordindex(string,wnum)    /* locate position of word x */

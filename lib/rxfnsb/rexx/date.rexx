@@ -13,6 +13,7 @@ date: Procedure = .string
   iformat=upper(iformat)
   oformat=upper(oformat)
   idate=upper(idate)
+  iNorm = ""
 
   /* 1. Check and translate input data according to its format to a JDN */
   if idate="" then do      /* no date set, take today, ignore input format */

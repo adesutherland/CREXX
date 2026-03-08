@@ -221,9 +221,9 @@ walker_result structure_symbols_walker(walker_direction direction,
 
         else if (node->node_type == INSTRUCTIONS) {
             /* Simple DO grouping is represented as a nested INSTRUCTIONS block (no DO ancestor).
-             * Create a child scope for any nested INSTRUCTIONS whose parent is INSTRUCTIONS
-             * (i.e., not the top-level procedure body) and whose parent is not a DO. */
-            if (node->parent && node->parent->node_type == INSTRUCTIONS) {
+             * Create a child scope for any nested INSTRUCTIONS whose parent is an IF.
+             * Note: If the parent is a DO, the DO currently does not have its own scope (Classic REXX). */
+            if (node->parent && node->parent->node_type == IF) {
                 if (node->scope) {
                     context->current_scope = node->scope;
                 } else {
@@ -522,9 +522,9 @@ walker_result build_symbols_walker(walker_direction direction,
 
         else if (node->node_type == INSTRUCTIONS) {
             /* Simple DO grouping is represented as a nested INSTRUCTIONS block (no DO ancestor).
-             * Create a child scope for any nested INSTRUCTIONS whose parent is INSTRUCTIONS
-             * (i.e., not the top-level procedure body) and whose parent is not a DO. */
-            if (node->parent && node->parent->node_type == INSTRUCTIONS) {
+             * Create a child scope for any nested INSTRUCTIONS whose parent is an IF.
+             * Note: If the parent is a DO, the DO currently does not have its own scope (Classic REXX). */
+            if (node->parent && node->parent->node_type == IF) {
                 if (node->scope) {
                     context->current_scope = node->scope;
                 } else {

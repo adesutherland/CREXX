@@ -27,4 +27,9 @@ Unlike exposed functions, which can be called across imported modules, **exposed
 **Typing and Shadowing of Global Variables:**
 Global variables are typed based on their first use or declaration. All modules exposing the variable must agree on this type.
 - **Top-Level Declarations:** In the top-level scope of a procedure (i.e. directly inside `procedure`), a typed declaration like `x = .int` does NOT create a local shadow variable. Instead, it asserts and binds the type to the global variable `x`.
-- **Sub-Scope Declarations (Shadowing):** In sub-scopes (e.g. inside a `do...end` block or an `if` block), a typed declaration like `x = .int` **creates a shadow local variable** that hides the global variable for the duration of that block. Conversely, an untyped assignment like `x = 10` inside a sub-scope binds directly to and updates the global variable.
+- **Sub-Scope Declarations (Shadowing):** In sub-scopes (e.g. inside a `do...end` block or an `if ... do` block), a typed declaration like `x = .int` **creates a shadow local variable** that hides the global variable for the duration of that block.
+- **Untyped Assignments:**
+    - In single-instruction branches (e.g., `if cond then x = 10`), an untyped assignment binds directly to and updates the global variable.
+    - Inside a `DO` block (e.g., `if cond then do; x = 10; end`), if `x` does not already exist in an outer scope, it creates a block-local variable. If it does exist (including as a global), it updates that variable.
+
+Note: The distinction between single-instruction branches and `DO` blocks is an intentional design choice in Level B.

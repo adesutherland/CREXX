@@ -1,0 +1,242 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : test_global_subscopes.rexx
+ * BUILT                  : 2026-03-08 09:29:38
+ */
+
+.srcfile="test_global_subscopes.rexx"
+.globals=4
+g0 .expose=test_global_subscopes.arr
+g1 .expose=test_global_subscopes.x
+g2 .expose=test_global_subscopes.y
+g3 .expose=test_global_subscopes.z
+
+main() .locals=9
+   .meta "test_global_subscopes.main"="b" ".void" main() "" ""
+   .src 4:1="main: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 11:3="x = 0"
+   load g1,0
+   .src 12:3="y = 0"
+   load g2,0
+   .src 13:3="z = 0"
+   load g3,0
+   .src 15:3="call test_simple_no_subscope"
+   load r0,0
+   call r1,test_simple_no_subscope(),r0
+   .src 16:2="if y = 5"
+   ieq r0,g2,5
+   brf l49iffalse,r0
+   .src 16:12="then"
+   .src 16:17="say \"test_simple_no_subscope OK\""
+   say "test_simple_no_subscope OK"
+   br l49ifend
+   .src 17:3="else"
+l49iffalse:
+   .src 17:8="say \"test_simple_no_subscope FAIL: y=\"||y"
+   itos g2
+   concat r2,"test_simple_no_subscope FAIL: y=",g2
+   say r2
+l49ifend:
+   .src 19:3="call test_simple"
+   load r2,0
+   call r0,test_simple(),r2
+   .src 20:2="if y = 10"
+   ieq r2,g2,10
+   brf l62iffalse,r2
+   .src 20:13="then"
+   .src 20:18="say \"test_simple OK\""
+   say "test_simple OK"
+   br l62ifend
+   .src 21:3="else"
+l62iffalse:
+   .src 21:8="say \"test_simple FAIL: y=\"||y"
+   itos g2
+   concat r3,"test_simple FAIL: y=",g2
+   say r3
+l62ifend:
+   .src 23:3="call test_array"
+   load r3,0
+   call r2,test_array(),r3
+   .src 24:2="if arr[1] = \"changed\""
+   setattrs g0,10
+   linkattr1 r3,g0,1
+   seq r4,r3,"changed"
+   unlink r3
+   brf l77iffalse,r4
+   .src 24:25="then"
+   .src 24:30="say \"test_array OK\""
+   say "test_array OK"
+   br l77ifend
+   .src 25:3="else"
+l77iffalse:
+   .src 25:8="say \"test_array FAIL: arr[1]=\"||arr[1"
+   setattrs g0,10
+   linkattr1 r5,g0,1
+   concat r6,"test_array FAIL: arr[1]=",r5
+   unlink r5
+   say r6
+l77ifend:
+   .src 27:3="call test_nested"
+   load r6,0
+   call r5,test_nested(),r6
+   .src 28:2="if x = 99"
+   ieq r6,g1,99
+   brf l90iffalse,r6
+   .src 28:13="then"
+   .src 28:18="say \"test_nested OK\""
+   say "test_nested OK"
+   br l90ifend
+   .src 29:3="else"
+l90iffalse:
+   .src 29:8="say \"test_nested FAIL: x=\"||x"
+   itos g1
+   concat r4,"test_nested FAIL: x=",g1
+   say r4
+l90ifend:
+   .src 31:3="call test_shadowing"
+   load r6,0
+   call r4,test_shadowing(),r6
+   .src 32:2="if x = 99"
+   ieq r6,g1,99
+   brf l103iffalse,r6
+   .src 32:13="then"
+   .src 32:18="say \"test_shadowing OK\""
+   say "test_shadowing OK"
+   br l103ifend
+   .src 33:3="else"
+l103iffalse:
+   .src 33:8="say \"test_shadowing FAIL: x=\"||x"
+   itos g1
+   concat r3,"test_shadowing FAIL: x=",g1
+   say r3
+l103ifend:
+   .src 34:2="if arr[5] = \"changed again\""
+   setattrs g0,10
+   linkattr1 r6,g0,5
+   seq r3,r6,"changed again"
+   unlink r6
+   brf l115iffalse,r3
+   .src 34:31="then"
+   .src 34:36="say \"test_shadowing (array index) OK\""
+   say "test_shadowing (array index) OK"
+   br l115ifend
+   .src 35:3="else"
+l115iffalse:
+   .src 35:8="say \"test_shadowing (array index) FAIL: arr[5]=\"||arr[5"
+   setattrs g0,10
+   linkattr1 r7,g0,5
+   concat r8,"test_shadowing (array index) FAIL: arr[5]=",r7
+   unlink r7
+   say r8
+l115ifend:
+   .src 37:3="call test_top_level_typed"
+   load r8,0
+   call r7,test_top_level_typed(),r8
+   .src 38:2="if z = 88"
+   ieq r8,g3,88
+   brf l128iffalse,r8
+   .src 38:13="then"
+   .src 38:18="say \"test_top_level_typed OK\""
+   say "test_top_level_typed OK"
+   br l128ifend
+   .src 39:3="else"
+l128iffalse:
+   .src 39:8="say \"test_top_level_typed FAIL: z=\"||z"
+   itos g3
+   concat r6,"test_top_level_typed FAIL: z=",g3
+   say r6
+l128ifend:
+   .src 41:3="return"
+   ret
+
+test_simple_no_subscope() .locals=0
+   .meta "test_global_subscopes.test_simple_no_subscope"="b" ".void" test_simple_no_subscope() "" ""
+   .src 43:1="test_simple_no_subscope: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 45:3="y = 5"
+   load g2,5
+   .src 46:3="return"
+   ret
+
+test_simple() .locals=0
+   .meta "test_global_subscopes.test_simple"="b" ".void" test_simple() "" ""
+   .src 48:1="test_simple: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 51:5="y = 10"
+   load g2,10
+   .src 53:3="return"
+   ret
+
+test_array() .locals=2
+   .meta "test_global_subscopes.test_array"="b" ".void" test_array() "" ""
+   .src 55:1="test_array: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 57:5="arr[1] = \"changed\""
+   setattrs g0,10
+   linkattr1 r0,g0,1
+   load r1,"changed"
+   scopy r0,r1
+   unlink r0
+   .src 59:3="return"
+   ret
+
+test_nested() .locals=0
+   .meta "test_global_subscopes.test_nested"="b" ".void" test_nested() "" ""
+   .src 61:1="test_nested: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 65:7="x = 99"
+   load g1,99
+   .src 68:3="return"
+   ret
+
+test_shadowing() .locals=2
+   .meta "test_global_subscopes.test_shadowing"="b" ".void" test_shadowing() "" ""
+   .src 70:1="test_shadowing: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 75:5="arr[x] = \"changed again\""
+   .meta "test_global_subscopes.test_shadowing.x"="b" ".int" "5"
+   setattrs g0,10
+   linkattr1 r0,g0,5
+   load r1,"changed again"
+   scopy r0,r1
+   unlink r0
+   .src 77:3="return"
+   ret
+
+test_top_level_typed() .locals=0
+   .meta "test_global_subscopes.test_top_level_typed"="b" ".void" test_top_level_typed() "" ""
+   .src 79:1="test_top_level_typed: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 82:3="z = 88"
+   load g3,88
+   .src 83:3="return"
+   ret

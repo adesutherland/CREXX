@@ -483,16 +483,22 @@ static walker_result shadowing_warning_walker(walker_direction direction,
                                               __attribute__((unused)) void *payload) {
     if (direction == in) {
         if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->is_shadowing) {
-            mknd_war(node, "SHADOWING_GLOBAL");
-            /* mknd_war returns the parent node, so we find the newly created WARNING child */
-            ASTNode *warn = node->child;
-            while (warn && warn->sibling) warn = warn->sibling; /* The warning is added at the end */
-            if (warn && warn->node_type == WARNING && node->source_start) {
-                warn->source_start = node->source_start;
-                /* Lock the bounds to exactly the node's identifier, avoiding array index expansion */
-                size_t len = node->node_string_length;
-                if (len > 0 && node->node_string[len - 1] == '.') len--; /* Ignore trailing dot */
-                warn->source_end = node->source_start + len - 1;
+            /* Only warn on primary identifier nodes */
+            if (node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET ||
+                node->node_type == VAR_REFERENCE || node->node_type == FUNC_SYMBOL ||
+                node->node_type == FUNCTION || node->node_type == CLASS_DEF) {
+
+                mknd_war(node, "SHADOWING");
+                /* mknd_war returns the parent node, so we find the newly created WARNING child */
+                ASTNode *warn = node->child;
+                while (warn && warn->sibling) warn = warn->sibling; /* The warning is added at the end */
+                if (warn && warn->node_type == WARNING && node->source_start) {
+                    warn->source_start = node->source_start;
+                    /* Lock the bounds to exactly the node's identifier, avoiding array index expansion */
+                    size_t len = node->node_string_length;
+                    if (len > 0 && node->node_string[len - 1] == '.') len--; /* Ignore trailing dot */
+                    warn->source_end = node->source_start + len - 1;
+                }
             }
         }
     }

@@ -82,5 +82,6 @@ docs/books/.DS_Store
 # Gemini CLI
 /.gemini/settings.json
 
-# Temp Folders
+# Temp Items
 /.tmp*
+/tests/repro.rexx
