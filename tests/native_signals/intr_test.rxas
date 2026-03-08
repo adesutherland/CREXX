@@ -1,0 +1,30 @@
+/*  Test native raised interrupts / signals
+    Tests
+        ERROR     aka SIGILL
+        TERM      aka SIGTERM
+        POSIX_INT aka SIGINT
+*/
+
+.globals=0
+
+main()  .locals=0
+    say "Set signals"
+    sigbr quit,"QUIT"
+    sigbr term,"TERM"
+    sigbr posix_int,"POSIX_INT"
+    say "waiting for signal"
+loop:
+    /* Looping */
+    br loop
+quit:
+    say "QUIT Signal received"
+    say "Terminating with rc=1"
+    ret 1
+term:
+    say "TERM Signal received"
+    say "Terminating with rc=2"
+    ret 2
+posix_int:
+    say "POSIX_INT Signal received"
+    say "Terminating with rc=3"
+    ret 3
