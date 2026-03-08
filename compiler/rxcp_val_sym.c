@@ -932,7 +932,14 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                     shadows_var = 1;
                 }
                 if (shadows_var) {
-                    symbol->is_shadowing = 1;
+                    /* Suppress shadowing warning for symbols in signature-only procedures (declarations) */
+                    int suppress = 0;
+                    if (symbol->scope && symbol->scope->type == SCOPE_PROCEDURE && symbol->scope->defining_node) {
+                        if (ast_chld(symbol->scope->defining_node, INSTRUCTIONS, NOP)->node_type == NOP) {
+                            suppress = 1;
+                        }
+                    }
+                    if (!suppress) symbol->is_shadowing = 1;
                 }
             } else if (symbol->status == SYM_STATUS_LOCAL_DEF) {
                 if (symbol->symbol_type == FUNCTION_SYMBOL) {
