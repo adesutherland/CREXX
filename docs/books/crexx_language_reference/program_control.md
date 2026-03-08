@@ -278,17 +278,14 @@ cREXX Level B introduces block-level scoping for certain control structures. It 
   ```rexx
   if condition then x = 10 /* x is in procedure scope */
   ```
-- **Grouped instructions (DO blocks)**: These create a `SCOPE_LOCAL` (block scope). New untyped variables created inside these blocks are local to the block and are destroyed at `END`.
-  ```rexx
-  if condition then do
-    y = 20 /* y is local to this DO block */
-  end
-  /* y is not visible here */
-  ```
+- **Grouped instructions (DO blocks)**: These create a `SCOPE_LOCAL` (block scope).
+- **Variable Hoisting (Untyped)**: Untyped assignments in subscopes (e.g. `if condition then do; x = 1; end`) bind to the procedure-level variable. If the variable has not been used earlier in the source, it is automatically "hoisted" and created in the procedure scope, making it visible to the rest of the routine.
+- **Variable Shadowing (Typed)**: A typed declaration (`x = .int`) inside a `DO` block always creates a block-local that shadows any outer variable (or constant) of the same name for the duration of the block.
+- **Temporal Resolution**: An untyped use in a subscope only binds to a parent variable if that variable has been assigned or used **earlier in the source code**. If the parent variable only appears later in the source, the subscope will create its own local definition and the compiler may issue a `#SHADOWING` warning if the names conflict.
 
 This difference in behavior between single-instruction branches and `DO` blocks is an intentional architectural design choice in Level B to balance REXX compatibility with modern structured scoping.
 
-- A typed declaration inside a `DO` block always creates a block-local that shadows any outer variable of the same name for the duration of the block:
+- A typed declaration inside a `DO` block always creates a block-local that shadows any outer variable (or constant) of the same name for the duration of the block:
   ```rexx <!--shadowingdo.rexx-->
   options levelb
   main: procedure
@@ -299,14 +296,14 @@ This difference in behavior between single-instruction branches and `DO` blocks 
     end
     say x  /* 1 */
   ```
-- An untyped assignment inside a `DO` block uses an existing variable if one exists; otherwise it creates a new loop-scoped variable that goes out of scope at `END`:
+- An untyped assignment inside a `DO` block uses an existing variable if one was used earlier in the source; otherwise it creates a new procedure-scoped variable (hoisting):
   ```rexx <!--newscopedo.rexx-->
   options levelb
   main: procedure
     do
-      y = 3  /* no prior y => creates loop-scoped y */
+      y = 3  /* no prior y => hoisted to procedure scope */
     end
-    /* y is out of scope here */
+    say y    /* 3 - y is still in scope */
   ```
 - Counted `DO` header: the control variable behaves the same way — if an outer variable with that name exists, it is reused; otherwise a loop-local control variable is created:
   ```rexx <!--counteddoheader.rexx-->

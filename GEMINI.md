@@ -23,8 +23,10 @@ Before answering queries, writing code, or forming hypotheses, you MUST use MCP 
 
 ## 🛠 Phase 2: Execution Workflow & Rules of Engagement
 
-### 1. Task Planning & Communication
-* **Explicit Planning:** Before executing complex tasks, output a numbered, step-by-step Todo plan.
+### 1. Task Planning, Architectural Alignment & Approval
+* **Mandatory Planning:** Before executing any task that modifies logic, syntax, or scoping, you MUST output a numbered, step-by-step Todo plan.
+* **Approval for Language Decisions:** You must explicitly pause and seek approval for any change that involves language design, syntax changes, or architectural shifts (e.g., scoping rules). Do not assume implementation details are the only concern; the user acts as the lead architect for the REXX language dialect.
+* **Architectural Justification:** When proposing a plan, explain the reasoning behind architectural choices and how they align with existing `crexx` standards or documentation.
 * **Periodic Check-ins:** Do not execute more than 3-4 MCP tool calls in a row without stopping to provide a brief text update to the user.
 * **Milestone Summaries:** After completing a major step (e.g., modifying a core file, finishing a search), explain what was done and what step is next.
 * **Pause for Permission:** If you encounter unexpected complexity, or are about to make massive destructive changes across multiple files, STOP and ask the user for permission.

@@ -221,9 +221,9 @@ walker_result structure_symbols_walker(walker_direction direction,
 
         else if (node->node_type == INSTRUCTIONS) {
             /* Simple DO grouping is represented as a nested INSTRUCTIONS block (no DO ancestor).
-             * Create a child scope for any nested INSTRUCTIONS whose parent is an IF.
+             * Create a child scope for any nested INSTRUCTIONS whose parent is an IF or another INSTRUCTIONS block.
              * Note: If the parent is a DO, the DO currently does not have its own scope (Classic REXX). */
-            if (node->parent && node->parent->node_type == IF) {
+            if (node->parent && (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS)) {
                 if (node->scope) {
                     context->current_scope = node->scope;
                 } else {
@@ -364,35 +364,51 @@ walker_result build_symbols_walker(walker_direction direction,
                     /* Arguments are local to the current scope */
                     symbol = sym_lrsv(context->current_scope, node);
                 } else if (node->parent->node_type == DEFINE) {
-                    /* Typed declarations always bind in the current scope (allowing shadowing) */
-                    symbol = sym_lrsv(context->current_scope, node);
-                    if (!symbol) {
-                        /* Auto-expose: If it's an exposed global, let's type the global, not shadow it */
-                        if (context->current_scope->type != SCOPE_LOCAL) {
+                    /* Typed declarations shadow in local blocks, but assert in procedures/namespaces */
+                    if (context->current_scope->type == SCOPE_LOCAL) {
+                        /* Force shadowing in local blocks */
+                        symbol = NULL;
+                    } else {
+                        /* Bind to existing (e.g. exposed global) in procedure/namespace scope */
+                        symbol = sym_lrsv(context->current_scope, node);
+                        if (!symbol) {
+                            /* Auto-expose: If it's an exposed global, let's type the global, not shadow it */
                             Symbol *glob = sym_rslv_global(context->current_scope, node);
                             if (glob && glob->symbol_type == VARIABLE_SYMBOL && glob->exposed) {
                                 symbol = glob;
                             }
                         }
-                    } else if (symbol->type != TP_UNKNOWN) {
-                        /* Already has a type - so this is a duplicate declaration */
-                        mknd_err(node, "ALREADY_DECLARED");
                     }
-                    /* If found but TP_UNKNOWN, we allow it (e.g. seeded via EXPOSE) */
                 } else {
-                    /* Untyped usage resolves outward; if not found, will create in current scope */
+                    /* Untyped usage resolves outward; if not found, will create in procedure scope (hoisting) */
                     symbol = sym_rslv_tiered(context->current_scope, node);
-                    if (symbol && symbol->symbol_type != VARIABLE_SYMBOL) {
-                        /* This is a function or class shadowing candidate.
-                         * In REXX, a variable can shadow a function of the same name.
-                         * So we ignore the non-variable symbol and force a new local variable. */
-                        symbol = NULL;
+                    if (symbol) {
+                        if (symbol->symbol_type != VARIABLE_SYMBOL && symbol->symbol_type != CONSTANT_SYMBOL) {
+                            /* This is a function or class shadowing candidate.
+                             * In REXX, a variable can shadow a function of the same name.
+                             * So we ignore the non-variable symbol and force a new local variable. */
+                            symbol = NULL;
+                        } else {
+                            /* TEMPORAL CHECK: Only bind if the symbol was used/defined EARLIER in the source */
+                            SymbolNode *first_use = sym_trnd(symbol, 0);
+                            if (first_use && first_use->node->high_ordinal > node->high_ordinal) {
+                                /* The existing symbol appears later in the source.
+                                 * In Level B, we ignore "future" definitions to allow local creation/hoisting. */
+                                symbol = NULL;
+                            }
+                        }
                     }
                 }
 
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
-                    symbol = sym_f(context->current_scope, node);
+                    Scope *target_scope = context->current_scope;
+                    /* Hoist untyped symbols to the procedure scope */
+                    if (node->parent->node_type != DEFINE && node->parent->node_type != ARG) {
+                        target_scope = ast_proc(node)->scope;
+                        if (!target_scope) target_scope = context->current_scope;
+                    }
+                    symbol = sym_f(target_scope, node);
                     symbol->status = SYM_STATUS_LOCAL_VAR;
                 } else if (node->parent->node_type == DEFINE && symbol->type != TP_UNKNOWN) {
                     mknd_err(node, "ALREADY_DECLARED");
@@ -459,14 +475,25 @@ walker_result build_symbols_walker(walker_direction direction,
                 node->scope = context->current_scope;
                 /* Find the symbol */
                 symbol = sym_rslv_tiered(context->current_scope, node);
-                if (symbol && symbol->symbol_type != VARIABLE_SYMBOL) {
-                    /* Shadowing: Ignore existing non-variable symbols */
-                    symbol = NULL;
+                if (symbol) {
+                    if (symbol->symbol_type != VARIABLE_SYMBOL && symbol->symbol_type != CONSTANT_SYMBOL) {
+                        /* Shadowing: Ignore existing non-variable symbols */
+                        symbol = NULL;
+                    } else {
+                        /* TEMPORAL CHECK: Only bind if the symbol was used/defined EARLIER in the source */
+                        SymbolNode *first_use = sym_trnd(symbol, 0);
+                        if (first_use && first_use->node->high_ordinal > node->high_ordinal) {
+                            symbol = NULL;
+                        }
+                    }
                 }
 
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
-                    symbol = sym_f(context->current_scope, node);
+                    /* Hoist untyped symbols to the procedure scope */
+                    Scope *target_scope = ast_proc(node)->scope;
+                    if (!target_scope) target_scope = context->current_scope;
+                    symbol = sym_f(target_scope, node);
                     symbol->status = SYM_STATUS_UNRESOLVED;
                 }
 
@@ -522,9 +549,9 @@ walker_result build_symbols_walker(walker_direction direction,
 
         else if (node->node_type == INSTRUCTIONS) {
             /* Simple DO grouping is represented as a nested INSTRUCTIONS block (no DO ancestor).
-             * Create a child scope for any nested INSTRUCTIONS whose parent is an IF.
+             * Create a child scope for any nested INSTRUCTIONS whose parent is an IF or another INSTRUCTIONS block.
              * Note: If the parent is a DO, the DO currently does not have its own scope (Classic REXX). */
-            if (node->parent && node->parent->node_type == IF) {
+            if (node->parent && (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS)) {
                 if (node->scope) {
                     context->current_scope = node->scope;
                 } else {
@@ -926,7 +953,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                     parent_sym = sym_rslv_local(symbol->scope->parent, rep_node);
                     if (!parent_sym) parent_sym = sym_rslv_global(symbol->scope->parent, rep_node);
                 }
-                if (parent_sym && parent_sym->symbol_type == VARIABLE_SYMBOL) {
+                if (parent_sym && (parent_sym->symbol_type == VARIABLE_SYMBOL || parent_sym->symbol_type == CONSTANT_SYMBOL)) {
                     shadows_var = 1;
                 } else if (sym_is_glob_var(context, rep_node)) {
                     shadows_var = 1;

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 09_nested.rexx
- * BUILT                  : 2026-02-26 20:48:13
+ * BUILT                  : 2026-03-08 19:55:26
  */
 
 .srcfile="09_nested.rexx"
@@ -15,10 +15,10 @@ main() .locals=0
    setnumcas 1
    setnumstd 1
    .src 6:20="say \"A>5 B<30\""
-   .meta "09_nested.main.a"="b" ".int" "10"
-   .meta "09_nested.main.b"="b" ".int" "20"
    say "A>5 B<30"
    .src 5:96=""
+   .meta "09_nested.main.a"="b" ".int" "10"
+   .meta "09_nested.main.b"="b" ".int" "20"
    ret
    .meta "09_nested.main.a"
    .meta "09_nested.main.b"
