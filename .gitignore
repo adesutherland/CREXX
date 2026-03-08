@@ -51,10 +51,7 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-* Lemon output
-*.out
-
-* CMAKE
+# CMAKE
 cmake*/
 CMakeLists.txt.user
 CMakeCache.txt
@@ -68,27 +65,10 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
-* idea / clion
+# idea / clion
 .idea/
-/compiler/rexxgrmr.c
-/compiler/rexxgrmr.h
-/assembler/rxasgrmr.c
-/assembler/rxasgrmr.h
-#/machine/instrmiss.h
-#/machine/instrset.h
-/compiler/rexbgrmr.h
-/compiler/rexbgrmr.c
-/compiler/rxtrace.txt
-/compiler/opt_grmr.h
-/compiler/opt_grmr.c
-/machine/instrmiss.h
-/machine/instrset.h
-/compiler/rxcpbgmr.c
-/compiler/rxcpbgmr.h
-/compiler/rxcpopgr.c
-/compiler/rxcpopgr.h
 
-* cREXX
+# cREXX
 *.rxbin
 
 # emacs backup files
@@ -101,3 +81,6 @@ docs/books/.DS_Store
 
 # Gemini CLI
 /.gemini/settings.json
+
+# Temp Folders
+/.tmp*
