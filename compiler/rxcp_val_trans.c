@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdio.h>
 #include "rxcp_val.h"
 
 /*
@@ -182,13 +183,13 @@ walker_result rewrite_address_walker(walker_direction direction,
                 add_ast(function_node, cmd);
 
                 /* Helper to transform redirect node to FUNCTION call */
-                #define TRANS_RED(r, is_in) \
+                #define TRANS_RED(r, i_i) \
                 if (r) { \
                     ASTNode *rc = r->child; \
                     if (!rc || rc->value_type == TP_VOID) { \
                         if (rc) ast_del(rc); \
                         r->node_type = FUNCTION; ast_str(r, "_noredir"); \
-                    } else if (is_in) { \
+                    } else if (i_i) { \
                         r->node_type = FUNCTION; \
                         if (rc->value_dims) ast_str(r, "_array2redir"); \
                         else ast_str(r, "_string2redir"); \
@@ -320,6 +321,90 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
         node->node_type = ADDRESS;
         /* node->node_string = "SYSTEM"; // Not strictly needed by walker but good for debug */
         context->changed_flags |= FLAG_VAL_TRANS;
+    }
+    return result_normal;
+}
+
+/*
+ * Lowers constructor-style declarations: x = .int(1)
+ */
+walker_result rewrite_constructor_walker(walker_direction direction,
+                                         ASTNode* node, void *payload) {
+    Context *context = (Context *) payload;
+
+    if (direction == in) {
+        if (node->node_type == ASSIGN) {
+            ASTNode *target = ast_chdn(node, 0);
+            ASTNode *rhs = ast_chdn(node, 1);
+
+            if (rhs && rhs->node_type == FACTORY_CALL) {
+                int fundamental = 0;
+                char* type_name = NULL;
+
+                if (is_node_string(rhs, "int")) { fundamental = 1; type_name = "int"; }
+                else if (is_node_string(rhs, "string")) { fundamental = 1; type_name = "string"; }
+                else if (is_node_string(rhs, "float")) { fundamental = 1; type_name = "float"; }
+                else if (is_node_string(rhs, "boolean")) { fundamental = 1; type_name = "boolean"; }
+                else if (is_node_string(rhs, "decimal")) { fundamental = 1; type_name = "decimal"; }
+
+                if (fundamental) {
+                    ASTNode *params = rhs->child;
+                    ASTNode *val = NULL;
+                    int has_error = 0;
+
+                    if (params) {
+                        if (params->node_type != NOVAL) {
+                            val = params;
+                            ASTNode *extra = val->sibling;
+                            while (extra) {
+                                mknd_err(extra, "UNEXPECTED_ARGUMENT");
+                                extra = extra->sibling;
+                                has_error = 1;
+                            }
+                            ast_del(val);
+                            val->sibling = NULL;
+                        }
+                    }
+
+                    ASTNode *class_node = ast_ft(context, CLASS);
+                    ast_sstr(class_node, mprintf(".%s", type_name), strlen(type_name) + 1);
+                    class_node->free_node_string = 1;
+                    class_node->line = rhs->line;
+                    class_node->column = rhs->column;
+                    class_node->node_string_length = strlen(class_node->node_string);
+
+                    ast_rpl(rhs, class_node);
+                    node->node_type = DEFINE;
+
+                    if (val) {
+                        ASTNode *new_assign = ast_ft(context, ASSIGN);
+                        ast_str(new_assign, "=");
+                        new_assign->line = node->line;
+                        new_assign->column = node->column;
+
+                        ASTNode *new_target = ast_fstk(context, target);
+                        new_target->node_type = VAR_TARGET;
+                        new_target->line = target->line;
+                        new_target->column = target->column;
+
+                        add_ast(new_assign, new_target);
+                        add_ast(new_assign, val);
+
+                        if (node->sibling) {
+                            new_assign->sibling = node->sibling;
+                        }
+                        node->sibling = new_assign;
+                        new_assign->parent = node->parent;
+                    }
+                    context->changed_flags |= FLAG_VAL_TRANS;
+
+                    /* If we had errors, return normal to avoid loop, but let the error be reported */
+                    if (has_error) return result_normal;
+
+                    return result_abort;
+                }
+            }
+        }
     }
     return result_normal;
 }

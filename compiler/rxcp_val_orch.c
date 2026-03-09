@@ -520,7 +520,7 @@ static walker_result shadowing_warning_walker(walker_direction direction,
 void validate_ast(Context *context) {
     int ordinal_counter;
 
-    /* AST fixups 
+    /* AST fixups
      * The Lemon parser only has a single lookahead and produces an unfinished flat AST.
      * These walkers restructure the AST into a proper logical hierarchy (e.g., nesting 
      * instructions under procedures and classes) and propagate source locations.
@@ -528,6 +528,7 @@ void validate_ast(Context *context) {
     context->current_scope = 0;
     context->in_factory = 0;
     ast_wlkr(context->ast, ast_structure_fixup_walker, (void *) context);
+    while (ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context) == result_abort);
     ast_wlkr(context->ast, source_location_walker, (void *) context);
     ast_wlkr(context->ast, syntax_validation_walker, (void *) context);
     ast_wlkr(context->ast, rxcp_fixup_walker, (void *) context);
@@ -797,6 +798,7 @@ void rxcp_bvl(Context *context) {
      * - Other AST fixups (TBC)
      */
     ast_wlkr(context->ast, ast_structure_fixup_walker, (void *) context);
+    while (ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context) == result_abort);
     ast_wlkr(context->ast, source_location_walker, (void *) context);
     ast_wlkr(context->ast, syntax_validation_walker, (void *) context);
 

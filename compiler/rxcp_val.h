@@ -64,6 +64,7 @@ walker_result float2decimal_walker(walker_direction direction, ASTNode* node, vo
 walker_result decimal2float_walker(walker_direction direction, ASTNode* node, void *payload);
 
 /* trans */
+walker_result rewrite_constructor_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result rewrite_exit_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result rewrite_implicit_cmd_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result rewrite_address_walker(walker_direction direction, ASTNode* node, void *payload);
