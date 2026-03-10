@@ -179,6 +179,18 @@ add_crexx_run_test(do_scope_typed_shadows rexx_src/do_scope_typed_shadows.rexx)
 # Hoisting and effective scopes tests
 add_crexx_run_test(test_global_subscopes rexx_src/test_global_subscopes.rexx)
 
+# New Phase 2 Scoping Tests
+add_crexx_run_test(test_simple_do_subscope rexx_src/test_simple_do_subscope.rexx)
+add_crexx_run_test(test_if_do_subscope rexx_src/test_if_do_subscope.rexx)
+add_crexx_run_test(test_iterative_do_subscope rexx_src/test_iterative_do_subscope.rexx)
+add_crexx_run_test(test_if_no_subscope rexx_src/test_if_no_subscope.rexx)
+add_crexx_run_test(test_untyped_subscopes rexx_src/test_untyped_subscopes.rexx)
+add_crexx_run_test(test_untyped_subscope_2 rexx_src/test_untyped_subscope_2.rexx)
+add_crexx_run_test(test_if_else_nested_subscopes rexx_src/test_if_else_nested_subscopes.rexx)
+add_crexx_run_test(test_sub_sub_scopes rexx_src/test_sub_sub_scopes.rexx)
+add_crexx_run_test(test_sub_sub_scopes_untyped rexx_src/test_sub_sub_scopes_untyped.rexx)
+add_crexx_run_test(test_global_nested_complex rexx_src/test_global_nested_complex.rexx)
+
 
 # Parsing Tests
 add_crexx_parsing_test(expr_abut_01 parsing_src/expr_abut_01.rexx)

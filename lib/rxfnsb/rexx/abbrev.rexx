@@ -6,6 +6,7 @@ namespace rxfnsb expose abbrev
 /* abbrev(string,abbrebiated-string,min-char-match) */
 abbrev: procedure = .string
   arg string = .string, astr = .string, len = 0
+  i = .int
   slen=0
   alen=0
   char1=0
