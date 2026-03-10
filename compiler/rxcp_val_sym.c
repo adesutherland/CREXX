@@ -215,14 +215,19 @@ walker_result structure_symbols_walker(walker_direction direction,
         }
 
         else if (node->node_type == DO) {
-            /* Counted/conditional DO: no new scope yet (handled in future work) */
-            node->scope = context->current_scope;
+            /* Create a new scope for every DO block (simple, counted, or conditional) */
+            if (node->scope) {
+                context->current_scope = node->scope;
+            } else {
+                context->current_scope = scp_f(context, context->current_scope, node, 0, SCOPE_LOCAL);
+                node->scope = context->current_scope;
+            }
         }
 
         else if (node->node_type == INSTRUCTIONS) {
-            /* Simple DO grouping is represented as a nested INSTRUCTIONS block (no DO ancestor).
-             * Create a child scope for any nested INSTRUCTIONS whose parent is an IF or another INSTRUCTIONS block.
-             * Note: If the parent is a DO, the DO currently does not have its own scope (Classic REXX). */
+            /* Create a child scope for any nested INSTRUCTIONS whose parent is an IF or another INSTRUCTIONS block.
+             * This handles THEN/ELSE bodies and simple DO blocks (which are represented as nested INSTRUCTIONS).
+             * If the parent is a DO, we use the DO's scope created above. */
             if (node->parent && (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS)) {
                 if (node->scope) {
                     context->current_scope = node->scope;
@@ -267,37 +272,55 @@ walker_result build_symbols_walker(walker_direction direction,
 
         if (node->node_type == REXX_UNIVERSE || node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE ||
             node->node_type == CLASS_DEF || node->node_type == PROCEDURE || node->node_type == METHOD ||
-            node->node_type == FACTORY || node->node_type == IMPORT) {
+            node->node_type == FACTORY || node->node_type == IMPORT ||
+            node->node_type == DO || node->node_type == INSTRUCTIONS || node->node_type == EXIT_OWNED) {
             /* Pass 1 has already created these scopes and symbols. Just navigate. */
             if (node->scope) {
                 context->current_scope = node->scope;
+            } else if (node->node_type == DO || node->node_type == EXIT_OWNED ||
+                      (node->node_type == INSTRUCTIONS && node->parent &&
+                       (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS))) {
+                /* If scope is missing, create it (handles nodes added by exits) */
+                context->current_scope = scp_f(context, context->current_scope, node, 0, SCOPE_LOCAL);
+                node->scope = context->current_scope;
+                context->changed_flags |= FLAG_VAL_SYM;
             }
             /* Level B Class Instance Support (Idempotent) */
             if (node->node_type == FACTORY) {
                 /* Add instance symbol '§factory' */
                 Symbol *star = sym_fn(context->current_scope, "§factory", 9);
-                if (star && star->type == TP_UNKNOWN) {
-                    star->symbol_type = VARIABLE_SYMBOL;
-                    star->type = TP_OBJECT;
-                    ASTNode *class_node = ast_class(node);
-                    if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
-                        if (star->value_class) free(star->value_class);
-                        star->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
-                        strcpy(star->value_class, class_node->symbolNode->symbol->name);
+                if (star) {
+                    if (star->type == TP_UNKNOWN) {
+                        star->symbol_type = VARIABLE_SYMBOL;
+                        star->type = TP_OBJECT;
+                        ASTNode *class_node = ast_class(node);
+                        if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
+                            if (star->value_class) free(star->value_class);
+                            star->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
+                            strcpy(star->value_class, class_node->symbolNode->symbol->name);
+                        }
                     }
+                    /* Sync ordinal in every iteration */
+                    star->creation_node = node;
+                    star->creation_ordinal = node->low_ordinal;
                 }
             } else if (node->node_type == METHOD) {
                 /* Add instance symbol '§this' */
                 Symbol *this_sym = sym_fn(context->current_scope, "§this", 6);
-                if (this_sym && this_sym->type == TP_UNKNOWN) {
-                    this_sym->symbol_type = VARIABLE_SYMBOL;
-                    this_sym->type = TP_OBJECT;
-                    ASTNode *class_node = ast_class(node);
-                    if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
-                        if (this_sym->value_class) free(this_sym->value_class);
-                        this_sym->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
-                        strcpy(this_sym->value_class, class_node->symbolNode->symbol->name);
+                if (this_sym) {
+                    if (this_sym->type == TP_UNKNOWN) {
+                        this_sym->symbol_type = VARIABLE_SYMBOL;
+                        this_sym->type = TP_OBJECT;
+                        ASTNode *class_node = ast_class(node);
+                        if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
+                            if (this_sym->value_class) free(this_sym->value_class);
+                            this_sym->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
+                            strcpy(this_sym->value_class, class_node->symbolNode->symbol->name);
+                        }
                     }
+                    /* Sync ordinal in every iteration */
+                    this_sym->creation_node = node;
+                    this_sym->creation_ordinal = node->low_ordinal;
                 }
             }
         }
@@ -341,6 +364,10 @@ walker_result build_symbols_walker(walker_direction direction,
                             symbol->is_global_var = 1;
                             context->changed_flags |= FLAG_VAL_SYM;
                         }
+                    }
+                    /* Ensure creation info is set for exposed/global variables */
+                    if (symbol->creation_ordinal == -1) {
+                        symbol->creation_ordinal = 0;
                     }
                     /* Link to the Procedure's INSTRUCTIONS if applicable */
                     ASTNode *proc = ast_proc(node);
@@ -390,8 +417,7 @@ walker_result build_symbols_walker(walker_direction direction,
                             symbol = NULL;
                         } else {
                             /* TEMPORAL CHECK: Only bind if the symbol was used/defined EARLIER in the source */
-                            SymbolNode *first_use = sym_trnd(symbol, 0);
-                            if (first_use && first_use->node->high_ordinal > node->high_ordinal) {
+                            if (symbol->creation_ordinal != -1 && !symbol->is_global_var && symbol->creation_ordinal > node->high_ordinal) {
                                 /* The existing symbol appears later in the source.
                                  * In Level B, we ignore "future" definitions to allow local creation/hoisting. */
                                 symbol = NULL;
@@ -403,15 +429,28 @@ walker_result build_symbols_walker(walker_direction direction,
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
                     Scope *target_scope = context->current_scope;
-                    /* Hoist untyped symbols to the procedure scope */
-                    if (node->parent->node_type != DEFINE && node->parent->node_type != ARG) {
-                        target_scope = ast_proc(node)->scope;
-                        if (!target_scope) target_scope = context->current_scope;
+
+                    /* DISJOINT SCOPE WARNING: Check if name exists in earlier disjoint blocks */
+                    /* TODO - fix WARNING node causing structural issues
+                    ASTNode *proc = ast_proc(node);
+                    if (proc && proc->scope) {
+                        Symbol *disjoint = sym_drsv(proc->scope, node);
+                        if (disjoint && (node->parent->node_type != DEFINE && node->parent->node_type != ARG)) {
+                            mknd_war(node, "#NOT_IN_SAME_SCOPE");
+                        }
                     }
+                    */
+
                     symbol = sym_f(target_scope, node);
                     symbol->status = SYM_STATUS_LOCAL_VAR;
                 } else if (node->parent->node_type == DEFINE && symbol->type != TP_UNKNOWN) {
                     mknd_err(node, "ALREADY_DECLARED");
+                }
+
+                /* Ensure creation info is set */
+                if (symbol && (symbol->creation_node == 0 || symbol->creation_node == node)) {
+                    symbol->creation_node = node;
+                    symbol->creation_ordinal = node->high_ordinal;
                 }
 
                 /* Set Argument flags - set by the parser grammar */
@@ -481,8 +520,7 @@ walker_result build_symbols_walker(walker_direction direction,
                         symbol = NULL;
                     } else {
                         /* TEMPORAL CHECK: Only bind if the symbol was used/defined EARLIER in the source */
-                        SymbolNode *first_use = sym_trnd(symbol, 0);
-                        if (first_use && first_use->node->high_ordinal > node->high_ordinal) {
+                        if (symbol->creation_ordinal != -1 && !symbol->is_global_var && symbol->creation_ordinal > node->high_ordinal) {
                             symbol = NULL;
                         }
                     }
@@ -490,11 +528,27 @@ walker_result build_symbols_walker(walker_direction direction,
 
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
-                    /* Hoist untyped symbols to the procedure scope */
-                    Scope *target_scope = ast_proc(node)->scope;
-                    if (!target_scope) target_scope = context->current_scope;
+                    Scope *target_scope = context->current_scope;
+
+                    /* DISJOINT SCOPE WARNING: Check if name exists in earlier disjoint blocks */
+                    /* TODO - fix WARNING node causing structural issues
+                    ASTNode *proc = ast_proc(node);
+                    if (proc && proc->scope) {
+                        Symbol *disjoint = sym_drsv(proc->scope, node);
+                        if (disjoint) {
+                            mknd_war(node, "#NOT_IN_SAME_SCOPE");
+                        }
+                    }
+                    */
+
                     symbol = sym_f(target_scope, node);
                     symbol->status = SYM_STATUS_UNRESOLVED;
+                }
+
+                /* Ensure creation info is set */
+                if (symbol && (symbol->creation_node == 0 || symbol->creation_node == node)) {
+                    symbol->creation_node = node;
+                    symbol->creation_ordinal = node->high_ordinal;
                 }
 
                 if (node->parent->node_type == ASSEMBLER) {
@@ -533,34 +587,12 @@ walker_result build_symbols_walker(walker_direction direction,
             return request_skip;
         }
 
-        else if (node->node_type == EXIT_OWNED) {
-            if (node->scope) {
-                context->current_scope = node->scope;
-            } else {
-                context->current_scope = scp_f(context, context->current_scope, node, 0, SCOPE_LOCAL);
-                node->scope = context->current_scope;
-            }
-        }
-
         else if (node->node_type == DO) {
-            /* Counted/conditional DO: no new scope yet (handled in future work) */
-            node->scope = context->current_scope;
+            /* Create/Navigate to scope - handled in the navigation block above */
         }
 
         else if (node->node_type == INSTRUCTIONS) {
-            /* Simple DO grouping is represented as a nested INSTRUCTIONS block (no DO ancestor).
-             * Create a child scope for any nested INSTRUCTIONS whose parent is an IF or another INSTRUCTIONS block.
-             * Note: If the parent is a DO, the DO currently does not have its own scope (Classic REXX). */
-            if (node->parent && (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS)) {
-                if (node->scope) {
-                    context->current_scope = node->scope;
-                } else {
-                    context->current_scope = scp_f(context, context->current_scope, node, 0, SCOPE_LOCAL);
-                    node->scope = context->current_scope;
-                }
-            } else {
-                node->scope = context->current_scope;
-            }
+            /* Create/Navigate to scope - handled in the navigation block above */
         }
 
         else {
@@ -957,9 +989,13 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                     while (search_scope) {
                         shadowed = sym_lrsv(search_scope, rep_node);
                         if (shadowed && (shadowed->symbol_type == VARIABLE_SYMBOL || shadowed->symbol_type == CONSTANT_SYMBOL)) {
-                            shadows_var = 1;
-                            symbol->shadowed_symbol = shadowed;
-                            break;
+                            /* TEMPORAL CHECK: Only shadow if the shadowed symbol was defined EARLIER */
+                            if (shadowed->creation_ordinal != -1 && symbol->creation_ordinal != -1 &&
+                                shadowed->creation_ordinal < symbol->creation_ordinal) {
+                                shadows_var = 1;
+                                symbol->shadowed_symbol = shadowed;
+                                break;
+                            }
                         }
                         if (search_scope->type == SCOPE_PROCEDURE || search_scope->type == SCOPE_CLASS) break;
                         search_scope = search_scope->parent;
@@ -970,8 +1006,11 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                     /* Check if it shadows a global/namespace variable */
                     Symbol *glob_sym = sym_rslv_global(symbol->scope, rep_node);
                     if (glob_sym && glob_sym != symbol && (glob_sym->symbol_type == VARIABLE_SYMBOL || glob_sym->symbol_type == CONSTANT_SYMBOL)) {
-                        shadows_var = 1;
-                        symbol->shadowed_symbol = glob_sym;
+                        /* Globals/Namespace variables are effectively defined at the start of the program (ordinal 0 or -1) */
+                        if (glob_sym->creation_ordinal <= 0 || (symbol->creation_ordinal != -1 && glob_sym->creation_ordinal < symbol->creation_ordinal)) {
+                            shadows_var = 1;
+                            symbol->shadowed_symbol = glob_sym;
+                        }
                     }
                 }
                 if (shadows_var) {

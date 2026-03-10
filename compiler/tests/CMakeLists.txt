@@ -150,7 +150,7 @@ add_crexx_compiler_test(basic_arrays rexx_src/basic_arrays.rexx)
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
     add_test(NAME ${NAME}_run
-             COMMAND bash -c "$<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${NAME}_run ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} && $<TARGET_FILE:rxas> -o ${NAME}_run.rxbin ${NAME}_run && $<TARGET_FILE:rxvm> ${CMAKE_BINARY_DIR}/bin/library.rxbin ${NAME}_run.rxbin | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
+             COMMAND bash -c "($<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${NAME}_run ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} 2>&1 && $<TARGET_FILE:rxas> -o ${NAME}_run.rxbin ${NAME}_run 2>&1 && $<TARGET_FILE:rxvm> ${CMAKE_BINARY_DIR}/bin/library.rxbin ${NAME}_run.rxbin 2>&1) | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endmacro()
 
@@ -190,6 +190,12 @@ add_crexx_run_test(test_if_else_nested_subscopes rexx_src/test_if_else_nested_su
 add_crexx_run_test(test_sub_sub_scopes rexx_src/test_sub_sub_scopes.rexx)
 add_crexx_run_test(test_sub_sub_scopes_untyped rexx_src/test_sub_sub_scopes_untyped.rexx)
 add_crexx_run_test(test_global_nested_complex rexx_src/test_global_nested_complex.rexx)
+add_crexx_run_test(test_disjoint_detailed rexx_src/test_disjoint_detailed.rexx)
+
+# New test for detailed warning
+add_test(NAME test_disjoint_detailed_warn
+         COMMAND bash -c "$<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o test_disjoint_detailed_warn ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/test_disjoint_detailed.rexx 2>&1 | grep -q 'original definition @ 4:5'"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 
 # Parsing Tests

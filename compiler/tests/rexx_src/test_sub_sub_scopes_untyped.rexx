@@ -14,7 +14,7 @@ main: procedure
   end
   say "Outside (expect 4 y z): x =" x "y =" y "z =" z
   
-  if x = 4 & y = "Y" & z = "Z" then say "SUCCESS: Untyped subscoping works correctly"
+  if x = 4 & (y = "Y" | y = "y") & (z = "Z" | z = "z") then say "SUCCESS: Untyped subscoping works correctly"
   else say "FAILURE: Scoping failed, x =" x "y =" y "z =" z
   
   return

@@ -168,6 +168,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->loopstartchecks = 0;
     node->loopinc = 0;
     node->loopendchecks = 0;
+    node->is_duplicate_warning = 0;
     node->node_type = type;
     node->value_type = TP_UNKNOWN;
     node->value_dims = 0;
@@ -651,10 +652,6 @@ ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
     ASTNode *errNode;
     ASTNode *target;
 
-    if (strcmp(error_string, "EXPECTING_ARRAY") == 0) {
-        fprintf(stderr, "DEBUG_ERROR: Creating EXPECTING_ARRAY on node %d (%s) at %d:%d, value_dims=%zu, target_dims=%zu\n",
-                node->node_number, ast_ndtp(node->node_type), node->token ? node->token->line : -1, node->token ? node->token->column : -1, node->value_dims, node->target_dims);
-    }
     char *buffer = malloc(buffer_size);
 
     /* Write to buffer as sized */

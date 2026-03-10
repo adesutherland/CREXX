@@ -32,6 +32,9 @@
 #include "rxcpmain.h"
 
 void print_error(ASTNode* node, FILE* stream, char* prefix) {
+
+    if (node->is_duplicate_warning) return;
+
     /* Try and set error position if not already set */
     ASTNode *p = node;
     while (p && p->line == -1 && !p->token) {
@@ -123,7 +126,7 @@ static walker_result print_error_walker(walker_direction direction,
     int *errors = (int*)payload;
 
     if (direction == in) {
-        if (node->node_type == ERROR) {
+        if (node->node_type == ERROR && !node->is_duplicate_warning) {
             print_error(node, stderr, "Error in");
             (*errors)++;
         }
@@ -138,7 +141,7 @@ static walker_result print_warning_walker(walker_direction direction,
     int *errors = (int*)payload;
 
     if (direction == in) {
-        if (node->node_type == WARNING) {
+        if (node->node_type == WARNING && !node->is_duplicate_warning) {
             print_error(node, stderr, "Warning in");
             (*errors)++;
         }
@@ -155,7 +158,7 @@ int prnterrs(Context *context) {
     }
     diag = (ASTNode*)context->diagnostics_list;
     while (diag) {
-        if (diag->node_type == ERROR) {
+        if (diag->node_type == ERROR && !diag->is_duplicate_warning) {
             print_error(diag, stderr, "Error");
             errors++;
         }
@@ -172,7 +175,7 @@ int prntwars(Context *context) {
     }
     diag = (ASTNode*)context->diagnostics_list;
     while (diag) {
-        if (diag->node_type == WARNING) {
+        if (diag->node_type == WARNING && !diag->is_duplicate_warning) {
             print_error(diag, stderr, "Warning");
             errors++;
         }

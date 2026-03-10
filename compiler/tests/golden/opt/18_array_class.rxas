@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 18_array_class_main.rexx
- * BUILT                  : 2026-03-01 10:33:39
+ * BUILT                  : 2026-03-10 12:36:41
  */
 
 .meta "array_class_lib.item"="b" ".unknown" .class
@@ -79,57 +79,54 @@ process() .locals=11
    ret ""
 l59iffalse:
    .src 22:5="it = items.1"
-   .meta "18_array_class_main.process.it"="b" ".item" r1
+   .meta "18_array_class_main.process.it"="b" ".item" r0
    minattrs a1,1
    linkattr1 r7,a1,1
-   copy r1,r7
+   copy r0,r7
    unlink r7
    .src 23:5="val = it.get_val"
-   .meta "18_array_class_main.process.val"="b" ".string" r4
+   .meta "18_array_class_main.process.val"="b" ".string" r2
    load r6,1
-   settp r1,1
-   swap r7,r1
-   call r4,§array_class_lib.item.get_val(),r6
-   swap r1,r7
+   settp r0,1
+   swap r7,r0
+   call r2,§array_class_lib.item.get_val(),r6
+   swap r0,r7
    .src 25:5="do"
    .src 25:8="i = 1"
-   .meta "18_array_class_main.process.i"="b" ".int" r0
-   load r0,1
+   .meta "18_array_class_main.process.i"="b" ".int" r3
+   load r3,1
    .src 25:14="to items.0"
    getattrs r6,a1,0
 l70dostart:
    .src 25:14="to items.0"
-   igt r8,r0,r6
+   igt r8,r3,r6
    brt l70doend,r8
    .src 26:9="it_i = items[i"
-   .meta "18_array_class_main.process.it_i"="b" ".item" r2
-   minattrs a1,r0,0
-   linkattr1 r9,a1,r0
-   copy r2,r9
+   .meta "18_array_class_main.process.it_i"="b" ".item" r4
+   minattrs a1,r3,0
+   linkattr1 r9,a1,r3
+   copy r4,r9
    unlink r9
    .src 27:9="val_i = it_i.get_val"
    .meta "18_array_class_main.process.val_i"="b" ".string" r5
    load r9,1
-   settp r2,1
-   swap r10,r2
+   settp r4,1
+   swap r10,r4
    call r5,§array_class_lib.item.get_val(),r9
-   swap r2,r10
+   swap r4,r10
    .src 28:9="say val_i"
    say r5
 l70doinc:
    .src 25:8="i"
-   inc r0
+   inc r3
    .src 29:5="end"
    br l70dostart
 l70doend:
    .src 30:5="return val"
-   ret r4
-   .meta "18_array_class_main.process.i"
+   ret r2
    .meta "18_array_class_main.process.it"
-   .meta "18_array_class_main.process.it_i"
    .meta "18_array_class_main.process.items"
    .meta "18_array_class_main.process.val"
-   .meta "18_array_class_main.process.val_i"
 
 /* Imported Declaration from file: array_class_lib.rexx */
 

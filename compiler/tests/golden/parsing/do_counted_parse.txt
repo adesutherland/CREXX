@@ -71,7 +71,8 @@ Scope [0]: Unnamed
   Scope [1]: do_counted_parse
     main (Function) -> .unknown
     Scope [2]: main
-      i (Variable) -> .unknown
+      Scope [3]: Unnamed
+        i (Variable) -> .unknown
 
 --- STAGE_SYMBOLS (Iteration 1) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]
@@ -100,7 +101,8 @@ Scope [0]: Unnamed
   Scope [1]: do_counted_parse
     main (Function) -> .void
     Scope [2]: main
-      i (Variable) -> .int
+      Scope [3]: Unnamed
+        i (Variable) -> .int
 
 --- STAGE_FINAL ---
 REXX_UNIVERSE : "" (0:1) [Type: .void]
@@ -129,5 +131,6 @@ Scope [0]: Unnamed
   Scope [1]: do_counted_parse
     main (Function) -> .void
     Scope [2]: main
-      i (Variable) -> .int
+      Scope [3]: Unnamed
+        i (Variable) -> .int
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

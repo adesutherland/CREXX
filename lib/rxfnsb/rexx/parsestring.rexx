@@ -24,6 +24,7 @@ parsestring: procedure
   WHITESPACE = ' '||'09'x||'0D'x||'0A'x||'0B'x||'0C'x||'A0'x
 
   L        = length(parse_string)
+  ii       = 0
   pointer  = 1                   /* absolute read pointer (1-based)           */
   j        = 0                   /* variable index                            */
 

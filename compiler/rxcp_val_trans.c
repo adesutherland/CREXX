@@ -371,6 +371,10 @@ walker_result rewrite_constructor_walker(walker_direction direction,
                     class_node->free_node_string = 1;
                     class_node->line = rhs->line;
                     class_node->column = rhs->column;
+                    class_node->source_start = rhs->source_start;
+                    class_node->source_end = rhs->source_end;
+                    class_node->token_start = rhs->token_start;
+                    class_node->token_end = rhs->token_end;
                     class_node->node_string_length = strlen(class_node->node_string);
 
                     ast_rpl(rhs, class_node);
@@ -381,11 +385,21 @@ walker_result rewrite_constructor_walker(walker_direction direction,
                         ast_str(new_assign, "=");
                         new_assign->line = node->line;
                         new_assign->column = node->column;
+                        new_assign->token = node->token;
+                        new_assign->source_start = node->source_start;
+                        new_assign->source_end = node->source_end;
+                        new_assign->token_start = node->token_start;
+                        new_assign->token_end = node->token_end;
 
                         ASTNode *new_target = ast_fstk(context, target);
                         new_target->node_type = VAR_TARGET;
                         new_target->line = target->line;
                         new_target->column = target->column;
+                        new_target->token = target->token;
+                        new_target->source_start = target->source_start;
+                        new_target->source_end = target->source_end;
+                        new_target->token_start = target->token_start;
+                        new_target->token_end = target->token_end;
 
                         add_ast(new_assign, new_target);
                         add_ast(new_assign, val);

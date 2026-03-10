@@ -1,0 +1,40 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : do_counted_parse.rexx
+ * BUILT                  : 2026-03-10 12:46:51
+ */
+
+.srcfile="do_counted_parse.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "do_counted_parse.main"="b" ".void" main() "" ""
+   .src 3:1="main: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="do"
+   .src 4:6="i = 1"
+   .meta "do_counted_parse.main.i"="b" ".int" r0
+   load r0,1
+   .src 4:12="to 3"
+   load r1,3
+   .src 4:17="by 1"
+   load r3,1
+l6dostart:
+   .src 4:12="to 3"
+   igt r2,r0,r1
+   brt l6doend,r2
+   .src 5:5="say i"
+   itos r0
+   say r0
+l6doinc:
+   .src 4:17="by 1"
+ iadd r0,r3,r0
+   .src 6:3="end"
+   br l6dostart
+l6doend:
+   .src 7:3="return"
+   ret

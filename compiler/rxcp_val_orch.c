@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "rxcp_val.h"
+#include "rxcpdary.h"
 
 /* Common Helpers */
 
@@ -470,6 +471,11 @@ walker_result set_node_ordinals_walker(walker_direction direction,
         /* BOTTOM-UP */
         node->high_ordinal = (*ordinal_counter)++;
 
+        /* Sync creation_ordinal if this is the creation_node of a symbol */
+        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->creation_node == node) {
+            node->symbolNode->symbol->creation_ordinal = node->high_ordinal;
+        }
+
         if (node->child) node->low_ordinal = node->child->low_ordinal;
         else node->low_ordinal = node->high_ordinal;
     }
@@ -512,6 +518,80 @@ static walker_result shadowing_warning_walker(walker_direction direction,
                     warn->source_end = node->source_start + len - 1;
                 }
             }
+        }
+    }
+    return result_normal;
+}
+
+/* Disjoint Scope warning walker */
+static walker_result disjoint_scope_warning_walker(walker_direction direction,
+                                                   ASTNode* node,
+                                                   __attribute__((unused)) void *payload) {
+    if (direction == in) {
+        if (node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET ||
+            node->node_type == VAR_REFERENCE || node->node_type == STRING) {
+
+            Symbol *symbol = node->symbolNode ? node->symbolNode->symbol : NULL;
+            if (symbol && symbol->creation_node == node) {
+                /* This is the first mention of this symbol in this scope */
+                /* Look for same named symbol in disjoint branches of the same procedure */
+                /* Skip if parent is ASSIGN or DEFINE as requested */
+                if (node->parent && (node->parent->node_type == ASSIGN || node->parent->node_type == DEFINE)) {
+                    /* No warning needed for explicit assignments/definitions */
+                } else {
+                    ASTNode *proc = ast_proc(node);
+                    if (proc && proc->scope) {
+                        size_t i;
+                        for (i = 0; i < scp_noch(proc->scope); i++) {
+                            Symbol *disjoint = sym_drsv(scp_chd(proc->scope, i), node);
+                            if (disjoint && disjoint != symbol) {
+                                /* Check if the disjoint symbol appears EARLIER in source */
+                                if (disjoint->creation_ordinal != -1 && node->high_ordinal != -1 &&
+                                    disjoint->creation_ordinal < node->high_ordinal) {
+                                    ASTNode *dnode = disjoint->creation_node;
+                                    if (dnode) {
+                                        mknd_war(node, "#NOT_IN_SAME_SCOPE, original definition @ %d:%d", dnode->line + 1, dnode->column + 1);
+                                    } else {
+                                        mknd_war(node, "#NOT_IN_SAME_SCOPE");
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return result_normal;
+}
+
+struct seen_warning {
+    char *msg;
+    int line;
+    int col;
+};
+
+static walker_result deduplicate_warnings_walker(walker_direction direction,
+                                                   ASTNode* node,
+                                                   void *payload) {
+    dpa *seen = (dpa*)payload;
+    if (direction == in && node->node_type == WARNING) {
+        size_t i;
+        for (i=0; i < seen->size; i++) {
+            struct seen_warning *s = (struct seen_warning *)seen->pointers[i];
+            if (s->line == node->line && s->col == node->column &&
+                strcmp(s->msg, node->node_string) == 0) {
+                node->is_duplicate_warning = 1;
+                return result_normal;
+            }
+        }
+        {
+            struct seen_warning *new_s = malloc(sizeof(struct seen_warning));
+            new_s->msg = node->node_string;
+            new_s->line = node->line;
+            new_s->col = node->column;
+            dpa_add(seen, new_s);
         }
     }
     return result_normal;
@@ -781,6 +861,19 @@ void validate_ast(Context *context) {
     /* Add shadowing warnings to all nodes referencing shadowed symbols */
     context->current_scope = 0;
     ast_wlkr(context->ast, shadowing_warning_walker, (void *)context);
+
+    /* Add disjoint scope warnings */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, disjoint_scope_warning_walker, (void *)context);
+
+    /* Deduplicate warnings */
+    {
+        dpa *seen = dpa_f();
+        size_t i;
+        ast_wlkr(context->ast, deduplicate_warnings_walker, (void *)seen);
+        for (i=0; i < seen->size; i++) free(seen->pointers[i]);
+        free_dpa(seen);
+    }
 }
 
 void rxcp_val(Context *context) {

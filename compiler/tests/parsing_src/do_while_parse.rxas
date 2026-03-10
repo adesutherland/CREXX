@@ -1,0 +1,36 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : do_while_parse.rexx
+ * BUILT                  : 2026-03-10 12:46:53
+ */
+
+.srcfile="do_while_parse.rexx"
+.globals=0
+
+main() .locals=2
+   .meta "do_while_parse.main"="b" ".void" main() "" ""
+   .src 3:1="main: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "do_while_parse.main.i"="b" ".int" r0
+   .src 4:3="i = .int"
+   null r0
+   .src 5:3="i = 0"
+   load r0,0
+   .src 6:3="do"
+l12dostart:
+   .src 6:6="while i < 2"
+   ilt r1,r0,2
+   brf l12doend,r1
+   .src 7:5="i = i + 1"
+   iadd r0,r0,1
+l12doinc:
+   .src 8:3="end"
+   br l12dostart
+l12doend:
+   .src 9:3="return"
+   ret
+   .meta "do_while_parse.main.i"

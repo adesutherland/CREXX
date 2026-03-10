@@ -84,6 +84,7 @@ Scope [0]: Unnamed
     main (Function) -> .unknown
     Scope [2]: main
       ready (Variable) -> .unknown
+      Scope [3]: Unnamed
 
 --- STAGE_SYMBOLS (Iteration 1) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]
@@ -117,6 +118,7 @@ Scope [0]: Unnamed
     main (Function) -> .void
     Scope [2]: main
       ready (Variable) -> .int
+      Scope [3]: Unnamed
 
 --- STAGE_FINAL ---
 REXX_UNIVERSE : "" (0:1) [Type: .void]
@@ -150,4 +152,5 @@ Scope [0]: Unnamed
     main (Function) -> .void
     Scope [2]: main
       ready (Variable) -> .int
+      Scope [3]: Unnamed
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

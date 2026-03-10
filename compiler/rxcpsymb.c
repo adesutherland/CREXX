@@ -488,6 +488,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     }
 
     symbol->scope = scope;
+    symbol->ast_node_array = 0;
     symbol->defines_scope = 0;
     symbol->type = TP_UNKNOWN;
     symbol->value_dims = 0;
@@ -515,6 +516,11 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->is_rc = 0;
     symbol->is_this = 0;
     symbol->is_factory = 0;
+    symbol->is_shadowing = 0;
+    symbol->shadowed_symbol = 0;
+    symbol->is_global_var = 0;
+    symbol->creation_ordinal = -1;
+    symbol->creation_node = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8

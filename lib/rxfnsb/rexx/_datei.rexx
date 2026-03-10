@@ -10,6 +10,12 @@ _datei: Procedure = .int
  *  Converts given Date in Julian Day Number
  * ----------------------------------------------------------
  */
+  /* Remove NOT_IN_SAME_SCOPE warnings */
+  YY = .string
+  mm = .string
+  dd = .string
+  mlist='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
+
   if format='' then format='NORMAL'
   if fabbreV('DAYS',format,1) then do
       call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(D) DAYS"
@@ -48,7 +54,6 @@ _datei: Procedure = .int
      return _jdn(dd,mm,YY)
   end
   if fabbreV('QUALIFIED',format,2) then do  /* format Thursday, December 17, 2020 */
-     mlist='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
      idate=split(idate,isep)
      YY=word(idate,4)
      yy=testyear(yy)
@@ -58,7 +63,6 @@ _datei: Procedure = .int
      return _jdn(dd,mm,YY)
   end
   if fabbreV('NORMAL',format,1) then do  /* format 24 December 2021 */
-     mlist='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
      idate=split(idate,isep)
      YY=word(idate,3)
      yy=testyear(yy)

@@ -51,8 +51,8 @@ void meta_set_symbol(Symbol *symbol, void *payload) {
         /* Logic that works out if we should emit the variable meta data here */
         if (symbol->meta_emitted) return;     /* Aleady done */
         if (node->high_ordinal == -1) return; /* Weird optimiser added node - skip as we don't know what's going on */
-        symbol_ordinal = sym_lord(symbol);
-        if (symbol_ordinal > node->high_ordinal) return; /* Symbol is not yet valid */
+        symbol_ordinal = symbol->creation_ordinal;
+        if (symbol_ordinal == -1 || symbol_ordinal > node->high_ordinal) return; /* Symbol is not yet valid */
         symbol->meta_emitted = 1;
 
         if (symbol->symbol_type == CONSTANT_SYMBOL) {
@@ -110,7 +110,11 @@ void add_variable_metadata(ASTNode* node) {
     }
 
     /* Sets the Procedure's Symbols from metadata */
-    scp_4all(scope, meta_set_symbol, node);
+    while (scope) {
+        scp_4all(scope, meta_set_symbol, node);
+        if (scope->type == SCOPE_PROCEDURE) break;
+        scope = scope->parent;
+    }
 }
 
 /* Adds Symbol default initiator */
@@ -177,7 +181,11 @@ void add_scope_initiators(ASTNode* node) {
     }
 
     /* Add Initiators */
-    scp_4all(scope, add_initiator, node);
+    while (scope) {
+        scp_4all(scope, add_initiator, node);
+        if (scope->type == SCOPE_PROCEDURE) break;
+        scope = scope->parent;
+    }
 }
 
 /* Adds and exposed Global Variable Symbol */
@@ -303,7 +311,11 @@ void clear_variable_metadata(ASTNode *node) {
     }
 
     /* Clears the Procedure's Symbols from metadata */
-    scp_4all(scope, meta_clear_symbol, node);
+    while (scope) {
+        scp_4all(scope, meta_clear_symbol, node);
+        if (scope->type == SCOPE_PROCEDURE) break;
+        scope = scope->parent;
+    }
 }
 
 /* Clear Global Variable Symbol metadata */

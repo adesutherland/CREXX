@@ -81,6 +81,7 @@ struct ASTNode {
     OutputFragment *loopstartchecks; /* Begin Loop exit checks */
     OutputFragment *loopinc;         /* Loop increments */
     OutputFragment *loopendchecks;   /* End Loop exit checks */
+    char is_duplicate_warning;
 };
 
 /* AST Functions */

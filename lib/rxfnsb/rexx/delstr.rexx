@@ -6,6 +6,7 @@ import _rxsysb
 /* delstr(string,position,length) delete string from certain position and length and returns it */
 delstr: procedure = .string
   arg string = .string, position = .int, dellen = 0
+  retstr = ""
  ## if position<1 then call raise "syntax", "40.13", position /* Invalid start */
   if position<1 then position=1
   len=length(string)

@@ -454,7 +454,7 @@ walker_result set_node_types_walker(walker_direction direction,
             case ASSIGN:
                 if (node->value_type == TP_UNKNOWN) {
                     set_node_type(node, TP_VOID);
-                    
+
                 }
                 if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
                     /* If the symbol does not have a known type yet - then determine it */

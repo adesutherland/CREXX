@@ -21,7 +21,9 @@ import rxfnsb
 arg command=.string[]
 internal_testing=0    ## activate only for rxpp internal tests
 verbose=1
-
+  infile = .string;
+  outfile = .string;
+  maclib = .string;
   ElapsedTime=time('us')
 
   do i=1 to command.0
@@ -98,6 +100,8 @@ return 0
 RXPPPassOne: procedure = .int
   arg expose infile=.string, outfile=.string,maclib=.string, macsys=.string
 
+  /* Locals */
+  maxmac = .string
 /* ---- 1a. Load Macros from MACLIB  */
   macnum=readSource(maclib)
   if macnum<0 then do
@@ -674,6 +678,7 @@ insert_source: Procedure=.int
   stemlog=0
   rc=arrayInsert(source,at,new)    ## insert new lines, shift buffer
   rc=arrayInsert(stype, at,new)
+  i = .int
   do i=0 to new-1                   ## in some cases you want special
      source[at+i]='/* reserved 'at+i i' */'
      stype[at+i]=expand             ## treatment of the new entry for
@@ -753,6 +758,7 @@ CMD_data: procedure
   arg line_no=.int,line=.string,array=.string
   stype.line_no= 'D'
   j=0
+  i = .int
   do i=line_no+1 to source.0
      line=source.i
      if upper(word(line,1))='##END' then leave
@@ -1608,6 +1614,7 @@ normalisePath: procedure=.string
   end
   /* Stack for normalised components */
   parti = 0
+  norm = .string[]
   do i = 1 to compi
     part = components.i
     if part = '.' then nop

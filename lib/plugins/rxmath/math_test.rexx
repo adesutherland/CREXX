@@ -81,7 +81,8 @@ say "asinh "asinh(10)
 say "acosh "acosh(50)
 say "atanh "atanh(0)
 say "hypot "hypot(4,10)
-
+mm = .float[]
+nn = .float[]
 do i=1 to 5000
    mm.i=i*1.0
    nn.i=i*2.0+7

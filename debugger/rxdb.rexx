@@ -421,6 +421,8 @@ dump_procs: procedure = .int
   proc_id = 0
   proc = 0
   procs = 0
+  start = 0
+  finish = 0
 
   assembler metaloadedmodules modules
 
@@ -459,6 +461,8 @@ find_proc: procedure = .int
   proc = 0
   procs = 0
   found_id = 0
+  start = 0
+  finish = 0
 
   assembler metaloadedmodules modules
   if mod_num = 0 then do

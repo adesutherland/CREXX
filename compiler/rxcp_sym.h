@@ -86,6 +86,8 @@ struct Symbol {
     char is_shadowing; /* Set if this symbol is incorrectly shadowing a global variable */
     struct Symbol *shadowed_symbol; /* Pointer to the symbol being shadowed */
     char is_global_var; /* Set if this symbol is an exposed global variable */
+    int creation_ordinal; /* Ordinal value when the symbol was first created */
+    ASTNode *creation_node; /* The node that first created this symbol */
 };
 
 /* Returns string name of a Value type */

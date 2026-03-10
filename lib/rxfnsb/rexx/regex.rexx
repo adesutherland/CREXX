@@ -432,6 +432,12 @@ return out
 __matchHere: PROCEDURE=.int
   /* Does pattern p[j..] match s starting at i? */
   arg s=.string, i=.int, p=.string, j=.int
+
+  /* Procedure Locals */
+  atom = .string
+  type = .string
+  atomLen = .int
+
   /* 1) End of pattern -> success (record cursor-after) */
   if j > length(p) then do
      call __set_last_end i
@@ -512,6 +518,11 @@ return 0
  */
 __matchStar: PROCEDURE=.int
   arg s=.string, i=.int, p=.string, j=.int, atomLen=.int
+
+  /* Procedure Locals */
+  atom = .string
+  type = .string
+
   /* Re-read the atom */
   c = substr(p, j, 1)
   if c = '\' then do
@@ -704,6 +715,11 @@ return hit
  */
 __matchStarLazy: PROCEDURE=.int
   arg s=.string, i=.int, p=.string, j=.int, atomLen=.int
+
+  /* Procedure Locals */
+  atom = .string
+  type = .string
+
   /* re-read the atom (same as in __matchStar) */
   c = substr(p, j, 1)
   if c = '\' then do
