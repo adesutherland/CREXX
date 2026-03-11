@@ -430,17 +430,6 @@ walker_result build_symbols_walker(walker_direction direction,
                 if (!symbol) {
                     Scope *target_scope = context->current_scope;
 
-                    /* DISJOINT SCOPE WARNING: Check if name exists in earlier disjoint blocks */
-                    /* TODO - fix WARNING node causing structural issues
-                    ASTNode *proc = ast_proc(node);
-                    if (proc && proc->scope) {
-                        Symbol *disjoint = sym_drsv(proc->scope, node);
-                        if (disjoint && (node->parent->node_type != DEFINE && node->parent->node_type != ARG)) {
-                            mknd_war(node, "#NOT_IN_SAME_SCOPE");
-                        }
-                    }
-                    */
-
                     symbol = sym_f(target_scope, node);
                     symbol->status = SYM_STATUS_LOCAL_VAR;
                 } else if (node->parent->node_type == DEFINE && symbol->type != TP_UNKNOWN) {
@@ -529,17 +518,6 @@ walker_result build_symbols_walker(walker_direction direction,
                 /* Make a new symbol if it does not exist */
                 if (!symbol) {
                     Scope *target_scope = context->current_scope;
-
-                    /* DISJOINT SCOPE WARNING: Check if name exists in earlier disjoint blocks */
-                    /* TODO - fix WARNING node causing structural issues
-                    ASTNode *proc = ast_proc(node);
-                    if (proc && proc->scope) {
-                        Symbol *disjoint = sym_drsv(proc->scope, node);
-                        if (disjoint) {
-                            mknd_war(node, "#NOT_IN_SAME_SCOPE");
-                        }
-                    }
-                    */
 
                     symbol = sym_f(target_scope, node);
                     symbol->status = SYM_STATUS_UNRESOLVED;
