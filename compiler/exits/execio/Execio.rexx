@@ -1,5 +1,5 @@
 options levelb
-namespace rxcpexits expose execioexit
+namespace rxcpexits expose execioexit _status _error_token _error_message
 import rxcp
 import rxfnsb
 
@@ -17,16 +17,20 @@ execioexit: class
         _error_token = 0
         _error_message = ""
         _status = "EMPTY"
-        return
 
     get_primary_keyword: method = .string
         return "execio"
 
     get_additional_keywords: method = .string
         return ""
+/* execioexit: compiler exit to translate
+ *   EXECIO <count-expr> <mode> <fname> ( STEM <stem> [FINIS] ... )
+ * into:
+ *   __rc=_execio(<count>, '<mode>', '<fname>', expose stem=<stem>);
+ */
 
-    process: method = .string
-        arg tokens = .token[]
+process: method = .string
+    arg tokens = .token[]
 
     /* reset per-call state */
     _replacement = ""
@@ -46,14 +50,16 @@ execioexit: class
    * ---------------------------------------------------------------------
    */
     allowed = "identifier int_literal string_literal operator bracket comma other"
-    do i = 2 to tokens.0
+    cmd=''
+    do i = 1 to tokens.0
        ti = tokens[i]
        t_type = strip(ti.get_type())
+       cmd=cmd' 'ti.get_text()
+       if i=1 then iterate
        if pos(t_type, allowed) > 0 then iterate
-       _status="ERROR"; _error_token=i
-       _error_message="Unsupported token type in EXECIO: <"t_type"> text=<"ti.get_text()">"
-       return _status
+       return setError("ERROR",i,"Unsupported token type in EXECIO: <"t_type"> text=<"ti.get_text()">")
     end
+    cmd=substr(cmd,2)
    /* --------------------------------------------------------------------
     * Check 2: wait until identifiers are available
     * --------------------------------------------------------------------
@@ -61,12 +67,13 @@ execioexit: class
     do i = 2 to tokens.0
         ti = tokens[i]
         if strip(ti.get_type())="identifier" & ti.get_value_type() = ".unknown" then do
-            _status = "PENDING"
-            return _status
+           _status = "PENDING"
+           return _status
         end
     end
    /* ------------------------------------------------------------
     *  Find op keyword position (top-level, outside option block)
+    *    DISKR/DISKW/DISKA/READ/WRITE/APPEND
     * ------------------------------------------------------------
     */
     ops = "DISKR DISKW DISKA READ WRITE APPEND DISKRU DISKSU"
@@ -82,19 +89,10 @@ execioexit: class
           leave
        end
     end
-    if opPos = 0 then do
-        _status="ERROR"
-        _error_token=2
-        _error_message="EXECIO: missing operation (DISKR/DISKW/...)"
-        return _status
-    end
+    if opPos = 0 then return setError("ERROR",2,"EXECIO: missing operation (DISKR/DISKW/...)")
+
    /* file name is next after DISKx parameter */
-    if opPos+1 > tokens.0 then do
-        _status="ERROR"
-        _error_token=opPos
-        _error_message="EXECIO: missing ddname/filename after operation"
-        return _status
-    end
+    if opPos+1 > tokens.0 then return setError("ERROR",opPos,"EXECIO: missing ddname/filename after operation")
    /* ------------------------------------------------------------
     * Join count-expr span: tokens[2..opPos-1]
     *  (spanning-ready; may be 1 token or expression like recs+10)
@@ -102,14 +100,10 @@ execioexit: class
     */
     countExpr = ""
     do i = 2 to opPos-1
-        countExpr=countExpr||tokens[i].get_text()
+       countExpr=countExpr||tokens[i].get_text()
     end
-    if strip(countExpr) = "" then do
-        _status="ERROR"
-        _error_token=2
-        _error_message="EXECIO: missing record count"
-        return _status
-    end
+    if strip(countExpr) = "" then return setError("ERROR",2,"EXECIO: missing record count")
+
  /* quoting rule: '*' must be quoted; numeric expr stays as-is */
     if strip(countExpr) = "*" then countEmit = "'"countExpr"'"
     else countEmit = countExpr
@@ -137,17 +131,9 @@ execioexit: class
           end
           if up = "STEM" then do
              p =p+1
-             if p > tokens.0 then do
-                _status="ERROR"; _error_token=p-1
-                _error_message="EXECIO: STEM requires a value"
-                return _status
-             end
+             if p > tokens.0 then return setError("ERROR",p-1,"EXECIO: STEM requires a value")
              vtok = tokens[p]
-             if strip(vtok.get_type()) \= "identifier" then do
-                _status="ERROR"; _error_token=p
-                _error_message="EXECIO: STEM value "vtok.get_text()" mandatory stem (no ending dot)"
-                return _status
-             end
+             if strip(vtok.get_type()) \= "identifier" then return setError("ERROR",p,"EXECIO: STEM value "vtok.get_text()" mandatory stem (no ending dot)")
              stemPresent = 1
              stemEmit = vtok.get_text()
              p =p+1
@@ -159,20 +145,18 @@ execioexit: class
              iterate
           end
           /* unknown option => error (or make permissive later) */
-           _status="ERROR"; _error_token=p
-           _error_message="EXECIO: unknown option '"txt"'"
-           return _status
-        end
+          return setError("ERROR",p,"EXECIO: unknown option '"txt"'")
+       end
     end
    /* ------------------------------------------------------------
     * Emit canonical call
     * ------------------------------------------------------------
     */
     opEmit=upper(strip(opEmit))
- /*  ++++ defined variables don't survive compiler exit end
+ /*  ++++ defined variables don't survive compiler exit end */
     if opEmit='DISKR' then _replacement = stemEmit"=.string[];"
     else _replacement=''
-  */
+
     _replacement=''
     _replacement = _replacement||"__rc=_execio("countEmit",'"opEmit"',"fnameEmit
     if stemPresent then _replacement = _replacement||", "stemEmit
@@ -194,8 +178,18 @@ execioexit: class
 
     get_node_id: method = .int
         return _node_id
+/* ----------------------------------------------------------------------------
+ * Set return error parameteres
+ * ----------------------------------------------------------------------------
+ */
+setError: procedure=.string
+  arg status = "EMPTY", error_token=0, error_message = "unknown"
+  _status=status
+  _error_token=error_token
+  _error_message=error_message
+return _status
 
-/***** Logging ***************************************************************
+/* *** Logging ****************************************************************
  * Keep logging side-effects cheap and safe:
  * - Prefer appending (linejoined_parm does)
  * - Consider gating via an env var so normal builds aren’t slowed down
@@ -203,5 +197,4 @@ execioexit: class
  */
 log: procedure = .int
   arg logtxt = .string
-  return 0
 return lineout("c:\temp\pluginlog.txt", time()" "logtxt)
