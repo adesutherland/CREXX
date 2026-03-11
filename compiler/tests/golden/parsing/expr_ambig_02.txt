@@ -76,10 +76,8 @@ Scope [0]: Unnamed
       c (Constant) -> .string
 Error in expr_ambig_02.rexx @ 2:5 - #BAD_CONVERSION, "b"
 Error in expr_ambig_02.rexx @ 2:8 - #BAD_CONVERSION, "c"
-Error in expr_ambig_02.rexx @ 2:5 - #BAD_CONVERSION, "b -c"
-3 error(s) in source file
+2 error(s) in source file
 Error in expr_ambig_02.rexx @ 2:5 - #BAD_CONVERSION, "b"
 Error in expr_ambig_02.rexx @ 2:8 - #BAD_CONVERSION, "c"
-Error in expr_ambig_02.rexx @ 2:5 - #BAD_CONVERSION, "b -c"
-3 error(s) in source file
+2 error(s) in source file
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

@@ -80,12 +80,8 @@ Scope [0]: Unnamed
       c (Constant) -> .string
 Error in expr_ambig_03.rexx @ 2:5 - #BAD_CONVERSION, "b"
 Error in expr_ambig_03.rexx @ 2:11 - #BAD_CONVERSION, "c"
-Error in expr_ambig_03.rexx @ 2:9 - #BAD_CONVERSION, "+ c"
-Error in expr_ambig_03.rexx @ 2:5 - #BAD_CONVERSION, "b + + c"
-4 error(s) in source file
+2 error(s) in source file
 Error in expr_ambig_03.rexx @ 2:5 - #BAD_CONVERSION, "b"
 Error in expr_ambig_03.rexx @ 2:11 - #BAD_CONVERSION, "c"
-Error in expr_ambig_03.rexx @ 2:9 - #BAD_CONVERSION, "+ c"
-Error in expr_ambig_03.rexx @ 2:5 - #BAD_CONVERSION, "b + + c"
-4 error(s) in source file
+2 error(s) in source file
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).
