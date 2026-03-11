@@ -945,6 +945,7 @@ replaceFixArg: Procedure=.string
      adefault=word(aname,2)                        ## 2. word is the default value
      if adefault='' then adefault="''"             ## if not there, use empty string
      aname=word(aname,1)                           ## now isolate parameter name
+     j = 0
      do j=1 to wrds                  ## find the appropriate keyword, sequence is free
         if fpos(aname'=',callargs.j,1)>0 then leave    ### +++++++++++ modify  ## use fpos function to search case-insensitive
      end
@@ -1276,6 +1277,7 @@ return 1
  */
 parsevar: Procedure=.int
   arg line_no=.int, parseLine=.string
+  lhs = ""
  ## 1. strip off PARSE VAR variable template or PARSE VALUE 'string'/variable [WITH] template
  ##                1w  2w   3w     4w            1w    2w     3w                4w
  ## 2. strip off PARSE variable template or PARSE 'string'/variable [WITH] template
@@ -1422,7 +1424,7 @@ parsevar: Procedure=.int
      end
   end
   inew=inject2Source(inew+1,0,'## ---------- parse variables set ----------')
-return token.0
+return tokenhi
 
 /* ------------------------------------------------------------------
  * flush: Flushes buffered text into token[] as a single token.

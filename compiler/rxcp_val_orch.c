@@ -443,6 +443,16 @@ void validate_node_promotion(ASTNode* node) {
 
     if (node->value_type != TP_VOID && node->target_type == TP_VOID) mknd_err(node, "UNEXPECTED_VALUE");
 
+    /* Taken constant check: If target is numeric (TP_INTEGER, TP_FLOAT, TP_DECIMAL)
+     * and source is a TAKEN CONSTANT (CONSTANT_SYMBOL), it's a compile-time failure.
+     * Note: String variables (TP_STRING) are allowed as they might contain numeric strings at runtime.
+     *       But a taken constant literal (the variable name) is known to be non-numeric at compile time. */
+    if ((node->target_type == TP_INTEGER || node->target_type == TP_FLOAT || node->target_type == TP_DECIMAL) &&
+        (node->node_type == STRING || node->node_type == VAR_SYMBOL) &&
+        node->symbolNode && node->symbolNode->symbol->symbol_type == CONSTANT_SYMBOL) {
+        mknd_err(node, "BAD_CONVERSION");
+    }
+
     /* Class / Object Support */
     if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) {
         if (node->value_type != node->target_type) {

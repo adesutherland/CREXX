@@ -22,7 +22,7 @@ end
 
 if reradix('f81',16,10) \= 3969  then do
   errors=errors+1
-  say 'RERADIX failed in test 4 reradix('f81',16,10)' reradix('f81',16,10) /* lower case */
+  say 'RERADIX failed in test 4 reradix("f81",16,10)' reradix('f81',16,10) /* lower case */
 end
 
 if reradix('FF81',16,10) \= 65409  then do
@@ -32,7 +32,7 @@ end
 
 if reradix('FF81',16,10) \= '65409'  then do
   errors=errors+1
-  say 'RERADIX failed in test 6 reradix('FF81',16,10)' reradix('FF81',16,10)
+  say 'RERADIX failed in test 6 reradix("FF81",16,10)' reradix('FF81',16,10)
 end
 
 if reradix('F0',16,10) \= 240  then do

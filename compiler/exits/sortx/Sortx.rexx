@@ -141,7 +141,7 @@ sortexit2: class
       end
       if strip(joined_parm) = "" then do
          _status = "ERROR"
-         _error_token = start
+         _error_token = split_start
          _error_message = "Empty expression"
          return _status
       end

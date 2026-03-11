@@ -30,6 +30,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "rxcp_val.h"
+#include "rxcp_util.h"
+#include "rxbin.h" /* Needed for rxvmvars.h */
+#include "rxvmvars.h"
 
 /* Validates a node promotion is correct for a call by reference (of symbols) adding error nodes if not */
 void validate_node_promotion_for_ref(ASTNode* node) {
@@ -693,14 +696,14 @@ walker_result type_safety_walker(walker_direction direction,
                     }
                     if (node->value_type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
                 }
-                break;
+
                 if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->type != TP_UNKNOWN && ast_nchd(node) && !node->symbolNode->symbol->value_dims) {
                     /* Relax Type Checks for Unresolved Globals: Temporarily suppress #NOT_AN_ARRAY errors for symbols with status == SYM_STATUS_UNRESOLVED and exposed == 1 */
                     /* Also relax for exposed symbols in general as they might be arrays defined elsewhere */
                     if (!((node->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || node->symbolNode->symbol->exposed) && node->symbolNode->symbol->exposed))
                         mknd_err(node, "NOT_AN_ARRAY");
                 }
-                else if (child1) {
+                if (child1) {
                     /* We have array parameters */
 
                     /* Set array parameter type to integer */
@@ -724,6 +727,14 @@ walker_result type_safety_walker(walker_direction direction,
                         }
 
                         set_node_target_type(n1, TP_INTEGER);
+
+                        if (n1->node_type == STRING && n1->symbolNode && n1->symbolNode->symbol->symbol_type == CONSTANT_SYMBOL) {
+                            /* Taken Constant used where integer required */
+                            rxinteger val_int;
+                            if (string2integer(&val_int, n1->node_string, n1->node_string_length)) {
+                                mknd_err(n1, "BAD_CONVERSION");
+                            }
+                        }
 
                         if (n1->node_type == INTEGER && n1->parent->symbolNode && n1->parent->symbolNode->symbol && n1->parent->symbolNode->symbol->dim_base) {
                             /* As a constant integer we can check it is in range */
@@ -848,6 +859,14 @@ walker_result type_safety_walker(walker_direction direction,
                         n1 = child1->child;
                         while (n1) {
                             set_node_target_type(n1, TP_INTEGER);
+
+                            if (n1->node_type == STRING && n1->symbolNode && n1->symbolNode->symbol->symbol_type == CONSTANT_SYMBOL) {
+                                /* Taken Constant used where integer required */
+                                rxinteger val_int;
+                                if (string2integer(&val_int, n1->node_string, n1->node_string_length)) {
+                                    mknd_err(n1, "BAD_CONVERSION");
+                                }
+                            }
 
                             if (n1->node_type == INTEGER) {
                                 /* As a constant integer we can check it is in range */

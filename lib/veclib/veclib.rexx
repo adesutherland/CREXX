@@ -184,6 +184,7 @@ return strip(ret)
 
 __s2vec: procedure=.string[]
 arg v=.string
+   s = .string[]
    do i=1 to words(v)
       s[i] = word(v,i)
    end

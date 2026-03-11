@@ -637,24 +637,29 @@ static walker_result emit_walker(walker_direction direction,
                         /* This is the logic to get the register attribute for this parameter (child1) */
 
                         /* Make temp2 the base 1 element index number */
-                        if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
+                        if (child1->node_type == INTEGER || child1->node_type == CONSTANT || child1->node_type == STRING) {
                             /* Make temp2 the base 1 element index number */
                             temp2 = format_constant(child1->value_type, child1);
-                            if (base != 1) {
+                            if (base != 1 && (child1->node_type == INTEGER || child1->node_type == CONSTANT)) {
                                 int ix = atoi(temp2) + 1 - base;
                                 free(temp2);
                                 temp2 = mprintf("%d", ix);
                             }
                         } else temp2 = 0;
 
-                        /* Make sure there is enough attributes */
+                        /* Make sure there are enough attributes */
                         if (node->symbolNode->symbol->dim_elements[ast_chdi(child1)]) {
                             /* Fixed array set to the dimension size - later linkattr1 might throw a signal if out of range by design */
                             temp1 = mprintf("   setattrs %c%d,%d\n",
                                             from_reg_type, from_reg_num,
                                             node->symbolNode->symbol->dim_elements[ast_chdi(child1)]);
-                        } else if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
+                        } else if (child1->node_type == INTEGER || child1->node_type == CONSTANT || child1->node_type == STRING) {
                             /* Variable array and constant parameter - set min attributes which gives a growth buffer */
+                            if (child1->value_type != TP_INTEGER) {
+                                // This should never happen - print an in fatal internal error to stderr and bail
+                                fprintf(stderr, "INTERNAL ERROR: non-integer constant used as array index\n");
+                                exit(1);
+                            }
                             temp1 = mprintf("   minattrs %c%d,%s\n",
                                             from_reg_type, from_reg_num,
                                             temp2);
@@ -669,8 +674,11 @@ static walker_result emit_walker(walker_direction direction,
                         free(temp1);
 
                         /* Link Array element */
-                        if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
+                        if (child1->node_type == INTEGER || child1->node_type == CONSTANT || child1->node_type == STRING) {
                             /* Constant Parameter */
+                            if (child1->value_type != TP_INTEGER) {
+                                mknd_err(child1, "BAD_CONVERSION");
+                            }
                             temp1 = mprintf("   linkattr1 r%d,%c%d,%s\n",
                                             node->register_num,
                                             from_reg_type, from_reg_num,

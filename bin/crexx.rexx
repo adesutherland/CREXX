@@ -74,6 +74,7 @@
  
  modulenumber=1
  /* loop through arguments and find options and program files */
+ libs = ""
  do i=1 to fn.0
    if left(fn.i,1)<>'-' then
      do /* it is not a flag but a filename */

@@ -123,7 +123,7 @@ if x2d('46 30'x) \= 240 then do
 end
 if x2d('F0') \= 240 then do
   errors=errors+1
-  say 'failed in test 16 x2d('F0')' x2d('F0') 'but must be 240'
+  say 'failed in test 16 x2d("F0")' x2d('F0') 'but must be 240'
 end
 if x2d('81',2) \= -127 then do
   errors=errors+1
@@ -284,7 +284,7 @@ if x2d( 'ff80', 5) \= "65408" then do
 end
 if x2d( 'ff81', 1) \= "1" then do
   errors=errors+1
-  say 'failed in test 56 x2d( 'ff81', 1) ' x2d( 'ff81', 1) 'but must be 1'
+  say 'failed in test 56 x2d( "ff81", 1) ' x2d( 'ff81', 1) 'but must be 1'
 end
 if x2d( 'ff81', 2) \= "-127" then do
   errors=errors+1

@@ -111,6 +111,7 @@ call log '------ Check in'
       * ---------------------------------------------------------------------
       */
       args = .string[]
+      joined_parm = ""
       do j = 1 to ranges[0]
          call log 123' 'ranges[j]
          split_start = word(ranges[j], 1)
@@ -126,7 +127,7 @@ call log '------ Check in'
          end
          if strip(joined_parm) = "" then do
             _status = "ERROR"
-            _error_token = start
+            _error_token = split_start
             _error_message = "Empty expression"
             return _status
          end
