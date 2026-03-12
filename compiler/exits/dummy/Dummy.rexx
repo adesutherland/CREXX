@@ -37,16 +37,6 @@ dummyexit: class
 
         /* Only accept identifiers */
         ti = tokens[2]
-        say "DEBUG_DUMMY: Token 2 type is '" || ti.get_type() || "' text is '" || ti.get_text() || "'"
-
-        /* Fake an error */
-                if ti.get_text() = "e" then do
-                    _error_token = 2
-                    _error_message = "E_IS_AN_ERROR!"
-                    _status = "ERROR"
-                    return _status
-                end
-
         if ti.get_type() \= "identifier" then do
             _status = "ERROR"
             _error_token = 2

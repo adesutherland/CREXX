@@ -517,9 +517,6 @@ static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context*
         if (error_token_idx > 0 && (size_t)error_token_idx <= num_tokens && node_map) {
             err_node = node_map[error_token_idx - 1];
         }
-        fprintf(stderr, "DEBUG_FINAL: error_token_idx=%lld err_node_type=%d src='%.*s'\n",
-            (long long)error_token_idx, err_node->node_type,
-            (int)(err_node->source_end - err_node->source_start + 1), err_node->source_start);
 
         if (err_msg_copy) {
             mknd_err(err_node, "%s", err_msg_copy);
