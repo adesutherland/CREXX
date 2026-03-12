@@ -55,6 +55,7 @@ walker_result build_symbols_walker(walker_direction direction, ASTNode* node, vo
 walker_result resolve_functions_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result exposed_symbols_walker(walker_direction direction, ASTNode* node, void *payload);
 void validate_symbols(Context *context, Scope *scope);
+int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, const char* type_name, int levels);
 
 /* type */
 walker_result set_node_types_walker(walker_direction direction, ASTNode* node, void *payload);

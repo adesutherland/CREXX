@@ -106,7 +106,7 @@
        if left(fn.i,2)= '-l' then do
 	 if left(fn.i,1)=' ' then do
 	   fn.i=fn.i||fn.i+1
-	   fn.i+1=''
+	   fn[i+1]=''
 	 end
 	 lastSlash = lastpos('/',fn.i)
 	 libs = libs';'rxpath||substr(fn.i,3) /* for rxvm execution */
@@ -229,7 +229,7 @@ do i=1 to words(filenames)
     do
       say esc||ANSI_GREEN'rxcpack command :'esc||ANSI_RESET pack_cmd
       end
-    pack_cmd
+    address system pack_cmd
     if verbose then do
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
@@ -253,7 +253,7 @@ do i=1 to words(filenames)
 	    rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a ',
 	 '-Wl,-force_load,"'rxpath'""',
 	  filename'.c'
-    cc_command
+    address system cc_command
     if verbose>1 then
       do
 	say 'cc compile command:'
@@ -275,7 +275,7 @@ do i=1 to words(filenames)
       if execute then say 'crexx executes:' ex_command
       if execute=0 then say 'crexx does not execute because of --noexec'
     end
-    if execute then ex_command
+    if execute then address system ex_command
   end
 end   -- do i
 

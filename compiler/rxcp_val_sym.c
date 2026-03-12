@@ -437,9 +437,17 @@ walker_result build_symbols_walker(walker_direction direction,
                 }
 
                 /* Ensure creation info is set */
-                if (symbol && (symbol->creation_node == 0 || symbol->creation_node == node)) {
-                    symbol->creation_node = node;
-                    symbol->creation_ordinal = node->high_ordinal;
+                if (symbol) {
+                    if (symbol->creation_node == 0 || symbol->creation_node == node) {
+                        symbol->creation_node = node;
+                        symbol->creation_ordinal = node->high_ordinal;
+                    } else if (node->parent->node_type == DEFINE && symbol->creation_node->parent && symbol->creation_node->parent->node_type != DEFINE) {
+                        symbol->creation_node = node;
+                        symbol->creation_ordinal = node->high_ordinal;
+                    } else if (node->high_ordinal < symbol->creation_ordinal) {
+                        symbol->creation_node = node;
+                        symbol->creation_ordinal = node->high_ordinal;
+                    }
                 }
 
                 /* Set Argument flags - set by the parser grammar */
@@ -524,9 +532,17 @@ walker_result build_symbols_walker(walker_direction direction,
                 }
 
                 /* Ensure creation info is set */
-                if (symbol && (symbol->creation_node == 0 || symbol->creation_node == node)) {
-                    symbol->creation_node = node;
-                    symbol->creation_ordinal = node->high_ordinal;
+                if (symbol) {
+                    if (symbol->creation_node == 0 || symbol->creation_node == node) {
+                        symbol->creation_node = node;
+                        symbol->creation_ordinal = node->high_ordinal;
+                    } else if (node->parent->node_type == DEFINE && symbol->creation_node->parent && symbol->creation_node->parent->node_type != DEFINE) {
+                        symbol->creation_node = node;
+                        symbol->creation_ordinal = node->high_ordinal;
+                    } else if (node->high_ordinal < symbol->creation_ordinal) {
+                        symbol->creation_node = node;
+                        symbol->creation_ordinal = node->high_ordinal;
+                    }
                 }
 
                 if (node->parent->node_type == ASSEMBLER) {
@@ -1285,4 +1301,94 @@ void validate_symbols(Context *context, Scope* scope) {
     for (i=0; i < (int)scp_noch(scope); i++) {
         validate_symbols(context, scp_chd(scope, i));
     }
+}
+
+/* Hoist a variable definition to a specific scope level.
+ * levels: -1 = Procedure/Method level, 1 = Parent level (up 1), 0 = Current level
+ * Returns 1 if hoisted/already exists, 0 on failure.
+ */
+int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, const char* type_name, int levels) {
+    ASTNode *target_scope_node = current_node;
+
+    if (levels == -1) {
+        target_scope_node = ast_proc(current_node);
+        if (!target_scope_node) target_scope_node = ast_ns(current_node); /* Fallback to namespace if not in proc */
+    } else {
+        int climbs = levels;
+        target_scope_node = target_scope_node->parent; /* start from parent */
+        while (climbs > 0 && target_scope_node) {
+            if (target_scope_node->node_type == DO ||
+                target_scope_node->node_type == EXIT_OWNED ||
+                target_scope_node->node_type == PROCEDURE ||
+                target_scope_node->node_type == METHOD ||
+                target_scope_node->node_type == NAMESPACE ||
+                target_scope_node->node_type == PROGRAM_FILE) {
+                climbs--;
+                if (climbs == 0) break;
+            }
+            target_scope_node = target_scope_node->parent;
+        }
+    }
+
+    if (!target_scope_node) return 0;
+
+    /* Search for INSTRUCTIONS child */
+    ASTNode *instructions = ast_chld(target_scope_node, INSTRUCTIONS, NOP);
+    if (!instructions) instructions = target_scope_node; /* Fallback for blocks like DO/EXIT_OWNED */
+
+    /* Manually scan instructions for a DEFINE or ASSIGN node targeting var_name */
+    int found = 0;
+    ASTNode *n = instructions->child;
+    while (n) {
+        if (n->node_type == DEFINE || n->node_type == ASSIGN) {
+            ASTNode *target = ast_chdn(n, 0);
+            if (target && (target->node_type == VAR_TARGET || target->node_type == VAR_SYMBOL)) {
+                const char *t_name = target->node_string;
+                size_t t_len = target->node_string_length;
+                if (!t_name && target->token) {
+                    t_name = target->token->token_string;
+                    t_len = target->token->length;
+                }
+                if (t_name && t_len == strlen(var_name) && strncasecmp(t_name, var_name, t_len) == 0) {
+                    found = 1;
+                    break;
+                }
+            }
+        }
+        n = n->sibling;
+    }
+
+    if (!found) {
+        /* Create DEFINE node: var_name = .type_name */
+        ASTNode *def_node = ast_ft(ctx, DEFINE);
+        ASTNode *var_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
+        var_node->free_node_string = 1;
+        ASTNode *type_node = ast_ft(ctx, CLASS);
+        type_node->node_string = malloc(strlen(type_name) + 2);
+        sprintf(type_node->node_string, ".%s", type_name);
+        type_node->node_string_length = strlen(type_name) + 1;
+        type_node->free_node_string = 1;
+
+        add_ast(def_node, var_node);
+        add_ast(def_node, type_node);
+
+        /* Set line/col to the beginning of the scope */
+        def_node->line = target_scope_node->line;
+        def_node->column = target_scope_node->column;
+        def_node->source_start = target_scope_node->source_start;
+        def_node->source_end = target_scope_node->source_end;
+        var_node->line = target_scope_node->line;
+        var_node->column = target_scope_node->column;
+        var_node->source_start = target_scope_node->source_start;
+        var_node->source_end = target_scope_node->source_end;
+
+        /* Prepend */
+        def_node->sibling = instructions->child;
+        instructions->child = def_node;
+        def_node->parent = instructions;
+
+        ctx->changed_flags |= FLAG_VAL_TRANS;
+    }
+
+    return 1;
 }
