@@ -266,6 +266,7 @@ RX_MOSTLYINLINE void clear_value(value* v) {
 }
 
 /* Int Flag */
+/*
 RX_INLINE void set_type_int(value *v) {
     v->status.all_type_flags = 0;
     v->status.type_int = 1;
@@ -279,7 +280,7 @@ RX_INLINE unsigned int get_type_int(value *v) {
     return v->status.type_int;
 }
 
-/* Float Flag */
+// Float Flag
 RX_INLINE void set_type_float(value *v) {
     v->status.all_type_flags = 0;
     v->status.type_float = 1;
@@ -293,7 +294,7 @@ RX_INLINE unsigned int get_type_float(value *v) {
     return v->status.type_float;
 }
 
-/* Decimal Flag */
+// Decimal Flag
 RX_INLINE void set_type_decimal(value *v) {
     v->status.all_type_flags = 0;
     v->status.type_decimal = 1;
@@ -307,7 +308,7 @@ RX_INLINE unsigned int get_type_decimal(value *v) {
     return v->status.type_decimal;
 }
 
-/* String Flag */
+// String Flag
 RX_INLINE void set_type_string(value *v) {
     v->status.all_type_flags = 0;
     v->status.type_string = 1;
@@ -321,7 +322,7 @@ RX_INLINE unsigned int get_type_string(value *v) {
     return v->status.type_string;
 }
 
-/* Object Flag */
+// Object Flag
 RX_INLINE void set_type_object(value *v) {
     v->status.all_type_flags = 0;
     v->status.type_object = 1;
@@ -335,10 +336,11 @@ RX_INLINE unsigned int get_type_object(value *v) {
     return v->status.type_object;
 }
 
-/* Unset Flag */
+// Unset Flag
 RX_INLINE void unset_type(value *v) {
     v->status.all_type_flags = 0;
 }
+*/
 
 RX_INLINE void set_int(value *v, rxinteger value) {
     v->int_value = value;

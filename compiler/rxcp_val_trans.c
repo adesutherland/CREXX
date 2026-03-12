@@ -110,6 +110,8 @@ walker_result rewrite_address_walker(walker_direction direction,
                 ASTNode *err = NULL;
                 ASTNode *expose_head = NULL;
                 ASTNode *expose_tail = NULL;
+                ASTNode *diag_head = NULL;
+                ASTNode *diag_tail = NULL;
 
                 /* Categorize children and remove them from 'node' */
                 c = node->child;
@@ -118,7 +120,13 @@ walker_result rewrite_address_walker(walker_direction direction,
                     next = c->sibling;
                     ast_del(c);
 
-                    if (c->node_type == REDIRECT_IN) {
+                    if (c->node_type == ERROR || c->node_type == WARNING) {
+                        if (diag_tail) diag_tail->sibling = c;
+                        else diag_head = c;
+                        diag_tail = c;
+                        c->sibling = NULL;
+                    }
+                    else if (c->node_type == REDIRECT_IN) {
                         if (!in) in = c;
                     }
                     else if (c->node_type == REDIRECT_OUT) {
@@ -216,6 +224,15 @@ walker_result rewrite_address_walker(walker_direction direction,
                     add_ast(function_node, c);
                     c = next;
                 }
+
+                /* Re-attach diagnostics */
+                c = diag_head;
+                while (c) {
+                    next = c->sibling;
+                    c->sibling = NULL;
+                    add_ast(node, c);
+                    c = next;
+                }
                 break;
 
             case REDIRECT_IN:
@@ -306,8 +323,27 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
     ASTNode *env_node;
 
     if (direction == in && node->node_type == IMPLICIT_CMD) {
+        /* Fix up location if missing - typically copied from the expression child */
+        if (node->line == -1 && node->child) {
+            node->line = node->child->line;
+            node->column = node->child->column;
+            node->file_name = node->child->file_name;
+            node->source_start = node->child->source_start;
+            node->source_end = node->child->source_end;
+            node->token_start = node->child->token_start;
+            node->token_end = node->child->token_end;
+        }
+
         if (node->exit_obj_reg != -1) return result_normal;
-        if (ast_hase(node)) return result_normal;
+
+        /* Warn about implicit address.
+         * Guard with ast_hase(node) to ensure we only warn once. */
+        if (!ast_hase(node)) {
+            mknd_war(node, "IMPLICIT_ADDRESS");
+        }
+
+        node->node_type = ADDRESS;
+
         /* Create explicit environment "SYSTEM" */
         env_node = ast_ft(context, STRING);
         ast_str(env_node, "SYSTEM");
@@ -318,7 +354,6 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
         node->child = env_node;
         env_node->parent = node;
 
-        node->node_type = ADDRESS;
         /* node->node_string = "SYSTEM"; // Not strictly needed by walker but good for debug */
         context->changed_flags |= FLAG_VAL_TRANS;
     }

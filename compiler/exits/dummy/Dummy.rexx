@@ -28,13 +28,25 @@ dummyexit: class
         arg tokens = .token[]
 
         /* Require exactly one identifier argument to shadow */
-        if tokens.0 \< 1 then do
-            _status = "REJECT"
+        if tokens.0 \= 2 then do
+            _error_token = 1
+            _error_message = "INVALID_ARGUMENTS"
+            _status = "ERROR"
             return _status
         end
 
         /* Only accept identifiers */
         ti = tokens[2]
+        say "DEBUG_DUMMY: Token 2 type is '" || ti.get_type() || "' text is '" || ti.get_text() || "'"
+
+        /* Fake an error */
+                if ti.get_text() = "e" then do
+                    _error_token = 2
+                    _error_message = "E_IS_AN_ERROR!"
+                    _status = "ERROR"
+                    return _status
+                end
+
         if ti.get_type() \= "identifier" then do
             _status = "ERROR"
             _error_token = 2
@@ -53,7 +65,7 @@ dummyexit: class
            compiler in an EXIT_OWNED block, so the declaration must not leak. */
         name = .string
         name = ti.get_text()
-        _replacement = "say '" || name || " (' || {" || 2 || "}.get_value_type() || ') = ' || {" || 2 || "}; " || name || " = .int; " || name || " = 1; say 'in-exit ' || " || name || "; "
+        _replacement = "say '" || name || " (" || ti.get_value_type() || ") = ' || {" || 2 || "}; " || name || " = .int; " || name || " = 1; say 'in-exit ' || " || name || "; "
         _status = "REPLACE"
         return _status
 

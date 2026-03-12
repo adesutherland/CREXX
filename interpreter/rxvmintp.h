@@ -136,12 +136,9 @@ struct stack_frame {
                                     (t) = strtod((s)->string_value, &converr);                          \
                                     if (converr[0] != '\0') goto converror; }
 
-#define CONV2INT(i,v)             { if ((v)->status.type_float)                                      \
-                                    (i) = (rxinteger) (v)->float_value;                                 \
-                                    else if ((v)->status.type_string) S2INT(i,v); }
+#define CONV2INT(i,v)             { S2INT(i,v); }
 
-#define CONV2FLOAT(i,v) if ((v)->status.type_int) (i) = (double) (v)->int_value;                      \
-        else if ((v)->status.type_string) S2FLOAT(i,v);                                               \
+#define CONV2FLOAT(i,v)           { S2FLOAT(i,v); }                                               \
                                                                                                       \
 // Get Character
 #ifndef NUTF8

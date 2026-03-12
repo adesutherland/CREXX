@@ -6,10 +6,10 @@ rm $1".rxas"
 rm $1".rxbin"
 
 echo "rxc -n $1"
-../cmake-build-debug/bin/rxc $1
+../cmake-build-debug/bin/rxc -n $1
 
 echo "rxas-n $1"
-../cmake-build-debug/bin/rxas $1
+../cmake-build-debug/bin/rxas -n $1
 
 echo "rxdas $1"
 ../cmake-build-debug/bin/rxdas $1

@@ -37,4 +37,4 @@ add_custom_command(
     COMMENT "Building rxcexits.rxbin (bundled via concatenation)"
 )
 add_custom_target(compiler_exit_bin ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin)
-add_dependencies(compiler_exit_bin token_bin exit_dump_bin exit_query_bin exit_dummy_bin)
+add_dependencies(compiler_exit_bin token_bin exit_dump_bin exit_query_bin exit_sort_bin exit_sortx_bin exit_pprint_bin exit_execio_bin exit_dummy_bin)

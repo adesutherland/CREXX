@@ -1,0 +1,65 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : test_implicit_address.rexx
+ * BUILT                  : 2026-03-11 17:30:44
+ */
+
+.srcfile="test_implicit_address.rexx"
+.globals=0
+
+main() .locals=8
+   .meta "test_implicit_address.main"="b" ".void" main() "" ""
+   .src 3:1="main: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="\"echo OK1\""
+   load r1,5
+   load r2,"SYSTEM"
+   load r3,"echo OK1"
+   .meta "test_implicit_address.main.rc"="b" ".int" r0
+   load r7,0
+   call r4,_noredir(),r7
+   load r7,0
+   call r5,_noredir(),r7
+   load r7,0
+   call r6,_noredir(),r7
+   settp r2,3
+   settp r3,3
+   settp r4,1
+   settp r5,1
+   settp r6,1
+   call r0,_address(),r1
+   .src 6:3="cmd"
+   load r2,5
+   load r3,"SYSTEM"
+   load r4,"echo OK2"
+   .meta "test_implicit_address.main.cmd"="b" ".string" "echo OK2"
+   load r1,0
+   call r5,_noredir(),r1
+   load r1,0
+   call r6,_noredir(),r1
+   load r1,0
+   call r7,_noredir(),r1
+   settp r3,3
+   settp r4,1
+   settp r5,1
+   settp r6,1
+   settp r7,1
+   call r0,_address(),r2
+   .src 7:3="return"
+   ret
+   .meta "test_implicit_address.main.cmd"
+   .meta "test_implicit_address.main.rc"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_noredir() .expose=_rxsysb._noredir
+   .meta "_rxsysb._noredir"="b" ".binary" _noredir() "" ""
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_address() .expose=_rxsysb._address
+   .meta "_rxsysb._address"="b" ".int" _address() "?env=.string,?command=.string,in=.binary,out=.binary,err=.binary,expose ...=.string" ""

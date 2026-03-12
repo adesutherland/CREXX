@@ -96,10 +96,8 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
         ctx->ext_args = NULL;
     }
 
-    /* If it's an integer return, use it as rc */
-    if (ret_val->status.type_int) {
-        rc = (int)ret_val->int_value;
-    }
+    /* If it has an integer value, use it as rc */
+    rc = (int)ret_val->int_value;
 
     clear_value(ret_val);
     free(ret_val);

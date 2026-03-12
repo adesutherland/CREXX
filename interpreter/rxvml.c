@@ -89,7 +89,6 @@ void rxvml_set_str(rxvml_value* v, const char* s, size_t len) {
 rxvml_value* rxvml_object_new(rxvml_context* ctx, size_t num_attrs) {
     value* v = value_f();
     set_num_attributes(v, num_attrs);
-    v->status.type_object = 1;
     return (rxvml_value*)v;
 }
 
@@ -369,7 +368,7 @@ int rxvml_call_factory(
 
 int rxvml_to_int(rxvml_context* ctx, const rxvml_value* v, rxinteger* out_v) {
     value* val = (value*)v;
-    if (val && val->status.type_int) {
+    if (val) {
         if (out_v) *out_v = val->int_value;
         return 0;
     }
@@ -378,7 +377,7 @@ int rxvml_to_int(rxvml_context* ctx, const rxvml_value* v, rxinteger* out_v) {
 
 int rxvml_to_str(rxvml_context* ctx, const rxvml_value* v, const char** out_s, size_t* out_len) {
     value* val = (value*)v;
-    if (val && (val->status.type_string || val->string_value)) {
+    if (val && val->string_value) {
         null_terminate_string_buffer(val);
         if (out_s) *out_s = val->string_value;
         if (out_len) *out_len = val->string_length;

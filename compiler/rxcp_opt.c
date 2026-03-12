@@ -133,7 +133,7 @@ static value* node_to_value(ASTNode* node) {
             }
             break;
         case TP_STRING:
-            v.status.type_string = 1;
+            // v.status.type_string = 1;
             if (node->node_string && node->node_string_length) {
                 v.string_value = malloc(node->node_string_length+1);
                 memcpy(v.string_value, node->node_string, node->node_string_length);
