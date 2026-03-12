@@ -337,8 +337,14 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
         if (node->exit_obj_reg != -1) return result_normal;
 
         /* Warn about implicit address.
-         * Guard with ast_hase(node) to ensure we only warn once. */
-        if (!ast_hase(node)) {
+         * Guard with ast_hase(node) to ensure we only warn once.
+         * Suppress warning if the command starts with a quote (' or "). */
+        int starts_with_quote = 0;
+        if (node->source_start && (node->source_start[0] == '\'' || node->source_start[0] == '"')) {
+            starts_with_quote = 1;
+        }
+
+        if (!ast_hase(node) && !starts_with_quote) {
             mknd_war(node, "IMPLICIT_ADDRESS");
         }
 
