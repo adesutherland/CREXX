@@ -692,13 +692,28 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case VAR_SYMBOL:
-                if (node->parent->node_type != NODE_REGISTER) {
+                if (node->parent->node_type != NODE_REGISTER && node->parent->node_type != DEFINE) {
                     if (node->symbolNode && node->symbolNode->symbol) {
                         if (node->value_type == TP_UNKNOWN) {
                             ast_svtp(node, node->symbolNode->symbol);
                         }
                     }
-                    if (node->value_type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
+                    if (node->value_type == TP_UNKNOWN) {
+                        /* Check if the variable was explicitly typed as .unknown at declaration */
+                        int is_explicit_unknown = 0;
+                        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->creation_node) {
+                            ASTNode *creation = node->symbolNode->symbol->creation_node;
+                            if (creation->node_type == DEFINE && ast_nchd(creation) > 1) {
+                                ASTNode *type_node = ast_chdn(creation, 1);
+                                if (type_node && type_node->node_type == CLASS && type_node->node_string && strcasecmp(type_node->node_string, ".unknown") == 0) {
+                                    is_explicit_unknown = 1;
+                                }
+                            }
+                        }
+                        if (!is_explicit_unknown) {
+                            mknd_err(node, "UNKNOWN_TYPE");
+                        }
+                    }
                 }
 
                 if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->type != TP_UNKNOWN && ast_nchd(node) && !node->symbolNode->symbol->value_dims) {
@@ -864,7 +879,16 @@ walker_result type_safety_walker(walker_direction direction,
                     }
                     if (child1->symbolNode) ast_svtp(child1, child1->symbolNode->symbol);
 
-                    if (!child1->symbolNode || child1->symbolNode->symbol->type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
+                    if (!child1->symbolNode || child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                        /* Check if the right-hand side is explicitly .unknown */
+                        int is_explicit_unknown = 0;
+                        if (child2->node_type == CLASS && child2->node_string && strcasecmp(child2->node_string, ".unknown") == 0) {
+                            is_explicit_unknown = 1;
+                        }
+                        if (!is_explicit_unknown) {
+                            mknd_err(node, "UNKNOWN_TYPE");
+                        }
+                    }
 
                     if (ast_nchd(child1)) {
                         /* We have array parameters */

@@ -753,7 +753,7 @@ int rxcp_exit_bridge_pre_invoke(Context *ctx, ASTNode *node) {
                                         }
                                         if (var_name) {
                                             /* Pass "unknown" for type_name to trigger untyped hoisting (.unknown) */
-                                            ast_hoist_var(ctx, node, var_name, "unknown", -1);
+                                            ast_hoist_var(ctx, node, var_name, "unknown", 0);
                                             free(var_name);
                                         }
                                     }

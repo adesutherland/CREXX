@@ -1307,6 +1307,39 @@ void validate_symbols(Context *context, Scope* scope) {
  * levels: -1 = Procedure/Method level, 1 = Parent level (up 1), 0 = Current level
  * Returns 1 if hoisted/already exists, 0 on failure.
  */
+/* Helper to scan AST backwards for prior definition of a variable */
+static int is_var_defined_before(ASTNode* start_node, const char* var_name) {
+    ASTNode *current = start_node;
+    while (current) {
+        ASTNode *p = current->parent;
+        if (!p) break;
+        ASTNode *n = p->child;
+        while (n && n != current) {
+            if (n->node_type == DEFINE || n->node_type == ASSIGN) {
+                ASTNode *target = ast_chdn(n, 0);
+                if (target && (target->node_type == VAR_TARGET || target->node_type == VAR_SYMBOL)) {
+                    const char *t_name = target->node_string;
+                    size_t t_len = target->node_string_length;
+                    if (!t_name && target->token) {
+                        t_name = target->token->token_string;
+                        t_len = target->token->length;
+                    }
+                    if (t_name && t_len == strlen(var_name) && strncasecmp(t_name, var_name, t_len) == 0) {
+                        return 1;
+                    }
+                }
+            }
+            n = n->sibling;
+        }
+        current = p;
+    }
+    return 0;
+}
+
+/* Hoist a variable definition to a specific scope level.
+ * levels: -1 = Procedure/Method level, 0 = Current level (inserted just before current_node), 1 = Parent level
+ * Returns 1 if hoisted/already exists, 0 on failure.
+ */
 int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, const char* type_name, int levels) {
     ASTNode *target_scope_node = current_node;
 
@@ -1332,63 +1365,40 @@ int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, con
 
     if (!target_scope_node) return 0;
 
-    /* Search for INSTRUCTIONS child */
-    ASTNode *instructions = ast_chld(target_scope_node, INSTRUCTIONS, NOP);
-    if (!instructions) instructions = target_scope_node; /* Fallback for blocks like DO/EXIT_OWNED */
+    /* Check if already defined anywhere before this node */
+    int found = is_var_defined_before(current_node, var_name);
 
-    /* Manually scan instructions for a DEFINE or ASSIGN node targeting var_name */
-    int found = 0;
-    ASTNode *n = instructions->child;
-    while (n) {
-        if (n->node_type == DEFINE || n->node_type == ASSIGN) {
-            ASTNode *target = ast_chdn(n, 0);
-            if (target && (target->node_type == VAR_TARGET || target->node_type == VAR_SYMBOL)) {
-                const char *t_name = target->node_string;
-                size_t t_len = target->node_string_length;
-                if (!t_name && target->token) {
-                    t_name = target->token->token_string;
-                    t_len = target->token->length;
-                }
-                if (t_name && t_len == strlen(var_name) && strncasecmp(t_name, var_name, t_len) == 0) {
-                    found = 1;
-                    break;
-                }
-            }
-        }
-        n = n->sibling;
-    }
+    /* Search for INSTRUCTIONS child for fallback block prepending */
+    ASTNode *instructions = ast_chld(target_scope_node, INSTRUCTIONS, NOP);
+    if (!instructions) instructions = target_scope_node;
 
     if (!found) {
-        if (!type_name) {
-            /* Create an ASSIGN node for untyped hoisting: var_name = var_name */
-            ASTNode *assign_node = ast_ft(ctx, ASSIGN);
-            ASTNode *target_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
-            target_node->free_node_string = 1;
-            ASTNode *value_node = ast_ftt(ctx, VAR_SYMBOL, strdup(var_name));
-            value_node->free_node_string = 1;
+        ASTNode *injected_node = NULL;
 
-            add_ast(assign_node, target_node);
-            add_ast(assign_node, value_node);
+        if (!type_name || strcasecmp(type_name, "unknown") == 0) {
+            /* Create DEFINE node: var_name = .unknown */
+            ASTNode *def_node = ast_ft(ctx, DEFINE);
+            ASTNode *var_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
+            var_node->free_node_string = 1;
+            ASTNode *type_node = ast_ft(ctx, CLASS);
+            type_node->node_string = strdup(".unknown");
+            type_node->node_string_length = strlen(".unknown");
+            type_node->free_node_string = 1;
 
-            /* Set line/col to the beginning of the scope */
-            assign_node->line = target_scope_node->line;
-            assign_node->column = target_scope_node->column;
-            assign_node->source_start = target_scope_node->source_start;
-            assign_node->source_end = target_scope_node->source_end;
-            target_node->line = target_scope_node->line;
-            target_node->column = target_scope_node->column;
-            target_node->source_start = target_scope_node->source_start;
-            target_node->source_end = target_scope_node->source_end;
-            value_node->line = target_scope_node->line;
-            value_node->column = target_scope_node->column;
-            value_node->source_start = target_scope_node->source_start;
-            value_node->source_end = target_scope_node->source_end;
+            add_ast(def_node, var_node);
+            add_ast(def_node, type_node);
 
-            /* Prepend */
-            assign_node->sibling = instructions->child;
-            instructions->child = assign_node;
-            assign_node->parent = instructions;
+            /* Match location to current_node */
+            def_node->line = current_node->line;
+            def_node->column = current_node->column;
+            def_node->source_start = current_node->source_start;
+            def_node->source_end = current_node->source_end;
+            var_node->line = current_node->line;
+            var_node->column = current_node->column;
+            var_node->source_start = current_node->source_start;
+            var_node->source_end = current_node->source_end;
 
+            injected_node = def_node;
         } else {
             /* Create DEFINE node: var_name = .type_name */
             ASTNode *def_node = ast_ft(ctx, DEFINE);
@@ -1403,21 +1413,45 @@ int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, con
             add_ast(def_node, var_node);
             add_ast(def_node, type_node);
 
-            /* Set line/col to the beginning of the scope */
-            def_node->line = target_scope_node->line;
-            def_node->column = target_scope_node->column;
-            def_node->source_start = target_scope_node->source_start;
-            def_node->source_end = target_scope_node->source_end;
-            var_node->line = target_scope_node->line;
-            var_node->column = target_scope_node->column;
-            var_node->source_start = target_scope_node->source_start;
-            var_node->source_end = target_scope_node->source_end;
+            /* Match location to current_node */
+            def_node->line = current_node->line;
+            def_node->column = current_node->column;
+            def_node->source_start = current_node->source_start;
+            def_node->source_end = current_node->source_end;
+            var_node->line = current_node->line;
+            var_node->column = current_node->column;
+            var_node->source_start = current_node->source_start;
+            var_node->source_end = current_node->source_end;
 
-            /* Prepend */
-            def_node->sibling = instructions->child;
-            instructions->child = def_node;
-            def_node->parent = instructions;
+            injected_node = def_node;
         }
+
+        if (levels == 0 && current_node->parent) {
+            /* Insert just before current_node */
+            ASTNode *p = current_node->parent;
+            if (p->child == current_node) {
+                injected_node->sibling = current_node;
+                p->child = injected_node;
+            } else {
+                ASTNode *sib = p->child;
+                while (sib && sib->sibling != current_node) sib = sib->sibling;
+                if (sib) {
+                    injected_node->sibling = current_node;
+                    sib->sibling = injected_node;
+                } else {
+                    /* Fallback */
+                    injected_node->sibling = instructions->child;
+                    instructions->child = injected_node;
+                }
+            }
+            injected_node->parent = p;
+        } else {
+            /* Prepend to top of target block */
+            injected_node->sibling = instructions->child;
+            instructions->child = injected_node;
+            injected_node->parent = instructions;
+        }
+
         ctx->changed_flags |= FLAG_VAL_TRANS;
     }
 
