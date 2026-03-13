@@ -530,9 +530,13 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case CLASS:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed_flags |= FLAG_VAL_TYPE; node->value_type = node_to_type(context, node, &(node->value_dims),
+                    ValueType nt = node_to_type(context, node, &(node->value_dims),
                                                     &(node->value_dim_base), &(node->value_dim_elements),
                                                     &(node->value_class));
+                    if (nt != TP_UNKNOWN || node->value_dims > 0 || node->value_class) {
+                        context->changed_flags |= FLAG_VAL_TYPE;
+                        node->value_type = nt;
+                    }
 
                     /* Reset Node Target Type to be the same as the node value type */
                     ast_rttp(node);
@@ -817,7 +821,16 @@ walker_result type_safety_walker(walker_direction direction,
                                          &(child1->symbolNode->symbol->value_class));
                     ast_svtp(child1, child1->symbolNode->symbol);
 
-                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
+                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                        /* Only error if the RHS isn't explicitly '.unknown' */
+                        int is_explicit_unknown = 0;
+                        if (child2->node_type == CLASS && child2->node_string && strcasecmp(child2->node_string, ".unknown") == 0) {
+                            is_explicit_unknown = 1;
+                        }
+                        if (!is_explicit_unknown) {
+                            mknd_err(node, "UNKNOWN_TYPE");
+                        }
+                    }
                 }
 
                 if (ast_nchd(child1)) {

@@ -311,6 +311,10 @@ ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_
             result = TP_VOID;
             goto exit;
         }
+        if (is_node_string(node, ".unknown")) {
+            result = TP_UNKNOWN;
+            goto exit;
+        }
 
         /* TODO Class Support */
         if (node->node_string[0] == '.') {

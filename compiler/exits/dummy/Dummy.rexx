@@ -24,6 +24,14 @@ dummyexit: class
     get_additional_keywords: method = .string
         return ""
 
+    pre_process: method = .string
+        arg tokens = .token[]
+
+        if tokens.0 < 2 then return ""
+
+        /* Tell the compiler we want to hoist the variable at token index 2 */
+        return "2"
+
     process: method = .string
         arg tokens = .token[]
 
@@ -55,7 +63,7 @@ dummyexit: class
            compiler in an EXIT_OWNED block, so the declaration must not leak. */
         name = .string
         name = ti.get_text()
-        _replacement = "say '" || name || " (" || ti.get_value_type() || ") = ' || {" || 2 || "}; " || name || " = .int; " || name || " = 1; say 'in-exit ' || " || name || "; "
+        _replacement = "say '" || name || " (" || ti.get_value_type() || ") = ' || {" || 2 || "}; " || name || " = .int; " || name || " = 1; say 'in-exit ' || " || name || "; dummy_var = 'hoisted_ok'; "
         _status = "REPLACE"
         return _status
 

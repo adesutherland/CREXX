@@ -1359,34 +1359,65 @@ int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, con
     }
 
     if (!found) {
-        /* Create DEFINE node: var_name = .type_name */
-        ASTNode *def_node = ast_ft(ctx, DEFINE);
-        ASTNode *var_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
-        var_node->free_node_string = 1;
-        ASTNode *type_node = ast_ft(ctx, CLASS);
-        type_node->node_string = malloc(strlen(type_name) + 2);
-        sprintf(type_node->node_string, ".%s", type_name);
-        type_node->node_string_length = strlen(type_name) + 1;
-        type_node->free_node_string = 1;
+        if (!type_name) {
+            /* Create an ASSIGN node for untyped hoisting: var_name = var_name */
+            ASTNode *assign_node = ast_ft(ctx, ASSIGN);
+            ASTNode *target_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
+            target_node->free_node_string = 1;
+            ASTNode *value_node = ast_ftt(ctx, VAR_SYMBOL, strdup(var_name));
+            value_node->free_node_string = 1;
 
-        add_ast(def_node, var_node);
-        add_ast(def_node, type_node);
+            add_ast(assign_node, target_node);
+            add_ast(assign_node, value_node);
 
-        /* Set line/col to the beginning of the scope */
-        def_node->line = target_scope_node->line;
-        def_node->column = target_scope_node->column;
-        def_node->source_start = target_scope_node->source_start;
-        def_node->source_end = target_scope_node->source_end;
-        var_node->line = target_scope_node->line;
-        var_node->column = target_scope_node->column;
-        var_node->source_start = target_scope_node->source_start;
-        var_node->source_end = target_scope_node->source_end;
+            /* Set line/col to the beginning of the scope */
+            assign_node->line = target_scope_node->line;
+            assign_node->column = target_scope_node->column;
+            assign_node->source_start = target_scope_node->source_start;
+            assign_node->source_end = target_scope_node->source_end;
+            target_node->line = target_scope_node->line;
+            target_node->column = target_scope_node->column;
+            target_node->source_start = target_scope_node->source_start;
+            target_node->source_end = target_scope_node->source_end;
+            value_node->line = target_scope_node->line;
+            value_node->column = target_scope_node->column;
+            value_node->source_start = target_scope_node->source_start;
+            value_node->source_end = target_scope_node->source_end;
 
-        /* Prepend */
-        def_node->sibling = instructions->child;
-        instructions->child = def_node;
-        def_node->parent = instructions;
+            /* Prepend */
+            assign_node->sibling = instructions->child;
+            instructions->child = assign_node;
+            assign_node->parent = instructions;
 
+        } else {
+            /* Create DEFINE node: var_name = .type_name */
+            ASTNode *def_node = ast_ft(ctx, DEFINE);
+            ASTNode *var_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
+            var_node->free_node_string = 1;
+            ASTNode *type_node = ast_ft(ctx, CLASS);
+            type_node->node_string = malloc(strlen(type_name) + 2);
+            sprintf(type_node->node_string, ".%s", type_name);
+            type_node->node_string_length = strlen(type_name) + 1;
+            type_node->free_node_string = 1;
+
+            add_ast(def_node, var_node);
+            add_ast(def_node, type_node);
+
+            /* Set line/col to the beginning of the scope */
+            def_node->line = target_scope_node->line;
+            def_node->column = target_scope_node->column;
+            def_node->source_start = target_scope_node->source_start;
+            def_node->source_end = target_scope_node->source_end;
+            var_node->line = target_scope_node->line;
+            var_node->column = target_scope_node->column;
+            var_node->source_start = target_scope_node->source_start;
+            var_node->source_end = target_scope_node->source_end;
+
+            /* Prepend */
+            def_node->sibling = instructions->child;
+            instructions->child = def_node;
+            def_node->parent = instructions;
+        }
         ctx->changed_flags |= FLAG_VAL_TRANS;
     }
 

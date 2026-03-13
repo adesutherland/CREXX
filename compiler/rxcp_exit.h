@@ -49,5 +49,7 @@ void rxcp_init_exits(Context *ctx);
 void rxcp_free_exits(Context *ctx);
 int rxcp_is_exit_primary(Context *ctx, const char *keyword, size_t len);
 int rxcp_is_exit_additional(Context *ctx, const char *keyword, size_t len);
+int rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node);
+int rxcp_exit_bridge_pre_invoke(Context *ctx, ASTNode *node);
 
 #endif

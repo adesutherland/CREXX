@@ -7,6 +7,7 @@
 #include "rxvmvars.h"
 #include "platform.h"
 #include "rxcp_exit.h"
+#include "rxcp_val.h"
 
 static const char* rexx_builtins[] = {
     "ADDRESS", "ASSEMBLER", "ARG", "CALL", "CLASS", "DO", "LOOP", "METHOD", "ELSE", "ERROR", "END", "EXIT",
@@ -682,4 +683,98 @@ int rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node) {
     if (node_map) free(node_map);
     ctx->in_exit_bridge = 0;
     return handled;
+}
+
+int rxcp_exit_bridge_pre_invoke(Context *ctx, ASTNode *node) {
+    rxvml_context* vctx;
+    rxvml_value* tok_array;
+    rxvml_value* response = NULL;
+    ASTNode **node_map = NULL;
+    size_t num_tokens = 0;
+    Context *root = ctx->master_context ? ctx->master_context : ctx;
+
+    if (ctx->in_exit_bridge) return 0;
+    ctx->in_exit_bridge = 1;
+
+    vctx = rxcp_init_bridge(ctx);
+    if (!vctx) {
+        ctx->in_exit_bridge = 0;
+        return 0;
+    }
+
+    tok_array = rxcp_marshal_implicit_cmd(vctx, node, &node_map, &num_tokens);
+    if (!tok_array) {
+        ctx->in_exit_bridge = 0;
+        return 0;
+    }
+
+    const char *keyword = NULL;
+    size_t key_len = 0;
+
+    if (node->node_type == EXIT_EXTENDED) {
+        if (node->token) {
+            keyword = node->token->token_string;
+            key_len = node->token->length;
+        }
+    } else if (node->node_type == IMPLICIT_CMD && num_tokens > 0) {
+        ASTNode *first_node = node_map[0];
+        keyword = first_node->token ? first_node->token->token_string : first_node->node_string;
+        key_len = first_node->token ? first_node->token->length : first_node->node_string_length;
+    }
+
+    if (keyword) {
+        ExitEntry *entry = (ExitEntry *)root->exit_registry;
+        while (entry) {
+            if (key_len == strlen(entry->primary_keyword) &&
+                strncasecmp(entry->primary_keyword, keyword, key_len) == 0) {
+
+                rxvml_value* nid_val = rxvml_value_new(vctx);
+                rxvml_set_int(nid_val, node->node_number);
+                rxvml_value* obj = NULL;
+
+                if (rxvml_call_factory(vctx, entry->class_name, 1, &nid_val, &obj) == 0 && obj) {
+                    if (rxvml_call_method(vctx, obj, entry->class_name, "pre_process", 1, &tok_array, &response) == 0) {
+                        const char* status = NULL;
+                        size_t status_len = 0;
+                        if (rxvml_to_str(vctx, response, &status, &status_len) == 0 && status) {
+                            /* Expected format: Space-separated token indexes (1-based), e.g., "2 3 4" */
+                            char *indices = strndup(status, status_len);
+                            char *p = strtok(indices, " ");
+                            while (p) {
+                                int idx = atoi(p);
+                                if (idx > 0 && (size_t)idx <= num_tokens && node_map) {
+                                    ASTNode *target = node_map[idx - 1];
+                                    if (target) {
+                                        char *var_name = NULL;
+                                        if (target->token && target->token->token_string && target->token->length > 0) {
+                                            var_name = strndup(target->token->token_string, target->token->length);
+                                        } else if (target->node_string) {
+                                            var_name = strdup(target->node_string);
+                                        }
+                                        if (var_name) {
+                                            /* Pass "unknown" for type_name to trigger untyped hoisting (.unknown) */
+                                            ast_hoist_var(ctx, node, var_name, "unknown", -1);
+                                            free(var_name);
+                                        }
+                                    }
+                                }
+                                p = strtok(NULL, " ");
+                            }
+                            free(indices);
+                        }
+                        if (response) rxvml_value_free(response);
+                    }
+                    rxvml_value_free(obj);
+                }
+                rxvml_value_free(nid_val);
+                break;
+            }
+            entry = entry->next;
+        }
+    }
+
+    rxvml_value_free(tok_array);
+    if (node_map) free(node_map);
+    ctx->in_exit_bridge = 0;
+    return 1;
 }

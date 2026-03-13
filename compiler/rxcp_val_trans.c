@@ -309,6 +309,10 @@ walker_result needs_rxsysb_walker(walker_direction direction,
             if (node->node_type == ADDRESS || node->node_type == IMPLICIT_CMD) {
                 ast_hoist_var(context, node, "rc", "int", -1);
             }
+
+            if (node->node_type == IMPLICIT_CMD || node->node_type == EXIT_EXTENDED) {
+                rxcp_exit_bridge_pre_invoke(context, node);
+            }
         }
         else if (node->node_type == EXIT) {
             context->need_rxsysb = 1;
