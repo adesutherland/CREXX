@@ -40,38 +40,32 @@ walker_result rewrite_exit_walker(walker_direction direction,
 
     Context *context = (Context*)payload;
 
-    ASTNode* args_node;
-    ASTNode* function_node;
-
     if (direction == out) {
         /* Bottom Up */
         switch (node->node_type) {
 
-            case EXIT:
+            case EXIT: {
                 /* Rewrite to call of _exit */
-
-                /* Assignment node and remember the command */
-                node->node_type = CALL;
-
-                /* Function */
-                function_node = ast_ft(context, FUNCTION);
-                ast_str(function_node, "_exit");
-                /* Fix up position for error messages */
-                function_node->column = node->column;
-                function_node->line = node->line;
+                ASTRewriteTemplate *call_tmpl = ast_rw_new(CALL, NULL);
+                ASTRewriteTemplate *func_tmpl = ast_rw_new(FUNCTION, "_exit");
 
                 /* Move Param(s) */
-                args_node = node->child;
+                ASTNode *args_node = node->child;
                 while (args_node) {
-                    ast_del(args_node);
-                    add_ast(function_node, args_node);
-                    args_node = node->child;
+                    ASTNode *next = args_node->sibling;
+                    /* Disconnect child */
+                    if (args_node == node->child) node->child = next;
+                    args_node->sibling = NULL;
+                    args_node->parent = NULL;
+
+                    ast_rw_add(func_tmpl, ast_rw_reuse(args_node));
+                    args_node = next;
                 }
 
-                /* Add Function */
-                add_ast(node, function_node);
-                context->changed_flags |= FLAG_VAL_TRANS;
+                ast_rw_add(call_tmpl, func_tmpl);
+                ast_execute_rewrite(context, node, call_tmpl);
                 break;
+            }
 
             default: ;
         }
@@ -224,7 +218,7 @@ walker_result rewrite_address_walker(walker_direction direction,
                     }
                 }
 
-                return result_abort;
+                break;
 
             case REDIRECT_IN:
             case REDIRECT_OUT:

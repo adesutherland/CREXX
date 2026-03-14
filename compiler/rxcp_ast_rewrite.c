@@ -157,6 +157,12 @@ ASTNode* ast_execute_rewrite(Context *ctx, ASTNode *target_to_replace, ASTRewrit
     if (new_root) {
         /* Physically swap in tree */
         ast_rpl(target_to_replace, new_root);
+
+        /* Restore the sibling pointer on the replaced node so that ast_wlkr's
+         * 'node = node->sibling' loop can continue walking the rest of the tree
+         * if the walker handler returns result_normal. */
+        target_to_replace->sibling = new_root->sibling;
+
         ctx->changed_flags |= FLAG_VAL_TRANS;
     }
     
