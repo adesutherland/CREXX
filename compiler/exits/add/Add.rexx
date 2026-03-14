@@ -144,9 +144,10 @@ process: method = .string
      */
     do i = 2 to tokens.0
         ti = tokens[i]
+      /*  call log 112' 'i': <'ti.get_text()'> 'ti.get_type()' 'ti.get_value_type() */
         if strip(ti.get_type()) = "identifier" & ti.get_value_type() = ".unknown" then do
-            _status = "PENDING"
-            return _status
+           _status = "PENDING"
+           return _status
         end
     end
     /* ------------------------------------------------------------------------
@@ -171,10 +172,9 @@ process: method = .string
     *   (Fix: check bracket in VALUE type, not lexical type.)
     * ----------------------------------------------------------------------
     */
-     k=2                                 /* in the moment we check only first parameter of PPRINT */
-     ti = tokens[k]                      /* address to first parms */
-     t_val = strip(ti.get_value_type())
-     if pos("[", t_val)=0 then return setError("ERROR",k,k". parameter <"ti.get_text()"> must be a stem/array")
+     k=2             /* check first parameter must an array */
+     if check_array(tokens[k].get_value_type())=0 then ,
+        return setError("ERROR",k,k". parameter <"tokens[k].get_text()"> must be a stem/array")
     /* ------------------------------------------------------------------------
      * Emit canonical replacement
      * ------------------------------------------------------------------------
@@ -208,7 +208,16 @@ process: method = .string
 
     get_node_id: method = .int
         return _node_id
-
+/* ============================================================================
+ * Helper: check_array
+ * ----------------------------------------------------------------------------
+ * check if provided parameter is an array
+ */
+check_array: procedure=.int
+  arg array=.string
+  t_val = strip(array)
+  if pos("[", t_val)=0 then return 0
+return 1
 /* ============================================================================
  * Helper: setError
  * ----------------------------------------------------------------------------
@@ -241,5 +250,4 @@ return _status
  */
 log: procedure = .int
     arg logtxt = .string
-    return ''
 return lineout("c:\temp\pluginlog.txt", time()" "logtxt)
