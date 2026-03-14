@@ -43,26 +43,26 @@ Level B uses a single **Default Factory** defined by the wildcard `*`.
 
 ## 2. Attribute Mapping (The `WITH` Clause)
 
-Attributes define the internal state of the class. They can be **Implicit** (Compiler-managed) or **Explicit** (mapped to specific VM/Object storage).
+Attributes define the internal state of the class. They can be **Implicit** (Compiler-managed, auto-allocated) or **Explicit** (mapped to specific VM/Object storage). If a `WITH register` mapping is omitted, the compiler will automatically allocate an unused register (e.g. `r1`, `r2`) for the attribute.
 
 **Syntax:**
 `variable_name = type [WITH source_location]`
 
 ### 2.1 Implicit Assignment (Standard Objects)
 
-If `WITH` is omitted, the Compiler automatically allocates a register for the variable.
+If `WITH` is omitted, the Compiler automatically allocates an unused register for the attribute. Automatic register allocation uses a two-pass mechanism to avoid conflicts with any explicitly mapped registers in the same class.
 
 ```rexx
-/* Compiler allocates next available register (e.g., reg 1) */
-counter = .int 
-/* Compiler allocates next (e.g., reg 2) */
-name    = .string 
+/* Compiler allocates an available register (e.g., reg 1) */
+counter = .int
+/* Compiler allocates next available register (e.g., reg 2) */
+name    = .string
 
 ```
 
 ### 2.2 Explicit Physical Mapping (VM/Plugin Interop)
 
-Used to map REXX variables to fixed C-Struct offsets or specific VM registers. This is essential for Compiler Plugins.
+Used to map REXX variables to fixed C-Struct offsets or specific VM registers. This is essential for Compiler Plugins and can be freely mixed with Implicit Assignment.
 
 **Syntax:** `WITH register[.index][.field]`
 
@@ -177,9 +177,10 @@ stem: class
 **Scope:**
 
 1. `CLASS`, `FACTORY`, `METHOD` keywords.
-2. `WITH register[.index][.field]` (Numeric/Field mapping).
+2. `WITH register[.index][.field]` (Explicit Numeric/Field mapping).
 3. Basic Method Dispatch (`obj.method()`).
-4. **Usage**: Successfully used to map `token` objects for Rexx plugins.
+4. Implicit Register Allocation (Compiler creates the map for unassigned attributes).
+5. **Usage**: Successfully used to map `token` objects for Rexx plugins and allows automatic VM registry mappings for objects.
 
 ### Phase 2: Dynamic & Sugar (Follow-up)
 
@@ -187,7 +188,6 @@ stem: class
 **Scope:**
 
 0. Review syntax and sub phased based on Phase 1 experience.
-1. Implicit Register allocation (Compiler creates the map).
-2. `WITH register["string"]` (Dynamic mapping).
-3. Syntactic Sugar (`get`/`set`/`tostring`).
-4. `OF` (Generics/Type hints)
+1. `WITH register["string"]` (Dynamic mapping).
+2. Syntactic Sugar (`get`/`set`/`tostring`).
+3. `OF` (Generics/Type hints)

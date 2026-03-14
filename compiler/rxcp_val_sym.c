@@ -596,6 +596,80 @@ walker_result build_symbols_walker(walker_direction direction,
 
     else {
         /* OUT - BOTTOM UP */
+
+        if (node->node_type == CLASS_DEF) {
+            /* Automatic Register Allocation for Attributes */
+            if (node->scope) {
+                Symbol **symbols = scp_syms(node->scope);
+                if (symbols) {
+                    char used_regs[1024]; /* Support up to 1024 registers for now */
+                    int i, j, next_free;
+                    memset(used_regs, 0, sizeof(used_regs));
+
+                    /* Pass 1: Find explicitly used registers */
+                    for (i = 0; symbols[i]; i++) {
+                        Symbol *s = symbols[i];
+                        if (s->symbol_type == VARIABLE_SYMBOL) {
+                            for (j = 0; j < (int)sym_nond(s); j++) {
+                                ASTNode *sn = sym_trnd(s, j)->node;
+                                if (sn->parent && sn->parent->node_type == DEFINE) {
+                                    ASTNode *nr = ast_chld(sn->parent, NODE_REGISTER, 0);
+                                    if (nr) {
+                                        ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                                        int reg_idx = -1;
+                                        if (idx) reg_idx = node_to_integer(idx);
+                                        else if (nr->int_value) reg_idx = (int)nr->int_value;
+
+                                        if (reg_idx >= 0 && reg_idx < 1024) {
+                                            used_regs[reg_idx] = 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    /* Pass 2: Assign automatic registers to those that don't have one */
+                    next_free = 1;
+                    for (i = 0; symbols[i]; i++) {
+                        Symbol *s = symbols[i];
+                        if (s->symbol_type == VARIABLE_SYMBOL) {
+                            char has_reg = 0;
+                            ASTNode *def_node = NULL;
+                            for (j = 0; j < (int)sym_nond(s); j++) {
+                                ASTNode *sn = sym_trnd(s, j)->node;
+                                if (sn->parent && sn->parent->node_type == DEFINE) {
+                                    def_node = sn->parent;
+                                    if (ast_chld(def_node, NODE_REGISTER, 0)) {
+                                        has_reg = 1;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!has_reg && def_node) {
+                                while (next_free < 1024 && used_regs[next_free]) next_free++;
+                                if (next_free < 1024) {
+                                    /* Create synthesized NODE_REGISTER node */
+                                    ASTNode *nr = ast_ft(context, NODE_REGISTER);
+                                    char reg_str[16];
+                                    ASTNode *idx = ast_ft(context, INTEGER);
+                                    sprintf(reg_str, "%d", next_free);
+                                    ast_copy_str(idx, reg_str);
+                                    idx->int_value = next_free;
+                                    nr->int_value = next_free; /* Set on both for robustness */
+                                    add_ast(nr, idx);
+                                    add_ast(def_node, nr);
+                                    used_regs[next_free] = 1;
+                                }
+                            }
+                        }
+                    }
+                    free(symbols);
+                }
+            }
+        }
+
         if (node->parent) context->current_scope = node->parent->scope;
         else context->current_scope = 0;
     }
