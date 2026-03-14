@@ -415,56 +415,52 @@ walker_result rewrite_constructor_walker(walker_direction direction,
                         }
                     }
 
-                    ASTNode *class_node = ast_ft(context, CLASS);
-                    ast_sstr(class_node, mprintf(".%s", type_name), strlen(type_name) + 1);
-                    class_node->free_node_string = 1;
-                    class_node->line = rhs->line;
-                    class_node->column = rhs->column;
-                    class_node->source_start = rhs->source_start;
-                    class_node->source_end = rhs->source_end;
-                    class_node->token_start = rhs->token_start;
-                    class_node->token_end = rhs->token_end;
-                    class_node->node_string_length = strlen(class_node->node_string);
-
-                    ast_rpl(rhs, class_node);
-                    node->node_type = DEFINE;
+                    /* Using AST Rewrite Utility */
+                    ASTRewriteTemplate *class_node_tmpl = ast_rw_new(CLASS, mprintf(".%s", type_name));
 
                     if (val) {
-                        ASTNode *new_assign = ast_ft(context, ASSIGN);
-                        ast_str(new_assign, "=");
-                        new_assign->line = node->line;
-                        new_assign->column = node->column;
-                        new_assign->token = node->token;
-                        new_assign->source_start = node->source_start;
-                        new_assign->source_end = node->source_end;
-                        new_assign->token_start = node->token_start;
-                        new_assign->token_end = node->token_end;
+                        /* x = .int(10) -> DEFINE x = .int ; ASSIGN x = 10 */
+                        ASTRewriteTemplate *define_tmpl = ast_rw_add(ast_rw_add(
+                            ast_rw_new(DEFINE, "="),
+                            ast_rw_reuse(target)),
+                            class_node_tmpl
+                        );
 
-                        ASTNode *new_target = ast_fstk(context, target);
-                        new_target->node_type = VAR_TARGET;
-                        new_target->line = target->line;
-                        new_target->column = target->column;
-                        new_target->token = target->token;
-                        new_target->source_start = target->source_start;
-                        new_target->source_end = target->source_end;
-                        new_target->token_start = target->token_start;
-                        new_target->token_end = target->token_end;
+                        ASTRewriteTemplate *assign_tmpl = ast_rw_add(ast_rw_add(
+                            ast_rw_new(ASSIGN, "="),
+                            ast_rw_new(VAR_TARGET, target->node_string)), /* Duplicate target */
+                            ast_rw_reuse(val)
+                        );
 
-                        add_ast(new_assign, new_target);
-                        add_ast(new_assign, val);
+                        ASTRewriteTemplate *wrapper = ast_rw_add(ast_rw_add(
+                            ast_rw_children(),
+                            define_tmpl),
+                            assign_tmpl
+                        );
 
-                        if (node->sibling) {
-                            new_assign->sibling = node->sibling;
-                        }
-                        node->sibling = new_assign;
-                        new_assign->parent = node->parent;
+                        ast_execute_rewrite(context, node, wrapper);
+                        context->changed_flags |= FLAG_VAL_TRANS;
+
+                        /* If we had errors, return normal to avoid loop, but let the error be reported */
+                        if (has_error) return result_normal;
+
+                        return result_abort;
                     }
-                    context->changed_flags |= FLAG_VAL_TRANS;
+                    else {
+                        /* x = .int() -> DEFINE x = .int */
+                        ASTRewriteTemplate *define_tmpl = ast_rw_add(ast_rw_add(
+                            ast_rw_new(DEFINE, "="),
+                            ast_rw_reuse(target)),
+                            class_node_tmpl
+                        );
+                        ast_execute_rewrite(context, node, define_tmpl);
+                        context->changed_flags |= FLAG_VAL_TRANS;
 
-                    /* If we had errors, return normal to avoid loop, but let the error be reported */
-                    if (has_error) return result_normal;
+                        /* If there was an error in args, just return normal to avoid loop, but let the error be reported */
+                        if (has_error) return result_normal;
 
-                    return result_abort;
+                        return result_abort;
+                    }
                 }
             }
         }

@@ -32,6 +32,7 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "../binutils/include/rxdefs.h"
+#include "rxcp_ast_rewrite.h"
 
 /* Internal validation module header */
 
