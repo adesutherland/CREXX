@@ -25,6 +25,20 @@ execioexit: class
     get_additional_keywords: method = .string
         return ""
 
+    pre_process: method = .string
+        arg tokens = .token[]
+
+        /* Find STEM and hoist its variable */
+        do i = 2 to tokens.0
+            if translate(tokens[i].get_text()) = "STEM" then do
+                p = i + 1
+                if p <= tokens.0 & strip(tokens[p].get_type()) = "identifier" then do
+                    return p
+                end
+            end
+        end
+        return ""
+
     process: method = .string
         arg tokens = .token[]
 
@@ -54,15 +68,23 @@ execioexit: class
        _error_message="Unsupported token type in EXECIO: <"t_type"> text=<"ti.get_text()">"
        return _status
     end
-   /* --------------------------------------------------------------------
+    /* --------------------------------------------------------------------
     * Check 2: wait until identifiers are available
     * --------------------------------------------------------------------
     */
     do i = 2 to tokens.0
         ti = tokens[i]
         if strip(ti.get_type())="identifier" & ti.get_value_type() = ".unknown" then do
-            _status = "PENDING"
-            return _status
+            /* If this identifier is the STEM variable, it's allowed to be .unknown
+               because we are about to type it! */
+            is_stem = 0
+            if i > 2 then do
+                if translate(tokens[i-1].get_text()) = "STEM" then is_stem = 1
+            end
+            if \is_stem then do
+                _status = "PENDING"
+                return _status
+            end
         end
     end
    /* ------------------------------------------------------------
@@ -169,11 +191,8 @@ execioexit: class
     * ------------------------------------------------------------
     */
     opEmit=upper(strip(opEmit))
- /*  ++++ defined variables don't survive compiler exit end
-    if opEmit='DISKR' then _replacement = stemEmit"=.string[];"
-    else _replacement=''
-  */
     _replacement=''
+    /* No need to emit stem=.string[] because the pre_process hoists it as a correctly typed array! */
     _replacement = _replacement||"__rc=_execio("countEmit",'"opEmit"',"fnameEmit
     if stemPresent then _replacement = _replacement||", "stemEmit
     _replacement = _replacement||")"    /* close execio function call */

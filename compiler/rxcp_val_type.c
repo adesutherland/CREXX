@@ -142,6 +142,49 @@ static void set_node_target_type(ASTNode* node, ValueType target_type) {
 
 /* This walker does the basic value types of operations
  * No errors generated - just simple "guesses" as to types */
+/* Propagate types from function signature to arguments and promote unknown symbols */
+void infer_arguments(Context *context, ASTNode *node) {
+    ASTNode *n1, *n2;
+    int arg_num;
+
+    /* Process all the arguments */
+    if (node->node_type == MEMBER_CALL) n1 = node->child->sibling; /* Skip Instance */
+    else n1 = node->child;
+
+    if (node->symbolNode && sym_nond(node->symbolNode->symbol) > 0) {
+        n2 = sym_trnd(node->symbolNode->symbol, 0)->node;
+        /* n2 is PROCEDURE/METHOD/FACTORY. Go to the first arg */
+        if (n2 && (n2->node_type == PROCEDURE || n2->node_type == METHOD || n2->node_type == FACTORY)) {
+            n2 = ast_chld(n2, ARGS, 0);
+            if (n2) n2 = n2->child;
+        } else n2 = 0;
+    }
+    else n2 = 0;
+
+    /* Check each argument */
+    arg_num = 0;
+    while (n1) {
+        arg_num++;
+        if (!n2) break;
+
+        if (n2->child->node_type == VARG || n2->child->node_type == VARG_REFERENCE) {
+            if (n1->node_type != NOVAL) {
+                ast_sttn(n1, n2);
+                promote_symbol_from_target(context, n1);
+            }
+        }
+        else {
+            /* Normal Argument */
+            if (n1->node_type != NOVAL) {
+                ast_sttn(n1, n2);
+                promote_symbol_from_target(context, n1);
+            }
+            n2 = n2->sibling;
+        }
+        n1 = n1->sibling;
+    }
+}
+
 walker_result set_node_types_walker(walker_direction direction,
                                            ASTNode* node,
                                            void *payload) {
@@ -237,6 +280,7 @@ walker_result set_node_types_walker(walker_direction direction,
                     if (node->value_type == TP_UNKNOWN) {
                         context->changed_flags |= FLAG_VAL_TYPE; ast_svtp(node, node->symbolNode->symbol);
                     }
+                    infer_arguments(context, node);
                 }
                 break;
 
@@ -255,7 +299,9 @@ walker_result set_node_types_walker(walker_direction direction,
                             if (method_sym && method_sym->symbol_type == FUNCTION_SYMBOL) {
                                 sym_adnd(method_sym, node, 1, 0);
                                 ast_svtp(node, method_sym);
-                                context->changed_flags |= FLAG_VAL_TYPE; } else if (!context->changed_flags) {
+                                context->changed_flags |= FLAG_VAL_TYPE;
+                                infer_arguments(context, node);
+                            } else if (!context->changed_flags) {
                                 /* DOT-AS-INDEX MUTATION: transform tokens.i -> tokens[i] */
                                 Symbol *index_sym = sym_rslv_tiered(context->current_scope, node);
                                 if (index_sym && index_sym->symbol_type == VARIABLE_SYMBOL &&
@@ -362,7 +408,9 @@ walker_result set_node_types_walker(walker_direction direction,
                             node->value_class = malloc(strlen(class_sym->name) + 1);
                             strcpy(node->value_class, class_sym->name);
                             ast_rttp(node);
-                            context->changed_flags |= FLAG_VAL_TYPE; } else if (!context->changed_flags) {
+                            context->changed_flags |= FLAG_VAL_TYPE;
+                            infer_arguments(context, node);
+                        } else if (!context->changed_flags) {
                             mknd_err(node, "FACTORY_NOT_FOUND");
                         }
                     } else if (!context->changed_flags) {
@@ -1202,6 +1250,7 @@ walker_result func_type_safety_walker(walker_direction direction,
                             }
                         } else {
                             ast_sttn(n1, n2);
+                            promote_symbol_from_target(context, n1);
                             validate_node_promotion(n1);
 
 
@@ -1228,6 +1277,7 @@ walker_result func_type_safety_walker(walker_direction direction,
                             }
                         } else {
                             ast_sttn(n1, n2);
+                            promote_symbol_from_target(context, n1);
                             validate_node_promotion(n1);
                         }
 

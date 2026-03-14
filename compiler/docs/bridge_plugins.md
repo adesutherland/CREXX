@@ -17,7 +17,7 @@ A Bridge Plugin can:
 
 ## 2. Writing a Plugin
 
-Plugins are written in cREXX (Level B) and must reside in the `rxcplugin` namespace.
+Plugins are written in cREXX (Level B) and must reside in the `rxcplugin` namespace. A plugin typically defines a `pre_process` method for structural changes (like hoisting variables) and a `process` method for semantic replacement.
 
 ### 2.1 The Token Class
 
@@ -59,6 +59,13 @@ MyOptimizer: class
     *: factory
         count = 0
         return
+
+    /* pre_process: Optional. Called to hoist variables before process is run. */
+    /* Returns a space-separated string of 1-based token indices to hoist as `.unknown` */
+    pre_process: method = .string
+        arg tokens = .token[]
+        /* E.g., hoist the 4th token: return "4" */
+        return ""
 
     /* process: Called for every IMPLICIT_CMD encountered */
     process: method = .string
@@ -129,3 +136,9 @@ The `token` class maps the following fields via `WITH REGISTER.x`:
 When a plugin returns a string containing placeholder tokens like `{1}`, `{2}`, the compiler bridge (`rxcp_util.c`) replaces these with the literal source code of the corresponding tokens.
 *   **Quotes Preservation**: The framework explicitly prefers the raw lexical `token->token_string` over the evaluated `node_string` to ensure that string literals maintain their quote marks in the generated fragment. Without this, a parameter like `'ASC'` would be injected as an unquoted, undefined variable `ASC`.
 *   **Fragment Restructuring**: Parsed fragments are routed through the early-stage validation walkers but have special `in_exit_bridge` context flags. This specifically instructs `ast_structure_fixup_walker` to omit injecting implicit `RETURN VOID` nodes, which would otherwise fatally conflict with explicitly typed methods when the fragment is grafted back into the main AST.
+
+### 4.5 Two-Phase Exits and Type Inference
+Modern exits use a two-phase architecture:
+1.  **`pre_process`**: This method analyzes tokens and returns a space-separated string of 1-based token indices that represent implicit variables (like `STEM` names in `EXECIO`). The compiler automatically hoists these variables into the local scope as `.unknown` types.
+2.  **`process`**: This method then generates the replacement code. If the replacement code passes the `.unknown` variable into a typed function or library method (e.g., `_execio`), the compiler's **Inference Engine** will automatically promote the `.unknown` variable to the target type required by the function signature (e.g., `.string[]`) during the convergence loop. The exit does not need to declare types explicitly.
+

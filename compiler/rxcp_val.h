@@ -40,6 +40,7 @@ int is_node_string(ASTNode* node, const char* value);
 int node_to_integer(ASTNode* node);
 void node_to_dims(ASTNode* node, size_t *dims, int** dim_base, int** dim_elements);
 ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_base, int **dim_elements, char **class_name);
+void promote_symbol_from_target(Context *context, ASTNode *node);
 void validate_node_promotion(ASTNode* node);
 void validate_node_promotion_for_ref(ASTNode* node);
 
@@ -55,7 +56,7 @@ walker_result build_symbols_walker(walker_direction direction, ASTNode* node, vo
 walker_result resolve_functions_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result exposed_symbols_walker(walker_direction direction, ASTNode* node, void *payload);
 void validate_symbols(Context *context, Scope *scope);
-int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, const char* type_name, int levels);
+int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int levels);
 
 /* type */
 walker_result set_node_types_walker(walker_direction direction, ASTNode* node, void *payload);

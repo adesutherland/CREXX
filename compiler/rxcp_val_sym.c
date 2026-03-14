@@ -1340,7 +1340,7 @@ static int is_var_defined_before(ASTNode* start_node, const char* var_name) {
  * levels: -1 = Procedure/Method level, 0 = Current level (inserted just before current_node), 1 = Parent level
  * Returns 1 if hoisted/already exists, 0 on failure.
  */
-int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, const char* type_name, int levels) {
+int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int levels) {
     ASTNode *target_scope_node = current_node;
 
     if (levels == -1) {
@@ -1375,56 +1375,29 @@ int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, con
     if (!found) {
         ASTNode *injected_node = NULL;
 
-        if (!type_name || strcasecmp(type_name, "unknown") == 0) {
-            /* Create DEFINE node: var_name = .unknown */
-            ASTNode *def_node = ast_ft(ctx, DEFINE);
-            ASTNode *var_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
-            var_node->free_node_string = 1;
-            ASTNode *type_node = ast_ft(ctx, CLASS);
-            type_node->node_string = strdup(".unknown");
-            type_node->node_string_length = strlen(".unknown");
-            type_node->free_node_string = 1;
+        /* Create DEFINE node: var_name = .unknown */
+        ASTNode *def_node = ast_ft(ctx, DEFINE);
+        ASTNode *var_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
+        var_node->free_node_string = 1;
+        ASTNode *type_node = ast_ft(ctx, CLASS);
+        type_node->node_string = strdup(".unknown");
+        type_node->node_string_length = strlen(".unknown");
+        type_node->free_node_string = 1;
 
-            add_ast(def_node, var_node);
-            add_ast(def_node, type_node);
+        add_ast(def_node, var_node);
+        add_ast(def_node, type_node);
 
-            /* Match location to current_node */
-            def_node->line = current_node->line;
-            def_node->column = current_node->column;
-            def_node->source_start = current_node->source_start;
-            def_node->source_end = current_node->source_end;
-            var_node->line = current_node->line;
-            var_node->column = current_node->column;
-            var_node->source_start = current_node->source_start;
-            var_node->source_end = current_node->source_end;
+        /* Match location to current_node */
+        def_node->line = current_node->line;
+        def_node->column = current_node->column;
+        def_node->source_start = current_node->source_start;
+        def_node->source_end = current_node->source_end;
+        var_node->line = current_node->line;
+        var_node->column = current_node->column;
+        var_node->source_start = current_node->source_start;
+        var_node->source_end = current_node->source_end;
 
-            injected_node = def_node;
-        } else {
-            /* Create DEFINE node: var_name = .type_name */
-            ASTNode *def_node = ast_ft(ctx, DEFINE);
-            ASTNode *var_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
-            var_node->free_node_string = 1;
-            ASTNode *type_node = ast_ft(ctx, CLASS);
-            type_node->node_string = malloc(strlen(type_name) + 2);
-            sprintf(type_node->node_string, ".%s", type_name);
-            type_node->node_string_length = strlen(type_name) + 1;
-            type_node->free_node_string = 1;
-
-            add_ast(def_node, var_node);
-            add_ast(def_node, type_node);
-
-            /* Match location to current_node */
-            def_node->line = current_node->line;
-            def_node->column = current_node->column;
-            def_node->source_start = current_node->source_start;
-            def_node->source_end = current_node->source_end;
-            var_node->line = current_node->line;
-            var_node->column = current_node->column;
-            var_node->source_start = current_node->source_start;
-            var_node->source_end = current_node->source_end;
-
-            injected_node = def_node;
-        }
+        injected_node = def_node;
 
         if (levels == 0 && current_node->parent) {
             /* Insert just before current_node */

@@ -380,6 +380,35 @@ exit:
     return result;
 }
 
+/* Promotes a symbol from its node's target type if it's currently unknown */
+void promote_symbol_from_target(Context *context, ASTNode *node) {
+    if (node->value_type == TP_UNKNOWN && node->target_type != TP_UNKNOWN) {
+        if ((node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET) &&
+            node->symbolNode && node->symbolNode->symbol) {
+            Symbol *s = node->symbolNode->symbol;
+            if (s->type == TP_UNKNOWN) {
+                s->type = node->target_type;
+                s->value_dims = node->target_dims;
+                if (s->value_dims > 0) {
+                    if (s->dim_base) free(s->dim_base);
+                    if (s->dim_elements) free(s->dim_elements);
+                    s->dim_base = malloc(sizeof(int) * s->value_dims);
+                    s->dim_elements = malloc(sizeof(int) * s->value_dims);
+                    memcpy(s->dim_base, node->target_dim_base, sizeof(int) * s->value_dims);
+                    memcpy(s->dim_elements, node->target_dim_elements, sizeof(int) * s->value_dims);
+                }
+                if (node->target_type == TP_OBJECT) {
+                    if (s->value_class) free(s->value_class);
+                    s->value_class = node->target_class ? strdup(node->target_class) : 0;
+                }
+                context->changed_flags |= FLAG_VAL_TYPE;
+                /* Also update the node's value_type so it matches target_type immediately */
+                ast_svtp(node, s);
+            }
+        }
+    }
+}
+
 /* Validates a node promotion is correct adding error nodes if not */
 void validate_node_promotion(ASTNode* node) {
     size_t i;

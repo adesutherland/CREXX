@@ -307,7 +307,7 @@ walker_result needs_rxsysb_walker(walker_direction direction,
             context->need_rxsysb = 1;
 
             if (node->node_type == ADDRESS || node->node_type == IMPLICIT_CMD) {
-                ast_hoist_var(context, node, "rc", "int", -1);
+                ast_hoist_var(context, node, "rc", -1);
             }
 
             if (node->node_type == IMPLICIT_CMD || node->node_type == EXIT_EXTENDED) {
