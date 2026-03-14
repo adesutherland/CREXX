@@ -88,8 +88,6 @@ walker_result rewrite_address_walker(walker_direction direction,
 
     Context *context = (Context*)payload;
 
-    ASTNode* function_node;
-    ASTNode* temp_node;
     ASTNode* c;
     ASTNode* next;
 
@@ -118,13 +116,15 @@ walker_result rewrite_address_walker(walker_direction direction,
                 int pos = 0;
                 while (c) {
                     next = c->sibling;
-                    ast_del(c);
+                    /* Disconnect child */
+                    if (c == node->child) node->child = next;
+                    c->sibling = NULL;
+                    c->parent = NULL;
 
                     if (c->node_type == ERROR || c->node_type == WARNING) {
                         if (diag_tail) diag_tail->sibling = c;
                         else diag_head = c;
                         diag_tail = c;
-                        c->sibling = NULL;
                     }
                     else if (c->node_type == REDIRECT_IN) {
                         if (!in) in = c;
@@ -140,100 +140,91 @@ walker_result rewrite_address_walker(walker_direction direction,
                         ASTNode *ec = c->child;
                         while (ec) {
                             ASTNode *enext = ec->sibling;
-                            ast_del(ec);
-
-                            /* Name string */
-                            ASTNode *name_node = ast_fstk(context, ec);
-                            name_node->node_type = STRING;
-
-                            /* Add name and then the variable */
-                            if (expose_tail) { expose_tail->sibling = name_node; }
-                            else { expose_head = name_node; }
-                            name_node->sibling = ec;
-                            expose_tail = ec;
+                            ec->parent = NULL;
                             ec->sibling = NULL;
+
+                            /* We will add name as a string node, and variable as a target in the rewrite step */
+                            if (expose_tail) { expose_tail->sibling = ec; }
+                            else { expose_head = ec; }
+                            expose_tail = ec;
 
                             ec = enext;
                         }
                     } else {
                         if (pos == 0) env = c;
                         else if (pos == 1) cmd = c;
-                        else {
-                            /* Extra children (e.g. from bad_nodes) - just ignore for now or append to expose?
-                             * Better to ignore as they likely have errors. */
-                        }
                         pos++;
                     }
                     c = next;
                 }
 
-                /* Assignment node rc = _address(...) */
-                node->node_type = ASSIGN;
-
-                /* rc is the target */
-                temp_node = ast_ft(context, VAR_TARGET);
-                ast_str(temp_node, "rc");
-                add_ast(node,temp_node);
-
-                /* Function _address */
-                function_node = ast_ft(context, FUNCTION);
-                ast_str(function_node, "_address");
-                function_node->column = node->column;
-                function_node->line = node->line;
-                add_ast(node,function_node);
+                ASTRewriteTemplate *call_tmpl = ast_rw_new(FUNCTION, "_address");
 
                 /* 1. Env */
-                if (!env) { env = ast_ft(context, STRING); ast_str(env, "SYSTEM"); }
-                add_ast(function_node, env);
+                ast_rw_add(call_tmpl, env ? ast_rw_reuse(env) : ast_rw_new(STRING, "SYSTEM"));
 
                 /* 2. Cmd */
-                if (!cmd) { cmd = ast_ft(context, STRING); ast_str(cmd, ""); }
-                add_ast(function_node, cmd);
+                ast_rw_add(call_tmpl, cmd ? ast_rw_reuse(cmd) : ast_rw_new(STRING, ""));
 
                 /* Helper to transform redirect node to FUNCTION call */
-                #define TRANS_RED(r, i_i) \
-                if (r) { \
-                    ASTNode *rc = r->child; \
-                    if (!rc || rc->value_type == TP_VOID) { \
-                        if (rc) ast_del(rc); \
-                        r->node_type = FUNCTION; ast_str(r, "_noredir"); \
-                    } else if (i_i) { \
-                        r->node_type = FUNCTION; \
-                        if (rc->value_dims) ast_str(r, "_array2redir"); \
-                        else ast_str(r, "_string2redir"); \
+                #define ADD_RED(r, i_i) do { \
+                    if (r) { \
+                        ASTNode *rc = r->child; \
+                        if (!rc || rc->value_type == TP_VOID) { \
+                            ast_rw_add(call_tmpl, ast_rw_new(FUNCTION, "_noredir")); \
+                        } else if (i_i) { \
+                            ASTRewriteTemplate *func = ast_rw_new(FUNCTION, rc->value_dims ? "_array2redir" : "_string2redir"); \
+                            ast_rw_add(func, ast_rw_reuse(rc)); \
+                            ast_rw_add(call_tmpl, func); \
+                        } else { \
+                            ASTRewriteTemplate *func = ast_rw_new(FUNCTION, rc->value_dims ? "_redir2array" : "_redir2string"); \
+                            ast_rw_add(func, ast_rw_reuse(rc)); \
+                            ast_rw_add(call_tmpl, func); \
+                        } \
                     } else { \
-                        r->node_type = FUNCTION; \
-                        if (rc->value_dims) ast_str(r, "_redir2array"); \
-                        else ast_str(r, "_redir2string"); \
+                        ast_rw_add(call_tmpl, ast_rw_new(FUNCTION, "_noredir")); \
                     } \
-                } else { \
-                    r = ast_ft(context, FUNCTION); ast_str(r, "_noredir"); \
-                } \
-                add_ast(function_node, r);
+                } while(0)
 
-                TRANS_RED(in, 1);
-                TRANS_RED(out, 0);
-                TRANS_RED(err, 0);
-                #undef TRANS_RED
+                ADD_RED(in, 1);
+                ADD_RED(out, 0);
+                ADD_RED(err, 0);
+                #undef ADD_RED
 
                 /* Add exposed */
                 c = expose_head;
                 while (c) {
                     next = c->sibling;
                     c->sibling = NULL;
-                    add_ast(function_node, c);
+
+                    ASTRewriteTemplate *name_node = ast_rw_new(STRING, c->node_string);
+                    ast_rw_add(call_tmpl, name_node);
+                    ast_rw_add(call_tmpl, ast_rw_reuse(c));
+
                     c = next;
                 }
 
+                /* Assignment node rc = _address(...) */
+                ASTRewriteTemplate *assign_tmpl = ast_rw_add(ast_rw_add(
+                    ast_rw_new(ASSIGN, "="),
+                    ast_rw_new(VAR_TARGET, "rc")),
+                    call_tmpl
+                );
+
+                ASTNode *new_assign = ast_execute_rewrite(context, node, assign_tmpl);
+
                 /* Re-attach diagnostics */
-                c = diag_head;
-                while (c) {
-                    next = c->sibling;
-                    c->sibling = NULL;
-                    add_ast(node, c);
-                    c = next;
+                if (new_assign) {
+                    c = diag_head;
+                    while (c) {
+                        next = c->sibling;
+                        c->sibling = NULL;
+                        add_ast(new_assign, c);
+                        c = next;
+                    }
                 }
-                break;
+
+                return result_abort;
 
             case REDIRECT_IN:
             case REDIRECT_OUT:
