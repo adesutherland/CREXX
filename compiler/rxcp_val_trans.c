@@ -313,9 +313,8 @@ walker_result needs_rxsysb_walker(walker_direction direction,
 walker_result rewrite_implicit_cmd_walker(walker_direction direction,
                                           ASTNode* node, void *payload) {
     Context *context = (Context *) payload;
-    ASTNode *env_node;
 
-    if (direction == in && node->node_type == IMPLICIT_CMD) {
+    if (direction == out && node->node_type == IMPLICIT_CMD) {
         /* Fix up location if missing - typically copied from the expression child */
         if (node->line == -1 && node->child) {
             node->line = node->child->line;
@@ -337,24 +336,28 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
             starts_with_quote = 1;
         }
 
+        /* We add the warning before rewrite so it gets caught by ast_execute_rewrite and moved */
         if (!ast_hase(node) && !starts_with_quote) {
             mknd_war(node, "IMPLICIT_ADDRESS");
         }
 
-        node->node_type = ADDRESS;
+        ASTRewriteTemplate *addr_tmpl = ast_rw_new(ADDRESS, NULL);
 
         /* Create explicit environment "SYSTEM" */
-        env_node = ast_ft(context, STRING);
-        ast_str(env_node, "SYSTEM");
+        ast_rw_add(addr_tmpl, ast_rw_new(STRING, "SYSTEM"));
 
-        /* Insert at the beginning of children */
-        env_node->sibling = node->child;
-        if (node->child) node->child->parent = node; /* Ensure parent is set though ast_ft does it usually */
-        node->child = env_node;
-        env_node->parent = node;
+        /* Reuse all existing children (command, redirections, diagnostics) */
+        ASTNode *c = node->child;
+        while (c) {
+            ASTNode *next = c->sibling;
+            if (c == node->child) node->child = next;
+            c->sibling = NULL;
+            c->parent = NULL;
+            ast_rw_add(addr_tmpl, ast_rw_reuse(c));
+            c = next;
+        }
 
-        /* node->node_string = "SYSTEM"; // Not strictly needed by walker but good for debug */
-        context->changed_flags |= FLAG_VAL_TRANS;
+        ast_execute_rewrite(context, node, addr_tmpl);
     }
     return result_normal;
 }
