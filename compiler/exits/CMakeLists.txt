@@ -18,12 +18,14 @@ add_subdirectory(sort)
 add_subdirectory(sortx)
 add_subdirectory(pprint)
 add_subdirectory(execio)
+add_subdirectory(add)
+add_subdirectory(fsay)
 add_subdirectory(dummy)
 
 # Build the bundle by concatenating all exit components
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
-    COMMAND ${CMAKE_COMMAND} -E cat token.rxbin dump/Dump.rxbin query/Query.rxbin sort/Sort.rxbin sortx/Sortx.rxbin pprint/Pprint.rxbin execio/Execio.rxbin dummy/Dummy.rxbin > ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
+    COMMAND ${CMAKE_COMMAND} -E cat token.rxbin dump/Dump.rxbin query/Query.rxbin sort/Sort.rxbin sortx/Sortx.rxbin pprint/Pprint.rxbin execio/Execio.rxbin add/Add.rxbin fsay/Fsay.rxbin dummy/Dummy.rxbin > ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
     DEPENDS rxc rxas
             ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin 
             ${CMAKE_CURRENT_BINARY_DIR}/dump/Dump.rxbin
@@ -31,6 +33,8 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/sort/Sort.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/sortx/Sortx.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/execio/Execio.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/add/Add.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/fsay/Fsay.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/pprint/Pprint.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/dummy/Dummy.rxbin
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

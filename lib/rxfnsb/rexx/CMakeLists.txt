@@ -46,6 +46,7 @@ set(BIFS
 		qextractpair
 		qstripcomment
 		qremoveall
+		fsayfmt
 		lastpos
 		left
 		right

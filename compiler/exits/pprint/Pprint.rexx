@@ -206,4 +206,5 @@ call log '------ Check in'
  */
 log: procedure = .int
   arg logtxt = .string
+  return 0
 return lineout("c:\temp\pluginlog.txt", time()" "logtxt)
