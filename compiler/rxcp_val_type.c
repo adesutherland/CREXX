@@ -767,8 +767,12 @@ walker_result type_safety_walker(walker_direction direction,
                 if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->type != TP_UNKNOWN && ast_nchd(node) && !node->symbolNode->symbol->value_dims) {
                     /* Relax Type Checks for Unresolved Globals: Temporarily suppress #NOT_AN_ARRAY errors for symbols with status == SYM_STATUS_UNRESOLVED and exposed == 1 */
                     /* Also relax for exposed symbols in general as they might be arrays defined elsewhere */
-                    if (!((node->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || node->symbolNode->symbol->exposed) && node->symbolNode->symbol->exposed))
-                        mknd_err(node, "NOT_AN_ARRAY");
+                    /* Also relax for Object property access before syntax sugar transformation */
+                    if (!((node->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || node->symbolNode->symbol->exposed) && node->symbolNode->symbol->exposed)) {
+                        if (node->symbolNode->symbol->type != TP_OBJECT) {
+                            mknd_err(node, "NOT_AN_ARRAY");
+                        }
+                    }
                 }
                 if (child1) {
                     /* We have array parameters */
@@ -978,14 +982,22 @@ walker_result type_safety_walker(walker_direction direction,
                         if (!child1->value_dims) {
                             /* Relax Type Checks for Unresolved Globals: Temporarily suppress #NOT_AN_ARRAY errors for symbols with status == SYM_STATUS_UNRESOLVED and exposed == 1 */
                             /* Also relax for exposed symbols in general */
-                            if (!((child1->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || child1->symbolNode->symbol->exposed) && child1->symbolNode->symbol->exposed))
-                                mknd_err(child1, "NOT_AN_ARRAY");
+                            /* Also relax for Object property access before syntax sugar transformation */
+                            if (!((child1->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || child1->symbolNode->symbol->exposed) && child1->symbolNode->symbol->exposed)) {
+                                if (child1->symbolNode->symbol->type != TP_OBJECT) {
+                                    mknd_err(child1, "NOT_AN_ARRAY");
+                                }
+                            }
                         }
                         else if (child1->value_dims != ast_nchd(child1)) {
                             /* Relax Type Checks for Unresolved Globals: Temporarily suppress #ARRAY_DIMS_MISMATCH errors for symbols with status == SYM_STATUS_UNRESOLVED and exposed == 1 */
                             /* Also relax for exposed symbols in general */
-                            if (!((child1->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || child1->symbolNode->symbol->exposed) && child1->symbolNode->symbol->exposed))
-                                mknd_err(node, "ARRAY_DIMS_MISMATCH");
+                            /* Also relax for Object property access before syntax sugar transformation */
+                            if (!((child1->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED || child1->symbolNode->symbol->exposed) && child1->symbolNode->symbol->exposed)) {
+                                if (child1->symbolNode->symbol->type != TP_OBJECT) {
+                                    mknd_err(node, "ARRAY_DIMS_MISMATCH");
+                                }
+                            }
                         }
 
                         child1->value_dims = 0; /* We are a single value */
