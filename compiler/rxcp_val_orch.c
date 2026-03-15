@@ -746,6 +746,22 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
+        /* Syntactic Sugar
+         * Progress: syntax_sugar_walker is idempotent. Verified by stress testing.
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
+
         /* Set Ordinals
          * Progress: set_node_ordinals_walker is idempotent. Recalculates from reset counter. Verified by stress testing.
          */
