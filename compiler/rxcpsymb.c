@@ -859,16 +859,20 @@ Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
     char *c;
     char *name;
 
+    size_t start = 0;
+    size_t len = node->node_string_length;
+
     /* Make a null terminated string */
-    if (node->node_string[0] == '.') {
-        name = (char*)malloc(node->node_string_length);
-        memcpy(name, node->node_string + 1, node->node_string_length - 1);
-        name[node->node_string_length - 1] = 0;
-    } else {
-        name = (char*)malloc(node->node_string_length + 1);
-        memcpy(name, node->node_string, node->node_string_length);
-        name[node->node_string_length] = 0;
+    if (len > 0 && node->node_string[0] == '.') {
+        start = 1;
+        len--;
+    } else if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {
+        start = 1;
+        len -= 2;
     }
+    name = (char*)malloc(len + 1);
+    memcpy(name, node->node_string + start, len);
+    name[len] = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8

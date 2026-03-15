@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "utf.h"
 #include "rxcp_val.h"
 
 /* Step 2a
@@ -693,8 +694,16 @@ walker_result resolve_functions_walker(walker_direction direction,
     }
     else {
         if (node->node_type == FUNCTION || node->node_type == FUNC_SYMBOL) {
+            int is_literal_call = 0;
+            if (node->node_string && node->node_string_length >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"')) {
+                is_literal_call = 1;
+            }
+
             /* Find the symbol */
-            Symbol *local_symbol = sym_rslv_tiered(node->scope ? node->scope : context->current_scope, node);
+            Symbol *local_symbol = 0;
+            if (!is_literal_call) {
+                local_symbol = sym_rslv_tiered(node->scope ? node->scope : context->current_scope, node);
+            }
 
             if (local_symbol && local_symbol->status == SYM_STATUS_LOCAL_DEF && local_symbol->symbol_type == FUNCTION_SYMBOL ) {
                 if (!node->symbolNode) {
@@ -704,6 +713,43 @@ walker_result resolve_functions_walker(walker_direction direction,
             } else {
                 /* Try global search */
                 symbol = sym_rvfc(context->ast, node);
+
+                if (is_literal_call && symbol && symbol->symbol_type == FUNCTION_SYMBOL) {
+                    /* Literal calls bypass unexposed local functions. 
+                     * If sym_rvfc found a local unexposed function, we force a search for the external one. */
+                    if (!symbol->exposed) {
+                        symbol = sym_imfn(context, node);
+                    }
+
+                    if (symbol && symbol->exposed) {
+                        /* Emit the specific shadowing reversal warning only once */
+                        if (!node->symbolNode) {
+                            char *fqn = sym_frnm(symbol);
+                            char *local_name = malloc(node->node_string_length + 1);
+                            size_t start = 1;
+                            size_t len = node->node_string_length - 2;
+                            memcpy(local_name, node->node_string + start, len);
+                            local_name[len] = 0;
+                            #ifdef NUTF8
+                            char *c;
+                            for (c = local_name; *c; ++c) *c = (char)tolower(*c);
+                            #else
+                            utf8lwr(local_name);
+                            #endif
+
+                            mknd_war(node, "EXTERNAL_SHADOW_BYPASS, external procedure \"%s\" shadowing local procedure \"%s\"", fqn, local_name);
+                            free(fqn);
+                            free(local_name);
+                        }
+
+                        /* Link to the external symbol */
+                        if (!node->symbolNode) {
+                            sym_adnd(symbol, node, 1, 0);
+                            context->changed_flags |= FLAG_VAL_SYM;
+                        }
+                    }
+                }
+
                 if (symbol && symbol->symbol_type == FUNCTION_SYMBOL ) {
                     /* Option A: Redirect if already linked to an UNRESOLVED local symbol */
                     if (node->symbolNode && node->symbolNode->symbol->status == SYM_STATUS_UNRESOLVED && node->symbolNode->symbol != symbol) {

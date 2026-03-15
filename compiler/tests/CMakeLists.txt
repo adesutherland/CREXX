@@ -191,6 +191,7 @@ add_crexx_run_test(test_if_else_nested_subscopes rexx_src/test_if_else_nested_su
 add_crexx_run_test(test_sub_sub_scopes rexx_src/test_sub_sub_scopes.rexx)
 add_crexx_run_test(test_sub_sub_scopes_untyped rexx_src/test_sub_sub_scopes_untyped.rexx)
 add_crexx_run_test(test_global_nested_complex rexx_src/test_global_nested_complex.rexx)
+add_crexx_run_test(test_function_shadowing rexx_src/test_function_shadowing.rexx)
 add_crexx_run_test(test_disjoint_detailed rexx_src/test_disjoint_detailed.rexx)
 
 # New test for detailed warning

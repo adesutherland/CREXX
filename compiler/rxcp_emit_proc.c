@@ -128,14 +128,9 @@ void emit_proc(ASTNode *node, void *pl) {
                 char* args = meta_narg(ast_chld(node, ARGS, 0));
                 char *proc_label, *proc_expose, *proc_fqn;
                 if (node->node_type == PROCEDURE) {
-                    if (node->node_string) {
-                        proc_label = malloc(node->node_string_length + 1);
-                        memcpy(proc_label, node->node_string, node->node_string_length);
-                        proc_label[node->node_string_length] = 0;
-                        if (proc_label[node->node_string_length - 1] == ':') proc_label[node->node_string_length - 1] = 0;
-                    } else proc_label = strdup(node->symbolNode->symbol->name);
                     proc_expose = sym_frnm(node->symbolNode->symbol);
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
+                    proc_label = strdup(proc_expose);
                 } else {
                     proc_label = sym_mngd_frnm(node->symbolNode->symbol);
                     /* For class methods/factory stubs, expose must use the unmangled fully-qualified name */

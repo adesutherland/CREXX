@@ -11,6 +11,19 @@ Here is an example of calling something defined by a label:
 
 And here a procedure with protected variables:
 
+## Function Shadowing and Literal Calls
+
+In cREXX Level B, if you define a local procedure (e.g., `Translate:`) that shares the same name as a function in an imported library (e.g., `translate()` from `rxfnsb`), the local procedure **shadows** the imported function. Any standard call to `translate()` within that file will invoke your local procedure instead of the library's function. 
+
+When this happens, the compiler will emit a diagnostic warning to alert you:
+`Warning in ... - #SHADOWING, original definition "rxfnsb.translate" @ ...`
+
+If you intentionally shadow a global function but still need to invoke the original external function, cREXX Level B retains a Classic REXX compatibility feature: the **Literal Function Call**. 
+
+By enclosing the function name in quotes (e.g., `'TRANSLATE'()`), you instruct the compiler to bypass the local, unexposed procedure and directly resolve the call against the global/imported namespaces. 
+
+Because relying on literal string calls to bypass scope is a legacy idiom, the compiler will emit a secondary warning to acknowledge this bypass:
+`Warning in ... - #EXTERNAL_SHADOW_BYPASS, external procedure "rxfnsb.translate" shadowing local procedure "translate"`
 
 ## Calling a built-in function
 

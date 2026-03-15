@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : repro_array_arg.rexx
- * BUILT                  : 2026-03-01 10:33:40
+ * BUILT                  : 2026-03-15 18:50:28
  */
 
 .srcfile="repro_array_arg.rexx"
@@ -37,7 +37,7 @@ main() .locals=5
    minattrs r1,1
    linkattr1 r4,r1,1
    swap r3,r4
-   call r0,upper(),r2
+   call r0,rxfnsb.upper(),r2
    swap r4,r3
    unlink r4
    .src 9:1="say \"Upper:  [\"c\"]\""
@@ -74,5 +74,5 @@ l46ifend:
 
 /* Imported Declaration from file: upper@library.rxbin */
 
-upper() .expose=rxfnsb.upper
-   .meta "rxfnsb.upper"="b" ".string" upper() "expose string=.string" ""
+rxfnsb.upper() .expose=rxfnsb.upper
+   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string" ""

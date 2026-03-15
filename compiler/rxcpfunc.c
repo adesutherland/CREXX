@@ -1465,16 +1465,20 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
     Symbol *found_symbol = 0;
     char *name;
 
+    size_t start = 0;
+    size_t len = node->node_string_length;
+
     /* Make a null terminated string */
-    if (node->node_string[0] == '.') {
-        name = (char*)malloc(node->node_string_length);
-        memcpy(name, node->node_string + 1, node->node_string_length - 1);
-        name[node->node_string_length - 1] = 0;
-    } else {
-        name = (char*)malloc(node->node_string_length + 1);
-        memcpy(name, node->node_string, node->node_string_length);
-        name[node->node_string_length] = 0;
+    if (len > 0 && node->node_string[0] == '.') {
+        start = 1;
+        len--;
+    } else if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {
+        start = 1;
+        len -= 2;
     }
+    name = (char*)malloc(len + 1);
+    memcpy(name, node->node_string + start, len);
+    name[len] = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -1533,16 +1537,20 @@ int sym_is_glob_var(Context *context, ASTNode *node) {
     char *name;
     int found = 0;
 
+    size_t start = 0;
+    size_t len = node->node_string_length;
+
     /* Make a null terminated string */
-    if (node->node_string[0] == '.') {
-        name = (char*)malloc(node->node_string_length);
-        memcpy(name, node->node_string + 1, node->node_string_length - 1);
-        name[node->node_string_length - 1] = 0;
-    } else {
-        name = (char*)malloc(node->node_string_length + 1);
-        memcpy(name, node->node_string, node->node_string_length);
-        name[node->node_string_length] = 0;
+    if (len > 0 && node->node_string[0] == '.') {
+        start = 1;
+        len--;
+    } else if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {
+        start = 1;
+        len -= 2;
     }
+    name = (char*)malloc(len + 1);
+    memcpy(name, node->node_string + start, len);
+    name[len] = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -1598,16 +1606,20 @@ int sym_is_imfn(Context *context, ASTNode *node) {
     char *name;
     int found = 0;
 
+    size_t start = 0;
+    size_t len = node->node_string_length;
+
     /* Make a null terminated string */
-    if (node->node_string[0] == '.') {
-        name = (char*)malloc(node->node_string_length);
-        memcpy(name, node->node_string + 1, node->node_string_length - 1);
-        name[node->node_string_length - 1] = 0;
-    } else {
-        name = (char*)malloc(node->node_string_length + 1);
-        memcpy(name, node->node_string, node->node_string_length);
-        name[node->node_string_length] = 0;
+    if (len > 0 && node->node_string[0] == '.') {
+        start = 1;
+        len--;
+    } else if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {
+        start = 1;
+        len -= 2;
     }
+    name = (char*)malloc(len + 1);
+    memcpy(name, node->node_string + start, len);
+    name[len] = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -1643,16 +1655,20 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
     char* defining_file = context->file_name;
     char *name;
 
+    size_t start = 0;
+    size_t len = node->node_string_length;
+
     /* Make a null terminated string */
-    if (node->node_string[0] == '.') {
-        name = (char*)malloc(node->node_string_length);
-        memcpy(name, node->node_string + 1, node->node_string_length - 1);
-        name[node->node_string_length - 1] = 0;
-    } else {
-        name = (char*)malloc(node->node_string_length + 1);
-        memcpy(name, node->node_string, node->node_string_length);
-        name[node->node_string_length] = 0;
+    if (len > 0 && node->node_string[0] == '.') {
+        start = 1;
+        len--;
+    } else if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {
+        start = 1;
+        len -= 2;
     }
+    name = (char*)malloc(len + 1);
+    memcpy(name, node->node_string + start, len);
+    name[len] = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -1685,6 +1701,13 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
     if (context->debug_mode >= 2) printf("Finished Importing files needed for file %s when Looking for Procedure %s\n", defining_file, name);
 
     if (found_func) {
+        /* Check if it's already in the master AST by its fully qualified name */
+        found_symbol = sym_rfqn(context->ast, found_func->fqname);
+        if (found_symbol && found_symbol->symbol_type == FUNCTION_SYMBOL && found_symbol->exposed) {
+            free(name);
+            return found_symbol;
+        }
+
         /* Compare found variable with the type defined in the master file being compiled */
         tp = type_from_string(found_func->type);
         if (found_func->is_variable) {

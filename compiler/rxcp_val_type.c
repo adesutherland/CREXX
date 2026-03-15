@@ -1233,6 +1233,10 @@ walker_result func_type_safety_walker(walker_direction direction,
                 /* Check each argument */
                 arg_num = 0;
                 while (n1) {
+                    if (n1->node_type == WARNING || n1->node_type == ERROR) {
+                        n1 = n1->sibling;
+                        continue;
+                    }
                     arg_num++;
                     if (!n2) {
                         /* Its not an error for the first NOVAL argument */

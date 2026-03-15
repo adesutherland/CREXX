@@ -146,12 +146,31 @@ void emit_expression(ASTNode *node, void *payload) {
                 }
                 if (use_mangled) call_name = sym_mngd_frnm(node->symbolNode->symbol);
                 else {
-                    /* For PROCEDURE, preserve case if possible */
-                    if (node->node_string) {
-                        call_name = malloc(node->node_string_length + 1);
-                        memcpy(call_name, node->node_string, node->node_string_length);
-                        call_name[node->node_string_length] = 0;
-                    } else call_name = strdup(node->symbolNode->symbol->name);
+                    int is_imported = 0;
+                    if (node->symbolNode->symbol) {
+                        SymbolNode *defsn = sym_trnd(node->symbolNode->symbol, 0);
+                        if (defsn && defsn->node && defsn->node->node_type == PROCEDURE) {
+                            if (ast_chld(defsn->node, INSTRUCTIONS, NOP)->node_type == NOP) {
+                                is_imported = 1;
+                            }
+                        }
+                    }
+                    if (is_imported) {
+                        call_name = sym_frnm(node->symbolNode->symbol);
+                    } else {
+                        /* For PROCEDURE, preserve case if possible */
+                        if (node->node_string) {
+                            size_t start = 0;
+                            size_t len = node->node_string_length;
+                            if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {
+                                start = 1;
+                                len -= 2;
+                            }
+                            call_name = malloc(len + 1);
+                            memcpy(call_name, node->node_string + start, len);
+                            call_name[len] = 0;
+                        } else call_name = strdup(node->symbolNode->symbol->name);
+                    }
                 }
                 temp1 = mprintf("   call %c%d,%s(),r%d\n",
                                 ret_type, ret_num,

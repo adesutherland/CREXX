@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 15_imports.rexx
- * BUILT                  : 2026-02-26 20:48:15
+ * BUILT                  : 2026-03-15 18:50:28
  */
 
 .srcfile="15_imports.rexx"
@@ -17,7 +17,7 @@ main() .locals=3
    .src 6:1="say myfunc(10)"
    load r0,1
    load r1,10
-   call r2,myfunc(),r0
+   call r2,mymath.myfunc(),r0
    itos r2
    say r2
    .src 6:15=""
@@ -25,5 +25,5 @@ main() .locals=3
 
 /* Imported Declaration from file: mymath.rexx */
 
-myfunc() .expose=mymath.myfunc
-   .meta "mymath.myfunc"="b" ".int" myfunc() "x=.int" ""
+mymath.myfunc() .expose=mymath.myfunc
+   .meta "mymath.myfunc"="b" ".int" mymath.myfunc() "x=.int" ""

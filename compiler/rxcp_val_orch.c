@@ -551,13 +551,19 @@ static walker_result shadowing_warning_walker(walker_direction direction,
 
                 Symbol *symbol = node->symbolNode->symbol;
                 Symbol *shadowed = symbol->shadowed_symbol;
-                if (shadowed && sym_nond(shadowed) > 0) {
-                    ASTNode *def = sym_trnd(shadowed, 0)->node;
-                    if (def && def->line != -1) {
-                        mknd_war(node, "SHADOWING, original definition @ %d:%d", def->line + 1, def->column + 1);
+                if (shadowed) {
+                    char *fqn = sym_frnm(shadowed);
+                    if (sym_nond(shadowed) > 0) {
+                        ASTNode *def = sym_trnd(shadowed, 0)->node;
+                        if (def && def->line != -1) {
+                            mknd_war(node, "SHADOWING, original definition \"%s\" @ %d:%d", fqn, def->line + 1, def->column + 1);
+                        } else {
+                            mknd_war(node, "SHADOWING, original definition \"%s\" is global", fqn);
+                        }
                     } else {
-                        mknd_war(node, "SHADOWING, original definition is global");
+                        mknd_war(node, "SHADOWING, shadows \"%s\"", fqn);
                     }
+                    free(fqn);
                 } else {
                     mknd_war(node, "SHADOWING");
                 }
