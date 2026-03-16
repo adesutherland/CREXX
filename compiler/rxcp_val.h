@@ -45,6 +45,13 @@ void promote_symbol_from_target(Context *context, ASTNode *node);
 void validate_node_promotion(ASTNode* node);
 void validate_node_promotion_for_ref(ASTNode* node);
 
+/* Monotonic Gatekeepers */
+void sym_promote_type(Context *context, Symbol *sym, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name);
+void sym_promote_status(Context *context, Symbol *sym, SymbolStatus status);
+void sym_promote_symtype(Context *context, Symbol *sym, SymbolType symbol_type);
+void ast_promote_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name);
+void ast_promote_target_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name);
+
 /* orch */
 void validate_ast(Context *context);
 void rxcp_val(Context *context); /* legacy name */

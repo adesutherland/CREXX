@@ -66,8 +66,8 @@ walker_result structure_symbols_walker(walker_direction direction,
             } else {
                 symbol = sym_f(context->current_scope, node);
             }
-            symbol->symbol_type = NAMESPACE_SYMBOL;
-            symbol->status = SYM_STATUS_LOCAL_DEF;
+            sym_promote_symtype(context, symbol, NAMESPACE_SYMBOL);
+            sym_promote_status(context, symbol, SYM_STATUS_LOCAL_DEF);
             sym_adnd(symbol, node, 1, 1);
             if (node->node_type == PROGRAM_FILE && context->namespace) sym_adnd(symbol, context->namespace, 0, 1);
 
@@ -99,8 +99,8 @@ walker_result structure_symbols_walker(walker_direction direction,
             /* Make a new symbol */
             if (!symbol) {
                 symbol = sym_f(context->current_scope, node);
-                symbol->symbol_type = CLASS_SYMBOL;
-                symbol->status = SYM_STATUS_LOCAL_DEF;
+                sym_promote_symtype(context, symbol, CLASS_SYMBOL);
+                sym_promote_status(context, symbol, SYM_STATUS_LOCAL_DEF);
             }
 
             sym_adnd(symbol, node, 0, 1);
@@ -123,9 +123,14 @@ walker_result structure_symbols_walker(walker_direction direction,
             /* Set the return value node value_type */
             n = ast_chld(node, CLASS, VOID);
             if (n) {
-                n->value_type = node_to_type(context, n,
-                                             &(n->value_dims), &(n->value_dim_base), &(n->value_dim_elements),
-                                             &(n->value_class));
+                size_t dims = 0;
+                int *db = 0, *de = 0;
+                char *cn = 0;
+                ValueType vt = node_to_type(context, n, &dims, &db, &de, &cn);
+                ast_promote_type(context, n, vt, dims, db, de, cn);
+                if (db) free(db);
+                if (de) free(de);
+                if (cn) free(cn);
 
                 /* Reset node Target Type to be the same as the node Value Type */
                 ast_rttp(n);
@@ -149,8 +154,8 @@ walker_result structure_symbols_walker(walker_direction direction,
                 } else {
                     symbol = sym_f(context->current_scope, node);
                 }
-                symbol->symbol_type = FUNCTION_SYMBOL;
-                symbol->status = SYM_STATUS_LOCAL_DEF;
+                sym_promote_symtype(context, symbol, FUNCTION_SYMBOL);
+                sym_promote_status(context, symbol, SYM_STATUS_LOCAL_DEF);
             }
 
             sym_adnd(symbol, node, 0, 1);
@@ -188,8 +193,8 @@ walker_result structure_symbols_walker(walker_direction direction,
             /* Make the new symbol */
             symbol = sym_f(namespaces, node->child);
             if (symbol) {
-                symbol->symbol_type = NAMESPACE_SYMBOL;
-                symbol->status = SYM_STATUS_LOCAL_DEF;
+                sym_promote_symtype(context, symbol, NAMESPACE_SYMBOL);
+                sym_promote_status(context, symbol, SYM_STATUS_LOCAL_DEF);
                 sym_adnd(symbol, node->child, 0, 1);
 
                 /* New scope scope */
@@ -432,9 +437,13 @@ walker_result build_symbols_walker(walker_direction direction,
                     Scope *target_scope = context->current_scope;
 
                     symbol = sym_f(target_scope, node);
-                    symbol->status = SYM_STATUS_LOCAL_VAR;
+                    sym_promote_status(context, symbol, SYM_STATUS_LOCAL_VAR);
                 } else if (node->parent->node_type == DEFINE && symbol->type != TP_UNKNOWN) {
                     mknd_err(node, "ALREADY_DECLARED");
+                }
+
+                if (symbol && symbol->symbol_type == UNKNOWN_SYMBOL) {
+                    sym_promote_symtype(context, symbol, VARIABLE_SYMBOL);
                 }
 
                 /* Ensure creation info is set */
@@ -529,7 +538,11 @@ walker_result build_symbols_walker(walker_direction direction,
                     Scope *target_scope = context->current_scope;
 
                     symbol = sym_f(target_scope, node);
-                    symbol->status = SYM_STATUS_UNRESOLVED;
+                    sym_promote_status(context, symbol, SYM_STATUS_UNRESOLVED);
+                }
+
+                if (symbol && symbol->symbol_type == UNKNOWN_SYMBOL) {
+                    sym_promote_symtype(context, symbol, VARIABLE_SYMBOL);
                 }
 
                 /* Ensure creation info is set */
@@ -866,11 +879,9 @@ walker_result exposed_symbols_walker(walker_direction direction,
                              if (namespace_scope) {
                                  symbol = sym_f(namespace_scope, n);
                                  if (symbol && symbol->symbol_type == UNKNOWN_SYMBOL) {
-                                     symbol->symbol_type = VARIABLE_SYMBOL;
-                                     symbol->status = SYM_STATUS_LOCAL_VAR;
-                                     context->changed_flags |= FLAG_VAL_SYM;
-                                 }
-                                 if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
+                                     sym_promote_symtype(context, symbol, VARIABLE_SYMBOL);
+                                     sym_promote_status(context, symbol, SYM_STATUS_LOCAL_VAR);
+                                 }                                 if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
                                      if (symbol->exposed == 0) {
                                          symbol->exposed = 1;
                                          symbol->is_global_var = 1;
@@ -975,11 +986,9 @@ walker_result exposed_symbols_walker(walker_direction direction,
                             if (namespace_scope) {
                                 symbol = sym_f(namespace_scope, n);
                                 if (symbol && symbol->symbol_type == UNKNOWN_SYMBOL) {
-                                    symbol->symbol_type = VARIABLE_SYMBOL;
-                                    symbol->status = SYM_STATUS_LOCAL_VAR;
-                                    context->changed_flags |= FLAG_VAL_SYM;
-                                }
-                                if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
+                                    sym_promote_symtype(context, symbol, VARIABLE_SYMBOL);
+                                    sym_promote_status(context, symbol, SYM_STATUS_LOCAL_VAR);
+                                }                                if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
                                     if (symbol->exposed == 0) {
                                         symbol->exposed = 1;
                                         symbol->is_global_var = 1;
@@ -1333,10 +1342,9 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         else if (symbol->symbol_type != NAMESPACE_SYMBOL && symbol->symbol_type != FUNCTION_SYMBOL && symbol->symbol_type != CLASS_SYMBOL) {
             /* Used without definition/declaration - Taken Constant */
             /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
-            symbol->type = TP_STRING;
-            symbol->symbol_type = CONSTANT_SYMBOL;
-            if (symbol->status == SYM_STATUS_UNRESOLVED) symbol->status = SYM_STATUS_LOCAL_VAR;
-            symbol->value_dims = 0;
+            sym_promote_type(context, symbol, TP_STRING, 0, 0, 0, 0);
+            sym_promote_symtype(context, symbol, CONSTANT_SYMBOL);
+            if (symbol->status == SYM_STATUS_UNRESOLVED) sym_promote_status(context, symbol, SYM_STATUS_LOCAL_VAR);
             /* Update all the attached AST Nodes to be constants */
             for (i = 0; i < sym_nond(symbol); i++) {
                 defining_node_link = sym_trnd(symbol, i);

@@ -501,7 +501,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     memcpy(symbol->name, name, name_length);
     symbol->name[name_length] = 0;
     symbol->register_type = 'r';
-    symbol->symbol_type = VARIABLE_SYMBOL;
+    symbol->symbol_type = UNKNOWN_SYMBOL;
     symbol->status = SYM_STATUS_UNRESOLVED;
     symbol->meta_emitted = 0;
     symbol->init_emitted = 0;
