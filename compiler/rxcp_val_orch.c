@@ -188,7 +188,7 @@ void sym_promote_type(Context *context, Symbol *sym, ValueType type, size_t dims
     size_t i;
 
     if (new_spec > current_spec) promote = 1;
-    else if (new_spec == current_spec) {
+    else if (new_spec == current_spec && type == sym->type) {
         if (dims > sym->value_dims) promote = 1;
         else if (dims == sym->value_dims) {
             if (class_name && !sym->value_class) promote = 1;
@@ -261,8 +261,8 @@ void ast_promote_type(Context *context, ASTNode *node, ValueType type, size_t di
     size_t i;
 
     if (new_spec > current_spec) promote = 1;
-    else if (new_spec == current_spec) {
-        if (dims != node->value_dims) promote = 1;
+    else if (new_spec == current_spec && type == node->value_type) {
+        if (dims > node->value_dims) promote = 1;
         else if (dims == node->value_dims) {
             if (class_name && !node->value_class) promote = 1;
         }
@@ -298,8 +298,8 @@ void ast_promote_target_type(Context *context, ASTNode *node, ValueType type, si
     size_t i;
 
     if (new_spec > current_spec) promote = 1;
-    else if (new_spec == current_spec) {
-        if (dims != node->target_dims) promote = 1;
+    else if (new_spec == current_spec && type == node->target_type) {
+        if (dims > node->target_dims) promote = 1;
         else if (dims == node->target_dims) {
             if (class_name && !node->target_class) promote = 1;
         }
