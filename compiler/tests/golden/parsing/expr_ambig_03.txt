@@ -56,18 +56,18 @@ Scope [0]: Unnamed
 
 --- STAGE_SYMBOLS (Iteration 1) ---
 REXX_UNIVERSE : "" (0:1) [Type: .unknown]
-  PROGRAM_FILE : "expr_ambig_03" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_ambig_03" (0:1) [Type: .void]
     REXX_OPTIONS : "options" (0:1) [Type: .unknown]
       LITERAL : "levelb" (0:9) [Type: .unknown]
     PROCEDURE : "main" (1:0) [Type: .void]
       VOID : "" (-1:-1) [Type: .void]
       ARGS : "" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (1:0) [Type: .unknown]
-        ASSIGN : "=" (1:0) [Type: .void]
-          VAR_TARGET : "a" (1:0) [Type: .float]
-          OP_ADD : "+" (1:4) [Type: .float]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_ADD : "+" (1:4) [Type: .unknown]
             STRING : "b" (1:4) [Type: .string]
-            OP_PLUS : "+" (1:8) [Type: .float]
+            OP_PLUS : "+" (1:8) [Type: .unknown]
               STRING : "c" (1:10) [Type: .string]
         RETURN : "" (1:11) [Type: .unknown]
 Scope [0]: Unnamed

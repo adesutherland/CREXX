@@ -77,6 +77,7 @@ struct Context {
     char need_rxsysb;
     char has_rxsysb;
     /* Source Options */
+    char is_final_pass;
     char processedOptions;
     RexxLevel level;
     char comments_hash;

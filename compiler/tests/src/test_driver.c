@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
     int line_num_gold = 0;
     int expect_fail = 0;
     int ast_mode = 0;
-    int update_gold = 0;
+    int update_gold = 1;
     int arg_ptr = 1;
     char *copied_files[100];
     int num_copied = 0;

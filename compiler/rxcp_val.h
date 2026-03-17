@@ -39,11 +39,11 @@
 /* Common Helpers (to be in orch or check) */
 int is_node_string(ASTNode* node, const char* value);
 int node_to_integer(ASTNode* node);
-void node_to_dims(ASTNode* node, size_t *dims, int** dim_base, int** dim_elements);
+void node_to_dims(Context *context, ASTNode* node, size_t *dims, int** dim_base, int** dim_elements);
 ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_base, int **dim_elements, char **class_name);
 void promote_symbol_from_target(Context *context, ASTNode *node);
-void validate_node_promotion(ASTNode* node);
-void validate_node_promotion_for_ref(ASTNode* node);
+void validate_node_promotion(Context *context, ASTNode* node);
+void validate_node_promotion_for_ref(Context *context, ASTNode* node);
 
 /* Monotonic Gatekeepers */
 void sym_promote_type(Context *context, Symbol *sym, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name);
@@ -69,6 +69,7 @@ void validate_symbols(Context *context, Scope *scope);
 int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int levels);
 
 /* type */
+walker_result clear_node_types_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result set_node_types_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result type_safety_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result func_type_safety_walker(walker_direction direction, ASTNode* node, void *payload);

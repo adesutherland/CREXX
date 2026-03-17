@@ -1297,6 +1297,19 @@ char* ast_n2tp(ASTNode *node) {
     char *array;
     char *result;
     ValueType type = node->value_type;
+    int dims = node->value_dims;
+    int* dim_base = node->value_dim_base;
+    int* dim_elements = node->value_dim_elements;
+
+    if (type == TP_UNKNOWN && node->symbolNode && node->symbolNode->symbol) {
+        Symbol *s = node->symbolNode->symbol;
+        if (s->type != TP_UNKNOWN) {
+            type = s->type;
+            dims = s->value_dims;
+            dim_base = s->dim_base;
+            dim_elements = s->dim_elements;
+        }
+    }
 
     if (type == TP_OBJECT) {
         buffer = ast_nsrc(node);
@@ -1337,7 +1350,7 @@ char* ast_n2tp(ASTNode *node) {
         }
     }
 
-    array = ast_astr(node->value_dims, node->value_dim_base, node->value_dim_elements);
+    array = ast_astr(dims, dim_base, dim_elements);
 
     result = malloc(strlen(buffer) + strlen(array) + 1);
     strcpy(result, buffer);

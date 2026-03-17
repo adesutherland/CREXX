@@ -32,6 +32,12 @@
 #include "rxcp_val.h"
 #include "rxcpdary.h"
 
+/* Suppress errors and warnings unless it is the final pass */
+#undef mknd_err
+#undef mknd_war
+#define mknd_err(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err)((n), __VA_ARGS__) : (n))
+#define mknd_war(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war)((n), __VA_ARGS__) : (n))
+
 /* Common Helpers */
 
 /* Helper function to compare node string value with a string
@@ -93,7 +99,7 @@ int node_to_integer(ASTNode* node) {
  * Sets dims to the number of dimensions (or 0 if not an array)
  *      dim_base and dim_elements are malloced and set as appropriately
  */
-void node_to_dims(ASTNode* node, size_t *dims, int** dim_base, int** dim_elements) {
+void node_to_dims(Context *context, ASTNode* node, size_t *dims, int** dim_base, int** dim_elements) {
     size_t local_dims = 0;
     int *local_dim_base = 0;
     int *local_dim_elements = 0;
@@ -642,7 +648,9 @@ void promote_symbol_from_target(Context *context, ASTNode *node) {
                     if (s->value_class) free(s->value_class);
                     s->value_class = node->target_class ? strdup(node->target_class) : 0;
                 }
-                context->changed_flags |= FLAG_VAL_TYPE;
+                if (context) {
+                    context->changed_flags |= FLAG_VAL_TYPE;
+                }
                 /* Also update the node's value_type so it matches target_type immediately */
                 ast_svtp(node, s);
             }
@@ -651,7 +659,7 @@ void promote_symbol_from_target(Context *context, ASTNode *node) {
 }
 
 /* Validates a node promotion is correct adding error nodes if not */
-void validate_node_promotion(ASTNode* node) {
+void validate_node_promotion(Context *context, ASTNode* node) {
     size_t i;
     if (node->target_type == TP_UNKNOWN) return; /* Can't validate yet - will be done later after the target is set */
     if (node->value_type == TP_UNKNOWN) return; /* Can't validate yet - will be done later after the value is set */
@@ -793,7 +801,8 @@ walker_result set_node_ordinals_walker(walker_direction direction,
 /* Shadowing warning walker */
 static walker_result shadowing_warning_walker(walker_direction direction,
                                               ASTNode* node,
-                                              __attribute__((unused)) void *payload) {
+                                              void *payload) {
+    Context *context = (Context *)payload;
     if (direction == in) {
         if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->is_shadowing) {
             /* Only warn on primary identifier nodes */
@@ -851,7 +860,8 @@ static walker_result shadowing_warning_walker(walker_direction direction,
 /* Disjoint Scope warning walker */
 static walker_result disjoint_scope_warning_walker(walker_direction direction,
                                                    ASTNode* node,
-                                                   __attribute__((unused)) void *payload) {
+                                                   void *payload) {
+    Context *context = (Context *)payload;
     if (direction == in) {
         if (node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET ||
             node->node_type == VAR_REFERENCE || node->node_type == STRING) {
@@ -979,8 +989,12 @@ void validate_ast(Context *context) {
     /* fixed point validation - Converge all exits */
     context->iterations = 0;
     context->after_rewrite = 0;
+    context->is_final_pass = 0;
     do {
         context->changed_flags = 0;
+
+        /* Reset node types for a clean slate */
+        ast_wlkr(context->ast, clear_node_types_walker, (void *) context);
 
         if (context->debug_mode && context == context->master_context) {
             rxcp_debug_header("STAGE_SYMBOLS", context->iterations);
@@ -1131,6 +1145,14 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
+        /* Type Safety checks */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, type_safety_walker, (void *)context);
+
+        /* Type Safety for function arguments */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, func_type_safety_walker, (void *)context);
+
         /* Re-write ADDRESS Instructions
          * Progress: rewrite_address_walker is idempotent. Mutates ADDRESS to ASSIGN.
          */
@@ -1184,6 +1206,10 @@ void validate_ast(Context *context) {
     ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
 
     /* Type Safety checks */
+    ast_wlkr(context->ast, clear_node_types_walker, (void *) context);
+    context->is_final_pass = 1;
+    context->current_scope = 0;
+    ast_wlkr(context->ast, set_node_types_walker, (void *) context);
     context->current_scope = 0;
     ast_wlkr(context->ast, type_safety_walker, (void *)context);
 

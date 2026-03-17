@@ -1265,7 +1265,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 /* The dimensions can be defined on the left-hand side (lhs) or rhs but not both and not if the rhs is a class */
                 /* node_to_type(context, ) above has checked the rhs - so now we look at the lhs */
                 if (symbol->value_dims == 0 && defining_node_link->node->sibling->node_type != CLASS)
-                    node_to_dims(defining_node_link->node, &(symbol->value_dims),
+                    node_to_dims(context, defining_node_link->node, &(symbol->value_dims),
                                  &(symbol->dim_base), &(symbol->dim_elements));
 
                 ast_svtp(defining_node_link->node, symbol);
@@ -1329,7 +1329,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             /* The dimensions can be defined on the left-hand side (lhs) or rhs but not both and not if the rhs is a class */
             /* node_to_type(context, ) above has checked the rhs - so now we look at the lhs */
             if (symbol->value_dims == 0 && defining_node_link->node->sibling->node_type != CLASS)
-                node_to_dims(defining_node_link->node, &(symbol->value_dims),
+                node_to_dims(context, defining_node_link->node, &(symbol->value_dims),
                              &(symbol->dim_base), &(symbol->dim_elements));
 
             ast_svtp(defining_node_link->node, symbol);

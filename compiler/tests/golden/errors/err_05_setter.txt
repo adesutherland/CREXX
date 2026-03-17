@@ -1,2 +1,4 @@
-Error in err_05_setter.rexx @ 4:1 - #INVALID_PUBLIC_ATTRIBUTE, "a.bar = \"test\""
-1 error(s) in source file
+Error in err_05_setter.rexx @ 4:3 - #BAD_CONVERSION, "bar"
+Error in err_05_setter.rexx @ 4:3 - #BAD_CONVERSION, "bar"
+Error in err_05_setter.rexx @ 4:9 - #TYPE_MISMATCH, "\"test\""
+3 error(s) in source file
