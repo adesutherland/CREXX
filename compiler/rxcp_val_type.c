@@ -344,6 +344,13 @@ walker_result set_node_types_walker(walker_direction direction,
                                 }
                                 if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                                     /* continue with method resolution below */
+                                    if (context->after_rewrite) {
+                                        if (node->node_string && (strcmp(node->node_string, "get") == 0 || strcmp(node->node_string, "set") == 0)) {
+                                            mknd_err(node, "INVALID_PUBLIC_ATTRIBUTE");
+                                        } else {
+                                            mknd_err(node, "METHOD_NOT_FOUND");
+                                        }
+                                    }
                                 } else if (!context->changed_flags) {
                                     /* Defer error if imports may provide class stubs */
                                     int has_import = 0;
@@ -1210,6 +1217,9 @@ walker_result func_type_safety_walker(walker_direction direction,
                     }
                     arg_num++;
                     if (!n2) {
+                        if (node->value_type == TP_UNKNOWN) {
+                            break;
+                        }
                         /* Its not an error for the first NOVAL argument */
                         if (arg_num > 1 || n1->node_type != NOVAL) mknd_err(n1, "UNEXPECTED_ARGUMENT, %d", arg_num);
                         else if (n1->node_type == NOVAL) {

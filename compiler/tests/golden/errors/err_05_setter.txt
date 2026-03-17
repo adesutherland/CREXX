@@ -1,0 +1,2 @@
+Error in err_05_setter.rexx @ 4:1 - #INVALID_PUBLIC_ATTRIBUTE, "a.bar = \"test\""
+1 error(s) in source file

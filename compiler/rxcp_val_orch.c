@@ -728,7 +728,30 @@ void validate_node_promotion(ASTNode* node) {
     }
 
     /* Class / Object Support */
-    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) {
+    if (node->value_type == TP_OBJECT && node->target_type == TP_STRING) {
+        int has_tostring = 0;
+        if (node->value_class) {
+            const char *cname = node->value_class;
+            if (cname[0] == '.') cname++;
+            ASTNode *root = node;
+            while (root->parent) root = root->parent;
+            Symbol *class_sym = sym_rvfn(root, (char*)cname);
+            if (class_sym && class_sym->symbol_type == CLASS_SYMBOL && class_sym->defines_scope) {
+                ASTNode mock_node;
+                memset(&mock_node, 0, sizeof(mock_node));
+                mock_node.node_string = "tostring";
+                mock_node.node_string_length = 8;
+                Symbol *tostring_sym = sym_lrsv(class_sym->defines_scope, &mock_node);
+                if (tostring_sym && tostring_sym->symbol_type == FUNCTION_SYMBOL) {
+                    has_tostring = 1;
+                }
+            }
+        }
+        if (!has_tostring) {
+            mknd_err(node, "BAD_CONVERSION");
+        }
+    }
+    else if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) {
         if (node->value_type != node->target_type) {
             mknd_err(node, "TYPE_MISMATCH");
         }
