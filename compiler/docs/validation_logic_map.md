@@ -36,6 +36,9 @@ The `validate_ast` function (in `rxcp_val_orch.c`) orchestrates the following se
 
 All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the compiler forces at least 3 iterations and multiple calls per walker to verify this property and ensure AST/Symbol stability.
 
+4.5. **Clear Node Types (`clear_node_types_walker`)**:
+    *   Intelligently resets dynamically inferred node types at the start of each validation pass, cleanly erasing stale target types while preserving the types of intrinsic literals and structural blocks.
+
 5.  **Exit Dispatch (`exit_dispatch_walker` - Pass A)**: 
     *   Consults the Bridge for `IMPLICIT_CMD` nodes. 
     *   Performs **Code Injection** if the plugin returns a Rexx string.
@@ -88,7 +91,19 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 
 13. **Type Inference (`set_node_types_walker`)**: 
     *   Propagates types through the tree. Handles first-assignment inference.
-    *   *Idempotency*: Skips nodes that already have a resolved type. Crucially, when resolving fallback types (e.g., assigning `TP_VOID` to a `TP_UNKNOWN` assignment target), it **does not** set the `changed_flags` convergence signal. This prevents infinite ping-pong idempotency violations between `type_safety_walker` and `set_node_types_walker`.
+    *   *Idempotency*: Skips nodes that already have a resolved type. 
+
+13.1 **ToString Rewrite (`tostring_rewrite_walker`)**:
+    *   Detects `TP_OBJECT` nodes requiring `TP_STRING` conversion and verifies that the `.tostring()` method exists.
+    *   Rewrites the AST to wrap the object expression in a `MEMBER_CALL("tostring")`.
+    *   *Idempotency*: Modifies the AST, triggering the `FLAG_VAL_TYPE` loop continuation flag to re-evaluate types for the new structure.
+
+13.2 **Type Safety (`type_safety_walker`)**: 
+    *   Verification of type compatibility using the promotion matrix.
+    *   *Idempotency*: Can run natively inside the fixed loop. Uses an `is_final_pass` flag to suppress type and argument-related errors inside the iterative resolution loop, only firing them during the final pass.
+
+13.3 **Function Call Type Safety (`func_type_safety_walker`)**: 
+    *   Validates arguments and reference parameters.
 
 14. **System Instruction Rewriting (`rewrite_address_walker` / `rewrite_exit_walker`)**: 
     *   Transforms `ADDRESS` and `EXIT` into internal system function calls.
@@ -101,11 +116,11 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
     *   Collects all `WARNING` and `ERROR` nodes from the AST and moves them to a detached list in the `Context`.
     *   This ensures the AST remains structurally clean for the emitter, while preserving all reported diagnostic information.
 
-16. **Type Safety (`type_safety_walker`)**: 
-    *   Final verification of type compatibility using the promotion matrix.
+16. **Final Type Inference (`set_node_types_walker`)**:
+    *   Restored right before the final `type_safety_walker` invocation, ensuring values and arguments retain their expected state before code generation.
 
-17. **Function Call Type Safety (`func_type_safety_walker`)**: 
-    *   Validates arguments and reference parameters.
+17. **Final Type Safety (`type_safety_walker` / `func_type_safety_walker`)**:
+    *   Invoked with `is_final_pass` set to true to emit any remaining type compatibility or argument errors.
 
 18. **Decimal Configuration (`decimal_parameters_walker`)**: 
     *   Sets precision and format parameters per scope.

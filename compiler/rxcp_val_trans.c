@@ -525,3 +525,61 @@ walker_result syntax_sugar_walker(walker_direction direction,
     }
     return result_normal;
 }
+
+/*
+ * Rewrites Object -> String conversions to use a tostring() method call.
+ */
+walker_result tostring_rewrite_walker(walker_direction direction,
+                                      ASTNode* node, void *payload) {
+    Context *context = (Context *) payload;
+
+    if (direction == in) {
+        /* Check if we have an object that needs to be a string. */
+        if (node->value_type == TP_OBJECT && node->target_type == TP_STRING && node->node_type != MEMBER_CALL) {
+            
+            /* Verify it actually has a tostring method */
+            int has_tostring = 0;
+            if (node->value_class) {
+                const char *cname = node->value_class;
+                if (cname[0] == '.') cname++;
+                ASTNode *root = node;
+                while (root && root->parent) root = root->parent;
+                Symbol *class_sym = sym_rvfn(root, (char*)cname);
+                if (class_sym && class_sym->symbol_type == CLASS_SYMBOL && class_sym->defines_scope) {
+                    ASTNode mock_node;
+                    memset(&mock_node, 0, sizeof(mock_node));
+                    mock_node.node_string = "tostring";
+                    mock_node.node_string_length = 8;
+                    Symbol *tostring_sym = sym_lrsv(class_sym->defines_scope, &mock_node);
+                    if (tostring_sym && tostring_sym->symbol_type == FUNCTION_SYMBOL) {
+                        has_tostring = 1;
+                    }
+                }
+            }
+            
+            if (has_tostring) {
+                /* Wrap the target instance node in a MEMBER_CALL("tostring") node.
+                 * We do manual tree surgery instead of ast_execute_rewrite because 
+                 * the latter expects the target to be destroyed, but we need to wrap 
+                 * the entire expression subtree unmodified. */
+                ASTNode *member_call = ast_ft(context, MEMBER_CALL);
+                ast_sstr(member_call, strdup("tostring"), 8);
+                member_call->free_node_string = 1;
+                member_call->line = node->line;
+                member_call->column = node->column;
+                member_call->source_start = node->source_start;
+                member_call->source_end = node->source_end;
+
+                /* Physically swap in the tree */
+                ast_rpl(node, member_call);
+                
+                /* Now put the original expression node as a child */
+                add_ast(member_call, node);
+
+                context->changed_flags |= FLAG_VAL_TYPE;
+                return result_abort;
+            }
+        }
+    }
+    return result_normal;
+}

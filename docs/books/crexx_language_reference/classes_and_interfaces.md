@@ -1,6 +1,6 @@
 # Classes and Interfaces {#classes-and-interfaces}
 
-*CURRENT STATUS: Classes are not implemented*
+*CURRENT STATUS: Classes are partially implemented (Phase 1 & Phase 2 in progress)*
 
 See also **Objects** subsection under **Data Types**.
 
@@ -208,9 +208,17 @@ an\_object \= an\_interface /\* Default Factory \*/
 
 an\_object.a\_method() /\* Calls Method \*/
 
-### *Getter / Setter* {#getter-/-setter}
+### *Getter / Setter Syntactic Sugar* {#getter-/-setter}
 
-An\_object \= “value”; say an\_object
+cREXX provides syntactic sugar for property access. 
+When accessing a property using dot notation (e.g. `say an_object.property`), the compiler attempts to call the `getProperty()` method.
+When setting a property (e.g. `an_object.property = "value"`), the compiler attempts to call the `setProperty("value")` method. 
+If the corresponding method does not exist, an `#INVALID_PUBLIC_ATTRIBUTE` error is raised.
+
+### *Object to String Conversion (tostring)* {#object-to-string}
+
+When an object is used in a string context (e.g. string concatenation or direct assignment to a `.string` variable), the compiler implicitly looks for a `.tostring()` method on the object. 
+If `.tostring()` is defined, it is called automatically to perform the conversion. If it is missing, a `#BAD_CONVERSION` error is raised.
 
 ### *Getter / Setter with Stem. format* {#getter-/-setter-with-stem.-format}
 

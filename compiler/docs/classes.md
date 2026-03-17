@@ -134,17 +134,22 @@ The Compiler applies specific resolution rules to map syntax to methods.
 When the compiler encounters `obj.member`, it resolves in this order:
 1.  **Method Match:** If `member` is a defined method with no arguments, generate `call member`. Note: RHS only.
 2.  **Private Attribute:** (Inside Class Only) If `member` is a `reserve` field, generate attribute access.
-3.  **Fallback (Sugar):** If the class defines `get`, rewrite to `obj.get("member")`.
-4.  **Error:** If none of the above, raise "Unknown Member".
+3.  **Fallback (Sugar):** Syntactic sugar attempts to rewrite property access. 
+    * `obj.member` rewrites to `obj.getMember()`. 
+    * `obj.member = val` rewrites to `obj.setMember(val)`. 
+    The compiler automatically upper-cases the first letter of the property name.
+4.  **Error:** If none of the above matches, it raises an `#INVALID_PUBLIC_ATTRIBUTE` error for property access or `#METHOD_NOT_FOUND` for method calls.
 
 **3. Reserved Method Names**
-To enable this sugar, the following method signatures are reserved:
+To enable this sugar, the following method signatures are reserved / expected:
 
 | Method | Signature | Triggered By |
 | :--- | :--- | :--- |
-| `get` | `arg key` | `obj[key]`, `obj.key` (Fallback) |
-| `set` | `arg key, value` | `obj[key]=v`, `obj.key=v` (Fallback) |
-| `tostring`| `(none)` | `(string)obj`, String concatenation |
+| `get` | `arg key` | `obj[key]` |
+| `set` | `arg key, value` | `obj[key]=v` |
+| `getProp` | `(none)` | `obj.prop` |
+| `setProp` | `arg value` | `obj.prop=v` |
+| `tostring`| `(none)` | `(string)obj`, String concatenation (implicit conversion to `TP_STRING`, throws `#BAD_CONVERSION` if missing) |
 | `(int)obj` | `toint: method` | Integer Math Context |
 | `(boolean)obj` | `toboolean: method` | Logic Context (IF/WHEN) |
 

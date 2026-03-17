@@ -16,6 +16,7 @@ This document summarizes an important change to the cREXX compiler (crexx-dev-26
 - Property: All walkers in the loop are idempotent. The `changed_flags` context variable is a bitmask used to identify exactly which walker forces another iteration, ensuring that non-converging phases can be instantly pinpointed and fixed. Under `-d3`, the compiler stress-tests by:
   - Invoking selected walkers multiple times per iteration.
   - Forcing extra loop iterations even when `context->changed_flags == 0`.
+- **Type Safety & Inference:** The type safety validation (`type_safety_walker` and `func_type_safety_walker`) is now run *inside* the loop. It uses an `is_final_pass` flag to suppress error emission during the iterative resolution loop, only firing true errors on the final pass. A newly introduced `clear_node_types_walker` resets dynamically inferred node types at the start of each validation pass so that subsequent passes can run natively without causing infinite ping-pong loops with `set_node_types_walker`. AST rewrite walkers (such as `tostring_rewrite_walker`) also run inside the loop to ensure structural mutations correctly ripple through the type propagation passes.
 - Diagnostic Override: If the loop does hit its maximum pass limit (16 iterations), it bypasses the standard AST error logger to instantly abort via `exit(255)` while dumping the unhandled walker flags.
 - Benefit: Safer future enhancements (e.g., block-scoped shadowing in DO blocks) without introducing order/iteration bugs.
 

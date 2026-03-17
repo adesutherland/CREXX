@@ -81,6 +81,7 @@ walker_result rewrite_constructor_walker(walker_direction direction, ASTNode* no
 walker_result rewrite_exit_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result rewrite_implicit_cmd_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result syntax_sugar_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result tostring_rewrite_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result rewrite_address_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result needs_rxsysb_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result add_rxsysb_walker(walker_direction direction, ASTNode* node, void *payload);
