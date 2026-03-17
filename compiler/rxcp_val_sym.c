@@ -297,13 +297,12 @@ walker_result build_symbols_walker(walker_direction direction,
                 Symbol *star = sym_fn(context->current_scope, "§factory", 9);
                 if (star) {
                     if (star->type == TP_UNKNOWN) {
-                        star->symbol_type = VARIABLE_SYMBOL;
-                        star->type = TP_OBJECT;
+                        sym_promote_symtype(context, star, VARIABLE_SYMBOL);
                         ASTNode *class_node = ast_class(node);
                         if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
-                            if (star->value_class) free(star->value_class);
-                            star->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
-                            strcpy(star->value_class, class_node->symbolNode->symbol->name);
+                            sym_promote_type(context, star, TP_OBJECT, 0, 0, 0, class_node->symbolNode->symbol->name);
+                        } else {
+                            sym_promote_type(context, star, TP_OBJECT, 0, 0, 0, 0);
                         }
                     }
                     /* Sync ordinal in every iteration */
@@ -315,13 +314,12 @@ walker_result build_symbols_walker(walker_direction direction,
                 Symbol *this_sym = sym_fn(context->current_scope, "§this", 6);
                 if (this_sym) {
                     if (this_sym->type == TP_UNKNOWN) {
-                        this_sym->symbol_type = VARIABLE_SYMBOL;
-                        this_sym->type = TP_OBJECT;
+                        sym_promote_symtype(context, this_sym, VARIABLE_SYMBOL);
                         ASTNode *class_node = ast_class(node);
                         if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
-                            if (this_sym->value_class) free(this_sym->value_class);
-                            this_sym->value_class = malloc(strlen(class_node->symbolNode->symbol->name) + 1);
-                            strcpy(this_sym->value_class, class_node->symbolNode->symbol->name);
+                            sym_promote_type(context, this_sym, TP_OBJECT, 0, 0, 0, class_node->symbolNode->symbol->name);
+                        } else {
+                            sym_promote_type(context, this_sym, TP_OBJECT, 0, 0, 0, 0);
                         }
                     }
                     /* Sync ordinal in every iteration */
@@ -354,8 +352,8 @@ walker_result build_symbols_walker(walker_direction direction,
                     }
                     if (namespace_scope) {
                         symbol = sym_f(namespace_scope, n);
-                        symbol->symbol_type = VARIABLE_SYMBOL;
-                        symbol->status = SYM_STATUS_LOCAL_VAR;
+                        sym_promote_symtype(context, symbol, VARIABLE_SYMBOL);
+                        sym_promote_status(context, symbol, SYM_STATUS_LOCAL_VAR);
                         symbol->exposed = 1;
                         symbol->is_global_var = 1;
                         context->changed_flags |= FLAG_VAL_SYM;
@@ -1172,21 +1170,21 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         /* Final attempt at global resolution (e.g. global variables) */
         sym_imva(context, symbol);
         if (symbol->status == SYM_STATUS_UNRESOLVED) {
-            symbol->status = SYM_STATUS_LOCAL_VAR;
+            sym_promote_status(context, symbol, SYM_STATUS_LOCAL_VAR);
         }
     }
 
     /* Process special symbols */
     if (symbol->is_rc) {
         symbol->type = TP_INTEGER;
-        symbol->symbol_type = VARIABLE_SYMBOL;
+        sym_promote_symtype(context, symbol, VARIABLE_SYMBOL);
         symbol->value_dims = 0;
         return;
     }
 
     if (symbol->is_factory && scope->defining_node && scope->defining_node->node_type == FACTORY) {
         symbol->type = TP_OBJECT;
-        symbol->symbol_type = VARIABLE_SYMBOL;
+        sym_promote_symtype(context, symbol, VARIABLE_SYMBOL);
         symbol->value_dims = 0;
         if (scope->parent && scope->parent->defining_node && scope->parent->defining_node->node_type == CLASS_DEF) {
             if (symbol->value_class) free(symbol->value_class);
@@ -1198,7 +1196,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
 
     if (symbol->is_this && scope->defining_node && scope->defining_node->node_type == METHOD) {
         symbol->type = TP_OBJECT;
-        symbol->symbol_type = VARIABLE_SYMBOL;
+        sym_promote_symtype(context, symbol, VARIABLE_SYMBOL);
         symbol->value_dims = 0;
         if (scope->parent && scope->parent->defining_node && scope->parent->defining_node->node_type == CLASS_DEF) {
             if (symbol->value_class) free(symbol->value_class);
