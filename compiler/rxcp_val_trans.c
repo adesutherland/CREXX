@@ -369,7 +369,7 @@ walker_result rewrite_constructor_walker(walker_direction direction,
                                          ASTNode* node, void *payload) {
     Context *context = (Context *) payload;
 
-    if (direction == in) {
+    if (direction == out) {
         if (node->node_type == ASSIGN) {
             ASTNode *target = ast_chdn(node, 0);
             ASTNode *rhs = ast_chdn(node, 1);
@@ -432,7 +432,7 @@ walker_result rewrite_constructor_walker(walker_direction direction,
                         /* If we had errors, return normal to avoid loop, but let the error be reported */
                         if (has_error) return result_normal;
 
-                        return result_abort;
+                        return result_normal;
                     }
                     else {
                         /* x = .int() -> DEFINE x = .int */
@@ -447,7 +447,7 @@ walker_result rewrite_constructor_walker(walker_direction direction,
                         /* If there was an error in args, just return normal to avoid loop, but let the error be reported */
                         if (has_error) return result_normal;
 
-                        return result_abort;
+                        return result_normal;
                     }
                 }
             }
@@ -464,8 +464,45 @@ walker_result syntax_sugar_walker(walker_direction direction,
                                   ASTNode* node, void *payload) {
     Context *context = (Context *) payload;
 
-    if (direction == in) {
-        if (node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET) {
+    if (direction == out) {
+        if (node->node_type == ASSIGN) {
+            ASTNode *target = node->child;
+            if (target && target->node_type == VAR_TARGET) {
+                ASTNode *index = target->child;
+
+                /* Rewrite if node is an Object and has an index (array/property access) */
+                int is_native_array = 0;
+                if (target->symbolNode && target->symbolNode->symbol) {
+                    if (target->symbolNode->symbol->value_dims > 0) is_native_array = 1;
+                } else if (target->value_dims > 0) {
+                    is_native_array = 1;
+                }
+
+                if (index && target->value_type == TP_OBJECT && !is_native_array) {
+                    ASTNode *val = target->sibling;
+
+                    /* Template: CALL -> MEMBER_CALL("set") -> [obj_stem, index, val] */
+                    ASTRewriteTemplate *call_tmpl = ast_rw_new(CALL, NULL);
+                    ASTRewriteTemplate *member_call_tmpl = ast_rw_new(MEMBER_CALL, "set");
+
+                    /* 1. Stem (Target instance) */
+                    ASTNode *stem_copy = ast_fstk(context, target);
+                    stem_copy->node_type = VAR_SYMBOL;
+                    ast_rw_add(member_call_tmpl, ast_rw_reuse(stem_copy));
+
+                    /* 2. Arguments */
+                    ast_rw_add(member_call_tmpl, ast_rw_reuse(index));
+                    if (val) ast_rw_add(member_call_tmpl, ast_rw_reuse(val));
+
+                    ast_rw_add(call_tmpl, member_call_tmpl);
+
+                    ast_execute_rewrite(context, node, call_tmpl);
+                    context->changed_flags |= FLAG_VAL_TRANS;
+                    return result_normal;
+                }
+            }
+        }
+        else if (node->node_type == VAR_SYMBOL) {
             ASTNode *index = node->child;
 
             /* Rewrite if node is an Object and has an index (array/property access) */
@@ -477,49 +514,20 @@ walker_result syntax_sugar_walker(walker_direction direction,
             }
 
             if (index && node->value_type == TP_OBJECT && !is_native_array) {
+                /* Template: MEMBER_CALL("get") -> [obj_stem, index] */
+                ASTRewriteTemplate *member_call_tmpl = ast_rw_new(MEMBER_CALL, "get");
 
-                if (node->node_type == VAR_TARGET) {
-                    ASTNode *parent = node->parent;
+                /* 1. Stem (Target instance) */
+                ASTNode *stem_copy = ast_fstk(context, node);
+                stem_copy->node_type = VAR_SYMBOL;
+                ast_rw_add(member_call_tmpl, ast_rw_reuse(stem_copy));
 
-                    /* Check for Assignment (LHS) */
-                    if (parent && parent->node_type == ASSIGN && parent->child == node) {
-                        ASTNode *val = node->sibling;
+                /* 2. Argument */
+                ast_rw_add(member_call_tmpl, ast_rw_reuse(index));
 
-                        /* Template: CALL -> MEMBER_CALL("set") -> [obj_stem, index, val] */
-                        ASTRewriteTemplate *call_tmpl = ast_rw_new(CALL, NULL);
-                        ASTRewriteTemplate *member_call_tmpl = ast_rw_new(MEMBER_CALL, "set");
-
-                        /* 1. Stem (Target instance) */
-                        ASTNode *stem_copy = ast_fstk(context, node);
-                        stem_copy->node_type = VAR_SYMBOL;
-                        ast_rw_add(member_call_tmpl, ast_rw_reuse(stem_copy));
-
-                        /* 2. Arguments */
-                        ast_rw_add(member_call_tmpl, ast_rw_reuse(index));
-                        if (val) ast_rw_add(member_call_tmpl, ast_rw_reuse(val));
-
-                        ast_rw_add(call_tmpl, member_call_tmpl);
-
-                        ast_execute_rewrite(context, parent, call_tmpl);
-                        return result_abort;
-                    }
-                }
-                /* Otherwise Expression (RHS) */
-                else if (node->node_type == VAR_SYMBOL) {
-                    /* Template: MEMBER_CALL("get") -> [obj_stem, index] */
-                    ASTRewriteTemplate *member_call_tmpl = ast_rw_new(MEMBER_CALL, "get");
-
-                    /* 1. Stem (Target instance) */
-                    ASTNode *stem_copy = ast_fstk(context, node);
-                    stem_copy->node_type = VAR_SYMBOL;
-                    ast_rw_add(member_call_tmpl, ast_rw_reuse(stem_copy));
-
-                    /* 2. Argument */
-                    ast_rw_add(member_call_tmpl, ast_rw_reuse(index));
-
-                    ast_execute_rewrite(context, node, member_call_tmpl);
-                    return result_abort;
-                }
+                ast_execute_rewrite(context, node, member_call_tmpl);
+                context->changed_flags |= FLAG_VAL_TRANS;
+                return result_normal;
             }
         }
     }
@@ -533,7 +541,7 @@ walker_result tostring_rewrite_walker(walker_direction direction,
                                       ASTNode* node, void *payload) {
     Context *context = (Context *) payload;
 
-    if (direction == in) {
+    if (direction == out) {
         /* Check if we have an object that needs to be a string. */
         if (node->value_type == TP_OBJECT && node->target_type == TP_STRING && node->node_type != MEMBER_CALL) {
             
@@ -576,8 +584,11 @@ walker_result tostring_rewrite_walker(walker_direction direction,
                 /* Now put the original expression node as a child */
                 add_ast(member_call, node);
 
+                /* Restore sibling pointer so walker can continue on direction == out */
+                node->sibling = member_call->sibling;
+
                 context->changed_flags |= FLAG_VAL_TYPE;
-                return result_abort;
+                return result_normal;
             }
         }
     }

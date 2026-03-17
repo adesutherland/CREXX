@@ -923,7 +923,7 @@ void validate_ast(Context *context) {
     context->current_scope = 0;
     context->in_factory = 0;
     ast_wlkr(context->ast, ast_structure_fixup_walker, (void *) context);
-    while (ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context) == result_abort);
+    ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context);
     ast_wlkr(context->ast, source_location_walker, (void *) context);
     ast_wlkr(context->ast, syntax_validation_walker, (void *) context);
     ast_wlkr(context->ast, rxcp_fixup_walker, (void *) context);
@@ -993,6 +993,27 @@ void validate_ast(Context *context) {
             ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
             rxcp_validate_ast_and_symbols(context->ast);
             ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
+
+        /* Re-write Constructors
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context);
+
+        /* Re-write EXIT Instructions
+         * Progress: rewrite_exit_walker is idempotent. Mutates EXIT to CALL.
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
@@ -1153,22 +1174,6 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
-        /* Re-write EXIT Instructions
-         * Progress: rewrite_exit_walker is idempotent. Mutates EXIT to CALL.
-         */
-        context->current_scope = 0;
-        ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
-        if (context->debug_mode >= 3) {
-            /* Stress test idempotency */
-            context->current_scope = 0;
-            ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
-            context->current_scope = 0;
-            ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
-        }
-
         context->iterations++;
         if (context->debug_mode >= 2) fprintf(stderr, "DEBUG: Iteration %d finished, changed_flags=0x%04X\n", context->iterations, context->changed_flags);
         /* Incremental update of symbols - So walkers can avoid duplicate processing */
@@ -1242,7 +1247,7 @@ void rxcp_bvl(Context *context) {
      * - Other AST fixups (TBC)
      */
     ast_wlkr(context->ast, ast_structure_fixup_walker, (void *) context);
-    while (ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context) == result_abort);
+    ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context);
     ast_wlkr(context->ast, source_location_walker, (void *) context);
     ast_wlkr(context->ast, syntax_validation_walker, (void *) context);
 
