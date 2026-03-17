@@ -51,6 +51,8 @@ void sym_promote_status(Context *context, Symbol *sym, SymbolStatus status);
 void sym_promote_symtype(Context *context, Symbol *sym, SymbolType symbol_type);
 void ast_promote_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name);
 void ast_promote_target_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name);
+void ast_set_value_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name);
+void ast_set_target_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name);
 
 /* orch */
 void validate_ast(Context *context);

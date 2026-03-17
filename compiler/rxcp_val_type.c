@@ -113,30 +113,14 @@ static ValueType max_type(ASTNode* node) {
 
 /* Set the node value and target type to a simple type (not an array or class name) */
 static void set_node_type(ASTNode* node, ValueType type) {
-    node->value_type = type;
-    node->value_dims = 0;
-    if (node->value_class) {
-        free(node->value_class);
-        node->value_class = 0;
-    }
-    node->target_type = type;
-    node->target_dims = 0;
-    if (node->target_class) {
-        free(node->target_class);
-        node->target_class = 0;
-    }
+    ast_set_value_type(0, node, type, 0, 0, 0, 0);
+    ast_set_target_type(0, node, type, 0, 0, 0, 0);
 }
 
 /* Set the target value to a simple target_type (not an array or class name)
  * and validates that it is convertable from the nodes value target_type */
 static void set_node_target_type(ASTNode* node, ValueType target_type) {
-    node->target_type = target_type;
-    node->target_dims = 0;
-    if (node->target_class) {
-        free(node->target_class);
-        node->target_class = 0;
-    }
-
+    ast_set_target_type(0, node, target_type, 0, 0, 0, 0);
     validate_node_promotion(node);
 }
 
@@ -332,22 +316,12 @@ walker_result set_node_types_walker(walker_direction direction,
                                     if (instance->symbolNode) sym_adnd(instance->symbolNode->symbol, node, 1, 0);
 
                                     /* Set scalar element type */
-                                    if (instance->symbolNode && instance->symbolNode->symbol) {
-                                        node->value_type = instance->symbolNode->symbol->type;
-                                    } else {
-                                        node->value_type = instance->value_type;
+                                    {
+                                        ValueType new_type = (instance->symbolNode && instance->symbolNode->symbol) ? instance->symbolNode->symbol->type : instance->value_type;
+                                        char *new_class = (instance->symbolNode && instance->symbolNode->symbol && instance->symbolNode->symbol->value_class) ? instance->symbolNode->symbol->value_class : instance->value_class;
+                                        ast_set_value_type(context, node, new_type, 0, 0, 0, new_class);
+                                        ast_set_target_type(context, node, new_type, 0, 0, 0, new_class);
                                     }
-                                    node->value_dims = 0;
-                                    node->target_dims = 0;
-                                    if (node->value_class) { free(node->value_class); node->value_class = 0; }
-                                    if (instance->symbolNode && instance->symbolNode->symbol && instance->symbolNode->symbol->value_class) {
-                                        node->value_class = malloc(strlen(instance->symbolNode->symbol->value_class) + 1);
-                                        strcpy(node->value_class, instance->symbolNode->symbol->value_class);
-                                    } else if (instance->value_class) {
-                                        node->value_class = malloc(strlen(instance->value_class) + 1);
-                                        strcpy(node->value_class, instance->value_class);
-                                    }
-                                    ast_rttp(node);
 
                                     /* Delete children (instance and any args) */
                                     while (node->child) {
@@ -404,10 +378,8 @@ walker_result set_node_types_walker(walker_direction direction,
                         Symbol *factory_sym = sym_lrsv(class_sym->defines_scope, &star_node);
                         if (factory_sym && factory_sym->symbol_type == FUNCTION_SYMBOL) {
                             sym_adnd(factory_sym, node, 1, 0);
-                            node->value_type = TP_OBJECT;
-                            node->value_class = malloc(strlen(class_sym->name) + 1);
-                            strcpy(node->value_class, class_sym->name);
-                            ast_rttp(node);
+                            ast_set_value_type(context, node, TP_OBJECT, 0, 0, 0, class_sym->name);
+                            ast_set_target_type(context, node, TP_OBJECT, 0, 0, 0, class_sym->name);
                             context->changed_flags |= FLAG_VAL_TYPE;
                             infer_arguments(context, node);
                         } else if (!context->changed_flags) {
@@ -473,27 +445,19 @@ walker_result set_node_types_walker(walker_direction direction,
                         } else {
                             /* We are returning the array element */
                             /* Ensure the node reflects the element (scalar) type and class */
-                            if (node->symbolNode && node->symbolNode->symbol->value_dims > ast_nchd(node)) {
-                                node->value_dims = node->symbolNode->symbol->value_dims - ast_nchd(node);
-                            } else {
-                                node->value_dims = 0;
-                            }
-                            node->target_dims = node->value_dims;
-                            ast_rttp(node);
-                            /* Copy over element value type/class from the symbol if needed */
-                            if (node->symbolNode && node->symbolNode->symbol) {
-                                /* Keep the underlying element ValueType */
-                                node->value_type = node->symbolNode->symbol->type;
-                                if (node->value_class) { free(node->value_class); node->value_class = 0; }
-                                if (node->symbolNode->symbol->value_class) {
-                                    node->value_class = malloc(strlen(node->symbolNode->symbol->value_class) + 1);
-                                    strcpy(node->value_class, node->symbolNode->symbol->value_class);
+                            {
+                                int new_dims = 0;
+                                ValueType new_type = node->value_type;
+                                char *new_class = node->value_class;
+                                if (node->symbolNode && node->symbolNode->symbol) {
+                                    if (node->symbolNode->symbol->value_dims > ast_nchd(node)) {
+                                        new_dims = node->symbolNode->symbol->value_dims - ast_nchd(node);
+                                    }
+                                    new_type = node->symbolNode->symbol->type;
+                                    new_class = node->symbolNode->symbol->value_class;
                                 }
-                                /* Make target match value */
-                                ast_rttp(node);
-                            } else {
-                                /* Reset Node Target Type to be the same as the node value type */
-                                ast_rttp(node);
+                                ast_set_value_type(context, node, new_type, new_dims, 0, 0, new_class);
+                                ast_set_target_type(context, node, new_type, new_dims, 0, 0, new_class);
                             }
                         }
                     }
@@ -850,13 +814,20 @@ walker_result type_safety_walker(walker_direction direction,
                                 mknd_err(node, "ARRAY_DIMS_MISMATCH");
                         }
 
-                        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->value_dims > ast_nchd(node)) {
-                            node->value_dims = node->symbolNode->symbol->value_dims - ast_nchd(node);
-                        } else {
-                            node->value_dims = 0;
+                        {
+                            int new_dims = 0;
+                            ValueType new_type = node->value_type;
+                            char *new_class = node->value_class;
+                            if (node->symbolNode && node->symbolNode->symbol) {
+                                if (node->symbolNode->symbol->value_dims > ast_nchd(node)) {
+                                    new_dims = node->symbolNode->symbol->value_dims - ast_nchd(node);
+                                }
+                                new_type = node->symbolNode->symbol->type;
+                                new_class = node->symbolNode->symbol->value_class;
+                            }
+                            ast_set_value_type(context, node, new_type, new_dims, 0, 0, new_class);
+                            ast_set_target_type(context, node, new_type, new_dims, 0, 0, new_class);
                         }
-                        node->target_dims = node->value_dims;
-                        ast_rttp(node);
                     }
                 }
                 break;

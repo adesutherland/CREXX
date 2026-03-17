@@ -291,6 +291,88 @@ void ast_promote_type(Context *context, ASTNode *node, ValueType type, size_t di
     }
 }
 
+
+/* Non-Monotonic Utility Setters for Type Safety */
+void ast_set_value_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
+    size_t i;
+
+    /* Optional change detection to help the orchestrator converge */
+    if (context) {
+        if (node->value_type != type || node->value_dims != dims) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        } else if (dims > 0 && (node->value_dim_base == 0 || node->value_dim_elements == 0)) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        } else if (class_name && (!node->value_class || strcmp(node->value_class, class_name) != 0)) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        }
+    }
+
+    node->value_type = type;
+    node->value_dims = dims;
+    
+    if (node->value_dim_base) free(node->value_dim_base);
+    if (node->value_dim_elements) free(node->value_dim_elements);
+    node->value_dim_base = 0;
+    node->value_dim_elements = 0;
+    
+    if (dims > 0) {
+        node->value_dim_base = malloc(sizeof(int) * dims);
+        node->value_dim_elements = malloc(sizeof(int) * dims);
+        if (dim_base) memcpy(node->value_dim_base, dim_base, sizeof(int) * dims);
+        else for (i=0; i<dims; i++) node->value_dim_base[i] = 1;
+        if (dim_elements) memcpy(node->value_dim_elements, dim_elements, sizeof(int) * dims);
+        else for (i=0; i<dims; i++) node->value_dim_elements[i] = 0;
+    }
+    
+    if (node->value_class) {
+        free(node->value_class);
+        node->value_class = 0;
+    }
+    if (class_name) {
+        node->value_class = strdup(class_name);
+    }
+}
+
+void ast_set_target_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
+    size_t i;
+
+    /* Optional change detection to help the orchestrator converge */
+    if (context) {
+        if (node->target_type != type || node->target_dims != dims) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        } else if (dims > 0 && (node->target_dim_base == 0 || node->target_dim_elements == 0)) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        } else if (class_name && (!node->target_class || strcmp(node->target_class, class_name) != 0)) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        }
+    }
+
+    node->target_type = type;
+    node->target_dims = dims;
+    
+    if (node->target_dim_base) free(node->target_dim_base);
+    if (node->target_dim_elements) free(node->target_dim_elements);
+    node->target_dim_base = 0;
+    node->target_dim_elements = 0;
+    
+    if (dims > 0) {
+        node->target_dim_base = malloc(sizeof(int) * dims);
+        node->target_dim_elements = malloc(sizeof(int) * dims);
+        if (dim_base) memcpy(node->target_dim_base, dim_base, sizeof(int) * dims);
+        else for (i=0; i<dims; i++) node->target_dim_base[i] = 1;
+        if (dim_elements) memcpy(node->target_dim_elements, dim_elements, sizeof(int) * dims);
+        else for (i=0; i<dims; i++) node->target_dim_elements[i] = 0;
+    }
+    
+    if (node->target_class) {
+        free(node->target_class);
+        node->target_class = 0;
+    }
+    if (class_name) {
+        node->target_class = strdup(class_name);
+    }
+}
+
 void ast_promote_target_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
     int current_spec = type_specificity(node->target_type);
     int new_spec = type_specificity(type);
