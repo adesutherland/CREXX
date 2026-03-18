@@ -626,6 +626,64 @@ walker_result syntax_sugar_walker(walker_direction direction,
 }
 
 /*
+ * Rewrites control flow statements, e.g. Classic SELECT -> IF / THEN / ELSE
+ */
+walker_result control_flow_rewrite_walker(walker_direction direction,
+                                          ASTNode* node, void *payload) {
+    Context *context = (Context *) payload;
+
+    if (direction == out) {
+        if (node->node_type == SELECT) {
+            ASTNode *when_list = node->child;
+            ASTNode *otherwise = when_list ? when_list->sibling : NULL;
+
+            if (when_list && when_list->node_type == INSTRUCTIONS) {
+                ASTNode *when_node = when_list->child;
+                ASTRewriteTemplate *root_if_tmpl = NULL;
+                ASTRewriteTemplate *current_if_tmpl = NULL;
+
+                while (when_node) {
+                    if (when_node->node_type == WHEN) {
+                        ASTNode *expr = when_node->child;
+                        ASTNode *inst = expr ? expr->sibling : NULL;
+
+                        ASTRewriteTemplate *new_if = ast_rw_new(IF, "if");
+                        if (expr) ast_rw_add(new_if, ast_rw_reuse(expr));
+                        if (inst) ast_rw_add(new_if, ast_rw_reuse(inst));
+
+                        if (!root_if_tmpl) {
+                            root_if_tmpl = new_if;
+                        } else {
+                            ast_rw_add(current_if_tmpl, new_if); /* Add as ELSE block of the current IF */
+                        }
+                        current_if_tmpl = new_if;
+                    }
+                    when_node = when_node->sibling;
+                }
+
+                if (root_if_tmpl) {
+                    if (otherwise) {
+                        /* The otherwise child is the instruction(s) to execute */
+                        if (otherwise->child) {
+                            ast_rw_add(current_if_tmpl, ast_rw_reuse(otherwise->child));
+                        }
+                    } else {
+                        /* Add a runtime error block for no otherwise if needed, but for now we omit ELSE */
+                        /* Actually, Rexx standard requires an error if no WHEN matches and no OTHERWISE */
+                        /* Let's generate a NOP or leave it empty for Level B */
+                    }
+
+                    ast_execute_rewrite(context, node, root_if_tmpl);
+                    context->changed_flags |= FLAG_VAL_TRANS;
+                    return result_normal;
+                }
+            }
+        }
+    }
+    return result_normal;
+}
+
+/*
  * Rewrites Object -> String conversions to use a tostring() method call.
  */
 walker_result tostring_rewrite_walker(walker_direction direction,

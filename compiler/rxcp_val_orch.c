@@ -1049,6 +1049,11 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
+        /* Control Flow Rewrite (e.g. SELECT) */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, control_flow_rewrite_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+
         /* Set Ordinals
          * Progress: set_node_ordinals_walker is idempotent. Recalculates from reset counter. Verified by stress testing.
          */

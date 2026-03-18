@@ -1,0 +1,30 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : test_select_classic.rexx
+ * BUILT                  : 2026-03-18 17:00:05
+ */
+
+.srcfile="test_select_classic.rexx"
+.globals=0
+
+main() .locals=0
+   .meta "test_select_classic.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 7:20="say \"Ten\""
+   .meta "test_select_classic.main.a"="b" ".int" "10"
+   say "Ten"
+   .src 14:13="say \"Other Same Line\""
+   say "Other Same Line"
+   .src 20:5="say \"Other1\""
+   say "Other1"
+   .src 21:5="say \"Other2\""
+   say "Other2"
+   .src 27:5="say \"Other in Do\""
+   say "Other in Do"
+   .src 24:74=""
+   ret
+   .meta "test_select_classic.main.a"

@@ -1,0 +1,82 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : test_select_classic.rexx
+ * BUILT                  : 2026-03-18 17:00:00
+ */
+
+.srcfile="test_select_classic.rexx"
+.globals=0
+
+main() .locals=3
+   .meta "test_select_classic.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:1="a = 10"
+   .meta "test_select_classic.main.a"="b" ".int" r0
+   load r0,10
+   .src 5:0="select\n  when a = 5"
+   ieq r1,r0,5
+   brf l71iffalse,r1
+   .src 6:14="then"
+   .src 6:19="say \"Five\""
+   say "Five"
+   br l71ifend
+   .src 7:3="when"
+l71iffalse:
+   .src 5:0="select\n  when a = 5 then say \"Five\"\n  when a = 10"
+   ieq r2,r0,10
+   brf l72iffalse,r2
+   .src 7:15="then"
+   .src 7:20="say \"Ten\""
+   say "Ten"
+   br l72ifend
+   .src 8:3="otherwise"
+l72iffalse:
+   .src 9:5="say \"Other\""
+   say "Other"
+l72ifend:
+l71ifend:
+   .src 12:0="select\n  when a = 1"
+   ieq r2,r0,1
+   brf l73iffalse,r2
+   .src 13:14="then"
+   .src 13:19="say \"One\""
+   say "One"
+   br l73ifend
+   .src 14:3="otherwise"
+l73iffalse:
+   .src 14:13="say \"Other Same Line\""
+   say "Other Same Line"
+l73ifend:
+   .src 17:0="select\n  when a = 2"
+   ieq r2,r0,2
+   brf l74iffalse,r2
+   .src 18:14="then"
+   .src 18:19="say \"Two\""
+   say "Two"
+   br l74ifend
+   .src 19:3="otherwise"
+l74iffalse:
+   .src 20:5="say \"Other1\""
+   say "Other1"
+   .src 21:5="say \"Other2\""
+   say "Other2"
+l74ifend:
+   .src 24:0="select\n  when a = 3"
+   ieq r2,r0,3
+   brf l75iffalse,r2
+   .src 25:14="then"
+   .src 25:19="say \"Three\""
+   say "Three"
+   br l75ifend
+   .src 26:3="otherwise"
+l75iffalse:
+   .src 27:5="say \"Other in Do\""
+   say "Other in Do"
+l75ifend:
+   .src 24:74=""
+   ret
+   .meta "test_select_classic.main.a"
