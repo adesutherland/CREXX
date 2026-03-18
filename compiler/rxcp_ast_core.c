@@ -685,6 +685,57 @@ ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
     return node;
 }
 
+/* Add an ERROR node only if it doesn't already exist as a child with the same message */
+ASTNode* mknd_err_unique(ASTNode* node, char *error_string, ...) {
+    va_list argptr;
+    size_t buffer_size = 200;
+    size_t needed;
+    ASTNode *errNode;
+
+    char *buffer = malloc(buffer_size);
+
+    /* Write to buffer as sized */
+    va_start(argptr, error_string);
+    needed = vsnprintf(buffer, buffer_size, error_string, argptr);
+    va_end(argptr);
+
+    /* Check if buffer was large enough, if not realloc and try again */
+    if (needed >= buffer_size) {
+        buffer_size = needed + 1;
+        buffer = realloc(buffer, buffer_size);
+        va_start(argptr, error_string);
+        vsnprintf(buffer, buffer_size, error_string, argptr);
+        va_end(argptr);
+    }
+
+    /* Check for duplicate */
+    ASTNode *child = node->child;
+    while (child) {
+        if (child->node_type == ERROR && child->node_string_length == strlen(buffer) && 
+            strncmp(child->node_string, buffer, child->node_string_length) == 0) {
+            free(buffer);
+            return node; /* Duplicate found */
+        }
+        child = child->sibling;
+    }
+
+    errNode = ast_ft(node->context, ERROR);
+    errNode->node_string = buffer;
+    errNode->node_string_length = strlen(buffer);
+    errNode->free_node_string = 1;
+
+    /* Copy location info */
+    errNode->line = node->line;
+    errNode->column = node->column;
+    errNode->file_name = node->file_name;
+    errNode->source_start = node->source_start;
+    errNode->source_end = node->source_end;
+
+    add_ast(node, errNode);
+
+    return node;
+}
+
 /* Add a WARNING node to a node - returns node for chaining */
 ASTNode* mknd_war(ASTNode* node, char *error_string, ...) {
     va_list argptr;

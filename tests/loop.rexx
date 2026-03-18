@@ -264,5 +264,18 @@ do i  =  1 to 12 by 2 while(i<=7)
       errors=errors+1
       say 'failed in test          22 '
     end
+  /* test 23 */
+  j=0; i=99
+  do i = .int(1) to 3
+    j = j + i
+  end
+  if i \= 99 then do
+    errors=errors+1
+    say 'failed in test          23 (shadowing i)'
+  end
+  if j \= 6 then do
+    errors=errors+1
+    say 'failed in test          23 (sum j)'
+  end
 
   return errors<>0

@@ -144,6 +144,8 @@ ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Add Child - Returns child 
 ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Add sibling - Returns younger for chaining */
 /* Add an error child node  - returns node for chaining */
 ASTNode *mknd_err(ASTNode* node, char *error_string, ...);
+/* Add an error child node only if an error with same string doesn't already exist on the node */
+ASTNode *mknd_err_unique(ASTNode* node, char *error_string, ...);
 /* Add a warning child node  - returns node for chaining */
 ASTNode *mknd_war(ASTNode* node, char *error_string, ...);
 void free_ast(Context* context);

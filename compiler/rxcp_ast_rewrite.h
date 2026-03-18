@@ -47,6 +47,7 @@ typedef struct ASTRewriteTemplate {
     NodeType node_type;         /* Used for RW_NEW_NODE */
     const char* string_val;     /* Used for RW_NEW_NODE */
     ASTNode* reused_node;       /* Used for RW_REUSE_NODE */
+    ASTNode* source_loc_node;   /* Explicitly assigned source location */
     struct ASTRewriteTemplate** children; 
     size_t num_children;
 } ASTRewriteTemplate;
@@ -55,6 +56,9 @@ typedef struct ASTRewriteTemplate {
 ASTRewriteTemplate* ast_rw_new(NodeType type, const char* str);
 ASTRewriteTemplate* ast_rw_reuse(ASTNode* node);
 ASTRewriteTemplate* ast_rw_add(ASTRewriteTemplate* parent, ASTRewriteTemplate* child);
+ASTRewriteTemplate* ast_rw_move_children(ASTRewriteTemplate* parent, ASTNode* source_node);
+ASTRewriteTemplate* ast_rw_move_children_replace(ASTRewriteTemplate* parent, ASTNode* source_node, ASTNode* replace_child, ASTRewriteTemplate* replace_tmpl);
+ASTRewriteTemplate* ast_rw_loc(ASTRewriteTemplate* tmpl, ASTNode* loc_node);
 ASTRewriteTemplate* ast_rw_children(void);
 
 /* Execution Engine */

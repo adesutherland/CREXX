@@ -36,14 +36,25 @@ foreach(_binfile ${REXXTESTBINS})
    get_filename_component(_basename ${_binfile} NAME_WE)
    # Create a "virtual target" using add_custom_target
    add_custom_target(${_basename} ALL DEPENDS ${_binfile})
-   add_custom_command(
-           COMMAND $<TARGET_FILE:rxc> -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
-           COMMAND $<TARGET_FILE:rxas> ${_basename}
-           DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm library compiler_exit_bin ${_prev_dependency}
-           OUTPUT ${_binfile}
-           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-           COMMENT "cREXX Assemble Test ${_basename} ..."
-   )
+   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.golden")
+       add_custom_command(
+               COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/check_warnings.sh $<TARGET_FILE:rxc> ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.golden
+               COMMAND $<TARGET_FILE:rxas> ${_basename}
+               DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm library compiler_exit_bin ${_prev_dependency} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.golden ${CMAKE_CURRENT_SOURCE_DIR}/check_warnings.sh
+               OUTPUT ${_binfile}
+               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+               COMMENT "cREXX Assemble Test ${_basename} (with golden check) ..."
+       )
+   else()
+       add_custom_command(
+               COMMAND $<TARGET_FILE:rxc> -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+               COMMAND $<TARGET_FILE:rxas> ${_basename}
+               DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm library compiler_exit_bin ${_prev_dependency}
+               OUTPUT ${_binfile}
+               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+               COMMENT "cREXX Assemble Test ${_basename} ..."
+       )
+   endif()
    add_test(NAME ${_basename}-rxvm COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
    add_test(NAME ${_basename}-rxbvm COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
    set(_prev_dependency ${_basename}.rxbin)

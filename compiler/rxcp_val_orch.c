@@ -34,8 +34,10 @@
 
 /* Suppress errors and warnings unless it is the final pass */
 #undef mknd_err
+#undef mknd_err_unique
 #undef mknd_war
 #define mknd_err(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err)((n), __VA_ARGS__) : (n))
+#define mknd_err_unique(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique)((n), __VA_ARGS__) : (n))
 #define mknd_war(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war)((n), __VA_ARGS__) : (n))
 
 /* Common Helpers */

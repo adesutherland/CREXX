@@ -384,6 +384,24 @@ walker_result rewrite_constructor_walker(walker_direction direction,
                 else if (is_node_string(rhs, "boolean")) { fundamental = 1; type_name = "boolean"; }
                 else if (is_node_string(rhs, "decimal")) { fundamental = 1; type_name = "decimal"; }
 
+                int in_do_loop = 0;
+                ASTNode *do_node = NULL;
+                if (node->parent && node->parent->node_type == REPEAT) {
+                    if (node->parent->parent && node->parent->parent->node_type == DO) {
+                        in_do_loop = 1;
+                        do_node = node->parent->parent;
+                    }
+                }
+
+                if (!fundamental && in_do_loop) {
+                    if (rhs->child) {
+                        ast_del(rhs->child);
+                        rhs->child = NULL;
+                    }
+                    mknd_err_unique(rhs, "LOOP_CLASSES_NOT_SUPPORTED");
+                    return result_normal;
+                }
+
                 if (fundamental) {
                     ASTNode *params = rhs->child;
                     ASTNode *val = NULL;
@@ -405,6 +423,67 @@ walker_result rewrite_constructor_walker(walker_direction direction,
 
                     /* Using AST Rewrite Utility */
                     ASTRewriteTemplate *class_node_tmpl = ast_rw_new(CLASS, mprintf(".%s", type_name));
+
+                    if (in_do_loop) {
+                        char *target_str = strndup(target->node_string, target->node_string_length);
+                        char *do_str = strndup(do_node->node_string, do_node->node_string_length);
+                        /* do i = .int(1) to 3 -> do; i = .int; do i = 1 to 3; ... ; end; end */
+                        ASTRewriteTemplate *define_tmpl = ast_rw_add(ast_rw_add(
+                            ast_rw_loc(ast_rw_new(DEFINE, "="), target),
+                            ast_rw_loc(ast_rw_new(VAR_TARGET, target_str), target)),
+                            class_node_tmpl
+                        );
+
+                        ASTRewriteTemplate *assign_tmpl = NULL;
+                        if (val) {
+                            assign_tmpl = ast_rw_add(ast_rw_add(
+                                ast_rw_loc(ast_rw_new(ASSIGN, "="), target),
+                                ast_rw_loc(ast_rw_new(VAR_TARGET, target_str), target)),
+                                ast_rw_reuse(val)
+                            );
+                        } else {
+                            /* No initial value, remove ASSIGN completely or assign null? 
+                               Actually loop needs an initializer, but let's just make it assign NOVAL to keep REPEAT child valid?
+                               Let's assign NOVAL to keep AST structure.
+                             */
+                            assign_tmpl = ast_rw_add(ast_rw_add(
+                                ast_rw_loc(ast_rw_new(ASSIGN, "="), target),
+                                ast_rw_loc(ast_rw_new(VAR_TARGET, target_str), target)),
+                                ast_rw_new(NOVAL, NULL)
+                            );
+                        }
+                        free(target_str);
+
+                        /* Rebuild DO node */
+                        ASTRewriteTemplate *new_do_tmpl = ast_rw_new(DO, do_node->node_string);
+                        
+                        ASTRewriteTemplate *instr_tmpl = ast_rw_add(ast_rw_add(
+                            ast_rw_new(INSTRUCTIONS, ""),
+                            define_tmpl),
+                            new_do_tmpl
+                        );
+                        
+                        /* Move all children of DO to new inner DO, except REPEAT -> ASSIGN which gets replaced */
+                        ASTNode *c = do_node->child;
+                        while (c) {
+                            ASTNode *next = c->sibling;
+                            if (c->node_type == REPEAT) {
+                                ASTRewriteTemplate *new_repeat = ast_rw_new(REPEAT, c->node_string);
+                                ast_rw_move_children_replace(new_repeat, c, node, assign_tmpl);
+                                ast_rw_add(new_do_tmpl, new_repeat);
+                            } else {
+                                c->sibling = NULL;
+                                c->parent = NULL;
+                                ast_rw_add(new_do_tmpl, ast_rw_reuse(c));
+                            }
+                            c = next;
+                        }
+
+                        do_node->child = NULL; /* prevent double free/reuse issues */
+                        ast_execute_rewrite(context, do_node, instr_tmpl);
+                        context->changed_flags |= FLAG_VAL_TRANS;
+                        return result_normal;
+                    }
 
                     if (val) {
                         /* x = .int(10) -> DEFINE x = .int ; ASSIGN x = 10 */
@@ -465,7 +544,19 @@ walker_result syntax_sugar_walker(walker_direction direction,
     Context *context = (Context *) payload;
 
     if (direction == out) {
-        if (node->node_type == ASSIGN) {
+        if (node->node_type == INSTRUCTIONS) {
+            /* Prove the approach with a new transformation use case: NOP removal */
+            ASTNode *nop_node = ast_chld(node, NOP, 0);
+            if (nop_node) {
+                ASTRewriteTemplate *new_inst = ast_rw_new(INSTRUCTIONS, node->node_string);
+                /* Using ast_rw_move_children_replace to move all children but drop the NOP node */
+                ast_rw_move_children_replace(new_inst, node, nop_node, NULL);
+                ast_execute_rewrite(context, node, new_inst);
+                context->changed_flags |= FLAG_VAL_TRANS;
+                return result_normal;
+            }
+        }
+        else if (node->node_type == ASSIGN) {
             ASTNode *target = node->child;
             if (target && target->node_type == VAR_TARGET) {
                 ASTNode *index = target->child;

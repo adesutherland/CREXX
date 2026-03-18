@@ -1119,7 +1119,7 @@ call(I) ::= TK_CALL(T) TK_STEM(S) stemparts(P) function_parameters(PP).
            if (prev) { prev->sibling = NULL; } else { P = NULL; }
            F = ast_f(context, MEMBER_CALL, last->token);
            if (F->node_string && F->node_string[0] == '.') {
-               memmove(F->node_string, F->node_string + 1, F->node_string_length);
+               F->node_string++;
                F->node_string_length--;
            }
            {
@@ -1164,7 +1164,7 @@ term(F)                ::= TK_STEM(S) stemparts(P) function_parameters(PP).
 
                                F = ast_f(context, MEMBER_CALL, last->token);
                                if (F->node_string && F->node_string[0] == '.') {
-                                   memmove(F->node_string, F->node_string + 1, F->node_string_length);
+                                   F->node_string++;
                                    F->node_string_length--;
                                }
 
@@ -1245,7 +1245,7 @@ bracket(F)           ::= TK_CLASS_TYPE(S) function_parameters(P).
                                F = ast_f(context, FACTORY_CALL, S);
                                if (P) add_ast(F,P);
                                if (F->node_string && F->node_string[0] == '.') {
-                                   memmove(F->node_string, F->node_string + 1, F->node_string_length);
+                                   F->node_string++;
                                    F->node_string_length--;
                                }
                            }
@@ -1256,7 +1256,7 @@ postfix(P)           ::= bracket(B).
 postfix(A)           ::= postfix(B) TK_CLASS_TYPE(S) function_parameters(PP). [TK_CLASS_TYPE]
                          { A = ast_f(context, MEMBER_CALL, S);
                            if (A->node_string && A->node_string[0] == '.') {
-                               memmove(A->node_string, A->node_string + 1, A->node_string_length);
+                               A->node_string++;
                                A->node_string_length--; }
                            add_ast(A,B); if (PP) add_ast(A,PP); }
 
@@ -1313,7 +1313,7 @@ postfix_c(P)         ::= bracket(B).
 postfix_c(A)         ::= postfix_c(B) TK_CLASS_TYPE(S) function_parameters(PP). [TK_CLASS_TYPE]
                          { A = ast_f(context, MEMBER_CALL, S);
                            if (A->node_string && A->node_string[0] == '.') {
-                               memmove(A->node_string, A->node_string + 1, A->node_string_length);
+                               A->node_string++;
                                A->node_string_length--; }
                            add_ast(A,B); if (PP) add_ast(A,PP); }
 

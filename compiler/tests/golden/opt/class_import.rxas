@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : class_import_main.rexx
- * BUILT                  : 2026-03-17 19:48:02
+ * BUILT                  : 2026-03-18 11:58:58
  */
 
 .meta "class_import_lib.counter"="b" ".unknown" .class
@@ -15,7 +15,7 @@ main() .locals=5
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 5:1="c = Counter("
+   .src 5:1="c = .Counter"
    .meta "class_import_main.main.c"="b" ".counter" r0
    load r1,0
    call r0,§class_import_lib.counter.§factory(),r1

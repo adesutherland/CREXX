@@ -140,6 +140,7 @@ add_crexx_compiler_fail_test(err_02_syntax rexx_src/err_02_syntax.rexx err_02_sy
 add_crexx_compiler_fail_test(err_04_getter rexx_src/err_04_getter.rexx err_04_getter.txt)
 add_crexx_compiler_fail_test(err_05_setter rexx_src/err_05_setter.rexx err_05_setter.txt)
 add_crexx_compiler_fail_test(err_06_missing_method rexx_src/err_06_missing_method.rexx err_06_missing_method.txt)
+add_crexx_compiler_fail_test(err_loop_class rexx_src/err_loop_class.rexx err_loop_class.txt)
 
 # Regression tests for rxpp issue
 add_crexx_compiler_test(repro_dotted_index rexx_src/repro_dotted_index.rexx)

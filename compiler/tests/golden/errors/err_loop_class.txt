@@ -1,0 +1,4 @@
+Error in err_loop_class.rexx @ 4:8 - #LOOP_CLASSES_NOT_SUPPORTED, ".foo"
+Error in err_loop_class.rexx @ 4:4 - #UNKNOWN_TYPE, "i = .foo"
+Error in err_loop_class.rexx @ 5:7 - #UNKNOWN_TYPE, "i"
+3 error(s) in source file

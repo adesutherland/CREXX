@@ -32,6 +32,7 @@ ASTRewriteTemplate* ast_rw_new(NodeType type, const char* str) {
     tmpl->node_type = type;
     tmpl->string_val = str ? strdup(str) : NULL;
     tmpl->reused_node = NULL;
+    tmpl->source_loc_node = NULL;
     tmpl->children = NULL;
     tmpl->num_children = 0;
     return tmpl;
@@ -42,6 +43,7 @@ ASTRewriteTemplate* ast_rw_reuse(ASTNode* node) {
     ASTRewriteTemplate* tmpl = malloc(sizeof(ASTRewriteTemplate));
     tmpl->action = RW_REUSE_NODE;
     tmpl->reused_node = node;
+    tmpl->source_loc_node = NULL;
     tmpl->string_val = NULL;
     tmpl->children = NULL;
     tmpl->num_children = 0;
@@ -56,12 +58,41 @@ ASTRewriteTemplate* ast_rw_add(ASTRewriteTemplate* parent, ASTRewriteTemplate* c
     return parent;
 }
 
+ASTRewriteTemplate* ast_rw_move_children(ASTRewriteTemplate* parent, ASTNode* source_node) {
+    return ast_rw_move_children_replace(parent, source_node, NULL, NULL);
+}
+
+ASTRewriteTemplate* ast_rw_move_children_replace(ASTRewriteTemplate* parent, ASTNode* source_node, ASTNode* replace_child, ASTRewriteTemplate* replace_tmpl) {
+    if (!parent || !source_node) return parent;
+    ASTNode *c = source_node->child;
+    while (c) {
+        ASTNode *next = c->sibling;
+        if (replace_child && c == replace_child) {
+            if (replace_tmpl) ast_rw_add(parent, replace_tmpl);
+        } else {
+            /* Detach to prevent cyclic operations before reuse */
+            c->sibling = NULL;
+            c->parent = NULL;
+            ast_rw_add(parent, ast_rw_reuse(c));
+        }
+        c = next;
+    }
+    return parent;
+}
+
+ASTRewriteTemplate* ast_rw_loc(ASTRewriteTemplate* tmpl, ASTNode* loc_node) {
+    if (!tmpl) return NULL;
+    tmpl->source_loc_node = loc_node;
+    return tmpl;
+}
+
 ASTRewriteTemplate* ast_rw_children(void) {
     ASTRewriteTemplate* tmpl = malloc(sizeof(ASTRewriteTemplate));
     tmpl->action = RW_CHILDREN;
     tmpl->node_type = 0;
     tmpl->string_val = NULL;
     tmpl->reused_node = NULL;
+    tmpl->source_loc_node = NULL;
     tmpl->children = NULL;
     tmpl->num_children = 0;
     return tmpl;
@@ -90,13 +121,15 @@ static ASTNode* execute_rewrite_recursive(Context* ctx, ASTRewriteTemplate* tmpl
             ast_sstr(result, strdup(tmpl->string_val), strlen(tmpl->string_val));
             result->free_node_string = 1;
         }
-        /* Inherit source tracking from target */
-        if (target_to_replace) {
-            result->line = target_to_replace->line;
-            result->column = target_to_replace->column;
-            result->token_start = target_to_replace->token_start;
-            result->source_start = target_to_replace->source_start;
-            result->source_end = target_to_replace->source_end;
+        /* Inherit source tracking from explicitly assigned loc_node or target */
+        ASTNode* loc_node = tmpl->source_loc_node ? tmpl->source_loc_node : target_to_replace;
+        if (loc_node) {
+            result->line = loc_node->line;
+            result->column = loc_node->column;
+            result->token_start = loc_node->token_start;
+            result->source_start = loc_node->source_start;
+            result->source_end = loc_node->source_end;
+            result->token = loc_node->token;
         }
     } 
     else if (tmpl->action == RW_REUSE_NODE) {
