@@ -181,7 +181,7 @@ int rexbscan(Context* s) {
     'NOP' { RET(TK_NOP); }
     'NUMERIC' { RET(TK_NUMERIC); }
   'OPTIONS' { RET(TK_OPTIONS); }
-  //  'OTHERWISE' { RET(TK_OTHERWISE); }
+    'OTHERWISE' { RET(TK_OTHERWISE); }
   'OUTPUT' { RET(TK_OUTPUT); }
   //  'PARSE' { RET(TK_PARSE); }
     'PROCEDURE' { RET(TK_PROCEDURE); }
@@ -195,11 +195,11 @@ int rexbscan(Context* s) {
   //  'QUEUE' { RET(TK_QUEUE); }
     'RETURN' { RET(TK_RETURN); }
     'SAY' { RET(TK_SAY); }
-  //  'SELECT' { RET(TK_SELECT); }
+    'SELECT' { RET(TK_SELECT); }
   //  'SIGNAL' { RET(TK_SIGNAL); }
     'THEN' { RET(TK_THEN); }
   //  'TRACE' { RET(TK_TRACE); }
-  //  'WHEN' { RET(TK_WHEN); }
+    'WHEN' { RET(TK_WHEN); }
   //  'OFF' { RET(TK_OFF); }
   //  'ON' { RET(TK_ON); }
     'BY' { RET(TK_BY); }

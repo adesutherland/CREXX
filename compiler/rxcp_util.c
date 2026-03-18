@@ -899,6 +899,10 @@ const char* node_type_to_string(NodeType type) {
         case COMPILER_ADDED_BLOCK: return "COMPILER_ADDED_BLOCK";
         case EXIT_EXTENDED: return "EXIT_EXTENDED";
         case EXIT_TOKEN: return "EXIT_TOKEN";
+        case SELECT: return "SELECT";
+        case SWITCH: return "SWITCH";
+        case WHEN: return "WHEN";
+        case OTHERWISE: return "OTHERWISE";
     }
     return "UNKNOWN";
 }

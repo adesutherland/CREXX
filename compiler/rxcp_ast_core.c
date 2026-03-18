@@ -1120,6 +1120,14 @@ const char *ast_ndtp(NodeType type) {
             return "EXIT_EXTENDED";
         case EXIT_TOKEN:
             return "EXIT_TOKEN";
+        case SELECT:
+            return "SELECT";
+        case SWITCH:
+            return "SWITCH";
+        case WHEN:
+            return "WHEN";
+        case OTHERWISE:
+            return "OTHERWISE";
         default: return "*UNKNOWN*";
     }
 }

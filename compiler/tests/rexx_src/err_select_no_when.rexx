@@ -3,5 +3,6 @@ options levelb
 
 a = 10
 select
-  otherwise say "Other"
+  otherwise
+    say "Other"
 end

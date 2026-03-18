@@ -5,18 +5,16 @@ REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
     REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
       LITERAL : "levelb" (-1:-1) [Type: .unknown]
     INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      ERROR : "SYNTAX_ERROR" (-1:-1) [Type: .unknown]
+        TOKEN : "say" (-1:-1) [Type: .unknown]
       IMPLICIT_CMD : "" (-1:-1) [Type: .unknown]
-        VAR_SYMBOL : "select" (-1:-1) [Type: .unknown]
-      IMPLICIT_CMD : "" (-1:-1) [Type: .unknown]
-        OP_SCONCAT : "" (-1:-1) [Type: .unknown]
-          VAR_SYMBOL : "when" (-1:-1) [Type: .unknown]
-          VAR_SYMBOL : "a" (-1:-1) [Type: .unknown]
-      SAY : "say" (-1:-1) [Type: .unknown]
         VAR_SYMBOL : "b" (-1:-1) [Type: .unknown]
       TOKEN : "end" (-1:-1) [Type: .unknown]
         ERROR : "UNEXPECTED_END" (-1:-1) [Type: .unknown]
+Error in err_struct_02.rexx @ 2:17 - #SYNTAX_ERROR, "say"
 Error in err_struct_02.rexx @ 2:24 - #UNEXPECTED_END, "end"
-1 error(s) in source file
+2 error(s) in source file
+Error in err_struct_02.rexx @ 2:17 - #SYNTAX_ERROR, "say"
 Error in err_struct_02.rexx @ 2:24 - #UNEXPECTED_END, "end"
-1 error(s) in source file
+2 error(s) in source file
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).
