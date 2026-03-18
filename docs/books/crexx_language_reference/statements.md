@@ -82,7 +82,20 @@ Evaluates the expression expr and prints the resulting string onto the standard 
 
 ## SELECT/WHEN/OTHERWISE
 
-*CURRENT STATUS: not implemented*
+SELECT [expression] [;]
+  WHEN expression [, expression ...] [;] THEN [;] instruction [;]
+  [WHEN expression [, expression ...] [;] THEN [;] instruction [;]]
+  ...
+  [OTHERWISE [;] [instruction] [;] ...]
+END [;]
+
+The SELECT statement allows you to conditionally evaluate multiple expressions and execute corresponding instructions based on the first expression that evaluates to true (1).
+
+There are two styles of the SELECT statement in cREXX:
+1. **Classic SELECT:** Does not include an initial `expression` after the `SELECT` keyword. Each `WHEN` expression is evaluated as a standalone boolean condition.
+2. **C-Style SELECT (SWITCH):** Includes an initial `expression` after the `SELECT` keyword. The `expression` is evaluated once, and its result is implicitly compared for equality (`=`) against each `WHEN` expression.
+
+If a `WHEN` condition is met, its associated `THEN` instruction is executed, and control exits the `SELECT` block. If no `WHEN` condition is met, the `OTHERWISE` block (if present) is executed. If no `WHEN` condition is met and an `OTHERWISE` block is absent, an error is typically raised (standard Rexx behavior).
 
 ## TRACE
 

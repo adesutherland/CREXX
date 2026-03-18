@@ -135,7 +135,7 @@ Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol, Sco
     scope->temp_flag = 0;
     if (parent) dpa_add((dpa*)(parent->child_array), scope);
 
-    if (type == SCOPE_LOCAL || (node && node->node_type == EXIT_OWNED)) {
+    if (type == SCOPE_LOCAL || (node && node->node_type == COMPILER_ADDED_BLOCK)) {
         scope->reg_scope = parent ? parent->reg_scope : scope;
     } else {
         scope->reg_scope = scope;

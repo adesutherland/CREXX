@@ -127,7 +127,7 @@ static walker_result emit_walker(walker_direction direction,
 
             case ARGS:
             case INSTRUCTIONS:
-            case EXIT_OWNED:
+            case COMPILER_ADDED_BLOCK:
                 emit_flow(node, pl);
                 break;
 

@@ -211,7 +211,7 @@ walker_result structure_symbols_walker(walker_direction direction,
             }
         }
 
-        else if (node->node_type == EXIT_OWNED) {
+        else if (node->node_type == COMPILER_ADDED_BLOCK) {
             if (node->scope) {
                 context->current_scope = node->scope;
             } else {
@@ -279,11 +279,11 @@ walker_result build_symbols_walker(walker_direction direction,
         if (node->node_type == REXX_UNIVERSE || node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE ||
             node->node_type == CLASS_DEF || node->node_type == PROCEDURE || node->node_type == METHOD ||
             node->node_type == FACTORY || node->node_type == IMPORT ||
-            node->node_type == DO || node->node_type == INSTRUCTIONS || node->node_type == EXIT_OWNED) {
+            node->node_type == DO || node->node_type == INSTRUCTIONS || node->node_type == COMPILER_ADDED_BLOCK) {
             /* Pass 1 has already created these scopes and symbols. Just navigate. */
             if (node->scope) {
                 context->current_scope = node->scope;
-            } else if (node->node_type == DO || node->node_type == EXIT_OWNED ||
+            } else if (node->node_type == DO || node->node_type == COMPILER_ADDED_BLOCK ||
                       (node->node_type == INSTRUCTIONS && node->parent &&
                        (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS))) {
                 /* If scope is missing, create it (handles nodes added by exits) */
@@ -1477,7 +1477,7 @@ int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int
         target_scope_node = target_scope_node->parent; /* start from parent */
         while (climbs > 0 && target_scope_node) {
             if (target_scope_node->node_type == DO ||
-                target_scope_node->node_type == EXIT_OWNED ||
+                target_scope_node->node_type == COMPILER_ADDED_BLOCK ||
                 target_scope_node->node_type == PROCEDURE ||
                 target_scope_node->node_type == METHOD ||
                 target_scope_node->node_type == NAMESPACE ||

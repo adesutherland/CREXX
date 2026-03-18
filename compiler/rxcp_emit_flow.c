@@ -55,7 +55,7 @@ void emit_flow(ASTNode *node, void *pl) {
 
         case ARGS:
         case INSTRUCTIONS:
-        case EXIT_OWNED:
+        case COMPILER_ADDED_BLOCK:
             if (!node->output) node->output = output_f();
             n = child1;
             while (n) {

@@ -1114,8 +1114,8 @@ const char *ast_ndtp(NodeType type) {
             return "MEMBER_CALL";
         case FACTORY_CALL:
             return "FACTORY_CALL";
-        case EXIT_OWNED:
-            return "EXIT_OWNED";
+        case COMPILER_ADDED_BLOCK:
+            return "COMPILER_ADDED_BLOCK";
         case EXIT_EXTENDED:
             return "EXIT_EXTENDED";
         case EXIT_TOKEN:

@@ -559,7 +559,7 @@ const char* token_to_string(int token_id) {
         case TK_ELLIPSIS: return "TK_ELLIPSIS";
         case TK_OPTIONAL: return "TK_OPTIONAL";
         case TK_NUMERIC: return "TK_NUMERIC";
-        case EXIT_OWNED: return "EXIT_OWNED";
+        case COMPILER_ADDED_BLOCK: return "COMPILER_ADDED_BLOCK";
         default: return "UNKNOWN";
     }
 }
@@ -728,24 +728,24 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
     if (frag->ast) {
         ASTNode *search = ast_fndn(ctx, frag->ast, INSTRUCTIONS);
         if (search && search->child) {
-            ASTNode *exit_owned = ast_f(ctx, EXIT_OWNED, target_node->token);
-            exit_owned->parent = target_node->parent;
-            exit_owned->scope = NULL;
+            ASTNode *compiler_added = ast_f(ctx, COMPILER_ADDED_BLOCK, target_node->token);
+            compiler_added->parent = target_node->parent;
+            compiler_added->scope = NULL;
 
             if (target_node->parent) {
-                if (target_node->parent->child == target_node) target_node->parent->child = exit_owned;
+                if (target_node->parent->child == target_node) target_node->parent->child = compiler_added;
                 else {
                     ASTNode *p = target_node->parent->child;
                     while (p && p->sibling != target_node) p = p->sibling;
-                    if (p) p->sibling = exit_owned;
+                    if (p) p->sibling = compiler_added;
                 }
             }
-            exit_owned->sibling = target_node->sibling;
+            compiler_added->sibling = target_node->sibling;
 
             ASTNode *instr = search->child;
             while (instr) {
                 ASTNode *next_instr = instr->sibling;
-                add_dast(exit_owned, instr);
+                add_dast(compiler_added, instr);
                 instr = next_instr;
             }
             ctx->changed_flags |= FLAG_UTIL;
@@ -896,7 +896,7 @@ const char* node_type_to_string(NodeType type) {
         case CLASS_DEF: return "CLASS_DEF";
         case MEMBER_CALL: return "MEMBER_CALL";
         case FACTORY_CALL: return "FACTORY_CALL";
-        case EXIT_OWNED: return "EXIT_OWNED";
+        case COMPILER_ADDED_BLOCK: return "COMPILER_ADDED_BLOCK";
         case EXIT_EXTENDED: return "EXIT_EXTENDED";
         case EXIT_TOKEN: return "EXIT_TOKEN";
     }
