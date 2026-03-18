@@ -1,3 +1,2 @@
 Error in err_select_c_no_when.rexx @ 7:1 - #MISSING_WHEN, "end"
-Error in err_select_c_no_when.rexx @ 7:1 - #SYNTAX_ERROR, "end"
-2 error(s) in source file
+1 error(s) in source file
