@@ -118,6 +118,8 @@ add_crexx_compiler_test(05_ops_classic rexx_src/05_ops_classic.rexx)
 add_crexx_compiler_test(06_logic rexx_src/06_logic.rexx)
 add_crexx_compiler_test(07_loops rexx_src/07_loops.rexx)
 add_crexx_compiler_test(08_select rexx_src/08_select.rexx)
+add_crexx_compiler_test(test_select_classic rexx_src/test_select_classic.rexx)
+add_crexx_compiler_test(test_select_c rexx_src/test_select_c.rexx)
 add_crexx_compiler_test(09_nested rexx_src/09_nested.rexx)
 add_crexx_compiler_test(10_procs rexx_src/10_procs.rexx)
 add_crexx_compiler_test(11_scope rexx_src/11_scope.rexx)
@@ -141,6 +143,8 @@ add_crexx_compiler_fail_test(err_04_getter rexx_src/err_04_getter.rexx err_04_ge
 add_crexx_compiler_fail_test(err_05_setter rexx_src/err_05_setter.rexx err_05_setter.txt)
 add_crexx_compiler_fail_test(err_06_missing_method rexx_src/err_06_missing_method.rexx err_06_missing_method.txt)
 add_crexx_compiler_fail_test(err_loop_class rexx_src/err_loop_class.rexx err_loop_class.txt)
+add_crexx_compiler_fail_test(err_select_no_when rexx_src/err_select_no_when.rexx err_select_no_when.txt)
+add_crexx_compiler_fail_test(err_select_c_no_when rexx_src/err_select_c_no_when.rexx err_select_c_no_when.txt)
 
 # Regression tests for rxpp issue
 add_crexx_compiler_test(repro_dotted_index rexx_src/repro_dotted_index.rexx)
