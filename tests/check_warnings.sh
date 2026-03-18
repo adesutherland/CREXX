@@ -1,7 +1,0 @@
-#!/bin/bash
-RXC=$1
-BASENAME=$2
-SOURCE=$3
-GOLDEN=$4
-$RXC -o $BASENAME $SOURCE 2> $BASENAME.out
-diff -u $GOLDEN $BASENAME.out || true

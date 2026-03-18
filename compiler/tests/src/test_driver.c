@@ -97,6 +97,7 @@ int main(int argc, char *argv[]) {
     int line_num_gold = 0;
     int expect_fail = 0;
     int ast_mode = 0;
+    int warnings_mode = 0;
     int update_gold = 0;
     int arg_ptr = 1;
     char *copied_files[100];
@@ -108,6 +109,9 @@ int main(int argc, char *argv[]) {
             arg_ptr++;
         } else if (strcmp(argv[arg_ptr], "--ast") == 0) {
             ast_mode = 1;
+            arg_ptr++;
+        } else if (strcmp(argv[arg_ptr], "--warnings") == 0) {
+            warnings_mode = 1;
             arg_ptr++;
         } else if (strcmp(argv[arg_ptr], "--update-gold") == 0) {
             update_gold = 1;
@@ -222,7 +226,7 @@ int main(int argc, char *argv[]) {
 
     /* Update Gold Logic */
     if (update_gold) {
-        const char *src_for_gold = (expect_fail || ast_mode) ? output_file : temp_rxas;
+        const char *src_for_gold = (expect_fail || ast_mode || warnings_mode) ? output_file : temp_rxas;
         if (copy_file(src_for_gold, golden_file)) {
             printf("Updated golden file: %s\n", golden_file);
             remove(temp_source_file);
@@ -239,7 +243,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Comparison Logic */
-    if (expect_fail || ast_mode) {
+    if (expect_fail || ast_mode || warnings_mode) {
         f_out = fopen(output_file, "r");
     } else {
         f_out = fopen(temp_rxas, "r");

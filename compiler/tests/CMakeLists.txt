@@ -41,6 +41,15 @@ macro(add_crexx_compiler_test NAME SOURCE_FILE)
              $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${COMPILER_OPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
 endmacro()
 
+# Macro to add a compiler warning test
+macro(add_crexx_compiler_warning_test NAME SOURCE_FILE GOLDEN_FILE)
+    add_test(NAME ${NAME}_warn
+             COMMAND crexx_test_driver --warnings
+             ${CMAKE_CURRENT_SOURCE_DIR}/golden/warnings/${GOLDEN_FILE}
+             ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_warn.txt
+             $<TARGET_FILE:rxc> ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+endmacro()
+
 # Macro to add a compiler failure test
 macro(add_crexx_compiler_fail_test NAME SOURCE_FILE GOLDEN_FILE)
     add_test(NAME ${NAME}_fail
@@ -145,6 +154,9 @@ add_crexx_compiler_fail_test(err_06_missing_method rexx_src/err_06_missing_metho
 add_crexx_compiler_fail_test(err_loop_class rexx_src/err_loop_class.rexx err_loop_class.txt)
 add_crexx_compiler_fail_test(err_select_no_when rexx_src/err_select_no_when.rexx err_select_no_when.txt)
 add_crexx_compiler_fail_test(err_select_c_no_when rexx_src/err_select_c_no_when.rexx err_select_c_no_when.txt)
+
+# Warning tests
+add_crexx_compiler_warning_test(loop rexx_src/loop.rexx loop.txt)
 
 # Regression tests for rxpp issue
 add_crexx_compiler_test(repro_dotted_index rexx_src/repro_dotted_index.rexx)
