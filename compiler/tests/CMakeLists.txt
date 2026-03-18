@@ -225,6 +225,10 @@ add_crexx_parsing_test(do_counted_parse parsing_src/do_counted_parse.rexx)
 add_crexx_parsing_test(do_while_parse parsing_src/do_while_parse.rexx)
 add_crexx_parsing_test(do_until_parse parsing_src/do_until_parse.rexx)
 
+# SELECT constructs parsing coverage
+add_crexx_parsing_test(select_classic_parse parsing_src/select_classic_parse.rexx)
+add_crexx_parsing_test(select_c_parse parsing_src/select_c_parse.rexx)
+
 # Bridge Connectivity Test
 add_custom_command(
         OUTPUT stub_plugin.rxbin

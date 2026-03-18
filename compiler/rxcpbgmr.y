@@ -637,6 +637,7 @@ group(I) ::= simple_do(K). { I = K; }
 group(I) ::= do(K) TK_EOC. { I = K; }
 group(I) ::= do(K). { I = K; }
 group(I) ::= if(K). { I = K; }
+group(I) ::= select(K) TK_EOC. { I = K; }
 group(I) ::= select(K). { I = K; }
 
 /* Groups */
@@ -752,42 +753,42 @@ else(T) ::= TK_ELSE ncl0 TK_END(E).
 select(S) ::= TK_SELECT(K) ncl0 when_list(W) TK_END.
               { S = ast_f(context, SELECT, K); add_ast(S,W); }
 select(S) ::= TK_SELECT(K) ncl0 when_list(W) TK_OTHERWISE(O) ncl0 instruction_list(I) TK_END.
-              { S = ast_f(context, SELECT, K); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,I); add_ast(S,oth); }
+              { S = ast_f(context, SELECT, K); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); if (I && I->node_type == INSTRUCTIONS && I->child && I->child->sibling == NULL) add_ast(oth, I->child); else add_ast(oth, I); add_ast(S,oth); }
 select(S) ::= TK_SELECT(K) ncl0 when_list(W) TK_OTHERWISE(O) ncl0 TK_END.
               { S = ast_f(context, SELECT, K); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,ast_ft(context, NOP)); add_ast(S,oth); }
 
 select(S) ::= TK_SELECT ncl0 TK_END(E).
               { S = ast_err(context, "MISSING_WHEN", E); }
 select(S) ::= TK_SELECT ncl0 TK_OTHERWISE(O) ncl0 instruction_list(I) TK_END(E).
-              { S = ast_err(context, "MISSING_WHEN", E); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,I); add_ast(S,oth); }
+              { S = ast_err(context, "MISSING_WHEN", E); ASTNode *oth = ast_f(context, OTHERWISE, O); if (I && I->node_type == INSTRUCTIONS && I->child && I->child->sibling == NULL) add_ast(oth, I->child); else add_ast(oth, I); add_ast(S,oth); }
 select(S) ::= TK_SELECT ncl0 TK_OTHERWISE(O) ncl0 TK_END(E).
               { S = ast_err(context, "MISSING_WHEN", E); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,ast_ft(context, NOP)); add_ast(S,oth); }
 
 select(S) ::= TK_SELECT(K) ncl0 when_list(W) TK_EOS.
               { S = ast_f(context, SELECT, K); add_ast(S,W); add_ast(S,ast_err(context, "MISSING_END", K)); }
 select(S) ::= TK_SELECT(K) ncl0 when_list(W) TK_OTHERWISE(O) ncl0 instruction_list(I) TK_EOS.
-              { S = ast_f(context, SELECT, K); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,I); add_ast(S,oth); add_ast(S,ast_err(context, "MISSING_END", K)); }
+              { S = ast_f(context, SELECT, K); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); if (I && I->node_type == INSTRUCTIONS && I->child && I->child->sibling == NULL) add_ast(oth, I->child); else add_ast(oth, I); add_ast(S,oth); add_ast(S,ast_err(context, "MISSING_END", K)); }
 select(S) ::= TK_SELECT(K) ncl0 when_list(W) TK_OTHERWISE(O) ncl0 TK_EOS.
               { S = ast_f(context, SELECT, K); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,ast_ft(context, NOP)); add_ast(S,oth); add_ast(S,ast_err(context, "MISSING_END", K)); }
 
 select(S) ::= TK_SELECT(K) expression(E) ncl0 when_list(W) TK_END.
               { S = ast_f(context, SWITCH, K); add_ast(S,E); add_ast(S,W); }
 select(S) ::= TK_SELECT(K) expression(E) ncl0 when_list(W) TK_OTHERWISE(O) ncl0 instruction_list(I) TK_END.
-              { S = ast_f(context, SWITCH, K); add_ast(S,E); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,I); add_ast(S,oth); }
+              { S = ast_f(context, SWITCH, K); add_ast(S,E); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); if (I && I->node_type == INSTRUCTIONS && I->child && I->child->sibling == NULL) add_ast(oth, I->child); else add_ast(oth, I); add_ast(S,oth); }
 select(S) ::= TK_SELECT(K) expression(E) ncl0 when_list(W) TK_OTHERWISE(O) ncl0 TK_END.
               { S = ast_f(context, SWITCH, K); add_ast(S,E); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,ast_ft(context, NOP)); add_ast(S,oth); }
 
 select(S) ::= TK_SELECT expression(E) ncl0 TK_END(K).
               { S = ast_err(context, "MISSING_WHEN", K); add_ast(S,E); }
 select(S) ::= TK_SELECT expression(E) ncl0 TK_OTHERWISE(O) ncl0 instruction_list(I) TK_END(K).
-              { S = ast_err(context, "MISSING_WHEN", K); add_ast(S,E); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,I); add_ast(S,oth); }
+              { S = ast_err(context, "MISSING_WHEN", K); add_ast(S,E); ASTNode *oth = ast_f(context, OTHERWISE, O); if (I && I->node_type == INSTRUCTIONS && I->child && I->child->sibling == NULL) add_ast(oth, I->child); else add_ast(oth, I); add_ast(S,oth); }
 select(S) ::= TK_SELECT expression(E) ncl0 TK_OTHERWISE(O) ncl0 TK_END(K).
               { S = ast_err(context, "MISSING_WHEN", K); add_ast(S,E); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,ast_ft(context, NOP)); add_ast(S,oth); }
 
 select(S) ::= TK_SELECT(K) expression(E) ncl0 when_list(W) TK_EOS.
               { S = ast_f(context, SWITCH, K); add_ast(S,E); add_ast(S,W); add_ast(S,ast_err(context, "MISSING_END", K)); }
 select(S) ::= TK_SELECT(K) expression(E) ncl0 when_list(W) TK_OTHERWISE(O) ncl0 instruction_list(I) TK_EOS.
-              { S = ast_f(context, SWITCH, K); add_ast(S,E); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,I); add_ast(S,oth); add_ast(S,ast_err(context, "MISSING_END", K)); }
+              { S = ast_f(context, SWITCH, K); add_ast(S,E); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); if (I && I->node_type == INSTRUCTIONS && I->child && I->child->sibling == NULL) add_ast(oth, I->child); else add_ast(oth, I); add_ast(S,oth); add_ast(S,ast_err(context, "MISSING_END", K)); }
 select(S) ::= TK_SELECT(K) expression(E) ncl0 when_list(W) TK_OTHERWISE(O) ncl0 TK_EOS.
               { S = ast_f(context, SWITCH, K); add_ast(S,E); add_ast(S,W); ASTNode *oth = ast_f(context, OTHERWISE, O); add_ast(oth,ast_ft(context, NOP)); add_ast(S,oth); add_ast(S,ast_err(context, "MISSING_END", K)); }
 
