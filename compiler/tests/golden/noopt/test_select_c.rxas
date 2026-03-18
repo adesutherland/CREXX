@@ -1,0 +1,150 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : test_select_c.rexx
+ * BUILT                  : 2026-03-18 17:38:40
+ */
+
+.srcfile="test_select_c.rexx"
+.globals=0
+
+main() .locals=13
+   .meta "test_select_c.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "test_select_c.main.scope_var"="b" ".int" r2
+   .src 54:5="scope_var = .int"
+   null r2
+   .src 4:1="a = 10"
+   .meta "test_select_c.main.a"="b" ".int" r0
+   load r0,10
+   .src 5:1="select a\n  when 5 then say \"Five\"\n  when 10 then do\n    say \"Ten\"\n  end\n  otherwise\n    say \"Other\""
+   .meta "test_select_c.main.select_tmp"="b" ".int" r3
+   icopy r3,r0
+   .src 5:0="select a\n  when 5 then say \"Five\"\n  when 10 then do\n    say \"Ten\"\n  end\n  otherwise\n    say \"Other\""
+   ieq r11,r3,5
+   brf l123iffalse,r11
+   .src 6:15="say \"Five\""
+   say "Five"
+   br l123ifend
+   .src 7:3="when"
+l123iffalse:
+   .src 5:0="select a\n  when 5 then say \"Five\"\n  when 10 then do\n    say \"Ten\"\n  end\n  otherwise\n    say \"Other\""
+   ieq r12,r3,10
+   brf l126iffalse,r12
+   .src 8:5="say \"Ten\""
+   say "Ten"
+   br l126ifend
+   .src 9:3="end"
+l126iffalse:
+   .src 11:5="say \"Other\""
+   say "Other"
+l126ifend:
+l123ifend:
+   .src 14:1="select a\n  when 1 then say \"One\"\n  otherwise say \"Other Same Line\""
+   .meta "test_select_c.main.select_tmp"="b" ".int" r4
+   icopy r4,r0
+   .src 14:0="select a\n  when 1 then say \"One\"\n  otherwise say \"Other Same Line\""
+   ieq r12,r4,1
+   brf l135iffalse,r12
+   .src 15:15="say \"One\""
+   say "One"
+   br l135ifend
+   .src 16:3="otherwise"
+l135iffalse:
+   .src 16:13="say \"Other Same Line\""
+   say "Other Same Line"
+l135ifend:
+   .src 19:1="select a\n  when 2 then say \"Two\"\n  otherwise\n    say \"Other1\"\n    say \"Other2\""
+   .meta "test_select_c.main.select_tmp"="b" ".int" r5
+   icopy r5,r0
+   .src 19:0="select a\n  when 2 then say \"Two\"\n  otherwise\n    say \"Other1\"\n    say \"Other2\""
+   ieq r12,r5,2
+   brf l144iffalse,r12
+   .src 20:15="say \"Two\""
+   say "Two"
+   br l144ifend
+   .src 21:3="otherwise"
+l144iffalse:
+   .src 22:5="say \"Other1\""
+   say "Other1"
+   .src 23:5="say \"Other2\""
+   say "Other2"
+l144ifend:
+   .src 26:1="select a\n  when 3 then say \"Three\"\n  otherwise do\n    say \"Other in Do\""
+   .meta "test_select_c.main.select_tmp"="b" ".int" r6
+   icopy r6,r0
+   .src 26:0="select a\n  when 3 then say \"Three\"\n  otherwise do\n    say \"Other in Do\""
+   ieq r12,r6,3
+   brf l153iffalse,r12
+   .src 27:15="say \"Three\""
+   say "Three"
+   br l153ifend
+   .src 28:3="otherwise"
+l153iffalse:
+   .src 29:5="say \"Other in Do\""
+   say "Other in Do"
+l153ifend:
+   .src 35:1="select a\n  when 999 then say \"Should not print\""
+   .meta "test_select_c.main.select_tmp"="b" ".int" r7
+   icopy r7,r0
+   .src 35:0="select a\n  when 999 then say \"Should not print\""
+   ieq r12,r7,999
+   brf l162iffalse,r12
+   .src 36:17="say \"Should not print\""
+   say "Should not print"
+l162iffalse:
+   .src 40:1="b = 5"
+   .meta "test_select_c.main.b"="b" ".int" r1
+   load r1,5
+   .src 41:1="select a\n  when 10 then do\n    select b\n      when 5 then say \"Nested 5\"\n      otherwise say \"Nested Other\"\n    end\n  end\n  otherwise say \"Outer Other\""
+   .meta "test_select_c.main.select_tmp"="b" ".int" r8
+   icopy r8,r0
+   .src 41:0="select a\n  when 10 then do\n    select b\n      when 5 then say \"Nested 5\"\n      otherwise say \"Nested Other\"\n    end\n  end\n  otherwise say \"Outer Other\""
+   ieq r12,r8,10
+   brf l180iffalse,r12
+   .src 43:5="select b\n      when 5 then say \"Nested 5\"\n      otherwise say \"Nested Other\""
+   .meta "test_select_c.main.select_tmp"="b" ".int" r9
+   icopy r9,r1
+   .src 43:4="select b\n      when 5 then say \"Nested 5\"\n      otherwise say \"Nested Other\""
+   ieq r11,r9,5
+   brf l171iffalse,r11
+   .src 44:19="say \"Nested 5\""
+   say "Nested 5"
+   br l171ifend
+   .src 45:7="otherwise"
+l171iffalse:
+   .src 45:17="say \"Nested Other\""
+   say "Nested Other"
+l171ifend:
+   br l180ifend
+   .src 46:5="end"
+l180iffalse:
+   .src 48:13="say \"Outer Other\""
+   say "Outer Other"
+l180ifend:
+   .src 52:1="select a\n  when 10 then do\n    scope_var = .int\n    scope_var = 42\n    say \"Scope: \" scope_var\n  end\n  otherwise say \"Other\""
+   .meta "test_select_c.main.select_tmp"="b" ".int" r10
+   icopy r10,r0
+   .src 52:0="select a\n  when 10 then do\n    scope_var = .int\n    scope_var = 42\n    say \"Scope: \" scope_var\n  end\n  otherwise say \"Other\""
+   ieq r12,r10,10
+   brf l189iffalse,r12
+   .src 55:5="scope_var = 42"
+   load r2,42
+   .src 56:5="say \"Scope: \" scope_var"
+   itos r2
+   sconcat r11,"Scope: ",r2
+   say r11
+   br l189ifend
+   .src 57:3="end"
+l189iffalse:
+   .src 58:13="say \"Other\""
+   say "Other"
+l189ifend:
+   .src 52:125=""
+   ret
+   .meta "test_select_c.main.a"
+   .meta "test_select_c.main.b"
+   .meta "test_select_c.main.scope_var"

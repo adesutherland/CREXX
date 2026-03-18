@@ -208,7 +208,7 @@ following the `END`.
 - If `expression1`, `expression2`, and so on, are all *false*, then processing continues
 with the instruction following the `OTHERWISE`.
 
-`OTHERWISE` is essentially the `SELECT`-equivalent of `ELSE`. If there is any
+`OTHERWISE` is essentially the `SELECT`-equivalent of `ELSE`. If no `WHEN` expressions evaluate to *true* and there is no `OTHERWISE` clause, the `SELECT` instruction simply acts as a `NOP` (null operation) and does nothing.
 
 ## Looping with DO
 
@@ -328,4 +328,3 @@ This difference in behavior between single-instruction branches and `DO` blocks 
   Note: This syntax candy (`do i = .int(1) to 3`) desugars into a wrapped block (`do; i = .int; do i = 1 to 3; ...; end; end`). It is only supported for fundamental types (`.int`, `.string`, `.float`, `.boolean`, `.decimal`). Attempting to instantiate a non-fundamental class in a loop initialization (e.g. `do i = a_class(5) to 10`) will result in a `#LOOP_CLASSES_NOT_SUPPORTED` compilation error.
 
 Rationale: typed declarations always define intent and should introduce a new local; untyped uses favor existing bindings to reduce surprises, while remaining safe by creating a loop-local when none exists.
-possibility that all the `WHEN` expressions could be *false*, there must be an `OTHERWISE` clause.

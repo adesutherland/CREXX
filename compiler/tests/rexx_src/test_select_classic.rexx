@@ -27,3 +27,31 @@ select
     say "Other in Do"
   end
 end
+
+
+/* Missing OTHERWISE (NOP) */
+select
+  when a = 999 then say "Should not print"
+end
+
+/* Nested SELECTs */
+b = 5
+select
+  when a = 10 then do
+    select
+      when b = 5 then say "Nested 5"
+      otherwise say "Nested Other"
+    end
+  end
+  otherwise say "Outer Other"
+end
+
+/* Variable scope inside SELECT */
+select
+  when a = 10 then do
+    scope_var = .int
+    scope_var = 42
+    say "Scope: " scope_var
+  end
+  otherwise say "Other"
+end

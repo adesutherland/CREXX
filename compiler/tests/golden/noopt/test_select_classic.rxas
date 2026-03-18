@@ -1,82 +1,135 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : test_select_classic.rexx
- * BUILT                  : 2026-03-18 17:00:00
+ * BUILT                  : 2026-03-18 17:38:40
  */
 
 .srcfile="test_select_classic.rexx"
 .globals=0
 
-main() .locals=3
+main() .locals=5
    .meta "test_select_classic.main"="b" ".void" main() "" ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
+   .meta "test_select_classic.main.scope_var"="b" ".int" r2
+   .src 52:5="scope_var = .int"
+   null r2
    .src 4:1="a = 10"
    .meta "test_select_classic.main.a"="b" ".int" r0
    load r0,10
    .src 5:0="select\n  when a = 5"
-   ieq r1,r0,5
-   brf l71iffalse,r1
+   ieq r3,r0,5
+   brf l126iffalse,r3
    .src 6:14="then"
    .src 6:19="say \"Five\""
    say "Five"
-   br l71ifend
+   br l126ifend
    .src 7:3="when"
-l71iffalse:
+l126iffalse:
    .src 5:0="select\n  when a = 5 then say \"Five\"\n  when a = 10"
-   ieq r2,r0,10
-   brf l72iffalse,r2
+   ieq r4,r0,10
+   brf l127iffalse,r4
    .src 7:15="then"
    .src 7:20="say \"Ten\""
    say "Ten"
-   br l72ifend
+   br l127ifend
    .src 8:3="otherwise"
-l72iffalse:
+l127iffalse:
    .src 9:5="say \"Other\""
    say "Other"
-l72ifend:
-l71ifend:
+l127ifend:
+l126ifend:
    .src 12:0="select\n  when a = 1"
-   ieq r2,r0,1
-   brf l73iffalse,r2
+   ieq r4,r0,1
+   brf l128iffalse,r4
    .src 13:14="then"
    .src 13:19="say \"One\""
    say "One"
-   br l73ifend
+   br l128ifend
    .src 14:3="otherwise"
-l73iffalse:
+l128iffalse:
    .src 14:13="say \"Other Same Line\""
    say "Other Same Line"
-l73ifend:
+l128ifend:
    .src 17:0="select\n  when a = 2"
-   ieq r2,r0,2
-   brf l74iffalse,r2
+   ieq r4,r0,2
+   brf l129iffalse,r4
    .src 18:14="then"
    .src 18:19="say \"Two\""
    say "Two"
-   br l74ifend
+   br l129ifend
    .src 19:3="otherwise"
-l74iffalse:
+l129iffalse:
    .src 20:5="say \"Other1\""
    say "Other1"
    .src 21:5="say \"Other2\""
    say "Other2"
-l74ifend:
+l129ifend:
    .src 24:0="select\n  when a = 3"
-   ieq r2,r0,3
-   brf l75iffalse,r2
+   ieq r4,r0,3
+   brf l130iffalse,r4
    .src 25:14="then"
    .src 25:19="say \"Three\""
    say "Three"
-   br l75ifend
+   br l130ifend
    .src 26:3="otherwise"
-l75iffalse:
+l130iffalse:
    .src 27:5="say \"Other in Do\""
    say "Other in Do"
-l75ifend:
-   .src 24:74=""
+l130ifend:
+   .src 33:0="select\n  when a = 999"
+   ieq r4,r0,999
+   brf l131iffalse,r4
+   .src 34:16="then"
+   .src 34:21="say \"Should not print\""
+   say "Should not print"
+l131iffalse:
+   .src 38:1="b = 5"
+   .meta "test_select_classic.main.b"="b" ".int" r1
+   load r1,5
+   .src 39:0="select\n  when a = 10"
+   ieq r4,r0,10
+   brf l133iffalse,r4
+   .src 40:15="then"
+   .src 41:4="select\n      when b = 5"
+   ieq r3,r1,5
+   brf l132iffalse,r3
+   .src 42:18="then"
+   .src 42:23="say \"Nested 5\""
+   say "Nested 5"
+   br l132ifend
+   .src 43:7="otherwise"
+l132iffalse:
+   .src 43:17="say \"Nested Other\""
+   say "Nested Other"
+l132ifend:
+   br l133ifend
+   .src 44:5="end"
+l133iffalse:
+   .src 46:13="say \"Outer Other\""
+   say "Outer Other"
+l133ifend:
+   .src 50:0="select\n  when a = 10"
+   ieq r4,r0,10
+   brf l134iffalse,r4
+   .src 51:15="then"
+   .src 53:5="scope_var = 42"
+   load r2,42
+   .src 54:5="say \"Scope: \" scope_var"
+   itos r2
+   sconcat r3,"Scope: ",r2
+   say r3
+   br l134ifend
+   .src 55:3="end"
+l134iffalse:
+   .src 56:13="say \"Other\""
+   say "Other"
+l134ifend:
+   .src 50:127=""
    ret
    .meta "test_select_classic.main.a"
+   .meta "test_select_classic.main.b"
+   .meta "test_select_classic.main.scope_var"

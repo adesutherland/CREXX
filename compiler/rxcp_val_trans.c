@@ -678,6 +678,66 @@ walker_result control_flow_rewrite_walker(walker_direction direction,
                     return result_normal;
                 }
             }
+        } else if (node->node_type == SWITCH) {
+            ASTNode *expr = node->child;
+            ASTNode *when_list = expr ? expr->sibling : NULL;
+            ASTNode *otherwise = when_list ? when_list->sibling : NULL;
+
+            if (expr && when_list && when_list->node_type == INSTRUCTIONS) {
+                ASTNode *when_node = when_list->child;
+                ASTRewriteTemplate *root_if_tmpl = NULL;
+                ASTRewriteTemplate *current_if_tmpl = NULL;
+
+                ASTRewriteTemplate *block_tmpl = ast_rw_new(COMPILER_ADDED_BLOCK, "COMPILER_ADDED_BLOCK");
+
+                ASTRewriteTemplate *decl_tmpl = ast_rw_new(DEFINE, "=");
+                ast_rw_add(decl_tmpl, ast_rw_new(VAR_TARGET, "select_tmp"));
+                ast_rw_add(decl_tmpl, ast_rw_new(CLASS, ".unknown"));
+                ast_rw_add(block_tmpl, decl_tmpl);
+
+                ASTRewriteTemplate *assgn_tmpl = ast_rw_new(ASSIGN, "=");
+                ast_rw_add(assgn_tmpl, ast_rw_new(VAR_TARGET, "select_tmp"));
+                ast_rw_add(assgn_tmpl, ast_rw_reuse(expr));
+                ast_rw_add(block_tmpl, assgn_tmpl);
+
+                while (when_node) {
+                    if (when_node->node_type == WHEN) {
+                        ASTNode *when_expr = when_node->child;
+                        ASTNode *inst = when_expr ? when_expr->sibling : NULL;
+
+                        ASTRewriteTemplate *new_if = ast_rw_new(IF, "if");
+                        
+                        ASTRewriteTemplate *eq_tmpl = ast_rw_new(OP_COMPARE_EQUAL, "=");
+                        ast_rw_add(eq_tmpl, ast_rw_new(VAR_REFERENCE, "select_tmp"));
+                        if (when_expr) ast_rw_add(eq_tmpl, ast_rw_reuse(when_expr));
+                        
+                        ast_rw_add(new_if, eq_tmpl);
+                        if (inst) ast_rw_add(new_if, ast_rw_reuse(inst));
+
+                        if (!root_if_tmpl) {
+                            root_if_tmpl = new_if;
+                        } else {
+                            ast_rw_add(current_if_tmpl, new_if);
+                        }
+                        current_if_tmpl = new_if;
+                    }
+                    when_node = when_node->sibling;
+                }
+
+                if (root_if_tmpl) {
+                    if (otherwise) {
+                        if (otherwise->child) {
+                            ast_rw_add(current_if_tmpl, ast_rw_reuse(otherwise->child));
+                        }
+                    }
+
+                    ast_rw_add(block_tmpl, root_if_tmpl);
+
+                    ast_execute_rewrite(context, node, block_tmpl);
+                    context->changed_flags |= FLAG_VAL_TRANS;
+                    return result_normal;
+                }
+            }
         }
     }
     return result_normal;

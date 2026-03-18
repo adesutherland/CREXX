@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : test_select_classic.rexx
- * BUILT                  : 2026-03-18 17:00:05
+ * BUILT                  : 2026-03-18 17:38:40
  */
 
 .srcfile="test_select_classic.rexx"
@@ -25,6 +25,14 @@ main() .locals=0
    say "Other2"
    .src 27:5="say \"Other in Do\""
    say "Other in Do"
-   .src 24:74=""
+   .src 42:23="say \"Nested 5\""
+   .meta "test_select_classic.main.b"="b" ".int" "5"
+   say "Nested 5"
+   .src 54:5="say \"Scope: \" scope_var"
+   .meta "test_select_classic.main.scope_var"="b" ".int" "42"
+   say "Scope:  42"
+   .src 50:127=""
    ret
    .meta "test_select_classic.main.a"
+   .meta "test_select_classic.main.b"
+   .meta "test_select_classic.main.scope_var"
