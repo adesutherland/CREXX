@@ -536,9 +536,17 @@ walker_result register_walker(walker_direction direction,
                         c = c->sibling;
                     }
 
-                    if (needs_extra_reg) {
+                    char needs_prop_reg = 0;
+                    if (node->symbolNode && node->symbolNode->symbol &&
+                        node->symbolNode->symbol->scope &&
+                        node->symbolNode->symbol->scope->defining_node &&
+                        node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
+                        needs_prop_reg = 1;
+                    }
+
+                    if (needs_extra_reg || needs_prop_reg) {
                         /* Yes we do need an additional register */
-                        node->num_additional_registers = 1;
+                        node->num_additional_registers = needs_extra_reg + needs_prop_reg;
                         node->additional_registers = get_regs(node->scope, node->num_additional_registers);
                         /* We return it straight away - we only need it for this node */
                         ret_reg(node->scope, node->additional_registers);

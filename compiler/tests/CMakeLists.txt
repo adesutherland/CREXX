@@ -185,6 +185,7 @@ add_crexx_run_test(repro_args_parse rexx_src/repro_args_parse.rexx)
 add_crexx_run_test(repro_args_alias rexx_src/repro_args_alias.rexx)
 add_crexx_run_test(repro_sconcat rexx_src/repro_sconcat.rexx)
 add_crexx_run_test(test_implicit_address rexx_src/test_implicit_address.rexx)
+add_crexx_run_test(test_stem rexx_src/test_stem.rexx)
 
 # Helper to add a run test that is expected to fail (until feature lands)
 macro(add_crexx_run_test_will_fail NAME SOURCE_FILE)

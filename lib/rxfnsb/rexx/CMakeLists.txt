@@ -102,6 +102,7 @@ set(BIFS
 		arraydump
 		arrayformat
 		fmtmask
+		stem
 )
 
 foreach (BIF ${BIFS})

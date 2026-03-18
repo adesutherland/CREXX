@@ -521,7 +521,7 @@ static walker_result emit_walker(walker_direction direction,
 
                 if (!node->output) node->output = output_f();
 
-                if (node->node_type == VAR_SYMBOL &&
+                if (node->node_type == VAR_SYMBOL && !child1 &&
                     node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->scope &&
                     node->symbolNode->symbol->scope->defining_node &&
                     node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
@@ -565,6 +565,53 @@ static walker_result emit_walker(walker_direction direction,
                     char from_reg_type = node->symbolNode->symbol->register_type;
                     int from_reg_num = node->symbolNode->symbol->register_num;
                     char unlink_needed = 0;
+
+                    char is_property = 0;
+                    if (node->symbolNode && node->symbolNode->symbol &&
+                        node->symbolNode->symbol->scope &&
+                        node->symbolNode->symbol->scope->defining_node &&
+                        node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
+                        is_property = 1;
+                        
+                        /* Attribute Read - link the array into the first additional register */
+                        int index = 0;
+                        if (sym_nond(node->symbolNode->symbol) > 0) {
+                            ASTNode *def_node = sym_trnd(node->symbolNode->symbol, 0)->node;
+                            if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
+                                ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+                                if (nr) {
+                                    ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                                    if (idx) index = node_to_integer(idx);
+                                    else if (nr->int_value) index = (int)nr->int_value;
+                                }
+                            }
+                        }
+
+                        ASTNode *proc = ast_proc(node);
+                        char this_type = 'a'; int this_num = 1; /* Default for METHOD */
+                        if (proc && proc->node_type == FACTORY) {
+                            ASTNode star_node;
+                            memset(&star_node, 0, sizeof(ASTNode));
+                            star_node.node_string = "\xc2\xa7" "factory"; star_node.node_string_length = 9;
+                            Symbol *star_sym = sym_lrsv(proc->scope, &star_node);
+                            if (star_sym) { this_type = star_sym->register_type; this_num = star_sym->register_num; }
+                        }
+
+                        temp1 = mprintf("   linkattr1 r%d,%c%d,%d\n",
+                                        node->additional_registers,
+                                        this_type, this_num, index);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+
+                        /* Add cleanup to unlink this property reference */
+                        temp1 = mprintf("   unlink r%d\n", node->additional_registers);
+                        node->cleanup = output_fs(temp1);
+                        free(temp1);
+
+                        from_reg_type = 'r';
+                        from_reg_num = node->additional_registers;
+                    }
+                    int math_reg = node->additional_registers + is_property;
 
                     /* Now we need to link the array elements */
                     while (child1) {
@@ -613,7 +660,7 @@ static walker_result emit_walker(walker_direction direction,
                                     temp1 = mprintf("   getattrs r%d,%c%d,%d\n"
                                                     "   unlink r%d\n"
                                                     "   icopy r%d,r%d\n",
-                                                    node->additional_registers,
+                                                    math_reg,
                                                     from_reg_type,
                                                     from_reg_num,
                                                     base - 1,
@@ -621,7 +668,7 @@ static walker_result emit_walker(walker_direction direction,
                                                     node->register_num,
 
                                                     node->register_num,
-                                                    node->additional_registers);
+                                                    math_reg);
                                 }
                             }
                             output_append_text(node->output, temp1);
@@ -693,12 +740,12 @@ static walker_result emit_walker(walker_direction direction,
                             /* Need to make it 1 base */
                             temp1 = mprintf("   iadd r%d,%c%d,%d\n"
                                             "   linkattr1 r%d,%c%d,r%d\n",
-                                            node->additional_registers,
+                                            math_reg,
                                             child1->register_type, child1->register_num,
                                             1 - base,
                                             node->register_num,
                                             from_reg_type, from_reg_num,
-                                            node->additional_registers);
+                                            math_reg);
                         }
 
                         unlink_needed = 1; /* We will need to define a cleanup action to unlink */
@@ -856,6 +903,7 @@ static walker_result emit_walker(walker_direction direction,
                 output_concat(node->output, child2->output);
 
                 if (child1->symbolNode && child1->symbolNode->symbol && child1->symbolNode->symbol->scope &&
+                    !child1->child &&
                     child1->symbolNode->symbol->scope->defining_node &&
                     child1->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
                     /* Attribute Write */
