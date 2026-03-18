@@ -101,6 +101,7 @@ set(BIFS
 		arraymove
 		arraydump
 		arrayformat
+		fmtmask
 )
 
 foreach (BIF ${BIFS})

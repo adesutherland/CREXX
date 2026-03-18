@@ -70,7 +70,7 @@
  
  rxpath=rxpath||dirsep /* to avoid having to start -l with a slash */
  
- libraries='/lib/rxfnsb'
+ libraries='bin'
  
  modulenumber=1
  /* loop through arguments and find options and program files */
@@ -109,9 +109,9 @@
 	   fn[i+1]=''
 	 end
 	 lastSlash = lastpos('/',fn.i)
-	 libs = libs';'rxpath||substr(fn.i,3) /* for rxvm execution */
+	 libs = libs';'rxpath||'bin'dirsep||substr(fn.i,3) /* for rxvm execution */
 	 module[modulenumber] = substr(fn.i, lastSlash + 1)
-	 /* say '---->' module[modulenumber] */
+	 -- say '>' module[modulenumber]
 	 libraries = libraries';'rxpath||substr(fn.i,3,lastSlash-2) /* for rxc compile */
 	 modulenumber = modulenumber+1
        end
@@ -223,8 +223,9 @@ do i=1 to words(filenames)
 
   if verbose>2 then call banner
   modules = translate(libs,' ',';')
+  -- say '-=-=-=>>' modules
   if native then do
-    pack_cmd = 'rxcpack' filename rxpath'/lib/rxfnsb/library' modules
+    pack_cmd = 'rxcpack' filename rxpath'/bin/library' modules
     if verbose>1 then
     do
       say esc||ANSI_GREEN'rxcpack command :'esc||ANSI_RESET pack_cmd

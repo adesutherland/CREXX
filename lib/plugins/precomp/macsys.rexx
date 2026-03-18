@@ -2,7 +2,9 @@
 ##define log(msg)           {say time('l') msg}
 
 ##define argv(stem)    {arg stem=.string[]; argc=stem.0}
-##define strlen(len,strg)  {len=0; assembler strlen len,strg}
+##define strlen(len,strg)     {len=.int; assembler strlen len,strg}
+##define fastpos(into, srch,string) {into = 1; __srch=srch; assembler strpos into,__srch,string; }
+
 ##define cmd execio(num DISKX file keyword stem) {if mode='DISKR' | mode='READ' then stem.1='';rc=_ExecIO('num','diskx',file,stem)}
 
 /* Numerical Functions */
