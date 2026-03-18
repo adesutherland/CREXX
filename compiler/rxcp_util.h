@@ -39,6 +39,9 @@ void error_and_exit(int rc, char* message);
 /* printf - but returns a malloced buffer with the result */
 char* mprintf(const char* format, ...);
 
+/* Cross platform strndup */
+char* rx_strndup(const char* s, size_t n);
+
 /* Encodes a string into a malloced buffer for output/assembly */
 char* encdstrg(const char* string, size_t length);
 

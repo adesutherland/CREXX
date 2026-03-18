@@ -17,24 +17,6 @@ static const char* rexx_builtins[] = {
     "ON", "DROP", "EXTERNAL", "INTERPRET", "LINEIN", "NAME", "NOVALUE", "SOURCE", "SYNTAX", "UPPER",
     "VAR", "VERSION", NULL
 };
-/* ----------------------------------------------------------------------
- * strndup() is POSIX and not available in MSVCRT (MinGW/Windows).
- * Provide a small C99 fallback and map strndup to it on _WIN32
- * to preserve portability without changing call sites.
- * ----------------------------------------------------------------------
- */
-#if defined(_WIN32) && !defined(HAVE_STRNDUP)
-char *strndup_windows(const char *s, size_t n) {
-    if (!s) return NULL;
-    size_t len = strnlen(s, n);
-    char *out = (char *)malloc(len + 1);
-    if (!out) return NULL;
-    memcpy(out, s, len);
-    out[len] = '\0';
-    return out;
-}
-#define strndup strndup_windows     // register strndup to windows
-#endif
 
 static int is_builtin_keyword(const char* keyword) {
     int i = 0;
@@ -122,7 +104,7 @@ void rxcp_init_exits(Context *ctx) {
 
                         /* Register exit */
                         ExitEntry *entry = calloc(1, sizeof(ExitEntry));
-                        entry->primary_keyword = strndup(pk, pk_len);
+                        entry->primary_keyword = rx_strndup(pk, pk_len);
                         entry->class_name = strdup(classes[i].class_name);
                         entry->next = (ExitEntry *)root->exit_registry;
                         root->exit_registry = entry;
@@ -134,7 +116,7 @@ void rxcp_init_exits(Context *ctx) {
                             size_t ak_len = 0;
                             rxvml_to_str(vctx, ak_val, &ak_str, &ak_len);
                             if (ak_str && ak_len > 0) {
-                                char *work = strndup(ak_str, ak_len);
+                                char *work = rx_strndup(ak_str, ak_len);
                                 char *p = strtok(work, " ");
                                 while (p) {
                                     ExitKeyword *kw = calloc(1, sizeof(ExitKeyword));
@@ -738,7 +720,7 @@ int rxcp_exit_bridge_pre_invoke(Context *ctx, ASTNode *node) {
                         size_t status_len = 0;
                         if (rxvml_to_str(vctx, response, &status, &status_len) == 0 && status) {
                             /* Expected format: Space-separated token indexes (1-based), e.g., "2 3 4" */
-                            char *indices = strndup(status, status_len);
+                            char *indices = rx_strndup(status, status_len);
                             char *p = strtok(indices, " ");
                             while (p) {
                                 int idx = atoi(p);
@@ -747,7 +729,7 @@ int rxcp_exit_bridge_pre_invoke(Context *ctx, ASTNode *node) {
                                     if (target) {
                                         char *var_name = NULL;
                                         if (target->token && target->token->token_string && target->token->length > 0) {
-                                            var_name = strndup(target->token->token_string, target->token->length);
+                                            var_name = rx_strndup(target->token->token_string, target->token->length);
                                         } else if (target->node_string) {
                                             var_name = strdup(target->node_string);
                                         }
