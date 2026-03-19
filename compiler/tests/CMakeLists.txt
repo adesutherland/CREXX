@@ -154,6 +154,7 @@ add_crexx_compiler_fail_test(err_06_missing_method rexx_src/err_06_missing_metho
 add_crexx_compiler_fail_test(err_loop_class rexx_src/err_loop_class.rexx err_loop_class.txt)
 add_crexx_compiler_fail_test(err_select_no_when rexx_src/err_select_no_when.rexx err_select_no_when.txt)
 add_crexx_compiler_fail_test(err_select_c_no_when rexx_src/err_select_c_no_when.rexx err_select_c_no_when.txt)
+add_crexx_compiler_fail_test(err_class_assign rexx_src/err_class_assign.rexx err_class_assign.txt)
 
 # Warning tests
 add_crexx_compiler_warning_test(loop rexx_src/loop.rexx loop.txt)

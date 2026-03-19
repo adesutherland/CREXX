@@ -129,13 +129,13 @@ Each class must implement one or more interfaces. There are two notable interfac
 
 Method and attribute names must be unique within a class, especially when implementing multiple interfaces, to prevent conflicts and ensure clarity.
 
-## **Attribute Definition and Initialization** {#attribute-definition-and-initialization}
+## **Attribute Definition** {#attribute-definition}
 
-Attributes can be simple data types, arrays or classes and are declared / initialised within a class structure.
+Attributes can be simple data types, arrays or classes and are declared within a class structure. Note that attributes cannot be assigned initial values in the class definition block; all initialization must be performed inside a factory method.
 
 a\_class: class \= .interface  
   attr\_1 \= .string /\* string type \*/  
-  attr\_2 \= 1 /\* Integer type and initialised to 1 \*/  
+  attr\_2 \= .int    /\* Integer type \*/  
   …
 
 In cREXX, class attributes are private and can only be accessed or modified through methods that encapsulate them. This ensures data integrity and prevents unintended external interference.

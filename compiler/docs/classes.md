@@ -45,6 +45,8 @@ Level B uses a single **Default Factory** defined by the wildcard `*`.
 
 Attributes define the internal state of the class. They can be **Implicit** (Compiler-managed, auto-allocated) or **Explicit** (mapped to specific VM/Object storage). If a `WITH register` mapping is omitted, the compiler will automatically allocate an unused register (e.g. `r1`, `r2`) for the attribute.
 
+**Note:** Attribute definitions in the class block may only declare the type (e.g., `counter = .int`). Assigning initial values directly in the class block is not permitted and will trigger a `#CANT_ASSIGN_IN_CLASS_DEF` error. All initializations must be performed inside the `factory` method.
+
 **Syntax:**
 `variable_name = type [WITH source_location]`
 

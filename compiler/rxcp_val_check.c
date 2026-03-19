@@ -581,6 +581,11 @@ walker_result syntax_validation_walker(walker_direction direction,
                 mknd_err(node, "MULTIPLE_NAMESPACE");
             }
         }
+        else if (node->node_type == ASSIGN) {
+            if (node->parent && node->parent->node_type == CLASS_DEF) {
+                mknd_err(node, "CANT_ASSIGN_IN_CLASS_DEF");
+            }
+        }
         else if (node->node_type == REPEAT) {
             /* Validate Sub-commands - Error 27.1 */
             has_to = 0;
