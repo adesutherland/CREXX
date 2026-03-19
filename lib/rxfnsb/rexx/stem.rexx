@@ -41,8 +41,7 @@ stem: class
       h = h * 31 + val
     end
     
-    q = h % num_buckets
-    rem = h - q * num_buckets
+    rem = h % num_buckets
     if rem < 0 then rem = -rem
     return rem + 1
 

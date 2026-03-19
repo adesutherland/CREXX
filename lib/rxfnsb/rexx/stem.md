@@ -20,10 +20,12 @@ call s.set("key", "value")
 val = s.get("key")
 ```
 
-## Known Limitations and Discovered Bugs
-During the initial implementation, the following VM and Compiler issues were discovered. Most have now been resolved:
+## Architecture & Future Optimizations
+This Rexx implementation of the `stem` class is an **interim solution**.
 
-1. **Class Array Property Shadowing (RESOLVED)**: Directly initializing an array property in a method (e.g., `keys = .string[]`) or indexing it (`keys[1] = ...`) generated invalid assembler instructions (`minattrs r-1`). This has been fixed in the compiler by appropriately assigning a temporary register for class property arrays.
-2. **Dynamic Array Allocation in Classes (RESOLVED)**: It was initially reported that accessing an uninitialized or dynamically growing array index inside a class caused the `rxvm` interpreter to Segfault. Upon further investigation, this segfault was actually misattributed to dynamic arrays, and was in fact caused by the string operations bug below. Dynamic array growth on properties works perfectly.
-3. **Internal Method Calls Missing Context (RESOLVED)**: Calling sibling methods internally (like `hash(key)`) without a `.object` prefix failed to pass the implicit `§this` context. This led to a mismatch in argument registers where `rxvm` encountered a NULL register and threw a Segmentation Fault. The compiler has been updated to implicitly rewrite internal method calls into proper `MEMBER_CALL` nodes.
-4. **UTF-8 to UTF-32 Conversion**: Note that assembler instructions for string parsing convert internal UTF-8 to UTF-32 characters. Length is calculated in codepoints, not bytes. This must be considered when writing Unicode tests for the hash function.
+In the future, to optimize performance, cREXX assembler assists (implemented in C) will be introduced to handle the heavy lifting:
+*   **Hashing:** The hash function will be replaced with a faster native C assist.
+*   **Indexing and Storage:** Array lookups and storage management will also be offloaded to C-level assists (exact details TBC).
+
+## Notes on Character Encoding
+Note that assembler instructions for string parsing convert internal UTF-8 to UTF-32 characters. Length is calculated in codepoints, not bytes. This impacts how the hash function processes Unicode strings.
