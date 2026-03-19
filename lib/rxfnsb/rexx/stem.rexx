@@ -13,7 +13,7 @@ namespace rxfnsb expose stem
 
 stem: class
   num_buckets = .int
-  buckets = .int[]
+  buckets = .int[256]
   keys = .string[]
   values = .string[]
   next = .int[]
@@ -21,10 +21,6 @@ stem: class
 
   *: factory
     num_buckets = 256
-    buckets = .int[256]
-    keys = .string[]
-    values = .string[]
-    next = .int[]
     count = 0
     return
 
