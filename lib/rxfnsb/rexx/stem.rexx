@@ -22,22 +22,29 @@ stem: class
   *: factory
     num_buckets = 256
     buckets = .int[256]
-    keys = .string[1024]
-    values = .string[1024]
-    next = .int[1024]
+    keys = .string[]
+    values = .string[]
+    next = .int[]
     count = 0
     return
 
   hash: method = .int
     arg key = .string
-    /* 
-     * NOTE: Currently cREXX VM segfaults when doing string operations 
-     * (like length, substr, c2d, or assembler strlen) inside a class method.
-     * Therefore, all keys hash to bucket 1 for now, making this behave
-     * like a linear search (Option 1 performance) but using Option 2's structure.
-     * This will be fixed once the VM bug is resolved.
-     */
-    return 1
+    
+    h = 0
+    len = length(key)
+    if len = 0 then return 1
+    
+    do i = 1 to len
+      char = substr(key, i, 1)
+      val = c2d(char)
+      h = h * 31 + val
+    end
+    
+    q = h % num_buckets
+    rem = h - q * num_buckets
+    if rem < 0 then rem = -rem
+    return rem + 1
 
   get: method = .string
     arg key = .string

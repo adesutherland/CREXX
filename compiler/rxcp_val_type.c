@@ -300,6 +300,42 @@ walker_result set_node_types_walker(walker_direction direction,
                     if (node->value_type == TP_UNKNOWN) {
                         /* context->changed_flags |= FLAG_VAL_TYPE; */ ast_svtp(node, node->symbolNode->symbol);
                     }
+                    if (node->symbolNode->symbol && node->symbolNode->symbol->symbol_type == FUNCTION_SYMBOL) {
+                        Symbol *fsym = node->symbolNode->symbol;
+                        int is_method = 0;
+                        if (sym_nond(fsym) > 0) {
+                            SymbolNode *defsn = sym_trnd(fsym, 0);
+                            if (defsn && defsn->node && (defsn->node->node_type == METHOD || defsn->node->node_type == FACTORY)) {
+                                is_method = 1;
+                            }
+                        }
+                        if (is_method) {
+                            /* We are calling a method. If we are in a method/factory context and this is a simple FUNCTION node
+                             * we must rewrite it to a MEMBER_CALL to implicitly pass §this */
+                            ASTNode *this_node = ast_f(context, VAR_SYMBOL, node->token);
+                            char *this_str = malloc(7);
+                            strcpy(this_str, "\xc2\xa7" "this");
+                            ast_sstr(this_node, this_str, 6);
+                            Symbol *this_sym = sym_lrsv(context->current_scope, this_node);
+                            if (this_sym) {
+                                sym_adnd(this_sym, this_node, 1, 0);
+                            }
+
+                            node->node_type = MEMBER_CALL;
+
+                            /* Insert this_node as the first child */
+                            if (node->child) {
+                                this_node->sibling = node->child;
+                                node->child = this_node;
+                                this_node->parent = node;
+                            } else {
+                                add_ast(node, this_node);
+                            }
+
+                            context->changed_flags |= FLAG_VAL_TYPE;
+                            return result_normal;
+                        }
+                    }
                     infer_arguments(context, node);
                 }
                 break;
