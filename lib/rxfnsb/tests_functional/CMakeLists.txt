@@ -64,6 +64,7 @@ set(REXXBINS
         ts_numeric.rxbin
         ts_splice.rxbin
         ts_arraydelete.rxbin
+        ts_stem.rxbin
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)

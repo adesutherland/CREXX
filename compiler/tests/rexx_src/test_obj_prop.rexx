@@ -1,8 +1,6 @@
 options levelb
 
-import rxfnsb
-
-obj = .stem()
+obj = .myclass()
 
 obj.bar = "10"
 a = obj.bar
@@ -16,6 +14,19 @@ say b
 
 if b \= "20" then return 1
 
-/* Check for errors */
-/* Actually, let's leave errors to another test and make this one green */
 return 0
+
+myclass: class
+    val = .string
+
+    *: factory
+        return
+
+    get: method = .string
+        arg k = .string
+        return val
+
+    set: method
+        arg k = .string, new_val = .string
+        val = new_val
+        return
