@@ -221,11 +221,16 @@ do i=1 to words(filenames)
   end
   if RC>0 then exit
 
-  if verbose>2 then call banner
   modules = translate(libs,' ',';')
-  -- say '-=-=-=>>' modules
+  
+  if verbose>2 then call banner
+
   if native then do
-    pack_cmd = 'rxcpack' filename rxpath'/bin/library' modules
+    forces = ''
+    loop f=1 to words(modules)
+      forces = forces '-Wl,-force_load,'word(modules,f)'_static.a'
+    end
+    pack_cmd = 'rxcpack' filename rxpath'bin/library' 
     if verbose>1 then
     do
       say esc||ANSI_GREEN'rxcpack command :'esc||ANSI_RESET pack_cmd
@@ -237,23 +242,22 @@ do i=1 to words(filenames)
       say '[ 'res' ] rxcpack  - C-Packed ' esc||ANSI_BLUE||filename||esc||ANSI_RESET
     end
 
-    cc_command = 'gcc -O3 -DNDEBUG -o' filename ,
-      '-L'rxpath'/interpreter',
-      '-L'rxpath'/interpreter/rxvmplugin',
-      '-L'rxpath'/interpreter/rxvmplugin/rxvmplugins/db_decimal',
-      '-L'rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal',
-      '-L'rxpath'/avl_tree',
-      '-L'rxpath'/rxpa',
-      '-L'rxpath'/platform',
-	'-lrxvml',
-	'-lrxpa',
-	'-lavl_tree',
-	'-lplatform',
-        '-lm -lrxvmplugin',
-	  rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a ',
-	    rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a ',
-	 '-Wl,-force_load,"'rxpath'""',
-	  filename'.c'
+    cc_command = ,
+    'gcc -O3 -DNDEBUG -Wl,-search_paths_first -o' filename ,
+    '-Wl,-headerpad_max_install_names ',
+    '-L'rxpath'bin' ,
+    '-lrxvml',
+    '-lrxpashim',
+    '-lrxvmplugin',
+    '-lplatform',
+    '-ldecnumber',
+    '-lavl_tree',
+    '-lrxpa',
+    '-lm',
+    rxpath'bin/rxvm_mc_decimal_manual.a',
+    forces,
+    filename'.c'
+
     address system cc_command
     if verbose>1 then
       do
@@ -366,9 +370,6 @@ arg filename = .string
 -- terminal/powershell
 
 return 'done'
-/*
-  /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  bin/CMakeFiles/crexx.dir/crexx.c.o -o bin/crexx  -Wl,-force_load,"/Users/rvjansen/apps/crexx_release/lib/plugins/sysinfo/rx_sysinfo_static.a"  interpreter/librxvml.a  rxpa/librxpa.a  avl_tree/libavl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a
-  */
 
 chop_suffix: procedure = .string
 arg fn = .string
