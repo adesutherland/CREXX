@@ -118,6 +118,9 @@ void node_to_dims(Context *context, ASTNode* node, size_t *dims, int** dim_base,
     }
 
     local_dims = ast_nchd(node);
+    if (local_dims > 0 && node->node_type == VAR_TARGET) {
+        /* printf("DEBUG: node_to_dims called on VAR_TARGET '%s', setting local_dims=%lu\n", node->node_string, (unsigned long)local_dims); */
+    }
     if (local_dims) {
         local_dim_base = malloc(sizeof(int) * (local_dims));
         local_dim_elements = malloc(sizeof(int) * (local_dims));
@@ -743,6 +746,11 @@ void validate_node_promotion(Context *context, ASTNode* node) {
     }
     else if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) {
         if (node->value_type != node->target_type) {
+            char debug_str[100] = {0};
+            if (node->node_string && node->node_string_length < 99) {
+                strncpy(debug_str, node->node_string, node->node_string_length);
+            }
+            /* printf("DEBUG: TYPE_MISMATCH on '%s': value_type=%d, target_type=%d\n", debug_str, node->value_type, node->target_type); */
             mknd_err(node, "TYPE_MISMATCH");
         }
         else if (node->value_class && node->target_class) {
@@ -1033,21 +1041,7 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
-        /* Syntactic Sugar
-         * Progress: syntax_sugar_walker is idempotent. Verified by stress testing.
-         */
-        context->current_scope = 0;
-        ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
-        if (context->debug_mode >= 3) {
-            /* Stress test idempotency */
-            context->current_scope = 0;
-            ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
-            context->current_scope = 0;
-            ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
-        }
+        /* Syntactic Sugar Moved */
 
         /* Control Flow Rewrite (e.g. SELECT) */
         context->current_scope = 0;
@@ -1153,13 +1147,32 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
-        /* Type Safety checks */
+        /* Syntactic Sugar
+         * Progress: syntax_sugar_walker is idempotent. Verified by stress testing.
+         * MOVED here so that types are known!
+         */
         context->current_scope = 0;
-        ast_wlkr(context->ast, type_safety_walker, (void *)context);
+        ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
 
-        /* Type Safety for function arguments */
-        context->current_scope = 0;
-        ast_wlkr(context->ast, func_type_safety_walker, (void *)context);
+        if (!(context->changed_flags & FLAG_VAL_TRANS)) {
+            /* Type Safety checks */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, type_safety_walker, (void *)context);
+
+            /* Type Safety for function arguments */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, func_type_safety_walker, (void *)context);
+        }
 
         /* Rewrite object to string conversions to tostring() calls */
         context->current_scope = 0;

@@ -348,7 +348,10 @@ walker_result set_node_types_walker(walker_direction direction,
                         /* Resolve the Class Symbol from the instance's class name */
                         const char *cname = instance->value_class;
                         if (cname && cname[0] == '.') cname++;
-                        Symbol *class_sym = sym_rvfn(context->ast, (char*)cname);
+                        ASTNode dummy = {0};
+                        dummy.node_string = (char*)cname;
+                        dummy.node_string_length = strlen(cname);
+                        Symbol *class_sym = sym_rvfc(context->ast, &dummy);
                         if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                             /* Lookup the Method Name in the Class Scope */
                             Symbol *method_sym = sym_lrsv(class_sym->defines_scope, node);
@@ -468,11 +471,31 @@ walker_result set_node_types_walker(walker_direction direction,
                         } else if (!context->changed_flags || context->is_final_pass) {
                             mknd_err(node, "FACTORY_NOT_FOUND");
                         }
-                    } else if (!context->changed_flags || context->is_final_pass) {
+                    } else {
                         /* Try and import the class */
                         Symbol *import_cls = sym_imcls(context, node);
                         if (import_cls) {
-                            context->changed_flags |= FLAG_VAL_TYPE; } else {
+                            /* Resolve again - it should be found now */
+                            class_sym = sym_rvfc(context->ast, node);
+                            if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
+                                ASTNode star_node;
+                                memset(&star_node, 0, sizeof(ASTNode));
+                                star_node.node_string = "\xc2\xa7" "factory";
+                                star_node.node_string_length = 9;
+                                Symbol *factory_sym = sym_lrsv(class_sym->defines_scope, &star_node);
+                                if (factory_sym && factory_sym->symbol_type == FUNCTION_SYMBOL) {
+                                    if (!node->symbolNode || node->symbolNode->symbol != factory_sym) {
+                                        sym_adnd(factory_sym, node, 1, 0);
+                                        context->changed_flags |= FLAG_VAL_TYPE;
+                                    }
+                                    ast_set_value_type(0, node, TP_OBJECT, 0, 0, 0, class_sym->name);
+                                    ast_set_target_type(0, node, TP_OBJECT, 0, 0, 0, class_sym->name);
+                                    infer_arguments(context, node);
+                                }
+                            } else {
+                                context->changed_flags |= FLAG_VAL_TYPE; 
+                            }
+                        } else {
                             /* Defer error if imports may provide class stubs */
                             int has_import = 0;
                             if (context->ast && context->ast->child && context->ast->child->node_type == PROGRAM_FILE) {
@@ -495,7 +518,22 @@ walker_result set_node_types_walker(walker_direction direction,
                 if (node->value_type == TP_UNKNOWN && node->symbolNode) {
                     ValueType old_type = node->value_type;
                     int old_dims = node->value_dims;
-                    ast_svtp(node, node->symbolNode->symbol);
+                    
+                    /* Prevent object property access (which will be rewritten to get()) from eagerly copying the object's type.
+                     * If it has children (indices) and the symbol is a scalar object, leave it as TP_UNKNOWN.
+                     * This prevents 'a = obj.bar' from inferring 'a' as TP_OBJECT on the first pass before the rewrite.
+                     */
+                    int skip_svtp = 0;
+                    if ((node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET) && 
+                        node->symbolNode->symbol->value_dims == 0 && 
+                        child1 != NULL) {
+                        skip_svtp = 1;
+                    }
+                    /* printf("DEBUG: VAR_SYMBOL '%s', skip_svtp=%d, type=%d, dims=%d, child1=%p\n", node->node_string, skip_svtp, node->symbolNode->symbol->type, node->symbolNode->symbol->value_dims, (void*)child1); */
+                    
+                    if (!skip_svtp) {
+                        ast_svtp(node, node->symbolNode->symbol);
+                    }
 
                     if (node->node_type == VAR_SYMBOL && child1) {
                         /* We have array parameters (subscript or stem-style) */
@@ -536,8 +574,13 @@ walker_result set_node_types_walker(walker_direction direction,
                                     if (node->symbolNode->symbol->value_dims > ast_nchd(node)) {
                                         new_dims = node->symbolNode->symbol->value_dims - ast_nchd(node);
                                     }
-                                    new_type = node->symbolNode->symbol->type;
-                                    new_class = node->symbolNode->symbol->value_class;
+                                    if (!skip_svtp) {
+                                        new_type = node->symbolNode->symbol->type;
+                                        new_class = node->symbolNode->symbol->value_class;
+                                    } else {
+                                        new_type = TP_UNKNOWN;
+                                        new_class = NULL;
+                                    }
                                 }
                                 ast_set_value_type(0, node, new_type, new_dims, 0, 0, new_class);
                                 ast_set_target_type(0, node, new_type, new_dims, 0, 0, new_class);
@@ -788,9 +831,17 @@ walker_result type_safety_walker(walker_direction direction,
 
             case VAR_SYMBOL:
                 if (node->parent->node_type != NODE_REGISTER && node->parent->node_type != DEFINE) {
+                    int skip_svtp = 0;
                     if (node->symbolNode && node->symbolNode->symbol) {
                         if (node->value_type == TP_UNKNOWN) {
-                            ast_svtp(node, node->symbolNode->symbol);
+                            if ((node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET) && 
+                                node->symbolNode->symbol->value_dims == 0 && 
+                                ast_chdn(node, 0) != NULL) {
+                                skip_svtp = 1;
+                            }
+                            if (!skip_svtp) {
+                                ast_svtp(node, node->symbolNode->symbol);
+                            }
                         }
                     }
                     if (node->value_type == TP_UNKNOWN) {
@@ -805,7 +856,7 @@ walker_result type_safety_walker(walker_direction direction,
                                 }
                             }
                         }
-                        if (!is_explicit_unknown) {
+                        if (!is_explicit_unknown && !skip_svtp) {
                             mknd_err(node, "UNKNOWN_TYPE");
                         }
                     }
@@ -983,15 +1034,30 @@ walker_result type_safety_walker(walker_direction direction,
                             node_to_dims(context, child1, &(child1->symbolNode->symbol->value_dims),
                                          &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
                     }
-                    if (child1->symbolNode) ast_svtp(child1, child1->symbolNode->symbol);
+                    if (child1->symbolNode) {
+                        int skip_svtp = 0;
+                        if (child1->node_type == VAR_TARGET && 
+                            child1->symbolNode->symbol->value_dims == 0 && 
+                            ast_chdn(child1, 0) != NULL) {
+                            skip_svtp = 1;
+                        }
+                        if (!skip_svtp) {
+                            ast_svtp(child1, child1->symbolNode->symbol);
+                        }
+                    }
 
-                    if (!child1->symbolNode || child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    if (!child1->symbolNode || child1->value_type == TP_UNKNOWN) {
                         /* Check if the right-hand side is explicitly .unknown */
                         int is_explicit_unknown = 0;
                         if (child2->node_type == CLASS && child2->node_string && strcasecmp(child2->node_string, ".unknown") == 0) {
                             is_explicit_unknown = 1;
                         }
-                        if (!is_explicit_unknown) {
+                        int skip_svtp = 0;
+                        if (child1->node_type == VAR_TARGET && child1->symbolNode && child1->symbolNode->symbol &&
+                            child1->symbolNode->symbol->value_dims == 0 && ast_chdn(child1, 0) != NULL) {
+                            skip_svtp = 1;
+                        }
+                        if (!is_explicit_unknown && !skip_svtp) {
                             mknd_err(node, "UNKNOWN_TYPE");
                         }
                     }

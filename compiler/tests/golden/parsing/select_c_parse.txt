@@ -192,7 +192,7 @@ Scope [0]: Unnamed
 
 --- STAGE_SYMBOLS (Iteration 1) ---
 REXX_UNIVERSE : "" (1:0) [Type: .unknown]
-  PROGRAM_FILE : "select_c_parse" (1:0) [Type: .void]
+  PROGRAM_FILE : "select_c_parse" (1:0) [Type: .unknown]
     REXX_OPTIONS : "options" (1:0) [Type: .unknown]
       LITERAL : "levelb" (1:8) [Type: .unknown]
     PROCEDURE : "main" (3:0) [Type: .void]

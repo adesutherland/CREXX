@@ -544,6 +544,15 @@ walker_result syntax_sugar_walker(walker_direction direction,
     Context *context = (Context *) payload;
 
     if (direction == out) {
+        if (node->node_type == ASSIGN) {
+            ASTNode *target = node->child;
+            if (target && target->node_type == VAR_TARGET) {
+                ASTNode *index = target->child;
+                if (index) {
+                    /* printf("DEBUG: syntax_sugar_walker checking VAR_TARGET '%s', value_type=%d, is_native_array=%d\n", target->node_string, target->value_type, target->value_dims); */
+                }
+            }
+        }
         if (node->node_type == INSTRUCTIONS) {
             /* Prove the approach with a new transformation use case: NOP removal */
             ASTNode *nop_node = ast_chld(node, NOP, 0);
@@ -569,27 +578,55 @@ walker_result syntax_sugar_walker(walker_direction direction,
                     is_native_array = 1;
                 }
 
-                if (index && target->value_type == TP_OBJECT && !is_native_array) {
-                    ASTNode *val = target->sibling;
+                int is_obj = 0;
+                char *vclass = target->value_class;
+                if (target->value_type == TP_OBJECT) is_obj = 1;
+                else if (target->symbolNode && target->symbolNode->symbol && target->symbolNode->symbol->type == TP_OBJECT) {
+                    is_obj = 1;
+                    if (!vclass) vclass = target->symbolNode->symbol->value_class;
+                }
 
-                    /* Template: CALL -> MEMBER_CALL("set") -> [obj_stem, index, val] */
-                    ASTRewriteTemplate *call_tmpl = ast_rw_new(CALL, NULL);
-                    ASTRewriteTemplate *member_call_tmpl = ast_rw_new(MEMBER_CALL, "set");
+                if (index && is_obj && !is_native_array) {
+                    int method_exists = 0;
+                    if (vclass) {
+                        ASTNode dummy = {0};
+                        dummy.node_string = (char*)vclass;
+                        if (dummy.node_string && dummy.node_string[0] == '.') dummy.node_string++;
+                        dummy.node_string_length = dummy.node_string ? strlen(dummy.node_string) : 0;
+                        Symbol *class_sym = sym_rvfc(context->ast, &dummy);
+                        if (class_sym && class_sym->symbol_type == CLASS_SYMBOL && class_sym->defines_scope) {
+                            ASTNode dummy_node = {0};
+                            dummy_node.node_string = (char*)"set";
+                            dummy_node.node_string_length = 3;
+                            Symbol *method_sym = sym_lrsv(class_sym->defines_scope, &dummy_node);
+                            if (method_sym && method_sym->symbol_type == FUNCTION_SYMBOL) {
+                                method_exists = 1;
+                            }
+                        }
+                    }
 
-                    /* 1. Stem (Target instance) */
-                    ASTNode *stem_copy = ast_fstk(context, target);
-                    stem_copy->node_type = VAR_SYMBOL;
-                    ast_rw_add(member_call_tmpl, ast_rw_reuse(stem_copy));
+                    if (method_exists) {
+                        ASTNode *val = target->sibling;
 
-                    /* 2. Arguments */
-                    ast_rw_add(member_call_tmpl, ast_rw_reuse(index));
-                    if (val) ast_rw_add(member_call_tmpl, ast_rw_reuse(val));
+                        /* Template: CALL -> MEMBER_CALL("set") -> [obj_stem, index, val] */
+                        ASTRewriteTemplate *call_tmpl = ast_rw_new(CALL, NULL);
+                        ASTRewriteTemplate *member_call_tmpl = ast_rw_new(MEMBER_CALL, "set");
 
-                    ast_rw_add(call_tmpl, member_call_tmpl);
+                        /* 1. Stem (Target instance) */
+                        ASTNode *stem_copy = ast_fstk(context, target);
+                        stem_copy->node_type = VAR_SYMBOL;
+                        ast_rw_add(member_call_tmpl, ast_rw_reuse(stem_copy));
 
-                    ast_execute_rewrite(context, node, call_tmpl);
-                    context->changed_flags |= FLAG_VAL_TRANS;
-                    return result_normal;
+                        /* 2. Arguments */
+                        ast_rw_add(member_call_tmpl, ast_rw_reuse(index));
+                        if (val) ast_rw_add(member_call_tmpl, ast_rw_reuse(val));
+
+                        ast_rw_add(call_tmpl, member_call_tmpl);
+
+                        ast_execute_rewrite(context, node, call_tmpl);
+                        context->changed_flags |= FLAG_VAL_TRANS;
+                        return result_normal;
+                    }
                 }
             }
         }
@@ -604,21 +641,49 @@ walker_result syntax_sugar_walker(walker_direction direction,
                 is_native_array = 1;
             }
 
-            if (index && node->value_type == TP_OBJECT && !is_native_array) {
-                /* Template: MEMBER_CALL("get") -> [obj_stem, index] */
-                ASTRewriteTemplate *member_call_tmpl = ast_rw_new(MEMBER_CALL, "get");
+            int is_obj = 0;
+            char *vclass = node->value_class;
+            if (node->value_type == TP_OBJECT) is_obj = 1;
+            else if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->type == TP_OBJECT) {
+                is_obj = 1;
+                if (!vclass) vclass = node->symbolNode->symbol->value_class;
+            }
 
-                /* 1. Stem (Target instance) */
-                ASTNode *stem_copy = ast_fstk(context, node);
-                stem_copy->node_type = VAR_SYMBOL;
-                ast_rw_add(member_call_tmpl, ast_rw_reuse(stem_copy));
+            if (index && is_obj && !is_native_array) {
+                int method_exists = 0;
+                if (vclass) {
+                    ASTNode dummy = {0};
+                    dummy.node_string = (char*)vclass;
+                    if (dummy.node_string && dummy.node_string[0] == '.') dummy.node_string++;
+                    dummy.node_string_length = dummy.node_string ? strlen(dummy.node_string) : 0;
+                    Symbol *class_sym = sym_rvfc(context->ast, &dummy);
+                    if (class_sym && class_sym->symbol_type == CLASS_SYMBOL && class_sym->defines_scope) {
+                        ASTNode dummy_node = {0};
+                        dummy_node.node_string = (char*)"get";
+                        dummy_node.node_string_length = 3;
+                        Symbol *method_sym = sym_lrsv(class_sym->defines_scope, &dummy_node);
+                        if (method_sym && method_sym->symbol_type == FUNCTION_SYMBOL) {
+                            method_exists = 1;
+                        }
+                    }
+                }
 
-                /* 2. Argument */
-                ast_rw_add(member_call_tmpl, ast_rw_reuse(index));
+                if (method_exists) {
+                    /* Template: MEMBER_CALL("get") -> [obj_stem, index] */
+                    ASTRewriteTemplate *member_call_tmpl = ast_rw_new(MEMBER_CALL, "get");
 
-                ast_execute_rewrite(context, node, member_call_tmpl);
-                context->changed_flags |= FLAG_VAL_TRANS;
-                return result_normal;
+                    /* 1. Stem (Target instance) */
+                    ASTNode *stem_copy = ast_fstk(context, node);
+                    stem_copy->node_type = VAR_SYMBOL;
+                    ast_rw_add(member_call_tmpl, ast_rw_reuse(stem_copy));
+
+                    /* 2. Argument */
+                    ast_rw_add(member_call_tmpl, ast_rw_reuse(index));
+
+                    ast_execute_rewrite(context, node, member_call_tmpl);
+                    context->changed_flags |= FLAG_VAL_TRANS;
+                    return result_normal;
+                }
             }
         }
     }
@@ -761,7 +826,11 @@ walker_result tostring_rewrite_walker(walker_direction direction,
                 if (cname[0] == '.') cname++;
                 ASTNode *root = node;
                 while (root && root->parent) root = root->parent;
-                Symbol *class_sym = sym_rvfn(root, (char*)cname);
+                ASTNode dummy = {0};
+                dummy.node_string = (char*)cname;
+                if (dummy.node_string && dummy.node_string[0] == '.') dummy.node_string++;
+                dummy.node_string_length = dummy.node_string ? strlen(dummy.node_string) : 0;
+                Symbol *class_sym = sym_rvfc(root, &dummy);
                 if (class_sym && class_sym->symbol_type == CLASS_SYMBOL && class_sym->defines_scope) {
                     ASTNode mock_node;
                     memset(&mock_node, 0, sizeof(mock_node));

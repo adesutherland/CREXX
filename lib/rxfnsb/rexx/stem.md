@@ -14,10 +14,21 @@ The implementation uses parallel arrays to manage a 256-bucket hash map with lin
 *   `next`: An integer array storing the index of the next item in the chain.
 
 ## Usage
+Stems can be accessed using standard `get` and `set` methods, but the preferred approach is using cREXX object property syntax (`obj.key` or `obj["key"]`) which is automatically rewritten to method calls by the compiler.
+
 ```rexx
 s = .stem()
-call s.set("key", "value")
-val = s.get("key")
+
+/* Property syntax (Syntactic Sugar) */
+s.key = "value"
+val = s.key
+
+/* Bracket notation for keys that aren't valid identifiers */
+s["my-key"] = "value2"
+
+/* Direct method calls */
+call s.set("other_key", "value3")
+val = s.get("other_key")
 ```
 
 ## Architecture & Future Optimizations
