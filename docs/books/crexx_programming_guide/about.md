@@ -10,7 +10,7 @@ for users and implementers alike.
 This Programming Guide focuses on documenting the
 tools delivered with \crexx{}, from a usage perspective. The technical
 background and design documentation is in the \emph{\crexx{} VM
-  Specification} (this includes information on how to build the tools
+  Specification} (which includes information on how to build the tools
 from source), while the programming language itself is defined in
 the \emph{\crexx{} Language Reference} document.
 
@@ -20,7 +20,7 @@ up the environment, handling data input and output, processing user
 input, and interacting with other software components.
 
 \section*{Audience}
-This Programming Guide is aimed at developers who want to use \crexx{} to create an application or integrate it into an existing system.
+This Programming Guide is aimed at developers who want to use \crexx{} to create an application or integrate it into an existing system. Also, developers of plugins or compiler exists can find the necessary technical information in this publication.
 
 <!-- ## History -->
 

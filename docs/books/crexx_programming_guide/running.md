@@ -1,12 +1,12 @@
-\chapter{Running \crexx{} on Linux and macOS}
+# Running \crexx{} on Linux, macOS and Windows
 
 Linux and other Unix-like operating systems like Apple macOS behave in
 an identical way when compiling, linking and running a \crexx{}
-program.
+program. Windows can be used in almost exactly the same way, with some
+caveats attached.
 
-\hypertarget{running-crexx-entails-compiling}{%
-\section{Running cRexx entails
-compiling}\label{running-crexx-entails-compiling}}
+
+## Running cRexx entails compiling
 
 All Rexx scripts you run with cRexx are compiled by \texttt{rxc} into
 Rexx assembler code (.rxas) and then assembled into an .rxbin file,
@@ -15,31 +15,33 @@ Machine \texttt{rxvm}. This rxvm executable takes care of linking
 separately compiled modules together and executing them, so one function
 can find another.
 
-\hypertarget{a-first-program---hello-world}{%
-\section{A first program - Hello
-World}\label{a-first-program---hello-world}}
+
+## A first program
+
 
 Let's say you have a Rexx exec you would like to run. To not have any
 surprises, it is of the \emph{hello world} kind. We have a file called
 hello.rexx, containing:
 
-\begin{verbatim}
+```rexx <!--hello.rexx-->
 /* rexx */
 options levelb
 say 'hello cRexx world!'
-\end{verbatim}
+```
 
 When cRexx level `C' (for `Classic') is available, the `options levelb'
 (on line 2) statement can be left out; for the moment, level B is all we
-have, and the compiler will refuse to compile without it.
-
+have, and the compiler will refuse to compile without it. This is in
+part a reminder to the programmer that not all compatibility features
+are implemented yet.
+ 
 With all our cRexx executables on the PATH, we only need to do:
 
-\begin{verbatim}
+```bash <!--compile.sh-->
 rxc hello
 rxas hello
 rxvm hello
-\end{verbatim}
+```
 
 to see `hello cRexx world!' on the console.
 
@@ -72,8 +74,7 @@ assembler instruction for the Rexx `say' instruction. (Assembler became
 a whole lot easier with Rexx assembler.) But we did not yet call any
 function.
 
-\hypertarget{using-built-in-functions}{%
-\section{Using built-in functions}\label{using-built-in-functions}}
+## Using built-in functions}\label{using-built-in-functions
 
 Most Rexx programs use the extremely well designed built-in functions.
 Now with these functions written in Rexx, and not hidden in the compiler
@@ -81,14 +82,14 @@ somewhere, we must tell it to import those from the library where we put
 them earlier during the build process. Let's say we want to add a
 display of the current weekday to our hello program. This will now be:
 
-\begin{verbatim}
+```rexx <!--hellofunc.rexx-->
 /* rexx */
 options levelb
 import rxfnsb
 say 'hello cRexx world!'
 say 'today is' date('w')
 return 0
-\end{verbatim}
+```
 
 Never mind the import statement, which you will not need when cRexx
 `Classic' level C is available. But in level B, we need this, because we
@@ -100,35 +101,8 @@ right parameters. This is done with the -i switch, which points to the
 directory containing the library - which is called `library', by the
 way.
 
-\begin{verbatim}
-rxc -i ~/crexx-build/lib/rxfns hello
-\end{verbatim}
 
-The assembler runs unchanged, because it trusts the compiler to have
-checked if the called function really sits in that library, and has the
-right parameters - the right code to call it has been generated.
-
-\begin{verbatim}
-rxas hello
-\end{verbatim}
-
-To run it, we can employ the `rxvme' executable - this one is extended
-with linked-in versions of all the functions in the library:
-
-\begin{verbatim}
-rxvme hello
-\end{verbatim}
-
-which yields:
-
-\begin{verbatim}
-hello cRexx world!
-today is Saturday
-\end{verbatim}
-
-\hypertarget{building-a-standalone-executable}{%
-\section{Building a standalone
-executable}\label{building-a-standalone-executable}}
+## Building a standalone executable
 
 To end this short tour of running cRexx, we are taking that last example
 and will build a standalone executable out of it. If your neighbour,
@@ -137,25 +111,6 @@ run your compiled Rexx program from a USB stick, without ever installing
 anything.
 
 For this, we need the next set of commands, expressed as a Rexx exec:
-
-\begin{verbatim}
-/* rexx compile a rexx exec to a native executable */
-/* Classic Rexx and NetRexx compatible             */
-crexx_home='~/crexx-build'
-if arg='' then do
-  say 'exec name expected.'
-  exit 99
-end
-parse arg execName'.'extension
-if extension<>'' then say 'filename extension ignored.'
-'rxc  -i' crexx_home'/lib/rxfns' execName
-'rxas' execName
-'rxcpack' execName crexx_home'/lib/rxfns/library'
-'gcc -o' execName,
-'-lrxvml -lmachine -lavl_tree -lplatform -lm -L',
-crexx_home'/interpreter -L'crexx_home'/machine -L',
-crexx_home'/avl_tree -L'crexx_home'/platform'  execName'.c'
-\end{verbatim}
 
 This exec is delivered in the source tree, bin directory. At the moment
 it can be run by classic rexx interpreters and NetRexx, it will soon be
@@ -175,5 +130,5 @@ today is Saturday
 ./hello  0.00s user 0.00s system 61% cpu 0.009 total
 \end{verbatim}
 
-\chapter{Running \crexx{} on Windows}
-%% \chapter{Running \crexx{} on VM/370CE}
+## Running \crexx{} on Windows
+

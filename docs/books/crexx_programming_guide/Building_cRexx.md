@@ -75,45 +75,45 @@ and cd into that directory. Now issue the following command (we assume
 that you installed ninja, otherwise substitute `make' for the two
 <!-- instances of `ninja'): -->
 
-<!-- \begin{verbatim} -->
-<!-- cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../CREXX && ninja && ctest -->
-<!-- \end{verbatim} -->
+```bash <!--buildcommand.sh-->
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../CREXX && ninja && ctest
+```
 
-<!-- This will do a lot of things. In fact, if all goes well, you will have a -->
-<!-- built and tested cRexx system. -->
+This will do a lot of things. In fact, if all goes well, you will have a
+built and tested cRexx system.
 
-<!-- ## Explaining the build process -->
+## Explaining the build process
 
-<!-- Let's zoom in a little on what we did. The first step is to tell CMake -->
-<!-- to validate your system environment and generate a build script (and a -->
-<!-- test script) for the chosen build tool. Cmake will read the file -->
-<!-- CmakeLists.txt and validate that your system can do what it asks it to -->
-<!-- do. This can yield error messages, for example if the C compiler lacks -->
-<!-- certain functions or header files. (When that happens, open an -->
-<!-- \href{https://github.com/adesutherland/CREXX/issues}{issue} and someone -->
-<!-- will have a look at it - or peruse -->
-<!-- \href{https://stackoverflow.com}{stack overflow} which is what we -->
-<!-- probably also will do). -->
+Let's zoom in a little on what we did. The first step is to tell CMake
+to validate your system environment and generate a build script (and a
+test script) for the chosen build tool. Cmake will read the file
+CmakeLists.txt and validate that your system can do what it asks it to
+do. This can yield error messages, for example if the C compiler lacks
+certain functions or header files. (When that happens, open an
+\href{https://github.com/adesutherland/CREXX/issues}{issue} and someone
+will have a look at it - or peruse
+\href{https://stackoverflow.com}{stack overflow} which is what we
+probably also will do).
 
-<!-- After CMake has successfully validated the build environment, it will -->
-<!-- generate a build script (a Makefile in the case of Make and a -->
-<!-- build.ninja file in the case of Ninja). This is specified after the -G -->
-<!-- flag. The -DCMAKE\_BUILD\_TYPE=Release flag makes sure we do an -->
-<!-- optimized build, which means we specify an -O3 flag to the C compiler, -->
-<!-- which then will spend some time optimizing the executable modules, which -->
-<!-- makes them run faster (they do!). The alternative is a `debug' build -->
-<!-- which will yield slower executables, but with more debugging information -->
-<!-- in them. -->
+After CMake has successfully validated the build environment, it will
+generate a build script (a Makefile in the case of Make and a
+build.ninja file in the case of Ninja). This is specified after the -G
+flag. The -DCMAKE\_BUILD\_TYPE=Release flag makes sure we do an
+optimized build, which means we specify an -O3 flag to the C compiler,
+which then will spend some time optimizing the executable modules, which
+makes them run faster (they do!). The alternative is a `debug' build
+which will yield slower executables, but with more debugging information
+in them.
 
-<!-- The two ampersands (\&\&) mean we do the next part only if the previous -->
-<!-- step was successful. This is a `ninja' statement, which will build -->
-<!-- everything in the build.ninja specification file. These are a lot of -->
-<!-- parts, and the good news is, when they are built once, only the changed -->
-<!-- source will be built, which will be fast. -->
+The two ampersands (\&\&) mean we do the next part only if the previous
+step was successful. This is a `ninja' statement, which will build
+everything in the build.ninja specification file. These are a lot of
+parts, and the good news is, when they are built once, only the changed
+source will be built, which will be fast.
 
 After this, the generated test suite is run with the `ctest' command.
-This knows what to do, and will show you successes and failures. If what
-you checked out if git is not a released version, there is a small
+This knows what to do, as the tests were defined in the Cmake recipes, and will show you successes and failures. If what
+you checked out if git is not a released version, there is a 
 change that some test cases fail, but generally these should indicate
 success.
 
@@ -125,7 +125,7 @@ dependencies on other Rexx built-in functions) before they are added to the
 library and the cRexx executables in their binary form.
 
 
-## What do we have after a successful build process
+## What do we have after a successful build
 
 ### Native executables
 
@@ -173,6 +173,9 @@ Production builds are optimized, while debug builds are slower in execution time
 Table: Debug vs Release options. {#tbl:id}
 
 ### Libraries
+
+We also have a set of libraries. Some are written in \crexx{} and others can be written in C and other programming languages.
+All executables and libraries are delivered in the `bin` directory of the distribution package.
 
 ### Optional libraries - build options
 

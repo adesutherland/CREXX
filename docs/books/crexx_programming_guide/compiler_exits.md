@@ -13,14 +13,17 @@ Typical uses:
 Injected code is grafted into the AST and then compiled like normal source.
 
 ## Enabling exits
+
 The compiler looks for an exit bundle (a packed `.rxbin`) in the import path.
 
 - Provide an import path that contains your bundle (e.g., the build `bin` directory):
-  ```bash
+
+```bash
   rxc -i /path/to/bin -o out in.rexx
   ```
 - Select the exit module to load using the `RXCP_EXIT_MODULE` environment variable. For the built-in bundle this is `rxcexits`:
-  ```bash
+
+```bash
   RXCP_EXIT_MODULE=rxcexits rxc -i /path/to/bin -o out in.rexx
   ```
 
