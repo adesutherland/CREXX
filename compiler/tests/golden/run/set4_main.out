@@ -1,0 +1,4 @@
+Call mid_func: Base Mid
+mid_func variable: Local Shadow
+Word 2 of 'A B C' is: B
+word variable: Shadowed BIF

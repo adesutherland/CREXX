@@ -1,0 +1,5 @@
+Testing Array Intrinsics...
+Length of a[10] (a[]): 10
+Length of b[5] (b[0]): 5
+Length of c[3, 4] second dimension at index 1 (c[1, ]): 4
+Array Intrinsics Test PASSED
