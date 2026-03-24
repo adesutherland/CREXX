@@ -28,6 +28,7 @@ The cREXX compiler (`rxc`) follows a traditional multi-pass architecture, transf
 | `rxcp_opt.c` | AST-level optimization passes. |
 | `rxcpbscn.re` | re2c source for the Level B scanner. |
 | `rxcpbgmr.y` | Lemon grammar for the Level B parser. |
+| `rxcp_diag_fallback.c` | Structural fallback diagnoser used only when parsing fails to produce an AST. |
 
 ---
 
@@ -91,3 +92,17 @@ The 8-character symbol limit is a legacy constraint rooted in mainframe compatib
 | **Medium** | Static Globals | Extensive use of static globals prevents reentrancy. | In Progress |
 | **Low** | Memory Management | Lack of clear ownership model or pool allocation for AST nodes. | Open |
 | **Low** | Bridge Overhead | Compiler now links with `rxvml`, increasing binary size and complexity. | Open |
+
+### 5.1 Parser Recovery Strategy
+The compiler now has an explicit escape hatch for grammar fragility:
+
+*   Keep **working Lemon recovery rules** when they preserve a useful partial AST and allow later passes to continue producing errors.
+*   Use the **fallback diagnoser** only for terminal parse failures where `context->ast` was never produced.
+*   Do **not** use the fallback diagnoser as a general substitute for grammar design. It is structural and token-driven by design, and should remain limited to unmatched terminators and misplaced structural keywords.
+
+This gives future parser refactors a clear rule:
+
+*   If a recovery production is helping AST continuity, keep it.
+*   If a recovery production exists only to emit a top-level syntax message and is destabilizing the grammar, consider removing it and letting `rxcp_diag_fallback.c` handle the terminal failure instead.
+
+At present, the intended use is conservative: preserve current working grammar recovery and use the fallback only to replace "Failure to create AST" with standard compiler diagnostics.

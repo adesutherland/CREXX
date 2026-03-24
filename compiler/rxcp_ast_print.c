@@ -159,7 +159,7 @@ int prnterrs(Context *context) {
     diag = (ASTNode*)context->diagnostics_list;
     while (diag) {
         if (diag->node_type == ERROR && !diag->is_duplicate_warning) {
-            print_error(diag, stderr, "Error");
+            print_error(diag, stderr, "Error in");
             errors++;
         }
         diag = diag->sibling;
@@ -176,7 +176,7 @@ int prntwars(Context *context) {
     diag = (ASTNode*)context->diagnostics_list;
     while (diag) {
         if (diag->node_type == WARNING && !diag->is_duplicate_warning) {
-            print_error(diag, stderr, "Warning");
+            print_error(diag, stderr, "Warning in");
             errors++;
         }
         diag = diag->sibling;

@@ -150,6 +150,15 @@ The parser enforces grammar rules. When a rule is violated, Lemon's `error` toke
     *   `BAD_NAMESPACE_SYNTAX`, `BAD_IMPORT_SYNTAX`.
     *   `INVALID_IN_ARRAY_DEF`: Invalid elements in array definitions.
 
+### 5.2.1 Recovery Policy
+The compiler uses two distinct recovery mechanisms, with different goals:
+
+*   **Grammar recovery first**: If a Lemon rule can recover while still preserving a usable partial AST, that recovery should stay in `rxcpbgmr.y`. This is the preferred path for structures like `DO`, `IF/THEN/ELSE`, and `SELECT`, where continued parsing may surface additional downstream errors.
+*   **Fallback diagnosis second**: If parsing fails so early that no AST is produced, `rxcpmain.c` invokes a structural token-based fallback diagnoser (`rxcp_diag_fallback.c`). This pass emits normal compiler diagnostics through `context->diagnostics_list`, but it does **not** attempt to build or repair an AST.
+*   **Not a second parser**: The fallback diagnoser is intentionally limited to structural syntax failures such as unmatched `END`, misplaced structural keywords, and other terminal parse-failure cases. It must not grow into a second full parser for expressions or semantic validation.
+
+This policy exists to keep the Lemon grammar stable. If a recovery rule preserves meaningful AST continuity, keep it in the grammar. If a rule exists only to improve terminal error reporting and is making the grammar fragile, prefer the fallback diagnoser instead.
+
 ### 5.3 Semantic Errors (Walker)
 The walker (`initial_checks_walker`) validates logic that cannot be expressed purely in grammar (or is deferred for checking).
 *   **Mechanism**: The walker traverses the AST and calls `mknd_err` to attach errors to specific nodes.
