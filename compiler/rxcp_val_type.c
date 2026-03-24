@@ -265,8 +265,13 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case OP_DIV:
                 if (node->value_type == TP_UNKNOWN) {
-                    /* context->changed_flags |= FLAG_VAL_TYPE; */ ValueType type = promotion[node_type(child1)][node_type(child2)];
-                    type = promotion[type][TP_FLOAT]; /* Ensure at least FLOAT */
+                    /* Under OPTIONS NUMERIC_COMMON, `/` keeps integer semantics for int/int. */
+                    ValueType type = promotion[node_type(child1)][node_type(child2)];
+                    if (type == TP_INTEGER && node->context && !node->context->numeric_standard) {
+                        set_node_type(node, TP_INTEGER);
+                        break;
+                    }
+                    type = promotion[type][TP_FLOAT]; /* Ensure at least FLOAT otherwise */
                     set_node_type(node, type);
                 }
                 break;

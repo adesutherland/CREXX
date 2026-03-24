@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : opt_decimal_safety.rexx
- * BUILT                  : 2026-03-18 11:58:57
+ * BUILT                  : 2026-03-24 16:24:26
  */
 
 .srcfile="opt_decimal_safety.rexx"
@@ -37,7 +37,7 @@ Case1() .locals=1
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 12:5="say 1/3"
+   .src 12:5="say 1.0d/3"
    say "0.33333"
    .src 13:5="return"
    ret
@@ -50,7 +50,7 @@ Case2() .locals=1
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 17:5="say 1/3"
+   .src 17:5="say 1.0d/3"
    say "0.333333333"
    .src 18:5="return"
    ret
@@ -76,7 +76,7 @@ TestInherited() .locals=0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 30:5="say 1/3"
-   say "0.333333333333333"
+   .src 30:5="say 1.0d/3"
+   say "0.333333333333333333"
    .src 31:5="return"
    ret

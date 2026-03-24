@@ -1,0 +1,36 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : div_ops_common.rexx
+ * BUILT                  : 2026-03-24 16:14:55
+ */
+
+.srcfile="div_ops_common.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "div_ops_common.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="gap = 101"
+   .meta "div_ops_common.main.gap"="b" ".int" r0
+   load r0,101
+   .src 4:1="res_int = gap / 2"
+   .meta "div_ops_common.main.res_int"="b" ".int" r2
+   idiv r2,r0,2
+   .src 5:1="res_float = gap / 2.0"
+   .meta "div_ops_common.main.res_float"="b" ".float" r1
+   itof r0
+   fdiv r1,r0,2.0
+   .src 6:1="say res_int res_float"
+   itos r2
+   ftos r1
+   sconcat r3,r2,r1
+   say r3
+   .src 6:22=""
+   ret
+   .meta "div_ops_common.main.gap"
+   .meta "div_ops_common.main.res_float"
+   .meta "div_ops_common.main.res_int"

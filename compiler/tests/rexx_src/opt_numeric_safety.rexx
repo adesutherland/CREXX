@@ -13,13 +13,13 @@ ScenarioA: procedure
     numeric form scientific
     numeric standard common
     numeric case upper
-    say 1/3
+    say 1.0d/3
     return
 
 ScenarioB: procedure
     /* Unsafe: Inherited Digits */
     numeric digits inherited
-    say 1/3
+    say 1.0d/3
     return
 
 ScenarioC: procedure

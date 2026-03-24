@@ -9,12 +9,12 @@ return
 
 Case1: procedure
     numeric digits 5
-    say 1/3
+    say 1.0d/3
     return
 
 Case2: procedure
     numeric digits 9
-    say 1/3
+    say 1.0d/3
     return
 
 Case3: procedure
@@ -26,6 +26,6 @@ Case3: procedure
 
 TestInherited: procedure
     /* Inherited context: Compiler should treat digits as unknown (-1) 
-       and NOT fold this calculation. It should generate a DIV instruction. */
-    say 1/3
+       and NOT fold this calculation. It should generate a divide instruction. */
+    say 1.0d/3
     return

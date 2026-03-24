@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : opt_decimal_safety.rexx
- * BUILT                  : 2026-03-18 11:58:57
+ * BUILT                  : 2026-03-24 16:24:25
  */
 
 .srcfile="opt_decimal_safety.rexx"
@@ -29,7 +29,7 @@ main() .locals=5
    .src 8:1="return"
    ret
 
-Case1() .locals=3
+Case1() .locals=2
    .meta "opt_decimal_safety.case1"="b" ".void" Case1() "" ""
    .src 10:1="Case1: procedure"
    setnumdgts 5
@@ -37,18 +37,16 @@ Case1() .locals=3
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 12:5="say 1/3"
-   load r1,1
-   itof r1
-   load r2,3
-   itof r2
-   fdiv r2,r1,r2
-   ftos r2
-   say r2
+   .src 12:5="say 1.0d/3"
+   load r1,3
+   itod r1
+   ddiv r1,1.0d,r1
+   dtos r1
+   say r1
    .src 13:5="return"
    ret
 
-Case2() .locals=3
+Case2() .locals=2
    .meta "opt_decimal_safety.case2"="b" ".void" Case2() "" ""
    .src 15:1="Case2: procedure"
    setnumdgts 9
@@ -56,14 +54,12 @@ Case2() .locals=3
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 17:5="say 1/3"
-   load r1,1
-   itof r1
-   load r2,3
-   itof r2
-   fdiv r2,r1,r2
-   ftos r2
-   say r2
+   .src 17:5="say 1.0d/3"
+   load r1,3
+   itod r1
+   ddiv r1,1.0d,r1
+   dtos r1
+   say r1
    .src 18:5="return"
    ret
 
@@ -91,7 +87,7 @@ l48ifend:
    .src 25:5="return"
    ret
 
-TestInherited() .locals=2
+TestInherited() .locals=1
    .meta "opt_decimal_safety.testinherited"="b" ".void" TestInherited() "" ""
    .src 27:1="TestInherited: procedure"
    setnumdgts 18
@@ -99,13 +95,11 @@ TestInherited() .locals=2
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 30:5="say 1/3"
-   load r0,1
-   itof r0
-   load r1,3
-   itof r1
-   fdiv r1,r0,r1
-   ftos r1
-   say r1
+   .src 30:5="say 1.0d/3"
+   load r0,3
+   itod r0
+   ddiv r0,1.0d,r0
+   dtos r0
+   say r0
    .src 31:5="return"
    ret
