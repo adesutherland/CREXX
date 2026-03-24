@@ -36,6 +36,11 @@ jobs:
           cmakeBuildType: Debug # optional, default is Debug
           buildDirectory: "${{ runner.temp }}/debug"
 
+      - name: CTest Debug
+        shell: bash
+        run: |
+          ctest --test-dir "${{ runner.temp }}/debug" --output-on-failure --no-tests=error --parallel 1
+
       - name: CMAKE Build Release
         uses: lukka/run-cmake@v3
         with:
@@ -162,6 +167,11 @@ jobs:
         cmake -G Ninja -B "${{ runner.temp }}/debug" -DCMAKE_BUILD_TYPE=Debug -DCREXX_FORCE_SYSTEM_OPENSSL=ON
         cmake --build "${{ runner.temp }}/debug"
 
+    - name: CTest Debug
+      shell: msys2 {0}
+      run: |
+        ctest --test-dir "${{ runner.temp }}/debug" --output-on-failure --no-tests=error --parallel 1
+
     - name: Build Release
       shell: msys2 {0}
       run: |
@@ -218,6 +228,11 @@ jobs:
           # Select the build configuration, typically Debug or Release.
           cmakeBuildType: Debug # optional, default is Debug
           buildDirectory: "${{ runner.temp }}/debug"
+
+      - name: CTest Debug
+        shell: bash
+        run: |
+          ctest --test-dir "${{ runner.temp }}/debug" --output-on-failure --no-tests=error --parallel 1
 
       - name: CMAKE Build Release
         uses: lukka/run-cmake@v3

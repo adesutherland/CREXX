@@ -35,6 +35,11 @@ jobs:
           cmake -S . -B "${{ runner.temp }}/release" -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel
           cmake --build "${{ runner.temp }}/release"
 
+      - name: CTest Release
+        shell: bash
+        run: |
+          ctest --test-dir "${{ runner.temp }}/release" --output-on-failure --no-tests=error --parallel 1
+
       - name: Collect executables
         shell: bash
         run: |
