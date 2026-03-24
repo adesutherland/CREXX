@@ -1,4 +1,5 @@
-\chapter{Intralanguage calls}
+# Intralanguage calls
+
 This chapter discusses calls from one \crexx{} procedure to another,
 including the built-in function package. Search order is an
 intrinsically related concept: how is the called component found. There
@@ -9,6 +10,7 @@ code; for \nr{} a \code{.class} file and in \crexx{} an \code{.rxbin}
 file. Level B introduces a package (module) system where a program can
 be part of a package and be imported into calling code.
 \section{At compile time}
+
 At compile time, a program uses the \code{CALL} statement, or the
 function notation with parentheses (also called round brackets). Going
 forward, and moving into object oriented notations for other \rexx{}
@@ -37,4 +39,4 @@ The \textbf{import} statement\label{intraImport} tells the compiler we want to
 import functions from a certain package.
 
 
-\section{At runtime}
+<!-- \section{At runtime} -->

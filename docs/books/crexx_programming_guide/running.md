@@ -29,7 +29,9 @@ options levelb
 say 'hello cRexx world!'
 ```
 
-When cRexx level `C' (for `Classic') is available, the `options levelb'
+<!--splice--hello.rexx-->
+
+When \crexx{} level C (for `Classic') is available, the `options levelb`
 (on line 2) statement can be left out; for the moment, level B is all we
 have, and the compiler will refuse to compile without it. This is in
 part a reminder to the programmer that not all compatibility features
@@ -46,35 +48,20 @@ rxvm hello
 to see `hello cRexx world!' on the console.
 
 It might be a good idea to make a shell script to execute these three
-programs in succession, and perhaps call it `crexx'. But take into
+programs in succession[^1]. But take into
 account that this really is a very simple case, in which no built-in
 functions are called. You can look into the generated rexx assembler
-(hello.rxas) file:
+(hello.rxas) file
 
-\begin{verbatim}
-/*
- * cREXX COMPILER VERSION : cREXX F0043
- * SOURCE                 : hello
- * BUILT                  : 2022-12-03 22:27:52
- */
+<!--listasm--hello.rxas-->
 
-.srcfile="hello"
-.globals=0
-
-main() .locals=1 .expose=hello.main
-   .meta "hello.main"="b" ".int" main() "" ""
-   .src 3:1="say 'hello cRexx world!'"
-   say "hello cRexx world!"
-   .src 4:1="return 0"
-   ret 0
-\end{verbatim}
-
-and you can see here that the compiler actually has generated a `say'
-assembler instruction for the Rexx `say' instruction. (Assembler became
-a whole lot easier with Rexx assembler.) But we did not yet call any
+and you can see here that the compiler actually has generated a `say`
+assembler instruction for the Rexx `say` instruction. But we did not yet call any
 function.
 
-## Using built-in functions}\label{using-built-in-functions
+[^1]: Don't worry, this is already delivered in the package as the crexx compiler driver.
+
+## Using built-in functions
 
 Most Rexx programs use the extremely well designed built-in functions.
 Now with these functions written in Rexx, and not hidden in the compiler
@@ -91,16 +78,34 @@ say 'today is' date('w')
 return 0
 ```
 
-Never mind the import statement, which you will not need when cRexx
-`Classic' level C is available. But in level B, we need this, because we
-need the flexibility it affords our plans for the future.
+We can run this with `crexx hellofunc`. It's output is this
 
-We must tell the compiler where to find the signature of the date()
+<!--splice--hellofunc.rexx-->
+
+Never mind the import statement, which you will not need when \crexx{}
+level C (for Classic) is available. But in level B, we need this, because we
+need the flexibility it affords our plans for the future. Line 3, however, has the `import rxfnsb` statement,
+which directs which version of the `date()` function we are going to use.
+
+<!--listasm--hellofunc.rxas-->
+
+The compiler will need to find the signature of the date()
 function, so it can check if we call it in the correct way, with the
-right parameters. This is done with the -i switch, which points to the
-directory containing the library - which is called `library', by the
-way.
+right parameters. As we see on line 35, this is the `date()` function it is going to look for.
+In the standard distribution, it will find it in the right library as long as it
+is in the same directory as the compiler executable, normally the `bin` directory.
 
+## Using external functions
+
+The built-in functions (BIF) are written in the \rexx{} language. External functions can be implemented in other languages, for example in a *plugin* written in C. For an explanation of the \crexx{} *Plugin Architecture* (rxpa), see page XXX. Plugins can contain a multitude of functions[^methods].
+
+An external function written in \crexx{}, of which the `.rxbin` file is found in the same source directory of the calling program, is found automatically. 
+
+Regardless of the implementation in \rexx{} or a *plugin*, the mechanism works the same: an import statement enables the use of the external functions.
+
+Because this is not a built-in function, we need to indicate the library where this plugin is to be found; for reasons of size, we cannot distribute an interpreter version which includes all available plugins linked in to it.
+
+[^methods]: or methods, if we have written an object-oriented program.
 
 ## Building a standalone executable
 
