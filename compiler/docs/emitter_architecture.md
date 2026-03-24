@@ -49,11 +49,13 @@ The emitter avoids most global variables by storing state directly in the `ASTNo
 - **Functionality**: Handling binary/unary operators, constants, and function calls. 
 - **Complexity**: High. Significant code handles combinations of constant vs. register operands.
 - **Optimization**: Implements "don't assign" register optimization to reduce assembly `copy` instructions.
+- **Expression Blocks**: `BLOCK_EXPR` emits its enclosed statement block and then yields the register allocated for the block result.
 - **Key Functions**: `type_promotion`, `format_constant`, `type_to_prefix`.
 
 ### Control Flow (`rxcp_emit_flow.c`)
-- **Functionality**: Generating branch logic and labels for `IF`, `DO`, `LOOP`, `LEAVE`, `ITERATE`, and `SELECT`.
+- **Functionality**: Generating branch logic and labels for `IF`, `DO`, `LOOP`, `LEAVE`, `LEAVE_WITH`, `ITERATE`, and `SELECT`.
 - **Labeling**: Uses `node->node_number` combined with suffixes (e.g., `l123dostart`, `l123iffalse`).
+- **Block Exit Convention**: `LEAVE_WITH` copies its expression result into the parent `BLOCK_EXPR` register and branches to `l%dbexprend`.
 
 ### Procedures & Program Structure (`rxcp_emit_proc.c`)
 - **Functionality**: Logic for `PROCEDURE`, `PROGRAM_FILE`, and `REXX_UNIVERSE`.

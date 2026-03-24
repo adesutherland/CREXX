@@ -109,6 +109,7 @@ Rules enforced on the hierarchy:
     3.  `INSTRUCTIONS`
 *   **Block Scoping**:
     *   `DO` ... `END`
+    *   Expression-form `DO` ... `END` (`BLOCK_EXPR`)
     *   `IF` ... `THEN` ... `ELSE`
     *   `SELECT` (Not fully implemented/verified in Level B yet, but keywords exist).
 *   **Procedures**:
@@ -125,6 +126,7 @@ Rules enforced on the logic:
 *   **Argument Declaration**: `ARGS` must be the first instruction in a procedure (checked and hoisted by walker).
 *   **Loop Safety**: Iterative loops with assignments must have a step value (implicit or explicit).
 *   **Assembler**: Instructions must match the valid operand types defined in the architecture.
+*   **Expression Blocks**: `DO ... END` in primary-expression position is parsed as a `BLOCK_EXPR`; the block yields through `LEAVE WITH expr`.
 
 ## 5. Syntax Error Detection
 The compiler employs a multi-layered strategy for error detection, with each stage of the pipeline catching specific classes of errors.
@@ -143,6 +145,7 @@ The parser enforces grammar rules. When a rule is violated, Lemon's `error` toke
     *   `MISSING_OPTIONS`: Program starts with invalid tokens.
     *   `EXTRANEOUS`: Unexpected tokens after a valid program.
     *   `MISSING_THEN`, `MISSING_END`, `UNEXPECTED_ELSE`, `UNEXPECTED_END`: Control flow structure violations.
+    *   `INCOMPLETE_DO`: Unterminated `DO` constructs, including expression-form blocks.
     *   `BADEXPR`: Malformed expressions (e.g., consecutive operators).
     *   `BAD_NAMESPACE_SYNTAX`, `BAD_IMPORT_SYNTAX`.
     *   `INVALID_IN_ARRAY_DEF`: Invalid elements in array definitions.
@@ -168,6 +171,7 @@ The Lemon grammar (`rxcpbgmr.y`) was analyzed for parsing conflicts.
 *   **Reduce/Reduce Conflicts**: 0
 *   **Status**: The grammar is **conflict-free**.
 *   **Resolution Mechanism**: The potential ambiguity in `IF/THEN/ELSE` structures is resolved explicitly using precedence directives:
+*   **Special Case**: Expression-form `DO` introduces a statement/expression ambiguity at command start. The grammar resolves this with a restricted `command_expression` entry point for bare commands while preserving `BLOCK_EXPR` in the normal expression grammar.
     ```yacc
     %nonassoc TK_IF.
     %nonassoc TK_ELSE.

@@ -16,10 +16,12 @@ The pipeline of transforming REXX source code into executable bytecode is struct
 2. **Lemon (Parser Generator)**
    - The token stream is parsed using a grammar defined in `Lemon` (e.g., `compiler/rxcpbgmr.y` and `compiler/rxcpopgr.y`).
    - Lemon applies the grammar rules to recognize the syntactic structures of the REXX language and translates them into an Abstract Syntax Tree (AST).
+   - `DO ... END` is overloaded: statement-leading `DO` remains the normal grouped/loop form, while expression-position `DO ... END` becomes `BLOCK_EXPR`. The grammar resolves the command-start ambiguity by routing top-level command expressions through a restricted `command_expression` spine while leaving the general expression grammar free to accept block expressions.
 
 3. **AST (Abstract Syntax Tree) & Compiler Exits**
    - The primary data structure bridging the parser and the code emitter.
    - Built using a hierarchical structure of `ASTNode` C structs that capture operations, scopes, typing, and tree associations.
+   - Expression-level control flow is supported through `BLOCK_EXPR` (`DO ... END` used as an expression) and `LEAVE_WITH` (`LEAVE WITH expr`). The `association` pointer links each `LEAVE_WITH` back to its owning `BLOCK_EXPR`, similar to how loop `LEAVE` / `ITERATE` link to `DO`.
    - Contains the **Exit Bridge Framework** (`rxcp_exit.c`), which intercepts unrecognized `IMPLICIT_CMD` nodes, invokes user-provided `rxplugin` macros to generate replacement source code, parses the interpolated strings (preserving literal quotes), and surgically grafts the resulting AST back into the main tree without violating return-type constraints.
    - **Auto-Expose Mechanics**: Implements automatic scope resolution that allows `namespace ... expose` global variables to implicitly bind into local `PROCEDURE` scopes, eliminating legacy `PROCEDURE EXPOSE` boilerplate.
    - **Automatic Register Allocation**: Within `rxcp_val_sym.c` (Step 3 - Pass 3), the compiler walks the AST (`build_symbols_walker`) to identify explicit `NODE_REGISTER` allocations via the `with register.X` clause. It then automatically maps any remaining unmapped attributes of a class to unused VM registers (`r1`, `r2`, etc.) by synthesizing implicit `NODE_REGISTER` AST nodes. This ensures tight interop and avoids manual mapping boilerplate for standard object usage.
@@ -71,7 +73,7 @@ struct ASTNode {
     char is_varg;
     ASTNode *free_list;
     ASTNode *parent, *child, *sibling;
-    ASTNode *association; /* E.g. for LEAVE / ITERATE TO relevant DO node */
+    ASTNode *association; /* E.g. for LEAVE / ITERATE relevant DO node or LEAVE_WITH relevant BLOCK_EXPR */
     Token *token;
     Scope *scope;
     char *node_string;

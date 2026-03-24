@@ -1,0 +1,4 @@
+Error in err_block_expr_leave_plain.rexx @ 4:3 - #LEAVE_WITH_REQUIRED, "leave"
+Error in err_block_expr_leave_plain.rexx @ 3:5 - #RETVAL_MISSING, "do"
+Error in err_block_expr_leave_plain.rexx @ 3:5 - #MISSING_VALUE, "do"
+3 error(s) in source file

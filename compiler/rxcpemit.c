@@ -797,6 +797,7 @@ static walker_result emit_walker(walker_direction direction,
             case FLOAT:
             case DECIMAL:
             case INTEGER:
+            case BLOCK_EXPR:
                 emit_expression(node, payload);
                 break;
 
@@ -970,6 +971,10 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case RETURN:
+                emit_flow(node, pl);
+                break;
+
+            case LEAVE_WITH:
                 emit_flow(node, pl);
                 break;
 

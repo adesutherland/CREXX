@@ -907,6 +907,8 @@ const char* node_type_to_string(NodeType type) {
         case MEMBER_CALL: return "MEMBER_CALL";
         case FACTORY_CALL: return "FACTORY_CALL";
         case COMPILER_ADDED_BLOCK: return "COMPILER_ADDED_BLOCK";
+        case BLOCK_EXPR: return "BLOCK_EXPR";
+        case LEAVE_WITH: return "LEAVE_WITH";
         case EXIT_EXTENDED: return "EXIT_EXTENDED";
         case EXIT_TOKEN: return "EXIT_TOKEN";
         case SELECT: return "SELECT";

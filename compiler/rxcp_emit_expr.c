@@ -38,6 +38,7 @@ void emit_expression(ASTNode *node, void *payload) {
     char *tp_prefix = type_to_prefix(node->value_type);
     char *temp1;
     char *temp2;
+    char *comment_meta;
     ASTNode *n;
     int i, j, k;
     char ret_type;
@@ -673,6 +674,21 @@ void emit_expression(ASTNode *node, void *payload) {
                 /* Do any type promotion */
                 type_promotion(node);
             }
+            break;
+
+        case BLOCK_EXPR:
+            comment_meta = get_metaline_token_at(node);
+            if (node->output) output_prepend_text(comment_meta, node->output);
+            else node->output = output_fs(comment_meta);
+            free(comment_meta);
+
+            if (child1 && child1->output) output_concat(node->output, child1->output);
+
+            temp1 = mprintf("l%dbexprend:\n", node->node_number);
+            output_append_text(node->output, temp1);
+            free(temp1);
+
+            type_promotion(node);
             break;
 
         default:

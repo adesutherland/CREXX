@@ -553,6 +553,59 @@ void emit_flow(ASTNode *node, void *pl) {
             free(temp1);
             break;
 
+        case LEAVE_WITH:
+            /* Leave BLOCK_EXPR with value */
+            comment_meta = get_metaline(node);
+            if (node->output) output_prepend_text(comment_meta, node->output);
+            else node->output = output_fs(comment_meta);
+            free(comment_meta);
+
+            /* Add Variable Metadata */
+            add_variable_metadata(node);
+
+            if (child1) {
+                char *result_prefix;
+
+                if (child1->output) output_concat(node->output, child1->output);
+
+                if (node->association) {
+                    if (node->association->value_dims) result_prefix = "";
+                    else result_prefix = type_to_prefix(node->association->value_type);
+
+                    if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                        temp2 = format_constant(child1->target_type, child1);
+                        temp1 = mprintf("   load %c%d,%s\n",
+                                        node->association->register_type,
+                                        node->association->register_num,
+                                        temp2);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                        free(temp2);
+                    }
+                    else if (child1->register_num != node->association->register_num ||
+                             child1->register_type != node->association->register_type) {
+                        temp1 = mprintf("   %scopy %c%d,%c%d\n",
+                                        result_prefix,
+                                        node->association->register_type,
+                                        node->association->register_num,
+                                        child1->register_type,
+                                        child1->register_num);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                }
+
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            }
+
+            if (node->association) {
+                temp1 = mprintf("   br l%dbexprend\n",
+                                node->association->node_number);
+                output_append_text(node->output, temp1);
+                free(temp1);
+            }
+            break;
+
         case ITERATE:
             /* Iterate Loop */
             /* Add source metadata */

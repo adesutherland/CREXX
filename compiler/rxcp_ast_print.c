@@ -303,6 +303,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case UNTIL:
             case ITERATE:
             case LEAVE:
+            case LEAVE_WITH:
             case NOP:
             case OPTIONS:
             case PULL:
@@ -317,6 +318,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case SAY:
             case UPPER:
             case PARSE:
+            case BLOCK_EXPR:
                 attributes = "color=green4";
                 only_type = 1;
                 break;

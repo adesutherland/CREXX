@@ -57,7 +57,7 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 
 8.  **Symbol Harvesting (`build_symbols_walker`)**: 
     *   Constructs the Symbol Table and defines Scopes for the current tree state.
-    *   **Block Scoping**: Creates `SCOPE_LOCAL` for simple `DO` groups and `IF` branches that use a `DO` block (confinement).
+    *   **Block Scoping**: Creates `SCOPE_LOCAL` for simple `DO` groups, `BLOCK_EXPR` nodes, and `IF` branches that use a `DO` block (confinement).
         *   *Intentional Inconsistency*: Single-instruction `IF` branches (e.g., `if cond then x = 1`) execute in the parent scope, whereas `DO` blocks (e.g., `if cond then do; x = 1; end`) create a local scope. This is as designed.
     *   *Idempotency*: Uses existing scopes if already created; `sym_adnd` prevents duplicate symbols.
     *   *Resolution*: Uses **Specialized Resolvers** (`sym_rslv_local`, `sym_rslv_attribute`, `sym_rslv_global`) to prevent "accidental" linkage.
@@ -100,6 +100,8 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 
 13.2 **Type Safety (`type_safety_walker`)**: 
     *   Verification of type compatibility using the promotion matrix.
+    *   **Block Expressions**: `BLOCK_EXPR` derives its value type from enclosed `LEAVE_WITH` nodes. Multiple `LEAVE_WITH` exits must agree exactly on value type and dimensions.
+    *   **Block Exit Diagnostics**: `LEAVE_WITH` outside a block expression yields `#NOT_IN_BLOCK_EXPR`; plain `LEAVE` inside a block expression without a loop target yields `#LEAVE_WITH_REQUIRED`.
     *   *Idempotency*: Can run natively inside the fixed loop. Uses an `is_final_pass` flag to suppress type and argument-related errors inside the iterative resolution loop, only firing them during the final pass.
 
 13.3 **Function Call Type Safety (`func_type_safety_walker`)**: 

@@ -18,6 +18,8 @@ CALL routine \[ parameter \] \[, \[ parameter \] ... \]
 
 DO \[ repetitor \] \[ conditional \] ; \[ clauses \]
 
+expr ::= DO ; \[ clauses \] END
+
 END \[ symbol \] ;
 
 repetitor : \= symbol \= expri \[ TO exprt \] \[ BY exprb \] \[ FOR exprf \]
@@ -25,6 +27,8 @@ repetitor : \= symbol \= expri \[ TO exprt \] \[ BY exprb \] \[ FOR exprf \]
 conditional : \= WHILE exprw UNTIL expru
 
 The DO/END statement is the command employed to iterate and group multiple statements into a singular block. This instruction consists of multiple clauses.
+
+When `DO ... END` appears where an expression is expected, it is parsed as a block expression. In that form the body must yield a value using `LEAVE WITH expr`.
 
 ## EXIT
 
@@ -50,7 +54,11 @@ The ITERATE instruction will execute the innermost, active loop in which the ITE
 
 LEAVE \[ symbol \] ;
 
+LEAVE WITH expr ;
+
 This statement terminates the innermost, active loop. If symbol is specified, it terminates the innermost, active loop having symbol as control variable. 
+
+`LEAVE WITH expr` is distinct from loop-control `LEAVE`. It exits the innermost enclosing expression-form `DO ... END` block and returns the value of `expr` to the parent expression.
 
 ## NOP
 
@@ -147,4 +155,3 @@ The compatibility arg() operator is designed to provide some compatibility with 
 ## Implicit Main Procedure
 
 In the event that a module file contains instructions preceding a PROCEDURE instruction, an implicit procedure named main() is automatically generated within the namespace of the module file. The arguments for this procedure can be accessed through the pseudo array arg or arg() operator. The return type of the implicitly defined main() procedure is automatically set to either int or void.
-

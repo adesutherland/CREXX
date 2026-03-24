@@ -1,0 +1,43 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : block_expr_short_circuit.rexx
+ * BUILT                  : 2026-03-24 17:43:22
+ */
+
+.srcfile="block_expr_short_circuit.rexx"
+.globals=0
+
+main() .locals=3
+   .meta "block_expr_short_circuit.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="calls = 0"
+   .meta "block_expr_short_circuit.main.calls"="b" ".int" r0
+   load r0,0
+   .src 9:1="say calls"
+   itos r0
+   say r0
+   .src 15:1="say calls"
+   itos r0
+   say r0
+   .src 17:0="if 1 & do\n  calls = calls + 100\n  leave with 1"
+   .src 17:8="do"
+   .src 18:3="calls = calls + 100"
+   iadd r0,r0,100
+   .src 19:3="leave with 1"
+   load r1,1
+   icopy r2,r1
+   br l47bexprend
+l47bexprend:
+   brf l51iffalse,r2
+   .src 20:1="end"
+   .src 20:10="say calls"
+   itos r0
+   say r0
+l51iffalse:
+   .src 17:66=""
+   ret
+   .meta "block_expr_short_circuit.main.calls"

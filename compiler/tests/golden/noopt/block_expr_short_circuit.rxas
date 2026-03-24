@@ -1,0 +1,81 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : block_expr_short_circuit.rexx
+ * BUILT                  : 2026-03-24 17:43:22
+ */
+
+.srcfile="block_expr_short_circuit.rexx"
+.globals=0
+
+main() .locals=8
+   .meta "block_expr_short_circuit.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="calls = 0"
+   .meta "block_expr_short_circuit.main.calls"="b" ".int" r0
+   load r0,0
+   .src 5:0="if 0 & do\n  calls = calls + 1\n  leave with 1"
+   load r3,0
+   brf l17andend,r3
+   .src 5:8="do"
+   .src 6:3="calls = calls + 1"
+   iadd r0,r0,1
+   .src 7:3="leave with 1"
+   load r1,1
+   icopy r2,r1
+   br l16bexprend
+l16bexprend:
+   icopy r3,r2
+l17andend:
+   brf l20iffalse,r3
+   .src 8:1="end"
+   .src 8:10="say \"bad-and\""
+   say "bad-and"
+l20iffalse:
+   .src 9:1="say calls"
+   itos r0
+   say r0
+   .src 11:0="if 1 | do\n  calls = calls + 10\n  leave with 0"
+   load r5,1
+   brt l33orend,r5
+   .src 11:8="do"
+   .src 12:3="calls = calls + 10"
+   iadd r0,r0,10
+   .src 13:3="leave with 0"
+   load r3,0
+   icopy r4,r3
+   br l32bexprend
+l32bexprend:
+   icopy r5,r4
+l33orend:
+   brf l35iffalse,r5
+   .src 14:1="end"
+l35iffalse:
+   .src 15:1="say calls"
+   itos r0
+   say r0
+   .src 17:0="if 1 & do\n  calls = calls + 100\n  leave with 1"
+   load r7,1
+   brf l48andend,r7
+   .src 17:8="do"
+   .src 18:3="calls = calls + 100"
+   iadd r0,r0,100
+   .src 19:3="leave with 1"
+   load r5,1
+   icopy r6,r5
+   br l47bexprend
+l47bexprend:
+   icopy r7,r6
+l48andend:
+   brf l51iffalse,r7
+   .src 20:1="end"
+   .src 20:10="say calls"
+   itos r0
+   say r0
+l51iffalse:
+   .src 17:66=""
+   ret
+   .meta "block_expr_short_circuit.main.calls"
