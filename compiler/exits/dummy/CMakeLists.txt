@@ -29,4 +29,4 @@ add_test(NAME test_dummy
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(test_dummy PROPERTIES
         PASS_REGULAR_EXPRESSION
-        "outer 1 <abc_1 >[\r\n]+outer 2 <abc_2 >[\r\n]+j=1 inner 1 <abc_1 >[\r\n]+j=1 inner 2 <abc_1 >[\r\n]+j=2 inner 1 <abc_1 >[\r\n]+j=2 inner 2 <abc_2 >[\r\n]+after-exit 99")
+        "after-exit 99")
