@@ -18,7 +18,7 @@ add_custom_target(exit_pprint_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Pprint.rxb
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_pprint.rxas
         COMMAND ${CMAKE_COMMAND} -E env RXCP_EXIT_MODULE=rxcexits $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o test_pprint ${CMAKE_CURRENT_SOURCE_DIR}/test_pprint.rexx
-        DEPENDS rxc ${CMAKE_CURRENT_SOURCE_DIR}/test_pprint.rexx compiler_exit_bin
+        DEPENDS rxc ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/test_pprint.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling test_pprint.rexx with exit"
 )
@@ -33,5 +33,6 @@ add_custom_command(
         COMMENT "Assembling test_pprint.rxas"
 )
 add_custom_target(test_pprint_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_pprint.rxbin)
+add_dependencies(test_pprint_bin compiler_exit_bin)
 
 add_test(NAME test_pprint COMMAND rxvm test_pprint.rxbin ${LIBRPATH} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

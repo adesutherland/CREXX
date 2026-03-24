@@ -18,7 +18,7 @@ add_custom_target(exit_parse_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Parse.rxbin
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_parse.rxas
         COMMAND ${CMAKE_COMMAND} -E env RXCP_EXIT_MODULE=rxcexits $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o test_parse ${CMAKE_CURRENT_SOURCE_DIR}/test_parse.rexx
-        DEPENDS rxc ${CMAKE_CURRENT_SOURCE_DIR}/test_parse.rexx compiler_exit_bin
+        DEPENDS rxc ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/test_parse.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling test_parse.rexx with exit"
 )
@@ -33,5 +33,6 @@ add_custom_command(
         COMMENT "Assembling test_parse.rxas"
 )
 add_custom_target(test_parse_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_parse.rxbin)
+add_dependencies(test_parse_bin compiler_exit_bin)
 
 add_test(NAME test_parse COMMAND rxvm test_parse.rxbin ${LIBRPATH} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

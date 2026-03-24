@@ -16,13 +16,17 @@ add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_dummy.rxbin
     COMMAND ${CMAKE_COMMAND} -E env RXCP_EXIT_MODULE=rxcexits $<TARGET_FILE:rxc> -i $<TARGET_FILE_DIR:rxc> -o test_dummy ${CMAKE_CURRENT_SOURCE_DIR}/test_dummy.rexx
     COMMAND $<TARGET_FILE:rxas> -o test_dummy.rxbin test_dummy
-    DEPENDS rxc rxas compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/test_dummy.rexx
+    DEPENDS rxc rxas ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/test_dummy.rexx
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Compiling test_dummy.rexx with exit"
 )
 add_custom_target(test_dummy_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_dummy.rxbin)
 add_dependencies(test_dummy_bin rxvm)
+add_dependencies(test_dummy_bin compiler_exit_bin)
 
 add_test(NAME test_dummy
          COMMAND $<TARGET_FILE:rxvm> ${CMAKE_CURRENT_BINARY_DIR}/test_dummy.rxbin
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(test_dummy PROPERTIES
+        PASS_REGULAR_EXPRESSION
+        "outer 1 <abc_1 >[\r\n]+outer 2 <abc_2 >[\r\n]+j=1 inner 1 <abc_1 >[\r\n]+j=1 inner 2 <abc_1 >[\r\n]+j=2 inner 1 <abc_1 >[\r\n]+j=2 inner 2 <abc_2 >[\r\n]+after-exit 99")

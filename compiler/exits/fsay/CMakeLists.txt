@@ -18,7 +18,7 @@ add_custom_target(exit_fsay_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Fsay.rxbin)
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_fsay.rxas
         COMMAND ${CMAKE_COMMAND} -E env RXCP_EXIT_MODULE=rxcexits $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o test_fsay ${CMAKE_CURRENT_SOURCE_DIR}/test_fsay.rexx
-        DEPENDS rxc ${CMAKE_CURRENT_SOURCE_DIR}/test_fsay.rexx compiler_exit_bin
+        DEPENDS rxc ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/test_fsay.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling test_fsay.rexx with exit"
 )
@@ -33,5 +33,6 @@ add_custom_command(
         COMMENT "Assembling test_fsay.rxas"
 )
 add_custom_target(test_fsay_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_fsay.rxbin)
+add_dependencies(test_fsay_bin compiler_exit_bin)
 
 add_test(NAME test_fsay COMMAND rxvm test_fsay.rxbin ${LIBRPATH} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

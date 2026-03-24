@@ -18,7 +18,7 @@ add_custom_target(exit_execio_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Execio.rxb
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_execio.rxas
         COMMAND ${CMAKE_COMMAND} -E env RXCP_EXIT_MODULE=rxcexits $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o test_execio ${CMAKE_CURRENT_SOURCE_DIR}/test_execio.rexx
-        DEPENDS rxc ${CMAKE_CURRENT_SOURCE_DIR}/test_execio.rexx compiler_exit_bin
+        DEPENDS rxc ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/test_execio.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling test_execio.rexx with exit"
 )
@@ -33,5 +33,6 @@ add_custom_command(
         COMMENT "Assembling test_execio.rxas"
 )
 add_custom_target(test_execio_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_execio.rxbin)
+add_dependencies(test_execio_bin compiler_exit_bin)
 
 add_test(NAME test_execio COMMAND rxvm test_execio.rxbin ${LIBRPATH} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

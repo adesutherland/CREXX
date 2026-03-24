@@ -306,7 +306,7 @@ process: method = .string
      do i=1 to ptext[0]
        texttab=texttab' 'ptext[i]
      end
-     _replacement='abc[1]="abc_1"; abc[2]="abc_2" ; say "outer 1 <"abc[1]">"; say "outer 2 "abc[2]">"; do j=1 to 2; say "j="j" inner 1 <"abc[j]">" ; say "j="j" inner 2 <"abc[j]">"; end'
+     _replacement='abc[1]="abc_1"; abc[2]="abc_2" ; say "outer 1 <"abc[1]">"; say "outer 2 <"abc[2]">"; do j=1 to 2; say "j="j" inner 1 <"abc[1]">" ; say "j="j" inner 2 <"abc[j]">"; end'
 /*
      _replacement='_rs=parse_exec('text',"'kindtab'", "'texttab'")'
      _replacement=_replacement'; if 'pkind[2]'=1  then 'ptext[2]'=_rs[1]'

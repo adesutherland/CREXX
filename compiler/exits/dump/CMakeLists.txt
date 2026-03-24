@@ -19,7 +19,7 @@ add_dependencies(exit_dump_bin token_bin)
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_dump.rxas
     COMMAND ${CMAKE_COMMAND} -E env RXCP_EXIT_MODULE=rxcexits $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o test_dump ${CMAKE_CURRENT_SOURCE_DIR}/test_dump.rexx
-    DEPENDS rxc ${CMAKE_CURRENT_SOURCE_DIR}/test_dump.rexx compiler_exit_bin
+    DEPENDS rxc ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/test_dump.rexx
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Compiling test_dump.rexx with exit"
 )
@@ -34,5 +34,6 @@ add_custom_command(
 
 add_custom_target(test_dump_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_dump.rxbin)
 add_dependencies(test_dump_bin rxvm)
+add_dependencies(test_dump_bin compiler_exit_bin)
 
 add_test(NAME test_dump COMMAND $<TARGET_FILE:rxvm> ${CMAKE_CURRENT_BINARY_DIR}/test_dump.rxbin WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

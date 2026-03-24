@@ -18,7 +18,7 @@ add_custom_target(exit_sort_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Sort.rxbin)
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_sort.rxas
         COMMAND ${CMAKE_COMMAND} -E env RXCP_EXIT_MODULE=rxcexits $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o test_sort ${CMAKE_CURRENT_SOURCE_DIR}/test_sort.rexx
-        DEPENDS rxc ${CMAKE_CURRENT_SOURCE_DIR}/test_sort.rexx compiler_exit_bin
+        DEPENDS rxc ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/test_sort.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling test_sort.rexx with exit"
 )
@@ -31,5 +31,6 @@ add_custom_command(
         COMMENT "Assembling test_sort.rxas"
 )
 add_custom_target(test_sort_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_sort.rxbin)
+add_dependencies(test_sort_bin compiler_exit_bin)
 
 add_test(NAME test_sort COMMAND rxvm test_sort.rxbin ${LIBRPATH} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
