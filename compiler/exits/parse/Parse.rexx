@@ -1,15 +1,18 @@
 options levelb
-namespace rxcpexits expose parseexit _status _error_token _error_message start_of_template pkind ptext parse_preprocess
+namespace rxcpexits expose parseexit
 
 import rxcp
 import rxfnsb
 
 parseexit: class
-    _node_id       = .int    with register.1
-    _replacement   = .string with register.2
-    _error_token   = .int    with register.3
-    _error_message = .string with register.4
-    _status        = .string with register.5
+    _node_id              = .int
+    _replacement          = .string
+    _error_token          = .int
+    _error_message        = .string
+    _status               = .string
+    _template_source_text = .string
+    _template_kindtab     = .string
+    _template_texttab     = .string
 
     /* ------------------------------------------------------------------------
      * Factory
@@ -24,6 +27,9 @@ parseexit: class
         _error_token = 0
         _error_message = ""
         _status = "EMPTY"
+        _template_source_text = ""
+        _template_kindtab = ""
+        _template_texttab = ""
     /* ------------------------------------------------------------------------
      * Primary keyword handled by this exit.
      * ----------------------------------------------------------------------
@@ -32,7 +38,7 @@ parseexit: class
         return "parse"
     /* ------------------------------------------------------------------------
      * Additional trigger keywords.
-     * Empty for now: the exit is bound only to "add".
+     * Empty for now: the exit is bound only to "parse".
      * ----------------------------------------------------------------------
      */
     get_additional_keywords: method = .string
@@ -61,6 +67,14 @@ parseexit: class
  */
 pre_process: method = .string
   arg tokens = .token[]
+
+  _replacement = ""
+  _error_token = 0
+  _error_message = ""
+  _status = "EMPTY"
+  _template_source_text = ""
+  _template_kindtab = ""
+  _template_texttab = ""
 
   start_of_template=.int
   parse_preprocess=.string[]
@@ -203,22 +217,37 @@ pre_process: method = .string
         out = out + 1
      end
   end
+  kindtab = ""
+  texttab = ""
+  do i = 1 to out
+     kindtab = kindtab' 'pkind[i]
+     texttab = texttab' 'ptext[i]
+  end
+
+  tx = parse_preprocess.1
+  tj = tokens[tx]
+  text = strip(tj.get_text())
+
+  _template_source_text = text
+  _template_kindtab = kindtab
+  _template_texttab = texttab
+  _replacement = '_rs=parse_exec('text',"'kindtab'", "'texttab'")'
+
+  result_index = 0
+  do i = 2 to out by 2
+     result_index = result_index + 1
+     if pkind[i] = 1 & ptext[i] \= "." then do
+        _replacement = _replacement'; if 1=1 then 'ptext[i]'=_rs['result_index']'
+     end
+  end
+
+  call log "prepared code "_replacement
   call log "must be exposed " toExpose" templates "out
 return toExpose
 
 process: method = .string
     arg tokens = .token[]
-    /* ------------------------------------------------------------------------
-     * Per-call state reset
-     * ------------------------------------------------------------------------
-     * Important: the exit object is reused, so reset all return fields before
-     * processing a new candidate sequence.
-     * ----------------------------------------------------------------------
-     */
-    _replacement = ""
-    _error_token = 0
-    _error_message = ""
-    _status = "EMPTY"
+
     if tokens.0 < 3 then do
        _status = "REJECT"
        return _status
@@ -280,52 +309,18 @@ process: method = .string
     end
   */
     /* ------------------------------------------------------------------------
-     * Emit canonical replacement
-       parse_preprocess.1 string/variable token to parse
-       parse_preprocess.2 upper/lower
-       parse_preprocess.3 VALUE/VAR
-       parse_preprocess.4 string/variable to parse
-
-     * ------------------------------------------------------------------------
+     * Emit the replacement prepared during pre_process.
+     *
+     * The bridge now keeps one exit instance per node, so the preprocessed
+     * template state remains attached to the object until process() runs.
+     * ----------------------------------------------------------------------
      */
-     _status = "REPLACE"
-     _replacement=""
-     tx=.int
-     tx = parse_preprocess.1                /* string to parse is third on, AT LEAST FOR NOW */
-     call log "987 "parse_preprocess.1" "tx" "c2x(tx)
-     tj   = tokens[tx]
-     type=strip(tj.get_type())
-     text=strip(tj.get_text())
-     call log "671 "type" "text
-    ## text=substr(text,2,length(text)-2)  /* strip off quotes */
-     kindtab=''
-     texttab=''
-     do i=1 to pkind[0]
-        kindtab=kindtab' 'pkind[i]
+     if _replacement = "" then do
+        return setError("ERROR", 1, "PARSE state missing before process")
      end
-     do i=1 to ptext[0]
-       texttab=texttab' 'ptext[i]
-     end
-     _replacement='abc[1]="abc_1"; abc[2]="abc_2" ; say "outer 1 <"abc[1]">"; say "outer 2 <"abc[2]">"; do j=1 to 2; say "j="j" inner 1 <"abc[1]">" ; say "j="j" inner 2 <"abc[j]">"; end'
-/*
-     _replacement='_rs=parse_exec('text',"'kindtab'", "'texttab'")'
-     _replacement=_replacement'; if 'pkind[2]'=1  then 'ptext[2]'=_rs[1]'
-     _replacement=_replacement'; if 'pkind[4]'=1  then 'ptext[4]'=_rs[2]'
-     _replacement=_replacement'; if 'pkind[6]'=1  then 'ptext[6]'=_rs[3]'
-     _replacement=_replacement'; if 'pkind[8]'=1  then 'ptext[8]'=_rs[4]'
 
-     _replacement=_replacement'; if 'pkind[10]'=1 then 'ptext[10]'=_rs[5]'
-   /*
-     _replacement=_replacement'; if 'pkind[12]'=1 then 'ptext[12]'=_rs[6]'
-     _replacement=_replacement'; if 'pkind[14]'=1 then 'ptext[14]'=_rs[7]'
-     _replacement=_replacement'; if 'pkind[16]'=1 then 'ptext[16]'=_rs[8]'
-     _replacement=_replacement'; if 'pkind[18]'=1 then 'ptext[18]'=_rs[9]'
-     _replacement=_replacement'; if 'pkind[20]'=1 then 'ptext[20]'=_rs[10]'
-  */
+     _status = "REPLACE"
      call log "injected code "_replacement
-     assembler SETATTRS pkind,0    /* reset the token arrays */
-     assembler SETATTRS ptext,0
-  */
      return _status
     /* ------------------------------------------------------------------------
      * Accessors
@@ -371,12 +366,13 @@ return _status
  *
  * Notes
  *   - Keep logging side-effects cheap and safe.
+ *   - "say" prints to rxc stdout (or maybe stderr?)
  *   - Consider guarding logging behind an environment switch for normal builds.
- *   - Current implementation writes to a fixed Windows path.
- *   - Returning '' keeps the helper unobtrusive to callers.
+ *   - Commented out implementation writes to a fixed Windows path.
  * ==========================================================================
  */
 log: procedure = .int
     arg logtxt = .string
-return 0
-return lineout("c:\temp\pluginlog.txt", time()" "logtxt)
+    say "EXIT LOG >" logtxt
+    /* call lineout "c:\temp\pluginlog.txt", time() logtxt */
+    return 0

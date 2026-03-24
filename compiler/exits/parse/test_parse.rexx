@@ -7,14 +7,20 @@ main: procedure
   line="4711Alice Johnson   1248.17EUR London"
   parse upper value "4711Alice Johnson   1270.18EUR" 1 id 5 name 21 amount 28 currency 31 city
 
-/*
   say 111 "<"id">"
   say 222 "<"name">"
   say 333 "<"amount">"
   say 444 "<"currency">"
-   say 555 "<"city">"
-*/
-  return
+  say 555 "<"city">"
+
+  parse upper value "9999John Smith      9999.99AUD Sydney" 1 id 5 name 21 amount 28 currency 31 city
+
+  say 611 "<"id">"
+  say 622 "<"name">"
+  say 633 "<"amount">"
+  say 644 "<"currency">"
+  say 655 "<"city">"
+
 /*
   parse var "4711Alice Johnson   1297.17EUR" 1 id 5 name 21 amount 28 currency
 
@@ -22,8 +28,8 @@ main: procedure
   say 222 "<"name">"
   say 333 "<"amount">"
   say 444 "<"currency">"
-
-
+*/
+/*
   line="To be, or not to be?"
   parse var "To be, or not to be?"   w1 ',' w2
   say 111 w1
@@ -289,4 +295,3 @@ log: procedure
     arg logtxt = .string
     say time()" "logtxt
 return
-

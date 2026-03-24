@@ -709,13 +709,39 @@ int rxcp_exit_bridge_pre_invoke(Context *ctx, ASTNode *node) {
         while (entry) {
             if (key_len == strlen(entry->primary_keyword) &&
                 strncasecmp(entry->primary_keyword, keyword, key_len) == 0) {
-
-                rxvml_value* nid_val = rxvml_value_new(vctx);
-                rxvml_set_int(nid_val, node->node_number);
                 rxvml_value* obj = NULL;
+                char class_name[256];
+                class_name[0] = 0;
 
-                if (rxvml_call_factory(vctx, entry->class_name, 1, &nid_val, &obj) == 0 && obj) {
-                    if (rxvml_call_method(vctx, obj, entry->class_name, "pre_process", 1, &tok_array, &response) == 0) {
+                if (node->exit_obj_reg != -1) {
+                    obj = rxvml_reg_get(vctx, node->exit_obj_reg, class_name);
+                }
+
+                if (!obj) {
+                    rxvml_value* nid_val = rxvml_value_new(vctx);
+                    rxvml_set_int(nid_val, node->node_number);
+
+                    if (rxvml_call_factory(vctx, entry->class_name, 1, &nid_val, &obj) == 0 && obj) {
+                        int reg_idx = rxvml_reg_alloc(vctx, obj, entry->class_name);
+                        if (reg_idx >= 0) {
+                            node->exit_obj_reg = reg_idx;
+                            strncpy(class_name, entry->class_name, sizeof(class_name) - 1);
+                            class_name[sizeof(class_name) - 1] = 0;
+                        } else {
+                            rxvml_value_free(obj);
+                            obj = NULL;
+                        }
+                    }
+                    rxvml_value_free(nid_val);
+                }
+
+                if (obj) {
+                    if (!class_name[0]) {
+                        strncpy(class_name, entry->class_name, sizeof(class_name) - 1);
+                        class_name[sizeof(class_name) - 1] = 0;
+                    }
+
+                    if (rxvml_call_method(vctx, obj, class_name, "pre_process", 1, &tok_array, &response) == 0) {
                         const char* status = NULL;
                         size_t status_len = 0;
                         if (rxvml_to_str(vctx, response, &status, &status_len) == 0 && status) {
@@ -745,9 +771,7 @@ int rxcp_exit_bridge_pre_invoke(Context *ctx, ASTNode *node) {
                         }
                         if (response) rxvml_value_free(response);
                     }
-                    rxvml_value_free(obj);
                 }
-                rxvml_value_free(nid_val);
                 break;
             }
             entry = entry->next;
