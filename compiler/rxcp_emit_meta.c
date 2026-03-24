@@ -36,6 +36,44 @@
 #define REGTP_VAL 1
 #define REGTP_NOTSYM 2
 
+static int symbol_has_live_node_in_proc(Symbol *symbol, ASTNode *proc_node) {
+    size_t i;
+
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *sn = sym_trnd(symbol, i);
+        ASTNode *n = sn ? sn->node : NULL;
+
+        while (n) {
+            if (n == proc_node) return 1;
+            n = n->parent;
+        }
+    }
+
+    return 0;
+}
+
+static int symbol_is_exit_token_only_in_proc(Symbol *symbol, ASTNode *proc_node) {
+    size_t i;
+    int saw_live_node = 0;
+
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *sn = sym_trnd(symbol, i);
+        ASTNode *n = sn ? sn->node : NULL;
+        ASTNode *walk = n;
+
+        while (walk) {
+            if (walk == proc_node) {
+                saw_live_node = 1;
+                if (!n || n->node_type != EXIT_TOKEN) return 0;
+                break;
+            }
+            walk = walk->parent;
+        }
+    }
+
+    return saw_live_node;
+}
+
 /* Adds Symbol metadata */
 void meta_set_symbol(Symbol *symbol, void *payload) {
     ASTNode* node = (ASTNode*)payload;
@@ -279,7 +317,15 @@ void meta_clear_symbol(Symbol *symbol, void *payload) {
     if (symbol->symbol_type != FUNCTION_SYMBOL) {
 
         if (!symbol->meta_emitted) {
-            fprintf(stderr, "WARNING: Did not emit metadata for symbol %s\n", symbol->name);
+            if (symbol->register_num < 0) {
+                return;
+            }
+            if (symbol_is_exit_token_only_in_proc(symbol, node)) {
+                return;
+            }
+            if (symbol_has_live_node_in_proc(symbol, node)) {
+                fprintf(stderr, "WARNING: Did not emit metadata for symbol %s\n", symbol->name);
+            }
             return;
         }
 
