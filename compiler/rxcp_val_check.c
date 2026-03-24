@@ -43,6 +43,34 @@ static OperandType nodetype_to_operandtype(NodeType ntype) {
     }
 }
 
+static int has_no_concat_gap(ASTNode *left, ASTNode *right) {
+    char *left_end = 0;
+    char *right_start = 0;
+    char *p;
+    int result = 1;
+
+    if (!left || !right) return 0;
+
+    left_end = left->source_end;
+    right_start = right->source_start;
+
+    if (!left_end || !right_start) return 0;
+    if (right_start <= left_end) return 0;
+
+    for (p = left_end + 1; p < right_start; p++) {
+        if (isspace((unsigned char)*p)) {
+            result = 0;
+            break;
+        }
+        if (*p != '"' && *p != '\'' && *p != ')' && *p != ']') {
+            result = 0;
+            break;
+        }
+    }
+
+    return result;
+}
+
 /* Step 1
  * - Fixes up procedure / class tree structures.
  *   Note: This stage is critical for Level B Rexx as the single-lookahead Lemon parser
@@ -366,6 +394,17 @@ walker_result source_location_walker(walker_direction direction,
         if (node->token_start) {
             if (node->node_type == VAR_REFERENCE) {
                 node->token_start = node->token_start->token_prev;
+            }
+            else if ((node->node_type == VAR_SYMBOL ||
+                      node->node_type == VAR_TARGET ||
+                      node->node_type == VAR_REFERENCE) && node->child) {
+                /* Array indexes are tokenized after the variable name, so include the trailing ] */
+                left = node->token_start->token_next;
+                right = node->token_end->token_next;
+                if (left && right && left->token_type == TK_OPEN_BRACKET &&
+                    right->token_type == TK_CLOSE_BRACKET) {
+                    node->token_end = right;
+                }
             }
             else if (node->node_type == FUNCTION || node->node_type == FUNC_SYMBOL) {
                 /* Function brackets */
@@ -723,7 +762,7 @@ walker_result syntax_validation_walker(walker_direction direction,
 
         else if (node->node_type == OP_SCONCAT) {
             /* We need to decide if there is white space between the tokens */
-            if (node->child->sibling->source_start - node->child->source_end == 1)
+            if (has_no_concat_gap(node->child, node->child->sibling))
                 node->node_type = OP_CONCAT; /* No gap */
         }
 
