@@ -1,0 +1,65 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_ref_negative.rexx
+ * BUILT                  : 2026-03-25 20:07:04
+ */
+
+.srcfile="inline_test_ref_negative.rexx"
+.globals=0
+
+main() .locals=5
+   .meta "inline_test_ref_negative.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "inline_test_ref_negative.main.values"="b" ".int[3]" r0
+   .src 5:3="values = .int[3"
+   null r0
+   .src 4:3="say \"Starting ref inline negative test...\""
+   say "Starting ref inline negative test..."
+   .src 6:3="values[1] = 10"
+   setattrs r0,3
+   linkattr1 r1,r0,1
+   load r2,10
+   icopy r1,r2
+   unlink r1
+   .src 7:3="say refBump(values[1"
+   load r1,1
+   setattrs r0,3
+   linkattr1 r3,r0,1
+   swap r2,r3
+   call r4,refBump(),r1
+   swap r3,r2
+   unlink r3
+   itos r4
+   say r4
+   .src 8:3="say values[1"
+   setattrs r0,3
+   linkattr1 r4,r0,1
+   itos r4
+   say r4
+   unlink r4
+   .src 9:3="say \"Ref inline negative test finished.\""
+   say "Ref inline negative test finished."
+   .src 10:3="return 0"
+   ret 0
+   .meta "inline_test_ref_negative.main.values"
+
+refBump() .locals=1
+   .meta "inline_test_ref_negative.refbump"="b" ".int" refBump() "expose value=.int" ""
+   .src 12:1="refBump: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 13:7="expose value = .int"
+   .meta "inline_test_ref_negative.refbump.value"="b" ".int" a1
+   .src 14:3="value = value + 1"
+   iadd a1,a1,1
+   .src 15:3="return value"
+   ret a1
+   .meta "inline_test_ref_negative.refbump.value"

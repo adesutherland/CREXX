@@ -191,6 +191,8 @@ add_crexx_compiler_test(inline_test_unary_expr rexx_src/inline_test_unary_expr.r
 add_crexx_compiler_test(inline_test_compare_expr rexx_src/inline_test_compare_expr.rexx)
 add_crexx_compiler_test(inline_test_call_arg_expr rexx_src/inline_test_call_arg_expr.rexx)
 add_crexx_compiler_test(inline_test_call_like_arg_expr rexx_src/inline_test_call_like_arg_expr.rexx)
+add_crexx_compiler_test(inline_test_ref_opt rexx_src/inline_test_ref_opt.rexx)
+add_crexx_compiler_test(inline_test_ref_negative rexx_src/inline_test_ref_negative.rexx)
 add_crexx_compiler_test(inline_test_bool_expr_negative rexx_src/inline_test_bool_expr_negative.rexx)
 
 # Macro to add a run test
@@ -244,6 +246,8 @@ add_crexx_run_test(inline_test_unary_expr rexx_src/inline_test_unary_expr.rexx)
 add_crexx_run_test(inline_test_compare_expr rexx_src/inline_test_compare_expr.rexx)
 add_crexx_run_test(inline_test_call_arg_expr rexx_src/inline_test_call_arg_expr.rexx)
 add_crexx_run_test(inline_test_call_like_arg_expr rexx_src/inline_test_call_like_arg_expr.rexx)
+add_crexx_run_test(inline_test_ref_opt rexx_src/inline_test_ref_opt.rexx)
+add_crexx_run_test(inline_test_ref_negative rexx_src/inline_test_ref_negative.rexx)
 add_crexx_run_test(inline_test_bool_expr_negative rexx_src/inline_test_bool_expr_negative.rexx)
 
 # New Phase 2 Scoping Tests

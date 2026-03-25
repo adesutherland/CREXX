@@ -67,7 +67,9 @@ More precisely:
 - For expression inlining, the `FUNCTION` call must fall into one of the currently supported expression-context capability buckets.
 - The callee must be a normal procedure, not a method or factory.
 - Arguments and return values must stay within the current safe built-in scalar slice: no class/object values and no arrays.
-- The callee must satisfy the existing safety checks: fixed pass-by-value args only, single trailing `RETURN`, small body, no unsupported nested inlining.
+- The callee must satisfy the existing safety checks: fixed args only, single trailing `RETURN`, small body, no unsupported nested inlining.
+- `expose`/by-reference formals are supported only when the actual argument is a direct aliasable symbol target.
+- Optional formals are supported in the current slice when the inline rewrite can materialise their default from the formal AST.
 
 At present, the supported expression-context buckets are:
 
@@ -216,7 +218,7 @@ For the first slice, a procedure is eligible only if all of the following hold:
 - fixed arguments only
 - built-in scalar arguments only
 - built-in scalar return only
-- no `.ref`, `.opt`, or varargs
+- no varargs
 - exactly one `RETURN`
 - the `RETURN` is the final instruction
 - body size is below the configured node threshold
@@ -248,20 +250,19 @@ That is another reason phase 1 should replace the enclosing assignment statement
 ## Later Phases
 
 ### Next Phase
-Broader embedded-expression inlining such as:
+The next meaningful extensions are the remaining argument-semantics and evaluation-order cases that are still intentionally excluded:
 
-```rexx
-x = func(a) + y
-```
-
-This should keep using `BLOCK_EXPR`, but expand beyond the current `SAY`/`RETURN`/call-argument/unary/arithmetic/concatenation/comparison slice into other surrounding expression shapes that still have explicit evaluation order.
+- broader by-reference actual shapes beyond direct aliasable symbol targets
+- varargs
+- short-circuit boolean parents and other contexts where evaluation ordering must be modelled explicitly
 
 ## Verification
 The design for phase 1 should be considered ready when:
 
-- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, and `inline_test_nested_call_expr` using the narrow supported strategies
-- excluded cases such as large procedures, methods, multi-return procedures, and unsupported nested-argument/short-circuit contexts remain uninlined under optimisation
+- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, `inline_test_nested_call_expr`, and `inline_test_ref_opt` using the narrow supported strategies
+- excluded cases such as large procedures, methods, multi-return procedures, unsupported by-reference actual shapes, and unsupported short-circuit contexts remain uninlined under optimisation
 - unsupported expression contexts such as those in `inline_test_expr_negative`, `inline_test_say_expr_negative`, and `inline_test_bool_expr_negative` remain uninlined under optimisation
+- unsupported by-reference actual shapes such as those in `inline_test_ref_negative` remain uninlined under optimisation
 - the resulting AST is structurally valid under `-dp`
 - optimised codegen succeeds
 - positive and negative compiler tests lock down the selector behaviour
@@ -270,9 +271,8 @@ The design for phase 1 should be considered ready when:
 
 - methods
 - factories
-- pass-by-reference
-- optional args
 - varargs
-- general embedded-expression inlining beyond the current direct-operand slice
+- broader pass-by-reference actual-shape support beyond direct aliasable symbols
+- general embedded-expression inlining beyond the current eager-bucket slice
 - aggressive pruning of fully inlined procedures
 - claiming fully generic scope/symbol cloning before it is proven
