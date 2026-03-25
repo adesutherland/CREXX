@@ -1,11 +1,12 @@
 options levelb
 
 main: procedure = .int
-  say "Starting nested call arg inline negative test..."
+  say "Starting nested short-circuit inline negative test..."
   do i = 1 to 3
-    say identity(addOne(i))
+    if identity(addOne(i)) | 0 then say "truthy" i
+    else say "falsey" i
   end
-  say "Nested call arg inline negative test finished."
+  say "Nested short-circuit inline negative test finished."
   return 0
 
 identity: procedure = .int

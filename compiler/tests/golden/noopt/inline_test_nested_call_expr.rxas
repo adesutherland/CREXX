@@ -1,0 +1,79 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_nested_call_expr.rexx
+ * BUILT                  : 2026-03-25 17:32:46
+ */
+
+.srcfile="inline_test_nested_call_expr.rexx"
+.globals=0
+
+main() .locals=7
+   .meta "inline_test_nested_call_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting nested call inline expr test...\""
+   say "Starting nested call inline expr test..."
+   .src 5:3="do"
+   .src 5:6="i = 1"
+   .meta "inline_test_nested_call_expr.main.i"="b" ".int" r0
+   load r0,1
+   .src 5:12="to 3"
+   load r1,3
+l8dostart:
+   .src 5:12="to 3"
+   igt r2,r0,r1
+   brt l8doend,r2
+   .src 6:5="say identity(addOne(i))"
+   load r3,1
+   load r5,1
+   swap r6,r0
+   call r4,addOne(),r5
+   swap r0,r6
+   call r6,identity(),r3
+   itos r6
+   say r6
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 7:3="end"
+   br l8dostart
+l8doend:
+   .src 8:3="say \"Nested call inline expr test finished.\""
+   say "Nested call inline expr test finished."
+   .src 9:3="return 0"
+   ret 0
+
+identity() .locals=1
+   .meta "inline_test_nested_call_expr.identity"="b" ".int" identity() "val=.int" ""
+   .src 11:1="identity: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 12:7="val = .int"
+   .meta "inline_test_nested_call_expr.identity.val"="b" ".int" r0
+   icopy r0,a1
+   .src 13:3="return val"
+   ret r0
+   .meta "inline_test_nested_call_expr.identity.val"
+
+addOne() .locals=2
+   .meta "inline_test_nested_call_expr.addone"="b" ".int" addOne() "val=.int" ""
+   .src 15:1="addOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 16:7="val = .int"
+   .meta "inline_test_nested_call_expr.addone.val"="b" ".int" r0
+   icopy r0,a1
+   .src 17:3="return val + 1"
+   iadd r1,r0,1
+   ret r1
+   .meta "inline_test_nested_call_expr.addone.val"

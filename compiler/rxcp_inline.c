@@ -21,10 +21,24 @@ typedef struct {
 } InlineSymbolMapEntry;
 
 typedef struct {
+    Scope *old_scope;
+    Scope *new_scope;
+} InlineScopeMapEntry;
+
+typedef struct {
+    ASTNode *old_node;
+    ASTNode *new_node;
+} InlineNodeMapEntry;
+
+typedef struct {
     Scope *callee_scope;
     Scope *inline_scope;
-    InlineSymbolMapEntry *entries;
-    size_t count;
+    InlineSymbolMapEntry *symbol_entries;
+    size_t symbol_count;
+    InlineScopeMapEntry *scope_entries;
+    size_t scope_count;
+    InlineNodeMapEntry *node_entries;
+    size_t node_count;
 } InlineCloneState;
 
 typedef struct {
@@ -52,22 +66,179 @@ static Symbol *inline_find_mapped_symbol(InlineCloneState *state, Symbol *old_sy
 
     if (!state || !old_symbol) return NULL;
 
-    for (i = 0; i < state->count; i++) {
-        if (state->entries[i].old_symbol == old_symbol) return state->entries[i].new_symbol;
+    for (i = 0; i < state->symbol_count; i++) {
+        if (state->symbol_entries[i].old_symbol == old_symbol) return state->symbol_entries[i].new_symbol;
     }
 
     return NULL;
 }
 
-static ASTNode *inline_clone_subtree(Context *context, ASTNode *node, InlineCloneState *state) {
+static Scope *inline_find_mapped_scope(InlineCloneState *state, Scope *old_scope) {
+    size_t i;
+
+    if (!state || !old_scope) return NULL;
+
+    for (i = 0; i < state->scope_count; i++) {
+        if (state->scope_entries[i].old_scope == old_scope) return state->scope_entries[i].new_scope;
+    }
+
+    return NULL;
+}
+
+static ASTNode *inline_find_mapped_node(InlineCloneState *state, ASTNode *old_node) {
+    size_t i;
+
+    if (!state || !old_node) return NULL;
+
+    for (i = 0; i < state->node_count; i++) {
+        if (state->node_entries[i].old_node == old_node) return state->node_entries[i].new_node;
+    }
+
+    return NULL;
+}
+
+static int inline_append_symbol_map_entry(InlineCloneState *state, Symbol *old_symbol, Symbol *new_symbol) {
+    InlineSymbolMapEntry *new_entries;
+
+    if (!state || !old_symbol || !new_symbol) return 0;
+
+    new_entries = realloc(state->symbol_entries,
+                          sizeof(InlineSymbolMapEntry) * (state->symbol_count + 1));
+    if (!new_entries) return 0;
+
+    state->symbol_entries = new_entries;
+    state->symbol_entries[state->symbol_count].old_symbol = old_symbol;
+    state->symbol_entries[state->symbol_count].new_symbol = new_symbol;
+    state->symbol_count++;
+    return 1;
+}
+
+static int inline_append_scope_map_entry(InlineCloneState *state, Scope *old_scope, Scope *new_scope) {
+    InlineScopeMapEntry *new_entries;
+
+    if (!state || !old_scope || !new_scope) return 0;
+
+    new_entries = realloc(state->scope_entries,
+                          sizeof(InlineScopeMapEntry) * (state->scope_count + 1));
+    if (!new_entries) return 0;
+
+    state->scope_entries = new_entries;
+    state->scope_entries[state->scope_count].old_scope = old_scope;
+    state->scope_entries[state->scope_count].new_scope = new_scope;
+    state->scope_count++;
+    return 1;
+}
+
+static int inline_append_node_map_entry(InlineCloneState *state, ASTNode *old_node, ASTNode *new_node) {
+    InlineNodeMapEntry *new_entries;
+
+    if (!state || !old_node || !new_node) return 0;
+
+    new_entries = realloc(state->node_entries,
+                          sizeof(InlineNodeMapEntry) * (state->node_count + 1));
+    if (!new_entries) return 0;
+
+    state->node_entries = new_entries;
+    state->node_entries[state->node_count].old_node = old_node;
+    state->node_entries[state->node_count].new_node = new_node;
+    state->node_count++;
+    return 1;
+}
+
+static int inline_duplicate_scope_symbols(Scope *old_scope,
+                                          Scope *new_scope,
+                                          InlineCloneState *state) {
+    Symbol **symbols;
+    size_t i;
+
+    if (!old_scope || !new_scope || !state) return 0;
+
+    symbols = scp_syms(old_scope);
+    if (!symbols) return 1;
+
+    for (i = 0; symbols[i]; i++) {
+        Symbol *old_symbol;
+        Symbol *new_symbol;
+
+        old_symbol = symbols[i];
+        if (!old_symbol || old_symbol->symbol_type == FUNCTION_SYMBOL) continue;
+        if (inline_find_mapped_symbol(state, old_symbol)) continue;
+
+        new_symbol = sym_dup(new_scope, old_symbol);
+        if (!new_symbol) {
+            free(symbols);
+            return 0;
+        }
+
+        new_symbol->register_num = UNSET_REGISTER;
+        new_symbol->register_type = 'r';
+        new_symbol->meta_emitted = 0;
+        new_symbol->init_emitted = 0;
+        new_symbol->defines_scope = NULL;
+        new_symbol->ast_template = NULL;
+        new_symbol->is_inlinable = 0;
+
+        if (!inline_append_symbol_map_entry(state, old_symbol, new_symbol)) {
+            free(symbols);
+            return 0;
+        }
+    }
+
+    free(symbols);
+    return 1;
+}
+
+static Scope *inline_clone_scope(Context *context,
+                                 Scope *old_scope,
+                                 Scope *new_parent,
+                                 ASTNode *new_defining_node,
+                                 InlineCloneState *state) {
+    Scope *new_scope;
+
+    if (!context || !old_scope || !state) return NULL;
+
+    new_scope = scp_f(context, new_parent, new_defining_node, NULL, old_scope->type);
+    if (!new_scope) return NULL;
+
+    if (old_scope->name) new_scope->name = strdup(old_scope->name);
+
+    if (!inline_append_scope_map_entry(state, old_scope, new_scope)) return NULL;
+    if (!inline_duplicate_scope_symbols(old_scope, new_scope, state)) return NULL;
+
+    return new_scope;
+}
+
+static ASTNode *inline_clone_subtree_in_scope(Context *context,
+                                              ASTNode *node,
+                                              InlineCloneState *state,
+                                              Scope *current_scope) {
     ASTNode *new_node;
     ASTNode *child;
     Symbol *mapped_symbol;
+    Scope *node_scope;
+    ASTNode *mapped_association;
 
     if (!node) return NULL;
 
     new_node = ast_dup(context, node);
-    new_node->scope = state ? state->inline_scope : node->scope;
+
+    node_scope = current_scope;
+    if (node->scope && node->scope->defining_node == node) {
+        node_scope = inline_find_mapped_scope(state, node->scope);
+        if (!node_scope) {
+            node_scope = inline_clone_scope(context, node->scope, current_scope, new_node, state);
+            if (!node_scope) return NULL;
+        }
+        new_node->scope = node_scope;
+        if (!inline_append_node_map_entry(state, node, new_node)) return NULL;
+    } else {
+        new_node->scope = current_scope ? current_scope : node->scope;
+    }
+
+    if (node->association) {
+        mapped_association = inline_find_mapped_node(state, node->association);
+        if (mapped_association) new_node->association = mapped_association;
+    }
 
     if (node->symbolNode && node->symbolNode->symbol) {
         mapped_symbol = inline_find_mapped_symbol(state, node->symbolNode->symbol);
@@ -77,11 +248,16 @@ static ASTNode *inline_clone_subtree(Context *context, ASTNode *node, InlineClon
 
     child = node->child;
     while (child) {
-        add_ast(new_node, inline_clone_subtree(context, child, state));
+        add_ast(new_node, inline_clone_subtree_in_scope(context, child, state, node_scope));
         child = child->sibling;
     }
 
     return new_node;
+}
+
+static ASTNode *inline_clone_subtree(Context *context, ASTNode *node, InlineCloneState *state) {
+    if (!state) return ast_dup_subtree(context, node);
+    return inline_clone_subtree_in_scope(context, node, state, state->inline_scope);
 }
 
 static void inline_disconnect_subtree_symbols(ASTNode *node) {
@@ -115,67 +291,32 @@ static size_t inline_count_siblings(ASTNode *node) {
 static int inline_build_symbol_map(Scope *callee_scope,
                                    Scope *inline_scope,
                                    InlineCloneState *state) {
-    Symbol **symbols;
-    size_t count;
-    size_t i;
-    size_t out_index;
-
     if (!callee_scope || !inline_scope || !state) return 0;
 
-    symbols = scp_syms(callee_scope);
-    count = 0;
-    while (symbols[count]) count++;
-
-    state->entries = NULL;
-    state->count = 0;
+    state->symbol_entries = NULL;
+    state->symbol_count = 0;
+    state->scope_entries = NULL;
+    state->scope_count = 0;
+    state->node_entries = NULL;
+    state->node_count = 0;
     state->callee_scope = callee_scope;
     state->inline_scope = inline_scope;
 
-    if (!count) {
-        free(symbols);
-        return 1;
-    }
-
-    state->entries = malloc(sizeof(InlineSymbolMapEntry) * count);
-    if (!state->entries) {
-        free(symbols);
-        return 0;
-    }
-
-    out_index = 0;
-    for (i = 0; i < count; i++) {
-        Symbol *old_symbol;
-        Symbol *new_symbol;
-
-        old_symbol = symbols[i];
-        if (!old_symbol || old_symbol->symbol_type == FUNCTION_SYMBOL) continue;
-
-        new_symbol = sym_dup(inline_scope, old_symbol);
-        if (!new_symbol) continue;
-
-        new_symbol->register_num = UNSET_REGISTER;
-        new_symbol->register_type = 'r';
-        new_symbol->meta_emitted = 0;
-        new_symbol->init_emitted = 0;
-        new_symbol->defines_scope = NULL;
-        new_symbol->ast_template = NULL;
-        new_symbol->is_inlinable = 0;
-
-        state->entries[out_index].old_symbol = old_symbol;
-        state->entries[out_index].new_symbol = new_symbol;
-        out_index++;
-    }
-
-    state->count = out_index;
-    free(symbols);
-    return 1;
+    if (!inline_append_scope_map_entry(state, callee_scope, inline_scope)) return 0;
+    return inline_duplicate_scope_symbols(callee_scope, inline_scope, state);
 }
 
 static void inline_free_symbol_map(InlineCloneState *state) {
     if (!state) return;
-    if (state->entries) free(state->entries);
-    state->entries = NULL;
-    state->count = 0;
+    if (state->symbol_entries) free(state->symbol_entries);
+    if (state->scope_entries) free(state->scope_entries);
+    if (state->node_entries) free(state->node_entries);
+    state->symbol_entries = NULL;
+    state->symbol_count = 0;
+    state->scope_entries = NULL;
+    state->scope_count = 0;
+    state->node_entries = NULL;
+    state->node_count = 0;
 }
 
 static void inline_copy_symbol_shape(Symbol *target, Symbol *source) {
@@ -277,20 +418,6 @@ static InlineExprContext inline_classify_expr_parent(ASTNode *node) {
     }
 }
 
-static int inline_call_has_block_expr_arg(ASTNode *call_node) {
-    ASTNode *arg;
-
-    if (!call_node) return 0;
-
-    arg = call_node->child;
-    while (arg) {
-        if (arg->node_type == BLOCK_EXPR) return 1;
-        arg = arg->sibling;
-    }
-
-    return 0;
-}
-
 static int ast_inline_statement(Context *context,
                                 ASTNode *statement_node,
                                 ASTNode *call_node,
@@ -308,7 +435,6 @@ static int ast_inline_statement(Context *context,
     InlineCloneState clone_state;
 
     if (!context || !statement_node || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
-    if (inline_call_has_block_expr_arg(call_node)) return 0;
 
     proc_def = proc_sym->ast_template;
     if (!proc_def || !proc_def->scope) return 0;
@@ -462,7 +588,6 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
     InlineExprContext expr_context;
 
     if (!context || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
-    if (inline_call_has_block_expr_arg(call_node)) return 0;
 
     expr_context = inline_classify_expr_parent(call_node->parent);
     if (expr_context == INLINE_EXPR_CONTEXT_NONE) return 0;

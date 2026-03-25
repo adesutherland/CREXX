@@ -1,5 +1,5 @@
-Starting nested call arg inline negative test...
-2
-3
-4
-Nested call arg inline negative test finished.
+Starting nested short-circuit inline negative test...
+truthy 1
+truthy 2
+truthy 3
+Nested short-circuit inline negative test finished.

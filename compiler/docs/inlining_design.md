@@ -80,7 +80,7 @@ At present, the supported expression-context buckets are:
 
 Short-circuit boolean parents such as `|` and `&` remain intentionally excluded.
 
-Call sites whose actual arguments already contain a `BLOCK_EXPR` are still intentionally left uninlined for now. That keeps the current implementation aligned with the existing scope/symbol remapping strategy while allowing inner eager argument expressions to inline safely.
+Composed inline sites are now supported when an outer call consumes an already-inlined `BLOCK_EXPR` actual, provided the outer context still falls into a supported eager bucket. This relies on scope-aware subtree cloning so nested `BLOCK_EXPR` locals and `LEAVE_WITH` associations remain isolated after the outer rewrite.
 
 The statement-position cases rewrite the enclosing statement. The expression-position case rewrites the `FUNCTION` node itself to `BLOCK_EXPR`.
 
@@ -254,12 +254,12 @@ Broader embedded-expression inlining such as:
 x = func(a) + y
 ```
 
-This should keep using `BLOCK_EXPR`, but expand beyond the current `SAY`/`RETURN`/call-argument/unary/arithmetic/concatenation/comparison slice into other surrounding expression shapes that still have explicit evaluation order, including later removal of the temporary "no inlining around existing `BLOCK_EXPR` actuals" restriction.
+This should keep using `BLOCK_EXPR`, but expand beyond the current `SAY`/`RETURN`/call-argument/unary/arithmetic/concatenation/comparison slice into other surrounding expression shapes that still have explicit evaluation order.
 
 ## Verification
 The design for phase 1 should be considered ready when:
 
-- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, and `inline_test_call_arg_expr` using the narrow supported strategies
+- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, and `inline_test_nested_call_expr` using the narrow supported strategies
 - excluded cases such as large procedures, methods, multi-return procedures, and unsupported nested-argument/short-circuit contexts remain uninlined under optimisation
 - unsupported expression contexts such as those in `inline_test_expr_negative`, `inline_test_say_expr_negative`, and `inline_test_bool_expr_negative` remain uninlined under optimisation
 - the resulting AST is structurally valid under `-dp`

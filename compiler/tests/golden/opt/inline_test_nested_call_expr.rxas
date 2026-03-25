@@ -1,0 +1,86 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_nested_call_expr.rexx
+ * BUILT                  : 2026-03-25 17:32:13
+ */
+
+.srcfile="inline_test_nested_call_expr.rexx"
+.globals=0
+
+main() .locals=8
+   .meta "inline_test_nested_call_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting nested call inline expr test...\""
+   say "Starting nested call inline expr test..."
+   .src 5:3="do"
+   .src 5:6="i = 1"
+   .meta "inline_test_nested_call_expr.main.i"="b" ".int" r0
+   load r0,1
+   .src 5:12="to 3"
+   load r4,3
+l8dostart:
+   .src 5:12="to 3"
+   igt r5,r0,r4
+   brt l8doend,r5
+   .src 6:5="say identity(addOne(i))"
+   .src 6:9="identity"
+   .src 12:7="val"
+   .src 6:18="addOne"
+   .src 16:7="val"
+   icopy r3,r0
+   .src 17:3="return"
+   iadd r6,r3,1
+   icopy r7,r6
+   br l62bexprend
+l62bexprend:
+   icopy r2,r7
+   .src 13:3="return"
+   icopy r7,r2
+   br l58bexprend
+l58bexprend:
+   itos r7
+   say r7
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 7:3="end"
+   br l8dostart
+l8doend:
+   .src 8:3="say \"Nested call inline expr test finished.\""
+   say "Nested call inline expr test finished."
+   .src 9:3="return 0"
+   ret 0
+
+identity() .locals=1
+   .meta "inline_test_nested_call_expr.identity"="b" ".int" identity() "val=.int" ""
+   .src 11:1="identity: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 12:7="val = .int"
+   .meta "inline_test_nested_call_expr.identity.val"="b" ".int" a1
+   .src 13:3="return val"
+   ret a1
+   .meta "inline_test_nested_call_expr.identity.val"
+
+addOne() .locals=2
+   .meta "inline_test_nested_call_expr.addone"="b" ".int" addOne() "val=.int" ""
+   .src 15:1="addOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 16:7="val = .int"
+   .meta "inline_test_nested_call_expr.addone.val"="b" ".int" a1
+   .src 17:3="return val + 1"
+   iadd r1,a1,1
+   ret r1
+   .meta "inline_test_nested_call_expr.addone.val"
