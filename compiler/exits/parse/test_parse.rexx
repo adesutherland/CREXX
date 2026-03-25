@@ -4,38 +4,35 @@ import rxfnsb
 main: procedure
   myArray=.string[]
 
-  line="4711Alice Johnson   1248.17EUR London"
-  parse upper value "4711Alice Johnson   1270.18EUR" 1 id 5 name 21 amount 28 currency 31 city
-
+  line="4711Alice Johnson   1249.17EUR London UK"
+  parse upper value "4711Alice Johnson   1249.19EUR London UK" 1 id 5 name 21 amount 28 currency city country
   say 111 "<"id">"
   say 222 "<"name">"
   say 333 "<"amount">"
   say 444 "<"currency">"
   say 555 "<"city">"
+  say 666 "<"country">"
+/*
+  parse upper value "9999John Smith      9999.99AUD Sydney" 1 id2 5 name2 21 amount 28 currency 31 city
 
-  parse upper value "9999John Smith      9999.99AUD Sydney" 1 id 5 name 21 amount 28 currency 31 city
-
-  say 611 "<"id">"
-  say 622 "<"name">"
+  say 611 "<"id2">"
+  say 622 "<"name2">"
   say 633 "<"amount">"
   say 644 "<"currency">"
   say 655 "<"city">"
 
-/*
-  parse var "4711Alice Johnson   1297.17EUR" 1 id 5 name 21 amount 28 currency
+  parse value "4711Alice Johnson   1297.17EUR" 1 id3 5 name3 21 amount 28 currency
 
-  say 111 "<"id">"
-  say 222 "<"name">"
+  say 111 "<"id3">"
+  say 222 "<"name3">"
   say 333 "<"amount">"
   say 444 "<"currency">"
-*/
-/*
-  line="To be, or not to be?"
-  parse var "To be, or not to be?"   w1 ',' w2
+
+  parse value "To be, or not to be?"   w1 ',' w2
   say 111 w1
   say 222 w2
-*/
 return
+*/
 /* ----------------------------------------------------------------------
  * parse_run
  *
@@ -91,17 +88,22 @@ parse_exec: procedure=.string[]
   wrds=words(type)
   do i=1 to wrds
      token_type[i]=word(type,i)
+  ##   say "type["i"]" token_type[i]
   end
 
   wrds=words(tokens)
   do i=1 to wrds
      token[i]=word(tokens,i)
+  ##   say "token["i"]" token[i]
   end
 
-  i = 1
   tkindx=0
-  new_statement = .string
   srclen = length(src)
+  scan_pos = 1
+  i = 1
+  vi = 0
+  call log "PARSE STRING='"src"'"
+  call log "              1---5----0----5----0----5----0----5----0----5----0"
 
   do while i <= token_type[0]
      t = token_type[i]
@@ -110,14 +112,13 @@ parse_exec: procedure=.string[]
       * --------------------------------------------------------------
       */
      call log "DBG i="i " boundary=["token[i]"] type="token_type[i] " var=["token[i+1]"]"
-
      if i + 2 <= token_type[0] then call log "DBG next boundary=["token[i+2]"] type="token_type[i+2]
      else call log "DBG next boundary=<END>"
      /* --------------------------------------------------------------
       * Current token must be a valid boundary
       * --------------------------------------------------------------
       */
-     if t \= 3 & t \= 2 & t \= 4 & t \= 5 then do
+     if t \= 3 & t \= 2 & t \= 4 & t \= 5 & t \= 6 then do
         say "PARSE V1 error: boundary expected at token" i "got type" t "text=<"token[i]">"
         return parse_values
      end
@@ -127,16 +128,16 @@ parse_exec: procedure=.string[]
       */
      if i + 1 > token_type[0] then do
         say "PARSE V1 error: variable expected after boundary at token" i
-         return parse_values
+        return parse_values
      end
-
      if token_type[i + 1] \= 1 then do
         say "PARSE V1 error: variable expected after boundary at token" i "got type" token_type[i + 1]
-         return parse_values
+        return parse_values
      end
      tkindx=parse_values[0]+1
      varname = token[i + 1]
-     say "111 varname="varname" "i+1
+     vi=vi+1
+     call log "*VARIABLE["vi"]="varname" TEMPLATE TOKEN="i+1
      /* --------------------------------------------------------------
       * Resolve current boundary into absolute start position
       *
@@ -145,10 +146,12 @@ parse_exec: procedure=.string[]
       *   2  -> literal found in source
       *   4  -> relative +n
       *   5  -> relative -n
+      *   6  -> implicit (next available position)
       * --------------------------------------------------------------
       */
-     curr_start = resolveStartV1(src, srclen, token[i], token_type[i])
-     call log "DBG resolved startpos="curr_start
+      call log "DBG current scan_pos="scan_pos " current type="t
+      curr_start = resolveCurrentStartV1(t, token[i], scan_pos, src, srclen)
+      call log "DBG resolved startpos="curr_start
      /* --------------------------------------------------------------
       * Invalid / unresolved start position:
       * skip current target and continue with next boundary pair
@@ -165,35 +168,31 @@ parse_exec: procedure=.string[]
       */
      if i + 2 > token_type[0] then do
         value = substr(src, curr_start)
-        call log 122 varname"="value
-
+        call log ">ASSIGN "varname"='"value"' FROM="curr_start" LENGTH="length(value)" RESULT-ENTRY="tkindx" >4"
         if varname = '.' then nop
-        else parse_values[tkindx]=strip(value)
+        else parse_values[tkindx] = strip(value)
+        scan_pos = srclen + 1
         leave
      end
      nextt = token_type[i + 2]
      nextx = strip(token[i + 2])
-
+     call log "DBG ADDRESS NEXT TOKEN="nextx" TYPE="nextt
      next_start = .int
-     off = .int
      /* --------------------------------------------------------------
       * Resolve next boundary if it is numeric / positional
       *
       *   type 3 -> next absolute position
       *   type 4 -> current start + offset
       *   type 5 -> current start - offset
+      *   type 6 -> start not available, must be calculated
       *
       * If successful, current target ends just before next_start.
       * --------------------------------------------------------------
       */
      if nextt = 3 then next_start = nextx
-     else if nextt = 4 then do
-        off = nextx
-        next_start = curr_start + off
-     end
+     else if nextt = 4 then next_start = curr_start + nextx
      else if nextt = 5 then do
-        off = nextx
-        next_start = curr_start - off
+        next_start = curr_start - nextx
         if next_start < 1 then next_start = 1
      end
      else next_start = -1
@@ -206,10 +205,10 @@ parse_exec: procedure=.string[]
         endpos = next_start - 1
         if endpos < curr_start then value = ""
         else value = substr(src, curr_start, endpos - curr_start + 1)
-
-        call log 123 varname"="value curr_start endpos tkindx
+        call log ">ASSIGN "varname"='"value"' FROM="curr_start" TO="endpos" LENGTH="length(value)" RESULT-ENTRY="tkindx" >1"
         if varname = '.' then nop
-        else parse_values[tkindx]=strip(value)
+        else parse_values[tkindx] = strip(value)
+        scan_pos = next_start
         i = i + 2
         iterate
      end
@@ -228,35 +227,82 @@ parse_exec: procedure=.string[]
         p = pos(nextx, src, curr_start)
         if p = 0 then do
            value = substr(src, curr_start)
-           call log 124 varname"="value
-
+           call log ">ASSIGN "varname"='"value"' FROM="curr_start" LENGTH="length(value)" RESULT-ENTRY="tkindx" >2"
            if varname = '.' then nop
-           else parse_values[tkindx]=strip(value)
+           else parse_values[tkindx] = strip(value)
+           scan_pos = srclen + 1
            leave
         end
         else do
            if p <= curr_start then value = ""
            else value = substr(src, curr_start, p - curr_start)
-           call log 125 varname"="value curr_start p
-
+           call log ">ASSIGN "varname"='"value"' FROM="curr_start" TO="p" LENGTH="length(value)" RESULT-ENTRY="tkindx" >3"
            if varname = '.' then nop
-           else parse_values[tkindx]=strip(value)
-
+           else parse_values[tkindx] = strip(value)
+           scan_pos = p + length(nextx)
            i = i + 2
            iterate
         end
      end
-     /* --------------------------------------------------------------
-      * Any other next boundary type is currently unsupported
-      * --------------------------------------------------------------
-      */
-     say "PARSE V1 error: invalid next boundary type at token" i + 2
-     return parse_values
-  end
-  do i=1 to parse_values[0]
-     say 999 i parse_values[i]
+
+  /* implicit next field boundary */
+    if nextt = 6 then do
+       rest  = substr(src, curr_start)
+       value = word(rest, 1)
+       call log ">ASSIGN "varname"='"value"' FROM="curr_start" LENGTH="length(value)" RESULT-ENTRY="tkindx" >5"
+       if varname = '.' then nop
+       else parse_values[tkindx] = strip(value)
+       scan_pos = curr_start + length(value)      /* move to char after extracted word */
+       scan_pos=scan_pos-1
+       assembler FNDNBLNK scan_pos,src,scan_pos
+       scan_pos=scan_pos+1
+       i = i + 2
+       call log "DBG next scan position "scan_pos" next token "i
+       iterate
+    end
+    say "PARSE V1 error: invalid next boundary type at token" i + 2
+    return parse_values
   end
 return parse_values
+
+/* ----------------------------------------------------------------------
+ * resolveCurrentStartV1
+ *
+ * Resolve current boundary into absolute start position.
+ *
+ * Inputs:
+ *   t         token type
+ *   tok       token payload (token[i])
+ *   scan_pos  current scan position
+ *   src       source string
+ *   srclen    length of source
+ *
+ * Output:
+ *   curr_start (1-based)
+ * ---------------------------------------------------------------------- */
+resolveCurrentStartV1: procedure = .int
+  arg t=.int, tok=.string, scan_pos=.int, src=.string, srclen=.int
+  curr_start = -1
+  if t = 6 then do
+     scan_pos=scan_pos-1
+     assembler FNDNBLNK curr_start,src,scan_pos
+     curr_start=curr_start+1
+     return curr_start
+  end
+  if t = 4 then do
+     curr_start = scan_pos + tok
+     if curr_start < 1 then return 1
+     if curr_start > srclen + 1 then return srclen + 1
+     return curr_start
+  end
+  if t = 5 then do
+     curr_start = scan_pos - tok
+     if curr_start < 1 then return 1
+     if curr_start > srclen + 1 then return srclen + 1
+     return curr_start
+  end
+  /* fallback: absolute / literal */
+return resolveStartV1(src, srclen, tok, t)
 
     /* ----------------------------------------------------------------------
      * resolveStartV1
@@ -275,10 +321,9 @@ return parse_values
    tok = strip(tok)
    p=.int
    call log "RESOLVE tok=["tok"] type="toktype " srclen="srclen
-
    if toktype = 3 then do
       p = tok
-      call log "RESOLVE ABS p="p
+      call log "RESOLVE ABSOLUT OFFSET="p
       if p < 1 then return 1
       if p > srclen + 1 then return srclen + 1
       return p
@@ -293,5 +338,5 @@ return parse_values
    return -1
 log: procedure
     arg logtxt = .string
-    say time()" "logtxt
+ ##   say time()" "logtxt
 return
