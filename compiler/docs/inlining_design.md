@@ -9,7 +9,7 @@ The selector is now best understood in terms of capability buckets rather than o
 
 - statement rewrites where the enclosing statement can be replaced directly
 - eager value consumers such as `SAY` and `RETURN`
-- eager call arguments to plain procedure calls
+- eager call arguments to call-like parents
 - eager expression parents such as arithmetic, concatenation, and comparison operators
 
 Contexts outside those buckets stay uninlined until their rewrite strategy exists.
@@ -74,7 +74,7 @@ At present, the supported expression-context buckets are:
 - eager value consumers:
   `SAY`, `RETURN`
 - eager call arguments:
-  direct arguments to a plain procedure `FUNCTION(...)`
+  direct arguments to `FUNCTION(...)`, `FACTORY_CALL(...)`, and `MEMBER_CALL(...)` excluding the receiver child of `MEMBER_CALL`
 - eager operators:
   unary `+`/`-`, arithmetic operators, concatenation operators, and comparison operators
 
@@ -259,7 +259,7 @@ This should keep using `BLOCK_EXPR`, but expand beyond the current `SAY`/`RETURN
 ## Verification
 The design for phase 1 should be considered ready when:
 
-- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, and `inline_test_nested_call_expr` using the narrow supported strategies
+- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, and `inline_test_nested_call_expr` using the narrow supported strategies
 - excluded cases such as large procedures, methods, multi-return procedures, and unsupported nested-argument/short-circuit contexts remain uninlined under optimisation
 - unsupported expression contexts such as those in `inline_test_expr_negative`, `inline_test_say_expr_negative`, and `inline_test_bool_expr_negative` remain uninlined under optimisation
 - the resulting AST is structurally valid under `-dp`

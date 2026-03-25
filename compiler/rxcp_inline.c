@@ -377,12 +377,22 @@ static ASTNode *inline_create_sink_target(Context *context,
     return sink_target;
 }
 
-static InlineExprContext inline_classify_expr_parent(ASTNode *node) {
+static InlineExprContext inline_classify_expr_context(ASTNode *node) {
+    ASTNode *parent;
+
     if (!node) return 0;
 
-    switch (node->node_type) {
+    parent = node->parent;
+    if (!parent) return 0;
+
+    switch (parent->node_type) {
         case FUNCTION:
+        case FACTORY_CALL:
             return INLINE_EXPR_CONTEXT_EAGER_CALL_ARGUMENT;
+
+        case MEMBER_CALL:
+            if (parent->child != node) return INLINE_EXPR_CONTEXT_EAGER_CALL_ARGUMENT;
+            return INLINE_EXPR_CONTEXT_NONE;
 
         case SAY:
         case RETURN:
@@ -589,7 +599,7 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
 
     if (!context || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
 
-    expr_context = inline_classify_expr_parent(call_node->parent);
+    expr_context = inline_classify_expr_context(call_node);
     if (expr_context == INLINE_EXPR_CONTEXT_NONE) return 0;
 
     proc_def = proc_sym->ast_template;

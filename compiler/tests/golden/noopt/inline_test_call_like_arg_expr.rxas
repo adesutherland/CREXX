@@ -1,0 +1,119 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_call_like_arg_expr.rexx
+ * BUILT                  : 2026-03-25 19:21:33
+ */
+
+.meta "inline_test_call_like_arg_expr.box"="b" ".unknown" .class
+.meta "inline_test_call_like_arg_expr.box.val"="b" ".int" .attr 1
+.srcfile="inline_test_call_like_arg_expr.rexx"
+.globals=0
+
+main() .locals=10
+   .meta "inline_test_call_like_arg_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting call-like arg inline expr test...\""
+   say "Starting call-like arg inline expr test..."
+   .src 5:3="do"
+   .src 5:6="i = 1"
+   .meta "inline_test_call_like_arg_expr.main.i"="b" ".int" r1
+   load r1,1
+   .src 5:12="to 3"
+   load r2,3
+l8dostart:
+   .src 5:12="to 3"
+   igt r3,r1,r2
+   brt l8doend,r3
+   .src 6:5="box = .Box(addOne(i))"
+   load r4,1
+   .meta "inline_test_call_like_arg_expr.main.box"="b" ".box" r0
+   load r6,1
+   swap r7,r1
+   call r5,addOne(),r6
+   swap r1,r7
+   call r0,§inline_test_call_like_arg_expr.box.§factory(),r4
+   .src 7:5="say box.bump(addOne(i))"
+   load r5,2
+   load r8,1
+   swap r9,r1
+   call r7,addOne(),r8
+   swap r1,r9
+   settp r0,1
+   swap r6,r0
+   call r9,§inline_test_call_like_arg_expr.box.bump(),r5
+   swap r0,r6
+   itos r9
+   say r9
+l8doinc:
+   .src 5:6="i"
+   inc r1
+   .src 8:3="end"
+   br l8dostart
+l8doend:
+   .src 9:3="say \"Call-like arg inline expr test finished.\""
+   say "Call-like arg inline expr test finished."
+   .src 10:3="return 0"
+   ret 0
+
+addOne() .locals=2
+   .meta "inline_test_call_like_arg_expr.addone"="b" ".int" addOne() "val=.int" ""
+   .src 12:1="addOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 13:7="val = .int"
+   .meta "inline_test_call_like_arg_expr.addone.val"="b" ".int" r0
+   icopy r0,a1
+   .src 14:3="return val + 1"
+   iadd r1,r0,1
+   ret r1
+   .meta "inline_test_call_like_arg_expr.addone.val"
+
+§inline_test_call_like_arg_expr.box.§factory() .locals=3
+   .meta "inline_test_call_like_arg_expr.box.§factory"="b" ".void" §inline_test_call_like_arg_expr.box.§factory() "initialvalue=.int" ""
+   .src 19:3="*: factory"
+   setattrs r1,2
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 20:9="initialValue = .int"
+   .meta "inline_test_call_like_arg_expr.box.§factory.initialvalue"="b" ".int" r0
+   .meta "inline_test_call_like_arg_expr.box.§factory.§factory"="b" ".box" r1
+   icopy r0,a1
+   .src 21:5="val = initialValue"
+   linkattr1 r2,r1,1
+   icopy r2,r0
+   unlink r2
+   .src 22:5="return"
+   ret r1
+   .meta "inline_test_call_like_arg_expr.box.§factory.initialvalue"
+   .meta "inline_test_call_like_arg_expr.box.§factory.§factory"
+
+§inline_test_call_like_arg_expr.box.bump() .locals=4
+   .meta "inline_test_call_like_arg_expr.box.bump"="b" ".int" §inline_test_call_like_arg_expr.box.bump() "amount=.int" ""
+   .src 24:3="bump: method = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 25:9="amount = .int"
+   .meta "inline_test_call_like_arg_expr.box.bump.amount"="b" ".int" r0
+   .meta "inline_test_call_like_arg_expr.box.bump.§this"="b" ".box" a1
+   icopy r0,a2
+   .src 26:5="return val + amount"
+   linkattr1 r2,a1,1
+   iadd r3,r2,r0
+   unlink r2
+   ret r3
+   .meta "inline_test_call_like_arg_expr.box.bump.amount"
+   .meta "inline_test_call_like_arg_expr.box.bump.§this"
