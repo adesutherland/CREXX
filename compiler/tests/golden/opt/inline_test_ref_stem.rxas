@@ -1,0 +1,70 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_ref_stem.rexx
+ * BUILT                  : 2026-03-25 20:37:56
+ */
+
+.srcfile="inline_test_ref_stem.rexx"
+.globals=2
+g0 .expose=refstem.lino
+g1 .expose=refstem.outbuf
+
+main() .locals=4
+   .meta "refstem.main"="b" ".int" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:1="say \"Starting stem ref inline test...\""
+   say "Starting stem ref inline test..."
+   .src 6:1="outbuf[2] = \"untouched\""
+   minattrs g1,2
+   linkattr1 r2,g1,2
+   load r3,"untouched"
+   scopy r2,r3
+   unlink r2
+   .src 7:1="lino = 1"
+   load g0,1
+   .src 9:22="lino"
+   icopy r0,g0
+   .src 17:3="lino = lino + 1"
+   iadd g0,g0,1
+   .src 18:3="slot = \"slot-one\""
+   minattrs g1,r0,0
+   linkattr1 r3,g1,r0
+   load r2,"slot-one"
+   scopy r3,r2
+   unlink r3
+   .src 10:1="say outbuf[1"
+   minattrs g1,1
+   linkattr1 r3,g1,1
+   say r3
+   unlink r3
+   .src 11:1="say outbuf[2"
+   minattrs g1,2
+   linkattr1 r3,g1,2
+   say r3
+   unlink r3
+   .src 12:1="say \"Stem ref inline test finished.\""
+   say "Stem ref inline test finished."
+   .src 13:1="return 0"
+   ret 0
+
+fillSlot() .locals=1
+   .meta "refstem.fillslot"="b" ".void" fillSlot() "expose slot=.string" ""
+   .src 15:1="fillSlot: procedure = .void"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 16:7="expose slot = .string"
+   .meta "refstem.fillslot.slot"="b" ".string" a1
+   .src 17:3="lino = lino + 1"
+   iadd g0,g0,1
+   .src 18:3="slot = \"slot-one\""
+   load a1,"slot-one"
+   .src 19:3="return"
+   ret
+   .meta "refstem.fillslot.slot"

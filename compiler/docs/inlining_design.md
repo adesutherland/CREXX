@@ -68,7 +68,8 @@ More precisely:
 - The callee must be a normal procedure, not a method or factory.
 - Arguments and return values must stay within the current safe built-in scalar slice: no class/object values and no arrays.
 - The callee must satisfy the existing safety checks: fixed args only, single trailing `RETURN`, small body, no unsupported nested inlining.
-- `expose`/by-reference formals are supported only when the actual argument is a direct aliasable symbol target.
+- `expose`/by-reference formals are supported when the actual argument is an aliasable variable-like target, including indexed and stem-style forms.
+- For nontrivial by-reference actuals, the inline rewrite captures the locator expressions once into inline-scope temps so the callee still sees call-time binding semantics.
 - Optional formals are supported in the current slice when the inline rewrite can materialise their default from the formal AST.
 
 At present, the supported expression-context buckets are:
@@ -259,10 +260,10 @@ The next meaningful extensions are the remaining argument-semantics and evaluati
 ## Verification
 The design for phase 1 should be considered ready when:
 
-- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, `inline_test_nested_call_expr`, and `inline_test_ref_opt` using the narrow supported strategies
-- excluded cases such as large procedures, methods, multi-return procedures, unsupported by-reference actual shapes, and unsupported short-circuit contexts remain uninlined under optimisation
+- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, `inline_test_nested_call_expr`, `inline_test_ref_opt`, `inline_test_ref_indexed`, and `inline_test_ref_stem` using the narrow supported strategies
+- excluded cases such as large procedures, methods, multi-return procedures, and unsupported short-circuit contexts remain uninlined under optimisation
 - unsupported expression contexts such as those in `inline_test_expr_negative`, `inline_test_say_expr_negative`, and `inline_test_bool_expr_negative` remain uninlined under optimisation
-- unsupported by-reference actual shapes such as those in `inline_test_ref_negative` remain uninlined under optimisation
+- unsupported by-reference/short-circuit combinations such as those in `inline_test_ref_negative` remain uninlined under optimisation
 - the resulting AST is structurally valid under `-dp`
 - optimised codegen succeeds
 - positive and negative compiler tests lock down the selector behaviour
@@ -272,7 +273,7 @@ The design for phase 1 should be considered ready when:
 - methods
 - factories
 - varargs
-- broader pass-by-reference actual-shape support beyond direct aliasable symbols
+- broader pass-by-reference support beyond the current variable-like/indexed/stem slice
 - general embedded-expression inlining beyond the current eager-bucket slice
 - aggressive pruning of fully inlined procedures
 - claiming fully generic scope/symbol cloning before it is proven

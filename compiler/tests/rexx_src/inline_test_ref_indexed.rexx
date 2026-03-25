@@ -1,16 +1,16 @@
 options levelb
-namespace refneg expose values idx
+namespace refidx expose values idx
 
-say "Starting ref inline negative test..."
+say "Starting indexed ref inline test..."
 values = .int[3]
 idx = 1
 values[1] = 10
 values[2] = 20
 
-if refBump(values[idx]) & 1 then say "branch"
+say refBump(values[idx])
 say values[1]
 say values[2]
-say "Ref inline negative test finished."
+say "Indexed ref inline test finished."
 return 0
 
 refBump: procedure = .int

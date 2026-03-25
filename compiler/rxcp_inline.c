@@ -31,6 +31,13 @@ typedef struct {
 } InlineNodeMapEntry;
 
 typedef struct {
+    Symbol *formal_symbol;
+    ASTNode *actual_source;
+    Symbol **captured_symbols;
+    size_t captured_count;
+} InlineRefActualEntry;
+
+typedef struct {
     Scope *callee_scope;
     Scope *inline_scope;
     InlineSymbolMapEntry *symbol_entries;
@@ -39,6 +46,8 @@ typedef struct {
     size_t scope_count;
     InlineNodeMapEntry *node_entries;
     size_t node_count;
+    InlineRefActualEntry *ref_entries;
+    size_t ref_count;
 } InlineCloneState;
 
 typedef struct {
@@ -60,6 +69,9 @@ typedef enum {
     INLINE_EXPR_CONTEXT_EAGER_OPERATOR,
     INLINE_EXPR_CONTEXT_EAGER_CALL_ARGUMENT
 } InlineExprContext;
+
+static size_t inline_count_siblings(ASTNode *node);
+static ASTNode *inline_clone_subtree(Context *context, ASTNode *node, InlineCloneState *state);
 
 static Symbol *inline_find_mapped_symbol(InlineCloneState *state, Symbol *old_symbol) {
     size_t i;
@@ -129,13 +141,246 @@ static int inline_is_missing_actual(ASTNode *actual_arg) {
 }
 
 static int inline_is_supported_ref_actual(ASTNode *actual_arg) {
+    ASTNode *child;
+
     if (!actual_arg) return 0;
     if (!actual_arg->symbolNode || !actual_arg->symbolNode->symbol) return 0;
-    if (actual_arg->child) return 0;
+    if (actual_arg->node_type != VAR_SYMBOL &&
+        actual_arg->node_type != VAR_TARGET &&
+        actual_arg->node_type != VAR_REFERENCE) return 0;
 
-    return actual_arg->node_type == VAR_SYMBOL ||
-           actual_arg->node_type == VAR_TARGET ||
-           actual_arg->node_type == VAR_REFERENCE;
+    child = actual_arg->child;
+    while (child) {
+        if (child->node_type != VAR_SYMBOL &&
+            child->node_type != VAR_TARGET &&
+            child->node_type != VAR_REFERENCE &&
+            child->node_type != CONSTANT) return 0;
+        child = child->sibling;
+    }
+
+    return 1;
+}
+
+static InlineRefActualEntry *inline_find_ref_actual(InlineCloneState *state, Symbol *formal_symbol) {
+    size_t i;
+
+    if (!state || !formal_symbol) return NULL;
+
+    for (i = 0; i < state->ref_count; i++) {
+        if (state->ref_entries[i].formal_symbol == formal_symbol) return &state->ref_entries[i];
+    }
+
+    return NULL;
+}
+
+static int inline_copy_node_shape(Symbol *target, ASTNode *source) {
+    if (!target || !source) return 0;
+
+    target->type = source->value_type;
+    target->value_dims = source->value_dims;
+
+    if (source->value_dims && source->value_dim_base) {
+        target->dim_base = malloc(sizeof(int) * source->value_dims);
+        if (!target->dim_base) return 0;
+        memcpy(target->dim_base, source->value_dim_base, sizeof(int) * source->value_dims);
+    } else {
+        target->dim_base = NULL;
+    }
+
+    if (source->value_dims && source->value_dim_elements) {
+        target->dim_elements = malloc(sizeof(int) * source->value_dims);
+        if (!target->dim_elements) return 0;
+        memcpy(target->dim_elements, source->value_dim_elements, sizeof(int) * source->value_dims);
+    } else {
+        target->dim_elements = NULL;
+    }
+
+    if (source->value_class) {
+        target->value_class = strdup(source->value_class);
+        if (!target->value_class) return 0;
+    } else {
+        target->value_class = NULL;
+    }
+
+    return 1;
+}
+
+static Symbol *inline_create_temp_symbol(Context *context,
+                                         Scope *inline_scope,
+                                         ASTNode *source_node,
+                                         const char *prefix,
+                                         size_t suffix) {
+    char temp_name[80];
+    Symbol *temp_symbol;
+
+    if (!context || !inline_scope || !source_node || !prefix) return NULL;
+
+    snprintf(temp_name, sizeof(temp_name), "%s_%d_%zu", prefix, source_node->node_number, suffix);
+
+    temp_symbol = sym_fn(inline_scope, temp_name, strlen(temp_name));
+    if (!temp_symbol) return NULL;
+
+    temp_symbol->symbol_type = VARIABLE_SYMBOL;
+    temp_symbol->status = SYM_STATUS_LOCAL_VAR;
+    temp_symbol->register_num = UNSET_REGISTER;
+    temp_symbol->register_type = 'r';
+    temp_symbol->meta_emitted = 0;
+    temp_symbol->init_emitted = 0;
+
+    if (!inline_copy_node_shape(temp_symbol, source_node)) return NULL;
+
+    return temp_symbol;
+}
+
+static ASTNode *inline_create_symbol_node(Context *context,
+                                          Scope *scope,
+                                          ASTNode *source_node,
+                                          Symbol *symbol,
+                                          NodeType node_type,
+                                          unsigned int read_usage,
+                                          unsigned int write_usage) {
+    ASTNode *node;
+
+    if (!context || !scope || !source_node || !symbol) return NULL;
+
+    node = ast_ftt(context, node_type, strdup(symbol->name));
+    if (!node) return NULL;
+
+    node->free_node_string = 1;
+    node->scope = scope;
+    node->token = source_node->token;
+    node->line = source_node->line;
+    node->column = source_node->column;
+    node->source_start = source_node->source_start;
+    node->source_end = source_node->source_end;
+    node->token_start = source_node->token_start;
+    node->token_end = source_node->token_end;
+    sym_adnd(symbol, node, read_usage, write_usage);
+    ast_svtp(node, symbol);
+
+    return node;
+}
+
+static ASTNode *inline_clone_ref_actual(Context *context,
+                                        ASTNode *formal_node,
+                                        Scope *current_scope,
+                                        InlineRefActualEntry *ref_entry) {
+    ASTNode *replacement;
+    ASTNode *source_child;
+    size_t child_index;
+
+    if (!context || !formal_node || !current_scope || !ref_entry || !ref_entry->actual_source) return NULL;
+
+    replacement = ast_dup(context, ref_entry->actual_source);
+    if (!replacement) return NULL;
+
+    replacement->node_type = formal_node->node_type;
+    replacement->scope = current_scope;
+
+    if (ref_entry->actual_source->symbolNode && ref_entry->actual_source->symbolNode->symbol) {
+        sym_adnd(ref_entry->actual_source->symbolNode->symbol,
+                 replacement,
+                 formal_node->symbolNode ? formal_node->symbolNode->readUsage : 0,
+                 formal_node->symbolNode ? formal_node->symbolNode->writeUsage : 0);
+    }
+
+    source_child = ref_entry->actual_source->child;
+    child_index = 0;
+    while (source_child) {
+        ASTNode *captured_ref;
+
+        if (child_index >= ref_entry->captured_count || !ref_entry->captured_symbols[child_index]) return NULL;
+
+        captured_ref = inline_create_symbol_node(context,
+                                                 current_scope,
+                                                 source_child,
+                                                 ref_entry->captured_symbols[child_index],
+                                                 VAR_SYMBOL,
+                                                 1,
+                                                 0);
+        if (!captured_ref) return NULL;
+
+        add_ast(replacement, captured_ref);
+        source_child = source_child->sibling;
+        child_index++;
+    }
+
+    return replacement;
+}
+
+static int inline_register_ref_actual(Context *context,
+                                      ASTNode *instr_list,
+                                      Scope *inline_scope,
+                                      ASTNode *formal_target,
+                                      ASTNode *actual_arg,
+                                      InlineCloneState *state) {
+    InlineRefActualEntry *new_entries;
+    InlineRefActualEntry *entry;
+    ASTNode *child;
+    size_t child_count;
+    size_t child_index;
+
+    if (!context || !instr_list || !inline_scope || !formal_target || !actual_arg || !state) return 0;
+    if (!formal_target->symbolNode || !formal_target->symbolNode->symbol) return 0;
+    if (!inline_is_supported_ref_actual(actual_arg)) return 0;
+
+    entry = inline_find_ref_actual(state, formal_target->symbolNode->symbol);
+    if (entry) return 1;
+
+    child_count = inline_count_siblings(actual_arg->child);
+    new_entries = realloc(state->ref_entries, sizeof(InlineRefActualEntry) * (state->ref_count + 1));
+    if (!new_entries) return 0;
+
+    state->ref_entries = new_entries;
+    entry = &state->ref_entries[state->ref_count];
+    memset(entry, 0, sizeof(*entry));
+    entry->formal_symbol = formal_target->symbolNode->symbol;
+    entry->actual_source = actual_arg;
+    entry->captured_count = child_count;
+
+    if (child_count) {
+        entry->captured_symbols = calloc(child_count, sizeof(Symbol *));
+        if (!entry->captured_symbols) return 0;
+    }
+
+    child = actual_arg->child;
+    child_index = 0;
+    while (child) {
+        Symbol *temp_symbol;
+        ASTNode *capture_assign;
+        ASTNode *capture_lhs;
+        ASTNode *capture_rhs;
+
+        temp_symbol = inline_create_temp_symbol(context, inline_scope, child, "__inline_ref", child_index);
+        if (!temp_symbol) return 0;
+
+        capture_assign = ast_f(context, ASSIGN, child->token);
+        if (!capture_assign) return 0;
+        capture_assign->scope = inline_scope;
+        capture_assign->value_type = child->value_type;
+        capture_assign->target_type = child->value_type;
+
+        capture_lhs = inline_create_symbol_node(context,
+                                                inline_scope,
+                                                child,
+                                                temp_symbol,
+                                                VAR_TARGET,
+                                                0,
+                                                1);
+        capture_rhs = inline_clone_subtree(context, child, state);
+        if (!capture_lhs || !capture_rhs) return 0;
+
+        add_ast(capture_assign, capture_lhs);
+        add_ast(capture_assign, capture_rhs);
+        add_ast(instr_list, capture_assign);
+
+        entry->captured_symbols[child_index] = temp_symbol;
+        child = child->sibling;
+        child_index++;
+    }
+
+    state->ref_count++;
+    return 1;
 }
 
 static int inline_append_scope_map_entry(InlineCloneState *state, Scope *old_scope, Scope *new_scope) {
@@ -245,6 +490,14 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
 
     if (!node) return NULL;
 
+    if (state && node->symbolNode && node->symbolNode->symbol &&
+        (node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET || node->node_type == VAR_REFERENCE)) {
+        InlineRefActualEntry *ref_entry;
+
+        ref_entry = inline_find_ref_actual(state, node->symbolNode->symbol);
+        if (ref_entry) return inline_clone_ref_actual(context, node, current_scope, ref_entry);
+    }
+
     new_node = ast_dup(context, node);
 
     node_scope = current_scope;
@@ -329,16 +582,26 @@ static int inline_build_symbol_map(Scope *callee_scope,
 }
 
 static void inline_free_symbol_map(InlineCloneState *state) {
+    size_t i;
+
     if (!state) return;
     if (state->symbol_entries) free(state->symbol_entries);
     if (state->scope_entries) free(state->scope_entries);
     if (state->node_entries) free(state->node_entries);
+    if (state->ref_entries) {
+        for (i = 0; i < state->ref_count; i++) {
+            if (state->ref_entries[i].captured_symbols) free(state->ref_entries[i].captured_symbols);
+        }
+        free(state->ref_entries);
+    }
     state->symbol_entries = NULL;
     state->symbol_count = 0;
     state->scope_entries = NULL;
     state->scope_count = 0;
     state->node_entries = NULL;
     state->node_count = 0;
+    state->ref_entries = NULL;
+    state->ref_count = 0;
 }
 
 static void inline_copy_symbol_shape(Symbol *target, Symbol *source) {
@@ -490,22 +753,9 @@ static int ast_inline_statement(Context *context,
 
     while (param_arg) {
         ASTNode *formal_target;
-        Symbol *formal_symbol;
 
         formal_target = inline_formal_target(param_arg);
-        formal_symbol = formal_target && formal_target->symbolNode ? formal_target->symbolNode->symbol : NULL;
-        if (!formal_target || !formal_symbol || !actual_arg) return 0;
-
-        if (param_arg->is_ref_arg && !inline_is_missing_actual(actual_arg)) {
-            Symbol *actual_symbol;
-
-            if (!inline_is_supported_ref_actual(actual_arg)) return 0;
-            actual_symbol = actual_arg->symbolNode->symbol;
-            if (!inline_append_symbol_map_entry(&clone_state, formal_symbol, actual_symbol)) {
-                inline_free_symbol_map(&clone_state);
-                return 0;
-            }
-        }
+        if (!formal_target || !actual_arg) return 0;
 
         param_arg = param_arg->sibling;
         actual_arg = actual_arg->sibling;
@@ -538,6 +788,10 @@ static int ast_inline_statement(Context *context,
         }
 
         if (param_arg->is_ref_arg && !inline_is_missing_actual(actual_arg)) {
+            if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, &clone_state)) {
+                inline_free_symbol_map(&clone_state);
+                return 0;
+            }
             param_arg = param_arg->sibling;
             actual_arg = actual_arg->sibling;
             continue;
@@ -709,22 +963,9 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
 
     while (param_arg) {
         ASTNode *formal_target;
-        Symbol *formal_symbol;
 
         formal_target = inline_formal_target(param_arg);
-        formal_symbol = formal_target && formal_target->symbolNode ? formal_target->symbolNode->symbol : NULL;
-        if (!formal_target || !formal_symbol || !actual_arg) return 0;
-
-        if (param_arg->is_ref_arg && !inline_is_missing_actual(actual_arg)) {
-            Symbol *actual_symbol;
-
-            if (!inline_is_supported_ref_actual(actual_arg)) return 0;
-            actual_symbol = actual_arg->symbolNode->symbol;
-            if (!inline_append_symbol_map_entry(&clone_state, formal_symbol, actual_symbol)) {
-                inline_free_symbol_map(&clone_state);
-                return 0;
-            }
-        }
+        if (!formal_target || !actual_arg) return 0;
 
         param_arg = param_arg->sibling;
         actual_arg = actual_arg->sibling;
@@ -757,6 +998,10 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
         }
 
         if (param_arg->is_ref_arg && !inline_is_missing_actual(actual_arg)) {
+            if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, &clone_state)) {
+                inline_free_symbol_map(&clone_state);
+                return 0;
+            }
             param_arg = param_arg->sibling;
             actual_arg = actual_arg->sibling;
             continue;
