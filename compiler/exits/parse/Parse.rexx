@@ -1,5 +1,5 @@
 options levelb
-namespace rxcpexits expose parseexit   parse_preprocess pkind ptext
+namespace rxcpexits expose parseexit
 
 import rxcp
 import rxfnsb
@@ -10,12 +10,7 @@ parseexit: class
     _error_token          = .int
     _error_message        = .string
     _status               = .string
-    _template_source_text = .string
-    _template_kindtab     = .string
     _template_texttab     = .string
-    pkind     = .int[]
-    ptext     = .string[]
-    parse_preprocess=.string[]
 
     /* ------------------------------------------------------------------------
      * Factory
@@ -30,8 +25,6 @@ parseexit: class
         _error_token = 0
         _error_message = ""
         _status = "EMPTY"
-        _template_source_text = ""
-        _template_kindtab = ""
         _template_texttab = ""
     /* ------------------------------------------------------------------------
      * Primary keyword handled by this exit.
@@ -76,49 +69,39 @@ pre_process: method = .string
   _error_token = 0
   _error_message = ""
   _status = "EMPTY"
-  _template_source_text = ""
   _template_kindtab = ""
   _template_texttab = ""
-##  assembler SETATTRS pkind,0    /* reset the token arrays */
-##  assembler SETATTRS ptext,0
-
-
   start_of_template=.int
+  uplow=.string
   do start_of_template=2 to tokens.0
      ti   = tokens[start_of_template]
      type = strip(ti.get_type())
      text = strip(ti.get_text())
      utext=upper(text)
-     call log 123" "start_of_template" "type" "text
-     if type='identifier' & (utext='UPPER' | utext='LOWER') then do
-        parse_preprocess.2=utext
-     end
-     else if type='identifier' & (utext='VALUE' | utext='VAR') then do
-        parse_preprocess.3=utext
-     end
-     else if type='identifier' & parse_preprocess.3='VAR' then do
-        parse_preprocess.4=text
-        leave
-     end
-     else if type='string_literal' & parse_preprocess.3='VALUE' then do
-        parse_preprocess.4=text
-        leave
-     end
-  end
+     if type='identifier' & (utext='UPPER' | utext='LOWER')    then uplow=utext
+     else if type='identifier' & (utext='VALUE' | utext='VAR') then parmtype=utext
+     else if type='identifier' & parmtype='VAR'       then leave  /* next token is with or parse string */
+     else if type='string_literal' & parmtype='VALUE' then leave
+   end
 
   out = 0
   toExpose = ""
-
-  parse_preprocess.1= start_of_template    /* token number of string/variable */
-  call log 'parse-details 'parse_preprocess.1' 'parse_preprocess.2" "parse_preprocess.3" "parse_preprocess.4
+  pkind = .int[]
+  ptext = .string[]
 
   i = start_of_template+1
-
+  haswith=0
   prevkind = 0
+
   do while i <= tokens.0
      ti   = tokens[i]
      type = strip(ti.get_type())
      text = strip(ti.get_text())
+     if haswith=0 & upper(text) = "WITH" then do
+        haswith=1
+        i = i + 1
+        iterate
+     end
      call log "Tokenise "i" "out+1 " " type " " text
  /* --------------------------------------------------------------
   * Absolute position (n)
@@ -230,30 +213,24 @@ pre_process: method = .string
      say "unsupported parse token kind:" type
      return ""
   end
-/* ------------------------------------------------------------------
- * Normalize template:
- * If first token is a receiving target, PARSE semantics imply
- * an implicit starting position at column 1.
- *
- * So:
- *    w1 ',' w2
- * becomes:
- *    1 w1 ',' w2
- * ------------------------------------------------------------------
- */
-  if out > 0 then do
-     if pkind[1] = 1 then do
-        do j = out to 1 by -1
-           pkind[j+1] = pkind[j]
-           ptext[j+1] = ptext[j]
-        end
-        pkind[1] = 3
-        ptext[1] = "1"
-        out = out + 1
-     end
+
+  do i = 1 to out
+    _template_kindtab = _template_kindtab' 'pkind[i]     /* no longer exposed */
+    _template_texttab = _template_texttab' 'ptext[i]
   end
-  call log "must be exposed " toExpose" templates "out" Parse_process "parse_preprocess.1
-  call log 'parse-details II 'parse_preprocess.1' 'parse_preprocess.2" "parse_preprocess.3" "parse_preprocess.4
+
+  ti = start_of_template     /* token number of string/variable to parse  */
+  tj = tokens[ti]
+  parse_string = strip(tj.get_text())
+
+  if uplow='UPPER'      then _replacement = "_source=upper("parse_string")"
+  else if uplow='LOWER' then _replacement = "_source=lower("parse_string")"
+  else _replacement = "_source="parse_string
+  _replacement = _replacement";"'_rs=parseexec(_source,"'_template_kindtab'","'_template_texttab'");'
+
+  call log 'Pre-Process II  '_template_texttab
+  call log 'Pre-Process IV  '_replacement
+  call log "must be exposed " toExpose" templates "out
 return toExpose
 
 process: method = .string
@@ -265,7 +242,7 @@ process: method = .string
      * processing a new candidate sequence.
      * ----------------------------------------------------------------------
      */
-    _replacement = ""
+ ##   _replacement = ""     /* will be reset in pre-exit mode */
     _error_token = 0
     _error_message = ""
     _status = "EMPTY"
@@ -331,39 +308,26 @@ process: method = .string
     end
   */
     /* ------------------------------------------------------------------------
-     * Emit canonical replacement
-       parse_preprocess.1 string/variable token to parse
-       parse_preprocess.2 upper/lower
-       parse_preprocess.3 VALUE/VAR
-       parse_preprocess.4 string/variable to parse
-
-     * ------------------------------------------------------------------------
+     * Emit the replacement prepared during pre_process.
+     *
+     * The bridge now keeps one exit instance per node, so the preprocessed
+     * template state remains attached to the object until process() runs.
+     * ----------------------------------------------------------------------
      */
      _status = "REPLACE"
-     _replacement=""
-     tx=.int
-     tx = parse_preprocess.1                /* string to parse is third on, AT LEAST FOR NOW */
-     call log "987 "parse_preprocess.1" "tx" "c2x(tx)
-     tj   = tokens[tx]
-     type=strip(tj.get_type())
-     text=strip(tj.get_text())
-     call log "671 "type" "text
-    ## text=substr(text,2,length(text)-2)  /* strip off quotes */
-     kindtab=''
-     texttab=''
-     do i=1 to pkind[0]
-        kindtab=kindtab' 'pkind[i]
+     call log 'Process 0 '_replacement
+     if _replacement = "" then do
+        return setError("ERROR", 1, "PARSE state missing before process")
      end
-     do i=1 to ptext[0]
-       texttab=texttab' 'ptext[i]
-     end
-     _replacement = '_rs=parse_exec('text',"'kindtab'","'texttab'");'
+
+     call log 'Process II '_template_texttab
+
      j = 0
-     do i = 2 to pkind[0] by 2
+     do i = 2 to words(_template_texttab) by 2
          j = j + 1
-         _replacement = _replacement || ptext[i] || '=_rs[' || j || '];'
+         _replacement = _replacement || word(_template_texttab,i) || '=_rs[' || j || '];'
      end
-     call log "injected code "_replacement
+     call log "Process III code "_replacement
       return _status
 
     /* ------------------------------------------------------------------------
