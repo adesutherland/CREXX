@@ -1,0 +1,8 @@
+Starting inline call test...
+Double for 1 is 2
+Observed return 2
+Double for 2 is 4
+Observed return 4
+Double for 3 is 6
+Observed return 6
+Inline call test finished.

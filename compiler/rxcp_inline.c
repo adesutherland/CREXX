@@ -34,6 +34,11 @@ typedef struct {
     int has_nested_scope;
 } InlinableCheck;
 
+typedef struct {
+    ASTNode *return_target;
+    Symbol *return_sink_symbol;
+} InlineReturnPlan;
+
 static Symbol *inline_find_mapped_symbol(InlineCloneState *state, Symbol *old_symbol) {
     size_t i;
 
@@ -165,8 +170,69 @@ static void inline_free_symbol_map(InlineCloneState *state) {
     state->count = 0;
 }
 
-static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_node, Symbol *proc_sym) {
-    ASTNode *lhs;
+static void inline_copy_symbol_shape(Symbol *target, Symbol *source) {
+    if (!target || !source) return;
+
+    target->type = source->type;
+    target->value_dims = source->value_dims;
+
+    if (source->dim_base && source->value_dims) {
+        target->dim_base = malloc(sizeof(int) * source->value_dims);
+        memcpy(target->dim_base, source->dim_base, sizeof(int) * source->value_dims);
+    }
+
+    if (source->dim_elements && source->value_dims) {
+        target->dim_elements = malloc(sizeof(int) * source->value_dims);
+        memcpy(target->dim_elements, source->dim_elements, sizeof(int) * source->value_dims);
+    }
+
+    if (source->value_class) target->value_class = strdup(source->value_class);
+}
+
+static ASTNode *inline_create_sink_target(Context *context,
+                                          Scope *inline_scope,
+                                          ASTNode *source_node,
+                                          Symbol *proc_sym) {
+    char sink_name[64];
+    ASTNode *sink_target;
+    Symbol *sink_symbol;
+
+    if (!context || !inline_scope || !source_node || !proc_sym) return NULL;
+
+    snprintf(sink_name, sizeof(sink_name), "__inline_unused_%d", source_node->node_number);
+
+    sink_symbol = sym_fn(inline_scope, sink_name, strlen(sink_name));
+    if (!sink_symbol) return NULL;
+
+    sink_symbol->symbol_type = VARIABLE_SYMBOL;
+    sink_symbol->status = SYM_STATUS_LOCAL_VAR;
+    sink_symbol->register_num = UNSET_REGISTER;
+    sink_symbol->register_type = 'r';
+    sink_symbol->meta_emitted = 0;
+    sink_symbol->init_emitted = 0;
+    inline_copy_symbol_shape(sink_symbol, proc_sym);
+
+    sink_target = ast_ftt(context, VAR_TARGET, strdup(sink_symbol->name));
+    sink_target->free_node_string = 1;
+    sink_target->scope = inline_scope;
+    sink_target->token = source_node->token;
+    sink_target->line = source_node->line;
+    sink_target->column = source_node->column;
+    sink_target->source_start = source_node->source_start;
+    sink_target->source_end = source_node->source_end;
+    sink_target->token_start = source_node->token_start;
+    sink_target->token_end = source_node->token_end;
+    sym_adnd(sink_symbol, sink_target, 0, 1);
+    ast_svtp(sink_target, sink_symbol);
+
+    return sink_target;
+}
+
+static int ast_inline_statement(Context *context,
+                                ASTNode *statement_node,
+                                ASTNode *call_node,
+                                Symbol *proc_sym,
+                                InlineReturnPlan *return_plan) {
     ASTNode *proc_def;
     ASTNode *param_list;
     ASTNode *proc_instrs;
@@ -178,10 +244,7 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
     Scope *inline_scope;
     InlineCloneState clone_state;
 
-    if (!context || !assign_node || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
-
-    lhs = assign_node->child;
-    if (!lhs || lhs->node_type != VAR_TARGET || lhs->child) return 0;
+    if (!context || !statement_node || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
 
     proc_def = proc_sym->ast_template;
     if (!proc_def || !proc_def->scope) return 0;
@@ -194,7 +257,7 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
     block->value_type = TP_VOID;
     block->target_type = TP_VOID;
 
-    inline_scope = scp_f(context, assign_node->scope, block, NULL, SCOPE_LOCAL);
+    inline_scope = scp_f(context, statement_node->scope, block, NULL, SCOPE_LOCAL);
     instr_list = block;
 
     memset(&clone_state, 0, sizeof(clone_state));
@@ -253,14 +316,27 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
 
             ret_expr = proc_instr->child;
             if (!ret_expr) {
-                inline_free_symbol_map(&clone_state);
-                return 0;
+                proc_instr = proc_instr->sibling;
+                continue;
             }
 
             ret_assign = ast_f(context, ASSIGN, proc_instr->token);
             ret_assign->scope = inline_scope;
 
-            ret_lhs = inline_clone_subtree(context, lhs, &clone_state);
+            if (return_plan && return_plan->return_target) {
+                ret_lhs = inline_clone_subtree(context, return_plan->return_target, &clone_state);
+            } else if (return_plan && return_plan->return_sink_symbol) {
+                ret_lhs = inline_create_sink_target(context, inline_scope, proc_instr, return_plan->return_sink_symbol);
+            } else {
+                inline_free_symbol_map(&clone_state);
+                return 0;
+            }
+
+            if (!ret_lhs) {
+                inline_free_symbol_map(&clone_state);
+                return 0;
+            }
+
             ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
 
             add_ast(ret_assign, ret_lhs);
@@ -276,16 +352,41 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
         proc_instr = proc_instr->sibling;
     }
 
-    ast_rpl(assign_node, block);
-    inline_disconnect_subtree_symbols(assign_node);
+    ast_rpl(statement_node, block);
+    inline_disconnect_subtree_symbols(statement_node);
     inline_free_symbol_map(&clone_state);
 
     return 1;
 }
 
+static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_node, Symbol *proc_sym) {
+    ASTNode *lhs;
+    InlineReturnPlan return_plan;
+
+    if (!assign_node || !call_node) return 0;
+
+    lhs = assign_node->child;
+    if (!lhs || lhs->node_type != VAR_TARGET || lhs->child) return 0;
+
+    memset(&return_plan, 0, sizeof(return_plan));
+    return_plan.return_target = lhs;
+
+    return ast_inline_statement(context, assign_node, call_node, proc_sym, &return_plan);
+}
+
+static int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Symbol *proc_sym) {
+    InlineReturnPlan return_plan;
+
+    memset(&return_plan, 0, sizeof(return_plan));
+    return_plan.return_sink_symbol = proc_sym;
+
+    return ast_inline_statement(context, call_stmt, call_node, proc_sym, &return_plan);
+}
+
 /* Walker to find statement-shaped call sites and inline them */
 walker_result inline_procedure_walker(walker_direction direction, ASTNode *node, void *payload) {
     Context *context;
+    ASTNode *call_node;
     ASTNode *lhs;
     ASTNode *rhs;
     Symbol *proc_sym;
@@ -293,17 +394,29 @@ walker_result inline_procedure_walker(walker_direction direction, ASTNode *node,
     context = (Context *)payload;
 
     if (direction == in) return result_normal;
-    if (node->node_type != ASSIGN) return result_normal;
 
-    lhs = node->child;
-    rhs = lhs ? lhs->sibling : NULL;
+    if (node->node_type == ASSIGN) {
+        lhs = node->child;
+        rhs = lhs ? lhs->sibling : NULL;
 
-    if (!lhs || !rhs) return result_normal;
-    if (rhs->node_type != FUNCTION) return result_normal;
+        if (!lhs || !rhs) return result_normal;
+        if (rhs->node_type != FUNCTION) return result_normal;
 
-    proc_sym = rhs->symbolNode ? rhs->symbolNode->symbol : NULL;
+        proc_sym = rhs->symbolNode ? rhs->symbolNode->symbol : NULL;
+        if (proc_sym && proc_sym->is_inlinable && proc_sym->ast_template) {
+            ast_inline_assignment(context, node, rhs, proc_sym);
+        }
+        return result_normal;
+    }
+
+    if (node->node_type != CALL) return result_normal;
+
+    call_node = node->child;
+    if (!call_node || call_node->node_type != FUNCTION) return result_normal;
+
+    proc_sym = call_node->symbolNode ? call_node->symbolNode->symbol : NULL;
     if (proc_sym && proc_sym->is_inlinable && proc_sym->ast_template) {
-        ast_inline_assignment(context, node, rhs, proc_sym);
+        ast_inline_call(context, node, call_node, proc_sym);
     }
 
     return result_normal;
@@ -345,6 +458,8 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         Symbol *sym;
         ASTNode *args;
         ASTNode *arg;
+        ASTNode *formal_target;
+        Symbol *formal_symbol;
         ASTNode *instrs;
         ASTNode *instr;
         ASTNode *last_instr;
@@ -365,8 +480,24 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
                     sym->is_inlinable = 0;
                     return result_normal;
                 }
+
+                formal_target = ast_chdn(arg, 0);
+                formal_symbol = formal_target && formal_target->symbolNode ? formal_target->symbolNode->symbol : NULL;
+                if (formal_symbol &&
+                    (formal_symbol->value_class ||
+                     formal_symbol->value_dims > 0 ||
+                     formal_symbol->type == TP_OBJECT)) {
+                    sym->is_inlinable = 0;
+                    return result_normal;
+                }
+
                 arg = arg->sibling;
             }
+        }
+
+        if (sym->value_class || sym->value_dims > 0 || sym->type == TP_OBJECT) {
+            sym->is_inlinable = 0;
+            return result_normal;
         }
 
         instrs = ast_chld(node, INSTRUCTIONS, 0);

@@ -10,7 +10,7 @@ main: procedure = .int
   say "NestedCallProc result:" nestedCallProc(10)
   
   /* 3. Method (in a class) */
-  o = .MyClass[]
+  o = .MyClass()
   say "Method result:" o.myMethod(20)
   
   /* 4. Procedure with multiple returns (already excluded, but good to keep) */
@@ -43,8 +43,11 @@ helper: procedure = .int
   return v + 1
 
 /* Methods should be excluded */
-class MyClass
-  myMethod: procedure = .int
+MyClass: class
+  *: factory
+    return
+
+  myMethod: method = .int
     arg v = .int
     return v * 2
 

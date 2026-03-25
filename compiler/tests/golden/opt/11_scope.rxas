@@ -1,24 +1,23 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 11_scope.rexx
- * BUILT                  : 2026-03-18 11:58:55
+ * BUILT                  : 2026-03-25 13:39:20
  */
 
 .srcfile="11_scope.rexx"
 .globals=0
 
-main() .locals=2
+main() .locals=0
    .meta "11_scope.main"="b" ".void" main() "" ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:1="call Inner"
-   .meta "11_scope.main.a"="b" ".int" "50"
-   load r0,0
-   call r1,Inner(),r0
+   .src 11:3="say \"Inner A is\" a"
+   say "Inner A is 10"
    .src 5:16="say \"Outer A Preserved\""
+   .meta "11_scope.main.a"="b" ".int" "50"
    say "Outer A Preserved"
    .src 7:1="return"
    ret

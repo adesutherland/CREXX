@@ -178,6 +178,8 @@ add_crexx_compiler_test(basic_arrays rexx_src/basic_arrays.rexx)
 add_crexx_compiler_test(block_expr_basic rexx_src/block_expr_basic.rexx)
 add_crexx_compiler_test(block_expr_short_circuit rexx_src/block_expr_short_circuit.rexx)
 add_crexx_compiler_test(inline_test1 rexx_src/inline_test1.rexx)
+add_crexx_compiler_test(inline_test2 rexx_src/inline_test2.rexx)
+add_crexx_compiler_test(inline_test_call rexx_src/inline_test_call.rexx)
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
@@ -217,6 +219,8 @@ add_crexx_run_test(test_global_subscopes rexx_src/test_global_subscopes.rexx)
 
 # Inlining tests
 add_crexx_run_test(inline_test1 rexx_src/inline_test1.rexx)
+add_crexx_run_test(inline_test2 rexx_src/inline_test2.rexx)
+add_crexx_run_test(inline_test_call rexx_src/inline_test_call.rexx)
 
 # New Phase 2 Scoping Tests
 add_crexx_run_test(test_simple_do_subscope rexx_src/test_simple_do_subscope.rexx)

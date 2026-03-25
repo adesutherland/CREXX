@@ -1,0 +1,5 @@
+Testing ineligible inlining scenarios...
+LargeProc result: 15
+NestedCallProc result: 11
+Method result: 40
+MultiReturn result: 1

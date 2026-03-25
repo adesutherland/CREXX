@@ -7,21 +7,29 @@ That means selection is opportunity-based, not just callee-based. A procedure ma
 
 ## Current Strategy
 
-### Phase 1 target
-The first supported scenario is:
+### Supported statement-position scenarios
+The currently supported scenarios are:
 
 ```rexx
 x = func(a)
 ```
 
+and
+
+```rexx
+call func(a)
+```
+
 More precisely:
 
-- The RHS must be a `FUNCTION` call.
-- The `FUNCTION` call must be the entire RHS of the enclosing `ASSIGN`.
+- The call must be a plain procedure `FUNCTION`, not a method or factory call.
+- For assignment inlining, the `FUNCTION` call must be the entire RHS of the enclosing `ASSIGN`.
+- For standalone call inlining, the enclosing statement must be `CALL func(...)`.
 - The callee must be a normal procedure, not a method or factory.
+- Arguments and return values must stay within the current safe scalar slice: no class/object values and no arrays.
 - The callee must satisfy the existing safety checks: fixed pass-by-value args only, single trailing `RETURN`, small body, no unsupported nested inlining.
 
-The first implementation should rewrite the enclosing `ASSIGN` statement, not the `FUNCTION` node in isolation.
+Both supported cases rewrite the enclosing statement, not the `FUNCTION` node in isolation.
 
 ### Why selection must stay narrow
 The inliner must not mark a procedure as globally "inline now" and then rewrite every call. That breaks the incremental rollout plan. Instead:
@@ -43,7 +51,7 @@ Use a compiler-added `INSTRUCTIONS` node for statement-position rewrites that ne
 - a sequence of injected statements
 - no expression value of their own
 
-This is the right tool for phase 1, because `x = func(a)` should become a statement block that contains:
+This is the right tool for the current statement-position phases, because `x = func(a)` should become a statement block that contains:
 
 1. argument binding
 2. cloned callee body
@@ -103,6 +111,26 @@ Important details:
 - The cloned body must use isolated local symbols and scopes.
 - The result should be a valid statement tree without forcing a statement-only block into expression position.
 
+### Phase 2 rewrite: `call func(a)`
+Given:
+
+```rexx
+call func(a)
+```
+
+rewrite the enclosing call statement into:
+
+1. a compiler-added `INSTRUCTIONS` block
+2. containing argument binding statements
+3. containing the cloned callee statements
+4. with the callee `RETURN expr` rewritten so the expression is still evaluated even though the caller ignores the result
+
+Important details:
+
+- A bare `RETURN` with no expression can simply disappear in the inlined form.
+- A `RETURN expr` must not be dropped, because the expression may still have side effects.
+- The current implementation handles this by sinking the ignored return value inside the compiler-added block.
+
 ## Procedure Eligibility
 For the first slice, a procedure is eligible only if all of the following hold:
 
@@ -111,6 +139,8 @@ For the first slice, a procedure is eligible only if all of the following hold:
 - not a method
 - not a factory
 - fixed arguments only
+- scalar built-in arguments only
+- scalar built-in return only
 - no `.ref`, `.opt`, or varargs
 - exactly one `RETURN`
 - the `RETURN` is the final instruction
@@ -142,16 +172,7 @@ That is another reason phase 1 should replace the enclosing assignment statement
 
 ## Later Phases
 
-### Phase 2
-Standalone call statements such as:
-
-```rexx
-call func(a)
-```
-
-This likely remains a compiler-added `INSTRUCTIONS` rewrite in statement position.
-
-### Phase 3
+### Next Phase
 Embedded-expression inlining such as:
 
 ```rexx
@@ -163,10 +184,11 @@ This should use `BLOCK_EXPR`, with the inlined block yielding its value through 
 ## Verification
 The design for phase 1 should be considered ready when:
 
-- the compiler rewrites `inline_test1` using the narrow statement-position strategy
+- the compiler rewrites `inline_test1` and `inline_test_call` using the narrow statement-position strategy
+- excluded cases such as those in `inline_test2` remain uninlined under optimisation
 - the resulting AST is structurally valid under `-dp`
 - optimised codegen succeeds
-- the relevant compiler tests stop depending on `WILL_FAIL`
+- positive and negative compiler tests lock down the selector behaviour
 
 ## Non-Goals For The First Step
 
