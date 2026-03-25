@@ -270,6 +270,30 @@ end
 - `ITERATE` restarts the current loop at the next iteration (optionally naming a control variable to target an outer loop).
 - `LEAVE` exits the current loop immediately (optionally naming a control variable to target an outer loop).
 
+### Block Expressions
+
+`DO ... END` can also appear inside an expression. In that form it behaves like a local statement block that yields a value back to the parent expression.
+
+```rexx
+options levelb
+total = 10 + do
+  a = 5
+  if a > 0 then leave with a * 2
+  leave with 0
+end
+say total   /* 20 */
+```
+
+Rules:
+
+- A block expression introduces a local block scope, just like a grouped `DO`.
+- The block result is produced with `LEAVE WITH expression`.
+- Every reachable value-producing path should end in `LEAVE WITH ...`.
+- If more than one `LEAVE WITH` is present, all yielded values must have the same type.
+- Plain `LEAVE` keeps its loop meaning. Inside an expression block, use `LEAVE WITH` when you intend to return a value.
+
+Because block expressions are ordinary expressions, they can be nested and used anywhere a primary expression is valid, such as arithmetic, comparisons, function arguments, and short-circuit boolean expressions.
+
 ### Variable shadowing and Scoping (Level B)
 
 cREXX Level B introduces block-level scoping for certain control structures. It is important to distinguish between single-instruction branches and grouped instructions (DO blocks).

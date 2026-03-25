@@ -1,0 +1,5 @@
+Testing UTF-8 and Math...
+Length of string is 5
+c2d of first char is 620756992
+large_num % 256 = 0
+large_num / 256 = 2424832000000

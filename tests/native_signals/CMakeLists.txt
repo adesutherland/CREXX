@@ -35,8 +35,28 @@ add_test(
         COMMAND signal_tester TERM "TERM Signal" 5 $<TARGET_FILE:rxvm> intr_test
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-add_test(
-        NAME INT_SIGNAL
-        COMMAND signal_tester INT "POSIX_INT Signal" 5 $<TARGET_FILE:rxvm> intr_test
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+
+# On Windows the harness uses GenerateConsoleCtrlEvent() to emulate native interrupts.
+# CTRL_C_EVENT cannot be targeted to a specific process group, so in CI it can hit the
+# harness/runner console rather than just the child under test. Keep TERM/QUIT coverage
+# on Windows and only run the INT test on POSIX where the delivery semantics are reliable.
+if(WIN32)
+    message(STATUS "Skipping INT_SIGNAL native signal test on Windows")
+else()
+    add_test(
+            NAME INT_SIGNAL
+            COMMAND signal_tester INT "POSIX_INT Signal" 5 $<TARGET_FILE:rxvm> intr_test
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+endif()
+
+set(_native_signal_tests QUIT_SIGNAL TERM_SIGNAL)
+if(NOT WIN32)
+    list(APPEND _native_signal_tests INT_SIGNAL)
+endif()
+
+set_tests_properties(${_native_signal_tests} PROPERTIES
+        LABELS "native_signal"
+        RUN_SERIAL TRUE
+        TIMEOUT 15
 )

@@ -1,0 +1,2 @@
+Error in err_leave_with_not_in_block.rexx @ 3:1 - #NOT_IN_BLOCK_EXPR, "leave with 1"
+1 error(s) in source file

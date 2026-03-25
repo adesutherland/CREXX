@@ -448,6 +448,16 @@ int rxcmain(int argc, char *argv[]) {
 
 
     if (!context->ast) {
+        /* Last-resort structural diagnosis path.
+         * Keep grammar recovery for cases that preserve a usable AST.
+         * Use fallback diagnostics only when parsing has already failed to
+         * produce any AST at all. */
+        errors = rxcp_run_fallback_diagnostics(context);
+        if (errors) {
+            errors = prnterrs(context);
+            if (errors) fprintf(stderr,"%d error(s) in source file\n", errors);
+            goto finish;
+        }
         fprintf(stderr,"INTERNAL ERROR: Compiler Exiting - Failure to create AST\n");
         goto finish;
     }

@@ -1,0 +1,16 @@
+Warning in test_iterative_do_subscope.rexx @ 12:6 - #SHADOWING, original definition "test_iterative_do_subscope.main.x" @ 10:3, "x"
+Warning in test_iterative_do_subscope.rexx @ 13:6 - #SHADOWING, original definition "test_iterative_do_subscope.main.x" @ 10:3, "x"
+Warning in test_iterative_do_subscope.rexx @ 14:33 - #SHADOWING, original definition "test_iterative_do_subscope.main.x" @ 10:3, "x"
+3 warning(s) in source file
+Before loop: i = 0
+  Inside loop: i = 1
+  Inside loop: i = 2
+  Inside loop: i = 3
+  Inside loop: i = 4
+  Inside loop: i = 5
+After loop: i = 6  (expect 6 in Classic REXX, but with subscope it might be different)
+    Nested typed x = 10
+    Nested typed x = 20
+    Nested typed x = 30
+After loop: x = 1  (expect 1)
+SUCCESS: Iterative DO subscope works for typed vars

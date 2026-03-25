@@ -1,0 +1,4 @@
+Warning in test_disjoint_detailed.rexx @ 7:28 - ##NOT_IN_SAME_SCOPE, original definition @ 4:5, "y"
+1 warning(s) in source file
+Inside block: y = 3
+Outside block: y = y

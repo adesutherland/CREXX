@@ -1,0 +1,85 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : block_expr_basic.rexx
+ * BUILT                  : 2026-03-24 17:43:22
+ */
+
+.srcfile="block_expr_basic.rexx"
+.globals=0
+
+main() .locals=10
+   .meta "block_expr_basic.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="total = 10 + do\n  a = 5\n  if a > 0 then leave with a * 2\n  leave with 0"
+   .src 3:14="do"
+   .src 4:3="a = 5"
+   .meta "block_expr_basic.main.a"="b" ".int" r2
+   .meta "block_expr_basic.main.total"="b" ".int" r1
+   load r2,5
+   .src 5:2="if a > 0"
+   igt r5,r2,0
+   brf l16iffalse,r5
+   .src 5:12="then"
+   .src 5:17="leave with a * 2"
+   imult r6,r2,2
+   icopy r7,r6
+   br l19bexprend
+l16iffalse:
+   .src 6:3="leave with 0"
+   load r5,0
+   icopy r7,r5
+   br l19bexprend
+l19bexprend:
+   iadd r1,r7,10
+   .src 8:1="say total"
+   itos r1
+   say r1
+   .src 10:1="nested = do\n  leave with 100 + do\n    x = 3\n    if x = 3 then leave with 7\n    leave with 0"
+   .src 10:10="do"
+   .src 11:3="leave with 100 + do\n    x = 3\n    if x = 3 then leave with 7\n    leave with 0"
+   .src 11:20="do"
+   .src 12:5="x = 3"
+   .meta "block_expr_basic.main.x"="b" ".int" r3
+   .meta "block_expr_basic.main.nested"="b" ".int" r0
+   load r3,3
+   .src 13:4="if x = 3"
+   ieq r7,r3,3
+   brf l36iffalse,r7
+   .src 13:14="then"
+   .src 13:19="leave with 7"
+   load r8,7
+   icopy r9,r8
+   br l39bexprend
+l36iffalse:
+   .src 14:5="leave with 0"
+   load r7,0
+   icopy r9,r7
+   br l39bexprend
+l39bexprend:
+   iadd r9,r9,100
+   br l43bexprend
+l43bexprend:
+   icopy r0,r9
+   .src 17:1="say nested"
+   itos r0
+   say r0
+   .src 19:1="say 1 + do\n  y = 1\n  leave with y"
+   .src 19:9="do"
+   .src 20:3="y = 1"
+   .meta "block_expr_basic.main.y"="b" ".int" r4
+   load r4,1
+   .src 21:3="leave with y"
+   icopy r9,r4
+   br l54bexprend
+l54bexprend:
+   iadd r9,r9,1
+   itos r9
+   say r9
+   .src 19:34=""
+   ret
+   .meta "block_expr_basic.main.nested"
+   .meta "block_expr_basic.main.total"

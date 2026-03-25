@@ -594,7 +594,7 @@ assignment(I) ::=  var_symbol(V) TK_EQUAL(T) expression(E). [TK_VAR_SYMBOL]
         V->node_type = VAR_TARGET;
     }
 
-command(I)             ::= expression(E).
+command(I)             ::= command_expression(E).
                        { I = ast_ft(context, IMPLICIT_CMD); add_ast(I,E); }
 
 keyword_instruction(I) ::= assembler(K). { I = K; }
@@ -992,6 +992,9 @@ iterate(I) ::= TK_ITERATE(T).
     { I = ast_f(context, ITERATE, T); }
 
 /* Leave */
+leave(I) ::= TK_LEAVE(T) TK_WITH expression(E).
+    { I = ast_f(context, LEAVE_WITH, T); add_ast(I,E); }
+
 leave(I) ::= TK_LEAVE(T) var_symbol(S).
     { I = ast_f(context, LEAVE, T); add_ast(I,S); }
 
@@ -1300,6 +1303,12 @@ bracket(A)           ::= term(T).
                          { A = T; }
 bracket(A)           ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
                          { A = B; }
+block_expr(A)        ::= TK_DO(T) TK_EOC instruction_list(I) TK_END.
+                         { A = ast_f(context, BLOCK_EXPR, T); add_ast(A, I); }
+block_expr(A)        ::= TK_DO(T) TK_EOC TK_END.
+                         { A = ast_f(context, BLOCK_EXPR, T); add_ast(A, ast_ft(context, INSTRUCTIONS)); }
+bracket(A)           ::= block_expr(B).
+                         { A = B; }
 /* Standalone class factory call as a primary */
 bracket(F)           ::= TK_CLASS_TYPE(S) function_parameters(P).
                            {
@@ -1310,6 +1319,109 @@ bracket(F)           ::= TK_CLASS_TYPE(S) function_parameters(P).
                                    F->node_string_length--;
                                }
                            }
+
+/* Command expressions use a left-spine variant so a bare TK_DO at statement
+ * start remains reserved for statement DO blocks, while nested expressions can
+ * still use BLOCK_EXPR through the regular expression grammar. */
+command_bracket(A)   ::= term(T).
+                         { A = T; }
+command_bracket(A)   ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
+                         { A = B; }
+command_bracket(F)   ::= TK_CLASS_TYPE(S) function_parameters(P).
+                           {
+                               F = ast_f(context, FACTORY_CALL, S);
+                               if (P) add_ast(F,P);
+                               if (F->node_string && F->node_string[0] == '.') {
+                                   F->node_string++;
+                                   F->node_string_length--;
+                               }
+                           }
+command_postfix(P)   ::= command_bracket(B).
+                         { P = B; }
+command_postfix(A)   ::= command_postfix(B) TK_CLASS_TYPE(S) function_parameters(PP). [TK_CLASS_TYPE]
+                         { A = ast_f(context, MEMBER_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               A->node_string++;
+                               A->node_string_length--; }
+                           add_ast(A,B); if (PP) add_ast(A,PP); }
+command_prefix_expression(P) ::= command_postfix(B). [ANYTHING] { P = B; }
+command_prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
+                         { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
+command_prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
+command_prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
+command_power_expression_L(A) ::= command_power_expression_L(B) TK_POWER_L(O) prefix_expression(C).
+                          { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
+command_power_expression_L(P) ::= command_prefix_expression(E).  { P = E; }
+command_power_expression_R(A) ::= command_power_expression_L(B) TK_POWER_R(O) power_expression_R(C).
+                          { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
+command_power_expression_R(P) ::= command_power_expression_L(E).  { P = E; }
+command_low_prefix_expression(P) ::= command_power_expression_R(E).
+                  { P = E; }
+command_low_prefix_expression(A) ::= TK_MINUS(O) power_expression_R(C).
+                  { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
+command_multiplication(P)    ::= command_low_prefix_expression(E).
+                         { P = E; }
+command_multiplication(A)    ::= command_multiplication(B) TK_MULT(O) low_prefix_expression(C).
+                         { A = ast_f(context, OP_MULT, O); add_ast(A,B); add_ast(A,C); }
+command_multiplication(A)    ::= command_multiplication(B) TK_DIV(O) low_prefix_expression(C).
+                         { A = ast_f(context, OP_DIV, O); add_ast(A,B); add_ast(A,C); }
+command_multiplication(A)    ::= command_multiplication(B) TK_IDIV(O) low_prefix_expression(C).
+                         { A = ast_f(context, OP_IDIV, O); add_ast(A,B); add_ast(A,C); }
+command_multiplication(A)    ::= command_multiplication(B) TK_MOD(O) low_prefix_expression(C).
+                         { A = ast_f(context, OP_MOD, O); add_ast(A,B); add_ast(A,C); }
+command_addition(P)          ::= command_multiplication(E).
+                         { P = E; }
+command_addition(A)          ::= command_addition(B) TK_PLUS(O) multiplication(C).
+                         { A = ast_f(context, OP_ADD, O); add_ast(A,B); add_ast(A,C); }
+command_addition(A)          ::= command_addition(B) TK_MINUS(O) multiplication(C).
+                         { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
+command_addition(A)          ::= command_addition(B) TK_HIGH_PRIORITY_MINUS(O) multiplication(C).
+                         { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
+command_concatenation(P)     ::= command_addition(E).
+                         { P = E; }
+command_concatenation(A)     ::= command_concatenation(B) TK_CONCAT(O) addition(C).
+                         { A = ast_f(context, OP_CONCAT, O); add_ast(A,B); add_ast(A,C); }
+command_concatenation(A)     ::= command_concatenation(B) addition_c(C). [IMPLICIT_CONCAT]
+                         { A = ast_ft(context, OP_SCONCAT); add_ast(A,B); add_ast(A,C); }
+command_comparison(P)        ::= command_concatenation(E).
+                         { P = E; }
+command_comparison(A)        ::= command_comparison(B) TK_EQUAL(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_EQUAL, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_NEQ(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_NEQ, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_GT(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_GT, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_LT(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_LT, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_GTE(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_GTE, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_LTE(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_LTE, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_S_EQ(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_S_EQ, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_S_NEQ(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_S_NEQ, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_S_GT(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_S_GT, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_S_LT(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_S_LT, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_S_GTE(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_S_GTE, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_S_LTE(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE_S_LTE, O); add_ast(A,B); add_ast(A,C); }
+command_or_expression(P)     ::= command_comparison(E).
+                         { P = E; }
+command_or_expression(A)     ::= command_or_expression(B) TK_OR(O) comparison(C).
+                         { A = ast_f(context, OP_OR, O); add_ast(A,B); add_ast(A,C); }
+command_and_expression(P)    ::= command_or_expression(E).
+                         { P = E; }
+command_and_expression(A)    ::= command_and_expression(B) TK_AND(O) or_expression(C).
+                         { A = ast_f(context, OP_AND, O); add_ast(A,B); add_ast(A,C); }
+command_expression(P)        ::= command_and_expression(E). { P = E; }
+command_expression(E)        ::= TK_COMMA(U) error. { E = ast_err(context, "BADEXPR", U); }
+command_expression(E)        ::= TK_CLOSE_BRACKET(U) error. { E = ast_err(context, "BADEXPR", U); }
 
 /* These are the normal expression form in unambiguous form */
 postfix(P)           ::= bracket(B).

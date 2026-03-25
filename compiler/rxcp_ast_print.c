@@ -159,7 +159,7 @@ int prnterrs(Context *context) {
     diag = (ASTNode*)context->diagnostics_list;
     while (diag) {
         if (diag->node_type == ERROR && !diag->is_duplicate_warning) {
-            print_error(diag, stderr, "Error");
+            print_error(diag, stderr, "Error in");
             errors++;
         }
         diag = diag->sibling;
@@ -176,7 +176,7 @@ int prntwars(Context *context) {
     diag = (ASTNode*)context->diagnostics_list;
     while (diag) {
         if (diag->node_type == WARNING && !diag->is_duplicate_warning) {
-            print_error(diag, stderr, "Warning");
+            print_error(diag, stderr, "Warning in");
             errors++;
         }
         diag = diag->sibling;
@@ -303,6 +303,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case UNTIL:
             case ITERATE:
             case LEAVE:
+            case LEAVE_WITH:
             case NOP:
             case OPTIONS:
             case PULL:
@@ -317,6 +318,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case SAY:
             case UPPER:
             case PARSE:
+            case BLOCK_EXPR:
                 attributes = "color=green4";
                 only_type = 1;
                 break;

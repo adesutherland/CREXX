@@ -131,6 +131,39 @@ static void set_node_target_type(Context* context, ASTNode* node, ValueType targ
     validate_node_promotion(context, node);
 }
 
+static ASTNode *find_enclosing_block_expr(ASTNode *node) {
+    if (node) node = node->parent;
+    while (node) {
+        if (node->node_type == BLOCK_EXPR) return node;
+        node = node->parent;
+    }
+    return 0;
+}
+
+static void copy_value_type(__attribute__((unused)) Context *context, ASTNode *dest, ASTNode *src) {
+    ast_set_value_type(0, dest, src->value_type, src->value_dims,
+                       src->value_dim_base, src->value_dim_elements, src->value_class);
+    ast_set_target_type(0, dest, src->value_type, src->value_dims,
+                        src->value_dim_base, src->value_dim_elements, src->value_class);
+}
+
+static int same_value_type(ASTNode *left, ASTNode *right) {
+    size_t i;
+
+    if (left->value_type != right->value_type || left->value_dims != right->value_dims) return 0;
+
+    for (i = 0; i < left->value_dims; i++) {
+        if (left->value_dim_base[i] != right->value_dim_base[i]) return 0;
+        if (left->value_dim_elements[i] != right->value_dim_elements[i]) return 0;
+    }
+
+    if (left->value_class && right->value_class) {
+        return strcmp(left->value_class, right->value_class) == 0;
+    }
+
+    return left->value_class == 0 && right->value_class == 0;
+}
+
 /* This walker does the basic value types of operations
  * No errors generated - just simple "guesses" as to types */
 /* Propagate types from function signature to arguments and promote unknown symbols */
@@ -1222,6 +1255,46 @@ walker_result type_safety_walker(walker_direction direction,
                 if (child1) set_node_target_type(context, child1, TP_STRING);
                 break;
 
+            case BLOCK_EXPR: {
+                ASTNode *n = node->child;
+                ASTNode *matched_leave = 0;
+                ASTNode *first_typed_leave = 0;
+
+                while (n) {
+                    if (n->node_type == LEAVE_WITH && n->association == node) {
+                        matched_leave = n;
+                        if (n->value_type != TP_UNKNOWN) {
+                            if (!first_typed_leave) {
+                                first_typed_leave = n;
+                            } else if (!same_value_type(first_typed_leave, n)) {
+                                mknd_err(n, "TYPE_MISMATCH");
+                            }
+                        }
+                    }
+
+                    if (n->child && n->node_type != BLOCK_EXPR) {
+                        n = n->child;
+                    } else if (n == node) {
+                        break;
+                    } else if (n->sibling) {
+                        n = n->sibling;
+                    } else {
+                        n = n->parent;
+                        while (n && n != node && !n->sibling) n = n->parent;
+                        if (!n || n == node) break;
+                        n = n->sibling;
+                    }
+                }
+
+                if (first_typed_leave) {
+                    copy_value_type(context, node, first_typed_leave);
+                } else if (!matched_leave && context->is_final_pass) {
+                    mknd_err(node, "RETVAL_MISSING");
+                    set_node_type(node, TP_VOID);
+                }
+                break;
+            }
+
             case RETURN:
                 /* Type is the procedure's return type */
                 n1 = ast_proc(node);
@@ -1240,6 +1313,22 @@ walker_result type_safety_walker(walker_direction direction,
                         validate_node_promotion(context, child1);
                     }
                     else mknd_err(node, "RETVAL_MISSING");
+                }
+                break;
+
+            case LEAVE_WITH:
+                node->association = find_enclosing_block_expr(node);
+                if (!node->association) {
+                    mknd_err(node, "NOT_IN_BLOCK_EXPR");
+                }
+                if (child1) {
+                    copy_value_type(context, node, child1);
+                    if (node->association && node->association->value_type != TP_UNKNOWN) {
+                        ast_sttn(child1, node->association);
+                        validate_node_promotion(context, child1);
+                    }
+                } else {
+                    set_node_type(node, TP_VOID);
                 }
                 break;
 
@@ -1302,7 +1391,11 @@ walker_result type_safety_walker(walker_direction direction,
                     /* Symbol not specified - just find inner DO */
                     node->association = ast_do(node);
                     if (!node->association) {
-                        mknd_err(node, "NOT_IN_LOOP"); /* 28.1, 28.2 */
+                        if (node->node_type == LEAVE && find_enclosing_block_expr(node)) {
+                            mknd_err(node, "LEAVE_WITH_REQUIRED");
+                        } else {
+                            mknd_err(node, "NOT_IN_LOOP"); /* 28.1, 28.2 */
+                        }
                     }
                 }
                 break;

@@ -157,6 +157,12 @@ add_crexx_compiler_fail_test(err_loop_class rexx_src/err_loop_class.rexx err_loo
 add_crexx_compiler_fail_test(err_select_no_when rexx_src/err_select_no_when.rexx err_select_no_when.txt)
 add_crexx_compiler_fail_test(err_select_c_no_when rexx_src/err_select_c_no_when.rexx err_select_c_no_when.txt)
 add_crexx_compiler_fail_test(err_class_assign rexx_src/err_class_assign.rexx err_class_assign.txt)
+add_crexx_compiler_fail_test(err_block_expr_type_mismatch rexx_src/err_block_expr_type_mismatch.rexx err_block_expr_type_mismatch.txt)
+add_crexx_compiler_fail_test(err_block_expr_no_leave rexx_src/err_block_expr_no_leave.rexx err_block_expr_no_leave.txt)
+add_crexx_compiler_fail_test(err_block_expr_leave_plain rexx_src/err_block_expr_leave_plain.rexx err_block_expr_leave_plain.txt)
+add_crexx_compiler_fail_test(err_block_expr_missing_end rexx_src/err_block_expr_missing_end.rexx err_block_expr_missing_end.txt)
+add_crexx_compiler_fail_test(err_block_expr_incomplete rexx_src/err_block_expr_incomplete.rexx err_block_expr_incomplete.txt)
+add_crexx_compiler_fail_test(err_leave_with_not_in_block rexx_src/err_leave_with_not_in_block.rexx err_leave_with_not_in_block.txt)
 
 # Warning tests
 add_crexx_compiler_warning_test(loop rexx_src/loop.rexx loop.txt)
@@ -169,6 +175,8 @@ add_crexx_compiler_test(repro_opt_args rexx_src/repro_opt_args.rexx)
 add_crexx_compiler_test(basic_loops rexx_src/basic_loops.rexx)
 add_crexx_compiler_test(basic_strings rexx_src/basic_strings.rexx)
 add_crexx_compiler_test(basic_arrays rexx_src/basic_arrays.rexx)
+add_crexx_compiler_test(block_expr_basic rexx_src/block_expr_basic.rexx)
+add_crexx_compiler_test(block_expr_short_circuit rexx_src/block_expr_short_circuit.rexx)
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
@@ -185,6 +193,8 @@ add_crexx_run_test(repro_opt_args rexx_src/repro_opt_args.rexx)
 add_crexx_run_test(basic_loops rexx_src/basic_loops.rexx)
 add_crexx_run_test(basic_strings rexx_src/basic_strings.rexx)
 add_crexx_run_test(basic_arrays rexx_src/basic_arrays.rexx)
+add_crexx_run_test(block_expr_basic rexx_src/block_expr_basic.rexx)
+add_crexx_run_test(block_expr_short_circuit rexx_src/block_expr_short_circuit.rexx)
 add_crexx_run_test(repro_args_parse rexx_src/repro_args_parse.rexx)
 add_crexx_run_test(repro_args_alias rexx_src/repro_args_alias.rexx)
 add_crexx_run_test(repro_sconcat rexx_src/repro_sconcat.rexx)
@@ -248,6 +258,7 @@ add_crexx_parsing_test(do_simple_parse parsing_src/do_simple_parse.rexx)
 add_crexx_parsing_test(do_counted_parse parsing_src/do_counted_parse.rexx)
 add_crexx_parsing_test(do_while_parse parsing_src/do_while_parse.rexx)
 add_crexx_parsing_test(do_until_parse parsing_src/do_until_parse.rexx)
+add_crexx_parsing_test(block_expr_parse parsing_src/block_expr_parse.rexx)
 
 # SELECT constructs parsing coverage
 add_crexx_parsing_test(select_classic_parse parsing_src/select_classic_parse.rexx)

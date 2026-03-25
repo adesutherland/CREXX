@@ -1,0 +1,2 @@
+Error in err_block_expr_type_mismatch.rexx @ 5:3 - #TYPE_MISMATCH, "leave with \"x\""
+1 error(s) in source file

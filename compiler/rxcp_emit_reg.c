@@ -206,7 +206,9 @@ walker_result register_walker(walker_direction direction,
                  * it to the target register on the way out (bottom up) and save
                  * a copy instruction
                  */
-                if (use_symbol_reg(child1) && (!use_symbol_reg(child2) || is_constant(child2)))
+                if (use_symbol_reg(child1) &&
+                    child2->node_type != BLOCK_EXPR &&
+                    (!use_symbol_reg(child2) || is_constant(child2)))
                     child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
                 break;
 
@@ -217,7 +219,7 @@ walker_result register_walker(walker_direction direction,
                  * (DONT_ASSIGN_REGISTER) so we can assign it to the target
                  * register on the way out (bottom up) and save a copy instruction
                  */
-                if ((!use_symbol_reg(child2) || is_constant(child2)))
+                if (child2->node_type != BLOCK_EXPR && (!use_symbol_reg(child2) || is_constant(child2)))
                     child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
                 break;
 
@@ -242,7 +244,8 @@ walker_result register_walker(walker_direction direction,
                 /* The children register need to be assigned */
                 if (node->node_type == MEMBER_CALL) {
                     /* Instance */
-                    if (!use_symbol_reg(child1) || is_constant(child1))
+                    if (child1->node_type != BLOCK_EXPR &&
+                        (!use_symbol_reg(child1) || is_constant(child1)))
                         child1->register_num = DONT_ASSIGN_REGISTER;
                     c = child2;
                     i = node->additional_registers + 2; /* First is argc, second is instance */
@@ -271,7 +274,7 @@ walker_result register_walker(walker_direction direction,
                     }
 
                      /* 2. If it is a non-symbol expression we set the register later */
-                    else if (!use_symbol_reg(c) || is_constant(c))
+                    else if (c->node_type != BLOCK_EXPR && (!use_symbol_reg(c) || is_constant(c)))
                         c->register_num = DONT_ASSIGN_REGISTER;
 
                     c = c->sibling;
@@ -349,10 +352,13 @@ walker_result register_walker(walker_direction direction,
                   * anyway the instructions cannot accept constants
                   * But we do want this node and all children to have the
                   * same register if possible to avoid register copies */
-                if (!use_symbol_reg(child1)
+                if (child1->node_type != BLOCK_EXPR &&
+                    !use_symbol_reg(child1)
                 && !defer_reg_return(child1))
                     child1->register_num = DONT_ASSIGN_REGISTER;
-                if (!use_symbol_reg(child2) && !defer_reg_return(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                if (child2->node_type != BLOCK_EXPR &&
+                    !use_symbol_reg(child2) &&
+                    !defer_reg_return(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
             case VAR_SYMBOL:
@@ -734,6 +740,11 @@ walker_result register_walker(walker_direction direction,
                         return_child_reg(child1);
                     }
                 }
+                break;
+
+            case BLOCK_EXPR:
+                node->register_num = get_reg(node->scope);
+                node->register_type = 'r';
                 break;
 
             case IF:

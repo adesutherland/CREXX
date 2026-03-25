@@ -59,7 +59,7 @@ struct ASTNode {
     char is_varg;
     ASTNode *free_list;
     ASTNode *parent, *child, *sibling;
-    ASTNode *association; /* E.g. for LEAVE / ITERATE TO relevant DO node */
+    ASTNode *association; /* E.g. for LEAVE / ITERATE relevant DO node or LEAVE_WITH relevant BLOCK_EXPR */
     Token *token;
     Scope *scope;
     char *node_string;

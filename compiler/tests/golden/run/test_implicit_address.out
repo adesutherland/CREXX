@@ -1,0 +1,4 @@
+Warning in test_implicit_address.rexx @ 6:3 - #IMPLICIT_ADDRESS, "cmd"
+1 warning(s) in source file
+OK1
+OK2

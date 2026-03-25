@@ -50,6 +50,11 @@ jobs:
           cmake -S . -G Ninja -B "${{ runner.temp }}/release" -DCMAKE_BUILD_TYPE=MinSizeRel  -DCREXX_FORCE_SYSTEM_OPENSSL=ON
           cmake --build "${{ runner.temp }}/release"
 
+      - name: CTest Release
+        shell: msys2 {0}
+        run: |
+          ctest --test-dir "${{ runner.temp }}/release" --output-on-failure --no-tests=error --parallel 1
+
       - name: Collect executables
         shell: msys2 {0}
         run: |
