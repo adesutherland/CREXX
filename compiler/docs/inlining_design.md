@@ -7,7 +7,7 @@ That means selection is opportunity-based, not just callee-based. A procedure ma
 
 ## Current Strategy
 
-### Supported statement-position scenarios
+### Supported scenarios
 The currently supported scenarios are:
 
 ```rexx
@@ -20,16 +20,23 @@ and
 call func(a)
 ```
 
+and
+
+```rexx
+x = 10 + func(a)
+```
+
 More precisely:
 
 - The call must be a plain procedure `FUNCTION`, not a method or factory call.
 - For assignment inlining, the `FUNCTION` call must be the entire RHS of the enclosing `ASSIGN`.
 - For standalone call inlining, the enclosing statement must be `CALL func(...)`.
+- For expression inlining, the `FUNCTION` call must be a direct child of a supported non-short-circuit binary operator.
 - The callee must be a normal procedure, not a method or factory.
 - Arguments and return values must stay within the current safe scalar slice: no class/object values and no arrays.
 - The callee must satisfy the existing safety checks: fixed pass-by-value args only, single trailing `RETURN`, small body, no unsupported nested inlining.
 
-Both supported cases rewrite the enclosing statement, not the `FUNCTION` node in isolation.
+The statement-position cases rewrite the enclosing statement. The expression-position case rewrites the `FUNCTION` node itself to `BLOCK_EXPR`.
 
 ### Why selection must stay narrow
 The inliner must not mark a procedure as globally "inline now" and then rewrite every call. That breaks the incremental rollout plan. Instead:
@@ -62,7 +69,7 @@ The original assignment statement is replaced as a whole by the block.
 ### `BLOCK_EXPR`
 Use this only when the inline expansion itself must remain an expression and yield a value to its parent expression tree.
 
-This is for later phases such as:
+This is now used for the first expression-position slice, and remains the path for broader later phases such as:
 
 ```rexx
 x = func(a) + y
@@ -131,6 +138,26 @@ Important details:
 - A `RETURN expr` must not be dropped, because the expression may still have side effects.
 - The current implementation handles this by sinking the ignored return value inside the compiler-added block.
 
+### Phase 3 rewrite: direct operand expression inlining
+Given:
+
+```rexx
+x = 10 + func(a)
+```
+
+rewrite the `FUNCTION` node into:
+
+1. a `BLOCK_EXPR`
+2. containing argument binding statements
+3. containing the cloned callee statements
+4. with the callee `RETURN expr` rewritten to `LEAVE_WITH expr`
+
+Important details:
+
+- The `BLOCK_EXPR` must preserve the original call node's value and target typing.
+- The current implementation only supports direct children of non-short-circuit arithmetic operators.
+- Unsupported expression contexts should remain normal calls until their rewrite strategy exists.
+
 ## Procedure Eligibility
 For the first slice, a procedure is eligible only if all of the following hold:
 
@@ -173,19 +200,20 @@ That is another reason phase 1 should replace the enclosing assignment statement
 ## Later Phases
 
 ### Next Phase
-Embedded-expression inlining such as:
+Broader embedded-expression inlining such as:
 
 ```rexx
 x = func(a) + y
 ```
 
-This should use `BLOCK_EXPR`, with the inlined block yielding its value through `LEAVE_WITH` or an equivalent direct block-expression result path.
+This should keep using `BLOCK_EXPR`, but expand beyond the current direct-operand slice into more parent operators and more surrounding expression shapes.
 
 ## Verification
 The design for phase 1 should be considered ready when:
 
-- the compiler rewrites `inline_test1` and `inline_test_call` using the narrow statement-position strategy
+- the compiler rewrites `inline_test1`, `inline_test_call`, and `inline_test_expr` using the narrow supported strategies
 - excluded cases such as those in `inline_test2` remain uninlined under optimisation
+- unsupported expression contexts such as those in `inline_test_expr_negative` remain uninlined under optimisation
 - the resulting AST is structurally valid under `-dp`
 - optimised codegen succeeds
 - positive and negative compiler tests lock down the selector behaviour
@@ -197,6 +225,6 @@ The design for phase 1 should be considered ready when:
 - pass-by-reference
 - optional args
 - varargs
-- general embedded-expression inlining
+- general embedded-expression inlining beyond the current direct-operand slice
 - aggressive pruning of fully inlined procedures
 - claiming fully generic scope/symbol cloning before it is proven

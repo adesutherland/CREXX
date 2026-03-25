@@ -30,8 +30,9 @@ typedef struct {
 typedef struct {
     ASTNode *root_proc;
     int node_count;
-    int has_inlinable_call;
+    int has_nested_call;
     int has_nested_scope;
+    int return_count;
 } InlinableCheck;
 
 typedef struct {
@@ -228,6 +229,24 @@ static ASTNode *inline_create_sink_target(Context *context,
     return sink_target;
 }
 
+static int inline_is_supported_expr_parent(ASTNode *node) {
+    if (!node) return 0;
+
+    switch (node->node_type) {
+        case OP_ADD:
+        case OP_MINUS:
+        case OP_MULT:
+        case OP_DIV:
+        case OP_IDIV:
+        case OP_MOD:
+        case OP_POWER:
+            return 1;
+
+        default:
+            return 0;
+    }
+}
+
 static int ast_inline_statement(Context *context,
                                 ASTNode *statement_node,
                                 ASTNode *call_node,
@@ -383,6 +402,130 @@ static int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_n
     return ast_inline_statement(context, call_stmt, call_node, proc_sym, &return_plan);
 }
 
+static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym) {
+    ASTNode *proc_def;
+    ASTNode *param_list;
+    ASTNode *proc_instrs;
+    ASTNode *param_arg;
+    ASTNode *actual_arg;
+    ASTNode *block_expr;
+    ASTNode *instr_list;
+    ASTNode *proc_instr;
+    Scope *inline_scope;
+    InlineCloneState clone_state;
+
+    if (!context || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
+    if (!call_node->parent || !inline_is_supported_expr_parent(call_node->parent)) return 0;
+
+    proc_def = proc_sym->ast_template;
+    if (!proc_def || !proc_def->scope) return 0;
+
+    if (call_node->child && inline_count_siblings(call_node->child) != proc_sym->fixed_args) return 0;
+    if (!call_node->child && proc_sym->fixed_args != 0) return 0;
+
+    block_expr = ast_dup(context, call_node);
+    block_expr->node_type = BLOCK_EXPR;
+    block_expr->node_string = "do";
+    block_expr->node_string_length = 2;
+    block_expr->free_node_string = 0;
+
+    inline_scope = scp_f(context, call_node->scope, block_expr, NULL, SCOPE_LOCAL);
+    block_expr->scope = inline_scope;
+
+    instr_list = ast_f(context, INSTRUCTIONS, call_node->token);
+    instr_list->scope = inline_scope;
+    instr_list->value_type = TP_VOID;
+    instr_list->target_type = TP_VOID;
+    add_ast(block_expr, instr_list);
+
+    memset(&clone_state, 0, sizeof(clone_state));
+    if (!inline_build_symbol_map(proc_def->scope, inline_scope, &clone_state)) {
+        return 0;
+    }
+
+    param_list = ast_chld(proc_def, ARGS, 0);
+    param_arg = param_list ? param_list->child : NULL;
+    actual_arg = call_node->child;
+
+    while (param_arg) {
+        ASTNode *formal_target;
+        ASTNode *bind_assign;
+        ASTNode *bind_lhs;
+        ASTNode *bind_rhs;
+
+        formal_target = ast_chdn(param_arg, 0);
+        if (!formal_target || !actual_arg) {
+            inline_free_symbol_map(&clone_state);
+            return 0;
+        }
+
+        bind_assign = ast_f(context, ASSIGN, formal_target->token);
+        bind_assign->scope = inline_scope;
+        bind_assign->value_type = formal_target->value_type;
+        bind_assign->target_type = formal_target->target_type;
+
+        bind_lhs = inline_clone_subtree(context, formal_target, &clone_state);
+        bind_rhs = inline_clone_subtree(context, actual_arg, &clone_state);
+
+        add_ast(bind_assign, bind_lhs);
+        add_ast(bind_assign, bind_rhs);
+        add_ast(instr_list, bind_assign);
+
+        param_arg = param_arg->sibling;
+        actual_arg = actual_arg->sibling;
+    }
+
+    if (actual_arg) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+
+    proc_instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
+    if (!proc_instrs) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+
+    proc_instr = proc_instrs->child;
+    while (proc_instr) {
+        if (proc_instr->node_type == RETURN) {
+            ASTNode *ret_expr;
+            ASTNode *leave_with;
+            ASTNode *leave_expr;
+
+            ret_expr = proc_instr->child;
+            if (!ret_expr) {
+                inline_free_symbol_map(&clone_state);
+                return 0;
+            }
+
+            leave_with = ast_f(context, LEAVE_WITH, proc_instr->token);
+            leave_with->scope = inline_scope;
+            leave_with->association = block_expr;
+            leave_with->value_type = ret_expr->value_type;
+            leave_with->target_type = ret_expr->target_type;
+
+            leave_expr = inline_clone_subtree(context, ret_expr, &clone_state);
+
+            add_ast(leave_with, leave_expr);
+            add_ast(instr_list, leave_with);
+        } else {
+            ASTNode *cloned_instr;
+
+            cloned_instr = inline_clone_subtree(context, proc_instr, &clone_state);
+            add_ast(instr_list, cloned_instr);
+        }
+
+        proc_instr = proc_instr->sibling;
+    }
+
+    ast_rpl(call_node, block_expr);
+    inline_disconnect_subtree_symbols(call_node);
+    inline_free_symbol_map(&clone_state);
+
+    return 1;
+}
+
 /* Walker to find statement-shaped call sites and inline them */
 walker_result inline_procedure_walker(walker_direction direction, ASTNode *node, void *payload) {
     Context *context;
@@ -394,6 +537,14 @@ walker_result inline_procedure_walker(walker_direction direction, ASTNode *node,
     context = (Context *)payload;
 
     if (direction == in) return result_normal;
+
+    if (node->node_type == FUNCTION) {
+        proc_sym = node->symbolNode ? node->symbolNode->symbol : NULL;
+        if (proc_sym && proc_sym->is_inlinable && proc_sym->ast_template) {
+            ast_inline_expression(context, node, proc_sym);
+        }
+        return result_normal;
+    }
 
     if (node->node_type == ASSIGN) {
         lhs = node->child;
@@ -436,13 +587,13 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
             check->has_nested_scope = 1;
         }
 
-        if (node->node_type == CALL || node->node_type == FUNCTION) {
-            Symbol *proc_sym;
+        if (node != check->root_proc &&
+            (node->node_type == CALL || node->node_type == FUNCTION)) {
+            check->has_nested_call = 1;
+        }
 
-            proc_sym = node->symbolNode ? node->symbolNode->symbol : NULL;
-            if (proc_sym && proc_sym->is_inlinable) {
-                check->has_inlinable_call = 1;
-            }
+        if (node->node_type == RETURN) {
+            check->return_count++;
         }
     }
     return result_normal;
@@ -525,8 +676,9 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         ast_wlkr(node, inlinable_check_walker, &check);
 
         if (check.node_count > INLINE_MAX_NODES ||
-            check.has_inlinable_call ||
-            check.has_nested_scope) {
+            check.has_nested_call ||
+            check.has_nested_scope ||
+            check.return_count != 1) {
             sym->is_inlinable = 0;
             return result_normal;
         }

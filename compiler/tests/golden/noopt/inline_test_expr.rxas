@@ -1,0 +1,66 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_expr.rexx
+ * BUILT                  : 2026-03-25 13:59:01
+ */
+
+.srcfile="inline_test_expr.rexx"
+.globals=0
+
+main() .locals=7
+   .meta "inline_test_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting inline expr test...\""
+   say "Starting inline expr test..."
+   .src 5:3="do"
+   .src 5:6="i = 1"
+   .meta "inline_test_expr.main.i"="b" ".int" r0
+   load r0,1
+   .src 5:12="to 4"
+   load r2,4
+l8dostart:
+   .src 5:12="to 4"
+   igt r3,r0,r2
+   brt l8doend,r3
+   .src 6:5="result = 10 + addOne(i)"
+   .meta "inline_test_expr.main.result"="b" ".int" r1
+   load r4,1
+   swap r5,r0
+   call r6,addOne(),r4
+   swap r0,r5
+   iadd r1,r6,10
+   .src 7:5="say \"Computed\" result"
+   itos r1
+   sconcat r6,"Computed",r1
+   say r6
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 8:3="end"
+   br l8dostart
+l8doend:
+   .src 9:3="say \"Inline expr test finished.\""
+   say "Inline expr test finished."
+   .src 10:3="return 0"
+   ret 0
+
+addOne() .locals=2
+   .meta "inline_test_expr.addone"="b" ".int" addOne() "val=.int" ""
+   .src 12:1="addOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 13:7="val = .int"
+   .meta "inline_test_expr.addone.val"="b" ".int" r0
+   icopy r0,a1
+   .src 14:3="return val + 1"
+   iadd r1,r0,1
+   ret r1
+   .meta "inline_test_expr.addone.val"

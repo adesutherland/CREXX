@@ -11,10 +11,4 @@ main: procedure = .int
 logDouble: procedure = .int
   arg val = .int
   say "Double for" val "is" val * 2
-  return observe(val * 2)
-
-observe: procedure = .int
-  arg value = .int
-  if value < 0 then return 0
-  say "Observed return" value
-  return value
+  return val * 2

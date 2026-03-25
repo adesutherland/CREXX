@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_call.rexx
- * BUILT                  : 2026-03-25 13:35:03
+ * BUILT                  : 2026-03-25 14:02:12
  */
 
 .srcfile="inline_test_call.rexx"
@@ -43,7 +43,7 @@ l8doend:
    .src 9:3="return 0"
    ret 0
 
-logDouble() .locals=4
+logDouble() .locals=3
    .meta "inline_test_call.logdouble"="b" ".int" logDouble() "val=.int" ""
    .src 11:1="logDouble: procedure = .int"
    setnumdgts 18
@@ -62,35 +62,7 @@ logDouble() .locals=4
    itos r2
    sconcat r2,r1,r2
    say r2
-   .src 14:3="return observe(val * 2)"
-   load r1,1
+   .src 14:3="return val * 2"
    imult r2,r0,2
-   call r3,observe(),r1
-   ret r3
+   ret r2
    .meta "inline_test_call.logdouble.val"
-
-observe() .locals=2
-   .meta "inline_test_call.observe"="b" ".int" observe() "value=.int" ""
-   .src 16:1="observe: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 17:7="value = .int"
-   .meta "inline_test_call.observe.value"="b" ".int" r0
-   icopy r0,a1
-   .src 18:2="if value < 0"
-   ilt r1,r0,0
-   brf l55iffalse,r1
-   .src 18:16="then"
-   .src 18:21="return 0"
-   ret 0
-l55iffalse:
-   .src 19:3="say \"Observed return\" value"
-   itos r0
-   sconcat r1,"Observed return",r0
-   say r1
-   .src 20:3="return value"
-   ret r0
-   .meta "inline_test_call.observe.value"
