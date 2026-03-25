@@ -32,12 +32,12 @@ The inliner must not mark a procedure as globally "inline now" and then rewrite 
 
 This preserves the ability to build and test the compiler while inlining support is still partial.
 
-## `COMPILER_ADDED_BLOCK` vs `BLOCK_EXPR`
+## Compiler-Added Statement Blocks vs `BLOCK_EXPR`
 
-Both node types are needed.
+Both forms are still needed, but they no longer need separate node types.
 
-### `COMPILER_ADDED_BLOCK`
-Use this for statement-position rewrites that need:
+### Compiler-added statement block
+Use a compiler-added `INSTRUCTIONS` node for statement-position rewrites that need:
 
 - scope isolation
 - a sequence of injected statements
@@ -68,17 +68,17 @@ or other contexts where hoisting to surrounding statements would change semantic
 - `LEAVE_WITH` result propagation
 - emitter support for yielding a register result
 
-So for expression-valued inlining, the target form should be a `BLOCK_EXPR`, not a raw `COMPILER_ADDED_BLOCK`.
+So for expression-valued inlining, the target form should be a `BLOCK_EXPR`, not a raw statement block.
 
 ### Decision
-Do not drop `COMPILER_ADDED_BLOCK` in favour of `BLOCK_EXPR`.
+Do not collapse statement rewrites into `BLOCK_EXPR`.
 
 Use:
 
-- `COMPILER_ADDED_BLOCK` for statement-only inlining rewrites
+- compiler-added `INSTRUCTIONS` for statement-only inlining rewrites
 - `BLOCK_EXPR` for expression-valued inlining rewrites
 
-Also avoid wrapping a `BLOCK_EXPR` around a `COMPILER_ADDED_BLOCK` unless a specific implementation need appears. For expression contexts, prefer constructing the final `BLOCK_EXPR` shape directly.
+Also avoid wrapping a `BLOCK_EXPR` around a compiler-added statement block unless a specific implementation need appears. For expression contexts, prefer constructing the final `BLOCK_EXPR` shape directly.
 
 ## AST Rewrite Plan
 
@@ -91,18 +91,17 @@ x = func(a)
 
 rewrite the enclosing assignment into:
 
-1. a `COMPILER_ADDED_BLOCK`
-2. containing an `INSTRUCTIONS` list
-3. containing argument binding statements
-4. containing the cloned callee statements
-5. with the callee `RETURN expr` rewritten to `x = expr`
+1. a compiler-added `INSTRUCTIONS` block
+2. containing argument binding statements
+3. containing the cloned callee statements
+4. with the callee `RETURN expr` rewritten to `x = expr`
 
 Important details:
 
 - Formal parameter binding must target the formal variable node, not the `ARG` node.
 - Actual arguments must be read from the real call shape used by `FUNCTION` nodes.
 - The cloned body must use isolated local symbols and scopes.
-- The result should be a valid statement tree without forcing `COMPILER_ADDED_BLOCK` into expression position.
+- The result should be a valid statement tree without forcing a statement-only block into expression position.
 
 ## Procedure Eligibility
 For the first slice, a procedure is eligible only if all of the following hold:
@@ -150,7 +149,7 @@ Standalone call statements such as:
 call func(a)
 ```
 
-This likely remains a `COMPILER_ADDED_BLOCK` rewrite in statement position.
+This likely remains a compiler-added `INSTRUCTIONS` rewrite in statement position.
 
 ### Phase 3
 Embedded-expression inlining such as:

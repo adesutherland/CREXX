@@ -68,7 +68,7 @@ static void assign_registers_in_scope(Scope *scope, walker_payload *payload) {
     scp_4all(scope, assign_symbol_registers_worker, payload);
     for (i = 0; i < scp_noch(scope); i++) {
         Scope *child = scp_chd(scope, i);
-        if (child && (child->type == SCOPE_LOCAL || (child->defining_node && child->defining_node->node_type == COMPILER_ADDED_BLOCK))) {
+        if (child && child->type == SCOPE_LOCAL) {
             assign_registers_in_scope(child, payload);
         }
     }

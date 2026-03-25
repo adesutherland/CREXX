@@ -211,7 +211,8 @@ walker_result structure_symbols_walker(walker_direction direction,
             }
         }
 
-        else if (node->node_type == COMPILER_ADDED_BLOCK || node->node_type == BLOCK_EXPR) {
+        else if (node->node_type == BLOCK_EXPR ||
+                 (node->node_type == INSTRUCTIONS && node->force_local_scope)) {
             if (node->scope) {
                 context->current_scope = node->scope;
             } else {
@@ -234,7 +235,8 @@ walker_result structure_symbols_walker(walker_direction direction,
             /* Create a child scope for any nested INSTRUCTIONS whose parent is an IF or another INSTRUCTIONS block.
              * This handles THEN/ELSE bodies and simple DO blocks (which are represented as nested INSTRUCTIONS).
              * If the parent is a DO, we use the DO's scope created above. */
-            if (node->parent && (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS)) {
+            if (node->force_local_scope ||
+                (node->parent && (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS))) {
                 if (node->scope) {
                     context->current_scope = node->scope;
                 } else {
@@ -279,15 +281,17 @@ walker_result build_symbols_walker(walker_direction direction,
         if (node->node_type == REXX_UNIVERSE || node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE ||
             node->node_type == CLASS_DEF || node->node_type == PROCEDURE || node->node_type == METHOD ||
             node->node_type == FACTORY || node->node_type == IMPORT ||
-            node->node_type == DO || node->node_type == INSTRUCTIONS || node->node_type == COMPILER_ADDED_BLOCK ||
+            node->node_type == DO || node->node_type == INSTRUCTIONS ||
             node->node_type == BLOCK_EXPR) {
             /* Pass 1 has already created these scopes and symbols. Just navigate. */
             if (node->scope) {
                 context->current_scope = node->scope;
-            } else if (node->node_type == DO || node->node_type == COMPILER_ADDED_BLOCK ||
+            } else if (node->node_type == DO ||
                       node->node_type == BLOCK_EXPR ||
-                      (node->node_type == INSTRUCTIONS && node->parent &&
-                       (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS))) {
+                      (node->node_type == INSTRUCTIONS &&
+                       (node->force_local_scope ||
+                        (node->parent &&
+                         (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS))))) {
                 /* If scope is missing, create it (handles nodes added by exits) */
                 context->current_scope = scp_f(context, context->current_scope, node, 0, SCOPE_LOCAL);
                 node->scope = context->current_scope;
@@ -1480,7 +1484,7 @@ int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int
         while (climbs > 0 && target_scope_node) {
             if (target_scope_node->node_type == DO ||
                 target_scope_node->node_type == BLOCK_EXPR ||
-                target_scope_node->node_type == COMPILER_ADDED_BLOCK ||
+                (target_scope_node->node_type == INSTRUCTIONS && target_scope_node->force_local_scope) ||
                 target_scope_node->node_type == PROCEDURE ||
                 target_scope_node->node_type == METHOD ||
                 target_scope_node->node_type == NAMESPACE ||

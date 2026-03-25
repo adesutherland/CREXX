@@ -753,7 +753,7 @@ walker_result control_flow_rewrite_walker(walker_direction direction,
                 ASTRewriteTemplate *root_if_tmpl = NULL;
                 ASTRewriteTemplate *current_if_tmpl = NULL;
 
-                ASTRewriteTemplate *block_tmpl = ast_rw_new(COMPILER_ADDED_BLOCK, "COMPILER_ADDED_BLOCK");
+                ASTRewriteTemplate *block_tmpl = ast_rw_new(INSTRUCTIONS, "");
 
                 ASTRewriteTemplate *decl_tmpl = ast_rw_new(DEFINE, "=");
                 ast_rw_add(decl_tmpl, ast_rw_new(VAR_TARGET, "select_tmp"));
@@ -798,7 +798,8 @@ walker_result control_flow_rewrite_walker(walker_direction direction,
 
                     ast_rw_add(block_tmpl, root_if_tmpl);
 
-                    ast_execute_rewrite(context, node, block_tmpl);
+                    ASTNode *new_block = ast_execute_rewrite(context, node, block_tmpl);
+                    ast_mark_compiler_generated_block(new_block);
                     context->changed_flags |= FLAG_VAL_TRANS;
                     return result_normal;
                 }

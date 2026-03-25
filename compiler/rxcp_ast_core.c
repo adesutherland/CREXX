@@ -196,6 +196,11 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->is_const_arg = 0;
     node->is_opt_arg = 0;
     node->is_varg = 0;
+    node->is_compiler_added = 0;
+    node->force_local_scope = 0;
+    node->inherit_parent_reg_scope = 0;
+    node->suppress_shadow_warnings = 0;
+    node->skip_exit_dispatch = 0;
     node->free_list = context->free_list;
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
     else node->node_number = 1;
@@ -288,6 +293,11 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->is_opt_arg = node->is_opt_arg;
     new_node->is_const_arg = node->is_const_arg;
     new_node->is_varg = node->is_varg;
+    new_node->is_compiler_added = node->is_compiler_added;
+    new_node->force_local_scope = node->force_local_scope;
+    new_node->inherit_parent_reg_scope = node->inherit_parent_reg_scope;
+    new_node->suppress_shadow_warnings = node->suppress_shadow_warnings;
+    new_node->skip_exit_dispatch = node->skip_exit_dispatch;
 
     new_node->token = node->token;
     if (node->free_node_string) {
@@ -320,6 +330,15 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->file_name = node->file_name;
 
     return new_node;
+}
+
+void ast_mark_compiler_generated_block(ASTNode *node) {
+    if (!node) return;
+    node->is_compiler_added = 1;
+    node->force_local_scope = 1;
+    node->inherit_parent_reg_scope = 1;
+    node->suppress_shadow_warnings = 1;
+    node->skip_exit_dispatch = 1;
 }
 
 /* Structure for add_dast() walker handler context */
@@ -1114,8 +1133,6 @@ const char *ast_ndtp(NodeType type) {
             return "MEMBER_CALL";
         case FACTORY_CALL:
             return "FACTORY_CALL";
-        case COMPILER_ADDED_BLOCK:
-            return "COMPILER_ADDED_BLOCK";
         case BLOCK_EXPR:
             return "BLOCK_EXPR";
         case LEAVE_WITH:

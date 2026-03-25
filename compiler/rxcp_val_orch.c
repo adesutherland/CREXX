@@ -804,7 +804,7 @@ static walker_result shadowing_warning_walker(walker_direction direction,
                 ASTNode *p = node;
                 int in_compiler_added = 0;
                 while (p) {
-                    if (p->node_type == COMPILER_ADDED_BLOCK) {
+                    if (p->suppress_shadow_warnings) {
                         in_compiler_added = 1;
                         break;
                     }

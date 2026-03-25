@@ -189,15 +189,13 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
     if (call_node->child && inline_count_siblings(call_node->child) != proc_sym->fixed_args) return 0;
     if (!call_node->child && proc_sym->fixed_args != 0) return 0;
 
-    block = ast_f(context, COMPILER_ADDED_BLOCK, call_node->token);
+    block = ast_f(context, INSTRUCTIONS, call_node->token);
+    ast_mark_compiler_generated_block(block);
     block->value_type = TP_VOID;
     block->target_type = TP_VOID;
 
     inline_scope = scp_f(context, assign_node->scope, block, NULL, SCOPE_LOCAL);
-
-    instr_list = ast_f(context, INSTRUCTIONS, call_node->token);
-    instr_list->scope = inline_scope;
-    add_ast(block, instr_list);
+    instr_list = block;
 
     memset(&clone_state, 0, sizeof(clone_state));
     if (!inline_build_symbol_map(proc_def->scope, inline_scope, &clone_state)) {

@@ -569,7 +569,6 @@ const char* token_to_string(int token_id) {
         case TK_ELLIPSIS: return "TK_ELLIPSIS";
         case TK_OPTIONAL: return "TK_OPTIONAL";
         case TK_NUMERIC: return "TK_NUMERIC";
-        case COMPILER_ADDED_BLOCK: return "COMPILER_ADDED_BLOCK";
         default: return "UNKNOWN";
     }
 }
@@ -738,7 +737,8 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
     if (frag->ast) {
         ASTNode *search = ast_fndn(ctx, frag->ast, INSTRUCTIONS);
         if (search && search->child) {
-            ASTNode *compiler_added = ast_f(ctx, COMPILER_ADDED_BLOCK, target_node->token);
+            ASTNode *compiler_added = ast_f(ctx, INSTRUCTIONS, target_node->token);
+            ast_mark_compiler_generated_block(compiler_added);
             compiler_added->parent = target_node->parent;
             compiler_added->scope = NULL;
 
@@ -906,7 +906,6 @@ const char* node_type_to_string(NodeType type) {
         case CLASS_DEF: return "CLASS_DEF";
         case MEMBER_CALL: return "MEMBER_CALL";
         case FACTORY_CALL: return "FACTORY_CALL";
-        case COMPILER_ADDED_BLOCK: return "COMPILER_ADDED_BLOCK";
         case BLOCK_EXPR: return "BLOCK_EXPR";
         case LEAVE_WITH: return "LEAVE_WITH";
         case EXIT_EXTENDED: return "EXIT_EXTENDED";

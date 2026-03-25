@@ -38,7 +38,7 @@ walker_result exit_dispatch_walker(walker_direction direction, ASTNode *node, vo
         if (node->scope) {
             context->current_scope = node->scope;
         }
-        if (node->node_type == COMPILER_ADDED_BLOCK) {
+        if (node->skip_exit_dispatch) {
             return request_skip;
         }
         if (node->node_type == IMPLICIT_CMD || node->node_type == ADDRESS || node->node_type == EXIT_EXTENDED) {

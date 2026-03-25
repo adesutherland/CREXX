@@ -127,7 +127,6 @@ static walker_result emit_walker(walker_direction direction,
 
             case ARGS:
             case INSTRUCTIONS:
-            case COMPILER_ADDED_BLOCK:
                 emit_flow(node, pl);
                 break;
 
@@ -1027,7 +1026,6 @@ static walker_result emit_walker(walker_direction direction,
 
         switch (node->node_type) {
             case INSTRUCTIONS:
-            case COMPILER_ADDED_BLOCK:
                 if (!node->output) node->output = output_f();
                 add_scope_initiators(node);
                 break;
