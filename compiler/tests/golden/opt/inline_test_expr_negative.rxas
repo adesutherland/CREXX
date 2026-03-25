@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_expr_negative.rexx
- * BUILT                  : 2026-03-25 13:59:01
+ * BUILT                  : 2026-03-25 15:59:08
  */
 
 .srcfile="inline_test_expr_negative.rexx"
 .globals=0
 
-main() .locals=6
+main() .locals=9
    .meta "inline_test_expr_negative.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -15,47 +15,69 @@ main() .locals=6
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting unsupported inline expr test...\""
-   say "Starting unsupported inline expr test..."
+   .src 4:3="say \"Starting nested call arg inline negative test...\""
+   say "Starting nested call arg inline negative test..."
    .src 5:3="do"
    .src 5:6="i = 1"
    .meta "inline_test_expr_negative.main.i"="b" ".int" r0
    load r0,1
    .src 5:12="to 3"
-   load r1,3
+   load r2,3
 l8dostart:
    .src 5:12="to 3"
-   igt r2,r0,r1
-   brt l8doend,r2
-   .src 6:5="say addOne(i)"
-   load r3,1
-   swap r4,r0
-   call r5,addOne(),r3
-   swap r0,r4
-   itos r5
-   say r5
+   igt r3,r0,r2
+   brt l8doend,r3
+   .src 6:5="say identity(addOne(i))"
+   load r4,1
+   .src 6:18="addOne"
+   .src 16:7="val"
+   icopy r1,r0
+   .src 17:3="return"
+   iadd r6,r1,1
+   icopy r7,r6
+   br l49bexprend
+l49bexprend:
+   swap r5,r7
+   call r8,identity(),r4
+   swap r7,r5
+   itos r8
+   say r8
 l8doinc:
    .src 5:6="i"
    inc r0
    .src 7:3="end"
    br l8dostart
 l8doend:
-   .src 8:3="say \"Unsupported inline expr test finished.\""
-   say "Unsupported inline expr test finished."
+   .src 8:3="say \"Nested call arg inline negative test finished.\""
+   say "Nested call arg inline negative test finished."
    .src 9:3="return 0"
    ret 0
 
-addOne() .locals=2
-   .meta "inline_test_expr_negative.addone"="b" ".int" addOne() "val=.int" ""
-   .src 11:1="addOne: procedure = .int"
+identity() .locals=1
+   .meta "inline_test_expr_negative.identity"="b" ".int" identity() "val=.int" ""
+   .src 11:1="identity: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
    .src 12:7="val = .int"
+   .meta "inline_test_expr_negative.identity.val"="b" ".int" a1
+   .src 13:3="return val"
+   ret a1
+   .meta "inline_test_expr_negative.identity.val"
+
+addOne() .locals=2
+   .meta "inline_test_expr_negative.addone"="b" ".int" addOne() "val=.int" ""
+   .src 15:1="addOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 16:7="val = .int"
    .meta "inline_test_expr_negative.addone.val"="b" ".int" a1
-   .src 13:3="return val + 1"
+   .src 17:3="return val + 1"
    iadd r1,a1,1
    ret r1
    .meta "inline_test_expr_negative.addone.val"

@@ -40,6 +40,13 @@ typedef struct {
     Symbol *return_sink_symbol;
 } InlineReturnPlan;
 
+typedef enum {
+    INLINE_EXPR_CONTEXT_NONE = 0,
+    INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER,
+    INLINE_EXPR_CONTEXT_EAGER_OPERATOR,
+    INLINE_EXPR_CONTEXT_EAGER_CALL_ARGUMENT
+} InlineExprContext;
+
 static Symbol *inline_find_mapped_symbol(InlineCloneState *state, Symbol *old_symbol) {
     size_t i;
 
@@ -229,10 +236,17 @@ static ASTNode *inline_create_sink_target(Context *context,
     return sink_target;
 }
 
-static int inline_is_supported_expr_parent(ASTNode *node) {
+static InlineExprContext inline_classify_expr_parent(ASTNode *node) {
     if (!node) return 0;
 
     switch (node->node_type) {
+        case FUNCTION:
+            return INLINE_EXPR_CONTEXT_EAGER_CALL_ARGUMENT;
+
+        case SAY:
+        case RETURN:
+            return INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER;
+
         case OP_ADD:
         case OP_MINUS:
         case OP_MULT:
@@ -254,11 +268,27 @@ static int inline_is_supported_expr_parent(ASTNode *node) {
         case OP_COMPARE_S_LT:
         case OP_COMPARE_S_GTE:
         case OP_COMPARE_S_LTE:
-            return 1;
+        case OP_NEG:
+        case OP_PLUS:
+            return INLINE_EXPR_CONTEXT_EAGER_OPERATOR;
 
         default:
-            return 0;
+            return INLINE_EXPR_CONTEXT_NONE;
     }
+}
+
+static int inline_call_has_block_expr_arg(ASTNode *call_node) {
+    ASTNode *arg;
+
+    if (!call_node) return 0;
+
+    arg = call_node->child;
+    while (arg) {
+        if (arg->node_type == BLOCK_EXPR) return 1;
+        arg = arg->sibling;
+    }
+
+    return 0;
 }
 
 static int ast_inline_statement(Context *context,
@@ -278,6 +308,7 @@ static int ast_inline_statement(Context *context,
     InlineCloneState clone_state;
 
     if (!context || !statement_node || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
+    if (inline_call_has_block_expr_arg(call_node)) return 0;
 
     proc_def = proc_sym->ast_template;
     if (!proc_def || !proc_def->scope) return 0;
@@ -428,8 +459,13 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
     Scope *inline_scope;
     InlineCloneState clone_state;
 
+    InlineExprContext expr_context;
+
     if (!context || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
-    if (!call_node->parent || !inline_is_supported_expr_parent(call_node->parent)) return 0;
+    if (inline_call_has_block_expr_arg(call_node)) return 0;
+
+    expr_context = inline_classify_expr_parent(call_node->parent);
+    if (expr_context == INLINE_EXPR_CONTEXT_NONE) return 0;
 
     proc_def = proc_sym->ast_template;
     if (!proc_def || !proc_def->scope) return 0;

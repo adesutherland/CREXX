@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test2.rexx
- * BUILT                  : 2026-03-25 13:35:17
+ * BUILT                  : 2026-03-25 15:25:26
  */
 
 .meta "inline_test2.myclass"="b" ".unknown" .class
@@ -120,10 +120,14 @@ nestedCallProc() .locals=4
    .src 38:7="val = .int"
    .meta "inline_test2.nestedcallproc.val"="b" ".int" a1
    .src 39:3="return helper(val)"
-   load r1,1
-   swap r2,a1
-   call r3,helper(),r1
-   swap a1,r2
+   .src 39:10="helper"
+   .src 42:7="v"
+   icopy r1,a1
+   .src 43:3="return"
+   iadd r2,r1,1
+   icopy r3,r2
+   br l169bexprend
+l169bexprend:
    ret r3
    .meta "inline_test2.nestedcallproc.val"
 

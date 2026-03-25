@@ -5,6 +5,15 @@ Inlining in `rxc` is an AST rewrite performed during optimisation. The immediate
 
 That means selection is opportunity-based, not just callee-based. A procedure may be generally eligible for inlining, but only some uses of it may be rewritten in a given phase.
 
+The selector is now best understood in terms of capability buckets rather than one-off scenarios:
+
+- statement rewrites where the enclosing statement can be replaced directly
+- eager value consumers such as `SAY` and `RETURN`
+- eager call arguments to plain procedure calls
+- eager expression parents such as arithmetic, concatenation, and comparison operators
+
+Contexts outside those buckets stay uninlined until their rewrite strategy exists.
+
 ## Current Strategy
 
 ### Supported scenarios
@@ -18,6 +27,24 @@ and
 
 ```rexx
 call func(a)
+```
+
+and
+
+```rexx
+say keepValue(func(a))
+```
+
+and
+
+```rexx
+say func(a)
+```
+
+and
+
+```rexx
+return func(a)
 ```
 
 and
@@ -37,18 +64,23 @@ More precisely:
 - The call must be a plain procedure `FUNCTION`, not a method or factory call.
 - For assignment inlining, the `FUNCTION` call must be the entire RHS of the enclosing `ASSIGN`.
 - For standalone call inlining, the enclosing statement must be `CALL func(...)`.
-- For expression inlining, the `FUNCTION` call must be a direct child of a supported non-short-circuit binary operator.
+- For expression inlining, the `FUNCTION` call must fall into one of the currently supported expression-context capability buckets.
 - The callee must be a normal procedure, not a method or factory.
 - Arguments and return values must stay within the current safe built-in scalar slice: no class/object values and no arrays.
 - The callee must satisfy the existing safety checks: fixed pass-by-value args only, single trailing `RETURN`, small body, no unsupported nested inlining.
 
-At present, supported expression parents are:
+At present, the supported expression-context buckets are:
 
-- arithmetic operators
-- concatenation operators
-- comparison operators
+- eager value consumers:
+  `SAY`, `RETURN`
+- eager call arguments:
+  direct arguments to a plain procedure `FUNCTION(...)`
+- eager operators:
+  unary `+`/`-`, arithmetic operators, concatenation operators, and comparison operators
 
 Short-circuit boolean parents such as `|` and `&` remain intentionally excluded.
+
+Call sites whose actual arguments already contain a `BLOCK_EXPR` are still intentionally left uninlined for now. That keeps the current implementation aligned with the existing scope/symbol remapping strategy while allowing inner eager argument expressions to inline safely.
 
 The statement-position cases rewrite the enclosing statement. The expression-position case rewrites the `FUNCTION` node itself to `BLOCK_EXPR`.
 
@@ -56,8 +88,8 @@ The statement-position cases rewrite the enclosing statement. The expression-pos
 The inliner must not mark a procedure as globally "inline now" and then rewrite every call. That breaks the incremental rollout plan. Instead:
 
 1. Identify procedures that are structurally inlineable.
-2. Identify call sites whose context is supported by the currently implemented rewrite.
-3. Rewrite only those call sites.
+2. Classify each call site by context capability bucket.
+3. Rewrite only call sites whose bucket is already supported.
 
 This preserves the ability to build and test the compiler while inlining support is still partial.
 
@@ -169,8 +201,8 @@ rewrite the `FUNCTION` node into:
 Important details:
 
 - The `BLOCK_EXPR` must preserve the original call node's value and target typing.
-- The current implementation supports direct children of non-short-circuit arithmetic, concatenation, and comparison operators.
-- Direct statement consumers such as `SAY func(a)` are still intentionally excluded.
+- The current implementation supports the eager value-consumer bucket (`SAY`, `RETURN`) and the eager-operator bucket (unary `+`/`-`, plus non-short-circuit arithmetic, concatenation, and comparison operators).
+- Other direct statement consumers are still intentionally excluded.
 - Short-circuit boolean operators are still intentionally excluded.
 - Unsupported expression contexts should remain normal calls until their rewrite strategy exists.
 
@@ -222,13 +254,13 @@ Broader embedded-expression inlining such as:
 x = func(a) + y
 ```
 
-This should keep using `BLOCK_EXPR`, but expand beyond the current arithmetic/concatenation/comparison direct-operand slice into other surrounding expression shapes that still have explicit evaluation order.
+This should keep using `BLOCK_EXPR`, but expand beyond the current `SAY`/`RETURN`/call-argument/unary/arithmetic/concatenation/comparison slice into other surrounding expression shapes that still have explicit evaluation order, including later removal of the temporary "no inlining around existing `BLOCK_EXPR` actuals" restriction.
 
 ## Verification
 The design for phase 1 should be considered ready when:
 
-- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, and `inline_test_compare_expr` using the narrow supported strategies
-- excluded cases such as those in `inline_test2` remain uninlined under optimisation
+- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, and `inline_test_call_arg_expr` using the narrow supported strategies
+- excluded cases such as large procedures, methods, multi-return procedures, and unsupported nested-argument/short-circuit contexts remain uninlined under optimisation
 - unsupported expression contexts such as those in `inline_test_expr_negative`, `inline_test_say_expr_negative`, and `inline_test_bool_expr_negative` remain uninlined under optimisation
 - the resulting AST is structurally valid under `-dp`
 - optimised codegen succeeds

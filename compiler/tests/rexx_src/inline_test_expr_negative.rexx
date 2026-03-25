@@ -1,12 +1,16 @@
 options levelb
 
 main: procedure = .int
-  say "Starting unsupported inline expr test..."
+  say "Starting nested call arg inline negative test..."
   do i = 1 to 3
-    say addOne(i)
+    say identity(addOne(i))
   end
-  say "Unsupported inline expr test finished."
+  say "Nested call arg inline negative test finished."
   return 0
+
+identity: procedure = .int
+  arg val = .int
+  return val
 
 addOne: procedure = .int
   arg val = .int

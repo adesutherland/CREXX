@@ -1,0 +1,83 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_return_expr.rexx
+ * BUILT                  : 2026-03-25 15:21:08
+ */
+
+.srcfile="inline_test_return_expr.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_return_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting return inline expr test...\""
+   say "Starting return inline expr test..."
+   .src 5:3="do"
+   .src 5:6="i = 1"
+   .meta "inline_test_return_expr.main.i"="b" ".int" r0
+   load r0,1
+   .src 5:12="to 3"
+   load r1,3
+l8dostart:
+   .src 5:12="to 3"
+   igt r2,r0,r1
+   brt l8doend,r2
+   .src 6:5="say wrap(i)"
+   load r3,1
+   swap r4,r0
+   call r5,wrap(),r3
+   swap r0,r4
+   itos r5
+   say r5
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 7:3="end"
+   br l8dostart
+l8doend:
+   .src 8:3="say \"Return inline expr test finished.\""
+   say "Return inline expr test finished."
+   .src 9:3="return 0"
+   ret 0
+
+wrap() .locals=4
+   .meta "inline_test_return_expr.wrap"="b" ".int" wrap() "val=.int" ""
+   .src 11:1="wrap: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 12:7="val = .int"
+   .meta "inline_test_return_expr.wrap.val"="b" ".int" a1
+   .src 13:3="return addOne(val)"
+   .src 13:10="addOne"
+   .src 16:7="val"
+   icopy r1,a1
+   .src 17:3="return"
+   iadd r2,r1,1
+   icopy r3,r2
+   br l49bexprend
+l49bexprend:
+   ret r3
+   .meta "inline_test_return_expr.wrap.val"
+
+addOne() .locals=2
+   .meta "inline_test_return_expr.addone"="b" ".int" addOne() "val=.int" ""
+   .src 15:1="addOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 16:7="val = .int"
+   .meta "inline_test_return_expr.addone.val"="b" ".int" a1
+   .src 17:3="return val + 1"
+   iadd r1,a1,1
+   ret r1
+   .meta "inline_test_return_expr.addone.val"

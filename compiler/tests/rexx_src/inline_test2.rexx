@@ -6,7 +6,7 @@ main: procedure = .int
   /* 1. Large procedure (exceeds node count) */
   say "LargeProc result:" largeProc(1, 2, 3, 4, 5)
   
-  /* 2. Procedure with nested call */
+  /* 2. Outer procedure still excluded; direct RETURN call inside it now inlines */
   say "NestedCallProc result:" nestedCallProc(10)
   
   /* 3. Method (in a class) */
@@ -33,7 +33,7 @@ largeProc: procedure = .int
   x = x / 3
   return x
 
-/* Should be excluded because it calls another procedure */
+/* The outer procedure stays excluded because it contains a nested call site. */
 nestedCallProc: procedure = .int
   arg val = .int
   return helper(val)
