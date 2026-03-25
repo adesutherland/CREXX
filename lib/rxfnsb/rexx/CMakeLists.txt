@@ -102,6 +102,9 @@ set(BIFS
 		arraydump
 		arrayformat
 		fmtmask
+		compilemask
+		runmask
+		parseExec
 		stem
 )
 
