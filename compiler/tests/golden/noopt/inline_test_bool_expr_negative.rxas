@@ -1,0 +1,78 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_bool_expr_negative.rexx
+ * BUILT                  : 2026-03-25 14:30:39
+ */
+
+.srcfile="inline_test_bool_expr_negative.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_bool_expr_negative.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting bool inline negative test...\""
+   say "Starting bool inline negative test..."
+   .src 5:3="do"
+   .src 5:6="i = 1"
+   .meta "inline_test_bool_expr_negative.main.i"="b" ".int" r0
+   load r0,1
+   .src 5:12="to 3"
+   load r1,3
+l8dostart:
+   .src 5:12="to 3"
+   igt r2,r0,r1
+   brt l8doend,r2
+   .src 6:4="if isTwo(i) | 0"
+   load r3,1
+   swap r4,r0
+   call r4,isTwo(),r3
+   swap r0,r4
+   brt l18orend,r4
+   load r4,0
+l18orend:
+   brf l27iffalse,r4
+   .src 6:21="then"
+   .src 6:26="say \"truthy\" i"
+   itos r0
+   sconcat r3,"truthy",r0
+   say r3
+   br l27ifend
+   .src 7:5="else"
+l27iffalse:
+   .src 7:10="say \"falsey\" i"
+   itos r0
+   sconcat r5,"falsey",r0
+   say r5
+l27ifend:
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 8:3="end"
+   br l8dostart
+l8doend:
+   .src 9:3="say \"Bool inline negative test finished.\""
+   say "Bool inline negative test finished."
+   .src 10:3="return 0"
+   ret 0
+
+isTwo() .locals=2
+   .meta "inline_test_bool_expr_negative.istwo"="b" ".int" isTwo() "val=.int" ""
+   .src 12:1="isTwo: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 13:7="val = .int"
+   .meta "inline_test_bool_expr_negative.istwo.val"="b" ".int" r0
+   icopy r0,a1
+   .src 14:3="return val = 2"
+   ieq r1,r0,2
+   btoi r1
+   ret r1
+   .meta "inline_test_bool_expr_negative.istwo.val"

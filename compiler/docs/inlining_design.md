@@ -23,6 +23,12 @@ call func(a)
 and
 
 ```rexx
+if func(a) = 3 then ...
+```
+
+and
+
+```rexx
 x = 10 + func(a)
 ```
 
@@ -35,6 +41,14 @@ More precisely:
 - The callee must be a normal procedure, not a method or factory.
 - Arguments and return values must stay within the current safe built-in scalar slice: no class/object values and no arrays.
 - The callee must satisfy the existing safety checks: fixed pass-by-value args only, single trailing `RETURN`, small body, no unsupported nested inlining.
+
+At present, supported expression parents are:
+
+- arithmetic operators
+- concatenation operators
+- comparison operators
+
+Short-circuit boolean parents such as `|` and `&` remain intentionally excluded.
 
 The statement-position cases rewrite the enclosing statement. The expression-position case rewrites the `FUNCTION` node itself to `BLOCK_EXPR`.
 
@@ -155,8 +169,9 @@ rewrite the `FUNCTION` node into:
 Important details:
 
 - The `BLOCK_EXPR` must preserve the original call node's value and target typing.
-- The current implementation supports direct children of non-short-circuit arithmetic and concatenation operators.
+- The current implementation supports direct children of non-short-circuit arithmetic, concatenation, and comparison operators.
 - Direct statement consumers such as `SAY func(a)` are still intentionally excluded.
+- Short-circuit boolean operators are still intentionally excluded.
 - Unsupported expression contexts should remain normal calls until their rewrite strategy exists.
 
 ## Procedure Eligibility
@@ -207,14 +222,14 @@ Broader embedded-expression inlining such as:
 x = func(a) + y
 ```
 
-This should keep using `BLOCK_EXPR`, but expand beyond the current arithmetic/concatenation direct-operand slice into comparison operators and other surrounding expression shapes.
+This should keep using `BLOCK_EXPR`, but expand beyond the current arithmetic/concatenation/comparison direct-operand slice into other surrounding expression shapes that still have explicit evaluation order.
 
 ## Verification
 The design for phase 1 should be considered ready when:
 
-- the compiler rewrites `inline_test1`, `inline_test_call`, and `inline_test_expr` using the narrow supported strategies
+- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, and `inline_test_compare_expr` using the narrow supported strategies
 - excluded cases such as those in `inline_test2` remain uninlined under optimisation
-- unsupported expression contexts such as those in `inline_test_expr_negative` remain uninlined under optimisation
+- unsupported expression contexts such as those in `inline_test_expr_negative`, `inline_test_say_expr_negative`, and `inline_test_bool_expr_negative` remain uninlined under optimisation
 - the resulting AST is structurally valid under `-dp`
 - optimised codegen succeeds
 - positive and negative compiler tests lock down the selector behaviour

@@ -242,6 +242,18 @@ static int inline_is_supported_expr_parent(ASTNode *node) {
         case OP_POWER:
         case OP_CONCAT:
         case OP_SCONCAT:
+        case OP_COMPARE_EQUAL:
+        case OP_COMPARE_NEQ:
+        case OP_COMPARE_GT:
+        case OP_COMPARE_LT:
+        case OP_COMPARE_GTE:
+        case OP_COMPARE_LTE:
+        case OP_COMPARE_S_EQ:
+        case OP_COMPARE_S_NEQ:
+        case OP_COMPARE_S_GT:
+        case OP_COMPARE_S_LT:
+        case OP_COMPARE_S_GTE:
+        case OP_COMPARE_S_LTE:
             return 1;
 
         default:

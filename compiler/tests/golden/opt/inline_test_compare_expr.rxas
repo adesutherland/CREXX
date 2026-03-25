@@ -1,0 +1,78 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_compare_expr.rexx
+ * BUILT                  : 2026-03-25 14:30:39
+ */
+
+.srcfile="inline_test_compare_expr.rexx"
+.globals=0
+
+main() .locals=8
+   .meta "inline_test_compare_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting compare inline expr test...\""
+   say "Starting compare inline expr test..."
+   .src 5:3="do"
+   .src 5:6="i = 1"
+   .meta "inline_test_compare_expr.main.i"="b" ".int" r0
+   load r0,1
+   .src 5:12="to 4"
+   load r2,4
+l8dostart:
+   .src 5:12="to 4"
+   igt r3,r0,r2
+   brt l8doend,r3
+   .src 6:4="if addOne(i) = 3"
+   .src 6:8="addOne"
+   .src 13:7="val"
+   icopy r1,r0
+   .src 14:3="return"
+   iadd r4,r1,1
+   icopy r5,r4
+   br l49bexprend
+l49bexprend:
+   ieq r5,r5,3
+   brf l27iffalse,r5
+   .src 6:22="then"
+   .src 6:27="say \"matched\" i"
+   itos r0
+   sconcat r6,"matched",r0
+   say r6
+   br l27ifend
+   .src 7:5="else"
+l27iffalse:
+   .src 7:10="say \"missed\" i"
+   itos r0
+   sconcat r7,"missed",r0
+   say r7
+l27ifend:
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 8:3="end"
+   br l8dostart
+l8doend:
+   .src 9:3="say \"Compare inline expr test finished.\""
+   say "Compare inline expr test finished."
+   .src 10:3="return 0"
+   ret 0
+
+addOne() .locals=2
+   .meta "inline_test_compare_expr.addone"="b" ".int" addOne() "val=.int" ""
+   .src 12:1="addOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 13:7="val = .int"
+   .meta "inline_test_compare_expr.addone.val"="b" ".int" a1
+   .src 14:3="return val + 1"
+   iadd r1,a1,1
+   ret r1
+   .meta "inline_test_compare_expr.addone.val"
