@@ -1,0 +1,61 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_say_expr_negative.rexx
+ * BUILT                  : 2026-03-25 14:16:01
+ */
+
+.srcfile="inline_test_say_expr_negative.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_say_expr_negative.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting say inline negative test...\""
+   say "Starting say inline negative test..."
+   .src 5:3="do"
+   .src 5:6="i = 1"
+   .meta "inline_test_say_expr_negative.main.i"="b" ".int" r0
+   load r0,1
+   .src 5:12="to 3"
+   load r1,3
+l8dostart:
+   .src 5:12="to 3"
+   igt r2,r0,r1
+   brt l8doend,r2
+   .src 6:5="say asString(i)"
+   load r3,1
+   swap r4,r0
+   call r5,asString(),r3
+   swap r0,r4
+   say r5
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 7:3="end"
+   br l8dostart
+l8doend:
+   .src 8:3="say \"Say inline negative test finished.\""
+   say "Say inline negative test finished."
+   .src 9:3="return 0"
+   ret 0
+
+asString() .locals=1
+   .meta "inline_test_say_expr_negative.asstring"="b" ".string" asString() "val=.int" ""
+   .src 11:1="asString: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 12:7="val = .int"
+   .meta "inline_test_say_expr_negative.asstring.val"="b" ".int" r0
+   icopy r0,a1
+   .src 13:3="return val"
+   itos r0
+   ret r0
+   .meta "inline_test_say_expr_negative.asstring.val"

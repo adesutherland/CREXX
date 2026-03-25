@@ -240,6 +240,8 @@ static int inline_is_supported_expr_parent(ASTNode *node) {
         case OP_IDIV:
         case OP_MOD:
         case OP_POWER:
+        case OP_CONCAT:
+        case OP_SCONCAT:
             return 1;
 
         default:

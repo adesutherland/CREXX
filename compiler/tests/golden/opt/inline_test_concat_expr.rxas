@@ -1,0 +1,67 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_concat_expr.rexx
+ * BUILT                  : 2026-03-25 14:15:07
+ */
+
+.srcfile="inline_test_concat_expr.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_concat_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting concat inline expr test...\""
+   say "Starting concat inline expr test..."
+   .src 5:3="do"
+   .src 5:6="i = 1"
+   .meta "inline_test_concat_expr.main.i"="b" ".int" r0
+   load r0,1
+   .src 5:12="to 3"
+   load r3,3
+l8dostart:
+   .src 5:12="to 3"
+   igt r4,r0,r3
+   brt l8doend,r4
+   .src 6:5="msg = \"Value=\" || asString(i)"
+   .meta "inline_test_concat_expr.main.msg"="b" ".string" r1
+   .src 6:23="asString"
+   .src 13:7="val"
+   icopy r2,r0
+   .src 14:3="return"
+   itos r2
+   scopy r5,r2
+   br l42bexprend
+l42bexprend:
+   concat r1,"Value=",r5
+   .src 7:5="say msg"
+   say r1
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 8:3="end"
+   br l8dostart
+l8doend:
+   .src 9:3="say \"Concat inline expr test finished.\""
+   say "Concat inline expr test finished."
+   .src 10:3="return 0"
+   ret 0
+
+asString() .locals=1
+   .meta "inline_test_concat_expr.asstring"="b" ".string" asString() "val=.int" ""
+   .src 12:1="asString: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 13:7="val = .int"
+   .meta "inline_test_concat_expr.asstring.val"="b" ".int" a1
+   .src 14:3="return val"
+   itos a1
+   ret a1
+   .meta "inline_test_concat_expr.asstring.val"

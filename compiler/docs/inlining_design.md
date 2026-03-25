@@ -33,7 +33,7 @@ More precisely:
 - For standalone call inlining, the enclosing statement must be `CALL func(...)`.
 - For expression inlining, the `FUNCTION` call must be a direct child of a supported non-short-circuit binary operator.
 - The callee must be a normal procedure, not a method or factory.
-- Arguments and return values must stay within the current safe scalar slice: no class/object values and no arrays.
+- Arguments and return values must stay within the current safe built-in scalar slice: no class/object values and no arrays.
 - The callee must satisfy the existing safety checks: fixed pass-by-value args only, single trailing `RETURN`, small body, no unsupported nested inlining.
 
 The statement-position cases rewrite the enclosing statement. The expression-position case rewrites the `FUNCTION` node itself to `BLOCK_EXPR`.
@@ -155,7 +155,8 @@ rewrite the `FUNCTION` node into:
 Important details:
 
 - The `BLOCK_EXPR` must preserve the original call node's value and target typing.
-- The current implementation only supports direct children of non-short-circuit arithmetic operators.
+- The current implementation supports direct children of non-short-circuit arithmetic and concatenation operators.
+- Direct statement consumers such as `SAY func(a)` are still intentionally excluded.
 - Unsupported expression contexts should remain normal calls until their rewrite strategy exists.
 
 ## Procedure Eligibility
@@ -166,8 +167,8 @@ For the first slice, a procedure is eligible only if all of the following hold:
 - not a method
 - not a factory
 - fixed arguments only
-- scalar built-in arguments only
-- scalar built-in return only
+- built-in scalar arguments only
+- built-in scalar return only
 - no `.ref`, `.opt`, or varargs
 - exactly one `RETURN`
 - the `RETURN` is the final instruction
@@ -206,7 +207,7 @@ Broader embedded-expression inlining such as:
 x = func(a) + y
 ```
 
-This should keep using `BLOCK_EXPR`, but expand beyond the current direct-operand slice into more parent operators and more surrounding expression shapes.
+This should keep using `BLOCK_EXPR`, but expand beyond the current arithmetic/concatenation direct-operand slice into comparison operators and other surrounding expression shapes.
 
 ## Verification
 The design for phase 1 should be considered ready when:

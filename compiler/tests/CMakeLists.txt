@@ -182,6 +182,8 @@ add_crexx_compiler_test(inline_test2 rexx_src/inline_test2.rexx)
 add_crexx_compiler_test(inline_test_call rexx_src/inline_test_call.rexx)
 add_crexx_compiler_test(inline_test_expr rexx_src/inline_test_expr.rexx)
 add_crexx_compiler_test(inline_test_expr_negative rexx_src/inline_test_expr_negative.rexx)
+add_crexx_compiler_test(inline_test_concat_expr rexx_src/inline_test_concat_expr.rexx)
+add_crexx_compiler_test(inline_test_say_expr_negative rexx_src/inline_test_say_expr_negative.rexx)
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
@@ -225,6 +227,8 @@ add_crexx_run_test(inline_test2 rexx_src/inline_test2.rexx)
 add_crexx_run_test(inline_test_call rexx_src/inline_test_call.rexx)
 add_crexx_run_test(inline_test_expr rexx_src/inline_test_expr.rexx)
 add_crexx_run_test(inline_test_expr_negative rexx_src/inline_test_expr_negative.rexx)
+add_crexx_run_test(inline_test_concat_expr rexx_src/inline_test_concat_expr.rexx)
+add_crexx_run_test(inline_test_say_expr_negative rexx_src/inline_test_say_expr_negative.rexx)
 
 # New Phase 2 Scoping Tests
 add_crexx_run_test(test_simple_do_subscope rexx_src/test_simple_do_subscope.rexx)
