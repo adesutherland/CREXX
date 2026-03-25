@@ -177,6 +177,7 @@ add_crexx_compiler_test(basic_strings rexx_src/basic_strings.rexx)
 add_crexx_compiler_test(basic_arrays rexx_src/basic_arrays.rexx)
 add_crexx_compiler_test(block_expr_basic rexx_src/block_expr_basic.rexx)
 add_crexx_compiler_test(block_expr_short_circuit rexx_src/block_expr_short_circuit.rexx)
+add_crexx_compiler_test(inline_test1 rexx_src/inline_test1.rexx)
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
@@ -208,19 +209,14 @@ add_crexx_run_test(test_lib_boundary rexx_src/test_lib_boundary.rexx)
 add_crexx_run_test(div_ops_common rexx_src/div_ops_common.rexx)
 add_crexx_run_test(div_ops_classic rexx_src/div_ops_classic.rexx)
 
-# Helper to add a run test that is expected to fail (until feature lands)
-macro(add_crexx_run_test_will_fail NAME SOURCE_FILE)
-    add_test(NAME ${NAME}_run
-             COMMAND bash -c "$<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${NAME}_run ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} && $<TARGET_FILE:rxas> -o ${NAME}_run.rxbin ${NAME}_run && $<TARGET_FILE:rxvm> ${CMAKE_BINARY_DIR}/bin/library.rxbin ${NAME}_run.rxbin | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
-             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    set_tests_properties(${NAME}_run PROPERTIES WILL_FAIL TRUE)
-endmacro()
-
 # Shadowing behavior in simple DO blocks
 add_crexx_run_test(do_scope_typed_shadows rexx_src/do_scope_typed_shadows.rexx)
 
 # Hoisting and effective scopes tests
 add_crexx_run_test(test_global_subscopes rexx_src/test_global_subscopes.rexx)
+
+# Inlining tests
+add_crexx_run_test(inline_test1 rexx_src/inline_test1.rexx)
 
 # New Phase 2 Scoping Tests
 add_crexx_run_test(test_simple_do_subscope rexx_src/test_simple_do_subscope.rexx)

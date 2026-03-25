@@ -1778,3 +1778,53 @@ ASTNode *ast_dup_subtree(Context* new_context, ASTNode *node) {
     }
     return new_node;
 }
+
+static void ast_dup_subtree_with_symbols_recursive(Context* new_context, ASTNode *node, ASTNode *new_node, Scope *current_new_scope) {
+    ASTNode *child = node->child;
+    ASTNode *new_child;
+    Scope *node_new_scope = current_new_scope;
+
+    /* If the node has a scope, duplicate it */
+    if (node->scope && node->scope->defining_node == node) {
+        node_new_scope = scp_dup(new_context, node->scope, current_new_scope, new_node);
+        new_node->scope = node_new_scope;
+    } else if (node->scope) {
+        /* This node is in a scope but doesn't define it. 
+         * We need to find the duplicated version of this scope.
+         * For simplicity in inlining, we assume we only duplicate subtrees that are within one procedure.
+         */
+        new_node->scope = current_new_scope;
+    }
+
+    /* Link symbols */
+    if (node->symbolNode && node->symbolNode->symbol) {
+        Symbol *old_sym = node->symbolNode->symbol;
+        Symbol *new_sym = NULL;
+        
+        /* Look for the symbol in the new scope hierarchy */
+        char *fqn = sym_frnm(old_sym);
+        new_sym = sym_rfqn(new_context->ast, fqn); /* Search from root of new tree */
+        free(fqn);
+
+        if (new_sym) {
+            sym_adnd(new_sym, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
+        } else {
+            /* If not found in new tree, it might be a global/external symbol. Link to original. */
+            sym_adnd(old_sym, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
+        }
+    }
+
+    while (child) {
+        new_child = ast_dup(new_context, child);
+        add_ast(new_node, new_child);
+        ast_dup_subtree_with_symbols_recursive(new_context, child, new_child, node_new_scope);
+        child = child->sibling;
+    }
+}
+
+ASTNode *ast_dup_subtree_with_symbols(Context* new_context, ASTNode *node, Scope *new_parent_scope) {
+    if (!node) return NULL;
+    ASTNode *new_node = ast_dup(new_context, node);
+    ast_dup_subtree_with_symbols_recursive(new_context, node, new_node, new_parent_scope);
+    return new_node;
+}

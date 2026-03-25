@@ -86,6 +86,8 @@ struct Symbol {
     char is_shadowing; /* Set if this symbol is incorrectly shadowing a global variable */
     struct Symbol *shadowed_symbol; /* Pointer to the symbol being shadowed */
     char is_global_var; /* Set if this symbol is an exposed global variable */
+    char is_inlinable;  /* Set if this procedure is inlinable */
+    ASTNode *ast_template; /* AST template for inlining */
     int creation_ordinal; /* Ordinal value when the symbol was first created */
     ASTNode *creation_node; /* The node that first created this symbol */
 };
@@ -149,6 +151,12 @@ void scp_free(Scope *scope);
 /* Symbol Factory - define a symbol */
 /* Returns NULL if the symbol is a duplicate */
 Symbol *sym_f(Scope *scope, ASTNode *node);
+
+/* Duplicate a symbol into a new scope */
+Symbol *sym_dup(Scope *new_scope, Symbol *symbol);
+
+/* Duplicate a scope and its symbols into a new parent scope */
+Scope *scp_dup(Context *context, Scope *old_scope, Scope *new_parent, ASTNode *new_defining_node);
 
 /* Symbol Factory - define a symbol with a name */
 /* Returns NULL if the symbol is a duplicate */

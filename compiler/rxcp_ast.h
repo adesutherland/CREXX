@@ -103,6 +103,7 @@ ASTNode *ast_ftt(Context* context, NodeType type, char *string);
 /* ASTNode Factory - With node type and string value copied from another node */
 ASTNode *ast_fstk(Context* context, ASTNode *source_node);
 ASTNode *ast_dup_subtree(Context* new_context, ASTNode *node);
+ASTNode *ast_dup_subtree_with_symbols(Context* new_context, ASTNode *node, Scope *new_parent_scope);
 /* Find first node of a certain type in a tree */
 ASTNode *ast_fndn(Context* ctx, ASTNode* node, NodeType type);
 /* Graft a Rexx source fragment into the AST replacing target_node */

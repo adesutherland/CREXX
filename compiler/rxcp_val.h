@@ -95,6 +95,11 @@ walker_result syntax_validation_walker(walker_direction direction, ASTNode* node
 walker_result decimal_parameters_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result exit_dispatch_walker(walker_direction direction, ASTNode* node, void *payload);
 
+/* inline */
+walker_result identify_inlinable_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result inline_procedure_walker(walker_direction direction, ASTNode* node, void *payload);
+void rxcp_inline_prune(Context *context, ASTNode *tree);
+
 /* misc */
 walker_result set_node_ordinals_walker(walker_direction direction, ASTNode* node, void *payload);
 

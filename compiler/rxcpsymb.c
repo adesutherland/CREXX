@@ -1014,6 +1014,74 @@ Symbol *sym_hoist_to_namespace(Symbol *symbol, Scope *target_namespace) {
     return sym_merg(target_namespace, symbol);
 }
 
+/* Duplicate a symbol into a new scope */
+Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
+    Symbol *new_symbol;
+    if (!symbol) return NULL;
+    new_symbol = sym_fn(new_scope, symbol->name, strlen(symbol->name));
+    if (!new_symbol) return NULL;
+
+    new_symbol->symbol_type = symbol->symbol_type;
+    new_symbol->status = symbol->status;
+    new_symbol->type = symbol->type;
+    new_symbol->value_dims = symbol->value_dims;
+    if (symbol->dim_base) {
+        new_symbol->dim_base = malloc(sizeof(int) * symbol->value_dims);
+        memcpy(new_symbol->dim_base, symbol->dim_base, sizeof(int) * symbol->value_dims);
+    }
+    if (symbol->dim_elements) {
+        new_symbol->dim_elements = malloc(sizeof(int) * symbol->value_dims);
+        memcpy(new_symbol->dim_elements, symbol->dim_elements, sizeof(int) * symbol->value_dims);
+    }
+    if (symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
+    new_symbol->register_num = symbol->register_num;
+    new_symbol->register_type = symbol->register_type;
+    new_symbol->fixed_args = symbol->fixed_args;
+    new_symbol->has_vargs = symbol->has_vargs;
+    new_symbol->exposed = symbol->exposed;
+    new_symbol->is_arg = symbol->is_arg;
+    new_symbol->is_ref_arg = symbol->is_ref_arg;
+    new_symbol->is_opt_arg = symbol->is_opt_arg;
+    new_symbol->is_const_arg = symbol->is_const_arg;
+    new_symbol->is_main = symbol->is_main;
+    new_symbol->is_rc = symbol->is_rc;
+    new_symbol->is_this = symbol->is_this;
+    new_symbol->is_factory = symbol->is_factory;
+    new_symbol->is_inlinable = symbol->is_inlinable;
+    new_symbol->ast_template = symbol->ast_template;
+
+    return new_symbol;
+}
+
+static void scp_dup_worker(Symbol *symbol, void *payload) {
+    Scope *new_scope = (Scope *)payload;
+    sym_dup(new_scope, symbol);
+}
+
+/* Duplicate a scope and its symbols into a new parent scope */
+Scope *scp_dup(Context *context, Scope *old_scope, Scope *new_parent, ASTNode *new_defining_node) {
+    Scope *new_scope;
+    if (!old_scope) return NULL;
+    new_scope = scp_f(context, new_parent, new_defining_node, NULL, old_scope->type);
+    if (old_scope->name) new_scope->name = strdup(old_scope->name);
+    
+    /* Duplicate symbols */
+    scp_4all(old_scope, scp_dup_worker, new_scope);
+    
+    /* Recursively duplicate child scopes? 
+     * In Level B procedures, usually no nested scopes unless we have blocks.
+     * scp_4all only does symbols. We need to do child scopes too.
+     */
+    size_t i;
+    for (i = 0; i < scp_noch(old_scope); i++) {
+        /* We don't have the new defining nodes for child scopes yet.
+         * This suggests scp_dup should be integrated into the AST duplication walker.
+         */
+    }
+
+    return new_scope;
+}
+
 /* Frees a symbol */
 void free_sym(Symbol *symbol) {
     size_t i;

@@ -67,6 +67,7 @@
 #include "rxcpbgmr.h"
 #include "rxvmplugin_framework.h"
 #include "rxbin.h" /* Needed for rxvmvars.h */
+#include "rxcp_val.h"
 #include "rxvmvars.h"
 #include "rxvalue.h"
 
@@ -1322,6 +1323,15 @@ void optimise(Context *context) {
 
     payload.current_scope = 0;
     payload.context = context;
+
+    /* Inlining Pass */
+    if (context->optimise) {
+        context->current_scope = 0;
+        ast_wlkr(context->ast, identify_inlinable_walker, (void *) context);
+        context->current_scope = 0;
+        ast_wlkr(context->ast, inline_procedure_walker, (void *) context);
+        rxcp_inline_prune(context, context->ast);
+    }
 
     payload.changed = 0;
 

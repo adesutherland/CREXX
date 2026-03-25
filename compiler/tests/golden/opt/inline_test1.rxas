@@ -1,0 +1,66 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test1.rexx
+ * BUILT                  : 2026-03-24 21:09:08
+ */
+
+.srcfile="inline_test1.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test1.main"="b" ".int" main() "" ""
+   .src 5:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 6:3="say \"Starting the loop...\""
+   say "Starting the loop..."
+   .src 7:3="do"
+   .src 7:6="i = 1"
+   .meta "inline_test1.main.i"="b" ".int" r0
+   load r0,1
+   .src 7:12="to 5"
+   load r3,5
+l8dostart:
+   .src 7:12="to 5"
+   igt r4,r0,r3
+   brt l8doend,r4
+   .src 15:7="val"
+   copy r2,r0
+   .src 17:3="return"
+   imult r1,r2,2
+   .src 9:5="say \"Result of multiplyByTwo for\" i \"is\" result"
+   .meta "inline_test1.main.result"="b" ".int" r1
+   itos r0
+   sconcat r5,"Result of multiplyByTwo for",r0
+   sconcat r5,r5,"is"
+   itos r1
+   sconcat r5,r5,r1
+   say r5
+l8doinc:
+   .src 7:6="i"
+   inc r0
+   .src 10:3="end"
+   br l8dostart
+l8doend:
+   .src 11:3="say \"Loop finished.\""
+   say "Loop finished."
+   .src 12:3="return 0"
+   ret 0
+
+multiplyByTwo() .locals=2
+   .meta "inline_test1.multiplybytwo"="b" ".int" multiplyByTwo() "val=.int" ""
+   .src 14:1="multiplyByTwo: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 15:7="val = .int"
+   .meta "inline_test1.multiplybytwo.val"="b" ".int" a1
+   .src 17:3="return val * 2"
+   imult r1,a1,2
+   ret r1
+   .meta "inline_test1.multiplybytwo.val"
