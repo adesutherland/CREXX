@@ -1,6 +1,6 @@
 # \crexx{}/PA \- Plugin Architecture
 
-This facility allows for the compilation, linking, and execution of additional functionality (developed C) alongside REXX code. It enables the decoupling of native modules (plugins), which can be developed and packaged either as separate entities or linked statically to the main \crexx{} core solution. 
+This facility allows for the compilation, linking, and execution of additional functionality (developed in C) alongside REXX code. It enables the decoupling of native modules (plugins), which can be developed and packaged either as separate entities or linked statically to the main \crexx{} core solution. 
 
 The architecture is designed to completely decouple the plugins from the rest of \crexx{}, and the plugin client library only consists of a single header file (rexxpa.h)
 
@@ -206,7 +206,7 @@ The \crexx{} Cmake build configuration should be referenced for static build sup
 The following is a REXX Level B example using the plugin. 
 
 Note that there is no manual loading of the dynamic or static plugin, instead \crexx{} loads the plugins using the same search rules as it uses for other REXX modules. This means that the REXX program (or programmer) does not need to be concerned about how the external function is provided \- REXX, Native, Dynamic, Static \- it all has the same calling syntax. This is designed to meet the objective to simplify programming.
-
+```rexx <!--execdes.rexx-->
 options levelb  /\* This is a rexx level b program \*/
 
 import rxfnsb   /\* Import the crexx level B functions \*/  
@@ -217,9 +217,9 @@ import rxfnsb   /\* Import the crexx level B functions \*/
 Plaintext \= "0000000000000000"  
 key \=       "08192A3B4C5D6E7F"  
                                         
-**Ciphertext \= Encrypt(key,Plaintext)**
-
-In **bold**, the import statement loads the namespace meaning that any REXX modules or native plugins in the rxdes namespace will be loaded as needed; the function call, encrypt(), follows REXX syntax, and the compiler can check parameters and return types as normal.
+Ciphertext \= Encrypt(key,Plaintext)
+```
+In line 4, the import statement loads the namespace meaning that any REXX modules or native plugins in the rxdes namespace will be loaded as needed; the function call, encrypt(), follows REXX syntax, and the compiler can check parameters and return types as normal.
 
 ## Future Changes
 

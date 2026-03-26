@@ -2,9 +2,9 @@
 
 ## Expression Operators
 
-Level B incorporates the Classic REXX operators, which function similarly to their counterparts in 
-other programming languages. However, as a language with a strong typing system, CREXX Level B 
-introduces rules for type promotion that differ significantly from Classic REXX's string-based model.
+Level B incorporates the Classic \rexx{} operators, which function similarly to their counterparts in 
+other programming languages. However, as a language with a strong typing system, \crexx{} Level B 
+introduces rules for type promotion that differ significantly from Classic \rexx{}'s string-based model.
 
 > **Note: Influence of `OPTIONS` and `NUMERIC`**
 >
@@ -46,6 +46,7 @@ The `OPTIONS {NUMERIC_CLASSIC|NUMERIC_COMMON}` setting determines which symbols 
 ## Comparison operators
 
 ### Strict Operators renamed to String Comparison Operators
+
 CREXX Level B refers to what other REXX dialects call strict comparison (e.g., ==, >>) as string comparison.
 
 This terminology is used intentionally to make the operator's semantics explicit within a typed language. 
@@ -55,6 +56,7 @@ is always a test of exact textual identity, with no possibility of numeric inter
 which clarifies its behaviour and purpose.
 
 ### Comparison Operator Categories
+
 CREXX provides a comprehensive set of comparison operators that fall into four categories based on two distinctions: **loose vs. string** and **case-sensitive vs. case-insensitive**.
 
 * **Loose** operators (like `=`) perform padding to make strings of unequal length comparable and can be numeric-aware.
@@ -80,7 +82,7 @@ Otherwise, they perform a character comparison where the shorter string is padde
 
 * The numeric comparison is affected by the **`NUMERIC FUZZ`** setting.
 
-> **CREXX Level B Unicode String Comparison**
+> **\crexx{} Level B Unicode String Comparison**
 >
 > To ensure accuracy with Unicode, CREXX Level B enhances the standard string comparison. Before the padding and 
 > comparison steps, both strings are first brought into a consistent representation by applying Unicode Normalization 

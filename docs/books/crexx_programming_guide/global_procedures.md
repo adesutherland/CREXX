@@ -4,9 +4,9 @@
 
 A procedure defined in a module file can be made available to other modules (provided it is in an imported namespace) by including the procedure in the namespace instruction.
 
-*EXAMPLE:*
-
+```rexx
 namespace mynamespace expose myfunc1 myfunc2
+```
 
 ## Importing Global Procedures
 
@@ -18,15 +18,14 @@ When compiling a program, the compiler looks for procedures that are called but 
 
 The compiler only uses external procedures that are in the same namespace as the module being compiled or for namespaces listed in the "import" instruction. 
 
-*EXAMPLE:*
-
+```rexx
 import rxfnsb mynamespace anothernamespace
+```
 
 Metadata encoded with the procedures allows the compiler to determine the type and argument types of imported procedures.
 
 The crexx level b standard library namespace is rxfnsb, to access these procedures programs should import this namespace.
 
-*EXAMPLE:*
-
+```rexx
 import rxfnsb
-
+```
