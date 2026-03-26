@@ -210,6 +210,7 @@ add_crexx_compiler_test(inline_test_nested_scope_exposed_call rexx_src/inline_te
 add_crexx_compiler_test(inline_test_multi_return_assign rexx_src/inline_test_multi_return_assign.rexx)
 add_crexx_compiler_test(inline_test_multi_return_expr rexx_src/inline_test_multi_return_expr.rexx)
 add_crexx_compiler_test(inline_test_multi_return_call rexx_src/inline_test_multi_return_call.rexx)
+add_crexx_compiler_test(inline_test_void_fallthrough_call rexx_src/inline_test_void_fallthrough_call.rexx)
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
@@ -286,6 +287,7 @@ add_crexx_run_test(inline_test_nested_scope_exposed_call rexx_src/inline_test_ne
 add_crexx_run_test(inline_test_multi_return_assign rexx_src/inline_test_multi_return_assign.rexx)
 add_crexx_run_test(inline_test_multi_return_expr rexx_src/inline_test_multi_return_expr.rexx)
 add_crexx_run_test(inline_test_multi_return_call rexx_src/inline_test_multi_return_call.rexx)
+add_crexx_run_test(inline_test_void_fallthrough_call rexx_src/inline_test_void_fallthrough_call.rexx)
 
 # New Phase 2 Scoping Tests
 add_crexx_run_test(test_simple_do_subscope rexx_src/test_simple_do_subscope.rexx)

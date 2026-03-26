@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_unary_expr.rexx
- * BUILT                  : 2026-03-25 15:21:08
+ * BUILT                  : 2026-03-26 19:45:04
  */
 
 .srcfile="inline_test_unary_expr.rexx"
@@ -31,7 +31,7 @@ l8dostart:
    .src 6:10="addOne"
    .src 13:7="val"
    icopy r1,r0
-   .src 14:3="return"
+   .src 14:3="return val + 1"
    iadd r5,r1,1
    icopy r6,r5
    br l44bexprend
@@ -43,7 +43,7 @@ l44bexprend:
    .src 7:10="addOne"
    .src 13:7="val"
    icopy r2,r0
-   .src 14:3="return"
+   .src 14:3="return val + 1"
    iadd r7,r2,1
    icopy r6,r7
    br l53bexprend

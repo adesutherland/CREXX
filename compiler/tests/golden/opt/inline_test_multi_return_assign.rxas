@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_multi_return_assign.rexx
- * BUILT                  : 2026-03-26 17:40:39
+ * BUILT                  : 2026-03-26 19:42:27
  */
 
 .srcfile="inline_test_multi_return_assign.rexx"
 .globals=0
 
-main() .locals=6
+main() .locals=9
    .meta "inline_test_multi_return_assign.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -22,17 +22,40 @@ main() .locals=6
    .meta "inline_test_multi_return_assign.main.i"="b" ".int" r0
    load r0,-1
    .src 5:13="to 1"
-   load r2,1
+   load r3,1
 l8dostart:
    .src 5:13="to 1"
-   igt r3,r0,r2
-   brt l8doend,r3
+   igt r4,r0,r3
+   brt l8doend,r4
    .src 6:5="result = classify(i)"
    .meta "inline_test_multi_return_assign.main.result"="b" ".int" r1
-   load r4,1
-   swap r5,r0
-   call r1,classify(),r4
-   swap r0,r5
+   .src 6:14="classify"
+   .src 13:7="val"
+   icopy r2,r0
+   .src 14:2="if val < 0"
+   ilt r5,r2,0
+   brf l59iffalse,r5
+   .src 14:14="then"
+   .src 14:19="return -1"
+   load r6,-1
+   icopy r8,r6
+   br l54bexprend
+l59iffalse:
+   .src 15:2="if val > 0"
+   igt r5,r2,0
+   brf l66iffalse,r5
+   .src 15:14="then"
+   .src 15:19="return 1"
+   load r7,1
+   icopy r8,r7
+   br l54bexprend
+l66iffalse:
+   .src 16:3="return 0"
+   load r5,0
+   icopy r8,r5
+   br l54bexprend
+l54bexprend:
+   icopy r1,r8
    .src 7:5="say result"
    itos r1
    say r1

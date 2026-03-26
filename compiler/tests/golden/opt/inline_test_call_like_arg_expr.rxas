@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_call_like_arg_expr.rexx
- * BUILT                  : 2026-03-25 19:20:56
+ * BUILT                  : 2026-03-26 19:45:07
  */
 
 .meta "inline_test_call_like_arg_expr.box"="b" ".unknown" .class
@@ -35,7 +35,7 @@ l8dostart:
    .src 6:16="addOne"
    .src 13:7="val"
    icopy r2,r1
-   .src 14:3="return"
+   .src 14:3="return val + 1"
    iadd r8,r2,1
    icopy r9,r8
    br l77bexprend
@@ -48,7 +48,7 @@ l77bexprend:
    .src 7:18="addOne"
    .src 13:7="val"
    icopy r3,r1
-   .src 14:3="return"
+   .src 14:3="return val + 1"
    iadd r7,r3,1
    icopy r6,r7
    br l86bexprend

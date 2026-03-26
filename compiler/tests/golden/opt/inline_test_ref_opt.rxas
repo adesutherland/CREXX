@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_opt.rexx
- * BUILT                  : 2026-03-25 20:44:06
+ * BUILT                  : 2026-03-26 19:45:07
  */
 
 .srcfile="inline_test_ref_opt.rexx"
@@ -24,7 +24,7 @@ main() .locals=5
    .src 6:7="refBump"
    .src 15:3="value = value + 1"
    iadd r0,r0,1
-   .src 16:3="return"
+   .src 16:3="return value"
    icopy r2,r0
    br l60bexprend
 l60bexprend:
@@ -35,7 +35,7 @@ l60bexprend:
    say r0
    .src 8:3="say optAdd"
    .src 8:7="optAdd"
-   .src 20:3="return"
+   .src 20:3="return a + b"
    load r2,15
    icopy r3,r2
    br l69bexprend
@@ -44,7 +44,7 @@ l69bexprend:
    say r3
    .src 9:3="say optAdd(3)"
    .src 9:7="optAdd"
-   .src 20:3="return"
+   .src 20:3="return a + b"
    load r3,8
    icopy r4,r3
    br l81bexprend

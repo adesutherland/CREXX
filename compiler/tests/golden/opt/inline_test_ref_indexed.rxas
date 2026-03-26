@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_indexed.rexx
- * BUILT                  : 2026-03-25 20:37:56
+ * BUILT                  : 2026-03-26 19:45:08
  */
 
 .srcfile="inline_test_ref_indexed.rexx"
@@ -47,7 +47,7 @@ main() .locals=5
    unlink r2
    icopy r3,r4
    unlink r3
-   .src 20:3="return"
+   .src 20:3="return value"
    setattrs g1,3
    linkattr1 r4,g1,r0
    icopy r3,r4

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_nested_scope_if_do.rexx
- * BUILT                  : 2026-03-26 17:25:07
+ * BUILT                  : 2026-03-26 19:45:14
  */
 
 .srcfile="inline_test_nested_scope_if_do.rexx"
@@ -22,16 +22,29 @@ main() .locals=6
    .meta "inline_test_nested_scope_if_do.main.i"="b" ".int" r0
    load r0,0
    .src 5:12="to 2"
-   load r1,2
+   load r3,2
 l8dostart:
    .src 5:12="to 2"
-   igt r2,r0,r1
-   brt l8doend,r2
+   igt r4,r0,r3
+   brt l8doend,r4
    .src 6:5="say classify(i)"
-   load r3,1
-   swap r4,r0
-   call r5,classify(),r3
-   swap r0,r4
+   .src 6:9="classify"
+   .src 12:7="val"
+   icopy r1,r0
+   .src 13:2="if val > 0"
+   igt r5,r1,0
+   brf l57iffalse,r5
+   .src 13:14="then"
+   .src 15:5="tmp = val * 10"
+   imult r2,r1,10
+   .src 16:5="return tmp"
+   icopy r5,r2
+   br l52bexprend
+l57iffalse:
+   .src 18:3="return val"
+   icopy r5,r1
+   br l52bexprend
+l52bexprend:
    itos r5
    say r5
 l8doinc:

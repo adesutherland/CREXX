@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_nested_call_expr.rexx
- * BUILT                  : 2026-03-25 17:32:13
+ * BUILT                  : 2026-03-26 19:45:00
  */
 
 .srcfile="inline_test_nested_call_expr.rexx"
@@ -33,13 +33,13 @@ l8dostart:
    .src 6:18="addOne"
    .src 16:7="val"
    icopy r3,r0
-   .src 17:3="return"
+   .src 17:3="return val + 1"
    iadd r6,r3,1
    icopy r7,r6
    br l62bexprend
 l62bexprend:
    icopy r2,r7
-   .src 13:3="return"
+   .src 13:3="return val"
    icopy r7,r2
    br l58bexprend
 l58bexprend:

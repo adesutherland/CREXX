@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_scalar.rexx
- * BUILT                  : 2026-03-26 16:47:39
+ * BUILT                  : 2026-03-26 19:44:39
  */
 
 .srcfile="arg_semantics_scalar.rexx"
@@ -22,7 +22,7 @@ main() .locals=12
    .src 6:22="inspectInt"
    .src 20:7="value"
    icopy r1,r0
-   .src 21:3="return"
+   .src 21:3="return value + 1"
    iadd r6,r1,1
    icopy r7,r6
    br l136bexprend
@@ -36,7 +36,7 @@ l136bexprend:
    icopy r2,r0
    .src 25:3="value = value + 10"
    iadd r2,r2,10
-   .src 26:3="return"
+   .src 26:3="return value"
    icopy r7,r2
    br l145bexprend
 l145bexprend:
@@ -56,7 +56,7 @@ l145bexprend:
    .src 13:3="say \"str-read=\" || readText(text)"
    .meta "arg_semantics_scalar.main.text"="b" ".string" "mix"
    .src 13:22="readText"
-   .src 35:3="return"
+   .src 35:3="return text || \":read\""
    load r7,"mix:read"
    scopy r8,r7
    br l163bexprend
@@ -72,7 +72,7 @@ l163bexprend:
    swap r9,r4
    call r9,rxfnsb.upper(),r8
    swap r4,r9
-   .src 40:3="return"
+   .src 40:3="return text || \":local\""
    concat r9,r4,":local"
    scopy r8,r9
    br l172bexprend
@@ -90,7 +90,7 @@ l172bexprend:
    swap r11,r5
    call r11,rxfnsb.upper(),r10
    swap r5,r11
-   .src 40:3="return"
+   .src 40:3="return text || \":local\""
    concat r11,r5,":local"
    scopy r10,r11
    br l185bexprend

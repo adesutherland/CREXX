@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_multi_return_call.rexx
- * BUILT                  : 2026-03-26 17:40:39
+ * BUILT                  : 2026-03-26 19:42:29
  */
 
 .srcfile="inline_test_multi_return_call.rexx"
 .globals=0
 
-main() .locals=6
+main() .locals=8
    .meta "inline_test_multi_return_call.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -22,16 +22,34 @@ main() .locals=6
    .meta "inline_test_multi_return_call.main.i"="b" ".int" r0
    load r0,0
    .src 5:12="to 2"
-   load r1,2
+   load r3,2
 l8dostart:
    .src 5:12="to 2"
-   igt r2,r0,r1
-   brt l8doend,r2
-   .src 6:5="call maybeLog(i)"
-   load r3,1
-   swap r4,r0
-   call r5,maybeLog(),r3
-   swap r0,r4
+   igt r4,r0,r3
+   brt l8doend,r4
+   .src 6:10="maybeLog"
+   .src 6:10="maybeLog"
+   .src 12:7="val"
+   icopy r2,r0
+   .src 13:2="if val = 0"
+   ieq r5,r2,0
+   brf l51iffalse,r5
+   .src 13:14="then"
+   .src 13:19="return"
+   load r6,0
+   icopy r7,r6
+   br l46bexprend
+l51iffalse:
+   .src 14:3="say \"value\" val"
+   itos r2
+   sconcat r5,"value",r2
+   say r5
+   .src 15:3="return"
+   load r5,0
+   icopy r7,r5
+   br l46bexprend
+l46bexprend:
+   icopy r1,r7
 l8doinc:
    .src 5:6="i"
    inc r0

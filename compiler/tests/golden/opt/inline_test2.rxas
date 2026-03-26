@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test2.rexx
- * BUILT                  : 2026-03-26 16:47:39
+ * BUILT                  : 2026-03-26 19:44:57
  */
 
 .meta "inline_test2.myclass"="b" ".unknown" .class
@@ -31,7 +31,7 @@ main() .locals=9
    say r7
    .src 10:3="say \"NestedCallProc result:\" nestedCallProc(10)"
    .src 10:32="nestedCallProc"
-   .src 39:3="return"
+   .src 39:3="return helper(val)"
    load r6,1
    load r7,10
    call r5,helper(),r6
@@ -56,12 +56,19 @@ l169bexprend:
    sconcat r8,"Method result:",r4
    say r8
    .src 17:3="say \"MultiReturn result:\" multiReturn(1)"
-   load r7,1
+   .src 17:29="multiReturn"
+   .src 57:17="return 1"
    load r8,1
-   call r6,multiReturn(),r7
+   icopy r6,r8
+   br l177bexprend
+   .src 58:3="return 0"
+   load r7,0
+   icopy r6,r7
+   br l177bexprend
+l177bexprend:
    itos r6
-   sconcat r8,"MultiReturn result:",r6
-   say r8
+   sconcat r6,"MultiReturn result:",r6
+   say r6
    .src 19:3="return 0"
    ret 0
    .meta "inline_test2.main.o"
@@ -128,11 +135,11 @@ nestedCallProc() .locals=4
    .src 39:10="helper"
    .src 42:7="v"
    icopy r1,a1
-   .src 43:3="return"
+   .src 43:3="return v + 1"
    iadd r2,r1,1
    icopy r3,r2
-   br l177bexprend
-l177bexprend:
+   br l190bexprend
+l190bexprend:
    ret r3
    .meta "inline_test2.nestedcallproc.val"
 

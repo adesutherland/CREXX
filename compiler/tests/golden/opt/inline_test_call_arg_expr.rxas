@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_call_arg_expr.rexx
- * BUILT                  : 2026-03-25 15:59:08
+ * BUILT                  : 2026-03-26 19:45:06
  */
 
 .srcfile="inline_test_call_arg_expr.rexx"
@@ -22,26 +22,38 @@ main() .locals=9
    .meta "inline_test_call_arg_expr.main.i"="b" ".int" r0
    load r0,1
    .src 5:12="to 4"
-   load r2,4
+   load r4,4
 l8dostart:
    .src 5:12="to 4"
-   igt r3,r0,r2
-   brt l8doend,r3
+   igt r5,r0,r4
+   brt l8doend,r5
    .src 6:5="say keepValue(addOne(i))"
-   load r4,1
+   .src 6:9="keepValue"
+   .src 12:7="val"
    .src 6:19="addOne"
    .src 17:7="val"
-   icopy r1,r0
-   .src 18:3="return"
-   iadd r6,r1,1
+   icopy r3,r0
+   .src 18:3="return val + 1"
+   iadd r6,r3,1
    icopy r7,r6
-   br l55bexprend
-l55bexprend:
-   swap r5,r7
-   call r8,keepValue(),r4
-   swap r7,r5
-   itos r8
-   say r8
+   br l68bexprend
+l68bexprend:
+   icopy r2,r7
+   .src 13:2="if val > 100"
+   igt r7,r2,100
+   brf l77iffalse,r7
+   .src 13:16="then"
+   .src 13:21="return 100"
+   load r8,100
+   icopy r7,r8
+   br l64bexprend
+l77iffalse:
+   .src 14:3="return val"
+   icopy r7,r2
+   br l64bexprend
+l64bexprend:
+   itos r7
+   say r7
 l8doinc:
    .src 5:6="i"
    inc r0

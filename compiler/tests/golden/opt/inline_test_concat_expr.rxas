@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_concat_expr.rexx
- * BUILT                  : 2026-03-25 14:15:07
+ * BUILT                  : 2026-03-26 19:45:01
  */
 
 .srcfile="inline_test_concat_expr.rexx"
@@ -32,7 +32,7 @@ l8dostart:
    .src 6:23="asString"
    .src 13:7="val"
    icopy r2,r0
-   .src 14:3="return"
+   .src 14:3="return val"
    itos r2
    scopy r5,r2
    br l42bexprend

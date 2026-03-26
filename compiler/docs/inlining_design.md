@@ -67,7 +67,7 @@ More precisely:
 - For expression inlining, the `FUNCTION` call must fall into one of the currently supported expression-context capability buckets.
 - The callee must be a normal procedure, not a method or factory.
 - Arguments and return values must stay within the current safe built-in scalar slice: no class/object values and no arrays.
-- The callee must satisfy the existing safety checks: current scalar slice only, final instruction `RETURN`, small body, and no unsupported nested inlining.
+- The callee must satisfy the existing safety checks: current scalar slice only, small body, and no unsupported nested inlining. Value-producing procedures still require a final `RETURN`; void statement-call sites may inline through bare-return and fallthrough shapes.
 - `expose`/by-reference formals are supported when the actual argument is an aliasable variable-like target, including indexed and stem-style forms.
 - For nontrivial by-reference actuals, the inline rewrite captures the locator expressions once into inline-scope temps so the callee still sees call-time binding semantics.
 - Optional formals are supported in the current slice when the inline rewrite can materialise their default from the formal AST.
@@ -219,8 +219,8 @@ For the first slice, a procedure is eligible only if all of the following hold:
 - fixed arguments or a supported trailing by-value vararg
 - built-in scalar arguments only
 - built-in scalar return only
-- at least one `RETURN`
-- the `RETURN` is the final instruction
+- value-producing procedures must still end in a final `RETURN`
+- void statement-call sites may also inline through bare-return and implicit-fallthrough shapes
 - body size is below the configured node threshold
 - no unsupported nested inline cases
 
@@ -241,7 +241,7 @@ Notes:
 
 - Varargs are the next sensible step, but varargs alone do not complete milestone 1.
 - The current implementation now supports by-value varargs, nested-call local procedures, and nested callee scopes through a bounded fixed-point pass with explicit cycle blocking for self-recursive and mutually recursive expansions.
-- The current implementation still excludes methods/factories, object or array values, class-scope procedures, and procedures without a final `RETURN`.
+- The current implementation still excludes methods/factories, object or array values, and class-scope procedures. Value-producing procedures still require a final `RETURN`, but void statement-call sites now cover implicit fallthrough and bare-return exit paths.
 - Selection should remain opportunity-based throughout milestone 1: a structurally inlineable procedure may still have uninlined call sites if their rewrite bucket is not yet implemented.
 
 ### Milestone 2: all local class method inlining works
@@ -285,7 +285,7 @@ The implementation now covers:
 - by-value trailing varargs
 - nested-call local procedures via repeated identify-and-inline passes until a bounded fixed point is reached
 - nested callee-local scopes with duplicated scope and symbol remapping
-- multi/early-return procedures, provided the callee still ends with a final `RETURN`
+- multi/early-return procedures, including branch returns and void fallthrough in statement-call sites
 - explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
 
 The implementation still excludes:
