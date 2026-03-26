@@ -1,0 +1,178 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : arg_semantics_scalar.rexx
+ * BUILT                  : 2026-03-26 12:41:56
+ */
+
+.srcfile="arg_semantics_scalar.rexx"
+.globals=0
+
+main() .locals=8
+   .meta "arg_semantics_scalar.main"="b" ".int" main() "" ""
+   .src 4:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 5:3="i = 7"
+   .meta "arg_semantics_scalar.main.i"="b" ".int" r0
+   load r0,7
+   .src 6:3="say \"int-read=\" || inspectInt(i)"
+   .src 6:22="inspectInt"
+   .src 20:7="value"
+   icopy r1,r0
+   .src 21:3="return"
+   iadd r4,r1,1
+   icopy r5,r4
+   br l136bexprend
+l136bexprend:
+   itos r5
+   concat r5,"int-read=",r5
+   say r5
+   .src 7:3="say \"int-mut=\" || addTen(i)"
+   .src 7:21="addTen"
+   .src 24:7="value"
+   icopy r2,r0
+   .src 25:3="value = value + 10"
+   iadd r2,r2,10
+   .src 26:3="return"
+   icopy r5,r2
+   br l145bexprend
+l145bexprend:
+   itos r5
+   concat r5,"int-mut=",r5
+   say r5
+   .src 8:3="say \"int-after=\" || i"
+   itos r0
+   concat r5,"int-after=",r0
+   say r5
+   .src 30:3="value = value + 1"
+   iadd r0,r0,1
+   .src 10:3="say \"int-ref=\" || i"
+   itos r0
+   concat r5,"int-ref=",r0
+   say r5
+   .src 13:3="say \"str-read=\" || readText(text)"
+   .meta "arg_semantics_scalar.main.text"="b" ".string" "mix"
+   load r5,1
+   load r6,"mix"
+   settp r6,1
+   call r7,readText(),r5
+   concat r7,"str-read=",r7
+   say r7
+   .src 14:3="say \"str-mut=\" || shoutText(text)"
+   load r6,1
+   load r7,"mix"
+   settp r7,1
+   call r5,shoutText(),r6
+   concat r7,"str-mut=",r5
+   say r7
+   .src 15:3="say \"str-after=\" || text"
+   say "str-after=mix"
+   .src 16:3="say \"str-temp=\" || shoutText(\"temp\")"
+   load r6,1
+   load r7,"temp"
+   settp r7,3
+   call r5,shoutText(),r6
+   concat r7,"str-temp=",r5
+   say r7
+   .src 17:3="return 0"
+   ret 0
+   .meta "arg_semantics_scalar.main.i"
+   .meta "arg_semantics_scalar.main.text"
+
+inspectInt() .locals=2
+   .meta "arg_semantics_scalar.inspectint"="b" ".int" inspectInt() "value=.int" ""
+   .src 19:1="inspectInt: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 20:7="value = .int"
+   .meta "arg_semantics_scalar.inspectint.value"="b" ".int" a1
+   .src 21:3="return value + 1"
+   iadd r1,a1,1
+   ret r1
+   .meta "arg_semantics_scalar.inspectint.value"
+
+addTen() .locals=1
+   .meta "arg_semantics_scalar.addten"="b" ".int" addTen() "value=.int" ""
+   .src 23:1="addTen: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 24:7="value = .int"
+   .meta "arg_semantics_scalar.addten.value"="b" ".int" r0
+   icopy r0,a1
+   .src 25:3="value = value + 10"
+   iadd r0,r0,10
+   .src 26:3="return value"
+   ret r0
+   .meta "arg_semantics_scalar.addten.value"
+
+addOneRef() .locals=1
+   .meta "arg_semantics_scalar.addoneref"="b" ".void" addOneRef() "expose value=.int" ""
+   .src 28:1="addOneRef: procedure = .void"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 29:7="expose value = .int"
+   .meta "arg_semantics_scalar.addoneref.value"="b" ".int" a1
+   .src 30:3="value = value + 1"
+   iadd a1,a1,1
+   .src 31:3="return"
+   ret
+   .meta "arg_semantics_scalar.addoneref.value"
+
+readText() .locals=2
+   .meta "arg_semantics_scalar.readtext"="b" ".string" readText() "text=.string" ""
+   .src 33:1="readText: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 34:7="text = .string"
+   .meta "arg_semantics_scalar.readtext.text"="b" ".string" a1
+   .src 35:3="return text || \":read\""
+   concat r1,a1,":read"
+   ret r1
+   .meta "arg_semantics_scalar.readtext.text"
+
+shoutText() .locals=3
+   .meta "arg_semantics_scalar.shouttext"="b" ".string" shoutText() "text=.string" ""
+   .src 37:1="shoutText: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 38:7="text = .string"
+   .meta "arg_semantics_scalar.shouttext.text"="b" ".string" r0
+   brtpandt l103c,a1,2
+   scopy r0,a1
+   acopy r0,a1
+   br l103d
+l103c:
+   swap r0,a1
+l103d:
+   .src 39:3="text = upper(text)"
+   load r1,1
+   swap r2,r0
+   call r2,rxfnsb.upper(),r1
+   swap r0,r2
+   .src 40:3="return text || \":local\""
+   concat r2,r0,":local"
+   ret r2
+   .meta "arg_semantics_scalar.shouttext.text"
+
+/* Imported Declaration from file: upper@library.rxbin */
+
+rxfnsb.upper() .expose=rxfnsb.upper
+   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string" ""

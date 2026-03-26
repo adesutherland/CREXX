@@ -69,6 +69,21 @@ The emitter avoids most global variables by storing state directly in the `ASTNo
 
 The register allocation logic is isolated in `rxcp_emit_reg.c`. It performs the first pass over the AST to ensure every node that requires a virtual register has one assigned before code emission begins.
 
+## 4.1 Argument Copy Semantics
+
+The VM calling convention is register-by-reference for all procedure calls. User-visible pass-by-value is therefore implemented by the compiler and emitter, not by the VM itself.
+
+Current rules:
+
+- `.ref` / `ARG expose ...` formals alias the incoming argument register and must be able to update the caller-visible value.
+- Plain by-value formals must preserve caller-visible state if the callee writes to the formal.
+- `mark_const_args()` in [`compiler/rxcp_opt.c`](/Users/adrian/CLionProjects/CREXX/compiler/rxcp_opt.c) marks by-value formals as `is_const_arg` when the formal symbol is provably read-only inside the callee. Those formals may safely share the incoming register in both `-n` and optimised builds.
+- Writable by-value formals still require an isolated local register. The emitter materialises that copy in the `ARG` case in [`compiler/rxcpemit.c`](/Users/adrian/CLionProjects/CREXX/compiler/rxcpemit.c).
+- For large values (strings, arrays, objects, binaries), `REGTP_NOTSYM` means the actual argument is not backed by a caller-visible symbol. In that case the callee may reuse or swap the incoming register instead of copying, because there is no caller binding to preserve.
+- For small values (`.int`, `.float`, booleans), the emitter always copies writable by-value formals. That is an intentional cost tradeoff: copying is cheaper than propagating and checking a "non-symbol temporary" flag for those types.
+
+This is semantic copy elision, not a change in language semantics. Any optimisation is valid only if the caller still observes pass-by-value behaviour.
+
 ## 5. Risk Registry
 
 | Risk | Description | Mitigation |

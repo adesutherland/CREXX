@@ -1,0 +1,5 @@
+object-read=alpha
+object-mut=local
+object-after=alpha
+object-temp=local
+object-ref=ref

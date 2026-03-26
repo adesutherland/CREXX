@@ -115,6 +115,15 @@ CURRENT STATUS: not implemented (Debugging Approach TBC)
 
 Arguments can be passed to a procedure by reference or by value. When an argument is passed by reference, the procedure can modify the original variable that was passed to it. When an argument is passed by value, a copy of the variable is passed to the procedure, and any changes made to the copy do not affect the original variable.
 
+The user-visible rules are:
+
+* Plain `ARG name = type` is pass by value.
+* `ARG expose name = type` is pass by reference.
+* Pass-by-value semantics are defined by caller visibility, not by the VM calling convention. If the callee writes to a by-value formal, the caller must still observe its original value after the call.
+* This applies equally to simple values, arrays, and class/object references. Rebinding or mutating a by-value formal must not leak back to the caller's variable.
+* The compiler is allowed to optimise away an internal defensive copy only when that cannot change caller-visible behaviour, for example when the formal is provably read-only or when the actual value is a temporary expression that has no caller-side symbol to preserve.
+* If the caller wants the callee to update the original variable, the parameter must be declared with `expose`.
+
 By example:
 
 ARG a1 \= 0, a2 \= .int, expose a3 \= .aclass, ?a4 \= .aclass, a5 \= .string\[\]
@@ -124,6 +133,30 @@ ARG a1 \= 0, a2 \= .int, expose a3 \= .aclass, ?a4 \= .aclass, a5 \= .string\[\]
 * Arg a3 is a mandatory class aclass pass by reference  
 * Arg a4 is a optional class aclass pass by value, value from the default factory if not specified in the call  
 * Arg a5 is an array of strings and is one way to allow an arbitrary number of strings to be passed to the procedure (see also Ellipsis later)
+
+Examples:
+
+```rexx
+bump: procedure = .int
+  arg value = .int
+  value = value + 1
+  return value
+
+x = 10
+say bump(x)
+say x           /* still 10 */
+```
+
+```rexx
+bumpref: procedure = .void
+  arg expose value = .int
+  value = value + 1
+  return
+
+x = 10
+call bumpref(x)
+say x           /* now 11 */
+```
 
 ## Ellipsis (...)
 

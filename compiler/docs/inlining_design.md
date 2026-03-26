@@ -248,6 +248,17 @@ However, the implementation should not assume that any arbitrary post-validation
 
 That is another reason phase 1 should replace the enclosing assignment statement with a statement block, rather than replacing an expression node with a statement-only node.
 
+## Argument Semantics During Inlining
+
+Inlining must preserve the same argument semantics as a normal call:
+
+- `.ref` / `expose` formals must continue to alias the caller target selected at the call site.
+- By-value formals that are written in the callee must behave as isolated locals, even if the VM's native call mechanism is by reference.
+- Read-only by-value formals may reuse the incoming value when that is already allowed in the non-inlined path.
+- Non-symbol temporaries may reuse storage when no caller-visible binding exists to preserve, but that remains an implementation choice, not a semantic change.
+
+For validation purposes, any inline rewrite that changes whether a caller variable, array, or object binding can be observed after the call is wrong even if the emitted code is smaller or faster.
+
 ## Later Phases
 
 ### Next Phase

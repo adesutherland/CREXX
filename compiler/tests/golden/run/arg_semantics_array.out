@@ -1,0 +1,5 @@
+array-read=red:blue
+array-mut=RED:local
+array-after=red:blue
+array-temp=TEMP:local
+array-ref=ref:BLUE

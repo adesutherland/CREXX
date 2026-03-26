@@ -1,0 +1,219 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : arg_semantics_array.rexx
+ * BUILT                  : 2026-03-26 12:23:46
+ */
+
+.srcfile="arg_semantics_array.rexx"
+.globals=0
+
+main() .locals=5
+   .meta "arg_semantics_array.main"="b" ".int" main() "" ""
+   .src 4:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "arg_semantics_array.main.arr"="b" ".string[*]" r0
+   .src 5:3="arr = .string"
+   null r0
+   .src 6:3="arr[1] = \"red\""
+   minattrs r0,1
+   linkattr1 r1,r0,1
+   load r2,"red"
+   scopy r1,r2
+   unlink r1
+   .src 7:3="arr[2] = \"blue\""
+   minattrs r0,2
+   linkattr1 r2,r0,2
+   load r1,"blue"
+   scopy r2,r1
+   unlink r2
+   .src 9:3="say \"array-read=\" || readArray(arr)"
+   load r1,1
+   settp r0,1
+   swap r2,r0
+   call r3,readArray(),r1
+   swap r0,r2
+   concat r3,"array-read=",r3
+   say r3
+   .src 10:3="say \"array-mut=\" || mutateArrayLocal(arr)"
+   load r2,1
+   settp r0,1
+   swap r3,r0
+   call r1,mutateArrayLocal(),r2
+   swap r0,r3
+   concat r3,"array-mut=",r1
+   say r3
+   .src 11:3="say \"array-after=\" || arr[1] || \":\" || arr[2"
+   minattrs r0,1
+   linkattr1 r3,r0,1
+   concat r2,"array-after=",r3
+   unlink r3
+   concat r2,r2,":"
+   minattrs r0,2
+   linkattr1 r1,r0,2
+   concat r2,r2,r1
+   unlink r1
+   say r2
+   .src 12:3="say \"array-temp=\" || mutateArrayLocal(makeArray"
+   load r2,1
+   load r1,0
+   call r3,makeArray(),r1
+   settp r3,1
+   call r1,mutateArrayLocal(),r2
+   concat r3,"array-temp=",r1
+   say r3
+   .src 13:3="call mutateArrayRef(arr)"
+   load r2,1
+   swap r3,r0
+   call r1,mutateArrayRef(),r2
+   swap r0,r3
+   .src 14:3="say \"array-ref=\" || arr[1] || \":\" || arr[2"
+   minattrs r0,1
+   linkattr1 r3,r0,1
+   concat r2,"array-ref=",r3
+   unlink r3
+   concat r2,r2,":"
+   minattrs r0,2
+   linkattr1 r4,r0,2
+   concat r2,r2,r4
+   unlink r4
+   say r2
+   .src 15:3="return 0"
+   ret 0
+   .meta "arg_semantics_array.main.arr"
+
+readArray() .locals=4
+   .meta "arg_semantics_array.readarray"="b" ".string" readArray() "value=.string[*]" ""
+   .src 17:1="readArray: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 18:7="value = .string"
+   .meta "arg_semantics_array.readarray.value"="b" ".string[*]" a1
+   .src 19:3="return value[1] || \":\" || value[2"
+   minattrs a1,1
+   linkattr1 r1,a1,1
+   concat r2,r1,":"
+   unlink r1
+   minattrs a1,2
+   linkattr1 r3,a1,2
+   concat r2,r2,r3
+   unlink r3
+   ret r2
+   .meta "arg_semantics_array.readarray.value"
+
+mutateArrayLocal() .locals=6
+   .meta "arg_semantics_array.mutatearraylocal"="b" ".string" mutateArrayLocal() "value=.string[*]" ""
+   .src 21:1="mutateArrayLocal: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 22:7="value = .string"
+   .meta "arg_semantics_array.mutatearraylocal.value"="b" ".string[*]" r0
+   brtpandt l82c,a1,2
+   copy r0,a1
+   acopy r0,a1
+   br l82d
+l82c:
+   swap r0,a1
+l82d:
+   .src 23:3="value[1] = upper(value[1"
+   minattrs r0,1
+   linkattr1 r1,r0,1
+   load r2,1
+   minattrs r0,1
+   linkattr1 r4,r0,1
+   swap r3,r4
+   call r5,rxfnsb.upper(),r2
+   swap r4,r3
+   unlink r4
+   scopy r1,r5
+   unlink r1
+   .src 24:3="value[2] = \"local\""
+   minattrs r0,2
+   linkattr1 r5,r0,2
+   load r4,"local"
+   scopy r5,r4
+   unlink r5
+   .src 25:3="return value[1] || \":\" || value[2"
+   minattrs r0,1
+   linkattr1 r5,r0,1
+   concat r4,r5,":"
+   unlink r5
+   minattrs r0,2
+   linkattr1 r3,r0,2
+   concat r4,r4,r3
+   unlink r3
+   ret r4
+   .meta "arg_semantics_array.mutatearraylocal.value"
+
+mutateArrayRef() .locals=6
+   .meta "arg_semantics_array.mutatearrayref"="b" ".void" mutateArrayRef() "expose value=.string[*]" ""
+   .src 27:1="mutateArrayRef: procedure = .void"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 28:7="expose value = .string"
+   .meta "arg_semantics_array.mutatearrayref.value"="b" ".string[*]" a1
+   .src 29:3="value[1] = \"ref\""
+   minattrs a1,1
+   linkattr1 r1,a1,1
+   load r2,"ref"
+   scopy r1,r2
+   unlink r1
+   .src 30:3="value[2] = upper(value[2"
+   minattrs a1,2
+   linkattr1 r2,a1,2
+   load r3,1
+   minattrs a1,2
+   linkattr1 r1,a1,2
+   swap r4,r1
+   call r5,rxfnsb.upper(),r3
+   swap r1,r4
+   unlink r1
+   scopy r2,r5
+   unlink r2
+   .src 31:3="return"
+   ret
+   .meta "arg_semantics_array.mutatearrayref.value"
+
+makeArray() .locals=3
+   .meta "arg_semantics_array.makearray"="b" ".string[*]" makeArray() "" ""
+   .src 33:1="makeArray: procedure = .string[]"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "arg_semantics_array.makearray.temp"="b" ".string[*]" r0
+   .src 34:3="temp = .string"
+   null r0
+   .src 35:3="temp[1] = \"temp\""
+   minattrs r0,1
+   linkattr1 r1,r0,1
+   load r2,"temp"
+   scopy r1,r2
+   unlink r1
+   .src 36:3="temp[2] = \"seed\""
+   minattrs r0,2
+   linkattr1 r2,r0,2
+   load r1,"seed"
+   scopy r2,r1
+   unlink r2
+   .src 37:3="return temp"
+   ret r0
+   .meta "arg_semantics_array.makearray.temp"
+
+/* Imported Declaration from file: upper@library.rxbin */
+
+rxfnsb.upper() .expose=rxfnsb.upper
+   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string" ""
