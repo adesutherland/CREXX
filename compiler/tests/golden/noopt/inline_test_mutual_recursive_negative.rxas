@@ -1,0 +1,63 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_mutual_recursive_negative.rexx
+ * BUILT                  : 2026-03-26 16:44:42
+ */
+
+.srcfile="inline_test_mutual_recursive_negative.rexx"
+.globals=0
+
+main() .locals=3
+   .meta "inline_test_mutual_recursive_negative.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting mutual recursive inline negative test...\""
+   say "Starting mutual recursive inline negative test..."
+   .src 5:3="say left(3)"
+   load r0,1
+   load r1,3
+   call r2,left(),r0
+   itos r2
+   say r2
+   .src 6:3="say \"Mutual recursive inline negative test finished.\""
+   say "Mutual recursive inline negative test finished."
+   .src 7:3="return 0"
+   ret 0
+
+left() .locals=4
+   .meta "inline_test_mutual_recursive_negative.left"="b" ".int" left() "val=.int" ""
+   .src 9:1="left: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 10:7="val = .int"
+   .meta "inline_test_mutual_recursive_negative.left.val"="b" ".int" a1
+   .src 11:3="return right(val - 1)"
+   load r1,1
+   isub r2,a1,1
+   call r3,right(),r1
+   ret r3
+   .meta "inline_test_mutual_recursive_negative.left.val"
+
+right() .locals=4
+   .meta "inline_test_mutual_recursive_negative.right"="b" ".int" right() "val=.int" ""
+   .src 13:1="right: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 14:7="val = .int"
+   .meta "inline_test_mutual_recursive_negative.right.val"="b" ".int" a1
+   .src 15:3="return left(val - 1)"
+   load r1,1
+   isub r2,a1,1
+   call r3,left(),r1
+   ret r3
+   .meta "inline_test_mutual_recursive_negative.right.val"

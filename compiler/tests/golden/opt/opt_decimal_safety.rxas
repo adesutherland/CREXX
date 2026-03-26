@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : opt_decimal_safety.rexx
- * BUILT                  : 2026-03-25 13:39:20
+ * BUILT                  : 2026-03-26 16:47:39
  */
 
 .srcfile="opt_decimal_safety.rexx"
 .globals=0
 
-main() .locals=5
+main() .locals=4
    .meta "opt_decimal_safety.main"="b" ".void" main() "" ""
    setnumdgts 18
    setnumfuz 0
@@ -16,15 +16,12 @@ main() .locals=5
    setnumstd 1
    .src 12:5="say 1.0d/3"
    say "0.333333333333333333"
-   .src 5:1="call Case2"
-   load r1,0
-   call r2,Case2(),r1
-   .src 6:1="call Case3"
-   load r1,0
-   call r3,Case3(),r1
-   .src 7:1="call TestInherited"
-   load r1,0
-   call r4,TestInherited(),r1
+   .src 17:5="say 1.0d/3"
+   say "0.333333333333333333"
+   .src 24:10="say \"Not Equal\""
+   say "Not Equal"
+   .src 30:5="say 1.0d/3"
+   say "0.333333333333333333"
    .src 8:1="return"
    ret
 

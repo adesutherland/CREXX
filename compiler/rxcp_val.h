@@ -98,6 +98,7 @@ walker_result exit_dispatch_walker(walker_direction direction, ASTNode* node, vo
 /* inline */
 walker_result identify_inlinable_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result inline_procedure_walker(walker_direction direction, ASTNode* node, void *payload);
+int rxcp_inline_pass(Context *context);
 void rxcp_inline_prune(Context *context, ASTNode *tree);
 
 /* misc */

@@ -241,7 +241,8 @@ This milestone should be treated as two internal stages:
 Notes:
 
 - Varargs are the next sensible step, but varargs alone do not complete milestone 1.
-- The current implementation still excludes varargs, methods/factories, object or array values, class-scope procedures, nested-call callees, nested scopes, and procedures without exactly one trailing `RETURN`.
+- The current implementation now supports by-value varargs and nested-call local procedures through a bounded fixed-point pass with explicit cycle blocking for self-recursive and mutually recursive expansions.
+- The current implementation still excludes methods/factories, object or array values, class-scope procedures, nested scopes, and procedures without exactly one trailing `RETURN`.
 - Selection should remain opportunity-based throughout milestone 1: a structurally inlineable procedure may still have uninlined call sites if their rewrite bucket is not yet implemented.
 
 ### Milestone 2: all local class method inlining works
@@ -277,20 +278,22 @@ Also note that imported sources are not all equivalent:
 
 So milestone 3 should likely begin with the narrower target of source-imported procedures and methods whose bodies are definitely available.
 
-## Current Approved Next Iteration
+## Current Status
 
-The currently approved next implementation slice is:
+The implementation now covers:
 
-- local plain procedure varargs
-- by-value varargs only
-- current supported call-site buckets only
-- methods, factories, imported callees, object/array values, nested-call callees, nested-scope callees, and multi/early-return callees remain out of slice
+- local plain procedures in statement and expression buckets across the current scalar slice
+- by-value trailing varargs
+- nested-call local procedures via repeated identify-and-inline passes until a bounded fixed point is reached
+- explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
 
-The implementation approach for this slice is:
+The implementation still excludes:
 
-- replace the current exact fixed-arity gate with shared matching logic that understands an optional trailing vararg tail
-- materialise the by-value vararg tail once in inline scope so call-time evaluation order is preserved
-- keep selection conservative for unsupported vararg body patterns and for reference-varargs
+- methods and factories
+- imported callees
+- object and array values
+- nested local scopes inside the callee
+- multi/early-return procedures
 
 Each iteration in this area should continue to use a full build and the compiler regression suite as its validation gate:
 

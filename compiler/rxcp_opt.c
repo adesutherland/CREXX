@@ -71,6 +71,8 @@
 #include "rxvmvars.h"
 #include "rxvalue.h"
 
+#define INLINE_MAX_PASSES 8
+
 /* Optimiser payload */
 typedef struct Payload {
     Context *context;
@@ -1343,10 +1345,12 @@ void optimise(Context *context) {
 
     /* Inlining Pass */
     if (context->optimise) {
-        context->current_scope = 0;
-        ast_wlkr(context->ast, identify_inlinable_walker, (void *) context);
-        context->current_scope = 0;
-        ast_wlkr(context->ast, inline_procedure_walker, (void *) context);
+        int inline_pass;
+
+        for (inline_pass = 0; inline_pass < INLINE_MAX_PASSES; inline_pass++) {
+            if (!rxcp_inline_pass(context)) break;
+        }
+
         rxcp_inline_prune(context, context->ast);
     }
 

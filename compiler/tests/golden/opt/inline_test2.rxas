@@ -1,14 +1,14 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test2.rexx
- * BUILT                  : 2026-03-25 15:25:26
+ * BUILT                  : 2026-03-26 16:47:39
  */
 
 .meta "inline_test2.myclass"="b" ".unknown" .class
 .srcfile="inline_test2.rexx"
 .globals=0
 
-main() .locals=8
+main() .locals=9
    .meta "inline_test2.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -30,33 +30,38 @@ main() .locals=8
    sconcat r7,"LargeProc result:",r7
    say r7
    .src 10:3="say \"NestedCallProc result:\" nestedCallProc(10)"
+   .src 10:32="nestedCallProc"
+   .src 39:3="return"
    load r6,1
    load r7,10
-   call r5,nestedCallProc(),r6
-   itos r5
-   sconcat r7,"NestedCallProc result:",r5
+   call r5,helper(),r6
+   icopy r7,r5
+   br l169bexprend
+l169bexprend:
+   itos r7
+   sconcat r7,"NestedCallProc result:",r7
    say r7
    .src 13:3="o = .MyClass"
    .meta "inline_test2.main.o"="b" ".myclass" r0
    load r7,0
    call r0,§inline_test2.myclass.§factory(),r7
    .src 14:3="say \"Method result:\" o.myMethod(20)"
-   load r5,2
-   load r7,20
+   load r6,2
+   load r8,20
    settp r0,1
-   swap r6,r0
-   call r4,§inline_test2.myclass.mymethod(),r5
-   swap r0,r6
+   swap r7,r0
+   call r4,§inline_test2.myclass.mymethod(),r6
+   swap r0,r7
    itos r4
-   sconcat r7,"Method result:",r4
-   say r7
+   sconcat r8,"Method result:",r4
+   say r8
    .src 17:3="say \"MultiReturn result:\" multiReturn(1)"
-   load r6,1
    load r7,1
-   call r5,multiReturn(),r6
-   itos r5
-   sconcat r7,"MultiReturn result:",r5
-   say r7
+   load r8,1
+   call r6,multiReturn(),r7
+   itos r6
+   sconcat r8,"MultiReturn result:",r6
+   say r8
    .src 19:3="return 0"
    ret 0
    .meta "inline_test2.main.o"
@@ -126,8 +131,8 @@ nestedCallProc() .locals=4
    .src 43:3="return"
    iadd r2,r1,1
    icopy r3,r2
-   br l169bexprend
-l169bexprend:
+   br l177bexprend
+l177bexprend:
    ret r3
    .meta "inline_test2.nestedcallproc.val"
 
