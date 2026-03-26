@@ -55,7 +55,6 @@ typedef struct {
 typedef struct {
     ASTNode *root_proc;
     int node_count;
-    int has_nested_scope;
     int return_count;
     int has_unsupported_varg_access;
     size_t max_required_varg_index;
@@ -1479,12 +1478,6 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
     if (direction == in) {
         check->node_count++;
 
-        if (node != check->root_proc &&
-            node->scope &&
-            node->scope->defining_node == node) {
-            check->has_nested_scope = 1;
-        }
-
         if (node->node_type == RETURN) {
             check->return_count++;
         }
@@ -1591,7 +1584,6 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         ast_wlkr(node, inlinable_check_walker, &check);
 
         if (check.node_count > INLINE_MAX_NODES ||
-            check.has_nested_scope ||
             check.return_count != 1 ||
             check.has_unsupported_varg_access) {
             sym->is_inlinable = 0;

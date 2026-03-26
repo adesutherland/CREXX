@@ -1,0 +1,86 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_nested_scope_exposed_call.rexx
+ * BUILT                  : 2026-03-26 17:25:07
+ */
+
+.srcfile="inline_test_nested_scope_exposed_call.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_nested_scope_exposed_call.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting nested scope exposed call inline test...\""
+   say "Starting nested scope exposed call inline test..."
+   .src 5:3="do"
+   .src 5:6="i = 1"
+   .meta "inline_test_nested_scope_exposed_call.main.i"="b" ".int" r0
+   load r0,1
+   .src 5:12="to 3"
+   load r1,3
+l8dostart:
+   .src 5:12="to 3"
+   igt r2,r0,r1
+   brt l8doend,r2
+   .src 6:5="say outer(i)"
+   load r3,1
+   swap r4,r0
+   call r5,outer(),r3
+   swap r0,r4
+   itos r5
+   say r5
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 7:3="end"
+   br l8dostart
+l8doend:
+   .src 8:3="say \"Nested scope exposed call inline test finished.\""
+   say "Nested scope exposed call inline test finished."
+   .src 9:3="return 0"
+   ret 0
+
+outer() .locals=4
+   .meta "inline_test_nested_scope_exposed_call.outer"="b" ".int" outer() "val=.int" ""
+   .src 11:1="outer: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 12:7="val = .int"
+   .meta "inline_test_nested_scope_exposed_call.outer.val"="b" ".int" a1
+   .meta "inline_test_nested_scope_exposed_call.outer.tmp"="b" ".int" r1
+   .src 14:5="tmp = .int"
+   null r1
+   .src 15:5="tmp = addOne(val)"
+   load r2,1
+   swap r3,a1
+   call r1,addOne(),r2
+   swap a1,r3
+   .src 16:5="return tmp * 2"
+   imult r3,r1,2
+   ret r3
+   .src 18:3="return 0"
+   ret 0
+   .meta "inline_test_nested_scope_exposed_call.outer.val"
+
+addOne() .locals=2
+   .meta "inline_test_nested_scope_exposed_call.addone"="b" ".int" addOne() "val=.int" ""
+   .src 20:1="addOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 21:7="val = .int"
+   .meta "inline_test_nested_scope_exposed_call.addone.val"="b" ".int" a1
+   .src 22:3="return val + 1"
+   iadd r1,a1,1
+   ret r1
+   .meta "inline_test_nested_scope_exposed_call.addone.val"

@@ -241,8 +241,8 @@ This milestone should be treated as two internal stages:
 Notes:
 
 - Varargs are the next sensible step, but varargs alone do not complete milestone 1.
-- The current implementation now supports by-value varargs and nested-call local procedures through a bounded fixed-point pass with explicit cycle blocking for self-recursive and mutually recursive expansions.
-- The current implementation still excludes methods/factories, object or array values, class-scope procedures, nested scopes, and procedures without exactly one trailing `RETURN`.
+- The current implementation now supports by-value varargs, nested-call local procedures, and nested callee scopes through a bounded fixed-point pass with explicit cycle blocking for self-recursive and mutually recursive expansions.
+- The current implementation still excludes methods/factories, object or array values, class-scope procedures, and procedures without exactly one trailing `RETURN`.
 - Selection should remain opportunity-based throughout milestone 1: a structurally inlineable procedure may still have uninlined call sites if their rewrite bucket is not yet implemented.
 
 ### Milestone 2: all local class method inlining works
@@ -285,6 +285,7 @@ The implementation now covers:
 - local plain procedures in statement and expression buckets across the current scalar slice
 - by-value trailing varargs
 - nested-call local procedures via repeated identify-and-inline passes until a bounded fixed point is reached
+- nested callee-local scopes with duplicated scope and symbol remapping
 - explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
 
 The implementation still excludes:
@@ -292,7 +293,6 @@ The implementation still excludes:
 - methods and factories
 - imported callees
 - object and array values
-- nested local scopes inside the callee
 - multi/early-return procedures
 
 Each iteration in this area should continue to use a full build and the compiler regression suite as its validation gate:
