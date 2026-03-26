@@ -18,17 +18,31 @@ The testing infrastructure consists of:
 
 ## 2. Running Tests
 
-To run the full test suite, use `ctest` from your build directory:
+For compiler work, the reliable regression gate is the compiler test subtree rather than a top-level regex filter.
+
+To run the full compiler regression suite:
 
 ```bash
-cd cmake-build-debug
-ctest -R compiler
+cmake --build cmake-build-debug -j4
+ctest --test-dir cmake-build-debug/compiler/tests --output-on-failure
+```
+
+This is the recommended gate for optimisation and inlining iterations because it covers:
+
+- compiler output golden tests in both `noopt` and `opt`
+- runtime golden tests in both `noopt` and `opt`
+- parsing, warning, error, and robustness tests
+
+If you want the entire repository test suite instead of just compiler coverage:
+
+```bash
+ctest --test-dir cmake-build-debug --output-on-failure
 ```
 
 To run a specific test:
 
 ```bash
-ctest -R 01_assign
+ctest --test-dir cmake-build-debug/compiler/tests -R 01_assign --output-on-failure
 ```
 
 ## 3. Updating Golden Files (`--update-gold`)

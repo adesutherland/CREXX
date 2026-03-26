@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_call.rexx
- * BUILT                  : 2026-03-25 14:02:12
+ * BUILT                  : 2026-03-26 14:17:44
  */
 
 .srcfile="inline_test_call.rexx"
@@ -28,7 +28,7 @@ l8dostart:
    igt r4,r0,r3
    brt l8doend,r4
    .src 12:7="val"
-   copy r2,r0
+   icopy r2,r0
    .src 13:3="say \"Double for\" val \"is\" val * 2"
    itos r2
    sconcat r5,"Double for",r2

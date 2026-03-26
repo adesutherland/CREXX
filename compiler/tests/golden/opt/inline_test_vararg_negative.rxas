@@ -1,0 +1,81 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_vararg_negative.rexx
+ * BUILT                  : 2026-03-26 14:15:37
+ */
+
+.srcfile="inline_test_vararg_negative.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_vararg_negative.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting vararg inline negative test...\""
+   say "Starting vararg inline negative test..."
+   .src 9:3="say dynamicPick(idx, a, b, c)"
+   .meta "inline_test_vararg_negative.main.a"="b" ".int" "10"
+   .meta "inline_test_vararg_negative.main.b"="b" ".int" "20"
+   .meta "inline_test_vararg_negative.main.c"="b" ".int" "30"
+   .meta "inline_test_vararg_negative.main.idx"="b" ".int" "2"
+   load r0,4
+   load r1,2
+   load r2,10
+   load r3,20
+   load r4,30
+   call r5,dynamicPick(),r0
+   itos r5
+   say r5
+   .src 10:3="say refTailCount(a, b, c)"
+   load r2,3
+   load r3,10
+   load r4,20
+   load r5,30
+   call r1,refTailCount(),r2
+   itos r1
+   say r1
+   .src 11:3="say \"Vararg inline negative test finished.\""
+   say "Vararg inline negative test finished."
+   .src 12:3="return 0"
+   ret 0
+   .meta "inline_test_vararg_negative.main.a"
+   .meta "inline_test_vararg_negative.main.b"
+   .meta "inline_test_vararg_negative.main.c"
+   .meta "inline_test_vararg_negative.main.idx"
+
+dynamicPick() .locals=2
+   .meta "inline_test_vararg_negative.dynamicpick"="b" ".int" dynamicPick() "which=.int,...=.int" ""
+   .src 14:1="dynamicPick: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 15:7="which = .int"
+   .meta "inline_test_vararg_negative.dynamicpick.which"="b" ".int" a1
+   .src 15:21="... = .int"
+   .src 16:3="return arg[which"
+   icopy r1,a0
+   isub r1,r1,1
+   ichkrng a1,1,r1
+   linkarg r1,a1,1
+   ret r1
+   .meta "inline_test_vararg_negative.dynamicpick.which"
+
+refTailCount() .locals=1
+   .meta "inline_test_vararg_negative.reftailcount"="b" ".int" refTailCount() "expose ...=.int" ""
+   .src 18:1="refTailCount: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 19:14="... = .int"
+   .src 20:3="return arg"
+   icopy r0,a0
+   isub r0,r0,0
+   ret r0

@@ -227,6 +227,76 @@ For the first slice, a procedure is eligible only if all of the following hold:
 
 These checks may be tightened further if needed to keep the first implementation simple and correct.
 
+## Milestones
+
+The milestone names below describe user-visible capability goals. They are intentionally broader than a single implementation slice, so each milestone is expected to contain several staged iterations.
+
+### Milestone 1: all local procedures work
+
+This milestone should be treated as two internal stages:
+
+- `M1a`: local plain procedures within the current safe scalar slice, including fixed arguments, optional arguments, by-reference formals, and by-value varargs, across the currently supported call-site capability buckets
+- `M1b`: local plain procedures beyond the current leaf restrictions, removing the temporary exclusions around nested calls, nested scopes, and single-trailing-`RETURN` only shapes
+
+Notes:
+
+- Varargs are the next sensible step, but varargs alone do not complete milestone 1.
+- The current implementation still excludes varargs, methods/factories, object or array values, class-scope procedures, nested-call callees, nested scopes, and procedures without exactly one trailing `RETURN`.
+- Selection should remain opportunity-based throughout milestone 1: a structurally inlineable procedure may still have uninlined call sites if their rewrite bucket is not yet implemented.
+
+### Milestone 2: all local class method inlining works
+
+This milestone should start with local methods before it attempts factories.
+
+Required work includes:
+
+- selecting `MEMBER_CALL` callees, not just `FUNCTION` callees
+- binding `§this` correctly
+- preserving receiver evaluation-once semantics
+- preserving class-scope and attribute resolution rules inside the cloned body
+
+Factories may follow as part of milestone 2, but they should be tracked separately from ordinary methods because their call shape and object-construction semantics are different enough to justify an incremental rollout.
+
+### Milestone 3: imported procedures and methods
+
+Milestone 3 requires an explicit design phase before implementation.
+
+The key open question is how inlineable callee bodies are made available across module boundaries. Current import handling is sufficient for signature-driven resolution, but not yet for general cross-module body cloning.
+
+The main design options currently in scope are:
+
+- metadata carries a reusable AST/symbol representation for inlineable imported bodies
+- imported REXX source is used as the body source for inlining
+
+Those options should be evaluated during the milestone 3 design phase. Additional approaches may emerge, but milestone 3 should not be treated as just another selector extension until body transport and ownership are understood.
+
+Also note that imported sources are not all equivalent:
+
+- source imports may plausibly provide full bodies
+- metadata-only imports such as `.rxbin` and plugin-driven imports may only provide signatures or stubs
+
+So milestone 3 should likely begin with the narrower target of source-imported procedures and methods whose bodies are definitely available.
+
+## Current Approved Next Iteration
+
+The currently approved next implementation slice is:
+
+- local plain procedure varargs
+- by-value varargs only
+- current supported call-site buckets only
+- methods, factories, imported callees, object/array values, nested-call callees, nested-scope callees, and multi/early-return callees remain out of slice
+
+The implementation approach for this slice is:
+
+- replace the current exact fixed-arity gate with shared matching logic that understands an optional trailing vararg tail
+- materialise the by-value vararg tail once in inline scope so call-time evaluation order is preserved
+- keep selection conservative for unsupported vararg body patterns and for reference-varargs
+
+Each iteration in this area should continue to use a full build and the compiler regression suite as its validation gate:
+
+- `cmake --build cmake-build-debug -j4`
+- `ctest --test-dir cmake-build-debug/compiler/tests --output-on-failure`
+
 ## Symbol and Scope Handling
 Inlining requires duplicating callee-local AST, symbols, and scopes into a new isolated scope under the caller.
 

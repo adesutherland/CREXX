@@ -1,0 +1,152 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_vararg.rexx
+ * BUILT                  : 2026-03-26 14:14:49
+ */
+
+.srcfile="inline_test_vararg.rexx"
+.globals=0
+
+main() .locals=7
+   .meta "inline_test_vararg.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting vararg inline test...\""
+   say "Starting vararg inline test..."
+   .src 5:3="say tailCount(10)"
+   .src 5:7="tailCount"
+   .src 17:3="return"
+   load r1,10
+   icopy r2,r1
+   br l105bexprend
+l105bexprend:
+   itos r2
+   say r2
+   .src 6:3="say tailCount(10, 20, 30)"
+   .src 6:7="tailCount"
+   .src 17:3="return"
+   load r2,12
+   icopy r3,r2
+   br l114bexprend
+l114bexprend:
+   itos r3
+   say r3
+   .src 7:3="total = 1 + secondOnly(5, 7, 11)"
+   .meta "inline_test_vararg.main.total"="b" ".int" r0
+   .src 7:15="secondOnly"
+   .src 21:3="return"
+   load r3,16
+   icopy r4,r3
+   br l129bexprend
+l129bexprend:
+   iadd r0,r4,1
+   .src 8:3="say total"
+   itos r0
+   say r0
+   .src 9:3="say hasThird(1, 2)"
+   .src 9:7="hasThird"
+   .src 25:3="return"
+   load r4,0
+   icopy r5,r4
+   br l144bexprend
+l144bexprend:
+   itos r5
+   say r5
+   .src 10:3="say hasThird(1, 2, 3)"
+   .src 10:7="hasThird"
+   .src 25:3="return"
+   load r5,1
+   icopy r6,r5
+   br l154bexprend
+l154bexprend:
+   itos r6
+   say r6
+   .src 29:3="say base + arg[2"
+   say "15"
+   .src 12:3="say \"Vararg inline test finished.\""
+   say "Vararg inline test finished."
+   .src 13:3="return 0"
+   ret 0
+   .meta "inline_test_vararg.main.total"
+
+tailCount() .locals=2
+   .meta "inline_test_vararg.tailcount"="b" ".int" tailCount() "base=.int,...=.int" ""
+   .src 15:1="tailCount: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 16:7="base = .int"
+   .meta "inline_test_vararg.tailcount.base"="b" ".int" a1
+   .src 16:20="... = .int"
+   .src 17:3="return base + arg"
+   icopy r1,a0
+   isub r1,r1,1
+   iadd r1,a1,r1
+   ret r1
+   .meta "inline_test_vararg.tailcount.base"
+
+secondOnly() .locals=3
+   .meta "inline_test_vararg.secondonly"="b" ".int" secondOnly() "base=.int,...=.int" ""
+   .src 19:1="secondOnly: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 20:7="base = .int"
+   .meta "inline_test_vararg.secondonly.base"="b" ".int" a1
+   .src 20:20="... = .int"
+   .src 21:3="return base + arg[2"
+   icopy r1,a0
+   isub r1,r1,1
+   ichkrng 2,1,r1
+   linkarg r1,3
+   iadd r2,a1,r1
+   unlink r1
+   ret r2
+   .meta "inline_test_vararg.secondonly.base"
+
+hasThird() .locals=1
+   .meta "inline_test_vararg.hasthird"="b" ".int" hasThird() "...=.int" ""
+   .src 23:1="hasThird: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 24:7="... = .int"
+   .src 25:3="return arg(3"
+   icopy r0,a0
+   ilte r0,3,r0
+   btoi r0
+   ret r0
+
+logSecond() .locals=3
+   .meta "inline_test_vararg.logsecond"="b" ".int" logSecond() "base=.int,...=.int" ""
+   .src 27:1="logSecond: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 28:7="base = .int"
+   .meta "inline_test_vararg.logsecond.base"="b" ".int" a1
+   .src 28:20="... = .int"
+   .src 29:3="say base + arg[2"
+   icopy r1,a0
+   isub r1,r1,1
+   ichkrng 2,1,r1
+   linkarg r1,3
+   iadd r2,a1,r1
+   unlink r1
+   itos r2
+   say r2
+   .src 30:3="return base"
+   ret a1
+   .meta "inline_test_vararg.logsecond.base"

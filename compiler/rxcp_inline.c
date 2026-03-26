@@ -48,6 +48,8 @@ typedef struct {
     size_t node_count;
     InlineRefActualEntry *ref_entries;
     size_t ref_count;
+    Symbol **varg_symbols;
+    size_t varg_count;
 } InlineCloneState;
 
 typedef struct {
@@ -56,6 +58,8 @@ typedef struct {
     int has_nested_call;
     int has_nested_scope;
     int return_count;
+    int has_unsupported_varg_access;
+    size_t max_required_varg_index;
 } InlinableCheck;
 
 typedef struct {
@@ -72,6 +76,10 @@ typedef enum {
 
 static size_t inline_count_siblings(ASTNode *node);
 static ASTNode *inline_clone_subtree(Context *context, ASTNode *node, InlineCloneState *state);
+static ASTNode *inline_create_integer_constant(Context *context, ASTNode *source_node, int value, ValueType type);
+static ASTNode *inline_find_varg_arg(ASTNode *proc_def);
+static int inline_call_arity_matches(ASTNode *call_node, Symbol *proc_sym, size_t *varg_count_out);
+static int inline_analyse_varg_usage(ASTNode *proc_def, int *unsupported_out, size_t *max_required_index_out);
 
 static Symbol *inline_find_mapped_symbol(InlineCloneState *state, Symbol *old_symbol) {
     size_t i;
@@ -201,6 +209,131 @@ static int inline_copy_node_shape(Symbol *target, ASTNode *source) {
     } else {
         target->value_class = NULL;
     }
+
+    return 1;
+}
+
+static ASTNode *inline_create_integer_constant(Context *context, ASTNode *source_node, int value, ValueType type) {
+    ASTNode *node;
+    char buffer[32];
+
+    if (!context || !source_node) return NULL;
+
+    node = ast_ft(context, INTEGER);
+    if (!node) return NULL;
+
+    snprintf(buffer, sizeof(buffer), "%d", value);
+    ast_copy_str(node, buffer);
+    node->token = source_node->token;
+    node->line = source_node->line;
+    node->column = source_node->column;
+    node->source_start = source_node->source_start;
+    node->source_end = source_node->source_end;
+    node->token_start = source_node->token_start;
+    node->token_end = source_node->token_end;
+    node->int_value = value;
+    node->bool_value = value ? 1 : 0;
+    ast_set_value_type(0, node, type, 0, 0, 0, 0);
+    ast_set_target_type(0, node, type, 0, 0, 0, 0);
+
+    return node;
+}
+
+static ASTNode *inline_find_varg_arg(ASTNode *proc_def) {
+    ASTNode *args;
+    ASTNode *arg;
+
+    if (!proc_def) return NULL;
+
+    args = ast_chld(proc_def, ARGS, 0);
+    arg = args ? args->child : NULL;
+    while (arg) {
+        if (arg->is_varg) return arg;
+        arg = arg->sibling;
+    }
+
+    return NULL;
+}
+
+static int inline_call_arity_matches(ASTNode *call_node, Symbol *proc_sym, size_t *varg_count_out) {
+    size_t actual_count;
+
+    if (varg_count_out) *varg_count_out = 0;
+    if (!call_node || !proc_sym) return 0;
+
+    actual_count = inline_count_siblings(call_node->child);
+    if (actual_count < proc_sym->fixed_args) return 0;
+    if (!proc_sym->has_vargs && actual_count != proc_sym->fixed_args) return 0;
+
+    if (varg_count_out && actual_count >= proc_sym->fixed_args) {
+        *varg_count_out = actual_count - proc_sym->fixed_args;
+    }
+
+    return 1;
+}
+
+static int inline_varg_index_from_node(ASTNode *node, size_t *index_out) {
+    int value;
+
+    if (index_out) *index_out = 0;
+    if (!node) return 0;
+
+    switch (node->node_type) {
+        case INTEGER:
+        case CONSTANT:
+            break;
+
+        default:
+            return 0;
+    }
+
+    value = node_to_integer(node);
+    if (value < 1) return 0;
+
+    if (index_out) *index_out = (size_t)value;
+    return 1;
+}
+
+static walker_result inline_varg_usage_walker(walker_direction direction, ASTNode *node, void *payload) {
+    InlinableCheck *check;
+    size_t index;
+
+    check = (InlinableCheck *)payload;
+    if (!check || direction == in) return result_normal;
+
+    if (node->node_type == OP_ARG_VALUE) {
+        if (!node->child) {
+            check->has_unsupported_varg_access = 1;
+            return result_normal;
+        }
+
+        if (!inline_varg_index_from_node(node->child, &index)) {
+            check->has_unsupported_varg_access = 1;
+            return result_normal;
+        }
+
+        if (index > check->max_required_varg_index) check->max_required_varg_index = index;
+    } else if (node->node_type == OP_ARG_IX_EXISTS) {
+        if (!node->child || !inline_varg_index_from_node(node->child, &index)) {
+            check->has_unsupported_varg_access = 1;
+        }
+    }
+
+    return result_normal;
+}
+
+static int inline_analyse_varg_usage(ASTNode *proc_def, int *unsupported_out, size_t *max_required_index_out) {
+    InlinableCheck check;
+
+    if (unsupported_out) *unsupported_out = 0;
+    if (max_required_index_out) *max_required_index_out = 0;
+    if (!proc_def) return 0;
+
+    memset(&check, 0, sizeof(check));
+    ast_wlkr(proc_def, inline_varg_usage_walker, &check);
+
+    if (unsupported_out) *unsupported_out = check.has_unsupported_varg_access;
+    if (max_required_index_out) *max_required_index_out = check.max_required_varg_index;
 
     return 1;
 }
@@ -383,6 +516,154 @@ static int inline_register_ref_actual(Context *context,
     return 1;
 }
 
+static int inline_capture_varg_actuals(Context *context,
+                                       ASTNode *instr_list,
+                                       Scope *inline_scope,
+                                       ASTNode *varg_arg,
+                                       ASTNode *actual_arg,
+                                       InlineCloneState *state) {
+    ASTNode *varg_type;
+    size_t child_index;
+
+    if (!context || !instr_list || !inline_scope || !varg_arg || !state) return 0;
+
+    if (!actual_arg) {
+        state->varg_symbols = NULL;
+        state->varg_count = 0;
+        return 1;
+    }
+
+    varg_type = inline_formal_default(varg_arg);
+    state->varg_count = inline_count_siblings(actual_arg);
+    state->varg_symbols = calloc(state->varg_count, sizeof(Symbol *));
+    if (!state->varg_symbols) return 0;
+
+    child_index = 0;
+    while (actual_arg) {
+        Symbol *temp_symbol;
+        ASTNode *capture_assign;
+        ASTNode *capture_lhs;
+        ASTNode *capture_rhs;
+
+        if (actual_arg->node_type == NOVAL) return 0;
+
+        temp_symbol = inline_create_temp_symbol(context,
+                                                inline_scope,
+                                                varg_type ? varg_type : actual_arg,
+                                                "__inline_varg",
+                                                child_index);
+        if (!temp_symbol) return 0;
+
+        capture_assign = ast_f(context, ASSIGN, actual_arg->token);
+        if (!capture_assign) return 0;
+        capture_assign->scope = inline_scope;
+        capture_assign->value_type = temp_symbol->type;
+        capture_assign->target_type = temp_symbol->type;
+
+        capture_lhs = inline_create_symbol_node(context,
+                                                inline_scope,
+                                                actual_arg,
+                                                temp_symbol,
+                                                VAR_TARGET,
+                                                0,
+                                                1);
+        capture_rhs = inline_clone_subtree(context, actual_arg, state);
+        if (!capture_lhs || !capture_rhs) return 0;
+
+        add_ast(capture_assign, capture_lhs);
+        add_ast(capture_assign, capture_rhs);
+        add_ast(instr_list, capture_assign);
+
+        state->varg_symbols[child_index] = temp_symbol;
+        child_index++;
+        actual_arg = actual_arg->sibling;
+    }
+
+    return 1;
+}
+
+static int inline_bind_call_arguments(Context *context,
+                                      ASTNode *instr_list,
+                                      Scope *inline_scope,
+                                      ASTNode *proc_def,
+                                      ASTNode *call_node,
+                                      Symbol *proc_sym,
+                                      InlineCloneState *clone_state) {
+    ASTNode *param_list;
+    ASTNode *param_arg;
+    ASTNode *actual_arg;
+    ASTNode *varg_arg;
+
+    if (!context || !instr_list || !inline_scope || !proc_def || !call_node || !proc_sym || !clone_state) return 0;
+
+    if (!inline_call_arity_matches(call_node, proc_sym, NULL)) return 0;
+
+    param_list = ast_chld(proc_def, ARGS, 0);
+    param_arg = param_list ? param_list->child : NULL;
+    actual_arg = call_node->child;
+    varg_arg = inline_find_varg_arg(proc_def);
+
+    while (param_arg) {
+        ASTNode *formal_target;
+        ASTNode *formal_default;
+        ASTNode *bind_assign;
+        ASTNode *bind_lhs;
+        ASTNode *bind_rhs;
+
+        if (param_arg == varg_arg) break;
+
+        formal_target = inline_formal_target(param_arg);
+        formal_default = inline_formal_default(param_arg);
+        if (!formal_target || !actual_arg) return 0;
+
+        if (param_arg->is_ref_arg && !inline_is_missing_actual(actual_arg)) {
+            if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, clone_state)) {
+                return 0;
+            }
+            param_arg = param_arg->sibling;
+            actual_arg = actual_arg->sibling;
+            continue;
+        }
+
+        if (inline_is_missing_actual(actual_arg)) {
+            if (!param_arg->is_opt_arg || !formal_default) return 0;
+        }
+
+        bind_assign = ast_f(context, ASSIGN, formal_target->token);
+        bind_assign->scope = inline_scope;
+        bind_assign->value_type = formal_target->value_type;
+        bind_assign->target_type = formal_target->target_type;
+
+        bind_lhs = inline_clone_subtree(context, formal_target, clone_state);
+        if (inline_is_missing_actual(actual_arg)) {
+            bind_rhs = inline_clone_subtree(context, formal_default, clone_state);
+        } else {
+            bind_rhs = inline_clone_subtree(context, actual_arg, clone_state);
+        }
+
+        if (!bind_lhs || !bind_rhs) return 0;
+
+        add_ast(bind_assign, bind_lhs);
+        add_ast(bind_assign, bind_rhs);
+        add_ast(instr_list, bind_assign);
+
+        param_arg = param_arg->sibling;
+        actual_arg = actual_arg->sibling;
+    }
+
+    if (varg_arg) {
+        if (!inline_capture_varg_actuals(context, instr_list, inline_scope, varg_arg, actual_arg, clone_state)) {
+            return 0;
+        }
+        actual_arg = NULL;
+        param_arg = varg_arg ? varg_arg->sibling : param_arg;
+    }
+
+    if (actual_arg || param_arg) return 0;
+
+    return 1;
+}
+
 static int inline_append_scope_map_entry(InlineCloneState *state, Scope *old_scope, Scope *new_scope) {
     InlineScopeMapEntry *new_entries;
 
@@ -498,6 +779,52 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
         if (ref_entry) return inline_clone_ref_actual(context, node, current_scope, ref_entry);
     }
 
+    if (state && node->node_type == OP_ARGS) {
+        ASTNode *count_node;
+
+        count_node = inline_create_integer_constant(context, node, (int)state->varg_count, TP_INTEGER);
+        if (count_node) count_node->scope = current_scope;
+        return count_node;
+    }
+
+    if (state && node->node_type == OP_ARG_VALUE) {
+        size_t index;
+        ASTNode *replacement;
+
+        if (!node->child || !inline_varg_index_from_node(node->child, &index)) return NULL;
+        if (index < 1 || index > state->varg_count || !state->varg_symbols || !state->varg_symbols[index - 1]) return NULL;
+
+        replacement = inline_create_symbol_node(context,
+                                                current_scope,
+                                                node,
+                                                state->varg_symbols[index - 1],
+                                                VAR_SYMBOL,
+                                                1,
+                                                0);
+        if (!replacement) return NULL;
+        ast_set_target_type(0,
+                            replacement,
+                            node->target_type,
+                            node->target_dims,
+                            node->target_dim_base,
+                            node->target_dim_elements,
+                            node->target_class);
+        return replacement;
+    }
+
+    if (state && node->node_type == OP_ARG_IX_EXISTS) {
+        size_t index;
+        ASTNode *exists_node;
+
+        if (!node->child || !inline_varg_index_from_node(node->child, &index)) return NULL;
+        exists_node = inline_create_integer_constant(context,
+                                                     node,
+                                                     index <= state->varg_count ? 1 : 0,
+                                                     TP_BOOLEAN);
+        if (exists_node) exists_node->scope = current_scope;
+        return exists_node;
+    }
+
     new_node = ast_dup(context, node);
 
     node_scope = current_scope;
@@ -594,6 +921,7 @@ static void inline_free_symbol_map(InlineCloneState *state) {
         }
         free(state->ref_entries);
     }
+    if (state->varg_symbols) free(state->varg_symbols);
     state->symbol_entries = NULL;
     state->symbol_count = 0;
     state->scope_entries = NULL;
@@ -602,6 +930,8 @@ static void inline_free_symbol_map(InlineCloneState *state) {
     state->node_count = 0;
     state->ref_entries = NULL;
     state->ref_count = 0;
+    state->varg_symbols = NULL;
+    state->varg_count = 0;
 }
 
 static void inline_copy_symbol_shape(Symbol *target, Symbol *source) {
@@ -713,16 +1043,29 @@ static InlineExprContext inline_classify_expr_context(ASTNode *node) {
     }
 }
 
+static int inline_validate_call_site(ASTNode *proc_def, ASTNode *call_node, Symbol *proc_sym) {
+    int unsupported_varg_access;
+    size_t max_required_varg_index;
+    size_t varg_count;
+
+    if (!proc_def || !call_node || !proc_sym) return 0;
+    if (!inline_call_arity_matches(call_node, proc_sym, &varg_count)) return 0;
+    if (!proc_sym->has_vargs) return 1;
+
+    if (!inline_analyse_varg_usage(proc_def, &unsupported_varg_access, &max_required_varg_index)) return 0;
+    if (unsupported_varg_access) return 0;
+    if (varg_count < max_required_varg_index) return 0;
+
+    return 1;
+}
+
 static int ast_inline_statement(Context *context,
                                 ASTNode *statement_node,
                                 ASTNode *call_node,
                                 Symbol *proc_sym,
                                 InlineReturnPlan *return_plan) {
     ASTNode *proc_def;
-    ASTNode *param_list;
     ASTNode *proc_instrs;
-    ASTNode *param_arg;
-    ASTNode *actual_arg;
     ASTNode *block;
     ASTNode *instr_list;
     ASTNode *proc_instr;
@@ -734,8 +1077,7 @@ static int ast_inline_statement(Context *context,
     proc_def = proc_sym->ast_template;
     if (!proc_def || !proc_def->scope) return 0;
 
-    if (call_node->child && inline_count_siblings(call_node->child) != proc_sym->fixed_args) return 0;
-    if (!call_node->child && proc_sym->fixed_args != 0) return 0;
+    if (!inline_validate_call_site(proc_def, call_node, proc_sym)) return 0;
 
     block = ast_f(context, INSTRUCTIONS, call_node->token);
     ast_mark_compiler_generated_block(block);
@@ -747,87 +1089,11 @@ static int ast_inline_statement(Context *context,
 
     memset(&clone_state, 0, sizeof(clone_state));
 
-    param_list = ast_chld(proc_def, ARGS, 0);
-    param_arg = param_list ? param_list->child : NULL;
-    actual_arg = call_node->child;
-
-    while (param_arg) {
-        ASTNode *formal_target;
-
-        formal_target = inline_formal_target(param_arg);
-        if (!formal_target || !actual_arg) return 0;
-
-        param_arg = param_arg->sibling;
-        actual_arg = actual_arg->sibling;
-    }
-
-    if (actual_arg) {
-        inline_free_symbol_map(&clone_state);
-        return 0;
-    }
-
     if (!inline_build_symbol_map(proc_def->scope, inline_scope, &clone_state)) {
         return 0;
     }
 
-    param_arg = param_list ? param_list->child : NULL;
-    actual_arg = call_node->child;
-
-    while (param_arg) {
-        ASTNode *formal_target;
-        ASTNode *formal_default;
-        ASTNode *bind_assign;
-        ASTNode *bind_lhs;
-        ASTNode *bind_rhs;
-
-        formal_target = inline_formal_target(param_arg);
-        formal_default = inline_formal_default(param_arg);
-        if (!formal_target || !actual_arg) {
-            inline_free_symbol_map(&clone_state);
-            return 0;
-        }
-
-        if (param_arg->is_ref_arg && !inline_is_missing_actual(actual_arg)) {
-            if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, &clone_state)) {
-                inline_free_symbol_map(&clone_state);
-                return 0;
-            }
-            param_arg = param_arg->sibling;
-            actual_arg = actual_arg->sibling;
-            continue;
-        }
-
-        if (inline_is_missing_actual(actual_arg)) {
-            if (!param_arg->is_opt_arg || !formal_default) {
-                inline_free_symbol_map(&clone_state);
-                return 0;
-            }
-        }
-
-        bind_assign = ast_f(context, ASSIGN, formal_target->token);
-        bind_assign->scope = inline_scope;
-
-        bind_lhs = inline_clone_subtree(context, formal_target, &clone_state);
-        if (inline_is_missing_actual(actual_arg)) {
-            bind_rhs = inline_clone_subtree(context, formal_default, &clone_state);
-        } else {
-            bind_rhs = inline_clone_subtree(context, actual_arg, &clone_state);
-        }
-
-        if (!bind_lhs || !bind_rhs) {
-            inline_free_symbol_map(&clone_state);
-            return 0;
-        }
-
-        add_ast(bind_assign, bind_lhs);
-        add_ast(bind_assign, bind_rhs);
-        add_ast(instr_list, bind_assign);
-
-        param_arg = param_arg->sibling;
-        actual_arg = actual_arg->sibling;
-    }
-
-    if (actual_arg) {
+    if (!inline_bind_call_arguments(context, instr_list, inline_scope, proc_def, call_node, proc_sym, &clone_state)) {
         inline_free_symbol_map(&clone_state);
         return 0;
     }
@@ -917,10 +1183,7 @@ static int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_n
 
 static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym) {
     ASTNode *proc_def;
-    ASTNode *param_list;
     ASTNode *proc_instrs;
-    ASTNode *param_arg;
-    ASTNode *actual_arg;
     ASTNode *block_expr;
     ASTNode *instr_list;
     ASTNode *proc_instr;
@@ -937,8 +1200,7 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
     proc_def = proc_sym->ast_template;
     if (!proc_def || !proc_def->scope) return 0;
 
-    if (call_node->child && inline_count_siblings(call_node->child) != proc_sym->fixed_args) return 0;
-    if (!call_node->child && proc_sym->fixed_args != 0) return 0;
+    if (!inline_validate_call_site(proc_def, call_node, proc_sym)) return 0;
 
     block_expr = ast_dup(context, call_node);
     block_expr->node_type = BLOCK_EXPR;
@@ -957,89 +1219,11 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
 
     memset(&clone_state, 0, sizeof(clone_state));
 
-    param_list = ast_chld(proc_def, ARGS, 0);
-    param_arg = param_list ? param_list->child : NULL;
-    actual_arg = call_node->child;
-
-    while (param_arg) {
-        ASTNode *formal_target;
-
-        formal_target = inline_formal_target(param_arg);
-        if (!formal_target || !actual_arg) return 0;
-
-        param_arg = param_arg->sibling;
-        actual_arg = actual_arg->sibling;
-    }
-
-    if (actual_arg) {
-        inline_free_symbol_map(&clone_state);
-        return 0;
-    }
-
     if (!inline_build_symbol_map(proc_def->scope, inline_scope, &clone_state)) {
         return 0;
     }
 
-    param_arg = param_list ? param_list->child : NULL;
-    actual_arg = call_node->child;
-
-    while (param_arg) {
-        ASTNode *formal_target;
-        ASTNode *formal_default;
-        ASTNode *bind_assign;
-        ASTNode *bind_lhs;
-        ASTNode *bind_rhs;
-
-        formal_target = inline_formal_target(param_arg);
-        formal_default = inline_formal_default(param_arg);
-        if (!formal_target || !actual_arg) {
-            inline_free_symbol_map(&clone_state);
-            return 0;
-        }
-
-        if (param_arg->is_ref_arg && !inline_is_missing_actual(actual_arg)) {
-            if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, &clone_state)) {
-                inline_free_symbol_map(&clone_state);
-                return 0;
-            }
-            param_arg = param_arg->sibling;
-            actual_arg = actual_arg->sibling;
-            continue;
-        }
-
-        if (inline_is_missing_actual(actual_arg)) {
-            if (!param_arg->is_opt_arg || !formal_default) {
-                inline_free_symbol_map(&clone_state);
-                return 0;
-            }
-        }
-
-        bind_assign = ast_f(context, ASSIGN, formal_target->token);
-        bind_assign->scope = inline_scope;
-        bind_assign->value_type = formal_target->value_type;
-        bind_assign->target_type = formal_target->target_type;
-
-        bind_lhs = inline_clone_subtree(context, formal_target, &clone_state);
-        if (inline_is_missing_actual(actual_arg)) {
-            bind_rhs = inline_clone_subtree(context, formal_default, &clone_state);
-        } else {
-            bind_rhs = inline_clone_subtree(context, actual_arg, &clone_state);
-        }
-
-        if (!bind_lhs || !bind_rhs) {
-            inline_free_symbol_map(&clone_state);
-            return 0;
-        }
-
-        add_ast(bind_assign, bind_lhs);
-        add_ast(bind_assign, bind_rhs);
-        add_ast(instr_list, bind_assign);
-
-        param_arg = param_arg->sibling;
-        actual_arg = actual_arg->sibling;
-    }
-
-    if (actual_arg) {
+    if (!inline_bind_call_arguments(context, instr_list, inline_scope, proc_def, call_node, proc_sym, &clone_state)) {
         inline_free_symbol_map(&clone_state);
         return 0;
     }
@@ -1159,6 +1343,22 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
         if (node->node_type == RETURN) {
             check->return_count++;
         }
+
+        if (node->node_type == OP_ARG_VALUE) {
+            size_t index;
+
+            if (!node->child || !inline_varg_index_from_node(node->child, &index)) {
+                check->has_unsupported_varg_access = 1;
+            } else if (index > check->max_required_varg_index) {
+                check->max_required_varg_index = index;
+            }
+        } else if (node->node_type == OP_ARG_IX_EXISTS) {
+            size_t index;
+
+            if (!node->child || !inline_varg_index_from_node(node->child, &index)) {
+                check->has_unsupported_varg_access = 1;
+            }
+        }
     }
     return result_normal;
 }
@@ -1192,11 +1392,17 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
             arg = args->child;
             while (arg) {
                 if (arg->is_varg) {
-                    sym->is_inlinable = 0;
-                    return result_normal;
+                    if (arg->is_ref_arg || arg->sibling) {
+                        sym->is_inlinable = 0;
+                        return result_normal;
+                    }
                 }
 
                 formal_target = ast_chdn(arg, 0);
+                if (arg->is_varg) {
+                    formal_target = arg->sibling;
+                }
+
                 formal_symbol = formal_target && formal_target->symbolNode ? formal_target->symbolNode->symbol : NULL;
                 if (formal_symbol &&
                     (formal_symbol->value_class ||
@@ -1242,7 +1448,8 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         if (check.node_count > INLINE_MAX_NODES ||
             check.has_nested_call ||
             check.has_nested_scope ||
-            check.return_count != 1) {
+            check.return_count != 1 ||
+            check.has_unsupported_varg_access) {
             sym->is_inlinable = 0;
             return result_normal;
         }
