@@ -1,0 +1,69 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_multi_return_call.rexx
+ * BUILT                  : 2026-03-26 17:40:39
+ */
+
+.srcfile="inline_test_multi_return_call.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_multi_return_call.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting multi return call inline test...\""
+   say "Starting multi return call inline test..."
+   .src 5:3="do"
+   .src 5:6="i = 0"
+   .meta "inline_test_multi_return_call.main.i"="b" ".int" r0
+   load r0,0
+   .src 5:12="to 2"
+   load r1,2
+l8dostart:
+   .src 5:12="to 2"
+   igt r2,r0,r1
+   brt l8doend,r2
+   .src 6:5="call maybeLog(i)"
+   load r3,1
+   swap r4,r0
+   call r5,maybeLog(),r3
+   swap r0,r4
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 7:3="end"
+   br l8dostart
+l8doend:
+   .src 8:3="say \"Multi return call inline test finished.\""
+   say "Multi return call inline test finished."
+   .src 9:3="return 0"
+   ret 0
+
+maybeLog() .locals=2
+   .meta "inline_test_multi_return_call.maybelog"="b" ".void" maybeLog() "val=.int" ""
+   .src 11:1="maybeLog: procedure = .void"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 12:7="val = .int"
+   .meta "inline_test_multi_return_call.maybelog.val"="b" ".int" a1
+   .src 13:2="if val = 0"
+   ieq r1,a1,0
+   brf l33iffalse,r1
+   .src 13:14="then"
+   .src 13:19="return"
+   ret
+l33iffalse:
+   .src 14:3="say \"value\" val"
+   itos a1
+   sconcat r1,"value",a1
+   say r1
+   .src 15:3="return"
+   ret
+   .meta "inline_test_multi_return_call.maybelog.val"

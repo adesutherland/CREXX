@@ -1,0 +1,76 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_multi_return_assign.rexx
+ * BUILT                  : 2026-03-26 17:40:39
+ */
+
+.srcfile="inline_test_multi_return_assign.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_multi_return_assign.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting multi return assign inline test...\""
+   say "Starting multi return assign inline test..."
+   .src 5:3="do"
+   .src 5:6="i = -1"
+   .meta "inline_test_multi_return_assign.main.i"="b" ".int" r0
+   load r0,-1
+   .src 5:13="to 1"
+   load r2,1
+l8dostart:
+   .src 5:13="to 1"
+   igt r3,r0,r2
+   brt l8doend,r3
+   .src 6:5="result = classify(i)"
+   .meta "inline_test_multi_return_assign.main.result"="b" ".int" r1
+   load r4,1
+   swap r5,r0
+   call r1,classify(),r4
+   swap r0,r5
+   .src 7:5="say result"
+   itos r1
+   say r1
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 8:3="end"
+   br l8dostart
+l8doend:
+   .src 9:3="say \"Multi return assign inline test finished.\""
+   say "Multi return assign inline test finished."
+   .src 10:3="return 0"
+   ret 0
+
+classify() .locals=2
+   .meta "inline_test_multi_return_assign.classify"="b" ".int" classify() "val=.int" ""
+   .src 12:1="classify: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 13:7="val = .int"
+   .meta "inline_test_multi_return_assign.classify.val"="b" ".int" a1
+   .src 14:2="if val < 0"
+   ilt r1,a1,0
+   brf l39iffalse,r1
+   .src 14:14="then"
+   .src 14:19="return -1"
+   ret -1
+l39iffalse:
+   .src 15:2="if val > 0"
+   igt r1,a1,0
+   brf l45iffalse,r1
+   .src 15:14="then"
+   .src 15:19="return 1"
+   ret 1
+l45iffalse:
+   .src 16:3="return 0"
+   ret 0
+   .meta "inline_test_multi_return_assign.classify.val"

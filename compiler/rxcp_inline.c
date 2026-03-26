@@ -84,6 +84,7 @@ static ASTNode *inline_find_varg_arg(ASTNode *proc_def);
 static int inline_call_arity_matches(ASTNode *call_node, Symbol *proc_sym, size_t *varg_count_out);
 static int inline_analyse_varg_usage(ASTNode *proc_def, int *unsupported_out, size_t *max_required_index_out);
 static int inline_call_is_recursive(ASTNode *call_node, Symbol *proc_sym);
+static int inline_has_final_return(ASTNode *proc_def, int *return_count_out);
 
 static Symbol *inline_find_mapped_symbol(InlineCloneState *state, Symbol *old_symbol) {
     size_t i;
@@ -960,12 +961,12 @@ static void inline_copy_symbol_shape(Symbol *target, Symbol *source) {
 static ASTNode *inline_create_sink_target(Context *context,
                                           Scope *inline_scope,
                                           ASTNode *source_node,
-                                          Symbol *proc_sym) {
+                                          ASTNode *shape_node) {
     char sink_name[64];
     ASTNode *sink_target;
     Symbol *sink_symbol;
 
-    if (!context || !inline_scope || !source_node || !proc_sym) return NULL;
+    if (!context || !inline_scope || !source_node || !shape_node) return NULL;
 
     snprintf(sink_name, sizeof(sink_name), "__inline_unused_%d", source_node->node_number);
 
@@ -978,7 +979,7 @@ static ASTNode *inline_create_sink_target(Context *context,
     sink_symbol->register_type = 'r';
     sink_symbol->meta_emitted = 0;
     sink_symbol->init_emitted = 0;
-    inline_copy_symbol_shape(sink_symbol, proc_sym);
+    if (!inline_copy_node_shape(sink_symbol, shape_node)) return NULL;
 
     sink_target = ast_ftt(context, VAR_TARGET, strdup(sink_symbol->name));
     sink_target->free_node_string = 1;
@@ -1204,6 +1205,146 @@ static int inline_validate_call_site(ASTNode *proc_def, ASTNode *call_node, Symb
     return 1;
 }
 
+static int inline_has_final_return(ASTNode *proc_def, int *return_count_out) {
+    ASTNode *instrs;
+    ASTNode *instr;
+    ASTNode *last_instr;
+    int return_count;
+
+    if (return_count_out) *return_count_out = 0;
+    if (!proc_def) return 0;
+
+    instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
+    if (!instrs) return 0;
+
+    instr = instrs->child;
+    last_instr = NULL;
+    return_count = 0;
+    while (instr) {
+        if (instr->node_type == RETURN) return_count++;
+        last_instr = instr;
+        instr = instr->sibling;
+    }
+
+    if (return_count_out) *return_count_out = return_count;
+    return return_count > 0 && last_instr && last_instr->node_type == RETURN;
+}
+
+static ASTNode *inline_build_block_expr(Context *context,
+                                        ASTNode *call_node,
+                                        Symbol *proc_sym,
+                                        Scope *parent_scope,
+                                        int allow_dummy_return) {
+    ASTNode *proc_def;
+    ASTNode *proc_instrs;
+    ASTNode *block_expr;
+    ASTNode *instr_list;
+    ASTNode *proc_instr;
+    Scope *inline_scope;
+    InlineCloneState clone_state;
+
+    if (!context || !call_node || !proc_sym || !proc_sym->ast_template || !parent_scope) return NULL;
+
+    proc_def = proc_sym->ast_template;
+    if (!proc_def || !proc_def->scope) return NULL;
+
+    if (!inline_validate_call_site(proc_def, call_node, proc_sym)) return NULL;
+
+    block_expr = ast_dup(context, call_node);
+    if (!block_expr) return NULL;
+
+    block_expr->node_type = BLOCK_EXPR;
+    block_expr->node_string = "do";
+    block_expr->node_string_length = 2;
+    block_expr->free_node_string = 0;
+    block_expr->association = proc_def;
+
+    if (allow_dummy_return && proc_sym->type == TP_VOID) {
+        ast_set_value_type(0, block_expr, TP_INTEGER, 0, 0, 0, 0);
+        ast_set_target_type(0, block_expr, TP_INTEGER, 0, 0, 0, 0);
+    }
+
+    inline_scope = scp_f(context, parent_scope, block_expr, NULL, SCOPE_LOCAL);
+    block_expr->scope = inline_scope;
+
+    instr_list = ast_f(context, INSTRUCTIONS, call_node->token);
+    if (!instr_list) return NULL;
+    instr_list->scope = inline_scope;
+    instr_list->value_type = TP_VOID;
+    instr_list->target_type = TP_VOID;
+    add_ast(block_expr, instr_list);
+
+    memset(&clone_state, 0, sizeof(clone_state));
+
+    if (!inline_build_symbol_map(proc_def->scope, inline_scope, &clone_state)) {
+        inline_free_symbol_map(&clone_state);
+        return NULL;
+    }
+
+    if (!inline_bind_call_arguments(context, instr_list, inline_scope, proc_def, call_node, proc_sym, &clone_state)) {
+        inline_free_symbol_map(&clone_state);
+        return NULL;
+    }
+
+    proc_instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
+    if (!proc_instrs) {
+        inline_free_symbol_map(&clone_state);
+        return NULL;
+    }
+
+    proc_instr = proc_instrs->child;
+    while (proc_instr) {
+        if (proc_instr->node_type == RETURN) {
+            ASTNode *ret_expr;
+            ASTNode *leave_with;
+            ASTNode *leave_expr;
+
+            ret_expr = proc_instr->child;
+            if (ret_expr) {
+                leave_expr = inline_clone_subtree(context, ret_expr, &clone_state);
+            } else if (allow_dummy_return && proc_sym->type == TP_VOID) {
+                leave_expr = inline_create_integer_constant(context, proc_instr, 0, TP_INTEGER);
+                if (leave_expr) leave_expr->scope = inline_scope;
+            } else {
+                inline_free_symbol_map(&clone_state);
+                return NULL;
+            }
+
+            if (!leave_expr) {
+                inline_free_symbol_map(&clone_state);
+                return NULL;
+            }
+
+            leave_with = ast_f(context, LEAVE_WITH, proc_instr->token);
+            if (!leave_with) {
+                inline_free_symbol_map(&clone_state);
+                return NULL;
+            }
+            leave_with->scope = inline_scope;
+            leave_with->association = block_expr;
+            leave_with->value_type = leave_expr->value_type;
+            leave_with->target_type = leave_expr->target_type;
+
+            add_ast(leave_with, leave_expr);
+            add_ast(instr_list, leave_with);
+        } else {
+            ASTNode *cloned_instr;
+
+            cloned_instr = inline_clone_subtree(context, proc_instr, &clone_state);
+            if (!cloned_instr) {
+                inline_free_symbol_map(&clone_state);
+                return NULL;
+            }
+            add_ast(instr_list, cloned_instr);
+        }
+
+        proc_instr = proc_instr->sibling;
+    }
+
+    inline_free_symbol_map(&clone_state);
+    return block_expr;
+}
+
 static int ast_inline_statement(Context *context,
                                 ASTNode *statement_node,
                                 ASTNode *call_node,
@@ -1270,7 +1411,7 @@ static int ast_inline_statement(Context *context,
             if (return_plan && return_plan->return_target) {
                 ret_lhs = inline_clone_subtree(context, return_plan->return_target, &clone_state);
             } else if (return_plan && return_plan->return_sink_symbol) {
-                ret_lhs = inline_create_sink_target(context, inline_scope, proc_instr, return_plan->return_sink_symbol);
+                ret_lhs = inline_create_sink_target(context, inline_scope, proc_instr, proc_instr->child);
             } else {
                 inline_free_symbol_map(&clone_state);
                 return 0;
@@ -1305,6 +1446,8 @@ static int ast_inline_statement(Context *context,
 
 static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_node, Symbol *proc_sym) {
     ASTNode *lhs;
+    ASTNode *block_expr;
+    ASTNode *proc_def;
     InlineReturnPlan return_plan;
 
     if (!assign_node || !call_node) return 0;
@@ -1315,11 +1458,69 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
     memset(&return_plan, 0, sizeof(return_plan));
     return_plan.return_target = lhs;
 
+    proc_def = proc_sym ? proc_sym->ast_template : NULL;
+    if (proc_def && !inline_has_final_return(proc_def, NULL)) return 0;
+    if (proc_def && inline_has_final_return(proc_def, NULL)) {
+        int return_count;
+
+        if (inline_has_final_return(proc_def, &return_count) && return_count != 1) {
+            block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
+            if (!block_expr) return 0;
+            ast_rpl(call_node, block_expr);
+            inline_disconnect_subtree_symbols(call_node);
+            return 1;
+        }
+    }
+
     return ast_inline_statement(context, assign_node, call_node, proc_sym, &return_plan);
 }
 
 static int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Symbol *proc_sym) {
+    ASTNode *proc_def;
+    ASTNode *block;
+    Scope *block_scope;
+    ASTNode *block_expr;
+    ASTNode *sink_assign;
+    ASTNode *sink_lhs;
     InlineReturnPlan return_plan;
+
+    proc_def = proc_sym ? proc_sym->ast_template : NULL;
+    if (proc_def && !inline_has_final_return(proc_def, NULL)) return 0;
+    if (proc_def && inline_has_final_return(proc_def, NULL)) {
+        int return_count;
+
+        if (inline_has_final_return(proc_def, &return_count) && return_count != 1) {
+            block = ast_f(context, INSTRUCTIONS, call_node->token);
+            if (!block) return 0;
+            ast_mark_compiler_generated_block(block);
+            block->association = proc_def;
+            block->value_type = TP_VOID;
+            block->target_type = TP_VOID;
+
+            block_scope = scp_f(context, call_stmt->scope, block, NULL, SCOPE_LOCAL);
+            if (!block_scope) return 0;
+
+            block_expr = inline_build_block_expr(context, call_node, proc_sym, block_scope, 1);
+            if (!block_expr) return 0;
+
+            sink_assign = ast_f(context, ASSIGN, call_node->token);
+            if (!sink_assign) return 0;
+            sink_assign->scope = block_scope;
+            sink_assign->value_type = block_expr->value_type;
+            sink_assign->target_type = block_expr->target_type;
+
+            sink_lhs = inline_create_sink_target(context, block_scope, call_node, block_expr);
+            if (!sink_lhs) return 0;
+
+            add_ast(sink_assign, sink_lhs);
+            add_ast(sink_assign, block_expr);
+            add_ast(block, sink_assign);
+
+            ast_rpl(call_stmt, block);
+            inline_disconnect_subtree_symbols(call_stmt);
+            return 1;
+        }
+    }
 
     memset(&return_plan, 0, sizeof(return_plan));
     return_plan.return_sink_symbol = proc_sym;
@@ -1328,95 +1529,20 @@ static int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_n
 }
 
 static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym) {
-    ASTNode *proc_def;
-    ASTNode *proc_instrs;
     ASTNode *block_expr;
-    ASTNode *instr_list;
-    ASTNode *proc_instr;
-    Scope *inline_scope;
-    InlineCloneState clone_state;
-
     InlineExprContext expr_context;
 
     if (!context || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
 
     expr_context = inline_classify_expr_context(call_node);
     if (expr_context == INLINE_EXPR_CONTEXT_NONE) return 0;
+    if (!inline_has_final_return(proc_sym->ast_template, NULL)) return 0;
 
-    proc_def = proc_sym->ast_template;
-    if (!proc_def || !proc_def->scope) return 0;
-
-    if (!inline_validate_call_site(proc_def, call_node, proc_sym)) return 0;
-
-    block_expr = ast_dup(context, call_node);
-    block_expr->node_type = BLOCK_EXPR;
-    block_expr->node_string = "do";
-    block_expr->node_string_length = 2;
-    block_expr->free_node_string = 0;
-    block_expr->association = proc_def;
-
-    inline_scope = scp_f(context, call_node->scope, block_expr, NULL, SCOPE_LOCAL);
-    block_expr->scope = inline_scope;
-
-    instr_list = ast_f(context, INSTRUCTIONS, call_node->token);
-    instr_list->scope = inline_scope;
-    instr_list->value_type = TP_VOID;
-    instr_list->target_type = TP_VOID;
-    add_ast(block_expr, instr_list);
-
-    memset(&clone_state, 0, sizeof(clone_state));
-
-    if (!inline_build_symbol_map(proc_def->scope, inline_scope, &clone_state)) {
-        return 0;
-    }
-
-    if (!inline_bind_call_arguments(context, instr_list, inline_scope, proc_def, call_node, proc_sym, &clone_state)) {
-        inline_free_symbol_map(&clone_state);
-        return 0;
-    }
-
-    proc_instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
-    if (!proc_instrs) {
-        inline_free_symbol_map(&clone_state);
-        return 0;
-    }
-
-    proc_instr = proc_instrs->child;
-    while (proc_instr) {
-        if (proc_instr->node_type == RETURN) {
-            ASTNode *ret_expr;
-            ASTNode *leave_with;
-            ASTNode *leave_expr;
-
-            ret_expr = proc_instr->child;
-            if (!ret_expr) {
-                inline_free_symbol_map(&clone_state);
-                return 0;
-            }
-
-            leave_with = ast_f(context, LEAVE_WITH, proc_instr->token);
-            leave_with->scope = inline_scope;
-            leave_with->association = block_expr;
-            leave_with->value_type = ret_expr->value_type;
-            leave_with->target_type = ret_expr->target_type;
-
-            leave_expr = inline_clone_subtree(context, ret_expr, &clone_state);
-
-            add_ast(leave_with, leave_expr);
-            add_ast(instr_list, leave_with);
-        } else {
-            ASTNode *cloned_instr;
-
-            cloned_instr = inline_clone_subtree(context, proc_instr, &clone_state);
-            add_ast(instr_list, cloned_instr);
-        }
-
-        proc_instr = proc_instr->sibling;
-    }
+    block_expr = inline_build_block_expr(context, call_node, proc_sym, call_node->scope, 0);
+    if (!block_expr) return 0;
 
     ast_rpl(call_node, block_expr);
     inline_disconnect_subtree_symbols(call_node);
-    inline_free_symbol_map(&clone_state);
 
     return 1;
 }
@@ -1514,8 +1640,6 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         ASTNode *formal_target;
         Symbol *formal_symbol;
         ASTNode *instrs;
-        ASTNode *instr;
-        ASTNode *last_instr;
         int return_count;
         InlinableCheck check;
 
@@ -1565,16 +1689,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
             return result_normal;
         }
 
-        instr = instrs->child;
-        last_instr = NULL;
-        return_count = 0;
-        while (instr) {
-            if (instr->node_type == RETURN) return_count++;
-            last_instr = instr;
-            instr = instr->sibling;
-        }
-
-        if (return_count != 1 || !last_instr || last_instr->node_type != RETURN) {
+        if (!inline_has_final_return(node, &return_count)) {
             sym->is_inlinable = 0;
             return result_normal;
         }
@@ -1584,7 +1699,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         ast_wlkr(node, inlinable_check_walker, &check);
 
         if (check.node_count > INLINE_MAX_NODES ||
-            check.return_count != 1 ||
+            check.return_count != return_count ||
             check.has_unsupported_varg_access) {
             sym->is_inlinable = 0;
             return result_normal;
