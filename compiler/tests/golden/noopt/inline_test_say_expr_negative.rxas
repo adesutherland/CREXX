@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_say_expr_negative.rexx
- * BUILT                  : 2026-03-25 14:46:09
+ * BUILT                  : 2026-03-26 08:59:14
  */
 
 .srcfile="inline_test_say_expr_negative.rexx"
@@ -53,16 +53,15 @@ asString() .locals=2
    setnumcas 1
    setnumstd 1
    .src 12:7="val = .int"
-   .meta "inline_test_say_expr_negative.asstring.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test_say_expr_negative.asstring.val"="b" ".int" a1
    .src 13:2="if val = 2"
-   ieq r1,r0,2
+   ieq r1,a1,2
    brf l34iffalse,r1
    .src 13:14="then"
    .src 13:19="return \"two\""
    ret "two"
 l34iffalse:
    .src 14:3="return val"
-   itos r0
-   ret r0
+   itos a1
+   ret a1
    .meta "inline_test_say_expr_negative.asstring.val"

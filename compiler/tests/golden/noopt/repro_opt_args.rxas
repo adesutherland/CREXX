@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : repro_opt_args.rexx
- * BUILT                  : 2026-03-18 11:59:00
+ * BUILT                  : 2026-03-26 08:59:12
  */
 
 .srcfile="repro_opt_args.rexx"
@@ -50,41 +50,29 @@ test_opt() .locals=4
    setnumcas 1
    setnumstd 1
    .src 9:7="a=10"
-   .meta "repro_opt_args.test_opt.a"="b" ".int" r0
+   .meta "repro_opt_args.test_opt.a"="b" ".int" a1
    brtpandt l22a,a1,1
-   load r0,10
-   br l22b
+   load a1,10
 l22a:
-   icopy r0,a1
-   acopy r0,a1
-l22b:
    .src 9:13="b=20"
-   .meta "repro_opt_args.test_opt.b"="b" ".int" r1
+   .meta "repro_opt_args.test_opt.b"="b" ".int" a2
    brtpandt l26a,a2,1
-   load r1,20
-   br l26b
+   load a2,20
 l26a:
-   icopy r1,a2
-   acopy r1,a2
-l26b:
    .src 9:19="c=30"
-   .meta "repro_opt_args.test_opt.c"="b" ".int" r2
+   .meta "repro_opt_args.test_opt.c"="b" ".int" a3
    brtpandt l29a,a3,1
-   load r2,30
-   br l29b
+   load a3,30
 l29a:
-   icopy r2,a3
-   acopy r2,a3
-l29b:
    .src 10:3="say \"a=\" a \"b=\" b \"c=\" c"
-   itos r0
-   sconcat r3,"a=",r0
+   itos a1
+   sconcat r3,"a=",a1
    sconcat r3,r3,"b="
-   itos r1
-   sconcat r3,r3,r1
+   itos a2
+   sconcat r3,r3,a2
    sconcat r3,r3,"c="
-   itos r2
-   sconcat r3,r3,r2
+   itos a3
+   sconcat r3,r3,a3
    say r3
    .src 11:3="return"
    ret

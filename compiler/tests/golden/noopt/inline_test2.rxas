@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test2.rexx
- * BUILT                  : 2026-03-25 13:35:03
+ * BUILT                  : 2026-03-26 08:59:12
  */
 
 .meta "inline_test2.myclass"="b" ".unknown" .class
@@ -70,29 +70,24 @@ largeProc() .locals=6
    setnumcas 1
    setnumstd 1
    .src 23:7="a=.int"
-   .meta "inline_test2.largeproc.a"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test2.largeproc.a"="b" ".int" a1
    .src 23:15="b=.int"
-   .meta "inline_test2.largeproc.b"="b" ".int" r1
-   icopy r1,a2
+   .meta "inline_test2.largeproc.b"="b" ".int" a2
    .src 23:23="c=.int"
-   .meta "inline_test2.largeproc.c"="b" ".int" r2
-   icopy r2,a3
+   .meta "inline_test2.largeproc.c"="b" ".int" a3
    .src 23:31="d=.int"
-   .meta "inline_test2.largeproc.d"="b" ".int" r3
-   icopy r3,a4
+   .meta "inline_test2.largeproc.d"="b" ".int" a4
    .src 23:39="e=.int"
-   .meta "inline_test2.largeproc.e"="b" ".int" r4
-   icopy r4,a5
+   .meta "inline_test2.largeproc.e"="b" ".int" a5
    .src 24:3="x = a + b"
    .meta "inline_test2.largeproc.x"="b" ".int" r5
-   iadd r5,r0,r1
+   iadd r5,a1,a2
    .src 25:3="x = x + c"
-   iadd r5,r5,r2
+   iadd r5,r5,a3
    .src 26:3="x = x + d"
-   iadd r5,r5,r3
+   iadd r5,r5,a4
    .src 27:3="x = x + e"
-   iadd r5,r5,r4
+   iadd r5,r5,a5
    .src 28:3="x = x * 2"
    imult r5,r5,2
    .src 29:3="x = x / 2"
@@ -123,13 +118,12 @@ nestedCallProc() .locals=4
    setnumcas 1
    setnumstd 1
    .src 38:7="val = .int"
-   .meta "inline_test2.nestedcallproc.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test2.nestedcallproc.val"="b" ".int" a1
    .src 39:3="return helper(val)"
    load r1,1
-   swap r2,r0
+   swap r2,a1
    call r3,helper(),r1
-   swap r0,r2
+   swap a1,r2
    ret r3
    .meta "inline_test2.nestedcallproc.val"
 
@@ -142,10 +136,9 @@ helper() .locals=2
    setnumcas 1
    setnumstd 1
    .src 42:7="v = .int"
-   .meta "inline_test2.helper.v"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test2.helper.v"="b" ".int" a1
    .src 43:3="return v + 1"
-   iadd r1,r0,1
+   iadd r1,a1,1
    ret r1
    .meta "inline_test2.helper.v"
 
@@ -172,11 +165,10 @@ helper() .locals=2
    setnumcas 1
    setnumstd 1
    .src 51:9="v = .int"
-   .meta "inline_test2.myclass.mymethod.v"="b" ".int" r0
+   .meta "inline_test2.myclass.mymethod.v"="b" ".int" a2
    .meta "inline_test2.myclass.mymethod.§this"="b" ".myclass" a1
-   icopy r0,a2
    .src 52:5="return v * 2"
-   imult r2,r0,2
+   imult r2,a2,2
    ret r2
    .meta "inline_test2.myclass.mymethod.v"
    .meta "inline_test2.myclass.mymethod.§this"
@@ -190,10 +182,9 @@ multiReturn() .locals=2
    setnumcas 1
    setnumstd 1
    .src 56:7="v = .int"
-   .meta "inline_test2.multireturn.v"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test2.multireturn.v"="b" ".int" a1
    .src 57:2="if v > 0"
-   igt r1,r0,0
+   igt r1,a1,0
    brf l154iffalse,r1
    .src 57:12="then"
    .src 57:17="return 1"

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_nested_call_expr.rexx
- * BUILT                  : 2026-03-25 17:32:46
+ * BUILT                  : 2026-03-26 08:59:13
  */
 
 .srcfile="inline_test_nested_call_expr.rexx"
@@ -56,10 +56,9 @@ identity() .locals=1
    setnumcas 1
    setnumstd 1
    .src 12:7="val = .int"
-   .meta "inline_test_nested_call_expr.identity.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test_nested_call_expr.identity.val"="b" ".int" a1
    .src 13:3="return val"
-   ret r0
+   ret a1
    .meta "inline_test_nested_call_expr.identity.val"
 
 addOne() .locals=2
@@ -71,9 +70,8 @@ addOne() .locals=2
    setnumcas 1
    setnumstd 1
    .src 16:7="val = .int"
-   .meta "inline_test_nested_call_expr.addone.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test_nested_call_expr.addone.val"="b" ".int" a1
    .src 17:3="return val + 1"
-   iadd r1,r0,1
+   iadd r1,a1,1
    ret r1
    .meta "inline_test_nested_call_expr.addone.val"

@@ -218,6 +218,7 @@ void rxcp_print_symbol_table(Scope *scope, int depth);
 
 /* Optimise AST Tree */
 void optimise(Context *context);
+void mark_const_args(Context *context);
 
 /* Prints errors and returns the number of errors in the AST Tree */
 int prnterrs(Context *context);

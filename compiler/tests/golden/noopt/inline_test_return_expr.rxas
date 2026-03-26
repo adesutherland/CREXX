@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_return_expr.rexx
- * BUILT                  : 2026-03-25 15:21:28
+ * BUILT                  : 2026-03-26 08:59:14
  */
 
 .srcfile="inline_test_return_expr.rexx"
@@ -54,13 +54,12 @@ wrap() .locals=4
    setnumcas 1
    setnumstd 1
    .src 12:7="val = .int"
-   .meta "inline_test_return_expr.wrap.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test_return_expr.wrap.val"="b" ".int" a1
    .src 13:3="return addOne(val)"
    load r1,1
-   swap r2,r0
+   swap r2,a1
    call r3,addOne(),r1
-   swap r0,r2
+   swap a1,r2
    ret r3
    .meta "inline_test_return_expr.wrap.val"
 
@@ -73,9 +72,8 @@ addOne() .locals=2
    setnumcas 1
    setnumstd 1
    .src 16:7="val = .int"
-   .meta "inline_test_return_expr.addone.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test_return_expr.addone.val"="b" ".int" a1
    .src 17:3="return val + 1"
-   iadd r1,r0,1
+   iadd r1,a1,1
    ret r1
    .meta "inline_test_return_expr.addone.val"

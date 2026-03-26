@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test1.rexx
- * BUILT                  : 2026-03-24 21:09:08
+ * BUILT                  : 2026-03-26 08:59:12
  */
 
 .srcfile="inline_test1.rexx"
@@ -60,9 +60,8 @@ multiplyByTwo() .locals=2
    setnumcas 1
    setnumstd 1
    .src 15:7="val = .int"
-   .meta "inline_test1.multiplybytwo.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test1.multiplybytwo.val"="b" ".int" a1
    .src 17:3="return val * 2"
-   imult r1,r0,2
+   imult r1,a1,2
    ret r1
    .meta "inline_test1.multiplybytwo.val"

@@ -26,6 +26,7 @@
  * Code Generator / RXAS Emitter - Register Allocation
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include "rxcpmain.h"
 #include "rxcp_emit.h"
@@ -88,6 +89,44 @@ static void return_child_reg_now(ASTNode* child) {
     if (!defer_reg_return(child)) {
         ret_reg(child->scope, child->register_num);
     }
+}
+
+static int allocate_call_result_reg(ASTNode *node) {
+    int reg;
+    int range_start;
+    int range_end;
+    int *skipped;
+    size_t skipped_count;
+
+    if (!node) return UNSET_REGISTER;
+
+    range_start = node->additional_registers;
+    range_end = node->additional_registers + (int)node->num_additional_registers - 1;
+    skipped = NULL;
+    skipped_count = 0;
+
+    reg = get_reg(node->scope);
+    while (reg >= range_start && reg <= range_end) {
+        int *new_skipped;
+
+        new_skipped = realloc(skipped, sizeof(int) * (skipped_count + 1));
+        if (!new_skipped) {
+            if (skipped) free(skipped);
+            return reg;
+        }
+
+        skipped = new_skipped;
+        skipped[skipped_count++] = reg;
+        reg = get_reg(node->scope);
+    }
+
+    while (skipped_count) {
+        skipped_count--;
+        ret_reg(node->scope, skipped[skipped_count]);
+    }
+    if (skipped) free(skipped);
+
+    return reg;
 }
 
 /* This function returns 1 if the node register should not be used by the parent (it should be returned AFTER the
@@ -187,7 +226,11 @@ walker_result register_walker(walker_direction direction,
                         c->register_num = a;
                         c->register_type = 'a';
                         if (c->is_ref_arg || c->is_const_arg) {
-                            /* Constant or Pass by reference - no copy so just use the 'a' register */
+                            /* `.ref` formals and read-only by-value formals keep
+                             * the incoming argument register. Writable by-value
+                             * formals must fall through so the emitter can
+                             * assign a distinct local register and preserve
+                             * caller-visible pass-by-value semantics. */
                             c->child->symbolNode->symbol->register_num = a;
                             c->child->symbolNode->symbol->register_type = 'a';
                         }
@@ -635,7 +678,7 @@ walker_result register_walker(walker_direction direction,
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later (or is not needed) */
-                    node->register_num = get_reg(node->scope);
+                    node->register_num = allocate_call_result_reg(node);
 
                 /* Assign additional Registers for arguments if assignment was deferred  */
                 if (node->node_type == MEMBER_CALL) {

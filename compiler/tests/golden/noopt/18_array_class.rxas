@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 18_array_class_main.rexx
- * BUILT                  : 2026-03-18 11:58:57
+ * BUILT                  : 2026-03-26 08:59:11
  */
 
 .meta "array_class_lib.item"="b" ".unknown" .class
@@ -64,20 +64,14 @@ process() .locals=11
    setnumcas 1
    setnumstd 1
    .src 18:9="items = .Item"
-   .meta "18_array_class_main.process.items"="b" ".item[*]" r1
-   brtpandt l41c,a1,2
-   copy r1,a1
-   br l41d
-l41c:
-   swap r1,a1
-l41d:
+   .meta "18_array_class_main.process.items"="b" ".item[*]" a1
    .src 19:5="say \"Inside process, Items.0 =\" items.0"
-   getattrs r7,r1,0
+   getattrs r7,a1,0
    itos r7
    sconcat r7,"Inside process, Items.0 =",r7
    say r7
    .src 20:4="if items.0 < 1"
-   getattrs r6,r1,0
+   getattrs r6,a1,0
    ilt r6,r6,1
    brf l59iffalse,r6
    .src 20:20="then"
@@ -86,8 +80,8 @@ l41d:
 l59iffalse:
    .src 22:5="it = items.1"
    .meta "18_array_class_main.process.it"="b" ".item" r0
-   minattrs r1,1
-   linkattr1 r7,r1,1
+   minattrs a1,1
+   linkattr1 r7,a1,1
    copy r0,r7
    unlink r7
    .src 23:5="val = it.get_val"
@@ -102,15 +96,15 @@ l59iffalse:
    .meta "18_array_class_main.process.i"="b" ".int" r3
    load r3,1
    .src 25:14="to items.0"
-   getattrs r6,r1,0
+   getattrs r6,a1,0
 l70dostart:
    .src 25:14="to items.0"
    igt r8,r3,r6
    brt l70doend,r8
    .src 26:9="it_i = items[i"
    .meta "18_array_class_main.process.it_i"="b" ".item" r4
-   minattrs r1,r3,0
-   linkattr1 r9,r1,r3
+   minattrs a1,r3,0
+   linkattr1 r9,a1,r3
    copy r4,r9
    unlink r9
    .src 27:9="val_i = it_i.get_val"

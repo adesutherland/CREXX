@@ -123,9 +123,14 @@ void emit_expression(ASTNode *node, void *payload) {
                     output_append_text(node->output, temp1);
                     free(temp1);
 
-                    /* Fix up return register so its swapped correctly */
-                    if (node->register_type == n->register_type &&
-                        node->register_num == n->register_num) {
+                    /* Map the call result through the restore-swap sequence so
+                     * it lands in the node's final register after marshalling
+                     * is unwound. */
+                    if (ret_type == 'r' && ret_num == i) {
+                        ret_type = n->register_type;
+                        ret_num = n->register_num;
+                    } else if (ret_type == n->register_type &&
+                               ret_num == n->register_num) {
                         ret_type = 'r';
                         ret_num = (int)i;
                     }

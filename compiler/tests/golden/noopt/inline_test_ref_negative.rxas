@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_negative.rexx
- * BUILT                  : 2026-03-25 20:41:09
+ * BUILT                  : 2026-03-25 21:37:48
  */
 
 .srcfile="inline_test_ref_negative.rexx"
@@ -37,7 +37,7 @@ main() .locals=3
    setattrs g1,3
    linkattr1 r2,g1,g0
    swap r1,r2
-   call r1,refBump(),r0
+   call r2,refBump(),r0
    swap r2,r1
    unlink r2
    brf l32andend,r1

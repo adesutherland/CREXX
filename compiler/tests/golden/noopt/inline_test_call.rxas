@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_call.rexx
- * BUILT                  : 2026-03-25 14:02:12
+ * BUILT                  : 2026-03-26 08:59:12
  */
 
 .srcfile="inline_test_call.rexx"
@@ -52,17 +52,16 @@ logDouble() .locals=3
    setnumcas 1
    setnumstd 1
    .src 12:7="val = .int"
-   .meta "inline_test_call.logdouble.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test_call.logdouble.val"="b" ".int" a1
    .src 13:3="say \"Double for\" val \"is\" val * 2"
-   itos r0
-   sconcat r1,"Double for",r0
+   itos a1
+   sconcat r1,"Double for",a1
    sconcat r1,r1,"is"
-   imult r2,r0,2
+   imult r2,a1,2
    itos r2
    sconcat r2,r1,r2
    say r2
    .src 14:3="return val * 2"
-   imult r2,r0,2
+   imult r2,a1,2
    ret r2
    .meta "inline_test_call.logdouble.val"

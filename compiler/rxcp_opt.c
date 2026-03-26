@@ -1273,7 +1273,13 @@ static void propagete_constant_symbols(Scope* scope, Payload* payload) {
 }
 
 /* Step 2
- * - Convert copy by value to copy by reference if the argument is a constant
+ * - Mark pass-by-value formals that are provably read-only so the emitter can
+ *   reuse the incoming argument register instead of materialising a defensive
+ *   local copy.
+ *
+ * This is semantic copy elision, not a type-based shortcut and not a change to
+ * pass-by-reference semantics: writable by-value formals must still get an
+ * isolated local register.
  */
 static walker_result opt2_walker(walker_direction direction,
                                  ASTNode* node,
@@ -1307,7 +1313,8 @@ static walker_result opt2_walker(walker_direction direction,
                             break;
                         }
                     }
-                    /* If it is readonly make the argument as const - this makes the emitter not bother to duplicate the register */
+                    /* A read-only by-value formal can safely share the incoming
+                     * argument register in both no-opt and opt builds. */
                     if (is_constant) node->is_const_arg = 1;
                 }
             }
@@ -1315,6 +1322,16 @@ static walker_result opt2_walker(walker_direction direction,
     }
 
     return result_normal;
+}
+
+void mark_const_args(Context *context) {
+    Payload payload;
+
+    payload.current_scope = 0;
+    payload.context = context;
+    /* This pass is intentionally callable outside optimise() so no-opt builds
+     * use the same semantic copy-elision rule as optimised builds. */
+    ast_wlkr(context->ast, opt2_walker, (void *) &payload);
 }
 
 /* Optimise AST Tree */
@@ -1347,7 +1364,7 @@ void optimise(Context *context) {
         if (!payload.changed) break;
     }
 
-    /* Constant Arguments converted to pass by reference */
-    ast_wlkr(context->ast, opt2_walker, (void *) &payload);
+    /* Mark read-only by-value formals for semantic copy elision. */
+    mark_const_args(context);
 
 }

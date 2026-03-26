@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_bool_expr_negative.rexx
- * BUILT                  : 2026-03-25 14:30:39
+ * BUILT                  : 2026-03-26 08:59:16
  */
 
 .srcfile="inline_test_bool_expr_negative.rexx"
@@ -30,7 +30,7 @@ l8dostart:
    .src 6:4="if isTwo(i) | 0"
    load r3,1
    swap r4,r0
-   call r4,isTwo(),r3
+   call r0,isTwo(),r3
    swap r0,r4
    brt l18orend,r4
    load r4,0
@@ -69,10 +69,9 @@ isTwo() .locals=2
    setnumcas 1
    setnumstd 1
    .src 13:7="val = .int"
-   .meta "inline_test_bool_expr_negative.istwo.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test_bool_expr_negative.istwo.val"="b" ".int" a1
    .src 14:3="return val = 2"
-   ieq r1,r0,2
+   ieq r1,a1,2
    btoi r1
    ret r1
    .meta "inline_test_bool_expr_negative.istwo.val"

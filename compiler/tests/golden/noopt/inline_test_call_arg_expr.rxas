@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_call_arg_expr.rexx
- * BUILT                  : 2026-03-25 15:49:29
+ * BUILT                  : 2026-03-26 08:59:15
  */
 
 .srcfile="inline_test_call_arg_expr.rexx"
@@ -56,17 +56,16 @@ keepValue() .locals=2
    setnumcas 1
    setnumstd 1
    .src 12:7="val = .int"
-   .meta "inline_test_call_arg_expr.keepvalue.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test_call_arg_expr.keepvalue.val"="b" ".int" a1
    .src 13:2="if val > 100"
-   igt r1,r0,100
+   igt r1,a1,100
    brf l35iffalse,r1
    .src 13:16="then"
    .src 13:21="return 100"
    ret 100
 l35iffalse:
    .src 14:3="return val"
-   ret r0
+   ret a1
    .meta "inline_test_call_arg_expr.keepvalue.val"
 
 addOne() .locals=2
@@ -78,9 +77,8 @@ addOne() .locals=2
    setnumcas 1
    setnumstd 1
    .src 17:7="val = .int"
-   .meta "inline_test_call_arg_expr.addone.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test_call_arg_expr.addone.val"="b" ".int" a1
    .src 18:3="return val + 1"
-   iadd r1,r0,1
+   iadd r1,a1,1
    ret r1
    .meta "inline_test_call_arg_expr.addone.val"

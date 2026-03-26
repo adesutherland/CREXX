@@ -52,6 +52,19 @@
  *       setting and checking this flag anyway */
 #define REGTP_NOTSYM 2
 
+static int is_large_value(ASTNode *node) {
+    if (!node) return 0;
+
+    if (node->value_dims || node->target_dims) return 1;
+
+    return node->value_type == TP_STRING ||
+           node->value_type == TP_OBJECT ||
+           node->value_type == TP_BINARY ||
+           node->target_type == TP_STRING ||
+           node->target_type == TP_OBJECT ||
+           node->target_type == TP_BINARY;
+}
+
 
 
 
@@ -166,17 +179,19 @@ static walker_result emit_walker(walker_direction direction,
 
                         /* End of logic */
                         if (node->is_ref_arg || node->is_const_arg) {
-                            /* Constant or Reference so no copy needed */
+                            /* `.ref` and read-only by-value formals already
+                             * share the incoming argument register, so no
+                             * defensive copy is required here. */
                             temp1 = mprintf("l%da:\n", child1->node_number);
                             output_append_text(node->output, temp1);
                             free(temp1);
                         } else {
-                            /* Pass by value - so if the default is not used we may need to
-                             * do a copy - but check if the argument needs preserving */
+                            /* Writable by-value formals still need an isolated
+                             * local register when the caller value must be
+                             * preserved. */
 
                             /* Only worry about it if it is a big register */
-                            if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT ||
-                                node->value_type == TP_BINARY) {
+                            if (is_large_value(node)) {
                                 temp1 = mprintf(
                                         "   br l%dd\n"
                                         "l%da:\n"
@@ -236,13 +251,15 @@ static walker_result emit_walker(walker_direction direction,
                             }
                         }
                     } else if (!(node->is_ref_arg || node->is_const_arg)) {
-                        /* Copy by value so may need to do a copy - but check if the argument needs preserving */
+                        /* Writable by-value formals may need a defensive copy;
+                         * read-only by-value formals were already marked
+                         * `is_const_arg` by semantic analysis. */
 
                         /* Only worry about it if it is a big register */
-                        if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT ||
-                            node->value_type == TP_BINARY) {
+                        if (is_large_value(node)) {
                             temp1 = mprintf("   brtpandt l%dc,%c%d,%d\n"
                                             "   %scopy %c%d,%c%d\n"
+                                            "   acopy %c%d,%c%d\n"
                                             "   br l%dd\n"
                                             "l%dc:\n"
                                             "   swap %c%d,%c%d\n"
@@ -251,6 +268,8 @@ static walker_result emit_walker(walker_direction direction,
                                             node->register_type, node->register_num,
                                             REGTP_NOTSYM,
                                             tp_prefix,
+                                            child1->register_type, child1->register_num,
+                                            node->register_type, node->register_num,
                                             child1->register_type, child1->register_num,
                                             node->register_type, node->register_num,
                                             child1->node_number,

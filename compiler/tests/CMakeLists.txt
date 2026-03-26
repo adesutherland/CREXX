@@ -199,8 +199,15 @@ add_crexx_compiler_test(inline_test_bool_expr_negative rexx_src/inline_test_bool
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
-    add_test(NAME ${NAME}_run
-             COMMAND bash -c "($<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${NAME}_run ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} 2>&1 && $<TARGET_FILE:rxas> -o ${NAME}_run.rxbin ${NAME}_run 2>&1 && $<TARGET_FILE:rxvm> ${CMAKE_BINARY_DIR}/bin/library.rxbin ${NAME}_run.rxbin 2>&1) | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
+    # Keep no-opt and opt runtime coverage paired so semantic shifts in
+    # argument handling or inlining are caught even when compiler-output
+    # goldens still match within one mode.
+    add_test(NAME ${NAME}_run_noopt
+             COMMAND bash -c "($<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${COMPILER_NOOPT_FLAG} -o ${NAME}_run_noopt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} 2>&1 && $<TARGET_FILE:rxas> -o ${NAME}_run_noopt.rxbin ${NAME}_run_noopt 2>&1 && $<TARGET_FILE:rxvm> ${CMAKE_BINARY_DIR}/bin/library.rxbin ${NAME}_run_noopt.rxbin 2>&1) | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+    add_test(NAME ${NAME}_run_opt
+             COMMAND bash -c "($<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${NAME}_run_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} 2>&1 && $<TARGET_FILE:rxas> -o ${NAME}_run_opt.rxbin ${NAME}_run_opt 2>&1 && $<TARGET_FILE:rxvm> ${CMAKE_BINARY_DIR}/bin/library.rxbin ${NAME}_run_opt.rxbin 2>&1) | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endmacro()
 

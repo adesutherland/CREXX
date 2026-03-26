@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_opt.rexx
- * BUILT                  : 2026-03-25 20:07:04
+ * BUILT                  : 2026-03-26 08:59:15
  */
 
 .srcfile="inline_test_ref_opt.rexx"
@@ -76,25 +76,17 @@ optAdd() .locals=3
    setnumcas 1
    setnumstd 1
    .src 19:8="a = 10"
-   .meta "inline_test_ref_opt.optadd.a"="b" ".int" r0
+   .meta "inline_test_ref_opt.optadd.a"="b" ".int" a1
    brtpandt l41a,a1,1
-   load r0,10
-   br l41b
+   load a1,10
 l41a:
-   icopy r0,a1
-   acopy r0,a1
-l41b:
    .src 19:17="b = 5"
-   .meta "inline_test_ref_opt.optadd.b"="b" ".int" r1
+   .meta "inline_test_ref_opt.optadd.b"="b" ".int" a2
    brtpandt l45a,a2,1
-   load r1,5
-   br l45b
+   load a2,5
 l45a:
-   icopy r1,a2
-   acopy r1,a2
-l45b:
    .src 20:3="return a + b"
-   iadd r2,r0,r1
+   iadd r2,a1,a2
    ret r2
    .meta "inline_test_ref_opt.optadd.a"
    .meta "inline_test_ref_opt.optadd.b"

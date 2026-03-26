@@ -488,6 +488,12 @@ int rxcmain(int argc, char *argv[]) {
     /* Remove all warnings and errors from the tree so they don't break the emitter */
     rxcp_collect_and_prune_diagnostics(context);
 
+    /* Apply the same semantic copy-elision rule in no-opt and opt builds:
+     * only read-only by-value formals may share the incoming argument
+     * register. This must not drift back into a type-based heuristic. Later
+     * optimisation passes may re-run it after rewriting the tree. */
+    mark_const_args(context);
+
 #ifndef __CMS__
     if (debug_mode >= 2) {
         // pdot_tree(context->ast, "astgraph1", context->file_name);

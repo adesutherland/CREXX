@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_call_like_arg_expr.rexx
- * BUILT                  : 2026-03-25 19:21:33
+ * BUILT                  : 2026-03-26 08:59:15
  */
 
 .meta "inline_test_call_like_arg_expr.box"="b" ".unknown" .class
@@ -69,10 +69,9 @@ addOne() .locals=2
    setnumcas 1
    setnumstd 1
    .src 13:7="val = .int"
-   .meta "inline_test_call_like_arg_expr.addone.val"="b" ".int" r0
-   icopy r0,a1
+   .meta "inline_test_call_like_arg_expr.addone.val"="b" ".int" a1
    .src 14:3="return val + 1"
-   iadd r1,r0,1
+   iadd r1,a1,1
    ret r1
    .meta "inline_test_call_like_arg_expr.addone.val"
 
@@ -86,12 +85,11 @@ addOne() .locals=2
    setnumcas 1
    setnumstd 1
    .src 20:9="initialValue = .int"
-   .meta "inline_test_call_like_arg_expr.box.§factory.initialvalue"="b" ".int" r0
+   .meta "inline_test_call_like_arg_expr.box.§factory.initialvalue"="b" ".int" a1
    .meta "inline_test_call_like_arg_expr.box.§factory.§factory"="b" ".box" r1
-   icopy r0,a1
    .src 21:5="val = initialValue"
    linkattr1 r2,r1,1
-   icopy r2,r0
+   icopy r2,a1
    unlink r2
    .src 22:5="return"
    ret r1
@@ -107,12 +105,11 @@ addOne() .locals=2
    setnumcas 1
    setnumstd 1
    .src 25:9="amount = .int"
-   .meta "inline_test_call_like_arg_expr.box.bump.amount"="b" ".int" r0
+   .meta "inline_test_call_like_arg_expr.box.bump.amount"="b" ".int" a2
    .meta "inline_test_call_like_arg_expr.box.bump.§this"="b" ".box" a1
-   icopy r0,a2
    .src 26:5="return val + amount"
    linkattr1 r2,a1,1
-   iadd r3,r2,r0
+   iadd r3,r2,a2
    unlink r2
    ret r3
    .meta "inline_test_call_like_arg_expr.box.bump.amount"
