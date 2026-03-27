@@ -85,6 +85,17 @@ typedef struct {
 
 static size_t inline_count_siblings(ASTNode *node);
 static ASTNode *inline_clone_subtree(Context *context, ASTNode *node, InlineCloneState *state);
+static ASTNode *inline_clone_subtree_in_scope(Context *context,
+                                              ASTNode *node,
+                                              InlineCloneState *state,
+                                              Scope *current_scope);
+static ASTNode *inline_create_symbol_node(Context *context,
+                                          Scope *scope,
+                                          ASTNode *source_node,
+                                          Symbol *symbol,
+                                          NodeType node_type,
+                                          unsigned int read_usage,
+                                          unsigned int write_usage);
 static ASTNode *inline_create_integer_constant(Context *context, ASTNode *source_node, int value, ValueType type);
 static ASTNode *inline_find_varg_arg(ASTNode *proc_def);
 static int inline_call_arity_matches(ASTNode *call_node, Symbol *proc_sym, size_t *varg_count_out);
@@ -229,6 +240,68 @@ static int inline_copy_node_shape(Symbol *target, ASTNode *source) {
     }
 
     return 1;
+}
+
+static int inline_node_has_array_shape(ASTNode *node) {
+    if (!node) return 0;
+    return node->value_dims > 0 || node->target_dims > 0;
+}
+
+static int inline_node_is_plain_object(ASTNode *node) {
+    if (!node) return 0;
+    return node->value_type == TP_OBJECT &&
+           node->target_type == TP_OBJECT &&
+           !inline_node_has_array_shape(node);
+}
+
+static int inline_is_direct_symbol_actual(ASTNode *node) {
+    if (!node || !node->symbolNode || !node->symbolNode->symbol || node->child) return 0;
+
+    return node->node_type == VAR_SYMBOL ||
+           node->node_type == VAR_TARGET ||
+           node->node_type == VAR_REFERENCE;
+}
+
+static ASTNode *inline_create_register_copy_instr(Context *context,
+                                                  Scope *scope,
+                                                  const char *opcode,
+                                                  ASTNode *lhs_node,
+                                                  ASTNode *rhs_node) {
+    ASTNode *instr;
+    ASTNode *lhs_copy;
+    ASTNode *rhs_copy;
+    Symbol *lhs_symbol;
+    Symbol *rhs_symbol;
+
+    if (!context || !scope || !lhs_node || !rhs_node) return NULL;
+    if (!lhs_node->symbolNode || !rhs_node->symbolNode) return NULL;
+
+    lhs_symbol = lhs_node->symbolNode->symbol;
+    rhs_symbol = rhs_node->symbolNode->symbol;
+    if (!lhs_symbol || !rhs_symbol) return NULL;
+
+    if (!opcode) return NULL;
+
+    instr = ast_ftt(context, ASSEMBLER, strdup(opcode));
+    if (!instr) return NULL;
+
+    instr->free_node_string = 1;
+    instr->scope = scope;
+    instr->token = lhs_node->token;
+    instr->line = lhs_node->line;
+    instr->column = lhs_node->column;
+    instr->source_start = lhs_node->source_start;
+    instr->source_end = lhs_node->source_end;
+    instr->token_start = lhs_node->token_start;
+    instr->token_end = lhs_node->token_end;
+
+    lhs_copy = inline_create_symbol_node(context, scope, lhs_node, lhs_symbol, VAR_TARGET, 0, 1);
+    rhs_copy = inline_create_symbol_node(context, scope, rhs_node, rhs_symbol, VAR_SYMBOL, 1, 0);
+    if (!lhs_copy || !rhs_copy) return NULL;
+
+    add_ast(instr, lhs_copy);
+    add_ast(instr, rhs_copy);
+    return instr;
 }
 
 static ASTNode *inline_create_integer_constant(Context *context, ASTNode *source_node, int value, ValueType type) {
@@ -415,9 +488,11 @@ static ASTNode *inline_create_symbol_node(Context *context,
 static ASTNode *inline_clone_ref_actual(Context *context,
                                         ASTNode *formal_node,
                                         Scope *current_scope,
-                                        InlineRefActualEntry *ref_entry) {
+                                        InlineRefActualEntry *ref_entry,
+                                        InlineCloneState *state) {
     ASTNode *replacement;
     ASTNode *source_child;
+    ASTNode *formal_child;
     size_t child_index;
 
     if (!context || !formal_node || !current_scope || !ref_entry || !ref_entry->actual_source) return NULL;
@@ -454,6 +529,17 @@ static ASTNode *inline_clone_ref_actual(Context *context,
         add_ast(replacement, captured_ref);
         source_child = source_child->sibling;
         child_index++;
+    }
+
+    formal_child = formal_node->child;
+    while (formal_child) {
+        ASTNode *cloned_child;
+
+        cloned_child = inline_clone_subtree_in_scope(context, formal_child, state, current_scope);
+        if (!cloned_child) return NULL;
+
+        add_ast(replacement, cloned_child);
+        formal_child = formal_child->sibling;
     }
 
     return replacement;
@@ -627,6 +713,7 @@ static int inline_bind_call_arguments(Context *context,
         ASTNode *bind_assign;
         ASTNode *bind_lhs;
         ASTNode *bind_rhs;
+        ASTNode *bind_source;
 
         if (param_arg == varg_arg) break;
 
@@ -647,6 +734,17 @@ static int inline_bind_call_arguments(Context *context,
             if (!param_arg->is_opt_arg || !formal_default) return 0;
         }
 
+        if (inline_node_is_plain_object(formal_target) &&
+            param_arg->is_const_arg &&
+            !inline_is_missing_actual(actual_arg)) {
+            if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, clone_state)) {
+                return 0;
+            }
+            param_arg = param_arg->sibling;
+            actual_arg = actual_arg->sibling;
+            continue;
+        }
+
         bind_assign = ast_f(context, ASSIGN, formal_target->token);
         bind_assign->scope = inline_scope;
         bind_assign->value_type = formal_target->value_type;
@@ -655,15 +753,31 @@ static int inline_bind_call_arguments(Context *context,
         bind_lhs = inline_clone_subtree(context, formal_target, clone_state);
         if (inline_is_missing_actual(actual_arg)) {
             bind_rhs = inline_clone_subtree(context, formal_default, clone_state);
+            bind_source = formal_default;
         } else {
             bind_rhs = inline_clone_subtree(context, actual_arg, clone_state);
+            bind_source = actual_arg;
         }
 
         if (!bind_lhs || !bind_rhs) return 0;
 
-        add_ast(bind_assign, bind_lhs);
-        add_ast(bind_assign, bind_rhs);
-        add_ast(instr_list, bind_assign);
+        if (inline_node_has_array_shape(formal_target)) {
+            ASTNode *bind_copy;
+            ASTNode *attr_copy;
+
+            if (!inline_is_direct_symbol_actual(bind_source)) return 0;
+
+            bind_copy = inline_create_register_copy_instr(context, inline_scope, "copy", bind_lhs, bind_rhs);
+            attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", bind_lhs, bind_rhs);
+            if (!bind_copy || !attr_copy) return 0;
+
+            add_ast(instr_list, bind_copy);
+            add_ast(instr_list, attr_copy);
+        } else {
+            add_ast(bind_assign, bind_lhs);
+            add_ast(bind_assign, bind_rhs);
+            add_ast(instr_list, bind_assign);
+        }
 
         param_arg = param_arg->sibling;
         actual_arg = actual_arg->sibling;
@@ -794,7 +908,7 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
         InlineRefActualEntry *ref_entry;
 
         ref_entry = inline_find_ref_actual(state, node->symbolNode->symbol);
-        if (ref_entry) return inline_clone_ref_actual(context, node, current_scope, ref_entry);
+        if (ref_entry) return inline_clone_ref_actual(context, node, current_scope, ref_entry, state);
     }
 
     if (state && node->node_type == OP_ARGS) {
@@ -1504,10 +1618,33 @@ static int ast_inline_statement(Context *context,
             }
 
             ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
+            if (!ret_rhs) {
+                inline_free_symbol_map(&clone_state);
+                return 0;
+            }
 
-            add_ast(ret_assign, ret_lhs);
-            add_ast(ret_assign, ret_rhs);
-            add_ast(instr_list, ret_assign);
+            if (inline_node_has_array_shape(ret_expr)) {
+                ASTNode *ret_copy;
+                ASTNode *attr_copy;
+
+                if (!inline_is_direct_symbol_actual(ret_expr)) {
+                    inline_free_symbol_map(&clone_state);
+                    return 0;
+                }
+
+                ret_copy = inline_create_register_copy_instr(context, inline_scope, "copy", ret_lhs, ret_rhs);
+                attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", ret_lhs, ret_rhs);
+                if (!ret_copy || !attr_copy) {
+                    inline_free_symbol_map(&clone_state);
+                    return 0;
+                }
+                add_ast(instr_list, ret_copy);
+                add_ast(instr_list, attr_copy);
+            } else {
+                add_ast(ret_assign, ret_lhs);
+                add_ast(ret_assign, ret_rhs);
+                add_ast(instr_list, ret_assign);
+            }
         } else {
             ASTNode *cloned_instr;
 
@@ -1543,6 +1680,7 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
     proc_def = proc_sym ? proc_sym->ast_template : NULL;
     if (!proc_def || !inline_analyse_return_shape(proc_def, &return_shape)) return 0;
     if (!return_shape.final_is_return || return_shape.return_count == 0) return 0;
+    if (proc_sym->value_dims > 0 && return_shape.return_count != 1) return 0;
     if (return_shape.return_count != 1) {
         block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
         if (!block_expr) return 0;
@@ -1620,6 +1758,7 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
 
     expr_context = inline_classify_expr_context(call_node);
     if (expr_context == INLINE_EXPR_CONTEXT_NONE) return 0;
+    if (proc_sym->value_dims > 0) return 0;
     if (!inline_analyse_return_shape(proc_sym->ast_template, &return_shape)) return 0;
     if (!return_shape.final_is_return || return_shape.return_count == 0) return 0;
 
@@ -1751,10 +1890,15 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
                 }
 
                 formal_symbol = formal_target && formal_target->symbolNode ? formal_target->symbolNode->symbol : NULL;
+                if (formal_symbol && formal_symbol->type == TP_BINARY) {
+                    sym->is_inlinable = 0;
+                    return result_normal;
+                }
+
                 if (formal_symbol &&
-                    (formal_symbol->value_class ||
-                     formal_symbol->value_dims > 0 ||
-                     formal_symbol->type == TP_OBJECT)) {
+                    formal_symbol->type == TP_OBJECT &&
+                    !arg->is_ref_arg &&
+                    !arg->is_const_arg) {
                     sym->is_inlinable = 0;
                     return result_normal;
                 }
@@ -1763,7 +1907,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
             }
         }
 
-        if (sym->value_class || sym->value_dims > 0 || sym->type == TP_OBJECT) {
+        if (sym->type == TP_BINARY) {
             sym->is_inlinable = 0;
             return result_normal;
         }

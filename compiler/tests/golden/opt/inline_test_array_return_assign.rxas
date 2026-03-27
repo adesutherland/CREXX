@@ -1,0 +1,127 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_array_return_assign.rexx
+ * BUILT                  : 2026-03-26 21:25:21
+ */
+
+.srcfile="inline_test_array_return_assign.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_array_return_assign.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "inline_test_array_return_assign.main.more"="b" ".string[*]" r0
+   .src 7:3="more = buildArray(\"green\", \"gold\")"
+   null r0
+   .meta "inline_test_array_return_assign.main.values"="b" ".string[*]" r1
+   .src 5:3="values = buildArray(\"red\", \"blue\")"
+   null r1
+   .src 4:3="say \"Starting array return assign inline test...\""
+   say "Starting array return assign inline test..."
+   .src 5:3="values = buildArray(\"red\", \"blue\")"
+   load r3,2
+   load r4,"red"
+   load r5,"blue"
+   settp r4,3
+   settp r5,3
+   call r1,buildArray(),r3
+   .src 6:3="say values[1] || \":\" || values[2"
+   minattrs r1,1
+   linkattr1 r5,r1,1
+   concat r4,r5,":"
+   unlink r5
+   minattrs r1,2
+   linkattr1 r3,r1,2
+   concat r4,r4,r3
+   unlink r3
+   say r4
+   .src 7:3="more = buildArray(\"green\", \"gold\")"
+   load r3,2
+   load r4,"green"
+   load r5,"gold"
+   settp r4,3
+   settp r5,3
+   call r0,buildArray(),r3
+   .src 8:3="say renderArray(more)"
+   .src 8:7="renderArray"
+   .src 20:7="value"
+   copy r2,r0
+   .src 20:7="value"
+   acopy r2,r0
+   .src 21:3="return value[1] || \":\" || value[2"
+   minattrs r2,1
+   linkattr1 r5,r2,1
+   concat r4,r5,":"
+   unlink r5
+   minattrs r2,2
+   linkattr1 r3,r2,2
+   concat r4,r4,r3
+   unlink r3
+   scopy r5,r4
+   br l84bexprend
+l84bexprend:
+   say r5
+   .src 9:3="say \"Array return assign inline test finished.\""
+   say "Array return assign inline test finished."
+   .src 10:3="return 0"
+   ret 0
+   .meta "inline_test_array_return_assign.main.more"
+   .meta "inline_test_array_return_assign.main.values"
+
+buildArray() .locals=4
+   .meta "inline_test_array_return_assign.buildarray"="b" ".string[*]" buildArray() "left=.string,right=.string" ""
+   .src 12:1="buildArray: procedure = .string[]"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 13:7="left = .string"
+   .meta "inline_test_array_return_assign.buildarray.left"="b" ".string" a1
+   .src 13:23="right = .string"
+   .meta "inline_test_array_return_assign.buildarray.right"="b" ".string" a2
+   .meta "inline_test_array_return_assign.buildarray.temp"="b" ".string[*]" r2
+   .src 14:3="temp = .string"
+   null r2
+   .src 15:3="temp[1] = left"
+   minattrs r2,1
+   linkattr1 r3,r2,1
+   scopy r3,a1
+   unlink r3
+   .src 16:3="temp[2] = right"
+   minattrs r2,2
+   linkattr1 r3,r2,2
+   scopy r3,a2
+   unlink r3
+   .src 17:3="return temp"
+   ret r2
+   .meta "inline_test_array_return_assign.buildarray.left"
+   .meta "inline_test_array_return_assign.buildarray.right"
+   .meta "inline_test_array_return_assign.buildarray.temp"
+
+renderArray() .locals=4
+   .meta "inline_test_array_return_assign.renderarray"="b" ".string" renderArray() "value=.string[*]" ""
+   .src 19:1="renderArray: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 20:7="value = .string"
+   .meta "inline_test_array_return_assign.renderarray.value"="b" ".string[*]" a1
+   .src 21:3="return value[1] || \":\" || value[2"
+   minattrs a1,1
+   linkattr1 r1,a1,1
+   concat r2,r1,":"
+   unlink r1
+   minattrs a1,2
+   linkattr1 r3,a1,2
+   concat r2,r2,r3
+   unlink r3
+   ret r2
+   .meta "inline_test_array_return_assign.renderarray.value"
