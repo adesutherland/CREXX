@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_vararg_runtime.rexx
- * BUILT                  : 2026-03-27 17:46:20
+ * BUILT                  : 2026-03-27 18:56:03
  */
 
 .srcfile="inline_test_ref_vararg_runtime.rexx"
 .globals=0
 
-main() .locals=9
+main() .locals=10
    .meta "inline_test_ref_vararg_runtime.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -25,50 +25,73 @@ main() .locals=9
    .meta "inline_test_ref_vararg_runtime.main.third"="b" ".int" r2
    load r2,30
    .src 8:3="say countTail(first, second, third)"
+   .src 8:7="countTail"
+   .src 20:3="return arg"
    load r3,3
-   swap r4,r0
-   swap r5,r1
-   swap r6,r2
-   call r7,countTail(),r3
-   swap r0,r4
-   swap r1,r5
-   swap r2,r6
-   itos r7
-   say r7
+   icopy r4,r3
+   acopy r4,r3
+   br l120bexprend
+l120bexprend:
+   itos r4
+   say r4
    .src 9:3="say readTail(2, first, second, third)"
-   load r3,4
-   load r4,2
-   swap r5,r0
-   swap r6,r1
-   swap r7,r2
-   call r8,readTail(),r3
-   swap r0,r5
-   swap r1,r6
-   swap r2,r7
-   itos r8
-   say r8
-   .src 10:3="say mutateTailIndirect(2, first, second, third)"
    load r4,4
    load r5,2
    swap r6,r0
    swap r7,r1
    swap r8,r2
-   call r3,mutateTailIndirect(),r4
+   call r9,readTail(),r4
    swap r0,r6
    swap r1,r7
    swap r2,r8
-   itos r3
-   say r3
-   .src 11:3="say first"
+   itos r9
+   say r9
+   .src 10:3="say hasTail(2, first, second, third)"
+   load r5,4
+   load r6,2
+   swap r7,r0
+   swap r8,r1
+   swap r9,r2
+   call r4,hasTail(),r5
+   swap r0,r7
+   swap r1,r8
+   swap r2,r9
+   itos r4
+   say r4
+   .src 11:3="say hasTail(5, first, second, third)"
+   load r5,4
+   load r6,5
+   swap r7,r0
+   swap r8,r1
+   swap r9,r2
+   call r4,hasTail(),r5
+   swap r0,r7
+   swap r1,r8
+   swap r2,r9
+   itos r4
+   say r4
+   .src 12:3="say mutateTailIndirect(2, first, second, third)"
+   load r5,4
+   load r6,2
+   swap r7,r0
+   swap r8,r1
+   swap r9,r2
+   call r4,mutateTailIndirect(),r5
+   swap r0,r7
+   swap r1,r8
+   swap r2,r9
+   itos r4
+   say r4
+   .src 13:3="say first"
    itos r0
    say r0
-   .src 12:3="say second"
+   .src 14:3="say second"
    itos r1
    say r1
-   .src 13:3="say third"
+   .src 15:3="say third"
    itos r2
    say r2
-   .src 14:3="return 0"
+   .src 16:3="return 0"
    ret 0
    .meta "inline_test_ref_vararg_runtime.main.first"
    .meta "inline_test_ref_vararg_runtime.main.second"
@@ -76,30 +99,30 @@ main() .locals=9
 
 countTail() .locals=1
    .meta "inline_test_ref_vararg_runtime.counttail"="b" ".int" countTail() "expose ...=.int" ""
-   .src 16:1="countTail: procedure = .int"
+   .src 18:1="countTail: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 17:14="... = .int"
-   .src 18:3="return arg"
+   .src 19:14="... = .int"
+   .src 20:3="return arg"
    icopy r0,a0
    isub r0,r0,0
    ret r0
 
 readTail() .locals=2
    .meta "inline_test_ref_vararg_runtime.readtail"="b" ".int" readTail() "which=.int,expose ...=.int" ""
-   .src 20:1="readTail: procedure = .int"
+   .src 22:1="readTail: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 21:7="which = .int"
+   .src 23:7="which = .int"
    .meta "inline_test_ref_vararg_runtime.readtail.which"="b" ".int" a1
-   .src 21:28="... = .int"
-   .src 22:3="return arg[which"
+   .src 23:28="... = .int"
+   .src 24:3="return arg[which"
    icopy r1,a0
    isub r1,r1,1
    ichkrng a1,1,r1
@@ -107,42 +130,63 @@ readTail() .locals=2
    ret r1
    .meta "inline_test_ref_vararg_runtime.readtail.which"
 
-bumpOne() .locals=1
-   .meta "inline_test_ref_vararg_runtime.bumpone"="b" ".int" bumpOne() "expose value=.int" ""
-   .src 24:1="bumpOne: procedure = .int"
+hasTail() .locals=2
+   .meta "inline_test_ref_vararg_runtime.hastail"="b" ".int" hasTail() "which=.int,expose ...=.int" ""
+   .src 26:1="hasTail: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 25:7="expose value = .int"
+   .src 27:7="which = .int"
+   .meta "inline_test_ref_vararg_runtime.hastail.which"="b" ".int" a1
+   .src 27:28="... = .int"
+   .src 28:3="return arg(which"
+   ilt r1,a1,1
+   signalt "OUT_OF_RANGE",r1
+   icopy r1,a0
+   isub r1,r1,1
+   ilte r1,a1,r1
+   btoi r1
+   ret r1
+   .meta "inline_test_ref_vararg_runtime.hastail.which"
+
+bumpOne() .locals=1
+   .meta "inline_test_ref_vararg_runtime.bumpone"="b" ".int" bumpOne() "expose value=.int" ""
+   .src 30:1="bumpOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 31:7="expose value = .int"
    .meta "inline_test_ref_vararg_runtime.bumpone.value"="b" ".int" a1
-   .src 26:3="value = value + 7"
+   .src 32:3="value = value + 7"
    iadd a1,a1,7
-   .src 27:3="return value"
+   .src 33:3="return value"
    ret a1
    .meta "inline_test_ref_vararg_runtime.bumpone.value"
 
-mutateTailIndirect() .locals=6
+mutateTailIndirect() .locals=7
    .meta "inline_test_ref_vararg_runtime.mutatetailindirect"="b" ".int" mutateTailIndirect() "which=.int,expose ...=.int" ""
-   .src 29:1="mutateTailIndirect: procedure = .int"
+   .src 35:1="mutateTailIndirect: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 30:7="which = .int"
+   .src 36:7="which = .int"
    .meta "inline_test_ref_vararg_runtime.mutatetailindirect.which"="b" ".int" a1
-   .src 30:28="... = .int"
-   .src 31:3="return bumpOne(arg[which"
-   load r2,1
-   icopy r4,a0
-   isub r4,r4,1
-   ichkrng a1,1,r4
-   linkarg r4,a1,1
-   swap r3,r4
-   call r5,bumpOne(),r2
-   swap r4,r3
-   unlink r4
-   ret r5
+   .src 36:28="... = .int"
+   .src 37:3="return bumpOne(arg[which"
+   load r3,1
+   icopy r5,a0
+   isub r5,r5,1
+   ichkrng a1,1,r5
+   linkarg r5,a1,1
+   swap r4,r5
+   call r6,bumpOne(),r3
+   swap r5,r4
+   unlink r5
+   ret r6
    .meta "inline_test_ref_vararg_runtime.mutatetailindirect.which"

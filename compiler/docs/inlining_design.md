@@ -250,6 +250,14 @@ The remaining discriminator behaviour is intentional and milestone-driven:
 
 So the milestone 1 closure is: local plain procedures are structurally and semantically covered; the remaining exclusions are later-milestone boundaries, not plain-procedure semantic gaps.
 
+Decision taken at milestone-1 closure:
+
+- keep the implementation on top of existing RXAS primitives rather than adding new VM or assembler instructions just for inlining
+- use compiler-side capture and rewrite helpers to preserve evaluation-once and alias semantics
+- support `.ref` / `expose` varargs for the common inlineable cases: `arg[]`, constant `arg[n]`, and constant `arg(n, "E")`
+- keep forwarded constant `.ref` vararg elements semantically correct by allowing them to flow into inner `expose` calls while leaving those inner calls as normal calls instead of inventing a locator-table model mid-milestone
+- defer dynamic `.ref` vararg indexing (`arg[ix]`, `arg(ix, "E")`) to a later design iteration; this is now treated as a post-milestone enhancement, not a milestone-1 blocker
+
 ### Milestone 2: all local class method inlining works
 
 This milestone should start with local methods before it attempts factories.
@@ -297,6 +305,7 @@ The implementation now covers:
 - array-typed formals, assignment-site returns, and expression/block-result returns where the inline rewrite can preserve attribute-copy semantics
 - non-symbol aggregate actuals and non-symbol aggregate return expressions via inline temp materialisation
 - broader aliasable by-reference actuals, including computed indexed/stem locator children
+- `.ref` / `expose` varargs for `arg[]`, constant `arg[n]`, and constant `arg(n, "E")`, using existing RXAS argument/link primitives plus compiler-side capture helpers
 - assignment-site inlining when the LHS itself has child selectors, by falling back to the RHS `BLOCK_EXPR` path
 - binary-typed local plain procedures across the current statement and expression rewrite machinery
 - explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
@@ -305,7 +314,7 @@ The implementation still excludes:
 
 - methods and factories
 - imported callees
-- `.ref` / `expose` varargs
+- dynamic-index `.ref` / `expose` vararg access
 
 ## Discriminator Review
 

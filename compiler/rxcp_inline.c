@@ -48,6 +48,7 @@ typedef struct {
     size_t node_count;
     InlineRefActualEntry *ref_entries;
     size_t ref_count;
+    InlineRefActualEntry *varg_ref_entries;
     Symbol **varg_symbols;
     size_t varg_count;
     Symbol *varg_array_symbol;
@@ -59,6 +60,7 @@ typedef struct {
     int return_count;
     int has_unsupported_varg_access;
     size_t max_required_varg_index;
+    int ref_varg_mode;
 } InlinableCheck;
 
 typedef struct {
@@ -220,6 +222,13 @@ static InlineRefActualEntry *inline_find_ref_actual(InlineCloneState *state, Sym
     return NULL;
 }
 
+static InlineRefActualEntry *inline_find_ref_varg_actual(InlineCloneState *state, size_t index) {
+    if (!state || !state->varg_ref_entries) return NULL;
+    if (index < 1 || index > state->varg_count) return NULL;
+
+    return &state->varg_ref_entries[index - 1];
+}
+
 static int inline_copy_node_shape(Symbol *target, ASTNode *source) {
     if (!target || !source) return 0;
 
@@ -250,6 +259,32 @@ static int inline_copy_node_shape(Symbol *target, ASTNode *source) {
     }
 
     return 1;
+}
+
+static void inline_copy_replacement_semantics(ASTNode *replacement, ASTNode *replaced_node) {
+    if (!replacement || !replaced_node) return;
+
+    replacement->is_ref_arg = replaced_node->is_ref_arg;
+    replacement->is_opt_arg = replaced_node->is_opt_arg;
+    replacement->is_const_arg = replaced_node->is_const_arg;
+    replacement->is_varg = replaced_node->is_varg;
+    replacement->inherit_parent_reg_scope = replaced_node->inherit_parent_reg_scope;
+    if (replacement->is_ref_arg && replacement->symbolNode) replacement->symbolNode->writeUsage = 1;
+
+    ast_set_value_type(0,
+                       replacement,
+                       replaced_node->value_type,
+                       replaced_node->value_dims,
+                       replaced_node->value_dim_base,
+                       replaced_node->value_dim_elements,
+                       replaced_node->value_class);
+    ast_set_target_type(0,
+                        replacement,
+                        replaced_node->target_type,
+                        replaced_node->target_dims,
+                        replaced_node->target_dim_base,
+                        replaced_node->target_dim_elements,
+                        replaced_node->target_class);
 }
 
 static int inline_node_has_array_shape(ASTNode *node) {
@@ -494,9 +529,13 @@ static walker_result inline_varg_usage_walker(walker_direction direction, ASTNod
 
         if (inline_varg_index_from_node(node->child, &index)) {
             if (index > check->max_required_varg_index) check->max_required_varg_index = index;
+        } else if (check->ref_varg_mode) {
+            check->has_unsupported_varg_access = 1;
         }
     } else if (node->node_type == OP_ARG_IX_EXISTS) {
         if (!node->child) {
+            check->has_unsupported_varg_access = 1;
+        } else if (check->ref_varg_mode && !inline_varg_index_from_node(node->child, &index)) {
             check->has_unsupported_varg_access = 1;
         }
     }
@@ -506,12 +545,15 @@ static walker_result inline_varg_usage_walker(walker_direction direction, ASTNod
 
 static int inline_analyse_varg_usage(ASTNode *proc_def, int *unsupported_out, size_t *max_required_index_out) {
     InlinableCheck check;
+    ASTNode *varg_arg;
 
     if (unsupported_out) *unsupported_out = 0;
     if (max_required_index_out) *max_required_index_out = 0;
     if (!proc_def) return 0;
 
     memset(&check, 0, sizeof(check));
+    varg_arg = inline_find_varg_arg(proc_def);
+    check.ref_varg_mode = varg_arg && varg_arg->is_ref_arg;
     ast_wlkr(proc_def, inline_varg_usage_walker, &check);
 
     if (unsupported_out) *unsupported_out = check.has_unsupported_varg_access;
@@ -636,38 +678,77 @@ static ASTNode *inline_clone_ref_actual(Context *context,
     return replacement;
 }
 
-static int inline_register_ref_actual(Context *context,
-                                      ASTNode *instr_list,
-                                      Scope *inline_scope,
-                                      ASTNode *formal_target,
-                                      ASTNode *actual_arg,
-                                      InlineCloneState *state) {
-    InlineRefActualEntry *new_entries;
-    InlineRefActualEntry *entry;
-    ASTNode *child;
-    size_t child_count;
+static ASTNode *inline_clone_ref_varg_actual(Context *context,
+                                             ASTNode *source_node,
+                                             Scope *current_scope,
+                                             InlineRefActualEntry *ref_entry,
+                                             InlineCloneState *state) {
+    ASTNode *replacement;
+    ASTNode *source_child;
     size_t child_index;
 
-    if (!context || !instr_list || !inline_scope || !formal_target || !actual_arg || !state) return 0;
-    if (!formal_target->symbolNode || !formal_target->symbolNode->symbol) return 0;
+    if (!context || !source_node || !current_scope || !ref_entry || !ref_entry->actual_source) return NULL;
+
+    replacement = ast_dup(context, ref_entry->actual_source);
+    if (!replacement) return NULL;
+    replacement->scope = current_scope;
+
+    if (ref_entry->actual_source->symbolNode && ref_entry->actual_source->symbolNode->symbol) {
+        sym_adnd(ref_entry->actual_source->symbolNode->symbol, replacement, 1, 0);
+    }
+
+    source_child = ref_entry->actual_source->child;
+    child_index = 0;
+    while (source_child) {
+        ASTNode *captured_ref;
+
+        if (child_index >= ref_entry->captured_count || !ref_entry->captured_symbols[child_index]) return NULL;
+
+        captured_ref = inline_create_symbol_node(context,
+                                                 current_scope,
+                                                 source_child,
+                                                 ref_entry->captured_symbols[child_index],
+                                                 VAR_SYMBOL,
+                                                 1,
+                                                 0);
+        if (!captured_ref) return NULL;
+
+        add_ast(replacement, captured_ref);
+        source_child = source_child->sibling;
+        child_index++;
+    }
+
+    inline_copy_replacement_semantics(replacement, source_node);
+    /* Mark forwarded `.ref` vararg actuals so later call-site checks can keep
+     * them as normal calls rather than recursively inlining aliasing through a
+     * synthetic locator model. */
+    replacement->is_varg = 1;
+    replacement->is_compiler_added = 1;
+    return replacement;
+}
+
+static int inline_capture_ref_entry(Context *context,
+                                    ASTNode *instr_list,
+                                    Scope *inline_scope,
+                                    ASTNode *actual_arg,
+                                    InlineCloneState *state,
+                                    InlineRefActualEntry *entry,
+                                    const char *prefix) {
+    ASTNode *child;
+    size_t child_index;
+    Symbol *formal_symbol;
+
+    if (!context || !instr_list || !inline_scope || !actual_arg || !state || !entry || !prefix) return 0;
     if (!inline_is_supported_ref_actual(actual_arg)) return 0;
 
-    entry = inline_find_ref_actual(state, formal_target->symbolNode->symbol);
-    if (entry) return 1;
-
-    child_count = inline_count_siblings(actual_arg->child);
-    new_entries = realloc(state->ref_entries, sizeof(InlineRefActualEntry) * (state->ref_count + 1));
-    if (!new_entries) return 0;
-
-    state->ref_entries = new_entries;
-    entry = &state->ref_entries[state->ref_count];
+    formal_symbol = entry->formal_symbol;
     memset(entry, 0, sizeof(*entry));
-    entry->formal_symbol = formal_target->symbolNode->symbol;
+    entry->formal_symbol = formal_symbol;
     entry->actual_source = actual_arg;
-    entry->captured_count = child_count;
+    entry->captured_count = inline_count_siblings(actual_arg->child);
 
-    if (child_count) {
-        entry->captured_symbols = calloc(child_count, sizeof(Symbol *));
+    if (entry->captured_count) {
+        entry->captured_symbols = calloc(entry->captured_count, sizeof(Symbol *));
         if (!entry->captured_symbols) return 0;
     }
 
@@ -679,7 +760,7 @@ static int inline_register_ref_actual(Context *context,
         ASTNode *capture_lhs;
         ASTNode *capture_rhs;
 
-        temp_symbol = inline_create_temp_symbol(context, inline_scope, child, "__inline_ref", child_index);
+        temp_symbol = inline_create_temp_symbol(context, inline_scope, child, prefix, child_index);
         if (!temp_symbol) return 0;
 
         capture_assign = ast_f(context, ASSIGN, child->token);
@@ -705,6 +786,41 @@ static int inline_register_ref_actual(Context *context,
         entry->captured_symbols[child_index] = temp_symbol;
         child = child->sibling;
         child_index++;
+    }
+
+    return 1;
+}
+
+static int inline_register_ref_actual(Context *context,
+                                      ASTNode *instr_list,
+                                      Scope *inline_scope,
+                                      ASTNode *formal_target,
+                                      ASTNode *actual_arg,
+                                      InlineCloneState *state) {
+    InlineRefActualEntry *new_entries;
+    InlineRefActualEntry *entry;
+    if (!context || !instr_list || !inline_scope || !formal_target || !actual_arg || !state) return 0;
+    if (!formal_target->symbolNode || !formal_target->symbolNode->symbol) return 0;
+    if (actual_arg->is_varg && actual_arg->is_compiler_added) return 0;
+    if (!inline_is_supported_ref_actual(actual_arg)) return 0;
+
+    entry = inline_find_ref_actual(state, formal_target->symbolNode->symbol);
+    if (entry) return 1;
+
+    new_entries = realloc(state->ref_entries, sizeof(InlineRefActualEntry) * (state->ref_count + 1));
+    if (!new_entries) return 0;
+
+    state->ref_entries = new_entries;
+    entry = &state->ref_entries[state->ref_count];
+    entry->formal_symbol = formal_target->symbolNode->symbol;
+    if (!inline_capture_ref_entry(context,
+                                  instr_list,
+                                  inline_scope,
+                                  actual_arg,
+                                  state,
+                                  entry,
+                                  "__inline_ref")) {
+        return 0;
     }
 
     state->ref_count++;
@@ -779,6 +895,45 @@ static int inline_capture_varg_actuals(Context *context,
     }
 
     return inline_initialise_varg_array(context, instr_list, inline_scope, varg_arg, source_template, state);
+}
+
+static int inline_capture_ref_varg_actuals(Context *context,
+                                           ASTNode *instr_list,
+                                           Scope *inline_scope,
+                                           ASTNode *actual_arg,
+                                           InlineCloneState *state) {
+    size_t child_index;
+
+    if (!context || !instr_list || !inline_scope || !state) return 0;
+
+    if (!actual_arg) {
+        state->varg_count = 0;
+        state->varg_ref_entries = NULL;
+        return 1;
+    }
+
+    state->varg_count = inline_count_siblings(actual_arg);
+    state->varg_ref_entries = calloc(state->varg_count, sizeof(InlineRefActualEntry));
+    if (!state->varg_ref_entries) return 0;
+
+    child_index = 0;
+    while (actual_arg) {
+        if (actual_arg->node_type == NOVAL) return 0;
+        if (actual_arg->symbolNode) actual_arg->symbolNode->writeUsage = 1;
+        if (!inline_capture_ref_entry(context,
+                                      instr_list,
+                                      inline_scope,
+                                      actual_arg,
+                                      state,
+                                      &state->varg_ref_entries[child_index],
+                                      "__inline_ref_varg")) {
+            return 0;
+        }
+        child_index++;
+        actual_arg = actual_arg->sibling;
+    }
+
+    return 1;
 }
 
 static Symbol *inline_create_varg_array_symbol(Context *context,
@@ -1247,8 +1402,14 @@ static int inline_bind_call_arguments(Context *context,
     }
 
     if (varg_arg) {
-        if (!inline_capture_varg_actuals(context, instr_list, inline_scope, varg_arg, actual_arg, clone_state)) {
-            return 0;
+        if (varg_arg->is_ref_arg) {
+            if (!inline_capture_ref_varg_actuals(context, instr_list, inline_scope, actual_arg, clone_state)) {
+                return 0;
+            }
+        } else {
+            if (!inline_capture_varg_actuals(context, instr_list, inline_scope, varg_arg, actual_arg, clone_state)) {
+                return 0;
+            }
         }
         actual_arg = NULL;
         param_arg = varg_arg ? varg_arg->sibling : param_arg;
@@ -1385,10 +1546,15 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
     if (state && node->node_type == OP_ARG_VALUE) {
         size_t index;
         ASTNode *replacement;
+        InlineRefActualEntry *ref_varg_entry;
 
         if (!node->child) return NULL;
         if (!inline_varg_index_from_node(node->child, &index)) {
             return inline_build_dynamic_varg_value(context, node, current_scope, state);
+        }
+        ref_varg_entry = inline_find_ref_varg_actual(state, index);
+        if (ref_varg_entry) {
+            return inline_clone_ref_varg_actual(context, node, current_scope, ref_varg_entry, state);
         }
         if (index < 1 || index > state->varg_count || !state->varg_symbols || !state->varg_symbols[index - 1]) return NULL;
 
@@ -1407,6 +1573,9 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
                             node->target_dim_base,
                             node->target_dim_elements,
                             node->target_class);
+        replacement->is_ref_arg = node->is_ref_arg;
+        replacement->is_opt_arg = node->is_opt_arg;
+        replacement->is_const_arg = node->is_const_arg;
         return replacement;
     }
 
@@ -1522,6 +1691,12 @@ static void inline_free_symbol_map(InlineCloneState *state) {
         }
         free(state->ref_entries);
     }
+    if (state->varg_ref_entries) {
+        for (i = 0; i < state->varg_count; i++) {
+            if (state->varg_ref_entries[i].captured_symbols) free(state->varg_ref_entries[i].captured_symbols);
+        }
+        free(state->varg_ref_entries);
+    }
     if (state->varg_symbols) free(state->varg_symbols);
     state->symbol_entries = NULL;
     state->symbol_count = 0;
@@ -1531,6 +1706,7 @@ static void inline_free_symbol_map(InlineCloneState *state) {
     state->node_count = 0;
     state->ref_entries = NULL;
     state->ref_count = 0;
+    state->varg_ref_entries = NULL;
     state->varg_symbols = NULL;
     state->varg_count = 0;
 }
@@ -2318,9 +2494,13 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
             } else if (inline_varg_index_from_node(node->child, &index) &&
                        index > check->max_required_varg_index) {
                 check->max_required_varg_index = index;
+            } else if (check->ref_varg_mode) {
+                check->has_unsupported_varg_access = 1;
             }
         } else if (node->node_type == OP_ARG_IX_EXISTS) {
             if (!node->child) {
+                check->has_unsupported_varg_access = 1;
+            } else if (check->ref_varg_mode && !inline_varg_index_from_node(node->child, NULL)) {
                 check->has_unsupported_varg_access = 1;
             }
         }
@@ -2355,7 +2535,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
             arg = args->child;
             while (arg) {
                 if (arg->is_varg) {
-                    if (arg->is_ref_arg || arg->sibling) {
+                    if (arg->sibling) {
                         sym->is_inlinable = 0;
                         return result_normal;
                     }
@@ -2392,6 +2572,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
 
         memset(&check, 0, sizeof(check));
         check.root_proc = node;
+        check.ref_varg_mode = args && inline_find_varg_arg(node) && inline_find_varg_arg(node)->is_ref_arg;
         ast_wlkr(node, inlinable_check_walker, &check);
 
         if (check.node_count > INLINE_MAX_NODES ||

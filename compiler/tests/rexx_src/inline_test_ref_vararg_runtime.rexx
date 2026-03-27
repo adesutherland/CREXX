@@ -7,6 +7,8 @@ main: procedure = .int
 
   say countTail(first, second, third)
   say readTail(2, first, second, third)
+  say hasTail(2, first, second, third)
+  say hasTail(5, first, second, third)
   say mutateTailIndirect(2, first, second, third)
   say first
   say second
@@ -20,6 +22,10 @@ countTail: procedure = .int
 readTail: procedure = .int
   arg which = .int, expose ... = .int
   return arg[which]
+
+hasTail: procedure = .int
+  arg which = .int, expose ... = .int
+  return arg(which, "E")
 
 bumpOne: procedure = .int
   arg expose value = .int

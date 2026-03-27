@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_vararg_negative.rexx
- * BUILT                  : 2026-03-27 17:46:20
+ * BUILT                  : 2026-03-27 18:56:03
  */
 
 .srcfile="inline_test_vararg_negative.rexx"
 .globals=0
 
-main() .locals=14
+main() .locals=8
    .meta "inline_test_vararg_negative.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -17,65 +17,55 @@ main() .locals=14
    setnumstd 1
    .src 4:3="say \"Starting vararg inline negative test...\""
    say "Starting vararg inline negative test..."
-   .src 6:3="a = 10"
-   .meta "inline_test_vararg_negative.main.a"="b" ".int" r0
-   .meta "inline_test_vararg_negative.main.idx"="b" ".int" "2"
-   load r0,10
-   .src 7:3="b = 20"
-   .meta "inline_test_vararg_negative.main.b"="b" ".int" r1
-   load r1,20
-   .src 8:3="c = 30"
-   .meta "inline_test_vararg_negative.main.c"="b" ".int" r2
-   load r2,30
    .src 9:3="say dynamicPick(idx, a, b, c)"
+   .meta "inline_test_vararg_negative.main.a"="b" ".int" "10"
+   .meta "inline_test_vararg_negative.main.b"="b" ".int" "20"
+   .meta "inline_test_vararg_negative.main.c"="b" ".int" "30"
+   .meta "inline_test_vararg_negative.main.idx"="b" ".int" "2"
    .src 9:7="dynamicPick"
-   .src 9:24="a"
-   icopy r3,r0
-   .src 9:27="b"
-   icopy r4,r1
-   .src 9:30="c"
-   icopy r5,r2
    .src 15:27=".int"
-   setattrs r6,3
-   linkattr1 r7,r6,1
-   icopy r7,r3
-   unlink r7
+   setattrs r0,3
+   linkattr1 r1,r0,1
+   load r2,10
+   icopy r1,r2
+   unlink r1
    .src 15:27=".int"
-   setattrs r6,3
-   linkattr1 r7,r6,2
-   icopy r7,r4
-   unlink r7
+   setattrs r0,3
+   linkattr1 r1,r0,2
+   load r3,20
+   icopy r1,r3
+   unlink r1
    .src 15:27=".int"
-   setattrs r6,3
-   linkattr1 r7,r6,3
-   icopy r7,r5
-   unlink r7
+   setattrs r0,3
+   linkattr1 r1,r0,3
+   load r4,30
+   icopy r1,r4
+   unlink r1
    .src 16:3="return arg[which"
    .src 16:10="arg"
    .src 16:10="arg"
-   setattrs r6,3
-   linkattr1 r7,r6,2
-   icopy r8,r7
-   unlink r7
+   setattrs r0,3
+   linkattr1 r1,r0,2
+   icopy r5,r1
+   unlink r1
    br l89bexprend
 l89bexprend:
-   icopy r9,r8
-   acopy r9,r8
+   icopy r6,r5
+   acopy r6,r5
    br l62bexprend
 l62bexprend:
-   itos r9
-   say r9
+   itos r6
+   say r6
    .src 10:3="say refTailCount(a, b, c)"
-   load r9,3
-   swap r10,r0
-   swap r11,r1
-   swap r12,r2
-   call r13,refTailCount(),r9
-   swap r0,r10
-   swap r1,r11
-   swap r2,r12
-   itos r13
-   say r13
+   .src 10:7="refTailCount"
+   .src 20:3="return arg"
+   load r6,3
+   icopy r7,r6
+   acopy r7,r6
+   br l97bexprend
+l97bexprend:
+   itos r7
+   say r7
    .src 11:3="say \"Vararg inline negative test finished.\""
    say "Vararg inline negative test finished."
    .src 12:3="return 0"

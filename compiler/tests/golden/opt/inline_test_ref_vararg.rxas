@@ -1,0 +1,183 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_ref_vararg.rexx
+ * BUILT                  : 2026-03-27 18:56:03
+ */
+
+.srcfile="inline_test_ref_vararg.rexx"
+.globals=0
+
+main() .locals=8
+   .meta "inline_test_ref_vararg.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 5:3="second = 20"
+   .meta "inline_test_ref_vararg.main.first"="b" ".int" "10"
+   .meta "inline_test_ref_vararg.main.second"="b" ".int" r0
+   load r0,20
+   .src 8:3="say countTail(first, second, third)"
+   .meta "inline_test_ref_vararg.main.third"="b" ".int" "30"
+   .src 8:7="countTail"
+   .src 20:3="return arg"
+   load r2,3
+   icopy r3,r2
+   acopy r3,r2
+   br l117bexprend
+l117bexprend:
+   itos r3
+   say r3
+   .src 9:3="say pickSecond(first, second, third)"
+   .src 9:7="pickSecond"
+   .src 24:3="return arg[2"
+   icopy r3,r0
+   acopy r3,r0
+   br l121bexprend
+l121bexprend:
+   itos r3
+   say r3
+   .src 10:3="say hasSecond(first, second, third)"
+   .src 10:7="hasSecond"
+   .src 28:3="return arg(2"
+   load r3,1
+   icopy r4,r3
+   acopy r4,r3
+   br l125bexprend
+l125bexprend:
+   itos r4
+   say r4
+   .src 11:3="say hasFifth(first, second, third)"
+   .src 11:7="hasFifth"
+   .src 32:3="return arg(5"
+   load r4,0
+   icopy r5,r4
+   acopy r5,r4
+   br l129bexprend
+l129bexprend:
+   itos r5
+   say r5
+   .src 12:3="say mutateSecond(first, second, third)"
+   .src 12:7="mutateSecond"
+   .src 41:3="return bumpOne(arg[2"
+   load r5,1
+   swap r6,r0
+   call r7,bumpOne(),r5
+   swap r0,r6
+   icopy r6,r7
+   acopy r6,r7
+   br l133bexprend
+l133bexprend:
+   itos r6
+   say r6
+   .src 13:3="say first"
+   say "10"
+   .src 14:3="say second"
+   itos r0
+   say r0
+   .src 15:3="say third"
+   say "30"
+   .src 16:3="return 0"
+   ret 0
+   .meta "inline_test_ref_vararg.main.first"
+   .meta "inline_test_ref_vararg.main.second"
+   .meta "inline_test_ref_vararg.main.third"
+
+countTail() .locals=1
+   .meta "inline_test_ref_vararg.counttail"="b" ".int" countTail() "expose ...=.int" ""
+   .src 18:1="countTail: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 19:14="... = .int"
+   .src 20:3="return arg"
+   icopy r0,a0
+   isub r0,r0,0
+   ret r0
+
+pickSecond() .locals=1
+   .meta "inline_test_ref_vararg.picksecond"="b" ".int" pickSecond() "expose ...=.int" ""
+   .src 22:1="pickSecond: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 23:14="... = .int"
+   .src 24:3="return arg[2"
+   icopy r0,a0
+   isub r0,r0,0
+   ichkrng 2,1,r0
+   linkarg r0,2
+   ret r0
+
+hasSecond() .locals=1
+   .meta "inline_test_ref_vararg.hassecond"="b" ".int" hasSecond() "expose ...=.int" ""
+   .src 26:1="hasSecond: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 27:14="... = .int"
+   .src 28:3="return arg(2"
+   icopy r0,a0
+   ilte r0,2,r0
+   btoi r0
+   ret r0
+
+hasFifth() .locals=1
+   .meta "inline_test_ref_vararg.hasfifth"="b" ".int" hasFifth() "expose ...=.int" ""
+   .src 30:1="hasFifth: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 31:14="... = .int"
+   .src 32:3="return arg(5"
+   icopy r0,a0
+   ilte r0,5,r0
+   btoi r0
+   ret r0
+
+bumpOne() .locals=1
+   .meta "inline_test_ref_vararg.bumpone"="b" ".int" bumpOne() "expose value=.int" ""
+   .src 34:1="bumpOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 35:7="expose value = .int"
+   .meta "inline_test_ref_vararg.bumpone.value"="b" ".int" a1
+   .src 36:3="value = value + 7"
+   iadd a1,a1,7
+   .src 37:3="return value"
+   ret a1
+   .meta "inline_test_ref_vararg.bumpone.value"
+
+mutateSecond() .locals=6
+   .meta "inline_test_ref_vararg.mutatesecond"="b" ".int" mutateSecond() "expose ...=.int" ""
+   .src 39:1="mutateSecond: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 40:14="... = .int"
+   .src 41:3="return bumpOne(arg[2"
+   load r2,1
+   icopy r4,a0
+   isub r4,r4,0
+   ichkrng 2,1,r4
+   linkarg r4,2
+   swap r3,r4
+   call r5,bumpOne(),r2
+   swap r4,r3
+   unlink r4
+   ret r5
