@@ -204,20 +204,20 @@ Important details:
 - Whole-RHS `ASSIGN` and standalone `CALL` sites still use dedicated statement-position rewrites instead of the expression path.
 
 ## Procedure Eligibility
-For the first slice, a procedure is eligible only if all of the following hold:
+For the current local-plain-procedure slice, a procedure is structurally eligible only if all of the following hold:
 
 - standard procedure only
 - not `main`
 - not a method
 - not a factory
-- fixed arguments or a supported trailing by-value vararg
-- non-binary arguments and returns within the current local-procedure value slice
-- value-producing procedures must still end in a final `RETURN`
-- void statement-call sites may also inline through bare-return and implicit-fallthrough shapes
+- local body available in the current compilation unit
+- argument and return shapes stay within the implemented local-procedure slice, including aggregates, binary values, by-reference formals, by-value varargs, and the current constant-index `.ref` vararg support
+- value-producing procedures still satisfy the current return-shape proof used by the inliner
 - body size is below the configured node threshold
-- no unsupported nested inline cases
+- no recursion cycle is introduced by the inline ancestry chain
+- no unsupported dynamic `.ref` vararg access is required
 
-These checks may be tightened further if needed to keep the first implementation simple and correct.
+Call-site selection remains separate from structural eligibility: an eligible procedure may still have uninlined call sites if the parent rewrite bucket belongs to milestone 2 or 3.
 
 ## Milestones
 
@@ -225,14 +225,13 @@ The milestone names below describe user-visible capability goals. They are inten
 
 ### Milestone 1: all local procedures work
 
-This milestone should be treated as two internal stages:
+This milestone was delivered in two internal stages:
 
 - `M1a`: local plain procedures within the current safe scalar slice, including fixed arguments, optional arguments, by-reference formals, and by-value varargs, across the currently supported call-site capability buckets
 - `M1b`: local plain procedures beyond the current leaf restrictions, removing the temporary exclusions around nested calls, nested scopes, and single-trailing-`RETURN` only shapes
 
 Notes:
 
-- Varargs are the next sensible step, but varargs alone do not complete milestone 1.
 - The current implementation now supports by-value varargs, nested-call local procedures, and nested callee scopes through a bounded fixed-point pass with explicit cycle blocking for self-recursive and mutually recursive expansions.
 - The current implementation still excludes methods/factories and class-scope procedures. Object by-value formals now follow the same split as normal calls: read-only formals alias the incoming binding, while writable formals materialise an isolated local copy. Array values are still supported only where the inline rewrite can preserve attribute-copy semantics.
 - Selection should remain opportunity-based throughout milestone 1: a structurally inlineable procedure may still have uninlined call sites if their rewrite bucket is not yet implemented.
@@ -380,21 +379,21 @@ For validation purposes, any inline rewrite that changes whether a caller variab
 ## Later Phases
 
 ### Next Phase
-The next meaningful extensions are the remaining argument-semantics and cross-procedure cases that are still intentionally excluded:
+The next meaningful extensions are now milestone-driven rather than milestone-1 cleanup work:
 
-- `.ref` / `expose` varargs, if normal-call parity is considered worth the added binding complexity
 - methods and factories
 - imported callees
+- any later reconsideration of dynamic `.ref` / `expose` vararg indexing
 
-Outside milestone 2 and 3, the remaining local-plain-procedure exclusions now split cleanly into:
+Outside milestone 2 and 3, the remaining exclusions now split cleanly into:
 
-- one real parity gap: `.ref` / `expose` varargs
+- post-milestone enhancements that may or may not be worth the complexity, such as dynamic `.ref` vararg indexing
 - safety and cost controls that should remain in some form: recursion-cycle blocking and body-size gating
 - non-goals or structural policy exclusions: `main`
 - language-validity constraints that are not extra inline restrictions: arity mismatches and invalid non-void fallthrough/value-return shapes
 
 ## Verification
-The design for phase 1 should be considered ready when:
+The local-plain-procedure design should be considered established when:
 
 - the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, `inline_test_nested_call_expr`, `inline_test_ref_opt`, `inline_test_ref_indexed`, and `inline_test_ref_stem` using the narrow supported strategies
 - excluded cases such as large procedures, methods, and imported callees remain uninlined under optimisation
@@ -403,11 +402,10 @@ The design for phase 1 should be considered ready when:
 - optimised codegen succeeds
 - positive and negative compiler tests lock down the selector behaviour
 
-## Non-Goals For The First Step
+## Non-Goals For The Current Design Boundary
 
 - methods
 - factories
-- `.ref` / `expose` varargs
 - methods/factories and imported callees in expression position
 - aggressive pruning of fully inlined procedures
 - claiming fully generic scope/symbol cloning before it is proven
