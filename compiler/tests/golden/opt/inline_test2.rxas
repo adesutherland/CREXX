@@ -1,14 +1,14 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test2.rexx
- * BUILT                  : 2026-03-27 15:15:24
+ * BUILT                  : 2026-03-27 15:59:16
  */
 
 .meta "inline_test2.myclass"="b" ".unknown" .class
 .srcfile="inline_test2.rexx"
 .globals=0
 
-main() .locals=9
+main() .locals=8
    .meta "inline_test2.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -32,46 +32,49 @@ main() .locals=9
    .src 10:3="say \"NestedCallProc result:\" nestedCallProc(10)"
    .src 10:32="nestedCallProc"
    .src 39:3="return helper(val)"
-   load r6,1
-   load r7,10
-   call r5,helper(),r6
-   icopy r7,r5
-   acopy r7,r5
+   .src 39:10="helper"
+   .src 43:3="return v + 1"
+   load r7,11
+   icopy r6,r7
+   br l199bexprend
+l199bexprend:
+   icopy r5,r6
+   acopy r5,r6
    br l169bexprend
 l169bexprend:
-   itos r7
-   sconcat r7,"NestedCallProc result:",r7
-   say r7
+   itos r5
+   sconcat r5,"NestedCallProc result:",r5
+   say r5
    .src 13:3="o = .MyClass"
    .meta "inline_test2.main.o"="b" ".myclass" r0
-   load r7,0
-   call r0,§inline_test2.myclass.§factory(),r7
+   load r5,0
+   call r0,§inline_test2.myclass.§factory(),r5
    .src 14:3="say \"Method result:\" o.myMethod(20)"
-   load r6,2
-   load r8,20
+   load r3,2
+   load r5,20
    settp r0,1
-   swap r7,r0
-   call r4,§inline_test2.myclass.mymethod(),r6
-   swap r0,r7
-   itos r4
-   sconcat r8,"Method result:",r4
-   say r8
+   swap r4,r0
+   call r2,§inline_test2.myclass.mymethod(),r3
+   swap r0,r4
+   itos r2
+   sconcat r5,"Method result:",r2
+   say r5
    .src 17:3="say \"MultiReturn result:\" multiReturn(1)"
    .src 17:29="multiReturn"
    .src 57:17="return 1"
-   load r8,1
-   icopy r6,r8
-   acopy r6,r8
+   load r5,1
+   icopy r3,r5
+   acopy r3,r5
    br l177bexprend
    .src 58:3="return 0"
-   load r7,0
-   icopy r6,r7
-   acopy r6,r7
+   load r4,0
+   icopy r3,r4
+   acopy r3,r4
    br l177bexprend
 l177bexprend:
-   itos r6
-   sconcat r6,"MultiReturn result:",r6
-   say r6
+   itos r3
+   sconcat r3,"MultiReturn result:",r3
+   say r3
    .src 19:3="return 0"
    ret 0
    .meta "inline_test2.main.o"

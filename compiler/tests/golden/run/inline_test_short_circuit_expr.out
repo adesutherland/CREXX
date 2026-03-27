@@ -1,0 +1,12 @@
+Starting short circuit inline test...
+and-left-ok
+0
+or-left-ok
+0
+not-ok
+1
+and-right-ok
+2
+or-right-ok
+3
+Short circuit inline test finished.

@@ -1,0 +1,90 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_array_return_temp.rexx
+ * BUILT                  : 2026-03-27 16:48:19
+ */
+
+.srcfile="inline_test_array_return_temp.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "inline_test_array_return_temp.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "inline_test_array_return_temp.main.pair"="b" ".int[2]" r0
+   .src 4:3="pair = .int[2"
+   null r0
+   .src 12:10="buildPair"
+   load r2,1
+   load r3,3
+   call r1,buildPair(),r2
+   .src 5:3="pair"
+   copy r0,r1
+   .src 5:3="pair"
+   acopy r0,r1
+   .src 6:3="say pair[1"
+   setattrs r0,2
+   linkattr1 r3,r0,1
+   itos r3
+   say r3
+   unlink r3
+   .src 7:3="say pair[2"
+   setattrs r0,2
+   linkattr1 r3,r0,2
+   itos r3
+   say r3
+   unlink r3
+   .src 8:3="return 0"
+   ret 0
+   .meta "inline_test_array_return_temp.main.pair"
+
+forwardPair() .locals=4
+   .meta "inline_test_array_return_temp.forwardpair"="b" ".int[2]" forwardPair() "seed=.int" ""
+   .src 10:1="forwardPair: procedure = .int[2]"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 11:7="seed = .int"
+   .meta "inline_test_array_return_temp.forwardpair.seed"="b" ".int" a1
+   .src 12:3="return buildPair(seed)"
+   load r1,1
+   swap r2,a1
+   call r3,buildPair(),r1
+   swap a1,r2
+   ret r3
+   .meta "inline_test_array_return_temp.forwardpair.seed"
+
+buildPair() .locals=4
+   .meta "inline_test_array_return_temp.buildpair"="b" ".int[2]" buildPair() "seed=.int" ""
+   .src 14:1="buildPair: procedure = .int[2]"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 15:7="seed = .int"
+   .meta "inline_test_array_return_temp.buildpair.seed"="b" ".int" a1
+   .meta "inline_test_array_return_temp.buildpair.pair"="b" ".int[2]" r0
+   .src 16:3="pair = .int[2"
+   null r0
+   .src 17:3="pair[1] = seed"
+   setattrs r0,2
+   linkattr1 r2,r0,1
+   icopy r2,a1
+   unlink r2
+   .src 18:3="pair[2] = seed + 1"
+   setattrs r0,2
+   linkattr1 r2,r0,2
+   iadd r3,a1,1
+   icopy r2,r3
+   unlink r2
+   .src 19:3="return pair"
+   ret r0
+   .meta "inline_test_array_return_temp.buildpair.pair"
+   .meta "inline_test_array_return_temp.buildpair.seed"

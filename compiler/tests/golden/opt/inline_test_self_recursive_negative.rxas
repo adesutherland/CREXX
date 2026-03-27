@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_self_recursive_negative.rexx
- * BUILT                  : 2026-03-27 15:15:27
+ * BUILT                  : 2026-03-27 15:59:16
  */
 
 .srcfile="inline_test_self_recursive_negative.rexx"
 .globals=0
 
-main() .locals=3
+main() .locals=9
    .meta "inline_test_self_recursive_negative.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -20,15 +20,50 @@ main() .locals=3
    .src 5:3="say recurse(3)"
    .src 5:7="recurse"
    .src 11:3="return recurse(val - 1)"
+   .src 11:10="recurse"
+   .src 11:3="return recurse(val - 1)"
+   .src 11:10="recurse"
+   .src 11:3="return recurse(val - 1)"
+   .src 11:10="recurse"
+   .src 11:3="return recurse(val - 1)"
+   .src 11:10="recurse"
+   .src 11:3="return recurse(val - 1)"
+   .src 11:10="recurse"
+   .src 11:3="return recurse(val - 1)"
+   .src 11:10="recurse"
+   .src 11:3="return recurse(val - 1)"
+   .src 11:10="recurse"
+   .src 11:3="return recurse(val - 1)"
    load r0,1
-   load r1,2
+   load r1,-5
    call r2,recurse(),r0
    icopy r1,r2
-   acopy r1,r2
+   br l113bexprend
+l113bexprend:
+   icopy r0,r1
+   br l101bexprend
+l101bexprend:
+   icopy r3,r0
+   br l89bexprend
+l89bexprend:
+   icopy r4,r3
+   br l77bexprend
+l77bexprend:
+   icopy r5,r4
+   br l65bexprend
+l65bexprend:
+   icopy r6,r5
+   br l53bexprend
+l53bexprend:
+   icopy r7,r6
+   br l41bexprend
+l41bexprend:
+   icopy r8,r7
+   acopy r8,r7
    br l31bexprend
 l31bexprend:
-   itos r1
-   say r1
+   itos r8
+   say r8
    .src 6:3="say \"Self recursive inline negative test finished.\""
    say "Self recursive inline negative test finished."
    .src 7:3="return 0"

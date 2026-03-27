@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_bool_expr_negative.rexx
- * BUILT                  : 2026-03-25 14:30:39
+ * BUILT                  : 2026-03-27 15:46:25
  */
 
 .srcfile="inline_test_bool_expr_negative.rexx"
 .globals=0
 
-main() .locals=6
+main() .locals=8
    .meta "inline_test_bool_expr_negative.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -22,29 +22,34 @@ main() .locals=6
    .meta "inline_test_bool_expr_negative.main.i"="b" ".int" r0
    load r0,1
    .src 5:12="to 3"
-   load r1,3
+   load r2,3
 l8dostart:
    .src 5:12="to 3"
-   igt r2,r0,r1
-   brt l8doend,r2
+   igt r3,r0,r2
+   brt l8doend,r3
    .src 6:4="if isTwo(i)"
-   load r3,1
-   swap r4,r0
-   call r5,isTwo(),r3
-   swap r0,r4
+   .src 6:8="isTwo"
+   .src 13:7="val"
+   icopy r1,r0
+   .src 14:3="return val = 2"
+   ieq r4,r1,2
+   btoi r4
+   icopy r5,r4
+   br l49bexprend
+l49bexprend:
    brf l27iffalse,r5
    .src 6:17="|"
    .src 6:26="say \"truthy\" i"
    itos r0
-   sconcat r4,"truthy",r0
-   say r4
+   sconcat r6,"truthy",r0
+   say r6
    br l27ifend
    .src 7:5="else"
 l27iffalse:
    .src 7:10="say \"falsey\" i"
    itos r0
-   sconcat r3,"falsey",r0
-   say r3
+   sconcat r7,"falsey",r0
+   say r7
 l27ifend:
 l8doinc:
    .src 5:6="i"

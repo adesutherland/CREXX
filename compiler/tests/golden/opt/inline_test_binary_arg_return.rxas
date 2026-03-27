@@ -1,0 +1,74 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_binary_arg_return.rexx
+ * BUILT                  : 2026-03-27 16:48:54
+ */
+
+.srcfile="inline_test_binary_arg_return.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_binary_arg_return.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "inline_test_binary_arg_return.main.data"="b" ".binary" r0
+   .src 4:3="data = .binary"
+   null r0
+   .src 5:22="makeBinary"
+   .src 5:22="makeBinary"
+   .src 15:3="data = \"abc\""
+   load r4,"abc"
+   .src 16:3="return data"
+   copy r5,r4
+   acopy r5,r4
+   br l58bexprend
+l58bexprend:
+   copy r2,r5
+   .src 10:7="data"
+   copy r3,r2
+   .src 10:7="data"
+   acopy r3,r2
+   .src 5:3="data"
+   copy r0,r3
+   .src 5:3="data"
+   acopy r0,r3
+   .src 6:3="say \"ok\""
+   say "ok"
+   .src 7:3="return 0"
+   ret 0
+   .meta "inline_test_binary_arg_return.main.data"
+
+relayBinary() .locals=1
+   .meta "inline_test_binary_arg_return.relaybinary"="b" ".binary" relayBinary() "data=.binary" ""
+   .src 9:1="relayBinary: procedure = .binary"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 10:7="data = .binary"
+   .meta "inline_test_binary_arg_return.relaybinary.data"="b" ".binary" a1
+   .src 11:3="return data"
+   ret a1
+   .meta "inline_test_binary_arg_return.relaybinary.data"
+
+makeBinary() .locals=1
+   .meta "inline_test_binary_arg_return.makebinary"="b" ".binary" makeBinary() "" ""
+   .src 13:1="makeBinary: procedure = .binary"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "inline_test_binary_arg_return.makebinary.data"="b" ".binary" r0
+   .src 14:3="data = .binary"
+   null r0
+   .src 15:3="data = \"abc\""
+   load r0,"abc"
+   .src 16:3="return data"
+   ret r0
+   .meta "inline_test_binary_arg_return.makebinary.data"

@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_vararg.rexx
- * BUILT                  : 2026-03-27 15:15:27
+ * BUILT                  : 2026-03-27 16:57:35
  */
 
 .srcfile="inline_test_vararg.rexx"
 .globals=0
 
-main() .locals=7
+main() .locals=24
    .meta "inline_test_vararg.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -20,55 +20,121 @@ main() .locals=7
    .src 5:3="say tailCount(10)"
    .src 5:7="tailCount"
    .src 17:3="return base + arg"
-   load r1,10
-   icopy r2,r1
-   acopy r2,r1
+   load r7,10
+   icopy r8,r7
+   acopy r8,r7
    br l105bexprend
 l105bexprend:
-   itos r2
-   say r2
+   itos r8
+   say r8
    .src 6:3="say tailCount(10, 20, 30)"
    .src 6:7="tailCount"
+   .src 16:26=".int"
+   setattrs r2,2
+   linkattr1 r8,r2,1
+   load r9,20
+   icopy r8,r9
+   unlink r8
+   .src 16:26=".int"
+   setattrs r2,2
+   linkattr1 r8,r2,2
+   load r10,30
+   icopy r8,r10
+   unlink r8
    .src 17:3="return base + arg"
-   load r2,12
-   icopy r3,r2
-   acopy r3,r2
+   load r8,12
+   icopy r11,r8
+   acopy r11,r8
    br l114bexprend
 l114bexprend:
-   itos r3
-   say r3
+   itos r11
+   say r11
    .src 7:3="total = 1 + secondOnly(5, 7, 11)"
    .meta "inline_test_vararg.main.total"="b" ".int" r0
    .src 7:15="secondOnly"
+   .src 20:26=".int"
+   setattrs r3,2
+   linkattr1 r11,r3,1
+   load r12,7
+   icopy r11,r12
+   unlink r11
+   .src 20:26=".int"
+   setattrs r3,2
+   linkattr1 r11,r3,2
+   load r13,11
+   icopy r11,r13
+   unlink r11
    .src 21:3="return base + arg[2"
-   load r3,16
-   icopy r4,r3
-   br l129bexprend
-l129bexprend:
-   iadd r0,r4,1
+   load r11,16
+   icopy r14,r11
+   br l137bexprend
+l137bexprend:
+   iadd r0,r14,1
    .src 8:3="say total"
    itos r0
    say r0
    .src 9:3="say hasThird(1, 2)"
    .src 9:7="hasThird"
+   .src 24:13=".int"
+   setattrs r4,2
+   linkattr1 r14,r4,1
+   load r15,1
+   icopy r14,r15
+   unlink r14
+   .src 24:13=".int"
+   setattrs r4,2
+   linkattr1 r14,r4,2
+   load r16,2
+   icopy r14,r16
+   unlink r14
    .src 25:3="return arg(3"
-   load r4,0
-   icopy r5,r4
-   acopy r5,r4
-   br l144bexprend
-l144bexprend:
-   itos r5
-   say r5
+   load r14,0
+   icopy r17,r14
+   acopy r17,r14
+   br l160bexprend
+l160bexprend:
+   itos r17
+   say r17
    .src 10:3="say hasThird(1, 2, 3)"
    .src 10:7="hasThird"
+   .src 24:13=".int"
+   setattrs r5,3
+   linkattr1 r17,r5,1
+   load r18,1
+   icopy r17,r18
+   unlink r17
+   .src 24:13=".int"
+   setattrs r5,3
+   linkattr1 r17,r5,2
+   load r19,2
+   icopy r17,r19
+   unlink r17
+   .src 24:13=".int"
+   setattrs r5,3
+   linkattr1 r17,r5,3
+   load r20,3
+   icopy r17,r20
+   unlink r17
    .src 25:3="return arg(3"
-   load r5,1
-   icopy r6,r5
-   acopy r6,r5
-   br l154bexprend
-l154bexprend:
-   itos r6
-   say r6
+   load r17,1
+   icopy r21,r17
+   acopy r21,r17
+   br l178bexprend
+l178bexprend:
+   itos r21
+   say r21
+   .src 28:26=".int"
+   setattrs r6,2
+   linkattr1 r21,r6,1
+   load r22,9
+   icopy r21,r22
+   unlink r21
+   .src 28:26=".int"
+   setattrs r6,2
+   linkattr1 r21,r6,2
+   load r23,12
+   icopy r21,r23
+   unlink r21
    .src 29:3="say base + arg[2"
    say "15"
    .src 12:3="say \"Vararg inline test finished.\""

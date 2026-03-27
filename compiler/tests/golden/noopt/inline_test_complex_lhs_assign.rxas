@@ -1,0 +1,59 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_complex_lhs_assign.rexx
+ * BUILT                  : 2026-03-27 16:48:20
+ */
+
+.srcfile="inline_test_complex_lhs_assign.rexx"
+.globals=0
+
+main() .locals=7
+   .meta "inline_test_complex_lhs_assign.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "inline_test_complex_lhs_assign.main.ix"="b" ".int" r0
+   .src 5:3="ix = .int"
+   null r0
+   .meta "inline_test_complex_lhs_assign.main.values"="b" ".int[3]" r1
+   .src 4:3="values = .int[3"
+   null r1
+   .src 6:3="ix = 1"
+   load r0,1
+   .src 7:3="values[ix + 1] = addOne(4)"
+   iadd r2,r0,1
+   setattrs r1,3
+   linkattr1 r3,r1,r2
+   load r4,1
+   load r5,4
+   call r6,addOne(),r4
+   icopy r3,r6
+   unlink r3
+   .src 8:3="say values[2"
+   setattrs r1,3
+   linkattr1 r6,r1,2
+   itos r6
+   say r6
+   unlink r6
+   .src 9:3="return 0"
+   ret 0
+   .meta "inline_test_complex_lhs_assign.main.ix"
+   .meta "inline_test_complex_lhs_assign.main.values"
+
+addOne() .locals=2
+   .meta "inline_test_complex_lhs_assign.addone"="b" ".int" addOne() "value=.int" ""
+   .src 11:1="addOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 12:7="value = .int"
+   .meta "inline_test_complex_lhs_assign.addone.value"="b" ".int" a1
+   .src 13:3="return value + 1"
+   iadd r1,a1,1
+   ret r1
+   .meta "inline_test_complex_lhs_assign.addone.value"

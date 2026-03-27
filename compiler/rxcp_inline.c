@@ -50,6 +50,7 @@ typedef struct {
     size_t ref_count;
     Symbol **varg_symbols;
     size_t varg_count;
+    Symbol *varg_array_symbol;
 } InlineCloneState;
 
 typedef struct {
@@ -75,7 +76,9 @@ typedef enum {
     INLINE_EXPR_CONTEXT_NONE = 0,
     INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER,
     INLINE_EXPR_CONTEXT_EAGER_OPERATOR,
-    INLINE_EXPR_CONTEXT_EAGER_CALL_ARGUMENT
+    INLINE_EXPR_CONTEXT_EAGER_CALL_ARGUMENT,
+    INLINE_EXPR_CONTEXT_SHORT_CIRCUIT_OPERATOR,
+    INLINE_EXPR_CONTEXT_CONTROL_CONSUMER
 } InlineExprContext;
 
 typedef struct {
@@ -97,6 +100,24 @@ static ASTNode *inline_create_symbol_node(Context *context,
                                           unsigned int read_usage,
                                           unsigned int write_usage);
 static ASTNode *inline_create_integer_constant(Context *context, ASTNode *source_node, int value, ValueType type);
+static Symbol *inline_create_temp_symbol(Context *context,
+                                         Scope *inline_scope,
+                                         ASTNode *source_node,
+                                         const char *prefix,
+                                         size_t suffix);
+static ASTNode *inline_create_temp_value_ref(Context *context,
+                                             ASTNode *instr_list,
+                                             Scope *inline_scope,
+                                             ASTNode *source_node,
+                                             InlineCloneState *state,
+                                             const char *prefix,
+                                             size_t suffix);
+static int inline_initialise_varg_array(Context *context,
+                                        ASTNode *instr_list,
+                                        Scope *inline_scope,
+                                        ASTNode *varg_arg,
+                                        ASTNode *source_node,
+                                        InlineCloneState *state);
 static ASTNode *inline_find_varg_arg(ASTNode *proc_def);
 static int inline_call_arity_matches(ASTNode *call_node, Symbol *proc_sym, size_t *varg_count_out);
 static int inline_analyse_varg_usage(ASTNode *proc_def, int *unsupported_out, size_t *max_required_index_out);
@@ -178,22 +199,11 @@ static int inline_is_missing_actual(ASTNode *actual_arg) {
 }
 
 static int inline_is_supported_ref_actual(ASTNode *actual_arg) {
-    ASTNode *child;
-
     if (!actual_arg) return 0;
     if (!actual_arg->symbolNode || !actual_arg->symbolNode->symbol) return 0;
     if (actual_arg->node_type != VAR_SYMBOL &&
         actual_arg->node_type != VAR_TARGET &&
         actual_arg->node_type != VAR_REFERENCE) return 0;
-
-    child = actual_arg->child;
-    while (child) {
-        if (child->node_type != VAR_SYMBOL &&
-            child->node_type != VAR_TARGET &&
-            child->node_type != VAR_REFERENCE &&
-            child->node_type != CONSTANT) return 0;
-        child = child->sibling;
-    }
 
     return 1;
 }
@@ -260,6 +270,25 @@ static int inline_is_direct_symbol_actual(ASTNode *node) {
     return node->node_type == VAR_SYMBOL ||
            node->node_type == VAR_TARGET ||
            node->node_type == VAR_REFERENCE;
+}
+
+static int inline_node_needs_attr_copy(ASTNode *node) {
+    if (!node) return 0;
+
+    if (inline_node_has_array_shape(node)) return 1;
+
+    return node->value_type == TP_OBJECT ||
+           node->value_type == TP_BINARY ||
+           node->target_type == TP_OBJECT ||
+           node->target_type == TP_BINARY;
+}
+
+static int inline_formal_needs_isolated_copy(ASTNode *formal_target, ASTNode *param_arg) {
+    if (!formal_target) return 0;
+    if (inline_node_has_array_shape(formal_target)) return 1;
+    if (formal_target->value_type == TP_BINARY || formal_target->target_type == TP_BINARY) return 1;
+
+    return inline_node_is_plain_object(formal_target) && !(param_arg && param_arg->is_const_arg);
 }
 
 static ASTNode *inline_create_register_copy_instr(Context *context,
@@ -330,6 +359,71 @@ static ASTNode *inline_create_integer_constant(Context *context, ASTNode *source
     return node;
 }
 
+static ASTNode *inline_create_temp_value_ref(Context *context,
+                                             ASTNode *instr_list,
+                                             Scope *inline_scope,
+                                             ASTNode *source_node,
+                                             InlineCloneState *state,
+                                             const char *prefix,
+                                             size_t suffix) {
+    Symbol *temp_symbol;
+    ASTNode *capture_assign;
+    ASTNode *capture_lhs;
+    ASTNode *capture_rhs;
+    ASTNode *temp_ref;
+
+    if (!context || !instr_list || !inline_scope || !source_node || !state || !prefix) return NULL;
+
+    temp_symbol = inline_create_temp_symbol(context, inline_scope, source_node, prefix, suffix);
+    if (!temp_symbol) return NULL;
+
+    capture_assign = ast_f(context, ASSIGN, source_node->token);
+    if (!capture_assign) return NULL;
+    capture_assign->scope = inline_scope;
+    capture_assign->value_type = source_node->value_type;
+    capture_assign->target_type = source_node->target_type;
+
+    capture_lhs = inline_create_symbol_node(context,
+                                            inline_scope,
+                                            source_node,
+                                            temp_symbol,
+                                            VAR_TARGET,
+                                            0,
+                                            1);
+    capture_rhs = inline_clone_subtree(context, source_node, state);
+    if (!capture_lhs || !capture_rhs) return NULL;
+
+    add_ast(capture_assign, capture_lhs);
+    add_ast(capture_assign, capture_rhs);
+    add_ast(instr_list, capture_assign);
+
+    temp_ref = inline_create_symbol_node(context,
+                                         inline_scope,
+                                         source_node,
+                                         temp_symbol,
+                                         VAR_SYMBOL,
+                                         1,
+                                         0);
+    if (!temp_ref) return NULL;
+
+    ast_set_value_type(0,
+                       temp_ref,
+                       source_node->value_type,
+                       source_node->value_dims,
+                       source_node->value_dim_base,
+                       source_node->value_dim_elements,
+                       source_node->value_class);
+    ast_set_target_type(0,
+                        temp_ref,
+                        source_node->target_type,
+                        source_node->target_dims,
+                        source_node->target_dim_base,
+                        source_node->target_dim_elements,
+                        source_node->target_class);
+
+    return temp_ref;
+}
+
 static ASTNode *inline_find_varg_arg(ASTNode *proc_def) {
     ASTNode *args;
     ASTNode *arg;
@@ -398,14 +492,11 @@ static walker_result inline_varg_usage_walker(walker_direction direction, ASTNod
             return result_normal;
         }
 
-        if (!inline_varg_index_from_node(node->child, &index)) {
-            check->has_unsupported_varg_access = 1;
-            return result_normal;
+        if (inline_varg_index_from_node(node->child, &index)) {
+            if (index > check->max_required_varg_index) check->max_required_varg_index = index;
         }
-
-        if (index > check->max_required_varg_index) check->max_required_varg_index = index;
     } else if (node->node_type == OP_ARG_IX_EXISTS) {
-        if (!node->child || !inline_varg_index_from_node(node->child, &index)) {
+        if (!node->child) {
             check->has_unsupported_varg_access = 1;
         }
     }
@@ -627,17 +718,21 @@ static int inline_capture_varg_actuals(Context *context,
                                        ASTNode *actual_arg,
                                        InlineCloneState *state) {
     ASTNode *varg_type;
+    ASTNode *source_template;
     size_t child_index;
 
     if (!context || !instr_list || !inline_scope || !varg_arg || !state) return 0;
 
+    varg_type = inline_formal_default(varg_arg);
+    source_template = varg_type ? varg_type : varg_arg;
+
     if (!actual_arg) {
         state->varg_symbols = NULL;
         state->varg_count = 0;
-        return 1;
+        return inline_initialise_varg_array(context, instr_list, inline_scope, varg_arg, source_template, state);
     }
 
-    varg_type = inline_formal_default(varg_arg);
+    source_template = varg_type ? varg_type : actual_arg;
     state->varg_count = inline_count_siblings(actual_arg);
     state->varg_symbols = calloc(state->varg_count, sizeof(Symbol *));
     if (!state->varg_symbols) return 0;
@@ -683,7 +778,362 @@ static int inline_capture_varg_actuals(Context *context,
         actual_arg = actual_arg->sibling;
     }
 
+    return inline_initialise_varg_array(context, instr_list, inline_scope, varg_arg, source_template, state);
+}
+
+static Symbol *inline_create_varg_array_symbol(Context *context,
+                                               Scope *inline_scope,
+                                               ASTNode *template_node,
+                                               ASTNode *source_node,
+                                               size_t count) {
+    Symbol *array_symbol;
+    int *old_base;
+    int *old_elements;
+    int old_dims;
+    int new_dims;
+    int i;
+    char temp_name[80];
+
+    if (!context || !inline_scope || !source_node) return NULL;
+
+    snprintf(temp_name, sizeof(temp_name), "__inline_varg_array_%d", source_node->node_number);
+    array_symbol = sym_fn(inline_scope, temp_name, strlen(temp_name));
+    if (!array_symbol) return NULL;
+
+    array_symbol->symbol_type = VARIABLE_SYMBOL;
+    array_symbol->status = SYM_STATUS_LOCAL_VAR;
+    array_symbol->register_num = UNSET_REGISTER;
+    array_symbol->register_type = 'r';
+    array_symbol->meta_emitted = 0;
+    array_symbol->init_emitted = 0;
+
+    if (!inline_copy_node_shape(array_symbol, template_node ? template_node : source_node)) return NULL;
+
+    old_base = array_symbol->dim_base;
+    old_elements = array_symbol->dim_elements;
+    old_dims = array_symbol->value_dims;
+    new_dims = old_dims + 1;
+
+    array_symbol->dim_base = calloc((size_t)new_dims, sizeof(int));
+    array_symbol->dim_elements = calloc((size_t)new_dims, sizeof(int));
+    if (!array_symbol->dim_base || !array_symbol->dim_elements) return NULL;
+
+    array_symbol->value_dims = new_dims;
+    array_symbol->dim_base[0] = 1;
+    array_symbol->dim_elements[0] = (int)(count > 0 ? count : 1);
+
+    for (i = 0; i < old_dims; i++) {
+        array_symbol->dim_base[i + 1] = old_base ? old_base[i] : 1;
+        array_symbol->dim_elements[i + 1] = old_elements ? old_elements[i] : 1;
+    }
+
+    free(old_base);
+    free(old_elements);
+
+    return array_symbol;
+}
+
+static ASTNode *inline_create_varg_array_slot(Context *context,
+                                              Scope *scope,
+                                              ASTNode *source_node,
+                                              Symbol *array_symbol,
+                                              ASTNode *index_node,
+                                              NodeType node_type,
+                                              ValueType element_type,
+                                              int element_dims,
+                                              int *element_base,
+                                              int *element_elements,
+                                              char *element_class) {
+    ASTNode *slot_node;
+
+    if (!context || !scope || !source_node || !array_symbol || !index_node) return NULL;
+
+    slot_node = inline_create_symbol_node(context, scope, source_node, array_symbol, node_type, 1, node_type == VAR_TARGET ? 1 : 0);
+    if (!slot_node) return NULL;
+
+    add_ast(slot_node, index_node);
+    ast_set_value_type(0, slot_node, element_type, element_dims, element_base, element_elements, element_class);
+    ast_set_target_type(0, slot_node, element_type, element_dims, element_base, element_elements, element_class);
+
+    return slot_node;
+}
+
+static int inline_initialise_varg_array(Context *context,
+                                        ASTNode *instr_list,
+                                        Scope *inline_scope,
+                                        ASTNode *varg_arg,
+                                        ASTNode *source_node,
+                                        InlineCloneState *state) {
+    ASTNode *template_node;
+    size_t i;
+
+    if (!context || !instr_list || !inline_scope || !source_node || !state) return 0;
+    if (state->varg_array_symbol) return 1;
+
+    template_node = inline_formal_default(varg_arg);
+    if (!template_node) template_node = source_node;
+
+    state->varg_array_symbol = inline_create_varg_array_symbol(context,
+                                                               inline_scope,
+                                                               template_node,
+                                                               source_node,
+                                                               state->varg_count);
+    if (!state->varg_array_symbol) return 0;
+
+    for (i = 0; i < state->varg_count; i++) {
+        ASTNode *assign_node;
+        ASTNode *lhs;
+        ASTNode *rhs;
+        ASTNode *index_node;
+
+        if (!state->varg_symbols || !state->varg_symbols[i]) return 0;
+
+        assign_node = ast_f(context, ASSIGN, source_node->token);
+        if (!assign_node) return 0;
+        assign_node->scope = inline_scope;
+        assign_node->value_type = state->varg_symbols[i]->type;
+        assign_node->target_type = state->varg_symbols[i]->type;
+
+        index_node = inline_create_integer_constant(context, source_node, (int)(i + 1), TP_INTEGER);
+        rhs = inline_create_symbol_node(context,
+                                        inline_scope,
+                                        source_node,
+                                        state->varg_symbols[i],
+                                        VAR_SYMBOL,
+                                        1,
+                                        0);
+        if (!index_node || !rhs) return 0;
+        index_node->scope = inline_scope;
+
+        lhs = inline_create_varg_array_slot(context,
+                                            inline_scope,
+                                            source_node,
+                                            state->varg_array_symbol,
+                                            index_node,
+                                            VAR_TARGET,
+                                            state->varg_symbols[i]->type,
+                                            state->varg_symbols[i]->value_dims,
+                                            state->varg_symbols[i]->dim_base,
+                                            state->varg_symbols[i]->dim_elements,
+                                            state->varg_symbols[i]->value_class);
+        if (!lhs) return 0;
+
+        add_ast(assign_node, lhs);
+        add_ast(assign_node, rhs);
+        add_ast(instr_list, assign_node);
+    }
+
     return 1;
+}
+
+static ASTNode *inline_create_assembler_instr(Context *context,
+                                              Scope *scope,
+                                              ASTNode *source_node,
+                                              const char *opcode,
+                                              ASTNode *arg1,
+                                              ASTNode *arg2,
+                                              ASTNode *arg3) {
+    ASTNode *instr;
+
+    if (!context || !scope || !source_node || !opcode) return NULL;
+
+    instr = ast_ftt(context, ASSEMBLER, strdup(opcode));
+    if (!instr) return NULL;
+
+    instr->free_node_string = 1;
+    instr->scope = scope;
+    instr->token = source_node->token;
+    instr->line = source_node->line;
+    instr->column = source_node->column;
+    instr->source_start = source_node->source_start;
+    instr->source_end = source_node->source_end;
+    instr->token_start = source_node->token_start;
+    instr->token_end = source_node->token_end;
+
+    if (arg1) add_ast(instr, arg1);
+    if (arg2) add_ast(instr, arg2);
+    if (arg3) add_ast(instr, arg3);
+
+    return instr;
+}
+
+static ASTNode *inline_build_dynamic_varg_value(Context *context,
+                                                ASTNode *node,
+                                                Scope *current_scope,
+                                                InlineCloneState *state) {
+    ASTNode *block_expr;
+    ASTNode *instr_list;
+    Scope *inline_scope;
+    Symbol *index_symbol;
+    ASTNode *assign_node;
+    ASTNode *assign_lhs;
+    ASTNode *assign_rhs;
+    ASTNode *leave_node;
+    ASTNode *slot_node;
+    ASTNode *index_ref;
+
+    if (!context || !node || !current_scope || !state || !state->varg_array_symbol || !node->child) return NULL;
+
+    block_expr = ast_dup(context, node);
+    if (!block_expr) return NULL;
+    block_expr->node_type = BLOCK_EXPR;
+    block_expr->node_string = "do";
+    block_expr->node_string_length = 2;
+    block_expr->free_node_string = 0;
+
+    inline_scope = scp_f(context, current_scope, block_expr, NULL, SCOPE_LOCAL);
+    if (!inline_scope) return NULL;
+    block_expr->scope = inline_scope;
+
+    instr_list = ast_f(context, INSTRUCTIONS, node->token);
+    if (!instr_list) return NULL;
+    instr_list->scope = inline_scope;
+    instr_list->value_type = TP_VOID;
+    instr_list->target_type = TP_VOID;
+    add_ast(block_expr, instr_list);
+
+    index_symbol = inline_create_temp_symbol(context, inline_scope, node->child, "__inline_arg_ix", 0);
+    if (!index_symbol) return NULL;
+
+    assign_node = ast_f(context, ASSIGN, node->token);
+    if (!assign_node) return NULL;
+    assign_node->scope = inline_scope;
+    assign_node->value_type = TP_INTEGER;
+    assign_node->target_type = TP_INTEGER;
+
+    assign_lhs = inline_create_symbol_node(context, inline_scope, node->child, index_symbol, VAR_TARGET, 0, 1);
+    assign_rhs = inline_clone_subtree_in_scope(context, node->child, state, inline_scope);
+    if (!assign_lhs || !assign_rhs) return NULL;
+    add_ast(assign_node, assign_lhs);
+    add_ast(assign_node, assign_rhs);
+    add_ast(instr_list, assign_node);
+
+    leave_node = ast_f(context, LEAVE_WITH, node->token);
+    if (!leave_node) return NULL;
+    leave_node->scope = inline_scope;
+    leave_node->association = block_expr;
+    leave_node->value_type = node->value_type;
+    leave_node->target_type = node->target_type;
+
+    index_ref = inline_create_symbol_node(context, inline_scope, node, index_symbol, VAR_SYMBOL, 1, 0);
+    if (!index_ref) return NULL;
+
+    slot_node = inline_create_varg_array_slot(context,
+                                              inline_scope,
+                                              node,
+                                              state->varg_array_symbol,
+                                              index_ref,
+                                              VAR_SYMBOL,
+                                              node->value_type,
+                                              node->value_dims,
+                                              node->value_dim_base,
+                                              node->value_dim_elements,
+                                              node->value_class);
+    if (!slot_node) return NULL;
+
+    add_ast(leave_node, slot_node);
+    add_ast(instr_list, leave_node);
+    return block_expr;
+}
+
+static ASTNode *inline_build_dynamic_varg_exists(Context *context,
+                                                 ASTNode *node,
+                                                 Scope *current_scope,
+                                                 InlineCloneState *state) {
+    ASTNode *block_expr;
+    ASTNode *instr_list;
+    Scope *inline_scope;
+    Symbol *index_symbol;
+    ASTNode *assign_node;
+    ASTNode *assign_lhs;
+    ASTNode *assign_rhs;
+    ASTNode *leave_node;
+    ASTNode *index_ref;
+    ASTNode *const_one;
+    ASTNode *const_max;
+    ASTNode *gte_node;
+    ASTNode *lte_node;
+    ASTNode *and_node;
+
+    if (!context || !node || !current_scope || !state || !node->child) return NULL;
+
+    block_expr = ast_dup(context, node);
+    if (!block_expr) return NULL;
+    block_expr->node_type = BLOCK_EXPR;
+    block_expr->node_string = "do";
+    block_expr->node_string_length = 2;
+    block_expr->free_node_string = 0;
+
+    inline_scope = scp_f(context, current_scope, block_expr, NULL, SCOPE_LOCAL);
+    if (!inline_scope) return NULL;
+    block_expr->scope = inline_scope;
+
+    instr_list = ast_f(context, INSTRUCTIONS, node->token);
+    if (!instr_list) return NULL;
+    instr_list->scope = inline_scope;
+    instr_list->value_type = TP_VOID;
+    instr_list->target_type = TP_VOID;
+    add_ast(block_expr, instr_list);
+
+    index_symbol = inline_create_temp_symbol(context, inline_scope, node->child, "__inline_arg_ix", 1);
+    if (!index_symbol) return NULL;
+
+    assign_node = ast_f(context, ASSIGN, node->token);
+    if (!assign_node) return NULL;
+    assign_node->scope = inline_scope;
+    assign_node->value_type = TP_INTEGER;
+    assign_node->target_type = TP_INTEGER;
+
+    assign_lhs = inline_create_symbol_node(context, inline_scope, node->child, index_symbol, VAR_TARGET, 0, 1);
+    assign_rhs = inline_clone_subtree_in_scope(context, node->child, state, inline_scope);
+    if (!assign_lhs || !assign_rhs) return NULL;
+    add_ast(assign_node, assign_lhs);
+    add_ast(assign_node, assign_rhs);
+    add_ast(instr_list, assign_node);
+
+    index_ref = inline_create_symbol_node(context, inline_scope, node, index_symbol, VAR_SYMBOL, 1, 0);
+    const_one = inline_create_integer_constant(context, node, 1, TP_INTEGER);
+    const_max = inline_create_integer_constant(context, node, (int)state->varg_count, TP_INTEGER);
+    if (!index_ref || !const_one || !const_max) return NULL;
+    index_ref->scope = inline_scope;
+    const_one->scope = inline_scope;
+    const_max->scope = inline_scope;
+
+    gte_node = ast_f(context, OP_COMPARE_GTE, node->token);
+    lte_node = ast_f(context, OP_COMPARE_LTE, node->token);
+    and_node = ast_f(context, OP_AND, node->token);
+    leave_node = ast_f(context, LEAVE_WITH, node->token);
+    if (!gte_node || !lte_node || !and_node || !leave_node) return NULL;
+
+    gte_node->scope = inline_scope;
+    lte_node->scope = inline_scope;
+    and_node->scope = inline_scope;
+    leave_node->scope = inline_scope;
+    leave_node->association = block_expr;
+
+    ast_set_value_type(0, gte_node, TP_BOOLEAN, 0, 0, 0, 0);
+    ast_set_target_type(0, gte_node, TP_BOOLEAN, 0, 0, 0, 0);
+    ast_set_value_type(0, lte_node, TP_BOOLEAN, 0, 0, 0, 0);
+    ast_set_target_type(0, lte_node, TP_BOOLEAN, 0, 0, 0, 0);
+    ast_set_value_type(0, and_node, TP_BOOLEAN, 0, 0, 0, 0);
+    ast_set_target_type(0, and_node, TP_BOOLEAN, 0, 0, 0, 0);
+    leave_node->value_type = TP_BOOLEAN;
+    leave_node->target_type = TP_BOOLEAN;
+
+    add_ast(gte_node, index_ref);
+    add_ast(gte_node, const_one);
+
+    index_ref = inline_create_symbol_node(context, inline_scope, node, index_symbol, VAR_SYMBOL, 1, 0);
+    if (!index_ref) return NULL;
+    add_ast(lte_node, index_ref);
+    add_ast(lte_node, const_max);
+
+    add_ast(and_node, gte_node);
+    add_ast(and_node, lte_node);
+    add_ast(leave_node, and_node);
+    add_ast(instr_list, leave_node);
+
+    return block_expr;
 }
 
 static int inline_bind_call_arguments(Context *context,
@@ -752,6 +1202,21 @@ static int inline_bind_call_arguments(Context *context,
 
         bind_lhs = inline_clone_subtree(context, formal_target, clone_state);
         if (inline_is_missing_actual(actual_arg)) {
+            bind_source = formal_default;
+        } else {
+            bind_source = actual_arg;
+        }
+
+        if (inline_formal_needs_isolated_copy(formal_target, param_arg) &&
+            !inline_is_direct_symbol_actual(bind_source)) {
+            bind_rhs = inline_create_temp_value_ref(context,
+                                                    instr_list,
+                                                    inline_scope,
+                                                    bind_source,
+                                                    clone_state,
+                                                    "__inline_bind",
+                                                    0);
+        } else if (inline_is_missing_actual(actual_arg)) {
             bind_rhs = inline_clone_subtree(context, formal_default, clone_state);
             bind_source = formal_default;
         } else {
@@ -761,12 +1226,9 @@ static int inline_bind_call_arguments(Context *context,
 
         if (!bind_lhs || !bind_rhs) return 0;
 
-        if (inline_node_has_array_shape(formal_target) ||
-            (inline_node_is_plain_object(formal_target) && !param_arg->is_const_arg)) {
+        if (inline_formal_needs_isolated_copy(formal_target, param_arg)) {
             ASTNode *bind_copy;
             ASTNode *attr_copy;
-
-            if (!inline_is_direct_symbol_actual(bind_source)) return 0;
 
             bind_copy = inline_create_register_copy_instr(context, inline_scope, "copy", bind_lhs, bind_rhs);
             attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", bind_lhs, bind_rhs);
@@ -924,7 +1386,10 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
         size_t index;
         ASTNode *replacement;
 
-        if (!node->child || !inline_varg_index_from_node(node->child, &index)) return NULL;
+        if (!node->child) return NULL;
+        if (!inline_varg_index_from_node(node->child, &index)) {
+            return inline_build_dynamic_varg_value(context, node, current_scope, state);
+        }
         if (index < 1 || index > state->varg_count || !state->varg_symbols || !state->varg_symbols[index - 1]) return NULL;
 
         replacement = inline_create_symbol_node(context,
@@ -949,7 +1414,10 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
         size_t index;
         ASTNode *exists_node;
 
-        if (!node->child || !inline_varg_index_from_node(node->child, &index)) return NULL;
+        if (!node->child) return NULL;
+        if (!inline_varg_index_from_node(node->child, &index)) {
+            return inline_build_dynamic_varg_exists(context, node, current_scope, state);
+        }
         exists_node = inline_create_integer_constant(context,
                                                      node,
                                                      index <= state->varg_count ? 1 : 0,
@@ -1134,45 +1602,32 @@ static InlineExprContext inline_classify_expr_context(ASTNode *node) {
     if (!parent) return 0;
 
     switch (parent->node_type) {
+        case ASSIGN:
+        case CALL:
+            /* These use dedicated statement-position rewrites instead of
+             * replacing the child call with a BLOCK_EXPR. */
+            return INLINE_EXPR_CONTEXT_NONE;
+
         case FUNCTION:
         case FACTORY_CALL:
+        case MEMBER_CALL:
             return INLINE_EXPR_CONTEXT_EAGER_CALL_ARGUMENT;
 
-        case MEMBER_CALL:
-            if (parent->child != node) return INLINE_EXPR_CONTEXT_EAGER_CALL_ARGUMENT;
-            return INLINE_EXPR_CONTEXT_NONE;
+        case IF:
+        case WHILE:
+        case UNTIL:
+        case FOR:
+        case TO:
+        case BY:
+            return INLINE_EXPR_CONTEXT_CONTROL_CONSUMER;
 
-        case SAY:
-        case RETURN:
-            return INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER;
-
-        case OP_ADD:
-        case OP_MINUS:
-        case OP_MULT:
-        case OP_DIV:
-        case OP_IDIV:
-        case OP_MOD:
-        case OP_POWER:
-        case OP_CONCAT:
-        case OP_SCONCAT:
-        case OP_COMPARE_EQUAL:
-        case OP_COMPARE_NEQ:
-        case OP_COMPARE_GT:
-        case OP_COMPARE_LT:
-        case OP_COMPARE_GTE:
-        case OP_COMPARE_LTE:
-        case OP_COMPARE_S_EQ:
-        case OP_COMPARE_S_NEQ:
-        case OP_COMPARE_S_GT:
-        case OP_COMPARE_S_LT:
-        case OP_COMPARE_S_GTE:
-        case OP_COMPARE_S_LTE:
-        case OP_NEG:
-        case OP_PLUS:
-            return INLINE_EXPR_CONTEXT_EAGER_OPERATOR;
+        case OP_AND:
+        case OP_OR:
+        case OP_NOT:
+            return INLINE_EXPR_CONTEXT_SHORT_CIRCUIT_OPERATOR;
 
         default:
-            return INLINE_EXPR_CONTEXT_NONE;
+            return INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER;
     }
 }
 
@@ -1618,17 +2073,29 @@ static int ast_inline_statement(Context *context,
                 return 0;
             }
 
-            ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
-            if (!ret_rhs) {
-                inline_free_symbol_map(&clone_state);
-                return 0;
-            }
-
-            if (inline_node_has_array_shape(ret_expr)) {
+            if (inline_node_has_array_shape(ret_expr) ||
+                (inline_node_needs_attr_copy(ret_expr) &&
+                 (ret_expr->value_type == TP_BINARY || ret_expr->target_type == TP_BINARY))) {
                 ASTNode *ret_copy;
                 ASTNode *attr_copy;
 
+                ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
+                if (!ret_rhs) {
+                    inline_free_symbol_map(&clone_state);
+                    return 0;
+                }
+
                 if (!inline_is_direct_symbol_actual(ret_expr)) {
+                    ret_rhs = inline_create_temp_value_ref(context,
+                                                           instr_list,
+                                                           inline_scope,
+                                                           ret_expr,
+                                                           &clone_state,
+                                                           "__inline_ret",
+                                                           0);
+                }
+
+                if (!ret_rhs) {
                     inline_free_symbol_map(&clone_state);
                     return 0;
                 }
@@ -1642,6 +2109,11 @@ static int ast_inline_statement(Context *context,
                 add_ast(instr_list, ret_copy);
                 add_ast(instr_list, attr_copy);
             } else {
+                ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
+                if (!ret_rhs) {
+                    inline_free_symbol_map(&clone_state);
+                    return 0;
+                }
                 add_ast(ret_assign, ret_lhs);
                 add_ast(ret_assign, ret_rhs);
                 add_ast(instr_list, ret_assign);
@@ -1673,7 +2145,7 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
     if (!assign_node || !call_node) return 0;
 
     lhs = assign_node->child;
-    if (!lhs || lhs->node_type != VAR_TARGET || lhs->child) return 0;
+    if (!lhs || lhs->node_type != VAR_TARGET) return 0;
 
     memset(&return_plan, 0, sizeof(return_plan));
     return_plan.return_target = lhs;
@@ -1681,6 +2153,13 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
     proc_def = proc_sym ? proc_sym->ast_template : NULL;
     if (!proc_def || !inline_analyse_return_shape(proc_def, &return_shape)) return 0;
     if (!return_shape.final_is_return || return_shape.return_count == 0) return 0;
+    if ((assign_node->parent && assign_node->parent->node_type == REPEAT) || lhs->child) {
+        block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
+        if (!block_expr) return 0;
+        ast_rpl(call_node, block_expr);
+        inline_disconnect_subtree_symbols(call_node);
+        return 1;
+    }
     if (return_shape.return_count != 1) {
         block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
         if (!block_expr) return 0;
@@ -1834,15 +2313,14 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
         if (node->node_type == OP_ARG_VALUE) {
             size_t index;
 
-            if (!node->child || !inline_varg_index_from_node(node->child, &index)) {
+            if (!node->child) {
                 check->has_unsupported_varg_access = 1;
-            } else if (index > check->max_required_varg_index) {
+            } else if (inline_varg_index_from_node(node->child, &index) &&
+                       index > check->max_required_varg_index) {
                 check->max_required_varg_index = index;
             }
         } else if (node->node_type == OP_ARG_IX_EXISTS) {
-            size_t index;
-
-            if (!node->child || !inline_varg_index_from_node(node->child, &index)) {
+            if (!node->child) {
                 check->has_unsupported_varg_access = 1;
             }
         }
@@ -1889,18 +2367,8 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
                 }
 
                 formal_symbol = formal_target && formal_target->symbolNode ? formal_target->symbolNode->symbol : NULL;
-                if (formal_symbol && formal_symbol->type == TP_BINARY) {
-                    sym->is_inlinable = 0;
-                    return result_normal;
-                }
-
                 arg = arg->sibling;
             }
-        }
-
-        if (sym->type == TP_BINARY) {
-            sym->is_inlinable = 0;
-            return result_normal;
         }
 
         instrs = ast_chld(node, INSTRUCTIONS, 0);

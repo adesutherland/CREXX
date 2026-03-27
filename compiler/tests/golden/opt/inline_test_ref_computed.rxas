@@ -1,0 +1,91 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_ref_computed.rexx
+ * BUILT                  : 2026-03-27 16:48:18
+ */
+
+.srcfile="inline_test_ref_computed.rexx"
+.globals=1
+g0 .expose=refcomputed.idx
+
+main() .locals=6
+   .meta "refcomputed.main"="b" ".int" main() "" ""
+   .src 4:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "refcomputed.main.values"="b" ".int[3]" r0
+   .src 5:3="values = .int[3"
+   null r0
+   .src 6:3="idx = 1"
+   load g0,1
+   .src 7:3="values[1] = 10"
+   setattrs r0,3
+   linkattr1 r3,r0,1
+   load r4,10
+   icopy r3,r4
+   unlink r3
+   .src 8:3="values[2] = 20"
+   setattrs r0,3
+   linkattr1 r4,r0,2
+   load r3,20
+   icopy r4,r3
+   unlink r4
+   .src 10:3="say bump(values[idx + 0 + 1"
+   .src 10:7="bump"
+   .src 10:27="+"
+   iadd r4,g0,0
+   iadd r1,r4,1
+   .src 17:3="idx = idx + 1"
+   iadd g0,g0,1
+   .src 18:3="slot = slot + idx"
+   setattrs r0,3
+   linkattr1 r4,r0,r1
+   setattrs r0,3
+   linkattr1 r3,r0,r1
+   iadd r5,r3,g0
+   unlink r3
+   icopy r4,r5
+   unlink r4
+   .src 19:3="return slot"
+   setattrs r0,3
+   linkattr1 r5,r0,r1
+   icopy r4,r5
+   acopy r4,r5
+   unlink r5
+   br l65bexprend
+l65bexprend:
+   itos r4
+   say r4
+   .src 11:3="say idx"
+   itos g0
+   say g0
+   .src 12:3="say values[2"
+   setattrs r0,3
+   linkattr1 r4,r0,2
+   itos r4
+   say r4
+   unlink r4
+   .src 13:3="return 0"
+   ret 0
+   .meta "refcomputed.main.values"
+
+bump() .locals=1
+   .meta "refcomputed.bump"="b" ".int" bump() "expose slot=.int" ""
+   .src 15:1="bump: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 16:7="expose slot = .int"
+   .meta "refcomputed.bump.slot"="b" ".int" a1
+   .src 17:3="idx = idx + 1"
+   iadd g0,g0,1
+   .src 18:3="slot = slot + idx"
+   iadd a1,a1,g0
+   .src 19:3="return slot"
+   ret a1
+   .meta "refcomputed.bump.slot"

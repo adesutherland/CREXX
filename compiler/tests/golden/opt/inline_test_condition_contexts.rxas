@@ -1,0 +1,159 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_condition_contexts.rexx
+ * BUILT                  : 2026-03-27 15:46:25
+ */
+
+.srcfile="inline_test_condition_contexts.rexx"
+.globals=0
+
+main() .locals=10
+   .meta "inline_test_condition_contexts.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting condition context inline test...\""
+   say "Starting condition context inline test..."
+   .src 6:2="if isOne(1)"
+   .src 6:6="isOne"
+   .src 29:3="return value = 1"
+   load r4,1
+   icopy r5,r4
+   br l99bexprend
+l99bexprend:
+   brf l14iffalse,r5
+   .src 6:15="then"
+   .src 6:20="say \"if-yes\""
+   say "if-yes"
+   br l14ifend
+   .src 7:3="else"
+l14iffalse:
+   .src 7:8="say \"bad-if-yes\""
+   say "bad-if-yes"
+l14ifend:
+   .src 9:2="if isOne(2)"
+   .src 9:6="isOne"
+   .src 29:3="return value = 1"
+   load r5,0
+   icopy r6,r5
+   br l108bexprend
+l108bexprend:
+   brf l21iffalse,r6
+   .src 9:15="then"
+   .src 9:20="say \"bad-if-no\""
+   say "bad-if-no"
+   br l21ifend
+   .src 10:3="else"
+l21iffalse:
+   .src 10:8="say \"if-no\""
+   say "if-no"
+l21ifend:
+   .src 12:3="i = 0"
+   .meta "inline_test_condition_contexts.main.i"="b" ".int" r0
+   load r0,0
+   .src 13:3="do"
+l25dostart:
+   .src 13:6="while belowTwo(i)"
+   .src 13:12="belowTwo"
+   .src 32:7="value"
+   icopy r2,r0
+   .src 33:3="return value < 2"
+   ilt r6,r2,2
+   btoi r6
+   icopy r7,r6
+   br l117bexprend
+l117bexprend:
+   brf l25doend,r7
+   .src 14:5="say \"while\" i"
+   itos r0
+   sconcat r8,"while",r0
+   say r8
+   .src 15:5="i = i + 1"
+   iadd r0,r0,1
+l25doinc:
+   .src 16:3="end"
+   br l25dostart
+l25doend:
+   .src 18:3="j = 0"
+   .meta "inline_test_condition_contexts.main.j"="b" ".int" r1
+   load r1,0
+   .src 19:3="do"
+l43dostart:
+   .src 20:5="say \"until\" j"
+   itos r1
+   sconcat r9,"until",r1
+   say r9
+   .src 21:5="j = j + 1"
+   iadd r1,r1,1
+l43doinc:
+   .src 19:6="until atLeastTwo(j)"
+   .src 19:12="atLeastTwo"
+   .src 36:7="value"
+   icopy r3,r1
+   .src 37:3="return value >= 2"
+   igte r8,r3,2
+   btoi r8
+   icopy r7,r8
+   br l126bexprend
+l126bexprend:
+   brt l43doend,r7
+   .src 22:3="end"
+   br l43dostart
+l43doend:
+   .src 24:3="say \"Condition context inline test finished.\""
+   say "Condition context inline test finished."
+   .src 25:3="return 0"
+   ret 0
+   .meta "inline_test_condition_contexts.main.i"
+   .meta "inline_test_condition_contexts.main.j"
+
+isOne() .locals=2
+   .meta "inline_test_condition_contexts.isone"="b" ".int" isOne() "value=.int" ""
+   .src 27:1="isOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 28:7="value = .int"
+   .meta "inline_test_condition_contexts.isone.value"="b" ".int" a1
+   .src 29:3="return value = 1"
+   ieq r1,a1,1
+   btoi r1
+   ret r1
+   .meta "inline_test_condition_contexts.isone.value"
+
+belowTwo() .locals=2
+   .meta "inline_test_condition_contexts.belowtwo"="b" ".int" belowTwo() "value=.int" ""
+   .src 31:1="belowTwo: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 32:7="value = .int"
+   .meta "inline_test_condition_contexts.belowtwo.value"="b" ".int" a1
+   .src 33:3="return value < 2"
+   ilt r1,a1,2
+   btoi r1
+   ret r1
+   .meta "inline_test_condition_contexts.belowtwo.value"
+
+atLeastTwo() .locals=2
+   .meta "inline_test_condition_contexts.atleasttwo"="b" ".int" atLeastTwo() "value=.int" ""
+   .src 35:1="atLeastTwo: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 36:7="value = .int"
+   .meta "inline_test_condition_contexts.atleasttwo.value"="b" ".int" a1
+   .src 37:3="return value >= 2"
+   igte r1,a1,2
+   btoi r1
+   ret r1
+   .meta "inline_test_condition_contexts.atleasttwo.value"

@@ -64,26 +64,22 @@ More precisely:
 - The call must be a plain procedure `FUNCTION`, not a method or factory call.
 - For assignment inlining, the `FUNCTION` call must be the entire RHS of the enclosing `ASSIGN`.
 - For standalone call inlining, the enclosing statement must be `CALL func(...)`.
-- For expression inlining, the `FUNCTION` call must fall into one of the currently supported expression-context capability buckets.
+- For expression inlining, the `FUNCTION` call must sit in an expression parent that can consume a `BLOCK_EXPR` result directly. In practice this is now the default for local plain procedures; dedicated statement rewrites still own standalone `CALL` statements and whole-RHS `ASSIGN` sites.
 - The callee must be a normal procedure, not a method or factory.
 - Arguments and return values must stay within the currently implemented safe slice: scalars are broadly supported, object values are supported across the local-procedure slice, and array values are supported only where attribute-copy semantics can be preserved.
-- The callee must satisfy the existing safety checks: current scalar slice only, small body, and no unsupported nested inlining. Value-producing procedures still require a final `RETURN`; void statement-call sites may inline through bare-return and fallthrough shapes.
+- The callee must satisfy the existing safety checks: plain local procedure only, small body, no recursion cycle, no binary values, and no unsupported vararg indexing. Value-producing procedures still require a final `RETURN`; void statement-call sites may inline through bare-return and fallthrough shapes.
 - `expose`/by-reference formals are supported when the actual argument is an aliasable variable-like target, including indexed and stem-style forms.
 - For nontrivial by-reference actuals, the inline rewrite captures the locator expressions once into inline-scope temps so the callee still sees call-time binding semantics.
 - Optional formals are supported in the current slice when the inline rewrite can materialise their default from the formal AST.
 
-At present, the supported expression-context buckets are:
+At present, expression rewriting is open for local plain procedures in all value and condition parents that can consume a `BLOCK_EXPR` directly. The discriminator now explicitly keeps only the dedicated statement-rewrite sites out of the expression path:
 
-- eager value consumers:
-  `SAY`, `RETURN`
-- eager call arguments:
-  direct arguments to `FUNCTION(...)`, `FACTORY_CALL(...)`, and `MEMBER_CALL(...)` excluding the receiver child of `MEMBER_CALL`
-- eager operators:
-  unary `+`/`-`, arithmetic operators, concatenation operators, and comparison operators
+- whole-RHS `ASSIGN` sites, which are rewritten as assignment statements rather than expression children
+- standalone `CALL func(...)` statements, which use the statement-position rewrite
 
-Short-circuit boolean parents such as `|` and `&` remain intentionally excluded.
+Short-circuit boolean parents (`|`, `&`, `\`), direct condition consumers (`IF`, `WHILE`, `UNTIL`), loop-bound expressions (`FOR`, `TO`, `BY`), call arguments, receiver-position `MEMBER_CALL` expressions, and ordinary value consumers/operators are all admitted.
 
-Composed inline sites are now supported when an outer call consumes an already-inlined `BLOCK_EXPR` actual, provided the outer context still falls into a supported eager bucket. This relies on scope-aware subtree cloning so nested `BLOCK_EXPR` locals and `LEAVE_WITH` associations remain isolated after the outer rewrite.
+Composed inline sites are now supported when an outer call consumes an already-inlined `BLOCK_EXPR` actual, provided the outer context can itself consume a `BLOCK_EXPR`. This relies on scope-aware subtree cloning so nested `BLOCK_EXPR` locals and `LEAVE_WITH` associations remain isolated after the outer rewrite.
 
 The statement-position cases rewrite the enclosing statement. The expression-position case rewrites the `FUNCTION` node itself to `BLOCK_EXPR`.
 
@@ -124,7 +120,7 @@ This is now used for the first expression-position slice, and remains the path f
 x = func(a) + y
 ```
 
-or other contexts where hoisting to surrounding statements would change semantics, especially around short-circuit evaluation.
+or other contexts where hoisting to surrounding statements would change semantics.
 
 `BLOCK_EXPR` already has the compiler machinery for:
 
@@ -204,10 +200,8 @@ rewrite the `FUNCTION` node into:
 Important details:
 
 - The `BLOCK_EXPR` must preserve the original call node's value and target typing.
-- The current implementation supports the eager value-consumer bucket (`SAY`, `RETURN`) and the eager-operator bucket (unary `+`/`-`, plus non-short-circuit arithmetic, concatenation, and comparison operators).
-- Other direct statement consumers are still intentionally excluded.
-- Short-circuit boolean operators are still intentionally excluded.
-- Unsupported expression contexts should remain normal calls until their rewrite strategy exists.
+- The current implementation now admits local plain-procedure calls in ordinary value consumers/operators, short-circuit boolean operators, direct condition consumers, loop-bound expressions, call arguments, and receiver-position member expressions.
+- Whole-RHS `ASSIGN` and standalone `CALL` sites still use dedicated statement-position rewrites instead of the expression path.
 
 ## Procedure Eligibility
 For the first slice, a procedure is eligible only if all of the following hold:
@@ -217,8 +211,7 @@ For the first slice, a procedure is eligible only if all of the following hold:
 - not a method
 - not a factory
 - fixed arguments or a supported trailing by-value vararg
-- built-in scalar arguments only
-- built-in scalar return only
+- non-binary arguments and returns within the current local-procedure value slice
 - value-producing procedures must still end in a final `RETURN`
 - void statement-call sites may also inline through bare-return and implicit-fallthrough shapes
 - body size is below the configured node threshold
@@ -250,13 +243,12 @@ Milestone 1 is now complete for local plain procedures.
 
 That does not mean every syntactic use of a local procedure is now inlined. It means the remaining non-inlined cases are no longer caused by missing local-procedure body semantics such as varargs, nested calls, nested scopes, multi-return shapes, or aggregate value binding. Those local-procedure capability gaps are now closed.
 
-The remaining discriminator behaviour is intentional and bucket-driven:
+The remaining discriminator behaviour is intentional and milestone-driven:
 
 - methods and factories are still out because they belong to milestone 2
 - imported callees are still out because they belong to milestone 3
-- short-circuit boolean parents and other unsupported expression parents remain out because their rewrite strategy is not yet implemented
 
-So the milestone 1 closure is: local plain procedures are structurally and semantically covered; the remaining exclusions are selector boundaries for later milestones, not plain-procedure semantic gaps.
+So the milestone 1 closure is: local plain procedures are structurally and semantically covered; the remaining exclusions are later-milestone boundaries, not plain-procedure semantic gaps.
 
 ### Milestone 2: all local class method inlining works
 
@@ -297,18 +289,23 @@ The implementation now covers:
 
 - local plain procedures in statement and expression buckets across the current scalar slice
 - by-value trailing varargs
+- dynamic vararg indexing and existence checks via inline-scope captured vararg arrays
 - nested-call local procedures via repeated identify-and-inline passes until a bounded fixed point is reached
 - nested callee-local scopes with duplicated scope and symbol remapping
 - multi/early-return procedures, including branch returns and void fallthrough in statement-call sites
 - object-typed returns and by-value object formals
 - array-typed formals, assignment-site returns, and expression/block-result returns where the inline rewrite can preserve attribute-copy semantics
+- non-symbol aggregate actuals and non-symbol aggregate return expressions via inline temp materialisation
+- broader aliasable by-reference actuals, including computed indexed/stem locator children
+- assignment-site inlining when the LHS itself has child selectors, by falling back to the RHS `BLOCK_EXPR` path
+- binary-typed local plain procedures across the current statement and expression rewrite machinery
 - explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
 
 The implementation still excludes:
 
 - methods and factories
 - imported callees
-- short-circuit boolean expression parents and other unsupported expression-context buckets
+- `.ref` / `expose` varargs
 
 ## Discriminator Review
 
@@ -317,7 +314,7 @@ The inline discriminator is now best understood as a two-stage filter.
 Stage 1: structural procedure eligibility
 
 - `identify_inlinable_walker()` answers whether a procedure body is inline-capable in principle
-- it rejects non-plain procedures (`main`, class-scope procedures, methods, factories), binary values, unsupported vararg shapes, invalid value-return shapes, oversized bodies, and unsupported vararg indexing
+- it rejects non-plain procedures (`main`, class-scope procedures, methods, factories), unsupported vararg shapes, invalid value-return shapes, oversized bodies, and malformed vararg access
 - it does not decide that every call must inline; it only marks the callee as structurally available
 
 Stage 2: call-site capability selection
@@ -325,7 +322,7 @@ Stage 2: call-site capability selection
 - `inline_validate_call_site()` answers whether a particular call is safe for the current rewrite machinery
 - it applies recursion blocking, arity/varg checks, and the concrete binding rules for actual arguments
 - statement rewrites then decide whether the enclosing node shape is one of the implemented buckets
-- expression rewrites additionally pass through `inline_classify_expr_context()`, which keeps selection in eager, non-short-circuit contexts only
+- expression rewrites additionally pass through `inline_classify_expr_context()`, which now defaults local plain-procedure expression sites to the `BLOCK_EXPR` path and only diverts dedicated statement buckets such as whole-RHS `ASSIGN` and standalone `CALL`
 
 This split is the right shape for later milestones:
 
@@ -374,18 +371,24 @@ For validation purposes, any inline rewrite that changes whether a caller variab
 ## Later Phases
 
 ### Next Phase
-The next meaningful extensions are the remaining argument-semantics and evaluation-order cases that are still intentionally excluded:
+The next meaningful extensions are the remaining argument-semantics and cross-procedure cases that are still intentionally excluded:
 
-- broader by-reference actual shapes beyond direct aliasable symbol targets
-- varargs
-- short-circuit boolean parents and other contexts where evaluation ordering must be modelled explicitly
+- `.ref` / `expose` varargs, if normal-call parity is considered worth the added binding complexity
+- methods and factories
+- imported callees
+
+Outside milestone 2 and 3, the remaining local-plain-procedure exclusions now split cleanly into:
+
+- one real parity gap: `.ref` / `expose` varargs
+- safety and cost controls that should remain in some form: recursion-cycle blocking and body-size gating
+- non-goals or structural policy exclusions: `main`
+- language-validity constraints that are not extra inline restrictions: arity mismatches and invalid non-void fallthrough/value-return shapes
 
 ## Verification
 The design for phase 1 should be considered ready when:
 
 - the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, `inline_test_nested_call_expr`, `inline_test_ref_opt`, `inline_test_ref_indexed`, and `inline_test_ref_stem` using the narrow supported strategies
-- excluded cases such as large procedures, methods, multi-return procedures, and unsupported short-circuit contexts remain uninlined under optimisation
-- unsupported expression contexts such as those in `inline_test_expr_negative`, `inline_test_say_expr_negative`, and `inline_test_bool_expr_negative` remain uninlined under optimisation
+- excluded cases such as large procedures, methods, and imported callees remain uninlined under optimisation
 - unsupported by-reference/short-circuit combinations such as those in `inline_test_ref_negative` remain uninlined under optimisation
 - the resulting AST is structurally valid under `-dp`
 - optimised codegen succeeds
@@ -395,8 +398,7 @@ The design for phase 1 should be considered ready when:
 
 - methods
 - factories
-- varargs
-- broader pass-by-reference support beyond the current variable-like/indexed/stem slice
-- general embedded-expression inlining beyond the current eager-bucket slice
+- `.ref` / `expose` varargs
+- methods/factories and imported callees in expression position
 - aggressive pruning of fully inlined procedures
 - claiming fully generic scope/symbol cloning before it is proven

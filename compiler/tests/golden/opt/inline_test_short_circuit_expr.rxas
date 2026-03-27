@@ -1,0 +1,123 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_short_circuit_expr.rexx
+ * BUILT                  : 2026-03-27 15:46:25
+ */
+
+.srcfile="inline_test_short_circuit_expr.rexx"
+.globals=0
+
+main() .locals=10
+   .meta "inline_test_short_circuit_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting short circuit inline test...\""
+   say "Starting short circuit inline test..."
+   .src 5:3="calls = 0"
+   .meta "inline_test_short_circuit_expr.main.calls"="b" ".int" r0
+   load r0,0
+   .src 8:8="say \"and-left-ok\""
+   say "and-left-ok"
+   .src 9:3="say calls"
+   itos r0
+   say r0
+   .src 11:31="say \"or-left-ok\""
+   say "or-left-ok"
+   .src 13:3="say calls"
+   itos r0
+   say r0
+   .src 15:2="if \probe(0, calls)"
+   .src 15:7="probe"
+   .src 32:3="count = count + 1"
+   iadd r0,r0,1
+   .src 33:3="return flag"
+   load r6,0
+   icopy r7,r6
+   br l119bexprend
+l119bexprend:
+   not r8,r7
+   brf l43iffalse,r8
+   .src 15:23="then"
+   .src 15:28="say \"not-ok\""
+   say "not-ok"
+   br l43ifend
+   .src 16:3="else"
+l43iffalse:
+   .src 16:8="say \"bad-not\""
+   say "bad-not"
+l43ifend:
+   .src 17:3="say calls"
+   itos r0
+   say r0
+   .src 19:2="if 1 & probe(1, calls)"
+   .src 19:10="probe"
+   .src 32:3="count = count + 1"
+   iadd r0,r0,1
+   .src 33:3="return flag"
+   load r8,1
+   icopy r7,r8
+   br l131bexprend
+l131bexprend:
+   brf l55iffalse,r7
+   .src 19:26="then"
+   .src 19:31="say \"and-right-ok\""
+   say "and-right-ok"
+   br l55ifend
+   .src 20:3="else"
+l55iffalse:
+   .src 20:8="say \"bad-and-right\""
+   say "bad-and-right"
+l55ifend:
+   .src 21:3="say calls"
+   itos r0
+   say r0
+   .src 23:2="if 0 | probe(1, calls)"
+   .src 23:10="probe"
+   .src 32:3="count = count + 1"
+   iadd r0,r0,1
+   .src 33:3="return flag"
+   load r7,1
+   icopy r9,r7
+   br l143bexprend
+l143bexprend:
+   brf l67iffalse,r9
+   .src 23:26="then"
+   .src 23:31="say \"or-right-ok\""
+   say "or-right-ok"
+   br l67ifend
+   .src 24:3="else"
+l67iffalse:
+   .src 24:8="say \"bad-or-right\""
+   say "bad-or-right"
+l67ifend:
+   .src 25:3="say calls"
+   itos r0
+   say r0
+   .src 27:3="say \"Short circuit inline test finished.\""
+   say "Short circuit inline test finished."
+   .src 28:3="return 0"
+   ret 0
+   .meta "inline_test_short_circuit_expr.main.calls"
+
+probe() .locals=2
+   .meta "inline_test_short_circuit_expr.probe"="b" ".int" probe() "flag=.int,expose count=.int" ""
+   .src 30:1="probe: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 31:7="flag = .int"
+   .meta "inline_test_short_circuit_expr.probe.flag"="b" ".int" a1
+   .src 31:20="expose count = .int"
+   .meta "inline_test_short_circuit_expr.probe.count"="b" ".int" a2
+   .src 32:3="count = count + 1"
+   iadd a2,a2,1
+   .src 33:3="return flag"
+   ret a1
+   .meta "inline_test_short_circuit_expr.probe.count"
+   .meta "inline_test_short_circuit_expr.probe.flag"

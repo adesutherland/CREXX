@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_object.rexx
- * BUILT                  : 2026-03-27 15:15:24
+ * BUILT                  : 2026-03-27 16:57:36
  */
 
 .meta "arg_semantics_object.box"="b" ".unknown" .class
@@ -69,14 +69,32 @@ l118bexprend:
    concat r10,"object-after=",r10
    say r10
    .src 8:3="say \"object-temp=\" || replaceBox(.Box(\"temp\"))"
+   .src 8:25="replaceBox"
+   .src 8:36=".Box"
    load r10,1
-   load r6,1
-   load r7,"temp"
-   settp r7,3
-   call r11,§arg_semantics_object.box.§factory(),r6
-   settp r11,1
-   call r7,replaceBox(),r10
-   concat r11,"object-temp=",r7
+   load r11,"temp"
+   settp r11,3
+   call r3,§arg_semantics_object.box.§factory(),r10
+   .src 18:7="value"
+   copy r4,r3
+   .src 18:7="value"
+   acopy r4,r3
+   .src 19:3="value = .Box(\"local\")"
+   load r10,1
+   load r11,"local"
+   settp r11,3
+   call r4,§arg_semantics_object.box.§factory(),r10
+   .src 20:3="return value.getName"
+   load r10,1
+   settp r4,1
+   swap r11,r4
+   call r7,§arg_semantics_object.box.getname(),r10
+   swap r4,r11
+   scopy r11,r7
+   acopy r11,r7
+   br l136bexprend
+l136bexprend:
+   concat r11,"object-temp=",r11
    say r11
    .src 24:3="value = .Box(\"ref\")"
    load r10,1
@@ -87,9 +105,9 @@ l118bexprend:
    load r10,1
    settp r0,1
    swap r11,r0
-   call r7,§arg_semantics_object.box.getname(),r10
+   call r6,§arg_semantics_object.box.getname(),r10
    swap r0,r11
-   concat r11,"object-ref=",r7
+   concat r11,"object-ref=",r6
    say r11
    .src 11:3="return 0"
    ret 0

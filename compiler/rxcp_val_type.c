@@ -1493,7 +1493,7 @@ walker_result func_type_safety_walker(walker_direction direction,
                             validate_node_promotion(context, n1);
 
 
-                            if (n2->child->node_type == VAR_REFERENCE) {
+                            if (n2->child->node_type == VARG_REFERENCE) {
                                 n1->is_ref_arg = 1;
                                 if (n1->symbolNode) {
                                     validate_node_promotion_for_ref(context, n1);

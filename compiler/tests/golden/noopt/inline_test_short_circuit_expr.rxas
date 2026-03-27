@@ -1,0 +1,154 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_short_circuit_expr.rexx
+ * BUILT                  : 2026-03-27 15:46:25
+ */
+
+.srcfile="inline_test_short_circuit_expr.rexx"
+.globals=0
+
+main() .locals=5
+   .meta "inline_test_short_circuit_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting short circuit inline test...\""
+   say "Starting short circuit inline test..."
+   .src 5:3="calls = 0"
+   .meta "inline_test_short_circuit_expr.main.calls"="b" ".int" r0
+   load r0,0
+   .src 7:2="if 0 & probe(1, calls)"
+   load r3,0
+   brf l15andend,r3
+   load r1,2
+   load r2,1
+   swap r3,r0
+   call r0,probe(),r1
+   swap r0,r3
+l15andend:
+   brf l20iffalse,r3
+   .src 7:26="then"
+   .src 7:31="say \"bad-and-left\""
+   say "bad-and-left"
+   br l20ifend
+   .src 8:3="else"
+l20iffalse:
+   .src 8:8="say \"and-left-ok\""
+   say "and-left-ok"
+l20ifend:
+   .src 9:3="say calls"
+   itos r0
+   say r0
+   .src 11:2="if 1 | probe(0, calls)"
+   load r3,1
+   brt l27orend,r3
+   load r1,2
+   load r2,0
+   swap r3,r0
+   call r0,probe(),r1
+   swap r0,r3
+l27orend:
+   brf l32iffalse,r3
+   .src 11:26="then"
+   .src 11:31="say \"or-left-ok\""
+   say "or-left-ok"
+   br l32ifend
+   .src 12:3="else"
+l32iffalse:
+   .src 12:8="say \"bad-or-left\""
+   say "bad-or-left"
+l32ifend:
+   .src 13:3="say calls"
+   itos r0
+   say r0
+   .src 15:2="if \probe(0, calls)"
+   load r1,2
+   load r2,0
+   swap r3,r0
+   call r4,probe(),r1
+   swap r0,r3
+   not r3,r4
+   brf l43iffalse,r3
+   .src 15:23="then"
+   .src 15:28="say \"not-ok\""
+   say "not-ok"
+   br l43ifend
+   .src 16:3="else"
+l43iffalse:
+   .src 16:8="say \"bad-not\""
+   say "bad-not"
+l43ifend:
+   .src 17:3="say calls"
+   itos r0
+   say r0
+   .src 19:2="if 1 & probe(1, calls)"
+   load r4,1
+   brf l50andend,r4
+   load r2,2
+   load r3,1
+   swap r4,r0
+   call r0,probe(),r2
+   swap r0,r4
+l50andend:
+   brf l55iffalse,r4
+   .src 19:26="then"
+   .src 19:31="say \"and-right-ok\""
+   say "and-right-ok"
+   br l55ifend
+   .src 20:3="else"
+l55iffalse:
+   .src 20:8="say \"bad-and-right\""
+   say "bad-and-right"
+l55ifend:
+   .src 21:3="say calls"
+   itos r0
+   say r0
+   .src 23:2="if 0 | probe(1, calls)"
+   load r4,0
+   brt l62orend,r4
+   load r2,2
+   load r3,1
+   swap r4,r0
+   call r0,probe(),r2
+   swap r0,r4
+l62orend:
+   brf l67iffalse,r4
+   .src 23:26="then"
+   .src 23:31="say \"or-right-ok\""
+   say "or-right-ok"
+   br l67ifend
+   .src 24:3="else"
+l67iffalse:
+   .src 24:8="say \"bad-or-right\""
+   say "bad-or-right"
+l67ifend:
+   .src 25:3="say calls"
+   itos r0
+   say r0
+   .src 27:3="say \"Short circuit inline test finished.\""
+   say "Short circuit inline test finished."
+   .src 28:3="return 0"
+   ret 0
+   .meta "inline_test_short_circuit_expr.main.calls"
+
+probe() .locals=2
+   .meta "inline_test_short_circuit_expr.probe"="b" ".int" probe() "flag=.int,expose count=.int" ""
+   .src 30:1="probe: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 31:7="flag = .int"
+   .meta "inline_test_short_circuit_expr.probe.flag"="b" ".int" a1
+   .src 31:20="expose count = .int"
+   .meta "inline_test_short_circuit_expr.probe.count"="b" ".int" a2
+   .src 32:3="count = count + 1"
+   iadd a2,a2,1
+   .src 33:3="return flag"
+   ret a1
+   .meta "inline_test_short_circuit_expr.probe.count"
+   .meta "inline_test_short_circuit_expr.probe.flag"

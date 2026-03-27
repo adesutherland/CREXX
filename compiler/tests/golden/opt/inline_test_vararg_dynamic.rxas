@@ -1,0 +1,179 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_vararg_dynamic.rexx
+ * BUILT                  : 2026-03-27 16:57:36
+ */
+
+.srcfile="inline_test_vararg_dynamic.rexx"
+.globals=0
+
+main() .locals=22
+   .meta "inline_test_vararg_dynamic.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say pick(2, 10, 20, 30)"
+   .src 4:7="pick"
+   .src 11:24=".int"
+   setattrs r0,3
+   linkattr1 r4,r0,1
+   load r5,10
+   icopy r4,r5
+   unlink r4
+   .src 11:24=".int"
+   setattrs r0,3
+   linkattr1 r4,r0,2
+   load r6,20
+   icopy r4,r6
+   unlink r4
+   .src 11:24=".int"
+   setattrs r0,3
+   linkattr1 r4,r0,3
+   load r7,30
+   icopy r4,r7
+   unlink r4
+   .src 12:3="return arg(ix)"
+   .src 12:10="arg"
+   .src 12:10="arg"
+   setattrs r0,3
+   linkattr1 r4,r0,2
+   icopy r8,r4
+   unlink r4
+   br l94bexprend
+l94bexprend:
+   icopy r9,r8
+   acopy r9,r8
+   br l67bexprend
+l67bexprend:
+   itos r9
+   say r9
+   .src 5:3="say pick(1 + 2 - 1, 40, 50)"
+   .src 5:7="pick"
+   .src 11:24=".int"
+   setattrs r1,2
+   linkattr1 r9,r1,1
+   load r10,40
+   icopy r9,r10
+   unlink r9
+   .src 11:24=".int"
+   setattrs r1,2
+   linkattr1 r9,r1,2
+   load r11,50
+   icopy r9,r11
+   unlink r9
+   .src 12:3="return arg(ix)"
+   .src 12:10="arg"
+   .src 12:10="arg"
+   setattrs r1,2
+   linkattr1 r9,r1,2
+   icopy r12,r9
+   unlink r9
+   br l126bexprend
+l126bexprend:
+   icopy r13,r12
+   acopy r13,r12
+   br l102bexprend
+l102bexprend:
+   itos r13
+   say r13
+   .src 6:3="say hasArg(3 - 1, 7, 8)"
+   .src 6:7="hasArg"
+   .src 15:24=".int"
+   setattrs r2,2
+   linkattr1 r13,r2,1
+   load r14,7
+   icopy r13,r14
+   unlink r13
+   .src 15:24=".int"
+   setattrs r2,2
+   linkattr1 r13,r2,2
+   load r15,8
+   icopy r13,r15
+   unlink r13
+   .src 16:3="return arg(ix"
+   .src 16:10="arg"
+   .src 16:10="arg"
+   load r13,1
+   icopy r16,r13
+   br l156bexprend
+l156bexprend:
+   btoi r16
+   icopy r17,r16
+   acopy r17,r16
+   br l134bexprend
+l134bexprend:
+   itos r17
+   say r17
+   .src 7:3="say hasArg(5 - 1, 7, 8)"
+   .src 7:7="hasArg"
+   .src 15:24=".int"
+   setattrs r3,2
+   linkattr1 r17,r3,1
+   load r18,7
+   icopy r17,r18
+   unlink r17
+   .src 15:24=".int"
+   setattrs r3,2
+   linkattr1 r17,r3,2
+   load r19,8
+   icopy r17,r19
+   unlink r17
+   .src 16:3="return arg(ix"
+   .src 16:10="arg"
+   .src 16:10="arg"
+   load r17,0
+   icopy r20,r17
+   br l191bexprend
+l191bexprend:
+   btoi r20
+   icopy r21,r20
+   acopy r21,r20
+   br l169bexprend
+l169bexprend:
+   itos r21
+   say r21
+   .src 8:3="return 0"
+   ret 0
+
+pick() .locals=2
+   .meta "inline_test_vararg_dynamic.pick"="b" ".int" pick() "ix=.int,...=.int" ""
+   .src 10:1="pick: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 11:7="ix = .int"
+   .meta "inline_test_vararg_dynamic.pick.ix"="b" ".int" a1
+   .src 11:18="... = .int"
+   .src 12:3="return arg(ix)"
+   icopy r1,a0
+   isub r1,r1,1
+   ichkrng a1,1,r1
+   linkarg r1,a1,1
+   ret r1
+   .meta "inline_test_vararg_dynamic.pick.ix"
+
+hasArg() .locals=2
+   .meta "inline_test_vararg_dynamic.hasarg"="b" ".int" hasArg() "ix=.int,...=.int" ""
+   .src 14:1="hasArg: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 15:7="ix = .int"
+   .meta "inline_test_vararg_dynamic.hasarg.ix"="b" ".int" a1
+   .src 15:18="... = .int"
+   .src 16:3="return arg(ix"
+   ilt r1,a1,1
+   signalt "OUT_OF_RANGE",r1
+   icopy r1,a0
+   isub r1,r1,1
+   ilte r1,a1,r1
+   btoi r1
+   ret r1
+   .meta "inline_test_vararg_dynamic.hasarg.ix"

@@ -1,0 +1,118 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_member_receiver_expr.rexx
+ * BUILT                  : 2026-03-27 15:46:25
+ */
+
+.meta "inline_test_member_receiver_expr.box"="b" ".unknown" .class
+.meta "inline_test_member_receiver_expr.box.name"="b" ".string" .attr 1
+.srcfile="inline_test_member_receiver_expr.rexx"
+.globals=0
+
+main() .locals=8
+   .meta "inline_test_member_receiver_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting member receiver inline test...\""
+   say "Starting member receiver inline test..."
+   .src 5:3="say buildBox(\"seed\").getName"
+   load r2,1
+   .src 5:7="buildBox"
+   .src 12:3="value = .Box(initial)"
+   load r4,1
+   load r5,"seed"
+   settp r5,1
+   call r0,§inline_test_member_receiver_expr.box.§factory(),r4
+   .src 13:3="return value"
+   copy r5,r0
+   acopy r5,r0
+   br l63bexprend
+l63bexprend:
+   settp r5,3
+   swap r3,r5
+   call r4,§inline_test_member_receiver_expr.box.getname(),r2
+   swap r5,r3
+   say r4
+   .src 6:3="say buildBox(\"temp\").getName"
+   load r3,1
+   .src 6:7="buildBox"
+   .src 12:3="value = .Box(initial)"
+   load r6,1
+   load r7,"temp"
+   settp r7,1
+   call r1,§inline_test_member_receiver_expr.box.§factory(),r6
+   .src 13:3="return value"
+   copy r7,r1
+   acopy r7,r1
+   br l74bexprend
+l74bexprend:
+   settp r7,3
+   swap r4,r7
+   call r6,§inline_test_member_receiver_expr.box.getname(),r3
+   swap r7,r4
+   say r6
+   .src 7:3="say \"Member receiver inline test finished.\""
+   say "Member receiver inline test finished."
+   .src 8:3="return 0"
+   ret 0
+
+buildBox() .locals=4
+   .meta "inline_test_member_receiver_expr.buildbox"="b" ".box" buildBox() "initial=.string" ""
+   .src 10:1="buildBox: procedure = .Box"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 11:7="initial = .string"
+   .meta "inline_test_member_receiver_expr.buildbox.initial"="b" ".string" a1
+   .src 12:3="value = .Box(initial)"
+   .meta "inline_test_member_receiver_expr.buildbox.value"="b" ".box" r1
+   load r2,1
+   settp a1,1
+   swap r3,a1
+   call r1,§inline_test_member_receiver_expr.box.§factory(),r2
+   swap a1,r3
+   .src 13:3="return value"
+   ret r1
+   .meta "inline_test_member_receiver_expr.buildbox.initial"
+   .meta "inline_test_member_receiver_expr.buildbox.value"
+
+§inline_test_member_receiver_expr.box.§factory() .locals=3
+   .meta "inline_test_member_receiver_expr.box.§factory"="b" ".void" §inline_test_member_receiver_expr.box.§factory() "initial=.string" ""
+   .src 18:3="*: factory"
+   setattrs r1,2
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 19:9="initial = .string"
+   .meta "inline_test_member_receiver_expr.box.§factory.initial"="b" ".string" a1
+   .meta "inline_test_member_receiver_expr.box.§factory.§factory"="b" ".box" r1
+   .src 20:5="name = initial"
+   linkattr1 r2,r1,1
+   scopy r2,a1
+   unlink r2
+   .src 21:5="return"
+   ret r1
+   .meta "inline_test_member_receiver_expr.box.§factory.initial"
+   .meta "inline_test_member_receiver_expr.box.§factory.§factory"
+
+§inline_test_member_receiver_expr.box.getname() .locals=2
+   .meta "inline_test_member_receiver_expr.box.getname"="b" ".string" §inline_test_member_receiver_expr.box.getname() "" ""
+   .src 23:3="getName: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 24:5="return name"
+   .meta "inline_test_member_receiver_expr.box.getname.§this"="b" ".box" a1
+   linkattr1 r1,a1,1
+   ret r1
+   .meta "inline_test_member_receiver_expr.box.getname.§this"

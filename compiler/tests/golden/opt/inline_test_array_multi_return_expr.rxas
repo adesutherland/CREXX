@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_multi_return_expr.rexx
- * BUILT                  : 2026-03-27 15:10:43
+ * BUILT                  : 2026-03-27 16:57:36
  */
 
 .srcfile="inline_test_array_multi_return_expr.rexx"
 .globals=0
 
-main() .locals=7
+main() .locals=9
    .meta "inline_test_array_multi_return_expr.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -18,29 +18,77 @@ main() .locals=7
    .src 4:3="say \"Starting array multi return expr inline test...\""
    say "Starting array multi return expr inline test..."
    .src 5:3="say renderArray(selectArray(-1))"
-   load r3,1
-   load r5,1
-   load r6,-1
-   call r4,selectArray(),r5
-   settp r4,1
-   call r6,renderArray(),r3
-   say r6
+   .src 5:7="renderArray"
+   .src 5:19="selectArray"
+   load r6,1
+   load r7,-1
+   call r0,selectArray(),r6
+   .src 27:7="value"
+   copy r1,r0
+   .src 27:7="value"
+   acopy r1,r0
+   .src 28:3="return value[1] || \":\" || value[2"
+   minattrs r1,1
+   linkattr1 r7,r1,1
+   concat r6,r7,":"
+   unlink r7
+   minattrs r1,2
+   linkattr1 r8,r1,2
+   concat r6,r6,r8
+   unlink r8
+   scopy r8,r6
+   acopy r8,r6
+   br l113bexprend
+l113bexprend:
+   say r8
    .src 6:3="say renderArray(selectArray(0))"
-   load r5,1
-   load r3,1
-   load r4,0
-   call r6,selectArray(),r3
-   settp r6,1
-   call r4,renderArray(),r5
-   say r4
+   .src 6:7="renderArray"
+   .src 6:19="selectArray"
+   load r7,1
+   load r8,0
+   call r2,selectArray(),r7
+   .src 27:7="value"
+   copy r3,r2
+   .src 27:7="value"
+   acopy r3,r2
+   .src 28:3="return value[1] || \":\" || value[2"
+   minattrs r3,1
+   linkattr1 r8,r3,1
+   concat r7,r8,":"
+   unlink r8
+   minattrs r3,2
+   linkattr1 r6,r3,2
+   concat r7,r7,r6
+   unlink r6
+   scopy r8,r7
+   acopy r8,r7
+   br l137bexprend
+l137bexprend:
+   say r8
    .src 7:3="say renderArray(selectArray(1))"
-   load r5,1
-   load r3,1
-   load r4,1
-   call r6,selectArray(),r3
-   settp r6,1
-   call r4,renderArray(),r5
-   say r4
+   .src 7:7="renderArray"
+   .src 7:19="selectArray"
+   load r7,1
+   load r8,1
+   call r4,selectArray(),r7
+   .src 27:7="value"
+   copy r5,r4
+   .src 27:7="value"
+   acopy r5,r4
+   .src 28:3="return value[1] || \":\" || value[2"
+   minattrs r5,1
+   linkattr1 r8,r5,1
+   concat r7,r8,":"
+   unlink r8
+   minattrs r5,2
+   linkattr1 r6,r5,2
+   concat r7,r7,r6
+   unlink r6
+   scopy r8,r7
+   acopy r8,r7
+   br l160bexprend
+l160bexprend:
+   say r8
    .src 8:3="say \"Array multi return expr inline test finished.\""
    say "Array multi return expr inline test finished."
    .src 9:3="return 0"

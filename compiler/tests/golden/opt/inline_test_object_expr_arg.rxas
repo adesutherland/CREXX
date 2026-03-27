@@ -1,0 +1,139 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_object_expr_arg.rexx
+ * BUILT                  : 2026-03-27 16:48:19
+ */
+
+.meta "inline_test_object_expr_arg.box"="b" ".unknown" .class
+.meta "inline_test_object_expr_arg.box.name"="b" ".string" .attr 1
+.srcfile="inline_test_object_expr_arg.rexx"
+.globals=0
+
+main() .locals=7
+   .meta "inline_test_object_expr_arg.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say renameBox(makeBox"
+   load r3,1
+   .src 4:17="makeBox"
+   .src 13:3="box = .Box(\"seed\")"
+   load r5,1
+   load r6,"seed"
+   settp r6,3
+   call r0,§inline_test_object_expr_arg.box.§factory(),r5
+   .src 14:3="return box"
+   copy r6,r0
+   acopy r6,r0
+   br l78bexprend
+l78bexprend:
+   settp r6,3
+   swap r4,r6
+   call r5,renameBox(),r3
+   swap r6,r4
+   say r5
+   .src 5:3="return 0"
+   ret 0
+
+renameBox() .locals=5
+   .meta "inline_test_object_expr_arg.renamebox"="b" ".string" renameBox() "box=.box" ""
+   .src 7:1="renameBox: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 8:7="box = .Box"
+   .meta "inline_test_object_expr_arg.renamebox.box"="b" ".box" a1
+   .src 9:3="call box.setName(\"changed\")"
+   load r1,2
+   load r3,"changed"
+   settp a1,1
+   swap r2,a1
+   settp r3,3
+   call r4,§inline_test_object_expr_arg.box.setname(),r1
+   swap a1,r2
+   .src 10:3="return box.getName"
+   load r2,1
+   settp a1,1
+   swap r3,a1
+   call r1,§inline_test_object_expr_arg.box.getname(),r2
+   swap a1,r3
+   ret r1
+   .meta "inline_test_object_expr_arg.renamebox.box"
+
+makeBox() .locals=3
+   .meta "inline_test_object_expr_arg.makebox"="b" ".box" makeBox() "" ""
+   .src 12:1="makeBox: procedure = .Box"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 13:3="box = .Box(\"seed\")"
+   .meta "inline_test_object_expr_arg.makebox.box"="b" ".box" r0
+   load r1,1
+   load r2,"seed"
+   settp r2,3
+   call r0,§inline_test_object_expr_arg.box.§factory(),r1
+   .src 14:3="return box"
+   ret r0
+   .meta "inline_test_object_expr_arg.makebox.box"
+
+§inline_test_object_expr_arg.box.§factory() .locals=3
+   .meta "inline_test_object_expr_arg.box.§factory"="b" ".void" §inline_test_object_expr_arg.box.§factory() "initial=.string" ""
+   .src 19:3="*: factory"
+   setattrs r1,2
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 20:9="initial = .string"
+   .meta "inline_test_object_expr_arg.box.§factory.initial"="b" ".string" a1
+   .meta "inline_test_object_expr_arg.box.§factory.§factory"="b" ".box" r1
+   .src 21:5="name = initial"
+   linkattr1 r2,r1,1
+   scopy r2,a1
+   unlink r2
+   .src 22:5="return"
+   ret r1
+   .meta "inline_test_object_expr_arg.box.§factory.initial"
+   .meta "inline_test_object_expr_arg.box.§factory.§factory"
+
+§inline_test_object_expr_arg.box.setname() .locals=3
+   .meta "inline_test_object_expr_arg.box.setname"="b" ".void" §inline_test_object_expr_arg.box.setname() "value=.string" ""
+   .src 24:3="setName: method"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 25:9="value = .string"
+   .meta "inline_test_object_expr_arg.box.setname.value"="b" ".string" a2
+   .meta "inline_test_object_expr_arg.box.setname.§this"="b" ".box" a1
+   .src 26:5="name = value"
+   linkattr1 r2,a1,1
+   scopy r2,a2
+   unlink r2
+   .src 27:5="return"
+   ret
+   .meta "inline_test_object_expr_arg.box.setname.value"
+   .meta "inline_test_object_expr_arg.box.setname.§this"
+
+§inline_test_object_expr_arg.box.getname() .locals=2
+   .meta "inline_test_object_expr_arg.box.getname"="b" ".string" §inline_test_object_expr_arg.box.getname() "" ""
+   .src 29:3="getName: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 30:5="return name"
+   .meta "inline_test_object_expr_arg.box.getname.§this"="b" ".box" a1
+   linkattr1 r1,a1,1
+   ret r1
+   .meta "inline_test_object_expr_arg.box.getname.§this"

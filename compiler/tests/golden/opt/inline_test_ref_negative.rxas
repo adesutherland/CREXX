@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_negative.rexx
- * BUILT                  : 2026-03-25 20:41:28
+ * BUILT                  : 2026-03-27 15:59:16
  */
 
 .srcfile="inline_test_ref_negative.rexx"
@@ -9,7 +9,7 @@
 g0 .expose=refneg.idx
 g1 .expose=refneg.values
 
-main() .locals=4
+main() .locals=5
    .meta "refneg.main"="b" ".int" main() "" ""
    setnumdgts 18
    setnumfuz 0
@@ -22,24 +22,38 @@ main() .locals=4
    load g0,1
    .src 7:1="values[1] = 10"
    setattrs g1,3
-   linkattr1 r0,g1,1
-   load r1,10
-   icopy r0,r1
-   unlink r0
+   linkattr1 r2,g1,1
+   load r3,10
+   icopy r2,r3
+   unlink r2
    .src 8:1="values[2] = 20"
    setattrs g1,3
-   linkattr1 r1,g1,2
-   load r0,20
-   icopy r1,r0
-   unlink r1
+   linkattr1 r3,g1,2
+   load r2,20
+   icopy r3,r2
+   unlink r3
    .src 10:0="if refBump(values[idx"
-   load r0,1
+   .src 10:4="refBump"
+   .src 10:19="idx"
+   icopy r0,g0
+   .src 18:3="idx = idx + 1"
+   iadd g0,g0,1
+   .src 19:3="value = value + 1"
    setattrs g1,3
-   linkattr1 r2,g1,g0
-   swap r1,r2
-   call r3,refBump(),r0
-   swap r2,r1
+   linkattr1 r3,g1,r0
+   setattrs g1,3
+   linkattr1 r2,g1,r0
+   iadd r4,r2,1
    unlink r2
+   icopy r3,r4
+   unlink r3
+   .src 20:3="return value"
+   setattrs g1,3
+   linkattr1 r4,g1,r0
+   icopy r3,r4
+   unlink r4
+   br l71bexprend
+l71bexprend:
    brf l35iffalse,r3
    .src 10:22="]"
    .src 10:34="say \"branch\""
