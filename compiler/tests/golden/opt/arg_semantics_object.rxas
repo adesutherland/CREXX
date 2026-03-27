@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_object.rexx
- * BUILT                  : 2026-03-26 21:34:11
+ * BUILT                  : 2026-03-27 14:38:31
  */
 
 .meta "arg_semantics_object.box"="b" ".unknown" .class
@@ -9,7 +9,7 @@
 .srcfile="arg_semantics_object.rexx"
 .globals=0
 
-main() .locals=8
+main() .locals=12
    .meta "arg_semantics_object.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -19,62 +19,76 @@ main() .locals=8
    setnumstd 1
    .src 4:3="box = .Box(\"alpha\")"
    .meta "arg_semantics_object.main.box"="b" ".box" r0
-   load r3,1
-   load r4,"alpha"
-   settp r4,3
-   call r0,§arg_semantics_object.box.§factory(),r3
+   load r6,1
+   load r7,"alpha"
+   settp r7,3
+   call r0,§arg_semantics_object.box.§factory(),r6
    .src 5:3="say \"object-read=\" || readBox(box)"
    .src 5:25="readBox"
    .src 15:3="return value.getName"
-   load r3,1
+   load r6,1
    settp r0,1
-   swap r4,r0
-   call r5,§arg_semantics_object.box.getname(),r3
-   swap r0,r4
-   scopy r4,r5
+   swap r7,r0
+   call r8,§arg_semantics_object.box.getname(),r6
+   swap r0,r7
+   scopy r7,r8
    br l113bexprend
 l113bexprend:
-   concat r4,"object-read=",r4
-   say r4
+   concat r7,"object-read=",r7
+   say r7
    .src 6:3="say \"object-mut=\" || replaceBox(box)"
-   load r3,1
-   settp r0,1
-   swap r4,r0
-   call r6,replaceBox(),r3
-   swap r0,r4
-   concat r6,"object-mut=",r6
-   say r6
+   .src 6:24="replaceBox"
+   .src 18:7="value"
+   copy r2,r0
+   .src 18:7="value"
+   acopy r2,r0
+   .src 19:3="value = .Box(\"local\")"
+   load r6,1
+   load r7,"local"
+   settp r7,3
+   call r2,§arg_semantics_object.box.§factory(),r6
+   .src 20:3="return value.getName"
+   load r6,1
+   settp r2,1
+   swap r7,r2
+   call r9,§arg_semantics_object.box.getname(),r6
+   swap r2,r7
+   scopy r7,r9
+   br l118bexprend
+l118bexprend:
+   concat r7,"object-mut=",r7
+   say r7
    .src 7:3="say \"object-after=\" || box.getName"
    load r6,1
    settp r0,1
    swap r7,r0
-   call r4,§arg_semantics_object.box.getname(),r6
+   call r10,§arg_semantics_object.box.getname(),r6
    swap r0,r7
-   concat r7,"object-after=",r4
-   say r7
+   concat r10,"object-after=",r10
+   say r10
    .src 8:3="say \"object-temp=\" || replaceBox(.Box(\"temp\"))"
+   load r10,1
    load r6,1
-   load r3,1
-   load r4,"temp"
-   settp r4,3
-   call r7,§arg_semantics_object.box.§factory(),r3
-   settp r7,1
-   call r4,replaceBox(),r6
-   concat r7,"object-temp=",r4
-   say r7
-   .src 24:3="value = .Box(\"ref\")"
-   load r6,1
-   load r7,"ref"
+   load r7,"temp"
    settp r7,3
-   call r0,§arg_semantics_object.box.§factory(),r6
+   call r11,§arg_semantics_object.box.§factory(),r6
+   settp r11,1
+   call r7,replaceBox(),r10
+   concat r11,"object-temp=",r7
+   say r11
+   .src 24:3="value = .Box(\"ref\")"
+   load r10,1
+   load r11,"ref"
+   settp r11,3
+   call r0,§arg_semantics_object.box.§factory(),r10
    .src 10:3="say \"object-ref=\" || box.getName"
-   load r6,1
+   load r10,1
    settp r0,1
-   swap r7,r0
-   call r4,§arg_semantics_object.box.getname(),r6
-   swap r0,r7
-   concat r7,"object-ref=",r4
-   say r7
+   swap r11,r0
+   call r7,§arg_semantics_object.box.getname(),r10
+   swap r0,r11
+   concat r11,"object-ref=",r7
+   say r11
    .src 11:3="return 0"
    ret 0
    .meta "arg_semantics_object.main.box"

@@ -761,7 +761,8 @@ static int inline_bind_call_arguments(Context *context,
 
         if (!bind_lhs || !bind_rhs) return 0;
 
-        if (inline_node_has_array_shape(formal_target)) {
+        if (inline_node_has_array_shape(formal_target) ||
+            (inline_node_is_plain_object(formal_target) && !param_arg->is_const_arg)) {
             ASTNode *bind_copy;
             ASTNode *attr_copy;
 
@@ -1891,14 +1892,6 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
 
                 formal_symbol = formal_target && formal_target->symbolNode ? formal_target->symbolNode->symbol : NULL;
                 if (formal_symbol && formal_symbol->type == TP_BINARY) {
-                    sym->is_inlinable = 0;
-                    return result_normal;
-                }
-
-                if (formal_symbol &&
-                    formal_symbol->type == TP_OBJECT &&
-                    !arg->is_ref_arg &&
-                    !arg->is_const_arg) {
                     sym->is_inlinable = 0;
                     return result_normal;
                 }
