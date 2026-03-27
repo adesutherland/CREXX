@@ -1,0 +1,145 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_array_multi_return_expr.rexx
+ * BUILT                  : 2026-03-27 15:10:43
+ */
+
+.srcfile="inline_test_array_multi_return_expr.rexx"
+.globals=0
+
+main() .locals=7
+   .meta "inline_test_array_multi_return_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting array multi return expr inline test...\""
+   say "Starting array multi return expr inline test..."
+   .src 5:3="say renderArray(selectArray(-1))"
+   load r3,1
+   load r5,1
+   load r6,-1
+   call r4,selectArray(),r5
+   settp r4,1
+   call r6,renderArray(),r3
+   say r6
+   .src 6:3="say renderArray(selectArray(0))"
+   load r5,1
+   load r3,1
+   load r4,0
+   call r6,selectArray(),r3
+   settp r6,1
+   call r4,renderArray(),r5
+   say r4
+   .src 7:3="say renderArray(selectArray(1))"
+   load r5,1
+   load r3,1
+   load r4,1
+   call r6,selectArray(),r3
+   settp r6,1
+   call r4,renderArray(),r5
+   say r4
+   .src 8:3="say \"Array multi return expr inline test finished.\""
+   say "Array multi return expr inline test finished."
+   .src 9:3="return 0"
+   ret 0
+
+selectArray() .locals=6
+   .meta "inline_test_array_multi_return_expr.selectarray"="b" ".string[*]" selectArray() "flag=.int" ""
+   .src 11:1="selectArray: procedure = .string[]"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 12:7="flag = .int"
+   .meta "inline_test_array_multi_return_expr.selectarray.flag"="b" ".int" a1
+   .meta "inline_test_array_multi_return_expr.selectarray.neg"="b" ".string[*]" r1
+   .src 13:3="neg = .string"
+   null r1
+   .meta "inline_test_array_multi_return_expr.selectarray.pos"="b" ".string[*]" r2
+   .src 15:3="pos = .string"
+   null r2
+   .meta "inline_test_array_multi_return_expr.selectarray.zero"="b" ".string[*]" r3
+   .src 14:3="zero = .string"
+   null r3
+   .src 16:3="neg[1] = \"neg\""
+   minattrs r1,1
+   linkattr1 r4,r1,1
+   load r5,"neg"
+   scopy r4,r5
+   unlink r4
+   .src 17:3="neg[2] = \"path\""
+   minattrs r1,2
+   linkattr1 r5,r1,2
+   load r4,"path"
+   scopy r5,r4
+   unlink r5
+   .src 18:3="zero[1] = \"zero\""
+   minattrs r3,1
+   linkattr1 r5,r3,1
+   load r4,"zero"
+   scopy r5,r4
+   unlink r5
+   .src 19:3="zero[2] = \"path\""
+   minattrs r3,2
+   linkattr1 r5,r3,2
+   load r4,"path"
+   scopy r5,r4
+   unlink r5
+   .src 20:3="pos[1] = \"pos\""
+   minattrs r2,1
+   linkattr1 r5,r2,1
+   load r4,"pos"
+   scopy r5,r4
+   unlink r5
+   .src 21:3="pos[2] = \"path\""
+   minattrs r2,2
+   linkattr1 r5,r2,2
+   load r4,"path"
+   scopy r5,r4
+   unlink r5
+   .src 22:2="if flag < 0"
+   ilt r5,a1,0
+   brf l81iffalse,r5
+   .src 22:15="then"
+   .src 22:20="return neg"
+   ret r1
+l81iffalse:
+   .src 23:2="if flag > 0"
+   igt r5,a1,0
+   brf l87iffalse,r5
+   .src 23:15="then"
+   .src 23:20="return pos"
+   ret r2
+l87iffalse:
+   .src 24:3="return zero"
+   ret r3
+   .meta "inline_test_array_multi_return_expr.selectarray.flag"
+   .meta "inline_test_array_multi_return_expr.selectarray.neg"
+   .meta "inline_test_array_multi_return_expr.selectarray.pos"
+   .meta "inline_test_array_multi_return_expr.selectarray.zero"
+
+renderArray() .locals=4
+   .meta "inline_test_array_multi_return_expr.renderarray"="b" ".string" renderArray() "value=.string[*]" ""
+   .src 26:1="renderArray: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 27:7="value = .string"
+   .meta "inline_test_array_multi_return_expr.renderarray.value"="b" ".string[*]" a1
+   .src 28:3="return value[1] || \":\" || value[2"
+   minattrs a1,1
+   linkattr1 r1,a1,1
+   concat r2,r1,":"
+   unlink r1
+   minattrs a1,2
+   linkattr1 r3,a1,2
+   concat r2,r2,r3
+   unlink r3
+   ret r2
+   .meta "inline_test_array_multi_return_expr.renderarray.value"

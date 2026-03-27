@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_return_assign.rexx
- * BUILT                  : 2026-03-26 21:25:21
+ * BUILT                  : 2026-03-27 15:11:45
  */
 
 .srcfile="inline_test_array_return_assign.rexx"
@@ -63,6 +63,7 @@ main() .locals=6
    concat r4,r4,r3
    unlink r3
    scopy r5,r4
+   acopy r5,r4
    br l84bexprend
 l84bexprend:
    say r5

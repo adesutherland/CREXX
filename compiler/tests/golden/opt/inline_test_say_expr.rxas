@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_say_expr.rexx
- * BUILT                  : 2026-03-26 19:45:02
+ * BUILT                  : 2026-03-27 15:15:25
  */
 
 .srcfile="inline_test_say_expr.rexx"
@@ -34,6 +34,7 @@ l8dostart:
    .src 13:3="return val"
    itos r1
    scopy r4,r1
+   acopy r4,r1
    br l37bexprend
 l37bexprend:
    say r4

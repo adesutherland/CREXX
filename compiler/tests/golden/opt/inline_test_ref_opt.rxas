@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_opt.rexx
- * BUILT                  : 2026-03-26 19:45:07
+ * BUILT                  : 2026-03-27 15:15:26
  */
 
 .srcfile="inline_test_ref_opt.rexx"
@@ -26,6 +26,7 @@ main() .locals=5
    iadd r0,r0,1
    .src 16:3="return value"
    icopy r2,r0
+   acopy r2,r0
    br l60bexprend
 l60bexprend:
    itos r2
@@ -38,6 +39,7 @@ l60bexprend:
    .src 20:3="return a + b"
    load r2,15
    icopy r3,r2
+   acopy r3,r2
    br l69bexprend
 l69bexprend:
    itos r3
@@ -47,6 +49,7 @@ l69bexprend:
    .src 20:3="return a + b"
    load r3,8
    icopy r4,r3
+   acopy r4,r3
    br l81bexprend
 l81bexprend:
    itos r4

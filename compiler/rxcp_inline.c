@@ -1681,7 +1681,6 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
     proc_def = proc_sym ? proc_sym->ast_template : NULL;
     if (!proc_def || !inline_analyse_return_shape(proc_def, &return_shape)) return 0;
     if (!return_shape.final_is_return || return_shape.return_count == 0) return 0;
-    if (proc_sym->value_dims > 0 && return_shape.return_count != 1) return 0;
     if (return_shape.return_count != 1) {
         block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
         if (!block_expr) return 0;
@@ -1759,7 +1758,6 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
 
     expr_context = inline_classify_expr_context(call_node);
     if (expr_context == INLINE_EXPR_CONTEXT_NONE) return 0;
-    if (proc_sym->value_dims > 0) return 0;
     if (!inline_analyse_return_shape(proc_sym->ast_template, &return_shape)) return 0;
     if (!return_shape.final_is_return || return_shape.return_count == 0) return 0;
 

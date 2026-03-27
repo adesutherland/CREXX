@@ -1,0 +1,98 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_array_return_expr.rexx
+ * BUILT                  : 2026-03-27 15:10:43
+ */
+
+.srcfile="inline_test_array_return_expr.rexx"
+.globals=0
+
+main() .locals=7
+   .meta "inline_test_array_return_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting array return expr inline test...\""
+   say "Starting array return expr inline test..."
+   .src 5:3="say renderArray(buildArray(\"red\", \"blue\"))"
+   load r2,1
+   load r4,2
+   load r5,"red"
+   load r6,"blue"
+   settp r5,3
+   settp r6,3
+   call r3,buildArray(),r4
+   settp r3,1
+   call r6,renderArray(),r2
+   say r6
+   .src 6:3="say renderArray(buildArray(\"green\", \"gold\"))"
+   load r5,1
+   load r2,2
+   load r3,"green"
+   load r4,"gold"
+   settp r3,3
+   settp r4,3
+   call r6,buildArray(),r2
+   settp r6,1
+   call r4,renderArray(),r5
+   say r4
+   .src 7:3="say \"Array return expr inline test finished.\""
+   say "Array return expr inline test finished."
+   .src 8:3="return 0"
+   ret 0
+
+buildArray() .locals=4
+   .meta "inline_test_array_return_expr.buildarray"="b" ".string[*]" buildArray() "left=.string,right=.string" ""
+   .src 10:1="buildArray: procedure = .string[]"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 11:7="left = .string"
+   .meta "inline_test_array_return_expr.buildarray.left"="b" ".string" a1
+   .src 11:23="right = .string"
+   .meta "inline_test_array_return_expr.buildarray.right"="b" ".string" a2
+   .meta "inline_test_array_return_expr.buildarray.temp"="b" ".string[*]" r2
+   .src 12:3="temp = .string"
+   null r2
+   .src 13:3="temp[1] = left"
+   minattrs r2,1
+   linkattr1 r3,r2,1
+   scopy r3,a1
+   unlink r3
+   .src 14:3="temp[2] = right"
+   minattrs r2,2
+   linkattr1 r3,r2,2
+   scopy r3,a2
+   unlink r3
+   .src 15:3="return temp"
+   ret r2
+   .meta "inline_test_array_return_expr.buildarray.left"
+   .meta "inline_test_array_return_expr.buildarray.right"
+   .meta "inline_test_array_return_expr.buildarray.temp"
+
+renderArray() .locals=4
+   .meta "inline_test_array_return_expr.renderarray"="b" ".string" renderArray() "value=.string[*]" ""
+   .src 17:1="renderArray: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 18:7="value = .string"
+   .meta "inline_test_array_return_expr.renderarray.value"="b" ".string[*]" a1
+   .src 19:3="return value[1] || \":\" || value[2"
+   minattrs a1,1
+   linkattr1 r1,a1,1
+   concat r2,r1,":"
+   unlink r1
+   minattrs a1,2
+   linkattr1 r3,a1,2
+   concat r2,r2,r3
+   unlink r3
+   ret r2
+   .meta "inline_test_array_return_expr.renderarray.value"

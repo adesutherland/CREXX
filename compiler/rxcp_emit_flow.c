@@ -30,6 +30,19 @@
 #include "rxcp_emit.h"
 #include "rxcp_util.h"
 
+static int flow_needs_attr_copy(ASTNode *node) {
+    if (!node) return 0;
+
+    if (node->value_dims || node->target_dims) return 1;
+
+    return node->value_type == TP_STRING ||
+           node->value_type == TP_OBJECT ||
+           node->value_type == TP_BINARY ||
+           node->target_type == TP_STRING ||
+           node->target_type == TP_OBJECT ||
+           node->target_type == TP_BINARY;
+}
+
 void emit_flow(ASTNode *node, void *pl) {
     walker_payload *payload = (walker_payload*) pl;
     ASTNode *child1, *child2, *child3, *n;
@@ -591,6 +604,16 @@ void emit_flow(ASTNode *node, void *pl) {
                                         child1->register_num);
                         output_append_text(node->output, temp1);
                         free(temp1);
+
+                        if (flow_needs_attr_copy(node->association)) {
+                            temp1 = mprintf("   acopy %c%d,%c%d\n",
+                                            node->association->register_type,
+                                            node->association->register_num,
+                                            child1->register_type,
+                                            child1->register_num);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                        }
                     }
                 }
 

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_self_recursive_negative.rexx
- * BUILT                  : 2026-03-26 19:46:22
+ * BUILT                  : 2026-03-27 15:15:27
  */
 
 .srcfile="inline_test_self_recursive_negative.rexx"
@@ -24,6 +24,7 @@ main() .locals=3
    load r1,2
    call r2,recurse(),r0
    icopy r1,r2
+   acopy r1,r2
    br l31bexprend
 l31bexprend:
    itos r1

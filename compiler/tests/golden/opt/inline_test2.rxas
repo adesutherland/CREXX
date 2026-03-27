@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test2.rexx
- * BUILT                  : 2026-03-26 19:44:57
+ * BUILT                  : 2026-03-27 15:15:24
  */
 
 .meta "inline_test2.myclass"="b" ".unknown" .class
@@ -36,6 +36,7 @@ main() .locals=9
    load r7,10
    call r5,helper(),r6
    icopy r7,r5
+   acopy r7,r5
    br l169bexprend
 l169bexprend:
    itos r7
@@ -60,10 +61,12 @@ l169bexprend:
    .src 57:17="return 1"
    load r8,1
    icopy r6,r8
+   acopy r6,r8
    br l177bexprend
    .src 58:3="return 0"
    load r7,0
    icopy r6,r7
+   acopy r6,r7
    br l177bexprend
 l177bexprend:
    itos r6

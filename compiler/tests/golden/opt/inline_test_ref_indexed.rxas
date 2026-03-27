@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_indexed.rexx
- * BUILT                  : 2026-03-26 19:45:08
+ * BUILT                  : 2026-03-27 15:15:26
  */
 
 .srcfile="inline_test_ref_indexed.rexx"
@@ -51,6 +51,7 @@ main() .locals=5
    setattrs g1,3
    linkattr1 r4,g1,r0
    icopy r3,r4
+   acopy r3,r4
    unlink r4
    br l67bexprend
 l67bexprend:

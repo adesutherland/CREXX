@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_nested_scope_do.rexx
- * BUILT                  : 2026-03-26 19:45:13
+ * BUILT                  : 2026-03-27 15:15:27
  */
 
 .srcfile="inline_test_nested_scope_do.rexx"
@@ -35,10 +35,12 @@ l8dostart:
    iadd r2,r1,2
    .src 16:5="return step"
    icopy r6,r2
+   acopy r6,r2
    br l48bexprend
    .src 18:3="return 0"
    load r5,0
    icopy r6,r5
+   acopy r6,r5
    br l48bexprend
 l48bexprend:
    itos r6

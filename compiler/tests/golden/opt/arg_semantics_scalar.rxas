@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_scalar.rexx
- * BUILT                  : 2026-03-26 19:44:39
+ * BUILT                  : 2026-03-27 15:15:23
  */
 
 .srcfile="arg_semantics_scalar.rexx"
@@ -25,6 +25,7 @@ main() .locals=12
    .src 21:3="return value + 1"
    iadd r6,r1,1
    icopy r7,r6
+   acopy r7,r6
    br l136bexprend
 l136bexprend:
    itos r7
@@ -38,6 +39,7 @@ l136bexprend:
    iadd r2,r2,10
    .src 26:3="return value"
    icopy r7,r2
+   acopy r7,r2
    br l145bexprend
 l145bexprend:
    itos r7
@@ -59,6 +61,7 @@ l145bexprend:
    .src 35:3="return text || \":read\""
    load r7,"mix:read"
    scopy r8,r7
+   acopy r8,r7
    br l163bexprend
 l163bexprend:
    concat r8,"str-read=",r8
@@ -75,6 +78,7 @@ l163bexprend:
    .src 40:3="return text || \":local\""
    concat r9,r4,":local"
    scopy r8,r9
+   acopy r8,r9
    br l172bexprend
 l172bexprend:
    concat r8,"str-mut=",r8
@@ -93,6 +97,7 @@ l172bexprend:
    .src 40:3="return text || \":local\""
    concat r11,r5,":local"
    scopy r10,r11
+   acopy r10,r11
    br l185bexprend
 l185bexprend:
    concat r10,"str-temp=",r10

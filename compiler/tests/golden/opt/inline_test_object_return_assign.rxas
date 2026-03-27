@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_return_assign.rexx
- * BUILT                  : 2026-03-26 21:34:11
+ * BUILT                  : 2026-03-27 15:11:45
  */
 
 .meta "inline_test_object_return_assign.box"="b" ".unknown" .class
@@ -36,6 +36,7 @@ main() .locals=12
    call r9,§inline_test_object_return_assign.box.getname(),r7
    swap r0,r8
    scopy r8,r9
+   acopy r8,r9
    br l110bexprend
 l110bexprend:
    say r8
@@ -56,6 +57,7 @@ l110bexprend:
    call r10,§inline_test_object_return_assign.box.getname(),r7
    swap r1,r8
    scopy r8,r10
+   acopy r8,r10
    br l126bexprend
 l126bexprend:
    say r8

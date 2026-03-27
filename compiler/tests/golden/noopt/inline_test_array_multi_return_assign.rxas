@@ -1,0 +1,167 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_array_multi_return_assign.rexx
+ * BUILT                  : 2026-03-27 15:10:43
+ */
+
+.srcfile="inline_test_array_multi_return_assign.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_array_multi_return_assign.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "inline_test_array_multi_return_assign.main.left"="b" ".string[*]" r0
+   .src 5:3="left = selectArray(-1)"
+   null r0
+   .meta "inline_test_array_multi_return_assign.main.mid"="b" ".string[*]" r1
+   .src 7:3="mid = selectArray(0)"
+   null r1
+   .meta "inline_test_array_multi_return_assign.main.right"="b" ".string[*]" r2
+   .src 9:3="right = selectArray(1)"
+   null r2
+   .src 4:3="say \"Starting array multi return assign inline test...\""
+   say "Starting array multi return assign inline test..."
+   .src 5:3="left = selectArray(-1)"
+   load r3,1
+   load r5,1
+   isub r4,0,r5
+   call r0,selectArray(),r3
+   .src 6:3="say renderArray(left)"
+   load r4,1
+   settp r0,1
+   swap r5,r0
+   call r3,renderArray(),r4
+   swap r0,r5
+   say r3
+   .src 7:3="mid = selectArray(0)"
+   load r4,1
+   load r5,0
+   call r1,selectArray(),r4
+   .src 8:3="say renderArray(mid)"
+   load r4,1
+   settp r1,1
+   swap r5,r1
+   call r3,renderArray(),r4
+   swap r1,r5
+   say r3
+   .src 9:3="right = selectArray(1)"
+   load r4,1
+   load r5,1
+   call r2,selectArray(),r4
+   .src 10:3="say renderArray(right)"
+   load r4,1
+   settp r2,1
+   swap r5,r2
+   call r3,renderArray(),r4
+   swap r2,r5
+   say r3
+   .src 11:3="say \"Array multi return assign inline test finished.\""
+   say "Array multi return assign inline test finished."
+   .src 12:3="return 0"
+   ret 0
+   .meta "inline_test_array_multi_return_assign.main.left"
+   .meta "inline_test_array_multi_return_assign.main.mid"
+   .meta "inline_test_array_multi_return_assign.main.right"
+
+selectArray() .locals=6
+   .meta "inline_test_array_multi_return_assign.selectarray"="b" ".string[*]" selectArray() "flag=.int" ""
+   .src 14:1="selectArray: procedure = .string[]"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 15:7="flag = .int"
+   .meta "inline_test_array_multi_return_assign.selectarray.flag"="b" ".int" a1
+   .meta "inline_test_array_multi_return_assign.selectarray.neg"="b" ".string[*]" r1
+   .src 16:3="neg = .string"
+   null r1
+   .meta "inline_test_array_multi_return_assign.selectarray.pos"="b" ".string[*]" r2
+   .src 18:3="pos = .string"
+   null r2
+   .meta "inline_test_array_multi_return_assign.selectarray.zero"="b" ".string[*]" r3
+   .src 17:3="zero = .string"
+   null r3
+   .src 19:3="neg[1] = \"neg\""
+   minattrs r1,1
+   linkattr1 r4,r1,1
+   load r5,"neg"
+   scopy r4,r5
+   unlink r4
+   .src 20:3="neg[2] = \"path\""
+   minattrs r1,2
+   linkattr1 r5,r1,2
+   load r4,"path"
+   scopy r5,r4
+   unlink r5
+   .src 21:3="zero[1] = \"zero\""
+   minattrs r3,1
+   linkattr1 r5,r3,1
+   load r4,"zero"
+   scopy r5,r4
+   unlink r5
+   .src 22:3="zero[2] = \"path\""
+   minattrs r3,2
+   linkattr1 r5,r3,2
+   load r4,"path"
+   scopy r5,r4
+   unlink r5
+   .src 23:3="pos[1] = \"pos\""
+   minattrs r2,1
+   linkattr1 r5,r2,1
+   load r4,"pos"
+   scopy r5,r4
+   unlink r5
+   .src 24:3="pos[2] = \"path\""
+   minattrs r2,2
+   linkattr1 r5,r2,2
+   load r4,"path"
+   scopy r5,r4
+   unlink r5
+   .src 25:2="if flag < 0"
+   ilt r5,a1,0
+   brf l90iffalse,r5
+   .src 25:15="then"
+   .src 25:20="return neg"
+   ret r1
+l90iffalse:
+   .src 26:2="if flag > 0"
+   igt r5,a1,0
+   brf l96iffalse,r5
+   .src 26:15="then"
+   .src 26:20="return pos"
+   ret r2
+l96iffalse:
+   .src 27:3="return zero"
+   ret r3
+   .meta "inline_test_array_multi_return_assign.selectarray.flag"
+   .meta "inline_test_array_multi_return_assign.selectarray.neg"
+   .meta "inline_test_array_multi_return_assign.selectarray.pos"
+   .meta "inline_test_array_multi_return_assign.selectarray.zero"
+
+renderArray() .locals=4
+   .meta "inline_test_array_multi_return_assign.renderarray"="b" ".string" renderArray() "value=.string[*]" ""
+   .src 29:1="renderArray: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 30:7="value = .string"
+   .meta "inline_test_array_multi_return_assign.renderarray.value"="b" ".string[*]" a1
+   .src 31:3="return value[1] || \":\" || value[2"
+   minattrs a1,1
+   linkattr1 r1,a1,1
+   concat r2,r1,":"
+   unlink r1
+   minattrs a1,2
+   linkattr1 r3,a1,2
+   concat r2,r2,r3
+   unlink r3
+   ret r2
+   .meta "inline_test_array_multi_return_assign.renderarray.value"

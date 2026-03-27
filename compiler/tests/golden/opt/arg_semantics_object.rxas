@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_object.rexx
- * BUILT                  : 2026-03-27 14:38:31
+ * BUILT                  : 2026-03-27 15:15:24
  */
 
 .meta "arg_semantics_object.box"="b" ".unknown" .class
@@ -32,6 +32,7 @@ main() .locals=12
    call r8,§arg_semantics_object.box.getname(),r6
    swap r0,r7
    scopy r7,r8
+   acopy r7,r8
    br l113bexprend
 l113bexprend:
    concat r7,"object-read=",r7
@@ -54,6 +55,7 @@ l113bexprend:
    call r9,§arg_semantics_object.box.getname(),r6
    swap r2,r7
    scopy r7,r9
+   acopy r7,r9
    br l118bexprend
 l118bexprend:
    concat r7,"object-mut=",r7

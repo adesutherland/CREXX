@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_nested_scope_if_do.rexx
- * BUILT                  : 2026-03-26 19:45:14
+ * BUILT                  : 2026-03-27 15:15:28
  */
 
 .srcfile="inline_test_nested_scope_if_do.rexx"
@@ -39,10 +39,12 @@ l8dostart:
    imult r2,r1,10
    .src 16:5="return tmp"
    icopy r5,r2
+   acopy r5,r2
    br l52bexprend
 l57iffalse:
    .src 18:3="return val"
    icopy r5,r1
+   acopy r5,r1
    br l52bexprend
 l52bexprend:
    itos r5

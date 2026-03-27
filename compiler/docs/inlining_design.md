@@ -244,6 +244,20 @@ Notes:
 - The current implementation still excludes methods/factories and class-scope procedures. Object by-value formals now follow the same split as normal calls: read-only formals alias the incoming binding, while writable formals materialise an isolated local copy. Array values are still supported only where the inline rewrite can preserve attribute-copy semantics.
 - Selection should remain opportunity-based throughout milestone 1: a structurally inlineable procedure may still have uninlined call sites if their rewrite bucket is not yet implemented.
 
+### Milestone 1 review
+
+Milestone 1 is now complete for local plain procedures.
+
+That does not mean every syntactic use of a local procedure is now inlined. It means the remaining non-inlined cases are no longer caused by missing local-procedure body semantics such as varargs, nested calls, nested scopes, multi-return shapes, or aggregate value binding. Those local-procedure capability gaps are now closed.
+
+The remaining discriminator behaviour is intentional and bucket-driven:
+
+- methods and factories are still out because they belong to milestone 2
+- imported callees are still out because they belong to milestone 3
+- short-circuit boolean parents and other unsupported expression parents remain out because their rewrite strategy is not yet implemented
+
+So the milestone 1 closure is: local plain procedures are structurally and semantically covered; the remaining exclusions are selector boundaries for later milestones, not plain-procedure semantic gaps.
+
 ### Milestone 2: all local class method inlining works
 
 This milestone should start with local methods before it attempts factories.
@@ -287,14 +301,38 @@ The implementation now covers:
 - nested callee-local scopes with duplicated scope and symbol remapping
 - multi/early-return procedures, including branch returns and void fallthrough in statement-call sites
 - object-typed returns and by-value object formals
-- array-typed formals and assignment-site returns where the inline rewrite can preserve attribute-copy semantics
+- array-typed formals, assignment-site returns, and expression/block-result returns where the inline rewrite can preserve attribute-copy semantics
 - explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
 
 The implementation still excludes:
 
 - methods and factories
 - imported callees
-- array-valued expression rewrites that would need aggregate `BLOCK_EXPR` result propagation
+- short-circuit boolean expression parents and other unsupported expression-context buckets
+
+## Discriminator Review
+
+The inline discriminator is now best understood as a two-stage filter.
+
+Stage 1: structural procedure eligibility
+
+- `identify_inlinable_walker()` answers whether a procedure body is inline-capable in principle
+- it rejects non-plain procedures (`main`, class-scope procedures, methods, factories), binary values, unsupported vararg shapes, invalid value-return shapes, oversized bodies, and unsupported vararg indexing
+- it does not decide that every call must inline; it only marks the callee as structurally available
+
+Stage 2: call-site capability selection
+
+- `inline_validate_call_site()` answers whether a particular call is safe for the current rewrite machinery
+- it applies recursion blocking, arity/varg checks, and the concrete binding rules for actual arguments
+- statement rewrites then decide whether the enclosing node shape is one of the implemented buckets
+- expression rewrites additionally pass through `inline_classify_expr_context()`, which keeps selection in eager, non-short-circuit contexts only
+
+This split is the right shape for later milestones:
+
+- new procedure semantics should extend stage 1 only when the cloned body model grows
+- new parent-expression or method/factory contexts should extend stage 2 without weakening structural safety checks
+
+That separation is what keeps the inliner opportunity-based instead of turning `is_inlinable` into an over-broad “inline everywhere” flag.
 
 Each iteration in this area should continue to use a full build and the compiler regression suite as its validation gate:
 

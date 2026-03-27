@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_nested_scope_exposed_call.rexx
- * BUILT                  : 2026-03-26 19:45:15
+ * BUILT                  : 2026-03-27 15:15:28
  */
 
 .srcfile="inline_test_nested_scope_exposed_call.rexx"
@@ -38,10 +38,12 @@ l8dostart:
    .src 16:5="return tmp * 2"
    imult r6,r2,2
    icopy r8,r6
+   acopy r8,r6
    br l60bexprend
    .src 18:3="return 0"
    load r7,0
    icopy r8,r7
+   acopy r8,r7
    br l60bexprend
 l60bexprend:
    itos r8

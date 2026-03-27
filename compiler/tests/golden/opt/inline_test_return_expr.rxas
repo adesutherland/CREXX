@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_return_expr.rexx
- * BUILT                  : 2026-03-26 19:45:03
+ * BUILT                  : 2026-03-27 15:15:25
  */
 
 .srcfile="inline_test_return_expr.rexx"
@@ -37,6 +37,7 @@ l8dostart:
    call r6,addOne(),r4
    swap r1,r5
    icopy r5,r6
+   acopy r5,r6
    br l49bexprend
 l49bexprend:
    itos r5

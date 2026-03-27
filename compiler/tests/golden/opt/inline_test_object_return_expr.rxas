@@ -1,0 +1,137 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_object_return_expr.rexx
+ * BUILT                  : 2026-03-27 15:10:43
+ */
+
+.meta "inline_test_object_return_expr.box"="b" ".unknown" .class
+.meta "inline_test_object_return_expr.box.name"="b" ".string" .attr 1
+.srcfile="inline_test_object_return_expr.rexx"
+.globals=0
+
+main() .locals=10
+   .meta "inline_test_object_return_expr.main"="b" ".int" main() "" ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting object return expr inline test...\""
+   say "Starting object return expr inline test..."
+   .src 5:3="say describeBox(buildBox(\"seed\"))"
+   load r6,1
+   .src 5:19="buildBox"
+   .src 12:3="value = .Box(initial)"
+   load r8,1
+   load r9,"seed"
+   settp r9,1
+   call r0,§inline_test_object_return_expr.box.§factory(),r8
+   .src 13:3="return value"
+   copy r9,r0
+   acopy r9,r0
+   br l73bexprend
+l73bexprend:
+   settp r9,3
+   swap r7,r9
+   call r8,describeBox(),r6
+   swap r9,r7
+   say r8
+   .src 6:3="say describeBox(buildBox(\"temp\"))"
+   load r8,1
+   .src 6:19="buildBox"
+   .src 12:3="value = .Box(initial)"
+   load r6,1
+   load r7,"temp"
+   settp r7,1
+   call r2,§inline_test_object_return_expr.box.§factory(),r6
+   .src 13:3="return value"
+   copy r7,r2
+   acopy r7,r2
+   br l86bexprend
+l86bexprend:
+   settp r7,3
+   swap r9,r7
+   call r6,describeBox(),r8
+   swap r7,r9
+   say r6
+   .src 7:3="say \"Object return expr inline test finished.\""
+   say "Object return expr inline test finished."
+   .src 8:3="return 0"
+   ret 0
+
+buildBox() .locals=4
+   .meta "inline_test_object_return_expr.buildbox"="b" ".box" buildBox() "initial=.string" ""
+   .src 10:1="buildBox: procedure = .Box"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 11:7="initial = .string"
+   .meta "inline_test_object_return_expr.buildbox.initial"="b" ".string" a1
+   .src 12:3="value = .Box(initial)"
+   .meta "inline_test_object_return_expr.buildbox.value"="b" ".box" r1
+   load r2,1
+   settp a1,1
+   swap r3,a1
+   call r1,§inline_test_object_return_expr.box.§factory(),r2
+   swap a1,r3
+   .src 13:3="return value"
+   ret r1
+   .meta "inline_test_object_return_expr.buildbox.initial"
+   .meta "inline_test_object_return_expr.buildbox.value"
+
+describeBox() .locals=4
+   .meta "inline_test_object_return_expr.describebox"="b" ".string" describeBox() "value=.box" ""
+   .src 15:1="describeBox: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 16:7="value = .Box"
+   .meta "inline_test_object_return_expr.describebox.value"="b" ".box" a1
+   .src 17:3="return value.getName"
+   load r1,1
+   settp a1,1
+   swap r2,a1
+   call r3,§inline_test_object_return_expr.box.getname(),r1
+   swap a1,r2
+   ret r3
+   .meta "inline_test_object_return_expr.describebox.value"
+
+§inline_test_object_return_expr.box.§factory() .locals=3
+   .meta "inline_test_object_return_expr.box.§factory"="b" ".void" §inline_test_object_return_expr.box.§factory() "initial=.string" ""
+   .src 22:3="*: factory"
+   setattrs r1,2
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 23:9="initial = .string"
+   .meta "inline_test_object_return_expr.box.§factory.initial"="b" ".string" a1
+   .meta "inline_test_object_return_expr.box.§factory.§factory"="b" ".box" r1
+   .src 24:5="name = initial"
+   linkattr1 r2,r1,1
+   scopy r2,a1
+   unlink r2
+   .src 25:5="return"
+   ret r1
+   .meta "inline_test_object_return_expr.box.§factory.initial"
+   .meta "inline_test_object_return_expr.box.§factory.§factory"
+
+§inline_test_object_return_expr.box.getname() .locals=2
+   .meta "inline_test_object_return_expr.box.getname"="b" ".string" §inline_test_object_return_expr.box.getname() "" ""
+   .src 27:3="getName: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 28:5="return name"
+   .meta "inline_test_object_return_expr.box.getname.§this"="b" ".box" a1
+   linkattr1 r1,a1,1
+   ret r1
+   .meta "inline_test_object_return_expr.box.getname.§this"
