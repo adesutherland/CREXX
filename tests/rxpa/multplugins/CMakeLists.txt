@@ -3,6 +3,8 @@ project(rxpatest C)
 
 set(CMAKE_C_STANDARD 90)
 
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+
 # Including RXPlugin Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
@@ -14,26 +16,20 @@ add_dependencies(_plugin1 rxpa library rxvm rxc) # The test (not plugin) depends
 add_dynamic_plugin_target(_plugin2 plugin2.c)
 add_dependencies(_plugin2 rxpa library rxvm rxc) # The test (not plugin) depends on rxpa, library, rxvm, and rxc
 
-# Build Dynamic Test Rexx
-add_custom_command(
-        COMMAND $<TARGET_FILE:rxc> -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_mult_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxpa_mult_test\" && $<TARGET_FILE:rxas> rxpa_mult_test
-        DEPENDS rxas rxc library _plugin1 _plugin2 ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_mult_test.rexx
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxpa_mult_test.rxbin ${CMAKE_CURRENT_BINARY_DIR}/rxpa_mult_test.rxas
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-add_custom_target(rxpa_mult_test ALL
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/rxpa_mult_test.rxbin
+add_custom_target(rxpa_mult_test ALL)
+crexx_add_rexx_opt_matrix(
+        NAME rxpa_mult_test
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_mult_test.rexx
+        TARGET_GROUP rxpa_mult_test
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS library _plugin1 _plugin2
+        RUNTIME_ARGS rx_plugin1 rx_plugin2 ${CMAKE_BINARY_DIR}/bin/library
 )
 
 # Enable testing functionality
 enable_testing()
 
-# Multiplugin test
-add_test(NAME rxpa_mult_test
-        COMMAND $<TARGET_FILE:rxvm> rxpa_mult_test rx_plugin1 rx_plugin2 ${CMAKE_BINARY_DIR}/bin/library
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
 # Set the property to check for expected output
-set_tests_properties(rxpa_mult_test PROPERTIES
+set_tests_properties(rxpa_mult_test_noopt rxpa_mult_test_opt PROPERTIES
         PASS_REGULAR_EXPRESSION "plugin1[^\\1]*plugin2"
 )

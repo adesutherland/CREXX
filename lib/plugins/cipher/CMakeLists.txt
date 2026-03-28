@@ -3,32 +3,22 @@ project(cipher_plugin C)
 
 set(CMAKE_C_STANDARD 90)
 
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+
 # Including RXPA Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
 # Create dynamic plugin module
 add_dynamic_plugin_target(_cipher cipher.c)
 
-# Build Test Rexx
-add_custom_command(
-        COMMAND $<TARGET_FILE:rxc>
-        -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
-        -o cipher_test \"${CMAKE_CURRENT_SOURCE_DIR}/cipher_test\" &&
-        $<TARGET_FILE:rxas> cipher_test
-
-        DEPENDS rxas rxc library _cipher ${CMAKE_CURRENT_SOURCE_DIR}/cipher_test.rexx
-        OUTPUT cipher_test.rxbin
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+add_custom_target(cipher_test ALL)
+crexx_add_rexx_opt_matrix(
+        NAME cipher_test
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cipher_test.rexx
+        TARGET_GROUP cipher_test
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS library _cipher
+        RUNTIME_ARGS rx_cipher ${CMAKE_BINARY_DIR}/bin/library
 )
-add_custom_target(cipher_test ALL
-        DEPENDS cipher_test.rxbin
-        )
 
-# Enable testing functionality
 enable_testing()
-
-# Basic test to run cipher_test.rxbin with the cipher plugin
-add_test(NAME cipher_test
-        COMMAND $<TARGET_FILE:rxvm> cipher_test rx_cipher ${CMAKE_BINARY_DIR}/bin/library
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )

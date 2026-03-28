@@ -22,19 +22,23 @@ add_custom_command(
 )
 
 # Create a custom target that depends on the custom command's output
-add_custom_target(intr_test ALL DEPENDS intr_test.rxbin rxvm signal_tester)
+add_custom_target(intr_test ALL DEPENDS intr_test.rxbin rxvm rxbvm signal_tester)
 
-# Add the native signal tests
-add_test(
-        NAME QUIT_SIGNAL
-        COMMAND signal_tester QUIT "QUIT Signal" 5 $<TARGET_FILE:rxvm> intr_test
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-add_test(
-        NAME TERM_SIGNAL
-        COMMAND signal_tester TERM "TERM Signal" 5 $<TARGET_FILE:rxvm> intr_test
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+function(crexx_add_native_signal_test SIGNAL_NAME SIGNAL_DESC)
+    add_test(
+            NAME ${SIGNAL_NAME}
+            COMMAND signal_tester ${SIGNAL_NAME} "${SIGNAL_DESC}" 5 $<TARGET_FILE:rxvm> intr_test
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(
+            NAME ${SIGNAL_NAME}_BYTECODE
+            COMMAND signal_tester ${SIGNAL_NAME} "${SIGNAL_DESC}" 5 $<TARGET_FILE:rxbvm> intr_test
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+endfunction()
+
+crexx_add_native_signal_test(QUIT "QUIT Signal")
+crexx_add_native_signal_test(TERM "TERM Signal")
 
 # On Windows the harness uses GenerateConsoleCtrlEvent() to emulate native interrupts.
 # CTRL_C_EVENT cannot be targeted to a specific process group, so in CI it can hit the
@@ -43,16 +47,12 @@ add_test(
 if(WIN32)
     message(STATUS "Skipping INT_SIGNAL native signal test on Windows")
 else()
-    add_test(
-            NAME INT_SIGNAL
-            COMMAND signal_tester INT "POSIX_INT Signal" 5 $<TARGET_FILE:rxvm> intr_test
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
+    crexx_add_native_signal_test(INT "POSIX_INT Signal")
 endif()
 
-set(_native_signal_tests QUIT_SIGNAL TERM_SIGNAL)
+set(_native_signal_tests QUIT TERM QUIT_BYTECODE TERM_BYTECODE)
 if(NOT WIN32)
-    list(APPEND _native_signal_tests INT_SIGNAL)
+    list(APPEND _native_signal_tests INT INT_BYTECODE)
 endif()
 
 set_tests_properties(${_native_signal_tests} PROPERTIES

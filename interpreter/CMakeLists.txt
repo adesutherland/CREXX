@@ -100,6 +100,29 @@ target_link_libraries(ts_regvalue_tester m)
 # Enable testing
 enable_testing()
 
+function(crexx_add_vm_dual_test)
+    set(options)
+    set(oneValueArgs NAME PASS_REGULAR_EXPRESSION)
+    set(multiValueArgs RXVM_ARGS)
+    cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    add_test(
+            NAME ${CREXX_NAME}
+            COMMAND $<TARGET_FILE:rxvm> ${CREXX_RXVM_ARGS}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(
+            NAME ${CREXX_NAME}-rxbvm
+            COMMAND $<TARGET_FILE:rxbvm> ${CREXX_RXVM_ARGS}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    if(CREXX_PASS_REGULAR_EXPRESSION)
+        set_tests_properties(${CREXX_NAME} ${CREXX_NAME}-rxbvm PROPERTIES
+                PASS_REGULAR_EXPRESSION "${CREXX_PASS_REGULAR_EXPRESSION}")
+    endif()
+endfunction()
+
 # Value Tests
 add_test(
 		NAME ts_regvalue_tester
@@ -119,16 +142,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_signals ALL DEPENDS tests_signals.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxassignalstests
-		COMMAND $<TARGET_FILE:rxvm> tests_signals
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-set_tests_properties(rxassignalstests PROPERTIES
-		PASS_REGULAR_EXPRESSION "PANIC:"
-)
+crexx_add_vm_dual_test(NAME rxassignalstests RXVM_ARGS tests_signals PASS_REGULAR_EXPRESSION "PANIC:")
 
 # Basic Instruction Tests
 add_custom_command(
@@ -142,12 +156,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_basic ALL DEPENDS tests_basic.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxasbasictests
-		COMMAND $<TARGET_FILE:rxvm> tests_basic
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+crexx_add_vm_dual_test(NAME rxasbasictests RXVM_ARGS tests_basic)
 
 # Integer Math Instruction Tests
 add_custom_command(
@@ -161,12 +170,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_int_math ALL DEPENDS tests_int_math.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxasintmathtests
-		COMMAND $<TARGET_FILE:rxvm> tests_int_math
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+crexx_add_vm_dual_test(NAME rxasintmathtests RXVM_ARGS tests_int_math)
 
 # Float Math Instruction Tests
 add_custom_command(
@@ -180,12 +184,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_float_math ALL DEPENDS tests_float_math.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxasfloatmathtests
-		COMMAND $<TARGET_FILE:rxvm> tests_float_math
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+crexx_add_vm_dual_test(NAME rxasfloatmathtests RXVM_ARGS tests_float_math)
 
 # String Instruction Tests
 add_custom_command(
@@ -199,12 +198,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_string ALL DEPENDS tests_string.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxasstringtests
-		COMMAND $<TARGET_FILE:rxvm> tests_string
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+crexx_add_vm_dual_test(NAME rxasstringtests RXVM_ARGS tests_string)
 
 # Logic and Flow Instruction Tests
 add_custom_command(
@@ -218,12 +212,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_logic_flow ALL DEPENDS tests_logic_flow.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxaslogicflowtests
-		COMMAND $<TARGET_FILE:rxvm> tests_logic_flow
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+crexx_add_vm_dual_test(NAME rxaslogicflowtests RXVM_ARGS tests_logic_flow)
 
 # System and I/O Instruction Tests
 add_custom_command(
@@ -237,12 +226,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_system_io ALL DEPENDS tests_system_io.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxassystemiotests
-		COMMAND $<TARGET_FILE:rxvm> tests_system_io
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+crexx_add_vm_dual_test(NAME rxassystemiotests RXVM_ARGS tests_system_io)
 
 # Decimal Instruction Tests
 add_custom_command(
@@ -256,18 +240,8 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_decimal ALL DEPENDS tests_decimal.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxasdecimaltests
-		COMMAND $<TARGET_FILE:rxvm> tests_decimal
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-add_test(
-		NAME rxasdecimaltests-mc
-		COMMAND $<TARGET_FILE:rxvm> -p rxvm_mc_decimal tests_decimal
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+crexx_add_vm_dual_test(NAME rxasdecimaltests RXVM_ARGS tests_decimal)
+crexx_add_vm_dual_test(NAME rxasdecimaltests-mc RXVM_ARGS -p rxvm_mc_decimal tests_decimal)
 
 # Conversion and Formatting Instruction Tests
 add_custom_command(
@@ -281,12 +255,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_conversion ALL DEPENDS tests_conversion.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxasconversiontests
-		COMMAND $<TARGET_FILE:rxvm> tests_conversion
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+crexx_add_vm_dual_test(NAME rxasconversiontests RXVM_ARGS tests_conversion)
 
 # Object and Attribute Instruction Tests
 add_custom_command(
@@ -300,12 +269,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_objects ALL DEPENDS tests_objects.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxasobjecttests
-		COMMAND $<TARGET_FILE:rxvm> tests_objects
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+crexx_add_vm_dual_test(NAME rxasobjecttests RXVM_ARGS tests_objects)
 
 # Reflection and Introspection Instruction Tests
 add_custom_command(
@@ -319,12 +283,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_reflection ALL DEPENDS tests_reflection.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxasreflectiontests
-		COMMAND $<TARGET_FILE:rxvm> tests_reflection
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+crexx_add_vm_dual_test(NAME rxasreflectiontests RXVM_ARGS tests_reflection)
 
 # Stress and Edge Case Instruction Tests
 add_custom_command(
@@ -338,12 +297,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_stress ALL DEPENDS tests_stress.rxbin)
 
-# Add the test to be executed after the custom command
-add_test(
-		NAME rxasstresstests
-		COMMAND $<TARGET_FILE:rxvm> tests_stress
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
+crexx_add_vm_dual_test(NAME rxasstresstests RXVM_ARGS tests_stress)
 
 # Re-entrancy Test
 add_custom_command(
@@ -362,4 +316,3 @@ target_link_libraries(test_reentrancy rxvml)
 add_dependencies(test_reentrancy test_reentrancy_bin)
 
 add_test(NAME reentrancy_check COMMAND test_reentrancy WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-

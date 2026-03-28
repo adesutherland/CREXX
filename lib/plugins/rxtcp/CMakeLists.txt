@@ -5,32 +5,22 @@ set(CMAKE_C_STANDARD 90)
 if(WIN32)
 	link_libraries(ws2_32 wsock32)
 endif()	
+
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 # Including RXPA Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
 # Create dynamic plugin module
 add_dynamic_plugin_target(_rxtcp rxtcp.c)
 
-# Build Test Rexx
-add_custom_command(
-        COMMAND $<TARGET_FILE:rxc>
-        -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
-        -o tcp_test \"${CMAKE_CURRENT_SOURCE_DIR}/tcp_test\" &&
-        $<TARGET_FILE:rxas> tcp_test
-
-        DEPENDS rxas rxc library _rxtcp ${CMAKE_CURRENT_SOURCE_DIR}/tcp_test.rexx
-        OUTPUT tcp_test.rxbin
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+add_custom_target(tcp_test ALL)
+crexx_add_rexx_opt_matrix(
+        NAME tcp_test
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/tcp_test.rexx
+        TARGET_GROUP tcp_test
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS library _rxtcp
+        RUNTIME_ARGS rx_rxtcp ${CMAKE_BINARY_DIR}/bin/library
 )
-add_custom_target(tcp_test ALL
-        DEPENDS tcp_test.rxbin
-        )
 
-# Enable testing functionality
 enable_testing()
-
-# Basic test to run tcp_test.rxbin with the rxtcp plugin
-add_test(NAME tcp_test
-        COMMAND $<TARGET_FILE:rxvm> tcp_test rx_rxtcp ${CMAKE_BINARY_DIR}/bin/library
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )

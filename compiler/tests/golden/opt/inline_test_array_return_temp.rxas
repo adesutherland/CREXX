@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_return_temp.rexx
- * BUILT                  : 2026-03-27 16:48:19
+ * BUILT                  : 2026-03-28 11:02:55
  */
 
 .srcfile="inline_test_array_return_temp.rexx"
 .globals=0
 
-main() .locals=4
+main() .locals=3
    .meta "inline_test_array_return_temp.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -18,26 +18,22 @@ main() .locals=4
    .meta "inline_test_array_return_temp.main.pair"="b" ".int[2]" r0
    .src 4:3="pair = .int[2"
    null r0
-   .src 12:10="buildPair"
-   load r2,1
-   load r3,3
-   call r1,buildPair(),r2
-   .src 5:3="pair"
-   copy r0,r1
-   .src 5:3="pair"
-   acopy r0,r1
+   .src 5:3="pair = forwardPair(3)"
+   load r1,1
+   load r2,3
+   call r0,forwardPair(),r1
    .src 6:3="say pair[1"
    setattrs r0,2
-   linkattr1 r3,r0,1
-   itos r3
-   say r3
-   unlink r3
+   linkattr1 r2,r0,1
+   itos r2
+   say r2
+   unlink r2
    .src 7:3="say pair[2"
    setattrs r0,2
-   linkattr1 r3,r0,2
-   itos r3
-   say r3
-   unlink r3
+   linkattr1 r2,r0,2
+   itos r2
+   say r2
+   unlink r2
    .src 8:3="return 0"
    ret 0
    .meta "inline_test_array_return_temp.main.pair"

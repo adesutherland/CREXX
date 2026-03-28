@@ -7,13 +7,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include "rxcp_val.h"
 #include "rxcp_ast.h"
 #include "rxcpbgmr.h"
 #include "rxcpdary.h"
 #include "rxcp_sym.h"
 
-#define INLINE_MAX_NODES 25
+#define INLINE_MAX_NODES 50
 
 typedef struct {
     Symbol *old_symbol;
@@ -132,6 +133,59 @@ static int inline_rewrite_return_nodes(Context *context,
                                        Scope *inline_scope,
                                        int allow_dummy_return,
                                        ValueType proc_type);
+
+static void inline_debug_log(Context *context,
+                             ASTNode *site,
+                             Symbol *proc_sym,
+                             const char *prefix,
+                             const char *format,
+                             ...) {
+    Context *root;
+    va_list args;
+
+    root = context && context->master_context ? context->master_context : context;
+    if (!root || root->debug_mode < 1 || !prefix || !format) return;
+
+    fprintf(stderr, "%s", prefix);
+    if (proc_sym && proc_sym->name) fprintf(stderr, " %s", proc_sym->name);
+    if (site && site->file_name) {
+        fprintf(stderr, " @ %s", site->file_name);
+        if (site->line > 0) fprintf(stderr, ":%d", site->line);
+        if (site->column > 0) fprintf(stderr, ":%d", site->column);
+    }
+    fprintf(stderr, " - ");
+
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputc('\n', stderr);
+}
+
+static void inline_debug_fail_closed(Context *context,
+                                     ASTNode *site,
+                                     Symbol *proc_sym,
+                                     const char *format,
+                                     ...) {
+    Context *root;
+    va_list args;
+
+    root = context && context->master_context ? context->master_context : context;
+    if (!root || root->debug_mode < 1 || !format) return;
+
+    fprintf(stderr, "DEBUG_INLINE_FAILCLOSED");
+    if (proc_sym && proc_sym->name) fprintf(stderr, " %s", proc_sym->name);
+    if (site && site->file_name) {
+        fprintf(stderr, " @ %s", site->file_name);
+        if (site->line > 0) fprintf(stderr, ":%d", site->line);
+        if (site->column > 0) fprintf(stderr, ":%d", site->column);
+    }
+    fprintf(stderr, " - ");
+
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputc('\n', stderr);
+}
 
 static Symbol *inline_find_mapped_symbol(InlineCloneState *state, Symbol *old_symbol) {
     size_t i;
@@ -290,6 +344,17 @@ static void inline_copy_replacement_semantics(ASTNode *replacement, ASTNode *rep
 static int inline_node_has_array_shape(ASTNode *node) {
     if (!node) return 0;
     return node->value_dims > 0 || node->target_dims > 0;
+}
+
+static int inline_node_requires_local_scope(ASTNode *node) {
+    if (!node) return 0;
+
+    if (node->node_type == BLOCK_EXPR || node->node_type == DO) return 1;
+    if (node->node_type != INSTRUCTIONS) return 0;
+    if (node->force_local_scope) return 1;
+
+    return node->parent &&
+           (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS);
 }
 
 static int inline_node_is_plain_object(ASTNode *node) {
@@ -1515,6 +1580,37 @@ static Scope *inline_clone_scope(Context *context,
     return new_scope;
 }
 
+static Scope *inline_prepare_cloned_node_scope(Context *context,
+                                               ASTNode *old_node,
+                                               ASTNode *new_node,
+                                               Scope *current_scope,
+                                               InlineCloneState *state) {
+    Scope *node_scope;
+
+    if (!new_node) return NULL;
+
+    node_scope = current_scope ? current_scope : old_node->scope;
+
+    if (old_node->scope && old_node->scope->defining_node == old_node) {
+        node_scope = inline_find_mapped_scope(state, old_node->scope);
+        if (!node_scope) {
+            node_scope = inline_clone_scope(context, old_node->scope, current_scope, new_node, state);
+            if (!node_scope) return NULL;
+        }
+        new_node->scope = node_scope;
+        if (!inline_append_node_map_entry(state, old_node, new_node)) return NULL;
+        return node_scope;
+    }
+
+    if (inline_node_requires_local_scope(old_node)) {
+        node_scope = scp_f(context, current_scope, new_node, NULL, SCOPE_LOCAL);
+        if (!node_scope) return NULL;
+    }
+
+    new_node->scope = node_scope;
+    return node_scope;
+}
+
 static ASTNode *inline_clone_subtree_in_scope(Context *context,
                                               ASTNode *node,
                                               InlineCloneState *state,
@@ -1596,19 +1692,10 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
     }
 
     new_node = ast_dup(context, node);
+    if (!new_node) return NULL;
 
-    node_scope = current_scope;
-    if (node->scope && node->scope->defining_node == node) {
-        node_scope = inline_find_mapped_scope(state, node->scope);
-        if (!node_scope) {
-            node_scope = inline_clone_scope(context, node->scope, current_scope, new_node, state);
-            if (!node_scope) return NULL;
-        }
-        new_node->scope = node_scope;
-        if (!inline_append_node_map_entry(state, node, new_node)) return NULL;
-    } else {
-        new_node->scope = current_scope ? current_scope : node->scope;
-    }
+    node_scope = inline_prepare_cloned_node_scope(context, node, new_node, current_scope, state);
+    if (!node_scope && inline_node_requires_local_scope(node)) return NULL;
 
     if (node->association) {
         mapped_association = inline_find_mapped_node(state, node->association);
@@ -1623,7 +1710,11 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
 
     child = node->child;
     while (child) {
-        add_ast(new_node, inline_clone_subtree_in_scope(context, child, state, node_scope));
+        ASTNode *cloned_child;
+
+        cloned_child = inline_clone_subtree_in_scope(context, child, state, node_scope);
+        if (!cloned_child) return NULL;
+        add_ast(new_node, cloned_child);
         child = child->sibling;
     }
 
@@ -1947,19 +2038,39 @@ static int inline_call_is_recursive(ASTNode *call_node, Symbol *proc_sym) {
     return is_recursive;
 }
 
-static int inline_validate_call_site(ASTNode *proc_def, ASTNode *call_node, Symbol *proc_sym) {
+static int inline_validate_call_site(Context *context,
+                                     ASTNode *proc_def,
+                                     ASTNode *call_node,
+                                     Symbol *proc_sym) {
     int unsupported_varg_access;
     size_t max_required_varg_index;
     size_t varg_count;
 
     if (!proc_def || !call_node || !proc_sym) return 0;
-    if (inline_call_is_recursive(call_node, proc_sym)) return 0;
-    if (!inline_call_arity_matches(call_node, proc_sym, &varg_count)) return 0;
+    if (inline_call_is_recursive(call_node, proc_sym)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "recursive inline cycle detected");
+        return 0;
+    }
+    if (!inline_call_arity_matches(call_node, proc_sym, &varg_count)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "call arity does not match formal arguments");
+        return 0;
+    }
     if (!proc_sym->has_vargs) return 1;
 
-    if (!inline_analyse_varg_usage(proc_def, &unsupported_varg_access, &max_required_varg_index)) return 0;
-    if (unsupported_varg_access) return 0;
-    if (varg_count < max_required_varg_index) return 0;
+    if (!inline_analyse_varg_usage(proc_def, &unsupported_varg_access, &max_required_varg_index)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to analyse vararg usage");
+        return 0;
+    }
+    if (unsupported_varg_access) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "unsupported vararg access in callee");
+        return 0;
+    }
+    if (varg_count < max_required_varg_index) {
+        inline_debug_fail_closed(context, call_node, proc_sym,
+                                 "call provides %zu varargs but callee requires index %zu",
+                                 varg_count, max_required_varg_index);
+        return 0;
+    }
 
     return 1;
 }
@@ -2072,12 +2183,18 @@ static ASTNode *inline_build_block_expr(Context *context,
     if (!context || !call_node || !proc_sym || !proc_sym->ast_template || !parent_scope) return NULL;
 
     proc_def = proc_sym->ast_template;
-    if (!proc_def || !proc_def->scope) return NULL;
+    if (!proc_def || !proc_def->scope) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "callee has no inlineable procedure scope");
+        return NULL;
+    }
 
-    if (!inline_validate_call_site(proc_def, call_node, proc_sym)) return NULL;
+    if (!inline_validate_call_site(context, proc_def, call_node, proc_sym)) return NULL;
 
     block_expr = ast_dup(context, call_node);
-    if (!block_expr) return NULL;
+    if (!block_expr) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to duplicate call node for BLOCK_EXPR");
+        return NULL;
+    }
 
     block_expr->node_type = BLOCK_EXPR;
     block_expr->node_string = "do";
@@ -2091,10 +2208,17 @@ static ASTNode *inline_build_block_expr(Context *context,
     }
 
     inline_scope = scp_f(context, parent_scope, block_expr, NULL, SCOPE_LOCAL);
+    if (!inline_scope) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to create BLOCK_EXPR inline scope");
+        return NULL;
+    }
     block_expr->scope = inline_scope;
 
     instr_list = ast_f(context, INSTRUCTIONS, call_node->token);
-    if (!instr_list) return NULL;
+    if (!instr_list) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to create inline instruction list");
+        return NULL;
+    }
     instr_list->scope = inline_scope;
     instr_list->value_type = TP_VOID;
     instr_list->target_type = TP_VOID;
@@ -2103,17 +2227,20 @@ static ASTNode *inline_build_block_expr(Context *context,
     memset(&clone_state, 0, sizeof(clone_state));
 
     if (!inline_build_symbol_map(proc_def->scope, inline_scope, &clone_state)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to build inline symbol/scope map");
         inline_free_symbol_map(&clone_state);
         return NULL;
     }
 
     if (!inline_bind_call_arguments(context, instr_list, inline_scope, proc_def, call_node, proc_sym, &clone_state)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to bind inline call arguments");
         inline_free_symbol_map(&clone_state);
         return NULL;
     }
 
     proc_instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
     if (!proc_instrs) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "callee has no instruction list");
         inline_free_symbol_map(&clone_state);
         return NULL;
     }
@@ -2124,6 +2251,7 @@ static ASTNode *inline_build_block_expr(Context *context,
 
         cloned_instr = inline_clone_subtree(context, proc_instr, &clone_state);
         if (!cloned_instr) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone callee instruction subtree");
             inline_free_symbol_map(&clone_state);
             return NULL;
         }
@@ -2133,6 +2261,7 @@ static ASTNode *inline_build_block_expr(Context *context,
                                          inline_scope,
                                          allow_dummy_return,
                                          proc_sym->type)) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "failed to rewrite return nodes for BLOCK_EXPR inline");
             inline_free_symbol_map(&clone_state);
             return NULL;
         }
@@ -2149,6 +2278,7 @@ static ASTNode *inline_build_block_expr(Context *context,
 
         leave_expr = inline_create_integer_constant(context, call_node, 0, TP_INTEGER);
         if (!leave_expr) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "failed to create dummy LEAVE_WITH expression");
             inline_free_symbol_map(&clone_state);
             return NULL;
         }
@@ -2156,6 +2286,7 @@ static ASTNode *inline_build_block_expr(Context *context,
 
         leave_with = ast_f(context, LEAVE_WITH, call_node->token);
         if (!leave_with) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "failed to create dummy LEAVE_WITH node");
             inline_free_symbol_map(&clone_state);
             return NULL;
         }
@@ -2188,32 +2319,46 @@ static int ast_inline_statement(Context *context,
     if (!context || !statement_node || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
 
     proc_def = proc_sym->ast_template;
-    if (!proc_def || !proc_def->scope) return 0;
+    if (!proc_def || !proc_def->scope) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "callee has no inlineable procedure scope");
+        return 0;
+    }
 
-    if (!inline_validate_call_site(proc_def, call_node, proc_sym)) return 0;
+    if (!inline_validate_call_site(context, proc_def, call_node, proc_sym)) return 0;
 
     block = ast_f(context, INSTRUCTIONS, call_node->token);
+    if (!block) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated statement block");
+        return 0;
+    }
     ast_mark_compiler_generated_block(block);
     block->association = proc_def;
     block->value_type = TP_VOID;
     block->target_type = TP_VOID;
 
     inline_scope = scp_f(context, statement_node->scope, block, NULL, SCOPE_LOCAL);
+    if (!inline_scope) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated statement scope");
+        return 0;
+    }
     instr_list = block;
 
     memset(&clone_state, 0, sizeof(clone_state));
 
     if (!inline_build_symbol_map(proc_def->scope, inline_scope, &clone_state)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to build inline symbol/scope map");
         return 0;
     }
 
     if (!inline_bind_call_arguments(context, instr_list, inline_scope, proc_def, call_node, proc_sym, &clone_state)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to bind inline call arguments");
         inline_free_symbol_map(&clone_state);
         return 0;
     }
 
     proc_instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
     if (!proc_instrs) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "callee has no instruction list");
         inline_free_symbol_map(&clone_state);
         return 0;
     }
@@ -2240,11 +2385,13 @@ static int ast_inline_statement(Context *context,
             } else if (return_plan && return_plan->return_sink_symbol) {
                 ret_lhs = inline_create_sink_target(context, inline_scope, proc_instr, proc_instr->child);
             } else {
+                inline_debug_fail_closed(context, call_node, proc_sym, "missing return target/sink during statement inline");
                 inline_free_symbol_map(&clone_state);
                 return 0;
             }
 
             if (!ret_lhs) {
+                inline_debug_fail_closed(context, call_node, proc_sym, "failed to build return assignment target");
                 inline_free_symbol_map(&clone_state);
                 return 0;
             }
@@ -2257,6 +2404,7 @@ static int ast_inline_statement(Context *context,
 
                 ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
                 if (!ret_rhs) {
+                    inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone aggregate return expression");
                     inline_free_symbol_map(&clone_state);
                     return 0;
                 }
@@ -2272,6 +2420,7 @@ static int ast_inline_statement(Context *context,
                 }
 
                 if (!ret_rhs) {
+                    inline_debug_fail_closed(context, call_node, proc_sym, "failed to materialise aggregate return temp");
                     inline_free_symbol_map(&clone_state);
                     return 0;
                 }
@@ -2279,6 +2428,7 @@ static int ast_inline_statement(Context *context,
                 ret_copy = inline_create_register_copy_instr(context, inline_scope, "copy", ret_lhs, ret_rhs);
                 attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", ret_lhs, ret_rhs);
                 if (!ret_copy || !attr_copy) {
+                    inline_debug_fail_closed(context, call_node, proc_sym, "failed to create aggregate return copy instructions");
                     inline_free_symbol_map(&clone_state);
                     return 0;
                 }
@@ -2287,6 +2437,7 @@ static int ast_inline_statement(Context *context,
             } else {
                 ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
                 if (!ret_rhs) {
+                    inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone scalar return expression");
                     inline_free_symbol_map(&clone_state);
                     return 0;
                 }
@@ -2298,6 +2449,11 @@ static int ast_inline_statement(Context *context,
             ASTNode *cloned_instr;
 
             cloned_instr = inline_clone_subtree(context, proc_instr, &clone_state);
+            if (!cloned_instr) {
+                inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone statement instruction subtree");
+                inline_free_symbol_map(&clone_state);
+                return 0;
+            }
             add_ast(instr_list, cloned_instr);
         }
 
@@ -2321,14 +2477,23 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
     if (!assign_node || !call_node) return 0;
 
     lhs = assign_node->child;
-    if (!lhs || lhs->node_type != VAR_TARGET) return 0;
+    if (!lhs || lhs->node_type != VAR_TARGET) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "assignment inline requires a plain VAR_TARGET lhs");
+        return 0;
+    }
 
     memset(&return_plan, 0, sizeof(return_plan));
     return_plan.return_target = lhs;
 
     proc_def = proc_sym ? proc_sym->ast_template : NULL;
-    if (!proc_def || !inline_analyse_return_shape(proc_def, &return_shape)) return 0;
-    if (!return_shape.final_is_return || return_shape.return_count == 0) return 0;
+    if (!proc_def || !inline_analyse_return_shape(proc_def, &return_shape)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to analyse callee return shape for assignment inline");
+        return 0;
+    }
+    if (!return_shape.final_is_return || return_shape.return_count == 0) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "assignment inline requires a final value RETURN");
+        return 0;
+    }
     if ((assign_node->parent && assign_node->parent->node_type == REPEAT) || lhs->child) {
         block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
         if (!block_expr) return 0;
@@ -2358,36 +2523,57 @@ static int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_n
     InlineReturnPlan return_plan;
 
     proc_def = proc_sym ? proc_sym->ast_template : NULL;
-    if (!proc_def || !inline_analyse_return_shape(proc_def, &return_shape)) return 0;
+    if (!proc_def || !inline_analyse_return_shape(proc_def, &return_shape)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to analyse callee return shape for call inline");
+        return 0;
+    }
     if (return_shape.return_count == 0) {
-        if (proc_sym->type != TP_VOID) return 0;
+        if (proc_sym->type != TP_VOID) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "value-returning callee has no RETURN");
+            return 0;
+        }
     } else if (!return_shape.final_is_return) {
-        if (proc_sym->type != TP_VOID) return 0;
+        if (proc_sym->type != TP_VOID) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "call inline requires a final RETURN for value-producing callees");
+            return 0;
+        }
     }
 
     if ((proc_sym->type == TP_VOID && (return_shape.return_count != 1 || !return_shape.final_is_return)) ||
         (proc_sym->type != TP_VOID && return_shape.return_count != 1)) {
         block = ast_f(context, INSTRUCTIONS, call_node->token);
-        if (!block) return 0;
+        if (!block) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated sink block");
+            return 0;
+        }
         ast_mark_compiler_generated_block(block);
         block->association = proc_def;
         block->value_type = TP_VOID;
         block->target_type = TP_VOID;
 
         block_scope = scp_f(context, call_stmt->scope, block, NULL, SCOPE_LOCAL);
-        if (!block_scope) return 0;
+        if (!block_scope) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "failed to create sink block scope");
+            return 0;
+        }
 
         block_expr = inline_build_block_expr(context, call_node, proc_sym, block_scope, 1);
         if (!block_expr) return 0;
 
         sink_assign = ast_f(context, ASSIGN, call_node->token);
-        if (!sink_assign) return 0;
+        if (!sink_assign) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "failed to create sink assignment");
+            return 0;
+        }
         sink_assign->scope = block_scope;
         sink_assign->value_type = block_expr->value_type;
         sink_assign->target_type = block_expr->target_type;
 
         sink_lhs = inline_create_sink_target(context, block_scope, call_node, block_expr);
-        if (!sink_lhs) return 0;
+        if (!sink_lhs) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "failed to create unused return sink target");
+            return 0;
+        }
 
         add_ast(sink_assign, sink_lhs);
         add_ast(sink_assign, block_expr);
@@ -2412,9 +2598,18 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
     if (!context || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
 
     expr_context = inline_classify_expr_context(call_node);
-    if (expr_context == INLINE_EXPR_CONTEXT_NONE) return 0;
-    if (!inline_analyse_return_shape(proc_sym->ast_template, &return_shape)) return 0;
-    if (!return_shape.final_is_return || return_shape.return_count == 0) return 0;
+    if (expr_context == INLINE_EXPR_CONTEXT_NONE) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "expression context belongs to a dedicated statement rewrite");
+        return 0;
+    }
+    if (!inline_analyse_return_shape(proc_sym->ast_template, &return_shape)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to analyse callee return shape for expression inline");
+        return 0;
+    }
+    if (!return_shape.final_is_return || return_shape.return_count == 0) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "expression inline requires a final value RETURN");
+        return 0;
+    }
 
     block_expr = inline_build_block_expr(context, call_node, proc_sym, call_node->scope, 0);
     if (!block_expr) return 0;
@@ -2510,7 +2705,7 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
 
 /* Walker to identify inlinable procedures */
 walker_result identify_inlinable_walker(walker_direction direction, ASTNode *node, void *payload) {
-    (void)payload;
+    Context *context = (Context *)payload;
 
     if (direction == in) return result_normal;
 
@@ -2534,8 +2729,17 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         if (args) {
             arg = args->child;
             while (arg) {
+                if (arg->is_opt_arg) {
+                    inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                                     "reject: optional formals are not yet in the robust fail-closed slice");
+                    sym->is_inlinable = 0;
+                    return result_normal;
+                }
+
                 if (arg->is_varg) {
                     if (arg->sibling) {
+                        inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                                         "reject: vararg formal is followed by additional formals");
                         sym->is_inlinable = 0;
                         return result_normal;
                     }
@@ -2547,25 +2751,50 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
                 }
 
                 formal_symbol = formal_target && formal_target->symbolNode ? formal_target->symbolNode->symbol : NULL;
+                if (formal_target && (formal_target->value_dims > 0 || formal_target->target_dims > 0)) {
+                    inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                                     "reject: array-typed formals are not yet in the robust fail-closed slice");
+                    sym->is_inlinable = 0;
+                    return result_normal;
+                }
+                if (formal_symbol && formal_symbol->value_dims > 0) {
+                    inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                                     "reject: array-typed formal symbols are not yet in the robust fail-closed slice");
+                    sym->is_inlinable = 0;
+                    return result_normal;
+                }
                 arg = arg->sibling;
             }
         }
 
+        if (sym->value_dims > 0) {
+            inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                             "reject: array-valued returns are not yet in the robust fail-closed slice");
+            sym->is_inlinable = 0;
+            return result_normal;
+        }
+
         instrs = ast_chld(node, INSTRUCTIONS, 0);
         if (!instrs) {
+            inline_debug_log(context, node, sym, "DEBUG_INLINE", "reject: procedure has no instruction list");
             sym->is_inlinable = 0;
             return result_normal;
         }
 
         if (!inline_analyse_return_shape(node, &return_shape)) {
+            inline_debug_log(context, node, sym, "DEBUG_INLINE", "reject: failed to analyse return shape");
             sym->is_inlinable = 0;
             return result_normal;
         }
         if (!return_shape.final_is_return && sym->type != TP_VOID) {
+            inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                             "reject: value-returning procedure does not end in RETURN");
             sym->is_inlinable = 0;
             return result_normal;
         }
         if (sym->type != TP_VOID && return_shape.return_count == 0) {
+            inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                             "reject: value-returning procedure has no RETURN");
             sym->is_inlinable = 0;
             return result_normal;
         }
@@ -2578,10 +2807,23 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         if (check.node_count > INLINE_MAX_NODES ||
             check.return_count != return_shape.return_count ||
             check.has_unsupported_varg_access) {
+            inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                             "reject: nodes=%d returns=%d final_return=%d unsupported_varg=%d cutoff=%d",
+                             check.node_count,
+                             check.return_count,
+                             return_shape.final_is_return,
+                             check.has_unsupported_varg_access,
+                             INLINE_MAX_NODES);
             sym->is_inlinable = 0;
             return result_normal;
         }
 
+        inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                         "accept: nodes=%d returns=%d final_return=%d cutoff=%d",
+                         check.node_count,
+                         check.return_count,
+                         return_shape.final_is_return,
+                         INLINE_MAX_NODES);
         sym->is_inlinable = 1;
         sym->ast_template = node;
     }

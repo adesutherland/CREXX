@@ -48,7 +48,3 @@ endif()
 # Enable testing
 # -------------------------------------------------------------------------------------------
 enable_testing()
-add_test(NAME ${test_rexx}
-        COMMAND $<TARGET_FILE:rxvm> ${test_rexx} rx_${plugin_name} ${CMAKE_BINARY_DIR}/bin/library
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )

@@ -3,6 +3,8 @@ project(sysinfo_plugin C)
 
 set(CMAKE_C_STANDARD 90)
 
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+
 # Including RXPA Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
@@ -12,29 +14,17 @@ add_dynamic_plugin_target(_sysinfo sysinfo.c)
 # Create the static link module
 add_static_plugin_target(_sysinfo sysinfo.c)
 
-# Build Test Rexx
-add_custom_command(
-        COMMAND $<TARGET_FILE:rxc>
-            -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
-            -o sysinfo_test \"${CMAKE_CURRENT_SOURCE_DIR}/sysinfo_test\" &&
-        $<TARGET_FILE:rxas> sysinfo_test
-
-        DEPENDS rxas rxc library _sysinfo ${CMAKE_CURRENT_SOURCE_DIR}/sysinfo_test.rexx
-        OUTPUT sysinfo_test.rxbin
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-add_custom_target(sysinfo_test ALL
-        DEPENDS sysinfo_test.rxbin
+add_custom_target(sysinfo_test ALL)
+crexx_add_rexx_opt_matrix(
+        NAME sysinfo_test
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/sysinfo_test.rexx
+        TARGET_GROUP sysinfo_test
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS library _sysinfo
+        RUNTIME_ARGS rx_sysinfo ${CMAKE_BINARY_DIR}/bin/library
 )
 
-# Enable testing functionality
 enable_testing()
-
-# Basic test to run sysinfo_test.rxbin with the sysinfo plugin
-add_test(NAME sysinfo_test
-        COMMAND $<TARGET_FILE:rxvm> sysinfo_test rx_sysinfo ${CMAKE_BINARY_DIR}/bin/library
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
 
 # add_custom_target(sysinfocopy ALL DEPENDS rx_sysinfo_static.a)
 

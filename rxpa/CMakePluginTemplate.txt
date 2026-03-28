@@ -1,9 +1,6 @@
-# In a common cmake file (e.g., rxpa/PluginFunctionTemplate.cmake)
 function(plugin_template plugin_name test_rexx use_precomp)
+  include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
   set(src "${plugin_name}.c")
-
-
-set(rx_include "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}\"")
 
 # Create dynamic plugin module
   add_dynamic_plugin_target(_${plugin_name} ${src})
@@ -40,17 +37,13 @@ set(rx_include "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}\"")
 # ---------------------------------------------------------------------------------------
 # Compile and ASM
 # ---------------------------------------------------------------------------------------
-    add_custom_command(
-        COMMAND $<TARGET_FILE:rxc>
-            -i "${rx_include}"
-            -o ${test_rexx} "${TEST_REXX_INPUT}" &&
-            $<TARGET_FILE:rxas> ${test_rexx}
-        DEPENDS rxas rxc library _${plugin_name} "${TEST_REXX_INPUT}"
-        OUTPUT ${test_rexx}.rxbin
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-
-    add_custom_target(${test_rexx} ALL
-        DEPENDS ${test_rexx}.rxbin
+    add_custom_target(${test_rexx} ALL)
+    crexx_add_rexx_opt_matrix(
+            NAME ${test_rexx}
+            SOURCE "${TEST_REXX_INPUT}"
+            TARGET_GROUP ${test_rexx}
+            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+            DEPENDS library _${plugin_name}
+            RUNTIME_ARGS rx_${plugin_name} ${CMAKE_BINARY_DIR}/bin/library
     )
 endfunction()

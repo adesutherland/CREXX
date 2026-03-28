@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_return_assign.rexx
- * BUILT                  : 2026-03-27 15:11:45
+ * BUILT                  : 2026-03-28 11:02:44
  */
 
 .srcfile="inline_test_array_return_assign.rexx"
 .globals=0
 
-main() .locals=6
+main() .locals=5
    .meta "inline_test_array_return_assign.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -24,49 +24,36 @@ main() .locals=6
    .src 4:3="say \"Starting array return assign inline test...\""
    say "Starting array return assign inline test..."
    .src 5:3="values = buildArray(\"red\", \"blue\")"
-   load r3,2
-   load r4,"red"
-   load r5,"blue"
+   load r2,2
+   load r3,"red"
+   load r4,"blue"
+   settp r3,3
    settp r4,3
-   settp r5,3
-   call r1,buildArray(),r3
+   call r1,buildArray(),r2
    .src 6:3="say values[1] || \":\" || values[2"
    minattrs r1,1
-   linkattr1 r5,r1,1
-   concat r4,r5,":"
-   unlink r5
+   linkattr1 r4,r1,1
+   concat r3,r4,":"
+   unlink r4
    minattrs r1,2
-   linkattr1 r3,r1,2
-   concat r4,r4,r3
-   unlink r3
-   say r4
+   linkattr1 r2,r1,2
+   concat r3,r3,r2
+   unlink r2
+   say r3
    .src 7:3="more = buildArray(\"green\", \"gold\")"
-   load r3,2
-   load r4,"green"
-   load r5,"gold"
+   load r2,2
+   load r3,"green"
+   load r4,"gold"
+   settp r3,3
    settp r4,3
-   settp r5,3
-   call r0,buildArray(),r3
+   call r0,buildArray(),r2
    .src 8:3="say renderArray(more)"
-   .src 8:7="renderArray"
-   .src 20:7="value"
-   copy r2,r0
-   .src 20:7="value"
-   acopy r2,r0
-   .src 21:3="return value[1] || \":\" || value[2"
-   minattrs r2,1
-   linkattr1 r5,r2,1
-   concat r4,r5,":"
-   unlink r5
-   minattrs r2,2
-   linkattr1 r3,r2,2
-   concat r4,r4,r3
-   unlink r3
-   scopy r5,r4
-   acopy r5,r4
-   br l84bexprend
-l84bexprend:
-   say r5
+   load r3,1
+   settp r0,1
+   swap r4,r0
+   call r2,renderArray(),r3
+   swap r0,r4
+   say r2
    .src 9:3="say \"Array return assign inline test finished.\""
    say "Array return assign inline test finished."
    .src 10:3="return 0"

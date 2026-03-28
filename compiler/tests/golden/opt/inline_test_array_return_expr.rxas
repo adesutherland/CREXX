@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_return_expr.rexx
- * BUILT                  : 2026-03-27 16:57:36
+ * BUILT                  : 2026-03-28 11:02:55
  */
 
 .srcfile="inline_test_array_return_expr.rexx"
 .globals=0
 
-main() .locals=7
+main() .locals=5
    .meta "inline_test_array_return_expr.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -18,59 +18,27 @@ main() .locals=7
    .src 4:3="say \"Starting array return expr inline test...\""
    say "Starting array return expr inline test..."
    .src 5:3="say renderArray(buildArray(\"red\", \"blue\"))"
-   .src 5:7="renderArray"
-   .src 5:19="buildArray"
-   load r4,2
-   load r5,"red"
-   load r6,"blue"
-   settp r5,3
-   settp r6,3
-   call r0,buildArray(),r4
-   .src 18:7="value"
-   copy r1,r0
-   .src 18:7="value"
-   acopy r1,r0
-   .src 19:3="return value[1] || \":\" || value[2"
-   minattrs r1,1
-   linkattr1 r6,r1,1
-   concat r5,r6,":"
-   unlink r6
-   minattrs r1,2
-   linkattr1 r4,r1,2
-   concat r5,r5,r4
-   unlink r4
-   scopy r6,r5
-   acopy r6,r5
-   br l73bexprend
-l73bexprend:
-   say r6
+   load r0,1
+   load r2,2
+   load r3,"red"
+   load r4,"blue"
+   settp r3,3
+   settp r4,3
+   call r1,buildArray(),r2
+   settp r1,1
+   call r4,renderArray(),r0
+   say r4
    .src 6:3="say renderArray(buildArray(\"green\", \"gold\"))"
-   .src 6:7="renderArray"
-   .src 6:19="buildArray"
-   load r4,2
-   load r5,"green"
-   load r6,"gold"
-   settp r5,3
-   settp r6,3
-   call r2,buildArray(),r4
-   .src 18:7="value"
-   copy r3,r2
-   .src 18:7="value"
-   acopy r3,r2
-   .src 19:3="return value[1] || \":\" || value[2"
-   minattrs r3,1
-   linkattr1 r6,r3,1
-   concat r5,r6,":"
-   unlink r6
-   minattrs r3,2
-   linkattr1 r4,r3,2
-   concat r5,r5,r4
-   unlink r4
-   scopy r6,r5
-   acopy r6,r5
-   br l97bexprend
-l97bexprend:
-   say r6
+   load r3,1
+   load r0,2
+   load r1,"green"
+   load r2,"gold"
+   settp r1,3
+   settp r2,3
+   call r4,buildArray(),r0
+   settp r4,1
+   call r2,renderArray(),r3
+   say r2
    .src 7:3="say \"Array return expr inline test finished.\""
    say "Array return expr inline test finished."
    .src 8:3="return 0"
