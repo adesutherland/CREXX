@@ -10,7 +10,9 @@ parseexit: class
     _error_token          = .int
     _error_message        = .string
     _status               = .string
+    _template_kindtab     = .string
     _template_texttab     = .string
+    _template             = .string
 
     /* ------------------------------------------------------------------------
      * Factory
@@ -71,28 +73,42 @@ pre_process: method = .string
   _status = "EMPTY"
   _template_kindtab = ""
   _template_texttab = ""
+  _template = ""
   start_of_template=.int
+  parmtype=""
   uplow=.string
+  wantlog=0
+  wanttrace=0
   do start_of_template=2 to tokens.0
      ti   = tokens[start_of_template]
      type = strip(ti.get_type())
      text = strip(ti.get_text())
      utext=upper(text)
      if type='identifier' & (utext='UPPER' | utext='LOWER')    then uplow=utext
+     else if type='identifier' & utext='LOG' then wantlog=1
+     else if type='identifier' & utext='TRACE' then wanttrace=1
      else if type='identifier' & (utext='VALUE' | utext='VAR') then parmtype=utext
-     else if type='identifier' & parmtype='VAR'       then leave  /* next token is with or parse string */
-     else if type='string_literal' & parmtype='VALUE' then leave
+     else if type='identifier' & (parmtype='VAR' | parmtype='VALUE') then leave  /* next token is with or parse string */
+     else if type='string_literal' & (parmtype='VAR' | parmtype='VALUE') then leave  /* next token is with or parse string */
    end
-
+   if parmtype="" then do
+      start_of_template=2
+      if uplow\="" then start_of_template=start_of_template+1
+      if wantlog>0 then start_of_template=start_of_template+1
+      if wanttrace>0 then start_of_template=start_of_template+1
+  end
+  if wanttrace>0 then wantlog=9
   out = 0
   toExpose = ""
+  _template=''
   pkind = .int[]
   ptext = .string[]
 
   i = start_of_template+1
+  call log 'Template start at 'i" parm type '"parmtype"' LOG="wantlog
   haswith=0
   prevkind = 0
-
+ call log "*********** New Parse *************"
   do while i <= tokens.0
      ti   = tokens[i]
      type = strip(ti.get_type())
@@ -102,11 +118,16 @@ pre_process: method = .string
         i = i + 1
         iterate
      end
-     call log "Tokenise "i" "out+1 " " type " " text
+     call log "Tokenise "i" "out+1 " " type " <"text">"
+     _template=_template||" "||text
  /* --------------------------------------------------------------
   * Absolute position (n)
   * --------------------------------------------------------------
   */
+     if type = "bracket" then do
+        i=i+1
+        iterate
+     end
      if type = "int_literal" then do
         out = out + 1
         pkind[out] = 3
@@ -137,8 +158,7 @@ pre_process: method = .string
               end
            end
         end
-        say "invalid operator usage in parse template:" text
-        return ""
+        call no_raise "syntax", "40.23", "invalid operator usage in parse template:" text
      end
  /* --------------------------------------------------------------
   * String literal (delimiter)
@@ -210,24 +230,29 @@ pre_process: method = .string
   * Unsupported token type
   * --------------------------------------------------------------
   */
-     say "unsupported parse token kind:" type
-     return ""
+     call no_raise "syntax", "40.23", "unsupported parse token kind: "type
   end
+  plan=compile_parse_plan(pkind, ptext, out)
 
+  _template_kindtab=""
+  _template_texttab=""
   do i = 1 to out
-    _template_kindtab = _template_kindtab' 'pkind[i]     /* no longer exposed */
-    _template_texttab = _template_texttab' 'ptext[i]
+     _template_kindtab = _template_kindtab' 'pkind[i]     /* no longer exposed */
+     if strip(ptext[i])='' then ptext[i]='?'
+     _template_texttab = _template_texttab' 'ptext[i]
   end
+  call log "kindTab '"_template_kindtab"'"
+  call log "TextTab '"_template_texttab"'"
+  call log "Pass plan '"plan"'"
 
   ti = start_of_template     /* token number of string/variable to parse  */
   tj = tokens[ti]
+  _replacement=''
   parse_string = strip(tj.get_text())
-
-  if uplow='UPPER'      then _replacement = "_source=upper("parse_string")"
-  else if uplow='LOWER' then _replacement = "_source=lower("parse_string")"
-  else _replacement = "_source="parse_string
-  _replacement = _replacement";"'_rs=parseexec(_source,"'_template_kindtab'","'_template_texttab'");'
-
+  if uplow='UPPER'      then _replacement = _replacement"; _source=upper("parse_string")"
+  else if uplow='LOWER' then _replacement = _replacement"; _source=lower("parse_string")"
+  else _replacement = _replacement"; _source="parse_string
+  _replacement = _replacement'; _rs=parseexec(_source,"'plan'","'_template'",'wantlog')'
   call log 'Pre-Process II  '_template_texttab
   call log 'Pre-Process IV  '_replacement
   call log "must be exposed " toExpose" templates "out
@@ -272,7 +297,7 @@ process: method = .string
      *   - the joined source text is retained in 'cmd' for diagnostics/future use
      * ----------------------------------------------------------------------
      */
-    allowed = "identifier int_literal string_literal operator comma other"
+    allowed = "identifier int_literal string_literal operator comma other bracket"
     cmd = ""
 
     do i = 1 to tokens.0
@@ -320,12 +345,20 @@ process: method = .string
         return setError("ERROR", 1, "PARSE state missing before process")
      end
 
-     call log 'Process II '_template_texttab
+     call log 'Process IIa '_template_kindtab
+     call log 'Process IIb '_template_texttab
 
      j = 0
-     do i = 2 to words(_template_texttab) by 2
+     wrds=words(_template_kindtab)
+     call log "KindTab "_template_kindtab
+     do i = 1 to wrds
+        if word(_template_kindtab,i)\="1" then iterate
          j = j + 1
-         _replacement = _replacement || word(_template_texttab,i) || '=_rs[' || j || '];'
+         var=word(_template_texttab,i)
+         call log 'Var is 'i' 'j' "'var'"'
+         if var='.' then iterate
+       #  else _replacement = _replacement || "_temp" || '=_rs[' || j || '];'
+          else _replacement = _replacement '; 'var|| '=_rs[' || j || '];'
      end
      call log "Process III code "_replacement
       return _status
@@ -349,6 +382,90 @@ process: method = .string
     get_node_id: method = .int
         return _node_id
 
+/* ----------------------------------------------------------------------
+ * compile_parse_plan
+ *
+ * Convert flat pkind[] / ptext[] token stream into a per-variable plan.
+ *
+ *
+ *
+ * Rules:
+ *   - controls before a variable become that variable's start control
+ *   - first control after a variable becomes that variable's end control
+ *   - any further controls belong to the next variable's start side
+ * ---------------------------------------------------------------------- */
+compile_parse_plan: procedure = .string
+  arg pkind=.int[], ptext=.string[], out=.int
+
+  v = 0
+  i = 1
+  pendingKind = 0
+  pendingText = ""
+
+  planStr = ""
+
+  do while i <= out
+
+     /* gather start-side controls until variable */
+     do while i <= out & pkind[i] \= 1
+        if pkind[i] = 2 | pkind[i] = 3 | pkind[i] = 4 | pkind[i] = 5 | pkind[i] = 6 then do
+           pendingKind = pkind[i]
+           pendingText = ptext[i]
+           i = i + 1
+        end
+        else call no_raise "syntax", "40.23","compile_parse_plan error: invalid token kind "pkind[i]" at "i
+     end
+
+     if i > out then leave
+
+     if pkind[i] \= 1 then call no_raise "syntax", "40.23","compile_parse_plan error: variable expected at token "i
+     v = v + 1
+
+     startKind = pendingKind
+     startText = pendingText
+     varName   = ptext[i]
+     endKind   = 0
+     endText   = "0"
+
+     call log "PLAN["v"] START=("startKind","startText") VAR="varName
+
+     pendingKind = 0
+     pendingText = ""
+
+     i = i + 1
+
+     /* first following control is end control */
+     if i <= out then do
+        if pkind[i] = 2 | pkind[i] = 3 | pkind[i] = 4 | pkind[i] = 5 | pkind[i] = 6 then do
+           endKind = pkind[i]
+           endText = ptext[i]
+           call log "PLAN["v"] END=("endKind","endText")"
+           i = i + 1
+        end
+     end
+
+     /* additional controls become pending start for next variable */
+     do while i <= out & pkind[i] \= 1
+        if pkind[i] = 2 | pkind[i] = 3 | pkind[i] = 4 | pkind[i] = 5 | pkind[i] = 6 then do
+           pendingKind = pkind[i]
+           pendingText = ptext[i]
+           call log "PENDING START=("pendingKind","pendingText") FROM TOKEN "i
+           i = i + 1
+        end
+        else leave
+     end
+
+     planStr = planStr ,
+             || startKind || "," ,
+             || length(startText) || ":" || startText || "," ,
+             || length(varName)   || ":" || varName   || "," ,
+             || endKind || "," ,
+             || length(endText)   || ":" || endText   || ";"
+  end
+
+  return planStr
+
+
 /* ============================================================================
  * Helper: setError
  * ----------------------------------------------------------------------------
@@ -367,6 +484,11 @@ setError: procedure = .string
     _error_message = error_message
 return _status
 
+No_raise: procedure
+  arg p0=.string, p1=.string, p2=.string
+  say "Error "p0 p1 p2
+exit 8
+
 /* ============================================================================
  * Helper: log
  * ----------------------------------------------------------------------------
@@ -382,5 +504,5 @@ return _status
 log: procedure = .int
     arg logtxt = .string
     /* say "EXIT LOG >" logtxt */
-   call lineout "c:\temp\pluginlog.txt", time() logtxt
+   ## call lineout "c:\temp\pluginlog.txt", time() logtxt
     return 0

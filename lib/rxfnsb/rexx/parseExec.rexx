@@ -2,311 +2,321 @@ options levelb
 
 namespace rxfnsb expose parseExec
 
-
+/*============================================================================= */
 /* ----------------------------------------------------------------------
- * parseexec
+ * parse_exec_plan
  *
- * Execute previously normalised PARSE template tokens against a source
- * string and generate replacement assignment statements.
+ * Execute compiled parse plan.
  *
- * Inputs:
- *   src             source string to be parsed
- *   token_type[]    normalised token classes
- *   token[]         normalised token payloads
+ * plan[] layout:
+ *   base = (v-1) * 5
+ *   plan[base+1] = startKind
+ *   plan[base+2] = startText
+ *   plan[base+3] = varName
+ *   plan[base+4] = endKind
+ *   plan[base+5] = endText
  *
- * Token classes:
- *   1  receiving variable name (identifier)
- *   2  quoted string / delimiter literal
- *   3  absolute position (plain integer)
- *   4  relative forward shift (+ integer)
- *   5  relative backward shift (- integer)
- *
- * Runtime model:
- *   The token stream is interpreted as:
- *
- *      boundary  target  next-boundary  ...
- *
- *   where:
- *      boundary      = absolute / relative / literal delimiter
- *      target        = receiving variable or "."
- *      next-boundary = determines where current target ends
- *
- * Semantics:
- *   - token[i]     = current boundary
- *   - token[i+1]   = current target variable (or ".")
- *   - token[i+2]   = next boundary used to determine end position
- *
- * The function does not assign variables directly. Instead it builds
- * an array of results per target variable.
- *
- *      a='foo'; b='bar';
- *
- * This can later be injected/executed by the caller.
- *
- * Notes:
- *   - "." acts as a drop target: the parsed value is ignored
- *   - if no next boundary exists, the target receives the remainder
- *   - if a literal delimiter is not found, the remainder is taken
- * ----------------------------------------------------------------------
- */
-parseexec: procedure=.string[]
-  arg src=.string, type=.string, tokens=.string
+ * plan[0] = number of variables
+ * ---------------------------------------------------------------------- */
+parseexec: procedure = .string[]
+  arg src=.string, splan=.string,template=.string,debug=0
 
-  parse_values=.string[]
-  token_type=.int[]
-  token=.string[]
-  wrds=words(type)
-  do i=1 to wrds
-     token_type[i]=word(type,i)
-  ##   say "type["i"]" token_type[i]
+  rs = .string[]
+  src_len = length(src)
+  cursor = 1
+  value=.string   /* define outside do loop */
+
+  plan=decode_plan(splan)
+  if debug>0 then do
+     call log "PARSE STRING  ='"src"'"
+     call log "                1---5----0----5----0----5----0----5----0----5----0"
+     call log "PARSE-TEMPLATE='"template"'"
+  end
+  if debug=9 then do
+      call log "PLAN STRING='"splan"'"
+     call dump_parse_plan plan
   end
 
-  wrds=words(tokens)
-  do i=1 to wrds
-     token[i]=word(tokens,i)
-  ##  say "token["i"]" token[i]
-  end
+  plan_count=.int
+  plan_count =plan[0] / 5
+  do v = 1 to plan_count
+     base = (v - 1) * 5
 
-  tkindx=0
-  srclen = length(src)
-  scan_pos = 1
-  i = 1
-  vi = 0
-  call log "PARSE STRING='"src"'"
-  call log "              1---5----0----5----0----5----0----5----0----5----0"
+     startKind = plan[base + 1]
+     startText = plan[base + 2]
+     varName   = plan[base + 3]
+     endKind   = plan[base + 4]
+     endText   = plan[base + 5]
 
-  do while i <= token_type[0]
-     t = token_type[i]
-     /* --------------------------------------------------------------
-      * Debug: current triple = boundary, target, next boundary
-      * --------------------------------------------------------------
-      */
-     call log "DBG i="i " boundary=["token[i]"] type="token_type[i] " var=["token[i+1]"]"
-     if i + 2 <= token_type[0] then call log "DBG next boundary=["token[i+2]"] type="token_type[i+2]
-     else call log "DBG next boundary=<END>"
-     /* --------------------------------------------------------------
-      * Current token must be a valid boundary
-      * --------------------------------------------------------------
-      */
-     if t \= 3 & t \= 2 & t \= 4 & t \= 5 & t \= 6 then do
-        say "PARSE V1 error: boundary expected at token" i "got type" t "text=<"token[i]">"
-        return parse_values
-     end
-     /* --------------------------------------------------------------
-      * Boundary must be followed by a receiving target
-      * --------------------------------------------------------------
-      */
-     if i + 1 > token_type[0] then do
-        say "PARSE V1 error: variable expected after boundary at token" i
-        return parse_values
-     end
-     if token_type[i + 1] \= 1 then do
-        say "PARSE V1 error: variable expected after boundary at token" i "got type" token_type[i + 1]
-        return parse_values
-     end
-     tkindx=parse_values[0]+1
-     varname = token[i + 1]
-     vi=vi+1
-     call log "*VARIABLE["vi"]="varname" TEMPLATE TOKEN="i+1
-     /* --------------------------------------------------------------
-      * Resolve current boundary into absolute start position
-      *
-      * For:
-      *   3  -> absolute position
-      *   2  -> literal found in source
-      *   4  -> relative +n
-      *   5  -> relative -n
-      *   6  -> implicit (next available position)
-      * --------------------------------------------------------------
-      */
-      call log "DBG current scan_pos="scan_pos " current type="t
-      curr_start = resolveCurrentStartV1(t, token[i], scan_pos, src, srclen)
-      call log "DBG resolved startpos="curr_start
-     /* --------------------------------------------------------------
-      * Invalid / unresolved start position:
-      * skip current target and continue with next boundary pair
-      * --------------------------------------------------------------
-      */
-     if curr_start < 1 then do
-        i = i + 2
+     if debug=9 then call log "PLAN-VAR["v"] START=("startKind","startText") VAR="varName " END=("endKind","endText") CURSOR="cursor
+
+     field_start = resolve_plan_start(src, src_len, cursor, startKind, startText, v)
+     if debug=9 then call log "PLAN-VAR["v"] resolved start="field_start
+
+     if field_start < 1 then do
+        rs[v] = ""
         iterate
      end
-     /* --------------------------------------------------------------
-      * No following boundary:
-      * target receives the remainder of the source string
-      * --------------------------------------------------------------
-      */
-     if i + 2 > token_type[0] then do
-        value = substr(src, curr_start)
-        call log ">ASSIGN "varname"='"value"' FROM="curr_start" LENGTH="length(value)" RESULT-ENTRY="tkindx" >4"
-        if varname = '.' then nop
-        else parse_values[tkindx] = strip(value)
-        scan_pos = srclen + 1
-        leave
-     end
-     nextt = token_type[i + 2]
-     nextx = strip(token[i + 2])
-     call log "DBG ADDRESS NEXT TOKEN="nextx" TYPE="nextt
-     next_start = .int
-     /* --------------------------------------------------------------
-      * Resolve next boundary if it is numeric / positional
-      *
-      *   type 3 -> next absolute position
-      *   type 4 -> current start + offset
-      *   type 5 -> current start - offset
-      *   type 6 -> start not available, must be calculated
-      *
-      * If successful, current target ends just before next_start.
-      * --------------------------------------------------------------
-      */
-     if nextt = 3 then next_start = nextx
-     else if nextt = 4 then next_start = curr_start + nextx
-     else if nextt = 5 then do
-        next_start = curr_start - nextx
-        if next_start < 1 then next_start = 1
-     end
-     else next_start = -1
-     /* --------------------------------------------------------------
-      * Numeric / positional next boundary:
-      * current field runs from curr_start to next_start - 1
-      * --------------------------------------------------------------
-      */
-     if next_start > 0 then do
-        endpos = next_start - 1
-        if endpos < curr_start then value = ""
-        else value = substr(src, curr_start, endpos - curr_start + 1)
-        call log ">ASSIGN "varname"='"value"' FROM="curr_start" TO="endpos" LENGTH="length(value)" RESULT-ENTRY="tkindx" >1"
-        if varname = '.' then nop
-        else parse_values[tkindx] = strip(value)
-        scan_pos = next_start
-        i = i + 2
+
+     /* no end control -> remainder */
+     if endKind = 0 then do
+        value = substr(src, field_start)
+        if debug=9 then call log ">PLAN ASSIGN 1 "varName"='"value"' FROM="field_start" MODE=REST ENTRY="v
+
+        rs[v] = value
+        cursor = src_len + 1
         iterate
      end
-     /* --------------------------------------------------------------
-      * Literal next boundary:
-      * search for literal starting at curr_start
-      *
-      * If found:
-      *   target receives text up to, but not including, the literal
-      *
-      * If not found:
-      *   target receives the remainder
-      * --------------------------------------------------------------
-      */
-     if nextt = 2 then do
-        p = pos(nextx, src, curr_start)
-        if p = 0 then do
-           value = substr(src, curr_start)
-           call log ">ASSIGN "varname"='"value"' FROM="curr_start" LENGTH="length(value)" RESULT-ENTRY="tkindx" >2"
-           if varname = '.' then nop
-           else parse_values[tkindx] = strip(value)
-           scan_pos = srclen + 1
-           leave
+
+     /* numeric end control */
+     if endKind = 3 | endKind = 4 | endKind = 5 then do
+        next_cursor = resolve_plan_end(src_len, cursor, field_start, endKind, endText)
+        if debug=9 then call log "PLAN-VAR["v"] numeric end cursor="next_cursor
+
+        if next_cursor <= field_start then do
+           value = take_raw_word(src, field_start, src_len, cursor)
+           if debug=9 then call log ">PLAN ASSIGN 2 "varName"='"value"' FROM="field_start" MODE=RAWWORD ENTRY="v
         end
         else do
-           if p <= curr_start then value = ""
-           else value = substr(src, curr_start, p - curr_start)
-           call log ">ASSIGN "varname"='"value"' FROM="curr_start" TO="p" LENGTH="length(value)" RESULT-ENTRY="tkindx" >3"
-           if varname = '.' then nop
-           else parse_values[tkindx] = strip(value)
-           scan_pos = p + length(nextx)
-           i = i + 2
-           iterate
+           value = substr(src, field_start, next_cursor - field_start)
+           cursor = next_cursor
+           if debug=9 then call log ">PLAN ASSIGN 3 "varName"='"value"' FROM="field_start" TO="next_cursor-1" MODE=SPAN ENTRY="v
         end
+        rs[v] = value
+        iterate
      end
 
-  /* implicit next field boundary */
-    if nextt = 6 then do
-       rest  = substr(src, curr_start)
-       value = word(rest, 1)
-       call log ">ASSIGN "varname"='"value"' FROM="curr_start" LENGTH="length(value)" RESULT-ENTRY="tkindx" >5"
-       if varname = '.' then nop
-       else parse_values[tkindx] = strip(value)
-       scan_pos = curr_start + length(value)      /* move to char after extracted word */
-       scan_pos=scan_pos-1
-       assembler FNDNBLNK scan_pos,src,scan_pos
-       scan_pos=scan_pos+1
-       i = i + 2
-       call log "DBG next scan position "scan_pos" next token "i
+     /* literal end control */
+     if endKind = 2 then do
+        p = pos(endText, src, field_start)
+        if p = 0 then do
+           value = substr(src, field_start)
+           cursor = src_len + 1
+           if debug=9 then call log ">PLAN ASSIGN 4 "varName"='"value"' FROM="field_start" MODE=LIT-REST ENTRY="v
+        end
+        else do
+           if p <= field_start then value = ""
+           else value = substr(src, field_start, p - field_start)
+
+           cursor = p + length(endText)
+           if debug=9 then call log ">PLAN ASSIGN 5 "varName"='"value"' FROM="field_start" TO="p-1" MODE=LIT ENTRY="v
+        end
+        rs[v] = value
+        iterate
+     end
+
+     /* implicit end control */
+    if endKind = 6 then do
+       p1 = field_start
+
+       /* skip leading blanks */
+       do while p1 <= src_len
+          ch = substr(src, p1, 1)
+          if ch \= ' ' then leave
+          p1 = p1 + 1
+       end
+
+       if p1 > src_len then do
+          value = ""
+          cursor = src_len + 1
+       end
+       else do
+          p2 = p1
+          do while p2 <= src_len
+             ch = substr(src, p2, 1)
+             if ch = ' ' then leave
+             p2 = p2 + 1
+          end
+
+          value = substr(src, p1, p2 - p1)
+
+          cursor = p2
+          do while cursor <= src_len
+             ch = substr(src, cursor, 1)
+             if ch \= ' ' then leave
+             cursor = cursor + 1
+          end
+       end
+       if debug=9 then call log ">PLAN ASSIGN 6 "varName"='"value"' FROM="field_start" MODE=IMPLICIT ENTRY="v
+       if varName \= '.' then rs[v] = value
        iterate
     end
-    say "PARSE V1 error: invalid next boundary type at token" i + 2
-    return parse_values
-  end
-return parse_values
 
-/* ----------------------------------------------------------------------
- * resolveCurrentStartV1
- *
- * Resolve current boundary into absolute start position.
- *
- * Inputs:
- *   t         token type
- *   tok       token payload (token[i])
- *   scan_pos  current scan position
- *   src       source string
- *   srclen    length of source
- *
- * Output:
- *   curr_start (1-based)
- * ---------------------------------------------------------------------- */
-resolveCurrentStartV1: procedure = .int
-  arg t=.int, tok=.string, scan_pos=.int, src=.string, srclen=.int
-  curr_start = -1
-  if t = 6 then do
-     scan_pos=scan_pos-1
-     assembler FNDNBLNK curr_start,src,scan_pos
-     curr_start=curr_start+1
-     return curr_start
+     say "parse_exec_plan error: invalid end kind" endKind "for variable" varName
+     return rs
   end
-  if t = 4 then do
-     curr_start = scan_pos + tok
-     if curr_start < 1 then return 1
-     if curr_start > srclen + 1 then return srclen + 1
-     return curr_start
+return rs
+
+/* --------------------------------------------------------------
+ * rebuild plan[] from flat string
+ * -------------------------------------------------------------- */
+decode_plan: procedure = .string[]
+  arg planStr=.string
+
+  plan = .string[]
+  posn = 1
+  v = 0
+
+  do while posn <= length(planStr)
+
+     if substr(planStr, posn, 1) = ";" then do
+        posn = posn + 1
+        iterate
+     end
+
+     v = v + 1
+     base = (v - 1) * 5
+     plan[base + 1]=read_number(planStr, posn)
+     call expect_char   planStr, posn, ","
+     plan[base + 2]=read_lp_field(planStr, posn)
+     call expect_char   planStr, posn, ","
+     plan[base + 3]=read_lp_field(planStr, posn)
+     call expect_char   planStr, posn, ","
+     plan[base + 4]=read_number(planStr, posn)
+     call expect_char   planStr, posn, ","
+     plan[base + 5] =read_lp_field(planStr, posn)
+     call expect_char   planStr, posn, ";"
   end
-  if t = 5 then do
-     curr_start = scan_pos - tok
-     if curr_start < 1 then return 1
-     if curr_start > srclen + 1 then return srclen + 1
-     return curr_start
+return plan
+
+read_number: procedure=.string
+  arg s=.string, expose posn=.int
+  n = ""
+  do while posn <= length(s)
+     ch = substr(s, posn, 1)
+     if ch < "0" | ch > "9" then leave
+     n = n || ch
+     posn = posn + 1
   end
-  /* fallback: absolute / literal */
-return resolveStartV1(src, srclen, tok, t)
 
-    /* ----------------------------------------------------------------------
-     * resolveStartV1
-     *
-     * Convert current boundary token into a 1-based start position.
-     *
-     * TK_ABS:
-     *   token text is numeric column number
-     *
-     * TK_LIT:
-     *   token text is delimiter; start is first char after the literal
-     * ---------------------------------------------------------------------- */
-    resolveStartV1: procedure=.int
-      arg src=.string, srclen=.int, tok=.string, toktype=.int
+return n
 
-   tok = strip(tok)
-   p=.int
-   call log "RESOLVE tok=["tok"] type="toktype " srclen="srclen
-   if toktype = 3 then do
-      p = tok
-      call log "RESOLVE ABSOLUT OFFSET="p
-      if p < 1 then return 1
-      if p > srclen + 1 then return srclen + 1
-      return p
-   end
+read_lp_field: procedure=.string
+  arg s=.string, expose posn=.int
+  lenstr = ""
+  do while posn <= length(s)
+     ch = substr(s, posn, 1)
+     if ch = ":" then leave
+     lenstr = lenstr || ch
+     posn = posn + 1
+  end
+  posn = posn + 1   /* skip ':' */
+  fldlen = lenstr + 0
+  if fldlen = 0 then out = ""
+  else out = substr(s, posn, fldlen)
+  posn = posn + fldlen
+return out
 
-   if toktype = 2 then do
-      p = pos(tok, src)
-      call log "RESOLVE LIT p="p
-      if p = 0 then return -1
-      return p + length(tok)
-   end
-   return -1
+expect_char: procedure
+  arg s=.string, expose posn=.int, wanted=.string
+  ch = substr(s, posn, 1)
+  if ch \= wanted then do
+   ##  call raise "syntax", "40.23", "decode_plan_string error: expected '"wanted"' at position" posn "got '"ch"'"
+  end
+  posn = posn + 1
+return
+
+resolve_plan_start: procedure = .int
+  arg src=.string, src_len=.int, cursor=.int, kind=.int, text=.string, v=.int
+  p = .int
+  if kind = 0 then return cursor
+  if kind = 3 then do
+     p = text
+     if p < 1 then return 1
+     if p > src_len + 1 then return src_len + 1
+     return p
+  end
+  if kind = 4 then do
+     p = cursor + text
+     if p < 1 then return 1
+     if p > src_len + 1 then return src_len + 1
+     return p
+  end
+  if kind = 5 then do
+     p = cursor - text
+     if p < 1 then return 1
+     if p > src_len + 1 then return src_len + 1
+     return p
+  end
+  if kind = 6 then do
+     p = cursor
+     do while p <= src_len
+        if substr(src, p, 1) \= ' ' then leave
+        p = p + 1
+     end
+     return p
+  end
+
+  if kind = 2 then do
+     /* literal start only searches in first variable, otherwise start is current cursor */
+     if v = 1 then do
+        p = pos(text, src, cursor)
+        if p = 0 then return -1
+        return p + length(text)
+     end
+     return cursor
+  end
+
+return -1
+
+resolve_plan_end: procedure = .int
+  arg src_len=.int, cursor=.int, field_start=.int, kind=.int, text=.string
+
+  p = .int
+
+  if kind = 3 then p = text
+  else if kind = 4 then p = field_start + text
+  else if kind = 5 then p = field_start - text
+  else return -1
+
+  if p < 1 then p = 1
+  if p > src_len + 1 then p = src_len + 1
+return p
+
+take_raw_word: procedure = .string
+  arg src=.string, field_start=.int, src_len=.int, cursor=.int
+
+  p1 = field_start
+  p2 = p1
+
+  /* scan to first nonblank, but keep leading blanks */
+  do while p2 <= src_len
+     if substr(src, p2, 1) \= ' ' then leave
+     p2 = p2 + 1
+  end
+
+  if p2 > src_len then do
+     cursor = src_len + 1
+     return substr(src, p1)
+  end
+
+  /* scan word */
+  p3 = p2
+  do while p3 <= src_len
+     if substr(src, p3, 1) = ' ' then leave
+     p3 = p3 + 1
+  end
+
+  /* also include trailing blanks */
+  p4 = p3
+  do while p4 <= src_len
+     if substr(src, p4, 1) \= ' ' then leave
+     p4 = p4 + 1
+  end
+
+  cursor = p4
+return substr(src, p1, p4 - p1)
+
+dump_parse_plan: procedure
+  arg plan=.string[]
+  plan_count =plan[0] / 5
+  do v = 1 to plan_count
+     base = (v - 1) * 5
+     call log "PLAN["v"] START=("plan[base+1]","plan[base+2]") VAR="plan[base+3] " END=("plan[base+4]","plan[base+5]")"
+  end
+return
+
 log: procedure
     arg logtxt = .string
- ##   say time()" "logtxt
+    say ">DBG "logtxt
 return
