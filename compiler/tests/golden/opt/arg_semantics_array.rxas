@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_array.rexx
- * BUILT                  : 2026-03-28 11:02:44
+ * BUILT                  : 2026-03-28 11:56:22
  */
 
 .srcfile="arg_semantics_array.rexx"
 .globals=0
 
-main() .locals=5
+main() .locals=13
    .meta "arg_semantics_array.main"="b" ".int" main() "" ""
    .src 4:1="main: procedure = .int"
    setnumdgts 18
@@ -20,67 +20,182 @@ main() .locals=5
    null r0
    .src 6:3="arr[1] = \"red\""
    minattrs r0,1
-   linkattr1 r1,r0,1
-   load r2,"red"
-   scopy r1,r2
-   unlink r1
+   linkattr1 r8,r0,1
+   load r9,"red"
+   scopy r8,r9
+   unlink r8
    .src 7:3="arr[2] = \"blue\""
    minattrs r0,2
-   linkattr1 r2,r0,2
-   load r1,"blue"
-   scopy r2,r1
-   unlink r2
+   linkattr1 r9,r0,2
+   load r8,"blue"
+   scopy r9,r8
+   unlink r9
    .src 9:3="say \"array-read=\" || readArray(arr)"
-   load r1,1
-   settp r0,1
-   swap r2,r0
-   call r3,readArray(),r1
-   swap r0,r2
-   concat r3,"array-read=",r3
-   say r3
+   .src 9:24="readArray"
+   .src 18:7="value"
+   copy r1,r0
+   .src 18:7="value"
+   acopy r1,r0
+   .src 19:3="return value[1] || \":\" || value[2"
+   minattrs r1,1
+   linkattr1 r9,r1,1
+   concat r8,r9,":"
+   unlink r9
+   minattrs r1,2
+   linkattr1 r10,r1,2
+   concat r8,r8,r10
+   unlink r10
+   scopy r10,r8
+   acopy r10,r8
+   br l169bexprend
+l169bexprend:
+   concat r10,"array-read=",r10
+   say r10
    .src 10:3="say \"array-mut=\" || mutateArrayLocal(arr)"
-   load r2,1
-   settp r0,1
-   swap r3,r0
-   call r1,mutateArrayLocal(),r2
-   swap r0,r3
-   concat r3,"array-mut=",r1
-   say r3
+   .src 10:23="mutateArrayLocal"
+   .src 22:7="value"
+   copy r2,r0
+   .src 22:7="value"
+   acopy r2,r0
+   .src 23:3="value[1] = upper(value[1"
+   minattrs r2,1
+   linkattr1 r10,r2,1
+   load r8,1
+   minattrs r2,1
+   linkattr1 r11,r2,1
+   swap r9,r11
+   call r12,rxfnsb.upper(),r8
+   swap r11,r9
+   unlink r11
+   scopy r10,r12
+   unlink r10
+   .src 24:3="value[2] = \"local\""
+   minattrs r2,2
+   linkattr1 r12,r2,2
+   load r11,"local"
+   scopy r12,r11
+   unlink r12
+   .src 25:3="return value[1] || \":\" || value[2"
+   minattrs r2,1
+   linkattr1 r12,r2,1
+   concat r11,r12,":"
+   unlink r12
+   minattrs r2,2
+   linkattr1 r10,r2,2
+   concat r11,r11,r10
+   unlink r10
+   scopy r12,r11
+   acopy r12,r11
+   br l188bexprend
+l188bexprend:
+   concat r12,"array-mut=",r12
+   say r12
    .src 11:3="say \"array-after=\" || arr[1] || \":\" || arr[2"
    minattrs r0,1
-   linkattr1 r3,r0,1
-   concat r2,"array-after=",r3
-   unlink r3
-   concat r2,r2,":"
+   linkattr1 r12,r0,1
+   concat r11,"array-after=",r12
+   unlink r12
+   concat r11,r11,":"
    minattrs r0,2
-   linkattr1 r1,r0,2
-   concat r2,r2,r1
-   unlink r1
-   say r2
+   linkattr1 r10,r0,2
+   concat r11,r11,r10
+   unlink r10
+   say r11
    .src 12:3="say \"array-temp=\" || mutateArrayLocal(makeArray"
-   load r2,1
-   load r1,0
-   call r3,makeArray(),r1
-   settp r3,1
-   call r1,mutateArrayLocal(),r2
-   concat r3,"array-temp=",r1
-   say r3
-   .src 13:3="call mutateArrayRef(arr)"
-   load r2,1
-   swap r3,r0
-   call r1,mutateArrayRef(),r2
-   swap r0,r3
+   .src 12:24="mutateArrayLocal"
+   .meta "arg_semantics_array.main.__inline_bind_217_0"="b" ".string[*]" r4
+   .src 12:41="makeArray"
+   null r4
+   .src 12:41="makeArray"
+   .src 12:41="makeArray"
+   .meta "arg_semantics_array.main.temp"="b" ".string[*]" r6
+   .src 34:3="temp = .string"
+   null r6
+   .src 35:3="temp[1] = \"temp\""
+   minattrs r6,1
+   linkattr1 r12,r6,1
+   load r11,"temp"
+   scopy r12,r11
+   unlink r12
+   .src 36:3="temp[2] = \"seed\""
+   minattrs r6,2
+   linkattr1 r12,r6,2
+   load r11,"seed"
+   scopy r12,r11
+   unlink r12
+   .src 37:3="return temp"
+   copy r12,r6
+   acopy r12,r6
+   br l241bexprend
+l241bexprend:
+   copy r4,r12
+   acopy r4,r12
+   .src 22:7="value"
+   copy r5,r4
+   .src 22:7="value"
+   acopy r5,r4
+   .src 23:3="value[1] = upper(value[1"
+   minattrs r5,1
+   linkattr1 r12,r5,1
+   load r10,1
+   minattrs r5,1
+   linkattr1 r9,r5,1
+   swap r11,r9
+   call r8,rxfnsb.upper(),r10
+   swap r9,r11
+   unlink r9
+   scopy r12,r8
+   unlink r12
+   .src 24:3="value[2] = \"local\""
+   minattrs r5,2
+   linkattr1 r12,r5,2
+   load r11,"local"
+   scopy r12,r11
+   unlink r12
+   .src 25:3="return value[1] || \":\" || value[2"
+   minattrs r5,1
+   linkattr1 r12,r5,1
+   concat r11,r12,":"
+   unlink r12
+   minattrs r5,2
+   linkattr1 r10,r5,2
+   concat r11,r11,r10
+   unlink r10
+   scopy r12,r11
+   acopy r12,r11
+   br l235bexprend
+l235bexprend:
+   concat r12,"array-temp=",r12
+   say r12
+   .src 29:3="value[1] = \"ref\""
+   minattrs r0,1
+   linkattr1 r12,r0,1
+   load r11,"ref"
+   scopy r12,r11
+   unlink r12
+   .src 30:3="value[2] = upper(value[2"
+   minattrs r0,2
+   linkattr1 r12,r0,2
+   load r10,1
+   minattrs r0,2
+   linkattr1 r9,r0,2
+   swap r11,r9
+   call r8,rxfnsb.upper(),r10
+   swap r9,r11
+   unlink r9
+   scopy r12,r8
+   unlink r12
    .src 14:3="say \"array-ref=\" || arr[1] || \":\" || arr[2"
    minattrs r0,1
-   linkattr1 r3,r0,1
-   concat r2,"array-ref=",r3
-   unlink r3
-   concat r2,r2,":"
+   linkattr1 r12,r0,1
+   concat r11,"array-ref=",r12
+   unlink r12
+   concat r11,r11,":"
    minattrs r0,2
-   linkattr1 r4,r0,2
-   concat r2,r2,r4
-   unlink r4
-   say r2
+   linkattr1 r10,r0,2
+   concat r11,r11,r10
+   unlink r10
+   say r11
    .src 15:3="return 0"
    ret 0
    .meta "arg_semantics_array.main.arr"

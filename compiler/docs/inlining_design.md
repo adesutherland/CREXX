@@ -66,11 +66,11 @@ More precisely:
 - For standalone call inlining, the enclosing statement must be `CALL func(...)`.
 - For expression inlining, the `FUNCTION` call must sit in an expression parent that can consume a `BLOCK_EXPR` result directly. In practice this is now the default for local plain procedures; dedicated statement rewrites still own standalone `CALL` statements and whole-RHS `ASSIGN` sites.
 - The callee must be a normal procedure, not a method or factory.
-- Arguments and return values must stay within the currently implemented safe slice: scalars are broadly supported, object values are supported across the local-procedure slice, and array values are supported only where attribute-copy semantics can be preserved.
-- The callee must satisfy the existing safety checks: plain local procedure only, small body, no recursion cycle, no binary values, and no unsupported vararg indexing. Value-producing procedures still require a final `RETURN`; void statement-call sites may inline through bare-return and fallthrough shapes.
+- Arguments and return values must stay within the currently implemented safe slice: scalars, object values, binary values, optional/default formals, and array-shaped formals/returns are now supported across the local plain-procedure slice.
+- The callee must satisfy the existing safety checks: plain local procedure only, small body, no recursion cycle, and no unsupported vararg indexing. Value-producing procedures still require a final `RETURN`; void statement-call sites may inline through bare-return and fallthrough shapes.
 - `expose`/by-reference formals are supported when the actual argument is an aliasable variable-like target, including indexed and stem-style forms.
 - For nontrivial by-reference actuals, the inline rewrite captures the locator expressions once into inline-scope temps so the callee still sees call-time binding semantics.
-- Optional formals are supported in the current slice when the inline rewrite can materialise their default from the formal AST.
+- Optional formals now inline through the same rewrite path as other supported local plain-procedure calls, with omitted-actual/default-formal semantics preserved during binding.
 
 At present, expression rewriting is open for local plain procedures in all value and condition parents that can consume a `BLOCK_EXPR` directly. The discriminator now explicitly keeps only the dedicated statement-rewrite sites out of the expression path:
 
@@ -233,7 +233,7 @@ This milestone was delivered in two internal stages:
 Notes:
 
 - The current implementation now supports by-value varargs, nested-call local procedures, and nested callee scopes through a bounded fixed-point pass with explicit cycle blocking for self-recursive and mutually recursive expansions.
-- The current implementation still excludes methods/factories and class-scope procedures. Object by-value formals now follow the same split as normal calls: read-only formals alias the incoming binding, while writable formals materialise an isolated local copy. Array values are still supported only where the inline rewrite can preserve attribute-copy semantics.
+- The current implementation still excludes methods/factories and class-scope procedures. Object by-value formals now follow the same split as normal calls: read-only formals alias the incoming binding, while writable formals materialise an isolated local copy. Array-shaped formals and returns are now handled by the same inline rewrite machinery as other supported local plain-procedure calls.
 - Selection should remain opportunity-based throughout milestone 1: a structurally inlineable procedure may still have uninlined call sites if their rewrite bucket is not yet implemented.
 
 ### Milestone 1 review
@@ -295,18 +295,21 @@ So milestone 3 should likely begin with the narrower target of source-imported p
 The implementation now covers:
 
 - local plain procedures in statement and expression buckets across the current scalar slice
+- optional/default formals with omitted-actual binding preserved in the inline body
+- a production inline body cutoff of 200 AST nodes for local plain procedures
 - by-value trailing varargs
 - dynamic vararg indexing and existence checks via inline-scope captured vararg arrays
 - nested-call local procedures via repeated identify-and-inline passes until a bounded fixed point is reached
 - nested callee-local scopes with duplicated scope and symbol remapping
 - multi/early-return procedures, including branch returns and void fallthrough in statement-call sites
 - object-typed returns and by-value object formals
-- array-typed formals, assignment-site returns, and expression/block-result returns where the inline rewrite can preserve attribute-copy semantics
+- array-typed formals and array-valued returns, including assignment, expression, and temp-materialised return sites
 - non-symbol aggregate actuals and non-symbol aggregate return expressions via inline temp materialisation
 - broader aliasable by-reference actuals, including computed indexed/stem locator children
 - `.ref` / `expose` varargs for `arg[]`, constant `arg[n]`, and constant `arg(n, "E")`, using existing RXAS argument/link primitives plus compiler-side capture helpers
 - assignment-site inlining when the LHS itself has child selectors, by falling back to the RHS `BLOCK_EXPR` path
 - binary-typed local plain procedures across the current statement and expression rewrite machinery
+- preserved default-init requirements for duplicated inline locals and inline-created aggregate temporaries
 - explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
 
 The implementation still excludes:
@@ -314,6 +317,32 @@ The implementation still excludes:
 - methods and factories
 - imported callees
 - dynamic-index `.ref` / `expose` vararg access
+
+## Post-Hardening Status
+
+The temporary hardening phase for local plain procedures is complete.
+
+The work that was previously fail-closed during broad-cutoff exploration is now part of the normal supported slice:
+
+- scope/symbol duplication preserves default-init requirements for cloned locals and inline-created aggregate temporaries
+- optional/default formals inline with omitted-actual/default-formal semantics preserved
+- array-typed formals and array-valued returns inline in assignment, expression, and temp-materialised contexts
+- whole-variable aggregate assignment emission preserves copy semantics for array and binary values in inline-expanded paths
+
+The current production stance is:
+
+- keep the 200-node body cutoff for local plain procedures
+- treat methods/factories, imported callees, and dynamic-index `.ref` / `expose` vararg access as milestone-boundary exclusions, not temporary hardening gaps
+- keep debug-visible inline rejection and rewrite diagnostics available for future tuning and milestone work
+
+Validation for the current cutoff and supported slice:
+
+- debug top-level `ctest` matrix passed
+- release compiler suite passed
+- debug and release `performance` label runs passed
+- additional compiler gold drift exposed by the broader cutoff was refreshed only after the matching runtime tests stayed green
+
+Future tuning in this area should prefer better profitability modeling over reintroducing structural fail-closed exclusions for already-supported local plain procedures. In particular, any later experimentation with larger limits should bias toward call-site-sensitive policy, such as hot/cold or loop-sensitive thresholds, rather than undoing the milestone-1 semantic coverage.
 
 ## Discriminator Review
 
@@ -339,10 +368,12 @@ This split is the right shape for later milestones:
 
 That separation is what keeps the inliner opportunity-based instead of turning `is_inlinable` into an over-broad “inline everywhere” flag.
 
-Each iteration in this area should continue to use a full build and the compiler regression suite as its validation gate:
+Each later iteration in this area should continue to use a full build, the compiler regression suite, the top-level `ctest` matrix, and the focused `performance` label as its validation gate:
 
 - `cmake --build cmake-build-debug -j4`
 - `ctest --test-dir cmake-build-debug/compiler/tests --output-on-failure`
+- `ctest --test-dir cmake-build-debug --output-on-failure`
+- `ctest --test-dir cmake-build-debug -L performance --output-on-failure`
 
 ## Symbol and Scope Handling
 Inlining requires duplicating callee-local AST, symbols, and scopes into a new isolated scope under the caller.

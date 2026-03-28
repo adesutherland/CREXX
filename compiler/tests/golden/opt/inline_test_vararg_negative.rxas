@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_vararg_negative.rexx
- * BUILT                  : 2026-03-27 18:56:03
+ * BUILT                  : 2026-03-28 12:29:21
  */
 
 .srcfile="inline_test_vararg_negative.rexx"
@@ -23,6 +23,9 @@ main() .locals=8
    .meta "inline_test_vararg_negative.main.c"="b" ".int" "30"
    .meta "inline_test_vararg_negative.main.idx"="b" ".int" "2"
    .src 9:7="dynamicPick"
+   .meta "inline_test_vararg_negative.main.__inline_varg_array_41"="b" ".int[3]" r0
+   .src 15:27=".int"
+   null r0
    .src 15:27=".int"
    setattrs r0,3
    linkattr1 r1,r0,1

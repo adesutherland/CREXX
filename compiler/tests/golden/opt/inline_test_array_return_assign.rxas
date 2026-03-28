@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_return_assign.rexx
- * BUILT                  : 2026-03-28 11:02:44
+ * BUILT                  : 2026-03-28 11:53:33
  */
 
 .srcfile="inline_test_array_return_assign.rexx"
 .globals=0
 
-main() .locals=5
+main() .locals=12
    .meta "inline_test_array_return_assign.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -24,36 +24,83 @@ main() .locals=5
    .src 4:3="say \"Starting array return assign inline test...\""
    say "Starting array return assign inline test..."
    .src 5:3="values = buildArray(\"red\", \"blue\")"
-   load r2,2
-   load r3,"red"
-   load r4,"blue"
-   settp r3,3
-   settp r4,3
-   call r1,buildArray(),r2
+   .src 5:12="buildArray"
+   .meta "inline_test_array_return_assign.main.temp"="b" ".string[*]" r2
+   .src 14:3="temp = .string"
+   null r2
+   .src 15:3="temp[1] = left"
+   minattrs r2,1
+   linkattr1 r5,r2,1
+   load r6,"red"
+   scopy r5,r6
+   unlink r5
+   .src 16:3="temp[2] = right"
+   minattrs r2,2
+   linkattr1 r5,r2,2
+   load r7,"blue"
+   scopy r5,r7
+   unlink r5
+   .src 17:3="return temp"
+   copy r5,r2
+   acopy r5,r2
+   br l84bexprend
+l84bexprend:
+   copy r1,r5
+   acopy r1,r5
    .src 6:3="say values[1] || \":\" || values[2"
    minattrs r1,1
-   linkattr1 r4,r1,1
-   concat r3,r4,":"
-   unlink r4
+   linkattr1 r5,r1,1
+   concat r8,r5,":"
+   unlink r5
    minattrs r1,2
-   linkattr1 r2,r1,2
-   concat r3,r3,r2
-   unlink r2
-   say r3
+   linkattr1 r9,r1,2
+   concat r8,r8,r9
+   unlink r9
+   say r8
    .src 7:3="more = buildArray(\"green\", \"gold\")"
-   load r2,2
-   load r3,"green"
-   load r4,"gold"
-   settp r3,3
-   settp r4,3
-   call r0,buildArray(),r2
+   .src 7:10="buildArray"
+   .meta "inline_test_array_return_assign.main.temp"="b" ".string[*]" r3
+   .src 14:3="temp = .string"
+   null r3
+   .src 15:3="temp[1] = left"
+   minattrs r3,1
+   linkattr1 r9,r3,1
+   load r8,"green"
+   scopy r9,r8
+   unlink r9
+   .src 16:3="temp[2] = right"
+   minattrs r3,2
+   linkattr1 r9,r3,2
+   load r5,"gold"
+   scopy r9,r5
+   unlink r9
+   .src 17:3="return temp"
+   copy r9,r3
+   acopy r9,r3
+   br l108bexprend
+l108bexprend:
+   copy r0,r9
+   acopy r0,r9
    .src 8:3="say renderArray(more)"
-   load r3,1
-   settp r0,1
-   swap r4,r0
-   call r2,renderArray(),r3
-   swap r0,r4
-   say r2
+   .src 8:7="renderArray"
+   .src 20:7="value"
+   copy r4,r0
+   .src 20:7="value"
+   acopy r4,r0
+   .src 21:3="return value[1] || \":\" || value[2"
+   minattrs r4,1
+   linkattr1 r9,r4,1
+   concat r10,r9,":"
+   unlink r9
+   minattrs r4,2
+   linkattr1 r11,r4,2
+   concat r10,r10,r11
+   unlink r11
+   scopy r11,r10
+   acopy r11,r10
+   br l132bexprend
+l132bexprend:
+   say r11
    .src 9:3="say \"Array return assign inline test finished.\""
    say "Array return assign inline test finished."
    .src 10:3="return 0"

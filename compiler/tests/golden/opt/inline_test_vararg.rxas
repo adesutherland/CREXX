@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_vararg.rexx
- * BUILT                  : 2026-03-27 16:57:35
+ * BUILT                  : 2026-03-28 12:29:21
  */
 
 .srcfile="inline_test_vararg.rexx"
@@ -19,6 +19,8 @@ main() .locals=24
    say "Starting vararg inline test..."
    .src 5:3="say tailCount(10)"
    .src 5:7="tailCount"
+   .meta "inline_test_vararg.main.__inline_varg_array_50"="b" ".int[1]" r1
+   null r1
    .src 17:3="return base + arg"
    load r7,10
    icopy r8,r7
@@ -29,6 +31,9 @@ l105bexprend:
    say r8
    .src 6:3="say tailCount(10, 20, 30)"
    .src 6:7="tailCount"
+   .meta "inline_test_vararg.main.__inline_varg_array_50"="b" ".int[2]" r2
+   .src 16:26=".int"
+   null r2
    .src 16:26=".int"
    setattrs r2,2
    linkattr1 r8,r2,1
@@ -52,6 +57,9 @@ l114bexprend:
    .src 7:3="total = 1 + secondOnly(5, 7, 11)"
    .meta "inline_test_vararg.main.total"="b" ".int" r0
    .src 7:15="secondOnly"
+   .meta "inline_test_vararg.main.__inline_varg_array_64"="b" ".int[2]" r3
+   .src 20:26=".int"
+   null r3
    .src 20:26=".int"
    setattrs r3,2
    linkattr1 r11,r3,1
@@ -75,6 +83,9 @@ l137bexprend:
    say r0
    .src 9:3="say hasThird(1, 2)"
    .src 9:7="hasThird"
+   .meta "inline_test_vararg.main.__inline_varg_array_74"="b" ".int[2]" r4
+   .src 24:13=".int"
+   null r4
    .src 24:13=".int"
    setattrs r4,2
    linkattr1 r14,r4,1
@@ -97,6 +108,9 @@ l160bexprend:
    say r17
    .src 10:3="say hasThird(1, 2, 3)"
    .src 10:7="hasThird"
+   .meta "inline_test_vararg.main.__inline_varg_array_74"="b" ".int[3]" r5
+   .src 24:13=".int"
+   null r5
    .src 24:13=".int"
    setattrs r5,3
    linkattr1 r17,r5,1
@@ -123,6 +137,9 @@ l160bexprend:
 l178bexprend:
    itos r21
    say r21
+   .meta "inline_test_vararg.main.__inline_varg_array_87"="b" ".int[2]" r6
+   .src 28:26=".int"
+   null r6
    .src 28:26=".int"
    setattrs r6,2
    linkattr1 r21,r6,1

@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_expr_arg.rexx
- * BUILT                  : 2026-03-27 16:50:43
+ * BUILT                  : 2026-03-28 13:07:27
  */
 
 .srcfile="inline_test_array_expr_arg.rexx"
 .globals=0
 
-main() .locals=5
+main() .locals=13
    .meta "inline_test_array_expr_arg.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -17,32 +17,56 @@ main() .locals=5
    setnumstd 1
    .src 4:3="say bumpFirst(makePair"
    .src 4:7="bumpFirst"
+   .meta "inline_test_array_expr_arg.main.__inline_bind_105_0"="b" ".int[2]" r7
    .src 4:17="makePair"
-   load r2,0
-   call r0,makePair(),r2
+   null r7
+   .src 4:17="makePair"
+   .src 4:17="makePair"
+   .meta "inline_test_array_expr_arg.main.pair"="b" ".int[2]" r9
+   .src 13:3="pair = .int[2"
+   null r9
+   .src 26:3="pair[1] = 7"
+   setattrs r9,2
+   linkattr1 r10,r9,1
+   load r11,7
+   icopy r10,r11
+   unlink r10
+   .src 27:3="pair[2] = 9"
+   setattrs r9,2
+   linkattr1 r11,r9,2
+   load r10,9
+   icopy r11,r10
+   unlink r11
+   .src 28:3="return pair"
+   copy r11,r9
+   acopy r11,r9
+   br l175bexprend
+l175bexprend:
+   copy r7,r11
+   acopy r7,r11
    .src 8:7="pair"
-   copy r1,r0
+   copy r8,r7
    .src 8:7="pair"
-   acopy r1,r0
+   acopy r8,r7
    .src 9:3="pair[1] = pair[1] + 5"
-   setattrs r1,2
-   linkattr1 r2,r1,1
-   setattrs r1,2
-   linkattr1 r3,r1,1
-   iadd r4,r3,5
-   unlink r3
-   icopy r2,r4
-   unlink r2
+   setattrs r8,2
+   linkattr1 r11,r8,1
+   setattrs r8,2
+   linkattr1 r10,r8,1
+   iadd r12,r10,5
+   unlink r10
+   icopy r11,r12
+   unlink r11
    .src 10:3="return pair[1"
-   setattrs r1,2
-   linkattr1 r4,r1,1
-   icopy r3,r4
-   acopy r3,r4
-   unlink r4
-   br l105bexprend
-l105bexprend:
-   itos r3
-   say r3
+   setattrs r8,2
+   linkattr1 r12,r8,1
+   icopy r11,r12
+   acopy r11,r12
+   unlink r12
+   br l169bexprend
+l169bexprend:
+   itos r11
+   say r11
    .src 5:3="return 0"
    ret 0
 

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_nested_scope_if_do.rexx
- * BUILT                  : 2026-03-27 15:15:28
+ * BUILT                  : 2026-03-28 12:29:21
  */
 
 .srcfile="inline_test_nested_scope_if_do.rexx"
@@ -35,6 +35,9 @@ l8dostart:
    igt r5,r1,0
    brf l57iffalse,r5
    .src 13:14="then"
+   .meta "inline_test_nested_scope_if_do.main.tmp"="b" ".int" r2
+   .src 14:5="tmp = .int"
+   null r2
    .src 15:5="tmp = val * 10"
    imult r2,r1,10
    .src 16:5="return tmp"

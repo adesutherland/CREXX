@@ -1,14 +1,14 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 18_array_class_main.rexx
- * BUILT                  : 2026-03-18 11:58:57
+ * BUILT                  : 2026-03-28 13:07:27
  */
 
 .meta "array_class_lib.item"="b" ".unknown" .class
 .srcfile="18_array_class_main.rexx"
 .globals=0
 
-main() .locals=5
+main() .locals=14
    .meta "18_array_class_main.main"="b" ".int" main() "" ""
    setnumdgts 18
    setnumfuz 0
@@ -24,30 +24,90 @@ main() .locals=5
    say "Main"
    .src 6:1="it1 = .Item(\"Hello\")"
    .meta "18_array_class_main.main.it1"="b" ".item" r1
-   load r2,1
-   load r3,"Hello"
-   settp r3,3
-   call r1,§array_class_lib.item.§factory(),r2
+   load r8,1
+   load r9,"Hello"
+   settp r9,3
+   call r1,§array_class_lib.item.§factory(),r8
    .src 7:1="say \"Created it1\""
    say "Created it1"
    .src 9:1="say \"Created ary\""
    say "Created ary"
    .src 10:1="ary[1] = it1"
    setattrs r0,1
-   linkattr1 r3,r0,1
-   copy r3,r1
-   unlink r3
+   linkattr1 r9,r0,1
+   copy r9,r1
+   unlink r9
    .src 11:1="say \"Assigned ary[1]\""
    say "Assigned ary[1]"
    .src 12:1="say \"Calling process\""
    say "Calling process"
    .src 13:1="say process(ary)"
-   load r2,1
-   settp r0,1
-   swap r3,r0
-   call r4,process(),r2
-   swap r0,r3
-   say r4
+   .src 13:5="process"
+   .src 18:9="items"
+   copy r3,r0
+   .src 18:9="items"
+   acopy r3,r0
+   .src 19:5="say \"Inside process, Items.0 =\" items.0"
+   getattrs r8,r3,0
+   itos r8
+   sconcat r8,"Inside process, Items.0 =",r8
+   say r8
+   .src 20:4="if items.0 < 1"
+   getattrs r8,r3,0
+   ilt r8,r8,1
+   brf l134iffalse,r8
+   .src 20:20="then"
+   .src 20:25="return \"\""
+   load r10,""
+   scopy r13,r10
+   acopy r13,r10
+   br l118bexprend
+l134iffalse:
+   .src 22:5="it = items.1"
+   minattrs r3,1
+   linkattr1 r9,r3,1
+   copy r2,r9
+   unlink r9
+   .src 23:5="val = it.get_val"
+   load r8,1
+   settp r2,1
+   swap r9,r2
+   call r4,§array_class_lib.item.get_val(),r8
+   swap r2,r9
+   .src 25:5="do"
+   .src 25:8="i = 1"
+   load r5,1
+   .src 25:14="to items.0"
+   getattrs r8,r3,0
+l149dostart:
+   .src 25:14="to items.0"
+   igt r11,r5,r8
+   brt l149doend,r11
+   .src 26:9="it_i = items[i"
+   minattrs r3,r5,0
+   linkattr1 r12,r3,r5
+   copy r6,r12
+   unlink r12
+   .src 27:9="val_i = it_i.get_val"
+   load r12,1
+   settp r6,1
+   swap r13,r6
+   call r7,§array_class_lib.item.get_val(),r12
+   swap r6,r13
+   .src 28:9="say val_i"
+   say r7
+l149doinc:
+   .src 25:8="i"
+   inc r5
+   .src 29:5="end"
+   br l149dostart
+l149doend:
+   .src 30:5="return val"
+   scopy r13,r4
+   acopy r13,r4
+   br l118bexprend
+l118bexprend:
+   say r13
    .src 14:1="say \"Done\""
    say "Done"
    .src 15:1="return 0"

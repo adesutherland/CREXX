@@ -962,12 +962,32 @@ static walker_result emit_walker(walker_direction direction,
                     free(temp1);
                 } else if (child1->register_num != child2->register_num ||
                     child1->register_type != child2->register_type) {
-                    temp1 = mprintf("   %scopy %c%d,%c%d\n",
-                                    tp_prefix,
-                                    child1->register_type,
-                                    child1->register_num,
-                                    child2->register_type,
-                                    child2->register_num);
+                    int aggregate_assign =
+                            !child1->child &&
+                            (child1->value_dims > 0 || child1->target_dims > 0 ||
+                             child2->value_dims > 0 || child2->target_dims > 0 ||
+                             child1->value_type == TP_BINARY || child1->target_type == TP_BINARY ||
+                             child2->value_type == TP_BINARY || child2->target_type == TP_BINARY);
+
+                    if (aggregate_assign) {
+                        temp1 = mprintf("   copy %c%d,%c%d\n"
+                                        "   acopy %c%d,%c%d\n",
+                                        child1->register_type,
+                                        child1->register_num,
+                                        child2->register_type,
+                                        child2->register_num,
+                                        child1->register_type,
+                                        child1->register_num,
+                                        child2->register_type,
+                                        child2->register_num);
+                    } else {
+                        temp1 = mprintf("   %scopy %c%d,%c%d\n",
+                                        tp_prefix,
+                                        child1->register_type,
+                                        child1->register_num,
+                                        child2->register_type,
+                                        child2->register_num);
+                    }
                     output_append_text(node->output, temp1);
                     free(temp1);
                 }

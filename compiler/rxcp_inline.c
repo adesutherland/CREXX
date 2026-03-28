@@ -14,7 +14,7 @@
 #include "rxcpdary.h"
 #include "rxcp_sym.h"
 
-#define INLINE_MAX_NODES 50
+#define INLINE_MAX_NODES 200
 
 typedef struct {
     Symbol *old_symbol;
@@ -650,6 +650,7 @@ static Symbol *inline_create_temp_symbol(Context *context,
     temp_symbol->init_emitted = 0;
 
     if (!inline_copy_node_shape(temp_symbol, source_node)) return NULL;
+    if (temp_symbol->value_dims > 0) temp_symbol->needs_default_initiation = 1;
 
     return temp_symbol;
 }
@@ -1026,6 +1027,7 @@ static Symbol *inline_create_varg_array_symbol(Context *context,
     array_symbol->register_type = 'r';
     array_symbol->meta_emitted = 0;
     array_symbol->init_emitted = 0;
+    array_symbol->needs_default_initiation = 1;
 
     if (!inline_copy_node_shape(array_symbol, template_node ? template_node : source_node)) return NULL;
 
@@ -1546,6 +1548,7 @@ static int inline_duplicate_scope_symbols(Scope *old_scope,
         new_symbol->register_type = 'r';
         new_symbol->meta_emitted = 0;
         new_symbol->init_emitted = 0;
+        new_symbol->needs_default_initiation = old_symbol->needs_default_initiation;
         new_symbol->defines_scope = NULL;
         new_symbol->ast_template = NULL;
         new_symbol->is_inlinable = 0;
@@ -2494,7 +2497,9 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
         inline_debug_fail_closed(context, call_node, proc_sym, "assignment inline requires a final value RETURN");
         return 0;
     }
-    if ((assign_node->parent && assign_node->parent->node_type == REPEAT) || lhs->child) {
+    if ((assign_node->parent && assign_node->parent->node_type == REPEAT) ||
+        lhs->child ||
+        (proc_sym && proc_sym->value_dims > 0)) {
         block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
         if (!block_expr) return 0;
         ast_rpl(call_node, block_expr);
@@ -2729,13 +2734,6 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         if (args) {
             arg = args->child;
             while (arg) {
-                if (arg->is_opt_arg) {
-                    inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                                     "reject: optional formals are not yet in the robust fail-closed slice");
-                    sym->is_inlinable = 0;
-                    return result_normal;
-                }
-
                 if (arg->is_varg) {
                     if (arg->sibling) {
                         inline_debug_log(context, node, sym, "DEBUG_INLINE",
@@ -2751,27 +2749,9 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
                 }
 
                 formal_symbol = formal_target && formal_target->symbolNode ? formal_target->symbolNode->symbol : NULL;
-                if (formal_target && (formal_target->value_dims > 0 || formal_target->target_dims > 0)) {
-                    inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                                     "reject: array-typed formals are not yet in the robust fail-closed slice");
-                    sym->is_inlinable = 0;
-                    return result_normal;
-                }
-                if (formal_symbol && formal_symbol->value_dims > 0) {
-                    inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                                     "reject: array-typed formal symbols are not yet in the robust fail-closed slice");
-                    sym->is_inlinable = 0;
-                    return result_normal;
-                }
+                (void)formal_symbol;
                 arg = arg->sibling;
             }
-        }
-
-        if (sym->value_dims > 0) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: array-valued returns are not yet in the robust fail-closed slice");
-            sym->is_inlinable = 0;
-            return result_normal;
         }
 
         instrs = ast_chld(node, INSTRUCTIONS, 0);

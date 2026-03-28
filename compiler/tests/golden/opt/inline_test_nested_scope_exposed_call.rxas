@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_nested_scope_exposed_call.rexx
- * BUILT                  : 2026-03-27 15:15:28
+ * BUILT                  : 2026-03-28 12:29:21
  */
 
 .srcfile="inline_test_nested_scope_exposed_call.rexx"
@@ -31,6 +31,9 @@ l8dostart:
    .src 6:9="outer"
    .src 12:7="val"
    icopy r1,r0
+   .meta "inline_test_nested_scope_exposed_call.main.tmp"="b" ".int" r2
+   .src 14:5="tmp = .int"
+   null r2
    .src 21:7="val"
    icopy r3,r1
    .src 22:3="return"

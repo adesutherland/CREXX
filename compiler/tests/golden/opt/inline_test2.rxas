@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test2.rexx
- * BUILT                  : 2026-03-27 15:59:16
+ * BUILT                  : 2026-03-28 13:07:27
  */
 
 .meta "inline_test2.myclass"="b" ".unknown" .class
@@ -19,62 +19,81 @@ main() .locals=8
    .src 4:3="say \"Testing ineligible inlining scenarios...\""
    say "Testing ineligible inlining scenarios..."
    .src 7:3="say \"LargeProc result:\" largeProc(1, 2, 3, 4, 5)"
-   load r1,5
-   load r2,1
-   load r3,2
-   load r4,3
-   load r5,4
-   load r6,5
-   call r7,largeProc(),r1
-   itos r7
-   sconcat r7,"LargeProc result:",r7
-   say r7
+   .src 7:27="largeProc"
+   .src 24:3="x = a + b"
+   load r1,3
+   .src 25:3="x = x + c"
+   iadd r1,r1,3
+   .src 26:3="x = x + d"
+   iadd r1,r1,4
+   .src 27:3="x = x + e"
+   iadd r1,r1,5
+   .src 28:3="x = x * 2"
+   imult r1,r1,2
+   .src 29:3="x = x / 2"
+   idiv r1,r1,2
+   .src 30:3="x = x + 1"
+   iadd r1,r1,1
+   .src 31:3="x = x - 1"
+   isub r1,r1,1
+   .src 32:3="x = x * 3"
+   imult r1,r1,3
+   .src 33:3="x = x / 3"
+   idiv r1,r1,3
+   .src 34:3="return x"
+   icopy r2,r1
+   acopy r2,r1
+   br l169bexprend
+l169bexprend:
+   itos r2
+   sconcat r2,"LargeProc result:",r2
+   say r2
    .src 10:3="say \"NestedCallProc result:\" nestedCallProc(10)"
    .src 10:32="nestedCallProc"
    .src 39:3="return helper(val)"
    .src 39:10="helper"
    .src 43:3="return v + 1"
-   load r7,11
-   icopy r6,r7
-   br l199bexprend
-l199bexprend:
-   icopy r5,r6
-   acopy r5,r6
-   br l169bexprend
-l169bexprend:
-   itos r5
-   sconcat r5,"NestedCallProc result:",r5
-   say r5
+   load r2,11
+   icopy r3,r2
+   br l268bexprend
+l268bexprend:
+   icopy r4,r3
+   acopy r4,r3
+   br l238bexprend
+l238bexprend:
+   itos r4
+   sconcat r4,"NestedCallProc result:",r4
+   say r4
    .src 13:3="o = .MyClass"
    .meta "inline_test2.main.o"="b" ".myclass" r0
-   load r5,0
-   call r0,§inline_test2.myclass.§factory(),r5
+   load r4,0
+   call r0,§inline_test2.myclass.§factory(),r4
    .src 14:3="say \"Method result:\" o.myMethod(20)"
-   load r3,2
-   load r5,20
+   load r4,2
+   load r6,20
    settp r0,1
-   swap r4,r0
-   call r2,§inline_test2.myclass.mymethod(),r3
-   swap r0,r4
-   itos r2
-   sconcat r5,"Method result:",r2
-   say r5
+   swap r5,r0
+   call r7,§inline_test2.myclass.mymethod(),r4
+   swap r0,r5
+   itos r7
+   sconcat r7,"Method result:",r7
+   say r7
    .src 17:3="say \"MultiReturn result:\" multiReturn(1)"
    .src 17:29="multiReturn"
    .src 57:17="return 1"
-   load r5,1
-   icopy r3,r5
-   acopy r3,r5
-   br l177bexprend
+   load r7,1
+   icopy r5,r7
+   acopy r5,r7
+   br l246bexprend
    .src 58:3="return 0"
-   load r4,0
-   icopy r3,r4
-   acopy r3,r4
-   br l177bexprend
-l177bexprend:
-   itos r3
-   sconcat r3,"MultiReturn result:",r3
-   say r3
+   load r6,0
+   icopy r5,r6
+   acopy r5,r6
+   br l246bexprend
+l246bexprend:
+   itos r5
+   sconcat r5,"MultiReturn result:",r5
+   say r5
    .src 19:3="return 0"
    ret 0
    .meta "inline_test2.main.o"
@@ -144,8 +163,8 @@ nestedCallProc() .locals=4
    .src 43:3="return v + 1"
    iadd r2,r1,1
    icopy r3,r2
-   br l190bexprend
-l190bexprend:
+   br l259bexprend
+l259bexprend:
    ret r3
    .meta "inline_test2.nestedcallproc.val"
 

@@ -1,43 +1,25 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : repro_opt_args.rexx
- * BUILT                  : 2026-03-18 11:59:00
+ * BUILT                  : 2026-03-28 11:53:32
  */
 
 .srcfile="repro_opt_args.rexx"
 .globals=0
 
-main() .locals=7
+main() .locals=0
    .meta "repro_opt_args.main"="b" ".int" main() "" ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 3:1="call test_opt 1, , 3"
-   load r0,3
-   load r1,1
-   load r3,3
-   settp r1,1
-   settp r2,0
-   settp r3,1
-   call r4,test_opt(),r0
-   .src 4:1="call test_opt 1, 2"
-   load r0,3
-   load r1,1
-   load r2,2
-   settp r1,1
-   settp r2,1
-   settp r3,0
-   call r5,test_opt(),r0
-   .src 5:1="call test_opt , 2, 3"
-   load r0,3
-   load r2,2
-   load r3,3
-   settp r1,0
-   settp r2,1
-   settp r3,1
-   call r6,test_opt(),r0
+   .src 10:3="say \"a=\" a \"b=\" b \"c=\" c"
+   say "a= 1 b= 20 c= 3"
+   .src 10:3="say \"a=\" a \"b=\" b \"c=\" c"
+   say "a= 1 b= 2 c= 30"
+   .src 10:3="say \"a=\" a \"b=\" b \"c=\" c"
+   say "a= 10 b= 2 c= 3"
    .src 6:1="return 0"
    ret 0
 
