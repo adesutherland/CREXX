@@ -176,8 +176,9 @@ ELSE instruction2
 
 When `IF` is used this way, `REXX` processes only one of these instructions, not the
 other. It will process:
-- Instructionl only if `expression` is true
-- Instructi on2 only if `expression` is false.
+
+- Instruction l only if `expression` is true
+- Instruction 2 only if `expression` is false.
 
 The flowchart diagram would look like this:
 
@@ -202,9 +203,11 @@ END
 
 - If `expression1` is true, `instruction1` is processed. After this, processing
 continues with the instruction following the `END`.
+
 - If `expression1` is false, then `expression2` is tested. If it is true, then
 instruction2 is processed and processing continues with the instruction
 following the `END`.
+
 - If `expression1`, `expression2`, and so on, are all *false*, then processing continues
 with the instruction following the `OTHERWISE`.
 
@@ -296,21 +299,27 @@ Because block expressions are ordinary expressions, they can be nested and used 
 
 ### Variable shadowing and Scoping (Level B)
 
-cREXX Level B introduces block-level scoping for certain control structures. It is important to distinguish between single-instruction branches and grouped instructions (DO blocks).
+\crexx{} Level B introduces block-level scoping for certain control structures. It is important to distinguish between single-instruction branches and grouped instructions (DO blocks).
 
 - **Single-instruction branches**: These execute in the current (procedure) scope.
-  ```rexx
+
+```rexx
   if condition then x = 10 /* x is in procedure scope */
-  ```
+```
+
 - **Grouped instructions (DO blocks)**: These create a `SCOPE_LOCAL` (block scope).
+
 - **Variable Hoisting (Untyped)**: Untyped assignments in subscopes (e.g. `if condition then do; x = 1; end`) bind to the procedure-level variable. If the variable has not been used earlier in the source, it is automatically "hoisted" and created in the procedure scope, making it visible to the rest of the routine.
+
 - **Variable Shadowing (Typed)**: A typed declaration (`x = .int`) inside a `DO` block always creates a block-local that shadows any outer variable (or constant) of the same name for the duration of the block.
+
 - **Temporal Resolution**: An untyped use in a subscope only binds to a parent variable if that variable has been assigned or used **earlier in the source code**. If the parent variable only appears later in the source, the subscope will create its own local definition and the compiler may issue a `#SHADOWING` warning if the names conflict.
 
 This difference in behavior between single-instruction branches and `DO` blocks is an intentional architectural design choice in Level B to balance REXX compatibility with modern structured scoping.
 
 - A typed declaration inside a `DO` block always creates a block-local that shadows any outer variable (or constant) of the same name for the duration of the block:
-  ```rexx <!--shadowingdo.rexx-->
+
+```rexx <!--shadowingdo.rexx-->
   options levelb
   main: procedure
     x = .int; x = 1
@@ -319,18 +328,22 @@ This difference in behavior between single-instruction branches and `DO` blocks 
       x = 9
     end
     say x  /* 1 */
-  ```
+```
+
 - An untyped assignment inside a `DO` block uses an existing variable if one was used earlier in the source; otherwise it creates a new procedure-scoped variable (hoisting):
-  ```rexx <!--newscopedo.rexx-->
+
+```rexx <!--newscopedo.rexx-->
   options levelb
   main: procedure
     do
       y = 3  /* no prior y => hoisted to procedure scope */
     end
     say y    /* 3 - y is still in scope */
-  ```
+```
+
 - Counted `DO` header: the control variable behaves the same way — if an outer variable with that name exists, it is reused; otherwise a loop-local control variable is created. However, you can explicitly force the creation of a block-local control variable that shadows the parent scope by using a typed constructor initializer:
-  ```rexx <!--counteddoheader.rexx-->
+
+```rexx <!--counteddoheader.rexx-->
   options levelb
   main: procedure
     i = .int; i = 100
@@ -348,7 +361,8 @@ This difference in behavior between single-instruction branches and `DO` blocks 
       /* ... */
     end
     /* i is still 100 here (outer one wasn't modified) */
-  ```
-  Note: This syntax candy (`do i = .int(1) to 3`) desugars into a wrapped block (`do; i = .int; do i = 1 to 3; ...; end; end`). It is only supported for fundamental types (`.int`, `.string`, `.float`, `.boolean`, `.decimal`). Attempting to instantiate a non-fundamental class in a loop initialization (e.g. `do i = a_class(5) to 10`) will result in a `#LOOP_CLASSES_NOT_SUPPORTED` compilation error.
+```
+
+Note: This syntax candy (`do i = .int(1) to 3`) desugars into a wrapped block (`do; i = .int; do i = 1 to 3; ...; end; end`). It is only supported for fundamental types (`.int`, `.string`, `.float`, `.boolean`, `.decimal`). Attempting to instantiate a non-fundamental class in a loop initialization (e.g. `do i = a_class(5) to 10`) will result in a `#LOOP_CLASSES_NOT_SUPPORTED` compilation error.
 
 Rationale: typed declarations always define intent and should introduce a new local; untyped uses favor existing bindings to reduce surprises, while remaining safe by creating a loop-local when none exists.

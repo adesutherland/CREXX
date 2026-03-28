@@ -54,16 +54,15 @@ fads and silver bullets, some developments have stuck and are
 sometimes missed in \rexx{}, which at this point in time is more than
 40 years old. The introduction of Object Orientation in the 1990's was
 a long and arduous process, that might have taken too much time than
-was time-to-market and user expectations allowed. What did not exactly
-helped was putting this Orexx version into the hands of a different
-language architect, the product intentions published early and the
-product delivery taking a very long time - as a 'user switchable'
+was time-to-market and user expectations allowed. The product was announced early and the
+product delivery took a long time - as a 'user switchable'
 implementation on a moribund operating
-system\footnote{IBM's OS/2.} Further announcements and retractions
+system\footnote{IBM's OS/2.}; IBM's mainframe operating systems z/VM and z/OS were left
+without an implementation. Further announcements and retractions
 of its owner regarding its open sourcing status did not help it in any way.
 Another variant, for the Java Virtual Machine, has shown the
 divergence in ideas between \rexx{}'s original architect, Mike
-Cowlishaw, and the Object Rexx implementation of the same ideas.
+Cowlishaw, and the Object Rexx implementation, of more or less the same ideas.
 
 We would like to try to avoid this by opening up architecture, source
 and discussion in the user community. While \rexx{} variants may have
@@ -78,13 +77,12 @@ of what different variants of \rexx{} need:
 - Functions as first class objects
 - Multi-threading
 - Dynamically typed, preferably with type hints
-- Co-routintes
+- Co-routines
 - Support for object oriented programming
 - Regular expressions
 - Libraries for web programming, jpegs, JSON/YAML parsing etc
 - Language tools
 - Logic programming
-
 
 Note that this list is just a statement of intent and some things
 do exist in existing implementations while others might not be a
@@ -92,22 +90,15 @@ good idea or would be done better by tools external to the language.
   
 ## Level B Minimally Viable Product Snapshot
 
-It is important to know that the Level B implementation is not complete
-yet. What still is missing from this snapshot with
-regard to the first \crexx{} Level B release, is the following
+This Level B implementation is feature complete.
 
-- Address statement
-- stream I/O
-- structured variables
-
-
-The team deems it important to release the working parts at this time,
+The team deems it important to release it at this time,
 so people can play with it, be amazed by the speed of code implemented
-with \rexx{}, use Unicode and see how it works, and possibly,
-hopefully participate in its development. This means that \crexx{} has
+with \rexx{}, use its Unicode implementation and see how it works, and possibly,
+hopefully, participate in its development. This means that \crexx{} has
 entered the phase in which things are stable enough for working on
 specific tasks by a larger team. Everybody is welcome! Lots of things
-can be done in \rexx{}!
+can be done.
 
 ## Features of R\textsc{exx}
 The R\textsc{exx} programming language\footnote{Cowlishaw, M. F., \textbf{The REXX Language} (second edition), ISBN 0-13-780651-5, Prentice-Hall, 1990.} was designed with just one objective: to make programming easier than it was before. The design achieved this by emphasizing readability and usability, with a minimum of special notations and restrictions. It was consciously designed to make life easier for its users, rather than for its implementers.

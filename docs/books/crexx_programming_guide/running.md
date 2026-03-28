@@ -21,15 +21,15 @@ can find another.
 
 Let's say you have a Rexx exec you would like to run. To not have any
 surprises, it is of the \emph{hello world} kind. We have a file called
-hello.rexx, containing:
+`hellofirst.rexx`, containing:
 
-```rexx <!--hello.rexx-->
+```rexx <!--hellofirst.rexx-->
 /* rexx */
 options levelb
 say 'hello cRexx world!'
 ```
 
-<!--splice--hello.rexx-->
+<!--splice--hellofirst.rexx-->
 
 When \crexx{} level C (for `Classic') is available, the `options levelb`
 (on line 2) statement can be left out; for the moment, level B is all we
@@ -51,9 +51,9 @@ It might be a good idea to make a shell script to execute these three
 programs in succession[^1]. But take into
 account that this really is a very simple case, in which no built-in
 functions are called. You can look into the generated rexx assembler
-(hello.rxas) file
+(hellofirst.rxas) file
 
-<!--listasm--hello.rxas-->
+<!--listasm--hellofirst.rxas-->
 
 and you can see here that the compiler actually has generated a `say`
 assembler instruction for the Rexx `say` instruction. But we did not yet call any
@@ -78,7 +78,7 @@ say 'today is' date('w')
 return 0
 ```
 
-We can run this with `crexx hellofunc`. It's output is this
+We can run this with `crexx hellofunc`. Its output is this
 
 <!--splice--hellofunc.rexx-->
 
@@ -97,7 +97,7 @@ is in the same directory as the compiler executable, normally the `bin` director
 
 ## Using external functions
 
-The built-in functions (BIF) are written in the \rexx{} language. External functions can be implemented in other languages, for example in a *plugin* written in C. For an explanation of the \crexx{} *Plugin Architecture* (rxpa), see page XXX. Plugins can contain a multitude of functions[^methods].
+The built-in functions (BIF) are written in the \rexx{} language. External functions can be implemented in other languages, for example in a *plugin* written in C. For an explanation of the \crexx{} *Plugin Architecture* (rxpa), see page \pageref{pa---plugin-architecture}. Plugins can contain a multitude of functions[^methods].
 
 An external function written in \crexx{}, of which the `.rxbin` file is found in the same source directory of the calling program, is found automatically. 
 
