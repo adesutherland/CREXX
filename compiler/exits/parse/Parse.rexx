@@ -13,6 +13,7 @@ parseexit: class
     _template_kindtab     = .string
     _template_texttab     = .string
     _template             = .string
+    _wanttrim             = .int
 
     /* ------------------------------------------------------------------------
      * Factory
@@ -28,6 +29,7 @@ parseexit: class
         _error_message = ""
         _status = "EMPTY"
         _template_texttab = ""
+        _wanttrim=0
     /* ------------------------------------------------------------------------
      * Primary keyword handled by this exit.
      * ----------------------------------------------------------------------
@@ -79,6 +81,8 @@ pre_process: method = .string
   uplow=.string
   wantlog=0
   wanttrace=0
+  _wanttrim=0
+
   do start_of_template=2 to tokens.0
      ti   = tokens[start_of_template]
      type = strip(ti.get_type())
@@ -87,6 +91,7 @@ pre_process: method = .string
      if type='identifier' & (utext='UPPER' | utext='LOWER')    then uplow=utext
      else if type='identifier' & utext='LOG' then wantlog=1
      else if type='identifier' & utext='TRACE' then wanttrace=1
+     else if type='identifier' & utext='TRIM' then _wanttrim=1
      else if type='identifier' & (utext='VALUE' | utext='VAR') then parmtype=utext
      else if type='identifier' & (parmtype='VAR' | parmtype='VALUE') then leave  /* next token is with or parse string */
      else if type='string_literal' & (parmtype='VAR' | parmtype='VALUE') then leave  /* next token is with or parse string */
@@ -96,6 +101,7 @@ pre_process: method = .string
       if uplow\="" then start_of_template=start_of_template+1
       if wantlog>0 then start_of_template=start_of_template+1
       if wanttrace>0 then start_of_template=start_of_template+1
+      if _wanttrim>0 then start_of_template=start_of_template+1
   end
   if wanttrace>0 then wantlog=9
   out = 0
@@ -105,7 +111,7 @@ pre_process: method = .string
   ptext = .string[]
 
   i = start_of_template+1
-  call log 'Template start at 'i" parm type '"parmtype"' LOG="wantlog
+  call log 'TEMPLATE START AT='i" PARSE TYPE='"parmtype"' LOG="wantlog" TRIM="_wanttrim
   haswith=0
   prevkind = 0
  call log "*********** New Parse *************"
@@ -158,7 +164,7 @@ pre_process: method = .string
               end
            end
         end
-        call no_raise "syntax", "40.23", "invalid operator usage in parse template:" text
+        return setError("ERROR", 1, "PARSE invalid operator usage in template:" text)
      end
  /* --------------------------------------------------------------
   * String literal (delimiter)
@@ -230,7 +236,7 @@ pre_process: method = .string
   * Unsupported token type
   * --------------------------------------------------------------
   */
-     call no_raise "syntax", "40.23", "unsupported parse token kind: "type
+     return setError("ERROR", 1, "PARSE unsupported parse token kind: "type)
   end
   plan=compile_parse_plan(pkind, ptext, out)
 
@@ -355,10 +361,17 @@ process: method = .string
         if word(_template_kindtab,i)\="1" then iterate
          j = j + 1
          var=word(_template_texttab,i)
-         call log 'Var is 'i' 'j' "'var'"'
+            call log 'Var is 'i' 'j' "'var'" isVar='isvar(var)
          if var='.' then iterate
-       #  else _replacement = _replacement || "_temp" || '=_rs[' || j || '];'
-          else _replacement = _replacement '; 'var|| '=_rs[' || j || '];'
+         if isvar(var)=0 then do
+            _status = "ERROR"
+            _error_token = 1
+            _error_message = "PARSE invalid variable name="var
+            return _status
+        ##    return setError("ERROR", 1, "PARSE invalid variable name="var)
+         end
+         if _wanttrim=0 then _replacement = _replacement '; 'var|| '=_rs[' || j || ']'
+         else _replacement = _replacement '; 'var|| '=strip(_rs[' || j || '])'
      end
      call log "Process III code "_replacement
       return _status
@@ -385,16 +398,162 @@ process: method = .string
 /* ----------------------------------------------------------------------
  * compile_parse_plan
  *
- * Convert flat pkind[] / ptext[] token stream into a per-variable plan.
+ * Purpose
+ *   Transform the flat tokenized PARSE template representation
+ *   (pkind[] / ptext[]) into a compiled per-variable execution plan.
  *
+ *   The generated plan is serialized as a compact length-prefixed string
+ *   and is intended to be consumed later by parse_exec_plan().
  *
+ * Overview
+ *   The PARSE template is initially available as a flat token stream:
  *
- * Rules:
- *   - controls before a variable become that variable's start control
- *   - first control after a variable becomes that variable's end control
- *   - any further controls belong to the next variable's start side
- * ---------------------------------------------------------------------- */
-compile_parse_plan: procedure = .string
+ *     pkind[i] = token kind
+ *     ptext[i] = token text
+ *
+ *   This routine converts that flat stream into a logical sequence of
+ *   variable-centered parse operations. Each output plan entry describes
+ *   exactly one receiving variable and contains:
+ *
+ *     - start control kind
+ *     - start control text
+ *     - variable name
+ *     - end control kind
+ *     - end control text
+ *
+ *   The result is emitted as a serialized plan string so that runtime
+ *   execution does not have to reconstruct token roles again.
+ *
+ * Input
+ *   pkind=.int[]
+ *     Flat array of token kinds produced by PARSE preprocessing.
+ *
+ *   ptext=.string[]
+ *     Flat array of token texts corresponding to pkind[].
+ *
+ *   out=.int
+ *     Highest token index / logical token count to process.
+ *
+ * Token kinds
+ *   1 = receiving variable / target
+ *   2 = literal delimiter
+ *   3 = absolute cursor position
+ *   4 = relative forward cursor shift
+ *   5 = relative backward cursor shift
+ *   6 = implicit next-word control
+ *
+ * Compile model
+ *   The routine applies the following role-assignment rules:
+ *
+ *   1. Controls appearing before a variable become that variable's
+ *      start control.
+ *
+ *   2. The first control appearing after a variable becomes that
+ *      variable's end control.
+ *
+ *   3. Any additional controls after that are not merged or normalized;
+ *      instead they are carried forward as the pending start control
+ *      for the next variable.
+ *
+ *   This is the key semantic rule that allows templates such as:
+ *
+ *     6 q +6 -3 y
+ *
+ *   to compile correctly as:
+ *
+ *     q : start = 6     end = +6
+ *     y : start = -3    end = none
+ *
+ *   rather than incorrectly collapsing the adjacent numeric controls.
+ *
+ * Pending control handling
+ *   The routine keeps one pending start control in:
+ *
+ *     pendingKind
+ *     pendingText
+ *
+ *   These represent the most recently seen control token that has not
+ *   yet been assigned to a variable.
+ *
+ *   When a variable token is encountered:
+ *
+ *     startKind = pendingKind
+ *     startText = pendingText
+ *
+ *   After assignment, pending control state is cleared.
+ *
+ *   If further control tokens appear after the variable's first end
+ *   control, the last such control becomes the pending start control
+ *   for the next variable.
+ *
+ * Output plan format
+ *   One serialized entry is emitted per variable using the format:
+ *
+ *     startKind,startTextLen:startText,varNameLen:varName,
+ *     endKind,endTextLen:endText;
+ *
+ *   Example:
+ *
+ *     3,1:6,1:q,4,1:6;5,1:3,1:y,0,1:0;
+ *
+ *   corresponding to:
+ *
+ *     q : start=(3,'6') end=(4,'6')
+ *     y : start=(5,'3') end=(0,'0')
+ *
+ *   Length-prefix encoding is used so that blanks and arbitrary literal
+ *   delimiters survive serialization unchanged. This is essential for
+ *   cases such as blank delimiter parsing.
+ *
+ * Default values
+ *   If a variable has no start control:
+ *
+ *     startKind = 0
+ *     startText = ""
+ *
+ *   If a variable has no end control:
+ *
+ *     endKind = 0
+ *     endText = "0"
+ *
+ *   endKind = 0 means "no end control" and is interpreted by runtime as
+ *   remainder extraction.
+ *
+ * Diagnostics
+ *   The routine emits log messages for:
+ *
+ *     - assigned start control
+ *     - assigned end control
+ *     - pending start control carried to the next variable
+ *
+ *   These diagnostics are useful when validating compile-time role
+ *   assignment independently from runtime parse execution.
+ *
+ * Error handling
+ *   A syntax error is raised if:
+ *
+ *     - a token kind outside the accepted control set is encountered
+ *       while gathering controls
+ *     - a variable token is expected but not found
+ *
+ * Runtime contract
+ *   The returned plan string is the sole compile-time product consumed
+ *   by parse_exec_plan(). Runtime must not reinterpret token adjacency
+ *   or attempt to reassign semantic roles.
+ *
+ * Notes
+ *   - Numeric control normalization must not be applied at this stage.
+ *   - Adjacent numeric controls are semantically meaningful only after
+ *     start/end role assignment.
+ *   - This routine intentionally preserves authored literal text,
+ *     including blanks.
+ *
+ * Returns
+ *   planStr
+ *     Serialized per-variable parse execution plan.
+ * ----------------------------------------------------------------------
+ */
+compile_parse_plan_old: procedure = .string
   arg pkind=.int[], ptext=.string[], out=.int
 
   v = 0
@@ -413,12 +572,12 @@ compile_parse_plan: procedure = .string
            pendingText = ptext[i]
            i = i + 1
         end
-        else call no_raise "syntax", "40.23","compile_parse_plan error: invalid token kind "pkind[i]" at "i
+        else return setError("ERROR", 1, "PARSE COMPILE PLAN ERROR: INVALID TOKEN="pkind[i]" AT "i)
      end
 
      if i > out then leave
 
-     if pkind[i] \= 1 then call no_raise "syntax", "40.23","compile_parse_plan error: variable expected at token "i
+     if pkind[i] \= 1 then return setError("ERROR", 1, "PARSE COMPILE PLAN ERROR: VARIABLE EXPECTED AT TOKEN="i)
      v = v + 1
 
      startKind = pendingKind
@@ -465,6 +624,111 @@ compile_parse_plan: procedure = .string
 
   return planStr
 
+  compile_parse_plan: procedure = .string
+    arg pkind=.int[], ptext=.string[], out=.int
+
+    v = 0
+    i = 1
+    pendingKind = 0
+    pendingText = ""
+
+    planStr = ""
+
+    do while i <= out
+
+       /* gather start-side controls until variable */
+       do while i <= out & pkind[i] \= 1
+          if pkind[i] = 2 | pkind[i] = 3 | pkind[i] = 4 | pkind[i] = 5 | pkind[i] = 6 then do
+             pendingKind = pkind[i]
+             pendingText = ptext[i]
+             i = i + 1
+          end
+          else return setError("ERROR", 1, "PARSE COMPILE PLAN ERROR: INVALID TOKEN="pkind[i]" AT "i)
+       end
+
+       if i > out then leave
+
+       if pkind[i] \= 1 then return setError("ERROR", 1, "PARSE COMPILE PLAN ERROR: VARIABLE EXPECTED AT TOKEN="i)
+       v = v + 1
+
+       startKind = pendingKind
+       startText = pendingText
+       varName   = ptext[i]
+       endKind   = 0
+       endText   = "0"
+
+       call log "PLAN["v"] START=("startKind","startText") VAR="varName
+
+       /* start control has now been consumed */
+       pendingKind = 0
+       pendingText = ""
+
+       i = i + 1
+
+       /* first following control is end control */
+       if i <= out then do
+          if pkind[i] = 2 | pkind[i] = 3 | pkind[i] = 4 | pkind[i] = 5 | pkind[i] = 6 then do
+             endKind = pkind[i]
+             endText = ptext[i]
+             call log "PLAN["v"] END=("endKind","endText")"
+
+             /* -------------------------------------------------------
+              * Logical duplication rule:
+              * absolute positional boundaries are shared
+              * between adjacent variables.
+              *
+              * Example:
+              *   2 w1 2 w2 2 w3
+              *
+              * behaves internally like:
+              *   2 w1 2 2 w2 2 2 w3
+              *
+              * so the same absolute position acts as:
+              *   - end of current variable
+              *   - start of next variable
+              * ------------------------------------------------------- */
+              shareIt = 0
+              if pkind[i] = 3 then shareIt = 1
+              else if (pkind[i] = 4 | pkind[i] = 5) & ptext[i] = "0" then shareIt = 1
+              if shareIt then do
+                 pendingKind = pkind[i]
+                 pendingText = ptext[i]
+                 call log "SHARED PENDING START=("pendingKind","pendingText") FROM END TOKEN "i
+              end
+              i = i + 1
+          end
+       end
+
+       /* additional controls become pending start for next variable */
+       do while i <= out & pkind[i] \= 1
+          if pkind[i] = 2 | pkind[i] = 3 | pkind[i] = 4 | pkind[i] = 5 | pkind[i] = 6 then do
+             pendingKind = pkind[i]
+             pendingText = ptext[i]
+             call log "PENDING START=("pendingKind","pendingText") FROM TOKEN "i
+             i = i + 1
+          end
+          else leave
+       end
+
+       planStr = planStr ,
+               || startKind || "," ,
+               || length(startText) || ":" || startText || "," ,
+               || length(varName)   || ":" || varName   || "," ,
+               || endKind || "," ,
+               || length(endText)   || ":" || endText   || ";"
+    end
+
+    return planStr
+
+/* isVAR test for valid Variable name, SYMBOL has some problems */
+isVar: procedure=.int
+  arg varname=.string
+  vlen=length(varname)
+  do i = 1 to vlen
+     c = substr(varname, i, 1)
+     if pos(c, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.') = 0 then return 0
+  end
+return 1
 
 /* ============================================================================
  * Helper: setError
@@ -484,11 +748,6 @@ setError: procedure = .string
     _error_message = error_message
 return _status
 
-No_raise: procedure
-  arg p0=.string, p1=.string, p2=.string
-  say "Error "p0 p1 p2
-exit 8
-
 /* ============================================================================
  * Helper: log
  * ----------------------------------------------------------------------------
@@ -504,5 +763,5 @@ exit 8
 log: procedure = .int
     arg logtxt = .string
     /* say "EXIT LOG >" logtxt */
-   ## call lineout "c:\temp\pluginlog.txt", time() logtxt
-    return 0
+  ## call lineout "c:\temp\pluginlog.txt", time() logtxt
+return 0

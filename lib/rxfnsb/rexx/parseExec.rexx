@@ -75,6 +75,7 @@ parseexec: procedure = .string[]
 
         if next_cursor <= field_start then do
            value = take_raw_word(src, field_start, src_len, cursor)
+           cursor = field_start
            if debug=9 then call log ">PLAN ASSIGN 2 "varName"='"value"' FROM="field_start" MODE=RAWWORD ENTRY="v
         end
         else do
