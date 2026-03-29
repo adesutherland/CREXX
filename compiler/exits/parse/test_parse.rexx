@@ -121,7 +121,10 @@ call assert_equal '11b', 'three', c, errors
 /* -------------------------------------------------------------- */
 say '----------------------------------------'
 if errors = 0 then
+do
    say 'All parse log tests passed'
+   say 'SUCCESS'
+end
 else
    say errors 'test(s) failed'
 say '----------------------------------------'

@@ -11,4 +11,5 @@ main: procedure
 
   /* After the exit, the outer 'i' must remain 99 if EXIT_OWNED scoping works */
   say 'after-exit ' || i
+  say 'SUCCESS'
   return

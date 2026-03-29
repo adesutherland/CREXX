@@ -19,6 +19,7 @@ say "Read back from file:"
 say "1: " mystem[1]
 say "2: " mystem[2]
 say "3: " mystem[3]
+say 'SUCCESS'
 return
 
 

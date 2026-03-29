@@ -22,4 +22,5 @@ say 'After'
 do i=1 to a[0]
    say i a[i]
 end
+say 'SUCCESS'
 return

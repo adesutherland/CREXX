@@ -7,3 +7,4 @@ y = "Hello World"
 
 /* The exit should rewrite this to: say 'x=' || x; say 'y=' || y; */
 dump x y
+say 'SUCCESS'

@@ -73,7 +73,7 @@ foreach(_binfile ${REXXBINS})
 	add_custom_command(
 		  COMMAND $<TARGET_FILE:rxc> -o ${_basename} -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
 		  COMMAND $<TARGET_FILE:rxas> ${_basename}
-		  DEPENDS rxas rxc ../rxas/rxfnsc-rxas.rxbin ${REXXSRC} ${_prev_dependency}
+		  DEPENDS rxas rxc rxfnsc-rxas ${REXXSRC} ${_prev_dependency}
 		  OUTPUT ${_binfile}
 		  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		  COMMENT "cREXX compile and assemble ${_basename} ..."

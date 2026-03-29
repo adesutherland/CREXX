@@ -13,5 +13,6 @@ do i=1 to max
 end
 
 pprint a,3,9
+say 'SUCCESS'
 
 

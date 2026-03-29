@@ -27,3 +27,4 @@ main: procedure
     total = qty.i * price.i
     fsay "{i:>3} {name.i:<12} {qty.i:>5} {price.i:>6.2} Total={total:>6.2}"
  end
+ say 'SUCCESS'
