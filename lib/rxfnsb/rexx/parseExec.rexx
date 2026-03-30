@@ -150,7 +150,8 @@ return rs
 
 /* --------------------------------------------------------------
  * rebuild plan[] from flat string
- * -------------------------------------------------------------- */
+ * --------------------------------------------------------------
+ */
 decode_plan: procedure = .string[]
   arg planStr=.string
 
@@ -179,7 +180,10 @@ decode_plan: procedure = .string[]
      call expect_char   planStr, posn, ";"
   end
 return plan
-
+/* --------------------------------------------------------------
+ * retrieve number from string
+ * --------------------------------------------------------------
+ */
 read_number: procedure=.string
   arg s=.string, expose posn=.int
   n = ""
@@ -192,7 +196,10 @@ read_number: procedure=.string
   end
 
 return n
-
+/* --------------------------------------------------------------
+ * retrieve field  from string
+ * --------------------------------------------------------------
+ */
 read_lp_field: procedure=.string
   arg s=.string, expose posn=.int
   lenstr = ""
