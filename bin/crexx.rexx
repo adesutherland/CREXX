@@ -84,25 +84,25 @@
      else
        do
 	 /* allow for single- and double dash options */
-       if left(fn.i,2) = '--' then fn.i=substr(fn.i,2)
-       if fn.i = '-help'     then ret = help(nocolor)
-       if fn.i = '-noexec'   then execute=0
-       if fn.i = '-native'   then native=1
-       if fn.i = '-version'  then version=1
-       if fn.i = '-verbose'  then verbose=1
-       if fn.i = '-verbose0' then verbose=0
-       if fn.i = '-verbose1' then verbose=1
-       if fn.i = '-verbose2' then verbose=2
-       if fn.i = '-verbose3' then verbose=3
-       if fn.i = '-verbose4' then verbose=4
+       if left(fn.i,2) = '--'  then fn.i=substr(fn.i,2)
+       if fn.i = '-help'       then ret = help(nocolor)
+       if fn.i = '-noexec'     then execute=0
+       if fn.i = '-native'     then native=1
+       if fn.i = '-version'    then version=1
+       if fn.i = '-verbose'    then verbose=1
+       if fn.i = '-verbose0'   then verbose=0
+       if fn.i = '-verbose1'   then verbose=1
+       if fn.i = '-verbose2'   then verbose=2
+       if fn.i = '-verbose3'   then verbose=3
+       if fn.i = '-verbose4'   then verbose=4
+       if fn.i = '-nocolor'    then nocolor=1
+       if fn.i = '-nocolour'   then nocolor=1
        if fn.i = '-nooptimize' then optimize=0
-       if fn.i = '-nocolor'  then nocolor=1
-       if fn.i = '-nocolour' then nocolor=1
-       if fn.i = '-keep' then keep=1
-       if fn.i = '-nokeep' then keep=0
-       if fn.i = '-nodecimal' then decimal=0
-       if fn.i = '-decimal' then decimal=1
-	     
+       if fn.i = '-keep'       then keep=1
+       if fn.i = '-nokeep'     then keep=0
+       if fn.i = '-nodecimal'  then decimal=0
+       if fn.i = '-decimal'    then decimal=1
+
        if left(fn.i,2)= '-l' then do
 	 if left(fn.i,1)=' ' then do
 	   fn.i=fn.i||fn.i+1
@@ -123,19 +123,24 @@
    if verbose>2 then     do
      call banner
      say 'INVOCATION OPTIONS'
-     
-       say 'Options in effect:'
-       if execute then say '  EXEC'
-       else say 'NOEXEC'
-       if native  then say '  NATIVE'
-       else say 'NONATIVE'
-       if \keep  then say '  KEEP'
-       else say 'NOKEEP'
-       if \color  then say '  COLOR'
-       else say 'NOCOLOR'
-       say 'VERBOSE' verbose
-       -- call formfeed
-       say;say;say
+     say 'Options in effect:'
+     if \color  then say '  COLOR'
+     else say 'NOCOLOR'
+     if decimal  then say '  DECIMAL'
+     else say 'NOCDECIMAL'
+       
+     if execute then say '  EXEC'
+     else say 'NOEXEC'
+     if native  then say '  NATIVE'
+     else say 'NONATIVE'
+     if \keep  then say '  KEEP'
+     else say 'NOKEEP'
+     if \optimize  then say 'NOOPTIMIZE'
+     else say '  OPTIMIZE'
+
+     say 'VERBOSE' verbose
+     -- call formfeed
+     say;say;say
      end
        
 if version then call logo nocolor
@@ -181,8 +186,8 @@ do i=1 to words(filenames)
     if verbose>3 then do
       call printFileToSTDout filename'.rexx'
     end
-
-  rxcmd = 'rxc -i' rxpath||lpath filename
+  optiflag=''; if optimize=0 then optiflag= '-n'
+  rxcmd = 'rxc' optiflag '-i' rxpath||lpath filename
   if verbose>1 then
     do
       if compile then say esc||ANSI_GREEN'rxc command     :'esc||ANSI_RESET rxcmd
@@ -213,8 +218,9 @@ do i=1 to words(filenames)
     end
 
     binfile = chop_suffix(filename)
-  'rxas -o' binfile binfile
+  'rxas' optiflag '-o' binfile binfile
   if verbose then do
+    if verbose>1 then say esc||ANSI_GREEN||'rxas command    :'   esc||ANSI_RESET'rxas' optiflag '-o' binfile binfile
     if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
     else res = esc||ANSI_RED||RC||esc||ANSI_RESET
     if compile then say '[ 'res' ] rxas     - Assembled      ' esc||ANSI_BLUE||filename'.rxas'||esc||ANSI_RESET
