@@ -7,15 +7,15 @@ main: procedure
  *
  * Regression tests for custom parse log implementation
  * -------------------------------------------------------------- */
-errors = 0
+ccod = .int[]
 /* -------------------------------------------------------------- */
 /* TEST 1: blank delimiter */
 /* -------------------------------------------------------------- */
 fred = 'Now is the time for all good men'
 parse log fred q ' ' y
 
-call assert_equal '1a', 'Now', q,errors
-call assert_equal '1b', 'is the time for all good men', y, errors
+call assert_equal '1a', 'Now', q,ccod
+call assert_equal '1b', 'is the time for all good men', y, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 2: numeric split */
@@ -23,8 +23,8 @@ call assert_equal '1b', 'is the time for all good men', y, errors
 fred = 'Now is the time for all good men'
 parse log fred 6 q +6 -3 y
 
-call assert_equal '2a', 's the ', q , errors
-call assert_equal '2b', 'he time for all good men', y , errors
+call assert_equal '2a', 's the ', q , ccod
+call assert_equal '2b', 'he time for all good men', y , ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 3: fixed positions */
@@ -32,12 +32,12 @@ call assert_equal '2b', 'he time for all good men', y , errors
 rec = '4711Alice Johnson   1249.19EUR London UK'
 parse log rec 1 id 5 name 21 amount 28 currency city country
 
-call assert_equal '3a', '4711', id , errors
-call assert_equal '3b', 'Alice Johnson   ', name , errors
-call assert_equal '3c', '1249.19', amount , errors
-call assert_equal '3d', 'EUR', currency , errors
-call assert_equal '3e', 'London', city , errors
-call assert_equal '3f', 'UK', country , errors
+call assert_equal '3a', '4711', id , ccod
+call assert_equal '3b', 'Alice Johnson   ', name , ccod
+call assert_equal '3c', '1249.19', amount , ccod
+call assert_equal '3d', 'EUR', currency , ccod
+call assert_equal '3e', 'London', city , ccod
+call assert_equal '3f', 'UK', country , ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 4: comma delimited                   */
@@ -45,11 +45,11 @@ call assert_equal '3f', 'UK', country , errors
 line = '1,22,333,4444,55555'
 parse log value '1,22,333,4444,55555' with 1 first ',' second ',' third ',' fourth ',' fifth
 
-call assert_equal '4a', '1', first , errors
-call assert_equal '4b', '22', second , errors
-call assert_equal '4c', '333', third , errors
-call assert_equal '4d', '4444', fourth , errors
-call assert_equal '4e', '55555', fifth , errors
+call assert_equal '4a', '1', first , ccod
+call assert_equal '4b', '22', second , ccod
+call assert_equal '4c', '333', third , ccod
+call assert_equal '4d', '4444', fourth , ccod
+call assert_equal '4e', '55555', fifth , ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 5: implicit with drop */
@@ -57,7 +57,7 @@ call assert_equal '4e', '55555', fifth , errors
 fred = 'Awfulcome its time'
 parse log fred h1 .
 
-call assert_equal '5a', 'Awfulcome', h1 , errors
+call assert_equal '5a', 'Awfulcome', h1 , ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 6: multiple implicit */
@@ -65,9 +65,9 @@ call assert_equal '5a', 'Awfulcome', h1 , errors
 fred = 'l  m  n o'
 parse log fred f1 f2 f3
 
-call assert_equal '6a', 'l', f1 , errors
-call assert_equal '6b', 'm', f2 , errors
-call assert_equal '6c', 'n o', f3 , errors
+call assert_equal '6a', 'l', f1 , ccod
+call assert_equal '6b', 'm', f2 , ccod
+call assert_equal '6c', 'n o', f3 , ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 7: repeated absolute position (your custom semantics) */
@@ -75,9 +75,9 @@ call assert_equal '6c', 'n o', f3 , errors
 x = ' abc '
 parse log var x 1 w1 1 w2 1 w3
 
-call assert_equal '7a', ' abc ', w1 , errors
-call assert_equal '7b', ' abc ', w2 , errors
-call assert_equal '7c', ' abc ', w3 , errors
+call assert_equal '7a', ' abc ', w1 , ccod
+call assert_equal '7b', ' abc ', w2 , ccod
+call assert_equal '7c', ' abc ', w3 , ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 8: positional blanks                 */
@@ -85,9 +85,9 @@ call assert_equal '7c', ' abc ', w3 , errors
 x = ' abc '
 parse log var x 1 a 2 b 3 c
 
-call assert_equal '8a', ' ', a, errors
-call assert_equal '8b', 'a', b, errors
-call assert_equal '8c', 'bc ', c, errors
+call assert_equal '8a', ' ', a, ccod
+call assert_equal '8b', 'a', b, ccod
+call assert_equal '8c', 'bc ', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 9: literal not found */
@@ -95,8 +95,8 @@ call assert_equal '8c', 'bc ', c, errors
 line = 'abcdef'
 parse log value line left ',' right
 
-call assert_equal '9a', 'abcdef', left, errors
-call assert_equal '9b', '', right, errors
+call assert_equal '9a', 'abcdef', left, ccod
+call assert_equal '9b', '', right, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 10: relative controls */
@@ -104,8 +104,8 @@ call assert_equal '9b', '', right, errors
 fred = 'abcdefghijklmno'
 ## parse log fred 3 a +4 b -2 c
 parse trace fred 3 a +4 c
-call assert_equal '10a', 'cdef', a, errors
-call assert_equal '10b', 'ghijklmno', c, errors
+call assert_equal '10a', 'cdef', a, ccod
+call assert_equal '10b', 'ghijklmno', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 11: suppressed middle */
@@ -113,8 +113,8 @@ call assert_equal '10b', 'ghijklmno', c, errors
 fred = 'one two three'
 parse log fred a . c
 
-call assert_equal '11a', 'one', a, errors
-call assert_equal '11b', 'three', c, errors
+call assert_equal '11a', 'one', a, ccod
+call assert_equal '11b', 'three', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 12: empty source with implicit variables                  */
@@ -122,9 +122,9 @@ call assert_equal '11b', 'three', c, errors
 x = ''
 parse log var x a b c
 
-call assert_equal '12a', '', a, errors
-call assert_equal '12b', '', b, errors
-call assert_equal '12c', '', c, errors
+call assert_equal '12a', '', a, ccod
+call assert_equal '12b', '', b, ccod
+call assert_equal '12c', '', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 13: blank-only source with implicit variables             */
@@ -132,8 +132,8 @@ call assert_equal '12c', '', c, errors
 x = '   '
 parse log var x a b
 
-call assert_equal '13a', '', a, errors
-call assert_equal '13b', '', b, errors
+call assert_equal '13a', '', a, ccod
+call assert_equal '13b', '', b, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 14: leading blank with blank delimiter                    */
@@ -141,8 +141,8 @@ call assert_equal '13b', '', b, errors
 x = ' Now'
 parse log var x a ' ' b
 
-call assert_equal '14a', '', a, errors
-call assert_equal '14b', 'Now', b, errors
+call assert_equal '14a', '', a, ccod
+call assert_equal '14b', 'Now', b, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 15: trailing blank with blank delimiter                   */
@@ -150,8 +150,8 @@ call assert_equal '14b', 'Now', b, errors
 x = 'Now '
 parse log var x a ' ' b
 
-call assert_equal '15a', 'Now', a, errors
-call assert_equal '15b', '', b, errors
+call assert_equal '15a', 'Now', a, ccod
+call assert_equal '15b', '', b, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 16: double blank after delimiter                          */
@@ -159,8 +159,8 @@ call assert_equal '15b', '', b, errors
 x = 'Now  is'
 parse log var x a ' ' b
 
-call assert_equal '16a', 'Now', a, errors
-call assert_equal '16b', ' is', b, errors
+call assert_equal '16a', 'Now', a, ccod
+call assert_equal '16b', ' is', b, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 17: comma with empty middle field                         */
@@ -168,9 +168,9 @@ call assert_equal '16b', ' is', b, errors
 x = 'a,,c'
 parse log var x a ',' b ',' c
 
-call assert_equal '17a', 'a', a, errors
-call assert_equal '17b', '', b, errors
-call assert_equal '17c', 'c', c, errors
+call assert_equal '17a', 'a', a, ccod
+call assert_equal '17b', '', b, ccod
+call assert_equal '17c', 'c', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 18: comma with all empty fields                           */
@@ -178,9 +178,9 @@ call assert_equal '17c', 'c', c, errors
 x = ',,'
 parse log var x a ',' b ',' c
 
-call assert_equal '18a', '', a, errors
-call assert_equal '18b', '', b, errors
-call assert_equal '18c', '', c, errors
+call assert_equal '18a', '', a, ccod
+call assert_equal '18b', '', b, ccod
+call assert_equal '18c', '', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 19: leading delimiter                                     */
@@ -188,8 +188,8 @@ call assert_equal '18c', '', c, errors
 x = ',leading'
 parse log var x a ',' b
 
-call assert_equal '19a', '', a, errors
-call assert_equal '19b', 'leading', b, errors
+call assert_equal '19a', '', a, ccod
+call assert_equal '19b', 'leading', b, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 20: trailing delimiter                                    */
@@ -197,8 +197,8 @@ call assert_equal '19b', 'leading', b, errors
 x = 'trailing,'
 parse log var x a ',' b
 
-call assert_equal '20a', 'trailing', a, errors
-call assert_equal '20b', '', b, errors
+call assert_equal '20a', 'trailing', a, ccod
+call assert_equal '20b', '', b, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 21: multi-character literal delimiter                     */
@@ -206,9 +206,9 @@ call assert_equal '20b', '', b, errors
 x = 'abc--def--ghi'
 parse log var x a '--' b '--' c
 
-call assert_equal '21a', 'abc', a, errors
-call assert_equal '21b', 'def', b, errors
-call assert_equal '21c', 'ghi', c, errors
+call assert_equal '21a', 'abc', a, ccod
+call assert_equal '21b', 'def', b, ccod
+call assert_equal '21c', 'ghi', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 22: suppressed first target                               */
@@ -216,8 +216,8 @@ call assert_equal '21c', 'ghi', c, errors
 x = 'one two three'
 parse log var x . b c
 
-call assert_equal '22a', 'two', b, errors
-call assert_equal '22b', 'three', c, errors
+call assert_equal '22a', 'two', b, ccod
+call assert_equal '22b', 'three', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 23: double suppressed target                              */
@@ -225,7 +225,7 @@ call assert_equal '22b', 'three', c, errors
 x = 'one two three'
 parse log var x . . c
 
-call assert_equal '23a', 'three', c, errors
+call assert_equal '23a', 'three', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 24: suppressed last target                                */
@@ -233,7 +233,7 @@ call assert_equal '23a', 'three', c, errors
 x = 'one two three'
 parse log var x a .
 
-call assert_equal '24a', 'one', a, errors
+call assert_equal '24a', 'one', a, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 25: single word plus remainder                            */
@@ -241,8 +241,8 @@ call assert_equal '24a', 'one', a, errors
 x = 'single'
 parse log var x a b
 
-call assert_equal '25a', 'single', a, errors
-call assert_equal '25b', '', b, errors
+call assert_equal '25a', 'single', a, ccod
+call assert_equal '25b', '', b, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 26: implicit remainder preserves trailing blanks          */
@@ -250,10 +250,10 @@ call assert_equal '25b', '', b, errors
 x = '  Now   is   the   time  '
 parse log var x a b c d
 
-call assert_equal '26a', 'Now', a, errors
-call assert_equal '26b', 'is', b, errors
-call assert_equal '26c', 'the', c, errors
-call assert_equal '26d', 'time  ', d, errors
+call assert_equal '26a', 'Now', a, ccod
+call assert_equal '26b', 'is', b, ccod
+call assert_equal '26c', 'the', c, ccod
+call assert_equal '26d', 'time  ', d, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 27: last variable bounded by suppressed target            */
@@ -261,10 +261,10 @@ call assert_equal '26d', 'time  ', d, errors
 x = '  Now   is   the   time  '
 parse log var x a b c d .
 
-call assert_equal '27a', 'Now', a, errors
-call assert_equal '27b', 'is', b, errors
-call assert_equal '27c', 'the', c, errors
-call assert_equal '27d', 'time', d, errors
+call assert_equal '27a', 'Now', a, ccod
+call assert_equal '27b', 'is', b, ccod
+call assert_equal '27c', 'the', c, ccod
+call assert_equal '27d', 'time', d, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 28: absolute start only                                   */
@@ -272,7 +272,7 @@ call assert_equal '27d', 'time', d, errors
 x = 'abcdef'
 parse log var x 3 a
 
-call assert_equal '28a', 'cdef', a, errors
+call assert_equal '28a', 'cdef', a, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 29: absolute span split                                   */
@@ -280,8 +280,8 @@ call assert_equal '28a', 'cdef', a, errors
 x = 'abcdef'
 parse log var x 1 a 4 b
 
-call assert_equal '29a', 'abc', a, errors
-call assert_equal '29b', 'def', b, errors
+call assert_equal '29a', 'abc', a, ccod
+call assert_equal '29b', 'def', b, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 30: second absolute span split                            */
@@ -289,8 +289,8 @@ call assert_equal '29b', 'def', b, errors
 x = 'abcdef'
 parse log var x 2 a 5 b
 
-call assert_equal '30a', 'bcd', a, errors
-call assert_equal '30b', 'ef', b, errors
+call assert_equal '30a', 'bcd', a, ccod
+call assert_equal '30b', 'ef', b, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 31: literal not found in empty source                     */
@@ -298,8 +298,8 @@ call assert_equal '30b', 'ef', b, errors
 x = ''
 parse log var x a ',' b
 
-call assert_equal '31a', '', a, errors
-call assert_equal '31b', '', b, errors
+call assert_equal '31a', '', a, ccod
+call assert_equal '31b', '', b, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 32: repeated same absolute position                       */
@@ -308,9 +308,9 @@ x = 'abcdef'
 parse trace var x 2 w1 2 w2 2 w3
 
 /* custom semantic / non-advancing numeric fallback */
-call assert_equal '32a', 'bcdef', w1, errors
-call assert_equal '32b', 'bcdef', w2, errors
-call assert_equal '32c', 'bcdef', w3, errors
+call assert_equal '32a', 'bcdef', w1, ccod
+call assert_equal '32b', 'bcdef', w2, ccod
+call assert_equal '32c', 'bcdef', w3, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 33: relative zero advance                                 */
@@ -319,8 +319,8 @@ x = 'abcdef'
 parse trace log var x 3 w1 +0 w2
 
 /* custom semantic / non-advancing numeric fallback */
-call assert_equal '33a', 'cdef', w1, errors
-call assert_equal '33b', 'cdef', w2, errors
+call assert_equal '33a', 'cdef', w1, ccod
+call assert_equal '33b', 'cdef', w2, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 34: implicit after literal delimiter                      */
@@ -328,9 +328,9 @@ call assert_equal '33b', 'cdef', w2, errors
 x = 'abc, def ghi'
 parse log var x a ',' b c
 
-call assert_equal '34a', 'abc', a, errors
-call assert_equal '34b', 'def', b, errors
-call assert_equal '34c', 'ghi', c, errors
+call assert_equal '34a', 'abc', a, ccod
+call assert_equal '34b', 'def', b, ccod
+call assert_equal '34c', 'ghi', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 35: literal delimiter with suppressed middle              */
@@ -338,8 +338,8 @@ call assert_equal '34c', 'ghi', c, errors
 x = 'abc,def,ghi'
 parse log var x a ',' . ',' c
 
-call assert_equal '35a', 'abc', a, errors
-call assert_equal '35b', 'ghi', c, errors
+call assert_equal '35a', 'abc', a, ccod
+call assert_equal '35b', 'ghi', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 36: blank delimiter with suppressed middle                */
@@ -347,8 +347,8 @@ call assert_equal '35b', 'ghi', c, errors
 x = 'one two three'
 parse log var x a ' ' . ' ' c
 
-call assert_equal '36a', 'one', a, errors
-call assert_equal '36b', 'three', c, errors
+call assert_equal '36a', 'one', a, ccod
+call assert_equal '36b', 'three', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 37: multiple blanks in implicit parsing                   */
@@ -356,9 +356,9 @@ call assert_equal '36b', 'three', c, errors
 x = 'one  two   three'
 parse log var x a b c
 
-call assert_equal '37a', 'one', a, errors
-call assert_equal '37b', 'two', b, errors
-call assert_equal '37c', 'three', c, errors
+call assert_equal '37a', 'one', a, ccod
+call assert_equal '37b', 'two', b, ccod
+call assert_equal '37c', 'three', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 38: remainder after comma                                 */
@@ -366,8 +366,8 @@ call assert_equal '37c', 'three', c, errors
 x = 'one,two,three'
 parse log var x a ',' rest
 
-call assert_equal '38a', 'one', a, errors
-call assert_equal '38b', 'two,three', rest, errors
+call assert_equal '38a', 'one', a, ccod
+call assert_equal '38b', 'two,three', rest, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 39: blank delimiter chain                                 */
@@ -375,29 +375,25 @@ call assert_equal '38b', 'two,three', rest, errors
 x = 'Now is the time'
 parse log var x a ' ' b ' ' c
 
-call assert_equal '39a', 'Now', a, errors
-call assert_equal '39b', 'is', b, errors
-call assert_equal '39c', 'the time', c, errors
+call assert_equal '39a', 'Now', a, ccod
+call assert_equal '39b', 'is', b, ccod
+call assert_equal '39c', 'the time', c, ccod
 
 /* -------------------------------------------------------------- */
 /* TEST 40: source starts with blanks, implicit drop first        */
 /* -------------------------------------------------------------- */
 x = ' one two '
-parse trace log var x . a
+parse log var x . a
 
-call assert_equal '40a', 'two ', a, errors
+call assert_equal '40a', 'two ', a, ccod
 
 /* -------------------------------------------------------------- */
 /* RESULT */
 /* -------------------------------------------------------------- */
 say '----------------------------------------'
-if errors = 0 then
-do
-   say 'All parse log tests passed'
-   say 'SUCCESS'
-end
-else
-   say errors 'test(s) failed'
+say ' tests passed 'ccod.1
+say ' tests failed 'ccod.2
+say '        total 'ccod.1+ccod.2
 say '----------------------------------------'
 return
 
@@ -406,16 +402,17 @@ return
 /* helper   */
 /* -------------------------------------------------------------- */
 assert_equal: procedure
-  arg testname=.string, expected=.string, actual=.string, expose errors=.int
+  arg testname=.string, expected=.string, actual=.string, expose ccod=.int[]
   if actual \= expected then do
      say '+++ FAIL TEST:' testname
      say '  expected=<'expected'>'
      say '  actual  =<'actual'>'
-     errors=errors+1
+     ccod.2=ccod.2+1
   end
   else do
      say '*** SUCCESS TEST:' testname
      say '  expected=<'expected'>'
      say '  actual  =<'actual'>'
+     ccod.1=ccod.1+1
   end
 return

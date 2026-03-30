@@ -183,7 +183,8 @@ return plan
 read_number: procedure=.string
   arg s=.string, expose posn=.int
   n = ""
-  do while posn <= length(s)
+  nlen=length(s)
+  do while posn <= nlen
      ch = substr(s, posn, 1)
      if ch < "0" | ch > "9" then leave
      n = n || ch
@@ -195,7 +196,8 @@ return n
 read_lp_field: procedure=.string
   arg s=.string, expose posn=.int
   lenstr = ""
-  do while posn <= length(s)
+  nlen=length(s)
+  do while posn <= nlen
      ch = substr(s, posn, 1)
      if ch = ":" then leave
      lenstr = lenstr || ch
