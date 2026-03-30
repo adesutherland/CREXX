@@ -75,6 +75,7 @@ parseexec: procedure = .string[]
 
         if next_cursor <= field_start then do
            value = take_raw_word(src, field_start, src_len, cursor)
+           cursor = field_start
            if debug=9 then call log ">PLAN ASSIGN 2 "varName"='"value"' FROM="field_start" MODE=RAWWORD ENTRY="v
         end
         else do
@@ -149,7 +150,8 @@ return rs
 
 /* --------------------------------------------------------------
  * rebuild plan[] from flat string
- * -------------------------------------------------------------- */
+ * --------------------------------------------------------------
+ */
 decode_plan: procedure = .string[]
   arg planStr=.string
 
@@ -178,11 +180,15 @@ decode_plan: procedure = .string[]
      call expect_char   planStr, posn, ";"
   end
 return plan
-
+/* --------------------------------------------------------------
+ * retrieve number from string
+ * --------------------------------------------------------------
+ */
 read_number: procedure=.string
   arg s=.string, expose posn=.int
   n = ""
-  do while posn <= length(s)
+  nlen=length(s)
+  do while posn <= nlen
      ch = substr(s, posn, 1)
      if ch < "0" | ch > "9" then leave
      n = n || ch
@@ -190,11 +196,15 @@ read_number: procedure=.string
   end
 
 return n
-
+/* --------------------------------------------------------------
+ * retrieve field  from string
+ * --------------------------------------------------------------
+ */
 read_lp_field: procedure=.string
   arg s=.string, expose posn=.int
   lenstr = ""
-  do while posn <= length(s)
+  nlen=length(s)
+  do while posn <= nlen
      ch = substr(s, posn, 1)
      if ch = ":" then leave
      lenstr = lenstr || ch
