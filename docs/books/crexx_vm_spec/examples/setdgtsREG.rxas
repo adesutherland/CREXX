@@ -1,7 +1,7 @@
 /* ddiv example */
 main()  .locals=4
 	say  "ddiv example 100/81 in 100 decimals:"
-	setdgts  75
+	setnumdgts  75
 	load  r1,100
 	load r2,81
 	itod  r1	
