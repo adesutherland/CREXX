@@ -150,8 +150,7 @@ return rs
 
 /* --------------------------------------------------------------
  * rebuild plan[] from flat string
- * --------------------------------------------------------------
- */
+ * -------------------------------------------------------------- */
 decode_plan: procedure = .string[]
   arg planStr=.string
 
@@ -260,12 +259,12 @@ resolve_plan_start: procedure = .int
 
   if kind = 2 then do
      /* literal start only searches in first variable, otherwise start is current cursor */
-     if v = 1 then do
+  ##   if v = 1 then do
         p = pos(text, src, cursor)
         if p = 0 then return -1
         return p + length(text)
-     end
-     return cursor
+  ##   end
+  ##   return cursor
   end
 
 return -1
@@ -291,11 +290,15 @@ take_raw_word: procedure = .string
   p2 = p1
 
   /* scan to first nonblank, but keep leading blanks */
+  p2=p2-1
+  assembler fndnblnk p2,src,p2
+  p2=p2+1
+/*
   do while p2 <= src_len
      if substr(src, p2, 1) \= ' ' then leave
      p2 = p2 + 1
   end
-
+*/
   if p2 > src_len then do
      cursor = src_len + 1
      return substr(src, p1)

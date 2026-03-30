@@ -8,6 +8,7 @@ main: procedure
  * Regression tests for custom parse log implementation
  * -------------------------------------------------------------- */
 ccod = .int[]
+
 /* -------------------------------------------------------------- */
 /* TEST 1: blank delimiter */
 /* -------------------------------------------------------------- */
@@ -388,6 +389,140 @@ parse log var x . a
 call assert_equal '40a', 'two ', a, ccod
 
 /* -------------------------------------------------------------- */
+/* TEST 41: relative backward zero                                */
+/* -------------------------------------------------------------- */
+x = 'abcdef'
+parse log var x 3 w1 -0 w2
+
+call assert_equal '41a', 'cdef', w1, ccod
+call assert_equal '41b', 'cdef', w2, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 42: multi-char literal not found                          */
+/* -------------------------------------------------------------- */
+x = 'abcdef'
+parse log var x a '--' b
+
+call assert_equal '42a', 'abcdef', a, ccod
+call assert_equal '42b', '', b, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 43: consecutive multi-char delimiters                     */
+/* -------------------------------------------------------------- */
+x = 'a----b'
+parse log var x a '--' b '--' c
+
+call assert_equal '43a', 'a', a, ccod
+call assert_equal '43b', '', b, ccod
+call assert_equal '43c', 'b', c, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 44: multi-char delimiter at boundaries                    */
+/* -------------------------------------------------------------- */
+x = '--abc--'
+parse log var x a '--' b '--' c
+
+call assert_equal '44a', '', a, ccod
+call assert_equal '44b', 'abc', b, ccod
+call assert_equal '44c', '', c, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 45: literal start control on first variable               */
+/* -------------------------------------------------------------- */
+x = 'x=1;y=22;z=333'
+parse trace var x 'x=' a ';' 'y=' b ';' 'z=' c
+
+call assert_equal '45a', '1', a, ccod
+call assert_equal '45b', '22', b, ccod
+call assert_equal '45c', '333', c, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 46: literal start not found                               */
+/* -------------------------------------------------------------- */
+x = 'abc=123'
+parse log var x 'xyz=' a
+
+call assert_equal '46a', '', a, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 47: implicit with trailing suppressed target              */
+/* -------------------------------------------------------------- */
+x = 'one two three'
+parse log var x a b .
+
+call assert_equal '47a', 'one', a, ccod
+call assert_equal '47b', 'two', b, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 48: triple suppressed target                              */
+/* -------------------------------------------------------------- */
+x = 'one two three four'
+parse log var x . . . d
+
+call assert_equal '48a', 'four', d, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 49: blank delimiter preserves exact remainder             */
+/* -------------------------------------------------------------- */
+x = 'one  two   three'
+parse log var x a ' ' b
+
+call assert_equal '49a', 'one', a, ccod
+call assert_equal '49b', ' two   three', b, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 50: absolute start beyond source length                   */
+/* -------------------------------------------------------------- */
+x = 'abc'
+parse log var x 10 a
+
+call assert_equal '50a', '', a, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 51: relative forward beyond source length                 */
+/* -------------------------------------------------------------- */
+x = 'abcdef'
+parse log var x 3 a +20 b
+
+call assert_equal '51a', 'cdef', a, ccod
+call assert_equal '51b', '', b, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 52: empty final field after blank delimiter chain         */
+/* -------------------------------------------------------------- */
+x = 'one two '
+parse log var x a ' ' b ' ' c
+
+call assert_equal '52a', 'one', a, ccod
+call assert_equal '52b', 'two', b, ccod
+call assert_equal '52c', '', c, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 53: implicit treats punctuation as part of word           */
+/* -------------------------------------------------------------- */
+x = 'abc,def ghi'
+parse log var x a b
+
+call assert_equal '53a', 'abc,def', a, ccod
+call assert_equal '53b', 'ghi', b, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 54: suppressed target leaves blank remainder              */
+/* -------------------------------------------------------------- */
+x = 'one '
+parse log var x a .
+
+call assert_equal '54a', 'one', a, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 55: final implicit variable on blank-only remainder       */
+/* -------------------------------------------------------------- */
+x = 'one '
+parse log var x . a
+
+call assert_equal '55a', '', a, ccod
+
+/* -------------------------------------------------------------- */
 /* RESULT */
 /* -------------------------------------------------------------- */
 say copies('-',32)
@@ -416,3 +551,10 @@ assert_equal: procedure
      ccod.1=ccod.1+1
   end
 return
+
+myargs: procedure = .int
+ arg ...=.string
+ do i = 1 to arg.0
+    say arg.i
+ end
+ return arg.0
