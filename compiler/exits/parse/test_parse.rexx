@@ -392,7 +392,10 @@ call assert_equal '40a', 'two ', a, errors
 /* -------------------------------------------------------------- */
 say '----------------------------------------'
 if errors = 0 then
+do
    say 'All parse log tests passed'
+   say 'SUCCESS'
+end
 else
    say errors 'test(s) failed'
 say '----------------------------------------'

@@ -11,3 +11,4 @@ main: procedure
   do i=1 to myArray[0]
      say i myArray[i]
   end
+  say 'SUCCESS'

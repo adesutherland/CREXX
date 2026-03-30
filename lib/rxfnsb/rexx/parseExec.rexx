@@ -202,7 +202,8 @@ read_lp_field: procedure=.string
      posn = posn + 1
   end
   posn = posn + 1   /* skip ':' */
-  fldlen = lenstr + 0
+  if lenstr = "" then fldlen = 0
+  else fldlen = lenstr + 0
   if fldlen = 0 then out = ""
   else out = substr(s, posn, fldlen)
   posn = posn + fldlen

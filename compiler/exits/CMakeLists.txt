@@ -9,6 +9,11 @@ function(crexx_add_compiler_exit_runtime_test TARGET_NAME SOURCE_FILE)
     set(multiValueArgs RUN_PREFIX RUN_SUFFIX)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+    set(_pass_regex "SUCCESS")
+    if(CREXX_PASS_REGULAR_EXPRESSION)
+        set(_pass_regex "${CREXX_PASS_REGULAR_EXPRESSION}")
+    endif()
+
     set(_outputs)
     foreach(_mode IN ITEMS noopt opt)
         set(_base ${TARGET_NAME}_${_mode})
@@ -35,15 +40,16 @@ function(crexx_add_compiler_exit_runtime_test TARGET_NAME SOURCE_FILE)
                 COMMAND $<TARGET_FILE:rxvm> ${CREXX_RUN_PREFIX} ${_output} ${CREXX_RUN_SUFFIX}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
+
+        set_tests_properties(${TARGET_NAME}_${_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "${_pass_regex}"
+                FAIL_REGULAR_EXPRESSION "^ERROR ;ERROR reading module file;#FUNCTION_NOT_FOUND;#UNKNOWN_TYPE;#UNKNOWN_VARIABLE;#BAD_CONVERSION"
+        )
     endforeach()
 
     add_custom_target(${TARGET_NAME}_bin ALL DEPENDS ${_outputs})
     add_dependencies(${TARGET_NAME}_bin compiler_exit_bin rxvm)
 
-    if(CREXX_PASS_REGULAR_EXPRESSION)
-        set_tests_properties(${TARGET_NAME}_noopt ${TARGET_NAME}_opt PROPERTIES
-                PASS_REGULAR_EXPRESSION "${CREXX_PASS_REGULAR_EXPRESSION}")
-    endif()
 endfunction()
 
 # Build token.rxbin
