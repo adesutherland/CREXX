@@ -553,76 +553,6 @@ process: method = .string
  *     Serialized per-variable parse execution plan.
  * ----------------------------------------------------------------------
  */
-compile_parse_plan_old: procedure = .string
-  arg pkind=.int[], ptext=.string[], out=.int
-
-  v = 0
-  i = 1
-  pendingKind = 0
-  pendingText = ""
-
-  planStr = ""
-
-  do while i <= out
-
-     /* gather start-side controls until variable */
-     do while i <= out & pkind[i] \= 1
-        if pkind[i] = 2 | pkind[i] = 3 | pkind[i] = 4 | pkind[i] = 5 | pkind[i] = 6 then do
-           pendingKind = pkind[i]
-           pendingText = ptext[i]
-           i = i + 1
-        end
-        else return setError("ERROR", 1, "PARSE COMPILE PLAN ERROR: INVALID TOKEN="pkind[i]" AT "i)
-     end
-
-     if i > out then leave
-
-     if pkind[i] \= 1 then return setError("ERROR", 1, "PARSE COMPILE PLAN ERROR: VARIABLE EXPECTED AT TOKEN="i)
-     v = v + 1
-
-     startKind = pendingKind
-     startText = pendingText
-     varName   = ptext[i]
-     endKind   = 0
-     endText   = "0"
-
-     call log "PLAN["v"] START=("startKind","startText") VAR="varName
-
-     pendingKind = 0
-     pendingText = ""
-
-     i = i + 1
-
-     /* first following control is end control */
-     if i <= out then do
-        if pkind[i] = 2 | pkind[i] = 3 | pkind[i] = 4 | pkind[i] = 5 | pkind[i] = 6 then do
-           endKind = pkind[i]
-           endText = ptext[i]
-           call log "PLAN["v"] END=("endKind","endText")"
-           i = i + 1
-        end
-     end
-
-     /* additional controls become pending start for next variable */
-     do while i <= out & pkind[i] \= 1
-        if pkind[i] = 2 | pkind[i] = 3 | pkind[i] = 4 | pkind[i] = 5 | pkind[i] = 6 then do
-           pendingKind = pkind[i]
-           pendingText = ptext[i]
-           call log "PENDING START=("pendingKind","pendingText") FROM TOKEN "i
-           i = i + 1
-        end
-        else leave
-     end
-
-     planStr = planStr ,
-             || startKind || "," ,
-             || length(startText) || ":" || startText || "," ,
-             || length(varName)   || ":" || varName   || "," ,
-             || endKind || "," ,
-             || length(endText)   || ":" || endText   || ";"
-  end
-
-  return planStr
 
   compile_parse_plan: procedure = .string
     arg pkind=.int[], ptext=.string[], out=.int
@@ -631,7 +561,6 @@ compile_parse_plan_old: procedure = .string
     i = 1
     pendingKind = 0
     pendingText = ""
-
     planStr = ""
 
     do while i <= out
@@ -671,7 +600,6 @@ compile_parse_plan_old: procedure = .string
              endKind = pkind[i]
              endText = ptext[i]
              call log "PLAN["v"] END=("endKind","endText")"
-
              /* -------------------------------------------------------
               * Logical duplication rule:
               * absolute positional boundaries are shared
@@ -719,8 +647,10 @@ compile_parse_plan_old: procedure = .string
     end
 
     return planStr
-
-/* isVAR test for valid Variable name, SYMBOL has some problems */
+/* ============================================================================
+ * Helper: isVAR test for valid Variable name, SYMBOL has some problems
+ * ----------------------------------------------------------------------------
+ */
 isVar: procedure=.int
   arg varname=.string
   vlen=length(varname)
