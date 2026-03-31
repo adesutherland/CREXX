@@ -118,7 +118,12 @@
      end
    end
 
+   declib = ''
+   if \decimal then declib = '-p rxvm_db_decimal'
    if verbose>1 then call logo nocolor  
+
+   decstat = rxpath'bin/rxvm_mc_decimal_manual.a'
+   if \decimal then decstat =  rxpath'bin/rxvm_db_decimal_manual.a'
    
    if verbose>2 then     do
      call banner
@@ -260,7 +265,7 @@ do i=1 to words(filenames)
     '-lavl_tree',
     '-lrxpa',
     '-lm',
-    rxpath'bin/rxvm_mc_decimal_manual.a',
+    decstat ,
     forces,
     filename'.c'
 
@@ -280,7 +285,7 @@ do i=1 to words(filenames)
     if RC>0 then exit  
     end
   else do
-    ex_command = 'rxvme' binfile modules
+    ex_command = 'rxvme' declib binfile modules
 
     if verbose>1 then do
       if execute then say 'crexx executes:' ex_command
