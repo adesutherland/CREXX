@@ -31,6 +31,7 @@
  /* defaults for options for this program */
  native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
  execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=0;decimal=1
+ binfiles='';lastfile=0
  
  esc             = '1b'X
  ANSI_RESET      = '[0m'
@@ -165,6 +166,7 @@ err = .string[]
 /* while we have no exists(file) function, specify the .rxpp extension */
 do i=1 to words(filenames)
   filename=word(filenames,i)
+  if i=words(filenames) then lastfile=1
     dotpos = pos('.',filename)
   if dotpos > 0 then do
     if right(filename,4) = 'rxpp'
@@ -223,6 +225,7 @@ do i=1 to words(filenames)
     end
 
     binfile = chop_suffix(filename)
+    binfiles = binfiles binfile
   'rxas' optiflag '-o' binfile binfile
   if verbose then do
     if verbose>1 then say esc||ANSI_GREEN||'rxas command    :'   esc||ANSI_RESET'rxas' optiflag '-o' binfile binfile
@@ -285,13 +288,13 @@ do i=1 to words(filenames)
     if RC>0 then exit  
     end
   else do
-    ex_command = 'rxvme' declib binfile modules
+    ex_command = 'rxvme' declib binfiles modules
 
     if verbose>1 then do
       if execute then say 'crexx executes:' ex_command
       if execute=0 then say 'crexx does not execute because of --noexec'
     end
-    if execute then address system ex_command
+    if lastfile=1 then if execute then address system ex_command
   end
 end   -- do i
 
