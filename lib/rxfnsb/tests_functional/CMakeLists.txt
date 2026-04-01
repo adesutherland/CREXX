@@ -61,7 +61,7 @@ set(REXXBINS
         ts_find.rxbin
         ts_index.rxbin
         ts_parse.rxbin	
-        ts_parse2.rxbin
+#        ts_parse2.rxbin
         ts_datatype.rxbin
         ts_numeric.rxbin
         ts_splice.rxbin
@@ -80,17 +80,17 @@ foreach(_binfile ${REXXBINS})
     set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx")
     set(_rexx_dep "${_basename}.rexx")
 
-    if("${_basename}" STREQUAL "ts_parse2")
-        # Technical Debt: ts_parse2 is pre-compiled from .rxpp
-        set(_rexx_file "${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rexx")
-        set(_rexx_dep "${_rexx_file}")
-        add_custom_command(
-                OUTPUT ${_rexx_file}
-                COMMAND rxpp -I ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxpp -O ${_rexx_file} -M ${CMAKE_SOURCE_DIR}/lib/plugins/precomp/maclib.rexx -VERBOSE0
-                DEPENDS rxpp ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxpp ${CMAKE_SOURCE_DIR}/lib/plugins/precomp/maclib.rexx
-                COMMENT "Pre-compiling ${_basename}.rxpp"
-        )
-    endif()
+    # if("${_basename}" STREQUAL "ts_parse2")
+    #     # Technical Debt: ts_parse2 is pre-compiled from .rxpp
+    #     set(_rexx_file "${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rexx")
+    #     set(_rexx_dep "${_rexx_file}")
+    #     add_custom_command(
+    #             OUTPUT ${_rexx_file}
+    #             COMMAND rxpp -I ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxpp -O ${_rexx_file} -M ${CMAKE_SOURCE_DIR}/lib/plugins/precomp/maclib.rexx -VERBOSE0
+    #             DEPENDS rxpp ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxpp ${CMAKE_SOURCE_DIR}/lib/plugins/precomp/maclib.rexx
+    #             COMMENT "Pre-compiling ${_basename}.rxpp"
+    #     )
+    # endif()
 
     add_custom_target(${_basename})
     add_dependencies(testbifs ${_basename})

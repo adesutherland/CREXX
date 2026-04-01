@@ -1,5 +1,5 @@
-/* options levelb */
-/* import rxfnsb */
+options levelb
+import rxfnsb
 
 errors=0;debug=0
 c=','
@@ -45,10 +45,10 @@ if debug then say 'after 6'
 
 h='come'
 h='Awful'h 'its time'
-parse h h1 .
+parse h h1 .           
 if h <> "Awfulcome its time" then do
-  errors=errors+1
-  say 'Parse failed in test 7 '
+ errors=errors+1
+ say 'Parse failed in test 7 '
 end
 if debug then say 'after 7'
 
@@ -251,8 +251,8 @@ if debug then say 'after 35'
 
 parse fred a 'the' . -6 y +4 .
 if y<> 'ow i' then do
-      errors=errors+1
-  say 'Parse failed in test 36 --------------->' y 'should be ow i'
+     errors=errors+1
+ say 'Parse failed in test 36 --------------->' y 'should be ow i'
 end
 if debug then say 'after 36'
 
@@ -618,10 +618,10 @@ if rest<>'the text which' then do
 end
 if debug then say 'after 91'
 
-parse 'a bb ccc dddd eeeee' . . . word4 .
+parse 'a bb ccc dddd eeeee' . . . word4 .  
 if word4<>'dddd' then do
-  errors=errors+1
-  say 'Parse failed in test 92 '
+ errors=errors+1
+ say 'Parse failed in test 92 '
 end
 if debug then say 'after 92'
 
