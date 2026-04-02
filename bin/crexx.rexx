@@ -70,7 +70,7 @@
  end
  
  rxpath=rxpath||dirsep /* to avoid having to start -l with a slash */
- 
+
  libraries='bin'
  
  modulenumber=1
@@ -194,10 +194,10 @@ do i=1 to words(filenames)
       call printFileToSTDout filename'.rexx'
     end
   optiflag=''; if optimize=0 then optiflag= '-n'
-  rxcmd = 'rxc' optiflag '-i' rxpath||lpath filename
+  rxcmd = rxpath'bin'dirsep'rxc' optiflag '-i' rxpath||lpath filename
   if verbose>1 then
     do
-      if compile then say esc||ANSI_GREEN'rxc command     :'esc||ANSI_RESET rxcmd
+      if compile then say esc||ANSI_GREEN'rxc command     :' rxcmd
 	if compile=0 then
 	  do
 	  say 'rxc does not compile due to --nocompile option'
@@ -226,9 +226,10 @@ do i=1 to words(filenames)
 
     binfile = chop_suffix(filename)
     binfiles = binfiles binfile
-  'rxas' optiflag '-o' binfile binfile
+    asmcmd = rxpath'bin'dirsep'rxas' optiflag '-o' binfile binfile
+    address cmd asmcmd output out error err
   if verbose then do
-    if verbose>1 then say esc||ANSI_GREEN||'rxas command    :'   esc||ANSI_RESET'rxas' optiflag '-o' binfile binfile
+    if verbose>1 then say esc||ANSI_GREEN||'rxas command    :'   asmcmd
     if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
     else res = esc||ANSI_RED||RC||esc||ANSI_RESET
     if compile then say '[ 'res' ] rxas     - Assembled      ' esc||ANSI_BLUE||filename'.rxas'||esc||ANSI_RESET
@@ -244,7 +245,7 @@ do i=1 to words(filenames)
     loop f=1 to words(modules)
       forces = forces '-Wl,-force_load,'word(modules,f)'_static.a'
     end
-    pack_cmd = 'rxcpack' filename rxpath'bin/library' 
+    pack_cmd = rxpath'bin'dirsep'rxcpack' filename rxpath'bin/library'
     if verbose>1 then
     do
       say esc||ANSI_GREEN'rxcpack command :'esc||ANSI_RESET pack_cmd
@@ -288,7 +289,7 @@ do i=1 to words(filenames)
     if RC>0 then exit  
     end
   else do
-    ex_command = 'rxvme' declib binfiles modules
+    ex_command = rxpath'bin'dirsep'rxvme' declib binfiles modules
 
     if verbose>1 then do
       if execute then say 'crexx executes:' ex_command
