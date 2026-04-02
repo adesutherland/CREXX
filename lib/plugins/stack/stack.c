@@ -21,6 +21,7 @@ PROCEDURE(additem) {
     PROCRETURN
 ENDPROC
 }
+
 PROCEDURE(queue) {
     INSERTATTR(ARG0, 0);
     SETSARRAY(ARG0, 0, GETSTRING(ARG1));
@@ -28,6 +29,7 @@ PROCEDURE(queue) {
     PROCRETURN
     ENDPROC
 }
+
 PROCEDURE(insertitem) {
     rxinteger hi, indx;
     hi = GETARRAYHI(ARG0);
@@ -45,6 +47,7 @@ PROCEDURE(insertitem) {
     PROCRETURN
     ENDPROC
 }
+
 PROCEDURE(delitem) {
     rxinteger hi, indx;
     hi = GETARRAYHI(ARG0);
@@ -58,6 +61,7 @@ PROCEDURE(delitem) {
     PROCRETURN
 ENDPROC
 }
+
 PROCEDURE(pull) {
     rxinteger hi;
     hi = GETARRAYHI(ARG0);
@@ -66,12 +70,14 @@ PROCEDURE(pull) {
     PROCRETURN
 ENDPROC
 }
+
 PROCEDURE(pullq) {
     RETURNSTR(GETSARRAY(ARG0,0));     // set to next item after deleted one
     REMOVEATTR(ARG0, 0);              // remove entry
     PROCRETURN
 ENDPROC
 }
+
 PROCEDURE(moveitem) {
     rxinteger hi, from,to;
     char * val;
@@ -96,14 +102,15 @@ ENDPROC
 PROCEDURE(list) {
         rxinteger i,hi;
         hi  = GETARRAYHI(ARG0);
-        printf("      Entries of Stack \n");
-        printf("Entry     Data   \n");
-        printf("-------------------------------------------------------\n");
+        /* printf("      Entries of Stack \n"); */
+        /* printf("Entry     Data   \n"); */
+        /* printf("-------------------------------------------------------\n"); */
         for (i=0;i<hi;i++) {
             printf("%0.7lld   %s\n",(long long)(i+1), GETSARRAY(ARG0,i));
         }
-        printf("%lld Entries\n",(long long)hi);
+        /* printf("%lld Entries\n",(long long)hi); */
 }
+
 PROCEDURE(finditem) {
     rxinteger i, from, to;
 
@@ -117,7 +124,8 @@ PROCEDURE(finditem) {
         }
     }
     RETURNINT(0);
-ENDPROC}
+ENDPROC
+}
 
 PROCEDURE(swapitem) {
     rxinteger hi,ix1,ix2;
@@ -132,14 +140,15 @@ PROCEDURE(swapitem) {
     }
     SWAPARRAY(ARG0, ix1-1, ix2-1);
     RETURNINT(0);
-ENDPROC}
+ENDPROC
+}
 
 PROCEDURE(create) {
     rxinteger hi, i;
     hi = GETARRAYHI(ARG0);
     for (i = 0; i < hi; ++i) {
         REMOVEATTR(ARG0, 0);   // remove entry
-        printf("CREATE %lld %lld \n",(long long)i,(long long)GETARRAYHI(ARG0));
+        // printf("CREATE %lld %lld \n",(long long)i,(long long)GETARRAYHI(ARG0));
     }
     PROCRETURN
 ENDPROC

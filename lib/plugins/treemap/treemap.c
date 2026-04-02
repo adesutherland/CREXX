@@ -831,8 +831,8 @@ LOADFUNCS
     ADDPROC(tmap_remove,        "treemap.tmremove",      "b",    ".int",    "map=.int, key=.string");
     ADDPROC(tmap_haskey,        "treemap.tmhaskey",      "b",    ".int",    "map=.int, key=.string");
     ADDPROC(tmap_hasvalue,      "treemap.tmhasvalue",    "b",    ".string", "map=.string, value=.string");
-    ADDPROC(tmap_containsKey,   "treemap.tmcontainsKey", "b",    ".int",    "map=.int, key=.string");
-    ADDPROC(tmap_containsValue, "treemap.tmcontainsValue","b",    ".string", "map=.string, value=.string");
+    ADDPROC(tmap_containsKey,   "treemap.tmcontainskey", "b",    ".int",    "map=.int, key=.string");
+    ADDPROC(tmap_containsValue, "treemap.tmcontainsvalue","b",    ".string", "map=.string, value=.string");
     ADDPROC(tmap_lastkey,       "treemap.tmlastkey",      "b",    ".string", "map=.int");
     ADDPROC(tmap_size,          "treemap.tmsize",         "b",    ".int",    "map=.int");
     ADDPROC(tmap_firstkey,      "treemap.tmfirstkey",     "b",   ".string",  "map=.int");
