@@ -28,6 +28,7 @@ parseexec: procedure = .string[]
 
   plan=decode_plan(splan)
   if debug>0 then do
+     call log "----- NEW PARSE -----"
      call log "PARSE STRING  ='"src"'"
      call log "                1---5----0----5----0----5----0----5----0----5----0"
      call log "PARSE-TEMPLATE='"template"'"
@@ -99,7 +100,7 @@ parseexec: procedure = .string[]
            if p <= field_start then value = ""
            else value = substr(src, field_start, p - field_start)
 
-           cursor = p + length(endText)
+           cursor = p  + length(endText)
            if debug=9 then call log ">PLAN ASSIGN 5 "varName"='"value"' FROM="field_start" TO="p-1" MODE=LIT ENTRY="v
         end
         rs[v] = value
@@ -107,7 +108,44 @@ parseexec: procedure = .string[]
      end
 
      /* implicit end control */
-    if endKind = 6 then do
+     /* implicit end control */
+     if endKind = 6 then do
+        p1 = field_start
+
+        /* skip leading blanks for this field */
+        do while p1 <= src_len
+           ch = substr(src, p1, 1)
+           if ch \= ' ' then leave
+           p1 = p1 + 1
+        end
+
+        if p1 > src_len then do
+           value = ""
+           cursor = src_len + 1
+        end
+        else do
+           /* scan one word */
+           p2 = p1
+           do while p2 <= src_len
+              ch = substr(src, p2, 1)
+              if ch = ' ' then leave
+              p2 = p2 + 1
+           end
+
+           value = substr(src, p1, p2 - p1)
+
+           /* consume exactly one separator blank, no more */
+           if p2 <= src_len & substr(src, p2, 1) = ' ' then
+              cursor = p2 + 1
+           else
+              cursor = p2
+        end
+
+        if debug=9 then call log ">PLAN ASSIGN 6 "varName"='"value"' FROM="field_start" MODE=IMPLICIT ENTRY="v " NEXTCURSOR="cursor
+        if varName \= '.' then rs[v] = value
+        iterate
+     end
+     if endKind = 67 then do
        p1 = field_start
 
        /* skip leading blanks */
@@ -256,7 +294,7 @@ resolve_plan_start: procedure = .int
      end
      return p
   end
-
+/*
   if kind = 2 then do
      /* literal start only searches in first variable, otherwise start is current cursor */
   ##   if v = 1 then do
@@ -265,6 +303,43 @@ resolve_plan_start: procedure = .int
         return p + length(text)
   ##   end
   ##   return cursor
+  end
+ */
+  if kind = 7 then do
+     litlen = length(text)
+     /* literal already immediately before cursor:
+      * we are already positioned after it  */
+     if litlen > 0 then do
+        p = cursor - litlen
+        if p >= 1 then do
+           if substr(src, p, litlen) = text then return cursor
+        end
+     end
+
+     /* otherwise search forward and start after the match */
+     p = pos(text, src, cursor)
+     if p = 0 then return -1
+     return p + litlen
+  end
+
+
+  if kind = 2 then do
+     litlen = length(text)
+
+      /* shared-literal start: if the literal is immediately before the current cursor,
+       * use that literal's start position
+       */
+      if litlen > 0 then do
+         p = cursor - litlen
+         if p >= 1 then do
+            if substr(src, p, litlen) = text then return p
+         end
+      end
+
+      /* fallback: normal literal-search start */
+      p = pos(text, src, cursor)
+      if p = 0 then return -1
+      return p  ###   + litlen
   end
 
 return -1

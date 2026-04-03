@@ -239,7 +239,13 @@ pre_process: method = .string
      return setError("ERROR", 1, "PARSE unsupported parse token kind: "type)
   end
   plan=compile_parse_plan(pkind, ptext, out)
-
+   ##    call setError("ERROR",1,substr(plan,9))
+  if substr(plan,1,8)=">>>ERROR" then do
+     _status = "ERROR"
+     _error_token = 1
+     _error_message = substr(plan,9)
+     return _status
+  end
   _template_kindtab=""
   _template_texttab=""
   do i = 1 to out
@@ -563,20 +569,49 @@ process: method = .string
     planStr = ""
 
     do while i <= out
+       /* gather start-side controls until variable
+        *   1 = receiving variable / target
+        *   2 = literal delimiter
+        *   3 = absolute cursor position
+        *   4 = relative forward cursor shift
+        *   5 = relative backward cursor shift
+        *   6 = implicit next-word control
+        */
+       scursor=0
+      /* Make all leading integers into one absolute position for the cursor */
+       do while i <= out & pkind[i] \= 1
+          if pkind[i] = 2  then do
+             pendingKind = 3
+             pendingText = 1
+             leave
+          end
+          if pkind[i] = 3  then scursor=ptext[i]
+          else if pkind[i] = 4  then scursor=scursor+ptext[i]
+          else if pkind[i] = 5  then scursor=scursor-ptext[i]
+          else leave            /* not an integer leave loop */
+          pendingKind = 3       /* the number is identified as absolute cursor position */
+          pendingText = scursor /* update the newly calculated number */
+      ##    call log "Eliminating early positioning numbers "PendingKind' 'pendingText' '
+          i=i+1
+       end
+      /* gather controls before the current variable being compiled */
 
-       /* gather start-side controls until variable */
+       seenLiteralStart = 0
        do while i <= out & pkind[i] \= 1
           if pkind[i] = 2 | pkind[i] = 3 | pkind[i] = 4 | pkind[i] = 5 | pkind[i] = 6 then do
+             if pkind[i] = 2 then seenLiteralStart = 1
+             if seenLiteralStart & (pkind[i] = 4 | pkind[i] = 5) then do
+                call log "+++++++++++++++++++ PARSE unsupported template combination: literal followed by relative offset before variable"
+                return ">>>ERROR PARSE unsupported template combination: literal followed by relative offset before variable"
+             end
              pendingKind = pkind[i]
              pendingText = ptext[i]
              i = i + 1
           end
-          else return setError("ERROR", 1, "PARSE COMPILE PLAN ERROR: INVALID TOKEN="pkind[i]" AT "i)
+          else return ">>>ERROR PARSE COMPILE PLAN ERROR: INVALID TOKEN="pkind[i]" AT "i
        end
-
        if i > out then leave
-
-       if pkind[i] \= 1 then return setError("ERROR", 1, "PARSE COMPILE PLAN ERROR: VARIABLE EXPECTED AT TOKEN="i)
+       if pkind[i] \= 1 then return ">>>ERROR PARSE COMPILE PLAN ERROR: VARIABLE EXPECTED AT TOKEN="i
        v = v + 1
 
        startKind = pendingKind
@@ -615,17 +650,50 @@ process: method = .string
               *   - start of next variable
               * ------------------------------------------------------- */
               shareIt = 0
-              if pkind[i] = 3 then shareIt = 1
-              else if (pkind[i] = 4 | pkind[i] = 5) & ptext[i] = "0" then shareIt = 1
-              if shareIt then do
-                 pendingKind = pkind[i]
-                 pendingText = ptext[i]
-                 call log "SHARED PENDING START=("pendingKind","pendingText") FROM END TOKEN "i
-              end
+                /* existing numeric sharing rules */
+               if pkind[i] = 3 then shareIt = 1
+               else if (pkind[i] = 4 | pkind[i] = 5) & ptext[i] = "0" then shareIt = 1
+
+               /* special literal-sharing rule:
+                * share literal only when it is followed by
+                *   literal-end current-var, then next-var, then +n/-n
+                * Example:
+                *   p ',' q +1 r
+                * so q starts at ',' and ends one char later
+                */
+               else if pkind[i] = 2 then do
+                  ni = i + 1
+                  nj = i + 2
+
+                  if ni <= out & nj <= out then do
+                     if pkind[ni] = 1 then do
+                        if pkind[nj] = 4 | pkind[nj] = 5 then do
+                           shareIt = 1
+                           call log "SHARE LITERAL END=("pkind[i]","ptext[i]") TO NEXT VAR "ptext[ni]" NEXTCTRL=("pkind[nj]","ptext[nj]")"
+                        end
+                     end
+                  end
+               end
+
+               if shareIt then do
+                  pendingKind = pkind[i]
+                  pendingText = ptext[i]
+                  call log "SHARED PENDING START=("pendingKind","pendingText") FROM END TOKEN "i
+               end
               i = i + 1
           end
        end
-
+       if startKind = 2 then do
+          /* literal starting with blank acts as prefix/separator */
+          if length(startText) > 0 & substr(startText,1,1) = ' ' then do
+             startKind = 7
+             call log "PLAN["v"] START LITERAL-BLANK RECLASSIFIED TO KIND 7 TEXT=("startText")"
+          end
+          else if endKind = 2 | endKind = 0 | endKind = 5 | endKind = 6 then do
+             startKind = 7
+             call log "PLAN["v"] START LITERAL RECLASSIFIED TO KIND 7 TEXT=("startText") ENDKIND="endKind
+          end
+       end
        /* additional controls become pending start for next variable */
        do while i <= out & pkind[i] \= 1
           if pkind[i] = 2 | pkind[i] = 3 | pkind[i] = 4 | pkind[i] = 5 | pkind[i] = 6 then do
@@ -692,5 +760,5 @@ return _status
 log: procedure = .int
     arg logtxt = .string
     /* say "EXIT LOG >" logtxt */
-  ## call lineout "c:\temp\pluginlog.txt", time() logtxt
+  ##  call lineout "c:\temp\pluginlog.txt", time() logtxt
 return 0
