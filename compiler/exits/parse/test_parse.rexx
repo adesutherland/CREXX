@@ -869,6 +869,10 @@ if total > 0 then do
 end
 say copies('-',32)
 
+if ccod.11 = 0 & ccod.2 = 0 then do
+    say 'SUCCESS'
+end
+
 return
 
 /* -------------------------------------------------------------- */
@@ -896,5 +900,3 @@ assert_equal: procedure
   end
    ccod.9=casenum     /* save case number */
 return
-
-
