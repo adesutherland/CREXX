@@ -1,227 +1,195 @@
 ;;; crexx-mode.el --- Major mode for Rexx language  -*- lexical-binding: t; -*-
+
 ;; Author: rvjansen
 ;; Version: 0.01
 ;; Keywords: languages
 ;; Package-Requires: ((emacs "24.4"))
-;; URL: https://example.invalid/crexx-mode
 
 ;;; Commentary:
-;; Minimal Rexx major mode with:
-;; - regexp-opt keyword highlighting
-;; - built-in function highlighting
-;; - label & number highlighting
-;; - CMS Pipelines: pipes, stage labels, common stage names
-;; - indentation for do/end, loop/end, select/when/otherwise/end
 ;;
-;; Usage:
-;;   (add-to-list 'load-path "/path/to/dir")
-;;   (require 'crexx-mode)
-;;   (add-to-list 'auto-mode-alist '("\\.rex\\'" . crexx-mode))
-;;   (add-to-list 'auto-mode-alist '("\\.rexx\\'" . crexx-mode))
-;;   (add-to-list 'auto-mode-alist '("\\.cmd\\'" . crexx-mode))
-;;   etc.
+;; Rexx major mode with:
+;; - keyword highlighting
+;; - top-level label highlighting
+;; - indentation
+;;
+;; Indentation rules:
+;; - ordinary top-level labels flush left
+;; - method/factory headers: 2 spaces
+;; - method/factory bodies: 4 spaces
+;; - nested blocks add further indentation
 
 ;;; Code:
+
+(require 'subr-x)
 
 (defgroup crexx-mode nil
   "Major mode for editing Rexx."
   :group 'languages)
 
+(defgroup rexx-indent nil
+  "Indentation settings."
+  :group 'crexx-mode)
+
+(defcustom rexx-indent-offset 2
+  "Normal block indentation."
+  :type 'integer
+  :group 'rexx-indent)
+
+(defcustom rexx-member-header-indent 2
+  "Indentation for METHOD/FACTORY header lines."
+  :type 'integer
+  :group 'rexx-indent)
+
+(defcustom rexx-member-body-indent 4
+  "Indentation for METHOD/FACTORY body lines."
+  :type 'integer
+  :group 'rexx-indent)
+
 ;; ------------------------------
-;; Keyword sets
+;; Keywords
 ;; ------------------------------
 
 (defconst rexx-keywords
-  '("address" "arg" "assembler" "break" "call" "do" "drop"
+  '("address" "arg" "assembler" "break" "call" "class" "do" "drop"
     "echo" "else" "end" "exit"
-    "forever" "if" "import" "interpret" "iterate" "leave"
-    "nop" "numeric" "options" "otherwise"
-    "parse" "procedure" "push" "pull" "namespace" "expose"
+    "factory" "forever" "if" "import" "interpret" "iterate" "leave" "method"
+    "namespace" "nop" "numeric" "options" "otherwise"
+    "parse" "procedure" "push" "pull" "expose"
     "queue" "return" "say" "select" "shell" "signal"
-    "then" "to" "trace" "until" "upper" "when" "while" "loop")
-  "Rexx keywords / statements. Case-insensitive.")
-
-(defconst rexx-builtin-functions
-  '("abbrev" "abs" "address" "arg" "center" "centre" "changestr" "compare"
-    "copies" "c2d" "c2x" "d2c" "d2x" "datatype" "delstr" "delword"
-    "errortext" "form" "format" "fuzz" "insert" "lastpos" "left"
-    "length" "lower" "max" "min" "overlay" "pos" "reverse" "right"
-    "sign" "space" "strip" "substr" "subword" "symbol" "translate"
-    "trunc" "upper" "value" "verify" "word" "wordindex" "wordlength"
-    "wordpos" "words" "xrange" "xranges")
-  "Common Rexx built-in functions (portable subset).")
+    "then" "to" "trace" "until" "upper" "when" "with" "while" "loop")
+  "Rexx keywords.")
 
 (defconst rexx-keywords-regexp
   (concat "\\<" (regexp-opt rexx-keywords t) "\\>")
-  "Optimized regexp for Rexx keywords.")
-
-(defconst rexx-builtin-regexp
-  (concat "\\<" (regexp-opt rexx-builtin-functions t) "\\>")
-  "Optimized regexp for Rexx built-in functions.")
+  "Regexp for Rexx keywords.")
 
 ;; ------------------------------
-;; Pipelines (CMS Pipelines style)
+;; Labels / members
 ;; ------------------------------
 
-;; Match one or two pipes: | or ||
-(defconst rexx-pipe-operator-regexp
-  "[|][|]?"
-  "Matches Rexx/CMS pipeline operator (single or double pipe).")
+(defconst rexx-top-label-token-regexp
+  "\\(?:\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)"
+  "Regexp matching a top-level Rexx label token.")
 
-;; Match a stage label immediately after a pipe:  | stage:
-(defconst rexx-pipe-stage-label-regexp
-  "[|][ \t]*\\([A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:"
-  "Label used as a pipeline stage after a pipe.")
+(defconst rexx-label-regexp
+  (concat "^\\(" rexx-top-label-token-regexp "\\)[ \t]*:")
+  "Regexp matching a top-level label.")
 
-;; Common CMS Pipelines stage names (extend as needed)
-(defconst rexx-pipe-stage-names
-  '("specs" "locate" "change" "find" "take" "drop" "sort" "append" "console"
-    "stem" "literal" "split" "join" "rexx" "host" "command" "substitute"
-    "strip" "center" "lower" "upper" "count" "unique" "merge" "tee" "out" "in"
-    "fields" "blank" "nonblank" "trim" "pack" "unpack" "pad" "date" "time")
-  "A non-exhaustive list of common CMS Pipelines stages.")
+(defconst rexx-member-start-regexp
+  (concat "^\\(" rexx-top-label-token-regexp
+          "\\)[ \t]*:[ \t]*\\_<\\(method\\|factory\\)\\_>")
+  "Regexp matching a top-level METHOD or FACTORY header.")
 
-(defconst rexx-pipe-stage-name-regexp
-  (concat "[|][ \t]*" (regexp-opt rexx-pipe-stage-names t) "\\_>")
-  "Matches a known pipeline stage name immediately after a pipe.")
+(defconst rexx-number-regexp
+  "\\b\\([0-9]+\\(?:\\.[0-9]+\\)?\\)\\b"
+  "Regexp matching numeric literals.")
 
 ;; ------------------------------
-;; Syntax table
+;; Syntax
 ;; ------------------------------
 
 (defvar crexx-mode-syntax-table
   (let ((st (make-syntax-table)))
-    ;; Comment syntax: /* ... */
+    ;; Block comments: /* ... */
     (modify-syntax-entry ?/ ". 124b" st)
-    (modify-syntax-entry ?* ". 23"   st)
-    (modify-syntax-entry ?# "< b" st)
-    (modify-syntax-entry ?\n "> b"   st)
+    (modify-syntax-entry ?* ". 23" st)
 
-    ;; Strings: both ' and "
+    ;; Line comments: # ... end-of-line
+    (modify-syntax-entry ?# "< b" st)
+    (modify-syntax-entry ?\n "> b" st)
+
+    ;; Strings
     (modify-syntax-entry ?\" "\"" st)
     (modify-syntax-entry ?'  "\"" st)
 
-    ;; Backslash is NOT an escape in Rexx strings
+    ;; Backslash is not an escape in Rexx strings
     (modify-syntax-entry ?\\ "." st)
-    
-    ;; Word constituents: underscore
-    (modify-syntax-entry ?_  "w" st)
+
+    ;; Underscore is part of words
+    (modify-syntax-entry ?_ "w" st)
 
     st)
   "Syntax table for `crexx-mode'.")
 
-
-;; After defining the syntax table:
 (defun rexx-syntax-propertize (start end)
+  "Apply syntax properties between START and END."
   (funcall
    (syntax-propertize-rules
-    ("\\(--\\)\\(?:\\s-\\|$\\)" (1 "< b"))) ; '--' starts a comment
+    ("\\(--\\)\\(?:\\s-\\|$\\)" (1 "< b")))
    start end))
 
 ;; ------------------------------
-;; Font-lock
+;; Font lock
 ;; ------------------------------
-
-(defconst rexx-label-regexp
-  "^[ \t]*\\([A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:"
-  "Rexx label at beginning of line.")
-
-(defconst rexx-number-regexp
-  "\\b\\([0-9]+\\(?:\\.[0-9]+\\)?\\)\\b"
-  "Numeric literals.")
 
 (defvar rexx-font-lock-keywords
-  `(
-    ;; Pipeline operators and stage labels
-    (,rexx-pipe-operator-regexp . font-lock-builtin-face)
-    (,rexx-pipe-stage-label-regexp (1 font-lock-function-name-face))
-    ;; Known pipeline stage names after a pipe
-    (,rexx-pipe-stage-name-regexp (1 font-lock-keyword-face))
-
-    ;; Core Rexx highlighting
-    (,rexx-keywords-regexp . font-lock-keyword-face)
-    (,rexx-builtin-regexp  . font-lock-builtin-face)
-    (,rexx-label-regexp    (1 font-lock-function-name-face))
-    (,rexx-number-regexp   (1 font-lock-constant-face))
-   )
-  "Default expressions to highlight in Rexx mode.")
-
-
-;; .dot words are types in crexx
-(add-to-list 'rexx-font-lock-keywords
-             '("\\.[A-Za-z_][A-Za-z0-9_]*\\>" . font-lock-type-face))
+  `((,rexx-keywords-regexp . font-lock-keyword-face)
+    (,rexx-label-regexp (1 font-lock-function-name-face))
+    (,rexx-number-regexp (1 font-lock-constant-face))
+    ("\\.[A-Za-z_][A-Za-z0-9_]*\\>" . font-lock-type-face)
+    ("address[ \t]+\\(\\<\\w+\\>\\)" (1 font-lock-variable-name-face))
+    ("namespace[ \t]+\\(\\<\\w+\\>\\)" (1 font-lock-variable-name-face))
+    ("import[ \t]+\\(\\<\\w+\\>\\)" (1 font-lock-variable-name-face)))
+  "Font-lock rules for `crexx-mode'.")
 
 ;; ------------------------------
-;; Indentation
+;; Abbrevs
 ;; ------------------------------
 
-(defgroup rexx-indent nil
-  "Indentation settings for Rexx mode."
-  :group 'crexx-mode)
+(define-abbrev-table 'crexx-mode-abbrev-table ())
 
-(defcustom rexx-indent-offset 2
-  "Indentation offset for Rexx blocks."
-  :type 'integer
-  :group 'rexx-indent)
+;; ------------------------------
+;; Helpers
+;; ------------------------------
 
-(defun rexx--line-matches-p (regex)
-  "Return non-nil if current line matches REGEX."
-  (save-excursion
-    (beginning-of-line)
-    (looking-at regex)))
+(defun rexx--line-comment-p ()
+  "Return non-nil if current line is a line comment."
+  (looking-at "^[ \t]*\\(?:--\\|#\\)"))
+
+(defun rexx--block-comment-start-p ()
+  "Return non-nil if current line starts a block comment."
+  (looking-at "^[ \t]*/\\*"))
+
+(defun rexx--goto-previous-code-line ()
+  "Move point to the previous non-blank, non-comment line.
+Return non-nil if such a line exists."
+  (let ((found nil))
+    (while (and (not found)
+                (zerop (forward-line -1)))
+      (cond
+       ((looking-at "^[ \t]*$"))
+       ((rexx--line-comment-p))
+       ((rexx--block-comment-start-p))
+       (t
+        (setq found t))))
+    found))
 
 (defun rexx--previous-code-line-indent ()
   "Return indentation of the previous non-blank, non-comment line."
   (save-excursion
-    (let ((found nil) (indent 0))
-      (while (and (not found)
-                  (zerop (forward-line -1)))
-        (cond
-         ;; skip blank lines
-         ((looking-at "^[ \t]*$"))
-         ;; skip comment-only lines
-         ((looking-at "^[ \t]*/\\*")
-          ;; if we're inside a block comment, skip until its start
-          (while (and (not (bobp))
-                      (not (looking-at ".*\\*/")))
-            (forward-line -1))
-          (forward-line -1))  ;; step above the */ line
-         (t (setq found t
-                  indent (current-indentation)))))
-      indent)))
+    (if (rexx--goto-previous-code-line)
+        (current-indentation)
+      0)))
 
 (defun rexx--previous-code-line-text ()
-  "Return text of the previous non-blank, non-comment line (trimmed)."
+  "Return text of the previous non-blank, non-comment line, trimmed."
   (save-excursion
-    (let ((text ""))
-      (while (and (zerop (forward-line -1))
-                  (or (looking-at "^[ \t]*$")
-                      (looking-at "^[ \t]*/\\*"))))
-      (setq text (buffer-substring-no-properties
-                  (line-beginning-position) (line-end-position)))
-      (string-trim text))))
-
-(defconst rexx--block-openers
-  '("do" "loop" "select")
-  "Keywords that increase indentation for the following line.")
-
-(defconst rexx--mid-block
-  '("when" "otherwise")
-  "Keywords that should outdent to the enclosing SELECT level.")
-
-(defconst rexx--block-closers
-  '("end")
-  "Keywords that close a block and should outdent.")
+    (if (rexx--goto-previous-code-line)
+        (string-trim
+         (buffer-substring-no-properties
+          (line-beginning-position)
+          (line-end-position)))
+      "")))
 
 (defun rexx--prev-line-opens-block-p ()
-  "Return non-nil if previous code line opens a block."
-  (let* ((line (downcase (rexx--previous-code-line-text))))
+  "Return non-nil if the previous code line opens a block."
+  (let ((line (downcase (rexx--previous-code-line-text))))
     (or (string-match-p "\\_<\\(do\\|loop\\|select\\)\\_>" line)
-        (string-match-p "\\_<then\\_>" line)
+        (string-match-p "\\_<then\\_>\\s-*$" line)
         (string-match-p "^\\s-*else\\_>" line))))
 
 (defun rexx--current-line-closer-or-mid-p ()
-  "Return 'close for END, 'mid for WHEN/OTHERWISE, or nil."
+  "Return `close' for END, `mid' for WHEN/OTHERWISE, or nil."
   (save-excursion
     (beginning-of-line)
     (let ((case-fold-search t))
@@ -230,18 +198,98 @@
        ((looking-at "\\s-*\\_<\\(when\\|otherwise\\)\\_>") 'mid)
        (t nil)))))
 
+(defun rexx--member-start-line-p ()
+  "Return non-nil if current line is a METHOD/FACTORY header."
+  (save-excursion
+    (beginning-of-line)
+    (looking-at rexx-member-start-regexp)))
+
+(defun rexx--top-level-label-line-p ()
+  "Return non-nil if current line is a top-level label."
+  (save-excursion
+    (beginning-of-line)
+    (looking-at rexx-label-regexp)))
+
+(defun rexx--inside-member-p ()
+  "Return non-nil if current line is inside a METHOD/FACTORY body.
+Header lines themselves do not count as body lines."
+  (and (not (rexx--member-start-line-p))
+       (save-excursion
+         (let ((found nil)
+               (done nil))
+           (beginning-of-line)
+           (while (and (not done) (not (bobp)))
+             (forward-line -1)
+             (cond
+              ((looking-at rexx-member-start-regexp)
+               (setq found t
+                     done t))
+              ((looking-at rexx-label-regexp)
+               (setq found nil
+                     done t))))
+           found))))
+
+(defun rexx--previous-code-line-is-member-header-p ()
+  "Return non-nil if the previous code line is a METHOD or FACTORY header."
+  (save-excursion
+    (and (rexx--goto-previous-code-line)
+         (rexx--member-start-line-p))))
+
+(defun rexx--previous-code-line-is-member-body-p ()
+  "Return non-nil if the previous code line is inside a METHOD/FACTORY body."
+  (save-excursion
+    (and (rexx--goto-previous-code-line)
+         (rexx--inside-member-p))))
+
+(defun rexx--current-line-is-member-body-p ()
+  "Return non-nil if current line is inside a METHOD/FACTORY body."
+  (rexx--inside-member-p))
+
+;; ------------------------------
+;; Indentation
+;; ------------------------------
+
 (defun rexx-calculate-indentation ()
   "Compute desired indentation for the current line."
   (save-excursion
-    (let* ((case-fold-search t)
-           (prev-indent (rexx--previous-code-line-indent))
+    (let* ((prev-indent (rexx--previous-code-line-indent))
            (kind (rexx--current-line-closer-or-mid-p))
-           (indent prev-indent))
+           (indent 0))
+
+      ;; Base indentation by line type.
+      (cond
+       ;; Member header itself: 2 spaces.
+       ((rexx--member-start-line-p)
+        (setq indent rexx-member-header-indent))
+
+       ;; First body line after a member header: 4 spaces.
+       ((rexx--previous-code-line-is-member-header-p)
+        (setq indent rexx-member-body-indent))
+
+       ;; Other lines inside a member body: inherit previous indentation,
+       ;; but never let it fall below the body baseline of 4.
+       ((rexx--current-line-is-member-body-p)
+        (setq indent (max prev-indent rexx-member-body-indent)))
+
+       ;; Top-level label: flush left.
+       ((rexx--top-level-label-line-p)
+        (setq indent 0))
+
+       ;; Ordinary line outside members: inherit previous indentation.
+       (t
+        (setq indent prev-indent)))
+
+      ;; Closing and mid-block keywords reduce indentation.
       (pcase kind
-        ('close (setq indent (max 0 (- prev-indent rexx-indent-offset))))
-        ('mid   (setq indent (max 0 (- prev-indent rexx-indent-offset))))
-        (_      (when (rexx--prev-line-opens-block-p)
-                  (setq indent (+ prev-indent rexx-indent-offset)))))
+        ('close
+         (setq indent (max 0 (- indent rexx-indent-offset))))
+        ('mid
+         (setq indent (max 0 (- indent rexx-indent-offset)))))
+
+      ;; Previous line opens a normal Rexx block.
+      (when (rexx--prev-line-opens-block-p)
+        (setq indent (+ indent rexx-indent-offset)))
+
       (max 0 indent))))
 
 (defun rexx-indent-line ()
@@ -249,72 +297,31 @@
   (interactive)
   (let ((col (current-column)))
     (indent-line-to (rexx-calculate-indentation))
-    (when (> col (current-column))
+    (when (> col (current-indentation))
       (move-to-column col))))
 
 ;; ------------------------------
-;; Mode definition
+;; Mode
 ;; ------------------------------
 
 ;;;###autoload
 (define-derived-mode crexx-mode prog-mode "Rexx"
-  "Major mode for editing Rexx code."
+  "Rexx major mode."
   :syntax-table crexx-mode-syntax-table
-  (setq-local comment-start "/* ")
-  (setq-local comment-end " */")
 
-  (setq rexx-font-lock-keywords-2
-  (append
-    rexx-font-lock-keywords
-    (list
-      ;; ports
-      (list
-       "address *\\(\\<\\w*\\>\\)" '(1 font-lock-variable-name-face nil))
-      ;; namespace names
-      (list
-       "namespace *\\(\\<\\w*\\>\\)" '(1 font-lock-variable-name-face nil))
-      ;; import names
-      (list
-       "import *\\(\\<\\w*\\>\\)" '(1 font-lock-variable-name-face nil))
-
-      ;; user function names
-      (list
-       "^\\(\\<.*\\>\\):" '(1 font-lock-type-face nil))
-      )
-    
-    )
-  )
-  
-  (setq-local font-lock-defaults '((rexx-font-lock-keywords-2) nil t))
-  (setq-local case-fold-search t)
-  (setq-local font-lock-keywords-case-fold-search t)  ;; case-insensitive
+  (setq-local font-lock-defaults '(rexx-font-lock-keywords nil t))
   (setq-local indent-line-function #'rexx-indent-line)
-
-  ;; Custom comment face:
-  ;; (defface rexx-comment-face
-  ;;   '((((class color)) :foreground "mediumspringgreen")
-  ;;     (t :inherit font-lock-comment-face))
-  ;;   "Face for Rexx comments.")
-  ;; (setq-local rexx--comment-face-cookie
-  ;;             (face-remap-add-relative 'font-lock-comment-face 'rexx-comment-face))
-  
-  (setq-local local-abbrev-table crexx-mode-abbrev-table)
   (setq-local syntax-propertize-function #'rexx-syntax-propertize)
+  (setq-local local-abbrev-table crexx-mode-abbrev-table)
+
+  (setq-local comment-use-syntax nil)
+  (setq-local comment-style 'indent)
   (setq-local comment-start "-- ")
   (setq-local comment-continue "-- ")
   (setq-local comment-end "")
-  (setq-local comment-start-skip "\\(?:--\\|#\\)\\s-*")
-  (setq-local imenu-generic-expression `(("Labels" ,rexx-label-regexp 1)))
-  ;; (rexx--maybe-enable-abbrevs)
-  ;; Strings in both ' and "
-  (modify-syntax-entry ?\" "\"" crexx-mode-syntax-table)
-  (modify-syntax-entry ?'  "\"" crexx-mode-syntax-table))
-
-;; Force comment commands to use the vars above (not block comment syntax table)
-(setq-local comment-use-syntax nil)
-
-;; Optional: how line prefixes align
-(setq-local comment-style 'indent)   ;; or 'aligned
+  (setq-local comment-start-skip "\\(?:--\\|#\\)\\s-*"))
 
 (provide 'crexx-mode)
+
 ;;; crexx-mode.el ends here
+
