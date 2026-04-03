@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #if defined(__APPLE__)
+ #include <pwd.h>
  #include <sys/stat.h>
  #include <sys/time.h>
  #include <sys/wait.h>
@@ -40,6 +41,7 @@
 #elif defined(__APPLE__)
 #else
 // #include <arpa/inet.h>    // Linux
+#include <pwd.h>
    #define wait(ms) usleep(ms*1000)
 #endif
 
@@ -757,7 +759,7 @@ PROCEDURE(getglobal) {
 ENDPROC
 }
 
-PROCEDURE(uptime) {
+PROCEDURE(sysuptime) {
     // Get system uptime in milliseconds
     char result[64];
 #if defined(_WIN32)
@@ -840,8 +842,15 @@ uint32_t username_len = sizeof(username);
     RETURNSTRX(username);
     } else RETURNSTRX("unknown");
 #else
-    char buffer[32];
-    snprintf(buffer, sizeof(buffer), "%u", getuid());
+    struct passwd pwd;
+    struct passwd *result;
+    char buffer[16384];  // sufficiently large buffer
+    
+    if (getpwuid_r(getuid(), &pwd, buffer, sizeof(buffer), &result) == 0 && result) {
+      snprintf(buffer, sizeof(buffer), "%s", result->pw_name);
+    } else {
+      snprintf(buffer, sizeof(buffer), "%s", "invalid");
+    }
     RETURNSTRX(buffer);
 #endif
 ENDPROC
@@ -1236,7 +1245,7 @@ LOADFUNCS
     ADDPROC(setclipboard,"system.setclipboard","b",    ".int","arg0=.string");
     ADDPROC(getglobal,   "system.getglobal"   ,"b",    ".string","key=.string");
     ADDPROC(setglobal,   "system.setglobal"   ,"b",    ".int",  "key=.string,value=.string");
-    ADDPROC(uptime,      "system.uptime"      ,"b",    ".int",  "");
+    ADDPROC(sysuptime,      "system.sysuptime"      ,"b",    ".int",  "");
     ADDPROC(waitX,       "system.wait"        ,"b",    ".int",  "time=.int");
     ADDPROC(beep,        "system.beep"        ,"b",    ".int",  "");
     ADDPROC(getuser,     "system.userid"      ,"b",    ".string",  "");
