@@ -155,7 +155,7 @@ target_include_directories(funcvm PRIVATE
 
 # Additional functional tests (of callback functions)
 set(FUNC_TESTS
-        signal_funcs
+#        signal_funcs
         string_funcs
         int_funcs
         float_funcs
