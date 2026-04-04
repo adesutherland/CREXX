@@ -21,6 +21,7 @@
 ;;; Code:
 
 (require 'subr-x)
+(require 'imenu)
 
 (defgroup crexx-mode nil
   "Major mode for editing Rexx."
@@ -84,6 +85,18 @@
   "\\b\\([0-9]+\\(?:\\.[0-9]+\\)?\\)\\b"
   "Regexp matching numeric literals.")
 
+(defconst rexx-class-regexp
+  "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<class\\_>"
+  "Regexp matching class definitions.")
+
+(defconst rexx-method-regexp
+  "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<method\\_>"
+  "Regexp matching method definitions.")
+
+(defconst rexx-factory-regexp
+  "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<factory\\_>"
+  "Regexp matching factory definitions.")
+
 ;; ------------------------------
 ;; Syntax
 ;; ------------------------------
@@ -118,6 +131,12 @@
     ("\\(--\\)\\(?:\\s-\\|$\\)" (1 "< b")))
    start end))
 
+(defvar rexx-imenu-generic-expression
+  `(
+    ("Classes"   ,rexx-class-regexp   1)
+    ("Methods"   ,rexx-method-regexp  1)
+    ("Factories" ,rexx-factory-regexp 1)
+    ))
 ;; ------------------------------
 ;; Font lock
 ;; ------------------------------
@@ -338,7 +357,10 @@ Header lines themselves do not count as body lines."
   (setq-local comment-start "-- ")
   (setq-local comment-continue "-- ")
   (setq-local comment-end "")
-  (setq-local comment-start-skip "\\(?:--\\|#\\)\\s-*"))
+  (setq-local comment-start-skip "\\(?:--\\|#\\)\\s-*")
+
+  (setq-local imenu-generic-expression rexx-imenu-generic-expression)
+  (setq-local imenu-case-fold-search t))
 
 (provide 'crexx-mode)
 
