@@ -1,5 +1,5 @@
 //
-// System Information Plugin for crexx/pa - Plugin Architecture
+// Stack Plugin for crexx/pa - Plugin Architecture
 //
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,9 +7,8 @@
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <math.h>
 
-/* ----------------------------------------------------------------------
- * STACK primitve Linked List
- * * --------------------------------------------------------------------------------------------
+/*
+ * STACK primitive Linked List
  */
 
 PROCEDURE(additem) {

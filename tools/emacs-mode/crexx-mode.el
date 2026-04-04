@@ -122,14 +122,33 @@
 ;; Font lock
 ;; ------------------------------
 
+(defconst rexx-defining-label-regexp
+  "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<\\(class\\|method\\|factory\\)\\_>"
+  "Regexp matching a label that defines a class, method, or factory.")
+
 (defvar rexx-font-lock-keywords
-  `((,rexx-keywords-regexp . font-lock-keyword-face)
+  `(
+    ;; Labels that define class/method/factory
+    (,rexx-defining-label-regexp
+     (1 font-lock-function-name-face prepend))
+
+    ;; Keywords
+    (,rexx-keywords-regexp . font-lock-keyword-face)
+
+    ;; Flush-left top-level labels
     (,rexx-label-regexp (1 font-lock-function-name-face))
+
+    ;; Numbers
     (,rexx-number-regexp (1 font-lock-constant-face))
+
+    ;; .types
     ("\\.[A-Za-z_][A-Za-z0-9_]*\\>" . font-lock-type-face)
+
+    ;; address / namespace / import targets
     ("address[ \t]+\\(\\<\\w+\\>\\)" (1 font-lock-variable-name-face))
     ("namespace[ \t]+\\(\\<\\w+\\>\\)" (1 font-lock-variable-name-face))
-    ("import[ \t]+\\(\\<\\w+\\>\\)" (1 font-lock-variable-name-face)))
+    ("import[ \t]+\\(\\<\\w+\\>\\)" (1 font-lock-variable-name-face))
+    )
   "Font-lock rules for `crexx-mode'.")
 
 ;; ------------------------------
