@@ -106,6 +106,10 @@
   "\\_<\\([A-Za-z_][A-Za-z0-9_]*\\)\\_>[ \t]*("
   "Regexp matching a function or method call followed by `(`.")
 
+(defconst rexx-member-start-regexp
+  (concat "^[ \t]*\\(" rexx-top-label-token-regexp
+          "\\)[ \t]*:[ \t]*\\_<\\(method\\|factory\\)\\_>")
+  "Regexp matching a METHOD or FACTORY header, optionally indented.")
 ;; ------------------------------
 ;; Syntax
 ;; ------------------------------
@@ -308,11 +312,11 @@ Header lines themselves do not count as body lines."
     (and (rexx--goto-previous-code-line)
          (rexx--member-start-line-p))))
 
-(defun rexx--previous-code-line-is-member-body-p ()
-  "Return non-nil if the previous code line is inside a METHOD/FACTORY body."
+(defun rexx--previous-code-line-is-member-header-p ()
+  "Return non-nil if the previous code line is a METHOD or FACTORY header."
   (save-excursion
     (and (rexx--goto-previous-code-line)
-         (rexx--inside-member-p))))
+         (rexx--member-start-line-p))))
 
 (defun rexx--current-line-is-member-body-p ()
   "Return non-nil if current line is inside a METHOD/FACTORY body."
@@ -342,7 +346,6 @@ Highlights every variable name on an ARG line that appears before =."
 ;; ------------------------------
 ;; Indentation
 ;; ------------------------------
-
 (defun rexx-calculate-indentation ()
   "Compute desired indentation for the current line."
   (save-excursion
@@ -383,6 +386,10 @@ Highlights every variable name on an ARG line that appears before =."
       ;; Previous line opens a normal Rexx block.
       (when (rexx--prev-line-opens-block-p)
         (setq indent (+ indent rexx-indent-offset)))
+
+      ;; Keep member bodies at least 4 spaces.
+      (when (rexx--current-line-is-member-body-p)
+        (setq indent (max indent rexx-member-body-indent)))
 
       (max 0 indent))))
 
