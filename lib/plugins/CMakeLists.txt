@@ -21,6 +21,7 @@ add_subdirectory(recv390)
 add_subdirectory(map)
 add_subdirectory(rxtcp)
 add_subdirectory(socket)
+add_subdirectory(system)
 
 #
 # These are the plugins that are additionally built for Linux

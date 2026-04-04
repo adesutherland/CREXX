@@ -8,7 +8,7 @@ val = .int
 
   *: factory
     return
-    
+
     /** 
     * method uptime returns the system uptime in seconds
     */

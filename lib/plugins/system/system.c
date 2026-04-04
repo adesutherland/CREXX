@@ -42,7 +42,17 @@
 #else
 // #include <arpa/inet.h>    // Linux
 #include <pwd.h>
-   #define wait(ms) usleep(ms*1000)
+#include <unistd.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <time.h>
+
+static inline void wait_ms(unsigned int ms) {
+    struct timespec ts;
+    ts.tv_sec = ms / 1000;
+    ts.tv_nsec = (ms % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+}
 #endif
 
 char * path;
@@ -416,78 +426,78 @@ void trim(char *str) {
     }
 }
 
-PROCEDURE(parse) {
-    int patternpos = 0, plen, indx=0;
-    char * stringpos,* stringoffset;
-    int begin, end;
-    char tchar;
-    char *string =  GETSTRING(ARG0);
-    char *pattern = GETSTRING(ARG1);
-    int debug = 0;
-    char patstring[255];
-    char valstring[512];
-    char variable[64];
-    plen = strlen(pattern);
-    if (strstr(GETSTRING(ARG2), "debug") > 0) debug=1;
+/* PROCEDURE(parse) { */
+/*     int patternpos = 0, plen, indx=0; */
+/*     char * stringpos,* stringoffset; */
+/*     int begin, end; */
+/*     char tchar; */
+/*     char *string =  GETSTRING(ARG0); */
+/*     char *pattern = GETSTRING(ARG1); */
+/*     int debug = 0; */
+/*     char patstring[255]; */
+/*     char valstring[512]; */
+/*     char variable[64]; */
+/*     plen = strlen(pattern); */
+/*     if (strstr(GETSTRING(ARG2), "debug") > 0) debug=1; */
 
-    RETURNINT(-8);
-    stringoffset=string;
-    while (patternpos < plen) {
-        indx++;
-     // locate first quote, can be a single or a double quote
-        patternpos = min(nextdel(pattern, 0, plen, '"'), nextdel(pattern, patternpos, plen, '\"'));
-        if (patternpos == INT_MAX) break;    // nothing there, 1. iteration to n. iteration
-        tchar = pattern[patternpos];         // save the quote type
-        begin = patternpos;                  // here the pattern begines
-        patternpos = nextdel(pattern, patternpos + 1, plen, tchar);  // search the ending (same quote type)
-        if (patternpos == INT_MAX) patternpos = plen;  // not found assume it lasts to the end of the pattern string
-        end = patternpos;                    // save the end position
-     // Extract string pattern and variable preceding it
-     // ------------------------------------------------
-        memset(patstring, 0, sizeof(patstring));
-        memset(valstring, 0, sizeof(valstring));
-        memset(variable,  0, sizeof(variable));
+/*     RETURNINT(-8); */
+/*     stringoffset=string; */
+/*     while (patternpos < plen) { */
+/*         indx++; */
+/*      // locate first quote, can be a single or a double quote */
+/*         patternpos = min(nextdel(pattern, 0, plen, '"'), nextdel(pattern, patternpos, plen, '\"')); */
+/*         if (patternpos == INT_MAX) break;    // nothing there, 1. iteration to n. iteration */
+/*         tchar = pattern[patternpos];         // save the quote type */
+/*         begin = patternpos;                  // here the pattern begines */
+/*         patternpos = nextdel(pattern, patternpos + 1, plen, tchar);  // search the ending (same quote type) */
+/*         if (patternpos == INT_MAX) patternpos = plen;  // not found assume it lasts to the end of the pattern string */
+/*         end = patternpos;                    // save the end position */
+/*      // Extract string pattern and variable preceding it */
+/*      // ------------------------------------------------ */
+/*         memset(patstring, 0, sizeof(patstring)); */
+/*         memset(valstring, 0, sizeof(valstring)); */
+/*         memset(variable,  0, sizeof(variable)); */
 
-        strncpy(variable, pattern, begin);
-        trim(variable);
-        strncpy(patstring, pattern + begin, end - begin + 1);
-        if (debug==1) printf("... located pattern : '%s'\n",patstring);
-        if (strlen(variable)>0) {   // first pattern has no preceding variable
-            if (debug==1)  printf("... located variable    : '%s'\n",variable);
-            SETARRAYHI(ARG2, indx);
-            SETSARRAY(ARG2, indx - 1, variable);
-            SETARRAYHI(ARG3, indx);
-            SETSARRAY(ARG3, indx - 1, "");
-        } else printf("... no prior variable assignment\n");
-        pattern = pattern + end + 1;
-     // now find pattern in string
-     // --------------------------
-        stringpos = strstr(stringoffset, patstring);
-        if (stringpos == 0) break;
-        strncpy(valstring, stringoffset, stringpos - stringoffset);
-        stringoffset = stringpos + strlen(patstring);
-        trim(valstring);
-        if (debug==1) printf("... extracted value : '%s' preceeding pattern\n",valstring);
-        if (strlen(variable)>0) {   // first pattern has no preceding variable
-             SETSARRAY(ARG3, indx - 1, valstring);
-        } else indx--;   // there is no variable reset indx by -1
-    }
- // now handle remaining parts past last pattern
-    memset(valstring, 0, sizeof(valstring));
-    memset(variable, 0, sizeof(variable));
-    sprintf(valstring, "%s",stringoffset);
-    trim(valstring);
-    sprintf(variable, "%s",pattern);
-    trim(variable);
-    SETARRAYHI(ARG2, indx);
-    SETARRAYHI(ARG3,indx);
-    if (strlen(variable)==0) SETSARRAY(ARG2, indx - 1, "not_assigned");
-       else SETSARRAY(ARG2, indx - 1, variable);
-    SETSARRAY(ARG3,indx-1,valstring);
-    RETURNINT(0);
-    PROCRETURN
-    ENDPROC
-}
+/*         strncpy(variable, pattern, begin); */
+/*         trim(variable); */
+/*         strncpy(patstring, pattern + begin, end - begin + 1); */
+/*         if (debug==1) printf("... located pattern : '%s'\n",patstring); */
+/*         if (strlen(variable)>0) {   // first pattern has no preceding variable */
+/*             if (debug==1)  printf("... located variable    : '%s'\n",variable); */
+/*             SETARRAYHI(ARG2, indx); */
+/*             SETSARRAY(ARG2, indx - 1, variable); */
+/*             SETARRAYHI(ARG3, indx); */
+/*             SETSARRAY(ARG3, indx - 1, ""); */
+/*         } else printf("... no prior variable assignment\n"); */
+/*         pattern = pattern + end + 1; */
+/*      // now find pattern in string */
+/*      // -------------------------- */
+/*         stringpos = strstr(stringoffset, patstring); */
+/*         if (stringpos == 0) break; */
+/*         strncpy(valstring, stringoffset, stringpos - stringoffset); */
+/*         stringoffset = stringpos + strlen(patstring); */
+/*         trim(valstring); */
+/*         if (debug==1) printf("... extracted value : '%s' preceeding pattern\n",valstring); */
+/*         if (strlen(variable)>0) {   // first pattern has no preceding variable */
+/*              SETSARRAY(ARG3, indx - 1, valstring); */
+/*         } else indx--;   // there is no variable reset indx by -1 */
+/*     } */
+/*  // now handle remaining parts past last pattern */
+/*     memset(valstring, 0, sizeof(valstring)); */
+/*     memset(variable, 0, sizeof(variable)); */
+/*     sprintf(valstring, "%s",stringoffset); */
+/*     trim(valstring); */
+/*     sprintf(variable, "%s",pattern); */
+/*     trim(variable); */
+/*     SETARRAYHI(ARG2, indx); */
+/*     SETARRAYHI(ARG3,indx); */
+/*     if (strlen(variable)==0) SETSARRAY(ARG2, indx - 1, "not_assigned"); */
+/*        else SETSARRAY(ARG2, indx - 1, variable); */
+/*     SETSARRAY(ARG3,indx-1,valstring); */
+/*     RETURNINT(0); */
+/*     PROCRETURN */
+/*     ENDPROC */
+/* } */
 
 // Function to check if a format specifier is valid
 int count_valid_format_specifiers(char *format) {
@@ -774,7 +784,7 @@ PROCEDURE(sysuptime) {
         long uptime_seconds = info.uptime;
         RETURNINTX(uptime_seconds)
      } else {
-        RETURNINTX(result, "-1");
+        RETURNINTX("-1");
     }
 #elif defined(__APPLE__)
     // Declare a struct to hold boot time information
@@ -1253,9 +1263,9 @@ LOADFUNCS
     ADDPROC(opsys,       "system.opsys"       ,"b",    ".string",  "");
     ADDPROC(append_binary_file,"system.append","b",    ".int","source=.string,target=.string");
     ADDPROC(rxbin_modules,"system.lmodules",   "b",    ".int","source=.string");
+/*
     ADDPROC(parse,       "system.parse",       "b",    ".int" ,"string=.string,pattern=.string,expose variable=.string[],expose value=.string[]");
     ADDPROC(parsex,      "system.parsex",      "b",    ".int" ,"string=.string,pattern=.string,expose entries=.string[]");
-/*
     ADDPROC(pipecreate,  "system.pipecreate",  "b",    ".int" ," ");
     ADDPROC(piperun,     "system.pipesend",    "b",    ".int" ,"proc=.int,cmd=.string");
     ADDPROC(pipewait,    "system.pipewait",    "b",    ".int" ,"proc=.int,mwait=10000");
