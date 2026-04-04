@@ -98,6 +98,10 @@
   "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<factory\\_>"
   "Regexp matching factory definitions.")
 
+(defconst rexx-return-type-regexp
+  "=[ \t]*\\(\\.[A-Za-z_][A-Za-z0-9_]*\\)"
+  "Regexp matching a CREXX return type.")
+
 ;; ------------------------------
 ;; Syntax
 ;; ------------------------------
@@ -160,6 +164,12 @@
 
     ;; Numbers
     (,rexx-number-regexp (1 font-lock-constant-face))
+
+    ;; Return types: = .int
+    (,rexx-return-type-regexp (1 font-lock-type-face))
+
+     ;; All ARG parameters on an arg line
+    (rexx-match-arg-variables (0 font-lock-variable-name-face))
 
     ;; .types
     ("\\.[A-Za-z_][A-Za-z0-9_]*\\>" . font-lock-type-face)
@@ -300,6 +310,27 @@ Header lines themselves do not count as body lines."
   "Return non-nil if current line is inside a METHOD/FACTORY body."
   (rexx--inside-member-p))
 
+(defun rexx-match-arg-variables (limit)
+  "Match ARG variable names up to LIMIT.
+Highlights every variable name on an ARG line that appears before =."
+  (catch 'found
+    (while (re-search-forward
+            "\\_<arg\\_>\\|\\([A-Za-z_][A-Za-z0-9_]*\\)[ \t]*="
+            limit t)
+      (cond
+       ;; Saw ARG: continue scanning on this line
+       ((save-excursion
+          (goto-char (match-beginning 0))
+          (looking-at "\\_<arg\\_>")))
+
+       ;; Saw a variable before = ; only accept it on an ARG line
+       ((match-beginning 1)
+        (save-excursion
+          (beginning-of-line)
+          (when (looking-at "^[ \t]*arg\\_>")
+            (set-match-data (list (match-beginning 1) (match-end 1)))
+            (throw 'found t)))))))
+  nil)
 ;; ------------------------------
 ;; Indentation
 ;; ------------------------------
