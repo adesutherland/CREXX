@@ -14,7 +14,6 @@ sp    = .int
     arg item = .string
     sp = sp + 1
     val[sp] = item
-    say val[sp]
     return 1
     
   size: method = .int
