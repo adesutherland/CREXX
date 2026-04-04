@@ -35,7 +35,6 @@ endif()
 # These are the plugins that are additionally built for macOS
 #
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  add_subdirectory(system)
 #  add_subdirectory(console) probably misses xwindows libs
 endif()
 
@@ -50,7 +49,6 @@ if(WIN32)
 	add_subdirectory(matrix)
 #	add_subdirectory(rxtcp)
 #	add_subdirectory(rxshm)
-	add_subdirectory(system)
 #	add_subdirectory(pick)
 #       add_subdirectory(pipe)
 #       add_subdirectory(socket)
