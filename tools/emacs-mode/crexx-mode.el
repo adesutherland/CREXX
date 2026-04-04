@@ -102,6 +102,10 @@
   "=[ \t]*\\(\\.[A-Za-z_][A-Za-z0-9_]*\\)"
   "Regexp matching a CREXX return type.")
 
+(defconst rexx-call-regexp
+  "\\_<\\([A-Za-z_][A-Za-z0-9_]*\\)\\_>[ \t]*("
+  "Regexp matching a function or method call followed by `(`.")
+
 ;; ------------------------------
 ;; Syntax
 ;; ------------------------------
@@ -156,6 +160,10 @@
     (,rexx-defining-label-regexp
      (1 font-lock-function-name-face prepend))
 
+    ;; Function/method calls like foo(...)
+    (,rexx-call-regexp
+     (1 font-lock-function-name-face))
+    
     ;; Keywords
     (,rexx-keywords-regexp . font-lock-keyword-face)
 
