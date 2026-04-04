@@ -22,6 +22,7 @@
 
 (require 'subr-x)
 (require 'imenu)
+(require 'easymenu)
 
 (defgroup crexx-mode nil
   "Major mode for editing Rexx."
@@ -175,6 +176,22 @@
 ;; ------------------------------
 
 (define-abbrev-table 'crexx-mode-abbrev-table ())
+
+;; ------------------------------
+;; Helper for easymenu
+;; ------------------------------
+
+(defvar crexx-mode-map
+  (let ((map (make-sparse-keymap)))
+    map)
+  "Keymap for `crexx-mode'.")
+
+(easy-menu-define crexx-mode-menu crexx-mode-map
+  "Menu for `crexx-mode'."
+  '("Crexx"
+    ["Index..." imenu t]
+    "---"
+    ["Indent line" rexx-indent-line t]))
 
 ;; ------------------------------
 ;; Helpers
@@ -360,7 +377,8 @@ Header lines themselves do not count as body lines."
   (setq-local comment-start-skip "\\(?:--\\|#\\)\\s-*")
 
   (setq-local imenu-generic-expression rexx-imenu-generic-expression)
-  (setq-local imenu-case-fold-search t))
+  (setq-local imenu-case-fold-search t)
+  (easy-menu-add crexx-mode-menu crexx-mode-map))
 
 (provide 'crexx-mode)
 
