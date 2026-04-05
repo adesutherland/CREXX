@@ -9,9 +9,9 @@ function(plugin_template plugin_name test_rexx use_precomp)
 # ---------------------------------------------------------------------------------------
   if(use_precomp)
      # Define paths
-     set(build "${CMAKE_SOURCE_DIR}")        # Build path
+     set(build "${CMAKE_SOURCE_DIR}")                              # Build path
      set(lib "${CMAKE_BINARY_DIR}/bin/library")                    # Runtime library path
-     set(sourcelib "${CMAKE_SOURCE_DIR}/lib/plugins/precomp")  # Source library path
+     set(sourcelib "${CMAKE_SOURCE_DIR}/lib/plugins/precomp")      # Source library path
 
      # input, output files
      set(REXX_PRE ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rxpp)

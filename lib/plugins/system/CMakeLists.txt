@@ -19,11 +19,11 @@ plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 
 enable_testing()
 # Create the static link module
-#add_static_plugin_target(_system system.c)
+add_static_plugin_target(_system system.c)
 
-# Add include directories - static version
-# target_include_directories(_system_static PRIVATE 
-#     ${CMAKE_SOURCE_DIR}/include
-#     ${CMAKE_SOURCE_DIR}/lib/include
-#     ${CMAKE_SOURCE_DIR}/rxpa
-# )
+#Add include directories - static version
+target_include_directories(_system_static PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/include
+    ${CMAKE_SOURCE_DIR}/rxpa
+)

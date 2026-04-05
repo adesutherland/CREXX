@@ -20,9 +20,9 @@ plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 enable_testing()
 
 # Create the static link module
-#add_static_plugin_target(_map map.c)
+# add_static_plugin_target(_map map.c)
 
-# Add include directories - static version
+# #Add include directories - static version
 # target_include_directories(_map_static PRIVATE 
 #     ${CMAKE_SOURCE_DIR}/include
 #     ${CMAKE_SOURCE_DIR}/lib/include

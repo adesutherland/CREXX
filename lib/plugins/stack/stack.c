@@ -3,9 +3,10 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>   // For POSIX systems (Linux/macOS)
+#include <unistd.h>      // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <math.h>
+#include <string.h>
 
 /*
  * STACK primitive Linked List

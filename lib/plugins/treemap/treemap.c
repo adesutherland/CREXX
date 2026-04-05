@@ -9,6 +9,9 @@
   #include <string.h>
 #endif
 
+#define PUSHSARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
+                                     SETSARRAY(pnum,indx,value);};
+
 #define STACK_CAPACITY 1024           // this defines the maximum depth of the tree, it is only used in tmap_keys (retrieve all keys)
 
 // Internal helper function declarations
