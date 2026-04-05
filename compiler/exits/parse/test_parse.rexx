@@ -10,7 +10,7 @@ main: procedure
 ccod = .int[]
 
 /* -------------------------------------------------------------- */
-/* TEST 1: blank delimiter     */
+/* TEST 1: blank delimiter        */
 /* -------------------------------------------------------------- */
 fred = 'Now is the time for all good men'
 parse fred q ' ' y
@@ -112,7 +112,7 @@ call assert_equal '10b', 'ghijklmno', c, ccod
 /* TEST 11: suppressed middle */
 /* -------------------------------------------------------------- */
 fred = 'one two three'
-parse fred a . c
+parse fred a b c
 
 call assert_equal '11a', 'one', a, ccod
 call assert_equal '11b', 'three', c, ccod
@@ -666,7 +666,7 @@ call assert_equal '113a', ' time for', x, ccod
 call assert_equal '113b', ' all good', y, ccod
 
 /***** disabled legacy tests 40-41 kept commented out in original *****/
-/*
+
 /* -------------------------------------------------------------- */
 /* TEST 114: multiple literal/position combinations */
 /* -------------------------------------------------------------- */
@@ -675,8 +675,8 @@ fred='Now is the time for all good men'
 parse var fred   ' ti' +1 time  ' '  1 ' go' +1 xx ' '
 
 call assert_equal '114a', 'time', time,  ccod
-call assert_equal '114b', '',     xx, ccod
-*/
+call assert_equal '114b', 'good', xx, ccod
+
 /* -------------------------------------------------------------- */
 /* TEST 115: delimiter and +1     */
 /* -------------------------------------------------------------- */
@@ -771,6 +771,7 @@ call assert_equal '124c', '  is scanned.',           rest, ccod
 /* -------------------------------------------------------------- */
 /* TEST 125: extra field before remainder */
 /* -------------------------------------------------------------- */
+in='This is  the text which, I think,  is scanned.'
 parse in w1 ',' w2 ',' w3 ',' rest
 
 call assert_equal '125a', 'This is  the text which', w1,   ccod
@@ -781,6 +782,7 @@ call assert_equal '125d', '',                        rest, ccod
 /* -------------------------------------------------------------- */
 /* TEST 126: word parsing with remainder */
 /* -------------------------------------------------------------- */
+in='This is  the text which, I think,  is scanned.'
 parse in w1 w2 w3 rest
 
 call assert_equal '126a', 'This',                              w1,   ccod
@@ -791,6 +793,7 @@ call assert_equal '126d', 'text which, I think,  is scanned.', rest, ccod
 /* -------------------------------------------------------------- */
 /* TEST 127: word parsing until comma */
 /* -------------------------------------------------------------- */
+in='This is  the text which, I think,  is scanned.'
 parse in w1 w2 w3 rest ','
 
 call assert_equal '127a', 'This',       w1,   ccod
@@ -801,6 +804,7 @@ call assert_equal '127d', 'text which', rest, ccod
 /* -------------------------------------------------------------- */
 /* TEST 128: explicit blank patterns */
 /* -------------------------------------------------------------- */
+in='This is  the text which, I think,  is scanned.'
 parse in w1 ' ' w2 ' ' w3 ' ' rest ','
 
 call assert_equal '128a', 'This',           w1,   ccod
@@ -818,6 +822,7 @@ call assert_equal '129a', 'dddd', word4, ccod
 /* -------------------------------------------------------------- */
 /* TEST 130: fixed column slices */
 /* -------------------------------------------------------------- */
+in='This is  the text which, I think,  is scanned.'
 parse in s1 10 s2 20 s3
 
 call assert_equal '130a', 'This is  ',                   s1, ccod
@@ -843,6 +848,85 @@ parse x 1 w1 1 w2 1 w3
 call assert_equal '132a', x, w1, ccod
 call assert_equal '132b', x, w2, ccod
 call assert_equal '132c', x, w3, ccod
+/* -------------------------------------------------------------- */
+/* TEST 133: PARSE UPPER */
+/* -------------------------------------------------------------- */
+x = 'AbC dEf'
+parse upper var x a b
+
+call assert_equal '133a', 'ABC', a, ccod
+call assert_equal '133b', 'DEF', b, ccod
+/* -------------------------------------------------------------- */
+/* TEST 134: PARSE LOWER */
+/* -------------------------------------------------------------- */
+x = 'AbC dEf'
+parse lower var x a b
+
+call assert_equal '134a', 'abc', a, ccod
+call assert_equal '134b', 'def', b, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 135: PARSE VALUE WITH */
+/* -------------------------------------------------------------- */
+x = 'one two three'
+parse value x with a b c
+call assert_equal '135a', 'one', a, ccod
+call assert_equal '135b', 'two', b, ccod
+call assert_equal '135c', 'three', c, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 136: PARSE VAR leaves source unchanged */
+/* -------------------------------------------------------------- */
+x = 'alpha beta'
+parse var x a b
+call assert_equal '136a', 'alpha beta', x, ccod
+call assert_equal '136b', 'alpha', a, ccod
+call assert_equal '136c', 'beta', b, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 137: empty literal delimiter */
+/* -------------------------------------------------------------- */
+x = 'abc'
+parse var x a '' b
+call assert_equal '137a', '', a, ccod
+call assert_equal '137b', 'abc', b, ccod
+/* -------------------------------------------------------------- */
+/* TEST 138: literal start not found before relative */
+/* -------------------------------------------------------------- */
+x = 'abcdef'
+parse var x 'xyz' +1 a
+call assert_equal '138a', '', a, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 139: absolute zero clamps to 1 */
+/* -------------------------------------------------------------- */
+x = 'abcdef'
+parse var x 0 a
+call assert_equal '139a', 'abcdef', a, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 140: negative absolute clamps to 1 */
+/* -------------------------------------------------------------- */
+x = 'abcdef'
+parse var x -3 a
+call assert_equal '140a', 'abcdef', a, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 141: shared multi-char literal with +1 */
+/* -------------------------------------------------------------- */
+x = 'ab--cd--ef'
+parse var x p '--' q +2 r
+call assert_equal '141a', 'ab', p, ccod
+call assert_equal '141b', '--', q, ccod
+call assert_equal '141c', 'cd--ef', r, ccod
+
+/* -------------------------------------------------------------- */
+/* TEST 142: final drop after mixed controls */
+/* -------------------------------------------------------------- */
+x = 'abc,def,ghi'
+parse var x a ',' b ',' .
+call assert_equal '142a', 'abc', a, ccod
+call assert_equal '142b', 'def', b, ccod
 
 /* -------------------------------------------------------------- */
 /* RESULT */
@@ -872,7 +956,6 @@ say copies('-',32)
 if ccod.11 = 0 & ccod.2 = 0 then do
     say 'SUCCESS'
 end
-
 return
 
 /* -------------------------------------------------------------- */
@@ -892,10 +975,10 @@ assert_equal: procedure
         ccod.2=ccod.2+1
      end
   end
-  else do /*
+  else do
      say '*** SUCCESS TEST:' testname
      say '  expected=<'expected'>'
-     say '  actual  =<'actual'>' */
+     say '  actual  =<'actual'>'
      ccod.1=ccod.1+1
   end
    ccod.9=casenum     /* save case number */
