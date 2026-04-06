@@ -4,10 +4,14 @@
 #include <ctype.h>
 #include "treemap.h"
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
+#include <string.h>
 
-#if defined(__APPLE__)
-  #include <string.h>
-#endif
+/* #if defined(__APPLE__) */
+
+/* #endif */
+
+#define PUSHSARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
+                                     SETSARRAY(pnum,indx,value);};
 
 #define STACK_CAPACITY 1024           // this defines the maximum depth of the tree, it is only used in tmap_keys (retrieve all keys)
 

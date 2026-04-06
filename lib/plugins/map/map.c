@@ -6,6 +6,9 @@
 #include <time.h>
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
+#define PUSHSARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
+                                     SETSARRAY(pnum,indx,value);};
+
 #define ENOENTRY 12
 #define ENOVALUE 22
 

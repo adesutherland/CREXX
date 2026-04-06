@@ -18,12 +18,12 @@ include(${CMAKE_SOURCE_DIR}/rxpa/CMakePluginTemplate.txt)
 plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 
 enable_testing()
-# Create the static link module
-#add_static_plugin_target(_recv390 recv390.c)
+#Create the static link module
+add_static_plugin_target(_recv390 recv390.c)
 
-# Add include directories - static version
-# target_include_directories(_recv390_static PRIVATE 
-#     ${CMAKE_SOURCE_DIR}/include
-#     ${CMAKE_SOURCE_DIR}/lib/include
-#     ${CMAKE_SOURCE_DIR}/rxpa
-# )
+#Add include directories - static version
+target_include_directories(_recv390_static PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/include
+    ${CMAKE_SOURCE_DIR}/rxpa
+)

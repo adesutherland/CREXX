@@ -20,11 +20,11 @@ plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 enable_testing()
 
 # Create the static link module
-#add_static_plugin_target(_treemap treemap.c)
+add_static_plugin_target(_treemap treemap.c)
 
 # Add include directories - static version
-# target_include_directories(_treemap_static PRIVATE 
-#     ${CMAKE_SOURCE_DIR}/include
-#     ${CMAKE_SOURCE_DIR}/lib/include
-#     ${CMAKE_SOURCE_DIR}/rxpa
-# )
+target_include_directories(_treemap_static PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/include
+    ${CMAKE_SOURCE_DIR}/rxpa
+)

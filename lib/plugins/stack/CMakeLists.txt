@@ -22,3 +22,13 @@ crexx_add_rexx_opt_matrix(
 )
 
 enable_testing()
+
+# Create the static link module
+add_static_plugin_target(_stack stack.c)
+
+#Add include directories - static version
+target_include_directories(_stack_static PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/include
+    ${CMAKE_SOURCE_DIR}/rxpa
+)
