@@ -27,7 +27,7 @@ option(CREXX_FORCE_SYSTEM_OPENSSL
        "Force use of system OpenSSL without local override"
        OFF)
 
-if(NOT CREXX_FORCE_SYSTEM_OPENSSL)
+if(NOT CREXX_FORCE_SYSTEM_OPENSSL AND WIN32)
 set(OPENSSL_ROOT_DIR "C:/msys64/mingw64")
 endif()
 

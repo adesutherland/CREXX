@@ -9,17 +9,19 @@ char *file2buf(FILE *file, size_t *l) {
     int i;
     size_t buf_size = 1024 * 4;
     char *buffer;
+    long len;
 
     /* GCCLIB function to try to get the file size */
-    *l = fgetlen(file);
-    if (!*l) return 0; /* Empty file */
+    len = fgetlen(file);
+    if (len == 0) return 0; /* Empty file */
     /* Note fgetlen() returns -1 for a variable length file */
 
     /* Disable cache and rewind file to the beginning */
     setbuf(file, 0);
     rewind(file);
 
-    if (*l > 0) {
+    if (len > 0) {
+        *l = (size_t)len;
         /* Read the file in one go */
         buffer = malloc(*l + 2);
         *l = fread(buffer, 1, *l, file);

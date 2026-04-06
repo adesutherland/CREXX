@@ -21,3 +21,8 @@ To test end-to-end execution:
 1. Compile: `./rxc test.rexx` (produces `test.rxas`)
 2. Assemble: `./rxas test.rxas` (produces `test.rxbin`)
 3. Execute: `./rxvm test.rxbin`
+
+### 5. Known Build and Platform Issues
+When encountering unusual build or execution errors on new platforms (e.g., macOS ARM, Windows), keep these documented issues in mind:
+*   **OpenSSL Resolution:** If CMake cannot find OpenSSL on macOS or Linux, ensure `CREXX_FORCE_SYSTEM_OPENSSL` is correctly handled. In `lib/plugins/socket/CMakeLists.txt`, hardcoded MSYS2 paths (`C:/msys64/...`) must be protected by an `if(WIN32)` check to prevent them from breaking path resolution on other OSs.
+*   **Massive Memory Leaks / Explosions (50+GB):** If the compiler (`rxc`) or assembler unexpectedly consumes gigabytes of memory and hangs, suspect a failure in `file2buf` (`platform/platform.c` or `S370/cmsutil.c`). Endpoint security tools (like ThreatLocker) or stream abstractions can cause `ftell()` or `fseek()` to fail, returning `-1`. If this `-1` is cast directly to a `size_t` without error checking, it overflows to `SIZE_MAX`. A subsequent `malloc(*bytes + 2)` wraps around to `1`, and `fread()` then performs a massive heap buffer overflow trying to read `SIZE_MAX` bytes, corrupting allocator headers and causing the OS to infinitely allocate memory. Always ensure `ftell()` is stored in a signed integer (e.g., `long`) and checked for errors (`< 0`) before casting to `size_t`.

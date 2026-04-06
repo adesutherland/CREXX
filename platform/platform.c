@@ -37,14 +37,22 @@
 char* file2buf(FILE *file, size_t *bytes) {
     char *buff;
     size_t n;
+    long pos;
 
     /* Get file size */
-    fseek(file, 0, SEEK_END);
-    *bytes = ftell(file);
+    if (fseek(file, 0, SEEK_END) != 0) {
+        return 0;
+    }
+    pos = ftell(file);
+    if (pos < 0) {
+        return 0;
+    }
+    *bytes = (size_t)pos;
     rewind(file);
 
     /* Allocate buffer and read */
     buff = (char*) malloc((*bytes + 2) * sizeof(char) );
+    if (!buff) return 0;
     n = fread(buff, 1, *bytes, file);
     if (n == 0 && *bytes > 0) {
         free(buff);
