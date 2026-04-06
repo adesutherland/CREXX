@@ -57,56 +57,56 @@
 
 ## Overview
 
-| NS               | CLASS      | TODO                                                          | ITEM             | KIND      | RETURNTYPE | SIG                      |
-|---------------- |---------- |------------------------------------------------------------- |---------------- |--------- |---------- |------------------------ |
-|                  |            |                                                               | Class library    |           |            |                          |
-| Data\_LinkedList |            | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | Data\_LinkedList | namespace |            |                          |
-|                  | LinkedList | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | LinkedList       | class     |            |                          |
-|                  | LinkedList | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | add              | method    |            | element=.string          |
-|                  | LinkedList | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | addFirst         | method    |            | element=.string          |
-|                  | LinkedList | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | addLast          | method    |            | element=.string          |
-|                  | LinkedList | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | tostring         | method    | = .string  | =.void                   |
-| Data\_Stack      |            | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | Data\_Stack      | namespace |            |                          |
-| Data\_Stack      | Stack      | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | Stack            | class     |            |                          |
-| Data\_Stack      | Stack      | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | push             | method    | = .void    | value=string             |
-| Data\_Stack      | Stack      | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | pop              | method    | = .string  | =.void                   |
-| Data\_Stack      | Stack      | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | tostring         | method    | = .string  | =.void                   |
-| Data\_TreeMap    |            | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | Data\_TreeMap    | namespace |            |                          |
-| Data\_TreeMap    | Treemap    | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | TreeMap          | class     |            |                          |
-| Data\_TreeMap    | Treemap    | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | put              | method    | = .void    | key=string, value=string |
-| Data\_TreeMap    | Treemap    | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | get              | method    | = .string  | key=string               |
-| Data\_TreeMap    | Treemap    | \![DESIGN](<https://img.shields.io/badge/state-design-blue>)  | tostring         | method    | = .string  | =.void                   |
-| System\_os       |            | \![DESIGN](<https://img.shields.io/badge/state-design-blue>)  | System\_os       | namespace |            |                          |
-| System\_os       | os         | \![DESIGN](<https://img.shields.io/badge/state-design-blue>)  | os               | class     |            |                          |
-| System\_os       | os         | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | uptime           | method    | = .int     | =.void                   |
-| System\_os       | os         | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | user             | method    | = .string  | void                     |
+| NS               | CLASS      | TODO                                                                  | ITEM             | KIND      | RETURNTYPE | SIG                      |
+|---------------- |---------- |--------------------------------------------------------------------- |---------------- |--------- |---------- |------------------------ |
+|                  |            |                                                                       | Class library    |           |            |                          |
+| Data\_LinkedList |            | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | Data\_LinkedList | namespace |            |                          |
+|                  | LinkedList | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | LinkedList       | class     |            |                          |
+|                  | LinkedList | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | add              | method    |            | element=.string          |
+|                  | LinkedList | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | addFirst         | method    |            | element=.string          |
+|                  | LinkedList | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | addLast          | method    |            | element=.string          |
+|                  | LinkedList | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | tostring         | method    | = .string  | =.void                   |
+| Data\_Stack      |            | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | Data\_Stack      | namespace |            |                          |
+| Data\_Stack      | Stack      | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | Stack            | class     |            |                          |
+| Data\_Stack      | Stack      | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | push             | method    | = .void    | value=string             |
+| Data\_Stack      | Stack      | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | pop              | method    | = .string  | =.void                   |
+| Data\_Stack      | Stack      | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | tostring         | method    | = .string  | =.void                   |
+| Data\_TreeMap    |            | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | Data\_TreeMap    | namespace |            |                          |
+| Data\_TreeMap    | Treemap    | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | TreeMap          | class     |            |                          |
+| Data\_TreeMap    | Treemap    | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | put              | method    | = .void    | key=string, value=string |
+| Data\_TreeMap    | Treemap    | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | get              | method    | = .string  | key=string               |
+| Data\_TreeMap    | Treemap    | @@html\![DESIGN](<https://img.shields.io/badge/state-design-blue>)@@  | tostring         | method    | = .string  | =.void                   |
+| System\_os       |            | @@html\![DESIGN](<https://img.shields.io/badge/state-design-blue>)@@  | System\_os       | namespace |            |                          |
+| System\_os       | os         | @@html\![DESIGN](<https://img.shields.io/badge/state-design-blue>)@@  | os               | class     |            |                          |
+| System\_os       | os         | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | uptime           | method    | = .int     | =.void                   |
+| System\_os       | os         | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | user             | method    | = .string  | void                     |
 
 
 # Export overview
 
-| NS               | CLASS      | TODO                                                          | ITEM             | KIND      | RETURNTYPE | SIG                      |
-|---------------- |---------- |------------------------------------------------------------- |---------------- |--------- |---------- |------------------------ |
-|                  |            |                                                               | Class library    |           |            |                          |
-| Data\_LinkedList |            | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | Data\_LinkedList | namespace |            |                          |
-|                  | LinkedList | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | LinkedList       | class     |            |                          |
-|                  | LinkedList | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | add              | method    |            | element=.string          |
-|                  | LinkedList | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | addFirst         | method    |            | element=.string          |
-|                  | LinkedList | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | addLast          | method    |            | element=.string          |
-|                  | LinkedList | \![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>) | tostring         | method    | = .string  | =.void                   |
-| Data\_Stack      |            | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | Data\_Stack      | namespace |            |                          |
-| Data\_Stack      | Stack      | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | Stack            | class     |            |                          |
-| Data\_Stack      | Stack      | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | push             | method    | = .void    | value=string             |
-| Data\_Stack      | Stack      | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | pop              | method    | = .string  | =.void                   |
-| Data\_Stack      | Stack      | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | tostring         | method    | = .string  | =.void                   |
-| Data\_TreeMap    |            | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | Data\_TreeMap    | namespace |            |                          |
-| Data\_TreeMap    | Treemap    | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | TreeMap          | class     |            |                          |
-| Data\_TreeMap    | Treemap    | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | put              | method    | = .void    | key=string, value=string |
-| Data\_TreeMap    | Treemap    | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | get              | method    | = .string  | key=string               |
-| Data\_TreeMap    | Treemap    | \![DESIGN](<https://img.shields.io/badge/state-design-blue>)  | tostring         | method    | = .string  | =.void                   |
-| System\_os       |            | \![DESIGN](<https://img.shields.io/badge/state-design-blue>)  | System\_os       | namespace |            |                          |
-| System\_os       | os         | \![DESIGN](<https://img.shields.io/badge/state-design-blue>)  | os               | class     |            |                          |
-| System\_os       | os         | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | uptime           | method    | = .int     | =.void                   |
-| System\_os       | os         | \![BUILD](<https://img.shields.io/badge/state-build-yellow>)  | user             | method    | = .string  | void                     |
+| NS               | CLASS      | TODO                                                                  | ITEM             | KIND      | RETURNTYPE | SIG                      |
+|---------------- |---------- |--------------------------------------------------------------------- |---------------- |--------- |---------- |------------------------ |
+|                  |            |                                                                       | Class library    |           |            |                          |
+| Data\_LinkedList |            | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | Data\_LinkedList | namespace |            |                          |
+|                  | LinkedList | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | LinkedList       | class     |            |                          |
+|                  | LinkedList | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | add              | method    |            | element=.string          |
+|                  | LinkedList | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | addFirst         | method    |            | element=.string          |
+|                  | LinkedList | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | addLast          | method    |            | element=.string          |
+|                  | LinkedList | @@html\![SPEC](<https://img.shields.io/badge/state-spec-lightgrey>)@@ | tostring         | method    | = .string  | =.void                   |
+| Data\_Stack      |            | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | Data\_Stack      | namespace |            |                          |
+| Data\_Stack      | Stack      | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | Stack            | class     |            |                          |
+| Data\_Stack      | Stack      | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | push             | method    | = .void    | value=string             |
+| Data\_Stack      | Stack      | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | pop              | method    | = .string  | =.void                   |
+| Data\_Stack      | Stack      | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | tostring         | method    | = .string  | =.void                   |
+| Data\_TreeMap    |            | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | Data\_TreeMap    | namespace |            |                          |
+| Data\_TreeMap    | Treemap    | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | TreeMap          | class     |            |                          |
+| Data\_TreeMap    | Treemap    | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | put              | method    | = .void    | key=string, value=string |
+| Data\_TreeMap    | Treemap    | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | get              | method    | = .string  | key=string               |
+| Data\_TreeMap    | Treemap    | @@html\![DESIGN](<https://img.shields.io/badge/state-design-blue>)@@  | tostring         | method    | = .string  | =.void                   |
+| System\_os       |            | @@html\![DESIGN](<https://img.shields.io/badge/state-design-blue>)@@  | System\_os       | namespace |            |                          |
+| System\_os       | os         | @@html\![DESIGN](<https://img.shields.io/badge/state-design-blue>)@@  | os               | class     |            |                          |
+| System\_os       | os         | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | uptime           | method    | = .int     | =.void                   |
+| System\_os       | os         | @@html\![BUILD](<https://img.shields.io/badge/state-build-yellow>)@@  | user             | method    | = .string  | void                     |
 
 
 # Export methods
