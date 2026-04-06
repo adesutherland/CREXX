@@ -1,208 +1,185 @@
 #+TITLE: CREXX class library
 #+OPTIONS: toc:nil
 #+OPTIONS: ^:nil
-#+COLUMNS: %14NS %16CLASS %10TODO %25ITEM %12KIND  %14RETURNTYPE %50SIG
+#+COLUMNS: %14NS %16CLASS %10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG
 #+SEQ_TODO: SPEC DESIGN BUILD TEST VERIFY DEPLOY DONE
 
-* Class library
+* Class library                                                     :noexport:
 :PROPERTIES:
 :ID: classlib
 :END:
 
 ** SPEC Data_LinkedList
 :PROPERTIES:
-:KIND: namespace
-:NS:   Data_LinkedList
+:ID:    ns-data-linkedlist
+:KIND:  namespace
+:NS:    Data_LinkedList
 :END:
 
-** SPEC LinkedList
+*** SPEC LinkedList
 :PROPERTIES:
-:KIND:  class
-:CLASS: LinkedList
-:TYPE:  class
+:ID:         class-linkedlist
+:KIND:       class
+:CLASS:      LinkedList
+:RETURNTYPE: class
 :END:
 
-*** SPEC add
+**** SPEC add
 :PROPERTIES:
-:KIND:  method
-:TYPE: .int 
-:SIG:  element=.string
+:KIND:       method
+:RETURNTYPE: = .int
+:SIG:        element=.string
 :END:
 
-*** SPEC addFirst
+**** SPEC addFirst
 :PROPERTIES:
-:KIND:  method
-:TYPE: .int 
-:SIG:  element=.string
+:KIND:       method
+:RETURNTYPE: = .int
+:SIG:        element=.string
 :END:
 
-*** SPEC addLast
+**** SPEC addLast
 :PROPERTIES:
-:KIND:  method
-:TYPE: .int 
-:SIG:  element=.string
+:KIND:       method
+:RETURNTYPE: = .int
+:SIG:        element=.string
 :END:
 
 **** SPEC tostring
 :PROPERTIES:
-:KIND:  method
-:RETURNTYPE:  = .string
-:SIG: =.void
+:KIND:       method
+:RETURNTYPE: = .string
+:SIG:        =.void
 :END:
 
-
-** BUILD Data_Stack 
+** BUILD Data_Stack
 :PROPERTIES:
-:KIND: namespace
-:NS:   Data_Stack
+:ID:    ns-data-stack
+:KIND:  namespace
+:NS:    Data_Stack
 :END:
 
 *** BUILD Stack
 :PROPERTIES:
+:ID:    class-stack
 :KIND:  class
 :CLASS: Stack
 :END:
 
 **** BUILD push
 :PROPERTIES:
-:KIND:  method
+:KIND:       method
 :RETURNTYPE: = .void
-:SIG: value=string
+:SIG:        value=.string
 :END:
 
 **** BUILD pop
 :PROPERTIES:
-:KIND:  method
-:RETURNTYPE:  = .string
-:SIG: =.void
+:KIND:       method
+:RETURNTYPE: = .string
+:SIG:        =.void
 :END:
 
 **** BUILD tostring
 :PROPERTIES:
-:KIND:  method
-:RETURNTYPE:  = .string
-:SIG: =.void
+:KIND:       method
+:RETURNTYPE: = .string
+:SIG:        =.void
 :END:
 
-** BUILD Data_TreeMap 
+** BUILD Data_TreeMap
 :PROPERTIES:
-:KIND: namespace
-:NS:   Data_TreeMap
+:ID:    ns-data-treemap
+:KIND:  namespace
+:NS:    Data_TreeMap
 :END:
 
 *** BUILD TreeMap
 :PROPERTIES:
+:ID:    class-treemap
 :KIND:  class
-:CLASS: Treemap
+:CLASS: TreeMap
 :END:
 
 **** BUILD put
 :PROPERTIES:
-:KIND:  method
-:RETURNTYPE:  = .void
-:SIG: key=string, value=string
+:KIND:       method
+:RETURNTYPE: = .void
+:SIG:        key=.string, value=.string
 :END:
 
 **** BUILD get
 :PROPERTIES:
-:KIND:  method
-:RETURNTYPE:  = .string
-:SIG: key=string
+:KIND:       method
+:RETURNTYPE: = .string
+:SIG:        key=.string
 :END:
 
 **** DESIGN tostring
 :PROPERTIES:
-:KIND:  method
-:RETURNTYPE:  = .string
-:SIG: =.void
+:KIND:       method
+:RETURNTYPE: = .string
+:SIG:        =.void
 :END:
 
-** DESIGN System_os 
+** DESIGN System_os
 :PROPERTIES:
-:KIND: namespace
-:NS:   System_os
+:ID:    ns-system-os
+:KIND:  namespace
+:NS:    System_os
 :END:
 
 *** DESIGN os
 :PROPERTIES:
+:ID:    class-os
 :KIND:  class
 :CLASS: os
 :END:
 
 **** BUILD uptime
 :PROPERTIES:
-:KIND: method
+:KIND:       method
 :RETURNTYPE: = .int
-:SIG: =.void
+:SIG:        =.void
 :END:
 
 **** BUILD user
 :PROPERTIES:
-:KIND:  method
+:KIND:       method
 :RETURNTYPE: = .string
-:SIG: void
+:SIG:        =.void
 :END:
-
-
-* Export tables
-** Overview
-#+BEGIN: columnview :id "classlib" :maxlevel 4
-| <14>            | <16>       | <10>   | <25>            | <12>      | <14>       | <50>                     |
-| NS              | CLASS      | TODO   | ITEM            | KIND      | RETURNTYPE | SIG                      |
-|-----------------+------------+--------+-----------------+-----------+------------+--------------------------|
-|                 |            |        | Class library   |           |            |                          |
-| Data_LinkedList |            | SPEC   | Data_LinkedList | namespace |            |                          |
-|                 | LinkedList | SPEC   | LinkedList      | class     |            |                          |
-|                 | LinkedList | SPEC   | add             | method    |            | element=.string          |
-|                 | LinkedList | SPEC   | addFirst        | method    |            | element=.string          |
-|                 | LinkedList | SPEC   | addLast         | method    |            | element=.string          |
-|                 | LinkedList | SPEC   | tostring        | method    | = .string  | =.void                   |
-| Data_Stack      |            | BUILD  | Data_Stack      | namespace |            |                          |
-| Data_Stack      | Stack      | BUILD  | Stack           | class     |            |                          |
-| Data_Stack      | Stack      | BUILD  | push            | method    | = .void    | value=string             |
-| Data_Stack      | Stack      | BUILD  | pop             | method    | = .string  | =.void                   |
-| Data_Stack      | Stack      | BUILD  | tostring        | method    | = .string  | =.void                   |
-| Data_TreeMap    |            | BUILD  | Data_TreeMap    | namespace |            |                          |
-| Data_TreeMap    | Treemap    | BUILD  | TreeMap         | class     |            |                          |
-| Data_TreeMap    | Treemap    | BUILD  | put             | method    | = .void    | key=string, value=string |
-| Data_TreeMap    | Treemap    | BUILD  | get             | method    | = .string  | key=string               |
-| Data_TreeMap    | Treemap    | DESIGN | tostring        | method    | = .string  | =.void                   |
-| System_os       |            | DESIGN | System_os       | namespace |            |                          |
-| System_os       | os         | DESIGN | os              | class     |            |                          |
-| System_os       | os         | BUILD  | uptime          | method    | = .int     | =.void                   |
-| System_os       | os         | BUILD  | user            | method    | = .string  | void                     |
-#+END:
 
 * Export overview
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
 
-#+BEGIN: columnview :id "classlib" :maxlevel 4
-| <14>            | <16>       | <10>   | <25>            | <12>      | <14>       | <50>                     |
-| NS              | CLASS      | TODO   | ITEM            | KIND      | RETURNTYPE | SIG                      |
-|-----------------+------------+--------+-----------------+-----------+------------+--------------------------|
-|                 |            |        | Class library   |           |            |                          |
-| Data_LinkedList |            | SPEC   | Data_LinkedList | namespace |            |                          |
-|                 | LinkedList | SPEC   | LinkedList      | class     |            |                          |
-|                 | LinkedList | SPEC   | add             | method    |            | element=.string          |
-|                 | LinkedList | SPEC   | addFirst        | method    |            | element=.string          |
-|                 | LinkedList | SPEC   | addLast         | method    |            | element=.string          |
-|                 | LinkedList | SPEC   | tostring        | method    | = .string  | =.void                   |
-| Data_Stack      |            | BUILD  | Data_Stack      | namespace |            |                          |
-| Data_Stack      | Stack      | BUILD  | Stack           | class     |            |                          |
-| Data_Stack      | Stack      | BUILD  | push            | method    | = .void    | value=string             |
-| Data_Stack      | Stack      | BUILD  | pop             | method    | = .string  | =.void                   |
-| Data_Stack      | Stack      | BUILD  | tostring        | method    | = .string  | =.void                   |
-| Data_TreeMap    |            | BUILD  | Data_TreeMap    | namespace |            |                          |
-| Data_TreeMap    | Treemap    | BUILD  | TreeMap         | class     |            |                          |
-| Data_TreeMap    | Treemap    | BUILD  | put             | method    | = .void    | key=string, value=string |
-| Data_TreeMap    | Treemap    | BUILD  | get             | method    | = .string  | key=string               |
-| Data_TreeMap    | Treemap    | DESIGN | tostring        | method    | = .string  | =.void                   |
-| System_os       |            | DESIGN | System_os       | namespace |            |                          |
-| System_os       | os         | DESIGN | os              | class     |            |                          |
-| System_os       | os         | BUILD  | uptime          | method    | = .int     | =.void                   |
-| System_os       | os         | BUILD  | user            | method    | = .string  | void                     |
+#+BEGIN: columnview :id "classlib" :maxlevel 4 :format "%14NS %16CLASS %10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
+| <14>            | <16>       | <10>   | <25>            | <12>      | <14>       | <50>                       |
+| NS              | CLASS      | TODO   | ITEM            | KIND      | RETURNTYPE | SIG                        |
+|-----------------+------------+--------+-----------------+-----------+------------+----------------------------|
+|                 |            |        | Class library   |           |            |                            |
+| Data_LinkedList |            | SPEC   | Data_LinkedList | namespace |            |                            |
+| Data_LinkedList | LinkedList | SPEC   | LinkedList      | class     | class      |                            |
+| Data_LinkedList | LinkedList | SPEC   | add             | method    | = .int     | element=.string            |
+| Data_LinkedList | LinkedList | SPEC   | addFirst        | method    | = .int     | element=.string            |
+| Data_LinkedList | LinkedList | SPEC   | addLast         | method    | = .int     | element=.string            |
+| Data_LinkedList | LinkedList | SPEC   | tostring        | method    | = .string  | =.void                     |
+| Data_Stack      |            | BUILD  | Data_Stack      | namespace |            |                            |
+| Data_Stack      | Stack      | BUILD  | Stack           | class     |            |                            |
+| Data_Stack      | Stack      | BUILD  | push            | method    | = .void    | value=.string              |
+| Data_Stack      | Stack      | BUILD  | pop             | method    | = .string  | =.void                     |
+| Data_Stack      | Stack      | BUILD  | tostring        | method    | = .string  | =.void                     |
+| Data_TreeMap    |            | BUILD  | Data_TreeMap    | namespace |            |                            |
+| Data_TreeMap    | TreeMap    | BUILD  | TreeMap         | class     |            |                            |
+| Data_TreeMap    | TreeMap    | BUILD  | put             | method    | = .void    | key=.string, value=.string |
+| Data_TreeMap    | TreeMap    | BUILD  | get             | method    | = .string  | key=.string                |
+| Data_TreeMap    | TreeMap    | DESIGN | tostring        | method    | = .string  | =.void                     |
+| System_os       |            | DESIGN | System_os       | namespace |            |                            |
+| System_os       | os         | DESIGN | os              | class     |            |                            |
+| System_os       | os         | BUILD  | uptime          | method    | = .int     | =.void                     |
+| System_os       | os         | BUILD  | user            | method    | = .string  | =.void                     |
 #+END:
 
 * Export methods
@@ -210,22 +187,22 @@
 :VISIBILITY: folded
 :END:
 
-#+BEGIN: columnview :id "classlib" :match "KIND=\"method\"" :format "%12NS %16CLASS %14RETURNTYPE %25ITEM %50SIG"
-| <12>         | <16>       | <14>       | <25>     | <50>                     |
-| NS           | CLASS      | RETURNTYPE | ITEM     | SIG                      |
-|--------------+------------+------------+----------+--------------------------|
-|              | LinkedList |            | add      | element=.string          |
-|              | LinkedList |            | addFirst | element=.string          |
-|              | LinkedList |            | addLast  | element=.string          |
-|              | LinkedList | = .string  | tostring | =.void                   |
-| Data_Stack   | Stack      | = .void    | push     | value=string             |
-| Data_Stack   | Stack      | = .string  | pop      | =.void                   |
-| Data_Stack   | Stack      | = .string  | tostring | =.void                   |
-| Data_TreeMap | Treemap    | = .void    | put      | key=string, value=string |
-| Data_TreeMap | Treemap    | = .string  | get      | key=string               |
-| Data_TreeMap | Treemap    | = .string  | tostring | =.void                   |
-| System_os    | os         | = .int     | uptime   | =.void                   |
-| System_os    | os         | = .string  | user     | void                     |
+#+BEGIN: columnview :id "classlib" :match "KIND=\"method\"" :format "%14NS %16CLASS %10TODO %25ITEM %14RETURNTYPE %50SIG"
+| <14>            | <16>       | <10>   | <25>     | <14>       | <50>                       |
+| NS              | CLASS      | TODO   | ITEM     | RETURNTYPE | SIG                        |
+|-----------------+------------+--------+----------+------------+----------------------------|
+| Data_LinkedList | LinkedList | SPEC   | add      | = .int     | element=.string            |
+| Data_LinkedList | LinkedList | SPEC   | addFirst | = .int     | element=.string            |
+| Data_LinkedList | LinkedList | SPEC   | addLast  | = .int     | element=.string            |
+| Data_LinkedList | LinkedList | SPEC   | tostring | = .string  | =.void                     |
+| Data_Stack      | Stack      | BUILD  | push     | = .void    | value=.string              |
+| Data_Stack      | Stack      | BUILD  | pop      | = .string  | =.void                     |
+| Data_Stack      | Stack      | BUILD  | tostring | = .string  | =.void                     |
+| Data_TreeMap    | TreeMap    | BUILD  | put      | = .void    | key=.string, value=.string |
+| Data_TreeMap    | TreeMap    | BUILD  | get      | = .string  | key=.string                |
+| Data_TreeMap    | TreeMap    | DESIGN | tostring | = .string  | =.void                     |
+| System_os       | os         | BUILD  | uptime   | = .int     | =.void                     |
+| System_os       | os         | BUILD  | user     | = .string  | =.void                     |
 #+END:
 
 * Export attributes
@@ -233,23 +210,117 @@
 :VISIBILITY: folded
 :END:
 
-#+BEGIN: columnview :id "classlib" :match "KIND=\"attribute\"" :format "%25ITEM %12NS %16CLASS %14TYPE"
-| <25> | <12> | <16>  | <14> |
-| ITEM | NS   | CLASS | TYPE |
-|------+------+-------+------|
+#+BEGIN: columnview :id "classlib" :match "KIND=\"attribute\"" :format "%14NS %16CLASS %10TODO %25ITEM %14TYPE"
+| <14> | <16>  | <10> | <25> | <14> |
+| NS   | CLASS | TODO | ITEM | TYPE |
+|------+-------+------+------+------|
 #+END:
 
-* Export classes
+* Export per class
 :PROPERTIES:
 :VISIBILITY: folded
 :END:
 
-#+BEGIN: columnview :id "classlib" :match "KIND=\"class\"" :format "%12NS %16CLASS %14TYPE"
-| <12>         | <16>       | <14>  |
-| NS           | CLASS      | TYPE  |
-|--------------+------------+-------|
-|              | LinkedList | class |
-| Data_Stack   | Stack      |       |
-| Data_TreeMap | Treemap    |       |
-| System_os    | os         |       |
+** LinkedList
+
+*** Overview
+#+BEGIN: columnview :id "class-linkedlist" :maxlevel 2 :format "%10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
+| <10> | <25> | <12> | <14>       | <50> |
+| TODO | ITEM | KIND | RETURNTYPE | SIG  |
+|------+------+------+------------+------|
+#+END:
+
+*** Methods
+#+BEGIN: columnview :id "class-linkedlist" :match "KIND=\"method\"" :format "%10TODO %25ITEM %14RETURNTYPE %50SIG"
+| <10> | <25>     | <14>       | <50>            |
+| TODO | ITEM     | RETURNTYPE | SIG             |
+|------+----------+------------+-----------------|
+| SPEC | add      | = .int     | element=.string |
+| SPEC | addFirst | = .int     | element=.string |
+| SPEC | addLast  | = .int     | element=.string |
+| SPEC | tostring | = .string  | =.void          |
+#+END:
+
+*** Attributes
+#+BEGIN: columnview :id "class-linkedlist" :match "KIND=\"attribute\"" :format "%10TODO %25ITEM %14TYPE"
+| <10> | <25> | <14> |
+| TODO | ITEM | TYPE |
+|------+------+------|
+#+END:
+
+** Stack
+
+*** Overview
+#+BEGIN: columnview :id "class-stack" :maxlevel 2 :format "%10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
+| <10> | <25> | <12> | <14>       | <50> |
+| TODO | ITEM | KIND | RETURNTYPE | SIG  |
+|------+------+------+------------+------|
+#+END:
+
+*** Methods
+#+BEGIN: columnview :id "class-stack" :match "KIND=\"method\"" :format "%10TODO %25ITEM %14RETURNTYPE %50SIG"
+| <10>  | <25>     | <14>       | <50>          |
+| TODO  | ITEM     | RETURNTYPE | SIG           |
+|-------+----------+------------+---------------|
+| BUILD | push     | = .void    | value=.string |
+| BUILD | pop      | = .string  | =.void        |
+| BUILD | tostring | = .string  | =.void        |
+#+END:
+
+*** Attributes
+#+BEGIN: columnview :id "class-stack" :match "KIND=\"attribute\"" :format "%10TODO %25ITEM %14TYPE"
+| <10> | <25> | <14> |
+| TODO | ITEM | TYPE |
+|------+------+------|
+#+END:
+
+** TreeMap
+
+*** Overview
+#+BEGIN: columnview :id "class-treemap" :maxlevel 2 :format "%10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
+| <10> | <25> | <12> | <14>       | <50> |
+| TODO | ITEM | KIND | RETURNTYPE | SIG  |
+|------+------+------+------------+------|
+#+END:
+
+*** Methods
+#+BEGIN: columnview :id "class-treemap" :match "KIND=\"method\"" :format "%10TODO %25ITEM %14RETURNTYPE %50SIG"
+| <10>   | <25>     | <14>       | <50>                       |
+| TODO   | ITEM     | RETURNTYPE | SIG                        |
+|--------+----------+------------+----------------------------|
+| BUILD  | put      | = .void    | key=.string, value=.string |
+| BUILD  | get      | = .string  | key=.string                |
+| DESIGN | tostring | = .string  | =.void                     |
+#+END:
+
+*** Attributes
+#+BEGIN: columnview :id "class-treemap" :match "KIND=\"attribute\"" :format "%10TODO %25ITEM %14TYPE"
+| <10> | <25> | <14> |
+| TODO | ITEM | TYPE |
+|------+------+------|
+#+END:
+
+** os
+
+*** Overview
+#+BEGIN: columnview :id "class-os" :maxlevel 2 :format "%10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
+| <10> | <25> | <12> | <14>       | <50> |
+| TODO | ITEM | KIND | RETURNTYPE | SIG  |
+|------+------+------+------------+------|
+#+END:
+
+*** Methods
+#+BEGIN: columnview :id "class-os" :match "KIND=\"method\"" :format "%10TODO %25ITEM %14RETURNTYPE %50SIG"
+| <10>  | <25>   | <14>       | <50>   |
+| TODO  | ITEM   | RETURNTYPE | SIG    |
+|-------+--------+------------+--------|
+| BUILD | uptime | = .int     | =.void |
+| BUILD | user   | = .string  | =.void |
+#+END:
+
+*** Attributes
+#+BEGIN: columnview :id "class-os" :match "KIND=\"attribute\"" :format "%10TODO %25ITEM %14TYPE"
+| <10> | <25> | <14> |
+| TODO | ITEM | TYPE |
+|------+------+------|
 #+END:
