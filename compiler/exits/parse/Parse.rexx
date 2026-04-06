@@ -589,5 +589,5 @@ return _status
 log: procedure = .int
     arg logtxt = .string
     /* say "EXIT LOG >" logtxt */
-    call lineout "c:\temp\pluginlog.txt", time() logtxt
+    ## call lineout "c:\temp\pluginlog.txt", time() logtxt
 return 0
