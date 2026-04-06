@@ -9,6 +9,21 @@ main: procedure
  * -------------------------------------------------------------- */
 ccod = .int[]
 
+fred = 'Now is the time for all good men '
+parse into abc var fred  first second
+Say 'Display extracted Variables'
+say '------------------------------'
+say "first='"first"'"
+say "second='"second"'"
+say " "
+Say 'Display array from INTO Clause'
+say '------------------------------'
+do i=1 to abc[0]
+   say 'Array['i']="'abc[i]'"'
+end
+say "  "
+Say "Start all test cases"
+say "--------------------"
 /* -------------------------------------------------------------- */
 /* TEST 1: blank delimiter        */
 /* -------------------------------------------------------------- */
@@ -61,7 +76,7 @@ parse fred h1 .
 call assert_equal '5a', 'Awfulcome', h1 , ccod
 
 /* -------------------------------------------------------------- */
-/* TEST 6: multiple implicit */
+/* TEST 6: multiple implicit      */
 /* -------------------------------------------------------------- */
 fred = 'l  m  n o'
 parse fred f1 f2 f3

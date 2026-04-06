@@ -14,6 +14,7 @@ parseexit: class
     _template_texttab     = .string
     _template             = .string
     _wanttrim             = .int
+    _into                 = .string
 
     /* ------------------------------------------------------------------------
      * Factory
@@ -33,6 +34,7 @@ parseexit: class
         _status = "EMPTY"
         _template_texttab = ""
         _wanttrim=0
+        _into=""
 
     /* ------------------------------------------------------------------------
      * Primary keyword handled by this exit.
@@ -100,6 +102,7 @@ pre_process: method = .string
   wantlog=0
   wanttrace=0
   _wanttrim=0
+  _into=''
 
   /* --------------------------------------------------------------
    * Scan the PARSE prefix before the template proper.
@@ -114,6 +117,7 @@ pre_process: method = .string
    *   start_of_template points to the token holding the parse source
    *   expression/variable; the actual template starts at +1.
    * -------------------------------------------------------------- */
+  toExpose = ""
   do start_of_template=2 to tokens.0
      ti   = tokens[start_of_template]
      type = strip(ti.get_type())
@@ -123,6 +127,14 @@ pre_process: method = .string
      else if type='identifier' & utext='LOG' then wantlog=1
      else if type='identifier' & utext='TRACE' then wanttrace=1
      else if type='identifier' & utext='TRIM' then _wanttrim=1
+     else if type='identifier' & utext='INTO' then do
+        ti = tokens[start_of_template+1]
+        if strip(ti.get_type())\='identifier' then iterate
+        start_of_template=start_of_template+1
+        toExpose=start_of_template||' '
+        _into=ti.get_text()
+        iterate
+     end
      else if type='identifier' & (utext='VALUE' | utext='VAR') then parmtype=utext
      else if type='identifier' & (parmtype='VAR' | parmtype='VALUE') then leave  /* next token is with or parse string */
      else if type='string_literal' & (parmtype='VAR' | parmtype='VALUE') then leave  /* next token is with or parse string */
@@ -137,17 +149,17 @@ pre_process: method = .string
       if wantlog>0 then start_of_template=start_of_template+1
       if wanttrace>0 then start_of_template=start_of_template+1
       if _wanttrim>0 then start_of_template=start_of_template+1
+      if _into\="" then start_of_template=start_of_template+2
   end
 
   if wanttrace>0 then wantlog=9
   out = 0
-  toExpose = ""
   _template=''
   pkind = .int[]
   ptext = .string[]
 
   i = start_of_template+1
-  call log 'TEMPLATE START AT='i" PARSE TYPE='"parmtype"' LOG="wantlog" TRIM="_wanttrim
+  call log 'TEMPLATE START AT='i" PARSE TYPE='"parmtype"' LOG="wantlog" TRIM="_wanttrim" INTO="_into
   haswith=0
   prevkind = 0
   call log "*********** New Parse *************"
@@ -345,13 +357,14 @@ pre_process: method = .string
   tj = tokens[ti]
   _replacement=''
   parse_string = strip(tj.get_text())
+  if _into='' then _into='_parseResult'
   if uplow='UPPER'      then _replacement = _replacement"; _source=upper("parse_string")"
   else if uplow='LOWER' then _replacement = _replacement"; _source=lower("parse_string")"
   else _replacement = _replacement"; _source="parse_string
-  _replacement = _replacement'; _rs=parseExec(_source,"'plan'","'_template'",'wantlog')'
+  _replacement = _replacement'; '_into'=parseExec(_source,"'plan'","'_template'",'wantlog')'
   call log 'Pre-Process II  '_template_texttab
   call log 'Pre-Process IV  '_replacement
-  call log "must be exposed " toExpose" templates "out
+  call log "must be exposed='"toExpose"' template='"out"'"
 return toExpose
 
 process: method = .string
@@ -452,8 +465,8 @@ process: method = .string
             return _status
         ##    return setError("ERROR", 1, "PARSE invalid variable name="var)
          end
-         if _wanttrim=0 then _replacement = _replacement '; 'var|| '=_rs[' || j || ']'
-         else _replacement = _replacement '; 'var|| '=strip(_rs[' || j || '])'
+         if _wanttrim=0 then _replacement = _replacement '; 'var|| '='_into'[' || j || ']'
+         else _replacement = _replacement '; 'var|| '=strip('_into'[' || j || '])'
      end
      call log "Process III code "_replacement
      return _status
@@ -576,5 +589,5 @@ return _status
 log: procedure = .int
     arg logtxt = .string
     /* say "EXIT LOG >" logtxt */
-   ## call lineout "c:\temp\pluginlog.txt", time() logtxt
+    call lineout "c:\temp\pluginlog.txt", time() logtxt
 return 0
