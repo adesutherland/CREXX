@@ -9,11 +9,67 @@
 :ID: classlib
 :END:
 
-** SPEC Data_LinkedList
+** SPEC crypto_des
+:PROPERTIES:
+:ID:    ns-crypto_des
+:KIND:  namespace
+:NS:    crypto_des
+:END:
+
+** SPEC des 
+:PROPERTIES:
+:KIND:  class
+:CLASS: des
+:TYPE:  class
+:END:
+
+*** SPEC encrypt
+:PROPERTIES:
+:KIND:  method
+:TYPE:  = .string
+:SIG:   = .string
+:END:
+
+*** SPEC decrypt
+:PROPERTIES:
+:KIND:  method
+:TYPE:  = .string
+:SIG:   = .string
+:END:
+
+** SPEC crypto_aes
+:PROPERTIES:
+:ID:    ns-crypto_des
+:KIND:  namespace
+:NS:    crypto_des
+:END:
+
+** SPEC aes 
+:PROPERTIES:
+:KIND:  class
+:CLASS: des
+:TYPE:  class
+:END:
+
+*** SPEC encrypt
+:PROPERTIES:
+:KIND:  method
+:TYPE:  = .string
+:SIG:   = .string
+:END:
+
+*** SPEC decrypt
+:PROPERTIES:
+:KIND:  method
+:TYPE:  = .string
+:SIG:   = .string
+:END:
+
+** SPEC data_LinkedList
 :PROPERTIES:
 :ID:    ns-data-linkedlist
 :KIND:  namespace
-:NS:    Data_LinkedList
+:NS:    data_LinkedList
 :END:
 
 *** SPEC LinkedList
@@ -52,11 +108,11 @@
 :SIG:        =.void
 :END:
 
-** BUILD Data_Stack
+** BUILD data_Stack
 :PROPERTIES:
 :ID:    ns-data-stack
 :KIND:  namespace
-:NS:    Data_Stack
+:NS:    data_Stack
 :END:
 
 *** BUILD Stack
@@ -87,11 +143,11 @@
 :SIG:        =.void
 :END:
 
-** BUILD Data_TreeMap
+** BUILD data_TreeMap
 :PROPERTIES:
 :ID:    ns-data-treemap
 :KIND:  namespace
-:NS:    Data_TreeMap
+:NS:    data_TreeMap
 :END:
 
 *** BUILD TreeMap
@@ -122,11 +178,109 @@
 :SIG:        =.void
 :END:
 
-** DESIGN System_os
+** DESIGN rxmath.math
+:PROPERTIES:
+:ID:    ns-rxmath=math
+:KIND:  namespace
+:NS:    rxmath_math
+:END:
+
+** SPEC math
+:PROPERTIES:
+:KIND:  class
+:CLASS: math
+:TYPE:  class
+:END:
+
+*** SPEC pi
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .void
+:END:
+
+*** SPEC sin
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC square
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC pow
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC base
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC cosin
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC tan
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC arctan
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+** DESIGN system_ipc
+:PROPERTIES:
+:ID:    ns-system-ipc
+:KIND:  namespace
+:NS:    system_ipc
+:END:
+
+** DESIGN semaphore
+:PROPERTIES:
+:KIND:  class
+:CLASS: semaphore
+:TYPE:  class
+:END:
+
+** DESIGN pipe
+:PROPERTIES:
+:KIND:  class
+:CLASS: pipe
+:TYPE:  class
+:END:
+
+** DESIGN queue
+:PROPERTIES:
+:KIND:  class
+:CLASS: ClassName
+:TYPE:  class
+:END:
+
+** DESIGN system_os
 :PROPERTIES:
 :ID:    ns-system-os
 :KIND:  namespace
-:NS:    System_os
+:NS:    system_os
 :END:
 
 *** DESIGN os
@@ -160,26 +314,48 @@
 | NS              | CLASS      | TODO   | ITEM            | KIND      | RETURNTYPE | SIG                        |
 |-----------------+------------+--------+-----------------+-----------+------------+----------------------------|
 |                 |            |        | Class library   |           |            |                            |
-| Data_LinkedList |            | SPEC   | Data_LinkedList | namespace |            |                            |
-| Data_LinkedList | LinkedList | SPEC   | LinkedList      | class     | class      |                            |
-| Data_LinkedList | LinkedList | SPEC   | add             | method    | = .int     | element=.string            |
-| Data_LinkedList | LinkedList | SPEC   | addFirst        | method    | = .int     | element=.string            |
-| Data_LinkedList | LinkedList | SPEC   | addLast         | method    | = .int     | element=.string            |
-| Data_LinkedList | LinkedList | SPEC   | tostring        | method    | = .string  | =.void                     |
-| Data_Stack      |            | BUILD  | Data_Stack      | namespace |            |                            |
-| Data_Stack      | Stack      | BUILD  | Stack           | class     |            |                            |
-| Data_Stack      | Stack      | BUILD  | push            | method    | = .void    | value=.string              |
-| Data_Stack      | Stack      | BUILD  | pop             | method    | = .string  | =.void                     |
-| Data_Stack      | Stack      | BUILD  | tostring        | method    | = .string  | =.void                     |
-| Data_TreeMap    |            | BUILD  | Data_TreeMap    | namespace |            |                            |
-| Data_TreeMap    | TreeMap    | BUILD  | TreeMap         | class     |            |                            |
-| Data_TreeMap    | TreeMap    | BUILD  | put             | method    | = .void    | key=.string, value=.string |
-| Data_TreeMap    | TreeMap    | BUILD  | get             | method    | = .string  | key=.string                |
-| Data_TreeMap    | TreeMap    | DESIGN | tostring        | method    | = .string  | =.void                     |
-| System_os       |            | DESIGN | System_os       | namespace |            |                            |
-| System_os       | os         | DESIGN | os              | class     |            |                            |
-| System_os       | os         | BUILD  | uptime          | method    | = .int     | =.void                     |
-| System_os       | os         | BUILD  | user            | method    | = .string  | =.void                     |
+| crypto_des      |            | SPEC   | crypto_des      | namespace |            |                            |
+|                 | des        | SPEC   | des             | class     |            |                            |
+|                 | des        | SPEC   | encrypt         | method    |            | = .string                  |
+|                 | des        | SPEC   | decrypt         | method    |            | = .string                  |
+| crypto_des      |            | SPEC   | crypto_aes      | namespace |            |                            |
+|                 | des        | SPEC   | aes             | class     |            |                            |
+|                 | des        | SPEC   | encrypt         | method    |            | = .string                  |
+|                 | des        | SPEC   | decrypt         | method    |            | = .string                  |
+| data_LinkedList |            | SPEC   | data_LinkedList | namespace |            |                            |
+| data_LinkedList | LinkedList | SPEC   | LinkedList      | class     | class      |                            |
+| data_LinkedList | LinkedList | SPEC   | add             | method    | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | addFirst        | method    | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | addLast         | method    | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | tostring        | method    | = .string  | =.void                     |
+| data_Stack      |            | BUILD  | data_Stack      | namespace |            |                            |
+| data_Stack      | Stack      | BUILD  | Stack           | class     |            |                            |
+| data_Stack      | Stack      | BUILD  | push            | method    | = .void    | value=.string              |
+| data_Stack      | Stack      | BUILD  | pop             | method    | = .string  | =.void                     |
+| data_Stack      | Stack      | BUILD  | tostring        | method    | = .string  | =.void                     |
+| data_TreeMap    |            | BUILD  | data_TreeMap    | namespace |            |                            |
+| data_TreeMap    | TreeMap    | BUILD  | TreeMap         | class     |            |                            |
+| data_TreeMap    | TreeMap    | BUILD  | put             | method    | = .void    | key=.string, value=.string |
+| data_TreeMap    | TreeMap    | BUILD  | get             | method    | = .string  | key=.string                |
+| data_TreeMap    | TreeMap    | DESIGN | tostring        | method    | = .string  | =.void                     |
+| rxmath_math     |            | DESIGN | rxmath.math     | namespace |            |                            |
+|                 | math       | SPEC   | math            | class     |            |                            |
+|                 | math       | SPEC   | pi              | method    |            | = .void                    |
+|                 | math       | SPEC   | sin             | method    |            | = .float                   |
+|                 | math       | SPEC   | square          | method    |            | = .float                   |
+|                 | math       | SPEC   | pow             | method    |            | = .float                   |
+|                 | math       | SPEC   | base            | method    |            | = .float                   |
+|                 | math       | SPEC   | cosin           | method    |            | = .float                   |
+|                 | math       | SPEC   | tan             | method    |            | = .float                   |
+|                 | math       | SPEC   | arctan          | method    |            | = .float                   |
+| system_ipc      |            | DESIGN | system_ipc      | namespace |            |                            |
+|                 | semaphore  | DESIGN | semaphore       | class     |            |                            |
+|                 | pipe       | DESIGN | pipe            | class     |            |                            |
+|                 | ClassName  | DESIGN | queue           | class     |            |                            |
+| system_os       |            | DESIGN | system_os       | namespace |            |                            |
+| system_os       | os         | DESIGN | os              | class     |            |                            |
+| system_os       | os         | BUILD  | uptime          | method    | = .int     | =.void                     |
+| system_os       | os         | BUILD  | user            | method    | = .string  | =.void                     |
 #+END:
 
 * Export methods
@@ -191,18 +367,30 @@
 | <14>            | <16>       | <10>   | <25>     | <14>       | <50>                       |
 | NS              | CLASS      | TODO   | ITEM     | RETURNTYPE | SIG                        |
 |-----------------+------------+--------+----------+------------+----------------------------|
-| Data_LinkedList | LinkedList | SPEC   | add      | = .int     | element=.string            |
-| Data_LinkedList | LinkedList | SPEC   | addFirst | = .int     | element=.string            |
-| Data_LinkedList | LinkedList | SPEC   | addLast  | = .int     | element=.string            |
-| Data_LinkedList | LinkedList | SPEC   | tostring | = .string  | =.void                     |
-| Data_Stack      | Stack      | BUILD  | push     | = .void    | value=.string              |
-| Data_Stack      | Stack      | BUILD  | pop      | = .string  | =.void                     |
-| Data_Stack      | Stack      | BUILD  | tostring | = .string  | =.void                     |
-| Data_TreeMap    | TreeMap    | BUILD  | put      | = .void    | key=.string, value=.string |
-| Data_TreeMap    | TreeMap    | BUILD  | get      | = .string  | key=.string                |
-| Data_TreeMap    | TreeMap    | DESIGN | tostring | = .string  | =.void                     |
-| System_os       | os         | BUILD  | uptime   | = .int     | =.void                     |
-| System_os       | os         | BUILD  | user     | = .string  | =.void                     |
+|                 | des        | SPEC   | encrypt  |            | = .string                  |
+|                 | des        | SPEC   | decrypt  |            | = .string                  |
+|                 | des        | SPEC   | encrypt  |            | = .string                  |
+|                 | des        | SPEC   | decrypt  |            | = .string                  |
+| data_LinkedList | LinkedList | SPEC   | add      | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | addFirst | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | addLast  | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | tostring | = .string  | =.void                     |
+| data_Stack      | Stack      | BUILD  | push     | = .void    | value=.string              |
+| data_Stack      | Stack      | BUILD  | pop      | = .string  | =.void                     |
+| data_Stack      | Stack      | BUILD  | tostring | = .string  | =.void                     |
+| data_TreeMap    | TreeMap    | BUILD  | put      | = .void    | key=.string, value=.string |
+| data_TreeMap    | TreeMap    | BUILD  | get      | = .string  | key=.string                |
+| data_TreeMap    | TreeMap    | DESIGN | tostring | = .string  | =.void                     |
+|                 | math       | SPEC   | pi       |            | = .void                    |
+|                 | math       | SPEC   | sin      |            | = .float                   |
+|                 | math       | SPEC   | square   |            | = .float                   |
+|                 | math       | SPEC   | pow      |            | = .float                   |
+|                 | math       | SPEC   | base     |            | = .float                   |
+|                 | math       | SPEC   | cosin    |            | = .float                   |
+|                 | math       | SPEC   | tan      |            | = .float                   |
+|                 | math       | SPEC   | arctan   |            | = .float                   |
+| system_os       | os         | BUILD  | uptime   | = .int     | =.void                     |
+| system_os       | os         | BUILD  | user     | = .string  | =.void                     |
 #+END:
 
 * Export attributes
