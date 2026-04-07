@@ -56,6 +56,12 @@ target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CU
         ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
         ${CMAKE_SOURCE_DIR}/binutils/include)
 
+if (ENABLE_PARSER_MODE)
+    target_link_libraries(rxclib dslsyntax_parser)
+    target_compile_definitions(rxclib PRIVATE ENABLE_PARSER_MODE)
+    target_include_directories(rxclib PRIVATE ${DSL_SH_SOURCE_DIR}/codebuffer)
+endif()
+
 add_executable(rxc rxc_main.c)
 target_include_directories(rxc PRIVATE ${CMAKE_SOURCE_DIR}/platform)
 # Link only what is not already linked transitively by rxclib to reduce duplicate library warnings
