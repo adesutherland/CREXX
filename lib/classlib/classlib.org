@@ -1,0 +1,514 @@
+#+TITLE: CREXX class library
+#+OPTIONS: toc:nil
+#+OPTIONS: ^:nil
+#+COLUMNS: %14NS %16CLASS %10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG
+#+SEQ_TODO: SPEC DESIGN BUILD TEST VERIFY DEPLOY DONE
+
+* Class library                                                     :noexport:
+:PROPERTIES:
+:ID: classlib
+:END:
+
+** SPEC crypto_des
+:PROPERTIES:
+:ID:    ns-crypto_des
+:KIND:  namespace
+:NS:    crypto_des
+:END:
+
+** SPEC des 
+:PROPERTIES:
+:KIND:  class
+:CLASS: des
+:TYPE:  class
+:END:
+
+*** SPEC encrypt
+:PROPERTIES:
+:KIND:  method
+:TYPE:  = .string
+:SIG:   = .string
+:END:
+
+*** SPEC decrypt
+:PROPERTIES:
+:KIND:  method
+:TYPE:  = .string
+:SIG:   = .string
+:END:
+
+** SPEC crypto_aes
+:PROPERTIES:
+:ID:    ns-crypto_des
+:KIND:  namespace
+:NS:    crypto_des
+:END:
+
+** SPEC aes 
+:PROPERTIES:
+:KIND:  class
+:CLASS: des
+:TYPE:  class
+:END:
+
+*** SPEC encrypt
+:PROPERTIES:
+:KIND:  method
+:TYPE:  = .string
+:SIG:   = .string
+:END:
+
+*** SPEC decrypt
+:PROPERTIES:
+:KIND:  method
+:TYPE:  = .string
+:SIG:   = .string
+:END:
+
+** SPEC data_LinkedList
+:PROPERTIES:
+:ID:    ns-data-linkedlist
+:KIND:  namespace
+:NS:    data_LinkedList
+:END:
+
+*** SPEC LinkedList
+:PROPERTIES:
+:ID:         class-linkedlist
+:KIND:       class
+:CLASS:      LinkedList
+:RETURNTYPE: class
+:END:
+
+**** SPEC add
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .int
+:SIG:        element=.string
+:END:
+
+**** SPEC addFirst
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .int
+:SIG:        element=.string
+:END:
+
+**** SPEC addLast
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .int
+:SIG:        element=.string
+:END:
+
+**** SPEC tostring
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .string
+:SIG:        =.void
+:END:
+
+** BUILD data_Stack
+:PROPERTIES:
+:ID:    ns-data-stack
+:KIND:  namespace
+:NS:    data_Stack
+:END:
+
+*** BUILD Stack
+:PROPERTIES:
+:ID:    class-stack
+:KIND:  class
+:CLASS: Stack
+:END:
+
+**** BUILD push
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .void
+:SIG:        value=.string
+:END:
+
+**** BUILD pop
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .string
+:SIG:        =.void
+:END:
+
+**** BUILD tostring
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .string
+:SIG:        =.void
+:END:
+
+** BUILD data_TreeMap
+:PROPERTIES:
+:ID:    ns-data-treemap
+:KIND:  namespace
+:NS:    data_TreeMap
+:END:
+
+*** BUILD TreeMap
+:PROPERTIES:
+:ID:    class-treemap
+:KIND:  class
+:CLASS: TreeMap
+:END:
+
+**** BUILD put
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .void
+:SIG:        key=.string, value=.string
+:END:
+
+**** BUILD get
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .string
+:SIG:        key=.string
+:END:
+
+**** DESIGN tostring
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .string
+:SIG:        =.void
+:END:
+
+** DESIGN rxmath.math
+:PROPERTIES:
+:ID:    ns-rxmath=math
+:KIND:  namespace
+:NS:    rxmath_math
+:END:
+
+** SPEC math
+:PROPERTIES:
+:KIND:  class
+:CLASS: math
+:TYPE:  class
+:END:
+
+*** SPEC pi
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .void
+:END:
+
+*** SPEC sin
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC square
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC pow
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC base
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC cosin
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC tan
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+*** SPEC arctan
+:PROPERTIES:
+:KIND:  method
+:TYPE: = .float  
+:SIG:  = .float
+:END:
+
+** DESIGN system_ipc
+:PROPERTIES:
+:ID:    ns-system-ipc
+:KIND:  namespace
+:NS:    system_ipc
+:END:
+
+** DESIGN semaphore
+:PROPERTIES:
+:KIND:  class
+:CLASS: semaphore
+:TYPE:  class
+:END:
+
+** DESIGN pipe
+:PROPERTIES:
+:KIND:  class
+:CLASS: pipe
+:TYPE:  class
+:END:
+
+** DESIGN queue
+:PROPERTIES:
+:KIND:  class
+:CLASS: ClassName
+:TYPE:  class
+:END:
+
+** DESIGN system_os
+:PROPERTIES:
+:ID:    ns-system-os
+:KIND:  namespace
+:NS:    system_os
+:END:
+
+*** DESIGN os
+:PROPERTIES:
+:ID:    class-os
+:KIND:  class
+:CLASS: os
+:END:
+
+**** BUILD uptime
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .int
+:SIG:        =.void
+:END:
+
+**** BUILD user
+:PROPERTIES:
+:KIND:       method
+:RETURNTYPE: = .string
+:SIG:        =.void
+:END:
+
+* Export overview
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN: columnview :id "classlib" :maxlevel 4 :format "%14NS %16CLASS %10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
+| <14>            | <16>       | <10>   | <25>            | <12>      | <14>       | <50>                       |
+| NS              | CLASS      | TODO   | ITEM            | KIND      | RETURNTYPE | SIG                        |
+|-----------------+------------+--------+-----------------+-----------+------------+----------------------------|
+|                 |            |        | Class library   |           |            |                            |
+| crypto_des      |            | SPEC   | crypto_des      | namespace |            |                            |
+|                 | des        | SPEC   | des             | class     |            |                            |
+|                 | des        | SPEC   | encrypt         | method    |            | = .string                  |
+|                 | des        | SPEC   | decrypt         | method    |            | = .string                  |
+| crypto_des      |            | SPEC   | crypto_aes      | namespace |            |                            |
+|                 | des        | SPEC   | aes             | class     |            |                            |
+|                 | des        | SPEC   | encrypt         | method    |            | = .string                  |
+|                 | des        | SPEC   | decrypt         | method    |            | = .string                  |
+| data_LinkedList |            | SPEC   | data_LinkedList | namespace |            |                            |
+| data_LinkedList | LinkedList | SPEC   | LinkedList      | class     | class      |                            |
+| data_LinkedList | LinkedList | SPEC   | add             | method    | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | addFirst        | method    | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | addLast         | method    | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | tostring        | method    | = .string  | =.void                     |
+| data_Stack      |            | BUILD  | data_Stack      | namespace |            |                            |
+| data_Stack      | Stack      | BUILD  | Stack           | class     |            |                            |
+| data_Stack      | Stack      | BUILD  | push            | method    | = .void    | value=.string              |
+| data_Stack      | Stack      | BUILD  | pop             | method    | = .string  | =.void                     |
+| data_Stack      | Stack      | BUILD  | tostring        | method    | = .string  | =.void                     |
+| data_TreeMap    |            | BUILD  | data_TreeMap    | namespace |            |                            |
+| data_TreeMap    | TreeMap    | BUILD  | TreeMap         | class     |            |                            |
+| data_TreeMap    | TreeMap    | BUILD  | put             | method    | = .void    | key=.string, value=.string |
+| data_TreeMap    | TreeMap    | BUILD  | get             | method    | = .string  | key=.string                |
+| data_TreeMap    | TreeMap    | DESIGN | tostring        | method    | = .string  | =.void                     |
+| rxmath_math     |            | DESIGN | rxmath.math     | namespace |            |                            |
+|                 | math       | SPEC   | math            | class     |            |                            |
+|                 | math       | SPEC   | pi              | method    |            | = .void                    |
+|                 | math       | SPEC   | sin             | method    |            | = .float                   |
+|                 | math       | SPEC   | square          | method    |            | = .float                   |
+|                 | math       | SPEC   | pow             | method    |            | = .float                   |
+|                 | math       | SPEC   | base            | method    |            | = .float                   |
+|                 | math       | SPEC   | cosin           | method    |            | = .float                   |
+|                 | math       | SPEC   | tan             | method    |            | = .float                   |
+|                 | math       | SPEC   | arctan          | method    |            | = .float                   |
+| system_ipc      |            | DESIGN | system_ipc      | namespace |            |                            |
+|                 | semaphore  | DESIGN | semaphore       | class     |            |                            |
+|                 | pipe       | DESIGN | pipe            | class     |            |                            |
+|                 | ClassName  | DESIGN | queue           | class     |            |                            |
+| system_os       |            | DESIGN | system_os       | namespace |            |                            |
+| system_os       | os         | DESIGN | os              | class     |            |                            |
+| system_os       | os         | BUILD  | uptime          | method    | = .int     | =.void                     |
+| system_os       | os         | BUILD  | user            | method    | = .string  | =.void                     |
+#+END:
+
+* Export methods
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN: columnview :id "classlib" :match "KIND=\"method\"" :format "%14NS %16CLASS %10TODO %25ITEM %14RETURNTYPE %50SIG"
+| <14>            | <16>       | <10>   | <25>     | <14>       | <50>                       |
+| NS              | CLASS      | TODO   | ITEM     | RETURNTYPE | SIG                        |
+|-----------------+------------+--------+----------+------------+----------------------------|
+|                 | des        | SPEC   | encrypt  |            | = .string                  |
+|                 | des        | SPEC   | decrypt  |            | = .string                  |
+|                 | des        | SPEC   | encrypt  |            | = .string                  |
+|                 | des        | SPEC   | decrypt  |            | = .string                  |
+| data_LinkedList | LinkedList | SPEC   | add      | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | addFirst | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | addLast  | = .int     | element=.string            |
+| data_LinkedList | LinkedList | SPEC   | tostring | = .string  | =.void                     |
+| data_Stack      | Stack      | BUILD  | push     | = .void    | value=.string              |
+| data_Stack      | Stack      | BUILD  | pop      | = .string  | =.void                     |
+| data_Stack      | Stack      | BUILD  | tostring | = .string  | =.void                     |
+| data_TreeMap    | TreeMap    | BUILD  | put      | = .void    | key=.string, value=.string |
+| data_TreeMap    | TreeMap    | BUILD  | get      | = .string  | key=.string                |
+| data_TreeMap    | TreeMap    | DESIGN | tostring | = .string  | =.void                     |
+|                 | math       | SPEC   | pi       |            | = .void                    |
+|                 | math       | SPEC   | sin      |            | = .float                   |
+|                 | math       | SPEC   | square   |            | = .float                   |
+|                 | math       | SPEC   | pow      |            | = .float                   |
+|                 | math       | SPEC   | base     |            | = .float                   |
+|                 | math       | SPEC   | cosin    |            | = .float                   |
+|                 | math       | SPEC   | tan      |            | = .float                   |
+|                 | math       | SPEC   | arctan   |            | = .float                   |
+| system_os       | os         | BUILD  | uptime   | = .int     | =.void                     |
+| system_os       | os         | BUILD  | user     | = .string  | =.void                     |
+#+END:
+
+* Export attributes
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+#+BEGIN: columnview :id "classlib" :match "KIND=\"attribute\"" :format "%14NS %16CLASS %10TODO %25ITEM %14TYPE"
+| <14> | <16>  | <10> | <25> | <14> |
+| NS   | CLASS | TODO | ITEM | TYPE |
+|------+-------+------+------+------|
+#+END:
+
+* Export per class
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+
+** LinkedList
+
+*** Overview
+#+BEGIN: columnview :id "class-linkedlist" :maxlevel 2 :format "%10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
+| <10> | <25> | <12> | <14>       | <50> |
+| TODO | ITEM | KIND | RETURNTYPE | SIG  |
+|------+------+------+------------+------|
+#+END:
+
+*** Methods
+#+BEGIN: columnview :id "class-linkedlist" :match "KIND=\"method\"" :format "%10TODO %25ITEM %14RETURNTYPE %50SIG"
+| <10> | <25>     | <14>       | <50>            |
+| TODO | ITEM     | RETURNTYPE | SIG             |
+|------+----------+------------+-----------------|
+| SPEC | add      | = .int     | element=.string |
+| SPEC | addFirst | = .int     | element=.string |
+| SPEC | addLast  | = .int     | element=.string |
+| SPEC | tostring | = .string  | =.void          |
+#+END:
+
+*** Attributes
+#+BEGIN: columnview :id "class-linkedlist" :match "KIND=\"attribute\"" :format "%10TODO %25ITEM %14TYPE"
+| <10> | <25> | <14> |
+| TODO | ITEM | TYPE |
+|------+------+------|
+#+END:
+
+** Stack
+
+*** Overview
+#+BEGIN: columnview :id "class-stack" :maxlevel 2 :format "%10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
+| <10> | <25> | <12> | <14>       | <50> |
+| TODO | ITEM | KIND | RETURNTYPE | SIG  |
+|------+------+------+------------+------|
+#+END:
+
+*** Methods
+#+BEGIN: columnview :id "class-stack" :match "KIND=\"method\"" :format "%10TODO %25ITEM %14RETURNTYPE %50SIG"
+| <10>  | <25>     | <14>       | <50>          |
+| TODO  | ITEM     | RETURNTYPE | SIG           |
+|-------+----------+------------+---------------|
+| BUILD | push     | = .void    | value=.string |
+| BUILD | pop      | = .string  | =.void        |
+| BUILD | tostring | = .string  | =.void        |
+#+END:
+
+*** Attributes
+#+BEGIN: columnview :id "class-stack" :match "KIND=\"attribute\"" :format "%10TODO %25ITEM %14TYPE"
+| <10> | <25> | <14> |
+| TODO | ITEM | TYPE |
+|------+------+------|
+#+END:
+
+** TreeMap
+
+*** Overview
+#+BEGIN: columnview :id "class-treemap" :maxlevel 2 :format "%10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
+| <10> | <25> | <12> | <14>       | <50> |
+| TODO | ITEM | KIND | RETURNTYPE | SIG  |
+|------+------+------+------------+------|
+#+END:
+
+*** Methods
+#+BEGIN: columnview :id "class-treemap" :match "KIND=\"method\"" :format "%10TODO %25ITEM %14RETURNTYPE %50SIG"
+| <10>   | <25>     | <14>       | <50>                       |
+| TODO   | ITEM     | RETURNTYPE | SIG                        |
+|--------+----------+------------+----------------------------|
+| BUILD  | put      | = .void    | key=.string, value=.string |
+| BUILD  | get      | = .string  | key=.string                |
+| DESIGN | tostring | = .string  | =.void                     |
+#+END:
+
+*** Attributes
+#+BEGIN: columnview :id "class-treemap" :match "KIND=\"attribute\"" :format "%10TODO %25ITEM %14TYPE"
+| <10> | <25> | <14> |
+| TODO | ITEM | TYPE |
+|------+------+------|
+#+END:
+
+** os
+
+*** Overview
+#+BEGIN: columnview :id "class-os" :maxlevel 2 :format "%10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
+| <10> | <25> | <12> | <14>       | <50> |
+| TODO | ITEM | KIND | RETURNTYPE | SIG  |
+|------+------+------+------------+------|
+#+END:
+
+*** Methods
+#+BEGIN: columnview :id "class-os" :match "KIND=\"method\"" :format "%10TODO %25ITEM %14RETURNTYPE %50SIG"
+| <10>  | <25>   | <14>       | <50>   |
+| TODO  | ITEM   | RETURNTYPE | SIG    |
+|-------+--------+------------+--------|
+| BUILD | uptime | = .int     | =.void |
+| BUILD | user   | = .string  | =.void |
+#+END:
+
+*** Attributes
+#+BEGIN: columnview :id "class-os" :match "KIND=\"attribute\"" :format "%10TODO %25ITEM %14TYPE"
+| <10> | <25> | <14> |
+| TODO | ITEM | TYPE |
+|------+------+------|
+#+END:
