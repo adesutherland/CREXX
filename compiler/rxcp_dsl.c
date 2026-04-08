@@ -38,10 +38,17 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_MINUSMINUS: return LEXER_COMMENT;
         case TK_VAR_SYMBOL:
         case TK_CLASS_STEM:
+        case TK_STEM:
         case TK_STEMVAR:
         case TK_STEMSTRING:
         case TK_STEMNOVAL:
         case TK_STEMINT: return LEXER_IDENTIFIER;
+        case TK_CLASS_TYPE: return LEXER_TYPE_IDENTIFIER;
+        case TK_LABEL:
+        case TK_MULT_LABEL: return LEXER_FUNCTION_IDENTIFIER;
+        case TK_IMPORT:
+        case TK_NAMESPACE:
+        case TK_OPTIONS: return LEXER_PREPROCESSOR;
         case TK_STRING: return LEXER_STRING_LITERAL;
         case TK_DECIMAL:
         case TK_INTEGER:
@@ -74,7 +81,8 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_OPEN_SBRACKET: return LEXER_LH_EXPR;
         case TK_CLOSE_BRACKET:
         case TK_CLOSE_SBRACKET: return LEXER_RH_EXPR;
-        case TK_COMMA: return LEXER_STATEMENT_SEPARATOR;
+        case TK_COMMA:
+        case TK_DOT: return LEXER_SEPARATOR;
         default:
             /* Keywords and builtins */
             return LEXER_KEYWORD;
