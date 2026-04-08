@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.24)
 project(CREXX)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  # Fallback to local user bin to avoid sudo permission errors during testing
+  if(WIN32)
+    set(CMAKE_INSTALL_PREFIX "$ENV{USERPROFILE}/.local" CACHE PATH "Default install prefix" FORCE)
+  else()
+    set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.local" CACHE PATH "Default install prefix" FORCE)
+  endif()
+endif()
+
 # Print the CMake version
 message(STATUS "CMake Version: ${CMAKE_VERSION}")
 
@@ -94,15 +103,6 @@ set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 # set the destination directory for your scripts in the build directory
 set(DEST_SCRIPTS_DIR ${CMAKE_CURRENT_BINARY_DIR})
-
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  # Fallback to local user bin to avoid sudo permission errors during testing
-  if(WIN32)
-    set(CMAKE_INSTALL_PREFIX "$ENV{USERPROFILE}/.local" CACHE PATH "Default install prefix" FORCE)
-  else()
-    set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.local" CACHE PATH "Default install prefix" FORCE)
-  endif()
-endif()
 
 # Install target to copy binaries to /usr/local/bin
 install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/
