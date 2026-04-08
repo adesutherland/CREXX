@@ -42,7 +42,7 @@ if (ENABLE_PARSER_MODE)
         FetchContent_Declare(
             dsl_syntax_highlighter
             GIT_REPOSITORY https://github.com/adesutherland/DSL-Syntax-Highlighter.git
-            GIT_TAG        main
+            GIT_TAG        develop
         )
         FetchContent_MakeAvailable(dsl_syntax_highlighter)
         set(DSL_SH_SOURCE_DIR ${dsl_syntax_highlighter_SOURCE_DIR})
