@@ -6,30 +6,43 @@ set(CLSS
   os
 )
 
-foreach (CLS ${CLSS})
-	set(CLSBINS ${CLSBINS} ${CLS}.rxbin)
-	set(REXXSRC ${REXXSRC} ${CLS}.rexx)
-endforeach ()
+set(CLSBINS)
+foreach(CLS IN LISTS CLSS)
+  list(APPEND CLSBINS "${CMAKE_CURRENT_BINARY_DIR}/${CLS}.rxbin")
+endforeach()
 
-unset(_prev_target)
-foreach(_binfile ${CLSBINS})
-	get_filename_component(_basename ${_binfile} NAME_WE)
-	add_custom_command(
-		  COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
-		  COMMAND $<TARGET_FILE:rxas> ${_basename}
-		  OUTPUT ${_binfile}
-		  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-		  COMMENT "cREXX compile and assemble ${_basename} ..."
-	)
-	set(_prev_target ${_binfile})
+foreach(_binfile IN LISTS CLSBINS)
+  get_filename_component(_basename "${_binfile}" NAME_WE)
+
+  add_custom_command(
+    OUTPUT "${_binfile}"
+    COMMAND $<TARGET_FILE:rxc>
+            -i "${CMAKE_BINARY_DIR}/bin"
+            -o "${_basename}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx"
+    COMMAND $<TARGET_FILE:rxas> "${_basename}"
+    DEPENDS
+      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx"
+      rxc
+      rxas
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    COMMENT "cREXX compile and assemble ${_basename} ..."
+    VERBATIM
+  )
 endforeach()
 
 add_custom_command(
- 		OUTPUT classlib.rxbin
-		COMMAND ${CMAKE_COMMAND} -E cat ${CLSBINS} > classlib.rxbin
-		COMMENT "cREXX REXX Library Archive ..."
-		DEPENDS ${CLSBINS}
+  OUTPUT "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin"
+  COMMAND ${CMAKE_COMMAND} -E cat ${CLSBINS} > "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+  DEPENDS ${CLSBINS}
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  COMMENT "cREXX REXX Class Library ..."
+  VERBATIM
 )
 
-add_custom_target(classlib ALL DEPENDS classlib.rxbin)
+add_custom_target(classlib ALL
+  DEPENDS "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+)
+
 add_dependencies(classlib library)
