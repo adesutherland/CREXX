@@ -35,6 +35,7 @@ add_custom_command(
 # Compiler Library - can be used to link plugins to make a extended compiler
 add_library(rxclib STATIC
         rxcpmain.c rxcp_ast_core.c rxcp_ast_print.c rxcp_ast_walk.c rxcpmain.h rxcp_util.c rxcp_diag_fallback.c
+        rxcp_dsl.c
         ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h rxcpopar.c
         ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h rxcpbpar.c
         ${CMAKE_SOURCE_DIR}/assembler/rxas.h
@@ -55,6 +56,12 @@ target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CU
         ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
         ${CMAKE_SOURCE_DIR}/binutils/include)
+
+if (ENABLE_PARSER_MODE)
+    target_link_libraries(rxclib dslsyntax_parser)
+    target_compile_definitions(rxclib PRIVATE ENABLE_PARSER_MODE)
+    target_include_directories(rxclib PRIVATE ${DSL_SH_SOURCE_DIR}/codebuffer)
+endif()
 
 add_executable(rxc rxc_main.c)
 target_include_directories(rxc PRIVATE ${CMAKE_SOURCE_DIR}/platform)

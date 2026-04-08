@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.24)
 project(CREXX)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  # Fallback to local user bin to avoid sudo permission errors during testing
+  if(WIN32)
+    set(CMAKE_INSTALL_PREFIX "$ENV{USERPROFILE}/.local" CACHE PATH "Default install prefix" FORCE)
+  else()
+    set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.local" CACHE PATH "Default install prefix" FORCE)
+  endif()
+endif()
+
 # Print the CMake version
 message(STATUS "CMake Version: ${CMAKE_VERSION}")
 
@@ -29,6 +38,25 @@ endif()
 
 option(ENABLE_ODBC "Enable ODBC support" OFF)
 option(ENABLE_GTK  "Enable GTK support"  OFF)
+option(ENABLE_PARSER_MODE "Enable Parser Mode (requires DSL-Syntax-Highlighter)" ON)
+
+if (ENABLE_PARSER_MODE)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../DSL-Syntax-Highlighter/CMakeLists.txt")
+        message(STATUS "Found DSL-Syntax-Highlighter as sibling directory.")
+        set(DSL_SH_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../DSL-Syntax-Highlighter")
+        add_subdirectory(${DSL_SH_SOURCE_DIR} dsl-syntax-highlighter)
+    else()
+        message(STATUS "Downloading DSL-Syntax-Highlighter from GitHub...")
+        include(FetchContent)
+        FetchContent_Declare(
+            dsl_syntax_highlighter
+            GIT_REPOSITORY https://github.com/adesutherland/DSL-Syntax-Highlighter.git
+            GIT_TAG        develop
+        )
+        FetchContent_MakeAvailable(dsl_syntax_highlighter)
+        set(DSL_SH_SOURCE_DIR ${dsl_syntax_highlighter_SOURCE_DIR})
+    endif()
+endif()
 
 include(CTest)
 
@@ -75,3 +103,10 @@ set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 # set the destination directory for your scripts in the build directory
 set(DEST_SCRIPTS_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+# Install target to copy binaries to /usr/local/bin
+install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/
+        DESTINATION bin
+        FILES_MATCHING
+        PATTERN "*"
+        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)

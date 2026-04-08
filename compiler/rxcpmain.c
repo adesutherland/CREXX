@@ -55,7 +55,12 @@ static void help() {
             "  -i import       Locations to import file - \";\" delimited list\n"
             "  -o output_file  REXX Assembler Output File\n"
             "  -n              No Optimising\n"
-            "  -x              Disable compiler exits\n";
+            "  -x              Disable compiler exits\n"
+#ifdef ENABLE_PARSER_MODE
+            "  --parser        Run as a language server (stdio mode)\n"
+            "  --port port     Run as a language server (socket mode on port)\n"
+#endif
+            ;
 
     printf("%s",helpMessage);
 }
@@ -219,8 +224,34 @@ int rxcmain(int argc, char *argv[]) {
     int disable_exits = 0;
     char *file_directory = 0;
 
+#ifdef ENABLE_PARSER_MODE
+    int parser_mode = 0;
+    int parser_port = 0;
+    int parser_stdio = 0;
+#endif
+
     /* Parse arguments  */
-    for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+    for (i = 1; i < argc; i++) {
+        if (argv[i][0] != '-') break; /* End of options */
+
+#ifdef ENABLE_PARSER_MODE
+        if (strcmp(argv[i], "--parser") == 0) {
+            parser_mode = 1;
+            parser_stdio = 1;
+            continue;
+        }
+        if (strcmp(argv[i], "--port") == 0) {
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing port number after --port");
+            }
+            parser_mode = 1;
+            parser_stdio = 0;
+            parser_port = atoi(argv[i]);
+            continue;
+        }
+#endif
+
         if (strncmp(argv[i], "-d", 2) == 0) {
             if (argv[i][2] == 'p') {
                 stop_after_parse = 1;
@@ -288,7 +319,26 @@ int rxcmain(int argc, char *argv[]) {
     }
 
     if (i == argc) {
+#ifdef ENABLE_PARSER_MODE
+        if (!parser_mode) error_and_exit(2, "Missing input source file");
+        file_name = "dsl_buffer.rexx";
+#else
         error_and_exit(2, "Missing input source file");
+#endif
+    } else {
+        file_name = argv[i++];
+    }
+
+#ifdef ENABLE_PARSER_MODE
+    if (parser_mode) {
+        /* Call the DSL initialization from rxcp_dsl.c */
+        extern int rxc_parser_mode_main(int stdio_mode, int port, const char *file_name, int debug_mode);
+        return rxc_parser_mode_main(parser_stdio, parser_port, file_name, debug_mode);
+    }
+#endif
+
+    if (i < argc) {
+        error_and_exit(2, "Unexpected Arguments");
     }
 
     /* Add current and executable path to import locations */
@@ -303,12 +353,6 @@ int rxcmain(int argc, char *argv[]) {
         import_locations = combined_import_locations;
     }
     free(exe_path);
-
-    file_name = argv[i++];
-
-    if (i < argc) {
-        error_and_exit(2, "Unexpected Arguments");
-    }
 
     char *allocated_output_file_name = 0;
     if (!output_file_name) {

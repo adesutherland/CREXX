@@ -15,6 +15,12 @@ add_executable(crexx_test_driver src/test_driver.c)
 # Ensure the driver is built when tests are built
 add_dependencies(crexx_test_driver rxc)
 
+if (ENABLE_PARSER_MODE)
+    add_executable(crexx_fake_editor src/fake_editor.c)
+    target_link_libraries(crexx_fake_editor dslsyntax_editor)
+    target_include_directories(crexx_fake_editor PRIVATE ${DSL_SH_SOURCE_DIR}/codebuffer)
+endif()
+
 enable_testing()
 
 # Compiler flags for optimization levels
