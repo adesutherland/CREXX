@@ -16,16 +16,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "dslsyntax_common.h"
-#include "dslsyntax_parser.h"
-#include "serialization.h"
-#include "dslsyntax_log.h"
+/* Rename conflicting cREXX AST node types to avoid windows.h collision */
+#define ERROR RXCP_ERROR
+#define WARNING RXCP_WARNING
+#define FLOAT RXCP_FLOAT
+#define INTEGER RXCP_INTEGER
+#define DECIMAL RXCP_DECIMAL
+#define PATTERN RXCP_PATTERN
+#define VOID RXCP_VOID
 
 #include "rxcpmain.h"
 #include "rxcp_val.h"
 #include "rxcpbgmr.h"
 #include "rxcp_exit.h"
 #include "utf.h"
+
+#undef ERROR
+#undef WARNING
+#undef FLOAT
+#undef INTEGER
+#undef DECIMAL
+#undef PATTERN
+#undef VOID
+
+#include "dslsyntax_common.h"
+#include "dslsyntax_parser.h"
+#include "serialization.h"
+#include "dslsyntax_log.h"
 
 /* Map cREXX token types to DSL platform node types */
 static CB_NodeType map_c_token_to_cb_type(int token_type) {
@@ -188,7 +205,7 @@ void rxc_dsl_parser_func(CodeBuffer *cb) {
                 diag_node.message = strdup("Syntax Error");
             }
             
-            diag_node.severity = (diag->node_type == WARNING) ? CB_WARNING : CB_ERROR;
+            diag_node.severity = (diag->node_type == RXCP_WARNING) ? CB_WARNING : CB_ERROR;
             cb_add_child_node(tb, diag_node);
         }
         diag = diag->sibling;

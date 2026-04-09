@@ -14,9 +14,6 @@ add_custom_command(
 )
 add_custom_target(exit_add_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Add.rxbin)
 
-execute_process(
-        COMMAND cmd /c "echo Debug breakpoint reached & pause"
-)
 crexx_add_compiler_exit_runtime_test(
         test_add
         test_add.rexx

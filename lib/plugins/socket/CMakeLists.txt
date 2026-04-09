@@ -40,6 +40,21 @@ if(OPENSSL_FOUND)
     include_directories(${OPENSSL_INCLUDE_DIR})
     # NOTE: the plugin target is probably named "_socket"
     target_link_libraries(_${plugin_name} PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+    
+    if(WIN32)
+        # Dynamically locate OpenSSL DLLs to copy to the output bin directory
+        get_filename_component(CRYPTO_LIB_DIR "${OPENSSL_CRYPTO_LIBRARY}" DIRECTORY)
+        get_filename_component(OPENSSL_BIN_DIR "${CRYPTO_LIB_DIR}/../bin" ABSOLUTE)
+        file(GLOB OPENSSL_DLLS "${OPENSSL_BIN_DIR}/libssl*.dll" "${OPENSSL_BIN_DIR}/libcrypto*.dll")
+        
+        if(OPENSSL_DLLS)
+            add_custom_command(TARGET _${plugin_name} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    ${OPENSSL_DLLS}
+                    "$<TARGET_FILE_DIR:_${plugin_name}>/"
+            )
+        endif()
+    endif()
 else()
     message(FATAL_ERROR "OpenSSL not found! Please install mingw-w64-x86_64-openssl via pacman.")
 endif()

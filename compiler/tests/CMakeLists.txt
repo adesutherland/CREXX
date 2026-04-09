@@ -99,17 +99,45 @@ macro(add_crexx_robustness_test NAME MAIN_FILE)
     # The list of dependencies are passed as additional arguments
     set(DEPS ${ARGN})
     set(DEP_BINS "")
-    set(BUILD_DEPS_CMD "")
+    
+    # Generate a CMake script for this test to replace bash -c
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/run_robustness_${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+    
+    # Build main file
+    string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness/${MAIN_FILE}\" RESULT_VARIABLE res)\n")
+    string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on main\")\nendif()\n")
+    string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${NAME}.rxbin\" \"${NAME}\" RESULT_VARIABLE res)\n")
+    string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on main\")\nendif()\n")
+
     foreach(DEP ${DEPS})
         # Extract lib name from filename
         get_filename_component(DEP_NAME ${DEP} NAME_WE)
-        set(BUILD_DEPS_CMD "${BUILD_DEPS_CMD} && $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness -o ${DEP_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness/${DEP}")
-        set(BUILD_DEPS_CMD "${BUILD_DEPS_CMD} && $<TARGET_FILE:rxas> -o ${DEP_NAME}.rxbin ${DEP_NAME}")
-        set(DEP_BINS "${DEP_BINS} ${DEP_NAME}.rxbin")
+        string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness\" -o \"${DEP_NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness/${DEP}\" RESULT_VARIABLE res)\n")
+        string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on ${DEP}\")\nendif()\n")
+        string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${DEP_NAME}.rxbin\" \"${DEP_NAME}\" RESULT_VARIABLE res)\n")
+        string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on ${DEP}\")\nendif()\n")
+        
+        # Build list for rxvm
+        set(DEP_BINS "${DEP_BINS};${DEP_NAME}.rxbin")
     endforeach()
 
+    # Run rxvm and compare output
+    string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${NAME}.rxbin\" ${DEP_BINS} \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" OUTPUT_VARIABLE vm_out RESULT_VARIABLE res)\n")
+    string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed\")\nendif()\n")
+    
+    # Read golden file
+    string(APPEND SCRIPT_CONTENT "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out\" golden_out)\n")
+    # Normalize line endings
+    string(APPEND SCRIPT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" vm_out \"\${vm_out}\")\n")
+    string(APPEND SCRIPT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" golden_out \"\${golden_out}\")\n")
+    
+    string(APPEND SCRIPT_CONTENT "if(NOT vm_out STREQUAL golden_out)\n  message(FATAL_ERROR \"Output mismatch: \\nExpected:\\n\${golden_out}\\nGot:\\n\${vm_out}\")\nendif()\n")
+
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+
     add_test(NAME robustness_${NAME}
-             COMMAND bash -c "$<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness -i ${CMAKE_BINARY_DIR}/bin -o ${NAME} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness/${MAIN_FILE} && $<TARGET_FILE:rxas> -o ${NAME}.rxbin ${NAME} ${BUILD_DEPS_CMD} && $<TARGET_FILE:rxvm> ${NAME}.rxbin ${DEP_BINS} ${CMAKE_BINARY_DIR}/bin/library.rxbin | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
+             COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endmacro()
 
@@ -119,8 +147,14 @@ add_crexx_robustness_test(set3_main set3_main.rexx set3_lib.rexx)
 add_crexx_robustness_test(set4_main set4_main.rexx set4_mid.rexx set4_base.rexx)
 
 # Set 5 - Encapsulation (Expected to fail compilation)
+set(SCRIPT_FILE_SET5 "${CMAKE_CURRENT_BINARY_DIR}/run_robustness_set5.cmake")
+set(SCRIPT_CONTENT_SET5 "")
+string(APPEND SCRIPT_CONTENT_SET5 "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness\" -o \"set5_main\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness/set5_main.rexx\" RESULT_VARIABLE res)\n")
+string(APPEND SCRIPT_CONTENT_SET5 "if(res EQUAL 0)\n  message(FATAL_ERROR \"Expected compilation to fail, but it succeeded\")\nendif()\n")
+file(GENERATE OUTPUT "${SCRIPT_FILE_SET5}" CONTENT "${SCRIPT_CONTENT_SET5}")
+
 add_test(NAME robustness_set5_encapsulation
-         COMMAND bash -c "! $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness -o set5_main ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness/set5_main.rexx"
+         COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE_SET5}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Example tests
@@ -244,12 +278,55 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
     # Keep no-opt and opt runtime coverage paired so semantic shifts in
     # argument handling or inlining are caught even when compiler-output
     # goldens still match within one mode.
+    
+    # No-opt script
+    set(NOOPT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_noopt.cmake")
+    set(NOOPT_CONTENT "set(full_out \"\")\n")
+    string(APPEND NOOPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_NOOPT_FLAG} -o \"${NAME}_run_noopt\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND NOOPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
+    string(APPEND NOOPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed: \${out}\")\nendif()\n")
+    
+    string(APPEND NOOPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${NAME}_run_noopt.rxbin\" \"${NAME}_run_noopt\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND NOOPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
+    string(APPEND NOOPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
+    
+    string(APPEND NOOPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${NAME}_run_noopt.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND NOOPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
+    string(APPEND NOOPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed: \${out}\")\nendif()\n")
+    
+    string(APPEND NOOPT_CONTENT "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out\" golden_out)\n")
+    string(APPEND NOOPT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"\${full_out}\")\n")
+    string(APPEND NOOPT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" golden_out \"\${golden_out}\")\n")
+    string(APPEND NOOPT_CONTENT "if(NOT full_out STREQUAL golden_out)\n  message(FATAL_ERROR \"Output mismatch: \\nExpected:\\n\${golden_out}\\nGot:\\n\${full_out}\")\nendif()\n")
+    file(GENERATE OUTPUT "${NOOPT_SCRIPT}" CONTENT "${NOOPT_CONTENT}")
+
     add_test(NAME ${NAME}_run_noopt
-             COMMAND bash -c "($<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${COMPILER_NOOPT_FLAG} -o ${NAME}_run_noopt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} 2>&1 && $<TARGET_FILE:rxas> -o ${NAME}_run_noopt.rxbin ${NAME}_run_noopt 2>&1 && $<TARGET_FILE:rxvm> ${CMAKE_BINARY_DIR}/bin/library.rxbin ${NAME}_run_noopt.rxbin 2>&1) | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
+             COMMAND ${CMAKE_COMMAND} -P "${NOOPT_SCRIPT}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+    # Opt script
+    set(OPT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_opt.cmake")
+    set(OPT_CONTENT "set(full_out \"\")\n")
+    string(APPEND OPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"${NAME}_run_opt\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND OPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
+    string(APPEND OPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed: \${out}\")\nendif()\n")
+    
+    string(APPEND OPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${NAME}_run_opt.rxbin\" \"${NAME}_run_opt\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND OPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
+    string(APPEND OPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
+    
+    string(APPEND OPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${NAME}_run_opt.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND OPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
+    string(APPEND OPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed: \${out}\")\nendif()\n")
+    
+    string(APPEND OPT_CONTENT "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out\" golden_out)\n")
+    string(APPEND OPT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"\${full_out}\")\n")
+    string(APPEND OPT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" golden_out \"\${golden_out}\")\n")
+    string(APPEND OPT_CONTENT "if(NOT full_out STREQUAL golden_out)\n  message(FATAL_ERROR \"Output mismatch: \\nExpected:\\n\${golden_out}\\nGot:\\n\${full_out}\")\nendif()\n")
+    file(GENERATE OUTPUT "${OPT_SCRIPT}" CONTENT "${OPT_CONTENT}")
+
     add_test(NAME ${NAME}_run_opt
-             COMMAND bash -c "($<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${NAME}_run_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} 2>&1 && $<TARGET_FILE:rxas> -o ${NAME}_run_opt.rxbin ${NAME}_run_opt 2>&1 && $<TARGET_FILE:rxvm> ${CMAKE_BINARY_DIR}/bin/library.rxbin ${NAME}_run_opt.rxbin 2>&1) | diff -u ${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out -"
+             COMMAND ${CMAKE_COMMAND} -P "${OPT_SCRIPT}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endmacro()
 
@@ -352,8 +429,13 @@ add_crexx_run_test(test_function_shadowing rexx_src/test_function_shadowing.rexx
 add_crexx_run_test(test_disjoint_detailed rexx_src/test_disjoint_detailed.rexx)
 
 # New test for detailed warning
+set(WARN_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_warn_test.cmake")
+set(WARN_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o test_disjoint_detailed_warn \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/test_disjoint_detailed.rexx\" ERROR_VARIABLE err_out OUTPUT_VARIABLE std_out RESULT_VARIABLE res)\n")
+string(APPEND WARN_CONTENT "if(NOT err_out MATCHES \"original definition @ 4:5\")\n  message(FATAL_ERROR \"Expected warning not found in output\")\nendif()\n")
+file(GENERATE OUTPUT "${WARN_SCRIPT}" CONTENT "${WARN_CONTENT}")
+
 add_test(NAME test_disjoint_detailed_warn
-         COMMAND bash -c "$<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o test_disjoint_detailed_warn ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/test_disjoint_detailed.rexx 2>&1 | grep -q 'original definition @ 4:5'"
+         COMMAND ${CMAKE_COMMAND} -P "${WARN_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 

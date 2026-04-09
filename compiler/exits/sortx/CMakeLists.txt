@@ -14,9 +14,6 @@ add_custom_command(
 )
 add_custom_target(exit_sortx_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Sortx.rxbin)
 
-execute_process(
-        COMMAND cmd /c "echo Debug breakpoint reached & pause"
-)
 crexx_add_compiler_exit_runtime_test(
         test_sortx
         test_sortx.rexx

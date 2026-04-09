@@ -40,7 +40,7 @@ function(crexx_add_rexx_opt_matrix)
         set(CREXX_ASSEMBLER_TARGET rxas)
     endif()
     if(CREXX_IMPORT_PATHS)
-        string(JOIN "\\;" _crexx_import_path ${CREXX_IMPORT_PATHS})
+        string(JOIN "$<SEMICOLON>" _crexx_import_path ${CREXX_IMPORT_PATHS})
         set(_crexx_import_arg "\"${_crexx_import_path}\"")
     endif()
 
