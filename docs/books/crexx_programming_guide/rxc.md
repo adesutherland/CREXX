@@ -57,7 +57,11 @@ rxc -d3 -o out input.rexx
 ```
 
 Notes:
+
 - These modes are for diagnostics and do not change user‑visible semantics.
+
 - All walkers inside the fixpoint loop are designed to be idempotent.
+
 - See also: `compiler/docs/fixpoint_idempotency_and_scope.md` for design details.
+
 - See also: `compiler/docs/testing.md` for information on regression testing and how to update golden files.
