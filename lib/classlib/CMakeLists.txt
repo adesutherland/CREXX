@@ -4,6 +4,8 @@ set(CLSS
   Stack
   TreeMap
   TreeMapIterator
+  TreeSet
+  TreeSetIterator
   os
 )
 
