@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 set(CLSS
   Stack
   TreeMap
+  TreeMapIterator
   os
 )
 

@@ -1,6 +1,7 @@
 options levelb
 namespace data_TreeMap expose TreeMap
 import treemap
+import TreeMapIterator
 
 /* 
  * TreeMap: a Red-Black tree based map that stores key-value
@@ -36,4 +37,9 @@ val = .int
   lastKey: method = .string
     return tmlastkey(val)
 
-    
+  getval: method = .int
+    return val
+
+  iterator: method = .TreeMapIterator
+    return .TreeMapIterator(val)
+
