@@ -26,6 +26,81 @@ static TreeNode *maximum(TreeNode *node);
 static void delete_fixup(TreeMap *map, TreeNode *x);
 static TreeNode *find_node(TreeNode *root, const char *key);
 static void free_tree(TreeNode *node);
+static void append_text(char **buf, size_t *cap, size_t *len, const char *text);
+static void append_char(char **buf, size_t *cap, size_t *len, char ch);
+static char *TreeMap_toString(TreeMap *map);
+TreeMapRegistry* is_valid_map(long long map);
+
+static void append_text(char **buf, size_t *cap, size_t *len, const char *text) {
+    size_t add = strlen(text);
+    size_t need = *len + add + 1;   /* +1 for trailing NUL */
+
+    if (need > *cap) {
+        while (*cap < need) {
+            *cap *= 2;
+        }
+        *buf = realloc(*buf, *cap);
+        if (!*buf) {
+            fprintf(stderr, "Out of memory in append_text\n");
+            exit(1);
+        }
+    }
+
+    memcpy(*buf + *len, text, add);
+    *len += add;
+    (*buf)[*len] = '\0';
+}
+
+static void append_char(char **buf, size_t *cap, size_t *len, char ch) {
+    size_t need = *len + 2;         /* char + trailing NUL */
+
+    if (need > *cap) {
+        while (*cap < need) {
+            *cap *= 2;
+        }
+        *buf = realloc(*buf, *cap);
+        if (!*buf) {
+            fprintf(stderr, "Out of memory in append_char\n");
+            exit(1);
+        }
+    }
+
+    (*buf)[(*len)++] = ch;
+    (*buf)[*len] = '\0';
+}
+
+static char *TreeMap_toString(TreeMap *map) {
+    TreeMapIterator *it;
+    TreeNode *n;
+    char *buf;
+    size_t cap = 64;
+    size_t len = 0;
+    int first = 1;
+
+    buf = malloc(cap);
+    if (!buf) return strdup("{}");
+    buf[0] = '\0';
+
+    append_char(&buf, &cap, &len, '{');
+
+    it = TreeMapIterator_create(map);
+    while (TreeMapIterator_hasNext(it)) {
+        n = TreeMapIterator_next(it);
+
+        if (!first) {
+            append_text(&buf, &cap, &len, ", ");
+        }
+        first = 0;
+
+        append_text(&buf, &cap, &len, n->key);
+        append_char(&buf, &cap, &len, '=');
+        append_text(&buf, &cap, &len, n->value);
+    }
+    TreeMapIterator_destroy(it);
+
+    append_char(&buf, &cap, &len, '}');
+    return buf;
+}
 
 static inline uint64_t simple_hash64(const char *str) {
     uint64_t hash = 14695981039346656037ULL;  // FNV offset basis
@@ -201,6 +276,21 @@ const char *TreeMap_lastKey(TreeMap *map) {
     TreeNode *max = maximum(map->root);
     return max ? max->key : NULL;
 }
+
+PROCEDURE(tmap_tostring) {
+    long long mapi = GETINT(ARG0);
+    TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry *treeCB = is_valid_map(mapi);
+    char *result;
+
+    if (treeCB == 0) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    result = TreeMap_toString(map);
+    RETURNSTRX(result);
+    free(result);
+ENDPROC
+}
+
 
 int TreeMap_remove(TreeMap *map, const char *key) {
     TreeNode *z = find_node(map->root, key);
@@ -893,4 +983,5 @@ LOADFUNCS
     ADDPROC(tmap_iterhasnext,   "treemap.tmiterhasnext",  "b", ".int",    "token=.int");
     ADDPROC(tmap_iternext,      "treemap.tmiternext",     "b", ".string", "token=.int");
     ADDPROC(tmap_iterfree,      "treemap.tmiterfree",     "b", ".int",    "token=.int");
+    ADDPROC(tmap_tostring,      "treemap.tmtostring",     "b", ".string", "map=.int");
 ENDLOADFUNCS

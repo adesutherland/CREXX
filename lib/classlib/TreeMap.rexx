@@ -91,5 +91,6 @@ val = .int
     * as a string.
     * @return .string
     */
-    # toString: method = .string
-    
+  toString: method = .string
+    return tmtostring(val)
+   
