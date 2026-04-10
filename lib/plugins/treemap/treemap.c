@@ -826,6 +826,46 @@ PROCEDURE(stem_stats) {
     ENDPROC
 }
 
+PROCEDURE(tmap_itercreate) {
+    long long mapi = GETINT(ARG0);
+    TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry *treeCB = is_valid_map(mapi);
+    if (treeCB == 0) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    TreeMapIterator *it = TreeMapIterator_create(map);
+    RETURNINTX((long long) it)
+ENDPROC
+}
+
+PROCEDURE(tmap_iterhasnext) {
+    long long tokeni = GETINT(ARG0);
+    TreeMapIterator *it = (TreeMapIterator *) tokeni;
+
+    if (!it) RETURNINTX(0);
+    RETURNINTX(TreeMapIterator_hasNext(it))
+ENDPROC
+}
+
+PROCEDURE(tmap_iternext) {
+    long long tokeni = GETINT(ARG0);
+    TreeMapIterator *it = (TreeMapIterator *) tokeni;
+
+    if (!it) RETURNSTRX("");
+
+    TreeNode *n = TreeMapIterator_next(it);
+    if (!n) RETURNSTRX("");
+    RETURNSTRX(n->key)
+ENDPROC
+}
+
+PROCEDURE(tmap_iterfree) {
+    long long tokeni = GETINT(ARG0);
+    TreeMapIterator *it = (TreeMapIterator *) tokeni;
+
+    if (it) TreeMapIterator_destroy(it);
+    RETURNINTX(0)
+ENDPROC
+}
 
 LOADFUNCS
     ADDPROC(tmap_create,        "treemap.tmcreate",      "b",    ".int","name=''");
@@ -849,4 +889,8 @@ LOADFUNCS
     ADDPROC(stem_iterate,       "treemap.stemiterate",    "b",    ".int",    "token=.int, expose keys=.string[], expose values=.string[]");
     ADDPROC(stem_hi,            "treemap.stemsize",        "b",    ".int",    "token=.int");
     ADDPROC(stem_stats,         "treemap.stemstats",       "b",    ".int",    "token=.int");
+    ADDPROC(tmap_itercreate,    "treemap.tmitercreate",   "b", ".int",    "map=.int");
+    ADDPROC(tmap_iterhasnext,   "treemap.tmiterhasnext",  "b", ".int",    "token=.int");
+    ADDPROC(tmap_iternext,      "treemap.tmiternext",     "b", ".string", "token=.int");
+    ADDPROC(tmap_iterfree,      "treemap.tmiterfree",     "b", ".int",    "token=.int");
 ENDLOADFUNCS
