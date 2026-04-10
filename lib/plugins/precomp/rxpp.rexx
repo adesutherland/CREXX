@@ -274,7 +274,7 @@ RXPPPassThree: procedure
            lineno=aifblock.lineno
         end
      end
-     else if stype.LineNo='PARSE' then call parsevar lineNo,line
+##     else if stype.LineNo='PARSE' then call parsevar lineNo,line
      else if stype.LineNo='IMPORT' then do
         func=word(line,2)
         if pos("|"func,imported_funcs)=0 then do
@@ -396,7 +396,7 @@ GetPrecomp: procedure
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
       else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
-      else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
+ ##     else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
       else if ucmd = '##ARRAY'   then call cmd_array  lineNo,line
       else if ucmd = '##GLOBAL'  then call cmd_global lineNo,line
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)

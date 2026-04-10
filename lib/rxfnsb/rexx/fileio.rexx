@@ -2,7 +2,7 @@
  * CREXX LEVEL B - FILE IO Functions
  */
 options levelb
-namespace rxfnsb expose lineout linein lines _execio readlines
+namespace rxfnsb expose lineout linein lines _execio readlines loadtext
 import _rxsysb
 
 /* REXX Lineout BIF */
@@ -210,3 +210,25 @@ readlines: procedure = .string[]
   assembler fclose rc,fileid
   if rc\=0 then call raise "error", "40.27", "cannot close "fname
 return lines
+
+loadtext: procedure = .string
+  arg fname=.string
+
+  stream=.string
+  eof=.int
+  fileid=0
+  rc=0
+  rmode="r"
+
+  assembler fopen fileid,fname,rmode
+  if fileid=0 then call raise "error", "40.27", "cannot open "fname
+  do while eof = 0
+     line = ""
+     assembler freadline line, fileid
+     assembler feof eof, fileid
+     if eof > 0 & line = "" then leave    /* stop on the final read-at-EOF empty result */
+     stream = stream||line||'0D0A'x
+  end
+  assembler fclose rc,fileid
+  if rc\=0 then call raise "error", "40.27", "cannot close "fname
+return stream
