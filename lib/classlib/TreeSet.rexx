@@ -34,6 +34,15 @@ val = .int
   iterator: method = .TreeSetIterator
     return .TreeSetIterator(val)
 
+    /**
+    * method keystem returns the items in this TreeSet 
+    * as a rexx stem
+    */
+  toStem: method = .string[]
+    list = .string[]
+    n = tmkeys(val, list)
+    return list
+    
   toString: method = .string
     if size() = 0 then return '{}'
 

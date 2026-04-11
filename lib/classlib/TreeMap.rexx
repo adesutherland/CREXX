@@ -44,12 +44,21 @@ val = .int
     return tmget(val,key)
 
     /**
-     * Returns the number of key-value mappings in this map.
+     * Returns the number of key-value mappings in this TreeMap.
      * return .int size
      */
   size: method = .int
     return tmsize(val)  
 
+    /**
+     * method remove removea a mapping from this TreeMap
+     * @parm .string key
+     * @return .int 0 for success, 4 for failure
+     */
+  remove: method = .int
+    arg key = .string
+    return tmremove(val,key)
+    
     /**
      * method containsKey returns 1 (true) if this map contains
      * a mapping for the specified key.
@@ -77,6 +86,15 @@ val = .int
      */
   lastKey: method = .string
     return tmlastkey(val)
+
+    /**
+     * method keystem returns the keys in this TreeMap 
+     * as a rexx stem
+     */
+  keyStem: method = .string[]
+    list = .string[]
+    n = tmkeys(val, list)
+    return list
 
     /**
      * method iterator returns a TreeMapIterator 
