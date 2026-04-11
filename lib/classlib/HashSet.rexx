@@ -25,6 +25,9 @@ val = .int
   size: method = .int
     return stemsize(val)
 
+  iterator: method = .HashSetIterator
+    return .HashSetIterator(val)
+    
   toString: method = .string
     keys = .string[]
     vals = .string[]

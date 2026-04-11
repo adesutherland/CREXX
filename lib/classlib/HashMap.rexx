@@ -35,6 +35,9 @@ val = .int
     n = stemiterate(val, list, vals)
     return list
 
+  iterator: method = .HashMapIterator
+    return .HashMapIterator(val)
+    
   toString: method = .string
     keys = .string[]
     vals = .string[]

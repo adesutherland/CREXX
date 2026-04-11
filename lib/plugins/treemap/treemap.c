@@ -529,6 +529,13 @@ typedef struct Stem {
     int collisionW;      // write collisions took place
 } Stem;
 
+typedef struct StemIterator {
+    Stem   *stem;
+    size_t  bucket_index;
+    Entry  *current;
+    Entry  *last_returned;
+} StemIterator;
+
 Stem *create_stem(size_t table_size,char *root) {
     Stem *s = malloc(sizeof(Stem));
     if (!s) return NULL;
@@ -665,6 +672,63 @@ void stem_free(Stem *s) {
     }
     free(s->buckets);
     free(s);
+}
+
+static StemIterator *stem_iterator_create(Stem *s) {
+    StemIterator *it = malloc(sizeof(StemIterator));
+    if (!it) return NULL;
+
+    it->stem = s;
+    it->bucket_index = 0;
+    it->current = NULL;
+    it->last_returned = NULL;
+
+    if (!s) return it;
+
+    while (it->bucket_index < s->table_size) {
+        if (s->buckets[it->bucket_index]) {
+            it->current = s->buckets[it->bucket_index];
+            break;
+        }
+        it->bucket_index++;
+    }
+
+    return it;
+}
+
+static int stem_iterator_has_next(StemIterator *it) {
+    return it && it->current != NULL;
+}
+
+static Entry *stem_iterator_next(StemIterator *it) {
+    Entry *ret;
+
+    if (!it || !it->current) return NULL;
+
+    ret = it->current;
+    it->last_returned = ret;
+
+    if (it->current->next) {
+        it->current = it->current->next;
+        return ret;
+    }
+
+    it->bucket_index++;
+    it->current = NULL;
+
+    while (it->bucket_index < it->stem->table_size) {
+        if (it->stem->buckets[it->bucket_index]) {
+            it->current = it->stem->buckets[it->bucket_index];
+            break;
+        }
+        it->bucket_index++;
+    }
+
+    return ret;
+}
+
+static void stem_iterator_destroy(StemIterator *it) {
+    free(it);
 }
 
 /* ------------------------------------------------------------------------------------
@@ -966,6 +1030,51 @@ PROCEDURE(stem_stats) {
     ENDPROC
 }
 
+PROCEDURE(stem_itercreate) {
+    long long tokeni = GETINT(ARG0);
+    Stem *token = (Stem *) tokeni;
+    StemIterator *it = stem_iterator_create(token);
+
+    RETURNINTX((long long) it);
+ENDPROC
+}
+
+PROCEDURE(stem_iterhasnext) {
+    long long tokeni = GETINT(ARG0);
+    StemIterator *it = (StemIterator *) tokeni;
+
+    RETURNINTX(stem_iterator_has_next(it));
+ENDPROC
+}
+
+PROCEDURE(stem_iternext) {
+    long long tokeni = GETINT(ARG0);
+    StemIterator *it = (StemIterator *) tokeni;
+    Entry *e = stem_iterator_next(it);
+
+    if (!e) RETURNSTRX("");
+    RETURNSTRX(e->key);
+ENDPROC
+}
+
+PROCEDURE(stem_itervalue) {
+    long long tokeni = GETINT(ARG0);
+    StemIterator *it = (StemIterator *) tokeni;
+
+    if (!it || !it->last_returned) RETURNSTRX("");
+    RETURNSTRX(it->last_returned->value);
+ENDPROC
+}
+
+PROCEDURE(stem_iterfree) {
+    long long tokeni = GETINT(ARG0);
+    StemIterator *it = (StemIterator *) tokeni;
+
+    if (it) stem_iterator_destroy(it);
+    RETURNINTX(0);
+ENDPROC
+}
+
 PROCEDURE(tmap_itercreate) {
     long long mapi = GETINT(ARG0);
     TreeMap *map = (TreeMap *) mapi;
@@ -1063,4 +1172,9 @@ LOADFUNCS
     ADDPROC(stem_containsKey,   "treemap.stemcontainskey", "b", ".int",    "token=.int, key=.string");
     ADDPROC(stem_remove,        "treemap.stemremove",      "b", ".int",    "token=.int, key=.string");
     ADDPROC(stem_destroy,       "treemap.stemfree",        "b", ".int",    "token=.int");
+    ADDPROC(stem_itercreate,  "treemap.stemitercreate",  "b", ".int",    "token=.int");
+    ADDPROC(stem_iterhasnext, "treemap.stemiterhasnext", "b", ".int",    "token=.int");
+    ADDPROC(stem_iternext,    "treemap.stemiternext",    "b", ".string", "token=.int");
+    ADDPROC(stem_itervalue,   "treemap.stemitervalue",   "b", ".string", "token=.int");
+    ADDPROC(stem_iterfree,    "treemap.stemiterfree",    "b", ".int",    "token=.int");
 ENDLOADFUNCS
