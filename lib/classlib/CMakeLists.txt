@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
 
 set(CLSS
+  HashMap
+  HashSet
   Stack
   TreeMap
   TreeMapIterator

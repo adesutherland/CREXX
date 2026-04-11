@@ -72,7 +72,7 @@
  rxpath=rxpath||dirsep /* to avoid having to start -l with a slash */
 
  libraries='bin'
- 
+
  modulenumber=1
  /* loop through arguments and find options and program files */
  libs = ""

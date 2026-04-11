@@ -15,6 +15,8 @@
 
 #define STACK_CAPACITY 1024           // this defines the maximum depth of the tree, it is only used in tmap_keys (retrieve all keys)
 
+typedef struct Entry Entry;
+typedef struct Stem Stem;
 // Internal helper function declarations
 static TreeNode *new_node(const char *key, const char *value);
 static void left_rotate(TreeMap *map, TreeNode *x);
@@ -30,6 +32,8 @@ static void append_text(char **buf, size_t *cap, size_t *len, const char *text);
 static void append_char(char **buf, size_t *cap, size_t *len, char ch);
 static char *TreeMap_toString(TreeMap *map);
 TreeMapRegistry* is_valid_map(long long map);
+static int stem_contains_key(Stem *s, const char *key);
+static int stem_remove_key(Stem *s, const char *key);
 
 static void append_text(char **buf, size_t *cap, size_t *len, const char *text) {
     size_t add = strlen(text);
@@ -217,6 +221,7 @@ static void right_rotate(TreeMap *map, TreeNode *y) {
     x->right = y;
     y->parent = x;
 }
+
 
 static void insert_fixup(TreeMap *map, TreeNode *z) {
     while (z->parent && z->parent->color == RED) {
@@ -546,6 +551,51 @@ Stem *create_stem(size_t table_size,char *root) {
     s->max_chain_depth=0;
   return s;
 }
+
+static int stem_contains_key(Stem *s, const char *key) {
+    if (!s || !key) return 0;
+
+    size_t idx = simple_hash64(key) % s->table_size;
+    Entry *e = s->buckets[idx];
+
+    while (e) {
+        if (strcmp(e->key, key) == 0) {
+            return 1;
+        }
+        e = e->next;
+    }
+    return 0;
+}
+
+static int stem_remove_key(Stem *s, const char *key) {
+    if (!s || !key) return 4;
+
+    size_t idx = simple_hash64(key) % s->table_size;
+    Entry *e = s->buckets[idx];
+    Entry *prev = NULL;
+
+    while (e) {
+        if (strcmp(e->key, key) == 0) {
+            if (prev) {
+                prev->next = e->next;
+            } else {
+                s->buckets[idx] = e->next;
+            }
+
+            free(e->key);
+            free(e->value);
+            free(e);
+
+            if (s->entries > 0) s->entries--;
+            return 0;   /* removed */
+        }
+        prev = e;
+        e = e->next;
+    }
+
+    return 4;           /* not found */
+}
+
 
 int put_stem(Stem *s, const char *key, const char *value) {
     size_t idx = simple_hash64(key)%s->table_size;
@@ -957,6 +1007,32 @@ PROCEDURE(tmap_iterfree) {
 ENDPROC
 }
 
+PROCEDURE(stem_containsKey) {
+    long long tokeni = GETINT(ARG0);
+    Stem *token = (Stem *) tokeni;
+
+    RETURNINTX(stem_contains_key(token, GETSTRING(ARG1)));
+ENDPROC
+}
+
+PROCEDURE(stem_remove) {
+    long long tokeni = GETINT(ARG0);
+    Stem *token = (Stem *) tokeni;
+
+    RETURNINTX(stem_remove_key(token, GETSTRING(ARG1)));
+ENDPROC
+}
+
+PROCEDURE(stem_destroy) {
+    long long tokeni = GETINT(ARG0);
+    Stem *token = (Stem *) tokeni;
+
+    if (token) stem_free(token);
+    RETURNINTX(0);
+ENDPROC
+}
+
+
 LOADFUNCS
     ADDPROC(tmap_create,        "treemap.tmcreate",      "b",    ".int","name=''");
     ADDPROC(tmap_lookup,        "treemap.tmlookup",      "b",    ".int","name=.string");
@@ -973,7 +1049,7 @@ LOADFUNCS
     ADDPROC(tmap_free,          "treemap.tmfree",         "b",    ".int",    "map=.int");
     ADDPROC(tmap_keys,          "treemap.tmkeys",         "b",    ".int",    "map=.int, expose list=.string[]");
     ADDPROC(tmap_dump,          "treemap.tmdump",         "b",    ".int",    "map=.int, expose keys=.string[], expose values=.string[]");
-    ADDPROC(stem_create,        "treemap.stemcreate",     "b",    ".int",    "root=.string,items=.int");
+    ADDPROC(stem_create, "treemap.stemcreate", "b", ".int", "items=.int, root=.string");
     ADDPROC(stem_put,           "treemap.stemput",        "b",    ".int",    "token=.int, key=.string, value=.string");
     ADDPROC(stem_get,           "treemap.stemget",        "b",    ".string", "token=.int, key=.string");
     ADDPROC(stem_iterate,       "treemap.stemiterate",    "b",    ".int",    "token=.int, expose keys=.string[], expose values=.string[]");
@@ -984,4 +1060,7 @@ LOADFUNCS
     ADDPROC(tmap_iternext,      "treemap.tmiternext",     "b", ".string", "token=.int");
     ADDPROC(tmap_iterfree,      "treemap.tmiterfree",     "b", ".int",    "token=.int");
     ADDPROC(tmap_tostring,      "treemap.tmtostring",     "b", ".string", "map=.int");
+    ADDPROC(stem_containsKey,   "treemap.stemcontainskey", "b", ".int",    "token=.int, key=.string");
+    ADDPROC(stem_remove,        "treemap.stemremove",      "b", ".int",    "token=.int, key=.string");
+    ADDPROC(stem_destroy,       "treemap.stemfree",        "b", ".int",    "token=.int");
 ENDLOADFUNCS
