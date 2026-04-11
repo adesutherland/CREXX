@@ -2,6 +2,7 @@ options levelb
 namespace data_TreeMap expose TreeMap
 import treemap
 import TreeMapIterator
+import data_TreeSet
 
 /** 
  * TreeMap: a Red-Black tree based map that stores key-value
@@ -95,6 +96,35 @@ val = .int
     list = .string[]
     n = tmkeys(val, list)
     return list
+
+    /**
+    * method valuestem returns the values in this TreeMap 
+    * as a rexx stem. This includes duplicates
+    */
+  valueStem: method = .string[]
+    keys = .string[]
+    vals = .string[]
+    n = tmdump(val, keys, vals)
+    return vals
+    
+    /* method keySet returns the keys in this TreeMap 
+     * as a TreeSet.
+     * @return .TreeSet
+     */
+  keySet: method = .TreeSet
+    ts = .TreeSet()
+    rc = ts.fromStem(keyStem())
+    return ts
+
+    /**
+    * method valueSet returns the values in this TreeMap 
+    * as a TreeSet, containing unique and ordered values
+    * @return .TreeSet 
+    */
+  valueSet: method = .TreeSet
+    ts = .TreeSet()
+    rc = ts.fromStem(valueStem())
+    return ts
 
     /**
      * method iterator returns a TreeMapIterator 

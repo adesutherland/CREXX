@@ -1,5 +1,6 @@
 options levelb
 import data_TreeMap
+import data_TreeSet
 
 errors = 0
 
@@ -52,7 +53,10 @@ rc = a.put('weide',8)
 rc = a.put('does',9)
 rc = a.put('hok',10)
 rc = a.put('duif',11)
-rc = a.put('schapen',12)
+rc = a.put('z1','aap') #duplicate values for valueStem test
+rc = a.put('z2','aap')
+rc = a.put('z3','aap')
+rc = a.put('z4','aap')
 
 say a.lastKey()
 
@@ -81,3 +85,20 @@ loop l=1 to keystem.0
 end
 
 say 'number of elements in stem:' keystem.0
+
+say 'valueStem() on TreeMap'
+valuestem = a.valueStem()
+
+say 'looping over value stem result'
+loop l=1 to valuestem.0
+  say valuestem.l
+end
+
+say 'number of elements in valuestem:' valuestem.0
+b = .TreeSet()
+rc = b.fromStem(a.valueStem())
+say b.toString()
+
+say 'hashmap''s valueSet as a TreeSet():'
+c = a.valueSet()
+say c.toString()

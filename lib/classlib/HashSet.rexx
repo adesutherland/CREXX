@@ -34,6 +34,21 @@ val = .int
     return stemput(val, key, key)
 
     /**
+    * method fromStem adds elements to this HashSet instance
+    * from a stem, and adds them without order.
+    * @parm .string items
+    * @result .int added
+    */
+  fromStem: method = .int
+    arg items = .string[]
+    added = 0
+    loop i = 1 to items.0
+      rc = add(items.i)
+      if rc = 0 then added = added + 1
+    end
+    return added
+
+    /**
     * method contains returns 1 (true) if this set contains
     * the specified element.
     * @parm .string element

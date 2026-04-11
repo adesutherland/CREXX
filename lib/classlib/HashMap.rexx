@@ -1,6 +1,7 @@
 options levelb
 namespace data_HashMap expose HashMap
 import treemap
+import data_TreeSet
 
 /** 
  * class HashMap offers a Map implementation backed by a hashed stem
@@ -78,6 +79,35 @@ val = .int
     vals = .string[]
     n = stemiterate(val, list, vals)
     return list
+
+    /**
+     * method keystem returns the keys in this HashMap 
+     * as a Rexx stem
+     */
+  valueStem: method = .string[]
+    list = .string[]
+    vals = .string[]
+    n = stemiterate(val, list, vals)
+    return vals
+
+    /* method keySet returns the keys in this HashMap 
+     * as a TreeSet, which is ordered.
+     * @return .TreeSet
+     */
+  keySet: method = .TreeSet
+    ts = .TreeSet()
+    rc = ts.fromStem(keyStem())
+    return ts
+
+    /**
+    * method valueSet returns the values in this HashMap 
+    * as a TreeSet, containing unique and ordered values
+    * @return .TreeSet 
+    */
+  valueSet: method = .TreeSet
+    ts = .TreeSet()
+    rc = ts.fromStem(valueStem())
+    return ts
 
     /**
     * method iterator returns a HashMapIterator 

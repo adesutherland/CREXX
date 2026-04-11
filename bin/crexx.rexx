@@ -112,13 +112,17 @@
 	 lastSlash = lastpos('/',fn.i)
 	 libs = libs';'rxpath||'bin'dirsep||substr(fn.i,3) /* for rxvm execution */
 	 module[modulenumber] = substr(fn.i, lastSlash + 1)
-	 -- say '>' module[modulenumber]
 	 libraries = libraries';'rxpath||substr(fn.i,3,lastSlash-2) /* for rxc compile */
 	 modulenumber = modulenumber+1
        end
      end
    end
 
+   -- standard libs plugin & classlibs included
+   libs = libs';'rxpath||'bin'dirsep'classlib'
+   libs = libs';'rxpath||'bin'dirsep'rx_treemap'
+   libs = libs';'rxpath||'bin'dirsep'rx_system'
+   
    declib = ''
    if \decimal then declib = '-p rxvm_db_decimal'
    if verbose>1 then call logo nocolor  
@@ -240,6 +244,8 @@ do i=1 to words(filenames)
   
   if verbose>2 then call banner
 
+  
+  
   if native then do
     forces = ''
     loop f=1 to words(modules)
