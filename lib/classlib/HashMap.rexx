@@ -5,6 +5,9 @@ import treemap
 /** 
  * class HashMap offers a Map implementation backed by a hashed stem
  * with dynamic buckets. The storage and representations is unordered.
+ * 
+ * @author René Vincent Jansen
+ * @author Peter Jacob
  */
 HashMap: class
 val = .int

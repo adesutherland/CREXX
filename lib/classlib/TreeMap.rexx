@@ -51,7 +51,7 @@ val = .int
     return tmsize(val)  
 
     /**
-     * method remove removea a mapping from this TreeMap
+     * method remove removes a mapping from this TreeMap
      * @parm .string key
      * @return .int 0 for success, 4 for failure
      */
