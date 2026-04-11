@@ -71,6 +71,6 @@ qextractall: procedure=.string[]
       parts.count = seg
 
       /* move beyond this segment */
-      pos = firstPos + length(seg)
+      pos = firstPos + length(seg)-1
    end
 return parts
