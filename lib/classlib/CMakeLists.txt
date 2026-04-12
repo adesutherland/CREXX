@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 set(CLSS
+  List
   HashMap
   HashMapIterator
   HashSet
