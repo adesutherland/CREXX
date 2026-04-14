@@ -4,9 +4,48 @@
 
 - `rxas` already has a usable parser-mode highlighter. It is simple and mostly flat, but it is structurally correct, produces diagnostics, and matches the assembler's source model well enough.
 - `rxc` should be treated as a prototype, not a finished architecture. The current parser-mode implementation runs the full compile-time validation and rewrite pipeline, then throws most of that structure away and emits a flattened token stream.
-- The best near-term solution is not a second grammar or a separate parser. It is a separate highlighting pipeline over a source-aligned AST.
-- The best long-term solution is a dual-tree model with a source AST for editor/highlighting/diagnostics and a work AST for exits, sugar, lowering, inlining, and optimization.
-- `is_compiler_added` and similar synthetic flags are useful, but they are not enough provenance on their own.
+- The agreed solution is not a second grammar or a separate parser. It is one shared parser and early fixup path, one separate `rxc` highlighting controller, one source-aligned tree for editor-facing truth, and one derived work tree for compilation.
+- The source tree becomes the canonical home for diagnostics, symbol/type conclusions, source metadata, and highlighting projection. The work tree remains free to be rewritten, lowered, inlined, and optimized.
+- A robust primary mapping from every work-tree node back to its source-tree node is required. `is_compiler_added` and similar synthetic flags remain useful, but they are not enough provenance on their own.
+- Parser-mode performance and side-effect risk are addressed by retaining caches across highlight calls for imports, external symbols, and exit loading/discovery. Exits may still be re-run against a fresh work tree, but discovery/loading must not happen from scratch on every keystroke.
+- `rxas` is considered complete for this work. The current `rxc` parser-mode implementation has no significant architectural reuse value beyond a few token-mapping ideas.
+
+## Implementation Signpost
+
+This is the implementation handoff summary.
+
+Build toward this target state:
+
+- keep one common parser and common early structural cleanup logic
+- build a source-aligned AST-shaped tree first
+- duplicate that tree into a work tree before any heavy rewrite stages
+- attach user-visible diagnostics and semantic conclusions to the source tree
+- require every work-tree node to resolve back to one primary source-tree node
+- generate DSLSH output from the source tree, not from the rewritten work tree
+- cache imports, external symbols, and exit loading/discovery between parser calls
+
+Do not build toward these alternatives:
+
+- do not create a separate standalone cREXX highlighting grammar
+- do not continue investing in the current flattened `rxc` token-stream highlighter as architecture
+- do not make the source tree depend on later compile-time rewrites such as implicit `main()` insertion, syntax sugar lowering, `ADDRESS` rewriting, inlining, or optimization
+
+Recommended implementation order:
+
+1. lock down parser-mode and source-metadata behaviour with tests
+2. split source tree and work tree while keeping compilation behaviour stable
+3. add mandatory work-to-source provenance mapping
+4. replace `rxc` parser mode with a dedicated highlighting controller over the source tree
+5. add retained caches for imports, external symbols, and exits
+6. sync semantic results back onto source-tree nodes and only then consider reducing redundant work-tree state
+
+Success criteria for implementation agents:
+
+- `rxc --syntaxhighlight` always emits a valid `PARSE_TREE_FILE` root
+- syntax errors, warnings, and source metadata anchor to the correct authored source location
+- highlighting and folding come from the source tree shape, not post-rewrite artefacts
+- compilation still runs from the separate work tree
+- late compiler diagnostics can always be mapped back to the correct source-tree node
 
 ## Scope
 
@@ -312,218 +351,450 @@ Recommendation:
 
 - not recommended, except as a purely heuristic fallback; DSLSH emergency parsing already serves that role
 
-## Recommended Direction
+## Agreed Direction
 
-### Recommendation 1: Build a Dedicated `rxc` Highlighter Pipeline
+The agreed direction is:
 
-Use a source-facing validation subset, not full `rxcp_val()`.
+- keep one strong common parser and common early fixup logic; do not create a separate standalone cREXX highlighter grammar
+- keep `rxas` as-is; its highlighting is considered complete for this work
+- replace the `rxc` parser-mode prototype with a separate syntax-highlighting controller that reuses the parser and selected existing walkers, but does not reuse the current flattened token-stream implementation
+- introduce two trees for `rxc`:
+  a source-aligned tree for highlighting, diagnostics, source metadata, and editor-facing semantic state, and a work tree for rewriting, lowering, inlining, optimization, and emission
+- require a robust primary mapping from every work-tree node back to its source-tree node
+- treat stronger source provenance and better metadata insertion as a primary goal, not just a side benefit
 
-The easiest path is to add a new function, for example `rxcp_hvl()`:
+## Feasibility Assessment
 
-- start from the shape of `rxcp_bvl()` in `compiler/rxcp_val_orch.c:1261-1288`
-- remove passes that lower or distort source shape
-- keep only source-faithful structure and symbol work
+This approach is feasible and sensible.
 
-Suggested contents of `rxcp_hvl()`:
+The key reasons are:
 
-- `ast_structure_fixup_walker`
-- `source_location_walker`
-- `syntax_validation_walker`
-- `structure_symbols_walker`
-- `build_symbols_walker`
-- `resolve_functions_walker`
-- `exposed_symbols_walker`
+- the compiler already has a parser, early fixup walkers, and source-location propagation that are useful before the heavy rewrite stages
+- the compiler already knows how to duplicate trees and already carries partial source provenance through duplication and grafting
+- the DSLSH middleware already supports a hierarchical projection model, so generating a syntax tree from a source-aligned tree is straightforward once the source tree exists
+- the parser server process persists between edits, so caching external symbol state and exit loading is practical
 
-Suggested exclusions:
+The main risks are not conceptual. They are refactoring risks:
 
-- `rxcp_scan_imports()`
-- `rxcp_init_exits()`
-- `needs_rxsysb_walker`
-- exit dispatch
-- fixed-point loop
-- `rewrite_implicit_cmd_walker`
-- `syntax_sugar_walker`
-- `rewrite_address_walker`
-- most lowering passes
+- much of the current compiler assumes one canonical `context->ast`
+- many helpers assume diagnostics, symbols, and source spans live directly on the actively mutated tree
+- several rewrite paths perform manual tree surgery and will need provenance updates
 
-Special note on `rewrite_constructor_walker`:
+Those risks are manageable if the change is staged and if the source tree is kept AST-compatible at first.
 
-- for editor highlighting I would exclude it initially
-- it is a lowering step, not a source-shape step
-- if some type information later depends on it, add a highlight-specific variant instead of reusing the compile-time form directly
+### Source Tree vs Parse Tree
 
-### Recommendation 2: Make Parser Mode Side-Effect Free
+The agreed implementation should start with a source-aligned AST-shaped tree, not a wholly separate data structure.
 
-Even if `rxcp_hvl()` is introduced, parser mode should also explicitly force safe behaviour:
+Reasons:
 
-- set `context->disable_exits = 1`
-- do not scan imports in the interactive parse path
-- do not attach project-wide semantics unless they come from a separate cache
+- existing walkers and utilities already operate on `ASTNode`
+- this minimizes regression risk
+- it keeps duplication into the work tree simple
+- it still satisfies the real requirement, which is a tree aligned to the source and cleaned up for editor use
 
-Editor parsing should never execute bridge plugins on every keystroke.
+Conceptually this source tree is closer to a parse tree than the final working tree:
 
-### Recommendation 3: Add a Real AST-to-DSLSH Projection Layer
+- it stays structurally close to the authored code
+- it receives only the cleanup needed to overcome limited parser lookahead and produce correct block/folding shape
+- it does not receive the later compile-time rewrites
 
-Add a dedicated module, for example `compiler/rxcp_highlight.c`, responsible for:
+If a later stage shows that a true separate parse-tree representation is materially more robust, that can be revisited. It should not be the initial implementation.
 
-- creating a `PARSE_TREE_FILE` root
-- traversing the source AST
-- creating DSLSH container nodes
-- emitting diagnostics from AST `ERROR` and `WARNING` nodes
-- providing a custom token callback over `context->token_head`
+## Agreed Architecture
 
-This should follow the DSLSH "AST containers plus token callback" pattern rather than the current "flatten then patch gaps" pattern.
+### 1. Separate `rxc` Highlighting Controller
 
-## Suggested Projection Design
+`rxc` should gain a dedicated highlighting controller, separate from the current parser-mode wrapper logic.
 
-### Root and Containers
+This controller should:
 
-Always create:
+- own the parser-mode caches
+- build and retain the source tree
+- derive a fresh work tree from the source tree
+- run the required semantic passes on the work tree
+- project syntax highlighting, diagnostics, and editor metadata from the source tree
 
-- `PARSE_TREE_FILE` for the whole file
+This separation is important because it avoids injecting parser-mode concerns into the main compiler orchestration and reduces regression risk in normal compilation.
 
-Then add containers for selected AST node classes.
+### 2. Source Tree
 
-Suggested initial mapping:
+The source tree is the authoritative tree for:
 
-| Compiler AST Node | DSLSH Container |
+- exact source ranges
+- folding structure
+- syntax highlighting projection
+- diagnostics and warnings shown to the user
+- metadata source insertion
+- editor-facing semantic state such as symbol/type information once known
+
+The source tree should be built from:
+
+1. raw parse output
+2. early structural cleanup needed to repair limited-lookahead weaknesses
+3. source-location propagation
+
+That cleanup includes examples such as:
+
+- nesting instructions under procedures and methods
+- fixing `IF` / `ELSE` structure
+- fixing `SELECT` / `WHEN` / `OTHERWISE` structure
+- producing a block shape suitable for code folding
+
+This tree should not receive later transformations such as:
+
+- implicit `main()` insertion
+- exit-driven code expansion
+- syntax sugar lowering
+- `ADDRESS` rewriting
+- inlining
+- optimization
+
+### 3. Work Tree
+
+The work tree is produced by duplicating the source tree after the source-tree cleanup phase.
+
+The work tree is then the only tree that may be:
+
+- rewritten
+- expanded
+- lowered
+- inlined
+- optimized
+- emitted
+
+This preserves the current compiler behaviour while isolating it from the editor-facing tree.
+
+### 4. Canonical Ownership of Diagnostics and Semantics
+
+Errors, warnings, symbol/type conclusions, and metadata anchors should be attached to the source tree as the canonical user-visible state.
+
+The work tree may still carry transient symbol/type links for convenience during compilation, but the authoritative user-facing result must be recoverable from the source tree.
+
+In practice this means:
+
+- passes may compute on the work tree
+- results must be written back to the mapped source-tree node
+- diagnostics must be attached to source-tree nodes, not left only on work-tree nodes
+
+### 5. Work-to-Source Mapping
+
+This mapping is mandatory.
+
+Each work-tree node must carry:
+
+- a primary source-tree node pointer
+- provenance mode information, at least distinguishing exact, inherited, synthetic, and composite mapping
+
+This mapping is required for:
+
+- error reporting
+- warning reporting
+- source metadata insertion
+- editor semantic projection
+- future robustness checks
+
+The reverse mapping from source tree to work tree is not required as a hard invariant in the first implementation.
+
+The agreed approach is:
+
+- make work-to-source mapping mandatory from day one
+- add reverse mapping only if a specific consumer needs it
+- if reverse mapping becomes useful, prefer an explicit primary-work mapping or an on-demand index rather than forcing a full bidirectional graph immediately
+
+### 6. Caching Model
+
+The concern about per-keystroke side effects is valid.
+
+The mitigation is not to avoid all semantic work. The mitigation is to cache the expensive external state between highlighting calls.
+
+The highlighting controller should therefore retain between parses:
+
+- external symbol/procedure/class discovery results
+- import resolution results
+- exit module loading and exit registry discovery
+- any VM bridge state required only for loading/discovery
+
+Exits may still be re-run on each parse against the fresh work tree, but:
+
+- loading/discovery must be cached
+- parser-mode state must be retained across calls
+- caches must be invalidated when relevant inputs change, for example search paths, imports, relevant file timestamps, or compiler option state
+
+The cache should store discovery and lookup state, not previous mutated AST results.
+
+### 7. Compiler Invariant
+
+The current invariant remains in force:
+
+- optimization runs only on syntax-error-free input
+- any later-stage errors after that point are internal compiler failures
+
+The new architecture should strengthen that invariant by making the source tree the canonical place where syntax and user-facing semantic errors are recorded.
+
+## Agreed Highlighting Projection
+
+Once the source tree exists, syntax-tree generation becomes straightforward.
+
+The highlighting projection should:
+
+- create a `PARSE_TREE_FILE` root
+- create DSLSH container nodes from the source tree for foldable or semantically useful regions
+- use an authoritative compiler-token callback for leaf tokens rather than relying on generic gap filling
+- emit errors and warnings directly from source-tree diagnostics
+
+Suggested initial DSLSH container mapping:
+
+| Source Tree Node | DSLSH Container |
 | --- | --- |
-| `PROGRAM_FILE`, `REXX_UNIVERSE` | `PARSE_TREE_FILE` or `PARSE_TREE_SCOPE` |
+| `PROGRAM_FILE`, `REXX_UNIVERSE` | `PARSE_TREE_FILE` |
 | `NAMESPACE`, `CLASS`, `CLASS_DEF` | `PARSE_TREE_SCOPE` |
 | `PROCEDURE`, `METHOD`, `FACTORY` | `PARSE_TREE_FUNCTION` |
 | `INSTRUCTIONS`, `DO`, `SELECT`, `WHEN`, `OTHERWISE` | `PARSE_TREE_CODEBLOCK` or `PARSE_TREE_STATEMENT` |
 | `IF`, `ASSIGN`, `CALL`, `RETURN`, `EXIT`, `ADDRESS`, `IMPLICIT_CMD` | `PARSE_TREE_STATEMENT` |
 | arithmetic/comparison/logical expression nodes, `BLOCK_EXPR` | `PARSE_TREE_EXPR` |
 
-Do not try to containerize every AST node. Start with the ones that materially improve folding and bracket ownership.
-
-### Leaf Tokens
-
-Do not rely on `cb_default_get_token_callback()` for cREXX.
-
-Instead:
-
-- build a custom token callback that reads the compiler token list
-- map each compiler token to DSLSH leaf type
-- return authoritative punctuation, brackets, separators, identifiers, keywords, literals, and operators
-
-This avoids the current gap-filling artefacts.
-
-### Diagnostics
-
-Do not depend on `context->diagnostics_list` in parser mode.
-
-Instead:
-
-- walk the AST directly
-- emit a DSLSH diagnostic node for every `ERROR` and `WARNING`
-- anchor it to `token_start/token_end` or `source_start/source_end`
-
-If later stages still want to prune diagnostics into a side list, that should be optional and explicit.
-
-## Why AST Projection Gives More Power
-
-The AST can answer questions the token stream cannot.
-
-Examples:
-
-- `=` can be rendered as assignment or comparison depending on AST context
-- a name can be distinguished as type, function, class, variable target, or variable reference
-- function and procedure bodies can become foldable regions
-- `BLOCK_EXPR` can be treated as an expression region instead of a statement block
-- generated warnings can be attached to the source construct that triggered them
-
-The current token-only mapping in `compiler/rxcp_dsl.c:47-105` cannot provide that level of disambiguation.
+This keeps the structure editor-friendly without forcing every AST node to become a DSLSH container.
 
 ## Why Synthetic Flags Alone Are Not Enough
 
-Keep the existing flags. They are still useful.
+`is_compiler_added` and related flags remain useful, but they are not sufficient.
 
-But they are not enough to support transformed diagnostics or a future source/work split.
+They do not answer:
 
-Concrete cases:
+- which exact source node caused this generated node
+- whether the source relationship is exact or inherited
+- which source construct should receive a later warning
+- which source location should be used for metadata insertion
 
-- Exit replacement can turn one source command into many generated instructions.
-- Inlining can duplicate or wrap a callee body at multiple call sites.
-- Lowering of `SELECT`, `ADDRESS`, constructors, and object-string conversions can replace one node with a structurally unrelated subtree.
-- Grafted exit fragments already need line/column remapping in `compiler/rxcp_util.c:676-735`.
+The agreed design therefore requires explicit provenance, not just synthetic flags.
 
-What is missing is explicit origin data, for example:
+## Agreed Step-by-Step Implementation Plan
 
-- `origin_node`
-- `origin_token_start`
-- `origin_token_end`
-- provenance flags such as exact, inherited, synthetic, composite
+### Stage 0: Lock Down Behaviour and Add Tests
 
-Without that, later diagnostics can only say "generated" instead of "generated from this exact source construct".
+1. Add or extend parser-mode tests for `rxc` similar to the existing `rxas` parser tests.
+2. Cover at least:
+   root node correctness, syntax errors, compound names, procedures/methods/classes, folding shape, and files that mention exit syntax.
+3. Add tests for source metadata insertion and error reporting where practical, because regressions are expected to surface there.
 
-## Recommended Long-Term Provenance Model
+This stage creates the safety net for the refactor.
 
-The strategic answer is:
+#### Stage 0 Status on April 14, 2026
 
-- `source_ast` remains source-aligned and editor-facing
-- `work_ast` is derived from it and free to be rewritten
-- each `work_ast` node points back to source provenance
+Stage 0 test scaffolding has now been added in `compiler/tests`.
 
-That provenance can initially be one primary origin pointer plus a source span.
+New parser-mode tests:
 
-It does not need to be perfect on day one, but it does need to exist as a first-class concept.
+- `syntaxhighlight_root_file`
+- `syntaxhighlight_syntax_error`
+- `syntaxhighlight_compound_names`
+- `syntaxhighlight_structure_nodes`
+- `syntaxhighlight_exit_keyword`
 
-## Implementation Plan
+Implementation notes:
 
-### Phase 0: Correctness Recovery
+- The tests are wired through `compiler/tests/CMakeLists.txt` and use `parser_tester` plus `compiler/tests/highlighting/dump_ast.txt`.
+- They are labeled `syntax_highlighting`, `compiler`, and `stage0`.
+- They intentionally assert the target behaviour described in this review, not the current broken behaviour.
 
-1. Fix `rxc` parser mode to always create `PARSE_TREE_FILE`.
-2. Stop reading diagnostics only from `context->diagnostics_list`.
-3. Remove `last_end` token suppression from the highlight path.
-4. Add parser-mode regression tests for `rxc`, similar to `assembler/parsingtests`.
+Current parser-mode result:
 
-### Phase 1: Source-AST Highlighting
+- `ctest --output-on-failure -L syntax_highlighting` fails all 5 tests, which is expected at this stage.
+- The failures confirm the already-reviewed gaps:
+  missing `PARSE_TREE_FILE` root, missing `SYNTAX_ERROR` projection, bad compound-name tokenization, no structural/folding nodes, and exit syntax not projected as editor-visible syntax.
 
-1. Add `rxcp_hvl()`.
-2. Switch `compiler/rxcp_dsl.c` to use `rxcp_hvl()` instead of `rxcp_val()`.
-3. Add AST-to-DSLSH projection with containers plus custom token callback.
-4. Keep `cb_order_tree()`, `cb_tweak_tree_positions()`, and `cb_validate_tree()`.
+Compiler-suite adequacy review:
 
-### Phase 2: Semantic Enrichment
+- The existing compiler suite is broad enough to act as the non-highlighting regression net once it is green:
+  codegen goldens, parser AST goldens, runtime round-trip tests, failure tests, warning tests, robustness tests, and exit runtime tests are already present.
+- Source metadata and source-anchored diagnostics already have meaningful coverage through:
+  emitted `.rxas` goldens, parser-position goldens in `golden/parsing`, failure tests in `golden/errors`, and warning checks such as `test_disjoint_detailed_warn`.
 
-1. Populate `identifier_id` for names that resolve to symbols.
-2. Distinguish declarations from references.
-3. Distinguish type identifiers, function identifiers, class names, and member calls from raw lexical identifiers.
-4. Expand editor seed config so emergency parsing better resembles the real language before the full parse returns.
+Important baseline note:
 
-### Phase 3: Provenance Architecture
+- An apparent non-highlighting baseline failure turned out to be a test-harness race, not a compiler regression.
+- Cause:
+  `crexx_test_driver` copies sources into the shared test working directory using the original basename, so `_noopt` and `_opt` variants can stomp each other's temporary files under parallel `ctest`.
+- Fix applied:
+  `compiler/tests/CMakeLists.txt` now applies a shared `RESOURCE_LOCK` to all `crexx_test_driver`-based tests.
+- Verified result after the fix:
+  `ctest --output-on-failure -LE syntax_highlighting -j8`
+  passes `401/401` in `cmake-build-debug/compiler/tests`.
+- Verified serial result:
+  `ctest --output-on-failure -LE syntax_highlighting -j1`
+  also passes `401/401`.
 
-1. Extend `ASTNode` with explicit origin fields.
-2. Update `ast_dup()`, `ast_execute_rewrite()`, `ast_grft_interpolated()`, and manual rewrite sites to maintain provenance.
-3. Introduce `source_ast` and `work_ast` in `Context` or an adjacent structure.
-4. Route late diagnostics through source provenance by default.
+Implication for future agents:
 
-## Test Plan
+- The compiler-suite discrepancy from the first Stage 0 report is resolved.
+- The non-highlighting compiler suite is a reliable safety net again in this build after the resource-lock fix.
+- The new highlighting tests are still useful and correctly failing.
+- In `cmake-build-debug/compiler/tests`, `ctest -N` reports `406` compiler-suite tests after adding the 5 Stage 0 syntax-highlighting tests.
+- In the top-level `cmake-build-debug`, `ctest -N` reports `670` total tests.
+- A top-level `ctest --output-on-failure -j8` run from this terminal still shows one extra non-compiler failure, `socket_test`, from the embedded `DSL-Syntax-Highlighter` project.
+- That `socket_test` failure is outside `compiler/tests` and aborts before opening a loopback port (`assert(port > 0)` in `DSL-Syntax-Highlighter/codebuffer/socket_test.c`), so treat it as an environment-specific top-level harness issue unless reproduced outside the sandbox.
+- A CLion run that reports only the 5 `syntaxhighlight_*` failures is therefore consistent with the compiler Stage 0 status and is not in conflict with the `compiler/tests` result.
+- Use:
+  `ctest -L syntax_highlighting`
+  to track highlighting progress, and
+  `ctest -LE syntax_highlighting`
+  to measure unrelated compiler-suite drift.
 
-Add parser-mode tests for `rxc` covering at least:
+### Stage 1: Introduce the Tree Split
 
-- valid hello-world file: root type and basic highlighting
-- broken syntax file: syntax errors visible in DSLSH output
-- compound names: `args.0`, `arg.i`, `.string[]`
-- assignment vs comparison: `a = b` in assignment context and compare context
-- procedures, methods, classes, and namespaces: folding containers
-- `DO`, `IF`, `SELECT`, and `BLOCK_EXPR`: structural containers
-- files that mention exit syntax: parser mode must not execute bridge plugins
+1. Refactor parsing/fixup entry points so the compiler can explicitly build a source tree first.
+2. Run only the early source-shape walkers on that tree:
+   `ast_structure_fixup_walker`, `source_location_walker`, and the minimal syntax/structure cleanup needed for correct source shape.
+3. Duplicate the source tree into a work tree.
+4. Change the normal compile pipeline to continue from the work tree.
 
-For `rxas`, keep the current tests and only add structure tests if containers are introduced later.
+Goal of this stage:
 
-## Final Recommendation
+- compilation still works
+- the source tree exists
+- no highlighting changes are required yet
 
-The practical answer is:
+#### Stage 1 Status on April 14, 2026
 
-- do not build a separate standalone cREXX parser for highlighting
-- do build a separate highlighting pipeline over a source-aligned AST
-- do keep `rxas` mostly as it is
-- do plan for a source/work dual-tree provenance model in the compiler
+Stage 1 is now partially implemented with the agreed variation of bringing the separate highlighting controller forward early.
 
-And the answer to the provenance question is:
+Implemented in this stage:
 
-- synthetic flags are useful
-- synthetic flags alone are not sufficient
-- explicit origin links are the right long-term solution
+- `rxc` parser mode now routes through a dedicated controller in `compiler/rxcp_highlight_controller.c`.
+- The compiler can now build a source-faithful tree explicitly via `rxcp_prepare_source_ast()`.
+- The source-facing restructuring has been split out from compile-only restructuring with:
+  `ast_source_structure_walker()` and `ast_work_structure_walker()`.
+- A new parser-mode test, `syntaxhighlight_top_level_statements`, confirms the source tree does not project an implicit `main()` for top-level statements.
+
+Important implementation detail:
+
+- The source tree is currently built in a separate `source_context`, not inside the main compile context.
+- This was necessary because allocating `source_ast` in the main context changed node numbering for later compiler-added rewrite nodes, which broke many codegen goldens despite leaving logic unchanged.
+- Keeping the source tree in its own context preserves compiler stability while still giving parser mode a faithful editor-facing tree.
+
+Current compiler-pipeline status:
+
+- `source_ast` exists and is source-faithful.
+- The separate highlighting controller projects from `source_ast`.
+- The normal compiler pipeline is intentionally still running from the legacy working tree in this stage.
+
+Why that boundary was kept:
+
+- A first attempt to make the compiler execute from a duplicated `work_ast` caused widespread regressions and crashes.
+- The immediate causes were:
+  shared mutable compiler-context state leaking between source/work preparation, and then node-identity / node-number coupling inside later rewrite and emission paths.
+- That means the full "compile from duplicated work tree" part of the original Stage 1 outline is not yet safe to claim complete.
+- It should resume only once work/source identity and provenance are made explicit enough to survive later rewrites.
+
+Verification:
+
+- `ctest --output-on-failure -LE syntax_highlighting -j8`
+  passes `401/401` in `cmake-build-debug/compiler/tests`.
+- `ctest --output-on-failure -L syntax_highlighting`
+  now passes `2/6`.
+- Passing highlighting tests:
+  `syntaxhighlight_root_file`, `syntaxhighlight_top_level_statements`.
+- Remaining failing highlighting tests:
+  `syntaxhighlight_syntax_error`, `syntaxhighlight_compound_names`, `syntaxhighlight_structure_nodes`, `syntaxhighlight_exit_keyword`.
+
+Implication for future agents:
+
+- Treat this as a safe Stage 1 landing point:
+  source-faithful tree exists, parser mode uses it, compiler regression net is green again.
+- Do not reintroduce `work_ast` execution in the main compiler path without also addressing node identity / provenance and later rewrite coupling.
+- The next useful work is to improve highlighting projection against the current `source_ast`, then return to true work-tree execution once provenance machinery is ready.
+
+### Stage 2: Introduce Primary Provenance Mapping
+
+1. Extend `ASTNode` with explicit work-to-source mapping fields.
+2. Ensure the source-to-work duplication step initializes those fields.
+3. Update duplication and rewrite helpers such as:
+   `ast_dup()`, `ast_execute_rewrite()`, `ast_grft_interpolated()`, inlining helpers, and manual tree surgery sites.
+4. Route diagnostics produced during work-tree validation back to the mapped source-tree node.
+
+Goal of this stage:
+
+- every work node can resolve back to a source node
+- user-visible diagnostics can be attached to the source tree
+
+### Stage 3: Build the Separate Highlighting Controller
+
+1. Add a new controller module for parser mode, for example `rxcp_highlight_controller.c`.
+2. Move `rxc` parser-mode entry logic onto that controller.
+3. Replace the current `rxc` flat token-stream builder; it has no real reuse value beyond narrow token mapping ideas.
+4. Generate the DSLSH tree from the source tree.
+5. Add a compiler-token callback so punctuation, separators, brackets, and identifiers are projected authoritatively.
+
+Goal of this stage:
+
+- `rxc --syntaxhighlight` becomes source-tree based
+- the current fragile flattened implementation is retired
+
+### Stage 4: Add Caching for External Symbols and Exits
+
+1. Add persistent caches to the highlighting controller for:
+   imports, external procedures/classes/symbols, exit discovery, and exit module loading.
+2. Reuse those caches between syntax-highlight calls in the same parser server process.
+3. Re-run exits per parse if required, but do not repeatedly reload/discover them.
+4. Add cache invalidation based on relevant inputs such as search paths, module identity, file timestamps, and language options.
+
+Goal of this stage:
+
+- semantic highlighting remains responsive
+- per-keystroke side effects are mitigated by retained state
+
+### Stage 5: Sync Semantic Results Back to the Source Tree
+
+1. Populate symbol/type conclusions onto source-tree nodes through the work-to-source mapping.
+2. Make the source tree the definitive view of:
+   parsed code, clarified argument types, diagnostics, and metadata anchors.
+3. Populate DSLSH `identifier_id` and richer semantic token distinctions from this source-owned state.
+
+Goal of this stage:
+
+- reading the source tree yields the canonical view of the user's code
+- the work tree remains an implementation detail for compilation
+
+### Stage 6: Reduce Redundant Work-Tree State Only After Proof
+
+1. Review whether some work-tree attributes such as direct source spans or some symbol ownership should be reduced or removed.
+2. Do this only after:
+   mapping, diagnostics, metadata insertion, and tests are all stable.
+3. Use this stage to prove that critical logic is genuinely going through the source tree.
+
+Goal of this stage:
+
+- strengthen the architecture without taking unnecessary early risk
+
+## Testing Requirements Per Stage
+
+At each stage run the existing compiler test suite and parser-mode tests.
+
+Special attention should go to:
+
+- parser-mode highlighting output
+- syntax-error reporting
+- warning anchoring
+- source metadata insertion
+- import/external symbol handling
+- exit-driven transformations
+- any change that affects provenance
+
+This work is explicitly expected to uncover existing weaknesses in error reporting and metadata insertion. That is a success criterion, not a failure mode.
+
+## Final Decision
+
+The agreed way forward is:
+
+- one common parser and common early fixup logic
+- one new source-aligned tree for editor-facing truth
+- one derived work tree for compilation
+- one separate `rxc` highlighting controller with retained caches
+- one mandatory primary mapping from work tree back to source tree
+
+And specifically:
+
+- `rxas` is complete and out of scope
+- the current `rxc` highlighting implementation has no significant reuse value as architecture
+- better provenance, better error reporting, and better source metadata insertion are part of the core objective

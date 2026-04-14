@@ -151,6 +151,14 @@ void fre_cntx(Context *context)  {
 
     if (context->import_locations) free(context->import_locations);
 
+    if (context->source_context) {
+        context->source_context->buff_start = 0;
+        context->source_context->buff_end = 0;
+        fre_cntx(context->source_context);
+        context->source_context = 0;
+        context->source_ast = 0;
+    }
+
     /* Deallocate Scope and Symbols */
     if (context->ast &&  context->ast->scope) scp_free(context->ast->scope);
 

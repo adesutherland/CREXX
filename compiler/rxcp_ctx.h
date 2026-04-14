@@ -65,6 +65,9 @@ struct Context {
     Token* token_head;
     Token* token_tail;
     ASTNode* ast;
+    struct Context *source_context;
+    ASTNode* source_ast;
+    ASTNode* work_ast;
     ASTNode* free_list;
     ASTNode* namespace;
     ASTNode* temp_node; /* Temporary node store to pass node between functions */

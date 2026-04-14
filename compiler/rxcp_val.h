@@ -58,6 +58,8 @@ void ast_set_target_type(Context *context, ASTNode *node, ValueType type, size_t
 void validate_ast(Context *context);
 void rxcp_val(Context *context); /* legacy name */
 void rxcp_bvl(Context *context);
+void rxcp_prepare_source_ast(Context *context);
+void rxcp_prepare_work_ast(Context *context);
 Context* rxcp_parse_buffer(char* source_string, int options);
 
 /* sym */
@@ -89,6 +91,8 @@ walker_result add_rxsysb_walker(walker_direction direction, ASTNode* node, void 
 walker_result rxcp_fixup_walker(walker_direction direction, ASTNode* node, void *payload);
 
 /* check */
+walker_result ast_source_structure_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result ast_work_structure_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result ast_structure_fixup_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result source_location_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result syntax_validation_walker(walker_direction direction, ASTNode* node, void *payload);

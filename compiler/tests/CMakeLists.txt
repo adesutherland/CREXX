@@ -19,6 +19,50 @@ if (ENABLE_PARSER_MODE)
     add_executable(crexx_fake_editor src/fake_editor.c)
     target_link_libraries(crexx_fake_editor dslsyntax_editor)
     target_include_directories(crexx_fake_editor PRIVATE ${DSL_SH_SOURCE_DIR}/codebuffer)
+
+    function(add_crexx_syntax_highlight_test NAME SOURCE_FILE)
+        set(options)
+        set(oneValueArgs)
+        set(multiValueArgs MUST_MATCH MUST_NOT_MATCH)
+        cmake_parse_arguments(HL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+        set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+        set(SCRIPT_CONTENT "")
+
+        string(APPEND SCRIPT_CONTENT
+               "execute_process(\n"
+               "    COMMAND \"$<TARGET_FILE:parser_tester>\" -q -p \"$<TARGET_FILE:rxc>\" -s \"${SOURCE_FILE}\" \"${CMAKE_CURRENT_SOURCE_DIR}/highlighting/dump_ast.txt\"\n"
+               "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+               "    OUTPUT_VARIABLE out\n"
+               "    ERROR_VARIABLE err\n"
+               "    RESULT_VARIABLE res\n"
+               ")\n")
+        string(APPEND SCRIPT_CONTENT
+               "if(NOT res EQUAL 0)\n"
+               "  message(FATAL_ERROR \"parser_tester failed with exit code \${res}\\nSTDERR:\\n\${err}\\nSTDOUT:\\n\${out}\")\n"
+               "endif()\n")
+
+        foreach(_pattern IN LISTS HL_MUST_MATCH)
+            string(APPEND SCRIPT_CONTENT
+                   "if(NOT out MATCHES [=[${_pattern}]=])\n"
+                   "  message(FATAL_ERROR \"Missing expected syntax-highlighting assertion.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")\n"
+                   "endif()\n")
+        endforeach()
+
+        foreach(_pattern IN LISTS HL_MUST_NOT_MATCH)
+            string(APPEND SCRIPT_CONTENT
+                   "if(out MATCHES [=[${_pattern}]=])\n"
+                   "  message(FATAL_ERROR \"Found forbidden syntax-highlighting pattern.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")\n"
+                   "endif()\n")
+        endforeach()
+
+        file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+
+        add_test(NAME ${NAME}
+                 COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(${NAME} PROPERTIES LABELS "compiler;syntax_highlighting;stage0")
+    endfunction()
 endif()
 
 enable_testing()
@@ -27,6 +71,7 @@ enable_testing()
 # Based on rxcpmain.c: -n is for No Optimising, and it's on by default.
 set(COMPILER_NOOPT_FLAG "-n")
 set(COMPILER_OPT_FLAG "") # Default is optimized
+set(CREXX_TEST_DRIVER_RESOURCE_LOCK "crexx_test_driver_workspace")
 
 # Macro to add a compiler test
 # NAME: Name of the test
@@ -38,6 +83,7 @@ macro(add_crexx_compiler_test NAME SOURCE_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/noopt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt.rxas
              $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${COMPILER_NOOPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+    set_tests_properties(${NAME}_noopt PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
     # Test 2 (Opt)
     add_test(NAME ${NAME}_opt
@@ -45,6 +91,7 @@ macro(add_crexx_compiler_test NAME SOURCE_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/opt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt.rxas
              $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${COMPILER_OPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+    set_tests_properties(${NAME}_opt PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 endmacro()
 
 # Macro to add a compiler warning test
@@ -54,6 +101,7 @@ macro(add_crexx_compiler_warning_test NAME SOURCE_FILE GOLDEN_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/warnings/${GOLDEN_FILE}
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_warn.txt
              $<TARGET_FILE:rxc> ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+    set_tests_properties(${NAME}_warn PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 endmacro()
 
 # Macro to add a compiler failure test
@@ -63,6 +111,7 @@ macro(add_crexx_compiler_fail_test NAME SOURCE_FILE GOLDEN_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/${GOLDEN_FILE}
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_fail.txt
              $<TARGET_FILE:rxc> ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+    set_tests_properties(${NAME}_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 endmacro()
 
 # Macro to add a compiler test with one dependency
@@ -76,6 +125,7 @@ macro(add_crexx_compiler_dep_test NAME SOURCE_FILE DEP_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/noopt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt.rxas
              $<TARGET_FILE:rxc> ${COMPILER_NOOPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+    set_tests_properties(${NAME}_noopt PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
     # Test 2 (Opt)
     add_test(NAME ${NAME}_opt
@@ -83,6 +133,7 @@ macro(add_crexx_compiler_dep_test NAME SOURCE_FILE DEP_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/opt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt.rxas
              $<TARGET_FILE:rxc> ${COMPILER_OPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+    set_tests_properties(${NAME}_opt PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 endmacro()
 
 # Macro to add a parsing test
@@ -92,6 +143,7 @@ macro(add_crexx_parsing_test NAME SOURCE_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/parsing/${NAME}.txt
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_ast.txt
              $<TARGET_FILE:rxc> -dp ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+    set_tests_properties(${NAME}_parse PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 endmacro()
 
 # Robustness tests
@@ -460,6 +512,58 @@ add_crexx_parsing_test(block_expr_parse parsing_src/block_expr_parse.rexx)
 # SELECT constructs parsing coverage
 add_crexx_parsing_test(select_classic_parse parsing_src/select_classic_parse.rexx)
 add_crexx_parsing_test(select_c_parse parsing_src/select_c_parse.rexx)
+
+if (ENABLE_PARSER_MODE)
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_root_file
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/16_classes.rexx
+            MUST_MATCH
+            "Node: type=71 \\(PARSE_TREE_FILE\\)"
+    )
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_syntax_error
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_02_syntax.rexx
+            MUST_MATCH
+            "SYNTAX_ERROR"
+            "Message:"
+    )
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_compound_names
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/repro_dotted_index.rexx
+            MUST_MATCH
+            "Node: type=46 \\(LEXER_SEPARATOR\\), pos=[0-9]+, len=1, sev=48, text=\"\\.\""
+            MUST_NOT_MATCH
+            "Node: type=38 \\(LEXER_COMMENT\\), pos=[0-9]+, len=1, sev=48, text=\"\\.\""
+    )
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_structure_nodes
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/16_classes.rexx
+            MUST_MATCH
+            "PARSE_TREE_STRUCTURE"
+            "PARSE_TREE_FUNCTION"
+            "PARSE_TREE_CODEBLOCK"
+    )
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_exit_keyword
+            ${CMAKE_SOURCE_DIR}/compiler/exits/fsay/test_fsay.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"fsay\""
+    )
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_top_level_statements
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/01_assign.rexx
+            MUST_MATCH
+            "PARSE_TREE_STATEMENT"
+            MUST_NOT_MATCH
+            "PARSE_TREE_FUNCTION"
+    )
+    set_tests_properties(syntaxhighlight_top_level_statements PROPERTIES LABELS "compiler;syntax_highlighting;stage1")
+endif()
 
 # Bridge Connectivity Test
 add_custom_command(

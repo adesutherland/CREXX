@@ -343,6 +343,311 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
     return result_normal;
 }
 
+static int is_structure_boundary(ASTNode *node) {
+    if (!node) return 0;
+    return node->node_type == PROCEDURE || node->node_type == CLASS_DEF ||
+           node->node_type == METHOD || node->node_type == FACTORY;
+}
+
+static void promote_program_file_children(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node || !node->child || !node->child->sibling) return;
+    if (node->child->sibling->node_type != INSTRUCTIONS) return;
+
+    child = node->child->sibling->child;
+    node->child->sibling = child;
+    while (child) {
+        child->parent = node;
+        child = child->sibling;
+    }
+}
+
+static ASTNode *find_child_of_type(ASTNode *parent, NodeType type) {
+    ASTNode *child;
+
+    if (!parent) return 0;
+    child = parent->child;
+    while (child) {
+        if (child->node_type == type) return child;
+        child = child->sibling;
+    }
+    return 0;
+}
+
+static ASTNode *infer_main_return_type(Context *context, ASTNode *first_node) {
+    ASTNode *n;
+
+    n = first_node;
+    while (1) {
+        if (!n) return ast_ft(context, VOID);
+        if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF) return ast_ft(context, VOID);
+        if (n->node_type == RETURN) {
+            if (n->child) return ast_ftt(context, CLASS, ".int");
+            return ast_ft(context, VOID);
+        }
+
+        if (n->child) n = n->child;
+        else if (n->sibling) n = n->sibling;
+        else {
+            n = n->parent;
+            while (n) {
+                if (n == first_node->parent) return ast_ft(context, VOID);
+                if (n->sibling) {
+                    n = n->sibling;
+                    break;
+                }
+                n = n->parent;
+            }
+        }
+    }
+}
+
+static ASTNode *ensure_instructions_child(Context *context, ASTNode *node) {
+    ASTNode *instructions;
+
+    instructions = find_child_of_type(node, INSTRUCTIONS);
+    if (!instructions) {
+        instructions = ast_ft(context, INSTRUCTIONS);
+        add_ast(node, instructions);
+    }
+
+    return instructions;
+}
+
+static void structure_callable_body(Context *context,
+                                    ASTNode *node,
+                                    int add_empty_args,
+                                    int add_implicit_return) {
+    ASTNode *next;
+    ASTNode *prev;
+    ASTNode *args_node;
+    ASTNode *instructions;
+    ASTNode *last;
+    ASTNode *existing_last;
+    char done_digits;
+    char done_fuzz;
+    char done_form;
+    char done_case;
+    char done_standard;
+    char first_instruction;
+
+    if (!node) return;
+
+    if (node->node_type == PROCEDURE && node->parent->node_type != PROGRAM_FILE) {
+        mknd_err(node, "CANT_DEFINE_PROC_HERE");
+        return;
+    }
+    if ((node->node_type == METHOD || node->node_type == FACTORY) && node->parent->node_type != CLASS_DEF) {
+        mknd_err(node, "CANT_DEFINE_METHOD_HERE");
+        return;
+    }
+
+    done_digits = 0;
+    done_fuzz = 0;
+    done_form = 0;
+    done_case = 0;
+    done_standard = 0;
+    args_node = find_child_of_type(node, ARGS);
+    first_instruction = 1;
+    next = node->sibling;
+    prev = node;
+
+    while (next && !is_structure_boundary(next)) {
+        switch (next->node_type) {
+            case ARGS:
+                if (args_node) {
+                    mknd_err(next, "REPEATED_ARG");
+                } else if (!first_instruction) {
+                    mknd_err(next, "ARG_NOT_FIRST_INST");
+                }
+                first_instruction = 0;
+                args_node = next;
+                next = next->sibling;
+                prev->sibling = args_node->sibling;
+                args_node->sibling = 0;
+                args_node->parent = 0;
+                add_ast(node, args_node);
+                break;
+
+            case DEC_DIGITS:
+                if (done_digits) mknd_err(next, "REPEATED_NUMERIC_DIGITS");
+                else if (!first_instruction) mknd_err(next, "NUMERIC_DIGITS_NOT_FIRST_INST");
+                done_digits = 1;
+                prev = next;
+                next = next->sibling;
+                break;
+
+            case DEC_FUZZ:
+                if (done_fuzz) mknd_err(next, "REPEATED_NUMERIC_FUZZ");
+                else if (!first_instruction) mknd_err(next, "NUMERIC_FUZZ_NOT_FIRST_INST");
+                done_fuzz = 1;
+                prev = next;
+                next = next->sibling;
+                break;
+
+            case DEC_FORM:
+                if (done_form) mknd_err(next, "REPEATED_NUMERIC_FORM");
+                else if (!first_instruction) mknd_err(next, "NUMERIC_FORM_NOT_FIRST_INST");
+                done_form = 1;
+                prev = next;
+                next = next->sibling;
+                break;
+
+            case DEC_CASE:
+                if (done_case) mknd_err(next, "REPEATED_NUMERIC_CASE");
+                else if (!first_instruction) mknd_err(next, "NUMERIC_CASE_NOT_FIRST_INST");
+                done_case = 1;
+                prev = next;
+                next = next->sibling;
+                break;
+
+            case DEC_STANDARD:
+                if (done_standard) mknd_err(next, "REPEATED_NUMERIC_STANDARD");
+                else if (!first_instruction) mknd_err(next, "NUMERIC_STANDARD_NOT_FIRST_INST");
+                done_standard = 1;
+                prev = next;
+                next = next->sibling;
+                break;
+
+            default:
+                first_instruction = 0;
+                prev = next;
+                next = next->sibling;
+        }
+    }
+
+    if (!args_node && add_empty_args) {
+        args_node = ast_ft(context, ARGS);
+        add_ast(node, args_node);
+    }
+
+    instructions = ensure_instructions_child(context, node);
+    last = 0;
+    existing_last = instructions->child;
+    while (existing_last && existing_last->sibling) existing_last = existing_last->sibling;
+
+    while ((next = node->sibling) && !is_structure_boundary(next)) {
+        last = next;
+        node->sibling = next->sibling;
+        next->sibling = 0;
+        next->parent = 0;
+        add_ast(instructions, next);
+    }
+
+    if (!last) last = existing_last;
+
+    if (last && add_implicit_return && last->node_type != RETURN && !context->in_exit_bridge) {
+        add_ast(last->parent, ast_ft(context, RETURN));
+    }
+}
+
+static void wrap_program_file_main(Context *context, ASTNode *node) {
+    ASTNode *child;
+    ASTNode *instructions;
+    ASTNode *next;
+
+    if (!node || !node->child) return;
+    child = node->child->sibling;
+    if (!child) return;
+    if (child->node_type == PROCEDURE || child->node_type == CLASS_DEF) return;
+
+    instructions = ast_ftt(context, PROCEDURE, "main:");
+    instructions->parent = node;
+    instructions->sibling = child;
+    node->child->sibling = instructions;
+
+    add_ast(instructions, infer_main_return_type(context, child));
+    add_ast(instructions, ast_ft(context, ARGS));
+    instructions = ast_ft(context, INSTRUCTIONS);
+    add_ast(node->child->sibling, instructions);
+
+    while ((next = node->child->sibling->sibling) && next->node_type != PROCEDURE && next->node_type != CLASS_DEF) {
+        node->child->sibling->sibling = next->sibling;
+        next->sibling = 0;
+        next->parent = 0;
+        add_ast(instructions, next);
+    }
+}
+
+walker_result ast_source_structure_walker(walker_direction direction,
+                                          ASTNode* node,
+                                          void *payload) {
+    Context *context;
+    ASTNode *next;
+    ASTNode *child;
+
+    context = (Context *)payload;
+
+    if (direction != in) return result_normal;
+
+    if (node->node_type == PROGRAM_FILE) {
+        promote_program_file_children(node);
+    }
+    else if (node->node_type == CLASS_DEF) {
+        if (node->parent->node_type != PROGRAM_FILE) {
+            mknd_err(node, "CANT_DEFINE_CLASS_HERE");
+        }
+        else {
+            while (((next = node->sibling)) && !is_structure_boundary(next)) {
+                node->sibling = next->sibling;
+                next->sibling = 0;
+                next->parent = 0;
+                add_ast(node, next);
+            }
+        }
+    }
+    else if (node->node_type == NODE_REGISTER) {
+        ASTNode *index;
+        ASTNode *attr;
+
+        index = node->child;
+        while (index && index->node_type == INSTRUCTIONS) index = index->child;
+        if (index && index->node_type == INTEGER) {
+            int idx = node_to_integer(index);
+            node->int_value = idx;
+            if (idx < 0) mknd_err(index, "REGISTER_INDEX_OUT_OF_RANGE");
+        }
+        attr = index ? index->sibling : 0;
+        if (attr && attr->node_type == VAR_SYMBOL) {
+            if (!nodeis(attr, "int") &&
+                !nodeis(attr, "string") &&
+                !nodeis(attr, "object") &&
+                !nodeis(attr, "float")) {
+                mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
+            }
+        }
+    }
+    else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
+        structure_callable_body(context, node, 0, 0);
+        child = find_child_of_type(node, INSTRUCTIONS);
+        if (child && !child->child) {
+            ast_del(child);
+        }
+    }
+
+    return result_normal;
+}
+
+walker_result ast_work_structure_walker(walker_direction direction,
+                                        ASTNode* node,
+                                        void *payload) {
+    Context *context;
+
+    context = (Context *)payload;
+
+    if (direction != in) return result_normal;
+
+    if (node->node_type == PROGRAM_FILE) {
+        wrap_program_file_main(context, node);
+    }
+    else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
+        structure_callable_body(context, node, 1, 1);
+    }
+
+    return result_normal;
+}
+
 /*
  * source_location_walker
  * - Sets the token and source start / finish position for each node

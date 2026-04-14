@@ -44,6 +44,8 @@
 #include "serialization.h"
 #include "dslsyntax_log.h"
 
+void rxc_highlight_controller_parse(CodeBuffer *cb);
+
 /* Map cREXX token types to DSL platform node types */
 static CB_NodeType map_c_token_to_cb_type(int token_type) {
     switch (token_type) {
@@ -248,7 +250,7 @@ int rxc_parser_mode_main(int stdio_mode, int port, const char *file_name, int de
         "quotes=\"\n";
     cb_set_ep_config_string(crexx_config);
 
-    CodeBuffer *cb = create_code_buffer(NULL, rxc_dsl_parser_func);
+    CodeBuffer *cb = create_code_buffer(NULL, rxc_highlight_controller_parse);
     if (!cb) {
         if (debug_mode) LOG("Failed to create CodeBuffer.");
         return 1;

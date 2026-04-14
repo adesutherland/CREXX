@@ -1,0 +1,370 @@
+#ifdef ENABLE_PARSER_MODE
+
+#ifndef restrict
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#elif defined(__GNUC__) || defined(__clang__)
+#define restrict __restrict
+#elif defined(_MSC_VER)
+#define restrict __restrict
+#else
+#define restrict
+#endif
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* Rename conflicting cREXX AST node types to avoid windows.h collision */
+#define ERROR RXCP_ERROR
+#define WARNING RXCP_WARNING
+#define FLOAT RXCP_FLOAT
+#define INTEGER RXCP_INTEGER
+#define DECIMAL RXCP_DECIMAL
+#define PATTERN RXCP_PATTERN
+#define VOID RXCP_VOID
+
+#include "rxcpmain.h"
+#include "rxcp_val.h"
+#include "rxcpbgmr.h"
+#include "rxcp_exit.h"
+#include "utf.h"
+
+#undef ERROR
+#undef WARNING
+#undef FLOAT
+#undef INTEGER
+#undef DECIMAL
+#undef PATTERN
+#undef VOID
+
+#include "dslsyntax_common.h"
+#include "dslsyntax_parser.h"
+#include "serialization.h"
+#include "dslsyntax_log.h"
+
+typedef struct HighlightTokenCursor {
+    Context *context;
+    Token *token;
+} HighlightTokenCursor;
+
+static CB_NodeType map_c_token_to_cb_type(int token_type) {
+    switch (token_type) {
+        case TK_UNKNOWN:
+        case TK_BADCOMMENT: return LEXER_UNKNOWN;
+        case TK_EOC:
+        case TK_EOL:
+        case TK_EOS: return LEXER_STATEMENT_SEPARATOR;
+        case TK_MINUSMINUS: return LEXER_COMMENT;
+        case TK_VAR_SYMBOL:
+        case TK_CLASS_STEM:
+        case TK_STEM:
+        case TK_STEMVAR:
+        case TK_STEMSTRING:
+        case TK_STEMNOVAL:
+        case TK_STEMINT: return LEXER_IDENTIFIER;
+        case TK_CLASS_TYPE: return LEXER_TYPE_IDENTIFIER;
+        case TK_LABEL:
+        case TK_MULT_LABEL: return LEXER_FUNCTION_IDENTIFIER;
+        case TK_IMPORT:
+        case TK_NAMESPACE:
+        case TK_OPTIONS: return LEXER_PREPROCESSOR;
+        case TK_STRING: return LEXER_STRING_LITERAL;
+        case TK_DECIMAL:
+        case TK_INTEGER:
+        case TK_FLOAT: return LEXER_NUMBER_LITERAL;
+        case TK_PLUS:
+        case TK_MINUS:
+        case TK_HIGH_PRIORITY_MINUS:
+        case TK_MULT:
+        case TK_DIV:
+        case TK_MOD:
+        case TK_IDIV:
+        case TK_POWER_L:
+        case TK_POWER_R: return LEXER_OPERATOR_ARITHMETIC;
+        case TK_EQUAL: return LEXER_OPERATOR_ASSIGN;
+        case TK_NEQ:
+        case TK_GT:
+        case TK_LT:
+        case TK_GTE:
+        case TK_LTE:
+        case TK_S_EQ:
+        case TK_S_NEQ:
+        case TK_S_GT:
+        case TK_S_LT:
+        case TK_S_GTE:
+        case TK_S_LTE:
+        case TK_AND:
+        case TK_OR:
+        case TK_NOT: return LEXER_OPERATOR_LOGICAL;
+        case TK_OPEN_BRACKET:
+        case TK_OPEN_SBRACKET: return LEXER_LH_EXPR;
+        case TK_CLOSE_BRACKET:
+        case TK_CLOSE_SBRACKET: return LEXER_RH_EXPR;
+        case TK_COMMA:
+        case TK_DOT: return LEXER_SEPARATOR;
+        default:
+            return LEXER_KEYWORD;
+    }
+}
+
+static int token_span_utf8(Context *context, Token *token, size_t *pos, size_t *len) {
+    size_t byte_offset;
+
+    if (!context || !token || !pos || !len) return 0;
+    if (!token->token_string || token->length <= 0) return 0;
+    if (token->token_string < context->buff_start) return 0;
+
+    byte_offset = (size_t)(token->token_string - context->buff_start);
+    *pos = utf8nlen(context->buff_start, byte_offset);
+    *len = utf8nlen(token->token_string, token->length);
+    return *len > 0;
+}
+
+static int ast_node_span_utf8(Context *context, ASTNode *node, size_t *pos, size_t *len) {
+    size_t start_offset;
+    size_t byte_length;
+
+    if (!context || !node || !pos || !len) return 0;
+    if (!node->source_start || !node->source_end) return 0;
+    if (node->source_start < context->buff_start) return 0;
+    if (node->source_end < node->source_start) return 0;
+
+    start_offset = (size_t)(node->source_start - context->buff_start);
+    byte_length = (size_t)(node->source_end - node->source_start) + 1;
+    *pos = utf8nlen(context->buff_start, start_offset);
+    *len = utf8nlen(node->source_start, byte_length);
+    return *len > 0;
+}
+
+static int ast_container_type(ASTNode *node, CB_NodeType *type) {
+    if (!node || !type) return 0;
+
+    switch (node->node_type) {
+        case CLASS_DEF:
+            *type = PARSE_TREE_STRUCTURE;
+            return 1;
+        case PROCEDURE:
+        case METHOD:
+        case FACTORY:
+            *type = PARSE_TREE_FUNCTION;
+            return 1;
+        case INSTRUCTIONS:
+        case DO:
+        case SELECT:
+        case WHEN:
+        case OTHERWISE:
+            *type = PARSE_TREE_CODEBLOCK;
+            return 1;
+        case IF:
+        case ASSIGN:
+        case CALL:
+        case RETURN:
+        case EXIT:
+        case ADDRESS:
+        case IMPLICIT_CMD:
+        case SAY:
+        case PULL:
+        case PARSE:
+            *type = PARSE_TREE_STATEMENT;
+            return 1;
+        case BLOCK_EXPR:
+        case OP_ADD:
+        case OP_MINUS:
+        case OP_MULT:
+        case OP_DIV:
+        case OP_IDIV:
+        case OP_MOD:
+        case OP_POWER:
+        case OP_CONCAT:
+        case OP_SCONCAT:
+        case OP_AND:
+        case OP_OR:
+        case OP_COMPARE_EQUAL:
+        case OP_COMPARE_NEQ:
+        case OP_COMPARE_GT:
+        case OP_COMPARE_LT:
+        case OP_COMPARE_GTE:
+        case OP_COMPARE_LTE:
+        case OP_COMPARE_S_EQ:
+        case OP_COMPARE_S_NEQ:
+        case OP_COMPARE_S_GT:
+        case OP_COMPARE_S_LT:
+        case OP_COMPARE_S_GTE:
+        case OP_COMPARE_S_LTE:
+            *type = PARSE_TREE_EXPR;
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static void emit_tokens_until(CB_ParseTree *tb, HighlightTokenCursor *cursor, size_t limit_pos) {
+    size_t pos;
+    size_t len;
+    CB_Node token_node;
+
+    while (cursor && cursor->token) {
+        if (!token_span_utf8(cursor->context, cursor->token, &pos, &len)) {
+            cursor->token = cursor->token->token_next;
+            continue;
+        }
+        if (pos >= limit_pos) break;
+        if (pos + len > limit_pos) break;
+
+        token_node = cb_create_node(map_c_token_to_cb_type(cursor->token->token_type), pos, len);
+        cb_add_child_node(tb, token_node);
+        cursor->token = cursor->token->token_next;
+    }
+}
+
+static void emit_ast_projection(CB_ParseTree *tb,
+                                Context *context,
+                                ASTNode *node,
+                                HighlightTokenCursor *cursor) {
+    ASTNode *child;
+    size_t child_pos;
+    size_t child_len;
+    CB_NodeType child_type;
+    CB_Node child_node;
+
+    child = node;
+    while (child) {
+        if (child->node_type != RXCP_ERROR && child->node_type != RXCP_WARNING &&
+            ast_container_type(child, &child_type) &&
+            ast_node_span_utf8(context, child, &child_pos, &child_len)) {
+            emit_tokens_until(tb, cursor, child_pos);
+            child_node = cb_create_node(child_type, child_pos, child_len);
+            cb_add_child_node(tb, child_node);
+            cb_set_current_parent_to_last_node(tb);
+            emit_ast_projection(tb, context, child->child, cursor);
+            emit_tokens_until(tb, cursor, child_pos + child_len);
+            cb_set_current_parent_to_grandparent(tb);
+        } else if (child->child) {
+            emit_ast_projection(tb, context, child->child, cursor);
+        }
+        child = child->sibling;
+    }
+}
+
+static void emit_diagnostics_from_tree(CB_ParseTree *tb, Context *context, ASTNode *node) {
+    ASTNode *child;
+    ASTNode *current;
+    size_t pos;
+    size_t len;
+    CB_Node diag_node;
+
+    current = node;
+    while (current) {
+        if ((current->node_type == RXCP_ERROR || current->node_type == RXCP_WARNING) &&
+            ast_node_span_utf8(context, current, &pos, &len)) {
+            diag_node = cb_create_node(SYNTAX_ERROR, pos, len);
+            diag_node.severity = (current->node_type == RXCP_WARNING) ? CB_WARNING : CB_ERROR;
+            diag_node.message = strdup(current->node_string ? current->node_string : "Syntax Error");
+            cb_set_current_parent_to_root_node(tb);
+            cb_add_child_node(tb, diag_node);
+        }
+
+        child = current->child;
+        if (child) emit_diagnostics_from_tree(tb, context, child);
+        current = current->sibling;
+    }
+}
+
+static CB_Node compiler_get_token_callback(void *user_data,
+                                           size_t pos,
+                                           size_t length,
+                                           CodeBufferCharacter* token_chars) {
+    HighlightTokenCursor *cursor;
+    Token *token;
+    size_t token_pos;
+    size_t token_len;
+
+    cursor = (HighlightTokenCursor *)user_data;
+    token = cursor ? cursor->context->token_head : 0;
+    while (token) {
+        if (token_span_utf8(cursor->context, token, &token_pos, &token_len) && token_pos == pos) {
+            return cb_create_node(map_c_token_to_cb_type(token->token_type), pos, token_len);
+        }
+        token = token->token_next;
+    }
+
+    return cb_default_get_token_callback(user_data, pos, length, token_chars);
+}
+
+static void emit_flat_tokens(CB_ParseTree *tb, Context *context) {
+    Token *token;
+    size_t pos;
+    size_t len;
+
+    token = context->token_head;
+    while (token) {
+        if (token_span_utf8(context, token, &pos, &len)) {
+            cb_add_child_node(tb, cb_create_node(map_c_token_to_cb_type(token->token_type), pos, len));
+        }
+        token = token->token_next;
+    }
+}
+
+void rxc_highlight_controller_parse(CodeBuffer *cb) {
+    char *source_code;
+    size_t source_len;
+    Context *context;
+    CB_ParseTree *tb;
+    CB_Node root_node;
+    HighlightTokenCursor cursor;
+
+    if (!cb) return;
+
+    source_code = get_code_buffer_source(cb);
+    if (!source_code) return;
+    source_len = strlen(source_code);
+
+    context = cntx_f();
+    context->master_context = context;
+    context->file_name = strdup("dsl_buffer.rexx");
+    context->debug_mode = 0;
+    context->stop_after_parse = 1;
+    context->optimise = 0;
+    context->level = LEVELB;
+
+    cntx_buf(context, source_code, strlen(source_code));
+
+    rxcp_init_exits(context);
+    rexbpars(context);
+
+    if (!context->ast) {
+        rxcp_run_fallback_diagnostics(context);
+    } else {
+        rxcp_prepare_source_ast(context);
+    }
+
+    tb = cb_create_token_buffer();
+    root_node = cb_create_node(PARSE_TREE_FILE, 0, source_len);
+    cb_add_child_node(tb, root_node);
+    cb_set_current_parent_to_root_node(tb);
+
+    if (context->source_ast) {
+        cursor.context = context;
+        cursor.token = context->token_head;
+        emit_ast_projection(tb, context, context->source_ast->child, &cursor);
+        emit_tokens_until(tb, &cursor, source_len);
+        emit_diagnostics_from_tree(tb, context, context->source_ast);
+    } else {
+        emit_flat_tokens(tb, context);
+        emit_diagnostics_from_tree(tb, context, (ASTNode *)context->diagnostics_list);
+    }
+
+    cb_order_tree(tb);
+    cursor.context = context;
+    cursor.token = context->token_head;
+    cb_add_missing_tokens(tb, cb, compiler_get_token_callback, &cursor);
+    cb_tweak_tree_positions(tb);
+    cb_validate_tree(tb);
+
+    if (context->file_name) free(context->file_name);
+    fre_cntx(context);
+    cb->parse_tree = tb;
+}
+
+#endif
