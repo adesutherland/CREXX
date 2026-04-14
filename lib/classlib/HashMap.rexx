@@ -4,7 +4,7 @@ import treemap
 import data_TreeSet
 
 /** 
- * class HashMap offers a Map implementation backed by a hashed stem
+ * class HashMap offers a Map implementation backed by a hashed stem plugin
  * with dynamic buckets. The storage and representations is unordered.
  * 
  * @author René Vincent Jansen
@@ -74,17 +74,17 @@ val = .int
      * method keystem returns the keys in this HashMap 
      * as a Rexx stem
      */
-  keyStem: method = .string[]
+  keyArray: method = .string[]
     list = .string[]
     vals = .string[]
     n = stemiterate(val, list, vals)
     return list
 
     /**
-     * method keystem returns the keys in this HashMap 
-     * as a Rexx stem
+     * method valueArray returns the keys in this HashMap 
+     * as a Rexx array
      */
-  valueStem: method = .string[]
+  valueArray: method = .string[]
     list = .string[]
     vals = .string[]
     n = stemiterate(val, list, vals)
@@ -96,7 +96,7 @@ val = .int
      */
   keySet: method = .TreeSet
     ts = .TreeSet()
-    rc = ts.fromStem(keyStem())
+    rc = ts.fromArray(keyArray())
     return ts
 
     /**
@@ -106,7 +106,7 @@ val = .int
     */
   valueSet: method = .TreeSet
     ts = .TreeSet()
-    rc = ts.fromStem(valueStem())
+    rc = ts.fromArray(valueArray())
     return ts
 
     /**

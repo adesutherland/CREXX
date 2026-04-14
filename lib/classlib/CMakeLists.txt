@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.24)
 
 set(CLSS
-  List
+  StemList
+  StemListIterator
+  ArrayList
+  ArrayListIterator
   HashMap
   HashMapIterator
   HashSet

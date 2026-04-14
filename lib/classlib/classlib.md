@@ -4,13 +4,13 @@
 |---------------- |---------- |------ |---------------- |--------- |---------- |-------------------------- |
 |                  |            |        | Class library    |           |            |                            |
 | crypto\_des      |            | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | crypto\_des      | namespace |            |                            |
-|                  | des        |        | des              | class     |            |                            |
-|                  | des        |        | encrypt          | method    |            | = .string                  |
-|                  | des        |        | decrypt          | method    |            | = .string                  |
-| crypto\_des      |            | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | crypto\_aes      | namespace |            |                            |
-|                  | des        |        | aes              | class     |            |                            |
-|                  | des        |        | encrypt          | method    |            | = .string                  |
-|                  | des        |        | decrypt          | method    |            | = .string                  |
+|                  | des        | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | des              | class     |            |                            |
+|                  | des        | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | encrypt          | method    |            | = .string                  |
+|                  | des        | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | decrypt          | method    |            | = .string                  |
+| crypto\_aes      |            | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | crypto\_aes      | namespace |            |                            |
+|                  | des        | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | aes              | class     |            |                            |
+|                  | des        | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | encrypt          | method    |            | = .string                  |
+|                  | des        | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | decrypt          | method    |            | = .string                  |
 | data\_LinkedList |            | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | data\_LinkedList | namespace |            |                            |
 | data\_LinkedList | LinkedList | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | LinkedList       | class     | class      |                            |
 | data\_LinkedList | LinkedList | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | add              | method    | = .int     | element=.string            |
@@ -27,6 +27,20 @@
 | data\_TreeMap    | TreeMap    | <img alt="BUILD" src="https://img.shields.io/badge/state-build-yellow">  | put              | method    | = .void    | key=.string, value=.string |
 | data\_TreeMap    | TreeMap    | <img alt="BUILD" src="https://img.shields.io/badge/state-build-yellow">  | get              | method    | = .string  | key=.string                |
 | data\_TreeMap    | TreeMap    | <img alt="DESIGN" src="https://img.shields.io/badge/state-design-blue"> | tostring         | method    | = .string  | =.void                     |
+| rxmath\_math     |            | <img alt="DESIGN" src="https://img.shields.io/badge/state-design-blue"> | rxmath.math      | namespace |            |                            |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | math             | class     |            |                            |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | pi               | method    |            | = .void                    |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | sin              | method    |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | square           | method    |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | pow              | method    |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | base             | method    |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | cosin            | method    |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | tan              | method    |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | arctan           | method    |            | = .float                   |
+| system\_ipc      |            | <img alt="DESIGN" src="https://img.shields.io/badge/state-design-blue"> | system\_ipc      | namespace |            |                            |
+|                  | semaphore  | <img alt="DESIGN" src="https://img.shields.io/badge/state-design-blue"> | semaphore        | class     |            |                            |
+|                  | pipe       | <img alt="DESIGN" src="https://img.shields.io/badge/state-design-blue"> | pipe             | class     |            |                            |
+|                  | ClassName  | <img alt="DESIGN" src="https://img.shields.io/badge/state-design-blue"> | queue            | class     |            |                            |
 | system\_os       |            | <img alt="DESIGN" src="https://img.shields.io/badge/state-design-blue"> | system\_os       | namespace |            |                            |
 | system\_os       | os         | <img alt="DESIGN" src="https://img.shields.io/badge/state-design-blue"> | os               | class     |            |                            |
 | system\_os       | os         | <img alt="BUILD" src="https://img.shields.io/badge/state-build-yellow">  | uptime           | method    | = .int     | =.void                     |
@@ -37,10 +51,10 @@
 
 | NS               | CLASS      | TODO   | ITEM     | RETURNTYPE | SIG                        |
 |---------------- |---------- |------ |-------- |---------- |-------------------------- |
-|                  | des        |        | encrypt  |            | = .string                  |
-|                  | des        |        | decrypt  |            | = .string                  |
-|                  | des        |        | encrypt  |            | = .string                  |
-|                  | des        |        | decrypt  |            | = .string                  |
+|                  | des        | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | encrypt  |            | = .string                  |
+|                  | des        | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | decrypt  |            | = .string                  |
+|                  | des        | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | encrypt  |            | = .string                  |
+|                  | des        | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | decrypt  |            | = .string                  |
 | data\_LinkedList | LinkedList | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | add      | = .int     | element=.string            |
 | data\_LinkedList | LinkedList | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | addFirst | = .int     | element=.string            |
 | data\_LinkedList | LinkedList | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | addLast  | = .int     | element=.string            |
@@ -51,6 +65,14 @@
 | data\_TreeMap    | TreeMap    | <img alt="BUILD" src="https://img.shields.io/badge/state-build-yellow">  | put      | = .void    | key=.string, value=.string |
 | data\_TreeMap    | TreeMap    | <img alt="BUILD" src="https://img.shields.io/badge/state-build-yellow">  | get      | = .string  | key=.string                |
 | data\_TreeMap    | TreeMap    | <img alt="DESIGN" src="https://img.shields.io/badge/state-design-blue"> | tostring | = .string  | =.void                     |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | pi       |            | = .void                    |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | sin      |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | square   |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | pow      |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | base     |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | cosin    |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | tan      |            | = .float                   |
+|                  | math       | <img alt="SPEC" src="https://img.shields.io/badge/state-spec-lightgrey">   | arctan   |            | = .float                   |
 | system\_os       | os         | <img alt="BUILD" src="https://img.shields.io/badge/state-build-yellow">  | uptime   | = .int     | =.void                     |
 | system\_os       | os         | <img alt="BUILD" src="https://img.shields.io/badge/state-build-yellow">  | user     | = .string  | =.void                     |
 
