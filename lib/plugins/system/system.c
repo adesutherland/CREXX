@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <limits.h>
 #if defined(__APPLE__)
+ #include <mach-o/dyld.h>
+ #include <libgen.h>
  #include <pwd.h>
  #include <sys/stat.h>
  #include <sys/time.h>
@@ -112,6 +114,61 @@ PROCEDURE(getdir) {
     }
 ENDPROC
 }
+/* -------------------------------------------------------------------------------------
+ * Get current load path
+ * -------------------------------------------------------------------------------------
+ */
+PROCEDURE(getLoadPath) {
+    char path[4096];
+    char *dir = NULL;
+
+#if defined(_WIN32)
+    if (GetModuleFileNameA(NULL, path, sizeof(path)) == 0) {
+      RETURNSIGNAL(SIGNAL_FAILURE, "Unable to get current load path")
+    }
+    char *last_backslash = strrchr(path, '\\');
+    if (last_backslash)
+        *last_backslash = '\0';
+    dir = _strdup(path);
+
+#elif defined(__APPLE__)
+    uint32_t size = sizeof(path);
+     if (_NSGetExecutablePath(path, &size) != 0)
+       RETURNSIGNAL(SIGNAL_FAILURE, "Unable to get current load path")
+
+    char resolved[PATH_MAX];
+    if (realpath(path, resolved) == NULL)
+      RETURNSIGNAL(SIGNAL_FAILURE, "Unable to get current load path")
+
+    // dirname may modify its argument, so copy it
+    char *dirbuf = strdup(resolved);
+    if (dirbuf) {
+        dir = strdup(dirname(dirbuf));
+        free(dirbuf);
+    }
+
+#elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+    ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
+    if (len != -1) {
+        path[len] = '\0';
+        char *dirbuf = strdup(path);
+        if (dirbuf) {
+            dir = strdup(dirname(dirbuf));
+            free(dirbuf);
+        }
+    }
+#endif
+    if (dir) {
+        SETSTRING(RETURN, dir);
+        free(dir);
+    } else {
+        SETSTRING(RETURN, "");
+    }
+    PROCRETURN
+ENDPROC
+}
+
+
 /* -------------------------------------------------------------------------------------
  * Set new current working directory
  * -------------------------------------------------------------------------------------
@@ -1244,6 +1301,7 @@ LOADFUNCS
 //      C Function, REXX namespace & name, Option, Return Type, Arguments
     ADDPROC(getEnv,      "system.getenv",      "b",    ".string", "input=.string");
     ADDPROC(getdir,      "system.getdir",      "b",    ".string", "");
+    ADDPROC(getLoadPath, "system.getloadpath", "b",    ".string", "");
     ADDPROC(setdir,      "system.setdir",      "b",    ".int",    "arg0=.string");
     ADDPROC(testdir,     "system.testdir",     "b",    ".int",    "arg0=.string");
     ADDPROC(createdir,   "system.createdir",   "b",    ".int",    "arg0=.string");

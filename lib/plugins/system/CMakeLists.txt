@@ -26,4 +26,5 @@ target_include_directories(_system_static PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/lib/include
     ${CMAKE_SOURCE_DIR}/rxpa
-)
+    )
+  
