@@ -25,8 +25,16 @@ os: class
     
     /** 
     * method user returns the logged on userid
-    * @return .string userid
+    * @return .string userid tsk
     */
   user: method = .string
     return userid()  
+
+    /** 
+    * method getLoadPath returns the path from which
+    * the program is run
+    * @return .string userid tsk
+    */
+  loadpath: method = .string
+    return getLoadPath()
     
