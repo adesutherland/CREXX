@@ -1,0 +1,6 @@
+INIT "./cmake-build-debug/bin/rxas" ./assembler/parsingtests/test_01_init.rxas
+STATUS
+INSERT 5 0 invalid_instruction r1,r2
+STATUS
+DUMP_AST
+QUIT

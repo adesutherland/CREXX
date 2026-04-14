@@ -70,7 +70,7 @@ void rxasperr(Assembler_Context* context) {
     }
 
     /* Print Errors - e is now the first error */
-    if (context->severity != 0) {
+    if (context->severity != 0 && !context->quiet) {
         printf("\nError Severity %d in file %s\n", context->severity, context->file_name);
         while (e) {
             printf("%d:%d - %s\n", e->line, e->column, e->message);

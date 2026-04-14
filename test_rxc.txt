@@ -1,0 +1,4 @@
+INIT /Users/adrian/.local/bin/rxc --parser /Users/adrian/CLionProjects/CREXX/test_parser.rexx
+STATUS
+DUMP_AST
+QUIT

@@ -1,0 +1,10 @@
+LOG "Initial load"
+STATUS
+DUMP_AST
+LOG "Insert async - check emergency tree"
+INSERT_ASYNC 5 0 copy r2,a2
+DUMP_AST
+LOG "Sync - check final tree"
+SYNC
+DUMP_AST
+QUIT

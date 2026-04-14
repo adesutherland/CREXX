@@ -1,0 +1,23 @@
+Node: type=71 (PARSE_TREE_FILE), pos=0, len=39, sev=48
+  Node: type=37 (LEXER_PREPROCESSOR), pos=0, len=8, sev=48, text=".globals"
+  Node: type=36 (LEXER_UNKNOWN), pos=0, len=1, sev=50, text="."
+      Message: Error no instructions in file
+  Node: type=38 (LEXER_COMMENT), pos=1, len=7, sev=48, text="globals"
+  Node: type=43 (LEXER_OPERATOR_ASSIGN), pos=8, len=1, sev=48, text="="
+  Node: type=40 (LEXER_NUMBER_LITERAL), pos=9, len=1, sev=48, text="0"
+  Node: type=47 (LEXER_STATEMENT_SEPARATOR), pos=10, len=1, sev=48, text=""
+  Node: type=56 (LEXER_FUNCTION_IDENTIFIER), pos=11, len=5, sev=48, text="main:"
+  Node: type=47 (LEXER_STATEMENT_SEPARATOR), pos=16, len=1, sev=48, text=""
+  Node: type=33 (LEXER_WHITESPACE), pos=17, len=2, sev=48, text="  "
+  Node: type=54 (LEXER_IDENTIFIER), pos=19, len=4, sev=48, text="load"
+  Node: type=33 (LEXER_WHITESPACE), pos=23, len=1, sev=48, text=" "
+  Node: type=54 (LEXER_IDENTIFIER), pos=24, len=2, sev=48, text="r1"
+  Node: type=46 (LEXER_SEPARATOR), pos=26, len=1, sev=48, text=","
+  Node: type=33 (LEXER_WHITESPACE), pos=27, len=1, sev=48, text=" "
+  Node: type=40 (LEXER_NUMBER_LITERAL), pos=28, len=2, sev=48, text="10"
+  Node: type=47 (LEXER_STATEMENT_SEPARATOR), pos=30, len=1, sev=48, text=""
+  Node: type=33 (LEXER_WHITESPACE), pos=31, len=2, sev=48, text="  "
+  Node: type=54 (LEXER_IDENTIFIER), pos=33, len=3, sev=48, text="ret"
+  Node: type=47 (LEXER_STATEMENT_SEPARATOR), pos=36, len=1, sev=48, text=""
+  Node: type=47 (LEXER_STATEMENT_SEPARATOR), pos=37, len=1, sev=48, text=""
+  Node: type=47 (LEXER_STATEMENT_SEPARATOR), pos=38, len=1, sev=48

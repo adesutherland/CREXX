@@ -1,0 +1,10 @@
+* Test Assembler File
+.globals=0
+.meta
+    .class "test_class"
+    .srcfile "test.rexx"
+    .locals=2
+.src 1:1="test"
+main:
+    load r1, 10
+    ret

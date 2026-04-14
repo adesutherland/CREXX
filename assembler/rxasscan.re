@@ -51,12 +51,12 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     }
     eol1 {
        s->line++;
-       s->linestart = s->cursor+1;
+       s->linestart = s->cursor;
        return(NEWLINE);
     }
     eol2 {
        s->line++;
-       s->linestart = s->cursor+2;
+       s->linestart = s->cursor;
        return(NEWLINE);
     }
 
@@ -105,7 +105,7 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
   }
   "\r\n" {
     s->line++;
-    s->linestart = s->cursor+1;
+    s->linestart = s->cursor;
     goto comment;
   }
   [\r] | [\n] {

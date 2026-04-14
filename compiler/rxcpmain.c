@@ -235,7 +235,7 @@ int rxcmain(int argc, char *argv[]) {
         if (argv[i][0] != '-') break; /* End of options */
 
 #ifdef ENABLE_PARSER_MODE
-        if (strcmp(argv[i], "--parser") == 0) {
+        if (strcmp(argv[i], "--syntaxhighlight") == 0) {
             parser_mode = 1;
             parser_stdio = 1;
             continue;

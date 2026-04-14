@@ -157,11 +157,20 @@ static void error_and_exit(int rc, char* message) {
     exit(rc);
 }
 
+#ifdef ENABLE_PARSER_MODE
+int rxas_parser_mode_main(int stdio_mode, int port, const char *file_name, int debug_mode);
+#endif
+
 int main(int argc, char *argv[]) {
     Assembler_Context scanner;
     char *combined_location = 0;
     char *exe_path = 0;
     int i;
+#ifdef ENABLE_PARSER_MODE
+    int parser_mode = 0;
+    int stdio_mode = 1;
+    int port = 0;
+#endif
 
     platform_install_signal_handlers();
 
@@ -178,12 +187,29 @@ int main(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
-        if (strlen(argv[i]) > 2) {
+#ifdef ENABLE_PARSER_MODE
+        if (strcmp(argv[i], "--syntaxhighlight") == 0) {
+            parser_mode = 1;
+            continue;
+        } else if (strcmp(argv[i], "--stdio") == 0) {
+            stdio_mode = 1;
+            continue;
+        } else if (strcmp(argv[i], "--port") == 0) {
+            stdio_mode = 0;
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing port after --port");
+            }
+            port = atoi(argv[i]);
+            continue;
+        }
+#endif
+        if (strlen(argv[i]) > 2 && argv[i][1] != '-') {
             error_and_exit(2, "Invalid argument");
         }
         switch (toupper((argv[i][1]))) {
             case '-':
-                break;
+                continue;
 
             case 'O': /* Output File */
                 i++;
@@ -237,6 +263,16 @@ int main(int argc, char *argv[]) {
                 error_and_exit(2, "Invalid argument");
         }
     }
+
+#ifdef ENABLE_PARSER_MODE
+    if (parser_mode) {
+        const char *file_name = NULL;
+        if (i < argc) {
+            file_name = argv[i];
+        }
+        exit(rxas_parser_mode_main(stdio_mode, port, file_name, scanner.debug_mode));
+    }
+#endif
 
     if (i == argc) {
         error_and_exit(2, "Missing input source file");

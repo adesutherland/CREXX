@@ -1,0 +1,20 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : test.rexx
+ * BUILT                  : 2026-04-12 20:36:56
+ */
+
+.srcfile="test.rexx"
+.globals=0
+
+main() .locals=0
+   .meta "test.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 2:1="say \"hello\""
+   say "hello"
+   .src 2:12=""
+   ret
