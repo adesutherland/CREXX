@@ -316,31 +316,36 @@ static int source_container_type(SourceNode *node, CB_NodeType *type) {
 
 static void emit_projected_token(CB_ParseTree *tb, Token *token, size_t pos, size_t len) {
     CB_NodeType type;
+    int has_embedded_separator;
 
     if (!tb || !token || len == 0) return;
+    has_embedded_separator = token->token_string && token->token_string[0] == '.';
 
     switch (token->token_type) {
         case TK_STEMVAR:
-            if (len > 1) {
+            if (has_embedded_separator && len > 1) {
                 cb_add_child_node(tb, cb_create_node(LEXER_SEPARATOR, pos, 1));
                 cb_add_child_node(tb, cb_create_node(LEXER_IDENTIFIER, pos + 1, len - 1));
                 return;
             }
-            break;
+            cb_add_child_node(tb, cb_create_node(LEXER_IDENTIFIER, pos, len));
+            return;
         case TK_STEMINT:
-            if (len > 1) {
+            if (has_embedded_separator && len > 1) {
                 cb_add_child_node(tb, cb_create_node(LEXER_SEPARATOR, pos, 1));
                 cb_add_child_node(tb, cb_create_node(LEXER_NUMBER_LITERAL, pos + 1, len - 1));
                 return;
             }
-            break;
+            cb_add_child_node(tb, cb_create_node(LEXER_NUMBER_LITERAL, pos, len));
+            return;
         case TK_STEMSTRING:
-            if (len > 1) {
+            if (has_embedded_separator && len > 1) {
                 cb_add_child_node(tb, cb_create_node(LEXER_SEPARATOR, pos, 1));
                 cb_add_child_node(tb, cb_create_node(LEXER_IDENTIFIER, pos + 1, len - 1));
                 return;
             }
-            break;
+            cb_add_child_node(tb, cb_create_node(LEXER_IDENTIFIER, pos, len));
+            return;
         case TK_STEMNOVAL:
             cb_add_child_node(tb, cb_create_node(LEXER_SEPARATOR, pos, len));
             return;

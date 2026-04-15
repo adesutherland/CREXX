@@ -24,19 +24,24 @@ endforeach()
 
 foreach(_binfile IN LISTS CLSBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
+  set(_workdir "${CMAKE_CURRENT_BINARY_DIR}/${_basename}.work")
 
   add_custom_command(
     OUTPUT "${_binfile}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_workdir}"
     COMMAND $<TARGET_FILE:rxc>
             -i "${CMAKE_BINARY_DIR}/bin"
-            -o "${_basename}"
+            -o "${_workdir}/${_basename}"
             "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx"
-    COMMAND $<TARGET_FILE:rxas> "${_basename}"
+    COMMAND $<TARGET_FILE:rxas> "${_workdir}/${_basename}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${_workdir}/${_basename}.rxbin"
+            "${_binfile}"
     DEPENDS
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx"
       rxc
       rxas
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     COMMENT "cREXX compile and assemble ${_basename} ..."
     VERBATIM
   )

@@ -500,4 +500,4 @@ LOADFUNCS
     ADDPROC(tcpclose,   "rxtcp.tcpclose",    "b", ".int",    "socket=.int");
     ADDPROC(tcpserver,  "rxtcp.tcpserver",   "b", ".int",    "port=.int,expose sockets=.string[]");
     ADDPROC(tcpwait,    "rxtcp.tcpwait",     "b", ".int",    "server=.int,timeout=.int,expose sockets=.string[]");
-}
+ENDLOADFUNCS

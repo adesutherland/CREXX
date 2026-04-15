@@ -71,7 +71,7 @@ if (TARGET lemon)
         $<$<NOT:$<C_COMPILER_ID:MSVC>>:-w>
     )
 endif()
-foreach(ext_tgt IN ITEMS re2c re2go)
+foreach(ext_tgt IN ITEMS re2c re2go re2c_objects_autogen re2c_objects_autogen_ver_to_vernum)
     if (TARGET ${ext_tgt})
         target_compile_options(${ext_tgt} PRIVATE
             $<$<C_COMPILER_ID:MSVC>:/w>

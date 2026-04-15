@@ -156,8 +156,8 @@ char * array1;
 
 char opthelp   = '-';
 
-char tranline[32760];
-char line[32760];
+char tranline[32760] = {0};
+char line[32760] = {0};
 
 long segbytesread = 0;
 

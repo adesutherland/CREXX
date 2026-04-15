@@ -534,8 +534,11 @@ if (ENABLE_PARSER_MODE)
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/repro_dotted_index.rexx
             MUST_MATCH
             "Node: type=46 \\(LEXER_SEPARATOR\\), pos=[0-9]+, len=1, sev=48, text=\"\\.\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=4, sev=48, text=\"lino\""
+            "Node: type=40 \\(LEXER_NUMBER_LITERAL\\), pos=[0-9]+, len=1, sev=48, text=\"1\""
             MUST_NOT_MATCH
             "Node: type=38 \\(LEXER_COMMENT\\), pos=[0-9]+, len=1, sev=48, text=\"\\.\""
+            "Node: type=46 \\(LEXER_SEPARATOR\\), pos=[0-9]+, len=1, sev=48, text=\"[A-Za-z0-9]\""
     )
 
     add_crexx_syntax_highlight_test(

@@ -510,13 +510,13 @@ uint64_t lookup_map(char * tree_name) {
     return 0;
 }
 
-typedef struct Entry {
+struct Entry {
     char *key;
     char *value;
     struct Entry *next;
-} Entry;
+};
 
-typedef struct Stem {
+struct Stem {
     Entry **buckets;     // now a dynamic array
     char root[32];       // root name max 32 chars
     size_t table_size;   // store the actual size
@@ -527,7 +527,7 @@ typedef struct Stem {
     int collisionR;      // re-reads in collision situation
     int max_chain_depth; // maximum collision depth
     int collisionW;      // write collisions took place
-} Stem;
+};
 
 typedef struct StemIterator {
     Stem   *stem;
