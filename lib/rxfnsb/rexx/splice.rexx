@@ -47,11 +47,9 @@ namespace rxfnsb expose splice
  */
 splice: procedure=.string
   arg needle=.string,haystack=.string, at=1, len=.int
-say 9999 "'"needle"' '"haystack"'" at len
   if at < 1 then return haystack
   if len < 0 then len = 0
 
   hlen = length(haystack)
   if at > hlen + 1 then at = hlen + 1   /* clamp to append */
-say 888 "'"left(haystack, at-1, '') || needle || substr(haystack, at+len)"'"
 return left(haystack, at-1, '') || needle || substr(haystack, at+len)

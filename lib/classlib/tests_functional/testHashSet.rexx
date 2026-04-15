@@ -34,9 +34,9 @@ say a.toString()
 
 say a.toString()
 
-say 'toStem() on HashSet'
+say 'toArray() on HashSet'
 
-keystem = a.toStem()
+keystem = a.toArray()
 
 say 'looping over stem result'
 loop l=1 to keystem.0

@@ -1,5 +1,5 @@
 /* rexx */
-options levelb
+options levelb comments_dash
 
 namespace rxfnsb expose stem
 
@@ -60,7 +60,11 @@ stem: class
     b = hash(key)
     idx = buckets[b]
     last_idx = 0
-    
+
+    -- say 'stemset value:' value
+    -- say 'stemset key:' key
+    -- say 'stemset hash:' b
+    -- say 'stemset idx:' idx
     /* Update existing if found */
     do while idx > 0
       if keys[idx] = key then do
@@ -87,3 +91,15 @@ stem: class
     end
     
     return
+
+  size: method = .int
+    return count
+
+  key: method = .string
+    arg ix = .int
+    return keys[ix]
+
+  value: method = .string
+    arg kv = .string
+    return values[kv]
+    

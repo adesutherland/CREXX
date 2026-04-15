@@ -92,7 +92,7 @@ val = .int
      * method keystem returns the keys in this TreeMap 
      * as a rexx stem
      */
-  keyStem: method = .string[]
+  keyArray: method = .string[]
     list = .string[]
     n = tmkeys(val, list)
     return list
@@ -101,7 +101,7 @@ val = .int
     * method valuestem returns the values in this TreeMap 
     * as a rexx stem. This includes duplicates
     */
-  valueStem: method = .string[]
+  valueArray: method = .string[]
     keys = .string[]
     vals = .string[]
     n = tmdump(val, keys, vals)
@@ -113,7 +113,7 @@ val = .int
      */
   keySet: method = .TreeSet
     ts = .TreeSet()
-    rc = ts.fromStem(keyStem())
+    rc = ts.fromArray(keyArray())
     return ts
 
     /**
@@ -123,7 +123,7 @@ val = .int
     */
   valueSet: method = .TreeSet
     ts = .TreeSet()
-    rc = ts.fromStem(valueStem())
+    rc = ts.fromArray(valueArray())
     return ts
 
     /**

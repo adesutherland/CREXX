@@ -1,7 +1,7 @@
 options levelb comments_dash
-namespace data_List expose List
-import ListIterator
-import rxfnsb
+namespace data_List expose ArrayList
+
+
 /**
 * A dynamic, ordered collection backed by a stringarray
 *
@@ -10,7 +10,7 @@ import rxfnsb
 *
  * Internal representation:
  *   val.1 .. val.n   - elements (stem tails)
- *   card             - number of elements in the list
+ *   size_             - number of elements in the list
  *
  * This class is optimized for:
  *   - fast append (O(1))
@@ -18,22 +18,22 @@ import rxfnsb
  *
  * Insertions/removals in the middle require shifting elements (O(n)).
  */
- List: class
- card = .int
+ArrayList: class
+ size_ = .int
  val = .string[]
  
  /**
  * Factory method, returns a List object, which initially is empty
  */
   *: factory
-    card = 0
+    size_ = 0
     return
     
  /**
  * Initializes an empty list.
  */
   init: method = .int
-    card = 0
+    size_ = 0
     return 1
     
     /**
@@ -43,8 +43,8 @@ import rxfnsb
     */
   add: method = .int
     arg item = .string
-    card = card + 1
-    val.card = item
+    size_ = size_ + 1
+    val.size_ = item
     return 1
     
     
@@ -57,7 +57,7 @@ import rxfnsb
   get: method = .string
     arg index = .int
     if index < 1 then return 0 -- TODO exception
-    if index > card then return 0 -- TODO exception
+    if index > size_ then return 0 -- TODO exception
     return val.index
       
       
@@ -69,7 +69,7 @@ import rxfnsb
       */
   set: method = .int
     arg index = .int, item = .string
-    if index >= 1 then if index <= card then
+    if index >= 1 then if index <= size_ then
       val.index = item
       return 1
       
@@ -85,15 +85,15 @@ import rxfnsb
     arg index = .int, item = .string
     
     if index < 1 then index = 1
-    if index > card + 1 then index = card + 1
+    if index > size_ + 1 then index = size_ + 1
     
-    do i = card to index by -1
+    do i = size_ to index by -1
       h=i+1
       val.h = val.i
     end
     
     val.index = item
-    card = card + 1
+    size_ = size_ + 1
     return 1
     
     
@@ -108,18 +108,18 @@ import rxfnsb
   remove: method = .string
      arg index = .int
     
-    if index < 1 | index > card then
+    if index < 1 | index > size_ then
       return 0 -- TODO raise exception
       
       item = val.index
       
-      do i = index to card - 1
+      do i = index to size_ - 1
 	h=i+1
 	val.i = val.h
       end
       
-      val.card = ''
-      card = card - 1
+      val.size_ = ''
+      size_ = size_ - 1
       
       return item
       
@@ -130,7 +130,7 @@ import rxfnsb
       * @return The size of the list.
       */
   size: method = .int
-    return card
+    return size_
     
     
     /**
@@ -139,24 +139,24 @@ import rxfnsb
     * @return 1 if empty, 0 otherwise.
     */
   isEmpty: method = .int
-    return card = 0
+    return size_ = 0
     
     /**
     * Returns an iterator over this list.
     *
     * @return A ListIterator.
     */
-  -- iterator: method = .ListIterator
-  --   return .ListIterator(this)
+  iterator: method = .string[]
+    return val
     
     /**
     * Removes all elements from the list.
     */
   clear: method = .void
-    do i = 1 to card
+    do i = 1 to size_
       val.i = ''
     end
-    card = 0
+    size_ = 0
     return
     
     

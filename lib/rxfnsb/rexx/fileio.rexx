@@ -175,7 +175,7 @@ return count
  * -------------------------------------------------------------------------------
  */
 readlines: procedure = .string[]
-  arg fname=.string, from=1, maxrec=0   /* maxrec=0 => all remaining */
+  arg fname=.string, from=1, maxrec=0, xError='raise'   /* maxrec=0 => all remaining */
 
   if from < 1   then from=1
   if maxrec < 0 then maxrec=0
@@ -187,9 +187,12 @@ readlines: procedure = .string[]
   llen=0
   rmode="r"
   lines=.string[]
-
   assembler fopen fileid,fname,rmode
-  if fileid=0 then call raise "error", "40.27", "cannot open "fname
+  if fileid=0 then do
+     if upper(xError)='RAISE' then call raise "error", "40.27", "cannot open "fname
+     lines[1]='-8 OPEN ERROR'    /* return array with error message */
+     return lines
+  end
 
   do while eof = 0
      line = ""

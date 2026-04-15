@@ -1,9 +1,9 @@
 options levelb comments_dash
-namespace data_List expose ListIterator
-import List
+namespace data_List expose ArrayListIterator
+
 
 /**
- * Iterator for the List class.
+ * Iterator for the ArrayList class.
  *
  * Supports forward traversal of a List.
  *
@@ -19,9 +19,9 @@ import List
  *     say it.next()
  *   end
  */
-ListIterator: class
+ArrayListIterator: class
 
-list_  = .List
+list_  = .string[]
 index_ = .int
 
 
@@ -31,9 +31,8 @@ index_ = .int
  * @param list  The List to iterate over.
  */
 *: factory
-  arg list = .List
-  -- arg s = .stem
-  list_  = list
+  arg s = .string[]
+  list_  = s
   index_ = 0
   return
 
@@ -44,7 +43,7 @@ index_ = .int
  * @return 1 if there is a next element, 0 otherwise.
  */
 hasNext: method = .int
-  return index_ < list_.size()
+  return index_ < list_.0
 
 
 /**
@@ -55,8 +54,8 @@ hasNext: method = .int
  * @return The next element, or 0 if none available.
  */
 next: method = .string
-  if index_ >= list_.size() then
-    return 0  -- TODO exception
+  if index_ >= list_.0 then
+    return 'error'  -- TODO exception
 
   index_ = index_ + 1
   return list_.index_

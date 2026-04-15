@@ -4,9 +4,8 @@ import treemap
 
 /**
  * Class TreeMapIterator returns an iterator
- * for a TreeMap object. It is short for
- * TreeMap.getKeySet.iterator(). It is a 'live'
- * iterator, as opposed to a 'snapshot' one.
+ * for the key set of a TreeMap object.
+ * It is a 'live' iterator, as opposed to a 'snapshot' one.
  * This implies that undefined behaviour is
  * possible (and expected) when the underlying 
  * TreeMap is modified during its execution.

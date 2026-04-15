@@ -35,11 +35,11 @@ val = .int
 
     /**
     * method fromStem adds elements to this HashSet instance
-    * from a stem, and adds them without order.
-    * @parm .string items
+    * from a .string[], and adds them without order.
+    * @parm .string[] items
     * @result .int added
     */
-  fromStem: method = .int
+  fromArray: method = .int
     arg items = .string[]
     added = 0
     loop i = 1 to items.0
@@ -75,10 +75,10 @@ val = .int
     return stemsize(val)
 
     /**
-    * method keystem returns the items in this HashSet 
-    * as a rexx stem
+    * method toArray returns the items in this HashSet 
+    * as a rexx .string[]
     */
-  toStem: method = .string[]
+  toArray: method = .string[]
     keys = .string[]
     vals = .string[]
     n = stemiterate(val, keys, vals)

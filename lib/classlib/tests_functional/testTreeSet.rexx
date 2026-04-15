@@ -32,9 +32,9 @@ end
 
 say a.toString()
 
-say 'toStem() on TreeSet'
+say 'toArray() on TreeSet'
 
-keystem = a.toStem()
+keystem = a.toArray()
 
 say 'looping over stem result'
 loop l=1 to keystem.0

@@ -39,9 +39,9 @@
 
 ** SPEC crypto_aes
 :PROPERTIES:
-:ID:    ns-crypto_des
+:ID:    ns-crypto_aes
 :KIND:  namespace
-:NS:    crypto_des
+:NS:    crypto_aes
 :END:
 
 ** SPEC aes 
@@ -318,7 +318,7 @@
 |                 | des        | SPEC   | des             | class     |            |                            |
 |                 | des        | SPEC   | encrypt         | method    |            | = .string                  |
 |                 | des        | SPEC   | decrypt         | method    |            | = .string                  |
-| crypto_des      |            | SPEC   | crypto_aes      | namespace |            |                            |
+| crypto_aes      |            | SPEC   | crypto_aes      | namespace |            |                            |
 |                 | des        | SPEC   | aes             | class     |            |                            |
 |                 | des        | SPEC   | encrypt         | method    |            | = .string                  |
 |                 | des        | SPEC   | decrypt         | method    |            | = .string                  |

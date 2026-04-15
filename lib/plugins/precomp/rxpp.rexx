@@ -40,9 +40,9 @@ verbose=1
   if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
   
   if internal_testing=1 then do
-     infile  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rxpp'
-     outfile = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rexx'
-     maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/precomp/Maclib.rexx'
+     infile  = 'C:/Users/PeterJ/CLionProjects/CREXX260401/lib/plugins/system/treemap_test.rxpp'
+     outfile = 'C:/Users/PeterJ/CLionProjects/CREXX260401/lib/plugins/system/treemap_test.rexx'
+     maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX260401/lib/plugins/precomp/Maclib.rexx'
   end
 
  if strip(infile)='' then do
@@ -354,7 +354,12 @@ return 0
 ReadSource: procedure=.int
   arg file=.string
 ##  i=readall(source,file,-1)
-  rc=_ExecIO('*','DISKR',file,source)
+  source=ReadLines(file,,,"noRaise")
+  if source[0]=1 & word(source[1],1)='-8' then do
+     say 'CRX0950E+['time('l')'] missing source file: 'file
+     say 'CRX0951E+['time('l')'] RXPP of: 'file' terminated'
+     exit 8
+  end
 return source[0]
 /* ------------------------------------------------------------------
  * Scans source for pre-compiler directives and macro definitions,
@@ -561,19 +566,22 @@ CMD_include: procedure
   arg line_no=.int,incl=.string,mode=.int
   stype.line_no= 'I'
   file=word(incl,2)
-  file=normalisepath(syspath'/'file)
+  rc=.int
+  insertat=.int
+  file=normalisepath(syspath,file)
   include=.string[]
   /* new=readall(include,file,-1) */
-  new=_ExecIO('*','DISKR',file,include)
-  if new<=0 then do
+  include=readLines(file,,,'noRaise')
+  new=include[0]
+  if new=1 & word(include[1],1)='-8' then do
      say 'CRX0950E+['time('l')'] missing include file: 'file
+     say 'CRX0951E+['time('l')'] RXPP terminated'
      exit 8
   end
   if push_unique(included_files,file)=0 then return      /* already part of the included list */
-
   if mode=1 then do
      rc= insert_source(line_no+1,new)
-     insertat=lino
+     insertat=line_no
   end
   else do
      linc=source.0
@@ -1589,60 +1597,81 @@ linkerInfo: procedure
   if verbose then say 'CRX0510I ['time('l')'] Library import names passed to 'linkfile
 return
 /* ------------------------------------------------------------------
- * normalizePath: resolves ../, ./ and slashes in mixed paths to normalised UNIX-style
- * Example: normalizePath("C:\\Users\\Peter/../Docs/./file.txt") -> "C:/Users/Docs/file.txt"
+ * normalisePath: resolves ../, ./ and mixed slashes
+ * Returns normalised UNIX-style path
+ * Example:
+ *   normalisePath("C:\Users\Peter/../Docs/./file.txt")
+ *   -> "C:/Users/Docs/file.txt"
  * ------------------------------------------------------------------
  */
 normalisePath: procedure=.string
-  arg rawpath=.string
+  arg xsyspath=.string, rawpath=.string
 
-  path = translate(rawpath, '/', '\')    /* Convert backslashes to forward slashes */
-  /* Split path into components by '/' */
-  components=.string[]
-  compi = 0
-  do while path \= ''
-     ppi = pos('/', path)
-     if ppi > 0 then do
-        part = substr(path, 1, ppi - 1)
-        path = substr(path, ppi + 1)
-     end
-     else do
-        part = path
-        path = ''
-     end
-     if part = '' then iterate
-     compi = compi + 1
-     components.compi = part
-  end
-  /* Stack for normalised components */
-  parti = 0
-  norm = .string[]
-  do i = 1 to compi
-    part = components.i
-    if part = '.' then nop
-    else if part = '..' then do
-       if parti > 0 then parti = parti - 1
-    end
-    else do
-       parti = parti + 1
-       norm.parti = part
-    end
-  end
-  /* Check for drive letter prefix */
+  path = translate(rawpath, '/', '\')   /* "\" -> "/" */
+  syspath = translate(xsyspath, '/', '\')
+
   drive = ''
-  if substr(components.1, 2, 1) = ':' then do
-     drive = components.1
-     start = 2
+  part=''
+  absolute = 0
+
+  /* Detect Windows drive prefix */
+  if length(path) >= 2 & substr(path, 2, 1) = ':' then do
+     drive = substr(path, 1, 2)
+     path  = substr(path, 3)
   end
-  else start = 1
-/* Reconstruct the normalised path with forward slashes */
+
+  /* Detect absolute path */
+  if left(path, 1) = '/' then do
+     absolute = 1
+     do while left(path, 1) = '/'
+        path = substr(path, 2)
+     end
+  end
+
+  /* Split into components */
+  components=Qsplit(path,'/')
+
+  /* Normalise components */
+  norm = .string[]
+  parti = 0
+
+  do i = 1 to components[0]
+     part = components[i]
+
+    select
+      when part = '.' then nop
+      when part = '..' then do
+        if parti > 0 then parti = parti - 1
+        else if \absolute then do
+          parti = parti + 1
+          norm[parti] = '..'
+        end
+      end
+      otherwise do
+        parti = parti + 1
+        norm[parti] = part
+      end
+    end
+  end
+
+  /* Rebuild */
   normalised = ''
+
   if drive \= '' then normalised = drive
-  do i = start to parti
-     normalised = normalised || '/' || norm.i
+
+  if absolute then normalised = normalised || '/'
+
+  do i = 1 to norm[0]
+    if right(normalised, 1) \= '/' then normalised = normalised || '/'
+    normalised = normalised || norm[i]
   end
-  if normalised = '' then normalised = '/'
+
+  if normalised = '' then do
+    if drive \= '' then normalised = drive || '/'
+    else normalised = '/'
+  end
 return normalised
+
 /* ---------------------------------------------------------------
  * CommentScan: Scans a line to update block-comment nesting and reports comment intersection.*
  * CommentScan(lino, depth)
