@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_void_fallthrough_call.rexx
- * BUILT                  : 2026-03-26 19:42:30
+ * BUILT                  : 2026-04-15 10:55:40
  */
 
 .srcfile="inline_test_void_fallthrough_call.rexx"
@@ -17,6 +17,7 @@ main() .locals=8
    setnumstd 1
    .src 4:3="say \"Starting void fallthrough inline test...\""
    say "Starting void fallthrough inline test..."
+   .src 5:3="call maybeLog(0)"
    .src 5:8="maybeLog"
    .src 5:8="maybeLog"
    .src 13:19="return"
@@ -31,6 +32,7 @@ main() .locals=8
    br l66bexprend
 l66bexprend:
    icopy r0,r5
+   .src 6:3="call maybeLog(2)"
    .src 6:8="maybeLog"
    .src 6:8="maybeLog"
    .src 14:3="say \"value\" val"
@@ -41,6 +43,7 @@ l66bexprend:
    br l86bexprend
 l86bexprend:
    icopy r1,r6
+   .src 7:3="call tracePair(1, 3)"
    .src 7:8="tracePair"
    .src 7:8="tracePair"
    .src 19:3="say \"pair\" left + right"

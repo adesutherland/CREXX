@@ -1,3 +1,3 @@
-Error in err_block_expr_no_leave.rexx @ 3:5 - #RETVAL_MISSING, "do"
 Error in err_block_expr_no_leave.rexx @ 3:5 - #MISSING_VALUE, "do"
+Error in err_block_expr_no_leave.rexx @ 3:5 - #RETVAL_MISSING, "do"
 2 error(s) in source file

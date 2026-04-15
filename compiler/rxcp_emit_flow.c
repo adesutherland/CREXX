@@ -67,6 +67,15 @@ void emit_flow(ASTNode *node, void *pl) {
     switch (node->node_type) {
 
         case ARGS:
+            if (!node->output) node->output = output_f();
+            n = child1;
+            while (n) {
+                if (n->output) output_concat(node->output, n->output);
+                if (n->cleanup) output_concat(node->output, n->cleanup);
+                n = ast_nsib(n);
+            }
+            break;
+
         case INSTRUCTIONS:
             if (!node->output) node->output = output_f();
             n = child1;
@@ -75,6 +84,9 @@ void emit_flow(ASTNode *node, void *pl) {
                 if (n->cleanup) output_concat(node->output, n->cleanup);
                 n = ast_nsib(n);
             }
+            comment_meta = get_reporting_metalines(node);
+            if (comment_meta[0]) output_prepend_text(comment_meta, node->output);
+            free(comment_meta);
             break;
 
         case NOP:

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_vararg.rexx
- * BUILT                  : 2026-03-28 12:29:21
+ * BUILT                  : 2026-04-15 10:55:40
  */
 
 .srcfile="inline_test_vararg.rexx"
@@ -137,6 +137,7 @@ l160bexprend:
 l178bexprend:
    itos r21
    say r21
+   .src 11:3="call logSecond(3, 9, 12)"
    .meta "inline_test_vararg.main.__inline_varg_array_87"="b" ".int[2]" r6
    .src 28:26=".int"
    null r6

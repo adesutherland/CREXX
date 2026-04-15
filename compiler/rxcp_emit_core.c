@@ -31,6 +31,7 @@
 #include <string.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
+#include "rxcp_source_tree.h"
 
 /* Type promotion matrix for numeric operators */
 const char* emit_promotion[9][9] = {
@@ -132,6 +133,91 @@ void print_output(FILE* file, OutputFragment* existing) {
         if (existing->output) fputs(existing->output, file);
         existing = existing->after;
     }
+}
+
+static char *get_source_node_metaline(SourceNode *node) {
+    char *result;
+    char *src;
+    int line;
+    int column;
+    char *source_start;
+    char *source_end;
+
+    line = -1;
+    column = -1;
+    source_start = 0;
+    source_end = 0;
+
+    if (!node) {
+        result = malloc(1);
+        result[0] = 0;
+        return result;
+    }
+
+    line = node->line;
+    column = node->column;
+    source_start = node->source_start;
+    source_end = node->source_end;
+
+    if (node->token) {
+        if (line == -1) line = node->token->line;
+        if (column == -1) column = node->token->column;
+        if (!source_start) source_start = node->token->token_string;
+        if (!source_end) source_end = node->token->token_string + node->token->length - 1;
+    }
+
+    if (!source_start) {
+        result = malloc(1);
+        result[0] = 0;
+        return result;
+    }
+
+    src = encode_line_source_malloc(source_start,
+                                    (int)(source_end - source_start) + 1);
+    result = mprintf("   .src %d:%d=\"%s\"\n", line + 1, column + 1, src);
+    free(src);
+    return result;
+}
+
+static void append_metaline_buffer(char **buffer, size_t *buffer_len, char *line) {
+    size_t line_len;
+
+    if (!buffer || !buffer_len || !line) return;
+    line_len = strlen(line);
+    if (line_len == 0) {
+        free(line);
+        return;
+    }
+
+    *buffer = realloc(*buffer, *buffer_len + line_len);
+    memcpy(*buffer + (*buffer_len - 1), line, line_len + 1);
+    *buffer_len += line_len;
+    free(line);
+}
+
+char* get_reporting_metalines(ASTNode *node) {
+    char *result;
+    char *line;
+    size_t buffer_len;
+    size_t i;
+
+    result = malloc(1);
+    result[0] = 0;
+    buffer_len = 1;
+
+    if (!node) return result;
+
+    if (node->emit_primary_reporting_anchor && node->source_node) {
+        line = get_source_node_metaline(node->source_node);
+        append_metaline_buffer(&result, &buffer_len, line);
+    }
+
+    for (i = 0; i < node->reporting_source_count; i++) {
+        line = get_source_node_metaline(node->reporting_source_nodes[i]);
+        append_metaline_buffer(&result, &buffer_len, line);
+    }
+
+    return result;
 }
 
 /* Returns the meta .src line in a malloced buffer */

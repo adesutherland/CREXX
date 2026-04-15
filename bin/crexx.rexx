@@ -134,7 +134,7 @@
      call banner
      say 'INVOCATION OPTIONS'
      say 'Options in effect:'
-     if \color  then say '  COLOR'
+    if \nocolor then say '  COLOR'
      else say 'NOCOLOR'
      if decimal  then say '  DECIMAL'
      else say 'NOCDECIMAL'

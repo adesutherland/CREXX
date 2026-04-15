@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_multi_return_call.rexx
- * BUILT                  : 2026-03-26 19:42:29
+ * BUILT                  : 2026-04-15 10:55:40
  */
 
 .srcfile="inline_test_multi_return_call.rexx"
@@ -27,6 +27,7 @@ l8dostart:
    .src 5:12="to 2"
    igt r4,r0,r3
    brt l8doend,r4
+   .src 6:5="call maybeLog(i)"
    .src 6:10="maybeLog"
    .src 6:10="maybeLog"
    .src 12:7="val"

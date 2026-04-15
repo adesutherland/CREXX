@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_object.rexx
- * BUILT                  : 2026-03-27 16:57:36
+ * BUILT                  : 2026-04-15 11:20:43
  */
 
 .meta "arg_semantics_object.box"="b" ".unknown" .class
@@ -96,6 +96,7 @@ l118bexprend:
 l136bexprend:
    concat r11,"object-temp=",r11
    say r11
+   .src 9:3="call replaceBoxRef(box)"
    .src 24:3="value = .Box(\"ref\")"
    load r10,1
    load r11,"ref"

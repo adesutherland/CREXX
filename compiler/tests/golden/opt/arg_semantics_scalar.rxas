@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_scalar.rexx
- * BUILT                  : 2026-03-27 15:15:23
+ * BUILT                  : 2026-04-15 11:20:43
  */
 
 .srcfile="arg_semantics_scalar.rexx"
@@ -49,6 +49,7 @@ l145bexprend:
    itos r0
    concat r7,"int-after=",r0
    say r7
+   .src 9:3="call addOneRef(i)"
    .src 30:3="value = value + 1"
    iadd r0,r0,1
    .src 10:3="say \"int-ref=\" || i"

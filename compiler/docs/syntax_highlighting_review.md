@@ -7,7 +7,7 @@
 - The agreed solution is not a second grammar or a separate parser. It is one shared parser and early fixup path, one separate `rxc` highlighting controller, one source-aligned tree for editor-facing truth, and one derived work tree for compilation.
 - The agreed construction order is important: the mutable compiler AST is first cleaned up into the authored source shape, the immutable source tree is copied from that source-shaped work tree, and only then is the mutable work tree allowed to diverge through later compiler rewrites.
 - The source tree becomes the canonical home for diagnostics, symbol/type conclusions, source metadata, and highlighting projection. The work tree remains free to be rewritten, lowered, inlined, and optimized.
-- A robust primary mapping from every work-tree node back to its source-tree node is required. `is_compiler_added` and similar synthetic flags remain useful, but they are not enough provenance on their own.
+- A robust primary mapping from every work-tree node back to its source-tree node is required, and transformed work nodes may also need additional source-reporting anchors. `is_compiler_added` and similar synthetic flags remain useful, but they are not enough provenance on their own.
 - Parser-mode performance and side-effect risk are addressed by retaining caches across highlight calls for imports, external symbols, and exit loading/discovery. Exits may still be re-run against a fresh work tree, but discovery/loading must not happen from scratch on every keystroke.
 - `rxas` is considered complete for this work. The current `rxc` parser-mode implementation has no significant architectural reuse value beyond a few token-mapping ideas.
 
@@ -21,7 +21,7 @@ Build toward this target state:
 - build the mutable work AST to the authored source shape first
 - copy an immutable source tree from that source-shaped work AST before any heavy rewrite stages
 - attach user-visible diagnostics and semantic conclusions to the source tree
-- require every work-tree node to resolve back to one primary source-tree node
+- require every work-tree node to resolve back to one primary source-tree node, with optional additional reporting anchors where transformed output must still mention removed authored constructs
 - generate DSLSH output from the source tree, not from the rewritten work tree
 - cache imports, external symbols, and exit loading/discovery between parser calls
 
@@ -45,6 +45,8 @@ Success criteria for implementation agents:
 
 - `rxc --syntaxhighlight` always emits a valid `PARSE_TREE_FILE` root
 - syntax errors, warnings, and source metadata anchor to the correct authored source location
+- transformed emission such as inlining can still surface the removed call site in source metadata and tracing
+- generated/internal failures are clearly labelled as internal while still pointing to the originating authored instruction
 - highlighting and folding come from the source tree shape, not post-rewrite artefacts
 - compilation still runs from the separate work tree
 - late compiler diagnostics can always be mapped back to the correct source-tree node
@@ -485,7 +487,13 @@ In practice this means:
 
 - passes may compute on the work tree
 - results must be written back to the mapped source-tree node
-- diagnostics must be attached to source-tree nodes, not left only on work-tree nodes
+- diagnostics must be attached to source-owned sidecar state, not left only on work-tree nodes
+
+The agreed implementation detail is:
+
+- keep the immutable source tree structurally clean; do not inject fake `ERROR`, `WARNING`, or documentation-only syntax nodes into it just to carry reporting state
+- store user-visible diagnostics, semantic conclusions, and other reporting-only facts in source-owned sidecars keyed by `SourceNode`
+- let parser mode, error reporting, and later source metadata consumers read from those sidecars as the canonical authored view
 
 ### 5. Work-to-Source Mapping
 
@@ -495,6 +503,7 @@ Each work-tree node must carry:
 
 - a primary source-tree node pointer
 - provenance mode information, at least distinguishing exact, inherited, synthetic, and composite mapping
+- optional additional source-tree reporting anchors for transformed cases where one work node must still report more than one authored construct
 
 This mapping is required for:
 
@@ -504,15 +513,40 @@ This mapping is required for:
 - editor semantic projection
 - future robustness checks
 
+The additional reporting anchors are needed for cases such as:
+
+- inlining, where the call site may disappear from the work tree but must still appear in emitted source metadata and tracing
+- exit-generated or interpolated code, where internal failures must point at the originating authored instruction rather than at opaque generated text
+- composite rewrites, where the best user-visible report may need both the surviving source anchor and one or more removed authored anchors
+
 The reverse mapping from source tree to work tree is not required as a hard invariant in the first implementation.
 
 The agreed approach is:
 
 - make work-to-source mapping mandatory from day one
+- keep one primary source anchor for compiler logic and deterministic ownership
+- allow one-to-many reporting anchors when user-visible tracing or diagnostics would otherwise lose authored intent
 - add reverse mapping only if a specific consumer needs it
 - if reverse mapping becomes useful, prefer an explicit primary-work mapping or an on-demand index rather than forcing a full bidirectional graph immediately
 
-### 6. Caching Model
+### 6. Diagnostic Semantics for Internal and Generated Failures
+
+The compiler invariant remains that user syntax/semantic errors should be resolved before optimization and late-stage failures are internal.
+
+That invariant is only useful to users if the reporting contract is clear:
+
+- diagnostics caused by generated, interpolated, or rewritten compiler-only code must still anchor to the originating authored source instruction
+- those diagnostics must be clearly labelled as internal or generated-code failures so users know the message is not claiming their written source text is itself malformed
+- the label should live in canonical source-owned diagnostic state, not in ad hoc emitter strings or parser-mode-only formatting
+
+This is especially important for:
+
+- exit-generated code
+- interpolated fragments
+- post-parse rewrites such as `ADDRESS`
+- inline-expanded procedures where removed call-site source still matters for tracing and metadata
+
+### 7. Caching Model
 
 The concern about per-keystroke side effects is valid.
 
@@ -533,7 +567,7 @@ Exits may still be re-run on each parse against the fresh work tree, but:
 
 The cache should store discovery and lookup state, not previous mutated AST results.
 
-### 7. Compiler Invariant
+### 8. Compiler Invariant
 
 The current invariant remains in force:
 
@@ -881,18 +915,20 @@ Step 5. Final documentation pass for this debugging round
 2. Ensure the source-to-work duplication step initializes those fields.
 3. Update duplication and rewrite helpers such as:
    `ast_dup()`, `ast_execute_rewrite()`, `ast_grft_interpolated()`, inlining helpers, and manual tree surgery sites.
-4. Route diagnostics produced during work-tree validation back to the mapped source-tree node.
+4. Route diagnostics produced during work-tree validation back to source-owned sidecars keyed by the mapped source-tree node.
+5. Add support for additional reporting anchors where transformed work-tree output must still preserve removed authored constructs for tracing or source metadata.
 
 Goal of this stage:
 
 - every work node can resolve back to a source node
-- user-visible diagnostics can be attached to the source tree
+- user-visible diagnostics can be attached to canonical source-owned state
+- transformed output can preserve authored tracing anchors even when the corresponding work-tree node has been removed
 
 #### Status Summary on April 15, 2026
 
-- Status: in progress
+- Status: complete
 - Delivered:
-  `ASTNode` now carries explicit provenance state in addition to the primary `source_node` pointer, and the common helpers / rewrite paths now propagate `exact`, `inherited`, and `synthetic` source ownership in the current worktree
+  `ASTNode` now carries explicit provenance state in addition to the primary `source_node` pointer, common helpers / rewrite paths propagate `exact`, `inherited`, and `synthetic` ownership in the current worktree, source-owned diagnostics are rebuilt from the current AST into canonical `SourceNode` sidecars, and transformed emission can preserve removed authored constructs through primary plus additional reporting anchors
 - Test coverage:
   a dedicated internal regression test,
   `source_provenance`,
@@ -905,8 +941,8 @@ Goal of this stage:
   `ctest --output-on-failure -j8`
   in `cmake-build-debug/compiler/tests`
   passes `408/408`
-- Remaining gap:
-  canonical user-visible diagnostics and semantic conclusions still are not mirrored onto immutable source-tree nodes as the single source of truth, so the highlighting controller still keeps an AST-backed diagnostic fallback
+- Practical outcome:
+  source-owned diagnostics are now the canonical user-visible reporting state for compiler and parser-mode consumers, stale diagnostics from earlier validation passes are dropped during sync, internal/generated diagnostics require explicit internal-generation context, and optimized / inlined `.src` metadata can retain the removed call-site anchor alongside the surviving transformed body
 
 #### Journal
 
@@ -940,6 +976,23 @@ Regression notes from that round:
 - Those regressions were then fixed in:
   `compiler/rxcp_ast_core.c` and `compiler/rxcp_ast_rewrite.c`.
 
+##### April 15, 2026 - Canonical source-reporting completion round
+
+Implemented in this stage:
+
+- `SourceNode` sidecars now carry canonical diagnostics rebuilt from the current AST rather than accumulating historical pass artifacts.
+- Diagnostic sync now clears stale mirrored state, rescans the current AST, and only falls back to detached diagnostics when the AST produced no source-owned diagnostics.
+- Parser-mode syntax diagnostics now come from source-owned state without needing the earlier AST-backed fallback when a source tree exists.
+- Internal/generated diagnostic labelling is now explicit:
+  exit-bridge and compiler-generated internal fragments mark diagnostics as internal,
+  while ordinary synthetic/provenance-carrying rewrite nodes do not automatically become internal.
+- Emission metadata now supports a primary source-reporting anchor plus additional reporting anchors, allowing optimized / inlined output to preserve removed call-site `.src` lines without fake syntax nodes.
+
+Curated regressions from this round:
+
+- optimized goldens were updated where preserving call-site `.src` anchors is the intended new tracing behaviour
+- several compiler-failure goldens were updated to reflect canonicalized spans, duplicate suppression, and the removal of stale cascade diagnostics
+
 ### Stage 3: Build the Separate Highlighting Controller
 
 1. Add a new controller module for parser mode, for example `rxcp_highlight_controller.c`.
@@ -959,7 +1012,7 @@ Goal of this stage:
 - Delivered:
   parser mode now routes through `compiler/rxcp_highlight_controller.c`, emits a proper `PARSE_TREE_FILE` root from the immutable source tree, projects DSLSH structure from source-tree containers, and uses a compiler-token callback for the currently covered token classes
 - Diagnostics state:
-  parser-mode diagnostics are emitted from the source tree with an AST-backed fallback so syntax errors are not dropped while Stage 2 remains incomplete
+  parser-mode diagnostics are emitted from canonical source-owned sidecars whenever a source tree exists; the detached AST diagnostic path remains only for the no-source-tree parse-failure fallback
 - Current verified baseline:
   `ctest --output-on-failure -L syntax_highlighting`
   passes `6/6`, and the same controller remains green under the full `408/408` compiler-suite run
@@ -976,7 +1029,7 @@ Implemented in this stage:
 - `rxc --syntaxhighlight` emits a proper `PARSE_TREE_FILE` root from the immutable source tree
 - DSLSH structure nodes are projected from source-tree containers rather than from the rewritten work AST
 - the token callback now maps separators, brackets, arithmetic operators, assignment, exit-primary tokens, and dotted stem-tail segments authoritatively enough for the current tests
-- parser mode configures import/executable search paths and emits diagnostics from the source tree plus AST fallback so parser errors are not dropped
+- parser mode configures import/executable search paths and now consumes diagnostics from the canonical source-owned state built in Stage 2
 
 ### Stage 4: Add Caching for External Symbols and Exits
 

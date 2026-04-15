@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_stem.rexx
- * BUILT                  : 2026-03-25 20:37:56
+ * BUILT                  : 2026-04-15 10:55:40
  */
 
 .srcfile="inline_test_ref_stem.rexx"
@@ -26,6 +26,7 @@ main() .locals=4
    unlink r2
    .src 7:1="lino = 1"
    load g0,1
+   .src 9:1="call fillSlot(outbuf.lino)"
    .src 9:22="lino"
    icopy r0,g0
    .src 17:3="lino = lino + 1"

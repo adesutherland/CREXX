@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_call.rexx
- * BUILT                  : 2026-03-26 14:17:44
+ * BUILT                  : 2026-04-15 10:55:40
  */
 
 .srcfile="inline_test_call.rexx"
@@ -27,6 +27,7 @@ l8dostart:
    .src 5:12="to 3"
    igt r4,r0,r3
    brt l8doend,r4
+   .src 6:5="call logDouble(i)"
    .src 12:7="val"
    icopy r2,r0
    .src 13:3="say \"Double for\" val \"is\" val * 2"

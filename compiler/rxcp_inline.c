@@ -2304,8 +2304,9 @@ static int ast_inline_statement(Context *context,
         inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated statement block");
         return 0;
     }
-    ast_copy_source_anchor(block, call_node, AST_SOURCE_SYNTHETIC);
+    ast_copy_source_anchor(block, statement_node, AST_SOURCE_SYNTHETIC);
     ast_mark_compiler_generated_block(block);
+    ast_enable_primary_reporting_anchor(block);
     block->association = proc_def;
     block->value_type = TP_VOID;
     block->target_type = TP_VOID;
@@ -2522,8 +2523,9 @@ static int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_n
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated sink block");
             return 0;
         }
-        ast_copy_source_anchor(block, call_node, AST_SOURCE_SYNTHETIC);
+        ast_copy_source_anchor(block, call_stmt, AST_SOURCE_SYNTHETIC);
         ast_mark_compiler_generated_block(block);
+        ast_enable_primary_reporting_anchor(block);
         block->association = proc_def;
         block->value_type = TP_VOID;
         block->target_type = TP_VOID;

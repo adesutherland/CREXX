@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "rxcpmain.h"
+#include "rxcp_source_tree.h"
 
 void print_error(ASTNode* node, FILE* stream, char* prefix) {
 
@@ -149,10 +150,62 @@ static walker_result print_warning_walker(walker_direction direction,
     return result_normal;
 }
 
+static void print_source_diagnostic(SourceDiagnostic *diag, FILE *stream, const char *prefix) {
+    int len;
+    int i;
+
+    if (!diag || !stream || !prefix) return;
+
+    len = 0;
+    if (diag->source_start && diag->source_end && diag->source_end >= diag->source_start) {
+        len = (int)(diag->source_end - diag->source_start + 1);
+        for (i = 0; i < len; i++) {
+            if (diag->source_start[i] == '\n') {
+                len = i;
+                break;
+            }
+        }
+    }
+
+    if (len > 0) {
+        fprintf(stream, "%s %s @ %d:%d - #%s, \"",
+                prefix,
+                diag->file_name ? diag->file_name : "<unknown>",
+                diag->line + 1,
+                diag->column + 1,
+                diag->message ? diag->message : "Syntax Error");
+        prt_unex(stream, diag->source_start, len);
+        fprintf(stream, "\"\n");
+    } else {
+        fprintf(stream, "%s %s @ %d:%d - #%s\n",
+                prefix,
+                diag->file_name ? diag->file_name : "<unknown>",
+                diag->line + 1,
+                diag->column + 1,
+                diag->message ? diag->message : "Syntax Error");
+    }
+}
+
 /* Prints errors and returns the number of errors in the AST Tree */
 int prnterrs(Context *context) {
     int errors = 0;
     ASTNode *diag;
+    SourceDiagnostic *source_diag;
+    const char *prefix;
+
+    if (context->source_tree && context->source_diagnostics_list) {
+        source_diag = context->source_diagnostics_list;
+        while (source_diag) {
+            if (source_diag->severity == SOURCE_DIAG_ERROR) {
+                prefix = source_diag->is_internal ? "Internal error in" : "Error in";
+                print_source_diagnostic(source_diag, stderr, prefix);
+                errors++;
+            }
+            source_diag = source_diag->next_in_context;
+        }
+        return errors;
+    }
+
     if (context->ast) {
         ast_wlkr(context->ast, print_error_walker, &errors);
     }
@@ -170,6 +223,22 @@ int prnterrs(Context *context) {
 int prntwars(Context *context) {
     int errors = 0;
     ASTNode *diag;
+    SourceDiagnostic *source_diag;
+    const char *prefix;
+
+    if (context->source_tree && context->source_diagnostics_list) {
+        source_diag = context->source_diagnostics_list;
+        while (source_diag) {
+            if (source_diag->severity == SOURCE_DIAG_WARNING) {
+                prefix = source_diag->is_internal ? "Internal warning in" : "Warning in";
+                print_source_diagnostic(source_diag, stderr, prefix);
+                errors++;
+            }
+            source_diag = source_diag->next_in_context;
+        }
+        return errors;
+    }
+
     if (context->ast) {
         ast_wlkr(context->ast, print_warning_walker, &errors);
     }

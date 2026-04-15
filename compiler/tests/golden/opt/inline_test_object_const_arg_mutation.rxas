@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_const_arg_mutation.rexx
- * BUILT                  : 2026-03-26 21:33:21
+ * BUILT                  : 2026-04-15 10:55:41
  */
 
 .meta "inline_test_object_const_arg_mutation.box"="b" ".unknown" .class
@@ -25,6 +25,7 @@ main() .locals=6
    load r3,"seed"
    settp r3,3
    call r0,§inline_test_object_const_arg_mutation.box.§factory(),r2
+   .src 6:3="call mutateBox(box)"
    .src 13:3="call value.setName(\"changed\")"
    load r2,2
    load r4,"changed"

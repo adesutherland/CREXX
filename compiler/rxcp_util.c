@@ -761,6 +761,7 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
             ASTNode *compiler_added = ast_f(ctx, INSTRUCTIONS, target_node->token);
             ast_copy_source_anchor(compiler_added, target_node, AST_SOURCE_SYNTHETIC);
             ast_mark_compiler_generated_block(compiler_added);
+            compiler_added->mark_internal_diagnostics = 1;
             compiler_added->parent = target_node->parent;
             compiler_added->scope = NULL;
 

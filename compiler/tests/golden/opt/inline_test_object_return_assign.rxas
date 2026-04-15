@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_return_assign.rexx
- * BUILT                  : 2026-03-27 15:11:45
+ * BUILT                  : 2026-04-15 10:55:41
  */
 
 .meta "inline_test_object_return_assign.box"="b" ".unknown" .class
@@ -19,6 +19,7 @@ main() .locals=12
    setnumstd 1
    .src 4:3="say \"Starting object return assign inline test...\""
    say "Starting object return assign inline test..."
+   .src 5:3="box = buildBox(\"seed\")"
    .src 16:3="value = .Box(initial)"
    load r7,1
    load r8,"seed"
@@ -40,6 +41,7 @@ main() .locals=12
    br l110bexprend
 l110bexprend:
    say r8
+   .src 7:3="other = buildBox(\"temp\")"
    .src 16:3="value = .Box(initial)"
    load r7,1
    load r8,"temp"
@@ -61,6 +63,7 @@ l110bexprend:
    br l126bexprend
 l126bexprend:
    say r8
+   .src 9:3="call replaceBoxRef(box)"
    .src 25:3="value = .Box(\"ref\")"
    load r7,1
    load r8,"ref"

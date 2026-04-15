@@ -66,13 +66,20 @@ struct ASTNode {
     char is_const_arg;
     char is_varg;
     char is_compiler_added;
+    char is_internal_diagnostic;
+    char is_source_diagnostic_recorded;
+    char mark_internal_diagnostics;
     char force_local_scope;
     char inherit_parent_reg_scope;
     char suppress_shadow_warnings;
     char skip_exit_dispatch;
+    char emit_primary_reporting_anchor;
     ASTNode *free_list;
     SourceNode *source_node;
     char source_provenance;
+    SourceNode **reporting_source_nodes;
+    size_t reporting_source_count;
+    size_t reporting_source_capacity;
     ASTNode *parent, *child, *sibling;
     ASTNode *association; /* E.g. for LEAVE / ITERATE relevant DO node or LEAVE_WITH relevant BLOCK_EXPR */
     Token *token;
@@ -122,6 +129,9 @@ ASTNode *ast_dup_subtree_with_symbols(Context* new_context, ASTNode *node, Scope
 void ast_mark_compiler_generated_block(ASTNode *node);
 void ast_set_primary_source_node(ASTNode *node, SourceNode *source_node, ASTSourceProvenance provenance);
 void ast_copy_source_anchor(ASTNode *node, ASTNode *source_node, ASTSourceProvenance provenance);
+void ast_enable_primary_reporting_anchor(ASTNode *node);
+int ast_add_reporting_source_node(ASTNode *node, SourceNode *source_node);
+void ast_clear_reporting_source_nodes(ASTNode *node);
 /* Find first node of a certain type in a tree */
 ASTNode *ast_fndn(Context* ctx, ASTNode* node, NodeType type);
 /* Graft a Rexx source fragment into the AST replacing target_node */

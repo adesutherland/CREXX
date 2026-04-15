@@ -518,6 +518,7 @@ int rxcmain(int argc, char *argv[]) {
     }
 
     rxcp_val(context);
+    source_tree_sync_diagnostics(context);
 
     /* Print all warnings and errors after the fixed loop but before optimising/emitting */
     warnings = prntwars(context);

@@ -220,6 +220,25 @@ static int source_node_span_utf8(Context *context, SourceNode *node, size_t *pos
     return 0;
 }
 
+static int source_diagnostic_span_utf8(Context *context, SourceDiagnostic *diag, size_t *pos, size_t *len) {
+    size_t start_offset;
+    size_t byte_length;
+
+    if (!context || !diag || !pos || !len) return 0;
+    if (diag->source_start && diag->source_end &&
+        diag->source_start >= context->buff_start &&
+        diag->source_end >= diag->source_start) {
+        start_offset = (size_t)(diag->source_start - context->buff_start);
+        byte_length = (size_t)(diag->source_end - diag->source_start) + 1;
+        *pos = utf8nlen(context->buff_start, start_offset);
+        *len = utf8nlen(diag->source_start, byte_length);
+        return *len > 0;
+    }
+
+    if (diag->owner) return source_node_span_utf8(context, diag->owner, pos, len);
+    return 0;
+}
+
 static int ast_node_span_utf8(Context *context, ASTNode *node, size_t *pos, size_t *len) {
     size_t start_offset;
     size_t byte_length;
@@ -401,51 +420,76 @@ static void emit_source_projection(CB_ParseTree *tb,
     }
 }
 
-static void emit_diagnostics_from_source_tree(CB_ParseTree *tb, Context *context, SourceNode *node) {
-    SourceNode *child;
-    SourceNode *current;
+static char *format_source_diagnostic_message(SourceDiagnostic *diag) {
+    char *message;
+
+    if (!diag) return strdup("Syntax Error");
+    if (!diag->is_internal) {
+        return strdup(diag->message ? diag->message : "Syntax Error");
+    }
+
+    if (diag->severity == SOURCE_DIAG_WARNING) {
+        message = mprintf("Internal generated-code warning: %s",
+                          diag->message ? diag->message : "Warning");
+    } else {
+        message = mprintf("Internal generated-code error: %s",
+                          diag->message ? diag->message : "Syntax Error");
+    }
+    return message;
+}
+
+static char *format_ast_diagnostic_message(ASTNode *diag) {
+    char *message;
+
+    if (!diag) return strdup("Syntax Error");
+    if (!diag->is_internal_diagnostic) {
+        return strdup(diag->node_string ? diag->node_string : "Syntax Error");
+    }
+
+    if (diag->node_type == RXCP_WARNING) {
+        message = mprintf("Internal generated-code warning: %s",
+                          diag->node_string ? diag->node_string : "Warning");
+    } else {
+        message = mprintf("Internal generated-code error: %s",
+                          diag->node_string ? diag->node_string : "Syntax Error");
+    }
+    return message;
+}
+
+static void emit_diagnostics_from_source_state(CB_ParseTree *tb, Context *context) {
+    SourceDiagnostic *diag;
     size_t pos;
     size_t len;
     CB_Node diag_node;
 
-        current = node;
-    while (current) {
-        if ((current->node_type == RXCP_ERROR || current->node_type == RXCP_WARNING) &&
-            source_node_span_utf8(context, current, &pos, &len)) {
+    diag = context ? context->source_diagnostics_list : 0;
+    while (diag) {
+        if (source_diagnostic_span_utf8(context, diag, &pos, &len)) {
             diag_node = cb_create_node(SYNTAX_ERROR, pos, len);
-            diag_node.severity = (current->node_type == RXCP_WARNING) ? CB_WARNING : CB_ERROR;
-            diag_node.message = strdup(current->node_string ? current->node_string : "Syntax Error");
+            diag_node.severity = (diag->severity == SOURCE_DIAG_WARNING) ? CB_WARNING : CB_ERROR;
+            diag_node.message = format_source_diagnostic_message(diag);
             cb_set_current_parent_to_root_node(tb);
             cb_add_child_node(tb, diag_node);
         }
-
-        child = current->child;
-        if (child) emit_diagnostics_from_source_tree(tb, context, child);
-        current = current->sibling;
+        diag = diag->next_in_context;
     }
 }
 
-static void emit_diagnostics_from_ast_tree(CB_ParseTree *tb, Context *context, ASTNode *node) {
-    ASTNode *child;
-    ASTNode *current;
+static void emit_diagnostics_from_detached_ast(CB_ParseTree *tb, Context *context, ASTNode *diag) {
     size_t pos;
     size_t len;
     CB_Node diag_node;
 
-    current = node;
-    while (current) {
-        if ((current->node_type == RXCP_ERROR || current->node_type == RXCP_WARNING) &&
-            ast_node_span_utf8(context, current, &pos, &len)) {
+    while (diag) {
+        if ((diag->node_type == RXCP_ERROR || diag->node_type == RXCP_WARNING) &&
+            ast_node_span_utf8(context, diag, &pos, &len)) {
             diag_node = cb_create_node(SYNTAX_ERROR, pos, len);
-            diag_node.severity = (current->node_type == RXCP_WARNING) ? CB_WARNING : CB_ERROR;
-            diag_node.message = strdup(current->node_string ? current->node_string : "Syntax Error");
+            diag_node.severity = (diag->node_type == RXCP_WARNING) ? CB_WARNING : CB_ERROR;
+            diag_node.message = format_ast_diagnostic_message(diag);
             cb_set_current_parent_to_root_node(tb);
             cb_add_child_node(tb, diag_node);
         }
-
-        child = current->child;
-        if (child) emit_diagnostics_from_ast_tree(tb, context, child);
-        current = current->sibling;
+        diag = diag->sibling;
     }
 }
 
@@ -537,6 +581,7 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
         rxcp_run_fallback_diagnostics(context);
     } else {
         rxcp_prepare_source_ast(context);
+        source_tree_sync_diagnostics(context);
     }
 
     tb = cb_create_token_buffer();
@@ -549,11 +594,10 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
         cursor.token = context->token_head;
         emit_source_projection(tb, context, context->source_tree->child, &cursor);
         emit_tokens_until(tb, &cursor, source_len);
-        emit_diagnostics_from_source_tree(tb, context, context->source_tree);
-        emit_diagnostics_from_ast_tree(tb, context, context->ast);
+        emit_diagnostics_from_source_state(tb, context);
     } else {
         emit_flat_tokens(tb, context);
-        emit_diagnostics_from_ast_tree(tb, context, (ASTNode *)context->diagnostics_list);
+        emit_diagnostics_from_detached_ast(tb, context, (ASTNode *)context->diagnostics_list);
     }
 
     cb_order_tree(tb);

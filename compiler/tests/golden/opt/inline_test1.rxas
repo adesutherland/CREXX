@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test1.rexx
- * BUILT                  : 2026-03-26 14:17:44
+ * BUILT                  : 2026-04-15 11:20:44
  */
 
 .srcfile="inline_test1.rexx"
@@ -27,6 +27,7 @@ l8dostart:
    .src 7:12="to 5"
    igt r4,r0,r3
    brt l8doend,r4
+   .src 8:5="result = multiplyByTwo(i)"
    .src 15:7="val"
    icopy r2,r0
    .src 17:3="return"

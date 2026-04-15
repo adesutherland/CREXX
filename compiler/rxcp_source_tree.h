@@ -32,6 +32,26 @@
 #include "rxcp_types.h"
 #include "rxcp_token.h"
 
+typedef enum SourceDiagnosticSeverity {
+    SOURCE_DIAG_ERROR = 0,
+    SOURCE_DIAG_WARNING = 1
+} SourceDiagnosticSeverity;
+
+struct SourceDiagnostic {
+    SourceDiagnostic *next_in_context;
+    SourceDiagnostic *next_on_source;
+    SourceNode *owner;
+    char *message;
+    size_t message_length;
+    char *file_name;
+    char *source_start;
+    char *source_end;
+    int line;
+    int column;
+    SourceDiagnosticSeverity severity;
+    char is_internal;
+};
+
 struct SourceNode {
     Context *context;
     int node_number;
@@ -49,10 +69,14 @@ struct SourceNode {
     SourceNode *parent;
     SourceNode *child;
     SourceNode *sibling;
+    SourceDiagnostic *diagnostics;
     SourceNode *free_list;
 };
 
 SourceNode *source_tree_build(Context *context, ASTNode *root);
+void source_tree_clear_diagnostics(Context *context);
+void source_tree_record_diagnostic(Context *context, ASTNode *diag);
+void source_tree_sync_diagnostics(Context *context);
 void source_tree_free(Context *context);
 
 #endif

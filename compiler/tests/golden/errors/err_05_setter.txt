@@ -1,3 +1,2 @@
 Error in err_05_setter.rexx @ 4:3 - #BAD_CONVERSION, "bar"
-Error in err_05_setter.rexx @ 4:3 - #BAD_CONVERSION, "bar"
-2 error(s) in source file
+1 error(s) in source file

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 10_procs.rexx
- * BUILT                  : 2026-03-25 13:39:20
+ * BUILT                  : 2026-04-15 11:20:43
  */
 
 .srcfile="10_procs.rexx"
@@ -16,6 +16,7 @@ main() .locals=0
    setnumstd 1
    .src 3:1="say \"Main Start\""
    say "Main Start"
+   .src 4:1="call MyProc 10"
    .src 10:3="say \"Inside Proc\" x"
    say "Inside Proc 10"
    .src 5:1="say \"Main End\""

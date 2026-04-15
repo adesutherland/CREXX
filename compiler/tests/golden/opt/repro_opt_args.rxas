@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : repro_opt_args.rexx
- * BUILT                  : 2026-03-28 11:53:32
+ * BUILT                  : 2026-04-15 11:20:44
  */
 
 .srcfile="repro_opt_args.rexx"
@@ -14,10 +14,13 @@ main() .locals=0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
+   .src 3:1="call test_opt 1, , 3"
    .src 10:3="say \"a=\" a \"b=\" b \"c=\" c"
    say "a= 1 b= 20 c= 3"
+   .src 4:1="call test_opt 1, 2"
    .src 10:3="say \"a=\" a \"b=\" b \"c=\" c"
    say "a= 1 b= 2 c= 30"
+   .src 5:1="call test_opt , 2, 3"
    .src 10:3="say \"a=\" a \"b=\" b \"c=\" c"
    say "a= 10 b= 2 c= 3"
    .src 6:1="return 0"

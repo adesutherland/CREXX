@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_exposed_nested_call.rexx
- * BUILT                  : 2026-03-26 19:45:13
+ * BUILT                  : 2026-04-15 10:55:40
  */
 
 .srcfile="inline_test_exposed_nested_call.rexx"
@@ -27,6 +27,7 @@ l8dostart:
    .src 5:12="to 4"
    igt r5,r0,r4
    brt l8doend,r5
+   .src 6:5="result = compute(i)"
    .src 13:7="val"
    icopy r2,r0
    .src 14:3="return"

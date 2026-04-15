@@ -14,6 +14,7 @@ main() .locals=0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
+   .src 4:1="call Inner"
    .src 11:3="say \"Inner A is\" a"
    say "Inner A is 10"
    .src 5:16="say \"Outer A Preserved\""

@@ -41,6 +41,29 @@
 #include "rxbin.h" /* Needed for rxvmvars.h */
 #include "rxvmvars.h"
 
+static int origin_subtree_has_error(ASTNode *node) {
+    ASTNode *current;
+
+    current = node;
+    while (current) {
+        if (ast_hase(current)) return 1;
+        switch (current->node_type) {
+            case ASSIGN:
+            case DEFINE:
+            case REPEAT:
+            case DO:
+            case SAY:
+            case CALL:
+            case RETURN:
+                return 0;
+            default:
+                current = current->parent;
+        }
+    }
+
+    return 0;
+}
+
 /* Validates a node promotion is correct for a call by reference (of symbols) adding error nodes if not */
 void validate_node_promotion_for_ref(Context *context, ASTNode* node) {
     size_t i;
@@ -885,6 +908,7 @@ walker_result type_safety_walker(walker_direction direction,
                     if (node->value_type == TP_UNKNOWN) {
                         /* Check if the variable was explicitly typed as .unknown at declaration */
                         int is_explicit_unknown = 0;
+                        int has_creation_error = 0;
                         if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->creation_node) {
                             ASTNode *creation = node->symbolNode->symbol->creation_node;
                             if (creation->node_type == DEFINE && ast_nchd(creation) > 1) {
@@ -893,8 +917,9 @@ walker_result type_safety_walker(walker_direction direction,
                                     is_explicit_unknown = 1;
                                 }
                             }
+                            if (origin_subtree_has_error(creation)) has_creation_error = 1;
                         }
-                        if (!is_explicit_unknown && !skip_svtp) {
+                        if (!is_explicit_unknown && !skip_svtp && !has_creation_error) {
                             mknd_err(node, "UNKNOWN_TYPE");
                         }
                     }
@@ -1037,7 +1062,7 @@ walker_result type_safety_walker(walker_direction direction,
                         if (child2->node_type == CLASS && child2->node_string && strcasecmp(child2->node_string, ".unknown") == 0) {
                             is_explicit_unknown = 1;
                         }
-                        if (!is_explicit_unknown) {
+                        if (!is_explicit_unknown && !ast_hase(node) && !ast_hase(child2)) {
                             mknd_err(node, "UNKNOWN_TYPE");
                         }
                     }
@@ -1095,7 +1120,7 @@ walker_result type_safety_walker(walker_direction direction,
                             child1->symbolNode->symbol->value_dims == 0 && ast_chdn(child1, 0) != NULL) {
                             skip_svtp = 1;
                         }
-                        if (!is_explicit_unknown && !skip_svtp) {
+                        if (!is_explicit_unknown && !skip_svtp && !ast_hase(node) && !ast_hase(child2)) {
                             mknd_err(node, "UNKNOWN_TYPE");
                         }
                     }

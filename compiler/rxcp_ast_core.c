@@ -33,6 +33,33 @@
 #include <ctype.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
+#include "rxcp_source_tree.h"
+
+static void ast_copy_reporting_anchors(ASTNode *dest, ASTNode *src) {
+    size_t i;
+
+    if (!dest || !src) return;
+
+    dest->emit_primary_reporting_anchor = src->emit_primary_reporting_anchor;
+    for (i = 0; i < src->reporting_source_count; i++) {
+        ast_add_reporting_source_node(dest, src->reporting_source_nodes[i]);
+    }
+}
+
+static int ast_origin_is_internal_diagnostic(ASTNode *node) {
+    ASTNode *current;
+
+    if (!node) return 0;
+    if (node->context && node->context->in_exit_bridge) return 1;
+
+    current = node;
+    while (current) {
+        if (current->mark_internal_diagnostics) return 1;
+        current = current->parent;
+    }
+
+    return 0;
+}
 
 void ast_set_primary_source_node(ASTNode *node, SourceNode *source_node, ASTSourceProvenance provenance) {
     if (!node) return;
@@ -40,6 +67,46 @@ void ast_set_primary_source_node(ASTNode *node, SourceNode *source_node, ASTSour
     node->source_node = source_node;
     if (source_node && provenance != AST_SOURCE_NONE) node->source_provenance = (char)provenance;
     else node->source_provenance = AST_SOURCE_NONE;
+}
+
+void ast_enable_primary_reporting_anchor(ASTNode *node) {
+    if (!node) return;
+    node->emit_primary_reporting_anchor = 1;
+}
+
+int ast_add_reporting_source_node(ASTNode *node, SourceNode *source_node) {
+    SourceNode **new_nodes;
+    size_t i;
+
+    if (!node || !source_node) return 0;
+    if (node->source_node == source_node) return 1;
+
+    for (i = 0; i < node->reporting_source_count; i++) {
+        if (node->reporting_source_nodes[i] == source_node) return 1;
+    }
+
+    if (node->reporting_source_count == node->reporting_source_capacity) {
+        size_t new_capacity;
+
+        new_capacity = node->reporting_source_capacity == 0 ? 2 : node->reporting_source_capacity * 2;
+        new_nodes = realloc(node->reporting_source_nodes, sizeof(SourceNode *) * new_capacity);
+        if (!new_nodes) return 0;
+
+        node->reporting_source_nodes = new_nodes;
+        node->reporting_source_capacity = new_capacity;
+    }
+
+    node->reporting_source_nodes[node->reporting_source_count++] = source_node;
+    return 1;
+}
+
+void ast_clear_reporting_source_nodes(ASTNode *node) {
+    if (!node) return;
+    if (node->reporting_source_nodes) free(node->reporting_source_nodes);
+    node->reporting_source_nodes = 0;
+    node->reporting_source_count = 0;
+    node->reporting_source_capacity = 0;
+    node->emit_primary_reporting_anchor = 0;
 }
 
 void ast_copy_source_anchor(ASTNode *node, ASTNode *source_node, ASTSourceProvenance provenance) {
@@ -56,6 +123,8 @@ void ast_copy_source_anchor(ASTNode *node, ASTNode *source_node, ASTSourceProven
 
     if (source_node->source_node) ast_set_primary_source_node(node, source_node->source_node, provenance);
     else ast_set_primary_source_node(node, 0, AST_SOURCE_NONE);
+
+    ast_copy_reporting_anchors(node, source_node);
 }
 
 /* Token Factory */
@@ -221,13 +290,20 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->is_opt_arg = 0;
     node->is_varg = 0;
     node->is_compiler_added = 0;
+    node->is_internal_diagnostic = 0;
+    node->is_source_diagnostic_recorded = 0;
+    node->mark_internal_diagnostics = 0;
     node->force_local_scope = 0;
     node->inherit_parent_reg_scope = 0;
     node->suppress_shadow_warnings = 0;
     node->skip_exit_dispatch = 0;
+    node->emit_primary_reporting_anchor = 0;
     node->free_list = context->free_list;
     node->source_node = 0;
     node->source_provenance = AST_SOURCE_NONE;
+    node->reporting_source_nodes = 0;
+    node->reporting_source_count = 0;
+    node->reporting_source_capacity = 0;
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
     else node->node_number = 1;
     context->free_list = node;
@@ -320,12 +396,15 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->is_const_arg = node->is_const_arg;
     new_node->is_varg = node->is_varg;
     new_node->is_compiler_added = node->is_compiler_added;
+    new_node->is_internal_diagnostic = node->is_internal_diagnostic;
+    new_node->mark_internal_diagnostics = node->mark_internal_diagnostics;
     new_node->force_local_scope = node->force_local_scope;
     new_node->inherit_parent_reg_scope = node->inherit_parent_reg_scope;
     new_node->suppress_shadow_warnings = node->suppress_shadow_warnings;
     new_node->skip_exit_dispatch = node->skip_exit_dispatch;
     new_node->source_node = node->source_node;
     new_node->source_provenance = node->source_provenance;
+    ast_copy_reporting_anchors(new_node, node);
 
     new_node->token = node->token;
     if (node->free_node_string) {
@@ -727,9 +806,11 @@ ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
     errNode->file_name = node->file_name;
     errNode->source_start = node->source_start;
     errNode->source_end = node->source_end;
+    errNode->is_internal_diagnostic = ast_origin_is_internal_diagnostic(node);
     if (node->source_node) ast_set_primary_source_node(errNode, node->source_node, AST_SOURCE_INHERITED);
 
     add_ast(node, errNode);
+    if (node->context && node->context->source_tree) source_tree_record_diagnostic(node->context, errNode);
 
     return node;
 }
@@ -778,9 +859,11 @@ ASTNode* mknd_err_unique(ASTNode* node, char *error_string, ...) {
     errNode->file_name = node->file_name;
     errNode->source_start = node->source_start;
     errNode->source_end = node->source_end;
+    errNode->is_internal_diagnostic = ast_origin_is_internal_diagnostic(node);
     if (node->source_node) ast_set_primary_source_node(errNode, node->source_node, AST_SOURCE_INHERITED);
 
     add_ast(node, errNode);
+    if (node->context && node->context->source_tree) source_tree_record_diagnostic(node->context, errNode);
 
     return node;
 }
@@ -817,9 +900,11 @@ ASTNode* mknd_war(ASTNode* node, char *error_string, ...) {
     warNode->file_name = node->file_name;
     warNode->source_start = node->source_start;
     warNode->source_end = node->source_end;
+    warNode->is_internal_diagnostic = ast_origin_is_internal_diagnostic(node);
     if (node->source_node) ast_set_primary_source_node(warNode, node->source_node, AST_SOURCE_INHERITED);
 
     add_ast(node, warNode);
+    if (node->context && node->context->source_tree) source_tree_record_diagnostic(node->context, warNode);
 
     return node;
 }
@@ -1372,6 +1457,7 @@ void free_ast(Context *context) {
         if (t->target_dim_base) free(t->target_dim_base);
         if (t->target_dim_elements) free(t->target_dim_elements);
         if (t->target_class) free(t->target_class);
+        if (t->reporting_source_nodes) free(t->reporting_source_nodes);
         if (t->output) f_output(t->output);
         if (t->cleanup) f_output(t->cleanup);
         if (t->loopstartchecks) f_output(t->loopstartchecks);

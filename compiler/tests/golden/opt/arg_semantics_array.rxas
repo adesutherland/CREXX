@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_array.rexx
- * BUILT                  : 2026-03-28 11:56:22
+ * BUILT                  : 2026-04-15 11:20:43
  */
 
 .srcfile="arg_semantics_array.rexx"
@@ -167,6 +167,7 @@ l241bexprend:
 l235bexprend:
    concat r12,"array-temp=",r12
    say r12
+   .src 13:3="call mutateArrayRef(arr)"
    .src 29:3="value[1] = \"ref\""
    minattrs r0,1
    linkattr1 r12,r0,1
