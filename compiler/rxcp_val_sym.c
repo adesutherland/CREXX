@@ -466,11 +466,13 @@ walker_result build_symbols_walker(walker_direction direction,
 
                 /* Set Argument flags - set by the parser grammar */
                 if (node->parent->node_type == ARG) {
+                    ASTNode *proc_node = ast_proc(node);
+
                     symbol->is_arg = 1;
                     symbol->is_opt_arg = node->parent->is_opt_arg;
                     symbol->is_ref_arg = node->parent->is_ref_arg;
                     /* Add the count of fixed args for the procedure symbol */
-                    ast_proc(node)->symbolNode->symbol->fixed_args++;
+                    proc_node->symbolNode->symbol->fixed_args++;
                 }
 
                 if (node->parent->node_type == ASSIGN) sym_adnd(symbol, node, 0, 1);
@@ -1520,15 +1522,10 @@ int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int
         add_ast(def_node, var_node);
         add_ast(def_node, type_node);
 
-        /* Match location to current_node */
-        def_node->line = current_node->line;
-        def_node->column = current_node->column;
-        def_node->source_start = current_node->source_start;
-        def_node->source_end = current_node->source_end;
-        var_node->line = current_node->line;
-        var_node->column = current_node->column;
-        var_node->source_start = current_node->source_start;
-        var_node->source_end = current_node->source_end;
+        /* Anchor the injected define to the current source location. */
+        ast_copy_source_anchor(def_node, current_node, AST_SOURCE_SYNTHETIC);
+        ast_copy_source_anchor(var_node, current_node, AST_SOURCE_SYNTHETIC);
+        ast_copy_source_anchor(type_node, current_node, AST_SOURCE_SYNTHETIC);
 
         injected_node = def_node;
 

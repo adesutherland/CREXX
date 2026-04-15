@@ -31,6 +31,7 @@
 #include <ctype.h>
 #include "rxcp_val.h"
 #include "rxcpdary.h"
+#include "rxcp_source_tree.h"
 
 /* Suppress errors and warnings unless it is the final pass */
 #undef mknd_err
@@ -931,10 +932,9 @@ void validate_ast(Context *context) {
     context->ast = context->work_ast;
     context->current_scope = 0;
     context->in_factory = 0;
-    ast_wlkr(context->ast, ast_structure_fixup_walker, (void *) context);
+    ast_wlkr(context->ast, ast_work_structure_walker, (void *) context);
     ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context);
     ast_wlkr(context->ast, source_location_walker, (void *) context);
-    ast_wlkr(context->ast, syntax_validation_walker, (void *) context);
     ast_wlkr(context->ast, rxcp_fixup_walker, (void *) context);
 
     // Initial checks walker will have set the options
@@ -1256,49 +1256,18 @@ void rxcp_val(Context *context) {
 }
 
 void rxcp_prepare_source_ast(Context *context) {
-    Context *source_context;
-
     if (!context) return;
-    if (context->source_ast) {
+    if (context->source_tree) {
         return;
     }
     if (!context->ast) return;
 
-    source_context = cntx_f();
-    source_context->master_context = context->master_context;
-    source_context->debug_mode = context->debug_mode;
-    source_context->stop_after_parse = context->stop_after_parse;
-    source_context->location = context->location;
-    source_context->file_name = context->file_name;
-    source_context->buff_start = context->buff_start;
-    source_context->buff_end = context->buff_end;
-    source_context->level = context->level;
-    source_context->optimise = context->optimise;
-    source_context->in_exit_bridge = context->in_exit_bridge;
-    source_context->disable_exits = context->disable_exits;
-    source_context->processedOptions = context->processedOptions;
-    source_context->comments_hash = context->comments_hash;
-    source_context->comments_dash = context->comments_dash;
-    source_context->comments_slash = context->comments_slash;
-    source_context->numeric_standard = context->numeric_standard;
-    source_context->floats_decimal = context->floats_decimal;
-    source_context->floats_binary = context->floats_binary;
-    source_context->numeric_common = context->numeric_common;
-    source_context->numeric_classic = context->numeric_classic;
-    source_context->comments_slash_specified = context->comments_slash_specified;
-    source_context->comments_dash_specified = context->comments_dash_specified;
-    source_context->comments_hash_specified = context->comments_hash_specified;
-
-    source_context->ast = ast_dup_subtree(source_context, context->ast);
-    source_context->current_scope = 0;
-    source_context->in_factory = 0;
-    source_context->namespace = 0;
-    ast_wlkr(source_context->ast, ast_source_structure_walker, (void *) source_context);
-    ast_wlkr(source_context->ast, source_location_walker, (void *) source_context);
-    ast_wlkr(source_context->ast, syntax_validation_walker, (void *) source_context);
-
-    context->source_context = source_context;
-    context->source_ast = source_context->ast;
+    context->current_scope = 0;
+    context->in_factory = 0;
+    ast_wlkr(context->ast, ast_source_structure_walker, (void *) context);
+    ast_wlkr(context->ast, source_location_walker, (void *) context);
+    ast_wlkr(context->ast, syntax_validation_walker, (void *) context);
+    source_tree_build(context, context->ast);
 }
 
 void rxcp_prepare_work_ast(Context *context) {

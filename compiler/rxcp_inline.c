@@ -416,13 +416,7 @@ static ASTNode *inline_create_register_copy_instr(Context *context,
 
     instr->free_node_string = 1;
     instr->scope = scope;
-    instr->token = lhs_node->token;
-    instr->line = lhs_node->line;
-    instr->column = lhs_node->column;
-    instr->source_start = lhs_node->source_start;
-    instr->source_end = lhs_node->source_end;
-    instr->token_start = lhs_node->token_start;
-    instr->token_end = lhs_node->token_end;
+    ast_copy_source_anchor(instr, lhs_node, AST_SOURCE_SYNTHETIC);
 
     lhs_copy = inline_create_symbol_node(context, scope, lhs_node, lhs_symbol, VAR_TARGET, 0, 1);
     rhs_copy = inline_create_symbol_node(context, scope, rhs_node, rhs_symbol, VAR_SYMBOL, 1, 0);
@@ -444,13 +438,7 @@ static ASTNode *inline_create_integer_constant(Context *context, ASTNode *source
 
     snprintf(buffer, sizeof(buffer), "%d", value);
     ast_copy_str(node, buffer);
-    node->token = source_node->token;
-    node->line = source_node->line;
-    node->column = source_node->column;
-    node->source_start = source_node->source_start;
-    node->source_end = source_node->source_end;
-    node->token_start = source_node->token_start;
-    node->token_end = source_node->token_end;
+    ast_copy_source_anchor(node, source_node, AST_SOURCE_SYNTHETIC);
     node->int_value = value;
     node->bool_value = value ? 1 : 0;
     ast_set_value_type(0, node, type, 0, 0, 0, 0);
@@ -671,13 +659,7 @@ static ASTNode *inline_create_symbol_node(Context *context,
 
     node->free_node_string = 1;
     node->scope = scope;
-    node->token = source_node->token;
-    node->line = source_node->line;
-    node->column = source_node->column;
-    node->source_start = source_node->source_start;
-    node->source_end = source_node->source_end;
-    node->token_start = source_node->token_start;
-    node->token_end = source_node->token_end;
+    ast_copy_source_anchor(node, source_node, AST_SOURCE_SYNTHETIC);
     sym_adnd(symbol, node, read_usage, write_usage);
     ast_svtp(node, symbol);
 
@@ -1164,13 +1146,7 @@ static ASTNode *inline_create_assembler_instr(Context *context,
 
     instr->free_node_string = 1;
     instr->scope = scope;
-    instr->token = source_node->token;
-    instr->line = source_node->line;
-    instr->column = source_node->column;
-    instr->source_start = source_node->source_start;
-    instr->source_end = source_node->source_end;
-    instr->token_start = source_node->token_start;
-    instr->token_end = source_node->token_end;
+    ast_copy_source_anchor(instr, source_node, AST_SOURCE_SYNTHETIC);
 
     if (arg1) add_ast(instr, arg1);
     if (arg2) add_ast(instr, arg2);
@@ -1850,13 +1826,7 @@ static ASTNode *inline_create_sink_target(Context *context,
     sink_target = ast_ftt(context, VAR_TARGET, strdup(sink_symbol->name));
     sink_target->free_node_string = 1;
     sink_target->scope = inline_scope;
-    sink_target->token = source_node->token;
-    sink_target->line = source_node->line;
-    sink_target->column = source_node->column;
-    sink_target->source_start = source_node->source_start;
-    sink_target->source_end = source_node->source_end;
-    sink_target->token_start = source_node->token_start;
-    sink_target->token_end = source_node->token_end;
+    ast_copy_source_anchor(sink_target, source_node, AST_SOURCE_SYNTHETIC);
     sym_adnd(sink_symbol, sink_target, 0, 1);
     ast_svtp(sink_target, sink_symbol);
 
@@ -2334,6 +2304,7 @@ static int ast_inline_statement(Context *context,
         inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated statement block");
         return 0;
     }
+    ast_copy_source_anchor(block, call_node, AST_SOURCE_SYNTHETIC);
     ast_mark_compiler_generated_block(block);
     block->association = proc_def;
     block->value_type = TP_VOID;
@@ -2551,6 +2522,7 @@ static int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_n
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated sink block");
             return 0;
         }
+        ast_copy_source_anchor(block, call_node, AST_SOURCE_SYNTHETIC);
         ast_mark_compiler_generated_block(block);
         block->association = proc_def;
         block->value_type = TP_VOID;

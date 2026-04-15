@@ -34,6 +34,30 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 
+void ast_set_primary_source_node(ASTNode *node, SourceNode *source_node, ASTSourceProvenance provenance) {
+    if (!node) return;
+
+    node->source_node = source_node;
+    if (source_node && provenance != AST_SOURCE_NONE) node->source_provenance = (char)provenance;
+    else node->source_provenance = AST_SOURCE_NONE;
+}
+
+void ast_copy_source_anchor(ASTNode *node, ASTNode *source_node, ASTSourceProvenance provenance) {
+    if (!node || !source_node) return;
+
+    node->file_name = source_node->file_name;
+    node->token = source_node->token;
+    node->line = source_node->line;
+    node->column = source_node->column;
+    node->token_start = source_node->token_start;
+    node->token_end = source_node->token_end;
+    node->source_start = source_node->source_start;
+    node->source_end = source_node->source_end;
+
+    if (source_node->source_node) ast_set_primary_source_node(node, source_node->source_node, provenance);
+    else ast_set_primary_source_node(node, 0, AST_SOURCE_NONE);
+}
+
 /* Token Factory */
 Token *token_f(Context *context, int type) {
     Token *token = malloc(sizeof(Token));
@@ -202,6 +226,8 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->suppress_shadow_warnings = 0;
     node->skip_exit_dispatch = 0;
     node->free_list = context->free_list;
+    node->source_node = 0;
+    node->source_provenance = AST_SOURCE_NONE;
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
     else node->node_number = 1;
     context->free_list = node;
@@ -298,6 +324,8 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->inherit_parent_reg_scope = node->inherit_parent_reg_scope;
     new_node->suppress_shadow_warnings = node->suppress_shadow_warnings;
     new_node->skip_exit_dispatch = node->skip_exit_dispatch;
+    new_node->source_node = node->source_node;
+    new_node->source_provenance = node->source_provenance;
 
     new_node->token = node->token;
     if (node->free_node_string) {
@@ -339,6 +367,7 @@ void ast_mark_compiler_generated_block(ASTNode *node) {
     node->inherit_parent_reg_scope = 1;
     node->suppress_shadow_warnings = 1;
     node->skip_exit_dispatch = 1;
+    if (node->source_node) node->source_provenance = AST_SOURCE_SYNTHETIC;
 }
 
 /* Structure for add_dast() walker handler context */
@@ -646,6 +675,7 @@ ASTNode *ast_fstk(Context* context, ASTNode *source_node) {
     ASTNode *node = ast_ft(context, source_node->node_type);
     node->node_string = source_node->node_string;
     node->node_string_length = source_node->node_string_length;
+    ast_copy_source_anchor(node, source_node, AST_SOURCE_EXACT);
     return node;
 }
 
@@ -692,12 +722,12 @@ ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
     errNode->node_string_length = strlen(buffer);
     errNode->free_node_string = 1;
 
-    /* Copy location info */
     errNode->line = node->line;
     errNode->column = node->column;
     errNode->file_name = node->file_name;
     errNode->source_start = node->source_start;
     errNode->source_end = node->source_end;
+    if (node->source_node) ast_set_primary_source_node(errNode, node->source_node, AST_SOURCE_INHERITED);
 
     add_ast(node, errNode);
 
@@ -743,12 +773,12 @@ ASTNode* mknd_err_unique(ASTNode* node, char *error_string, ...) {
     errNode->node_string_length = strlen(buffer);
     errNode->free_node_string = 1;
 
-    /* Copy location info */
     errNode->line = node->line;
     errNode->column = node->column;
     errNode->file_name = node->file_name;
     errNode->source_start = node->source_start;
     errNode->source_end = node->source_end;
+    if (node->source_node) ast_set_primary_source_node(errNode, node->source_node, AST_SOURCE_INHERITED);
 
     add_ast(node, errNode);
 
@@ -782,12 +812,12 @@ ASTNode* mknd_war(ASTNode* node, char *error_string, ...) {
     warNode->node_string_length = strlen(buffer);
     warNode->free_node_string = 1;
 
-    /* Copy location info */
     warNode->line = node->line;
     warNode->column = node->column;
     warNode->file_name = node->file_name;
     warNode->source_start = node->source_start;
     warNode->source_end = node->source_end;
+    if (node->source_node) ast_set_primary_source_node(warNode, node->source_node, AST_SOURCE_INHERITED);
 
     add_ast(node, warNode);
 
@@ -1221,6 +1251,8 @@ static void fix_ast_line_number(ASTNode *node) {
  * Note - This assumes the child has only got younger siblings and moved them as well
  *        older siblings are left hanging ... */
 ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
+    ASTNode *c;
+
     if (child == 0) return child;
 
     /* Adds as the youngest sibling */
@@ -1237,6 +1269,14 @@ ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
         s = s->sibling;
     }
 
+    c = child;
+    while (c) {
+        if (!c->source_node && parent->source_node) {
+            ast_set_primary_source_node(c, parent->source_node, AST_SOURCE_INHERITED);
+        }
+        c = c->sibling;
+    }
+
     /* Fix line numbers */
     fix_ast_line_number(child);
 
@@ -1245,11 +1285,20 @@ ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
 
 /* Add sibling - Returns younger for chaining */
 ASTNode *add_sbtr(ASTNode *older, ASTNode *younger) {
+    ASTNode *n;
+
     if (younger == 0 || older == 0) return younger;
     ASTNode *parent = older->parent;
     while (older->sibling) older = older->sibling;
     older->sibling = younger;
-    younger->parent = parent;
+    n = younger;
+    while (n) {
+        n->parent = parent;
+        if (!n->source_node && older->source_node) {
+            ast_set_primary_source_node(n, older->source_node, AST_SOURCE_INHERITED);
+        }
+        n = n->sibling;
+    }
     fix_ast_line_number(younger);
     return younger;
 }
@@ -1259,6 +1308,10 @@ ASTNode *add_sbtr(ASTNode *older, ASTNode *younger) {
  * new_node (else we might get a loop in the tree)! */
 void ast_rpl(ASTNode* replaced_node, ASTNode* new_node) {
     ASTNode *younger_sibling;
+
+    if (!new_node->source_node && replaced_node->source_node) {
+        ast_set_primary_source_node(new_node, replaced_node->source_node, AST_SOURCE_INHERITED);
+    }
 
     /* Make the new node point to the right parent and younger sibling */
     new_node->sibling = replaced_node->sibling;

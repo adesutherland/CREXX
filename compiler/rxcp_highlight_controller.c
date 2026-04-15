@@ -25,10 +25,12 @@
 #define VOID RXCP_VOID
 
 #include "rxcpmain.h"
+#include "rxcp_source_tree.h"
 #include "rxcp_val.h"
 #include "rxcpbgmr.h"
 #include "rxcp_exit.h"
 #include "utf.h"
+#include "platform.h"
 
 #undef ERROR
 #undef WARNING
@@ -47,6 +49,68 @@ typedef struct HighlightTokenCursor {
     Context *context;
     Token *token;
 } HighlightTokenCursor;
+
+static int retain_context_buffer(Context *context, char *buffer) {
+    char **new_buffers;
+
+    if (!context || !buffer) return 0;
+
+    new_buffers = realloc(context->extra_buffers, sizeof(char *) * (context->extra_buffers_count + 1));
+    if (!new_buffers) {
+        return 0;
+    }
+
+    context->extra_buffers = new_buffers;
+    context->extra_buffers[context->extra_buffers_count++] = buffer;
+    return 1;
+}
+
+static void configure_parser_import_locations(Context *context) {
+    char *exe_path;
+    char *combined_locations;
+    char **import_locations;
+    size_t length;
+    size_t i;
+    size_t index;
+
+    if (!context || context->import_locations) return;
+
+    exe_path = exepath();
+    if (!exe_path) return;
+
+    length = strlen(exe_path) + 4;
+    combined_locations = malloc(length);
+    if (!combined_locations) {
+        free(exe_path);
+        return;
+    }
+    snprintf(combined_locations, length, ".;%s", exe_path);
+    free(exe_path);
+
+    import_locations = malloc(sizeof(char *) * 3);
+    if (!import_locations) {
+        free(combined_locations);
+        return;
+    }
+
+    index = 0;
+    import_locations[index++] = combined_locations;
+    for (i = 0; combined_locations[i]; i++) {
+        if (combined_locations[i] == ';') {
+            combined_locations[i] = 0;
+            import_locations[index++] = combined_locations + i + 1;
+        }
+    }
+    import_locations[index] = 0;
+
+    if (!retain_context_buffer(context, combined_locations)) {
+        free(import_locations);
+        free(combined_locations);
+        return;
+    }
+
+    context->import_locations = import_locations;
+}
 
 static CB_NodeType map_c_token_to_cb_type(int token_type) {
     switch (token_type) {
@@ -69,10 +133,13 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_IMPORT:
         case TK_NAMESPACE:
         case TK_OPTIONS: return LEXER_PREPROCESSOR;
+        case TK_EXIT_PRIMARY:
+        case TK_EXIT_TOKEN: return LEXER_KEYWORD;
         case TK_STRING: return LEXER_STRING_LITERAL;
         case TK_DECIMAL:
         case TK_INTEGER:
         case TK_FLOAT: return LEXER_NUMBER_LITERAL;
+        case TK_CONCAT: return LEXER_OPERATOR;
         case TK_PLUS:
         case TK_MINUS:
         case TK_HIGH_PRIORITY_MINUS:
@@ -121,23 +188,71 @@ static int token_span_utf8(Context *context, Token *token, size_t *pos, size_t *
     return *len > 0;
 }
 
+static int source_node_span_utf8(Context *context, SourceNode *node, size_t *pos, size_t *len) {
+    size_t start_offset;
+    size_t byte_length;
+
+    if (!context || !node || !pos || !len) return 0;
+    if (node->source_start && node->source_end &&
+        node->source_start >= context->buff_start &&
+        node->source_end >= node->source_start) {
+        start_offset = (size_t)(node->source_start - context->buff_start);
+        byte_length = (size_t)(node->source_end - node->source_start) + 1;
+        *pos = utf8nlen(context->buff_start, start_offset);
+        *len = utf8nlen(node->source_start, byte_length);
+        return *len > 0;
+    }
+
+    if (node->token_start && node->token_end &&
+        node->token_start->token_string && node->token_end->token_string &&
+        node->token_start->token_string >= context->buff_start &&
+        node->token_end->token_string >= node->token_start->token_string) {
+        start_offset = (size_t)(node->token_start->token_string - context->buff_start);
+        byte_length = (size_t)(node->token_end->token_string - node->token_start->token_string) +
+                      (size_t)node->token_end->length;
+        *pos = utf8nlen(context->buff_start, start_offset);
+        *len = utf8nlen(node->token_start->token_string, byte_length);
+        return *len > 0;
+    }
+
+    if (token_span_utf8(context, node->token, pos, len)) return 1;
+    if (node->parent) return source_node_span_utf8(context, node->parent, pos, len);
+    return 0;
+}
+
 static int ast_node_span_utf8(Context *context, ASTNode *node, size_t *pos, size_t *len) {
     size_t start_offset;
     size_t byte_length;
 
     if (!context || !node || !pos || !len) return 0;
-    if (!node->source_start || !node->source_end) return 0;
-    if (node->source_start < context->buff_start) return 0;
-    if (node->source_end < node->source_start) return 0;
+    if (node->source_start && node->source_end &&
+        node->source_start >= context->buff_start &&
+        node->source_end >= node->source_start) {
+        start_offset = (size_t)(node->source_start - context->buff_start);
+        byte_length = (size_t)(node->source_end - node->source_start) + 1;
+        *pos = utf8nlen(context->buff_start, start_offset);
+        *len = utf8nlen(node->source_start, byte_length);
+        return *len > 0;
+    }
 
-    start_offset = (size_t)(node->source_start - context->buff_start);
-    byte_length = (size_t)(node->source_end - node->source_start) + 1;
-    *pos = utf8nlen(context->buff_start, start_offset);
-    *len = utf8nlen(node->source_start, byte_length);
-    return *len > 0;
+    if (node->token_start && node->token_end &&
+        node->token_start->token_string && node->token_end->token_string &&
+        node->token_start->token_string >= context->buff_start &&
+        node->token_end->token_string >= node->token_start->token_string) {
+        start_offset = (size_t)(node->token_start->token_string - context->buff_start);
+        byte_length = (size_t)(node->token_end->token_string - node->token_start->token_string) +
+                      (size_t)node->token_end->length;
+        *pos = utf8nlen(context->buff_start, start_offset);
+        *len = utf8nlen(node->token_start->token_string, byte_length);
+        return *len > 0;
+    }
+
+    if (token_span_utf8(context, node->token, pos, len)) return 1;
+    if (node->parent) return ast_node_span_utf8(context, node->parent, pos, len);
+    return 0;
 }
 
-static int ast_container_type(ASTNode *node, CB_NodeType *type) {
+static int source_container_type(SourceNode *node, CB_NodeType *type) {
     if (!node || !type) return 0;
 
     switch (node->node_type) {
@@ -199,10 +314,45 @@ static int ast_container_type(ASTNode *node, CB_NodeType *type) {
     }
 }
 
+static void emit_projected_token(CB_ParseTree *tb, Token *token, size_t pos, size_t len) {
+    CB_NodeType type;
+
+    if (!tb || !token || len == 0) return;
+
+    switch (token->token_type) {
+        case TK_STEMVAR:
+            if (len > 1) {
+                cb_add_child_node(tb, cb_create_node(LEXER_SEPARATOR, pos, 1));
+                cb_add_child_node(tb, cb_create_node(LEXER_IDENTIFIER, pos + 1, len - 1));
+                return;
+            }
+            break;
+        case TK_STEMINT:
+            if (len > 1) {
+                cb_add_child_node(tb, cb_create_node(LEXER_SEPARATOR, pos, 1));
+                cb_add_child_node(tb, cb_create_node(LEXER_NUMBER_LITERAL, pos + 1, len - 1));
+                return;
+            }
+            break;
+        case TK_STEMSTRING:
+            if (len > 1) {
+                cb_add_child_node(tb, cb_create_node(LEXER_SEPARATOR, pos, 1));
+                cb_add_child_node(tb, cb_create_node(LEXER_IDENTIFIER, pos + 1, len - 1));
+                return;
+            }
+            break;
+        case TK_STEMNOVAL:
+            cb_add_child_node(tb, cb_create_node(LEXER_SEPARATOR, pos, len));
+            return;
+    }
+
+    type = map_c_token_to_cb_type(token->token_type);
+    cb_add_child_node(tb, cb_create_node(type, pos, len));
+}
+
 static void emit_tokens_until(CB_ParseTree *tb, HighlightTokenCursor *cursor, size_t limit_pos) {
     size_t pos;
     size_t len;
-    CB_Node token_node;
 
     while (cursor && cursor->token) {
         if (!token_span_utf8(cursor->context, cursor->token, &pos, &len)) {
@@ -212,17 +362,16 @@ static void emit_tokens_until(CB_ParseTree *tb, HighlightTokenCursor *cursor, si
         if (pos >= limit_pos) break;
         if (pos + len > limit_pos) break;
 
-        token_node = cb_create_node(map_c_token_to_cb_type(cursor->token->token_type), pos, len);
-        cb_add_child_node(tb, token_node);
+        emit_projected_token(tb, cursor->token, pos, len);
         cursor->token = cursor->token->token_next;
     }
 }
 
-static void emit_ast_projection(CB_ParseTree *tb,
-                                Context *context,
-                                ASTNode *node,
-                                HighlightTokenCursor *cursor) {
-    ASTNode *child;
+static void emit_source_projection(CB_ParseTree *tb,
+                                   Context *context,
+                                   SourceNode *node,
+                                   HighlightTokenCursor *cursor) {
+    SourceNode *child;
     size_t child_pos;
     size_t child_len;
     CB_NodeType child_type;
@@ -231,23 +380,47 @@ static void emit_ast_projection(CB_ParseTree *tb,
     child = node;
     while (child) {
         if (child->node_type != RXCP_ERROR && child->node_type != RXCP_WARNING &&
-            ast_container_type(child, &child_type) &&
-            ast_node_span_utf8(context, child, &child_pos, &child_len)) {
+            source_container_type(child, &child_type) &&
+            source_node_span_utf8(context, child, &child_pos, &child_len)) {
             emit_tokens_until(tb, cursor, child_pos);
             child_node = cb_create_node(child_type, child_pos, child_len);
             cb_add_child_node(tb, child_node);
             cb_set_current_parent_to_last_node(tb);
-            emit_ast_projection(tb, context, child->child, cursor);
+            emit_source_projection(tb, context, child->child, cursor);
             emit_tokens_until(tb, cursor, child_pos + child_len);
             cb_set_current_parent_to_grandparent(tb);
         } else if (child->child) {
-            emit_ast_projection(tb, context, child->child, cursor);
+            emit_source_projection(tb, context, child->child, cursor);
         }
         child = child->sibling;
     }
 }
 
-static void emit_diagnostics_from_tree(CB_ParseTree *tb, Context *context, ASTNode *node) {
+static void emit_diagnostics_from_source_tree(CB_ParseTree *tb, Context *context, SourceNode *node) {
+    SourceNode *child;
+    SourceNode *current;
+    size_t pos;
+    size_t len;
+    CB_Node diag_node;
+
+        current = node;
+    while (current) {
+        if ((current->node_type == RXCP_ERROR || current->node_type == RXCP_WARNING) &&
+            source_node_span_utf8(context, current, &pos, &len)) {
+            diag_node = cb_create_node(SYNTAX_ERROR, pos, len);
+            diag_node.severity = (current->node_type == RXCP_WARNING) ? CB_WARNING : CB_ERROR;
+            diag_node.message = strdup(current->node_string ? current->node_string : "Syntax Error");
+            cb_set_current_parent_to_root_node(tb);
+            cb_add_child_node(tb, diag_node);
+        }
+
+        child = current->child;
+        if (child) emit_diagnostics_from_source_tree(tb, context, child);
+        current = current->sibling;
+    }
+}
+
+static void emit_diagnostics_from_ast_tree(CB_ParseTree *tb, Context *context, ASTNode *node) {
     ASTNode *child;
     ASTNode *current;
     size_t pos;
@@ -266,7 +439,7 @@ static void emit_diagnostics_from_tree(CB_ParseTree *tb, Context *context, ASTNo
         }
 
         child = current->child;
-        if (child) emit_diagnostics_from_tree(tb, context, child);
+        if (child) emit_diagnostics_from_ast_tree(tb, context, child);
         current = current->sibling;
     }
 }
@@ -287,6 +460,27 @@ static CB_Node compiler_get_token_callback(void *user_data,
             return cb_create_node(map_c_token_to_cb_type(token->token_type), pos, token_len);
         }
         token = token->token_next;
+    }
+
+    if (token_chars && length > 0 && token_chars[0].codepoints > 0) {
+        switch (token_chars[0].character[0]) {
+            case '.':
+            case ',':
+                return cb_create_node(LEXER_SEPARATOR, pos, 1);
+            case '(':
+            case '[':
+                return cb_create_node(LEXER_LH_EXPR, pos, 1);
+            case ')':
+            case ']':
+                return cb_create_node(LEXER_RH_EXPR, pos, 1);
+            case '=':
+                return cb_create_node(LEXER_OPERATOR_ASSIGN, pos, 1);
+            case '+':
+            case '-':
+            case '*':
+            case '/':
+                return cb_create_node(LEXER_OPERATOR_ARITHMETIC, pos, 1);
+        }
     }
 
     return cb_default_get_token_callback(user_data, pos, length, token_chars);
@@ -329,6 +523,7 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     context->level = LEVELB;
 
     cntx_buf(context, source_code, strlen(source_code));
+    configure_parser_import_locations(context);
 
     rxcp_init_exits(context);
     rexbpars(context);
@@ -344,15 +539,16 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     cb_add_child_node(tb, root_node);
     cb_set_current_parent_to_root_node(tb);
 
-    if (context->source_ast) {
+    if (context->source_tree) {
         cursor.context = context;
         cursor.token = context->token_head;
-        emit_ast_projection(tb, context, context->source_ast->child, &cursor);
+        emit_source_projection(tb, context, context->source_tree->child, &cursor);
         emit_tokens_until(tb, &cursor, source_len);
-        emit_diagnostics_from_tree(tb, context, context->source_ast);
+        emit_diagnostics_from_source_tree(tb, context, context->source_tree);
+        emit_diagnostics_from_ast_tree(tb, context, context->ast);
     } else {
         emit_flat_tokens(tb, context);
-        emit_diagnostics_from_tree(tb, context, (ASTNode *)context->diagnostics_list);
+        emit_diagnostics_from_ast_tree(tb, context, (ASTNode *)context->diagnostics_list);
     }
 
     cb_order_tree(tb);

@@ -32,6 +32,14 @@
 #include "rxcp_types.h"
 #include "rxcp_token.h"
 
+typedef enum ASTSourceProvenance {
+    AST_SOURCE_NONE = 0,
+    AST_SOURCE_EXACT = 1,
+    AST_SOURCE_INHERITED = 2,
+    AST_SOURCE_SYNTHETIC = 3,
+    AST_SOURCE_COMPOSITE = 4
+} ASTSourceProvenance;
+
 struct ASTNode {
     Context *context;
     int node_number;
@@ -63,6 +71,8 @@ struct ASTNode {
     char suppress_shadow_warnings;
     char skip_exit_dispatch;
     ASTNode *free_list;
+    SourceNode *source_node;
+    char source_provenance;
     ASTNode *parent, *child, *sibling;
     ASTNode *association; /* E.g. for LEAVE / ITERATE relevant DO node or LEAVE_WITH relevant BLOCK_EXPR */
     Token *token;
@@ -110,6 +120,8 @@ ASTNode *ast_fstk(Context* context, ASTNode *source_node);
 ASTNode *ast_dup_subtree(Context* new_context, ASTNode *node);
 ASTNode *ast_dup_subtree_with_symbols(Context* new_context, ASTNode *node, Scope *new_parent_scope);
 void ast_mark_compiler_generated_block(ASTNode *node);
+void ast_set_primary_source_node(ASTNode *node, SourceNode *source_node, ASTSourceProvenance provenance);
+void ast_copy_source_anchor(ASTNode *node, ASTNode *source_node, ASTSourceProvenance provenance);
 /* Find first node of a certain type in a tree */
 ASTNode *ast_fndn(Context* ctx, ASTNode* node, NodeType type);
 /* Graft a Rexx source fragment into the AST replacing target_node */

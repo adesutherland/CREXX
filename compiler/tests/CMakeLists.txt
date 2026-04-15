@@ -582,5 +582,21 @@ target_link_libraries(test_bridge PRIVATE rxvml rxpashim)
 target_include_directories(test_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 add_dependencies(test_bridge stub_plugin_bin)
 
+add_executable(test_source_provenance src/test_source_provenance.c)
+target_link_libraries(test_source_provenance PRIVATE rxclib)
+target_include_directories(test_source_provenance PRIVATE
+        ${CMAKE_SOURCE_DIR}/compiler
+        ${CMAKE_BINARY_DIR}/compiler
+        ${CMAKE_SOURCE_DIR}/assembler
+        ${CMAKE_SOURCE_DIR}/avl_tree
+        ${CMAKE_SOURCE_DIR}/platform
+        ${CMAKE_SOURCE_DIR}/utf8
+        ${CMAKE_SOURCE_DIR}/rxpa
+        ${CMAKE_SOURCE_DIR}/interpreter
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
+        ${CMAKE_SOURCE_DIR}/binutils/include)
+
 # Commented out until fix found for multiple calls to the VM
 add_test(NAME BridgeConnectivity COMMAND test_bridge)
+add_test(NAME source_provenance COMMAND test_source_provenance)
+set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")

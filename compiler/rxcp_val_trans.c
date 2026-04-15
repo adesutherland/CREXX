@@ -852,10 +852,7 @@ walker_result tostring_rewrite_walker(walker_direction direction,
                 ASTNode *member_call = ast_ft(context, MEMBER_CALL);
                 ast_sstr(member_call, strdup("tostring"), 8);
                 member_call->free_node_string = 1;
-                member_call->line = node->line;
-                member_call->column = node->column;
-                member_call->source_start = node->source_start;
-                member_call->source_end = node->source_end;
+                ast_copy_source_anchor(member_call, node, AST_SOURCE_SYNTHETIC);
 
                 /* Physically swap in the tree */
                 ast_rpl(node, member_call);

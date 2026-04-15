@@ -37,6 +37,7 @@
 
 /* Forward declarations */
 typedef struct ASTNode ASTNode;
+typedef struct SourceNode SourceNode;
 typedef struct Token Token;
 typedef struct Scope Scope;
 typedef struct Symbol Symbol;

@@ -343,10 +343,15 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
     return result_normal;
 }
 
-static int is_structure_boundary(ASTNode *node) {
+static int is_callable_boundary(ASTNode *node) {
     if (!node) return 0;
     return node->node_type == PROCEDURE || node->node_type == CLASS_DEF ||
            node->node_type == METHOD || node->node_type == FACTORY;
+}
+
+static int is_class_member_boundary(ASTNode *node) {
+    if (!node) return 0;
+    return node->node_type == PROCEDURE || node->node_type == CLASS_DEF;
 }
 
 static void promote_program_file_children(ASTNode *node) {
@@ -415,6 +420,71 @@ static ASTNode *ensure_instructions_child(Context *context, ASTNode *node) {
     return instructions;
 }
 
+static ASTNode *ensure_args_child(Context *context,
+                                  ASTNode *node,
+                                  int create_if_missing) {
+    ASTNode *args_node;
+    ASTNode *instructions;
+    ASTNode *child;
+    ASTNode *prev;
+    ASTNode *args_prev;
+
+    args_node = find_child_of_type(node, ARGS);
+    instructions = find_child_of_type(node, INSTRUCTIONS);
+
+    if (!args_node) {
+        if (!create_if_missing) return 0;
+        args_node = ast_ft(context, ARGS);
+        args_node->parent = node;
+        args_node->source_node = node->source_node;
+
+        if (!instructions) {
+            add_ast(node, args_node);
+            return args_node;
+        }
+
+        prev = 0;
+        child = node->child;
+        while (child && child != instructions) {
+            prev = child;
+            child = child->sibling;
+        }
+
+        args_node->sibling = instructions;
+        if (prev) prev->sibling = args_node;
+        else node->child = args_node;
+        return args_node;
+    }
+
+    if (!instructions || args_node == instructions) return args_node;
+
+    prev = 0;
+    args_prev = 0;
+    child = node->child;
+    while (child && child != instructions && child != args_node) {
+        prev = child;
+        child = child->sibling;
+    }
+
+    if (child == args_node) return args_node;
+
+    child = node->child;
+    while (child && child != args_node) {
+        args_prev = child;
+        child = child->sibling;
+    }
+    if (!child) return args_node;
+
+    if (args_prev) args_prev->sibling = args_node->sibling;
+    else node->child = args_node->sibling;
+
+    args_node->sibling = instructions;
+    if (prev) prev->sibling = args_node;
+    else node->child = args_node;
+
+    return args_node;
+}
+
 static void structure_callable_body(Context *context,
                                     ASTNode *node,
                                     int add_empty_args,
@@ -448,12 +518,12 @@ static void structure_callable_body(Context *context,
     done_form = 0;
     done_case = 0;
     done_standard = 0;
-    args_node = find_child_of_type(node, ARGS);
+    args_node = ensure_args_child(context, node, 0);
     first_instruction = 1;
     next = node->sibling;
     prev = node;
 
-    while (next && !is_structure_boundary(next)) {
+    while (next && !is_callable_boundary(next)) {
         switch (next->node_type) {
             case ARGS:
                 if (args_node) {
@@ -517,17 +587,14 @@ static void structure_callable_body(Context *context,
         }
     }
 
-    if (!args_node && add_empty_args) {
-        args_node = ast_ft(context, ARGS);
-        add_ast(node, args_node);
-    }
+    args_node = ensure_args_child(context, node, add_empty_args);
 
     instructions = ensure_instructions_child(context, node);
     last = 0;
     existing_last = instructions->child;
     while (existing_last && existing_last->sibling) existing_last = existing_last->sibling;
 
-    while ((next = node->sibling) && !is_structure_boundary(next)) {
+    while ((next = node->sibling) && !is_callable_boundary(next)) {
         last = next;
         node->sibling = next->sibling;
         next->sibling = 0;
@@ -589,7 +656,7 @@ walker_result ast_source_structure_walker(walker_direction direction,
             mknd_err(node, "CANT_DEFINE_CLASS_HERE");
         }
         else {
-            while (((next = node->sibling)) && !is_structure_boundary(next)) {
+            while (((next = node->sibling)) && !is_class_member_boundary(next)) {
                 node->sibling = next->sibling;
                 next->sibling = 0;
                 next->parent = 0;

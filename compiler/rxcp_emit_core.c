@@ -140,6 +140,14 @@ char* get_metaline(ASTNode *node) {
     int line, column;
     char *source_start, *source_end;
 
+    if (node->is_compiler_added &&
+        node->source_provenance == AST_SOURCE_SYNTHETIC &&
+        node->node_type == INSTRUCTIONS) {
+        result = malloc(1);
+        result[0] = 0;
+        return result;
+    }
+
     line = node->line;
     column = node->column;
     source_start = node->source_start;

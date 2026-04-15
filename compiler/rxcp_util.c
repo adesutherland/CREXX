@@ -586,6 +586,8 @@ typedef struct SourceMapEntry {
     size_t end;
     int line;
     int column;
+    SourceNode *source_node;
+    char provenance;
 } SourceMapEntry;
 
 typedef struct SourceMap {
@@ -594,7 +596,13 @@ typedef struct SourceMap {
     size_t capacity;
 } SourceMap;
 
-static void add_source_map_entry(SourceMap *map, size_t start, size_t end, int line, int column) {
+static void add_source_map_entry(SourceMap *map,
+                                 size_t start,
+                                 size_t end,
+                                 int line,
+                                 int column,
+                                 SourceNode *source_node,
+                                 ASTSourceProvenance provenance) {
     if (map->count == map->capacity) {
         map->capacity = map->capacity == 0 ? 8 : map->capacity * 2;
         map->entries = realloc(map->entries, sizeof(SourceMapEntry) * map->capacity);
@@ -603,6 +611,8 @@ static void add_source_map_entry(SourceMap *map, size_t start, size_t end, int l
     map->entries[map->count].end = end;
     map->entries[map->count].line = line;
     map->entries[map->count].column = column;
+    map->entries[map->count].source_node = source_node;
+    map->entries[map->count].provenance = (char)provenance;
     map->count++;
 }
 
@@ -624,6 +634,11 @@ static walker_result fragment_fixup_walker(walker_direction direction, ASTNode *
                 if (pos >= map->entries[i].start && pos < map->entries[i].end) {
                     node->line = map->entries[i].line;
                     node->column = map->entries[i].column;
+                    if (map->entries[i].source_node) {
+                        ast_set_primary_source_node(node,
+                                                    map->entries[i].source_node,
+                                                    (ASTSourceProvenance)map->entries[i].provenance);
+                    }
                     if (node->token) {
                         node->token->line = map->entries[i].line;
                         node->token->column = map->entries[i].column;
@@ -673,7 +688,13 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
                 }
 
                 if (text) {
-                    add_source_map_entry(&map, int_pos, int_pos + text_len, token_node->line, token_node->column);
+                    add_source_map_entry(&map,
+                                         int_pos,
+                                         int_pos + text_len,
+                                         token_node->line,
+                                         token_node->column,
+                                         token_node->source_node,
+                                         AST_SOURCE_EXACT);
                     memcpy(interpolated + int_pos, text, text_len);
                     int_pos += text_len;
                 }
@@ -738,6 +759,7 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
         ASTNode *search = ast_fndn(ctx, frag->ast, INSTRUCTIONS);
         if (search && search->child) {
             ASTNode *compiler_added = ast_f(ctx, INSTRUCTIONS, target_node->token);
+            ast_copy_source_anchor(compiler_added, target_node, AST_SOURCE_SYNTHETIC);
             ast_mark_compiler_generated_block(compiler_added);
             compiler_added->parent = target_node->parent;
             compiler_added->scope = NULL;

@@ -124,12 +124,16 @@ static ASTNode* execute_rewrite_recursive(Context* ctx, ASTRewriteTemplate* tmpl
         /* Inherit source tracking from explicitly assigned loc_node or target */
         ASTNode* loc_node = tmpl->source_loc_node ? tmpl->source_loc_node : target_to_replace;
         if (loc_node) {
+            result->file_name = loc_node->file_name;
+            result->token = loc_node->token;
             result->line = loc_node->line;
             result->column = loc_node->column;
             result->token_start = loc_node->token_start;
             result->source_start = loc_node->source_start;
             result->source_end = loc_node->source_end;
-            result->token = loc_node->token;
+            if (loc_node->source_node) {
+                ast_set_primary_source_node(result, loc_node->source_node, AST_SOURCE_SYNTHETIC);
+            }
         }
     } 
     else if (tmpl->action == RW_REUSE_NODE) {
