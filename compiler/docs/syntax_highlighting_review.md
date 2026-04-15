@@ -1046,20 +1046,40 @@ Goal of this stage:
 
 #### Status Summary on April 15, 2026
 
-- Status: not started
-- Current code reality:
-  parser mode configures import/executable lookup paths each parse, but it does not yet retain caches for imports, external symbols, exit discovery, or exit module loading across highlight calls
-- Recommended entry criteria:
-  define the cache contents and invalidation model first, then add retained state in the highlighting controller
+- Status: complete
+- Delivered:
+  parser mode now retains a dedicated master context inside `compiler/rxcp_highlight_controller.c`,
+  reuses cached import inventory / loaded external state through that retained root,
+  warms exit discovery and module loading once per stable cache generation,
+  and invalidates the retained state when the document identity, effective search paths, or watched import/module timestamps change
+- Cache model details:
+  parser mode now derives the authored file name and source directory from the DSLSH `CodeBuffer` document id,
+  uses that document directory plus the parser server working directory and `exepath()` as the retained search-path basis,
+  snapshots importable files plus `library` / exit-module binaries for timestamp checks,
+  and tracks exit discovery readiness explicitly so a valid "no exits discovered" result is still cached rather than rediscovered every parse
+- Test coverage:
+  a dedicated parser-mode regression test,
+  `highlight_cache`,
+  is now wired through `compiler/tests/CMakeLists.txt`
+- Current verified baseline:
+  `ctest --output-on-failure -L syntax_highlighting`
+  in `cmake-build-debug/compiler/tests`
+  passes `7/7`
 - Dependency view:
-  this stage can begin once the remaining Stage 2 invariants are considered stable, but it should remain separate from the Stage 5 semantic-sync work
+  this retained-state layer is now ready for the later Stage 5 semantic-sync work without changing the separate source-tree / work-tree ownership model
 
 #### Journal
 
-##### April 15, 2026 - No retained parser-mode caches yet
+##### April 15, 2026 - Retained parser-mode cache implementation
 
-- No retained cache implementation exists yet for imports, external symbols, exit discovery, or exit module loading.
-- The controller work done so far is per-parse setup, not Stage 4 retained-state behaviour.
+- Added a retained parser-mode master context in `compiler/rxcp_highlight_controller.c` so each highlight request still gets a fresh child parse context while imports, external symbol state, exit discovery, and VM module loading can persist across calls in the same parser process.
+- Parser mode now derives source-aware cache keys from the DSLSH document id, including the authored file name and containing directory rather than relying on the earlier hard-coded `dsl_buffer.rexx` placeholder.
+- The retained cache now snapshots search directories, discovered importable files, and the `library` / configured exit-module binaries so timestamp changes invalidate the cache before the next highlight pass.
+- Exit discovery now has an explicit readiness flag, preventing repeated rediscovery when a parse generation has already checked for exits, even if that discovery produced an empty registry.
+- Added `compiler/tests/src/test_highlight_cache.c` to verify:
+  stable same-process parses reuse the retained generation,
+  dependency timestamp changes invalidate and rebuild it,
+  and changing the document search path also forces a rebuild.
 
 ### Stage 5: Sync Semantic Results Back to the Source Tree
 

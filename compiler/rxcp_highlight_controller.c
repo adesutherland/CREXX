@@ -14,6 +14,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <time.h>
+
+#ifdef _WIN32
+#include <direct.h>
+#define rxcp_getcwd _getcwd
+#else
+#include <unistd.h>
+#define rxcp_getcwd getcwd
+#endif
 
 /* Rename conflicting cREXX AST node types to avoid windows.h collision */
 #define ERROR RXCP_ERROR
@@ -25,10 +35,12 @@
 #define VOID RXCP_VOID
 
 #include "rxcpmain.h"
+#include "rxcp_highlight_controller.h"
 #include "rxcp_source_tree.h"
 #include "rxcp_val.h"
 #include "rxcpbgmr.h"
 #include "rxcp_exit.h"
+#include "rxvml.h"
 #include "utf.h"
 #include "platform.h"
 
@@ -50,6 +62,44 @@ typedef struct HighlightTokenCursor {
     Token *token;
 } HighlightTokenCursor;
 
+typedef struct HighlightWatchedPath {
+    char *path;
+    time_t mtime;
+    long size;
+    int exists;
+} HighlightWatchedPath;
+
+typedef struct HighlightRetainedState {
+    Context *root;
+    char *document_id;
+    char *search_path_key;
+    char *exit_module_name;
+    HighlightWatchedPath *directories;
+    size_t directory_count;
+    HighlightWatchedPath *files;
+    size_t file_count;
+    size_t cached_import_file_count;
+    unsigned long generation;
+    unsigned long invalidation_count;
+    unsigned long exit_warm_count;
+    unsigned long import_inventory_warm_count;
+    int exits_disabled;
+    int exit_registry_ready;
+} HighlightRetainedState;
+
+typedef struct HighlightDocumentInfo {
+    char *document_id;
+    char *document_name;
+    char *document_dir;
+    char *current_working_directory;
+    char *exe_path;
+    char *exit_module_name;
+    char *search_path_key;
+    int disable_exits;
+} HighlightDocumentInfo;
+
+static HighlightRetainedState g_highlight_state;
+
 static int retain_context_buffer(Context *context, char *buffer) {
     char **new_buffers;
 
@@ -63,6 +113,461 @@ static int retain_context_buffer(Context *context, char *buffer) {
     context->extra_buffers = new_buffers;
     context->extra_buffers[context->extra_buffers_count++] = buffer;
     return 1;
+}
+
+static char *retain_context_string(Context *context, const char *value) {
+    char *copy;
+
+    if (!context || !value) return 0;
+
+    copy = strdup(value);
+    if (!copy) return 0;
+    if (!retain_context_buffer(context, copy)) {
+        free(copy);
+        return 0;
+    }
+    return copy;
+}
+
+static char *highlight_getcwd(void) {
+    char *buffer;
+
+    buffer = malloc(MAXFILEPATH);
+    if (!buffer) return 0;
+    if (!rxcp_getcwd(buffer, MAXFILEPATH)) {
+        free(buffer);
+        return 0;
+    }
+    return buffer;
+}
+
+static void free_highlight_watched_paths(HighlightWatchedPath *paths, size_t count) {
+    size_t i;
+
+    if (!paths) return;
+    for (i = 0; i < count; i++) {
+        if (paths[i].path) free(paths[i].path);
+    }
+    free(paths);
+}
+
+static void highlight_clear_retained_state(int count_as_invalidation) {
+    if (count_as_invalidation && g_highlight_state.root) {
+        g_highlight_state.invalidation_count++;
+    }
+
+    if (g_highlight_state.root) {
+        fre_cntx(g_highlight_state.root);
+        g_highlight_state.root = 0;
+    }
+
+    if (g_highlight_state.document_id) free(g_highlight_state.document_id);
+    if (g_highlight_state.search_path_key) free(g_highlight_state.search_path_key);
+    if (g_highlight_state.exit_module_name) free(g_highlight_state.exit_module_name);
+
+    free_highlight_watched_paths(g_highlight_state.directories, g_highlight_state.directory_count);
+    free_highlight_watched_paths(g_highlight_state.files, g_highlight_state.file_count);
+
+    g_highlight_state.document_id = 0;
+    g_highlight_state.search_path_key = 0;
+    g_highlight_state.exit_module_name = 0;
+    g_highlight_state.directories = 0;
+    g_highlight_state.directory_count = 0;
+    g_highlight_state.files = 0;
+    g_highlight_state.file_count = 0;
+    g_highlight_state.cached_import_file_count = 0;
+    g_highlight_state.exits_disabled = 0;
+    g_highlight_state.exit_registry_ready = 0;
+}
+
+void rxcp_highlight_controller_reset_cache(void) {
+    highlight_clear_retained_state(0);
+    memset(&g_highlight_state, 0, sizeof(g_highlight_state));
+}
+
+void rxcp_highlight_controller_get_cache_stats(RXCPHighlightCacheStats *stats) {
+    if (!stats) return;
+
+    stats->generation = g_highlight_state.generation;
+    stats->invalidation_count = g_highlight_state.invalidation_count;
+    stats->exit_warm_count = g_highlight_state.exit_warm_count;
+    stats->import_inventory_warm_count = g_highlight_state.import_inventory_warm_count;
+    stats->cached_import_file_count = g_highlight_state.cached_import_file_count;
+    stats->watched_directory_count = g_highlight_state.directory_count;
+    stats->watched_file_count = g_highlight_state.file_count;
+    stats->exits_disabled = g_highlight_state.exits_disabled;
+}
+
+static int highlight_capture_path_state(HighlightWatchedPath *entry, const char *path) {
+    struct stat st;
+
+    if (!entry || !path) return 0;
+
+    memset(entry, 0, sizeof(*entry));
+    entry->path = strdup(path);
+    if (!entry->path) return 0;
+
+    if (stat(path, &st) == 0) {
+        entry->exists = 1;
+        entry->mtime = st.st_mtime;
+        entry->size = (long)st.st_size;
+    }
+    return 1;
+}
+
+static int highlight_add_watched_path(HighlightWatchedPath **paths,
+                                      size_t *count,
+                                      const char *path) {
+    HighlightWatchedPath *new_paths;
+    HighlightWatchedPath snapshot;
+    size_t i;
+
+    if (!paths || !count || !path || !path[0]) return 0;
+
+    for (i = 0; i < *count; i++) {
+        if ((*paths)[i].path && strcmp((*paths)[i].path, path) == 0) return 1;
+    }
+
+    if (!highlight_capture_path_state(&snapshot, path)) return 0;
+
+    new_paths = realloc(*paths, sizeof(HighlightWatchedPath) * (*count + 1));
+    if (!new_paths) {
+        if (snapshot.path) free(snapshot.path);
+        return 0;
+    }
+
+    *paths = new_paths;
+    (*paths)[*count] = snapshot;
+    (*count)++;
+    return 1;
+}
+
+static int highlight_path_changed(HighlightWatchedPath *entry) {
+    struct stat st;
+
+    if (!entry || !entry->path) return 0;
+
+    if (stat(entry->path, &st) != 0) {
+        return entry->exists;
+    }
+
+    if (!entry->exists) return 1;
+    if (entry->mtime != st.st_mtime) return 1;
+    if (entry->size != (long)st.st_size) return 1;
+    return 0;
+}
+
+static int highlight_paths_stale(void) {
+    size_t i;
+
+    for (i = 0; i < g_highlight_state.directory_count; i++) {
+        if (highlight_path_changed(&g_highlight_state.directories[i])) return 1;
+    }
+
+    for (i = 0; i < g_highlight_state.file_count; i++) {
+        if (highlight_path_changed(&g_highlight_state.files[i])) return 1;
+    }
+
+    return 0;
+}
+
+static char *highlight_join_path(const char *dir, const char *name) {
+    size_t dir_len;
+    size_t name_len;
+    size_t total_len;
+    char *full_path;
+    int needs_sep;
+
+    if (!name) return 0;
+    if (!dir || !dir[0]) return strdup(name);
+
+    dir_len = strlen(dir);
+    name_len = strlen(name);
+    needs_sep = dir_len > 0 && dir[dir_len - 1] != '/' && dir[dir_len - 1] != '\\';
+    total_len = dir_len + (needs_sep ? 1 : 0) + name_len + 1;
+
+    full_path = malloc(total_len);
+    if (!full_path) return 0;
+
+    memcpy(full_path, dir, dir_len);
+    if (needs_sep) full_path[dir_len++] = '/';
+    memcpy(full_path + dir_len, name, name_len);
+    full_path[dir_len + name_len] = 0;
+    return full_path;
+}
+
+static char *highlight_module_filename(const char *module_name) {
+    if (!module_name || !module_name[0]) return 0;
+    if (has_any_extension(module_name)) return strdup(module_name);
+    return mprintf("%s.rxbin", module_name);
+}
+
+static char *highlight_resolve_module_path(Context *context, const char *module_name) {
+    char *module_file;
+    char *candidate;
+    size_t i;
+    struct stat st;
+
+    if (!context) return 0;
+
+    module_file = highlight_module_filename(module_name);
+    if (!module_file) return 0;
+
+    if (context->location) {
+        candidate = highlight_join_path(context->location, module_file);
+        if (candidate && stat(candidate, &st) == 0) {
+            free(module_file);
+            return candidate;
+        }
+        if (candidate) free(candidate);
+    }
+
+    if (context->import_locations) {
+        for (i = 0; context->import_locations[i]; i++) {
+            candidate = highlight_join_path(context->import_locations[i], module_file);
+            if (candidate && stat(candidate, &st) == 0) {
+                free(module_file);
+                return candidate;
+            }
+            if (candidate) free(candidate);
+        }
+    }
+
+    candidate = highlight_join_path(0, module_file);
+    if (candidate && stat(candidate, &st) == 0) {
+        free(module_file);
+        return candidate;
+    }
+    if (candidate) free(candidate);
+
+    free(module_file);
+    return 0;
+}
+
+static size_t highlight_count_importable_files(importable_file **file_list) {
+    size_t count;
+
+    count = 0;
+    if (!file_list) return 0;
+    while (file_list[count]) count++;
+    return count;
+}
+
+static void highlight_record_root_snapshots(Context *root, const HighlightDocumentInfo *info) {
+    importable_file **file_list;
+    size_t i;
+    char *module_path;
+    char *full_path;
+
+    free_highlight_watched_paths(g_highlight_state.directories, g_highlight_state.directory_count);
+    free_highlight_watched_paths(g_highlight_state.files, g_highlight_state.file_count);
+    g_highlight_state.directories = 0;
+    g_highlight_state.directory_count = 0;
+    g_highlight_state.files = 0;
+    g_highlight_state.file_count = 0;
+
+    if (!root) return;
+
+    highlight_add_watched_path(&g_highlight_state.directories, &g_highlight_state.directory_count, root->location);
+    if (root->import_locations) {
+        for (i = 0; root->import_locations[i]; i++) {
+            highlight_add_watched_path(&g_highlight_state.directories,
+                                       &g_highlight_state.directory_count,
+                                       root->import_locations[i]);
+        }
+    }
+
+    file_list = root->importable_file_list;
+    while (file_list && *file_list) {
+        full_path = highlight_join_path((*file_list)->location, (*file_list)->name);
+        if (full_path) {
+            highlight_add_watched_path(&g_highlight_state.files, &g_highlight_state.file_count, full_path);
+            free(full_path);
+        }
+        file_list++;
+    }
+
+    module_path = highlight_resolve_module_path(root, "library");
+    if (module_path) {
+        highlight_add_watched_path(&g_highlight_state.files, &g_highlight_state.file_count, module_path);
+        free(module_path);
+    }
+
+    module_path = highlight_resolve_module_path(root, info ? info->exit_module_name : 0);
+    if (module_path) {
+        highlight_add_watched_path(&g_highlight_state.files, &g_highlight_state.file_count, module_path);
+        free(module_path);
+    }
+
+    g_highlight_state.cached_import_file_count = highlight_count_importable_files(root->importable_file_list);
+}
+
+static void highlight_free_document_info(HighlightDocumentInfo *info) {
+    if (!info) return;
+    if (info->document_id) free(info->document_id);
+    if (info->document_name) free(info->document_name);
+    if (info->document_dir) free(info->document_dir);
+    if (info->current_working_directory) free(info->current_working_directory);
+    if (info->exe_path) free(info->exe_path);
+    if (info->exit_module_name) free(info->exit_module_name);
+    if (info->search_path_key) free(info->search_path_key);
+    memset(info, 0, sizeof(*info));
+}
+
+static int highlight_build_document_info(CodeBuffer *cb, HighlightDocumentInfo *info) {
+    const char *doc_id;
+
+    if (!info) return 0;
+    memset(info, 0, sizeof(*info));
+
+    doc_id = (cb && cb->unique_document_id && cb->unique_document_id[0]) ? cb->unique_document_id : "dsl_buffer.rexx";
+    info->document_id = strdup(doc_id);
+    info->document_name = strdup(filename(doc_id));
+    info->document_dir = file_dir(doc_id);
+    info->current_working_directory = highlight_getcwd();
+    info->exe_path = exepath();
+    info->exit_module_name = strdup(getenv("RXCP_EXIT_MODULE") ? getenv("RXCP_EXIT_MODULE") : "rxcexits");
+    info->disable_exits = getenv("RXCP_DISABLE_EXIT") != 0;
+
+    if (!info->document_dir) info->document_dir = strdup(".");
+    if (!info->current_working_directory) info->current_working_directory = strdup(".");
+    if (!info->exe_path) info->exe_path = strdup(".");
+
+    if (!info->document_id || !info->document_name || !info->document_dir ||
+        !info->current_working_directory || !info->exe_path || !info->exit_module_name) {
+        highlight_free_document_info(info);
+        return 0;
+    }
+
+    info->search_path_key = mprintf("%s|%s|%s",
+                                    info->document_dir,
+                                    info->current_working_directory,
+                                    info->exe_path);
+    if (!info->search_path_key) {
+        highlight_free_document_info(info);
+        return 0;
+    }
+
+    return 1;
+}
+
+static int highlight_configure_root_context(Context *root, const HighlightDocumentInfo *info) {
+    char **import_locations;
+    char *cwd;
+    char *exe_path;
+    size_t count;
+
+    if (!root || !info) return 0;
+
+    root->master_context = root;
+    root->debug_mode = 0;
+    root->stop_after_parse = 1;
+    root->optimise = 0;
+    root->level = LEVELB;
+    root->disable_exits = info->disable_exits;
+    root->location = retain_context_string(root, info->document_dir);
+    root->file_name = retain_context_string(root, info->document_name);
+
+    count = 0;
+    cwd = retain_context_string(root, info->current_working_directory);
+    exe_path = retain_context_string(root, info->exe_path);
+    if (cwd) count++;
+    if (exe_path && (!cwd || strcmp(exe_path, cwd) != 0)) count++;
+
+    import_locations = malloc(sizeof(char *) * (count + 1));
+    if (!import_locations) return 0;
+
+    count = 0;
+    if (cwd) import_locations[count++] = cwd;
+    if (exe_path && (!cwd || strcmp(exe_path, cwd) != 0)) import_locations[count++] = exe_path;
+    import_locations[count] = 0;
+    root->import_locations = import_locations;
+
+    if (root->file_name) {
+        root->loading_files = malloc(sizeof(char *));
+        if (root->loading_files) {
+            root->loading_files[0] = strdup(root->file_name);
+            if (root->loading_files[0]) {
+                root->loading_files_count = 1;
+            } else {
+                free(root->loading_files);
+                root->loading_files = 0;
+            }
+        }
+    }
+
+    return 1;
+}
+
+static int highlight_cache_needs_reset(const HighlightDocumentInfo *info) {
+    if (!g_highlight_state.root) return 1;
+    if (!info) return 1;
+    if (!g_highlight_state.document_id || strcmp(g_highlight_state.document_id, info->document_id) != 0) return 1;
+    if (!g_highlight_state.search_path_key || strcmp(g_highlight_state.search_path_key, info->search_path_key) != 0) return 1;
+    if (!g_highlight_state.exit_module_name ||
+        strcmp(g_highlight_state.exit_module_name, info->exit_module_name) != 0) return 1;
+    if (g_highlight_state.exits_disabled != info->disable_exits) return 1;
+    if (highlight_paths_stale()) return 1;
+    return 0;
+}
+
+static Context *highlight_prepare_root_cache(CodeBuffer *cb) {
+    HighlightDocumentInfo info;
+    Context *root;
+
+    if (!highlight_build_document_info(cb, &info)) return 0;
+
+    if (highlight_cache_needs_reset(&info)) {
+        highlight_clear_retained_state(g_highlight_state.root != 0);
+
+        root = cntx_f();
+        if (!root || !highlight_configure_root_context(root, &info)) {
+            if (root) fre_cntx(root);
+            highlight_free_document_info(&info);
+            return 0;
+        }
+
+        g_highlight_state.root = root;
+        g_highlight_state.document_id = strdup(info.document_id);
+        g_highlight_state.search_path_key = strdup(info.search_path_key);
+        g_highlight_state.exit_module_name = strdup(info.exit_module_name);
+        g_highlight_state.exits_disabled = info.disable_exits;
+        g_highlight_state.exit_registry_ready = 0;
+        g_highlight_state.generation++;
+    }
+
+    root = g_highlight_state.root;
+
+    if (root && !root->importable_file_list) {
+        root->importable_file_list = rxfl_lst(root);
+        g_highlight_state.import_inventory_warm_count++;
+    }
+
+    if (root && !root->disable_exits && !g_highlight_state.exit_registry_ready) {
+        rxcp_init_exits(root);
+        g_highlight_state.exit_registry_ready = 1;
+        g_highlight_state.exit_warm_count++;
+    }
+
+    highlight_record_root_snapshots(root, &info);
+    highlight_free_document_info(&info);
+    return root;
+}
+
+static void highlight_release_parse_exit_objects(Context *context, ASTNode *node) {
+    rxvml_context *bridge;
+
+    if (!context || !node || !context->master_context || !context->master_context->rxvml_bridge) return;
+
+    bridge = (rxvml_context *)context->master_context->rxvml_bridge;
+    while (node) {
+        if (node->exit_obj_reg >= 0) {
+            rxvml_reg_free(bridge, node->exit_obj_reg);
+            node->exit_obj_reg = -1;
+        }
+        if (node->child) highlight_release_parse_exit_objects(context, node->child);
+        node = node->sibling;
+    }
 }
 
 static void configure_parser_import_locations(Context *context) {
@@ -553,28 +1058,37 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     char *source_code;
     size_t source_len;
     Context *context;
+    Context *root_context;
     CB_ParseTree *tb;
     CB_Node root_node;
     HighlightTokenCursor cursor;
+    HighlightDocumentInfo doc_info;
+    int have_doc_info;
 
     if (!cb) return;
 
     source_code = get_code_buffer_source(cb);
     if (!source_code) return;
     source_len = strlen(source_code);
+    have_doc_info = highlight_build_document_info(cb, &doc_info);
+    root_context = highlight_prepare_root_cache(cb);
 
     context = cntx_f();
-    context->master_context = context;
-    context->file_name = strdup("dsl_buffer.rexx");
+    context->master_context = root_context ? root_context : context;
+    context->file_name = strdup(have_doc_info && doc_info.document_name ? doc_info.document_name : "dsl_buffer.rexx");
     context->debug_mode = 0;
     context->stop_after_parse = 1;
     context->optimise = 0;
     context->level = LEVELB;
+    context->disable_exits = root_context ? root_context->disable_exits : (have_doc_info ? doc_info.disable_exits : 0);
+    context->location = root_context ? root_context->location : (have_doc_info ? doc_info.document_dir : 0);
 
-    cntx_buf(context, source_code, strlen(source_code));
-    configure_parser_import_locations(context);
-
-    rxcp_init_exits(context);
+    cntx_buf(context, source_code, source_len);
+    if (!root_context) {
+        configure_parser_import_locations(context);
+        if (!context->disable_exits) rxcp_init_exits(context);
+        if (!context->importable_file_list) context->importable_file_list = rxfl_lst(context);
+    }
     rexbpars(context);
 
     if (!context->ast) {
@@ -607,8 +1121,12 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     cb_tweak_tree_positions(tb);
     cb_validate_tree(tb);
 
+    if (context->master_context != context) {
+        highlight_release_parse_exit_objects(context, context->ast);
+    }
     if (context->file_name) free(context->file_name);
     fre_cntx(context);
+    if (have_doc_info) highlight_free_document_info(&doc_info);
     cb->parse_tree = tb;
 }
 

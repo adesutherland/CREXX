@@ -599,7 +599,30 @@ target_include_directories(test_source_provenance PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
         ${CMAKE_SOURCE_DIR}/binutils/include)
 
+if (ENABLE_PARSER_MODE)
+    add_executable(test_highlight_cache src/test_highlight_cache.c)
+    target_link_libraries(test_highlight_cache PRIVATE rxclib dslsyntax_editor)
+    target_compile_definitions(test_highlight_cache PRIVATE ENABLE_PARSER_MODE)
+    target_include_directories(test_highlight_cache PRIVATE
+            ${CMAKE_SOURCE_DIR}/compiler
+            ${CMAKE_BINARY_DIR}/compiler
+            ${CMAKE_SOURCE_DIR}/assembler
+            ${CMAKE_SOURCE_DIR}/avl_tree
+            ${CMAKE_SOURCE_DIR}/platform
+            ${CMAKE_SOURCE_DIR}/utf8
+            ${CMAKE_SOURCE_DIR}/rxpa
+            ${CMAKE_SOURCE_DIR}/interpreter
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
+            ${CMAKE_SOURCE_DIR}/binutils/include
+            ${DSL_SH_SOURCE_DIR}/codebuffer)
+endif()
+
 # Commented out until fix found for multiple calls to the VM
 add_test(NAME BridgeConnectivity COMMAND test_bridge)
 add_test(NAME source_provenance COMMAND test_source_provenance)
 set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")
+
+if (ENABLE_PARSER_MODE)
+    add_test(NAME highlight_cache COMMAND test_highlight_cache)
+    set_tests_properties(highlight_cache PROPERTIES LABELS "compiler;syntax_highlighting;stage4")
+endif()

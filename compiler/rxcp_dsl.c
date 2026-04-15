@@ -26,6 +26,7 @@
 #define VOID RXCP_VOID
 
 #include "rxcpmain.h"
+#include "rxcp_highlight_controller.h"
 #include "rxcp_val.h"
 #include "rxcpbgmr.h"
 #include "rxcp_exit.h"
@@ -43,8 +44,6 @@
 #include "dslsyntax_parser.h"
 #include "serialization.h"
 #include "dslsyntax_log.h"
-
-void rxc_highlight_controller_parse(CodeBuffer *cb);
 
 /* Map cREXX token types to DSL platform node types */
 static CB_NodeType map_c_token_to_cb_type(int token_type) {
