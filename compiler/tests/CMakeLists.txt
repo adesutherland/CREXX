@@ -566,6 +566,24 @@ if (ENABLE_PARSER_MODE)
             "PARSE_TREE_FUNCTION"
     )
     set_tests_properties(syntaxhighlight_top_level_statements PROPERTIES LABELS "compiler;syntax_highlighting;stage1")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_block_comment
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_block_comment.rexx
+            MUST_MATCH
+            "Node: type=38 \\(LEXER_COMMENT\\), pos=0, len=[0-9]+, sev=48"
+            MUST_NOT_MATCH
+            "LEXER_OPERATOR_ARITHMETIC"
+    )
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_comments_dash
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_comments_dash.rexx
+            MUST_MATCH
+            "Node: type=38 \\(LEXER_COMMENT\\), pos=[0-9]+, len=[0-9]+, sev=48, text=\"-- dash line comment\""
+            MUST_NOT_MATCH
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=1, sev=48, text=\"-\""
+    )
 endif()
 
 # Bridge Connectivity Test

@@ -60,6 +60,8 @@
 typedef struct HighlightTokenCursor {
     Context *context;
     Token *token;
+    const char *last_source_ptr;
+    size_t last_source_pos;
 } HighlightTokenCursor;
 
 typedef struct HighlightWatchedPath {
@@ -998,6 +1000,100 @@ static void emit_diagnostics_from_detached_ast(CB_ParseTree *tb, Context *contex
     }
 }
 
+static const char *highlight_source_ptr_for_pos(HighlightTokenCursor *cursor, size_t pos) {
+    const char *ptr;
+    size_t current_pos;
+    utf8_int32_t codepoint;
+
+    if (!cursor || !cursor->context || !cursor->context->buff_start) return 0;
+
+    if (!cursor->last_source_ptr || pos < cursor->last_source_pos) {
+        ptr = cursor->context->buff_start;
+        current_pos = 0;
+    } else {
+        ptr = cursor->last_source_ptr;
+        current_pos = cursor->last_source_pos;
+    }
+
+    while (ptr && *ptr && current_pos < pos) {
+        ptr = utf8codepoint(ptr, &codepoint);
+        current_pos++;
+    }
+
+    if (!ptr || current_pos != pos) return 0;
+
+    cursor->last_source_ptr = ptr;
+    cursor->last_source_pos = current_pos;
+    return ptr;
+}
+
+/* Comments are intentionally skipped by the compiler lexer, so parser mode
+ * must recover them from source gaps after projecting the authoritative tree. */
+static int highlight_comment_span(HighlightTokenCursor *cursor,
+                                  size_t pos,
+                                  CB_Node *node_out) {
+    Context *context;
+    const char *start;
+    const char *ptr;
+    size_t byte_length;
+    size_t char_length;
+    int depth;
+
+    if (!cursor || !node_out) return 0;
+    context = cursor->context;
+    if (!context) return 0;
+
+    start = highlight_source_ptr_for_pos(cursor, pos);
+    if (!start || start >= context->buff_end) return 0;
+
+    if ((size_t)(context->buff_end - start) >= 2 && start[0] == '/' && start[1] == '*') {
+        depth = 1;
+        ptr = start + 2;
+        while (ptr < context->buff_end) {
+            if ((size_t)(context->buff_end - ptr) >= 2 && ptr[0] == '/' && ptr[1] == '*') {
+                depth++;
+                ptr += 2;
+                continue;
+            }
+            if ((size_t)(context->buff_end - ptr) >= 2 && ptr[0] == '*' && ptr[1] == '/') {
+                depth--;
+                ptr += 2;
+                if (depth == 0) break;
+                continue;
+            }
+            ptr++;
+        }
+
+        byte_length = (size_t)(ptr - start);
+        char_length = utf8nlen(start, byte_length);
+        if (char_length == 0) char_length = 1;
+        *node_out = cb_create_node(LEXER_COMMENT, pos, char_length);
+        return 1;
+    }
+
+    if (context->comments_hash && start[0] == '#') {
+        ptr = start + 1;
+    } else if (context->comments_dash &&
+               (size_t)(context->buff_end - start) >= 2 &&
+               start[0] == '-' && start[1] == '-') {
+        ptr = start + 2;
+    } else if (context->comments_slash &&
+               (size_t)(context->buff_end - start) >= 2 &&
+               start[0] == '/' && start[1] == '/') {
+        ptr = start + 2;
+    } else {
+        return 0;
+    }
+
+    while (ptr < context->buff_end && *ptr != '\n' && *ptr != '\r') ptr++;
+
+    byte_length = (size_t)(ptr - start);
+    char_length = utf8nlen(start, byte_length);
+    if (char_length == 0) char_length = 1;
+    *node_out = cb_create_node(LEXER_COMMENT, pos, char_length);
+    return 1;
+}
+
 static CB_Node compiler_get_token_callback(void *user_data,
                                            size_t pos,
                                            size_t length,
@@ -1006,6 +1102,7 @@ static CB_Node compiler_get_token_callback(void *user_data,
     Token *token;
     size_t token_pos;
     size_t token_len;
+    CB_Node comment_node;
 
     cursor = (HighlightTokenCursor *)user_data;
     token = cursor ? cursor->context->token_head : 0;
@@ -1014,6 +1111,10 @@ static CB_Node compiler_get_token_callback(void *user_data,
             return cb_create_node(map_c_token_to_cb_type(token->token_type), pos, token_len);
         }
         token = token->token_next;
+    }
+
+    if (highlight_comment_span(cursor, pos, &comment_node)) {
+        return comment_node;
     }
 
     if (token_chars && length > 0 && token_chars[0].codepoints > 0) {
@@ -1084,6 +1185,10 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     context->location = root_context ? root_context->location : (have_doc_info ? doc_info.document_dir : 0);
 
     cntx_buf(context, source_code, source_len);
+    opt_pars(context);
+    free_ast(context);
+    free_tok(context);
+    cntx_buf(context, source_code, source_len);
     if (!root_context) {
         configure_parser_import_locations(context);
         if (!context->disable_exits) rxcp_init_exits(context);
@@ -1106,6 +1211,8 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     if (context->source_tree) {
         cursor.context = context;
         cursor.token = context->token_head;
+        cursor.last_source_ptr = context->buff_start;
+        cursor.last_source_pos = 0;
         emit_source_projection(tb, context, context->source_tree->child, &cursor);
         emit_tokens_until(tb, &cursor, source_len);
         emit_diagnostics_from_source_state(tb, context);
@@ -1117,6 +1224,8 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     cb_order_tree(tb);
     cursor.context = context;
     cursor.token = context->token_head;
+    cursor.last_source_ptr = context->buff_start;
+    cursor.last_source_pos = 0;
     cb_add_missing_tokens(tb, cb, compiler_get_token_callback, &cursor);
     cb_tweak_tree_positions(tb);
     cb_validate_tree(tb);

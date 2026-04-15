@@ -1031,6 +1031,12 @@ Implemented in this stage:
 - the token callback now maps separators, brackets, arithmetic operators, assignment, exit-primary tokens, and dotted stem-tail segments authoritatively enough for the current tests
 - parser mode configures import/executable search paths and now consumes diagnostics from the canonical source-owned state built in Stage 2
 
+##### April 15, 2026 - Comment-span recovery round
+
+- Parser mode now runs the same initial `opt_pars()` scan as normal compilation before the real highlight parse, so comment-style options such as `comments_dash` affect lexer behaviour during syntax highlighting as well.
+- Because the compiler lexer intentionally skips comments rather than emitting normal parser tokens for them, `compiler/rxcp_highlight_controller.c` now recovers full comment spans from source gaps during `cb_add_missing_tokens()`.
+- That recovery path matches cREXX comment semantics, including nested `/* ... */` block comments, and uses the parsed `Context` flags for line-comment styles instead of hard-coded defaults.
+
 ### Stage 4: Add Caching for External Symbols and Exits
 
 1. Add persistent caches to the highlighting controller for:
