@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD 99)
 # -------------------------------------------------------------------------------------------
 set(plugin_name "system")       # add plugin name
 set(test_rexx "system_test")    # add rexx to test plugin
-set(use_precomp TRUE)           # TRUE pre compile needed, FALSE if not
+set(use_precomp FALSE)           # TRUE pre compile needed, FALSE if not
 
 # ===========================================================================================
 # The following sequence is generic and does not require modification.
@@ -18,6 +18,7 @@ include(${CMAKE_SOURCE_DIR}/rxpa/CMakePluginTemplate.txt)
 plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 
 enable_testing()
+
 # Create the static link module
 add_static_plugin_target(_system system.c)
 

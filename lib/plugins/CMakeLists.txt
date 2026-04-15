@@ -5,7 +5,6 @@ project(plugins NONE)
 #
 # These are the plugins that are built for Windows, macOS and Linux
 #
-add_subdirectory(sysinfo)
 add_subdirectory(arrays)
 add_subdirectory(rxmath)
 add_subdirectory(stack)

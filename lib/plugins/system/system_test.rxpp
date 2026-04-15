@@ -1,6 +1,0 @@
-import system
-##cflags def nset  3buf  parse def
-##  array=.string[]
-
-say "System Test plugin examples have been lost."
-say "Empty rexx to allow successfull commit."

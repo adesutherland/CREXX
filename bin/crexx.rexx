@@ -21,7 +21,7 @@
 
  options levelb comments_dash
  import rxfnsb
- import sysinfo
+ import system
  
  /* procedure main is what is run when crexx starts execution */
  main: procedure = .int

@@ -89,18 +89,18 @@ void searchReplace(char *str, char search, char replace) {
  * Get environment variable (directory)
  * -------------------------------------------------------------------------------------
  */
-PROCEDURE(getEnv) {
-    char *varName = GETSTRING(ARG0);
-    if (!varName) {
-        RETURNSIGNAL(SIGNAL_FAILURE, "Invalid argument")
-    }
-    char *varValue = getenv(varName);   
-    if (varValue == NULL) {             
-        RETURNSIGNAL(SIGNAL_FAILURE, "Environment variable not found")
-    }
-    RETURNSTR(varValue);
-ENDPROC
-}
+/* PROCEDURE(getEnv) { */
+/*     char *varName = GETSTRING(ARG0); */
+/*     if (!varName) { */
+/*         RETURNSIGNAL(SIGNAL_FAILURE, "Invalid argument") */
+/*     } */
+/*     char *varValue = getenv(varName);    */
+/*     if (varValue == NULL) {              */
+/*         RETURNSIGNAL(SIGNAL_FAILURE, "Environment variable not found") */
+/*     } */
+/*     RETURNSTR(varValue); */
+/* ENDPROC */
+/* } */
 /* -------------------------------------------------------------------------------------
  * Get current working directory
  * -------------------------------------------------------------------------------------
@@ -878,7 +878,7 @@ PROCEDURE(waitX) {
     ENDPROC
 }
 /* ------------------------------------------------------------------------------------------------
- * Beep creates a primitive beep
+ * Beep creates a primitive beep. TODO does not seem to works and is not platform independent
  * ------------------------------------------------------------------------------------------------
  */
 PROCEDURE(beep) {
@@ -1299,8 +1299,8 @@ PROCEDURE(pipeclose) {
  */
 LOADFUNCS
 //      C Function, REXX namespace & name, Option, Return Type, Arguments
-    ADDPROC(getEnv,      "system.getenv",      "b",    ".string", "input=.string");
     ADDPROC(getdir,      "system.getdir",      "b",    ".string", "");
+    ADDPROC(getdir,      "system.getCWD",      "b",    ".string", "");
     ADDPROC(getLoadPath, "system.getloadpath", "b",    ".string", "");
     ADDPROC(setdir,      "system.setdir",      "b",    ".int",    "arg0=.string");
     ADDPROC(testdir,     "system.testdir",     "b",    ".int",    "arg0=.string");
@@ -1309,14 +1309,14 @@ LOADFUNCS
     ADDPROC(deletefile,  "system.deletefile",  "b",    ".int",    "arg0=.string");
     ADDPROC(renamefileP, "system.renamefile",  "b",    ".int",    "arg0=.string,arg1=.string");
     ADDPROC(testfile,    "system.testfile",    "b",    ".int",    "arg0=.string");
-    ADDPROC(listdir,     "system.listdir",     "b",    ".int",    "file=.string,expose entries=.string[]");
+    ADDPROC(listdir,     "system._listdir",     "b",    ".int",    "file=.string,expose entries=.string[]");
     ADDPROC(getclipboard,"system.getclipboard","b",    ".string","");
     ADDPROC(setclipboard,"system.setclipboard","b",    ".int","arg0=.string");
     ADDPROC(getglobal,   "system.getglobal"   ,"b",    ".string","key=.string");
     ADDPROC(setglobal,   "system.setglobal"   ,"b",    ".int",  "key=.string,value=.string");
-    ADDPROC(sysuptime,      "system.sysuptime"      ,"b",    ".int",  "");
-    ADDPROC(waitX,       "system.wait"        ,"b",    ".int",  "time=.int");
-    ADDPROC(beep,        "system.beep"        ,"b",    ".int",  "");
+    ADDPROC(sysuptime,    "system.sysuptime"      ,"b",    ".int",  "");
+    ADDPROC(waitX,       "system._wait"        ,"b",    ".int",  "time=.int");
+    ADDPROC(beep,        "system._beep"        ,"b",    ".int",  "");
     ADDPROC(getuser,     "system.userid"      ,"b",    ".string",  "");
     ADDPROC(getcomputer, "system.host"        ,"b",    ".string",  "");
     ADDPROC(opsys,       "system.opsys"       ,"b",    ".string",  "");
