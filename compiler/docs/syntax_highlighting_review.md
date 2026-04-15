@@ -1101,23 +1101,41 @@ Goal of this stage:
 
 #### Status Summary on April 15, 2026
 
-- Status: not started
-- Current code reality:
-  provenance exists, but symbol/type conclusions and user-visible diagnostics still primarily live on the mutable work AST rather than on immutable source-tree nodes as canonical state
-- Not yet delivered:
-  source-owned semantic state,
-  source-owned canonical diagnostics,
-  `identifier_id`,
-  and richer semantic token projection derived from that source-owned state
+- Status: complete
+- Delivered:
+  immutable `SourceNode` instances now carry source-owned semantic sidecars in `compiler/rxcp_source_tree.*`,
+  the normal compiler path now mirrors final symbol/type conclusions onto that source-owned state after validation,
+  parser mode now runs the semantic validation pipeline only when the source tree is syntax-error free,
+  and DSLSH leaf projection now populates both `identifier_id` and stronger identifier classes from that mirrored source-owned state
+- Current parser-mode behaviour:
+  authored procedure labels that lex as `TK_UNKNOWN` are now still projected as semantic function identifiers when the source tree resolves them,
+  plain function calls such as `twice(value)` now project as `LEXER_FUNCTION_IDENTIFIER`,
+  and repeated authored uses of the same symbol share one non-zero `identifier_id`
+- Test coverage:
+  a dedicated regression test,
+  `source_semantics`,
+  is now wired through `compiler/tests/CMakeLists.txt`
+- Current verified baseline:
+  `ctest --output-on-failure -R '^(source_semantics|source_provenance|highlight_cache)$'`
+  passes `3/3`,
+  `ctest --output-on-failure -L syntax_highlighting`
+  passes `10/10`,
+  and `ctest --output-on-failure -j8`
+  in `cmake-build-debug/compiler/tests`
+  passes `412/412`
 - Dependency view:
-  this stage should follow the remaining Stage 2 work so the source tree can become the authoritative target for mirrored results rather than an additional partially-populated view
+  Stages 2 through 5 are now complete enough that the source tree is the authoritative user-facing path for diagnostics, semantic projection, and identifier ownership;
+  Stage 6 remains a separate cleanup pass rather than a blocker
 
 #### Journal
 
-##### April 15, 2026 - Stage reserved pending completion of the remaining Stage 2 gap
+##### April 15, 2026 - Source-owned semantic sync and projection completion
 
-- No semantic-sync implementation has been started yet.
-- The source tree is still not the single canonical store for diagnostics and semantic conclusions.
+- Added source-owned semantic sidecars to immutable `SourceNode` objects, including mirrored symbol identity, identifier class, usage flags, and resolved value/target type conclusions.
+- Added `source_tree_sync_semantics()` and wired it into both normal compilation and parser mode after validation.
+- Updated parser mode so semantic validation runs only after a syntax-clean source tree exists, preserving the earlier lightweight behaviour for broken input while enabling semantic highlighting on valid input.
+- Updated the DSLSH token projection so semantic source state can override raw lexer categories and supply `identifier_id`, including for authored labels that the lexer reports as `TK_UNKNOWN`.
+- Added `compiler/tests/src/test_source_semantics.c` to verify both the mirrored source-tree state and the parser-mode `identifier_id` / semantic-token projection.
 
 ### Stage 6: Reduce Redundant Work-Tree State Only After Proof
 
@@ -1136,7 +1154,7 @@ Goal of this stage:
 - Current guidance:
   do not remove direct source spans, mutable-AST convenience fields, or other redundant work-tree state yet
 - Dependency view:
-  this stage should only begin after Stages 2 through 5 are complete and the source tree is demonstrably the authoritative path for diagnostics, semantic projection, and metadata anchoring
+  Stages 2 through 5 are now complete, but reduction work should still wait until the new source-owned semantic path has more soak time and a concrete redundancy target
 
 #### Journal
 

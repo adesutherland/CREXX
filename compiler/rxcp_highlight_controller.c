@@ -62,7 +62,17 @@ typedef struct HighlightTokenCursor {
     Token *token;
     const char *last_source_ptr;
     size_t last_source_pos;
+    struct HighlightSemanticTokenOwner *semantic_tokens;
+    size_t semantic_token_count;
+    size_t semantic_token_capacity;
+    size_t semantic_token_index;
 } HighlightTokenCursor;
+
+typedef struct HighlightSemanticTokenOwner {
+    Token *token;
+    SourceNode *source_node;
+    size_t depth;
+} HighlightSemanticTokenOwner;
 
 typedef struct HighlightWatchedPath {
     char *path;
@@ -778,6 +788,191 @@ static int ast_node_span_utf8(Context *context, ASTNode *node, size_t *pos, size
     return 0;
 }
 
+static int highlight_has_source_errors(Context *context) {
+    SourceDiagnostic *diag;
+
+    if (!context) return 0;
+
+    diag = context->source_diagnostics_list;
+    while (diag) {
+        if (diag->severity == SOURCE_DIAG_ERROR) return 1;
+        diag = diag->next_in_context;
+    }
+    return 0;
+}
+
+static int highlight_semantic_rank(SourceNode *node) {
+    SourceSemanticInfo *semantics;
+
+    if (!node) return 0;
+    semantics = node->semantics;
+    if (!semantics) return node->token ? 1 : 0;
+
+    if (semantics->identifier_id > 0) return 4;
+    if (semantics->identifier_kind != SOURCE_SEMANTIC_NONE) return 3;
+    if (semantics->symbol_type != UNKNOWN_SYMBOL) return 2;
+    return node->token ? 1 : 0;
+}
+
+static int highlight_semantic_owner_compare(const void *lhs, const void *rhs) {
+    const HighlightSemanticTokenOwner *left = (const HighlightSemanticTokenOwner *)lhs;
+    const HighlightSemanticTokenOwner *right = (const HighlightSemanticTokenOwner *)rhs;
+
+    if (left->token->token_number < right->token->token_number) return -1;
+    if (left->token->token_number > right->token->token_number) return 1;
+    if (left->depth < right->depth) return -1;
+    if (left->depth > right->depth) return 1;
+    return 0;
+}
+
+static void highlight_collect_semantic_tokens(HighlightTokenCursor *cursor,
+                                              SourceNode *node,
+                                              size_t depth) {
+    HighlightSemanticTokenOwner *new_tokens;
+    size_t new_capacity;
+    size_t i;
+    int new_rank;
+    int old_rank;
+
+    while (node) {
+        if (node->token) {
+            for (i = 0; i < cursor->semantic_token_count; i++) {
+                if (cursor->semantic_tokens[i].token == node->token) {
+                    new_rank = highlight_semantic_rank(node);
+                    old_rank = highlight_semantic_rank(cursor->semantic_tokens[i].source_node);
+                    if (new_rank > old_rank ||
+                        (new_rank == old_rank && depth >= cursor->semantic_tokens[i].depth)) {
+                        cursor->semantic_tokens[i].source_node = node;
+                        cursor->semantic_tokens[i].depth = depth;
+                    }
+                    break;
+                }
+            }
+
+            if (i == cursor->semantic_token_count) {
+                if (cursor->semantic_token_count == cursor->semantic_token_capacity) {
+                    new_capacity = cursor->semantic_token_capacity ? cursor->semantic_token_capacity * 2 : 64;
+                    new_tokens = realloc(cursor->semantic_tokens,
+                                         sizeof(HighlightSemanticTokenOwner) * new_capacity);
+                    if (!new_tokens) return;
+                    cursor->semantic_tokens = new_tokens;
+                    cursor->semantic_token_capacity = new_capacity;
+                }
+
+                cursor->semantic_tokens[cursor->semantic_token_count].token = node->token;
+                cursor->semantic_tokens[cursor->semantic_token_count].source_node = node;
+                cursor->semantic_tokens[cursor->semantic_token_count].depth = depth;
+                cursor->semantic_token_count++;
+            }
+        }
+
+        if (node->child) highlight_collect_semantic_tokens(cursor, node->child, depth + 1);
+        node = node->sibling;
+    }
+}
+
+static void highlight_prepare_semantic_tokens(HighlightTokenCursor *cursor, SourceNode *root) {
+    if (!cursor) return;
+
+    cursor->semantic_token_count = 0;
+    cursor->semantic_token_capacity = 0;
+    cursor->semantic_token_index = 0;
+    cursor->semantic_tokens = 0;
+
+    if (!root) return;
+
+    highlight_collect_semantic_tokens(cursor, root, 0);
+    if (cursor->semantic_token_count > 1) {
+        qsort(cursor->semantic_tokens,
+              cursor->semantic_token_count,
+              sizeof(HighlightSemanticTokenOwner),
+              highlight_semantic_owner_compare);
+    }
+}
+
+static void highlight_free_semantic_tokens(HighlightTokenCursor *cursor) {
+    if (!cursor) return;
+    if (cursor->semantic_tokens) free(cursor->semantic_tokens);
+    cursor->semantic_tokens = 0;
+    cursor->semantic_token_count = 0;
+    cursor->semantic_token_capacity = 0;
+    cursor->semantic_token_index = 0;
+}
+
+static SourceNode *highlight_source_node_for_token(HighlightTokenCursor *cursor, Token *token) {
+    size_t index;
+
+    if (!cursor || !token || !cursor->semantic_tokens) return 0;
+
+    index = cursor->semantic_token_index;
+    if (index < cursor->semantic_token_count &&
+        cursor->semantic_tokens[index].token->token_number > token->token_number) {
+        index = 0;
+    }
+    while (index < cursor->semantic_token_count &&
+           cursor->semantic_tokens[index].token->token_number < token->token_number) {
+        index++;
+    }
+    cursor->semantic_token_index = index;
+
+    while (index < cursor->semantic_token_count &&
+           cursor->semantic_tokens[index].token->token_number == token->token_number) {
+        if (cursor->semantic_tokens[index].token == token) {
+            cursor->semantic_token_index = index;
+            return cursor->semantic_tokens[index].source_node;
+        }
+        index++;
+    }
+
+    return 0;
+}
+
+static CB_NodeType highlight_identifier_type_from_source(SourceNode *node, int fallback_type) {
+    SourceSemanticInfo *semantics;
+
+    if (!node) return (CB_NodeType)fallback_type;
+    semantics = node->semantics;
+    if (!semantics) return (CB_NodeType)fallback_type;
+
+    switch (semantics->identifier_kind) {
+        case SOURCE_SEMANTIC_FUNCTION: return LEXER_FUNCTION_IDENTIFIER;
+        case SOURCE_SEMANTIC_TYPE: return LEXER_TYPE_IDENTIFIER;
+        case SOURCE_SEMANTIC_CONSTANT: return LEXER_CONSTANT_IDENTIFIER;
+        default: return (CB_NodeType)fallback_type;
+    }
+}
+
+static CB_Node highlight_cb_node_for_token(HighlightTokenCursor *cursor,
+                                           Token *token,
+                                           size_t pos,
+                                           size_t len) {
+    CB_Node node;
+    SourceNode *source_node;
+
+    node = cb_create_node(map_c_token_to_cb_type(token->token_type), pos, len);
+    source_node = highlight_source_node_for_token(cursor, token);
+
+    switch (token->token_type) {
+        case TK_UNKNOWN:
+        case TK_VAR_SYMBOL:
+        case TK_STEM:
+        case TK_STEMSTRING:
+        case TK_CLASS_TYPE:
+        case TK_LABEL:
+        case TK_MULT_LABEL:
+            node.type = highlight_identifier_type_from_source(source_node, node.type);
+            if (source_node && source_node->semantics) node.identifier_id = source_node->semantics->identifier_id;
+            break;
+        case TK_STEMVAR:
+            if (source_node && source_node->semantics) node.identifier_id = source_node->semantics->identifier_id;
+            break;
+        default:
+            break;
+    }
+
+    return node;
+}
+
 static int source_container_type(SourceNode *node, CB_NodeType *type) {
     if (!node || !type) return 0;
 
@@ -840,21 +1035,32 @@ static int source_container_type(SourceNode *node, CB_NodeType *type) {
     }
 }
 
-static void emit_projected_token(CB_ParseTree *tb, Token *token, size_t pos, size_t len) {
-    CB_NodeType type;
+static void emit_projected_token(CB_ParseTree *tb,
+                                 HighlightTokenCursor *cursor,
+                                 Token *token,
+                                 size_t pos,
+                                 size_t len) {
+    CB_Node node;
     int has_embedded_separator;
 
     if (!tb || !token || len == 0) return;
     has_embedded_separator = token->token_string && token->token_string[0] == '.';
+    node = highlight_cb_node_for_token(cursor, token, pos, len);
 
     switch (token->token_type) {
         case TK_STEMVAR:
             if (has_embedded_separator && len > 1) {
                 cb_add_child_node(tb, cb_create_node(LEXER_SEPARATOR, pos, 1));
-                cb_add_child_node(tb, cb_create_node(LEXER_IDENTIFIER, pos + 1, len - 1));
+                node.pos = pos + 1;
+                node.length = len - 1;
+                node.type = highlight_identifier_type_from_source(highlight_source_node_for_token(cursor, token),
+                                                                  LEXER_IDENTIFIER);
+                cb_add_child_node(tb, node);
                 return;
             }
-            cb_add_child_node(tb, cb_create_node(LEXER_IDENTIFIER, pos, len));
+            node.type = highlight_identifier_type_from_source(highlight_source_node_for_token(cursor, token),
+                                                              LEXER_IDENTIFIER);
+            cb_add_child_node(tb, node);
             return;
         case TK_STEMINT:
             if (has_embedded_separator && len > 1) {
@@ -867,18 +1073,23 @@ static void emit_projected_token(CB_ParseTree *tb, Token *token, size_t pos, siz
         case TK_STEMSTRING:
             if (has_embedded_separator && len > 1) {
                 cb_add_child_node(tb, cb_create_node(LEXER_SEPARATOR, pos, 1));
-                cb_add_child_node(tb, cb_create_node(LEXER_IDENTIFIER, pos + 1, len - 1));
+                node.pos = pos + 1;
+                node.length = len - 1;
+                node.type = highlight_identifier_type_from_source(highlight_source_node_for_token(cursor, token),
+                                                                  LEXER_IDENTIFIER);
+                cb_add_child_node(tb, node);
                 return;
             }
-            cb_add_child_node(tb, cb_create_node(LEXER_IDENTIFIER, pos, len));
+            node.type = highlight_identifier_type_from_source(highlight_source_node_for_token(cursor, token),
+                                                              LEXER_IDENTIFIER);
+            cb_add_child_node(tb, node);
             return;
         case TK_STEMNOVAL:
             cb_add_child_node(tb, cb_create_node(LEXER_SEPARATOR, pos, len));
             return;
     }
 
-    type = map_c_token_to_cb_type(token->token_type);
-    cb_add_child_node(tb, cb_create_node(type, pos, len));
+    cb_add_child_node(tb, node);
 }
 
 static void emit_tokens_until(CB_ParseTree *tb, HighlightTokenCursor *cursor, size_t limit_pos) {
@@ -893,7 +1104,7 @@ static void emit_tokens_until(CB_ParseTree *tb, HighlightTokenCursor *cursor, si
         if (pos >= limit_pos) break;
         if (pos + len > limit_pos) break;
 
-        emit_projected_token(tb, cursor->token, pos, len);
+        emit_projected_token(tb, cursor, cursor->token, pos, len);
         cursor->token = cursor->token->token_next;
     }
 }
@@ -1108,7 +1319,7 @@ static CB_Node compiler_get_token_callback(void *user_data,
     token = cursor ? cursor->context->token_head : 0;
     while (token) {
         if (token_span_utf8(cursor->context, token, &token_pos, &token_len) && token_pos == pos) {
-            return cb_create_node(map_c_token_to_cb_type(token->token_type), pos, token_len);
+            return highlight_cb_node_for_token(cursor, token, pos, token_len);
         }
         token = token->token_next;
     }
@@ -1171,6 +1382,7 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     source_code = get_code_buffer_source(cb);
     if (!source_code) return;
     source_len = strlen(source_code);
+    memset(&cursor, 0, sizeof(cursor));
     have_doc_info = highlight_build_document_info(cb, &doc_info);
     root_context = highlight_prepare_root_cache(cb);
 
@@ -1201,6 +1413,11 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     } else {
         rxcp_prepare_source_ast(context);
         source_tree_sync_diagnostics(context);
+        if (!highlight_has_source_errors(context)) {
+            validate_ast(context);
+            source_tree_sync_diagnostics(context);
+            source_tree_sync_semantics(context);
+        }
     }
 
     tb = cb_create_token_buffer();
@@ -1213,6 +1430,7 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
         cursor.token = context->token_head;
         cursor.last_source_ptr = context->buff_start;
         cursor.last_source_pos = 0;
+        highlight_prepare_semantic_tokens(&cursor, context->source_tree);
         emit_source_projection(tb, context, context->source_tree->child, &cursor);
         emit_tokens_until(tb, &cursor, source_len);
         emit_diagnostics_from_source_state(tb, context);
@@ -1226,9 +1444,11 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     cursor.token = context->token_head;
     cursor.last_source_ptr = context->buff_start;
     cursor.last_source_pos = 0;
+    if (!cursor.semantic_tokens && context->source_tree) highlight_prepare_semantic_tokens(&cursor, context->source_tree);
     cb_add_missing_tokens(tb, cb, compiler_get_token_callback, &cursor);
     cb_tweak_tree_positions(tb);
     cb_validate_tree(tb);
+    highlight_free_semantic_tokens(&cursor);
 
     if (context->master_context != context) {
         highlight_release_parse_exit_objects(context, context->ast);

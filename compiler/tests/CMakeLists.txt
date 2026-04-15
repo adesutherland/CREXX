@@ -633,6 +633,22 @@ if (ENABLE_PARSER_MODE)
             ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
             ${CMAKE_SOURCE_DIR}/binutils/include
             ${DSL_SH_SOURCE_DIR}/codebuffer)
+
+    add_executable(test_source_semantics src/test_source_semantics.c)
+    target_link_libraries(test_source_semantics PRIVATE rxclib dslsyntax_editor)
+    target_compile_definitions(test_source_semantics PRIVATE ENABLE_PARSER_MODE)
+    target_include_directories(test_source_semantics PRIVATE
+            ${CMAKE_SOURCE_DIR}/compiler
+            ${CMAKE_BINARY_DIR}/compiler
+            ${CMAKE_SOURCE_DIR}/assembler
+            ${CMAKE_SOURCE_DIR}/avl_tree
+            ${CMAKE_SOURCE_DIR}/platform
+            ${CMAKE_SOURCE_DIR}/utf8
+            ${CMAKE_SOURCE_DIR}/rxpa
+            ${CMAKE_SOURCE_DIR}/interpreter
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
+            ${CMAKE_SOURCE_DIR}/binutils/include
+            ${DSL_SH_SOURCE_DIR}/codebuffer)
 endif()
 
 # Commented out until fix found for multiple calls to the VM
@@ -643,4 +659,7 @@ set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")
 if (ENABLE_PARSER_MODE)
     add_test(NAME highlight_cache COMMAND test_highlight_cache)
     set_tests_properties(highlight_cache PROPERTIES LABELS "compiler;syntax_highlighting;stage4")
+
+    add_test(NAME source_semantics COMMAND test_source_semantics)
+    set_tests_properties(source_semantics PROPERTIES LABELS "compiler;syntax_highlighting;stage5")
 endif()
