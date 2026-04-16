@@ -9,7 +9,7 @@ c2x: procedure = .string
   fz=""
   len=0
   assembler strlen len,from
-  if len=0 then return ""
+  if len=0 then return "00"
   do  i=0 to len-1
       assembler hexchar fz,from,i
       stx=stx||fz
