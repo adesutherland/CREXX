@@ -8,12 +8,23 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 # Including RXPlugin Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
+function(localize_test_plugin_output target)
+    # Keep test-only plugins out of the shared release bin directory.
+    set_target_properties(${target} PROPERTIES
+            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    )
+endfunction()
+
 # Create dynamic plugin 1
 add_dynamic_plugin_target(_plugin1 plugin1.c)
+localize_test_plugin_output(_plugin1)
 add_dependencies(_plugin1 rxpa library rxvm rxc) # The test (not plugin) depends on rxpa, library, rxvm, and rxc
 
 # Create dynamic plugin 2
 add_dynamic_plugin_target(_plugin2 plugin2.c)
+localize_test_plugin_output(_plugin2)
 add_dependencies(_plugin2 rxpa library rxvm rxc) # The test (not plugin) depends on rxpa, library, rxvm, and rxc
 
 add_custom_target(rxpa_mult_test ALL)

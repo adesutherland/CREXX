@@ -1,22 +1,44 @@
-/* RXPP
- * ----------------------------------------------------------------------
- *  CREXX Stem Engine / Robin Hood Hash Demo
- *
- *  Demonstrates:
- *    - Multi-level stems (a.b.c.n)
- *    - setstem / getstem
- *    - stemstat / liststems
- *    - dropstem / dropEntry and error messages via getstemmsg
- *    - Iteration via getstemtail / getall / getalltails
- *    - clonestem (deep copy of a stem)
- *
- * ----------------------------------------------------------------------
- */
 options levelb
 import rxfnsb
 import map
 
-##cflags nbuf nbuf nbuf
-/* map processing dropped, will become part of the kernel */
-say 'MAPS are not supported'
+say "map smoke"
 
+rc = putstem("Customer.42.name", "IBM")
+if rc \= 0 then do
+    say "putstem failed" rc getstemmsg()
+    exit 1
+end
+
+value = getstem("Customer.42.name")
+if value \= "IBM" then do
+    say "getstem returned" value
+    exit 1
+end
+
+stats = stemstat("Customer.")
+if stats = "" then do
+    say "stemstat returned empty output"
+    exit 1
+end
+
+rc = dropstem("Customer.")
+if rc \= 0 then do
+    say "dropstem failed" rc getstemmsg()
+    exit 1
+end
+
+value = getstem("Customer.42.name")
+if value \= "CUSTOMER.42.NAME" then do
+    say "expected canonical missing stem value, got" value
+    exit 1
+end
+
+msg = getstemmsg()
+if msg \= "Stem not defined" then do
+    say "unexpected getstemmsg" msg
+    exit 1
+end
+
+say "map smoke ok"
+return 0
