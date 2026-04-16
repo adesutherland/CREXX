@@ -6,10 +6,6 @@
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <string.h>
 
-/* #if defined(__APPLE__) */
-
-/* #endif */
-
 #define STACK_CAPACITY 1024           // this defines the maximum depth of the tree, it is only used in tmap_keys (retrieve all keys)
 
 typedef struct Entry Entry;
