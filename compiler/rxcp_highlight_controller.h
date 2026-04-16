@@ -23,6 +23,8 @@ typedef struct RXCPHighlightCacheStats {
     unsigned long exit_warm_count;
     unsigned long import_inventory_warm_count;
     size_t cached_import_file_count;
+    size_t cached_import_function_count;
+    size_t cached_exit_primary_count;
     size_t watched_directory_count;
     size_t watched_file_count;
     int exits_disabled;

@@ -76,6 +76,9 @@ struct Context {
     Scope *current_scope;
     void* importable_function_tree;
     void* importable_class_tree;
+    size_t importable_function_count;
+    size_t importable_variable_count;
+    size_t importable_class_count;
     char after_rewrite; /* To avoid duplicate processing / warnings after the compiler rewrites */
     uint32_t changed_flags; /* Bitmask used to see which walkers have made changes */
     /* Do we need to import _rxsysb */

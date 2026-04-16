@@ -81,6 +81,50 @@ The final stage of the front-end is the Validation Orchestrator. Unlike previous
 *   **Code Injection**: Plugins can return Rexx source strings which are parsed into AST fragments and grafted into the main tree. This sets the `changed` flag, triggering another loop iteration to resolve symbols in the new code.
 *   **Rewrite Walkers**: Final transformations (like `ADDRESS` and `EXIT` rewriting) occur within the loop to ensure they interact correctly with injected code.
 
+### 3.6 Source Tree, Provenance, and Parser Mode
+The front-end no longer has a single user-facing tree.
+
+After the early source-shaping work has run, the compiler now snapshots an
+immutable `SourceNode` tree in `compiler/rxcp_source_tree.c`. That snapshot is
+built from the current authored-shape AST before the later compile-only rewrite
+stages continue mutating the working AST.
+
+This split has two explicit roles:
+
+*   **`context->source_tree`**: Canonical user-facing structure for authored
+    layout, source spans, diagnostics, semantic sidecars, and editor-facing
+    projection.
+*   **`context->ast` / `work_ast`**: Mutable compiler tree used for import
+    loading, exit dispatch, fixed-point rewrites, optimization, and emission.
+
+The working AST carries explicit links back to the source tree:
+
+*   `ASTNode->source_node` stores the primary source-tree owner.
+*   `ASTNode->source_provenance` records whether that ownership is exact,
+    inherited, synthetic, or composite.
+*   Some transformed output paths also preserve additional reporting anchors so
+    emitted metadata can still mention removed authored call sites.
+
+Diagnostics and semantic conclusions are synchronized back onto source-owned
+state:
+
+*   `source_tree_sync_diagnostics()` rebuilds canonical source diagnostics from
+    the current AST and detached diagnostics list, clearing stale mirrored
+    state first.
+*   `source_tree_sync_semantics()` mirrors final symbol and type conclusions
+    onto immutable `SourceNode` sidecars after validation.
+
+Parser mode (`rxc --syntaxhighlight`) uses the same parser and early source
+preparation, but it does not serialize the rewritten work tree. Instead,
+`compiler/rxcp_highlight_controller.c` emits DSLSH from `source_tree`, keeps a
+retained parser-mode cache for imports and exit discovery, and only runs the
+semantic pipeline when the source tree is syntax-clean. Because the compiler
+lexer skips comment tokens, parser mode also recovers comment spans from raw
+source gaps during DSLSH projection.
+
+For the DSLSH mapping, editor contract, and retained-cache behavior, see
+[cREXX DSLSH Integration](dslsh_integration.md).
+
 ## 4. Syntax Rules Implemented by Step
 
 ### Step 1: Lexical Rules (Scanner)

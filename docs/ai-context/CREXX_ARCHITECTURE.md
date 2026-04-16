@@ -40,6 +40,33 @@ The pipeline of transforming REXX source code into executable bytecode is struct
    - Modules are loaded via `rxldmod`.
    - The execution loop happens inside the `rxvm_run` function (e.g., in `rxvmmain.c` / `rxvmintp.c`).
 
+## Source Tree and Parser Mode
+
+cREXX now has an explicit split between the user-facing source model and the
+mutable compiler tree.
+
+- After the early source-shaping and source-location work, the compiler builds
+  an immutable `SourceNode` tree in `compiler/rxcp_source_tree.c`.
+- `context->source_tree` is the canonical user-facing tree for authored
+  structure, diagnostics, semantic sidecars, metadata anchors, and editor
+  projection.
+- `context->ast` / `work_ast` remains the mutable compiler tree for import
+  loading, exit dispatch, fixed-point rewrites, optimization, and emission.
+- `ASTNode` instances keep explicit links back to the source tree so later
+  rewritten nodes can still report against authored source.
+
+Parser mode (`rxc --syntaxhighlight`) uses the same parser and early source
+preparation, but it routes through `compiler/rxcp_highlight_controller.c` and
+serializes DSLSH from `source_tree`, not from the later rewritten work tree.
+The controller also keeps retained parser-mode cache state for imports and exit
+discovery across requests.
+
+For the compiler-side build order and tree-split details, see
+[Parsing Pipeline Anatomy](../../compiler/docs/parsing_pipeline_anatomy.md).
+
+For the DSLSH/editor mapping and parser-mode contract, see
+[cREXX DSLSH Integration](../../compiler/docs/dslsh_integration.md).
+
 ## Core Data Structures
 
 ### `ASTNode` (from `compiler/rxcp_ast.h`)

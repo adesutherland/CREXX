@@ -112,6 +112,21 @@ typedef struct HighlightDocumentInfo {
 
 static HighlightRetainedState g_highlight_state;
 
+static size_t highlight_count_registered_exits(Context *root) {
+    ExitEntry *entry;
+    size_t count;
+
+    if (!root) return 0;
+
+    count = 0;
+    entry = (ExitEntry *)root->exit_registry;
+    while (entry) {
+        count++;
+        entry = entry->next;
+    }
+    return count;
+}
+
 static int retain_context_buffer(Context *context, char *buffer) {
     char **new_buffers;
 
@@ -205,6 +220,8 @@ void rxcp_highlight_controller_get_cache_stats(RXCPHighlightCacheStats *stats) {
     stats->exit_warm_count = g_highlight_state.exit_warm_count;
     stats->import_inventory_warm_count = g_highlight_state.import_inventory_warm_count;
     stats->cached_import_file_count = g_highlight_state.cached_import_file_count;
+    stats->cached_import_function_count = g_highlight_state.root ? g_highlight_state.root->importable_function_count : 0;
+    stats->cached_exit_primary_count = highlight_count_registered_exits(g_highlight_state.root);
     stats->watched_directory_count = g_highlight_state.directory_count;
     stats->watched_file_count = g_highlight_state.file_count;
     stats->exits_disabled = g_highlight_state.exits_disabled;
@@ -1174,6 +1191,125 @@ static char *format_ast_diagnostic_message(ASTNode *diag) {
     return message;
 }
 
+typedef struct HighlightDiagnosticSelection {
+    SourceDiagnostic *source_diag;
+    ASTNode *ast_diag;
+    CB_Severity severity;
+    size_t pos;
+    size_t len;
+} HighlightDiagnosticSelection;
+
+static int highlight_spans_overlap(size_t left_pos,
+                                   size_t left_len,
+                                   size_t right_pos,
+                                   size_t right_len) {
+    size_t left_end;
+    size_t right_end;
+
+    if (left_len == 0 || right_len == 0) return 0;
+
+    left_end = left_pos + left_len;
+    right_end = right_pos + right_len;
+    return left_pos < right_end && right_pos < left_end;
+}
+
+static int highlight_should_replace_diagnostic_match(const HighlightDiagnosticSelection *current,
+                                                     CB_Severity severity,
+                                                     size_t pos,
+                                                     size_t len) {
+    if (!current || (!current->source_diag && !current->ast_diag)) return 1;
+    if (severity > current->severity) return 1;
+    if (severity < current->severity) return 0;
+    if (len < current->len) return 1;
+    if (len > current->len) return 0;
+    return pos < current->pos;
+}
+
+static int highlight_select_diagnostic_for_leaf(Context *context,
+                                                CB_Node *node,
+                                                HighlightDiagnosticSelection *selection) {
+    SourceDiagnostic *source_diag;
+    ASTNode *ast_diag;
+    size_t pos;
+    size_t len;
+
+    if (!selection) return 0;
+    memset(selection, 0, sizeof(*selection));
+    if (!context || !node || node->length == 0) return 0;
+
+    source_diag = context->source_diagnostics_list;
+    while (source_diag) {
+        if (source_diagnostic_span_utf8(context, source_diag, &pos, &len) &&
+            highlight_spans_overlap(node->pos, node->length, pos, len) &&
+            highlight_should_replace_diagnostic_match(selection,
+                                                     source_diag->severity == SOURCE_DIAG_WARNING ? CB_WARNING : CB_ERROR,
+                                                     pos,
+                                                     len)) {
+            selection->source_diag = source_diag;
+            selection->ast_diag = 0;
+            selection->severity = source_diag->severity == SOURCE_DIAG_WARNING ? CB_WARNING : CB_ERROR;
+            selection->pos = pos;
+            selection->len = len;
+        }
+        source_diag = source_diag->next_in_context;
+    }
+
+    if (selection->source_diag) return 1;
+
+    ast_diag = (ASTNode *)context->diagnostics_list;
+    while (ast_diag) {
+        if ((ast_diag->node_type == RXCP_ERROR || ast_diag->node_type == RXCP_WARNING) &&
+            ast_node_span_utf8(context, ast_diag, &pos, &len) &&
+            highlight_spans_overlap(node->pos, node->length, pos, len) &&
+            highlight_should_replace_diagnostic_match(selection,
+                                                     ast_diag->node_type == RXCP_WARNING ? CB_WARNING : CB_ERROR,
+                                                     pos,
+                                                     len)) {
+            selection->source_diag = 0;
+            selection->ast_diag = ast_diag;
+            selection->severity = ast_diag->node_type == RXCP_WARNING ? CB_WARNING : CB_ERROR;
+            selection->pos = pos;
+            selection->len = len;
+        }
+        ast_diag = ast_diag->sibling;
+    }
+
+    return selection->ast_diag != 0;
+}
+
+static void highlight_overlay_diagnostic_on_leaf(CB_Node *node,
+                                                 size_t depth,
+                                                 void *user_data) {
+    Context *context;
+    HighlightDiagnosticSelection selection;
+
+    (void)depth;
+
+    context = (Context *)user_data;
+    if (!context || !node || node->child) return;
+    if (node->type == SYNTAX_ERROR || node->type == INTERNAL_ERROR) return;
+    if (!highlight_select_diagnostic_for_leaf(context, node, &selection)) return;
+    if (node->severity > selection.severity) return;
+    if (node->severity == selection.severity && node->message) return;
+
+    node->severity = selection.severity;
+    if (node->message) {
+        free(node->message);
+        node->message = 0;
+    }
+    if (selection.source_diag) {
+        node->message = format_source_diagnostic_message(selection.source_diag);
+    } else if (selection.ast_diag) {
+        node->message = format_ast_diagnostic_message(selection.ast_diag);
+    }
+}
+
+static void highlight_overlay_diagnostics_on_tree(CB_ParseTree *tb, Context *context) {
+    if (!tb || !context) return;
+    if (!context->source_diagnostics_list && !context->diagnostics_list) return;
+    cb_walk_tree_top_down(tb, highlight_overlay_diagnostic_on_leaf, context);
+}
+
 static void emit_diagnostics_from_source_state(CB_ParseTree *tb, Context *context) {
     SourceDiagnostic *diag;
     size_t pos;
@@ -1447,6 +1583,7 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     if (!cursor.semantic_tokens && context->source_tree) highlight_prepare_semantic_tokens(&cursor, context->source_tree);
     cb_add_missing_tokens(tb, cb, compiler_get_token_callback, &cursor);
     cb_tweak_tree_positions(tb);
+    highlight_overlay_diagnostics_on_tree(tb, context);
     cb_validate_tree(tb);
     highlight_free_semantic_tokens(&cursor);
 

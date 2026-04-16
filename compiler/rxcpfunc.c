@@ -326,6 +326,8 @@ static int add_func(Context *context, imported_func *func) {
         freimpfc(func);
         return 1;
     }
+    if (func->is_variable) context->master_context->importable_variable_count++;
+    else context->master_context->importable_function_count++;
     return 0;
 }
 
@@ -361,6 +363,7 @@ static int add_class(Context *context, struct imported_class *cls) {
         free(cls);
         return 1;
     }
+    context->master_context->importable_class_count++;
     return 0;
 }
 
