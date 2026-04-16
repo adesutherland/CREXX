@@ -159,9 +159,11 @@ set(FUNC_TESTS
         string_funcs
         int_funcs
         float_funcs
+        array_push_funcs
 )
 set(OUTPUTS
         Signal
+        OK
         OK
         OK
         OK
@@ -194,7 +196,7 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest_source}
             TARGET_GROUP rxpa_${_rexxtest}_static
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
-            DEPENDS library funcvm
+            DEPENDS library funcvm _testfuncs_dynamic
             RUNNER funcvm
             RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
     )

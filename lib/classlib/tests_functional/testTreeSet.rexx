@@ -23,7 +23,6 @@ rc = a.add('schapen')
 
 say a.size()
 
-i = .TreeSetIterator
 i = a.iterator()
 
 loop while i.hasNext()
@@ -42,4 +41,3 @@ loop l=1 to keystem.0
 end
 
 say 'number of elements in stem:' keystem.0
-

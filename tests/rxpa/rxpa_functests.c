@@ -155,6 +155,19 @@ PROCEDURE(bubble_sort)
     RESETSIGNAL
 }
 
+// Populate caller-provided arrays using the RXPA push helpers.
+PROCEDURE(fill_push_arrays)
+{
+    if (NUM_ARGS != 2) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "2 arguments expected")
+
+    PUSHIARRAY(ARG(0), 0, 7);
+    PUSHIARRAY(ARG(0), 1, 8);
+    PUSHSARRAY(ARG(1), 0, "alpha");
+    PUSHSARRAY(ARG(1), 1, "beta");
+
+    RESETSIGNAL
+}
+
 #endif
 
 // Functions to be provided to rexx
@@ -168,4 +181,5 @@ ADDPROC(add_integers_ref,  "rxpatests.add_integers_ref",    "b",     ".void",   
 ADDPROC(add_floats,        "rxpatests.add_floats",          "b",     ".float",     "f1 = .float, f2 = .float");
 ADDPROC(add_floats_ref,    "rxpatests.add_floats_ref",      "b",     ".void",      "f1 = .float, f2 = .float, expose f3 = .float");
 ADDPROC(bubble_sort,       "rxpatests.bubble_sort",         "b",     ".void",      "expose a = .int[]");
+ADDPROC(fill_push_arrays,  "rxpatests.fill_push_arrays",    "b",     ".void",      "expose ints = .int[], expose strings = .string[]");
 ENDLOADFUNCS

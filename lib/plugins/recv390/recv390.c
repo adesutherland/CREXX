@@ -8,9 +8,6 @@
 #include <ctype.h>
 
 #include "crexxpa.h"      // crexx/pa - Plugin Architecture header file
-#define PUSHSARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
-                                     SETSARRAY(pnum,indx,value);};
-
 #ifdef _WIN32
 #include <direct.h>     // For Windows
 #include <windows.h>

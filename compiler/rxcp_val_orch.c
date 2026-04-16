@@ -586,7 +586,7 @@ ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_
 
         /* Try and import the class on-demand if it's not already known */
         if (context->ast && !sym_rvfn(context->ast, local_class_name)) {
-            sym_imcls(context, node);
+            ensure_class_imported(context, node->node_string, node->node_string_length);
         }
 
         result = TP_OBJECT;

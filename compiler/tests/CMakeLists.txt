@@ -197,6 +197,7 @@ add_crexx_robustness_test(set1_main set1_main.rexx set1_lib.rexx)
 add_crexx_robustness_test(set2_main set2_main.rexx set2_lib.rexx)
 add_crexx_robustness_test(set3_main set3_main.rexx set3_lib.rexx)
 add_crexx_robustness_test(set4_main set4_main.rexx set4_mid.rexx set4_base.rexx)
+add_crexx_robustness_test(set6_main set6_main.rexx Counter.rexx CounterIterator.rexx)
 
 # Set 5 - Encapsulation (Expected to fail compilation)
 set(SCRIPT_FILE_SET5 "${CMAKE_CURRENT_BINARY_DIR}/run_robustness_set5.cmake")

@@ -128,13 +128,14 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 //  InsertSarray adds a new entry to an array at a certain position, the entry is added prior to the current entry which is shifted beyond
 #define INSERTSARRAY(pnum,indx,value) {INSERTATTR(pnum,indx); \
                                        SETSARRAY(pnum,indx,value);};
+// Push helpers append to the array handle passed by the caller.
 #define PUSHSARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
                                      SETSARRAY(pnum,indx,value);};
 #define RETURNSTR(value) _rxpa_context->setstring(RETURN,(value))
 #define RETURNSTRX(value) {_rxpa_context->setstring(RETURN,(value));PROCRETURN}
 #define SETINT(attr, value) _rxpa_context->setint((attr),(value))
 #define SETIARRAY(pnum,index,value) SETINT(GETATTR(pnum, index),value)
-#define PUSHIARRAY(pnum,indx,value) {SETARRAYHI(ARG2, indx + 1); \
+#define PUSHIARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
                                      SETIARRAY(pnum,indx,value);};
 #define RETURNINT(value) _rxpa_context->setint(RETURN,(value))
 #define RETURNINTX(value) {RETURNINT(value); PROCRETURN}
@@ -277,7 +278,12 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define SETSARRAY(pnum,index,value) SETSTRING(GETATTR(pnum, index),value)
 #define INSERTSARRAY(pnum,indx,value) {INSERTATTR(pnum,indx); \
 SETSARRAY(pnum,indx,value);};
+// Push helpers append to the array handle passed by the caller.
+#define PUSHSARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
+SETSARRAY(pnum,indx,value);};
 #define SETIARRAY(pnum,index,value) SETINT(GETATTR(pnum, index),value)
+#define PUSHIARRAY(pnum,indx,value) {SETARRAYHI(pnum, indx + 1); \
+SETIARRAY(pnum,indx,value);};
 #define RETURNINTX(value) {RETURNINT(value); PROCRETURN}
 #define GETIARRAY(pnum,index) GETINT(GETATTR(pnum, index))
 #define GETFARRAY(pnum,index) GETFLOAT(GETATTR(pnum, index))
