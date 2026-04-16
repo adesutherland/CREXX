@@ -405,102 +405,107 @@ walker_result set_node_types_walker(walker_direction direction,
                 if (ast_chld(node, ERROR, 0)) break;
                 if (node->value_type == TP_UNKNOWN) {
                     ASTNode *instance = ast_chdn(node, 0);
-                    if (instance->value_type == TP_OBJECT && instance->value_class) {
+                    const char *cname = instance->value_class;
+                    Symbol *class_sym = 0;
+                    Symbol *method_sym = 0;
+                    if (!cname && instance->symbolNode && instance->symbolNode->symbol) {
+                        cname = instance->symbolNode->symbol->value_class;
+                    }
+                    if (instance->value_type == TP_OBJECT && cname) {
                         /* Resolve the Class Symbol from the instance's class name */
-                        const char *cname = instance->value_class;
                         if (cname && cname[0] == '.') cname++;
                         ASTNode dummy = {0};
                         dummy.node_string = (char*)cname;
                         dummy.node_string_length = strlen(cname);
-                        Symbol *class_sym = sym_rvfc(context->ast, &dummy);
+                        class_sym = sym_rvfc(context->ast, &dummy);
                         if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
-                            /* Lookup the Method Name in the Class Scope */
-                            Symbol *method_sym = sym_lrsv(class_sym->defines_scope, node);
-                            if (method_sym && method_sym->symbol_type == FUNCTION_SYMBOL) {
-                                if (!node->symbolNode || node->symbolNode->symbol != method_sym) {
-                                    sym_adnd(method_sym, node, 1, 0);
-                                    context->changed_flags |= FLAG_VAL_TYPE;
-                                }
-                                ast_svtp(node, method_sym);
-                                infer_arguments(context, node);
-                            } else if (!context->changed_flags || context->is_final_pass) {
-                                /* DOT-AS-INDEX MUTATION: transform tokens.i -> tokens[i] */
-                                Symbol *index_sym = sym_rslv_tiered(context->current_scope, node);
-                                if (index_sym && index_sym->symbol_type == VARIABLE_SYMBOL &&
-                                    instance->value_dims > 0) {
-
-                                    ASTNode *new_index_node = ast_f(context, VAR_SYMBOL, node->token);
-                                    {
-                                        char *s = malloc(node->node_string_length + 1);
-                                        memcpy(s, node->node_string, node->node_string_length);
-                                        s[node->node_string_length] = 0;
-                                        ast_sstr(new_index_node, s, node->node_string_length);
-                                    }
-                                    sym_adnd(index_sym, new_index_node, 1, 0);
-
-                                    /* Transform current node (MEMBER_CALL) into the array's VAR_SYMBOL */
-                                    node->node_type = VAR_SYMBOL;
-                                    {
-                                        char *s = malloc(instance->node_string_length + 1);
-                                        memcpy(s, instance->node_string, instance->node_string_length);
-                                        s[instance->node_string_length] = 0;
-                                        ast_sstr(node, s, instance->node_string_length);
-                                    }
-
-                                    /* Disconnect from any previous symbols if any */
-                                    if (node->symbolNode) sym_dno(node->symbolNode->symbol, node);
-
-                                    /* Link to the same symbol as instance if it has one */
-                                    if (instance->symbolNode) sym_adnd(instance->symbolNode->symbol, node, 1, 0);
-
-                                    /* Set scalar element type */
-                                    {
-                                        ValueType new_type = (instance->symbolNode && instance->symbolNode->symbol) ? instance->symbolNode->symbol->type : instance->value_type;
-                                        char *new_class = (instance->symbolNode && instance->symbolNode->symbol && instance->symbolNode->symbol->value_class) ? instance->symbolNode->symbol->value_class : instance->value_class;
-                                        ast_set_value_type(0, node, new_type, 0, 0, 0, new_class);
-                                        ast_set_target_type(0, node, new_type, 0, 0, 0, new_class);
-                                    }
-
-                                    /* Delete children (instance and any args) */
-                                    while (node->child) {
-                                        ASTNode *c = node->child;
-                                        if (c->symbolNode) sym_dno(c->symbolNode->symbol, c);
-                                        ast_del(c);
-                                    }
-
-                                    /* Add the resolved variable as the index child (subscript) */
-                                    add_ast(node, new_index_node);
-
-                                    context->changed_flags |= FLAG_VAL_TYPE; return result_normal;
-                                } else if (!context->changed_flags || context->is_final_pass) {
-                                    /* Try and import the class */
-                                    Symbol *import_cls = sym_imcls(context, node);
-                                    if (import_cls) {
-                                        /* Resolve again - it should be found now */
-                                        class_sym = sym_rvfc(context->ast, node);
-                                    }
-                                }
+                            method_sym = sym_lrsv(class_sym->defines_scope, node);
+                        } else if (!context->changed_flags || context->is_final_pass) {
+                            if (ensure_class_imported(context, cname, strlen(cname))) {
+                                class_sym = sym_rvfc(context->ast, &dummy);
                                 if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
-                                    /* continue with method resolution below */
-                                    if (context->after_rewrite) {
-                                        if (node->node_string && (strcmp(node->node_string, "get") == 0 || strcmp(node->node_string, "set") == 0)) {
-                                            mknd_err(node, "INVALID_PUBLIC_ATTRIBUTE");
-                                        } else {
-                                            mknd_err(node, "METHOD_NOT_FOUND");
-                                        }
-                                    }
-                                } else if (!context->changed_flags || context->is_final_pass) {
-                                    /* Defer error if imports may provide class stubs */
-                                    int has_import = 0;
-                                    if (context->ast && context->ast->child && context->ast->child->node_type == PROGRAM_FILE) {
-                                        ASTNode *pfch = context->ast->child->child;
-                                        while (pfch) { if (pfch->node_type == IMPORT) { has_import = 1; break; } pfch = pfch->sibling; }
-                                    }
-                                    if (has_import && !context->after_rewrite) {
-                                        /* defer error on first pass */
+                                    method_sym = sym_lrsv(class_sym->defines_scope, node);
+                                }
+                            }
+                        }
+
+                        if (method_sym && method_sym->symbol_type == FUNCTION_SYMBOL) {
+                            if (!node->symbolNode || node->symbolNode->symbol != method_sym) {
+                                sym_adnd(method_sym, node, 1, 0);
+                                context->changed_flags |= FLAG_VAL_TYPE;
+                            }
+                            ast_svtp(node, method_sym);
+                            infer_arguments(context, node);
+                        } else if (!context->changed_flags || context->is_final_pass) {
+                            /* DOT-AS-INDEX MUTATION: transform tokens.i -> tokens[i] */
+                            Symbol *index_sym = sym_rslv_tiered(context->current_scope, node);
+                            if (index_sym && index_sym->symbol_type == VARIABLE_SYMBOL &&
+                                instance->value_dims > 0) {
+
+                                ASTNode *new_index_node = ast_f(context, VAR_SYMBOL, node->token);
+                                {
+                                    char *s = malloc(node->node_string_length + 1);
+                                    memcpy(s, node->node_string, node->node_string_length);
+                                    s[node->node_string_length] = 0;
+                                    ast_sstr(new_index_node, s, node->node_string_length);
+                                }
+                                sym_adnd(index_sym, new_index_node, 1, 0);
+
+                                /* Transform current node (MEMBER_CALL) into the array's VAR_SYMBOL */
+                                node->node_type = VAR_SYMBOL;
+                                {
+                                    char *s = malloc(instance->node_string_length + 1);
+                                    memcpy(s, instance->node_string, instance->node_string_length);
+                                    s[instance->node_string_length] = 0;
+                                    ast_sstr(node, s, instance->node_string_length);
+                                }
+
+                                /* Disconnect from any previous symbols if any */
+                                if (node->symbolNode) sym_dno(node->symbolNode->symbol, node);
+
+                                /* Link to the same symbol as instance if it has one */
+                                if (instance->symbolNode) sym_adnd(instance->symbolNode->symbol, node, 1, 0);
+
+                                /* Set scalar element type */
+                                {
+                                    ValueType new_type = (instance->symbolNode && instance->symbolNode->symbol) ? instance->symbolNode->symbol->type : instance->value_type;
+                                    char *new_class = (instance->symbolNode && instance->symbolNode->symbol && instance->symbolNode->symbol->value_class) ? instance->symbolNode->symbol->value_class : instance->value_class;
+                                    ast_set_value_type(0, node, new_type, 0, 0, 0, new_class);
+                                    ast_set_target_type(0, node, new_type, 0, 0, 0, new_class);
+                                }
+
+                                /* Delete children (instance and any args) */
+                                while (node->child) {
+                                    ASTNode *c = node->child;
+                                    if (c->symbolNode) sym_dno(c->symbolNode->symbol, c);
+                                    ast_del(c);
+                                }
+
+                                /* Add the resolved variable as the index child (subscript) */
+                                add_ast(node, new_index_node);
+
+                                context->changed_flags |= FLAG_VAL_TYPE; return result_normal;
+                            }
+
+                            if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
+                                if (context->after_rewrite) {
+                                    if (node->node_string && (strcmp(node->node_string, "get") == 0 || strcmp(node->node_string, "set") == 0)) {
+                                        mknd_err(node, "INVALID_PUBLIC_ATTRIBUTE");
                                     } else {
-                                        mknd_err(node, "CLASS_NOT_FOUND");
+                                        mknd_err(node, "METHOD_NOT_FOUND");
                                     }
+                                }
+                            } else {
+                                /* Defer error if imports may provide class stubs */
+                                int has_import = 0;
+                                if (context->ast && context->ast->child && context->ast->child->node_type == PROGRAM_FILE) {
+                                    ASTNode *pfch = context->ast->child->child;
+                                    while (pfch) { if (pfch->node_type == IMPORT) { has_import = 1; break; } pfch = pfch->sibling; }
+                                }
+                                if (has_import && !context->after_rewrite) {
+                                    /* defer error on first pass */
+                                } else {
+                                    mknd_err(node, "CLASS_NOT_FOUND");
                                 }
                             }
                         }
@@ -534,7 +539,7 @@ walker_result set_node_types_walker(walker_direction direction,
                         }
                     } else {
                         /* Try and import the class */
-                        Symbol *import_cls = sym_imcls(context, node);
+                        Symbol *import_cls = ensure_class_imported(context, node->node_string, node->node_string_length);
                         if (import_cls) {
                             /* Resolve again - it should be found now */
                             class_sym = sym_rvfc(context->ast, node);

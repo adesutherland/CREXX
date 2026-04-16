@@ -23,7 +23,6 @@ rc = a.put('schapen',12)
 
 say a.size()
 
-i = .HashMapIterator
 i = a.iterator()
 
 loop while i.hasNext()

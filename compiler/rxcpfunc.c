@@ -1535,6 +1535,19 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
     return found_symbol;
 }
 
+/* Try and import an external class by name - return its symbol if successful */
+Symbol *ensure_class_imported(Context *context, const char *class_name, size_t class_name_length) {
+    ASTNode lookup_node;
+
+    if (!context || !class_name || !class_name_length) return 0;
+
+    memset(&lookup_node, 0, sizeof(ASTNode));
+    lookup_node.node_string = (char*)class_name;
+    lookup_node.node_string_length = class_name_length;
+
+    return sym_imcls(context, &lookup_node);
+}
+
 /* Check if a symbol is an importable Variable - return 1 if it is, 0 otherwise */
 int sym_is_glob_var(Context *context, ASTNode *node) {
     imported_func *func;

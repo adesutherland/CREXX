@@ -60,7 +60,6 @@ rc = a.put('z4','aap')
 
 say a.lastKey()
 
-it = .TreeMapIterator
 it = a.iterator()
 
 loop while it.hasNext()

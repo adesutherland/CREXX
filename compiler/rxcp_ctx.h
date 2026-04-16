@@ -206,6 +206,8 @@ int sym_is_glob_var(Context *context, ASTNode *node);
 int sym_is_imcls(Context *context, ASTNode *node);
 /* Try and import an external class - return its symbol if successful */
 Symbol *sym_imcls(Context *context, ASTNode *node);
+/* Try and import an external class by name - return its symbol if successful */
+Symbol *ensure_class_imported(Context *context, const char *class_name, size_t class_name_length);
 
 /* Set the type of a symbol from imported modules */
 void sym_imva(Context *context, Symbol *symbol);
