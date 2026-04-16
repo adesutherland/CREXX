@@ -215,7 +215,7 @@ void toUpperCase(char *str) {
     }
 }
 
-void trim(char *str) {
+void lltrim(char *str) {
     char *start = str;  // Pointer auf den Anfang des Strings
     char *end;
     while (isspace((unsigned char)*start)) {   // skip leading blanks
