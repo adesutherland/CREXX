@@ -171,6 +171,7 @@ The AST/Symbol validator (`rxcp_validate_ast_and_symbols`) asserts these rules i
 ### 3. Class Imports
 *   Classes are imported as **Stubs**. The compiler parses the imported file, extracts the class signature (methods, factories), and injects a stub definition into the `master_context`'s AST.
 *   **On-Demand Import**: Currently, class stubs are only imported if the class name is **explicitly referenced** in the source code (e.g., via a factory call `.ClassName()` or a typed variable definition). Merely having a function return an object of that class does **not** automatically trigger the class stub import, which may lead to unresolved method calls at the call site.
+*   **Import Precedence**: When multiple importable artifacts share the same module stem, the scanner prefers `.rexx` over `.rxas`, and `.rxas` over `.rxbin`. The compiler also skips generated side-products for the module currently being compiled so stale build artifacts cannot shadow the active source file.
 
 ## Business Rule Inventory ("The Magic")
 

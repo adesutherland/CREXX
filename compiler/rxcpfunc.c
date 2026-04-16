@@ -1983,6 +1983,57 @@ static void add_file_to_list(importable_file *file, size_t *number, importable_f
     (*list)[*number] = 0;
 }
 
+static size_t module_stem_length(const char *name) {
+    const char *dot;
+
+    if (!name) return 0;
+    dot = strrchr(name, '.');
+    if (!dot) return strlen(name);
+    return (size_t)(dot - name);
+}
+
+static int module_name_equals(const char *left, const char *right) {
+    size_t left_len;
+    size_t right_len;
+    size_t i;
+
+    if (!left || !right) return 0;
+
+    left_len = module_stem_length(left);
+    right_len = module_stem_length(right);
+    if (left_len != right_len) return 0;
+
+    for (i = 0; i < left_len; i++) {
+        if (tolower((unsigned char)left[i]) != tolower((unsigned char)right[i])) return 0;
+    }
+    return 1;
+}
+
+static int list_has_module_for_type(importable_file **list, file_type type, const char *name) {
+    size_t i;
+
+    if (!list || !name) return 0;
+    for (i = 0; list[i]; i++) {
+        if (list[i]->type != type) continue;
+        if (module_name_equals(list[i]->name, name)) return 1;
+    }
+    return 0;
+}
+
+static int should_skip_importable_file(importable_file **list, file_type type, const char *name, const char *skip_module) {
+    if (skip_module && module_name_equals(name, skip_module)) return 1;
+
+    if (type == RXAS_FILE || type == RXBIN_FILE) {
+        if (list_has_module_for_type(list, REXX_FILE, name)) return 1;
+    }
+
+    if (type == RXBIN_FILE) {
+        if (list_has_module_for_type(list, RXAS_FILE, name)) return 1;
+    }
+
+    return 0;
+}
+
 static importable_file* importable_file_f(char* name, file_type type, char *location) {
     importable_file *file;
     file = malloc(sizeof(importable_file));
@@ -1999,7 +2050,7 @@ static importable_file* importable_file_f(char* name, file_type type, char *loca
 }
 
 /* Get a list of files if a type in a directory (can be null), skipping skip_name (can be null) */
-static void list_files_in_dir(char *directory, file_type type, char* skip_name, importable_file ***list, size_t *number, int debug_mode) {
+static void list_files_in_dir(char *directory, file_type type, char* skip_name, char *skip_module, importable_file ***list, size_t *number, int debug_mode) {
 
     void *dir_ptr;
     char* name;
@@ -2025,7 +2076,8 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
     /* Read files in the directory */
     name = dirfstfl(directory,  file_prefix, type_name, &dir_ptr);
     if (name) {
-        if (!skip_name || strcmp(name, skip_name) != 0 ) { // Skip if the same name as the file
+        if ((!skip_name || strcmp(name, skip_name) != 0) &&
+            !should_skip_importable_file(*list, type, name, skip_module)) {
             if (debug_mode >= 2) fprintf(stderr, "Found importable %s file: %s in %s\n", type_name, name, directory);
             file = importable_file_f(name, type, directory);
             add_file_to_list(file, number, list);
@@ -2033,7 +2085,8 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
         do {
             name = dirnxtfl(&dir_ptr);
             if (name) {
-                if (!skip_name || strcmp(name, skip_name) != 0 ) { // Skip if the same name as the file
+                if ((!skip_name || strcmp(name, skip_name) != 0) &&
+                    !should_skip_importable_file(*list, type, name, skip_module)) {
                     if (debug_mode >= 2) fprintf(stderr, "Found importable %s file: %s in %s\n", type_name, name, directory);
                     file = importable_file_f(name, type, directory);
                     add_file_to_list(file, number, list);
@@ -2050,56 +2103,58 @@ importable_file **rxfl_lst(Context *context) {
     size_t number = 0;
     importable_file **list = 0;
     char* exe_dir;
+    char *skip_module;
     size_t d;
 
     list = malloc( sizeof(importable_file*) );
     list[0] = 0;
     exe_dir = exepath();
+    skip_module = context ? context->file_name : 0;
 
     if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files in current location: %s\n", context->location ? context->location : ".");
     /* Read REXX files in the current directory */
-    list_files_in_dir(context->location, REXX_FILE, context->file_name, &list, &number, context->debug_mode);
+    list_files_in_dir(context->location, REXX_FILE, context->file_name, skip_module, &list, &number, context->debug_mode);
 
     /* Read RXAS files in the current directory */
-    list_files_in_dir(context->location, RXAS_FILE, 0, &list, &number, context->debug_mode);
+    list_files_in_dir(context->location, RXAS_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
     /* Read RXBIN files in the current directory */
-    list_files_in_dir(context->location, RXBIN_FILE, 0, &list, &number, context->debug_mode);
+    list_files_in_dir(context->location, RXBIN_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
     /* Read in native plugins  in the current directory */
-    list_files_in_dir(context->location, NATIVE_FILE, 0, &list, &number, context->debug_mode);
+    list_files_in_dir(context->location, NATIVE_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
     /* Look in the imported location */
     if (context->import_locations) {
         for (d = 0; context->import_locations[d]; d++) {
             if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files in: %s\n", context->import_locations[d]);
             /* Read in REXX files in the directory */
-            list_files_in_dir(context->import_locations[d], REXX_FILE, 0, &list, &number, context->debug_mode);
+            list_files_in_dir(context->import_locations[d], REXX_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
             /* Read in RXAS files in the directory */
-            list_files_in_dir(context->import_locations[d], RXAS_FILE, 0, &list, &number, context->debug_mode);
+            list_files_in_dir(context->import_locations[d], RXAS_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
             /* Read in RXBIN files in the directory */
-            list_files_in_dir(context->import_locations[d], RXBIN_FILE, 0, &list, &number, context->debug_mode);
+            list_files_in_dir(context->import_locations[d], RXBIN_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
             /* Read in native plugins in the directory */
-            list_files_in_dir(context->import_locations[d], NATIVE_FILE, 0, &list, &number, context->debug_mode);
+            list_files_in_dir(context->import_locations[d], NATIVE_FILE, 0, skip_module, &list, &number, context->debug_mode);
         }
     }
 
     if (exe_dir) {
         if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files in compiler location: %s\n", exe_dir);
         /* Read in REXX files in the directory holding the compiler */
-        list_files_in_dir(exe_dir, REXX_FILE, 0, &list, &number, context->debug_mode);
+        list_files_in_dir(exe_dir, REXX_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
         /* Read in RXAS files in the directory holding the compiler */
-        list_files_in_dir(exe_dir, RXAS_FILE, 0, &list, &number, context->debug_mode);
+        list_files_in_dir(exe_dir, RXAS_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
         /* Read in RXBIN files in the directory holding the compiler */
-        list_files_in_dir(exe_dir, RXBIN_FILE, 0, &list, &number, context->debug_mode);
+        list_files_in_dir(exe_dir, RXBIN_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
         /* Read in native plugins in the directory holding the compiler */
-        list_files_in_dir(exe_dir, NATIVE_FILE, 0, &list, &number, context->debug_mode);
+        list_files_in_dir(exe_dir, NATIVE_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
         free(exe_dir);
     }
