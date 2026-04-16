@@ -510,6 +510,9 @@ int rxcmain(int argc, char *argv[]) {
     }
 
 
+    rxcp_prepare_source_ast(context);
+    source_tree_sync_diagnostics(context);
+
     errors = prnterrs(context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);

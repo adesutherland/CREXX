@@ -64,6 +64,11 @@ struct Context {
     int token_counter;
     Token* token_head;
     Token* token_tail;
+    Token* current_clause_token;
+    Token* current_parser_token;
+    Token* next_parser_token;
+    Token* syntax_error_clause_token;
+    Token* syntax_error_token;
     ASTNode* ast;
     SourceNode* source_tree;
     SourceNode* source_free_list;

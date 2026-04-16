@@ -40,6 +40,7 @@
 /* Validation API */
 void validate_ast(Context *context);
 void rxcp_val(Context *context);
+void rxcp_prepare_source_ast(Context *context);
 void rxcp_bvl(Context *context);
 void rxcp_collect_and_prune_diagnostics(Context *context);
 int rxcp_run_fallback_diagnostics(Context *context);

@@ -936,10 +936,47 @@ void ast_copy_str(ASTNode* node, char *string) {
     node->node_string_length = strlen(string);
 }
 
+static int ast_is_significant_anchor_token(Token *token) {
+    if (!token) return 0;
+
+    return token->token_type != TK_EOC &&
+           token->token_type != TK_EOS &&
+           token->token_type != TK_BADCOMMENT &&
+           token->token_type != TK_EOL;
+}
+
+static Token *ast_errh_anchor(Context *context) {
+    Token *token;
+
+    if (!context) return 0;
+
+    token = context->syntax_error_clause_token;
+    if (ast_is_significant_anchor_token(token)) return token;
+
+    token = context->syntax_error_token;
+    if (ast_is_significant_anchor_token(token)) return token;
+
+    token = context->current_parser_token;
+    if (ast_is_significant_anchor_token(token)) return token;
+
+    token = context->next_parser_token;
+    if (ast_is_significant_anchor_token(token)) return token;
+
+    token = context->token_tail;
+    while (token && !ast_is_significant_anchor_token(token)) {
+        token = token->token_prev;
+    }
+
+    if (token) return token;
+    return context->token_tail;
+}
+
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_errh(Context* context, char *error_string) {
+    Token *anchor;
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
-    add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev->token_prev));
+    anchor = ast_errh_anchor(context);
+    if (anchor) add_ast(errorAST, ast_f(context, TOKEN, anchor));
 
     if (context->debug_mode >= 2) print_error(errorAST, stdout, "DEBUG: Error in");
     return errorAST;

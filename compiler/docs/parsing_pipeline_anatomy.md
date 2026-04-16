@@ -114,6 +114,13 @@ state:
 *   `source_tree_sync_semantics()` mirrors final symbol and type conclusions
     onto immutable `SourceNode` sidecars after validation.
 
+After a successful parse has produced an AST, user-facing diagnostics should be
+reported from this source-owned state rather than from raw parser-era AST error
+nodes. Parser mode already does this during DSLSH emission, and the CLI now
+also prepares the source AST and syncs diagnostics before printing early syntax
+errors. The raw AST diagnostic list remains a fallback for terminal no-AST
+parse failures only.
+
 Parser mode (`rxc --syntaxhighlight`) uses the same parser and early source
 preparation, but it does not serialize the rewritten work tree. Instead,
 `compiler/rxcp_highlight_controller.c` emits DSLSH from `source_tree`, keeps a

@@ -122,6 +122,11 @@ int rexbpars(Context *context) {
             RexxB(parser, token_type, t, context);
         }
 
+        if (token_type != TK_EOC && last_token_type == TK_EOC) {
+            context->current_clause_token = token;
+        }
+        context->current_parser_token = token;
+        context->next_parser_token = peek_token;
         if (context->debug_mode >= 2) fprintf(stderr, "[GLUE] Line %d: Passing Token %d (%s) to Parser\n", context->line, token_type, token_to_string(token_type));
         RexxB(parser, token_type, token, context);
         last_token_type = token_type;

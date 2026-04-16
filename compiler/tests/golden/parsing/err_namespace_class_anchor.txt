@@ -1,0 +1,16 @@
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+      NAMESPACE : "namespace" (-1:-1) [Type: .unknown]
+        LITERAL : "data_List" (-1:-1) [Type: .unknown]
+        EXPOSED : "expose" (-1:-1) [Type: .unknown]
+          LITERAL : "List" (-1:-1) [Type: .unknown]
+        ERROR : "SYNTAX_ERROR" (-1:-1) [Type: .unknown]
+          TOKEN : "class" (-1:-1) [Type: .unknown]
+Error in err_namespace_class_anchor.rexx @ 5:1 - #SYNTAX_ERROR, "class"
+1 error(s) in source file
+Error in err_namespace_class_anchor.rexx @ 5:1 - #SYNTAX_ERROR, "class"
+1 error(s) in source file
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

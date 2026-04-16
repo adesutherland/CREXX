@@ -1,2 +1,2 @@
-Error in err_select_no_when.rexx @ 8:1 - #MISSING_WHEN, "end"
+Error in err_select_no_when.rexx @ 6:3 - #MISSING_WHEN, "otherwise"
 1 error(s) in source file

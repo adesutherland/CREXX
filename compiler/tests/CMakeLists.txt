@@ -502,6 +502,7 @@ add_crexx_parsing_test(expr_ambig_03 parsing_src/expr_ambig_03.rexx)
 add_crexx_parsing_test(err_struct_01 parsing_src/err_struct_01.rexx)
 add_crexx_parsing_test(err_struct_02 parsing_src/err_struct_02.rexx)
 add_crexx_parsing_test(err_struct_03 parsing_src/err_struct_03.rexx)
+add_crexx_parsing_test(err_namespace_class_anchor parsing_src/err_namespace_class_anchor.rexx)
 # DO constructs parsing coverage
 add_crexx_parsing_test(do_simple_parse parsing_src/do_simple_parse.rexx)
 add_crexx_parsing_test(do_counted_parse parsing_src/do_counted_parse.rexx)
