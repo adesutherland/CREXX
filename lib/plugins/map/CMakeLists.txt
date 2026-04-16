@@ -19,6 +19,10 @@ plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 
 enable_testing()
 
+set_tests_properties(map_test_noopt map_test_opt PROPERTIES
+        PASS_REGULAR_EXPRESSION "map smoke ok"
+)
+
 # Create the static link module
 # add_static_plugin_target(_map map.c)
 

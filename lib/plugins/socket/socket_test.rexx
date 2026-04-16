@@ -2,41 +2,26 @@ options levelb
 import rxfnsb
 import socket
 
-##cflags def nset  3buf  parse
+say "socket smoke"
 
 s = socketCreate()
-call socketconnect s, 'localhost',8080  /* Connect to Server */
-call socketenabletls s,""               /* Enalble TLS */
-call socketsend s, "Hello to Server"    /* Send message to Server */
-do forever                              /* Receive all data from Server */
-    data = socketrecv(s, 4096)
-    if data = "" then leave
-    say "' received data "data"'"
+if s < 0 then do
+    say "socketCreate failed" s
+    exit 1
 end
 
-call socketclose s                      /* Close server connection */
-
-exit
-/* ----------  overview of available socket functions
-token = socketCreate()
-say 'socket  'token
-say 'connect 'socketConnect(token, 'localhost', 12345)
-say 'error   'socketlasterror(token)
-say "Connected? "socketIsConnected(token)
-say "Local IP? "socketLocalInfo(token)
-say "Peer: "socketPeerInfo(token)
-say "TimeOut: "socketSetTimeout(token,100)
-say 'send    'socketSend(token, "Hello Server")
-say 'error   'socketlasterror(token)
-##   line=socketRecv(token,1024)
-
-do forever
-   line=socketRecvline(token)
-   if line = "" then leave
-   say "RECV: '"line"'"
+err = socketLastError(s)
+if err \= "0 " then do
+    say "unexpected initial socket error" err
+    call socketClose s
+    exit 1
 end
-call socketShutdown token, 0     ## No more reads allowed (SHUT_RD)
-## call socketShutdown token, 1  ## No more sends allowed (SHUT_WR)
-## call socketShutdown token, 2 ## Fully close (sends FIN, both directions, SHUT_RDWR)
-  call socketClose token
-*/
+
+rc = socketClose(s)
+if rc \= 0 then do
+    say "socketClose failed" rc
+    exit 1
+end
+
+say "socket smoke ok"
+return 0
