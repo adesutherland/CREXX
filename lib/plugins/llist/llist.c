@@ -498,7 +498,6 @@ PROCEDURE(freellist) {
     llEntryStub[nodeIndex].sStackLastValid = NULL;
     llEntryStub[nodeIndex].sStackEntries = 0;
 
-    printf("List successfully freed.\n");
     RETURNINT(0);
 }
 

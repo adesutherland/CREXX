@@ -9,6 +9,7 @@ set(CLSS
   HashMapIterator
   HashSet
   HashSetIterator
+  LinkedList
   Stack
   TreeMap
   TreeMapIterator
