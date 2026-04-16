@@ -43,3 +43,8 @@ Table: db decimal precision: OS legenda. {#tbl:id}
 | s390x/5  | Hardware-backed IEEE 128-bit (z13 and newer)                          |
 
 Table: db decimal precision: architecture notes. {#tbl:id}
+
+On macOS ARM64 (Arch/OS `ARM64/6`), `db decimal` is therefore limited to about
+15-17 significant decimal digits. Programs that require higher precision, such
+as `numeric digits 1000`, must use the `mc decimal` backend instead of
+`db decimal`.

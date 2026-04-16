@@ -811,3 +811,14 @@ static rxvm_plugin *new_decplugin() {
 
 // Register the rxvmplugin plugin factory
 REGISTER_PLUGIN(new_decplugin)
+
+#ifdef MANUAL_PLUGIN_LINK
+/*
+ * rxvml/rxvm currently hardcode the mandatory decimal manual initializer as
+ * decnumber_register_rxvm_plugin(). Export a compatibility alias here so the
+ * db_decimal manual archive can satisfy the same archive-link contract.
+ */
+void decnumber_register_rxvm_plugin(void) {
+    dbnumber_register_rxvm_plugin();
+}
+#endif

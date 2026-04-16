@@ -316,3 +316,39 @@ target_link_libraries(test_reentrancy rxvml)
 add_dependencies(test_reentrancy test_reentrancy_bin)
 
 add_test(NAME reentrancy_check COMMAND test_reentrancy WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+# Archive-link regression test for manual db_decimal packaging.
+add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link
+        COMMAND ${CMAKE_C_COMPILER}
+                -O0
+                -I${CMAKE_CURRENT_SOURCE_DIR}
+                -I${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+                -I${CMAKE_SOURCE_DIR}/inc
+                -o ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_db_decimal_archive_link.c
+                $<TARGET_FILE:rxvml>
+                $<TARGET_FILE:rxpashim>
+                $<TARGET_FILE:rxvmplugin>
+                $<TARGET_FILE:platform>
+                $<TARGET_FILE:decnumber>
+                $<TARGET_FILE:avl_tree>
+                $<TARGET_FILE:rxpa>
+                -lm
+                $<TARGET_FILE:db_decimal_manual>
+        DEPENDS
+                tests/test_db_decimal_archive_link.c
+                rxvml
+                rxpashim
+                rxvmplugin
+                platform
+                decnumber
+                avl_tree
+                rxpa
+                db_decimal_manual
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Linking archive-level db_decimal regression harness ..."
+        VERBATIM
+)
+add_custom_target(test_db_decimal_archive_link_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link)
+add_test(NAME db_decimal_archive_link COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
