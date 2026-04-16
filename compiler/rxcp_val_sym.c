@@ -32,6 +32,39 @@
 #include "utf.h"
 #include "rxcp_val.h"
 
+static void normalize_symbol_label(ASTNode *node) {
+    size_t start;
+    size_t len;
+    int had_boundary_whitespace;
+
+    if (!node || !node->node_string) return;
+
+    start = 0;
+    len = node->node_string_length;
+    had_boundary_whitespace = 0;
+
+    if (len > 0 && node->node_string[len - 1] == ':') {
+        len--;
+    }
+
+    while (start < len && isspace((unsigned char)node->node_string[start])) {
+        start++;
+        had_boundary_whitespace = 1;
+    }
+
+    while (len > start && isspace((unsigned char)node->node_string[len - 1])) {
+        len--;
+        had_boundary_whitespace = 1;
+    }
+
+    if (had_boundary_whitespace) {
+        mknd_err_unique(node, "SYMBOL_HAS_BOUNDARY_WHITESPACE");
+    }
+
+    node->node_string += start;
+    node->node_string_length = len - start;
+}
+
 /* Step 2a
  * - Builds the Structure Symbol Table (Pass 1)
  *   Handles Namespaces, Classes, and Procedures.
@@ -81,9 +114,7 @@ walker_result structure_symbols_walker(walker_direction direction,
         }
 
         else if (node->node_type == CLASS_DEF) {
-            if (node->node_string_length > 0 && node->node_string[node->node_string_length - 1] == ':') {
-                node->node_string_length--; /* Remove the ':' */
-            }
+            normalize_symbol_label(node);
 
             /* Check for duplicated */
             symbol = sym_rslv_global(context->current_scope, node);
@@ -116,9 +147,7 @@ walker_result structure_symbols_walker(walker_direction direction,
 
 
         else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
-            if (node->node_string_length > 0 && node->node_string[node->node_string_length - 1] == ':') {
-                node->node_string_length--; /* Remove the ':' */
-            }
+            normalize_symbol_label(node);
 
             /* Set the return value node value_type */
             n = ast_chld(node, CLASS, VOID);

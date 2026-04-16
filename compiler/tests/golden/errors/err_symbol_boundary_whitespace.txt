@@ -1,0 +1,2 @@
+Error in err_symbol_boundary_whitespace.rexx @ 3:3 - #SYMBOL_HAS_BOUNDARY_WHITESPACE, "bad : method = .int"
+1 error(s) in source file
