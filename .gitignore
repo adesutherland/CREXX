@@ -86,7 +86,3 @@ docs/books/.DS_Store
 # Temp Items
 /.tmp*
 /tests/repro.rexx
-
-# re2c bootstrapping
-/re2c/bootstrap/src/parse/parser.cc
-/re2c/bootstrap/src/parse/parser.h
