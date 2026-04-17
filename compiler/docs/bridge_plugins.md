@@ -2,6 +2,11 @@
 
 Bridge Plugins allow the cREXX compiler to execute Rexx code during the validation phase. This enables custom syntax transformations, macro-like expansions, and domain-specific optimizations by intercepting unrecognized commands (`IMPLICIT_CMD`).
 
+This document describes the current bridge-plugin model. The `ADDRESS` /
+REXXSAA Stage 1 work is also defining a certified/system-exit track and a
+richer planning contract for core language features. The active design record is
+[address_rexxsaa_working.md](/Users/adrian/CLionProjects/CREXX/compiler/docs/address_rexxsaa_working.md:1).
+
 ## 1. Overview
 
 When the compiler encounters a statement that is not a recognized Rexx keyword or a resolved function/method call, it creates an `IMPLICIT_CMD` node. The **Fixpoint Orchestrator** then dispatches these nodes to registered Bridge Plugins.
@@ -61,7 +66,7 @@ MyOptimizer: class
         return
 
     /* pre_process: Optional. Called to hoist variables before process is run. */
-    /* Returns a space-separated string of 1-based token indices to hoist as `.unknown` */
+    /* Current contract: returns a space-separated string of 1-based token indices. */
     pre_process: method = .string
         arg tokens = .token[]
         /* E.g., hoist the 4th token: return "4" */
@@ -142,3 +147,11 @@ Modern exits use a two-phase architecture:
 1.  **`pre_process`**: This method analyzes tokens and returns a space-separated string of 1-based token indices that represent implicit variables (like `STEM` names in `EXECIO`). The compiler automatically hoists these variables into the local scope as `.unknown` types.
 2.  **`process`**: This method then generates the replacement code. If the replacement code passes the `.unknown` variable into a typed function or library method (e.g., `_execio`), the compiler's **Inference Engine** will automatically promote the `.unknown` variable to the target type required by the function signature (e.g., `.string[]`) during the convergence loop. The exit does not need to declare types explicitly.
 
+Planned direction:
+
+- the current string-returning `pre_process` mechanism is expected to evolve
+  toward a structured planning object for certified/system exits
+- that proposal includes richer binding metadata, contextual keyword claims, and
+  typed planning information
+
+See [address_rexxsaa_working.md](/Users/adrian/CLionProjects/CREXX/compiler/docs/address_rexxsaa_working.md:1) for the active proposal set.

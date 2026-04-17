@@ -6,6 +6,12 @@ This chapter introduces cREXX compiler exits: what they are, how to enable them,
 
 A compiler exit is a compile-time hook written in Rexx that can inspect tokens and inject replacement code into the current compilation unit. Exits are packaged as a module that the compiler (`rxc`) loads on demand.
 
+This chapter primarily describes the current general-exit model. The ongoing
+`ADDRESS` / REXXSAA work is also defining a certified/system-exit model for
+core-team-curated exits that may own reserved keywords and use a richer
+compiler-facing planning contract. The working design record is
+[address_rexxsaa_working.md](/Users/adrian/CLionProjects/CREXX/compiler/docs/address_rexxsaa_working.md:1).
+
 Typical uses:
 
 - Lightweight source transforms for diagnostics and logging (e.g., a `dump` helper that expands into runtime `say` statements).
@@ -43,6 +49,23 @@ The project ships a small bundle of exits primarily for demonstration and testin
 - `query` — queries token properties.
 
 You can find their sources under `compiler/exits/` in the repository.
+
+## Certified/System Exits
+
+Current user exits are intended for non-reserved keywords. The compiler also has
+an emerging certified/system-exit direction for core-team-policed exits tied to
+language features such as `ADDRESS`.
+
+Key distinctions in the planned model:
+
+- Certified/system exits may own reserved keywords.
+- General user exits should not be able to override those reserved bindings.
+- Certified/system exits are expected to use a richer planning response than the
+  current string-only `pre_process()` contract.
+
+Until implementation lands, treat the working note as the design authority for
+that model:
+[address_rexxsaa_working.md](/Users/adrian/CLionProjects/CREXX/compiler/docs/address_rexxsaa_working.md:1).
 
 ## Example: Dumping variables and arrays
 
@@ -113,6 +136,24 @@ process: procedure
 ```
 
 Package your exit module into a bundle (`.rxbin`) and place it in the compiler’s import path, then set `RXCP_EXIT_MODULE` to the bundle name.
+
+## Planning Hooks
+
+Current behaviour:
+
+- `pre_process()` is used for early structural planning such as hoisting
+  implicit variables.
+- In the current bridge, that planning is communicated back to the compiler as a
+  space-separated list of 1-based token indices.
+
+Planned direction:
+
+- the Stage 1 `ADDRESS` work proposes structured planning objects for richer
+  compiler interaction, including bindings, contextual keyword claims, and
+  typed planning data.
+
+See the working note for the proposal details:
+[address_rexxsaa_working.md](/Users/adrian/CLionProjects/CREXX/compiler/docs/address_rexxsaa_working.md:1).
 
 Tips
 
