@@ -39,6 +39,7 @@ foreach(_binfile IN LISTS CLSBINS)
       rxas
       lib/plugins/_system
       lib/plugins/_treemap
+      lib/plugins/_llist
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "cREXX compile and assemble ${_basename} ..."
     VERBATIM

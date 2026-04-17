@@ -10,7 +10,7 @@ import rxfnsb
  * In this version all elements are strings.
  *
  * @author René Vincent Jansen
- * @author Peter Jacob
+ * @author Peter Jacob : llist plugin
  */
 
 LinkedList: class
@@ -149,9 +149,9 @@ nextid = .int
    * method size returns the number of elements in the list.
    * @return .int
    */
-  -- size: method = .int
-  --   a = valueArray()
-  --   return a[0]
+  size: method = .int
+    a = toArray()
+    return a[0]
 
   /**
    * method isEmpty returns 1 if the list is empty, else 0.
@@ -163,56 +163,55 @@ nextid = .int
     return 0
 
   /**
-   * method valueArray returns the values in this LinkedList
+   * method toArray returns the values in this LinkedList
    * as a rexx stem in traversal order.
    * @return .string[]
    */
-  -- valueArray: method = .string[]
-  --   list = .string[]
-  --   i = 0
-  --   rc = setFirst()
-  --   item = current()
-  --   loop while item <> ""
-  --     i = i + 1
-  --     list[i] = item
-  --     item = next()
-  --   end
-  --   list[0] = i
-  --   return list
+  toArray: method = .string[]
+    list = .string[]
+    i = 0
+    rc = setFirst()
+    item = current()
+    loop while item <> ""
+      i = i + 1
+      list[i] = item
+      item = next()
+    end
+    return list
 
   -- /**
   --  * method fromArray rebuilds this LinkedList from a rexx stem.
   --  * @parm .string[] list
   --  * @return .int
   --  */
-  -- fromArray: method = .int
-  --   arg list = .string[]
-  --   rc = clear()
-  --   loop i = 1 to list[0]
-  --     rc = append(list[i])
-  --   end
-  --   return 0
+  fromArray: method = .int
+    arg list = .string[]
+    rc = clear()
+    loop i = 1 to list[0]
+      rc = append(list[i])
+    end
+    return 0
 
   /**
    * method debug validates and reports on this list.
    * @return .int
    */
-  -- debug: method = .int
-  --   return debug(val)
+  debug: method = .int
+    return _debug(val)
 
   /**
    * method toString returns the content of the LinkedList
    * as a string.
    * @return .string
    */
-  -- toString: method = .string
-  --   a = valueArray()
-  --   s = "{"
-  --   loop i = 1 to a[0]
-  --     if i > 1 then s = s || ", "
-  --     s = s || a[i]
-  --   end
-  --   s = s || "}"
-  --   return s
+  toString: method = .string
+    a = toArray()
+    s = "{"
+    loop i = 1 to a[0]
+      if i > 1 then s = s || ", "
+      s = s || a[i]
+    end
+    s = s || "}"
+    return s
 
     

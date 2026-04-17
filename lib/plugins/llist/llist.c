@@ -762,6 +762,6 @@ ADDPROC(setnodeaddr, "llist.setnodeaddr", "b",  ".int", "queue=.int,position=.in
 ADDPROC(listnode,     "llist.listnode",   "b",  ".int", "qname=.int" );
 ADDPROC(listllist,    "llist.listllist",  "b",  ".int", "qname=.int" );
 ADDPROC(freellist,    "llist.freellist",  "b",  ".int", "qname=.int" );
-ADDPROC(debug_llist,   "llist.debug",    "b",  ".int",    "qname=.int" );
+ADDPROC(debug_llist,   "llist._debug",    "b",  ".int",    "qname=.int" );
 ADDPROC(cleanup,       "llist.cleanup",  "b",  ".int",    "" );
 ENDLOADFUNCS
