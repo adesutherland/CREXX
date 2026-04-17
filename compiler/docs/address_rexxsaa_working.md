@@ -34,43 +34,55 @@ the primary modern interface.
 
 ### 3.1 Parser and AST shape today
 
-`ADDRESS` is still a hard-coded compiler instruction, not an exit.
+`ADDRESS` now executes through the certified exit path, but legacy parser/AST
+ownership has not yet been fully removed.
 
-- The grammar in `compiler/rxcpbgmr.y` has explicit `address` productions.
-- It supports:
+- The grammar in `compiler/rxcpbgmr.y` still has explicit `address`
+  productions.
+- It still supports:
   - environment literal
   - command expression
   - redirects `INPUT`, `OUTPUT`, `ERROR`
   - `EXPOSE` followed by a list of variables
-- `IMPLICIT_CMD` is rewritten by the compiler to `ADDRESS "SYSTEM" ...`.
+- `IMPLICIT_CMD` is still produced by the parser and then routed to the
+  certified `ADDRESS` exit bridge.
+- The compiler parser wrapper in `compiler/rxcpbpar.c` now also promotes
+  certified exit primaries and contextual exit keywords for the new path.
 
 Important consequence:
 
-- `ADDRESS` handling is still woven into parser and validation logic.
-- The compiler exit framework is not yet the implementation path for
-  `ADDRESS`.
+- certified exit ownership is now the active implementation path for
+  `ADDRESS`
+- legacy `ADDRESS` grammar productions and AST node shapes still exist as
+  cleanup debt
+- the next compiler cleanup should remove those legacy parsing and AST
+  artifacts once the exit path is considered stable
 
 ### 3.2 Lowering in the compiler today
 
-The current lowering path is in `compiler/rxcp_val_trans.c`.
+The active lowering path is now the certified/system exit bridge in
+`compiler/rxcp_exit.c`, with supporting validation logic in
+`compiler/rxcp_val_trans.c`.
 
-- `needs_rxsysb_walker()` marks `ADDRESS` as needing `_rxsysb`.
-- `rewrite_address_walker()` rewrites `ADDRESS` to:
+- `ADDRESS` and `PARSE` are registered as certified exits.
+- `EXIT_EXTENDED` and `IMPLICIT_CMD` nodes can be lowered by the exit bridge.
+- the current `ADDRESS` lowering still targets:
   - `rc = _address(...)`
-- The walker also rewrites redirect operands into helper calls:
+- redirect operands are still normalized through the existing helper calls:
   - `_noredir()`
   - `_string2redir()`
   - `_array2redir()`
   - `_redir2string()`
   - `_redir2array()`
-- `rewrite_address_walker()` is called from the main validation loop in
-  `compiler/rxcp_val_orch.c`.
+- warning handling for implicit command use now preserves certified-exit
+  lowering rather than suppressing it.
 
 Important consequence:
 
-- the lowering is embedded in the validation pipeline
-- the `ADDRESS` compiler knowledge is duplicated across parser, validator, and
-  runtime library assumptions
+- implementation ownership has moved to the certified exit framework
+- some legacy compiler knowledge about `ADDRESS` still remains in parser/AST
+  structures and should be removed as a follow-on cleanup
+- the runtime backend assumptions are intentionally unchanged in this stage
 
 ### 3.3 Runtime library path today
 
@@ -777,10 +789,14 @@ Stage 1 exit criteria:
 
 ### Stage 2: compiler refactor
 
-Status: implemented for the current certified-exit path
+Status: implemented for the current certified-exit path, with cleanup still
+required
 
-- remove hard-coded `ADDRESS` lowering from `rewrite_address_walker`
+Completed in this stage:
+
 - route `ADDRESS` through the new system-exit path
+- mark `PARSE` as a certified exit and move its contextual keyword handling
+  onto the same model
 - keep the existing `_address` / `spawn` runtime backend
 - add focused tests for:
   - explicit `ADDRESS`
@@ -788,6 +804,15 @@ Status: implemented for the current certified-exit path
   - redirects
   - `EXPOSE`
   - parser/highlighter keyword handling
+  - direct Rexx-side exit harness coverage for `pre_process()` and `process()`
+
+Cleanup queued immediately after this stage:
+
+- remove legacy `ADDRESS` parsing from `compiler/rxcpbgmr.y`
+- remove obsolete `ADDRESS` AST artifacts and dedicated parser-era ownership
+  assumptions
+- remove dead keyword/parser support left behind by the migration once the new
+  path is fully trusted
 
 ### Stage 3: runtime abstraction
 
@@ -838,6 +863,21 @@ Status: implemented for the current certified-exit path
     lower correctly
   - focused direct Rexx-side exit harness tests now cover `pre_process()` and
     `process()` for `ADDRESS` and `PARSE`
+- 2026-04-17: post-Stage-2 stabilisation completed:
+  - `EXECIO` moved to typed binding-hoist planning for `STEM`
+  - build dependencies for exit-compiled Rexx artifacts were corrected
+  - legacy string exit responses are no longer misidentified as
+    `rxcp.exitplan` objects, which removed the dummy-exit
+    `PANIC: (SIGNAL OUT_OF_RANGE)` noise
+  - full verification is green again:
+    - `cmake --build cmake-build-debug`
+    - `ctest --test-dir cmake-build-debug --output-on-failure`
+    - result: `697/697` tests passed
+- 2026-04-17: next implementation task agreed:
+  - remove legacy `ADDRESS` parsing and AST artifacts now that the certified
+    exit path is working
+  - then do the associated grammar/parser/highlighter cleanup for long-term
+    maintainability
 
 ## 10. Evidence and code anchors
 
