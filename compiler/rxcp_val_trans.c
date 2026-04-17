@@ -75,162 +75,13 @@ walker_result rewrite_exit_walker(walker_direction direction,
 }
 
 /*
- * Converts ADDRESS Instruction to _address and redirect system functions
+ * ADDRESS lowering now routes through the certified/system exit bridge.
+ * The legacy hard-coded rewrite is intentionally disabled.
  */
 walker_result rewrite_address_walker(walker_direction direction,
                                             ASTNode* node, __attribute__((unused)) void *payload) {
-
-    Context *context = (Context*)payload;
-
-    ASTNode* c;
-    ASTNode* next;
-
-    if (direction == out) {
-        /* Bottom Up */
-        switch (node->node_type) {
-
-            case ADDRESS:
-                if (node->exit_obj_reg != -1) return result_normal;
-                if (context->debug_mode >= 2) fprintf(stderr, "Lowering ADDRESS Instruction at line %d\n", node->line);
-                /* Rewrite to an assignment from a function */
-                context->changed_flags |= FLAG_VAL_TRANS;
-
-                ASTNode *env = NULL;
-                ASTNode *cmd = NULL;
-                ASTNode *in = NULL;
-                ASTNode *out = NULL;
-                ASTNode *err = NULL;
-                ASTNode *expose_head = NULL;
-                ASTNode *expose_tail = NULL;
-                ASTNode *diag_head = NULL;
-                ASTNode *diag_tail = NULL;
-
-                /* Categorize children and remove them from 'node' */
-                c = node->child;
-                int pos = 0;
-                while (c) {
-                    next = c->sibling;
-                    /* Disconnect child */
-                    if (c == node->child) node->child = next;
-                    c->sibling = NULL;
-                    c->parent = NULL;
-
-                    if (c->node_type == ERROR || c->node_type == WARNING) {
-                        if (diag_tail) diag_tail->sibling = c;
-                        else diag_head = c;
-                        diag_tail = c;
-                    }
-                    else if (c->node_type == REDIRECT_IN) {
-                        if (!in) in = c;
-                    }
-                    else if (c->node_type == REDIRECT_OUT) {
-                        if (!out) out = c;
-                    }
-                    else if (c->node_type == REDIRECT_ERROR) {
-                        if (!err) err = c;
-                    }
-                    else if (c->node_type == REDIRECT_EXPOSE) {
-                        /* Gather expose children */
-                        ASTNode *ec = c->child;
-                        while (ec) {
-                            ASTNode *enext = ec->sibling;
-                            ec->parent = NULL;
-                            ec->sibling = NULL;
-
-                            /* We will add name as a string node, and variable as a target in the rewrite step */
-                            if (expose_tail) { expose_tail->sibling = ec; }
-                            else { expose_head = ec; }
-                            expose_tail = ec;
-
-                            ec = enext;
-                        }
-                    } else {
-                        if (pos == 0) env = c;
-                        else if (pos == 1) cmd = c;
-                        pos++;
-                    }
-                    c = next;
-                }
-
-                ASTRewriteTemplate *call_tmpl = ast_rw_new(FUNCTION, "_address");
-
-                /* 1. Env */
-                ast_rw_add(call_tmpl, env ? ast_rw_reuse(env) : ast_rw_new(STRING, "SYSTEM"));
-
-                /* 2. Cmd */
-                ast_rw_add(call_tmpl, cmd ? ast_rw_reuse(cmd) : ast_rw_new(STRING, ""));
-
-                /* Helper to transform redirect node to FUNCTION call */
-                #define ADD_RED(r, i_i) do { \
-                    if (r) { \
-                        ASTNode *rc = r->child; \
-                        if (!rc || rc->value_type == TP_VOID) { \
-                            ast_rw_add(call_tmpl, ast_rw_new(FUNCTION, "_noredir")); \
-                        } else if (i_i) { \
-                            ASTRewriteTemplate *func = ast_rw_new(FUNCTION, rc->value_dims ? "_array2redir" : "_string2redir"); \
-                            ast_rw_add(func, ast_rw_reuse(rc)); \
-                            ast_rw_add(call_tmpl, func); \
-                        } else { \
-                            ASTRewriteTemplate *func = ast_rw_new(FUNCTION, rc->value_dims ? "_redir2array" : "_redir2string"); \
-                            ast_rw_add(func, ast_rw_reuse(rc)); \
-                            ast_rw_add(call_tmpl, func); \
-                        } \
-                    } else { \
-                        ast_rw_add(call_tmpl, ast_rw_new(FUNCTION, "_noredir")); \
-                    } \
-                } while(0)
-
-                ADD_RED(in, 1);
-                ADD_RED(out, 0);
-                ADD_RED(err, 0);
-                #undef ADD_RED
-
-                /* Add exposed */
-                c = expose_head;
-                while (c) {
-                    next = c->sibling;
-                    c->sibling = NULL;
-
-                    ASTRewriteTemplate *name_node = ast_rw_new(STRING, c->node_string);
-                    ast_rw_add(call_tmpl, name_node);
-                    ast_rw_add(call_tmpl, ast_rw_reuse(c));
-
-                    c = next;
-                }
-
-                /* Assignment node rc = _address(...) */
-                ASTRewriteTemplate *assign_tmpl = ast_rw_add(ast_rw_add(
-                    ast_rw_new(ASSIGN, "="),
-                    ast_rw_new(VAR_TARGET, "rc")),
-                    call_tmpl
-                );
-
-                ASTNode *new_assign = ast_execute_rewrite(context, node, assign_tmpl);
-
-                /* Re-attach diagnostics */
-                if (new_assign) {
-                    c = diag_head;
-                    while (c) {
-                        next = c->sibling;
-                        c->sibling = NULL;
-                        add_ast(new_assign, c);
-                        c = next;
-                    }
-                }
-
-                break;
-
-            case REDIRECT_IN:
-            case REDIRECT_OUT:
-            case REDIRECT_ERROR:
-            case REDIRECT_EXPOSE:
-                /* Handled by ADDRESS */
-                break;
-
-            default:;
-        }
-    }
-
+    (void)direction;
+    (void)node;
     return result_normal;
 }
 
@@ -278,9 +129,10 @@ walker_result add_rxsysb_walker(walker_direction direction,
 }
 
 /*
- * `Sees if rxsysb is needed
- * - If ADDRESS is used
+ * Sees if rxsysb is needed
  */
+static void rxcp_warn_implicit_address(ASTNode *node);
+
 walker_result needs_rxsysb_walker(walker_direction direction,
                                        ASTNode* node, __attribute__((unused)) void *payload) {
 
@@ -288,16 +140,22 @@ walker_result needs_rxsysb_walker(walker_direction direction,
 
     if (direction == out) {
         /* Bottom Up */
-        if (node->node_type == ADDRESS || node->node_type == IMPLICIT_CMD || node->node_type == EXIT_EXTENDED) {
+        if (node->node_type == IMPLICIT_CMD || node->node_type == EXIT_EXTENDED) {
             context->need_rxsysb = 1;
 
-            if (node->node_type == ADDRESS || node->node_type == IMPLICIT_CMD) {
+            if (node->node_type == IMPLICIT_CMD) {
+                rxcp_warn_implicit_address(node);
                 ast_hoist_var(context, node, "rc", -1);
+            } else if (node->node_type == EXIT_EXTENDED && node->token) {
+                unsigned int flags;
+
+                flags = rxcp_get_exit_flags(context, node->token->token_string, node->token->length);
+                if (flags & RXCP_EXIT_FLAG_IMPLICIT_COMMAND) {
+                    ast_hoist_var(context, node, "rc", -1);
+                }
             }
 
-            if (node->node_type == IMPLICIT_CMD || node->node_type == EXIT_EXTENDED) {
-                rxcp_exit_bridge_pre_invoke(context, node);
-            }
+            rxcp_exit_bridge_pre_invoke(context, node);
         }
         else if (node->node_type == EXIT) {
             context->need_rxsysb = 1;
@@ -307,12 +165,29 @@ walker_result needs_rxsysb_walker(walker_direction direction,
     return result_normal;
 }
 
+static void rxcp_warn_implicit_address(ASTNode *node) {
+    int starts_with_quote;
+
+    if (!node || ast_hase(node)) return;
+
+    starts_with_quote = 0;
+    if (node->source_start && (node->source_start[0] == '\'' || node->source_start[0] == '"')) {
+        starts_with_quote = 1;
+    }
+
+    if (!starts_with_quote) {
+        mknd_war(node, "IMPLICIT_ADDRESS");
+    }
+}
+
 /*
- * Rewrites IMPLICIT_CMD to ADDRESS
+ * Warns on implicit command usage while keeping IMPLICIT_CMD available for
+ * the certified ADDRESS exit bridge.
  */
 walker_result rewrite_implicit_cmd_walker(walker_direction direction,
                                           ASTNode* node, void *payload) {
     Context *context = (Context *) payload;
+    (void)context;
 
     if (direction == out && node->node_type == IMPLICIT_CMD) {
         /* Fix up location if missing - typically copied from the expression child */
@@ -326,38 +201,7 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
             node->token_end = node->child->token_end;
         }
 
-        if (node->exit_obj_reg != -1) return result_normal;
-
-        /* Warn about implicit address.
-         * Guard with ast_hase(node) to ensure we only warn once.
-         * Suppress warning if the command starts with a quote (' or "). */
-        int starts_with_quote = 0;
-        if (node->source_start && (node->source_start[0] == '\'' || node->source_start[0] == '"')) {
-            starts_with_quote = 1;
-        }
-
-        /* We add the warning before rewrite so it gets caught by ast_execute_rewrite and moved */
-        if (!ast_hase(node) && !starts_with_quote) {
-            mknd_war(node, "IMPLICIT_ADDRESS");
-        }
-
-        ASTRewriteTemplate *addr_tmpl = ast_rw_new(ADDRESS, NULL);
-
-        /* Create explicit environment "SYSTEM" */
-        ast_rw_add(addr_tmpl, ast_rw_new(STRING, "SYSTEM"));
-
-        /* Reuse all existing children (command, redirections, diagnostics) */
-        ASTNode *c = node->child;
-        while (c) {
-            ASTNode *next = c->sibling;
-            if (c == node->child) node->child = next;
-            c->sibling = NULL;
-            c->parent = NULL;
-            ast_rw_add(addr_tmpl, ast_rw_reuse(c));
-            c = next;
-        }
-
-        ast_execute_rewrite(context, node, addr_tmpl);
+        rxcp_warn_implicit_address(node);
     }
     return result_normal;
 }

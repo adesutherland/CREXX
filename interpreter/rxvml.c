@@ -386,6 +386,12 @@ int rxvml_to_str(rxvml_context* ctx, const rxvml_value* v, const char** out_s, s
     return -1;
 }
 
+size_t rxvml_num_attributes(const rxvml_value* v) {
+    const value* val = (const value*)v;
+    if (!val) return 0;
+    return val->num_attributes;
+}
+
 int rxvml_last_error(rxvml_context* ctx, const char** out_msg) {
     if (out_msg) *out_msg = ctx->last_error;
     return ctx->last_error ? -1 : 0;

@@ -37,6 +37,8 @@ foreach(_binfile IN LISTS CLSBINS)
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx"
       rxc
       rxas
+      library
+      compiler_exit_bin
       lib/plugins/_system
       lib/plugins/_treemap
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"

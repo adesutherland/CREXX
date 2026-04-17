@@ -679,9 +679,17 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
                 /* Get raw text of the token */
                 const char *text = NULL;
                 size_t text_len = 0;
+                char *source_text = NULL;
                 if (token_node->token) {
-                    text = token_node->token->token_string;
-                    text_len = token_node->token->length;
+                    if (token_node->token_start && token_node->token_end &&
+                        token_node->token_start != token_node->token_end) {
+                        source_text = ast_nsrc(token_node);
+                        text = source_text;
+                        text_len = strlen(source_text);
+                    } else {
+                        text = token_node->token->token_string;
+                        text_len = token_node->token->length;
+                    }
                 } else if (token_node->node_string) {
                     text = token_node->node_string;
                     text_len = token_node->node_string_length;
@@ -698,6 +706,7 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
                     memcpy(interpolated + int_pos, text, text_len);
                     int_pos += text_len;
                 }
+                if (source_text) free(source_text);
             } else {
                 /* Not a valid {n} or n out of range, copy literally */
                 interpolated[int_pos++] = '{';

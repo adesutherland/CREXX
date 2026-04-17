@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.24)
 function(crexx_add_compiler_exit_runtime_test TARGET_NAME SOURCE_FILE)
     set(options)
     set(oneValueArgs PASS_REGULAR_EXPRESSION)
-    set(multiValueArgs RUN_PREFIX RUN_SUFFIX)
+    set(multiValueArgs RUN_PREFIX RUN_SUFFIX EXTRA_DEPENDS)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     set(_pass_regex "SUCCESS")
@@ -29,7 +29,7 @@ function(crexx_add_compiler_exit_runtime_test TARGET_NAME SOURCE_FILE)
                 OUTPUT ${_output}
                 COMMAND ${CMAKE_COMMAND} -E env RXCP_EXIT_MODULE=rxcexits $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${_rxc_flags} -o ${_base} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}
                 COMMAND $<TARGET_FILE:rxas> ${_rxas_flags} -o ${_base} ${_base}
-                DEPENDS rxc rxas ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}
+                DEPENDS rxc rxas ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} ${CREXX_EXTRA_DEPENDS}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 COMMENT "Compiling ${SOURCE_FILE} with exit (${_mode})"
         )
@@ -64,11 +64,23 @@ add_custom_command(
 )
 add_custom_target(token_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin)
 
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/bin/exittestsupport.rxbin
+    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i "\"${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_SOURCE_DIR}\"" -o exittestsupport ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.rexx
+    COMMAND $<TARGET_FILE:rxas> -o ${CMAKE_BINARY_DIR}/bin/exittestsupport exittestsupport
+    DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.rexx ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/exittestsupport.rxas
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Building exittestsupport.rxbin"
+)
+add_custom_target(exit_test_support_bin DEPENDS ${CMAKE_BINARY_DIR}/bin/exittestsupport.rxbin)
+
 add_subdirectory(dump)
 add_subdirectory(query)
 add_subdirectory(sort)
 add_subdirectory(sortx)
 add_subdirectory(pprint)
+add_subdirectory(address)
 add_subdirectory(execio)
 add_subdirectory(add)
 add_subdirectory(fsay)
@@ -78,13 +90,14 @@ add_subdirectory(dummy)
 # Build the bundle by concatenating all exit components
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
-    COMMAND ${CMAKE_COMMAND} -E cat token.rxbin dump/Dump.rxbin query/Query.rxbin sort/Sort.rxbin sortx/Sortx.rxbin pprint/Pprint.rxbin parse/Parse.rxbin execio/Execio.rxbin add/Add.rxbin fsay/Fsay.rxbin dummy/Dummy.rxbin > ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
+    COMMAND ${CMAKE_COMMAND} -E cat token.rxbin dump/Dump.rxbin query/Query.rxbin sort/Sort.rxbin sortx/Sortx.rxbin pprint/Pprint.rxbin address/Address.rxbin parse/Parse.rxbin execio/Execio.rxbin add/Add.rxbin fsay/Fsay.rxbin dummy/Dummy.rxbin > ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
     DEPENDS rxc rxas
             ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin 
             ${CMAKE_CURRENT_BINARY_DIR}/dump/Dump.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/query/Query.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/sort/Sort.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/sortx/Sortx.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/address/Address.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/execio/Execio.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/add/Add.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/fsay/Fsay.rxbin
@@ -95,4 +108,4 @@ add_custom_command(
     COMMENT "Building rxcexits.rxbin (bundled via concatenation)"
 )
 add_custom_target(compiler_exit_bin ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin)
-add_dependencies(compiler_exit_bin token_bin exit_dump_bin exit_query_bin exit_sort_bin exit_sortx_bin exit_pprint_bin exit_parse_bin exit_execio_bin exit_add_bin exit_fsay_bin exit_dummy_bin)
+add_dependencies(compiler_exit_bin token_bin exit_dump_bin exit_query_bin exit_sort_bin exit_sortx_bin exit_pprint_bin exit_address_bin exit_parse_bin exit_execio_bin exit_add_bin exit_fsay_bin exit_dummy_bin)

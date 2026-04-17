@@ -44,6 +44,15 @@ function(crexx_add_rexx_opt_matrix)
         set(_crexx_import_arg "\"${_crexx_import_path}\"")
     endif()
 
+    set(_crexx_compile_depends
+            ${CREXX_COMPILER_TARGET}
+            ${CREXX_ASSEMBLER_TARGET}
+            ${CREXX_SOURCE}
+            ${CREXX_DEPENDS})
+    if(CREXX_COMPILER_TARGET STREQUAL "rxc")
+        list(APPEND _crexx_compile_depends compiler_exit_bin)
+    endif()
+
     foreach(_crexx_mode IN ITEMS noopt opt)
         set(_crexx_output_base ${CREXX_NAME}_${_crexx_mode})
         set(_crexx_mode_rxc_flags ${CREXX_RXC_FLAGS})
@@ -67,7 +76,7 @@ function(crexx_add_rexx_opt_matrix)
                 OUTPUT ${_crexx_artifact}
                 COMMAND ${_crexx_compile_cmd}
                 COMMAND ${_crexx_assemble_cmd}
-                DEPENDS ${CREXX_COMPILER_TARGET} ${CREXX_ASSEMBLER_TARGET} ${CREXX_SOURCE} ${CREXX_DEPENDS}
+                DEPENDS ${_crexx_compile_depends}
                 WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
         )
 

@@ -16,7 +16,7 @@ add_custom_command(
         -o rxml_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxml_test\" &&
         $<TARGET_FILE:rxas> rxml_test
 
-        DEPENDS rxas rxc library _rxml ${CMAKE_CURRENT_SOURCE_DIR}/rxml_test.rexx
+        DEPENDS rxas rxc library compiler_exit_bin _rxml ${CMAKE_CURRENT_SOURCE_DIR}/rxml_test.rexx
         OUTPUT rxml_test.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

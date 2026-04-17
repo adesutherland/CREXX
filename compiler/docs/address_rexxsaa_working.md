@@ -777,6 +777,8 @@ Stage 1 exit criteria:
 
 ### Stage 2: compiler refactor
 
+Status: implemented for the current certified-exit path
+
 - remove hard-coded `ADDRESS` lowering from `rewrite_address_walker`
 - route `ADDRESS` through the new system-exit path
 - keep the existing `_address` / `spawn` runtime backend
@@ -827,10 +829,15 @@ Stage 1 exit criteria:
   - common address request/response/pool contract
   - preferred `expose` forms and marker syntax proposal
   - merged binding normalization and conflict rules
-- Stage 1 proposals pending:
-  - exact planning-response shape for exits
-  - exact marker syntax
-  - exact merged binding-list rules
+- 2026-04-17: Stage 2 implementation landed:
+  - `ADDRESS` and `PARSE` now run through the certified exit path
+  - structured `exitplan` planning is active for binding hoists and contextual
+    keyword claims
+  - implicit command dispatch now falls back to the certified `ADDRESS` exit
+  - redirect handling defers until operand typing is known, so array redirects
+    lower correctly
+  - focused direct Rexx-side exit harness tests now cover `pre_process()` and
+    `process()` for `ADDRESS` and `PARSE`
 
 ## 10. Evidence and code anchors
 

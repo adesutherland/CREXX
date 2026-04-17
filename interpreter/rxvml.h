@@ -34,6 +34,7 @@ int          rxvml_array_set(rxvml_context* ctx, rxvml_value* arr, size_t index1
 /* Introspection / extraction */
 int      rxvml_to_int      (rxvml_context* ctx, const rxvml_value* v, rxinteger* out_v);
 int      rxvml_to_str      (rxvml_context* ctx, const rxvml_value* v, const char** out_s, size_t* out_len);
+size_t   rxvml_num_attributes(const rxvml_value* v);
 
 /* Invocation */
 int rxvml_call_procedure(

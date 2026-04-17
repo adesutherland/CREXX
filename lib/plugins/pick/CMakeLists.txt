@@ -30,7 +30,7 @@ add_custom_command(
         -o pick_test \"${CMAKE_CURRENT_SOURCE_DIR}/pick_test\" &&
         $<TARGET_FILE:rxas> pick_test
 
-        DEPENDS rxas rxc library _pick ${CMAKE_CURRENT_SOURCE_DIR}/pick_test.rexx
+        DEPENDS rxas rxc library compiler_exit_bin _pick ${CMAKE_CURRENT_SOURCE_DIR}/pick_test.rexx
         OUTPUT pick_test.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

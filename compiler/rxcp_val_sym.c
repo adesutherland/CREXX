@@ -1503,7 +1503,12 @@ static int is_var_defined_before(ASTNode* start_node, const char* var_name) {
  * levels: -1 = Procedure/Method level, 0 = Current level (inserted just before current_node), 1 = Parent level
  * Returns 1 if hoisted/already exists, 0 on failure.
  */
-int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int levels) {
+int ast_hoist_var_typed(Context* ctx,
+                        ASTNode* current_node,
+                        const char* var_name,
+                        int levels,
+                        const char* type_name,
+                        size_t dims) {
     ASTNode *target_scope_node = current_node;
 
     if (levels == -1) {
@@ -1538,15 +1543,31 @@ int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int
 
     if (!found) {
         ASTNode *injected_node = NULL;
+        size_t i;
 
-        /* Create DEFINE node: var_name = .unknown */
+        /* Create DEFINE node with the requested type shape. */
         ASTNode *def_node = ast_ft(ctx, DEFINE);
         ASTNode *var_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
         var_node->free_node_string = 1;
         ASTNode *type_node = ast_ft(ctx, CLASS);
-        type_node->node_string = strdup(".unknown");
-        type_node->node_string_length = strlen(".unknown");
+        const char *effective_type = (type_name && *type_name) ? type_name : ".unknown";
+        type_node->node_string = strdup(effective_type);
+        type_node->node_string_length = strlen(effective_type);
         type_node->free_node_string = 1;
+
+        for (i = 0; i < dims; i++) {
+            ASTNode *range_node = ast_ft(ctx, RANGE);
+            ASTNode *min_node = ast_ft(ctx, NOVAL);
+            ASTNode *max_node = ast_ft(ctx, NOVAL);
+
+            add_ast(range_node, min_node);
+            add_ast(range_node, max_node);
+            add_ast(type_node, range_node);
+
+            ast_copy_source_anchor(range_node, current_node, AST_SOURCE_SYNTHETIC);
+            ast_copy_source_anchor(min_node, current_node, AST_SOURCE_SYNTHETIC);
+            ast_copy_source_anchor(max_node, current_node, AST_SOURCE_SYNTHETIC);
+        }
 
         add_ast(def_node, var_node);
         add_ast(def_node, type_node);
@@ -1588,4 +1609,8 @@ int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int
     }
 
     return 1;
+}
+
+int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int levels) {
+    return ast_hoist_var_typed(ctx, current_node, var_name, levels, ".unknown", 0);
 }

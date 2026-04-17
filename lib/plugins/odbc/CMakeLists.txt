@@ -67,7 +67,7 @@ add_custom_command(
         -o odbc_test \"${CMAKE_CURRENT_SOURCE_DIR}/odbc_test\" &&
         $<TARGET_FILE:rxas> odbc_test
 
-        DEPENDS rxas rxc library _odbc ${CMAKE_CURRENT_SOURCE_DIR}/odbc_test.rexx
+        DEPENDS rxas rxc library compiler_exit_bin _odbc ${CMAKE_CURRENT_SOURCE_DIR}/odbc_test.rexx
         OUTPUT odbc_test.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -83,4 +83,3 @@ add_test(NAME odbc_test
         COMMAND $<TARGET_FILE:rxvm> odbc_test rx_odbc ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
-

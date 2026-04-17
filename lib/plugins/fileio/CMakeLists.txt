@@ -16,7 +16,7 @@ add_custom_command(
         -o fileio_test \"${CMAKE_CURRENT_SOURCE_DIR}/fileio_test\" &&
         $<TARGET_FILE:rxas> fileio_test
 
-        DEPENDS rxas rxc library _fileio ${CMAKE_CURRENT_SOURCE_DIR}/fileio_test.rexx
+        DEPENDS rxas rxc library compiler_exit_bin _fileio ${CMAKE_CURRENT_SOURCE_DIR}/fileio_test.rexx
         OUTPUT fileio_test.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

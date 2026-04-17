@@ -86,8 +86,9 @@ parseexit: class
  *   - Runtime semantics are resolved in parseExec(), not here.
  *   - Implicit ABS 1 is injected for a leading bare target.
  * ------------------------------------------------------------------ */
-pre_process: method = .string
+pre_process: method = .exitplan
   arg tokens = .token[]
+  compile_plan = .exitplan("READY")
 
   _replacement = ""
   _error_token = 0
@@ -117,25 +118,40 @@ pre_process: method = .string
    *   start_of_template points to the token holding the parse source
    *   expression/variable; the actual template starts at +1.
    * -------------------------------------------------------------- */
-  toExpose = ""
   do start_of_template=2 to tokens.0
      ti   = tokens[start_of_template]
      type = strip(ti.get_type())
      text = strip(ti.get_text())
      utext=upper(text)
-     if type='identifier' & (utext='UPPER' | utext='LOWER')    then uplow=utext
-     else if type='identifier' & utext='LOG' then wantlog=1
-     else if type='identifier' & utext='TRACE' then wanttrace=1
-     else if type='identifier' & utext='TRIM' then _wanttrim=1
+     if type='identifier' & (utext='UPPER' | utext='LOWER')    then do
+        uplow=utext
+        call compile_plan.add_keyword(start_of_template, text, "parse_option", "parse")
+     end
+     else if type='identifier' & utext='LOG' then do
+        wantlog=1
+        call compile_plan.add_keyword(start_of_template, text, "parse_option", "parse")
+     end
+     else if type='identifier' & utext='TRACE' then do
+        wanttrace=1
+        call compile_plan.add_keyword(start_of_template, text, "parse_option", "parse")
+     end
+     else if type='identifier' & utext='TRIM' then do
+        _wanttrim=1
+        call compile_plan.add_keyword(start_of_template, text, "parse_option", "parse")
+     end
      else if type='identifier' & utext='INTO' then do
+        call compile_plan.add_keyword(start_of_template, text, "parse_option", "parse")
         ti = tokens[start_of_template+1]
         if strip(ti.get_type())\='identifier' then iterate
         start_of_template=start_of_template+1
-        toExpose=start_of_template||' '
+        call compile_plan.add_binding("var", ti.get_text(), "", "", 0, "parse_into", "")
         _into=ti.get_text()
         iterate
      end
-     else if type='identifier' & (utext='VALUE' | utext='VAR') then parmtype=utext
+     else if type='identifier' & (utext='VALUE' | utext='VAR') then do
+        parmtype=utext
+        call compile_plan.add_keyword(start_of_template, text, "parse_source", "parse")
+     end
      else if type='identifier' & (parmtype='VAR' | parmtype='VALUE') then leave  /* next token is with or parse string */
      else if type='string_literal' & (parmtype='VAR' | parmtype='VALUE') then leave  /* next token is with or parse string */
    end
@@ -157,6 +173,34 @@ pre_process: method = .string
   _template=''
   pkind = .int[]
   ptext = .string[]
+  template_end = tokens.0
+
+  do while template_end >= start_of_template + 1
+     ti   = tokens[template_end]
+     type = strip(ti.get_type())
+     text = strip(ti.get_text())
+     utext=upper(text)
+
+     if type='identifier' & _into='' & template_end > start_of_template + 1 then do
+        tj = tokens[template_end - 1]
+        if strip(tj.get_type())='identifier' & upper(strip(tj.get_text()))='INTO' then do
+           call compile_plan.add_keyword(template_end - 1, tj.get_text(), "parse_option", "parse")
+           call compile_plan.add_binding("var", text, "", "", 0, "parse_into", "")
+           _into=text
+           template_end = template_end - 2
+           iterate
+        end
+     end
+
+     if type='identifier' & utext='TRIM' & _wanttrim=0 then do
+        call compile_plan.add_keyword(template_end, text, "parse_option", "parse")
+        _wanttrim=1
+        template_end = template_end - 1
+        iterate
+     end
+
+     leave
+  end
 
   i = start_of_template+1
   call log 'TEMPLATE START AT='i" PARSE TYPE='"parmtype"' LOG="wantlog" TRIM="_wanttrim" INTO="_into
@@ -170,7 +214,7 @@ pre_process: method = .string
    * This preserves the source order exactly; parseExec() later
    * interprets the resulting sequential runtime stream.
    * -------------------------------------------------------------- */
-  do while i <= tokens.0
+  do while i <= template_end
      ti   = tokens[i]
      type = strip(ti.get_type())
      text = strip(ti.get_text())
@@ -230,7 +274,9 @@ pre_process: method = .string
               end
            end
         end
-        return setError("ERROR", 1, "PARSE invalid operator usage in template:" text)
+        call setError("ERROR", 1, "PARSE invalid operator usage in template:" text)
+        call compile_plan.set_error(_error_token, _error_message)
+        return compile_plan
      end
 
  /* --------------------------------------------------------------
@@ -275,7 +321,7 @@ pre_process: method = .string
         out = out + 1
         pkind[out] = 1
         ptext[out] = text
-        toExpose = toExpose || i' '
+        call compile_plan.add_binding("var", text, "", "", 0, "parse_target", "")
         prevkind = 1
         i = i + 1
         iterate
@@ -311,7 +357,9 @@ pre_process: method = .string
  /* --------------------------------------------------------------
   * Unsupported token type
   * -------------------------------------------------------------- */
-     return setError("ERROR", 1, "PARSE unsupported parse token kind: "type)
+     call setError("ERROR", 1, "PARSE unsupported parse token kind: "type)
+     call compile_plan.set_error(_error_token, _error_message)
+     return compile_plan
   end
 
   /* --------------------------------------------------------------
@@ -326,10 +374,9 @@ pre_process: method = .string
   plan=compile_parse_plan(pkind, ptext, out)
    ##    call setError("ERROR",1,substr(plan,9))
   if substr(plan,1,8)=">>>ERROR" then do
-     _status = "ERROR"
-     _error_token = 1
-     _error_message = substr(plan,9)
-     return _status
+     call setError("ERROR", 1, substr(plan,9))
+     call compile_plan.set_error(_error_token, _error_message)
+     return compile_plan
   end
 
   /* --------------------------------------------------------------
@@ -364,8 +411,7 @@ pre_process: method = .string
   _replacement = _replacement'; '_into'=parseExec(_source,"'plan'","'_template'",'wantlog')'
   call log 'Pre-Process II  '_template_texttab
   call log 'Pre-Process IV  '_replacement
-  call log "must be exposed='"toExpose"' template='"out"'"
-return toExpose
+return compile_plan
 
 process: method = .string
     arg tokens = .token[]
@@ -395,7 +441,7 @@ process: method = .string
      *   - token 1 is the PARSE keyword itself and is skipped
      *   - the joined command text is currently used only for logging
      * ---------------------------------------------------------------------- */
-    allowed = "identifier int_literal string_literal operator comma other bracket"
+    allowed = "identifier exit_keyword keyword int_literal string_literal operator comma other bracket"
     cmd = ""
 
     do i = 1 to tokens.0

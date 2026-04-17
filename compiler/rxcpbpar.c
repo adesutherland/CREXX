@@ -61,12 +61,16 @@ int rexbpars(Context *context) {
         }
 
         // Promotion
-        if (token_type == TK_VAR_SYMBOL) {
-            if (last_token_type == TK_EOC && rxcp_is_exit_primary(context, token->token_string, token->length)) {
-                token_type = TK_EXIT_PRIMARY;
-                token->token_type = TK_EXIT_PRIMARY;
-                in_exit_instruction = 1;
-            } else if (in_exit_instruction && rxcp_is_exit_additional(context, token->token_string, token->length)) {
+        if (last_token_type == TK_EOC &&
+            token_type != TK_EOC &&
+            token_type != TK_EOS &&
+            token->token_string &&
+            rxcp_is_exit_primary(context, token->token_string, token->length)) {
+            token_type = TK_EXIT_PRIMARY;
+            token->token_type = TK_EXIT_PRIMARY;
+            in_exit_instruction = 1;
+        } else if (token_type == TK_VAR_SYMBOL) {
+            if (in_exit_instruction && rxcp_is_exit_additional(context, token->token_string, token->length)) {
                 token_type = TK_EXIT_TOKEN;
                 token->token_type = TK_EXIT_TOKEN;
             }

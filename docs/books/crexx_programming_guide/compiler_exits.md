@@ -7,7 +7,7 @@ This chapter introduces cREXX compiler exits: what they are, how to enable them,
 A compiler exit is a compile-time hook written in Rexx that can inspect tokens and inject replacement code into the current compilation unit. Exits are packaged as a module that the compiler (`rxc`) loads on demand.
 
 This chapter primarily describes the current general-exit model. The ongoing
-`ADDRESS` / REXXSAA work is also defining a certified/system-exit model for
+`ADDRESS` / REXXSAA work has also introduced a certified/system-exit model for
 core-team-curated exits that may own reserved keywords and use a richer
 compiler-facing planning contract. The working design record is
 [address_rexxsaa_working.md](/Users/adrian/CLionProjects/CREXX/compiler/docs/address_rexxsaa_working.md:1).
@@ -52,19 +52,22 @@ You can find their sources under `compiler/exits/` in the repository.
 
 ## Certified/System Exits
 
-Current user exits are intended for non-reserved keywords. The compiler also has
-an emerging certified/system-exit direction for core-team-policed exits tied to
-language features such as `ADDRESS`.
+Current user exits are intended for non-reserved keywords. The compiler now also
+has certified/system exits for core-team-policed language features.
 
-Key distinctions in the planned model:
+Current certified exits:
+
+- `ADDRESS`
+- `PARSE`
+
+Key distinctions in the current model:
 
 - Certified/system exits may own reserved keywords.
 - General user exits should not be able to override those reserved bindings.
-- Certified/system exits are expected to use a richer planning response than the
-  current string-only `pre_process()` contract.
+- Certified/system exits may use a richer planning response than the legacy
+  string-only `pre_process()` contract.
 
-Until implementation lands, treat the working note as the design authority for
-that model:
+Treat the working note as the design authority for the evolving model:
 [address_rexxsaa_working.md](/Users/adrian/CLionProjects/CREXX/compiler/docs/address_rexxsaa_working.md:1).
 
 ## Example: Dumping variables and arrays
@@ -143,14 +146,15 @@ Current behaviour:
 
 - `pre_process()` is used for early structural planning such as hoisting
   implicit variables.
-- In the current bridge, that planning is communicated back to the compiler as a
+- General exits may still communicate that planning back to the compiler as a
   space-separated list of 1-based token indices.
+- Certified exits can now return a structured `rxcp.exitplan` object for
+  binding hoists, contextual keyword claims, and planning diagnostics.
 
 Planned direction:
 
-- the Stage 1 `ADDRESS` work proposes structured planning objects for richer
-  compiler interaction, including bindings, contextual keyword claims, and
-  typed planning data.
+- the Stage 1 `ADDRESS` work continues to extend the structured planning model
+  with richer typed planning data and broader address-environment contracts.
 
 See the working note for the proposal details:
 [address_rexxsaa_working.md](/Users/adrian/CLionProjects/CREXX/compiler/docs/address_rexxsaa_working.md:1).

@@ -16,7 +16,7 @@ add_custom_command(
             -o fpool_test \"${CMAKE_CURRENT_SOURCE_DIR}/fpool_test\" &&
         $<TARGET_FILE:rxas> fpool_test
 
-        DEPENDS rxas rxc library _fpool ${CMAKE_CURRENT_SOURCE_DIR}/fpool_test.rexx
+        DEPENDS rxas rxc library compiler_exit_bin _fpool ${CMAKE_CURRENT_SOURCE_DIR}/fpool_test.rexx
         OUTPUT fpool_test.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

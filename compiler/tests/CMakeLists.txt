@@ -217,6 +217,7 @@ add_crexx_compiler_test(03_calc rexx_src/03_calc.rexx)
 add_crexx_compiler_test(04_literals rexx_src/04_literals.rexx)
 add_crexx_compiler_test(05_ops_common rexx_src/05_ops_common.rexx)
 add_crexx_compiler_test(05_ops_classic rexx_src/05_ops_classic.rexx)
+add_crexx_compiler_test(address_expose rexx_src/address_expose.rexx)
 add_crexx_compiler_test(div_ops_common rexx_src/div_ops_common.rexx)
 add_crexx_compiler_test(div_ops_classic rexx_src/div_ops_classic.rexx)
 add_crexx_compiler_test(06_logic rexx_src/06_logic.rexx)
@@ -400,6 +401,8 @@ add_crexx_run_test(block_expr_short_circuit rexx_src/block_expr_short_circuit.re
 add_crexx_run_test(repro_args_parse rexx_src/repro_args_parse.rexx)
 add_crexx_run_test(repro_args_alias rexx_src/repro_args_alias.rexx)
 add_crexx_run_test(repro_sconcat rexx_src/repro_sconcat.rexx)
+add_crexx_run_test(test_explicit_address rexx_src/test_explicit_address.rexx)
+add_crexx_run_test(test_address_redirect rexx_src/test_address_redirect.rexx)
 add_crexx_run_test(test_implicit_address rexx_src/test_implicit_address.rexx)
 add_crexx_run_test(test_obj_prop rexx_src/test_obj_prop.rexx)
 add_crexx_run_test(test_meth_vs_proc rexx_src/test_meth_vs_proc.rexx)
@@ -561,6 +564,29 @@ if (ENABLE_PARSER_MODE)
     )
 
     add_crexx_syntax_highlight_test(
+            syntaxhighlight_address_keywords
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_address_keywords.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=7, sev=48, text=\"address\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"input\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"output\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"error\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"expose\""
+    )
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_parse_keywords
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_parse_keywords.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"parse\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"upper\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"value\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"trim\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"into\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"var\""
+    )
+
+    add_crexx_syntax_highlight_test(
             syntaxhighlight_top_level_statements
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/01_assign.rexx
             MUST_MATCH
@@ -594,7 +620,7 @@ add_custom_command(
         OUTPUT stub_plugin.rxbin
         COMMAND $<TARGET_FILE:rxc> -n -o stub_plugin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/stub_plugin.rexx
         COMMAND $<TARGET_FILE:rxas> -o stub_plugin stub_plugin
-        DEPENDS rxc rxas ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/stub_plugin.rexx
+        DEPENDS rxc rxas compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/stub_plugin.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling stub_plugin.rexx ..."
 )

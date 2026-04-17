@@ -6,7 +6,7 @@ set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Execio.rxbin
-        COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i "\"${CMAKE_CURRENT_SOURCE_DIR}/..;${CMAKE_CURRENT_BINARY_DIR}/..\"" -o Execio ${CMAKE_CURRENT_SOURCE_DIR}/Execio.rexx
+        COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i "\"${CMAKE_CURRENT_BINARY_DIR}/..;${CMAKE_CURRENT_SOURCE_DIR}/..\"" -o Execio ${CMAKE_CURRENT_SOURCE_DIR}/Execio.rexx
         COMMAND $<TARGET_FILE:rxas> -o Execio Execio
         DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/Execio.rexx ${CMAKE_CURRENT_BINARY_DIR}/../token.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

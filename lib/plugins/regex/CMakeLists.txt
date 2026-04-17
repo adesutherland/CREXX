@@ -19,7 +19,7 @@ add_custom_command(
         -o regex_test \"${CMAKE_CURRENT_SOURCE_DIR}/regex_test\" &&
         $<TARGET_FILE:rxas> regex_test
 
-        DEPENDS rxas rxc library _regex ${CMAKE_CURRENT_SOURCE_DIR}/regex_test.rexx
+        DEPENDS rxas rxc library compiler_exit_bin _regex ${CMAKE_CURRENT_SOURCE_DIR}/regex_test.rexx
         OUTPUT regex_test.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

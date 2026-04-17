@@ -1177,22 +1177,6 @@ void validate_ast(Context *context) {
         context->current_scope = 0;
         ast_wlkr(context->ast, tostring_rewrite_walker, (void *)context);
 
-        /* Re-write ADDRESS Instructions
-         * Progress: rewrite_address_walker is idempotent. Mutates ADDRESS to ASSIGN.
-         */
-        context->current_scope = 0;
-        ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
-        if (context->debug_mode >= 3) {
-            /* Stress test idempotency */
-            context->current_scope = 0;
-            ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
-            context->current_scope = 0;
-            ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
-        }
-
         context->iterations++;
         if (context->debug_mode >= 2) fprintf(stderr, "DEBUG: Iteration %d finished, changed_flags=0x%04X\n", context->iterations, context->changed_flags);
         /* Incremental update of symbols - So walkers can avoid duplicate processing */

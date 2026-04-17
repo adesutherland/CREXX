@@ -29,19 +29,21 @@ execioexit: class
  *   __rc=_execio(<count>, '<mode>', '<fname>', expose stem=<stem>);
  */
 
-    pre_process: method = .string
+    pre_process: method = .exitplan
         arg tokens = .token[]
+        compile_plan = .exitplan("READY")
 
         /* Find STEM and hoist its variable */
         do i = 2 to tokens.0
             if translate(tokens[i].get_text()) = "STEM" then do
                 p = i + 1
                 if p <= tokens.0 & strip(tokens[p].get_type()) = "identifier" then do
-                    return p
+                    call compile_plan.add_binding("var", tokens[p].get_text(), "", ".string", 1, "execio_stem", "")
+                    return compile_plan
                 end
             end
         end
-        return ""
+        return compile_plan
 
 process: method = .string
     arg tokens = .token[]
