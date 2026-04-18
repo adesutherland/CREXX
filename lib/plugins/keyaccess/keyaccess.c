@@ -53,8 +53,8 @@
  * call keyaccess.closekey handle
  * ```
  *
- * @author Your Name
- * @date YYYY-MM-DD
+ * @author Peter Jacobs
+ * @date 2024-03-20
  * @version 1.0
  */
 
@@ -78,7 +78,7 @@
 #define MAX_KEY_LENGTH 256
 #define MAX_VALUE_LENGTH 4096
 #define MAX_LINE_LENGTH (MAX_KEY_LENGTH + MAX_VALUE_LENGTH + 2)
-#define LOG_FILENAME "c:\\temp\\crexx\\keyaccess.log"
+#define LOG_FILENAME "keyaccess.log"
 #define CACHE_SIZE 1024
 
 // Error codes
@@ -891,17 +891,17 @@ PROCEDURE(get_statistics) {
  * -------------------------------------------------------------------------------------
  */
 LOADFUNCS
-    ADDPROC(openfile,    "keyaccess.openkey",     "b", ".int",    "filename=.string,mode=.string");
-    ADDPROC(closefile,   "keyaccess.closekey",    "b", ".int",    "handle=.int");
-    ADDPROC(writekey,    "keyaccess.writekey",    "b", ".int",    "handle=.int,key=.string,value=.string");
-    ADDPROC(readkey,     "keyaccess.readkey",     "b", ".string", "handle=.int,key=.string");
-    ADDPROC(deletekey,   "keyaccess.deletekey",   "b", ".int",    "handle=.int,key=.string");
-    ADDPROC(listkeys,    "keyaccess.listkey",     "b", ".int",    "handle=.int");
-    ADDPROC(begin_transaction, "keyaccess.txbegin",   "b", ".int",    "handle=.int");
-    ADDPROC(commit_transaction, "keyaccess.txcommit", "b", ".int",    "handle=.int");
-    ADDPROC(rollback_transaction, "keyaccess.txrollback", "b", ".int", "handle=.int");
-    ADDPROC(get_statistics, "keyaccess.stats",   "b", ".string", "handle=.int");
-    ADDPROC(backup,        "keyaccess.backup",  "b", ".int",    "handle=.int,path=.string");
-    ADDPROC(validate_database, "keyaccess.validate", "b", ".int", "handle=.int");
-    ADDPROC(compact_database, "keyaccess.compact",  "b", ".int", "handle=.int");
+    ADDPROC(openfile,    "keyaccess._openkey",     "b", ".int",    "filename=.string,mode=.string");
+    ADDPROC(closefile,   "keyaccess._closekey",    "b", ".int",    "handle=.int");
+    ADDPROC(writekey,    "keyaccess._writekey",    "b", ".int",    "handle=.int,key=.string,value=.string");
+    ADDPROC(readkey,     "keyaccess._readkey",     "b", ".string", "handle=.int,key=.string");
+    ADDPROC(deletekey,   "keyaccess._deletekey",   "b", ".int",    "handle=.int,key=.string");
+    ADDPROC(listkeys,    "keyaccess._listkey",     "b", ".int",    "handle=.int");
+    ADDPROC(begin_transaction, "keyaccess._txbegin",   "b", ".int",    "handle=.int");
+    ADDPROC(commit_transaction, "keyaccess._txcommit", "b", ".int",    "handle=.int");
+    ADDPROC(rollback_transaction, "keyaccess._txrollback", "b", ".int", "handle=.int");
+    ADDPROC(get_statistics, "keyaccess._stats",   "b", ".string", "handle=.int");
+    ADDPROC(backup,        "keyaccess._backup",  "b", ".int",    "handle=.int,path=.string");
+    ADDPROC(validate_database, "keyaccess._validate", "b", ".int", "handle=.int");
+    ADDPROC(compact_database, "keyaccess._compact",  "b", ".int", "handle=.int");
 ENDLOADFUNCS
