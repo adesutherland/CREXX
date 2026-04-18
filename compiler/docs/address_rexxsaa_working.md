@@ -758,7 +758,7 @@ Proposal:
 
 ### Stage 1: architecture and contract
 
-Status: in progress
+Status: implemented
 
 Stage 1 deliverables:
 
@@ -806,7 +806,26 @@ Completed in this stage:
 - remove dead keyword/parser support left behind by the migration once the new
   path was trusted
 
+### Stage 2.5: exit protocol unification
+
+Status: complete
+
+Deliverables:
+
+- make `describe()` / `pre_process()` / `process()` mandatory for all exits
+- remove legacy compatibility from the compiler bridge
+- move exit-owned imports from compiler metadata into exit-declared descriptor
+  or plan data
+- make multiline replacement text first-class
+- declare helper procedures in `pre_process()` so file-tail helpers can be
+  appended before symbol harvesting
+- update bundled exits, tests, and docs together
+
 ### Stage 3: runtime abstraction
+
+Status: next active phase
+
+Stage 2 and Stage 2.5 are complete. The next implementation work starts here.
 
 - introduce redirect endpoint objects over current `REDIRECT`
 - make environment handling real instead of ignored
@@ -887,6 +906,31 @@ Completed in this stage:
     bodies structurally before hoisting bindings, while preserving the parent
     lexical scope so later constant-folding and control-flow rewrites do not
     drop or localize the rewritten statement
+- 2026-04-18: Stage 2.5 exit protocol unification completed:
+  - all bundled exits now implement the V2 `describe()` / `pre_process()` /
+    `process()` contract
+  - the compiler bridge no longer accepts legacy string-plan or getter-based
+    result shapes
+  - exit-owned imports now come from descriptor or plan data instead of
+    compiler hardcoding
+  - replacement text is now multiline-capable through `replacement_lines`
+  - helper procedures are declared structurally during `pre_process()`
+  - bridge token marshalling now preserves semantic token categories for
+    certified-exit payloads instead of flattening every `EXIT_TOKEN` to one
+    raw kind
+  - full verification is green again:
+    - `cmake --build cmake-build-debug`
+    - `ctest --test-dir cmake-build-debug --output-on-failure`
+    - result: `704/704` tests passed
+- 2026-04-18: final Stage-2/2.5 stabilisation completed:
+  - incomplete `PARSE` input such as bare `parse` or `parse into` now reports
+    normal user-facing protocol diagnostics instead of throwing bridge/runtime
+    exceptions
+  - exit-authored diagnostics are now reported as user diagnostics, while real
+    bridge failures remain internal bridge diagnostics
+  - editor/highlighter coverage now includes incomplete `PARSE` forms
+  - Stage 2 and Stage 2.5 are complete; Stage 3 runtime abstraction is the
+    next active phase
 
 ## 10. Evidence and code anchors
 

@@ -279,6 +279,8 @@ add_test(NAME err_parse_inline_then_exit_disabled_fail
          $<TARGET_FILE:rxc> -x ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_parse_inline_then_exit_disabled.rexx)
 set_tests_properties(err_parse_inline_then_exit_disabled_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
+add_crexx_compiler_fail_test(err_parse_missing_arguments rexx_src/err_parse_missing_arguments.rexx err_parse_missing_arguments.txt)
+
 # Warning tests
 add_crexx_compiler_warning_test(loop rexx_src/loop.rexx loop.txt)
 

@@ -117,6 +117,7 @@ struct Context {
     char disable_exits;
     void *exit_registry; /* Pointer to the list of registered exits (primary and additional keywords) */
     void *exit_additional_keywords; /* Pointer to the list of all additional keywords across all exits */
+    void *exit_helper_registry; /* Pointer to per-file helper definitions injected by exits */
 
     /* Recursion Guard for Imports */
     char** loading_files;

@@ -40,6 +40,16 @@ static const char *warning_source =
         "\n"
         "  return\n";
 
+static const char *incomplete_parse_source =
+        "options levelb\n"
+        "main: procedure\n"
+        "  parse into\n";
+
+static const char *bare_parse_source =
+        "options levelb\n"
+        "main: procedure\n"
+        "  parse\n";
+
 static void expect_true(int condition, const char *message) {
     if (condition) return;
     fprintf(stderr, "FAIL: %s\n", message);
@@ -195,11 +205,71 @@ static void test_editor_receives_warning_diagnostics(void) {
     free_editor_parse(cb, comm);
 }
 
+static void test_editor_handles_incomplete_parse_exit(void) {
+    CommunicationFunctions *comm;
+    CodeBuffer *cb;
+    TreeDiagnosticMatch tree_match;
+    BufferDiagnosticMatch buffer_match;
+
+    comm = 0;
+    cb = load_document_in_editor("incomplete_parse.rexx", incomplete_parse_source, &comm);
+    if (!cb) return;
+
+    memset(&tree_match, 0, sizeof(tree_match));
+    tree_match.severity = CB_ERROR;
+    tree_match.message_substring = "PARSE INTO requires a target variable";
+    cb_walk_tree_top_down(cb->parse_tree, collect_tree_diagnostic_matches, &tree_match);
+    expect_true(tree_match.count > 0,
+                "incomplete PARSE should report a recoverable syntax/exit diagnostic in the parse tree");
+
+    memset(&buffer_match, 0, sizeof(buffer_match));
+    buffer_match.severity = CB_ERROR;
+    buffer_match.message_substring = "PARSE INTO requires a target variable";
+    expect_true(enter_codeblock_critical_section() == 0, "buffer scan should enter critical section");
+    scan_buffer_for_leaf_diagnostics(cb, &buffer_match);
+    expect_true(exit_codeblock_critical_section() == 0, "buffer scan should exit critical section");
+    expect_true(buffer_match.count > 0,
+                "incomplete PARSE should expose its diagnostic on editor-visible characters");
+
+    free_editor_parse(cb, comm);
+}
+
+static void test_editor_handles_bare_parse_exit(void) {
+    CommunicationFunctions *comm;
+    CodeBuffer *cb;
+    TreeDiagnosticMatch tree_match;
+    BufferDiagnosticMatch buffer_match;
+
+    comm = 0;
+    cb = load_document_in_editor("bare_parse.rexx", bare_parse_source, &comm);
+    if (!cb) return;
+
+    memset(&tree_match, 0, sizeof(tree_match));
+    tree_match.severity = CB_ERROR;
+    tree_match.message_substring = "PARSE requires arguments";
+    cb_walk_tree_top_down(cb->parse_tree, collect_tree_diagnostic_matches, &tree_match);
+    expect_true(tree_match.count > 0,
+                "bare PARSE should report a user-facing missing-arguments diagnostic in the parse tree");
+
+    memset(&buffer_match, 0, sizeof(buffer_match));
+    buffer_match.severity = CB_ERROR;
+    buffer_match.message_substring = "PARSE requires arguments";
+    expect_true(enter_codeblock_critical_section() == 0, "buffer scan should enter critical section");
+    scan_buffer_for_leaf_diagnostics(cb, &buffer_match);
+    expect_true(exit_codeblock_critical_section() == 0, "buffer scan should exit critical section");
+    expect_true(buffer_match.count > 0,
+                "bare PARSE should expose a user-facing missing-arguments diagnostic on editor-visible characters");
+
+    free_editor_parse(cb, comm);
+}
+
 int main(void) {
     editor_init();
 
     test_editor_receives_syntax_error_diagnostics();
     test_editor_receives_warning_diagnostics();
+    test_editor_handles_incomplete_parse_exit();
+    test_editor_handles_bare_parse_exit();
 
     editor_free();
     return failures ? 1 : 0;

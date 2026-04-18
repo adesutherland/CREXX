@@ -972,6 +972,17 @@ void validate_ast(Context *context) {
     context->current_scope = 0;
     ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
 
+    /* Exit planning is the only structural phase exits are allowed to perform.
+     * Run it before the initial symbol harvest so hoisted bindings/imports/helpers
+     * are visible on the first build_symbols pass. */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, exit_plan_walker, (void *) context);
+    if (rxcp_scan_imports(context)) {
+        rxcp_init_exits(context);
+    }
+    context->current_scope = 0;
+    ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
+
     context->current_scope = 0;
     ast_wlkr(context->ast, build_symbols_walker, (void *) context);
 
@@ -990,6 +1001,11 @@ void validate_ast(Context *context) {
             rxcp_print_ast_recursive(context->ast, 0);
             rxcp_print_symbol_table(context->ast->scope, 0);
         }
+
+        /* Exit pre_process() is structural and must run before symbol harvesting.
+         * It is idempotent and may request another pass while types/imports settle. */
+        context->current_scope = 0;
+        if (ast_wlkr(context->ast, exit_plan_walker, (void *) context) == result_error) break;
 
         /* Exit Dispatch
          * Progress: exit_dispatch_walker is idempotent. Verified by stress testing with 3x calls per iteration.

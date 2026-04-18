@@ -98,6 +98,7 @@ walker_result source_location_walker(walker_direction direction, ASTNode* node, 
 walker_result syntax_validation_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result decimal_parameters_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result exit_dispatch_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result exit_plan_walker(walker_direction direction, ASTNode* node, void *payload);
 
 /* inline */
 walker_result identify_inlinable_walker(walker_direction direction, ASTNode* node, void *payload);

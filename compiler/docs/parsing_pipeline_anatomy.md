@@ -77,8 +77,8 @@ The final stage of the front-end is the Validation Orchestrator. Unlike previous
 *   **Explicit Symbol Lifecycle**: The pipeline uses a state-driven approach for symbol resolution. Every name is assigned an explicit `SymbolStatus` (e.g., `SYM_STATUS_UNRESOLVED`), allowing walkers to cleanly transition names from tentative placeholders to global imports or local variables across loop iterations.
 *   **Idempotency & Stress Testing**: Every walker in the fixpoint loop is designed to be **Idempotent**. In debug mode `-d3`, the compiler forces 3 iterations and multiple calls per walker to prove this and ensure the AST and Symbol table converge to a stable state. Furthermore, a strict max iterations threshold exists (16 passes); if breached and `changed_flags` is non-zero, it triggers a hard bypass abort with the active bits logged.
 *   **AST Validation**: An integrated validator (`rxcp_ast_val.c`) runs between passes (in `-d2`) to assert AST structural integrity and Symbol↔Node linkage consistency.
-*   **Plugin Dispatch**: Intercepts `IMPLICIT_CMD` nodes and consults the **Bridge Plugin** (see `rxcp_val_plugin.c` and [Bridge Plugins](bridge_plugins.md)).
-*   **Code Injection**: Plugins can return Rexx source strings which are parsed into AST fragments and grafted into the main tree. This sets the `changed` flag, triggering another loop iteration to resolve symbols in the new code.
+*   **Plugin Dispatch**: Intercepts `IMPLICIT_CMD` nodes and consults the compiler exit bridge (see `rxcp_val_plugin.c` and [Exit Bridge Guide](exit_bridge_guide.md)).
+*   **Code Injection**: Exits can return multiline replacement fragments which are joined, parsed into AST fragments, and grafted into the main tree. This sets the `changed` flag, triggering another loop iteration to resolve symbols in the new code.
 *   **Rewrite Walkers**: Final transformations (such as certified-exit lowering and `EXIT` rewriting) occur within the loop to ensure they interact correctly with injected code.
 
 ### 3.6 Source Tree, Provenance, and Parser Mode

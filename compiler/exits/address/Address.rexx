@@ -1,40 +1,32 @@
 options levelb
 namespace rxcpexits expose addressexit
+
 import rxcp
 import rxfnsb
 
 addressexit: class
     _node_id = .int with register.1
-    _replacement = .string with register.2
-    _error_token = .int with register.3
-    _error_message = .string with register.4
-    _status = .string with register.5
 
     *: factory
         arg nid = .int
         _node_id = nid
-        _replacement = ""
-        _error_token = 0
-        _error_message = ""
-        _status = "EMPTY"
-        return
 
-    get_primary_keyword: method = .string
-        return "ADDRESS"
-
-    get_additional_keywords: method = .string
-        return ""
+    describe: method = .exitdescriptor
+        desc = .exitdescriptor
+        desc = .exitdescriptor("ADDRESS")
+        call desc.add_flag("certified")
+        call desc.add_flag("reserved_keyword")
+        call desc.add_flag("implicit_command")
+        return desc
 
     pre_process: method = .exitplan
         arg tokens = .token[]
-        _replacement = ""
-        _error_token = 0
-        _error_message = ""
-        _status = "EMPTY"
         return .exitplan("READY")
 
-    process: method = .string
+    process: method = .exitresult
         arg tokens = .token[]
+
+        result = .exitresult("EMPTY")
 
         explicit = .int
         env_expr = .string
@@ -52,18 +44,13 @@ addressexit: class
         section = .string
         depth = .int
 
-        _replacement = ""
-        _error_token = 0
-        _error_message = ""
-        _status = "EMPTY"
-
-        if tokens.0 < 1 then return setError("ERROR", 1, "ADDRESS missing token stream")
+        if tokens.0 < 1 then return error_result(1, "ADDRESS missing token stream")
 
         explicit = 0
         if upper(strip(tokens[1].get_text())) = "ADDRESS" then explicit = 1
 
         if explicit = 1 then do
-            if tokens.0 < 3 then return setError("ERROR", 1, "ADDRESS requires an environment and command")
+            if tokens.0 < 3 then return error_result(1, "ADDRESS requires an environment and command")
             env_expr = emitEnvironment(tokens[2])
             clause_start = 3
         end
@@ -98,23 +85,23 @@ addressexit: class
                 else if section = "ERROR" then error_end = i - 1
                 else if section = "EXPOSE" then expose_end = i - 1
                 if utext = "INPUT" then do
-                    if input_start > 0 then return setError("ERROR", i, "ADDRESS INPUT clause repeated")
+                    if input_start > 0 then return error_result(i, "ADDRESS INPUT clause repeated")
                     input_start = i + 1
                 end
                 else if utext = "OUTPUT" then do
-                    if output_start > 0 then return setError("ERROR", i, "ADDRESS OUTPUT clause repeated")
+                    if output_start > 0 then return error_result(i, "ADDRESS OUTPUT clause repeated")
                     output_start = i + 1
                 end
                 else if utext = "ERROR" then do
-                    if error_start > 0 then return setError("ERROR", i, "ADDRESS ERROR clause repeated")
+                    if error_start > 0 then return error_result(i, "ADDRESS ERROR clause repeated")
                     error_start = i + 1
                 end
                 else if utext = "EXPOSE" then do
-                    if expose_start > 0 then return setError("ERROR", i, "ADDRESS EXPOSE clause repeated")
+                    if expose_start > 0 then return error_result(i, "ADDRESS EXPOSE clause repeated")
                     expose_start = i + 1
                 end
                 section = utext
-                if i = tokens.0 then return setError("ERROR", i, "ADDRESS clause requires an operand")
+                if i = tokens.0 then return error_result(i, "ADDRESS clause requires an operand")
                 iterate
             end
 
@@ -123,50 +110,43 @@ addressexit: class
                 else if text = ")" | text = "]" then depth = depth - 1
             end
         end
+
         if section = "COMMAND" then command_end = tokens.0
         else if section = "INPUT" then input_end = tokens.0
         else if section = "OUTPUT" then output_end = tokens.0
         else if section = "ERROR" then error_end = tokens.0
         else if section = "EXPOSE" then expose_end = tokens.0
 
-        if command_end < command_start then return setError("ERROR", clause_start, "ADDRESS requires a command expression")
-        if input_start > 0 & input_end < input_start then return setError("ERROR", input_start - 1, "ADDRESS INPUT clause requires an operand")
-        if output_start > 0 & output_end < output_start then return setError("ERROR", output_start - 1, "ADDRESS OUTPUT clause requires an operand")
-        if error_start > 0 & error_end < error_start then return setError("ERROR", error_start - 1, "ADDRESS ERROR clause requires an operand")
-        if expose_start > 0 & expose_end < expose_start then return setError("ERROR", expose_start - 1, "ADDRESS EXPOSE clause requires an operand")
-        if redirectNeedsResolution(tokens, input_start, input_end) then return setPending()
-        if redirectNeedsResolution(tokens, output_start, output_end) then return setPending()
-        if redirectNeedsResolution(tokens, error_start, error_end) then return setPending()
+        if command_end < command_start then return error_result(clause_start, "ADDRESS requires a command expression")
+        if input_start > 0 & input_end < input_start then return error_result(input_start - 1, "ADDRESS INPUT clause requires an operand")
+        if output_start > 0 & output_end < output_start then return error_result(output_start - 1, "ADDRESS OUTPUT clause requires an operand")
+        if error_start > 0 & error_end < error_start then return error_result(error_start - 1, "ADDRESS ERROR clause requires an operand")
+        if expose_start > 0 & expose_end < expose_start then return error_result(expose_start - 1, "ADDRESS EXPOSE clause requires an operand")
+        if redirectNeedsResolution(tokens, input_start, input_end) then return pending_result()
+        if redirectNeedsResolution(tokens, output_start, output_end) then return pending_result()
+        if redirectNeedsResolution(tokens, error_start, error_end) then return pending_result()
 
-        _replacement = "rc=_address(" || env_expr
-        _replacement = _replacement || "," || emitTokenRange(tokens, command_start, command_end)
-        _replacement = _replacement || "," || buildRedirect(tokens, input_start, input_end, "IN")
-        _replacement = _replacement || "," || buildRedirect(tokens, output_start, output_end, "OUT")
-        _replacement = _replacement || "," || buildRedirect(tokens, error_start, error_end, "OUT")
-        _replacement = _replacement || buildExposeArgs(tokens, expose_start, expose_end)
-        _replacement = _replacement || ")"
+        replacement = "rc=_address(" || env_expr
+        replacement = replacement || "," || emitTokenRange(tokens, command_start, command_end)
+        replacement = replacement || "," || buildRedirect(tokens, input_start, input_end, "IN")
+        replacement = replacement || "," || buildRedirect(tokens, output_start, output_end, "OUT")
+        replacement = replacement || "," || buildRedirect(tokens, error_start, error_end, "OUT")
+        replacement = replacement || buildExposeArgs(tokens, expose_start, expose_end)
+        replacement = replacement || ")"
 
-        _status = "REPLACE"
-        return _status
+        call result.set_status("REPLACE")
+        call result.add_replacement_line(replacement)
+        return result
 
-    get_replacement: method = .string
-        return _replacement
+pending_result: procedure = .exitresult
+    result = .exitresult("PENDING")
+    return result
 
-    get_error_token: method = .int
-        return _error_token
-
-    get_error_message: method = .string
-        return _error_message
-
-    get_status: method = .string
-        return _status
-
-    get_node_id: method = .int
-        return _node_id
-
-setPending: procedure = .string
-    _status = "PENDING"
-    return _status
+error_result: procedure = .exitresult
+    arg token_index = .int, message = .string
+    result = .exitresult("ERROR")
+    call result.set_error(token_index, message)
+    return result
 
 isClauseKeyword: procedure = .int
     arg text = .string
@@ -258,20 +238,13 @@ buildExposeArgs: procedure = .string
     arg tokens = .token[], start_index = .int, end_index = .int
     expose_args = .string
     expose_args = ""
-    if start_index = 0 | end_index < start_index then return expose_args
 
+    if start_index = 0 | end_index < start_index then return expose_args
     do i = start_index to end_index
         ti = tokens[i]
         type = strip(ti.get_type())
-        text = strip(ti.get_text())
-        if type \= "identifier" then iterate
-        expose_args = expose_args || ", " || quoteName(text) || ", " || text
+        if type = "comma" then iterate
+        name = strip(ti.get_text())
+        expose_args = expose_args || ", '" || name || "', " || name
     end
     return expose_args
-
-setError: procedure = .string
-    arg status = "EMPTY", error_token = 0, error_message = "unknown"
-    _status = status
-    _error_token = error_token
-    _error_message = error_message
-    return _status

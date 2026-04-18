@@ -32,15 +32,23 @@ typedef struct ExitKeyword {
     struct ExitKeyword *next;
 } ExitKeyword;
 
+typedef struct ExitImport {
+    char *namespace_name;
+    char *provenance;
+    char *flags;
+    struct ExitImport *next;
+} ExitImport;
+
 typedef struct ExitEntry {
     char *primary_keyword;
     ExitKeyword *additional_keywords;
     char *class_name; /* the class name of the exit object */
-    char *required_imports;
+    ExitImport *default_imports;
     unsigned int flags;
     struct ExitEntry *next;
 } ExitEntry;
 
+#define RXCP_EXIT_PROTOCOL_VERSION       2u
 #define RXCP_EXIT_FLAG_CERTIFIED        0x0001u
 #define RXCP_EXIT_FLAG_RESERVED_KEYWORD 0x0002u
 #define RXCP_EXIT_FLAG_IMPLICIT_COMMAND 0x0004u
@@ -58,6 +66,6 @@ int rxcp_is_exit_primary(Context *ctx, const char *keyword, size_t len);
 int rxcp_is_exit_additional(Context *ctx, const char *keyword, size_t len);
 unsigned int rxcp_get_exit_flags(Context *ctx, const char *keyword, size_t len);
 int rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node);
-int rxcp_exit_bridge_pre_invoke(Context *ctx, ASTNode *node);
+int rxcp_exit_bridge_plan_invoke(Context *ctx, ASTNode *node);
 
 #endif

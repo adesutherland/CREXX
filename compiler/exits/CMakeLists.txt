@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.24)
 # Keep the canonical exit bundle in /bin on the normal optimised path.
 # Opt/no-opt comparisons for exit consumers are emitted as suffixed test-only
 # artifacts in each exit subdirectory.
+set(CREXX_EXIT_IMPORT_PATH "\"${CMAKE_CURRENT_BINARY_DIR}\"")
+
 function(crexx_add_compiler_exit_runtime_test TARGET_NAME SOURCE_FILE)
     set(options)
     set(oneValueArgs PASS_REGULAR_EXPRESSION)
@@ -66,7 +68,7 @@ add_custom_target(token_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin)
 
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/bin/exittestsupport.rxbin
-    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i "\"${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_SOURCE_DIR}\"" -o exittestsupport ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.rexx
+    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i ${CREXX_EXIT_IMPORT_PATH} -o exittestsupport ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.rexx
     COMMAND $<TARGET_FILE:rxas> -o ${CMAKE_BINARY_DIR}/bin/exittestsupport exittestsupport
     DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.rexx ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/exittestsupport.rxas

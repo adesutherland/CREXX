@@ -148,7 +148,6 @@ walker_result needs_rxsysb_walker(walker_direction direction,
             context->need_rxsysb = 1;
             rxcp_warn_implicit_address(node);
             ast_hoist_var(context, node, "rc", -1);
-            rxcp_exit_bridge_pre_invoke(context, node);
         }
         else if (node->node_type == EXIT_EXTENDED) {
             const char *certified_keyword;
@@ -171,7 +170,6 @@ walker_result needs_rxsysb_walker(walker_direction direction,
                     ast_hoist_var(context, node, "rc", -1);
                 }
             }
-            rxcp_exit_bridge_pre_invoke(context, node);
         }
         else if (node->node_type == EXIT) {
             context->need_rxsysb = 1;

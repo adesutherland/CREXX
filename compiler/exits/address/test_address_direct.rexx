@@ -7,16 +7,32 @@ main: procedure
   failures = .int
   failures = 0
 
+  failures = failures + test_descriptor()
   failures = failures + test_explicit_address()
   failures = failures + test_implicit_address()
 
   call report_result failures
   return
 
+test_descriptor: procedure = .int
+  failures = .int
+  addr = .addressexit(1000)
+  desc = .exitdescriptor
+  failures = 0
+
+  desc = addr.describe()
+  if check_equal("address protocol version", "2", desc.get_protocol_version()) = 0 then failures = failures + 1
+  if check_true("address certified flag", descriptor_has_flag(desc, "certified") > 0, "missing certified flag") = 0 then failures = failures + 1
+  if check_true("address reserved flag", descriptor_has_flag(desc, "reserved_keyword") > 0, "missing reserved flag") = 0 then failures = failures + 1
+  if check_true("address implicit flag", descriptor_has_flag(desc, "implicit_command") > 0, "missing implicit flag") = 0 then failures = failures + 1
+
+  return failures
+
 test_explicit_address: procedure = .int
   failures = .int
   addr = .addressexit(1001)
   plan = .exitplan
+  result = .exitresult
   failures = 0
 
   tokens = newtokens()
@@ -34,9 +50,10 @@ test_explicit_address: procedure = .int
 
   plan = addr.pre_process(tokens)
   if check_equal("address explicit pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
-  if check_equal("address explicit process", "REPLACE", addr.process(tokens)) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address explicit process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
 
-  replacement = addr.get_replacement()
+  replacement = join_result_lines(result)
   if check_contains("address explicit env", replacement, "_address('system',cmd") = 0 then failures = failures + 1
   if check_contains("address explicit input", replacement, "_array2redir(input_lines)") = 0 then failures = failures + 1
   if check_contains("address explicit output", replacement, "_redir2array(output_lines)") = 0 then failures = failures + 1
@@ -49,6 +66,7 @@ test_implicit_address: procedure = .int
   failures = .int
   addr = .addressexit(1002)
   plan = .exitplan
+  result = .exitresult
   failures = 0
 
   tokens = newtokens()
@@ -56,7 +74,8 @@ test_implicit_address: procedure = .int
 
   plan = addr.pre_process(tokens)
   if check_equal("address implicit pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
-  if check_equal("address implicit process", "REPLACE", addr.process(tokens)) = 0 then failures = failures + 1
-  if check_contains("address implicit default env", addr.get_replacement(), "_address('SYSTEM',cmd,_noredir(),_noredir(),_noredir())") = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address implicit process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_contains("address implicit default env", join_result_lines(result), "_address('SYSTEM',cmd,_noredir(),_noredir(),_noredir())") = 0 then failures = failures + 1
 
   return failures

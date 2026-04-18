@@ -7,16 +7,34 @@ main: procedure
   failures = .int
   failures = 0
 
+  failures = failures + test_descriptor()
   failures = failures + test_parse_plan()
+  failures = failures + test_parse_incomplete_inputs()
   failures = failures + test_parse_suffix_options()
+  failures = failures + test_parse_claimed_keywords()
 
   call report_result failures
   return
+
+test_descriptor: procedure = .int
+  failures = .int
+  parser = .parseexit(2000)
+  desc = .exitdescriptor
+  failures = 0
+
+  desc = parser.describe()
+  if check_equal("parse protocol version", "2", desc.get_protocol_version()) = 0 then failures = failures + 1
+  if check_true("parse certified flag", descriptor_has_flag(desc, "certified") > 0, "missing certified flag") = 0 then failures = failures + 1
+  if check_true("parse reserved flag", descriptor_has_flag(desc, "reserved_keyword") > 0, "missing reserved flag") = 0 then failures = failures + 1
+  if check_true("parse descriptor import", find_descriptor_import(desc, "rxfnsb") > 0, "missing rxfnsb import") = 0 then failures = failures + 1
+
+  return failures
 
 test_parse_plan: procedure = .int
   failures = .int
   parser = .parseexit(2001)
   plan = .exitplan
+  result = .exitresult
   failures = 0
 
   tokens = newtokens()
@@ -49,18 +67,22 @@ test_parse_plan: procedure = .int
   if check_true("parse second binding", second_bind > 0, "binding missing") = 0 then failures = failures + 1
 
   if abc_bind > 0 then do
-     if check_equal("parse abc provenance", "parse_into", plan.get_binding_provenance(abc_bind)) = 0 then failures = failures + 1
+     binding = plan.get_binding(abc_bind)
+     if check_equal("parse abc provenance", "parse_into", binding.get_provenance()) = 0 then failures = failures + 1
   end
   if first_bind > 0 then do
-     if check_equal("parse first provenance", "parse_target", plan.get_binding_provenance(first_bind)) = 0 then failures = failures + 1
+     binding = plan.get_binding(first_bind)
+     if check_equal("parse first provenance", "parse_target", binding.get_provenance()) = 0 then failures = failures + 1
   end
   if var_kw > 0 then do
-     if check_equal("parse var role", "parse_source", plan.get_keyword_role(var_kw)) = 0 then failures = failures + 1
+     keyword = plan.get_keyword(var_kw)
+     if check_equal("parse var role", "parse_source", keyword.get_keyword_role()) = 0 then failures = failures + 1
   end
 
-  if check_equal("parse process", "REPLACE", parser.process(tokens)) = 0 then failures = failures + 1
+  result = parser.process(tokens)
+  if check_equal("parse process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
 
-  replacement = parser.get_replacement()
+  replacement = join_result_lines(result)
   if check_contains("parse source rewrite", replacement, "_source=upper(fred)") = 0 then failures = failures + 1
   if check_contains("parse runtime call", replacement, "abc=parseExec(_source,") = 0 then failures = failures + 1
   if check_contains("parse first assignment", replacement, "first=abc[1]") = 0 then failures = failures + 1
@@ -68,10 +90,58 @@ test_parse_plan: procedure = .int
 
   return failures
 
+test_parse_incomplete_inputs: procedure = .int
+  failures = .int
+  parser = .parseexit(2004)
+  plan = .exitplan
+  diagnostic = .exitdiagnostic
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "INTO"
+
+  plan = parser.pre_process(tokens)
+  if check_equal("parse into pre_process", "ERROR", plan.get_status()) = 0 then failures = failures + 1
+  if check_equal("parse into diagnostic count", "1", plan.get_diagnostic_count()) = 0 then failures = failures + 1
+  if plan.get_diagnostic_count() > 0 then do
+     diagnostic = plan.get_diagnostic(1)
+     if check_equal("parse into diagnostic code", "MISSING_ARGUMENTS", diagnostic.get_code()) = 0 then failures = failures + 1
+     if check_equal("parse into diagnostic message", "PARSE INTO requires a target variable", diagnostic.get_message()) = 0 then failures = failures + 1
+  end
+
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "VALUE"
+
+  plan = parser.pre_process(tokens)
+  if check_equal("parse value pre_process", "ERROR", plan.get_status()) = 0 then failures = failures + 1
+  if check_equal("parse value diagnostic count", "1", plan.get_diagnostic_count()) = 0 then failures = failures + 1
+  if plan.get_diagnostic_count() > 0 then do
+     diagnostic = plan.get_diagnostic(1)
+     if check_equal("parse value diagnostic code", "MISSING_ARGUMENTS", diagnostic.get_code()) = 0 then failures = failures + 1
+     if check_equal("parse value diagnostic message", "PARSE VALUE requires a source expression", diagnostic.get_message()) = 0 then failures = failures + 1
+  end
+
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+
+  plan = parser.pre_process(tokens)
+  if check_equal("parse missing source pre_process", "ERROR", plan.get_status()) = 0 then failures = failures + 1
+  if check_equal("parse missing source diagnostic count", "1", plan.get_diagnostic_count()) = 0 then failures = failures + 1
+  if plan.get_diagnostic_count() > 0 then do
+     diagnostic = plan.get_diagnostic(1)
+     if check_equal("parse missing source diagnostic code", "MISSING_ARGUMENTS", diagnostic.get_code()) = 0 then failures = failures + 1
+     if check_equal("parse missing source diagnostic message", "PARSE requires arguments", diagnostic.get_message()) = 0 then failures = failures + 1
+  end
+
+  return failures
+
 test_parse_suffix_options: procedure = .int
   failures = .int
   parser = .parseexit(2002)
   plan = .exitplan
+  result = .exitresult
   failures = 0
 
   tokens = newtokens()
@@ -94,11 +164,47 @@ test_parse_suffix_options: procedure = .int
   parsed_bind = find_binding(plan, "parsed")
   if check_true("parse suffix into binding", parsed_bind > 0, "binding missing") = 0 then failures = failures + 1
 
-  if check_equal("parse suffix process", "REPLACE", parser.process(tokens)) = 0 then failures = failures + 1
-  replacement = parser.get_replacement()
+  result = parser.process(tokens)
+  if check_equal("parse suffix process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
   if check_contains("parse suffix into call", replacement, "parsed=parseExec(_source,") = 0 then failures = failures + 1
   if check_contains("parse suffix template quoting", replacement, ",' left "","" right',0)") = 0 then failures = failures + 1
   if check_contains("parse suffix trim assign", replacement, "left=strip(parsed[1])") = 0 then failures = failures + 1
   if check_contains("parse suffix trim assign 2", replacement, "right=strip(parsed[2])") = 0 then failures = failures + 1
+
+  return failures
+
+test_parse_claimed_keywords: procedure = .int
+  failures = .int
+  parser = .parseexit(2003)
+  plan = .exitplan
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushexitkeyword tokens, "UPPER"
+  call pushexitkeyword tokens, "VALUE"
+  call pushidentifier tokens, "src", ".string", 0
+  call pushexitkeyword tokens, "WITH"
+  call pushidentifier tokens, "left", ".string", 0
+  call pushstring tokens, '","'
+  call pushidentifier tokens, "right", ".string", 0
+  call pushexitkeyword tokens, "TRIM"
+  call pushexitkeyword tokens, "INTO"
+  call pushidentifier tokens, "parsed", ".string[]", 1
+
+  plan = parser.pre_process(tokens)
+  if check_equal("parse claimed pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  if check_true("parse claimed trim keyword", find_keyword(plan, "TRIM") > 0, "keyword claim missing") = 0 then failures = failures + 1
+  if check_true("parse claimed into keyword", find_keyword(plan, "INTO") > 0, "keyword claim missing") = 0 then failures = failures + 1
+
+  result = parser.process(tokens)
+  if check_equal("parse claimed process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("parse claimed source rewrite", replacement, "_source=upper(src)") = 0 then failures = failures + 1
+  if check_contains("parse claimed runtime call", replacement, "parsed=parseExec(_source,") = 0 then failures = failures + 1
+  if check_contains("parse claimed trim assign", replacement, "left=strip(parsed[1])") = 0 then failures = failures + 1
+  if check_contains("parse claimed trim assign 2", replacement, "right=strip(parsed[2])") = 0 then failures = failures + 1
 
   return failures

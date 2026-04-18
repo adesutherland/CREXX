@@ -4,7 +4,8 @@ set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Address.rxbin
-        COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i "\"${CMAKE_CURRENT_BINARY_DIR}/..;${CMAKE_CURRENT_SOURCE_DIR}/..\"" -o Address ${CMAKE_CURRENT_SOURCE_DIR}/Address.rexx
+        COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
+        COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i ${CREXX_EXIT_IMPORT_PATH} -o Address ${CMAKE_CURRENT_SOURCE_DIR}/Address.rexx
         COMMAND $<TARGET_FILE:rxas> -o Address Address
         DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/Address.rexx ${CMAKE_CURRENT_BINARY_DIR}/../token.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
