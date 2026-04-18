@@ -1,7 +1,6 @@
 options levelb comments_dash
 namespace data_List expose ArrayListIterator
 
-
 /**
  * Iterator for the ArrayList class.
  *

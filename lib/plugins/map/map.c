@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <time.h>
+/* #include <time.h> */
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
 #define ENOENTRY 12
@@ -41,13 +41,13 @@ static inline void str2upper(char* str) {
     }
 }
 
-double elapsed_time(struct timespec start, struct timespec end) {
-    return (end.tv_sec - start.tv_sec) +
-           (end.tv_nsec - start.tv_nsec) / 1e9;
-}
-double is_time(struct timespec start) {
-    return ( start.tv_sec) + (start.tv_nsec) / 1e9;
-}
+/* double elapsed_time(struct timespec start, struct timespec end) { */
+/*     return (end.tv_sec - start.tv_sec) + */
+/*            (end.tv_nsec - start.tv_nsec) / 1e9; */
+/* } */
+/* double is_time(struct timespec start) { */
+/*     return ( start.tv_sec) + (start.tv_nsec) / 1e9; */
+/* } */
 /* ============================================================
  * Robin Hood hashmap core (generic value pointer)
  * Used for:
@@ -201,8 +201,8 @@ static char *valpool_strdup(valpool_t *p, const char *s)
  */
 static int map_compact_valpool(void)
 {
-    struct timespec start, end;
-    if(mapflags & STEM_FLAG_REHASH) clock_gettime(CLOCK_MONOTONIC, &start);
+    /* struct timespec start, end; */
+    /* if(mapflags & STEM_FLAG_REHASH) clock_gettime(CLOCK_MONOTONIC, &start); */
     if (g_valpool.revisions<25000) return 4;
     /* New empty pool; keep same chunk size policy */
     valpool_t newp = { .head = NULL, .chunk_size = g_valpool.chunk_size };
@@ -239,16 +239,16 @@ static int map_compact_valpool(void)
     size_t chunks_before = g_valpool.chunks;
     valpool_destroy(&g_valpool);
     g_valpool = newp;
-    if(mapflags & STEM_FLAG_REHASH) {   // output only if flag is set
-        size_t revisions     = g_valpool.revisions;
-        size_t used_after = newp.bytes_used;
-        clock_gettime(CLOCK_MONOTONIC, &end);    // End time
-        printf("POOL compact: before=%zu after=%zu reclaimed=%zu (%.2f%%) revisions=%zu elapsed=%f\n",
-               used_before, used_after,
-               (used_before > used_after ? used_before - used_after : 0),
-               used_before ? 100.0 * (double) (used_before - used_after) / (double) used_before : 0.0, revisions,
-               elapsed_time(start, end));
-    }
+    /* if(mapflags & STEM_FLAG_REHASH) {   // output only if flag is set */
+    /*     size_t revisions     = g_valpool.revisions; */
+    /*     size_t used_after = newp.bytes_used; */
+    /*     clock_gettime(CLOCK_MONOTONIC, &end);    // End time */
+    /*     printf("POOL compact: before=%zu after=%zu reclaimed=%zu (%.2f%%) revisions=%zu elapsed=%f\n", */
+    /*            used_before, used_after, */
+    /*            (used_before > used_after ? used_before - used_after : 0), */
+    /*            used_before ? 100.0 * (double) (used_before - used_after) / (double) used_before : 0.0, revisions, */
+    /*            elapsed_time(start, end)); */
+    /* } */
     return 0;
 }
 /* ---------- hashing ---------- */
@@ -414,15 +414,15 @@ rhmap_rehash(rhmap_t *m, size_t new_capacity)
     m->total_insert_probes = 0;
     m->max_probe_len       = 0;
 
-    struct timespec start, end;
+    /* struct timespec start, end; */
 
     if (!old_slots) {
         return 0;  /* first allocation, don't count as "rehash" */
     }
 
-    if(mapflags & STEM_FLAG_REHASH) {
-       clock_gettime(CLOCK_MONOTONIC, &start);  // Startzeit
-    }
+    /* if(mapflags & STEM_FLAG_REHASH) { */
+    /*    clock_gettime(CLOCK_MONOTONIC, &start);  // Startzeit */
+    /* } */
     m->rehash_count++;
     /* reinsert all */
     for (size_t i = 0; i < old_capacity; ++i) {
@@ -464,11 +464,11 @@ rhmap_rehash(rhmap_t *m, size_t new_capacity)
             dist++;
         }
     }
-    if(mapflags & STEM_FLAG_REHASH) {
-       clock_gettime(CLOCK_MONOTONIC, &end);    // End time
-       m->rehash_time += elapsed_time(start, end);
-       printf("Rehash Time %f %zu %zu\n", m->rehash_time, old_capacity, new_capacity);
-    }
+    /* if(mapflags & STEM_FLAG_REHASH) { */
+    /*    clock_gettime(CLOCK_MONOTONIC, &end);    // End time */
+    /*    m->rehash_time += elapsed_time(start, end); */
+    /*    printf("Rehash Time %f %zu %zu\n", m->rehash_time, old_capacity, new_capacity); */
+    /* } */
     free(old_slots);
     return 0;
 }

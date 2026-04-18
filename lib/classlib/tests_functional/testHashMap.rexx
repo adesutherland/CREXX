@@ -31,9 +31,9 @@ end
 
 say a.toString()
 
-say 'keyStem() on HashMap'
+say 'keyArray() on HashMap'
 
-keystem = a.keyStem()
+keystem = a.keyArray()
 
 say 'looping over stem result'
 loop l=1 to keystem.0

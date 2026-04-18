@@ -123,6 +123,8 @@
    libs = libs';'rxpath||'bin'dirsep'rx_treemap'
    libs = libs';'rxpath||'bin'dirsep'rx_system'
    libs = libs';'rxpath||'bin'dirsep'rx_llist'
+   libs = libs';'rxpath||'bin'dirsep'rx_keyaccess'
+   libs = libs';'rxpath||'bin'dirsep'rx_id'
    
    declib = ''
    if \decimal then declib = '-p rxvm_db_decimal'

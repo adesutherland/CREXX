@@ -183,11 +183,11 @@ PROCEDURE(base58) {
 
 /* --------------------- Registration block --------------------- */
 LOADFUNCS
-    ADDPROC(uuid,   "id.uuid",   "b", ".string", "");
-    ADDPROC(uuidt,  "id.uuidt",  "b", ".string", "");
-    ADDPROC(uuidv7, "id.uuidv7",  "b", ".string", "");
-    ADDPROC(ulid,   "id.ulid",    "b", ".string", "");
-    ADDPROC(nanoid, "id.nanoid",   "b", ".string", "");
-    ADDPROC(snowflake,"id.snowflake","b",".string", "");
-    ADDPROC(base58,"id.base58",    "b", ".string", "");
+    ADDPROC(uuid,   "id._uuid",   "b", ".string", "");
+    ADDPROC(uuidt,  "id._uuidt",  "b", ".string", "");
+    ADDPROC(uuidv7, "id._uuidv7",  "b", ".string", "");
+    ADDPROC(ulid,   "id._ulid",    "b", ".string", "");
+    ADDPROC(nanoid, "id._nanoid",   "b", ".string", "");
+    ADDPROC(snowflake,"id._snowflake","b",".string", "");
+    ADDPROC(base58,"id._base58",    "b", ".string", "");
 ENDLOADFUNCS

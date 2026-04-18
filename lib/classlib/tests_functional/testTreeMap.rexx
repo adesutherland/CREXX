@@ -1,4 +1,4 @@
-options levelb
+options levelb comments_dash
 import data_TreeMap
 import data_TreeSet
 
@@ -60,6 +60,7 @@ rc = a.put('z4','aap')
 
 say a.lastKey()
 
+#it = .TreeMapIterator
 it = a.iterator()
 
 loop while it.hasNext()
@@ -74,30 +75,33 @@ say a.remove('aap')
 
 say a.remove('zzy')
 
-say 'keyStem() on TreeMap'
+-- say 'keyStem() on TreeMap'
 
-keystem = a.keyStem()
+-- keystem = a.keyStem()
 
-say 'looping over stem result'
-loop l=1 to keystem.0
-  say keystem.l
-end
+-- say 'looping over stem result'
+-- loop l=1 to keystem.0
+--   say keystem.l
+-- end
 
-say 'number of elements in stem:' keystem.0
+-- say 'number of elements in stem:' keystem.0
 
-say 'valueStem() on TreeMap'
-valuestem = a.valueStem()
+-- say 'valueStem() on TreeMap'
+-- valuestem = a.valueStem()
 
-say 'looping over value stem result'
-loop l=1 to valuestem.0
-  say valuestem.l
-end
+-- say 'looping over value stem result'
+-- loop l=1 to valuestem.0
+--   say valuestem.l
+-- end
 
-say 'number of elements in valuestem:' valuestem.0
-b = .TreeSet()
-rc = b.fromStem(a.valueStem())
-say b.toString()
+-- say 'number of elements in valuestem:' valuestem.0
+-- b = .TreeSet()
+-- rc = b.fromStem(a.valueStem())
+-- say b.toString()
 
-say 'hashmap''s valueSet as a TreeSet():'
-c = a.valueSet()
-say c.toString()
+-- say 'hashmap''s valueSet as a TreeSet():'
+-- c = a.valueSet()
+-- say c.toString()
+
+b = .TreeMap()
+say 'the new treemap size is: ' b.size()
