@@ -9,6 +9,7 @@ set(CLSS
   HashMapIterator
   HashSet
   HashSetIterator
+  id
   KeyDB
   LinkedList
   Stack
@@ -42,6 +43,7 @@ foreach(_binfile IN LISTS CLSBINS)
       lib/plugins/_treemap
       lib/plugins/_llist
       lib/plugins/_keyaccess
+      lib/plugins/_id
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "cREXX compile and assemble ${_basename} ..."
     VERBATIM

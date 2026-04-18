@@ -1,7 +1,6 @@
 options levelb comments_dash
 namespace data_List expose ArrayList
 
-
 /**
 * A dynamic, ordered collection backed by a stringarray
 *
