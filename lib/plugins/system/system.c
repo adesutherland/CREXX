@@ -4,17 +4,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <string.h>
+
+#ifndef _WIN32
+#include <libgen.h>
+#endif
+
 #if defined(__APPLE__)
  #include <mach-o/dyld.h>
- #include <libgen.h>
  #include <pwd.h>
  #include <sys/stat.h>
  #include <sys/time.h>
  #include <sys/wait.h>
  #include <sys/sysctl.h>
  #include <errno.h>
- #include <string.h>
-#include <unistd.h>        // For POSIX systems (Linux/macOS)
+ #include <unistd.h>        // For POSIX systems (Linux/macOS)
 #define max(a,b)             \
   ({			     \
     __typeof__ (a) _a = (a); \
@@ -36,22 +40,25 @@
 #else
   #include <dirent.h>
   #include <ctype.h>
+  #include <pwd.h>
+  #include <unistd.h>
+  #include <sys/stat.h>
+  #include <errno.h>
+  #include <time.h>
+#endif
+
+#if defined(__linux__)
+#include <sys/sysinfo.h>
 #endif
 
 #ifdef _WIN32
-#define wait(ms) Sleep(ms);
-#elif defined(__APPLE__)
+static void wait_ms(unsigned int ms) {
+    Sleep(ms);
+}
 #else
-// #include <arpa/inet.h>    // Linux
-#include <pwd.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <time.h>
-
-
-static inline void wait_ms(unsigned int ms) {
+static void wait_ms(unsigned int ms) {
     struct timespec ts;
+
     ts.tv_sec = ms / 1000;
     ts.tv_nsec = (ms % 1000) * 1000000;
     nanosleep(&ts, NULL);
@@ -59,6 +66,20 @@ static inline void wait_ms(unsigned int ms) {
 #endif
 
 char * path;
+
+static char *dup_string(const char *value) {
+    char *copy;
+    size_t len;
+
+    if (!value) return NULL;
+
+    len = strlen(value) + 1;
+    copy = malloc(len);
+    if (!copy) return NULL;
+
+    memcpy(copy, value, len);
+    return copy;
+}
 
 #include "crexxpa.h"      // crexx/pa - Plugin Architecture header file
 // distinguish between Windows and Linux and MAC
@@ -72,7 +93,7 @@ char * path;
     #define REMOVE_DIR(path) rmdir(path)
     #define MAKE_DIR(path)   mkdir(path, 0755)
     #define TEST_DIR(path)   access(path, F_OK)
-    #define TEST_FILE(fname) access(path, F_OK)
+    #define TEST_FILE(fname) access(fname, F_OK)
     #define RENAME_FILE(source,target)  rename(source, target)
 #endif
 
@@ -141,9 +162,9 @@ PROCEDURE(getLoadPath) {
       RETURNSIGNAL(SIGNAL_FAILURE, "Unable to get current load path")
 
     // dirname may modify its argument, so copy it
-    char *dirbuf = strdup(resolved);
+    char *dirbuf = dup_string(resolved);
     if (dirbuf) {
-        dir = strdup(dirname(dirbuf));
+        dir = dup_string(dirname(dirbuf));
         free(dirbuf);
     }
 
@@ -151,9 +172,9 @@ PROCEDURE(getLoadPath) {
     ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
     if (len != -1) {
         path[len] = '\0';
-        char *dirbuf = strdup(path);
+        char *dirbuf = dup_string(path);
         if (dirbuf) {
-            dir = strdup(dirname(dirbuf));
+            dir = dup_string(dirname(dirbuf));
             free(dirbuf);
         }
     }
@@ -828,39 +849,32 @@ ENDPROC
 }
 
 PROCEDURE(sysuptime) {
-    // Get system uptime in milliseconds
-    char result[64];
 #if defined(_WIN32)
     ULONGLONG uptime = GetTickCount64();
-    RETURNINTX(uptime/1000)
-    // Convert uptime to seconds, minutes, hours, and days
- #elif defined(__linux__)
-    #include <sys/sysinfo.h>
+    RETURNINTX((rxinteger)(uptime / 1000));
+#elif defined(__linux__)
     struct sysinfo info;
     if (sysinfo(&info) == 0) {
-        // Convert uptime to seconds, minutes, hours, and days
-        long uptime_seconds = info.uptime;
-        RETURNINTX(uptime_seconds)
-     } else {
-        RETURNINTX("-1");
+        RETURNINTX((rxinteger)info.uptime);
+    } else {
+        RETURNINTX(-1);
     }
 #elif defined(__APPLE__)
-    // Declare a struct to hold boot time information
     struct timeval boottime;
+    long uptime_seconds;
     size_t len = sizeof(boottime);
 
-    // Get the boot time from sysctl
     if (sysctlbyname("kern.boottime", &boottime, &len, NULL, 0) == 0) {
-        // Get the current time
         struct timeval now;
         gettimeofday(&now, NULL);
 
-        // Calculate the uptime in seconds
-        long uptime_seconds = now.tv_sec - boottime.tv_sec;
+        uptime_seconds = now.tv_sec - boottime.tv_sec;
         RETURNINTX(uptime_seconds);
     }
+    RETURNINTX(-1);
+#else
+    RETURNINTX(-1);
 #endif
-    RETURNSTR(result);
 ENDPROC
 }
 /* ------------------------------------------------------------------------------------------------
@@ -868,12 +882,10 @@ ENDPROC
  * ------------------------------------------------------------------------------------------------
  */
 PROCEDURE(waitX) {
-    int waittime = GETINT(ARG0);
-#ifdef _WIN32
-    wait(waittime);
-#else
-    wait(&waittime);
-#endif
+    rxinteger waittime = GETINT(ARG0);
+
+    if (waittime < 0) waittime = 0;
+    wait_ms((unsigned int)waittime);
     RETURNINTX(0);
     ENDPROC
 }
@@ -1334,4 +1346,3 @@ LOADFUNCS
     ADDPROC(pipeclose,   "system.pipeclose",   "b",    ".int" ,"proc=.int");
  */
 ENDLOADFUNCS
-

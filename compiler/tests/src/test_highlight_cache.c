@@ -126,6 +126,42 @@ static int copy_binary_file(const char *source_path, const char *target_path) {
     return 1;
 }
 
+static int build_path(char *dest, size_t dest_size, const char *base, const char *suffix) {
+    size_t base_len;
+    size_t suffix_len;
+
+    if (!dest || !base || !suffix || dest_size == 0) return 0;
+
+    base_len = strlen(base);
+    suffix_len = strlen(suffix);
+    if (base_len + suffix_len >= dest_size) return 0;
+
+    memcpy(dest, base, base_len);
+    memcpy(dest + base_len, suffix, suffix_len + 1);
+    return 1;
+}
+
+static int build_path_with_pid(char *dest, size_t dest_size, const char *base, const char *suffix, long pid) {
+    char pid_buffer[32];
+    int pid_len;
+    size_t base_len;
+    size_t suffix_len;
+
+    if (!dest || !base || !suffix || dest_size == 0) return 0;
+
+    pid_len = snprintf(pid_buffer, sizeof(pid_buffer), "%ld", pid);
+    if (pid_len < 0) return 0;
+
+    base_len = strlen(base);
+    suffix_len = strlen(suffix);
+    if (base_len + suffix_len + (size_t)pid_len >= dest_size) return 0;
+
+    memcpy(dest, base, base_len);
+    memcpy(dest + base_len, suffix, suffix_len);
+    memcpy(dest + base_len + suffix_len, pid_buffer, (size_t)pid_len + 1);
+    return 1;
+}
+
 static int bump_file_timestamp(const char *path) {
     struct stat st;
     struct rxcp_test_utimbuf times;
@@ -230,19 +266,23 @@ int main(void) {
                      "Failed to derive build bin directory")) return 1;
 
     snprintf(sandbox, sizeof(sandbox), "highlight_cache_%ld", pid);
-    snprintf(dir_a, sizeof(dir_a), "%s/a", sandbox);
-    snprintf(dir_b, sizeof(dir_b), "%s/b", sandbox);
-    snprintf(main_a, sizeof(main_a), "%s/a/main.rexx", sandbox);
-    snprintf(dep_a, sizeof(dep_a), "%s/a/dep.rexx", sandbox);
-    snprintf(main_b, sizeof(main_b), "%s/b/main.rexx", sandbox);
-    snprintf(dep_b, sizeof(dep_b), "%s/b/dep.rexx", sandbox);
-    snprintf(feature_sandbox, sizeof(feature_sandbox), "%s/highlight_feature_cache_%ld", bin_dir, pid);
-    snprintf(external_file, sizeof(external_file), "%s/external_cache.rexx", feature_sandbox);
-    snprintf(exit_file, sizeof(exit_file), "%s/exit_cache.rexx", feature_sandbox);
-    snprintf(library_source, sizeof(library_source), "%s/library.rxbin", bin_dir);
-    snprintf(exit_module_source, sizeof(exit_module_source), "%s/rxcexits.rxbin", bin_dir);
-    snprintf(library_file, sizeof(library_file), "%s/library.rxbin", feature_sandbox);
-    snprintf(exit_module_file, sizeof(exit_module_file), "%s/rxcexits.rxbin", feature_sandbox);
+    if (!expect_true(build_path(dir_a, sizeof(dir_a), sandbox, "/a") &&
+                     build_path(dir_b, sizeof(dir_b), sandbox, "/b") &&
+                     build_path(main_a, sizeof(main_a), sandbox, "/a/main.rexx") &&
+                     build_path(dep_a, sizeof(dep_a), sandbox, "/a/dep.rexx") &&
+                     build_path(main_b, sizeof(main_b), sandbox, "/b/main.rexx") &&
+                     build_path(dep_b, sizeof(dep_b), sandbox, "/b/dep.rexx"),
+                     "Failed to derive cache sandbox paths")) return 1;
+    if (!expect_true(build_path_with_pid(feature_sandbox, sizeof(feature_sandbox),
+                                         bin_dir, "/highlight_feature_cache_", pid),
+                     "Failed to derive feature cache sandbox path")) return 1;
+    if (!expect_true(build_path(external_file, sizeof(external_file), feature_sandbox, "/external_cache.rexx") &&
+                     build_path(exit_file, sizeof(exit_file), feature_sandbox, "/exit_cache.rexx") &&
+                     build_path(library_source, sizeof(library_source), bin_dir, "/library.rxbin") &&
+                     build_path(exit_module_source, sizeof(exit_module_source), bin_dir, "/rxcexits.rxbin") &&
+                     build_path(library_file, sizeof(library_file), feature_sandbox, "/library.rxbin") &&
+                     build_path(exit_module_file, sizeof(exit_module_file), feature_sandbox, "/rxcexits.rxbin"),
+                     "Failed to derive feature cache file paths")) return 1;
     saved_exit_module = getenv("RXCP_EXIT_MODULE") ? strdup(getenv("RXCP_EXIT_MODULE")) : 0;
 
     cleanup_test_paths(main_a, dep_a, dir_a);

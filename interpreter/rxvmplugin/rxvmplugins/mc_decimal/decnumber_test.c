@@ -42,7 +42,7 @@ static int do_decNumberFromInt64_test(char* test, int64_t value) {
     char buffer[digits + 14];
     int error = 0;
 
-    sprintf(expected, "%lld", value);
+    sprintf(expected, "%lld", (long long)value);
     /* Get a malloced DecNumber */
     decNumber *dn = getNumber(digits);
 
@@ -141,7 +141,7 @@ static int do_decNumberFromUInt64_test(char* test, uint64_t value) {
     char buffer[digits + 14];
     int error = 0;
 
-    sprintf(expected, "%llu", value);
+    sprintf(expected, "%llu", (unsigned long long)value);
     /* Get a malloced DecNumber */
     decNumber *dn = getNumber(digits);
 
@@ -206,7 +206,7 @@ static int do_decNumberToInt64_test(char* test, int64_t value) {
     char expected[digits + 14];
     int error = 0;
 
-    sprintf(expected, "%lld", value);
+    sprintf(expected, "%lld", (long long)value);
 
     // Allocate memory for the context
     decContext* context = malloc(sizeof(decContext));
@@ -222,7 +222,7 @@ static int do_decNumberToInt64_test(char* test, int64_t value) {
     int64_t result = decNumberToInt64(dn, context);
     if (result != value) {
         error = 1;
-        printf("- ERROR - Expected: %lld - Got: %lld", value, result);
+        printf("- ERROR - Expected: %lld - Got: %lld", (long long)value, (long long)result);
     }
     printf("\n");
 
@@ -232,7 +232,7 @@ static int do_decNumberToInt64_test(char* test, int64_t value) {
     result = decNumberToInt64(dn, context);
     if (result != value) {
         error = 1;
-        printf("- ERROR - Expected: %lld - Got: %lld", value, result);
+        printf("- ERROR - Expected: %lld - Got: %lld", (long long)value, (long long)result);
     }
     printf("\n");
 
@@ -329,7 +329,7 @@ int test_decNumberToInt64() {
     }
     else {
         errors++;
-        printf("Test decNumberToInt64 with INT64_MAX + 1 - ERROR, expecting: Invalid_operation - Got: %lld\n", result);
+        printf("Test decNumberToInt64 with INT64_MAX + 1 - ERROR, expecting: Invalid_operation - Got: %lld\n", (long long)result);
     }
     // Now test after normalisation
     decNumberNormalize(dn, dn, context);
@@ -341,7 +341,7 @@ int test_decNumberToInt64() {
     }
     else {
         errors++;
-        printf("Test decNumberToInt64 with INT64_MAX + 1 (after normalisation) - ERROR, expecting: Invalid_operation - Got: %lld\n", result);
+        printf("Test decNumberToInt64 with INT64_MAX + 1 (after normalisation) - ERROR, expecting: Invalid_operation - Got: %lld\n", (long long)result);
     }
     // Free the number and context
     free(dn);
@@ -355,7 +355,7 @@ static int do_decNumberToUInt64_test(char* test, uint64_t value) {
     char expected[digits + 14];
     int error = 0;
 
-    sprintf(expected, "%llu", value);
+    sprintf(expected, "%llu", (unsigned long long)value);
 
     // Allocate memory for the context
     decContext* context = malloc(sizeof(decContext));
@@ -371,7 +371,7 @@ static int do_decNumberToUInt64_test(char* test, uint64_t value) {
     uint64_t result = decNumberToUInt64(dn, context);
     if (result != value) {
         error = 1;
-        printf("- ERROR - Expected: %llu - Got: %llu", value, result);
+        printf("- ERROR - Expected: %llu - Got: %llu", (unsigned long long)value, (unsigned long long)result);
     }
     printf("\n");
 
@@ -381,7 +381,7 @@ static int do_decNumberToUInt64_test(char* test, uint64_t value) {
     result = decNumberToUInt64(dn, context);
     if (result != value) {
         error = 1;
-        printf("- ERROR - Expected: %llu - Got: %llu", value, result);
+        printf("- ERROR - Expected: %llu - Got: %llu", (unsigned long long)value, (unsigned long long)result);
     }
     printf("\n");
 
@@ -454,7 +454,7 @@ int test_decNumberToUInt64() {
     }
     else {
         errors++;
-        printf("Test decNumberToUInt64 with UINT64_MAX + 1 - ERROR, expecting: Invalid_operation - Got: %lld\n", result);
+        printf("Test decNumberToUInt64 with UINT64_MAX + 1 - ERROR, expecting: Invalid_operation - Got: %llu\n", (unsigned long long)result);
     }
     // Now test after normalisation
     decNumberNormalize(dn, dn, context);
@@ -466,7 +466,7 @@ int test_decNumberToUInt64() {
     }
     else {
         errors++;
-        printf("Test decNumberToUInt64 with UINT64_MAX + 1 (after normalisation) - ERROR, expecting: Invalid_operation - Got: %lld\n", result);
+        printf("Test decNumberToUInt64 with UINT64_MAX + 1 (after normalisation) - ERROR, expecting: Invalid_operation - Got: %llu\n", (unsigned long long)result);
     }
     // Free the number and context
     free(dn);

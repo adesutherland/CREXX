@@ -92,7 +92,7 @@ crexx_add_rexx_opt_matrix(
         TARGET_GROUP rxpa_staticlink_run
         COMPILER_TARGET rxc_staticlink
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS library
+        DEPENDS library compiler_exit_bin
         RUNNER testvm
         RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
 )

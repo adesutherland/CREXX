@@ -55,7 +55,6 @@ static const char *ssl_err_to_str(SSL *ssl, int rc, char *buf, size_t bufsz) {
     }
     return buf;
 }
-// --------------------------------------------------------------------
 
 typedef struct {
 #ifdef _WIN32
@@ -77,6 +76,30 @@ typedef struct {
     SSL *ssl;             // TLS session
     SSL_CTX *ctx;         // TLS context
 } TcpSocket;
+
+static void set_error_with_detail(TcpSocket *s, const char *prefix, const char *detail) {
+    size_t prefix_len;
+    size_t detail_len;
+    size_t detail_cap;
+
+    if (!detail) detail = "";
+
+    prefix_len = strlen(prefix);
+    if (prefix_len >= sizeof(s->last_error_msg)) {
+        memcpy(s->last_error_msg, prefix, sizeof(s->last_error_msg) - 1);
+        s->last_error_msg[sizeof(s->last_error_msg) - 1] = 0;
+        return;
+    }
+
+    memcpy(s->last_error_msg, prefix, prefix_len);
+    detail_cap = sizeof(s->last_error_msg) - prefix_len - 1;
+    detail_len = strlen(detail);
+    if (detail_len > detail_cap) detail_len = detail_cap;
+
+    memcpy(s->last_error_msg + prefix_len, detail, detail_len);
+    s->last_error_msg[prefix_len + detail_len] = 0;
+}
+// --------------------------------------------------------------------
 
 #define SET_SOCK_ERR(s, code, msg) do { \
     (s)->last_error = (code); \
@@ -257,8 +280,7 @@ PROCEDURE(socketenabletls) {
     if (rc != 1) {
         char ebuf[128];
         ssl_err_to_str(s->ssl, rc, ebuf, sizeof(ebuf));
-        snprintf(s->last_error_msg, sizeof(s->last_error_msg),
-                 "TLS handshake failed: %s", ebuf);
+        set_error_with_detail(s, "TLS handshake failed: ", ebuf);
         s->last_error = -203;
         SSL_free(s->ssl);   s->ssl = NULL;
         SSL_CTX_free(s->ctx); s->ctx = NULL;
@@ -297,8 +319,7 @@ PROCEDURE(socketsend) {
         rc = SSL_write(s->ssl, data, len);
         if (rc <= 0) {
             char ebuf[128]; ssl_err_to_str(s->ssl, rc, ebuf, sizeof(ebuf));
-            snprintf(s->last_error_msg, sizeof(s->last_error_msg),
-                     "SSL_write failed: %s", ebuf);
+            set_error_with_detail(s, "SSL_write failed: ", ebuf);
             s->last_error = -3;
             RETURNINTX(-3);
         }
@@ -358,8 +379,7 @@ PROCEDURE(socketsendall) {
             rc = SSL_write(s->ssl, data + total_sent, len - total_sent);
             if (rc <= 0) {
                 char ebuf[128]; ssl_err_to_str(s->ssl, rc, ebuf, sizeof(ebuf));
-                snprintf(s->last_error_msg, sizeof(s->last_error_msg),
-                         "SSL_write failed: %s", ebuf);
+                set_error_with_detail(s, "SSL_write failed: ", ebuf);
                 s->last_error = -3;
                 RETURNINTX(-3);
             }

@@ -106,7 +106,7 @@ PROCEDURE(list) {
         /* printf("Entry     Data   \n"); */
         /* printf("-------------------------------------------------------\n"); */
         for (i=0;i<hi;i++) {
-            printf("%0.7lld   %s\n",(long long)(i+1), GETSARRAY(ARG0,i));
+            printf("%.7lld   %s\n",(long long)(i+1), GETSARRAY(ARG0,i));
         }
         /* printf("%lld Entries\n",(long long)hi); */
 }
@@ -169,4 +169,3 @@ LOADFUNCS
     ADDPROC(swapitem, "stack.swapitem", "b",    ".int",   "expose list=.string[],ll_indx1=.int,ll_indx2=.int");
     ADDPROC(create,   "stack.createll", "b",    ".int",   "expose list=.string[],ll_arg=.string");
 ENDLOADFUNCS
-

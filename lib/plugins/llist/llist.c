@@ -580,15 +580,15 @@ PROCEDURE(prevnode) {
 
     struct NodeEntry *currentEntry = (struct NodeEntry *) llEntryStub[qname].sStackCurrent;
     if (currentEntry == NULL) {
-        char EOLL[16];
-        sprintf(EOLL, "$%s%d$", "TOP-OF-LLIST-",(int)qname);
+        char EOLL[32];
+        snprintf(EOLL, sizeof(EOLL), "$TOP-OF-LLIST-%d$", (int)qname);
         RETURNSTR(EOLL);
     }
     
     currentEntry = (struct NodeEntry *) currentEntry->sPrev;
     if (currentEntry == NULL) {
-        char EOLL[16];
-        sprintf(EOLL, "$%s%d$", "TOP-OF-LLIST-",(int)qname);
+        char EOLL[32];
+        snprintf(EOLL, sizeof(EOLL), "$TOP-OF-LLIST-%d$", (int)qname);
         RETURNSTR(EOLL);
     } else {
         RETURNSTR(currentEntry->String);

@@ -187,7 +187,7 @@ PROCEDURE (list_array)  {
     if(hi<=0) printf("Array contains no Entries\n");
     else {
         for (i=from-1;i<to;i++) {
-            printf("%0.7d   %s\n",i+1, GETSARRAY(ARG0,i));
+            printf("%.7d   %s\n",i+1, GETSARRAY(ARG0,i));
         }
         printf("%d Entries\n",to);
     }
@@ -861,4 +861,3 @@ LOADFUNCS
     ADDPROC(templist,     "precomp.templistx",     "b",  ".string","mode=.string,index=.int,string=.string");
     ADDPROC(stemquote,    "precomp.stemquote",    "b",  ".string","path=.string");
 ENDLOADFUNCS
-

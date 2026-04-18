@@ -43,7 +43,7 @@ int aTestFromToInt(char* expected, int64_t int_input) {
     if (int_input > 9223372036854775804 || int_input < -9223372036854775804) {
         // Bigger than the max int value that can be convered exactly (without rounding)
         if (!plugin->base.signal_number) {
-            printf("Error - expected signal got %lld for int\n", int_output);
+            printf("Error - expected signal got %lld for int\n", (long long)int_output);
             errors++;
         }
         else printf("OK - expected signal for int\n");
@@ -54,7 +54,7 @@ int aTestFromToInt(char* expected, int64_t int_input) {
             errors++;
         }
         else printf("OK - ");
-        printf("expected %lld got %lld for to int\n", int_input, int_output);
+        printf("expected %lld got %lld for to int\n", (long long)int_input, (long long)int_output);
     }
     free(output);
     if (a.decimal_value) free(a.decimal_value);
@@ -222,9 +222,9 @@ static int test_int_tofrom_conversions() {
             // Make sure it is only 18 digits
             int_input = int_input % 1000000000000000000;
         }
-        sprintf(input, "%lld", int_input);
+        sprintf(input, "%lld", (long long)int_input);
         errors += aTestFromToInt(input, int_input);
-        sprintf(input, "%lld", -int_input);
+        sprintf(input, "%lld", (long long)(-int_input));
         errors += aTestFromToInt(input, -int_input);
     }
     free(input);
@@ -468,7 +468,7 @@ int test_moreDecimalToInteger() {
         errors++;
     }
     else printf("OK - signal - ");
-    printf("decNumber: nan, Result: %lld\n", result);
+    printf("decNumber: nan, Result: %lld\n", (long long)result);
 
     // Test Infinity
     plugin->decimalFromString(plugin, &input, "inf");
@@ -478,7 +478,7 @@ int test_moreDecimalToInteger() {
         errors++;
     }
     else printf("OK - signal - ");
-    printf("decNumber: inf, Result: %lld\n", result);
+    printf("decNumber: inf, Result: %lld\n", (long long)result);
 
     // Test -Infinity
     plugin->decimalFromString(plugin, &input, "-inf");
@@ -488,7 +488,7 @@ int test_moreDecimalToInteger() {
         errors++;
     }
     else printf("OK - signal - ");
-    printf("decNumber: -inf, Result: %lld\n", result);
+    printf("decNumber: -inf, Result: %lld\n", (long long)result);
 
     // Test 0.0
     plugin->decimalFromString(plugin, &input, "0");
@@ -498,7 +498,7 @@ int test_moreDecimalToInteger() {
         errors++;
     }
     else printf("OK - ");
-    printf("decNumber: 0.0, Result: %lld\n", result);
+    printf("decNumber: 0.0, Result: %lld\n", (long long)result);
 
     // Test -0.0
     plugin->decimalFromString(plugin, &input, "-0");
@@ -508,16 +508,16 @@ int test_moreDecimalToInteger() {
         errors++;
     }
     else printf("OK - ");
-    printf("decNumber: -0.0, Result: %lld\n", result);
+    printf("decNumber: -0.0, Result: %lld\n", (long long)result);
 
     // Test 1.23456789
     plugin->decimalFromString(plugin, &input, "1.23456789");
     plugin->decimalToInt(plugin, &input, &result);
     if (!plugin->base.signal_number) { // (result != 1) {
-        printf("Error - no signal: 1.23456789, Result: %lld\n", result);
+        printf("Error - no signal: 1.23456789, Result: %lld\n", (long long)result);
         errors++;
     }
-    else printf("OK - signal: decNumber: 1.23456789, Result: %lld\n", result);
+    else printf("OK - signal: decNumber: 1.23456789, Result: %lld\n", (long long)result);
 
     if (max_digits_supported >= 18) {
         // Test 1234567890123456789
@@ -528,7 +528,7 @@ int test_moreDecimalToInteger() {
             errors++;
         }
         else printf("OK - ");
-        printf("decNumber: 1234567890123456789 -> 1234567890123456790, Result: %lld (i.e. rounded to 18 digits)\n", result);
+        printf("decNumber: 1234567890123456789 -> 1234567890123456790, Result: %lld (i.e. rounded to 18 digits)\n", (long long)result);
     }
     else {
         // Test 1234567890123456
@@ -539,7 +539,7 @@ int test_moreDecimalToInteger() {
             errors++;
         }
         else printf("OK - ");
-        printf("decNumber: 1234567890123456 -> 1234567890123456, Result: %lld (i.e. rounded to 15 digits)\n", result);
+        printf("decNumber: 1234567890123456 -> 1234567890123456, Result: %lld (i.e. rounded to 15 digits)\n", (long long)result);
     }
         if (input.decimal_value) free(input.decimal_value);
     return errors;
@@ -1678,7 +1678,7 @@ int testDecimalExtract(char* input, char* expected_coefficient, int64_t expected
         errors++;
     }
     else printf("OK - ");
-    if (exponent) printf("%s -> %se%lld\n", input, coefficient, exponent);
+    if (exponent) printf("%s -> %se%lld\n", input, coefficient, (long long)exponent);
     else printf("%s -> %s\n", input, coefficient);
 
     free(a.decimal_value);
