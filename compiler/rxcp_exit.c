@@ -23,14 +23,17 @@ typedef struct CertifiedExitSpec {
     const char *module_name;
     const char *class_name;
     unsigned int flags;
+    const char *required_imports;
 } CertifiedExitSpec;
 
 static const CertifiedExitSpec certified_exit_specs[] = {
     { "ADDRESS", "rxcexits", "rxcpexits.addressexit",
-      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD | RXCP_EXIT_FLAG_IMPLICIT_COMMAND },
+      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD | RXCP_EXIT_FLAG_IMPLICIT_COMMAND,
+      NULL },
     { "PARSE", "rxcexits", "rxcpexits.parseexit",
-      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
-    { NULL, NULL, NULL, 0 }
+      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD,
+      "rxfnsb" },
+    { NULL, NULL, NULL, 0, NULL }
 };
 
 static int is_builtin_keyword(const char* keyword) {
@@ -96,6 +99,7 @@ static ExitEntry *rxcp_register_exit_entry(Context *ctx,
                                            const char *primary_keyword,
                                            size_t primary_len,
                                            const char *class_name,
+                                           const char *required_imports,
                                            unsigned int flags) {
     Context *root = ctx->master_context ? ctx->master_context : ctx;
     ExitEntry *entry = calloc(1, sizeof(ExitEntry));
@@ -104,6 +108,9 @@ static ExitEntry *rxcp_register_exit_entry(Context *ctx,
 
     entry->primary_keyword = rx_strndup(primary_keyword, primary_len);
     entry->class_name = strdup(class_name);
+    if (required_imports && required_imports[0]) {
+        entry->required_imports = strdup(required_imports);
+    }
     entry->flags = flags;
     entry->next = (ExitEntry *)root->exit_registry;
     root->exit_registry = entry;
@@ -173,6 +180,7 @@ void rxcp_free_exits(Context *ctx) {
             free(kw);
             kw = next_kw;
         }
+        if (entry->required_imports) free(entry->required_imports);
         if (entry->class_name) free(entry->class_name);
         free(entry);
         entry = next;
@@ -249,7 +257,12 @@ void rxcp_init_exits(Context *ctx) {
                         }
 
                         /* Register exit */
-                        ExitEntry *entry = rxcp_register_exit_entry(ctx, pk, pk_len, classes[i].class_name, flags);
+                        ExitEntry *entry = rxcp_register_exit_entry(ctx,
+                                                                   pk,
+                                                                   pk_len,
+                                                                   classes[i].class_name,
+                                                                   certified ? certified->required_imports : NULL,
+                                                                   flags);
 
                         /* Get additional keywords */
                         rxvml_value* ak_val = NULL;
@@ -804,6 +817,87 @@ static int rxcp_apply_plan_keywords(ExitEntry *entry,
     return 0;
 }
 
+static ASTNode *rxcp_find_file_container(ASTNode *node) {
+    while (node) {
+        if (node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE) {
+            return node;
+        }
+        node = node->parent;
+    }
+    return NULL;
+}
+
+static int rxcp_file_has_import(ASTNode *file_node, const char *import_name) {
+    ASTNode *child;
+
+    if (!file_node || !import_name || !import_name[0]) return 0;
+
+    child = file_node->child;
+    while (child) {
+        if (child->node_type == IMPORT &&
+            child->child &&
+            is_node_string(child->child, import_name)) {
+            return 1;
+        }
+        child = child->sibling;
+    }
+    return 0;
+}
+
+static int rxcp_insert_import(Context *ctx, ASTNode *node, const char *import_name) {
+    ASTNode *file_node;
+    ASTNode *import_node;
+    ASTNode *literal_node;
+
+    if (!ctx || !node || !import_name || !import_name[0]) return 0;
+
+    file_node = rxcp_find_file_container(node);
+    if (!file_node || rxcp_file_has_import(file_node, import_name)) return 0;
+
+    import_node = ast_ft(ctx, IMPORT);
+    literal_node = ast_ft(ctx, LITERAL);
+    ast_copy_str(literal_node, (char *)import_name);
+    add_ast(import_node, literal_node);
+
+    import_node->sibling = file_node->child;
+    file_node->child = import_node;
+    import_node->parent = file_node;
+
+    return 1;
+}
+
+static int rxcp_apply_required_imports(Context *ctx, ASTNode *node, const char *required_imports) {
+    const char *cursor;
+    int inserted;
+
+    if (!required_imports || !required_imports[0]) return 0;
+
+    inserted = 0;
+    cursor = required_imports;
+    while (*cursor) {
+        const char *start;
+        size_t len;
+        char *import_name;
+
+        while (*cursor && isspace((unsigned char)*cursor)) cursor++;
+        if (!*cursor) break;
+
+        start = cursor;
+        while (*cursor && !isspace((unsigned char)*cursor)) cursor++;
+        len = (size_t)(cursor - start);
+        if (len == 0) continue;
+
+        import_name = rx_strndup(start, len);
+        if (rxcp_insert_import(ctx, node, import_name)) {
+            inserted = 1;
+        }
+        free(import_name);
+    }
+
+    if (inserted) ctx->changed_flags |= FLAG_EXIT;
+    return inserted;
+}
+
 static int rxcp_apply_exit_plan(Context *ctx,
                                 ASTNode *node,
                                 ExitEntry *entry,
@@ -875,6 +969,17 @@ static int rxcp_apply_exit_plan(Context *ctx,
     rxcp_apply_plan_keywords(entry, node_map, num_tokens, vctx, plan);
     free(status);
     return 0;
+}
+
+static int rxcp_apply_certified_exit_imports(Context *ctx, ASTNode *node, const char *class_name) {
+    const CertifiedExitSpec *spec;
+
+    if (!class_name) return 0;
+
+    spec = rxcp_find_certified_exit_by_class(class_name);
+    if (!spec || !(spec->flags & RXCP_EXIT_FLAG_CERTIFIED)) return 0;
+
+    return rxcp_apply_required_imports(ctx, node, spec->required_imports);
 }
 
 static void rxcp_say_exit(char* message) {
@@ -1049,6 +1154,7 @@ static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context*
         }
 
         if (replacement_code) {
+            rxcp_apply_certified_exit_imports(ctx, node, class_name);
             rxcp_preserve_replaced_node_diagnostics(ctx, node);
             int rc = ast_grft_interpolated(ctx, node, replacement_code, node_map, num_tokens);
             /* Mark context changed to force recompilation pass (locals/regs recalculation) */

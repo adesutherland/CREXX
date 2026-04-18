@@ -110,6 +110,8 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 14. **Certified Exit Lowering and System Rewrite (`exit_dispatch_walker` / `rewrite_exit_walker`)**: 
     *   Lowers certified exits such as `ADDRESS` through the exit bridge and rewrites `EXIT` into the internal `_exit` call.
     *   If exits are disabled, certified primaries that fell back to `IMPLICIT_CMD` are diagnosed before `_rxsysb` import/hoisting.
+    *   Certified exits may inject required runtime imports during `REPLACE`; `PARSE` uses this to add `rxfnsb`.
+    *   Inline branch statements lowered from certified exits may be wrapped in synthetic `INSTRUCTIONS` blocks for structural safety; these wrappers can inherit the parent lexical scope so hoisted bindings stay visible after the branch.
     *   *Idempotency*: Exit lowering replaces the original node; `rewrite_exit_walker` mutates `EXIT` into a call.
 
 ---

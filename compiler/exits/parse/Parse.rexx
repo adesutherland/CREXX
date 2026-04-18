@@ -408,7 +408,7 @@ pre_process: method = .exitplan
   if uplow='UPPER'      then _replacement = _replacement"; _source=upper("parse_string")"
   else if uplow='LOWER' then _replacement = _replacement"; _source=lower("parse_string")"
   else _replacement = _replacement"; _source="parse_string
-  _replacement = _replacement'; '_into'=parseExec(_source,"'plan'","'_template'",'wantlog')'
+  _replacement = _replacement || '; ' || _into || '=parseExec(_source,' || quote_rexx_string(plan) || ',' || quote_rexx_string(_template) || ',' || wantlog || ')'
   call log 'Pre-Process II  '_template_texttab
   call log 'Pre-Process IV  '_replacement
 return compile_plan
@@ -569,8 +569,8 @@ process: method = .string
  *   - Literal payload text is preserved exactly, including blanks and
  *     empty-string literals.
  * ---------------------------------------------------------------------- */
- compile_parse_plan: procedure = .string
-   arg pkind=.int[], ptext=.string[], out=.int
+compile_parse_plan: procedure = .string
+  arg pkind=.int[], ptext=.string[], out=.int
 
    planStr = ""
    do i = 1 to out
@@ -587,6 +587,24 @@ process: method = .string
    end
    call log '****** Plan V2="'Planstr'"'
    return planStr
+
+/* ----------------------------------------------------------------------
+ * quote_rexx_string
+ *
+ * Emit a Rexx single-quoted literal for arbitrary text. Embedded single
+ * quotes are doubled so generated replacement code remains a single
+ * argument even when the authored PARSE template used quoted literals.
+ * ---------------------------------------------------------------------- */
+quote_rexx_string: procedure = .string
+  arg raw = .string
+
+  quoted = "'"
+  do i = 1 to length(raw)
+     ch = substr(raw, i, 1)
+     if ch = "'" then quoted = quoted || "''"
+     else quoted = quoted || ch
+  end
+  return quoted || "'"
 
 /* ============================================================================
  * Helper: isVAR test for valid variable name

@@ -36,6 +36,7 @@ typedef struct ExitEntry {
     char *primary_keyword;
     ExitKeyword *additional_keywords;
     char *class_name; /* the class name of the exit object */
+    char *required_imports;
     unsigned int flags;
     struct ExitEntry *next;
 } ExitEntry;

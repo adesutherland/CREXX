@@ -97,6 +97,7 @@ test_parse_suffix_options: procedure = .int
   if check_equal("parse suffix process", "REPLACE", parser.process(tokens)) = 0 then failures = failures + 1
   replacement = parser.get_replacement()
   if check_contains("parse suffix into call", replacement, "parsed=parseExec(_source,") = 0 then failures = failures + 1
+  if check_contains("parse suffix template quoting", replacement, ",' left "","" right',0)") = 0 then failures = failures + 1
   if check_contains("parse suffix trim assign", replacement, "left=strip(parsed[1])") = 0 then failures = failures + 1
   if check_contains("parse suffix trim assign 2", replacement, "right=strip(parsed[2])") = 0 then failures = failures + 1
 

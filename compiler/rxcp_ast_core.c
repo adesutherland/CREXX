@@ -294,6 +294,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->is_source_diagnostic_recorded = 0;
     node->mark_internal_diagnostics = 0;
     node->force_local_scope = 0;
+    node->inherit_parent_scope = 0;
     node->inherit_parent_reg_scope = 0;
     node->suppress_shadow_warnings = 0;
     node->skip_exit_dispatch = 0;
@@ -399,6 +400,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->is_internal_diagnostic = node->is_internal_diagnostic;
     new_node->mark_internal_diagnostics = node->mark_internal_diagnostics;
     new_node->force_local_scope = node->force_local_scope;
+    new_node->inherit_parent_scope = node->inherit_parent_scope;
     new_node->inherit_parent_reg_scope = node->inherit_parent_reg_scope;
     new_node->suppress_shadow_warnings = node->suppress_shadow_warnings;
     new_node->skip_exit_dispatch = node->skip_exit_dispatch;

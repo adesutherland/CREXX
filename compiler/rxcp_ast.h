@@ -70,6 +70,7 @@ struct ASTNode {
     char is_source_diagnostic_recorded;
     char mark_internal_diagnostics;
     char force_local_scope;
+    char inherit_parent_scope;
     char inherit_parent_reg_scope;
     char suppress_shadow_warnings;
     char skip_exit_dispatch;

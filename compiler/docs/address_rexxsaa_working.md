@@ -878,6 +878,15 @@ Completed in this stage:
   - inline instruction sites such as `if ... then address ...` now use the
     same certified-exit promotion path instead of falling through to
     `IMPLICIT_CMD`
+- 2026-04-18: enabled `PARSE` follow-up fixes completed:
+  - certified exits can now declare required runtime imports, and `PARSE`
+    auto-imports `rxfnsb` instead of depending on a handwritten source import
+  - the `PARSE` replacement now quotes generated runtime string arguments,
+    which fixes templates containing double-quoted literals such as `","`
+  - inline certified exits under `IF` / `WHEN` / `OTHERWISE` now wrap branch
+    bodies structurally before hoisting bindings, while preserving the parent
+    lexical scope so later constant-folding and control-flow rewrites do not
+    drop or localize the rewritten statement
 
 ## 10. Evidence and code anchors
 

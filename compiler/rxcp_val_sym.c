@@ -264,7 +264,9 @@ walker_result structure_symbols_walker(walker_direction direction,
             /* Create a child scope for any nested INSTRUCTIONS whose parent is an IF or another INSTRUCTIONS block.
              * This handles THEN/ELSE bodies and simple DO blocks (which are represented as nested INSTRUCTIONS).
              * If the parent is a DO, we use the DO's scope created above. */
-            if (node->force_local_scope ||
+            if (node->inherit_parent_scope) {
+                node->scope = context->current_scope;
+            } else if (node->force_local_scope ||
                 (node->parent && (node->parent->node_type == IF || node->parent->node_type == INSTRUCTIONS))) {
                 if (node->scope) {
                     context->current_scope = node->scope;
@@ -315,6 +317,8 @@ walker_result build_symbols_walker(walker_direction direction,
             /* Pass 1 has already created these scopes and symbols. Just navigate. */
             if (node->scope) {
                 context->current_scope = node->scope;
+            } else if (node->node_type == INSTRUCTIONS && node->inherit_parent_scope) {
+                node->scope = context->current_scope;
             } else if (node->node_type == DO ||
                       node->node_type == BLOCK_EXPR ||
                       (node->node_type == INSTRUCTIONS &&
@@ -1499,6 +1503,50 @@ static int is_var_defined_before(ASTNode* start_node, const char* var_name) {
     return 0;
 }
 
+static ASTNode *ast_prepare_branch_hoist_block(Context *ctx, ASTNode *current_node) {
+    ASTNode *parent;
+    ASTNode *block;
+    ASTNode *previous;
+
+    if (!ctx || !current_node) return current_node;
+
+    parent = current_node->parent;
+    if (!parent) return current_node;
+
+    if (parent->node_type != IF &&
+        parent->node_type != WHEN &&
+        parent->node_type != OTHERWISE) {
+        return current_node;
+    }
+
+    if (current_node->node_type == INSTRUCTIONS) return current_node;
+
+    block = ast_ft(ctx, INSTRUCTIONS);
+    ast_copy_source_anchor(block, current_node, AST_SOURCE_SYNTHETIC);
+    block->line = current_node->line;
+    block->column = current_node->column;
+    block->inherit_parent_scope = 1;
+    block->inherit_parent_reg_scope = 1;
+    block->suppress_shadow_warnings = 1;
+
+    previous = NULL;
+    if (parent->child != current_node) {
+        previous = parent->child;
+        while (previous && previous->sibling != current_node) previous = previous->sibling;
+    }
+
+    block->parent = parent;
+    block->sibling = current_node->sibling;
+    current_node->parent = block;
+    current_node->sibling = NULL;
+    block->child = current_node;
+
+    if (previous) previous->sibling = block;
+    else parent->child = block;
+
+    return current_node;
+}
+
 /* Hoist a variable definition to a specific scope level.
  * levels: -1 = Procedure/Method level, 0 = Current level (inserted just before current_node), 1 = Parent level
  * Returns 1 if hoisted/already exists, 0 on failure.
@@ -1509,6 +1557,8 @@ int ast_hoist_var_typed(Context* ctx,
                         int levels,
                         const char* type_name,
                         size_t dims) {
+    current_node = ast_prepare_branch_hoist_block(ctx, current_node);
+
     ASTNode *target_scope_node = current_node;
 
     if (levels == -1) {
