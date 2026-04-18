@@ -64,6 +64,20 @@ static const CertifiedExitSpec *rxcp_find_certified_exit_by_class(const char *cl
     return NULL;
 }
 
+const char *rxcp_match_certified_exit_primary(const char *keyword, size_t len) {
+    int i;
+
+    if (!keyword || len == 0) return NULL;
+
+    for (i = 0; certified_exit_specs[i].primary_keyword; i++) {
+        const char *primary = certified_exit_specs[i].primary_keyword;
+        if (len == strlen(primary) && strncasecmp(primary, keyword, len) == 0) {
+            return primary;
+        }
+    }
+    return NULL;
+}
+
 static ExitEntry *rxcp_find_exit_entry(Context *ctx, const char *keyword, size_t len) {
     Context *root = ctx->master_context ? ctx->master_context : ctx;
     ExitEntry *entry = (ExitEntry *)root->exit_registry;

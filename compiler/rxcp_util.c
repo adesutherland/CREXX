@@ -560,10 +560,6 @@ const char* token_to_string(int token_id) {
         case TK_EXIT_PRIMARY: return "TK_EXIT_PRIMARY";
         case TK_EXIT_TOKEN: return "TK_EXIT_TOKEN";
         case TK_ARG: return "TK_ARG";
-        case TK_ADDRESS: return "TK_ADDRESS";
-        case TK_OUTPUT: return "TK_OUTPUT";
-        case TK_ERROR: return "TK_ERROR";
-        case TK_INPUT: return "TK_INPUT";
         case TK_ASSEMBLER: return "TK_ASSEMBLER";
         case TK_VOID: return "TK_VOID";
         case TK_ELLIPSIS: return "TK_ELLIPSIS";
@@ -826,7 +822,6 @@ int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code) {
 const char* node_type_to_string(NodeType type) {
     switch (type) {
         case ABS_POS: return "ABS_POS";
-        case ADDRESS: return "ADDRESS";
         case IMPLICIT_CMD: return "IMPLICIT_CMD";
         case ARG: return "ARG";
         case ARGS: return "ARGS";
@@ -904,10 +899,6 @@ const char* node_type_to_string(NodeType type) {
         case REL_POS: return "REL_POS";
         case RANGE: return "RANGE";
         case REPEAT: return "REPEAT";
-        case REDIRECT_IN: return "REDIRECT_IN";
-        case REDIRECT_OUT: return "REDIRECT_OUT";
-        case REDIRECT_ERROR: return "REDIRECT_ERROR";
-        case REDIRECT_EXPOSE: return "REDIRECT_EXPOSE";
         case RETURN: return "RETURN";
         case REXX_OPTIONS: return "REXX_OPTIONS";
         case REXX_UNIVERSE: return "REXX_UNIVERSE";

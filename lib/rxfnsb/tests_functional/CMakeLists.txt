@@ -94,12 +94,16 @@ foreach(_binfile ${REXXBINS})
 
     add_custom_target(${_basename})
     add_dependencies(testbifs ${_basename})
+    set(_rxc_flags -x)
+    if("${_basename}" STREQUAL "ts_address")
+        set(_rxc_flags)
+    endif()
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
             SOURCE ${_rexx_file}
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
-            RXC_FLAGS -x
+            RXC_FLAGS ${_rxc_flags}
             DEPENDS library ${_rexx_dep} ${_prev_target}
             RUNTIME_ARGS ${LIBRPATH}
     )

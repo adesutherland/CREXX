@@ -23,7 +23,7 @@ The `validate_ast` function (in `rxcp_val_orch.c`) orchestrates the following se
     *   Literal type normalization based on `OPTIONS` (Classic vs. Common).
 
 5.  **Library Requirement Check (`needs_rxsysb_walker`)**: 
-    *   Flags if the `_rxsysb` system library is needed (for `ADDRESS`, `EXIT`, or `IMPLICIT_CMD`).
+    *   Flags if the `_rxsysb` system library is needed (for certified exit instructions, `EXIT`, or `IMPLICIT_CMD`).
 
 6.  **Library Injection (`add_rxsysb_walker`)**: 
     *   Injects `IMPORT _rxsysb` into the `PROGRAM_FILE` if needed.
@@ -48,7 +48,7 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 6.  **Implicit Command Transformation (`rewrite_implicit_cmd_walker`)**:
     *   Rewrites non-handled `IMPLICIT_CMD` nodes.
     *   If the child is a `MEMBER_CALL`, `FACTORY_CALL`, or `FUNCTION`, it is promoted to a regular instruction.
-    *   Otherwise, it is rewritten to `ADDRESS SYSTEM`.
+    *   Otherwise, it remains on the certified `ADDRESS` path and is later lowered to `_address("SYSTEM", ...)`.
     *   *Idempotency*: Mutates the node type, preventing re-execution on the same node.
 
 7.  **Ordinal Assignment (`set_node_ordinals_walker`)**: 
@@ -107,9 +107,10 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 13.3 **Function Call Type Safety (`func_type_safety_walker`)**: 
     *   Validates arguments and reference parameters.
 
-14. **System Instruction Rewriting (`rewrite_address_walker` / `rewrite_exit_walker`)**: 
-    *   Transforms `ADDRESS` and `EXIT` into internal system function calls.
-    *   *Idempotency*: Mutates node type to `ASSIGN` or `CALL`.
+14. **Certified Exit Lowering and System Rewrite (`exit_dispatch_walker` / `rewrite_exit_walker`)**: 
+    *   Lowers certified exits such as `ADDRESS` through the exit bridge and rewrites `EXIT` into the internal `_exit` call.
+    *   If exits are disabled, certified primaries that fell back to `IMPLICIT_CMD` are diagnosed before `_rxsysb` import/hoisting.
+    *   *Idempotency*: Exit lowering replaces the original node; `rewrite_exit_walker` mutates `EXIT` into a call.
 
 ---
 ### 3. Post-Loop Finalization
@@ -178,8 +179,8 @@ The AST/Symbol validator (`rxcp_validate_ast_and_symbols`) asserts these rules i
 | Behavior | Logic Location | Description |
 | :--- | :--- | :--- |
 | **Array Length Intrinsics** | `set_node_types_walker` | `arr[]` or `arr[..., void]` is automatically typed as `TP_INTEGER` (returning the array length). |
-| **Implicit IMPORT Injection** | `add_rxsysb_walker` | Automatically adds `import _rxsysb` if `ADDRESS` or `EXIT` is used, ensuring system functions are available. |
-| **ADDRESS Instruction Rewrite** | `rewrite_address_walker` | Transforms `ADDRESS` into a standard function call and assignment to `rc`. |
+| **Implicit IMPORT Injection** | `add_rxsysb_walker` | Automatically adds `import _rxsysb` if a certified system exit, `EXIT`, or `IMPLICIT_CMD` needs it. |
+| **ADDRESS Certified Exit Lowering** | `exit_dispatch_walker` | Lowers `ADDRESS` through the certified exit bridge into the `_address(...)` call shape. |
 | **EXIT Instruction Rewrite** | `rewrite_exit_walker` | Transforms `EXIT` into a call to the internal `_exit` function. |
 | **SCONCAT Normalization** | `syntax_validation_walker` | Converts "space concatenation" tokens to standard concatenation if no physical space exists. |
 | **Automatic Type Inference** | `set_node_types_walker` | Variables are typed upon first assignment; subsequent assignments to different types trigger errors. |

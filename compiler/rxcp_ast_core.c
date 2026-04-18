@@ -1061,8 +1061,6 @@ const char *ast_ndtp(NodeType type) {
     switch (type) {
         case ABS_POS:
             return "ABS_POS";
-        case ADDRESS:
-            return "ADDRESS";
         case IMPLICIT_CMD:
             return "IMPLICIT_CMD";
         case ARG:
@@ -1221,14 +1219,6 @@ const char *ast_ndtp(NodeType type) {
             return "RANGE";
         case REPEAT:
             return "REPEAT";
-        case REDIRECT_IN:
-            return "REDIRECT_IN";
-        case REDIRECT_OUT:
-            return "REDIRECT_OUT";
-        case REDIRECT_ERROR:
-            return "REDIRECT_ERROR";
-        case REDIRECT_EXPOSE:
-            return "REDIRECT_EXPOSE";
         case RETURN:
             return "RETURN";
         case EXIT:

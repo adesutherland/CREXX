@@ -1,0 +1,2 @@
+Error in err_parse_exit_disabled.rexx @ 4:3 - #CERTIFIED_EXIT_DISABLED, "PARSE", "parse value \"x\" with a"
+1 error(s) in source file

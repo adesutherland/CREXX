@@ -34,29 +34,25 @@ the primary modern interface.
 
 ### 3.1 Parser and AST shape today
 
-`ADDRESS` now executes through the certified exit path, but legacy parser/AST
-ownership has not yet been fully removed.
+`ADDRESS` now executes through the certified exit path and no longer has
+legacy parser/AST ownership.
 
-- The grammar in `compiler/rxcpbgmr.y` still has explicit `address`
-  productions.
-- It still supports:
-  - environment literal
-  - command expression
-  - redirects `INPUT`, `OUTPUT`, `ERROR`
-  - `EXPOSE` followed by a list of variables
+- explicit `ADDRESS` now enters the compiler tree as `EXIT_EXTENDED`
+- clause keywords such as `INPUT`, `OUTPUT`, and `ERROR` are now consumed as
+  exit tokens rather than legacy grammar productions
 - `IMPLICIT_CMD` is still produced by the parser and then routed to the
-  certified `ADDRESS` exit bridge.
-- The compiler parser wrapper in `compiler/rxcpbpar.c` now also promotes
-  certified exit primaries and contextual exit keywords for the new path.
+  certified `ADDRESS` exit bridge
+- the compiler parser wrapper in `compiler/rxcpbpar.c` promotes certified exit
+  primaries and contextual exit keywords for the new path
 
 Important consequence:
 
 - certified exit ownership is now the active implementation path for
   `ADDRESS`
-- legacy `ADDRESS` grammar productions and AST node shapes still exist as
-  cleanup debt
-- the next compiler cleanup should remove those legacy parsing and AST
-  artifacts once the exit path is considered stable
+- legacy `ADDRESS` grammar productions and parser-era AST node shapes are now
+  removed
+- disabling exits now also disables explicit `ADDRESS` parsing, matching the
+  existing `PARSE` model
 
 ### 3.2 Lowering in the compiler today
 
@@ -789,8 +785,7 @@ Stage 1 exit criteria:
 
 ### Stage 2: compiler refactor
 
-Status: implemented for the current certified-exit path, with cleanup still
-required
+Status: implemented, including parser/AST cleanup
 
 Completed in this stage:
 
@@ -805,14 +800,11 @@ Completed in this stage:
   - `EXPOSE`
   - parser/highlighter keyword handling
   - direct Rexx-side exit harness coverage for `pre_process()` and `process()`
-
-Cleanup queued immediately after this stage:
-
 - remove legacy `ADDRESS` parsing from `compiler/rxcpbgmr.y`
 - remove obsolete `ADDRESS` AST artifacts and dedicated parser-era ownership
   assumptions
 - remove dead keyword/parser support left behind by the migration once the new
-  path is fully trusted
+  path was trusted
 
 ### Stage 3: runtime abstraction
 
@@ -875,9 +867,17 @@ Cleanup queued immediately after this stage:
     - result: `697/697` tests passed
 - 2026-04-17: next implementation task agreed:
   - remove legacy `ADDRESS` parsing and AST artifacts now that the certified
-    exit path is working
+  exit path is working
   - then do the associated grammar/parser/highlighter cleanup for long-term
-    maintainability
+  maintainability
+- 2026-04-17: post-Stage-2 parser cleanup completed:
+  - explicit `ADDRESS` now parses only through certified exit promotion
+  - legacy `ADDRESS` and redirect AST node types were removed
+  - `rxc -x` now rejects explicit certified exits such as `ADDRESS` and
+    `PARSE` with `#CERTIFIED_EXIT_DISABLED`
+  - inline instruction sites such as `if ... then address ...` now use the
+    same certified-exit promotion path instead of falling through to
+    `IMPLICIT_CMD`
 
 ## 10. Evidence and code anchors
 

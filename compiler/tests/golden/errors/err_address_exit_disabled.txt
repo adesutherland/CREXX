@@ -1,0 +1,2 @@
+Error in err_address_exit_disabled.rexx @ 4:3 - #CERTIFIED_EXIT_DISABLED, "ADDRESS", "address system \"echo disabled\""
+1 error(s) in source file

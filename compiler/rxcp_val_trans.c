@@ -31,6 +31,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include "rxcp_val.h"
+#include "rxcp_exit.h"
 
 /*
  * Converts EXIT Instruction to _exit System Function
@@ -71,17 +72,6 @@ walker_result rewrite_exit_walker(walker_direction direction,
         }
     }
 
-    return result_normal;
-}
-
-/*
- * ADDRESS lowering now routes through the certified/system exit bridge.
- * The legacy hard-coded rewrite is intentionally disabled.
- */
-walker_result rewrite_address_walker(walker_direction direction,
-                                            ASTNode* node, __attribute__((unused)) void *payload) {
-    (void)direction;
-    (void)node;
     return result_normal;
 }
 
@@ -132,6 +122,9 @@ walker_result add_rxsysb_walker(walker_direction direction,
  * Sees if rxsysb is needed
  */
 static void rxcp_warn_implicit_address(ASTNode *node);
+static ASTNode *rxcp_first_implicit_cmd_leaf(ASTNode *node);
+static const char *rxcp_get_node_text(ASTNode *node, size_t *len);
+static const char *rxcp_disabled_certified_exit_keyword(ASTNode *node);
 
 walker_result needs_rxsysb_walker(walker_direction direction,
                                        ASTNode* node, __attribute__((unused)) void *payload) {
@@ -140,13 +133,37 @@ walker_result needs_rxsysb_walker(walker_direction direction,
 
     if (direction == out) {
         /* Bottom Up */
-        if (node->node_type == IMPLICIT_CMD || node->node_type == EXIT_EXTENDED) {
-            context->need_rxsysb = 1;
+        if (node->node_type == IMPLICIT_CMD) {
+            const char *certified_keyword;
 
-            if (node->node_type == IMPLICIT_CMD) {
-                rxcp_warn_implicit_address(node);
-                ast_hoist_var(context, node, "rc", -1);
-            } else if (node->node_type == EXIT_EXTENDED && node->token) {
+            certified_keyword = NULL;
+            if (context->disable_exits) {
+                certified_keyword = rxcp_disabled_certified_exit_keyword(node);
+            }
+            if (certified_keyword) {
+                mknd_err_unique(node, "CERTIFIED_EXIT_DISABLED, \"%s\"", certified_keyword);
+                return result_normal;
+            }
+
+            context->need_rxsysb = 1;
+            rxcp_warn_implicit_address(node);
+            ast_hoist_var(context, node, "rc", -1);
+            rxcp_exit_bridge_pre_invoke(context, node);
+        }
+        else if (node->node_type == EXIT_EXTENDED) {
+            const char *certified_keyword;
+
+            certified_keyword = NULL;
+            if (context->disable_exits && node->token) {
+                certified_keyword = rxcp_match_certified_exit_primary(node->token->token_string, node->token->length);
+            }
+            if (certified_keyword) {
+                mknd_err_unique(node, "CERTIFIED_EXIT_DISABLED, \"%s\"", certified_keyword);
+                return result_normal;
+            }
+
+            context->need_rxsysb = 1;
+            if (node->token) {
                 unsigned int flags;
 
                 flags = rxcp_get_exit_flags(context, node->token->token_string, node->token->length);
@@ -154,7 +171,6 @@ walker_result needs_rxsysb_walker(walker_direction direction,
                     ast_hoist_var(context, node, "rc", -1);
                 }
             }
-
             rxcp_exit_bridge_pre_invoke(context, node);
         }
         else if (node->node_type == EXIT) {
@@ -180,9 +196,67 @@ static void rxcp_warn_implicit_address(ASTNode *node) {
     }
 }
 
+static ASTNode *rxcp_first_implicit_cmd_leaf(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return NULL;
+    if (node->node_type == ERROR || node->node_type == WARNING) return NULL;
+
+    if (node->node_type == OP_CONCAT || node->node_type == OP_SCONCAT || node->node_type == IMPLICIT_CMD) {
+        child = node->child;
+        while (child) {
+            ASTNode *leaf = rxcp_first_implicit_cmd_leaf(child);
+            if (leaf) return leaf;
+            child = child->sibling;
+        }
+        return NULL;
+    }
+
+    return node;
+}
+
+static const char *rxcp_get_node_text(ASTNode *node, size_t *len) {
+    if (len) *len = 0;
+    if (!node) return NULL;
+
+    if (node->token && node->token->token_string && node->token->length > 0) {
+        if (len) *len = node->token->length;
+        return node->token->token_string;
+    }
+
+    if (node->node_string) {
+        size_t text_len = node->node_string_length ? node->node_string_length : strlen(node->node_string);
+        if (text_len > 0) {
+            if (len) *len = text_len;
+            return node->node_string;
+        }
+    }
+
+    return NULL;
+}
+
+static const char *rxcp_disabled_certified_exit_keyword(ASTNode *node) {
+    ASTNode *leaf;
+    const char *text;
+    size_t len;
+
+    leaf = rxcp_first_implicit_cmd_leaf(node);
+    if (!leaf) return NULL;
+
+    if (leaf->node_type != VAR_SYMBOL && leaf->node_type != CONST_SYMBOL) {
+        return NULL;
+    }
+
+    text = rxcp_get_node_text(leaf, &len);
+    if (!text || len == 0) return NULL;
+
+    return rxcp_match_certified_exit_primary(text, len);
+}
+
 /*
- * Warns on implicit command usage while keeping IMPLICIT_CMD available for
- * the certified ADDRESS exit bridge.
+ * Warns on implicit command usage while preserving IMPLICIT_CMD fallback for
+ * non-certified commands. Certified primaries are rejected earlier when exits
+ * are disabled.
  */
 walker_result rewrite_implicit_cmd_walker(walker_direction direction,
                                           ASTNode* node, void *payload) {
@@ -190,6 +264,8 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
     (void)context;
 
     if (direction == out && node->node_type == IMPLICIT_CMD) {
+        if (ast_hase(node)) return result_normal;
+
         /* Fix up location if missing - typically copied from the expression child */
         if (node->line == -1 && node->child) {
             node->line = node->child->line;

@@ -155,7 +155,7 @@ int rexbscan(Context* s) {
     "]" { RET(TK_CLOSE_SBRACKET); }
     ";" { RET(TK_EOC); }
 
-    'ADDRESS' { RET(TK_ADDRESS); }
+  //  'ADDRESS' { RET(TK_ADDRESS); }
     'ASSEMBLER' { RET(TK_ASSEMBLER); }
     'ARG' { RET(TK_ARG); }
     'CALL' { RET(TK_CALL); }
@@ -165,14 +165,14 @@ int rexbscan(Context* s) {
     'METHOD' { RET(TK_METHOD); }
   //  'DROP' { RET(TK_DROP); }
     'ELSE' { RET(TK_ELSE); }
-    'ERROR' { RET(TK_ERROR); }
+  //  'ERROR' { RET(TK_ERROR); }
     'END' { RET(TK_END); }
   //  'EXTERNAL' { RET(TK_EXTERNAL); }
     'EXIT' { RET(TK_EXIT); }
     'FACTORY' { RET(TK_FACTORY); }
     'IF' { RET(TK_IF); }
     'IMPORT' { RET(TK_IMPORT); }
-    'INPUT' { RET(TK_INPUT); }
+  //  'INPUT' { RET(TK_INPUT); }
   //  'INTERPRET' { RET(TK_INTERPRET); }
     'ITERATE' { RET(TK_ITERATE); }
     'LEAVE' { RET(TK_LEAVE); }
@@ -182,7 +182,7 @@ int rexbscan(Context* s) {
     'NUMERIC' { RET(TK_NUMERIC); }
   'OPTIONS' { RET(TK_OPTIONS); }
     'OTHERWISE' { RET(TK_OTHERWISE); }
-  'OUTPUT' { RET(TK_OUTPUT); }
+  //  'OUTPUT' { RET(TK_OUTPUT); }
   //  'PARSE' { RET(TK_PARSE); }
     'PROCEDURE' { RET(TK_PROCEDURE); }
     'REGISTER' / [.] {

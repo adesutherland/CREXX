@@ -1612,7 +1612,6 @@ walker_result func_type_safety_walker(walker_direction direction,
             case PARSE:
             case UPPER:
             case PULL:
-            case ADDRESS:
             case ENVIRONMENT:
             case DEC_DIGITS:
             case DEC_FORM:

@@ -32,6 +32,14 @@
 #include "rxcpbgmr.h"
 #include "rxcpmain.h"
 #include "rxcp_util.h"
+#include "rxcp_exit.h"
+
+static int rxcp_is_instruction_lead_token(int last_token_type) {
+    return last_token_type == TK_EOC ||
+           last_token_type == TK_THEN ||
+           last_token_type == TK_ELSE ||
+           last_token_type == TK_OTHERWISE;
+}
 
 int rexbpars(Context *context) {
 
@@ -52,6 +60,8 @@ int rexbpars(Context *context) {
     last_token_type = TK_EOC;
     int in_exit_instruction = 0;
     while (1) {
+        const char *disabled_certified_primary;
+
         token = peek_token;
         if (token->token_type == TK_EOL) token->token_type = TK_EOC;
         token_type = token->token_type;
@@ -61,11 +71,16 @@ int rexbpars(Context *context) {
         }
 
         // Promotion
-        if (last_token_type == TK_EOC &&
+        disabled_certified_primary = NULL;
+        if (context->disable_exits && token->token_string) {
+            disabled_certified_primary = rxcp_match_certified_exit_primary(token->token_string, token->length);
+        }
+        if (rxcp_is_instruction_lead_token(last_token_type) &&
             token_type != TK_EOC &&
             token_type != TK_EOS &&
             token->token_string &&
-            rxcp_is_exit_primary(context, token->token_string, token->length)) {
+            (rxcp_is_exit_primary(context, token->token_string, token->length) ||
+             disabled_certified_primary)) {
             token_type = TK_EXIT_PRIMARY;
             token->token_type = TK_EXIT_PRIMARY;
             in_exit_instruction = 1;

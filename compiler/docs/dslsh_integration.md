@@ -131,7 +131,7 @@ Current source-node to DSLSH container mapping:
 | `CLASS_DEF` | `PARSE_TREE_STRUCTURE` |
 | `PROCEDURE`, `METHOD`, `FACTORY` | `PARSE_TREE_FUNCTION` |
 | `INSTRUCTIONS`, `DO`, `SELECT`, `WHEN`, `OTHERWISE` | `PARSE_TREE_CODEBLOCK` |
-| `IF`, `ASSIGN`, `CALL`, `RETURN`, `EXIT`, `ADDRESS`, `IMPLICIT_CMD`, `SAY`, `PULL`, `PARSE` | `PARSE_TREE_STATEMENT` |
+| `IF`, `ASSIGN`, `CALL`, `RETURN`, `EXIT`, `EXIT_EXTENDED`, `IMPLICIT_CMD`, `SAY`, `PULL`, `PARSE` | `PARSE_TREE_STATEMENT` |
 | `BLOCK_EXPR` and infix operators | `PARSE_TREE_EXPR` |
 
 These container nodes are the basis for:

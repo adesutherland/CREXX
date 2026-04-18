@@ -325,7 +325,6 @@ walker_result register_walker(walker_direction direction,
                 }
                 break;
 
-            case ADDRESS:
             case SAY:
             case RETURN:
                 /*
@@ -765,7 +764,6 @@ walker_result register_walker(walker_direction direction,
                 }
                 break;
 
-            case ADDRESS: // TODO Does Address make it here - I think it is rewritten to a function call earlier
             case SAY:
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;

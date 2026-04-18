@@ -52,6 +52,7 @@ typedef struct ExitAdditionalKeywords {
 
 void rxcp_init_exits(Context *ctx);
 void rxcp_free_exits(Context *ctx);
+const char *rxcp_match_certified_exit_primary(const char *keyword, size_t len);
 int rxcp_is_exit_primary(Context *ctx, const char *keyword, size_t len);
 int rxcp_is_exit_additional(Context *ctx, const char *keyword, size_t len);
 unsigned int rxcp_get_exit_flags(Context *ctx, const char *keyword, size_t len);

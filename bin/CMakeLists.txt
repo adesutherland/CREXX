@@ -5,7 +5,7 @@ project(driver C)
 set(CMAKE_C_STANDARD 90)
 
 add_custom_command(
-        COMMAND $<TARGET_FILE:rxc> -x -i "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_BINARY_DIR}/lib/plugins/system\"" -o crexx ${CMAKE_CURRENT_SOURCE_DIR}/crexx
+        COMMAND $<TARGET_FILE:rxc> -i "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_BINARY_DIR}/lib/plugins/system\"" -o crexx ${CMAKE_CURRENT_SOURCE_DIR}/crexx
         COMMAND $<TARGET_FILE:rxas> crexx
         COMMAND $<TARGET_FILE:rxcpack> crexx ${CMAKE_BINARY_DIR}/bin/library
         DEPENDS rxas rxc crexx.rexx library rxcpack rxpa _system compiler_exit_bin

@@ -79,7 +79,7 @@ The final stage of the front-end is the Validation Orchestrator. Unlike previous
 *   **AST Validation**: An integrated validator (`rxcp_ast_val.c`) runs between passes (in `-d2`) to assert AST structural integrity and Symbol↔Node linkage consistency.
 *   **Plugin Dispatch**: Intercepts `IMPLICIT_CMD` nodes and consults the **Bridge Plugin** (see `rxcp_val_plugin.c` and [Bridge Plugins](bridge_plugins.md)).
 *   **Code Injection**: Plugins can return Rexx source strings which are parsed into AST fragments and grafted into the main tree. This sets the `changed` flag, triggering another loop iteration to resolve symbols in the new code.
-*   **Rewrite Walkers**: Final transformations (like `ADDRESS` and `EXIT` rewriting) occur within the loop to ensure they interact correctly with injected code.
+*   **Rewrite Walkers**: Final transformations (such as certified-exit lowering and `EXIT` rewriting) occur within the loop to ensure they interact correctly with injected code.
 
 ### 3.6 Source Tree, Provenance, and Parser Mode
 The front-end no longer has a single user-facing tree.

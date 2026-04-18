@@ -258,6 +258,26 @@ add_crexx_compiler_fail_test(err_block_expr_leave_plain rexx_src/err_block_expr_
 add_crexx_compiler_fail_test(err_block_expr_missing_end rexx_src/err_block_expr_missing_end.rexx err_block_expr_missing_end.txt)
 add_crexx_compiler_fail_test(err_block_expr_incomplete rexx_src/err_block_expr_incomplete.rexx err_block_expr_incomplete.txt)
 add_crexx_compiler_fail_test(err_leave_with_not_in_block rexx_src/err_leave_with_not_in_block.rexx err_leave_with_not_in_block.txt)
+add_test(NAME err_address_exit_disabled_fail
+         COMMAND crexx_test_driver --expect-fail
+         ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_address_exit_disabled.txt
+         ${CMAKE_CURRENT_BINARY_DIR}/err_address_exit_disabled_fail.txt
+         $<TARGET_FILE:rxc> -x ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_address_exit_disabled.rexx)
+set_tests_properties(err_address_exit_disabled_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+
+add_test(NAME err_parse_exit_disabled_fail
+         COMMAND crexx_test_driver --expect-fail
+         ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_parse_exit_disabled.txt
+         ${CMAKE_CURRENT_BINARY_DIR}/err_parse_exit_disabled_fail.txt
+         $<TARGET_FILE:rxc> -x ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_parse_exit_disabled.rexx)
+set_tests_properties(err_parse_exit_disabled_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+
+add_test(NAME err_parse_inline_then_exit_disabled_fail
+         COMMAND crexx_test_driver --expect-fail
+         ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_parse_inline_then_exit_disabled.txt
+         ${CMAKE_CURRENT_BINARY_DIR}/err_parse_inline_then_exit_disabled_fail.txt
+         $<TARGET_FILE:rxc> -x ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_parse_inline_then_exit_disabled.rexx)
+set_tests_properties(err_parse_inline_then_exit_disabled_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
 # Warning tests
 add_crexx_compiler_warning_test(loop rexx_src/loop.rexx loop.txt)
@@ -508,6 +528,8 @@ add_crexx_parsing_test(err_struct_01 parsing_src/err_struct_01.rexx)
 add_crexx_parsing_test(err_struct_02 parsing_src/err_struct_02.rexx)
 add_crexx_parsing_test(err_struct_03 parsing_src/err_struct_03.rexx)
 add_crexx_parsing_test(err_namespace_class_anchor parsing_src/err_namespace_class_anchor.rexx)
+add_crexx_parsing_test(address_exit_extended parsing_src/address_exit_extended.rexx)
+add_crexx_parsing_test(address_inline_then parsing_src/address_inline_then.rexx)
 # DO constructs parsing coverage
 add_crexx_parsing_test(do_simple_parse parsing_src/do_simple_parse.rexx)
 add_crexx_parsing_test(do_counted_parse parsing_src/do_counted_parse.rexx)
@@ -568,9 +590,9 @@ if (ENABLE_PARSER_MODE)
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_address_keywords.rexx
             MUST_MATCH
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=7, sev=48, text=\"address\""
-            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"input\""
-            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"output\""
-            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"error\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=5, sev=48, text=\"input\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=6, sev=48, text=\"output\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=5, sev=48, text=\"error\""
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"expose\""
     )
 

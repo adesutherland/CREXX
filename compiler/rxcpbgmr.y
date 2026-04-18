@@ -421,14 +421,6 @@ assignment(G)     ::= TK_IF(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_ARG(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-assignment(G)     ::= TK_ADDRESS(K) TK_EQUAL(T) expression(E).
-      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-assignment(G)     ::= TK_OUTPUT(K) TK_EQUAL(T) expression(E).
-      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-assignment(G)     ::= TK_ERROR(K) TK_EQUAL(T) expression(E).
-      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-assignment(G)     ::= TK_INPUT(K) TK_EQUAL(T) expression(E).
-      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_ASSEMBLER(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_SAY(K) TK_EQUAL(T) expression(E).
@@ -485,14 +477,6 @@ define(G)     ::= TK_IF(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_ARG(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-define(G)     ::= TK_ADDRESS(K) TK_EQUAL(T) type_def(E).
-      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-define(G)     ::= TK_OUTPUT(K) TK_EQUAL(T) type_def(E).
-      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-define(G)     ::= TK_ERROR(K) TK_EQUAL(T) type_def(E).
-      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-define(G)     ::= TK_INPUT(K) TK_EQUAL(T) type_def(E).
-      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_ASSEMBLER(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_SAY(K) TK_EQUAL(T) type_def(E).
@@ -543,14 +527,6 @@ assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_UNTIL(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_IF(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
-assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_ADDRESS(K) error.
-    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
-assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_OUTPUT(K) error.
-    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
-assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_ERROR(K) error.
-    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
-assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_INPUT(K) error.
-    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_ASSEMBLER(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_SAY(K) error.
@@ -600,7 +576,6 @@ command(I)             ::= command_expression(E).
                        { I = ast_ft(context, IMPLICIT_CMD); add_ast(I,E); }
 
 keyword_instruction(I) ::= assembler(K). { I = K; }
-keyword_instruction(I) ::= address(K). { I = K; }
 keyword_instruction(I) ::= arg(K). { I = K; }
 keyword_instruction(I) ::= call(K). { I = K; }
 keyword_instruction(I) ::= iterate(K). { I = K; }
@@ -889,30 +864,6 @@ argument(E)         ::= TK_EXPOSE TK_ELLIPSIS TK_EQUAL(X) expression.
                       { E = ast_err(context, "MUST_EQUAL_TYPE", X); }
 argument(E)         ::= TK_ELLIPSIS(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
-
-/* Instructions */
-
-/* ADDRESS */
-address(A)   ::= TK_ADDRESS literal(S) expression(E).
-             { A = ast_ft(context, ADDRESS); add_ast(A,S); add_ast(A,E); }
-address(A)   ::= TK_ADDRESS literal(S) expression(E) redirect_list(R).
-             { A = ast_ft(context, ADDRESS); add_ast(A,S); add_ast(A,E); add_ast(A,R); }
-redirect_list(L) ::= redirect(E).
-                 { L = E; }
-redirect_list(L) ::= redirect_list(L1) redirect(L2).
-                 { L = L1; add_sbtr(L,L2); }
-redirect(C)      ::= TK_OUTPUT var_symbol(S).
-                 { C = ast_ft(context, REDIRECT_OUT); add_ast(C, S); }
-redirect(C)      ::= TK_ERROR var_symbol(S).
-                 { C = ast_ft(context, REDIRECT_ERROR); add_ast(C, S); }
-redirect(C)      ::= TK_INPUT expression(S).
-                 { C = ast_ft(context, REDIRECT_IN); add_ast(C, S); }
-redirect(C)      ::= TK_EXPOSE expose_list_as_var(S).
-                 { C = ast_ft(context, REDIRECT_EXPOSE); add_ast(C, S); }
-expose_list_as_var(I) ::= var_symbol(L).
-                      { I = L; }
-expose_list_as_var(I) ::= expose_list_as_var(I1) var_symbol(L).
-                      { I = I1; add_sbtr(I,L); }
 
 /* Assembler */
 assembler(I) ::= TK_ASSEMBLER assembler_instruction(A).

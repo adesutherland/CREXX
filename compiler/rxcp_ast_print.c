@@ -378,10 +378,6 @@ walker_result pdot_walker_handler(walker_direction direction,
             case PULL:
             case RANGE:
             case REPEAT:
-            case REDIRECT_IN:
-            case REDIRECT_OUT:
-            case REDIRECT_ERROR:
-            case REDIRECT_EXPOSE:
             case RETURN:
             case EXIT:
             case SAY:
@@ -400,12 +396,6 @@ walker_result pdot_walker_handler(walker_direction direction,
             case FUNC_SYMBOL:
             case PROCEDURE:
                 attributes = "color=pink";
-                break;
-
-                /* Address is often a sign of a parsing error */
-            case ADDRESS:
-                attributes = "style=filled fillcolor=orange";
-                only_type = 1;
                 break;
 
             case OP_ADD:
