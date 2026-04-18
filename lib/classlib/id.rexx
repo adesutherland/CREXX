@@ -30,9 +30,9 @@ id: class
     return _uuid()
 
 /** 
- * method uuidCompat returns the compatibility/demo UUIDv4 string.
+ * method uuidt returns a time base uuid string.
  */
-  uuidCompat: method = .string
+  uuidt: method = .string
     return _uuidt()
 
 /** 
