@@ -3,27 +3,48 @@ namespace data_KeyDB expose KeyDB
 import keyaccess
 
 /**
- * keydb.rexx
+ * Class KeyDB
  *
- * Object-oriented CREXX wrapper around the keyaccess.c plugin.
+ * This module implements a transactional key-value database with the following features:
+ * - Key-value storage with CRUD operations
+ * - Transaction support (begin, commit, rollback)
+ * - LRU cache for improved read performance
+ * - File locking for concurrent access
+ * - Database maintenance (backup, compact, validate)
+ * - Error logging and statistics
  *
- * Native plugin exports:
- *   keyaccess._openkey(handle, ...)
- *   keyaccess._closekey(...)
- *   keyaccess._writekey(...)
- *   keyaccess._readkey(...)
- *   keyaccess._deletekey(...)
- *   keyaccess._listkey(...)
- *   keyaccess._txbegin(...)
- *   keyaccess._txcommit(...)
- *   keyaccess._txrollback(...)
- *   keyaccess._stats(...)
- *   keyaccess._backup(...)
- *   keyaccess._validate(...)
- *   keyaccess._compact(...)
+ * File Structure:
+ * - Data file: Stores actual key-value data
+ * - Index file: Maintains key locations and metadata
+ * - Log file: Records operations and errors
  *
- * This wrapper keeps the native handle in an instance variable and exposes
- * friendlier instance methods.
+ * Error Codes:
+ * - KA_SUCCESS (0): Operation successful
+ * - KA_ERROR_PARAM (-1): Invalid parameters
+ * - KA_ERROR_MEMORY (-2): Memory allocation failed
+ * - KA_ERROR_IO (-3): I/O operation failed
+ * - KA_ERROR_LOCK (-4): File locking failed
+ * - KA_ERROR_NOTFOUND (-5): Key not found
+ * - KA_ERROR_EXISTS (-6): Key already exists
+ * - KA_ERROR_CORRUPT (-7): Database corruption detected
+ * - KA_ERROR_TXACTIVE (-8): Transaction already active
+ * - KA_ERROR_TXINACTIVE (-9): No active transaction
+ * - KA_ERROR_TOOLONG (-10): Key or value too long
+ *
+ * Example Usage:
+ * ```rexx
+ * handle = keyaccess.openkey("mydb.dat", "w+")
+ * call keyaccess.txbegin handle
+ * call keyaccess.writekey handle, "name", "John Doe"
+ * call keyaccess.txcommit handle
+ * value = keyaccess.readkey(handle, "name")
+ * call keyaccess.closekey handle
+ * ```
+ *
+ * @author Peter Jacobs
+ * @author René Vincent Jansen
+ * @date 2024-03-20
+ * @version 1.0
  */
 
 KeyDB: class
