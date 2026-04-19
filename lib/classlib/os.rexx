@@ -82,7 +82,6 @@ os: class
    */
   wait: method = .int
     arg time = .int
-    say 'TODO: wait is not fully implemented'
     return _wait(time)
 
     /**
