@@ -252,6 +252,7 @@ do i=1 to words(filenames)
   if native then do
     forces = ''
     loop f=1 to words(modules)
+      if pos('classlib',word(modules,f)) > 0 then iterate -- temp fix for static linking
       forces = forces '-Wl,-force_load,'word(modules,f)'_static.a'
     end
     pack_cmd = rxpath'bin'dirsep'rxcpack' filename rxpath'bin/library'
@@ -328,7 +329,7 @@ say '-verbose[0-4]    -- report on progress; default verbose0'
 say '-colo[u]r        -- use colo[u]r (default)'
 say '-keep            -- keep .rxas source (default nokeep)'
 say '-decimal         -- use decimal arithmetic'
-say '-l[library path] -- use import library'
+say '-l[library path] -- use library'
 say
 say 'all options can also be prefixed with --'
 say 'all options can be prefixed with NO for the inverse value'
