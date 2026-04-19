@@ -255,7 +255,7 @@ do i=1 to words(filenames)
       if pos('classlib',word(modules,f)) > 0 then iterate -- temp fix for static linking
       forces = forces '-Wl,-force_load,'word(modules,f)'_static.a'
     end
-    pack_cmd = rxpath'bin'dirsep'rxcpack' filename rxpath'bin/library'
+    pack_cmd = rxpath'bin'dirsep'rxcpack' filename rxpath'bin/library' rxpath'bin/classlib'
     if verbose>1 then
     do
       say esc||ANSI_GREEN'rxcpack command :'esc||ANSI_RESET pack_cmd

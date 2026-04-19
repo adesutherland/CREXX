@@ -1,7 +1,9 @@
 options levelb comments_dash
 import id_id
+import rxfnsb
 
 say 'testing id class'
+say date()
 
 x = .id()
 say 'uuid:     ' x.uuid()
