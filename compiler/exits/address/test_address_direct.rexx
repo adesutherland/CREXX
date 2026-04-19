@@ -8,6 +8,7 @@ main: procedure
   failures = 0
 
   failures = failures + test_descriptor()
+  failures = failures + test_set_environment()
   failures = failures + test_explicit_address()
   failures = failures + test_implicit_address()
 
@@ -25,6 +26,25 @@ test_descriptor: procedure = .int
   if check_true("address certified flag", descriptor_has_flag(desc, "certified") > 0, "missing certified flag") = 0 then failures = failures + 1
   if check_true("address reserved flag", descriptor_has_flag(desc, "reserved_keyword") > 0, "missing reserved flag") = 0 then failures = failures + 1
   if check_true("address implicit flag", descriptor_has_flag(desc, "implicit_command") > 0, "missing implicit flag") = 0 then failures = failures + 1
+
+  return failures
+
+test_set_environment: procedure = .int
+  failures = .int
+  addr = .addressexit(1003)
+  plan = .exitplan
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "cms"
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address set env pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address set env process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_contains("address set env replacement", join_result_lines(result), "_set_address_environment('cms')") = 0 then failures = failures + 1
 
   return failures
 
@@ -76,6 +96,6 @@ test_implicit_address: procedure = .int
   if check_equal("address implicit pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
   result = addr.process(tokens)
   if check_equal("address implicit process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
-  if check_contains("address implicit default env", join_result_lines(result), "_address('SYSTEM',cmd,_noredir(),_noredir(),_noredir())") = 0 then failures = failures + 1
+  if check_contains("address implicit current env", join_result_lines(result), "_address('',cmd,_noredir(),_noredir(),_noredir())") = 0 then failures = failures + 1
 
   return failures

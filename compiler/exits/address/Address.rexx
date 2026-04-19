@@ -50,12 +50,13 @@ addressexit: class
         if upper(strip(tokens[1].get_text())) = "ADDRESS" then explicit = 1
 
         if explicit = 1 then do
-            if tokens.0 < 3 then return error_result(1, "ADDRESS requires an environment and command")
             env_expr = emitEnvironment(tokens[2])
+            if tokens.0 = 2 then return set_environment_result(env_expr)
+            if tokens.0 < 3 then return error_result(1, "ADDRESS requires an environment and command")
             clause_start = 3
         end
         else do
-            env_expr = "'SYSTEM'"
+            env_expr = "''"
             clause_start = 1
         end
 
@@ -137,6 +138,12 @@ addressexit: class
         call result.set_status("REPLACE")
         call result.add_replacement_line(replacement)
         return result
+
+set_environment_result: procedure = .exitresult
+    arg env_expr = .string
+    result = .exitresult("REPLACE")
+    call result.add_replacement_line("rc=_set_address_environment(" || env_expr || ")")
+    return result
 
 pending_result: procedure = .exitresult
     result = .exitresult("PENDING")

@@ -1,7 +1,7 @@
 # ADDRESS and REXXSAA Working Notes
 
 Status: draft, direction partially approved
-Last updated: 2026-04-17
+Last updated: 2026-04-18
 
 ## 1. Purpose
 
@@ -64,6 +64,9 @@ The active lowering path is now the certified/system exit bridge in
 - `EXIT_EXTENDED` and `IMPLICIT_CMD` nodes can be lowered by the exit bridge.
 - the current `ADDRESS` lowering still targets:
   - `rc = _address(...)`
+- explicit `ADDRESS` currently requires both an environment and a command
+  expression
+- implicit command dispatch currently hardcodes `'SYSTEM'` as the environment
 - redirect operands are still normalized through the existing helper calls:
   - `_noredir()`
   - `_string2redir()`
@@ -78,6 +81,9 @@ Important consequence:
 - implementation ownership has moved to the certified exit framework
 - some legacy compiler knowledge about `ADDRESS` still remains in parser/AST
   structures and should be removed as a follow-on cleanup
+- Stage 3 runtime work also needs a small certified-exit follow-up so
+  `ADDRESS env` can set the current/default environment without executing a
+  command
 - the runtime backend assumptions are intentionally unchanged in this stage
 
 ### 3.3 Runtime library path today
@@ -94,6 +100,7 @@ Important current facts:
 - `_address` currently ignores its `env` argument completely.
 - So `ADDRESS shell`, `ADDRESS cmd`, `ADDRESS system`, and any other
   environment literal all currently use the same backend path.
+- there is no real runtime current/default address-environment state yet
 - `EXPOSE` on `ADDRESS` currently means "pass named variables as environment
   variables to the spawned command", not "grant arbitrary access to the Rexx
   variable pool".
@@ -201,10 +208,12 @@ Working interpretation:
 - it should not automatically define the primary modern CREXX API shape
 - a future adapter may implement this interface over a more modern CREXX
   internal protocol
+- for the current implementation wave, `rxvml` is the real external CREXX
+  entry point; any `RexxStart()` / REXXSAA adapter remains later work
 
 ## 5. Approved decisions and requirements
 
-### 5.1 Approved decisions as of 2026-04-17
+### 5.1 Approved decisions as of 2026-04-18
 
 The following points are now approved for this programme.
 
@@ -219,6 +228,15 @@ The following points are now approved for this programme.
 5. Address environments should fit a common class-shaped contract.
 6. Exit documentation must be updated as part of this programme so the
    certified/system-exit model does not live only in code and private context.
+7. `ADDRESS env` should be able to set the current/default address
+   environment, with that state represented in the runtime/library layer
+   rather than as a compiler-owned special case.
+8. The first Stage 3 proof of concept should be a Rexx-written CMS/VM-style
+   environment with a deliberately small and easy-to-implement command set.
+   Hard-coded output is acceptable for this demo/test phase.
+9. `rxvml` is the current external embedding entry point for environment
+   registration and current-environment seeding. Any `RexxStart()`-style or
+   `RexxRegisterSubcomExe()`-style adapter remains later work.
 
 ### 5.2 Requirements emerging from iteration 1
 
@@ -252,6 +270,12 @@ The following points are now approved for this programme.
 11. Compiler-exit documentation must be revised alongside implementation to
     describe certified exits, richer planning responses, and parser/editor
     implications.
+12. Runtime needs a notion of current/default address environment that
+    explicit `ADDRESS env` can update without immediately requiring a command.
+13. The first CMS-oriented environment should optimize for deterministic demo
+    and test behaviour rather than faithful CMS implementation.
+14. External registration in the current codebase should attach to
+    `rxvml_context` so embedders can seed environments before executing Rexx.
 
 ## 6. Working design direction
 
@@ -308,9 +332,13 @@ Approved direction:
 - keep transport pluggable
 - keep compatibility-style variable-pool operations in the modern address
   contract rather than only in an adapter layer
+- keep current/default address-environment state in the runtime/library layer
+  so explicit `ADDRESS env` can update it without inventing a compiler-only
+  special case
 
 That contract should be able to:
 
+- track and update the current/default address environment
 - receive command text
 - receive redirect and exposure plans
 - execute or delegate the command
@@ -633,6 +661,18 @@ Phase-1 implementation guidance:
 - the current spawn backend becomes one concrete environment implementation
   behind the shared request/response model
 
+Current-address state proposal:
+
+- the runtime should keep the current/default address environment as
+  library-owned state rather than as a compiler rewrite artifact
+- explicit `ADDRESS env` should update that state without immediately executing
+  a command
+- implicit commands should resolve through that current environment
+- if no current environment has been set yet, the initial fallback should
+  remain `SYSTEM`
+- external embedders should be able to seed or override this state through the
+  current `rxvml` entry point
+
 ### 7.5 Exposure syntax proposal
 
 Preferred modern syntax:
@@ -827,9 +867,136 @@ Status: next active phase
 
 Stage 2 and Stage 2.5 are complete. The next implementation work starts here.
 
-- introduce redirect endpoint objects over current `REDIRECT`
+Overall goals:
+
 - make environment handling real instead of ignored
-- prepare runtime structures for future pipelines
+- introduce a true runtime environment registry and current-environment state
+- keep `_address(...)` as the dispatcher shim during the transition
+- prepare redirect/runtime structures for future pipelines
+
+### Stage 3.1: Rexx-written environment proof of concept
+
+Status: implemented prototype on 2026-04-18
+
+Implemented in this slice:
+
+- `_address(...)` now dispatches through runtime request/response objects
+- the runtime now owns a named environment registry plus current/default
+  environment state
+- explicit `ADDRESS env` now updates that current/default environment without
+  requiring a command
+- implicit command dispatch now resolves through the current/default
+  environment, with `SYSTEM` as the fallback
+- `SYSTEM`, `CMD`, and `SHELL` currently share the existing spawn-backed
+  implementation
+- a Rexx-written `CMS` proof-of-concept environment is registered with a
+  deterministic demo command set:
+  - `CP QUERY USERID`
+  - `CP SET MSG ON`
+  - `CP SET MSG OFF`
+  - `LISTFILE`
+  - `TYPE`
+- focused runtime/compiler coverage now exercises:
+  - explicit `ADDRESS env`
+  - implicit command dispatch after environment changes
+  - the CMS proof-of-concept commands
+  - existing redirect behaviour
+Primary goal:
+
+- prove the address-environment contract with a Rexx-written environment before
+  adding external registration surfaces or native-environment generalization
+
+Deliverables:
+
+- turn `_address` into a dispatcher/backend shim over the approved common
+  request/response contract
+- add runtime registration and lookup for named address environments
+- add a runtime-owned current/default address-environment variable
+- make explicit `ADDRESS env` update that current/default environment
+- make implicit command dispatch resolve through the current/default
+  environment, with `SYSTEM` as the initial fallback
+- register the existing spawn backend as the concrete `SYSTEM`
+  implementation so current behaviour remains available
+- implement one Rexx-written `CMS` proof-of-concept environment for demo/test
+  use
+
+Approved scope for the `CMS` proof of concept:
+
+- use a deliberately small, easy-to-implement command set
+- command behaviour may be hard-coded and deterministic
+- the goal is environment registration, dispatch, and syntax/runtime proof,
+  not faithful CMS emulation
+
+Initial demo command set target:
+
+- `CP QUERY USERID`
+- `CP SET MSG ON`
+- `CP SET MSG OFF`
+- `LISTFILE`
+- `TYPE`
+
+Non-goals for Stage 3.1:
+
+- full CMS or VM command semantics
+- full compatibility variable-pool support
+- redirect-endpoint refactoring
+- native/non-Rexx environment registration
+- any `RexxStart()` or REXXSAA adapter work
+
+### Stage 3.2: `rxvml` startup registration
+
+Primary goal:
+
+- allow external C embedders to register and seed environments at the actual
+  current CREXX entry point
+
+Deliverables:
+
+- expose context-scoped registration hooks on `rxvml_context`
+- allow an external C caller to register a Rexx address environment object
+  before running a program
+- allow the current/default address environment to be seeded from `rxvml`
+- add focused bridge/embedding coverage around this startup path
+
+Rationale:
+
+- `rxvml` is the real embedding surface in the current codebase
+- this keeps Stage 3 grounded in the implementation that exists today rather
+  than in future compatibility shims
+
+### Stage 3.3: generalized environment model
+
+Primary goal:
+
+- generalize the Stage 3.1 runtime model so the same logical contract can host
+  Rexx and non-Rexx environments
+
+Deliverables:
+
+- define the adapter/proxy shape for non-Rexx environments behind the common
+  contract
+- preserve one registry/current-environment model for both Rexx and native
+  implementations
+- keep the source-level `ADDRESS` model unchanged while broadening runtime
+  implementation choices
+
+Explicitly deferred from Stage 3.3:
+
+- full REXXSAA subcommand registration compatibility
+- transport-specific remote adapters
+
+### Stage 3.4: redirect endpoint abstraction
+
+Primary goal:
+
+- introduce redirect endpoint objects over current `REDIRECT` once environment
+  dispatch is real and testable
+
+Deliverables:
+
+- wrap the existing redirect machinery in endpoint-shaped runtime objects
+- prepare for future pipeline graphs without changing VM opcodes first
+- keep executable multi-command pipelines out of scope for this stage
 
 ### Stage 4: compatibility and transport adapters
 
@@ -931,6 +1098,32 @@ Stage 2 and Stage 2.5 are complete. The next implementation work starts here.
   - editor/highlighter coverage now includes incomplete `PARSE` forms
   - Stage 2 and Stage 2.5 are complete; Stage 3 runtime abstraction is the
     next active phase
+- 2026-04-18: Stage 3 roadmap refined and approved:
+- 2026-04-18: Stage 3 roadmap refined and approved:
+  - `ADDRESS env` should set the current/default address environment through
+    runtime/library-owned state
+  - the first proof of concept should be a Rexx-written `CMS` environment with
+    a tiny deterministic command set and hard-coded output where useful
+  - `SYSTEM` should remain available as the spawn-backed default environment
+    during the transition
+  - `rxvml` is the current external embedding entry point for environment
+    registration and current-environment seeding
+  - Stage 3 is now split into:
+    - Stage 3.1 Rexx environment proof of concept
+    - Stage 3.2 `rxvml` startup registration
+    - Stage 3.3 generalized Rexx/non-Rexx environment model
+    - Stage 3.4 redirect endpoint abstraction
+- 2026-04-18: Stage 3.1 prototype implemented:
+  - `_address(...)` now dispatches through runtime request/response objects
+  - runtime now owns the current/default address environment and named
+    environment registry
+  - explicit `ADDRESS env` now updates the current/default environment
+  - implicit commands now resolve through the current/default environment
+  - `SYSTEM` remains the spawn-backed default backend
+  - a Rexx-written `CMS` environment is registered with hard-coded demo
+    commands for `CP QUERY USERID`, `CP SET MSG`, `LISTFILE`, and `TYPE`
+  - focused verification is green for `test_address*` and `ts_address*`
+    - Stage 3.4 redirect endpoint abstraction
 
 ## 10. Evidence and code anchors
 
@@ -939,11 +1132,15 @@ Stage 2 and Stage 2.5 are complete. The next implementation work starts here.
 - `compiler/rxcp_val_orch.c`
 - `compiler/rxcp_exit.c`
 - `compiler/rxcpbpar.c`
+- `compiler/exits/address/Address.rexx`
 - `compiler/exits/parse/Parse.rexx`
 - `compiler/exits/execio/Execio.rexx`
 - `lib/rxfnsb/rexx/_address.rexx`
 - `interpreter/rxspawn.c`
 - `interpreter/rxvmintp.c`
+- `interpreter/rxvml.c`
+- `interpreter/rxvml.h`
+- `compiler/tests/src/test_bridge.c`
 - `rexxsaa.h`
 - `docs/books/crexx_language_reference/statements.md`
 - `docs/books/crexx_vm_spec/Level-B-Grammar.tex`
