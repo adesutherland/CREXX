@@ -213,7 +213,7 @@ Working interpretation:
 
 ## 5. Approved decisions and requirements
 
-### 5.1 Approved decisions as of 2026-04-18
+### 5.1 Approved decisions as of 2026-04-19
 
 The following points are now approved for this programme.
 
@@ -237,6 +237,12 @@ The following points are now approved for this programme.
 9. `rxvml` is the current external embedding entry point for environment
    registration and current-environment seeding. Any `RexxStart()`-style or
    `RexxRegisterSubcomExe()`-style adapter remains later work.
+10. The canonical registration path should be the runtime/Rexx registration
+    function itself. External embedders should prefer to call that path via
+    `rxvml` rather than using a separate C-only registration model.
+11. Native environments should still be represented as Rexx-visible address
+    environment objects. Their methods may be implemented in C or plugin code,
+    but the dispatch and registration model should remain unified.
 
 ### 5.2 Requirements emerging from iteration 1
 
@@ -274,8 +280,10 @@ The following points are now approved for this programme.
     explicit `ADDRESS env` can update without immediately requiring a command.
 13. The first CMS-oriented environment should optimize for deterministic demo
     and test behaviour rather than faithful CMS implementation.
-14. External registration in the current codebase should attach to
-    `rxvml_context` so embedders can seed environments before executing Rexx.
+14. External registration in the current codebase should go through the same
+    runtime/Rexx registration path used by Rexx code, with `rxvml` acting as
+    the embedding call surface rather than defining a separate registration
+    protocol.
 
 ## 6. Working design direction
 
@@ -589,11 +597,16 @@ Immediate beneficiary:
 Proposal:
 
 - define a common class-shaped runtime contract for address environments
+- represent every environment as a Rexx-visible object implementing that
+  contract
 - use the same logical contract for:
-  - native environments
-  - Rexx environments
+  - Rexx-written environments
+  - native-backed environments whose methods are implemented in C/plugin code
   - remote environments
   - compatibility adapters
+- keep registration unified around the runtime/Rexx registration function,
+  regardless of whether the caller originates in Rexx or in an external
+  `rxvml` embedder
 
 Recommended classes:
 
@@ -609,6 +622,28 @@ Recommended `addressenvironment` method shape:
 execute: method = .addressresponse
     arg request = .addressrequest
 ```
+
+Canonical registration shape:
+
+```rexx
+rc = _register_address_environment(name, env_obj)
+rc = _set_address_environment(name)
+```
+
+Interpretation:
+
+- `env_obj` should be the canonical environment object, not a parallel
+  registration record
+- an external `rxvml` embedder should be able to:
+  - load the module defining the environment class or object
+  - construct or obtain the environment object
+  - call the same registration function that Rexx code calls
+- a native environment should still be surfaced as a Rexx-visible object, with
+  methods dispatched normally; the implementation behind those methods may be C
+  or plugin code
+- if convenience wrappers are later added on `rxvml_context`, they should
+  delegate to this canonical registration path rather than define a second
+  registration model
 
 Recommended `addressrequest` fields:
 
@@ -863,7 +898,8 @@ Deliverables:
 
 ### Stage 3: runtime abstraction
 
-Status: next active phase
+Status: Stage 3.1 complete for approved POC scope; Stage 3.2 is the next
+active phase
 
 Stage 2 and Stage 2.5 are complete. The next implementation work starts here.
 
@@ -876,7 +912,7 @@ Overall goals:
 
 ### Stage 3.1: Rexx-written environment proof of concept
 
-Status: implemented prototype on 2026-04-18
+Status: complete for approved POC scope on 2026-04-19
 
 Implemented in this slice:
 
@@ -901,6 +937,15 @@ Implemented in this slice:
   - implicit command dispatch after environment changes
   - the CMS proof-of-concept commands
   - existing redirect behaviour
+
+Known limitation of the current POC:
+
+- the current implementation proves registration/current-environment state and
+  dispatch, but it still uses one `addressenvironment` class with internal kind
+  switching rather than separate concrete environment classes/objects for
+  `SYSTEM`, `CMS`, and later environments
+- that was acceptable for the proof of concept but does not fully exercise the
+  intended environment class shape as a first-class object model
 Primary goal:
 
 - prove the address-environment contract with a Rexx-written environment before
@@ -943,42 +988,58 @@ Non-goals for Stage 3.1:
 - native/non-Rexx environment registration
 - any `RexxStart()` or REXXSAA adapter work
 
-### Stage 3.2: `rxvml` startup registration
+### Stage 3.2: canonical registration and bridge startup path
 
 Primary goal:
 
-- allow external C embedders to register and seed environments at the actual
-  current CREXX entry point
+- make the runtime/Rexx registration function the canonical registration path
+  for both Rexx code and external `rxvml` embedders, while tightening the
+  environment object shape beyond the Stage 3.1 proof of concept
 
 Deliverables:
 
-- expose context-scoped registration hooks on `rxvml_context`
-- allow an external C caller to register a Rexx address environment object
-  before running a program
-- allow the current/default address environment to be seeded from `rxvml`
+- split the Stage 3.1 proof into separate concrete environment classes or
+  objects so `SYSTEM`, `CMS`, and future environments implement the common
+  contract directly rather than through an internal kind switch
+- keep `_register_address_environment(name, env_obj)` as the canonical runtime
+  registration operation
+- allow an external C caller using `rxvml` to construct or obtain an
+  environment object and call that same registration function before running a
+  program
+- allow the current/default address environment to be seeded through the same
+  canonical path
 - add focused bridge/embedding coverage around this startup path
+- if desired for ergonomics, add thin `rxvml` helper wrappers only as
+  convenience delegates to the canonical Rexx/runtime registration path
 
 Rationale:
 
 - `rxvml` is the real embedding surface in the current codebase
-- this keeps Stage 3 grounded in the implementation that exists today rather
-  than in future compatibility shims
+- using the same registration path for Rexx and external callers avoids
+  bifurcating the model too early
+- splitting `SYSTEM` and `CMS` into separate environment objects/classes closes
+  the remaining Stage 3.1 gap around the actual environment class shape
 
-### Stage 3.3: generalized environment model
+### Stage 3.3: unified native-backed environment objects
 
 Primary goal:
 
-- generalize the Stage 3.1 runtime model so the same logical contract can host
-  Rexx and non-Rexx environments
+- preserve one environment object model while allowing environments whose
+  methods are implemented partly or wholly in native code
 
 Deliverables:
 
-- define the adapter/proxy shape for non-Rexx environments behind the common
-  contract
-- preserve one registry/current-environment model for both Rexx and native
-  implementations
+- define the recommended shape for a native-backed environment object:
+  - Rexx-visible object identity
+  - normal method dispatch
+  - object receiver passed as the first argument in the usual method call path
+- preserve one registry/current-environment model for Rexx-written and
+  native-backed environments
 - keep the source-level `ADDRESS` model unchanged while broadening runtime
   implementation choices
+- allow proxy/adaptor objects where useful, but keep them inside the unified
+  object model rather than treating native environments as a separate class of
+  registration target
 
 Explicitly deferred from Stage 3.3:
 
@@ -1099,7 +1160,6 @@ Deliverables:
   - Stage 2 and Stage 2.5 are complete; Stage 3 runtime abstraction is the
     next active phase
 - 2026-04-18: Stage 3 roadmap refined and approved:
-- 2026-04-18: Stage 3 roadmap refined and approved:
   - `ADDRESS env` should set the current/default address environment through
     runtime/library-owned state
   - the first proof of concept should be a Rexx-written `CMS` environment with
@@ -1123,7 +1183,16 @@ Deliverables:
   - a Rexx-written `CMS` environment is registered with hard-coded demo
     commands for `CP QUERY USERID`, `CP SET MSG`, `LISTFILE`, and `TYPE`
   - focused verification is green for `test_address*` and `ts_address*`
-    - Stage 3.4 redirect endpoint abstraction
+- 2026-04-19: Stage 3.1 reviewed and marked complete for the approved proof of
+  concept scope:
+  - the current POC is sufficient to close Stage 3.1, but it leaves one known
+    follow-on: `SYSTEM` and `CMS` still sit behind a kind-switched
+    implementation instead of separate concrete environment classes/objects
+  - the roadmap is now adjusted so Stage 3.2 closes that object-shape gap while
+    also making the runtime/Rexx registration function the canonical
+    registration path for both Rexx code and external `rxvml` embedders
+  - Stage 3.3 is now framed as unified native-backed environment objects rather
+    than a separate Rexx vs non-Rexx registration model
 
 ## 10. Evidence and code anchors
 
