@@ -140,9 +140,13 @@ a\_class: class \= .interface
 
 In cREXX, class attributes are private and can only be accessed or modified through methods that encapsulate them. This ensures data integrity and prevents unintended external interference.
 
+For ordinary classes, attributes should normally be declared without any explicit physical slot mapping. The compiler will allocate storage automatically, and callers should interact through factory and accessor methods rather than depend on internal attribute positions.
+
 ## **Physical Attribute Access** {#physical-attribute-access}
 
 Level B requires access to specific physical attributes to allow access to physical objects (see Objects Section) defined by the CREXX VM. 
+
+This is a specialised interop feature. It should only be used when a class must match an externally defined physical object layout or reserve special physical storage. Ordinary classes should not pin attributes to fixed physical slots unless that layout is part of the external contract.
 
 In this example the two attributes are mapped to the first two child attributes in the object. The reserve keyword specifies the attribute number being reserved / mapped to the attribute.
 
@@ -323,4 +327,3 @@ say car\_instance\_named /\* Returns “Sedan” \*/
 bike\_instance \= .vehicle.new\_bike  /\* A bike \*/
 
 say bike\_instance /\* Returns “Just a Bike” \*/ 
-

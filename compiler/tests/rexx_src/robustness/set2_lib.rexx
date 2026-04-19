@@ -2,8 +2,8 @@ options levelb
 namespace set2_lib expose Person
 
 Person: class
-  name = .string with register.1
-  age = .int with register.2
+  name = .string
+  age = .int
 
   *: factory
     arg n = .string, a = .int

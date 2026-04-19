@@ -6,7 +6,7 @@ say var.getvalue()
 return;
 
 myclass: class
-    val = .int with register.1.int
+    val = .int
 
     *: factory
         arg initial_value = .int

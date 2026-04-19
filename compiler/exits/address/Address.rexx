@@ -5,7 +5,7 @@ import rxcp
 import rxfnsb
 
 addressexit: class
-    _node_id = .int with register.1
+    _node_id = .int
 
     *: factory
         arg nid = .int
@@ -58,6 +58,7 @@ addressexit: class
         else do
             env_expr = "''"
             clause_start = 1
+            call maybe_add_implicit_warning(result, tokens)
         end
 
         command_start = clause_start
@@ -154,6 +155,17 @@ error_result: procedure = .exitresult
     result = .exitresult("ERROR")
     call result.set_error(token_index, message)
     return result
+
+maybe_add_implicit_warning: procedure = .void
+    arg result = .exitresult, tokens = .token[]
+    text = .string
+
+    if tokens.0 < 1 then return
+    text = tokens[1].get_text()
+    if length(text) > 0 & (left(text, 1) = "'" | left(text, 1) = '"') then return
+
+    call result.add_diagnostic(.exitdiagnostic("warning", 1, "IMPLICIT_ADDRESS", ""))
+    return
 
 isClauseKeyword: procedure = .int
     arg text = .string

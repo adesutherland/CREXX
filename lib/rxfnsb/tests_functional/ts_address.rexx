@@ -26,7 +26,7 @@ if rc <> 0 then errors=errors+1
 /* ADDRESS env should update the current/default environment */
 address cms
 cmd = 'CP SET MSG OFF'
-cmd
+address '' cmd
 if rc <> 0 then errors=errors+1
 
 address cms 'CP QUERY USERID' output cms_out
@@ -42,7 +42,7 @@ address cms 'CP SET MSG ON'
 if rc <> 0 then errors=errors+1
 
 cmd = 'CP QUERY USERID'
-cmd
+address '' cmd
 if rc <> 0 then errors=errors+1
 
 address system

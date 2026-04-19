@@ -11,6 +11,7 @@ main: procedure
   failures = failures + test_set_environment()
   failures = failures + test_explicit_address()
   failures = failures + test_implicit_address()
+  failures = failures + test_implicit_string_no_warning()
 
   call report_result failures
   return
@@ -87,6 +88,7 @@ test_implicit_address: procedure = .int
   addr = .addressexit(1002)
   plan = .exitplan
   result = .exitresult
+  diagnostic = .exitdiagnostic
   failures = 0
 
   tokens = newtokens()
@@ -97,5 +99,27 @@ test_implicit_address: procedure = .int
   result = addr.process(tokens)
   if check_equal("address implicit process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
   if check_contains("address implicit current env", join_result_lines(result), "_address('',cmd,_noredir(),_noredir(),_noredir())") = 0 then failures = failures + 1
+  if check_equal("address implicit warning count", "1", result.get_diagnostic_count()) = 0 then failures = failures + 1
+  diagnostic = result.get_diagnostic(1)
+  if check_equal("address implicit warning severity", "warning", diagnostic.get_severity()) = 0 then failures = failures + 1
+  if check_equal("address implicit warning code", "IMPLICIT_ADDRESS", diagnostic.get_code()) = 0 then failures = failures + 1
+
+  return failures
+
+test_implicit_string_no_warning: procedure = .int
+  failures = .int
+  addr = .addressexit(1004)
+  plan = .exitplan
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushstring tokens, "'echo OK'"
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address implicit string pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address implicit string process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_equal("address implicit string warning count", "0", result.get_diagnostic_count()) = 0 then failures = failures + 1
 
   return failures

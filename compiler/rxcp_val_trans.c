@@ -121,7 +121,6 @@ walker_result add_rxsysb_walker(walker_direction direction,
 /*
  * Sees if rxsysb is needed
  */
-static void rxcp_warn_implicit_address(ASTNode *node);
 static ASTNode *rxcp_first_implicit_cmd_leaf(ASTNode *node);
 static const char *rxcp_get_node_text(ASTNode *node, size_t *len);
 static const char *rxcp_disabled_certified_exit_keyword(ASTNode *node);
@@ -146,7 +145,6 @@ walker_result needs_rxsysb_walker(walker_direction direction,
             }
 
             context->need_rxsysb = 1;
-            rxcp_warn_implicit_address(node);
             ast_hoist_var(context, node, "rc", -1);
         }
         else if (node->node_type == EXIT_EXTENDED) {
@@ -177,21 +175,6 @@ walker_result needs_rxsysb_walker(walker_direction direction,
     }
 
     return result_normal;
-}
-
-static void rxcp_warn_implicit_address(ASTNode *node) {
-    int starts_with_quote;
-
-    if (!node || ast_hase(node)) return;
-
-    starts_with_quote = 0;
-    if (node->source_start && (node->source_start[0] == '\'' || node->source_start[0] == '"')) {
-        starts_with_quote = 1;
-    }
-
-    if (!starts_with_quote) {
-        mknd_war(node, "IMPLICIT_ADDRESS");
-    }
 }
 
 static ASTNode *rxcp_first_implicit_cmd_leaf(ASTNode *node) {
@@ -275,7 +258,6 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
             node->token_end = node->child->token_end;
         }
 
-        rxcp_warn_implicit_address(node);
     }
     return result_normal;
 }

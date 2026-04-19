@@ -2,17 +2,17 @@ options levelb
 namespace rxcp expose token exitdescriptor exitplan bindingplan keywordclaim importplan helperplan exitdiagnostic exitresult
 
 token: class
-    _type = .int with register.1
-    _subtype = .int with register.2
-    _text = .string with register.3
-    _line = .int with register.4
-    _column = .int with register.5
-    _length = .int with register.6
-    _file = .string with register.7
-    _node_type = .int with register.8
-    _value_type = .string with register.13
-    _type_string = .string with register.14
-    _value_dims = .int with register.15
+    _type = .int
+    _subtype = .int
+    _text = .string
+    _line = .int
+    _column = .int
+    _length = .int
+    _file = .string
+    _node_type = .int
+    _value_type = .string
+    _type_string = .string
+    _value_dims = .int
 
     *: factory
         arg t=.int, st=.int, txt=.string, l=.int, c=.int, len=.int, f=.string, nt=.int, vt=.string, ts=.string, vd=.int
@@ -71,13 +71,13 @@ token: class
         _text = t
 
 bindingplan: class
-    _kind = .string with register.1
-    _internal_name = .string with register.2
-    _external_alias = .string with register.3
-    _value_type = .string with register.4
-    _dimensions = .int with register.5
-    _provenance = .string with register.6
-    _flags = .string with register.7
+    _kind = .string
+    _internal_name = .string
+    _external_alias = .string
+    _value_type = .string
+    _dimensions = .int
+    _provenance = .string
+    _flags = .string
 
     *: factory
         arg kind = .string, internal_name = .string, external_alias = .string, value_type = .string, dimensions = .int, provenance = .string, flags = .string
@@ -112,10 +112,10 @@ bindingplan: class
         return _flags
 
 keywordclaim: class
-    _token_index = .int with register.1
-    _keyword_text = .string with register.2
-    _keyword_role = .string with register.3
-    _provenance = .string with register.4
+    _token_index = .int
+    _keyword_text = .string
+    _keyword_role = .string
+    _provenance = .string
 
     *: factory
         arg token_index = .int, keyword_text = .string, keyword_role = .string, provenance = .string
@@ -138,9 +138,9 @@ keywordclaim: class
         return _provenance
 
 importplan: class
-    _namespace_name = .string with register.1
-    _provenance = .string with register.2
-    _flags = .string with register.3
+    _namespace_name = .string
+    _provenance = .string
+    _flags = .string
 
     *: factory
         arg namespace_name = .string, provenance = .string, flags = .string
@@ -159,12 +159,12 @@ importplan: class
         return _flags
 
 helperplan: class
-    _helper_id = .string with register.1
-    _scope = .string with register.2
-    _symbol_name = .string with register.3
-    _flags = .string with register.4
-    _line_count = .int with register.5
-    _lines = .string[] with register.6
+    _helper_id = .string
+    _scope = .string
+    _symbol_name = .string
+    _flags = .string
+    _line_count = .int
+    _lines = .string[]
 
     *: factory
         arg helper_id = .string, scope = .string, symbol_name = .string, flags = .string
@@ -202,10 +202,10 @@ helperplan: class
         return _lines[index]
 
 exitdiagnostic: class
-    _severity = .string with register.1
-    _token_index = .int with register.2
-    _code = .string with register.3
-    _message = .string with register.4
+    _severity = .string
+    _token_index = .int
+    _code = .string
+    _message = .string
 
     *: factory
         arg severity = .string, token_index = .int, code = .string, message = .string
@@ -228,14 +228,14 @@ exitdiagnostic: class
         return _message
 
 exitdescriptor: class
-    _protocol_version = .int with register.1
-    _primary_keyword = .string with register.2
-    _additional_keyword_count = .int with register.3
-    _additional_keywords = .string[] with register.4
-    _flag_count = .int with register.5
-    _flags = .string[] with register.6
-    _import_count = .int with register.7
-    _imports = .importplan[] with register.8
+    _protocol_version = .int
+    _primary_keyword = .string
+    _additional_keyword_count = .int
+    _additional_keywords = .string[]
+    _flag_count = .int
+    _flags = .string[]
+    _import_count = .int
+    _imports = .importplan[]
 
     *: factory
         arg primary_keyword = .string
@@ -306,19 +306,19 @@ exitdescriptor: class
         return _imports[index]
 
 exitplan: class
-    _status = .string with register.1
-    _binding_count = .int with register.2
-    _bindings = .bindingplan[] with register.3
-    _keyword_count = .int with register.4
-    _keywords = .keywordclaim[] with register.5
-    _import_count = .int with register.6
-    _imports = .importplan[] with register.7
-    _helper_count = .int with register.8
-    _helpers = .helperplan[] with register.9
-    _diagnostic_count = .int with register.10
-    _diagnostics = .exitdiagnostic[] with register.11
-    _note_count = .int with register.12
-    _notes = .string[] with register.13
+    _status = .string
+    _binding_count = .int
+    _bindings = .bindingplan[]
+    _keyword_count = .int
+    _keywords = .keywordclaim[]
+    _import_count = .int
+    _imports = .importplan[]
+    _helper_count = .int
+    _helpers = .helperplan[]
+    _diagnostic_count = .int
+    _diagnostics = .exitdiagnostic[]
+    _note_count = .int
+    _notes = .string[]
 
     *: factory
         arg status = .string
@@ -446,13 +446,13 @@ exitplan: class
         call add_diagnostic(.exitdiagnostic("error", token_index, code, message))
 
 exitresult: class
-    _status = .string with register.1
-    _replacement_line_count = .int with register.2
-    _replacement_lines = .string[] with register.3
-    _diagnostic_count = .int with register.4
-    _diagnostics = .exitdiagnostic[] with register.5
-    _note_count = .int with register.6
-    _notes = .string[] with register.7
+    _status = .string
+    _replacement_line_count = .int
+    _replacement_lines = .string[]
+    _diagnostic_count = .int
+    _diagnostics = .exitdiagnostic[]
+    _note_count = .int
+    _notes = .string[]
 
     *: factory
         arg status = .string

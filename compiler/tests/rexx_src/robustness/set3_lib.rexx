@@ -2,7 +2,7 @@ options levelb
 namespace set3_lib expose get_int_array get_person_array Item
 
 Item: class
-  val = .string with register.1
+  val = .string
   *: factory
     arg v = .string
     val = v

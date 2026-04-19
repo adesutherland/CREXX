@@ -18,8 +18,7 @@ main: procedure
   if rc <> 0 then failures = failures + 1
 
   address cms
-  cmd = "CP SET MSG OFF"
-  cmd
+  "CP SET MSG OFF"
   if rc <> 0 then failures = failures + 1
 
   address cms "CP QUERY USERID" output cms_out
@@ -34,8 +33,7 @@ main: procedure
   address cms "CP SET MSG ON"
   if rc <> 0 then failures = failures + 1
 
-  cmd = "CP QUERY USERID"
-  cmd
+  "CP QUERY USERID"
   if rc <> 0 then failures = failures + 1
 
   address system

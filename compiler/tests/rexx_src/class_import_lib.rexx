@@ -3,7 +3,7 @@ options levelb
 namespace class_import_lib expose Counter
 
 Counter: class
-  val = .int with register.1
+  val = .int
 
   *: factory
     val = 0

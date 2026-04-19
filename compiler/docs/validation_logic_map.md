@@ -48,7 +48,8 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 6.  **Implicit Command Transformation (`rewrite_implicit_cmd_walker`)**:
     *   Rewrites non-handled `IMPLICIT_CMD` nodes.
     *   If the child is a `MEMBER_CALL`, `FACTORY_CALL`, or `FUNCTION`, it is promoted to a regular instruction.
-    *   Otherwise, it remains on the certified `ADDRESS` path and is later lowered to `_address("SYSTEM", ...)`.
+    *   Otherwise, it remains on the certified `ADDRESS` path.
+    *   Any implicit-address warning policy is owned by the `ADDRESS` certified exit rather than by the generic compiler walker.
     *   *Idempotency*: Mutates the node type, preventing re-execution on the same node.
 
 7.  **Ordinal Assignment (`set_node_ordinals_walker`)**: 

@@ -4,11 +4,11 @@ namespace _rxsysb expose _address _register_address_environment _set_address_env
 import rxfnsb
 
 addressbinding: class
-  _kind = .string with register.1
-  _internal_name = .string with register.2
-  _external_alias = .string with register.3
-  _value = .string with register.4
-  _flags = .string with register.5
+  _kind = .string
+  _internal_name = .string
+  _external_alias = .string
+  _value = .string
+  _flags = .string
 
   *: factory
     arg kind = "var", internal_name = "", external_alias = "", value = "", flags = ""
@@ -35,14 +35,14 @@ addressbinding: class
     return _flags
 
 addressrequest: class
-  _environment_name = .string with register.1
-  _command = .string with register.2
-  _stdin_endpoint = .binary with register.3
-  _stdout_endpoint = .binary with register.4
-  _stderr_endpoint = .binary with register.5
-  _binding_count = .int with register.6
-  _bindings = .addressbinding[] with register.7
-  _flags = .string with register.8
+  _environment_name = .string
+  _command = .string
+  _stdin_endpoint = .binary
+  _stdout_endpoint = .binary
+  _stderr_endpoint = .binary
+  _binding_count = .int
+  _bindings = .addressbinding[]
+  _flags = .string
 
   *: factory
     arg environment_name = "", command = "", stdin_endpoint = .binary, stdout_endpoint = .binary, stderr_endpoint = .binary, flags = ""
@@ -112,10 +112,10 @@ addressrequest: class
     return _bindings[index]
 
 addressresponse: class
-  _rc = .int with register.1
-  _condition_name = .string with register.2
-  _diagnostic_count = .int with register.3
-  _diagnostics = .string[] with register.4
+  _rc = .int
+  _condition_name = .string
+  _diagnostic_count = .int
+  _diagnostics = .string[]
 
   *: factory
     arg rc = 0, condition_name = ""
@@ -153,8 +153,8 @@ addressresponse: class
     return _diagnostics[index]
 
 addressenvironment: class
-  _kind = .string with register.1
-  _msg_mode = .string with register.2
+  _kind = .string
+  _msg_mode = .string
 
   *: factory
     arg kind = "SYSTEM"

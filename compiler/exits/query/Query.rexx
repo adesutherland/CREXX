@@ -5,7 +5,7 @@ import rxcp
 import rxfnsb
 
 queryexit: class
-    _node_id = .int with register.1
+    _node_id = .int
 
     *: factory
         arg nid = .int

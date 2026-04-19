@@ -38,8 +38,8 @@ l8dostart:
    .src 14:3="return val + 1"
    iadd r8,r2,1
    icopy r9,r8
-   br l77bexprend
-l77bexprend:
+   br l76bexprend
+l76bexprend:
    swap r7,r9
    call r0,§inline_test_call_like_arg_expr.box.§factory(),r6
    swap r9,r7
@@ -51,8 +51,8 @@ l77bexprend:
    .src 14:3="return val + 1"
    iadd r7,r3,1
    icopy r6,r7
-   br l86bexprend
-l86bexprend:
+   br l85bexprend
+l85bexprend:
    settp r0,1
    swap r10,r0
    swap r11,r6

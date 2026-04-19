@@ -45,6 +45,16 @@ Level B uses a single **Default Factory** defined by the wildcard `*`.
 
 Attributes define the internal state of the class. They can be **Implicit** (Compiler-managed, auto-allocated) or **Explicit** (mapped to specific VM/Object storage). If a `WITH register` mapping is omitted, the compiler will automatically allocate an unused register (e.g. `r1`, `r2`) for the attribute.
 
+**Default rule:** Omit `WITH register...` for normal class state. If the class is constructed through a factory and consumed through methods, let the compiler allocate the storage and keep external callers on accessor methods.
+
+**Use `WITH register...` only when you need a deliberate physical layout**, for example:
+
+- mapping onto a VM-created or native/plugin-defined object
+- exposing a documented fixed slot layout to external low-level code
+- reserving special physical storage such as `register.status` or `register.count`
+
+Compiler bridges such as the certified-exit bridge and ordinary `rxvml` clients should normally call factories and accessor methods rather than depend on fixed attribute slots.
+
 **Note:** Attribute definitions in the class block may only declare the type (e.g., `counter = .int`). Assigning initial values directly in the class block is not permitted and will trigger a `#CANT_ASSIGN_IN_CLASS_DEF` error. All initializations must be performed inside the `factory` method.
 
 **Syntax:**
@@ -60,11 +70,14 @@ counter = .int
 /* Compiler allocates next available register (e.g., reg 2) */
 name    = .string
 
+/* Preferred for ordinary internal state */
+count   = .int
+
 ```
 
 ### 2.2 Explicit Physical Mapping (VM/Plugin Interop)
 
-Used to map REXX variables to fixed C-Struct offsets or specific VM registers. This is essential for Compiler Plugins and can be freely mixed with Implicit Assignment.
+Used to map REXX variables to fixed C-Struct offsets or specific VM registers. This is for genuine physical interop, not ordinary class fields, and can be freely mixed with Implicit Assignment.
 
 **Syntax:** `WITH register[.index][.field]`
 

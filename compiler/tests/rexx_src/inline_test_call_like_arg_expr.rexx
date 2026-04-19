@@ -14,7 +14,7 @@ addOne: procedure = .int
   return val + 1
 
 Box: class
-  val = .int with register.1.int
+  val = .int
 
   *: factory
     arg initialValue = .int

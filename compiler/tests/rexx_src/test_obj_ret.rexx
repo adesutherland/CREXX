@@ -1,7 +1,7 @@
 options levelb
 
 test_obj: class
-    val_text = .string with register.1
+    val_text = .string
 
     *: factory
         arg txt_val = .string

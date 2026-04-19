@@ -1,10 +1,10 @@
 options levelb
 namespace stub expose stub_plugin token
 
-/* The Token class used for mapping */
+/* The Token class used by the bridge test */
 token: class
-    val_type = .int with register.1
-    val_text = .string with register.3
+    val_type = .int
+    val_text = .string
 
     /* Factory for the test */
     *: factory

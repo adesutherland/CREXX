@@ -4,7 +4,7 @@ namespace rxcpexits expose dummyexit
 import rxcp
 
 dummyexit: class
-    _node_id = .int with register.1
+    _node_id = .int
 
     *: factory
         arg nid = .int
