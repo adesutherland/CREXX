@@ -48,6 +48,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include "rxcpmain.h"
+
+static RexxLevel cli_or_default_level(Context *context) {
+    if (context->cli_default_level != UNKNOWN) return context->cli_default_level;
+    return LEVELC;
+}
 }
 
 /* Program Structure */
@@ -55,19 +60,21 @@ program            ::= rexx_options after_the_options.
 program            ::= after_the_options.
 program            ::= error.
                    {
-                        if (context->level == UNKNOWN) context->level = LEVELC;
+                        if (context->level == UNKNOWN) context->level = cli_or_default_level(context);
                         context->processedOptions = 1;
                    }
 
 rexx_options       ::= TK_OPTIONS TK_EOC.
                    {
-                        if (context->level == UNKNOWN) context->level = LEVELC;
+                        context->source_has_options = 1;
+                        if (context->level == UNKNOWN) context->level = cli_or_default_level(context);
                         context->processedOptions = 1;
                    }
 
 rexx_options       ::= TK_OPTIONS option_list TK_EOC.
                    {
-                        if (context->level == UNKNOWN) context->level = LEVELC;
+                        context->source_has_options = 1;
+                        if (context->level == UNKNOWN) context->level = cli_or_default_level(context);
                         context->processedOptions = 1;
                    }
 
@@ -92,7 +99,7 @@ option             ::= TK_SYMBOL. /* For some other language processor */
 
 after_the_options  ::= ANYTHING.
                    {
-                        if (context->level == UNKNOWN) context->level = LEVELC;
+                        if (context->level == UNKNOWN) context->level = cli_or_default_level(context);
                         context->processedOptions = 1;
                    }
 

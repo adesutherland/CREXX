@@ -1,16 +1,24 @@
 /* rexx compile a rexx exec to a native executable      */
-/* Classic Rexx (ooRexx, REgina) and NetRexx compatible */
-crexx_home=directory()
-if arg='' then do
-  say 'exec name expected.'
+/* Classic Rexx (ooRexx, REgina), NetRexx and cRexx compatible */
+
+parse arg crexx_home execSpec
+crexx_home = strip(crexx_home)
+execSpec = strip(execSpec)
+
+if crexx_home='' | execSpec='' then do
+  say 'usage: crxc.rexx crexx_home execName[.ext]'
   exit 99
 end
-parse arg execName'.'extension
+
+parse var execSpec execName '.' extension
 if extension<>'' then say 'filename extension ignored.'
-'rxc  -i' crexx_home'/lib/rxfnsb' execName
-'rxas' execName 
-'rxcpack' execName crexx_home'/lib/rxfnsb/library'
-'gcc -o' execName,
-'-lrxvml -lavl_tree -lplatform -lm -L',
-crexx_home'/interpreter -L',
-crexx_home'/avl_tree -L'crexx_home'/platform'  execName'.c'
+
+address system '"' || crexx_home || '/rxc" -i "' || crexx_home || '" ' || execName
+if rc<>0 then exit rc
+address system '"' || crexx_home || '/rxas" ' || execName
+if rc<>0 then exit rc
+address system '"' || crexx_home || '/rxcpack" ' || execName || ' ' || crexx_home || '/library'
+if rc<>0 then exit rc
+address system 'gcc -o ' || execName || ' -L "' || crexx_home || '" -lrxvml -lavl_tree -lplatform -lm ' || execName || '.c'
+if rc<>0 then exit rc
+exit 0

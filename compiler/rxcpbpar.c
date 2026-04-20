@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
 #include "rxcpbgmr.h"
 #include "rxcpmain.h"
 #include "rxcp_util.h"
@@ -41,6 +42,56 @@ static int rxcp_is_instruction_lead_token(int last_token_type) {
            last_token_type == TK_OTHERWISE;
 }
 
+static const char *rxcp_cli_level_name(Context *context) {
+    switch (context->cli_default_level) {
+        case LEVELA: return "levela";
+        case LEVELB: return "levelb";
+        case LEVELC: return "levelc";
+        case LEVELD: return "leveld";
+        case LEVELG: return "levelg";
+        case LEVELL: return "levell";
+        default: return 0;
+    }
+}
+
+static Token *rxcp_synthetic_token(Context *context, int type, const char *text) {
+    Token *token;
+
+    token = token_f(context, type);
+    if (text) {
+        token->token_string = (char*)text;
+        token->length = (int)strlen(text);
+        token->line = 0;
+        token->column = 1;
+    }
+
+    return token;
+}
+
+static Token *rxcp_next_parser_token(Context *context, int *cli_option_stage) {
+    const char *level_name;
+
+    if (cli_option_stage && *cli_option_stage) {
+        level_name = rxcp_cli_level_name(context);
+        switch (*cli_option_stage) {
+            case 1:
+                *cli_option_stage = 2;
+                return rxcp_synthetic_token(context, TK_OPTIONS, "options");
+            case 2:
+                *cli_option_stage = 3;
+                return rxcp_synthetic_token(context, TK_VAR_SYMBOL, level_name);
+            case 3:
+                *cli_option_stage = 0;
+                return rxcp_synthetic_token(context, TK_EOC, 0);
+            default:
+                *cli_option_stage = 0;
+                break;
+        }
+    }
+
+    return token_f(context, rexbscan(context));
+}
+
 int rexbpars(Context *context) {
 
     char *buff, *buff_end;
@@ -48,6 +99,7 @@ int rexbpars(Context *context) {
     int token_type, last_token_type;
     Token *token, *t, *peek_token;
     void *parser;
+    int cli_option_stage;
 
     /* Create parser and set up tracing */
     parser = RexxBAlloc(malloc);
@@ -56,7 +108,12 @@ int rexbpars(Context *context) {
     else RexxBTrace(context->traceFile, "Parser(B) >> ");
 #endif
 
-    peek_token = token_f(context, rexbscan(context));
+    cli_option_stage = 0;
+    if (context->cli_default_level != UNKNOWN && !context->source_has_options) {
+        cli_option_stage = 1;
+    }
+
+    peek_token = rxcp_next_parser_token(context, &cli_option_stage);
     last_token_type = TK_EOC;
     int in_exit_instruction = 0;
     while (1) {
@@ -114,13 +171,13 @@ int rexbpars(Context *context) {
             break;
         }
 
-        peek_token = token_f(context, rexbscan(context));
+        peek_token = rxcp_next_parser_token(context, &cli_option_stage);
 
         // Line Continuation
         if (token_type == TK_COMMA && peek_token->token_type == TK_EOL) {
             token_r(context);  /* Discard tokens , and EOC tokens */
             token_r(context);
-            peek_token = token_f(context, rexbscan(context));
+            peek_token = rxcp_next_parser_token(context, &cli_option_stage);
             continue;
         }
 

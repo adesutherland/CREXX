@@ -65,6 +65,77 @@ int is_node_string(ASTNode* node, const char* value) {
     return 1;
 }
 
+static int rxcp_program_has_import(ASTNode *program_file, const char *namespace_name) {
+    ASTNode *child;
+
+    if (!program_file || !namespace_name) return 0;
+
+    child = program_file->child;
+    while (child) {
+        if (child->node_type == IMPORT &&
+            child->child &&
+            is_node_string(child->child, namespace_name)) {
+            return 1;
+        }
+        child = child->sibling;
+    }
+
+    return 0;
+}
+
+static void rxcp_insert_program_import(Context *context, ASTNode *program_file, const char *namespace_name) {
+    ASTNode *import_node;
+    ASTNode *literal_node;
+    ASTNode *child;
+    ASTNode *insert_after;
+
+    if (!context || !program_file || !namespace_name || !namespace_name[0]) return;
+
+    import_node = ast_ft(context, IMPORT);
+    literal_node = ast_ft(context, LITERAL);
+    ast_copy_str(literal_node, (char*)namespace_name);
+    add_ast(import_node, literal_node);
+
+    insert_after = 0;
+    child = program_file->child;
+    while (child &&
+           (child->node_type == REXX_OPTIONS ||
+            child->node_type == IMPORT ||
+            child->node_type == NAMESPACE)) {
+        insert_after = child;
+        child = child->sibling;
+    }
+
+    if (insert_after) {
+        import_node->sibling = insert_after->sibling;
+        insert_after->sibling = import_node;
+    } else {
+        import_node->sibling = program_file->child;
+        program_file->child = import_node;
+    }
+    import_node->parent = program_file;
+}
+
+static void rxcp_inject_cli_imports(Context *context) {
+    ASTNode *program_file;
+    size_t i;
+
+    if (!context || !context->ast || !context->cli_import_names || context->cli_import_count == 0) return;
+
+    program_file = context->ast->child;
+    while (program_file) {
+        if (program_file->node_type == PROGRAM_FILE) {
+            for (i = 0; i < context->cli_import_count; i++) {
+                if (!rxcp_program_has_import(program_file, context->cli_import_names[i])) {
+                    rxcp_insert_program_import(context, program_file, context->cli_import_names[i]);
+                }
+            }
+            return;
+        }
+        program_file = program_file->sibling;
+    }
+}
+
 /* Convert a node (i.e. type INTEGER) to an integer - no error correction as the lexer will have done that */
 int node_to_integer(ASTNode* node) {
     int result;
@@ -930,6 +1001,7 @@ void validate_ast(Context *context) {
     rxcp_prepare_work_ast(context);
 
     context->ast = context->work_ast;
+    rxcp_inject_cli_imports(context);
     context->current_scope = 0;
     context->in_factory = 0;
     ast_wlkr(context->ast, ast_work_structure_walker, (void *) context);

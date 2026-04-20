@@ -41,6 +41,33 @@
 // Static Linked Functions
 struct static_linked_function *static_linked_functions;
 
+static RexxLevel parse_cli_level_name(const char *level_name) {
+    if (!level_name) return UNKNOWN;
+
+    if (strcmp(level_name, "a") == 0 || strcmp(level_name, "levela") == 0) return LEVELA;
+    if (strcmp(level_name, "b") == 0 || strcmp(level_name, "levelb") == 0) return LEVELB;
+    if (strcmp(level_name, "c") == 0 || strcmp(level_name, "levelc") == 0) return LEVELC;
+    if (strcmp(level_name, "d") == 0 || strcmp(level_name, "leveld") == 0) return LEVELD;
+    if (strcmp(level_name, "g") == 0 || strcmp(level_name, "levelg") == 0) return LEVELG;
+    if (strcmp(level_name, "l") == 0 || strcmp(level_name, "levell") == 0) return LEVELL;
+
+    return UNKNOWN;
+}
+
+static void append_cli_import_name(char ***imports, size_t *count, const char *name) {
+    char **new_imports;
+
+    if (!imports || !count || !name || !name[0]) return;
+
+    new_imports = realloc(*imports, sizeof(char*) * (*count + 1));
+    if (!new_imports) error_and_exit(255, "Out of memory appending --import");
+
+    *imports = new_imports;
+    (*imports)[*count] = strdup(name);
+    if (!(*imports)[*count]) error_and_exit(255, "Out of memory copying --import");
+    (*count)++;
+}
+
 static void help() {
     char* helpMessage =
             "cREXX Compiler\n"
@@ -54,6 +81,8 @@ static void help() {
             "  -dp             Stop after parsing and validation\n"
             "  -l location     Working Location (directory)\n"
             "  -i import       Locations to import file - \";\" delimited list\n"
+            "  --level level   Default source level when OPTIONS omits one\n"
+            "  --import ns     Inject a file-level IMPORT namespace (repeatable)\n"
             "  -o output_file  REXX Assembler Output File\n"
             "  -n              No Optimising\n"
             "  -x              Disable compiler exits\n"
@@ -100,6 +129,7 @@ Context *cntx_f() {
     context = calloc(1, sizeof(Context)); /* Zero Contents */
 
     context->level = UNKNOWN;
+    context->cli_default_level = UNKNOWN;
     context->lexer_stem_mode = 0;
     context->comments_hash = 1; /* This is the recommended & default line comment style */
     context->floats_decimal = 0; /* Force floats to be decimal */
@@ -192,6 +222,11 @@ void fre_cntx(Context *context)  {
         }
     }
 
+    if (context->cli_import_names) {
+        for (i = 0; i < context->cli_import_count; i++) free(context->cli_import_names[i]);
+        free(context->cli_import_names);
+    }
+
     free(context->buff_start);
 
     if (context->extra_buffers) {
@@ -226,6 +261,9 @@ int rxcmain(int argc, char *argv[]) {
     int do_optimise = 1;
     int disable_exits = 0;
     char *file_directory = 0;
+    RexxLevel cli_default_level = UNKNOWN;
+    char **cli_import_names = 0;
+    size_t cli_import_count = 0;
 
 #ifdef ENABLE_PARSER_MODE
     int parser_mode = 0;
@@ -254,6 +292,29 @@ int rxcmain(int argc, char *argv[]) {
             continue;
         }
 #endif
+
+        if (strcmp(argv[i], "--level") == 0) {
+            RexxLevel parsed_level;
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing level after --level");
+            }
+            parsed_level = parse_cli_level_name(argv[i]);
+            if (parsed_level == UNKNOWN) {
+                error_and_exit(2, "Invalid level name after --level");
+            }
+            cli_default_level = parsed_level;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--import") == 0) {
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing namespace after --import");
+            }
+            append_cli_import_name(&cli_import_names, &cli_import_count, argv[i]);
+            continue;
+        }
 
         if (strncmp(argv[i], "-d", 2) == 0) {
             if (argv[i][2] == 'p') {
@@ -365,6 +426,9 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Context Structure */
     context = cntx_f();
+    context->cli_default_level = cli_default_level;
+    context->cli_import_names = cli_import_names;
+    context->cli_import_count = cli_import_count;
 
     /* I am the main context */
     context->master_context = context;
