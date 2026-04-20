@@ -1,6 +1,6 @@
 /* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
-namespace _rxsysb expose _address _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _noredir _redir2array _redir2string _array2redir _string2redir addressbinding addressrequest addressresponse addressenvironment
+namespace _rxsysb expose _address _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _noredir _redir2array _redir2string _array2redir _string2redir addressbinding addressrequest addressresponse addressenvironment systemaddressenvironment pathaddressenvironment cmsaddressenvironment
 import rxfnsb
 
 addressbinding: class
@@ -172,7 +172,7 @@ addressenvironment: class
   execute: method = .addressresponse
     arg request = .addressrequest
 
-    if _kind = "SYSTEM" | _kind = "CMD" | _kind = "SHELL" then return spawn_request(request)
+    if _kind = "SYSTEM" | _kind = "COMMAND" | _kind = "CMD" | _kind = "SHELL" | _kind = "PATH" then return spawn_request(request)
     if _kind = "CMS" then return execute_cms(request)
 
     response = .addressresponse(0)
@@ -207,6 +207,15 @@ addressenvironment: class
     if prefix4 = "TYPE" then return execute_system_command(request, "echo CMS TYPE DEMO")
 
     return unknown_command_response("CMS", request.get_command())
+
+systemaddressenvironment: procedure = .addressenvironment
+  return .addressenvironment("SYSTEM")
+
+pathaddressenvironment: procedure = .addressenvironment
+  return .addressenvironment("PATH")
+
+cmsaddressenvironment: procedure = .addressenvironment
+  return .addressenvironment("CMS")
 
 /* This is the function that the compiler calls for the ADDRESS instruction */
 _address: procedure = .int
@@ -296,8 +305,9 @@ _reset_address_environments: procedure = .int expose _address_runtime_ready _add
 ensure_address_runtime: procedure expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
   if _address_runtime_ready = 1 then return
 
-  system_env = .addressenvironment("SYSTEM")
-  cms_env = .addressenvironment("CMS")
+  system_env = systemaddressenvironment()
+  path_env = pathaddressenvironment()
+  cms_env = cmsaddressenvironment()
 
   _address_environment_names = .string[]
   _address_environment_objects = .addressenvironment[]
@@ -306,14 +316,20 @@ ensure_address_runtime: procedure expose _address_runtime_ready _address_current
   _address_environment_names.1 = "SYSTEM"
   _address_environment_objects.1 = system_env
 
-  _address_environment_names.2 = "CMD"
+  _address_environment_names.2 = "COMMAND"
   _address_environment_objects.2 = system_env
 
-  _address_environment_names.3 = "SHELL"
+  _address_environment_names.3 = "CMD"
   _address_environment_objects.3 = system_env
 
-  _address_environment_names.4 = "CMS"
-  _address_environment_objects.4 = cms_env
+  _address_environment_names.4 = "SHELL"
+  _address_environment_objects.4 = system_env
+
+  _address_environment_names.5 = "PATH"
+  _address_environment_objects.5 = path_env
+
+  _address_environment_names.6 = "CMS"
+  _address_environment_objects.6 = cms_env
 
   _address_runtime_ready = 1
   return

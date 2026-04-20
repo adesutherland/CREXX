@@ -51,6 +51,16 @@ int rxvml_call_factory(
     rxvml_value** args,
     rxvml_value** response_out);
 
+/* ADDRESS convenience wrappers over the canonical Rexx/runtime path */
+int rxvml_address_register_environment(
+    rxvml_context* ctx,
+    const char* env_name,
+    rxvml_value* env_obj);
+
+int rxvml_address_set_environment(
+    rxvml_context* ctx,
+    const char* env_name);
+
 /* Persistent Registry for Stateful Exits */
 int          rxvml_reg_alloc(rxvml_context* ctx, rxvml_value* v, const char* class_name);
 void         rxvml_reg_free(rxvml_context* ctx, int reg_idx);

@@ -898,8 +898,9 @@ Deliverables:
 
 ### Stage 3: runtime abstraction
 
-Status: Stage 3.1 complete for approved POC scope; Stage 3.2 is the next
-active phase
+Status: Stage 3.1 complete; Stage 3.2 closed at a stable single-class
+endpoint; further object-model generalization is blocked on Level B callable
+contracts / interfaces
 
 Stage 2 and Stage 2.5 are complete. The next implementation work starts here.
 
@@ -990,35 +991,65 @@ Non-goals for Stage 3.1:
 
 ### Stage 3.2: canonical registration and bridge startup path
 
-Primary goal:
+Status: implemented at the stable single-class close-down point on
+2026-04-20
 
-- make the runtime/Rexx registration function the canonical registration path
-  for both Rexx code and external `rxvml` embedders, while tightening the
-  environment object shape beyond the Stage 3.1 proof of concept
+Implemented in this slice:
 
-Deliverables:
-
-- split the Stage 3.1 proof into separate concrete environment classes or
-  objects so `SYSTEM`, `CMS`, and future environments implement the common
-  contract directly rather than through an internal kind switch
 - keep `_register_address_environment(name, env_obj)` as the canonical runtime
   registration operation
-- allow an external C caller using `rxvml` to construct or obtain an
-  environment object and call that same registration function before running a
-  program
-- allow the current/default address environment to be seeded through the same
-  canonical path
-- add focused bridge/embedding coverage around this startup path
-- if desired for ergonomics, add thin `rxvml` helper wrappers only as
-  convenience delegates to the canonical Rexx/runtime registration path
+- add thin `rxvml` helper wrappers that delegate to
+  `_register_address_environment(...)` and `_set_address_environment(...)`
+- add focused bridge/embedding coverage around registration and
+  current-environment seeding
+- close the environment set for this stage at:
+  - `SYSTEM`
+  - `COMMAND`
+  - `PATH`
+  - `CMS`
+  - plus long-term synonyms `CMD` and `SHELL`
+- keep one Rexx `addressenvironment` class for all currently supported
+  environments, with separate registered objects representing the different
+  environments
+- keep `SYSTEM`, `COMMAND`, `CMD`, and `SHELL` on the existing spawn-backed
+  behaviour
+- keep `PATH` on the same current spawn-backed transport for now; on POSIX this
+  already resolves the executable through process `PATH`
+- keep `CMS` as the deterministic Rexx-written test/demo environment
+
+What this stage intentionally does not do:
+
+- it does not introduce multiple distinct Rexx classes dispatched
+  polymorphically from Rexx source
+- it does not yet provide the fully general native-backed environment object
+  model originally sketched for later Stage 3 work
+
+Block discovered while closing this stage:
+
+- bridge/native callers can name an explicit class when calling methods, but
+  normal Rexx source cannot express that same kind of shared-contract dispatch
+  across distinct classes in Level B today
+- `.object` is too weak for this use because named method calls still need a
+  concrete compile-time class contract
+- the current implementation/docs do not yet provide a working Level B
+  interface or callable-contract mechanism that would make those calls type-safe
+  and ergonomic in ordinary Rexx code
+
+Conclusion for Stage 3.2:
+
+- the stable stopping point is one `addressenvironment` class plus multiple
+  registered objects and aliases
+- further generalization to truly separate environment classes is deferred
+  until Level B callable contracts / interfaces exist
 
 Rationale:
 
 - `rxvml` is the real embedding surface in the current codebase
 - using the same registration path for Rexx and external callers avoids
-  bifurcating the model too early
-- splitting `SYSTEM` and `CMS` into separate environment objects/classes closes
-  the remaining Stage 3.1 gap around the actual environment class shape
+  bifurcating the model
+- this closes the practical runtime-registration/startup goal for Stage 3.2
+  without inventing an ad hoc pseudo-interface mechanism inside `ADDRESS`
+  itself
 
 ### Stage 3.3: unified native-backed environment objects
 
@@ -1040,6 +1071,11 @@ Deliverables:
 - allow proxy/adaptor objects where useful, but keep them inside the unified
   object model rather than treating native environments as a separate class of
   registration target
+
+Current prerequisite before resuming this stage:
+
+- a minimal Level B callable-contract / interface mechanism that allows Rexx
+  code to call one shared method set across different concrete classes
 
 Explicitly deferred from Stage 3.3:
 

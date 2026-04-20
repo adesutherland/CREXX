@@ -365,6 +365,102 @@ int rxvml_call_factory(
     return rc;
 }
 
+static int rxvml_call_int_procedure(
+    rxvml_context* ctx,
+    const char* proc_name,
+    size_t argc,
+    rxvml_value** args,
+    int* out_rc) {
+
+    rxvml_value* response = NULL;
+    rxinteger rc_value = 0;
+
+    if (!ctx || !proc_name) return -1;
+
+    if (rxvml_call_procedure(ctx, proc_name, argc, args, &response) != 0) {
+        return -1;
+    }
+
+    if (!response) {
+        ctx->last_error = "Procedure returned NULL";
+        return -1;
+    }
+
+    if (rxvml_to_int(ctx, response, &rc_value) != 0) {
+        ctx->last_error = "Procedure did not return an integer";
+        rxvml_value_free(response);
+        return -1;
+    }
+
+    if (out_rc) *out_rc = (int)rc_value;
+    rxvml_value_free(response);
+    return 0;
+}
+
+int rxvml_address_register_environment(
+    rxvml_context* ctx,
+    const char* env_name,
+    rxvml_value* env_obj) {
+
+    rxvml_value* name_arg;
+    rxvml_value* args[2];
+    int rc_value = 0;
+
+    if (!ctx || !env_name || !env_obj) {
+        if (ctx) ctx->last_error = "Invalid address registration arguments";
+        return -1;
+    }
+
+    name_arg = rxvml_value_new(ctx);
+    if (!name_arg) {
+        ctx->last_error = "Failed to allocate address registration argument";
+        return -1;
+    }
+
+    rxvml_set_str(name_arg, env_name, strlen(env_name));
+    args[0] = name_arg;
+    args[1] = env_obj;
+
+    if (rxvml_call_int_procedure(ctx, "_rxsysb._register_address_environment", 2, args, &rc_value) != 0) {
+        rxvml_value_free(name_arg);
+        return -1;
+    }
+
+    rxvml_value_free(name_arg);
+    return rc_value;
+}
+
+int rxvml_address_set_environment(
+    rxvml_context* ctx,
+    const char* env_name) {
+
+    rxvml_value* name_arg;
+    rxvml_value* args[1];
+    int rc_value = 0;
+
+    if (!ctx || !env_name) {
+        if (ctx) ctx->last_error = "Invalid address environment name";
+        return -1;
+    }
+
+    name_arg = rxvml_value_new(ctx);
+    if (!name_arg) {
+        ctx->last_error = "Failed to allocate address environment argument";
+        return -1;
+    }
+
+    rxvml_set_str(name_arg, env_name, strlen(env_name));
+    args[0] = name_arg;
+
+    if (rxvml_call_int_procedure(ctx, "_rxsysb._set_address_environment", 1, args, &rc_value) != 0) {
+        rxvml_value_free(name_arg);
+        return -1;
+    }
+
+    rxvml_value_free(name_arg);
+    return rc_value;
+}
+
 
 int rxvml_to_int(rxvml_context* ctx, const rxvml_value* v, rxinteger* out_v) {
     value* val = (value*)v;

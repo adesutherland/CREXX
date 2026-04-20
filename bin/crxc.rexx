@@ -1,5 +1,6 @@
-/* rexx compile a rexx exec to a native executable      */
-/* Classic Rexx (ooRexx, REgina), NetRexx and cRexx compatible */
+/* rexx compile a rexx exec to a native executable           */
+/* Classic Rexx (ooRexx, REgina), NetRexx and CREXX (when    */
+/* ran as a simple script from the crexx wrapper) compatible */
 
 parse arg crexx_home execSpec
 crexx_home = strip(crexx_home)

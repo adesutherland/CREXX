@@ -766,6 +766,11 @@ target_link_libraries(test_bridge PRIVATE rxvml rxpashim)
 target_include_directories(test_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 add_dependencies(test_bridge stub_plugin_bin)
 
+add_executable(test_address_bridge src/test_address_bridge.c)
+target_link_libraries(test_address_bridge PRIVATE rxvml rxpashim)
+target_include_directories(test_address_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+add_dependencies(test_address_bridge library)
+
 add_executable(test_source_provenance src/test_source_provenance.c)
 target_link_libraries(test_source_provenance PRIVATE rxclib)
 target_include_directories(test_source_provenance PRIVATE
@@ -835,6 +840,10 @@ endif()
 
 # Commented out until fix found for multiple calls to the VM
 add_test(NAME BridgeConnectivity COMMAND test_bridge)
+add_test(NAME address_bridge COMMAND test_address_bridge)
+set_tests_properties(address_bridge PROPERTIES
+        LABELS "compiler;stage3"
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_test(NAME source_provenance COMMAND test_source_provenance)
 set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")
 
