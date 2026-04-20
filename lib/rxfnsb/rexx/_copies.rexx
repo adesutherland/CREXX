@@ -1,9 +1,9 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb expose copies
+namespace rxfnsb expose _copies
 
-copies: procedure=.string
+_copies: procedure=.string
   arg cstring=.string, count=.int
   result=''
   do i = 1 to count
