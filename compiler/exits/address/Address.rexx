@@ -206,13 +206,17 @@ emitTokenRange: procedure = .string
     arg tokens = .token[], start_index = .int, end_index = .int
     expr = .string
     previous = .string
+    join_before = .string
     expr = ""
     previous = ""
     if start_index = 0 | end_index < start_index then return ""
     do i = start_index to end_index
         text = strip(tokens[i].get_text())
+        join_before = upper(strip(tokens[i].get_join_before()))
         if text = "" then iterate
         if expr = "" then expr = text
+        else if join_before = "CONCAT" then expr = expr || text
+        else if join_before = "SCONCAT" then expr = expr || " " || text
         else if text = ")" | text = "]" | text = "," | text = "." then expr = expr || text
         else if previous = "(" | previous = "[" | previous = "." then expr = expr || text
         else if text = "(" | text = "[" then expr = expr || text

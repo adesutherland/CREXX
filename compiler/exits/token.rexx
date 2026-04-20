@@ -13,9 +13,10 @@ token: class
     _value_type = .string
     _type_string = .string
     _value_dims = .int
+    _join_before = .string
 
     *: factory
-        arg t=.int, st=.int, txt=.string, l=.int, c=.int, len=.int, f=.string, nt=.int, vt=.string, ts=.string, vd=.int
+        arg t=.int, st=.int, txt=.string, l=.int, c=.int, len=.int, f=.string, nt=.int, vt=.string, ts=.string, vd=.int, jb=.string
         _type = t
         _subtype = st
         _text = txt
@@ -27,6 +28,7 @@ token: class
         _value_type = vt
         _type_string = ts
         _value_dims = vd
+        _join_before = jb
         return
 
     get_id: method = .int
@@ -43,6 +45,9 @@ token: class
 
     get_value_dims: method = .int
         return _value_dims
+
+    get_join_before: method = .string
+        return _join_before
 
     get_text: method = .string
         return _text
@@ -69,6 +74,10 @@ token: class
     set_text: method = .void
         arg t = .string
         _text = t
+
+    set_join_before: method = .void
+        arg jb = .string
+        _join_before = jb
 
 bindingplan: class
     _kind = .string

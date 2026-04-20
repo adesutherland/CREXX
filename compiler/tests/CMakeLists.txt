@@ -423,6 +423,7 @@ add_crexx_run_test(block_expr_short_circuit rexx_src/block_expr_short_circuit.re
 add_crexx_run_test(repro_args_parse rexx_src/repro_args_parse.rexx)
 add_crexx_run_test(repro_args_alias rexx_src/repro_args_alias.rexx)
 add_crexx_run_test(repro_sconcat rexx_src/repro_sconcat.rexx)
+add_crexx_run_test(repro_implicit_address_abuttal rexx_src/repro_implicit_address_abuttal.rexx)
 add_crexx_run_test(test_explicit_address rexx_src/test_explicit_address.rexx)
 add_crexx_run_test(test_address_redirect rexx_src/test_address_redirect.rexx)
 add_crexx_run_test(test_implicit_address rexx_src/test_implicit_address.rexx)
