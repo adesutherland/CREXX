@@ -1009,16 +1009,16 @@ void validate_ast(Context *context) {
 
         /* Exit Dispatch
          * Progress: exit_dispatch_walker is idempotent. Verified by stress testing with 3x calls per iteration.
+         * Debug validation is intentionally deferred until after structure/build_symbols:
+         * structured exit fragments may temporarily contain nested INSTRUCTIONS/DO blocks
+         * whose SCOPE_LOCAL is attached in the later symbol passes.
          */
         context->current_scope = 0;
         if (ast_wlkr(context->ast, exit_dispatch_walker, (void *) context) == result_error) break;
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
         if (context->debug_mode >= 3) {
             /* Stress test idempotency */
             ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
             ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
         }
 
         /* Re-write Constructors
@@ -1028,32 +1028,30 @@ void validate_ast(Context *context) {
 
         /* Re-write EXIT Instructions
          * Progress: rewrite_exit_walker is idempotent. Mutates EXIT to CALL.
+         * Debug validation remains deferred until after build_symbols because
+         * the tree may still contain exit-added nested blocks awaiting SCOPE_LOCAL.
          */
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
         if (context->debug_mode >= 3) {
             /* Stress test idempotency */
             context->current_scope = 0;
             ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
             context->current_scope = 0;
             ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
         }
 
         /* Re-write IMPLICIT_CMD Instructions
          * Progress: rewrite_implicit_cmd_walker is idempotent. Verified by stress testing with 3x calls per iteration.
+         * Debug validation remains deferred until after build_symbols because
+         * the tree may still contain exit-added nested blocks awaiting SCOPE_LOCAL.
          */
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
         if (context->debug_mode >= 3) {
             /* Stress test idempotency */
             ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
             ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
         }
 
         /* Syntactic Sugar Moved */
@@ -1061,22 +1059,20 @@ void validate_ast(Context *context) {
         /* Control Flow Rewrite (e.g. SELECT) */
         context->current_scope = 0;
         ast_wlkr(context->ast, control_flow_rewrite_walker, (void *) context);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
 
         /* Set Ordinals
          * Progress: set_node_ordinals_walker is idempotent. Recalculates from reset counter. Verified by stress testing.
+         * Debug validation remains deferred until after build_symbols because
+         * the tree may still contain exit-added nested blocks awaiting SCOPE_LOCAL.
          */
         ordinal_counter = 0;
         ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
         if (context->debug_mode >= 3) {
             /* Stress test idempotency */
             ordinal_counter = 0;
             ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
-            rxcp_validate_ast_and_symbols(context->ast);
             ordinal_counter = 0;
             ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
-            rxcp_validate_ast_and_symbols(context->ast);
         }
 
         /* Builds the Symbol Table

@@ -80,6 +80,7 @@ struct Symbol {
     char meta_emitted; /* Has the emitter output the symbol's metadata */
     char init_emitted; /* Has the emitter output the symbol's default inititator */
     char is_main;      /* Is the main procedure */
+    char is_implicit_main; /* Is the compiler-generated implicit main procedure */
     char is_rc;        /* Is the system rc variable */
     char is_this;      /* Is the §this instance reference */
     char is_factory;   /* Is the §factory reference */

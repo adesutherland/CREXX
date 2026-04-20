@@ -43,6 +43,8 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
     *   Consults the Bridge for `IMPLICIT_CMD` nodes. 
     *   Performs **Code Injection** if the plugin returns a Rexx string.
     *   Splices injected AST nodes and sets `context->changed_flags |= FLAG_VAL_PLUGIN`.
+    *   Structured replacements are valid here, including nested `DO`, `IF`, and nested `INSTRUCTIONS` blocks. Freshly grafted fragments may still be missing final `SCOPE_LOCAL` attachments until the later symbol-structure rebuild.
+    *   Debug validation for this step is intentionally deferred until after `structure_symbols_walker` / `build_symbols_walker`, so valid structured exit output is checked only after its local scopes have been materialized.
     *   *Idempotency*: Guarded by `node->exit_obj_reg` to prevent re-processing.
 
 6.  **Implicit Command Transformation (`rewrite_implicit_cmd_walker`)**:
@@ -59,6 +61,8 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 8.  **Symbol Harvesting (`build_symbols_walker`)**: 
     *   Constructs the Symbol Table and defines Scopes for the current tree state.
     *   **Block Scoping**: Creates `SCOPE_LOCAL` for simple `DO` groups, `BLOCK_EXPR` nodes, and `IF` branches that use a `DO` block (confinement).
+    *   **Exit Fragment Scope Repair**: This is also the pass that creates missing `SCOPE_LOCAL` nodes for `DO`, `BLOCK_EXPR`, and nested `INSTRUCTIONS` introduced by exit fragment grafting.
+    *   **Implicit-Main Compatibility State**: Procedure symbols inherit the AST `is_implicit_main` marker here. Later typing/emission use that symbol flag to reinterpret `OP_ARGS` / `OP_ARG_VALUE` as command-line argument access for the compiler-generated `main()` only.
         *   *Intentional Inconsistency*: Single-instruction `IF` branches (e.g., `if cond then x = 1`) execute in the parent scope, whereas `DO` blocks (e.g., `if cond then do; x = 1; end`) create a local scope. This is as designed.
     *   *Idempotency*: Uses existing scopes if already created; `sym_adnd` prevents duplicate symbols.
     *   *Resolution*: Uses **Specialized Resolvers** (`sym_rslv_local`, `sym_rslv_attribute`, `sym_rslv_global`) to prevent "accidental" linkage.
@@ -182,6 +186,7 @@ The AST/Symbol validator (`rxcp_validate_ast_and_symbols`) asserts these rules i
 | Behavior | Logic Location | Description |
 | :--- | :--- | :--- |
 | **Array Length Intrinsics** | `set_node_types_walker` | `arr[]` or `arr[..., void]` is automatically typed as `TP_INTEGER` (returning the array length). |
+| **Implicit Main `arg` Compatibility** | `rxcp_val_check.c`, `rxcp_val_sym.c`, `rxcp_val_type.c`, `rxcpemit.c` | Compiler-generated implicit `main()` carries `is_implicit_main`; `arg()` / `arg[]` / `arg[n]` in that routine are redirected onto the hidden VM command-line argv array, while ordinary procedures keep normal vararg semantics. |
 | **Implicit IMPORT Injection** | `add_rxsysb_walker` | Automatically adds `import _rxsysb` if a certified system exit, `EXIT`, or `IMPLICIT_CMD` needs it. |
 | **ADDRESS Certified Exit Lowering** | `exit_dispatch_walker` | Lowers `ADDRESS` through the certified exit bridge into the `_address(...)` call shape. |
 | **EXIT Instruction Rewrite** | `rewrite_exit_walker` | Transforms `EXIT` into a call to the internal `_exit` function. |
@@ -198,3 +203,4 @@ The AST/Symbol validator (`rxcp_validate_ast_and_symbols`) asserts these rules i
 | `context->need_rxsysb` | `needs_rxsysb_walker`, `add_rxsysb_walker` | `needs` writes 1, `add` reads it to perform injection. |
 | `node->value_type` / `node->target_type` | `set_node_types_walker` onwards | `set_node_types` writes; subsequent passes read for validation. |
 | `context->current_scope` | Almost All | Managed by walkers to track the active symbol scope. |
+| `symbol->is_implicit_main` | `structure_symbols_walker`, `set_node_types_walker`, emitter helpers | Copied from the synthesized procedure node during symbol harvest, then read later to decide whether classic `arg` nodes mean VM command-line argv access or ordinary vararg access. |

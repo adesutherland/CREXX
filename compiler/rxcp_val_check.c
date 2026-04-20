@@ -117,6 +117,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 /* If the first instruction is not a PROCEDURE or CLASS, then we need to
                 * add an implicit "main" PROCEDURE */
                 child = ast_ftt(context, PROCEDURE, "main:");
+                child->is_implicit_main = 1;
                 child->parent = node;
                 child->sibling = node->child->sibling;
                 node->child->sibling = child;
@@ -620,6 +621,7 @@ static void wrap_program_file_main(Context *context, ASTNode *node) {
     if (child->node_type == PROCEDURE || child->node_type == CLASS_DEF) return;
 
     instructions = ast_ftt(context, PROCEDURE, "main:");
+    instructions->is_implicit_main = 1;
     instructions->parent = node;
     instructions->sibling = child;
     node->child->sibling = instructions;

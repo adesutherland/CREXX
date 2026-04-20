@@ -65,10 +65,32 @@ static int is_large_value(ASTNode *node) {
            node->target_type == TP_BINARY;
 }
 
+static Symbol *current_procedure_symbol(ASTNode *node) {
+    ASTNode *proc_node;
 
+    proc_node = ast_proc(node);
+    if (!proc_node || !proc_node->symbolNode) return 0;
+    return proc_node->symbolNode->symbol;
+}
 
+static int uses_implicit_main_args(ASTNode *node) {
+    Symbol *symbol = current_procedure_symbol(node);
+    return symbol && symbol->is_implicit_main;
+}
 
+static int visible_fixed_arg_count(ASTNode *node) {
+    Symbol *symbol = current_procedure_symbol(node);
+    int fixed_args;
 
+    if (!symbol) return 0;
+
+    fixed_args = (int)symbol->fixed_args;
+
+    /* Explicit main() with no declared parameters still receives the hidden argv array. */
+    if (symbol->is_main && !symbol->is_implicit_main && symbol->fixed_args == 0) fixed_args++;
+
+    return fixed_args;
+}
 
 static walker_result emit_walker(walker_direction direction,
                                   ASTNode* node,
@@ -84,6 +106,8 @@ static walker_result emit_walker(walker_direction direction,
     size_t i;
     int j, k;
     int flag;
+    int fixed_arg_count;
+    int implicit_main_args;
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
     char ret_type;
@@ -94,6 +118,8 @@ static walker_result emit_walker(walker_direction direction,
     else child2 = NULL;
     if (child2) child3 = child2->sibling;
     else child3 = NULL;
+    fixed_arg_count = visible_fixed_arg_count(node);
+    implicit_main_args = uses_implicit_main_args(node);
 
     if (direction == out) {
         /* OUT - BOTTOM UP */
@@ -365,17 +391,23 @@ static walker_result emit_walker(walker_direction direction,
 
             case OP_ARGS:
                 if (!node->output) node->output = output_f();
-                /* Get the total args and subtract the fixed args of the procedure we are in */
-                temp1 = mprintf("   icopy %c%d,a0\n"
-                                "   isub %c%d,%c%d,%d\n",
-                                node->register_type,
-                                node->register_num,
-                                node->register_type,
-                                node->register_num,
-                                node->register_type,
-                                node->register_num,
-                                ast_proc(node)->symbolNode->symbol->fixed_args
-                );
+                if (implicit_main_args) {
+                    temp1 = mprintf("   getattrs %c%d,a1,0\n",
+                                    node->register_type,
+                                    node->register_num);
+                } else {
+                    /* Get the total args and subtract the visible fixed args of the procedure we are in. */
+                    temp1 = mprintf("   icopy %c%d,a0\n"
+                                    "   isub %c%d,%c%d,%d\n",
+                                    node->register_type,
+                                    node->register_num,
+                                    node->register_type,
+                                    node->register_num,
+                                    node->register_type,
+                                    node->register_num,
+                                    fixed_arg_count
+                    );
+                }
                 output_append_text(node->output, temp1);
                 free(temp1);
                 type_promotion(node);
@@ -384,65 +416,78 @@ static walker_result emit_walker(walker_direction direction,
             case OP_ARG_VALUE:
                 if (!node->output) node->output = output_f();
 
-                /* Link the argument */
-                if (child1->register_num == DONT_ASSIGN_REGISTER) {
-                    /* Child is a constant */
+                if (implicit_main_args) {
+                    if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                        /* Child is a constant. */
+                        temp2 = format_constant(child1->value_type, child1);
+                        temp1 = mprintf("   getattrs %c%d,a1,0\n"
+                                        "   ichkrng %s,1,%c%d\n"
+                                        "   linkattr1 %c%d,a1,%s\n",
+                                        node->register_type, node->register_num,
+                                        temp2,
+                                        node->register_type, node->register_num,
+                                        node->register_type, node->register_num,
+                                        temp2);
+                        free(temp2);
+                    } else {
+                        /* Child is a register. */
+                        temp1 = mprintf("   getattrs %c%d,a1,0\n"
+                                        "   ichkrng %c%d,1,%c%d\n"
+                                        "   linkattr1 %c%d,a1,%c%d\n",
+                                        node->register_type, node->register_num,
+                                        child1->register_type, child1->register_num,
+                                        node->register_type, node->register_num,
+                                        node->register_type, node->register_num,
+                                        child1->register_type, child1->register_num);
+                    }
+                } else if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                    /* Child is a constant. */
 
-                    /* Needed to calculate the argument number taking into account the number of fixed args */
+                    /* Needed to calculate the argument number taking into account the number of visible fixed args. */
                     temp2 = format_constant(child1->value_type, child1);
-                    int arg_ix = atoi(temp2) + ast_proc(node)->symbolNode->symbol->fixed_args;
+                    {
+                        int arg_ix = atoi(temp2) + fixed_arg_count;
+                        temp1 = mprintf("   icopy %c%d,a0\n" /* Total number of arguments */
+                                        "   isub %c%d,%c%d,%d\n"    /* Deduct # fixed arguments */
+                                        "   ichkrng %s,1,%c%d\n"    /* Validate Range */
+                                        "   linkarg %c%d,%d\n",     /* Link to argument (with added # fixed arguments) */
+
+                                        node->register_type, node->register_num,
+
+                                        node->register_type,
+                                        node->register_num,
+                                        node->register_type,
+                                        node->register_num,
+                                        fixed_arg_count,
+
+                                        temp2,
+                                        node->register_type, node->register_num,
+
+                                        node->register_type, node->register_num,
+                                        arg_ix);
+                    }
                     free(temp2);
-
-                    temp1 = mprintf("   icopy %c%d,a0\n" /* Total number of arguments */
-                                    "   isub %c%d,%c%d,%d\n"    /* Deduct # fixed arguments */
-                                    "   ichkrng %.*s,1,%c%d\n"  /* Validate Range */
-                                    "   linkarg %c%d,%d\n",     /* Link to argument (with added # fixed arguments) */
-
-                                    /* icopy %c%d,a0 */
-                                    node->register_type, node->register_num,
-
-                                    /* isub %c%d,%c%d,%d */
-                                    node->register_type,
-                                    node->register_num,
-                                    node->register_type,
-                                    node->register_num,
-                                    ast_proc(node)->symbolNode->symbol->fixed_args,
-
-                                    /* ichkrng %.*s,1,%c%d */
-                                    child1->node_string_length, child1->node_string,
-                                    node->register_type, node->register_num,
-
-                                    /* linkarg %c%d,%.*s */
-                                    node->register_type, node->register_num,
-                                    arg_ix);
-                }
-
-                else {
-                    /* Child is a register */
+                } else {
+                    /* Child is a register. */
                     temp1 = mprintf("   icopy %c%d,a0\n"    /* Total number of arguments */
                                     "   isub %c%d,%c%d,%d\n"       /* Deduct # of fixed arguments */
                                     "   ichkrng %c%d,1,%c%d\n"     /* Validate Range */
                                     "   linkarg %c%d,%c%d,%d\n",   /* Link to argument (third param adds # fixed arguments) */
 
-                                    /* icopy %c%d,a0 */
                                     node->register_type, node->register_num,
 
-                                    /* isub %c%d,%c%d,%d */
                                     node->register_type,
                                     node->register_num,
                                     node->register_type,
                                     node->register_num,
-                                    ast_proc(node)->symbolNode->symbol->fixed_args,
+                                    fixed_arg_count,
 
-                                    /* ichkrng %.*s,1,%c%d */
                                     child1->register_type, child1->register_num,
                                     node->register_type, node->register_num,
 
-                                    /* linkarg %c%d,%c%d,%d */
                                     node->register_type, node->register_num,
                                     child1->register_type, child1->register_num,
-                                    ast_proc(node)->symbolNode->symbol->fixed_args);
-
+                                    fixed_arg_count);
                 }
 
                 output_append_text(node->output, temp1);
@@ -466,51 +511,68 @@ static walker_result emit_walker(walker_direction direction,
                 /* This is really a compatability operator - if the argument number given is smaller or equal
                  * to the number of variable arguments then it does exist otherwise it doesn't. If smaller than 1
                  * a signal should be thrown */
-                if (child1->register_num == DONT_ASSIGN_REGISTER) {
-                    /* Child is a constant */
+                if (implicit_main_args) {
+                    if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                        /* Child is a constant. */
+                        temp2 = format_constant(child1->value_type, child1);
+                        temp1 = mprintf("   getattrs %c%d,a1,0\n"
+                                        "   ilte %c%d,%s,%c%d\n",
+                                        node->register_type, node->register_num,
+                                        node->register_type, node->register_num,
+                                        temp2,
+                                        node->register_type, node->register_num);
+                        free(temp2);
+                    } else {
+                        /* Child is a register. */
+                        temp1 = mprintf("   ilt %c%d,%c%d,1\n"
+                                        "   signalt \"OUT_OF_RANGE\",%c%d\n"
+                                        "   getattrs %c%d,a1,0\n"
+                                        "   ilte %c%d,%c%d,%c%d\n",
+                                        node->register_type, node->register_num,
+                                        child1->register_type, child1->register_num,
+                                        node->register_type, node->register_num,
+                                        node->register_type, node->register_num,
+                                        node->register_type, node->register_num,
+                                        child1->register_type, child1->register_num,
+                                        node->register_type, node->register_num);
+                    }
+                } else if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                    /* Child is a constant. */
                     /* < 1 will already be checked */
 
-                    /* Needed to calculate the argument number by adding #fixed args */
+                    /* Needed to calculate the argument number by adding #fixed args. */
                     temp2 = format_constant(child1->value_type, child1);
-                    int arg_ix = atoi(temp2) + ast_proc(node)->symbolNode->symbol->fixed_args;
+                    {
+                        int arg_ix = atoi(temp2) + fixed_arg_count;
+                        temp1 = mprintf("   icopy %c%d,a0\n"       /* Total number of arguments (fixed and variable) */
+                                        "   ilte %c%d,%d,%c%d\n",  /* `Is <= number of registers? */
+
+                                        node->register_type, node->register_num,
+
+                                        node->register_type, node->register_num,
+                                        arg_ix,
+                                        node->register_type, node->register_num);
+                    }
                     free(temp2);
-
-                    temp1 = mprintf("   icopy %c%d,a0\n"       /* Total number of arguments (fixed and variable) */
-                                    "   ilte %c%d,%d,%c%d\n",  /* `Is <= number of registers? */
-
-                                    /* icopy %c%d,a0 */
-                                    node->register_type, node->register_num,
-
-                                    /* ilte %c%d,%d,%c%d */
-                                    node->register_type, node->register_num,
-                                    arg_ix,
-                                    node->register_type, node->register_num);
-                }
-
-                else {
-                    /* Child is a register */
+                } else {
+                    /* Child is a register. */
                     temp1 = mprintf("   ilt %c%d,%c%d,1\n"         /* Is parm < 1? */
                                     "   signalt \"OUT_OF_RANGE\",%c%d\n"   /* Signal if so */
                                     "   icopy %c%d,a0\n"           /* Total number of arguments */
                                     "   isub %c%d,%c%d,%d\n"       /* Deduct # of fixed arguments */
                                     "   ilte %c%d,%c%d,%c%d\n",    /* Is <= number of registers? */
 
-                                    /* ilt %c%d,%c%d,1 */
                                     node->register_type, node->register_num,
                                     child1->register_type, child1->register_num,
 
-                                    /* signalt "OUT_OF_RANGE",%c%d */
                                     node->register_type, node->register_num,
 
-                                    /* icopy %c%d,a0 */
                                     node->register_type, node->register_num,
 
-                                    /* isub %c%d,%c%d,%d */
                                     node->register_type, node->register_num,
                                     node->register_type, node->register_num,
-                                    ast_proc(node)->symbolNode->symbol->fixed_args,
+                                    fixed_arg_count,
 
-                                    /* ilte %c%d,%c%d,%c%d */
                                     node->register_type, node->register_num,
                                     child1->register_type, child1->register_num,
                                     node->register_type, node->register_num);
