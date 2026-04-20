@@ -19,6 +19,7 @@ set(BIFS
 		_substr
 		_copies
 		_x2c
+		_x2d
 		_c2d
 		_reradix
 		_right

@@ -60,7 +60,7 @@ val = .string
     fz=""
     len=0
     assembler strlen len,from
-  if len=0 then return "00"
+    if len=0 then return "00"
     do  i=0 to len-1
       assembler hexchar fz,from,i
       stx=stx||fz
@@ -78,7 +78,7 @@ val = .string
       assembler hexchar fz,from,i
       stx=stx||fz
     end
-    return x2d(stx)
+    return _x2d(stx)
 -- 		center
   center: method = .string
     arg expose centlen = .int,  pad = " "

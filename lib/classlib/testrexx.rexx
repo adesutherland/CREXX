@@ -12,7 +12,7 @@ say 'end of testrexx'
  */
 
 say '--- testing real bif' 
-r = aap
+r = 'aap'
 say substr(r,1,3)
 
 say '--- testing abs'
@@ -23,4 +23,5 @@ say '--- testing c2d'
 say s.c2d()
 
 say '--- testing c2x'
+say s
 say s.c2x()
