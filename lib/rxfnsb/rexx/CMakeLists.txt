@@ -8,6 +8,22 @@ set(BIFS
 		_ftrunc
 		_itrunc
 		_jdn
+		_word
+		_words
+		_strip
+		_lower
+		_upper
+		_wordindex
+		_abbrev
+		_pos
+		_substr
+		_copies
+		_x2c
+		_c2d
+		_reradix
+		_right
+		_length
+		_datatype
 		abbrev
 		abs
 		c2x
