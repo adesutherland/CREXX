@@ -12,6 +12,7 @@ set(CLSS
   id
   KeyDB
   LinkedList
+  rexx
   Stack
   TreeMap
   TreeMapIterator
