@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
+add_subdirectory(tests_functional)
 
 set(CLSS
   StemList
