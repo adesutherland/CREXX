@@ -11,6 +11,7 @@ main: procedure
   failures = failures + test_set_environment()
   failures = failures + test_explicit_address()
   failures = failures + test_implicit_address()
+  failures = failures + test_implicit_join_before()
   failures = failures + test_implicit_string_no_warning()
 
   call report_result failures
@@ -103,6 +104,33 @@ test_implicit_address: procedure = .int
   diagnostic = result.get_diagnostic(1)
   if check_equal("address implicit warning severity", "warning", diagnostic.get_severity()) = 0 then failures = failures + 1
   if check_equal("address implicit warning code", "IMPLICIT_ADDRESS", diagnostic.get_code()) = 0 then failures = failures + 1
+
+  return failures
+
+test_implicit_join_before: procedure = .int
+  failures = .int
+  addr = .addressexit(1005)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushstring tokens, "'echo'"
+  call pushidentifier tokens, "name", ".string", 0, "sconcat"
+  call pushstring tokens, "'.txt'", "concat"
+  call pushidentifier tokens, "OUTPUT"
+  call pushidentifier tokens, "output_lines", ".string[]", 1
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address implicit join pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address implicit join process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address implicit join command", replacement, "_address('','echo' name'.txt'") = 0 then failures = failures + 1
+  if check_contains("address implicit join output", replacement, "_redir2array(output_lines)") = 0 then failures = failures + 1
+  if check_equal("address implicit join warning count", "0", result.get_diagnostic_count()) = 0 then failures = failures + 1
 
   return failures
 

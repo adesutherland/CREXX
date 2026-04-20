@@ -269,7 +269,34 @@ Compiler behavior:
 
 The shared protocol classes live in `compiler/exits/token.rexx`.
 
-#### 7.1 `rxcp.exitdescriptor`
+#### 7.1 `rxcp.token`
+
+Fields:
+
+- `type`
+- `subtype`
+- `text`
+- `line`
+- `column`
+- `length`
+- `file`
+- `node_type`
+- `value_type`
+- `type_string`
+- `value_dims`
+- `join_before`
+
+`join_before` is normalized concat metadata emitted by the compiler when an
+expression is flattened for the exit bridge:
+
+- `""`: no inherited concat boundary
+- `"concat"`: concatenate without inserting a blank
+- `"sconcat"`: concatenate with one blank
+
+This lets exits reconstruct command or expression text without preserving the
+full concat subtree shape.
+
+#### 7.2 `rxcp.exitdescriptor`
 
 Fields:
 
@@ -281,7 +308,7 @@ Fields:
 
 Use it to describe static class-level ownership.
 
-#### 7.2 `rxcp.exitplan`
+#### 7.3 `rxcp.exitplan`
 
 Fields:
 
@@ -295,7 +322,7 @@ Fields:
 
 Use it to declare all structural data for the current occurrence.
 
-#### 7.3 `rxcp.exitresult`
+#### 7.4 `rxcp.exitresult`
 
 Fields:
 
@@ -306,7 +333,7 @@ Fields:
 
 Use it to lower or reject an occurrence after planning is already complete.
 
-#### 7.4 `rxcp.bindingplan`
+#### 7.5 `rxcp.bindingplan`
 
 Fields:
 
@@ -324,7 +351,7 @@ Typical uses:
 - typed stem binding
 - exit-owned synthetic temporary
 
-#### 7.5 `rxcp.keywordclaim`
+#### 7.6 `rxcp.keywordclaim`
 
 Fields:
 
@@ -336,7 +363,7 @@ Fields:
 Use it when the exit needs the compiler to treat a particular token as an
 exit-owned contextual keyword.
 
-#### 7.6 `rxcp.importplan`
+#### 7.7 `rxcp.importplan`
 
 Fields:
 
@@ -346,7 +373,7 @@ Fields:
 
 This object is shared by both default imports and plan imports.
 
-#### 7.7 `rxcp.helperplan`
+#### 7.8 `rxcp.helperplan`
 
 Fields:
 
@@ -362,7 +389,7 @@ Wave-1 supported scope:
 
 Helper procedures must be declared in `pre_process()`, not in `process()`.
 
-#### 7.8 `rxcp.exitdiagnostic`
+#### 7.9 `rxcp.exitdiagnostic`
 
 Fields:
 

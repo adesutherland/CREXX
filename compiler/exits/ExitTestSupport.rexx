@@ -9,45 +9,45 @@ newtokens: procedure = .token[]
     return tokens
 
 pushidentifier: procedure = .int
-    arg expose tokens = .token[], text = .string, value_type = ".unknown", value_dims = 0
+    arg expose tokens = .token[], text = .string, value_type = ".unknown", value_dims = 0, join_before = ""
     index = tokens[0] + 1
-    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, value_type, "identifier", value_dims)
+    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, value_type, "identifier", value_dims, join_before)
     return index
 
 pushexitkeyword: procedure = .int
-    arg expose tokens = .token[], text = .string
+    arg expose tokens = .token[], text = .string, join_before = ""
     index = tokens[0] + 1
-    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, ".unknown", "exit_keyword", 0)
+    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, ".unknown", "exit_keyword", 0, join_before)
     return index
 
 pushstring: procedure = .int
-    arg expose tokens = .token[], text = .string
+    arg expose tokens = .token[], text = .string, join_before = ""
     index = tokens[0] + 1
-    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, ".string", "string_literal", 0)
+    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, ".string", "string_literal", 0, join_before)
     return index
 
 pushint: procedure = .int
-    arg expose tokens = .token[], text = .string
+    arg expose tokens = .token[], text = .string, join_before = ""
     index = tokens[0] + 1
-    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, ".int", "int_literal", 0)
+    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, ".int", "int_literal", 0, join_before)
     return index
 
 pushoperator: procedure = .int
-    arg expose tokens = .token[], text = .string
+    arg expose tokens = .token[], text = .string, join_before = ""
     index = tokens[0] + 1
-    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, "", "operator", 0)
+    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, "", "operator", 0, join_before)
     return index
 
 pushbracket: procedure = .int
-    arg expose tokens = .token[], text = .string
+    arg expose tokens = .token[], text = .string, join_before = ""
     index = tokens[0] + 1
-    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, "", "bracket", 0)
+    tokens[index] = .token(0, 0, text, 1, 1, length(text), "exit_test", 0, "", "bracket", 0, join_before)
     return index
 
 pushcomma: procedure = .int
-    arg expose tokens = .token[]
+    arg expose tokens = .token[], join_before = ""
     index = tokens[0] + 1
-    tokens[index] = .token(0, 0, ",", 1, 1, 1, "exit_test", 0, "", "comma", 0)
+    tokens[index] = .token(0, 0, ",", 1, 1, 1, "exit_test", 0, "", "comma", 0, join_before)
     return index
 
 check_equal: procedure = .int

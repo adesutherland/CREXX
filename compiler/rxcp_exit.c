@@ -705,6 +705,23 @@ static void count_tokens(ASTNode *node, size_t *count) {
     }
 }
 
+typedef enum rxcp_join_before {
+    RXCP_JOIN_NONE = 0,
+    RXCP_JOIN_CONCAT,
+    RXCP_JOIN_SCONCAT
+} rxcp_join_before;
+
+static const char *rxcp_join_before_text(rxcp_join_before join_before) {
+    switch (join_before) {
+        case RXCP_JOIN_CONCAT:
+            return "concat";
+        case RXCP_JOIN_SCONCAT:
+            return "sconcat";
+        default:
+            return "";
+    }
+}
+
 static int rxcp_node_has_error(ASTNode *node) {
     ASTNode *child;
 
@@ -747,8 +764,13 @@ static void rxcp_preserve_replaced_node_diagnostics(Context *ctx, ASTNode *node)
     }
 }
 
-static void marshal_single_token(rxvml_context *ctx, ASTNode *node, rxvml_value *token_array, ASTNode **node_map, size_t *count) {
-    /* Layout (rxcp_intern.token factory compatible):
+static void marshal_single_token(rxvml_context *ctx,
+                                 ASTNode *node,
+                                 rxvml_value *token_array,
+                                 ASTNode **node_map,
+                                 rxcp_join_before join_before,
+                                 size_t *count) {
+    /* Layout (rxcp.token factory compatible):
        Arg 1: Type (.int)
        Arg 2: Subtype (.int)
        Arg 3: Text (.string)
@@ -760,10 +782,12 @@ static void marshal_single_token(rxvml_context *ctx, ASTNode *node, rxvml_value 
        Arg 9: Value Type (.int)
        Arg 10: Type String (.string)
        Arg 11: Value Dims (.int)
+       Arg 12: Join Before (.string)
     */
 
-    rxvml_value* args[11];
+    rxvml_value* args[12];
     int i;
+    const char *join_text;
     args[0] = rxvml_value_new(ctx);
     int t_type = node->token ? node->token->token_type : 0;
     rxvml_set_int(args[0], t_type);
@@ -792,32 +816,53 @@ static void marshal_single_token(rxvml_context *ctx, ASTNode *node, rxvml_value 
     }
     args[10] = rxvml_value_new(ctx);
     rxvml_set_int(args[10], rxcp_token_value_dims(node));
+    args[11] = rxvml_value_new(ctx);
+    join_text = rxcp_join_before_text(join_before);
+    rxvml_set_str(args[11], join_text, strlen(join_text));
 
     rxvml_value *tok_obj = NULL;
-    if (rxvml_call_factory(ctx, "rxcp.token", 11, args, &tok_obj) == 0 && tok_obj) {
+    if (rxvml_call_factory(ctx, "rxcp.token", 12, args, &tok_obj) == 0 && tok_obj) {
         rxvml_array_set(ctx, token_array, *count + 1, tok_obj);
         if (node_map) node_map[*count] = node;
         (*count)++;
         rxvml_value_free(tok_obj);
     }
 
-    for (i = 0; i < 11; i++) {
+    for (i = 0; i < 12; i++) {
         rxvml_value_free(args[i]);
     }
 }
 
-static void collect_tokens(rxvml_context *ctx, ASTNode *node, rxvml_value *token_array, ASTNode **node_map, size_t *count) {
+static void collect_tokens(rxvml_context *ctx,
+                           ASTNode *node,
+                           rxvml_value *token_array,
+                           ASTNode **node_map,
+                           rxcp_join_before join_before,
+                           size_t *count) {
+    ASTNode *child;
+    rxcp_join_before child_join;
+
     if (!node) return;
     if (node->node_type == ERROR || node->node_type == WARNING) return;
 
-    if (node->node_type == OP_CONCAT || node->node_type == OP_SCONCAT || node->node_type == EXIT_EXTENDED) {
-        ASTNode *child = node->child;
+    if (node->node_type == OP_CONCAT || node->node_type == OP_SCONCAT) {
+        child = node->child;
         while (child) {
-            collect_tokens(ctx, child, token_array, node_map, count);
+            collect_tokens(ctx, child, token_array, node_map, join_before, count);
+            if (node->node_type == OP_CONCAT) child_join = RXCP_JOIN_CONCAT;
+            else child_join = RXCP_JOIN_SCONCAT;
+            join_before = child_join;
+            child = child->sibling;
+        }
+    } else if (node->node_type == EXIT_EXTENDED) {
+        marshal_single_token(ctx, node, token_array, node_map, join_before, count);
+        child = node->child;
+        while (child) {
+            collect_tokens(ctx, child, token_array, node_map, RXCP_JOIN_NONE, count);
             child = child->sibling;
         }
     } else {
-        marshal_single_token(ctx, node, token_array, node_map, count);
+        marshal_single_token(ctx, node, token_array, node_map, join_before, count);
     }
 }
 
@@ -849,10 +894,10 @@ rxvml_value* rxcp_marshal_implicit_cmd(rxvml_context *ctx, ASTNode *cmd_node, AS
         rxvml_value_free(count_val);
 
         node_map = malloc(sizeof(ASTNode*) * num_tokens);
-        marshal_single_token(ctx, cmd_node, token_array, node_map, &count);
+        marshal_single_token(ctx, cmd_node, token_array, node_map, RXCP_JOIN_NONE, &count);
         c = cmd_node->child;
         while (c) {
-            collect_tokens(ctx, c, token_array, node_map, &count);
+            collect_tokens(ctx, c, token_array, node_map, RXCP_JOIN_NONE, &count);
             c = c->sibling;
         }
 
@@ -877,7 +922,7 @@ rxvml_value* rxcp_marshal_implicit_cmd(rxvml_context *ctx, ASTNode *cmd_node, AS
     rxvml_value_free(count_val);
 
     node_map = malloc(sizeof(ASTNode*) * num_tokens);
-    collect_tokens(ctx, command_expression, token_array, node_map, &count);
+    collect_tokens(ctx, command_expression, token_array, node_map, RXCP_JOIN_NONE, &count);
 
     if (node_map_out) *node_map_out = node_map;
     if (num_tokens_out) *num_tokens_out = num_tokens;
