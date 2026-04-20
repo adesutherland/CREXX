@@ -21,3 +21,5 @@ configure_linker_for_static_lib_rel(crexx system _system)
 target_link_libraries(crexx rxvml rxpashim)
 
 add_dependencies(crexx rxvml rxpa avl_tree platform _system)
+
+add_subdirectory(tests)

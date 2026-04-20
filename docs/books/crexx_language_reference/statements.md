@@ -76,7 +76,12 @@ The OPTIONS instruction is used to set various interpreter-specific options. See
 
 PARSE \[ option \] \[ CASELESS \] type \[ template \] ;
 
-*CURRENT STATUS: not implemented*
+Current implementation status:
+
+* `PARSE VALUE ...`, `PARSE VAR ...`, and `PARSE ARG ...` are implemented through the certified `PARSE` exit.
+* `PARSE ARG` uses the current procedure's `arg()` compatibility view.
+* In implicit `main`, that means command-line arguments.
+* In other procedures, that means the `...` tail if present, or an empty source string if there is no `...` tail.
 
 ## PROCEDURE
 
@@ -173,6 +178,7 @@ Pseudo Array arg allows access to the '...' arguments. Also see the Arrays secti
 
 * arg\[1\] or arg.1 gives the first '...' argument. These can signal OUTOFRANGE  
 * arg\[0\], arg\[\], arg.0 or arg. return the number of '...' arguments
+* In a procedure without a `...` tail, the count forms return `0`
 
 The type of this Pseudo is the type of the '...' argument
 
@@ -184,7 +190,8 @@ The compatibility arg() operator is designed to provide some compatibility with 
 * arg(1) is equivalent to arg.1 etc. The type of this operator is the same as the '...' argument and like arg.1 can signal OUTOFRANGE  
 * arg(4,E), arg(4,"E"), arg(4,Exxx), arg(4,"Exxx") etc. all return 1 (true) if there were 4 or more '...' arguments given or 0 (false) otherwise. E is Exists.  
 * Likewise arg(4,'O') etc. (O is Omitted) is equivalent to \~arg(4,'E').
+* In a procedure without a `...` tail, `arg()` returns `0` and the `E`/`O` probe forms operate on that empty tail
 
 ## Implicit Main Procedure
 
-In the event that a module file contains instructions preceding a PROCEDURE instruction, an implicit procedure named main() is automatically generated within the namespace of the module file. The arguments for this procedure can be accessed through the pseudo array arg or arg() operator. The return type of the implicitly defined main() procedure is automatically set to either int or void.
+In the event that a module file contains instructions preceding a PROCEDURE instruction, an implicit procedure named main() is automatically generated within the namespace of the module file. The arguments for this procedure can be accessed through the pseudo array arg or arg() operator. This implicit main() case is the compatibility bridge that maps classic `arg(n)` access onto command-line arguments when no explicit signature is present. The return type of the implicitly defined main() procedure is automatically set to either int or void.

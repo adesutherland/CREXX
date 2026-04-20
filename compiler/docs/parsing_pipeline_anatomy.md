@@ -10,7 +10,7 @@ Before the main compilation pipeline begins, the compiler performs a lightweight
 *   **Components**:
     *   **Scanner**: `compiler/rxcposcn.re` (re2c). It scans for the `OPTIONS` keyword and level tokens (e.g., `LEVELB`), while skipping comments and whitespace. It stops scanning upon encountering any token that is not a valid option.
     *   **Parser**: `compiler/rxcpopgr.y` (Lemon). A simplified grammar that only recognizes the `OPTIONS` instruction.
-*   **Outcome**: The process sets the `context->level` (defaults to Level C if unspecified) and `context->numeric_standard`. Once the options are processed or a non-option token is found, the context is reset (tokens freed, buffer rewound), and the main pipeline (`rexbpars`) begins.
+*   **Outcome**: The process sets the `context->level` (defaults to Level C if unspecified, or to the CLI `--level` default when one is supplied), records whether the source actually began with an `OPTIONS` instruction, and sets `context->numeric_standard`. Once the options are processed or a non-option token is found, the context is reset (tokens freed, buffer rewound), and the main pipeline (`rexbpars`) begins.
 
 ## 3. Pipeline Anatomy
 
@@ -38,6 +38,7 @@ The Glue Layer sits between the Scanner and the Parser, transforming the raw tok
     *   *Rule*: If a `TK_COMMA` is immediately followed by `TK_EOL`, **both** tokens are discarded. This merges the physical lines into a single logical clause.
 *   **Terminator Collapsing**: Consecutive `TK_EOC` tokens are effectively ignored/collapsed to prevent "empty statement" noise in the parser (implemented via loop continuation).
 *   **Stream Termination**: Guarantees that the parser always receives a clean shutdown sequence (`TK_EOC` followed by `TK_EOS`), injecting `TK_EOC` if the source file lacks a final newline.
+*   **CLI Default Level Injection**: When `rxc --level ...` is used and the source is headerless, the glue layer injects a synthetic `OPTIONS level...` token sequence ahead of the real source stream. This keeps the existing grammar unchanged while allowing headerless Level B/G/L entry through the normal parser path.
 
 ### 3.3 Syntactic Analysis (Parser)
 **Source**: `compiler/rxcpbgmr.y` (Lemon)
@@ -79,6 +80,7 @@ The final stage of the front-end is the Validation Orchestrator. Unlike previous
 *   **AST Validation**: An integrated validator (`rxcp_ast_val.c`) runs between passes (in `-d2`) to assert AST structural integrity and Symbol↔Node linkage consistency.
 *   **Plugin Dispatch**: Intercepts `IMPLICIT_CMD` nodes and consults the compiler exit bridge (see `rxcp_val_plugin.c` and [Exit Bridge Guide](exit_bridge_guide.md)).
 *   **Code Injection**: Exits can return multiline replacement fragments which are joined, parsed into AST fragments, and grafted into the main tree. This sets the `changed` flag, triggering another loop iteration to resolve symbols in the new code.
+*   **CLI Import Injection**: `validate_ast` injects any `--import namespace` CLI defaults as synthetic file-level `IMPORT` nodes on the mutable work AST before import scanning. Duplicate imports are skipped.
 *   **Rewrite Walkers**: Final transformations (such as certified-exit lowering and `EXIT` rewriting) occur within the loop to ensure they interact correctly with injected code.
 
 ### 3.6 Source Tree, Provenance, and Parser Mode

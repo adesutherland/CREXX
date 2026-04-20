@@ -66,6 +66,7 @@ struct ASTNode {
     char is_const_arg;
     char is_varg;
     char is_compiler_added;
+    char is_implicit_main;
     char is_internal_diagnostic;
     char is_source_diagnostic_recorded;
     char mark_internal_diagnostics;

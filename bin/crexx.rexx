@@ -200,8 +200,13 @@ do i=1 to words(filenames)
     if verbose>3 then do
       call printFileToSTDout filename'.rexx'
     end
+  compat_flags = ''
+  if \hasSourceHeader(filename'.rexx') then do
+    compat_flags = ' --level levelb --import rxfnsb'
+    if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
+  end
   optiflag=''; if optimize=0 then optiflag= '-n'
-  rxcmd = rxpath'bin'dirsep'rxc' optiflag '-i' rxpath||lpath filename
+  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags '-i' rxpath||lpath filename
   if verbose>1 then
     do
       if compile then say esc||ANSI_GREEN'rxc command     :' rxcmd
@@ -331,6 +336,8 @@ say '-keep            -- keep .rxas source (default nokeep)'
 say '-decimal         -- use decimal arithmetic'
 say '-l[library path] -- use library'
 say
+say 'Headerless top-level scripts are compiled with --level levelb --import rxfnsb.'
+say
 say 'all options can also be prefixed with --'
 say 'all options can be prefixed with NO for the inverse value'
 return 'help done'
@@ -352,6 +359,56 @@ end
 say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserved.'
 say 'Copyright (c) RexxLA 2021,'left(date('j'),4)'. All rights reserved.'
 return
+
+/*----------------------------------------------------------------------*/
+hasSourceHeader: procedure = .int
+arg sourceFile = .string
+line = .string
+text = .string
+firstWord = .string
+inBlockComment = 0
+
+do while lines(sourceFile) > 0
+  line = linein(sourceFile)
+  text = strip(line)
+
+  do while 1
+    if inBlockComment then do
+      endPos = pos('*/', text)
+      if endPos > 0 then do
+        text = strip(substr(text, endPos + 2))
+        inBlockComment = 0
+        iterate
+      end
+      else do
+        text = ''
+        leave
+      end
+    end
+
+    if text = '' then leave
+    if left(text, 2) = '/*' then do
+      endPos = pos('*/', text, 3)
+      if endPos > 0 then do
+        text = strip(substr(text, endPos + 2))
+        iterate
+      end
+      inBlockComment = 1
+      text = ''
+      leave
+    end
+    leave
+  end
+
+  if text = '' then iterate
+  if left(text, 1) = '#' then iterate
+
+  firstWord = word(translate(text), 1)
+  if firstWord = 'OPTIONS' | firstWord = 'IMPORT' | firstWord = 'NAMESPACE' then return 1
+  return 0
+end
+
+return 0
 
 /*----------------------------------------------------------------------*/
 printarray: procedure = .string

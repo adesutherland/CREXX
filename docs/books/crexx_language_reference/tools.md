@@ -16,6 +16,10 @@ Options :
 
   \-i import       Locations to import file \- ";" delimited list
 
+  \--level level   Default source level when the source omits one
+
+  \--import ns     Inject a file-level IMPORT namespace (repeatable)
+
   \-o output\_file  REXX Assembler Output File
 
   \-n              No Optimising
@@ -149,6 +153,12 @@ Comments are used to provide additional information about a REXX program. Commen
 # Language Level and Options
 
 All crexx programs can start with an “options’ instruction, which can include the language level (e.g. ‘levelb). If a crexx program does not start with an ‘options’ instruction or if the options do not include a language level then Level C (classic REXX) is assumed.
+
+The compiler command can also provide a default level with `--level`. This is a default only: if the source already has an `options` instruction with an explicit level, the source level wins.
+
+The compiler command can also add synthetic file-level imports with `--import namespace`. These are treated like normal top-level `import` instructions during compilation, but the source file itself is not rewritten.
+
+The `crexx` driver uses this for headerless top-level simple scripts by compiling them with `--level levelb --import rxfnsb`. Files that already start with `options`, `import`, or `namespace` are compiled without those extra defaults.
 
 *CURRENT STATUS: Level C is not implemented. Also it may be that the default language level will be changed to Level G.*
 

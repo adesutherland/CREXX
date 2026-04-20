@@ -65,6 +65,77 @@ int is_node_string(ASTNode* node, const char* value) {
     return 1;
 }
 
+static int rxcp_program_has_import(ASTNode *program_file, const char *namespace_name) {
+    ASTNode *child;
+
+    if (!program_file || !namespace_name) return 0;
+
+    child = program_file->child;
+    while (child) {
+        if (child->node_type == IMPORT &&
+            child->child &&
+            is_node_string(child->child, namespace_name)) {
+            return 1;
+        }
+        child = child->sibling;
+    }
+
+    return 0;
+}
+
+static void rxcp_insert_program_import(Context *context, ASTNode *program_file, const char *namespace_name) {
+    ASTNode *import_node;
+    ASTNode *literal_node;
+    ASTNode *child;
+    ASTNode *insert_after;
+
+    if (!context || !program_file || !namespace_name || !namespace_name[0]) return;
+
+    import_node = ast_ft(context, IMPORT);
+    literal_node = ast_ft(context, LITERAL);
+    ast_copy_str(literal_node, (char*)namespace_name);
+    add_ast(import_node, literal_node);
+
+    insert_after = 0;
+    child = program_file->child;
+    while (child &&
+           (child->node_type == REXX_OPTIONS ||
+            child->node_type == IMPORT ||
+            child->node_type == NAMESPACE)) {
+        insert_after = child;
+        child = child->sibling;
+    }
+
+    if (insert_after) {
+        import_node->sibling = insert_after->sibling;
+        insert_after->sibling = import_node;
+    } else {
+        import_node->sibling = program_file->child;
+        program_file->child = import_node;
+    }
+    import_node->parent = program_file;
+}
+
+static void rxcp_inject_cli_imports(Context *context) {
+    ASTNode *program_file;
+    size_t i;
+
+    if (!context || !context->ast || !context->cli_import_names || context->cli_import_count == 0) return;
+
+    program_file = context->ast->child;
+    while (program_file) {
+        if (program_file->node_type == PROGRAM_FILE) {
+            for (i = 0; i < context->cli_import_count; i++) {
+                if (!rxcp_program_has_import(program_file, context->cli_import_names[i])) {
+                    rxcp_insert_program_import(context, program_file, context->cli_import_names[i]);
+                }
+            }
+            return;
+        }
+        program_file = program_file->sibling;
+    }
+}
+
 /* Convert a node (i.e. type INTEGER) to an integer - no error correction as the lexer will have done that */
 int node_to_integer(ASTNode* node) {
     int result;
@@ -930,6 +1001,7 @@ void validate_ast(Context *context) {
     rxcp_prepare_work_ast(context);
 
     context->ast = context->work_ast;
+    rxcp_inject_cli_imports(context);
     context->current_scope = 0;
     context->in_factory = 0;
     ast_wlkr(context->ast, ast_work_structure_walker, (void *) context);
@@ -1009,16 +1081,16 @@ void validate_ast(Context *context) {
 
         /* Exit Dispatch
          * Progress: exit_dispatch_walker is idempotent. Verified by stress testing with 3x calls per iteration.
+         * Debug validation is intentionally deferred until after structure/build_symbols:
+         * structured exit fragments may temporarily contain nested INSTRUCTIONS/DO blocks
+         * whose SCOPE_LOCAL is attached in the later symbol passes.
          */
         context->current_scope = 0;
         if (ast_wlkr(context->ast, exit_dispatch_walker, (void *) context) == result_error) break;
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
         if (context->debug_mode >= 3) {
             /* Stress test idempotency */
             ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
             ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
         }
 
         /* Re-write Constructors
@@ -1028,32 +1100,30 @@ void validate_ast(Context *context) {
 
         /* Re-write EXIT Instructions
          * Progress: rewrite_exit_walker is idempotent. Mutates EXIT to CALL.
+         * Debug validation remains deferred until after build_symbols because
+         * the tree may still contain exit-added nested blocks awaiting SCOPE_LOCAL.
          */
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
         if (context->debug_mode >= 3) {
             /* Stress test idempotency */
             context->current_scope = 0;
             ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
             context->current_scope = 0;
             ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
         }
 
         /* Re-write IMPLICIT_CMD Instructions
          * Progress: rewrite_implicit_cmd_walker is idempotent. Verified by stress testing with 3x calls per iteration.
+         * Debug validation remains deferred until after build_symbols because
+         * the tree may still contain exit-added nested blocks awaiting SCOPE_LOCAL.
          */
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
         if (context->debug_mode >= 3) {
             /* Stress test idempotency */
             ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
             ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
-            rxcp_validate_ast_and_symbols(context->ast);
         }
 
         /* Syntactic Sugar Moved */
@@ -1061,22 +1131,20 @@ void validate_ast(Context *context) {
         /* Control Flow Rewrite (e.g. SELECT) */
         context->current_scope = 0;
         ast_wlkr(context->ast, control_flow_rewrite_walker, (void *) context);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
 
         /* Set Ordinals
          * Progress: set_node_ordinals_walker is idempotent. Recalculates from reset counter. Verified by stress testing.
+         * Debug validation remains deferred until after build_symbols because
+         * the tree may still contain exit-added nested blocks awaiting SCOPE_LOCAL.
          */
         ordinal_counter = 0;
         ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
-        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
         if (context->debug_mode >= 3) {
             /* Stress test idempotency */
             ordinal_counter = 0;
             ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
-            rxcp_validate_ast_and_symbols(context->ast);
             ordinal_counter = 0;
             ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
-            rxcp_validate_ast_and_symbols(context->ast);
         }
 
         /* Builds the Symbol Table

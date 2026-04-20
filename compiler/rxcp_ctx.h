@@ -92,7 +92,9 @@ struct Context {
     /* Source Options */
     char is_final_pass;
     char processedOptions;
+    char source_has_options;
     RexxLevel level;
+    RexxLevel cli_default_level;
     char comments_hash;
     char comments_dash;
     char comments_slash;
@@ -126,6 +128,10 @@ struct Context {
     /* Extra buffers to be freed with the context */
     char** extra_buffers;
     size_t extra_buffers_count;
+
+    /* CLI-injected imports for the primary source file */
+    char** cli_import_names;
+    size_t cli_import_count;
 
     /* Diagnostics list (collected from AST for safe emission) */
     void *diagnostics_list;

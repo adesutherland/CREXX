@@ -172,6 +172,17 @@ When a result returns `REPLACE`, the bridge:
 The bridge intentionally preserves source-valid token text where possible so
 quoted literals stay quoted in generated Rexx code.
 
+Important scope note:
+
+- replacement fragments are structurally normalized before grafting, but their
+  final lexical scopes are completed later by `structure_symbols_walker` and
+  `build_symbols_walker`
+- structured replacements are therefore supported, including nested `DO` /
+  `IF` / nested `INSTRUCTIONS`
+- debug validation for post-dispatch fragments runs after that scope rebuild,
+  so `-d2` / `-d3` checks the stabilized tree rather than the transient
+  pre-scope form
+
 ## 8. Diagnostics And Notes
 
 Both `exitplan` and `exitresult` may emit:
@@ -233,6 +244,9 @@ When debugging the bridge:
 5. check whether the failure is in planning or in lowering
 6. distinguish stale binaries from real bridge failures by rebuilding the
    consuming executable, not just `rxc`
+7. if a debug-only failure mentions missing local scope on an exit-generated
+   nested block, inspect the symbol-structure rebuild path before assuming the
+   fragment shape itself is invalid
 
 Useful places to inspect:
 

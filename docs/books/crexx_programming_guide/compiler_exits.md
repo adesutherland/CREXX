@@ -101,7 +101,12 @@ a (.int[5])[5] = 0
 
 ## Shadowing and scoping inside exits
 
-Exit replacements are wrapped in a special block that has its own child scope (internally, an `EXIT_OWNED` block). This ensures that identifiers created by injected code do not collide with or overwrite variables in the host program.
+Exit replacements are grafted back into the main AST and then normalized like
+ordinary source. Structured replacements are supported, including nested
+`DO ... END`, `IF ... THEN/ELSE`, and nested instruction blocks. Local scopes
+for those generated blocks are materialized during the normal symbol-building
+passes, so identifiers created by injected code do not collide with or
+overwrite variables in the host program.
 
 Practical consequences:
 
@@ -120,7 +125,9 @@ main: procedure
   return 0
 ```
 
-Behind the scenes, the exit’s generated code is compiled in an isolated scope so that temporary loop counters and helper variables remain confined to the exit block.
+Behind the scenes, any generated grouped blocks are compiled with their own
+local scopes so that temporary loop counters and helper variables remain
+confined to the exit-generated block structure.
 
 ## Writing your own exit (overview)
 
@@ -163,7 +170,9 @@ Tips
 
 - Prefer uncommon temporary names and make typed declarations for any locals you introduce in the replacement.
 
-- Use `rxc -d2` for detailed compiler diagnostics if troubleshooting exit behavior.
+- For detailed compiler diagnostics, use `rxc -d2` or `rxc -d3`, but redirect
+  both stdout and stderr to a temp log and inspect the log with `tail`, `sed`,
+  or `grep` rather than streaming the raw trace to the terminal.
 
 ## Troubleshooting
 

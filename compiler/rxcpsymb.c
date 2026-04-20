@@ -513,6 +513,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->is_const_arg = 0;
     symbol->is_opt_arg = 0;
     symbol->is_main = 0;
+    symbol->is_implicit_main = 0;
     symbol->is_rc = 0;
     symbol->is_this = 0;
     symbol->is_factory = 0;
@@ -1044,6 +1045,7 @@ Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
     new_symbol->is_opt_arg = symbol->is_opt_arg;
     new_symbol->is_const_arg = symbol->is_const_arg;
     new_symbol->is_main = symbol->is_main;
+    new_symbol->is_implicit_main = symbol->is_implicit_main;
     new_symbol->is_rc = symbol->is_rc;
     new_symbol->is_this = symbol->is_this;
     new_symbol->is_factory = symbol->is_factory;

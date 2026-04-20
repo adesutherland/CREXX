@@ -798,13 +798,27 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case OP_ARG_VALUE:
                 if (node->value_type == TP_UNKNOWN) {
+                    /* Implicit main exposes the hidden argv array as classic string arguments. */
+                    n1 = ast_proc(node);
+                    if (n1 && n1->symbolNode && n1->symbolNode->symbol &&
+                        n1->symbolNode->symbol->is_implicit_main) {
+                        set_node_type(node, TP_STRING);
+                        break;
+                    }
+
                     /* Find the procedure ellipse type node */
                     n1 = ast_proc(node); /* Procedure node */
-                    n1 = ast_chld(n1, ARGS, 0); /* ARGS Node */
-                    if (ast_nchd(n1) == 0) break; /* No ARGS at all! */
+                    n1 = n1 ? ast_chld(n1, ARGS, 0) : 0; /* ARGS Node */
+                    if (!n1 || ast_nchd(n1) == 0) {
+                        set_node_type(node, TP_STRING);
+                        break;
+                    }
                     n1 = ast_chdn(n1, ast_nchd(n1) - 1); /* Last ARG */
                     n1 = n1->child; /* The VARG */
-                    if (n1->node_type != VARG) break; /* No VARGS */
+                    if (n1->node_type != VARG && n1->node_type != VARG_REFERENCE) {
+                        set_node_type(node, TP_STRING);
+                        break;
+                    }
 
                     n1 = n1->sibling; /* This is the CLASS of the VARGS */
                     ast_svtn(node, n1);
@@ -1259,10 +1273,6 @@ walker_result type_safety_walker(walker_direction direction,
 
             case OP_ARG_VALUE:
             case OP_ARG_IX_EXISTS:
-                n1 = ast_proc(node);
-                if (n1 && n1->symbolNode && n1->symbolNode->symbol) {
-                    if (!n1->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
-                }
                 set_node_target_type(context, child1,TP_INTEGER);
 
                 if (child1->node_type == INTEGER) {
@@ -1275,10 +1285,6 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case OP_ARGS:
-                n1 = ast_proc(node);
-                if (n1 && n1->symbolNode && n1->symbolNode->symbol) {
-                    if (!n1->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
-                }
                 break;
 
             case SAY:

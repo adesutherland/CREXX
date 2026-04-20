@@ -188,6 +188,7 @@ walker_result structure_symbols_walker(walker_direction direction,
             }
 
             sym_adnd(symbol, node, 0, 1);
+            symbol->is_implicit_main = node->is_implicit_main;
 
             /* Pass 1 Varargs Detection */
             ASTNode *args = ast_chld(node, ARGS, 0);

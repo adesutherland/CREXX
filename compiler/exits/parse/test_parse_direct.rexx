@@ -9,6 +9,7 @@ main: procedure
 
   failures = failures + test_descriptor()
   failures = failures + test_parse_plan()
+  failures = failures + test_parse_arg_plan()
   failures = failures + test_parse_incomplete_inputs()
   failures = failures + test_parse_suffix_options()
   failures = failures + test_parse_claimed_keywords()
@@ -87,6 +88,40 @@ test_parse_plan: procedure = .int
   if check_contains("parse runtime call", replacement, "abc=parseExec(_source,") = 0 then failures = failures + 1
   if check_contains("parse first assignment", replacement, "first=abc[1]") = 0 then failures = failures + 1
   if check_contains("parse second assignment", replacement, "second=abc[2]") = 0 then failures = failures + 1
+
+  return failures
+
+test_parse_arg_plan: procedure = .int
+  failures = .int
+  parser = .parseexit(2005)
+  plan = .exitplan
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "PARSE"
+  call pushidentifier tokens, "ARG"
+  call pushidentifier tokens, "execName", ".string", 0
+  call pushstring tokens, "'.'"
+  call pushidentifier tokens, "extension", ".string", 0
+
+  plan = parser.pre_process(tokens)
+  if check_equal("parse arg pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  if check_true("parse arg keyword", find_keyword(plan, "ARG") > 0, "keyword claim missing") = 0 then failures = failures + 1
+  if check_equal("parse arg binding count", "2", plan.get_binding_count()) = 0 then failures = failures + 1
+  if check_true("parse arg execName binding", find_binding(plan, "execName") > 0, "binding missing") = 0 then failures = failures + 1
+  if check_true("parse arg extension binding", find_binding(plan, "extension") > 0, "binding missing") = 0 then failures = failures + 1
+
+  result = parser.process(tokens)
+  if check_equal("parse arg process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("parse arg source count", replacement, "__rxcpx_parse_arg_count=arg()") = 0 then failures = failures + 1
+  if check_contains("parse arg source loop", replacement, "__rxcpx_parse_arg_source=__rxcpx_parse_arg_source || arg[__rxcpx_parse_arg_ix]") = 0 then failures = failures + 1
+  if check_contains("parse arg block return", replacement, "leave with __rxcpx_parse_arg_source") = 0 then failures = failures + 1
+  if check_contains("parse arg runtime call", replacement, "_parseResult=parseExec(_source,") = 0 then failures = failures + 1
+  if check_contains("parse arg first assignment", replacement, "execName=_parseResult[1]") = 0 then failures = failures + 1
+  if check_contains("parse arg second assignment", replacement, "extension=_parseResult[2]") = 0 then failures = failures + 1
 
   return failures
 
