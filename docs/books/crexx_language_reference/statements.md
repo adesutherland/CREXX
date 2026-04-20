@@ -76,7 +76,12 @@ The OPTIONS instruction is used to set various interpreter-specific options. See
 
 PARSE \[ option \] \[ CASELESS \] type \[ template \] ;
 
-*CURRENT STATUS: not implemented*
+Current implementation status:
+
+* `PARSE VALUE ...`, `PARSE VAR ...`, and `PARSE ARG ...` are implemented through the certified `PARSE` exit.
+* `PARSE ARG` uses the current procedure's `arg()` compatibility view.
+* In implicit `main`, that means command-line arguments.
+* In other procedures, that means the `...` tail if present, or an empty source string if there is no `...` tail.
 
 ## PROCEDURE
 

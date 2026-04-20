@@ -86,9 +86,13 @@ pre_process: method = .exitplan
         _into = ti.get_text()
         iterate
      end
-     else if isParseKeywordToken(ti, "VALUE") | isParseKeywordToken(ti, "VAR") then do
+     else if isParseKeywordToken(ti, "VALUE") | isParseKeywordToken(ti, "VAR") | isParseKeywordToken(ti, "ARG") then do
         parmtype = utext
         call compile_plan.add_keyword(start_of_template, text, "parse_source", "parse")
+        if parmtype = "ARG" then do
+           source_found = 1
+           leave
+        end
      end
      else if isParseIdentifierToken(ti) & (parmtype='VAR' | parmtype='VALUE') then do
         source_found = 1
@@ -115,6 +119,11 @@ pre_process: method = .exitplan
   end
 
   if start_of_template > tokens.0 then do
+     call compile_plan.set_error(1, "PARSE requires arguments", "MISSING_ARGUMENTS")
+     return compile_plan
+  end
+
+  if parmtype = "ARG" & start_of_template + 1 > tokens.0 then do
      call compile_plan.set_error(1, "PARSE requires arguments", "MISSING_ARGUMENTS")
      return compile_plan
   end
@@ -276,9 +285,12 @@ pre_process: method = .exitplan
   end
 
   ti = start_of_template
-  tj = tokens[ti]
   _replacement=''
-  parse_string = strip(tj.get_text())
+  if parmtype = "ARG" then parse_string = build_parse_arg_source_expr()
+  else do
+     tj = tokens[ti]
+     parse_string = strip(tj.get_text())
+  end
   if _into='' then _into='_parseResult'
   if uplow='UPPER' then _replacement = _replacement"; _source=upper("parse_string")"
   else if uplow='LOWER' then _replacement = _replacement"; _source=lower("parse_string")"
@@ -343,6 +355,9 @@ compile_parse_plan: procedure = .string
       planStr = planStr || k || "," || length(t) || ":" || t || ";"
    end
    return planStr
+
+build_parse_arg_source_expr: procedure = .string
+  return "do; __rxcpx_parse_arg_count=arg(); __rxcpx_parse_arg_source=''; do __rxcpx_parse_arg_ix = 1 to __rxcpx_parse_arg_count; if __rxcpx_parse_arg_ix > 1 then __rxcpx_parse_arg_source=__rxcpx_parse_arg_source || ' '; __rxcpx_parse_arg_source=__rxcpx_parse_arg_source || arg[__rxcpx_parse_arg_ix]; end; leave with __rxcpx_parse_arg_source; end"
 
 quote_rexx_string: procedure = .string
   arg raw = .string
