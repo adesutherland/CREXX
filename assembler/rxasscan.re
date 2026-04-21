@@ -86,6 +86,9 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     '.meta' { return(KW_META); }
     '.class' { return(KW_CLASS); }
     '.attr' { return(KW_ATTR); }
+    '.interface' { return(KW_INTERFACE); }
+    '.implements' { return(KW_IMPLEMENTS); }
+    '.member' { return(KW_MEMBER); }
     eof { return(EOS); }
     whitespace {
       s->top = s->cursor;

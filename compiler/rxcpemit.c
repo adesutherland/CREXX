@@ -158,6 +158,7 @@ static walker_result emit_walker(walker_direction direction,
             break;
 
             case CLASS_DEF:
+            case INTERFACE_DEF:
             case FACTORY:
             case METHOD:
             case PROCEDURE:

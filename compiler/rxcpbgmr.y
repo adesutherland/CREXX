@@ -591,6 +591,7 @@ keyword_instruction(I) ::= numeric(K). { I = K; }
 keyword_instruction(I) ::= factory_def(K). { I = K; }
 keyword_instruction(I) ::= method_def(K). { I = K; }
 keyword_instruction(I) ::= class_def(K). { I = K; }
+keyword_instruction(I) ::= interface_def(K). { I = K; }
 
 /* Note the "error" tokens here (esp for TK_END) - seem to fix a conflict error - I am not
    sure if the error virtual token is only enabled when in error recovery node. If so this
@@ -1553,19 +1554,40 @@ expression_in_list(P) ::= and_expression(E). { P = E; }
 
 /* Classes / Factories / Methods */
 
-class_def(C) ::= TK_LABEL(L) TK_CLASS opt_of(O).
+class_def(C) ::= TK_LABEL(L) TK_CLASS opt_of(O) opt_implements(I).
 {
   C = ast_f(context, CLASS_DEF, L);
   if (O) add_ast(C, O);
+  if (I) add_ast(C, I);
 }
 
 opt_of(O) ::= . { O = NULL; }
 opt_of(O) ::= TK_OF type_def(T). { O = T; }
 
-factory_def(F) ::= TK_MULT_LABEL(L) TK_FACTORY.
+opt_implements(I) ::= . { I = NULL; }
+opt_implements(I) ::= TK_IMPLEMENTS implements_list(L). { I = L; }
+
+implements_list(I) ::= type_def(T).
+{
+  I = ast_ft(context, IMPLEMENTS);
+  add_ast(I, T);
+}
+implements_list(I) ::= implements_list(L) type_def(T).
+{
+  I = L;
+  add_ast(I, T);
+}
+
+interface_def(C) ::= TK_LABEL(L) TK_INTERFACE.
+{
+  C = ast_f(context, INTERFACE_DEF, L);
+}
+
+factory_def(F) ::= TK_MULT_LABEL(L) TK_FACTORY opt_method_return_type(T).
 {
   F = ast_f(context, FACTORY, L);
-  add_ast(F, ast_ft(context, VOID));
+  if (T) add_ast(F, T);
+  else add_ast(F, ast_ft(context, VOID));
 }
 
 method_def(M) ::= TK_LABEL(L) TK_METHOD opt_method_return_type(T).

@@ -74,6 +74,15 @@ static int symbol_is_exit_token_only_in_proc(Symbol *symbol, ASTNode *proc_node)
     return saw_live_node;
 }
 
+static int node_is_imported_definition(ASTNode *node) {
+    while (node) {
+        if (node->node_type == IMPORTED_FILE) return 1;
+        if (node->node_type == PROGRAM_FILE) return 0;
+        node = node->parent;
+    }
+    return 0;
+}
+
 /* Adds Symbol metadata */
 void meta_set_symbol(Symbol *symbol, void *payload) {
     ASTNode* node = (ASTNode*)payload;
@@ -408,7 +417,7 @@ void clear_global_variable_metadata(ASTNode* node) {
 
 /* Returns Argument definition from the ARG Node as a malloced string to be used in meta-data */
 /* Node should be an ARGS node else the program aborts */
-/* Adds Class Symbol metadata */
+/* Adds class/interface contract metadata */
 void add_class_symbol(Symbol *symbol, void *payload) {
     ASTNode* node = (ASTNode*)payload;
     OutputFragment *output = node->output;
@@ -416,19 +425,84 @@ void add_class_symbol(Symbol *symbol, void *payload) {
     char* symbol_fqn;
 
     if (symbol->symbol_type == CLASS_SYMBOL) {
+        ASTNode *def_node = symbol->defines_scope ? symbol->defines_scope->defining_node : 0;
+
+        if (!def_node || node_is_imported_definition(def_node)) return;
+
         symbol_fqn = sym_frnm(symbol);
-        buffer = mprintf(".meta \"%s\"=\"b\" \"%s\" .class\n",
-                         symbol_fqn,
-                         type_nm(symbol->type)
-        );
+        if (def_node && def_node->node_type == INTERFACE_DEF) {
+            buffer = mprintf(".meta \"%s\"=\"b\" \"%s\" .interface\n",
+                             symbol_fqn,
+                             type_nm(symbol->type));
+        } else {
+            buffer = mprintf(".meta \"%s\"=\"b\" \"%s\" .class\n",
+                             symbol_fqn,
+                             type_nm(symbol->type));
+        }
         free(symbol_fqn);
 
         /* Add the metadata to the output fragment */
         output_append_text(output, buffer);
         free(buffer);
 
+        if (def_node && def_node->node_type == CLASS_DEF) {
+            ASTNode *implements_node = ast_chld(def_node, IMPLEMENTS, 0);
+            ASTNode *iface_ref = implements_node ? implements_node->child : 0;
+            while (iface_ref) {
+                Symbol *iface_symbol = iface_ref->symbolNode ? iface_ref->symbolNode->symbol : 0;
+                if (!iface_symbol) iface_symbol = sym_rvfc(def_node->context ? def_node->context->ast : 0, iface_ref);
+                if (iface_symbol && iface_symbol->symbol_type == CLASS_SYMBOL) {
+                    char *class_fqn = sym_frnm(symbol);
+                    char *iface_fqn = sym_frnm(iface_symbol);
+                    char *buf_impl = mprintf(".meta \"%s\"=\"%s\" .implements\n", class_fqn, iface_fqn);
+                    output_append_text(output, buf_impl);
+                    free(buf_impl);
+                    free(class_fqn);
+                    free(iface_fqn);
+                }
+                iface_ref = iface_ref->sibling;
+            }
+        }
+
+        if (def_node && def_node->node_type == INTERFACE_DEF && symbol->defines_scope) {
+            Symbol **symbols = scp_syms(symbol->defines_scope);
+            int i;
+            for (i = 0; symbols[i]; i++) {
+                Symbol *s = symbols[i];
+                if (s->symbol_type == FUNCTION_SYMBOL && sym_nond(s) > 0) {
+                    ASTNode *member = sym_trnd(s, 0)->node;
+                    if (member && (member->node_type == METHOD || member->node_type == FACTORY)) {
+                        char *owner_fqn = sym_frnm(symbol);
+                        char *rtype = ast_n2tp(ast_chld(member, CLASS, VOID));
+                        char *args = meta_narg(ast_chld(member, ARGS, 0));
+                        char *member_name;
+                        if (member->node_type == FACTORY) {
+                            member_name = strdup("*");
+                        } else {
+                            member_name = malloc(member->node_string_length + 1);
+                            memcpy(member_name, member->node_string, member->node_string_length);
+                            member_name[member->node_string_length] = 0;
+                        }
+                        char *buf_member = mprintf(".meta \"%s\"=\"%s\" \"%s\" \"%s\" \"%s\" .member\n",
+                                                   owner_fqn,
+                                                   member->node_type == FACTORY ? "factory" : "method",
+                                                   member_name,
+                                                   rtype,
+                                                   args);
+                        output_append_text(output, buf_member);
+                        free(buf_member);
+                        free(member_name);
+                        free(args);
+                        free(rtype);
+                        free(owner_fqn);
+                    }
+                }
+            }
+            free(symbols);
+        }
+
         /* Add attribute metadata by walking class scope symbols */
-        if (symbol->defines_scope) {
+        if (def_node && def_node->node_type == CLASS_DEF && symbol->defines_scope) {
             Symbol **symbols = scp_syms(symbol->defines_scope);
             int i, j;
             for (i = 0; symbols[i]; i++) {
@@ -467,7 +541,7 @@ void add_class_symbol(Symbol *symbol, void *payload) {
     }
 }
 
-/* Add all class metadata in a scope */
+/* Add all contract metadata in a scope */
 void add_all_class_metadata(ASTNode* scope_node, ASTNode* output_node) {
     Scope *scope = scope_node->scope;
     if (!scope) return;
@@ -489,6 +563,12 @@ char *meta_narg(ASTNode *node) {
     ASTNode *a;
     char **type;
     char **name;
+
+    if (!node) {
+        buffer = malloc(1);
+        buffer[0] = 0;
+        return buffer;
+    }
 
     if (node->node_type != ARGS) {
         fprintf(stderr,"INTERNAL ERROR - Not a ARG node in meta_args()\n");

@@ -109,7 +109,9 @@ static void validate_scope(Scope *scope, int *errors) {
                         (void*)scope, scope->parent ? scope->parent->type : -1);
                 (*errors)++;
             }
-            if (scope->defining_node && scope->defining_node->node_type != CLASS_DEF) {
+            if (scope->defining_node &&
+                scope->defining_node->node_type != CLASS_DEF &&
+                scope->defining_node->node_type != INTERFACE_DEF) {
                 fprintf(stderr, "Scope Hierarchy Error: CLASS scope %p has wrong defining node type %s\n",
                         (void*)scope, ast_ndtp(scope->defining_node->node_type));
                 (*errors)++;

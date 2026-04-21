@@ -1,0 +1,2 @@
+Error in interface_no_impl.rexx @ 6:13 - #INTERFACE_IMPLEMENTATION_NOT_FOUND, ".vehicle(\"solo\")"
+1 error(s) in source file

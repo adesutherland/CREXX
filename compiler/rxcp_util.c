@@ -550,6 +550,8 @@ const char* token_to_string(int token_id) {
         case TK_STEMSTRING: return "TK_STEMSTRING";
         case TK_STEMNOVAL: return "TK_STEMNOVAL";
         case TK_CLASS: return "TK_CLASS";
+        case TK_IMPLEMENTS: return "TK_IMPLEMENTS";
+        case TK_INTERFACE: return "TK_INTERFACE";
         case TK_FACTORY: return "TK_FACTORY";
         case TK_METHOD: return "TK_METHOD";
         case TK_WITH: return "TK_WITH";
@@ -927,6 +929,8 @@ const char* node_type_to_string(NodeType type) {
         case NODE_REGISTER: return "NODE_REGISTER";
         case OF: return "OF";
         case CLASS_DEF: return "CLASS_DEF";
+        case INTERFACE_DEF: return "INTERFACE_DEF";
+        case IMPLEMENTS: return "IMPLEMENTS";
         case MEMBER_CALL: return "MEMBER_CALL";
         case FACTORY_CALL: return "FACTORY_CALL";
         case BLOCK_EXPR: return "BLOCK_EXPR";

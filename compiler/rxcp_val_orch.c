@@ -826,7 +826,7 @@ void validate_node_promotion(Context *context, ASTNode* node) {
             mknd_err(node, "TYPE_MISMATCH");
         }
         else if (node->value_class && node->target_class) {
-            if (strcmp(node->value_class, node->target_class) != 0) {
+            if (!symbol_name_assignable_to(context, node->value_class, node->target_class)) {
                 mknd_err(node, "TYPE_MISMATCH");
             }
         }

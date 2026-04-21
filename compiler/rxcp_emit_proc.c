@@ -109,6 +109,7 @@ void emit_proc(ASTNode *node, void *pl) {
         break;
 
         case CLASS_DEF:
+        case INTERFACE_DEF:
             if (!node->output) node->output = output_f();
 
             n = child1;
@@ -122,6 +123,11 @@ void emit_proc(ASTNode *node, void *pl) {
         case FACTORY:
         case METHOD:
         case PROCEDURE:
+            if ((node->node_type == FACTORY || node->node_type == METHOD) &&
+                node->parent && node->parent->node_type == INTERFACE_DEF) {
+                if (!node->output) node->output = output_f();
+                break;
+            }
             if (ast_chld(node, INSTRUCTIONS, NOP)->node_type == NOP) {
                 /* A declaration - external */
                 char* type = ast_n2tp(ast_chld(node, CLASS, VOID));

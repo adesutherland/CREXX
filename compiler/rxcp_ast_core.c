@@ -1275,6 +1275,10 @@ const char *ast_ndtp(NodeType type) {
             return "OF";
         case CLASS_DEF:
             return "CLASS_DEF";
+        case INTERFACE_DEF:
+            return "INTERFACE_DEF";
+        case IMPLEMENTS:
+            return "IMPLEMENTS";
         case MEMBER_CALL:
             return "MEMBER_CALL";
         case FACTORY_CALL:

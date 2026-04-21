@@ -3,8 +3,6 @@
  * SOURCE                 : 18_array_class_main.rexx
  * BUILT                  : 2026-03-28 13:07:27
  */
-
-.meta "array_class_lib.item"="b" ".unknown" .class
 .srcfile="18_array_class_main.rexx"
 .globals=0
 

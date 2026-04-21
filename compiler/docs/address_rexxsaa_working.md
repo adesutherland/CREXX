@@ -1031,16 +1031,18 @@ Block discovered while closing this stage:
   across distinct classes in Level B today
 - `.object` is too weak for this use because named method calls still need a
   concrete compile-time class contract
-- the current implementation/docs do not yet provide a working Level B
-  interface or callable-contract mechanism that would make those calls type-safe
-  and ergonomic in ordinary Rexx code
+- the current codebase now has a tracer-bullet Level B interface path for the
+  one-interface, one-implementation case, but not the richer multi-provider
+  runtime dispatch needed for `ADDRESS` environment polymorphism
 
 Conclusion for Stage 3.2:
 
 - the stable stopping point is one `addressenvironment` class plus multiple
   registered objects and aliases
 - further generalization to truly separate environment classes is deferred
-  until Level B callable contracts / interfaces exist
+  until the fuller Level B callable-contract / interface dispatch model exists
+- see `compiler/docs/levelb_interfaces_working.md` for the follow-on design
+  record for that prerequisite
 
 Rationale:
 

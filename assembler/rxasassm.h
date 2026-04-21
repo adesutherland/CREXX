@@ -31,6 +31,12 @@ void rxasqmct(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
 void rxasqmclss(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type);
 /* Attribute Metadata */
 void rxasqmattr(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
+/* Interface Metadata */
+void rxasqmintf(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type);
+/* Implements Metadata */
+void rxasqmimpl(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *interface_symbol);
+/* Interface Member Metadata */
+void rxasqmmemb(Assembler_Context *context, Assembler_Token *owner, Assembler_Token *kind, Assembler_Token *member, Assembler_Token *type, Assembler_Token *args);
 /* Clear Metadata */
 void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol);
 
@@ -68,6 +74,12 @@ void rxasmect(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
 void rxasmeclss(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type);
 /* Attribute Metadata */
 void rxasmeattr(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
+/* Interface Metadata */
+void rxasmeintf(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type);
+/* Implements Metadata */
+void rxasmeimpl(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *interface_symbol);
+/* Interface Member Metadata */
+void rxasmememb(Assembler_Context *context, Assembler_Token *owner, Assembler_Token *kind, Assembler_Token *member, Assembler_Token *type, Assembler_Token *args);
 /* Clear Metadata */
 void rxasmecl(Assembler_Context *context, Assembler_Token *symbol);
 

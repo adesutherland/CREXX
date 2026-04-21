@@ -1348,3 +1348,50 @@ void rxasmeattr(Assembler_Context *context, Assembler_Token *symbol, Assembler_T
     mentry->type = s_typ;
     mentry->reg = (size_t)reg->token_value.integer;
 }
+
+/* Interface Metadata */
+void rxasmeintf(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type) {
+    size_t entry = add_meta_entry(context, sizeof(meta_interface_constant), META_INTERFACE);
+    size_t s_sym, s_opt, s_typ;
+
+    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
+    s_opt = add_string_to_pool(context, (char*)option->token_value.string);
+    s_typ = add_string_to_pool(context, (char*)type->token_value.string);
+
+    meta_interface_constant *mentry = (meta_interface_constant*)(context->binary.const_pool + entry);
+    mentry->symbol = s_sym;
+    mentry->option = s_opt;
+    mentry->type = s_typ;
+}
+
+/* Implements Metadata */
+void rxasmeimpl(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *interface_symbol) {
+    size_t entry = add_meta_entry(context, sizeof(meta_implements_constant), META_IMPLEMENTS);
+    size_t s_sym, s_iface;
+
+    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
+    s_iface = add_string_to_pool(context, (char*)interface_symbol->token_value.string);
+
+    meta_implements_constant *mentry = (meta_implements_constant*)(context->binary.const_pool + entry);
+    mentry->symbol = s_sym;
+    mentry->interface_symbol = s_iface;
+}
+
+/* Interface Member Metadata */
+void rxasmememb(Assembler_Context *context, Assembler_Token *owner, Assembler_Token *kind, Assembler_Token *member, Assembler_Token *type, Assembler_Token *args) {
+    size_t entry = add_meta_entry(context, sizeof(meta_member_constant), META_MEMBER);
+    size_t s_owner, s_kind, s_member, s_type, s_args;
+
+    s_owner = add_string_to_pool(context, (char*)owner->token_value.string);
+    s_kind = add_string_to_pool(context, (char*)kind->token_value.string);
+    s_member = add_string_to_pool(context, (char*)member->token_value.string);
+    s_type = add_string_to_pool(context, (char*)type->token_value.string);
+    s_args = add_string_to_pool(context, (char*)args->token_value.string);
+
+    meta_member_constant *mentry = (meta_member_constant*)(context->binary.const_pool + entry);
+    mentry->owner = s_owner;
+    mentry->kind = s_kind;
+    mentry->member = s_member;
+    mentry->type = s_type;
+    mentry->args = s_args;
+}

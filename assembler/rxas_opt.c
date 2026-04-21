@@ -1139,6 +1139,15 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
             /* Queue Attribute Metadata */
             rxasmeattr(context, item->instrToken, item->operand1Token, item->operand2Token, item->operand3Token);
             break;
+        case INTERFACE_META:
+            rxasmeintf(context, item->instrToken, item->operand1Token, item->operand2Token);
+            break;
+        case IMPLEMENTS_META:
+            rxasmeimpl(context, item->instrToken, item->operand1Token);
+            break;
+        case MEMBER_META:
+            rxasmememb(context, item->instrToken, item->operand1Token, item->operand2Token, item->operand3Token, item->operand4Token);
+            break;
         case SRC_LINE:
             /* Queue Source Line */
             rxasmesr(context, item->instrToken, item->operand1Token, item->operand2Token);
@@ -1286,6 +1295,27 @@ void rxasqmattr(Assembler_Context *context, Assembler_Token *symbol, Assembler_T
         queue_instruction(context, ATTR_META, symbol, option, type, reg, 0, 0);
     }
     else rxasmeattr(context, symbol, option, type, reg);
+}
+
+void rxasqmintf(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type) {
+    if (context->optimise) {
+        queue_instruction(context, INTERFACE_META, symbol, option, type, 0, 0, 0);
+    }
+    else rxasmeintf(context, symbol, option, type);
+}
+
+void rxasqmimpl(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *interface_symbol) {
+    if (context->optimise) {
+        queue_instruction(context, IMPLEMENTS_META, symbol, interface_symbol, 0, 0, 0, 0);
+    }
+    else rxasmeimpl(context, symbol, interface_symbol);
+}
+
+void rxasqmmemb(Assembler_Context *context, Assembler_Token *owner, Assembler_Token *kind, Assembler_Token *member, Assembler_Token *type, Assembler_Token *args) {
+    if (context->optimise) {
+        queue_instruction(context, MEMBER_META, owner, kind, member, type, args, 0);
+    }
+    else rxasmememb(context, owner, kind, member, type, args);
 }
 
 /* Queue Clear Metadata */

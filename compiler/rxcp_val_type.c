@@ -187,6 +187,149 @@ static int same_value_type(ASTNode *left, ASTNode *right) {
     return left->value_class == 0 && right->value_class == 0;
 }
 
+static int same_contract_type_node(Context *context, ASTNode *left, ASTNode *right) {
+    size_t left_dims = 0, right_dims = 0;
+    int *left_base = 0, *left_elems = 0, *right_base = 0, *right_elems = 0;
+    char *left_class = 0, *right_class = 0;
+    ValueType left_type;
+    ValueType right_type;
+    int same = 0;
+
+    left_type = node_to_type(context, left, &left_dims, &left_base, &left_elems, &left_class);
+    right_type = node_to_type(context, right, &right_dims, &right_base, &right_elems, &right_class);
+
+    if (left_type == right_type && left_dims == right_dims) {
+        size_t i;
+        same = 1;
+        for (i = 0; i < left_dims; i++) {
+            if (left_base[i] != right_base[i] || left_elems[i] != right_elems[i]) {
+                same = 0;
+                break;
+            }
+        }
+        if (same) {
+            if (left_class && right_class) same = strcmp(left_class, right_class) == 0;
+            else same = left_class == 0 && right_class == 0;
+        }
+    }
+
+    if (left_base) free(left_base);
+    if (left_elems) free(left_elems);
+    if (left_class) free(left_class);
+    if (right_base) free(right_base);
+    if (right_elems) free(right_elems);
+    if (right_class) free(right_class);
+
+    return same;
+}
+
+static int same_contract_signature(Context *context, ASTNode *iface_member, ASTNode *class_member) {
+    ASTNode *iface_args;
+    ASTNode *class_args;
+    ASTNode *iface_arg;
+    ASTNode *class_arg;
+    ASTNode *iface_ret;
+    ASTNode *class_ret;
+
+    iface_ret = iface_member;
+    class_ret = class_member;
+    if (!same_contract_type_node(context, iface_ret, class_ret)) {
+        if (iface_ret && class_ret &&
+            iface_ret->value_type == TP_OBJECT && class_ret->value_type == TP_OBJECT &&
+            !iface_ret->value_dims && !class_ret->value_dims &&
+            iface_ret->value_class && class_ret->value_class &&
+            symbol_name_assignable_to(context, class_ret->value_class, iface_ret->value_class)) {
+            /* Concrete class return types may satisfy interface returns in the tracer-bullet slice. */
+        } else {
+            return 0;
+        }
+    }
+
+    iface_args = ast_chld(iface_member, ARGS, 0);
+    class_args = ast_chld(class_member, ARGS, 0);
+    iface_arg = iface_args ? iface_args->child : 0;
+    class_arg = class_args ? class_args->child : 0;
+
+    while (iface_arg && class_arg) {
+        ASTNode *iface_target = iface_arg->child ? iface_arg->child->sibling : 0;
+        ASTNode *class_target = class_arg->child ? class_arg->child->sibling : 0;
+
+        if (!iface_target || !class_target) return 0;
+        if (!same_contract_type_node(context, iface_target, class_target)) return 0;
+
+        iface_arg = iface_arg->sibling;
+        class_arg = class_arg->sibling;
+    }
+
+    return iface_arg == 0 && class_arg == 0;
+}
+
+static void validate_class_interface_contracts(Context *context, ASTNode *class_node) {
+    ASTNode *implements_node;
+    ASTNode *iface_ref;
+
+    if (!class_node || class_node->node_type != CLASS_DEF) return;
+
+    implements_node = ast_chld(class_node, IMPLEMENTS, 0);
+    if (!implements_node) return;
+
+    for (iface_ref = implements_node->child; iface_ref; iface_ref = iface_ref->sibling) {
+        Symbol *iface_symbol = sym_rvfc(context->ast, iface_ref);
+        ASTNode *iface_member;
+
+        if (!iface_symbol) {
+            ensure_class_imported(context, iface_ref->node_string, iface_ref->node_string_length);
+            iface_symbol = sym_rvfc(context->ast, iface_ref);
+        }
+
+        if (!sym_is_interface_symbol(iface_symbol)) {
+            mknd_err(iface_ref, "INTERFACE_NOT_FOUND");
+            continue;
+        }
+
+        for (iface_member = iface_symbol->defines_scope ? iface_symbol->defines_scope->defining_node->child : 0;
+             iface_member;
+             iface_member = iface_member->sibling) {
+            Symbol *class_member_symbol;
+            ASTNode *class_member_node;
+            char *member_name;
+            char *iface_name;
+
+            if (iface_member->node_type != METHOD && iface_member->node_type != FACTORY) continue;
+
+            if (iface_member->node_type == FACTORY) {
+                ASTNode star_node;
+                memset(&star_node, 0, sizeof(ASTNode));
+                star_node.node_string = "\xc2\xa7" "factory";
+                star_node.node_string_length = 9;
+                class_member_symbol = sym_lrsv(class_node->scope, &star_node);
+                member_name = strdup("*");
+            } else {
+                class_member_symbol = sym_lrsv(class_node->scope, iface_member);
+                member_name = malloc(iface_member->node_string_length + 1);
+                memcpy(member_name, iface_member->node_string, iface_member->node_string_length);
+                member_name[iface_member->node_string_length] = 0;
+            }
+
+            iface_name = sym_frnm(iface_symbol);
+            if (!class_member_symbol || class_member_symbol->symbol_type != FUNCTION_SYMBOL) {
+                mknd_err(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name);
+                free(member_name);
+                if (iface_name) free(iface_name);
+                continue;
+            }
+
+            class_member_node = sym_trnd(class_member_symbol, 0)->node;
+            if (!same_contract_signature(context, iface_member, class_member_node)) {
+                mknd_err(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name);
+            }
+
+            free(member_name);
+            if (iface_name) free(iface_name);
+        }
+    }
+}
+
 /* This walker does the basic value types of operations
  * No errors generated - just simple "guesses" as to types */
 /* Propagate types from function signature to arguments and promote unknown symbols */
@@ -407,6 +550,7 @@ walker_result set_node_types_walker(walker_direction direction,
                     ASTNode *instance = ast_chdn(node, 0);
                     const char *cname = instance->value_class;
                     Symbol *class_sym = 0;
+                    Symbol *dispatch_class_sym = 0;
                     Symbol *method_sym = 0;
                     if (!cname && instance->symbolNode && instance->symbolNode->symbol) {
                         cname = instance->symbolNode->symbol->value_class;
@@ -419,12 +563,42 @@ walker_result set_node_types_walker(walker_direction direction,
                         dummy.node_string_length = strlen(cname);
                         class_sym = sym_rvfc(context->ast, &dummy);
                         if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
-                            method_sym = sym_lrsv(class_sym->defines_scope, node);
+                            dispatch_class_sym = class_sym;
+                            if (sym_is_interface_symbol(class_sym)) {
+                                int candidate_count = 0;
+                                if (!sym_lrsv(class_sym->defines_scope, node) && (!context->changed_flags || context->is_final_pass)) {
+                                    mknd_err(node, "METHOD_NOT_FOUND");
+                                    break;
+                                }
+                                dispatch_class_sym = find_unique_implementing_class(context, class_sym, &candidate_count);
+                                if (!dispatch_class_sym) {
+                                    if (!context->changed_flags || context->is_final_pass) {
+                                        if (candidate_count == 0) mknd_err(node, "INTERFACE_IMPLEMENTATION_NOT_FOUND");
+                                        else mknd_err(node, "AMBIGUOUS_INTERFACE_IMPLEMENTATION");
+                                    }
+                                    break;
+                                }
+                            }
+                            method_sym = sym_lrsv(dispatch_class_sym->defines_scope, node);
                         } else if (!context->changed_flags || context->is_final_pass) {
                             if (ensure_class_imported(context, cname, strlen(cname))) {
                                 class_sym = sym_rvfc(context->ast, &dummy);
                                 if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
-                                    method_sym = sym_lrsv(class_sym->defines_scope, node);
+                                    dispatch_class_sym = class_sym;
+                                    if (sym_is_interface_symbol(class_sym)) {
+                                        int candidate_count = 0;
+                                        if (!sym_lrsv(class_sym->defines_scope, node) && (!context->changed_flags || context->is_final_pass)) {
+                                            mknd_err(node, "METHOD_NOT_FOUND");
+                                            break;
+                                        }
+                                        dispatch_class_sym = find_unique_implementing_class(context, class_sym, &candidate_count);
+                                        if (!dispatch_class_sym) {
+                                            if (candidate_count == 0) mknd_err(node, "INTERFACE_IMPLEMENTATION_NOT_FOUND");
+                                            else mknd_err(node, "AMBIGUOUS_INTERFACE_IMPLEMENTATION");
+                                            break;
+                                        }
+                                    }
+                                    method_sym = sym_lrsv(dispatch_class_sym->defines_scope, node);
                                 }
                             }
                         }
@@ -520,12 +694,28 @@ walker_result set_node_types_walker(walker_direction direction,
                 if (node->value_type == TP_UNKNOWN) {
                     Symbol *class_sym = sym_rvfc(context->ast, node);
                     if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
+                        Symbol *dispatch_class_sym = class_sym;
                         /* Resolve the Factory routine '§factory' within that class */
                         ASTNode star_node;
                         memset(&star_node, 0, sizeof(ASTNode));
                         star_node.node_string = "\xc2\xa7" "factory";
                         star_node.node_string_length = 9;
-                        Symbol *factory_sym = sym_lrsv(class_sym->defines_scope, &star_node);
+                        if (sym_is_interface_symbol(class_sym)) {
+                            int candidate_count = 0;
+                            if (!sym_lrsv(class_sym->defines_scope, &star_node) && (!context->changed_flags || context->is_final_pass)) {
+                                mknd_err(node, "FACTORY_NOT_FOUND");
+                                break;
+                            }
+                            dispatch_class_sym = find_unique_implementing_class(context, class_sym, &candidate_count);
+                            if (!dispatch_class_sym) {
+                                if (!context->changed_flags || context->is_final_pass) {
+                                    if (candidate_count == 0) mknd_err(node, "INTERFACE_IMPLEMENTATION_NOT_FOUND");
+                                    else mknd_err(node, "AMBIGUOUS_INTERFACE_IMPLEMENTATION");
+                                }
+                                break;
+                            }
+                        }
+                        Symbol *factory_sym = sym_lrsv(dispatch_class_sym->defines_scope, &star_node);
                         if (factory_sym && factory_sym->symbol_type == FUNCTION_SYMBOL) {
                             if (!node->symbolNode || node->symbolNode->symbol != factory_sym) {
                                 sym_adnd(factory_sym, node, 1, 0);
@@ -544,11 +734,25 @@ walker_result set_node_types_walker(walker_direction direction,
                             /* Resolve again - it should be found now */
                             class_sym = sym_rvfc(context->ast, node);
                             if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
+                                Symbol *dispatch_class_sym = class_sym;
                                 ASTNode star_node;
                                 memset(&star_node, 0, sizeof(ASTNode));
                                 star_node.node_string = "\xc2\xa7" "factory";
                                 star_node.node_string_length = 9;
-                                Symbol *factory_sym = sym_lrsv(class_sym->defines_scope, &star_node);
+                                if (sym_is_interface_symbol(class_sym)) {
+                                    int candidate_count = 0;
+                                    if (!sym_lrsv(class_sym->defines_scope, &star_node) && (!context->changed_flags || context->is_final_pass)) {
+                                        mknd_err(node, "FACTORY_NOT_FOUND");
+                                        break;
+                                    }
+                                    dispatch_class_sym = find_unique_implementing_class(context, class_sym, &candidate_count);
+                                    if (!dispatch_class_sym) {
+                                        if (candidate_count == 0) mknd_err(node, "INTERFACE_IMPLEMENTATION_NOT_FOUND");
+                                        else mknd_err(node, "AMBIGUOUS_INTERFACE_IMPLEMENTATION");
+                                        break;
+                                    }
+                                }
+                                Symbol *factory_sym = sym_lrsv(dispatch_class_sym->defines_scope, &star_node);
                                 if (factory_sym && factory_sym->symbol_type == FUNCTION_SYMBOL) {
                                     if (!node->symbolNode || node->symbolNode->symbol != factory_sym) {
                                         sym_adnd(factory_sym, node, 1, 0);
@@ -1625,8 +1829,12 @@ walker_result func_type_safety_walker(walker_direction direction,
             case DEC_CASE:
             case DEC_STANDARD:
             case CLASS_DEF:
+            case INTERFACE_DEF:
             case METHOD:
             case FACTORY:
+                if (node->node_type == CLASS_DEF && context->is_final_pass) {
+                    validate_class_interface_contracts(context, node);
+                }
                 if (node->value_type == TP_UNKNOWN) {
                     set_node_type(node, TP_VOID);
                     

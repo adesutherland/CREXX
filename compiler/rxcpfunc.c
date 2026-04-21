@@ -59,6 +59,8 @@ typedef struct {
     Context *import_context;
 } class_import_payload;
 
+static int load_another_file(Context *context);
+
 #define GET_INDEX(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func->fqname
 #define GET_VALUE(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func
 
@@ -224,6 +226,85 @@ static int src_fqcl(Context *context, char* name, struct imported_class **cls) {
     return 0;
 }
 
+int sym_is_interface_symbol(Symbol *symbol) {
+    if (!symbol || symbol->symbol_type != CLASS_SYMBOL || !symbol->defines_scope || !symbol->defines_scope->defining_node) {
+        return 0;
+    }
+    return symbol->defines_scope->defining_node->node_type == INTERFACE_DEF;
+}
+
+int sym_is_class_contract_symbol(Symbol *symbol) {
+    if (!symbol || symbol->symbol_type != CLASS_SYMBOL || !symbol->defines_scope || !symbol->defines_scope->defining_node) {
+        return 0;
+    }
+    return symbol->defines_scope->defining_node->node_type == CLASS_DEF;
+}
+
+static Symbol *resolve_contract_symbol(Context *context, const char *name) {
+    Symbol *symbol;
+
+    if (!context || !name || !*name) return 0;
+
+    symbol = sym_rvfn(context->ast, (char *)name);
+    if (symbol && symbol->symbol_type == CLASS_SYMBOL) return symbol;
+
+    ensure_class_imported(context, name, strlen(name));
+    symbol = sym_rvfn(context->ast, (char *)name);
+    if (symbol && symbol->symbol_type == CLASS_SYMBOL) return symbol;
+
+    return 0;
+}
+
+static int loaded_class_implements_interface(Context *context, Symbol *class_symbol, Symbol *interface_symbol) {
+    ASTNode *class_node;
+    ASTNode *implements_node;
+    ASTNode *iface_ref;
+
+    if (!context || !sym_is_class_contract_symbol(class_symbol) || !sym_is_interface_symbol(interface_symbol)) {
+        return 0;
+    }
+
+    class_node = class_symbol->defines_scope->defining_node;
+    if (!class_node) return 0;
+
+    implements_node = ast_chld(class_node, IMPLEMENTS, 0);
+    if (!implements_node) return 0;
+
+    iface_ref = implements_node->child;
+    while (iface_ref) {
+        Symbol *implemented_symbol = sym_rvfc(context->ast, iface_ref);
+        if (!implemented_symbol) {
+            ensure_class_imported(context, iface_ref->node_string, iface_ref->node_string_length);
+            implemented_symbol = sym_rvfc(context->ast, iface_ref);
+        }
+
+        if (implemented_symbol == interface_symbol) return 1;
+
+        iface_ref = iface_ref->sibling;
+    }
+
+    return 0;
+}
+
+int symbol_name_assignable_to(Context *context, const char *from_name, const char *to_name) {
+    Symbol *from_symbol;
+    Symbol *to_symbol;
+
+    if (!from_name || !to_name) return 0;
+    if (strcmp(from_name, to_name) == 0) return 1;
+    if (!context) return 0;
+
+    from_symbol = resolve_contract_symbol(context, from_name);
+    to_symbol = resolve_contract_symbol(context, to_name);
+
+    if (!from_symbol || !to_symbol) return 0;
+    if (sym_is_class_contract_symbol(from_symbol) && sym_is_interface_symbol(to_symbol)) {
+        return loaded_class_implements_interface(context, from_symbol, to_symbol);
+    }
+
+    return 0;
+}
+
 // Search for a function / variable from name (checking for imported namespaces in the context)
 // if only_namespace is set then the search only covers the file namespace not imported ones
 // (this is for global variables)
@@ -332,20 +413,75 @@ static int add_func(Context *context, imported_func *func) {
     return 0;
 }
 
+static int imported_contract_member_count(Context *ctx) {
+    ASTNode *program;
+    ASTNode *contract;
+    int count = 0;
+
+    if (!ctx || !ctx->ast) return 0;
+    program = ctx->ast->child;
+    if (!program) return 0;
+    contract = program->child;
+    while (contract && contract->node_type == REXX_OPTIONS) contract = contract->sibling;
+    if (!contract) return 0;
+
+    for (ASTNode *member = contract->child; member; member = member->sibling) {
+        if (member->node_type == METHOD || member->node_type == FACTORY) count++;
+    }
+
+    return count;
+}
+
+static void free_imported_class_payload(struct imported_class *cls, int free_identity) {
+    if (!cls) return;
+    if (free_identity) {
+        free(cls->name);
+        free(cls->fqname);
+        free(cls->namespace);
+    }
+    free(cls->file_name);
+    if (cls->implements_fqnames) {
+        size_t k;
+        for (k = 0; k < cls->implements_count; k++) free(cls->implements_fqnames[k]);
+        free(cls->implements_fqnames);
+    }
+    if (cls->context) fre_cntx(cls->context);
+}
+
 /* Adds a class to the master context*/
 /* Returns 0 on success, 1 on duplicate */
 static int add_class(Context *context, struct imported_class *cls) {
+
     if (context->debug_mode >= 2) fprintf(stderr, "Importing Class %s from %s (into context file: %s)\n", cls->fqname, cls->file_name, context->file_name);
     struct avl_tree_node **root = (struct avl_tree_node **)&(context->master_context->importable_class_tree);
     struct imported_class *existing_cls;
     /* Does the class already exist? */
     if ( src_class(context, cls->fqname, &existing_cls) ) {
+        if (existing_cls &&
+            imported_contract_member_count(existing_cls->context) < imported_contract_member_count(cls->context)) {
+            free(existing_cls->file_name);
+            if (existing_cls->implements_fqnames) {
+                size_t k;
+                for (k = 0; k < existing_cls->implements_count; k++) free(existing_cls->implements_fqnames[k]);
+                free(existing_cls->implements_fqnames);
+            }
+            if (existing_cls->context) fre_cntx(existing_cls->context);
+
+            existing_cls->file_name = cls->file_name;
+            existing_cls->context = cls->context;
+            existing_cls->contract_type = cls->contract_type;
+            existing_cls->implements_fqnames = cls->implements_fqnames;
+            existing_cls->implements_count = cls->implements_count;
+
+            free(cls->name);
+            free(cls->fqname);
+            free(cls->namespace);
+            free(cls);
+            return 1;
+        }
+
         /* Yes a duplicate - we don't care if it's consistent for now, just free the new one */
-        free(cls->name);
-        free(cls->fqname);
-        free(cls->namespace);
-        free(cls->file_name);
-        if (cls->context) fre_cntx(cls->context);
+        free_imported_class_payload(cls, 1);
         free(cls);
         return 1;
     }
@@ -356,11 +492,7 @@ static int add_class(Context *context, struct imported_class *cls) {
         /* Duplicate */
         fprintf(stderr, "Internal Error: Unexpected duplicate class symbol\n");
         free(i);
-        free(cls->name);
-        free(cls->fqname);
-        free(cls->namespace);
-        free(cls->file_name);
-        if (cls->context) fre_cntx(cls->context);
+        free_imported_class_payload(cls, 1);
         free(cls);
         return 1;
     }
@@ -377,11 +509,7 @@ void fre_ctre(Context *context) {
 
     /* This walks the tree in post order which allows each node be freed */
     avl_tree_for_each_in_postorder(i, *root, struct class_tree_wrapper, index_node) {
-        free(i->cls->name);
-        free(i->cls->fqname);
-        free(i->cls->namespace);
-        free(i->cls->file_name);
-        if (i->cls->context) fre_cntx(i->cls->context);
+        free_imported_class_payload(i->cls, 1);
         free(i->cls);
         free(i);
     }
@@ -389,7 +517,8 @@ void fre_ctre(Context *context) {
 }
 
 /* imported_class factory */
-static struct imported_class *rximpcl_f(Context* context, char* file_name, char *fqname, Context *stub_ctx) {
+static struct imported_class *rximpcl_f(Context* context, char* file_name, char *fqname, Context *stub_ctx,
+                                        NodeType contract_type, char **implements_fqnames, size_t implements_count) {
     struct imported_class *cls;
     char *dot;
 
@@ -403,7 +532,10 @@ static struct imported_class *rximpcl_f(Context* context, char* file_name, char 
         stub_ctx->file_name = cls->file_name;
         ast_set_file_name(stub_ctx, cls->file_name);
     }
-    cls->class_node = 0;
+    cls->contract_node = 0;
+    cls->contract_type = contract_type;
+    cls->implements_fqnames = implements_fqnames;
+    cls->implements_count = implements_count;
 
     dot = strrchr(cls->fqname, '.');
     if (dot) {
@@ -422,6 +554,131 @@ static struct imported_class *rximpcl_f(Context* context, char* file_name, char 
     }
 
     return cls;
+}
+
+static Symbol *load_imported_contract(Context *context, struct imported_class *found_cls) {
+    Symbol *found_symbol = 0;
+
+    if (!context || !found_cls || !found_cls->context || !found_cls->context->ast || !found_cls->context->ast->child) {
+        return 0;
+    }
+
+    found_symbol = sym_rfqn(context->ast, found_cls->fqname);
+    if (found_symbol) return found_symbol;
+
+    ASTNode *new_stub = add_dast(context->ast, found_cls->context->ast->child);
+    context->changed_flags |= FLAG_FUNC;
+
+    {
+        Scope *old_scope = context->current_scope;
+        context->current_scope = context->ast->scope;
+        ast_wlkr(new_stub, build_symbols_walker, context);
+        context->current_scope = old_scope;
+    }
+
+    found_symbol = sym_rfqn(context->ast, found_cls->fqname);
+    if (found_symbol) {
+        found_symbol->exposed = 1;
+        found_symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
+    }
+
+    return found_symbol;
+}
+
+Symbol *find_unique_implementing_class(Context *context, Symbol *interface_symbol, int *candidate_count) {
+    size_t i;
+    int count = 0;
+    Symbol *winner = 0;
+    struct imported_class *winner_import = 0;
+    char *iface_fq;
+    Scope *universe;
+
+    if (candidate_count) *candidate_count = 0;
+    if (!context || !sym_is_interface_symbol(interface_symbol)) return 0;
+
+    iface_fq = sym_frnm(interface_symbol);
+    if (!iface_fq) return 0;
+
+    while (load_another_file(context)) {
+        /* Ensure the importable contract registry is complete before scanning implementations. */
+    }
+
+    universe = context->ast ? context->ast->scope : 0;
+    if (universe) {
+        for (i = 0; i < scp_noch(universe); i++) {
+            Scope *ns_scope = scp_chd(universe, i);
+            Symbol **symbols;
+            size_t j;
+
+            if (!ns_scope) continue;
+            symbols = scp_syms(ns_scope);
+            if (!symbols) continue;
+
+            for (j = 0; symbols[j]; j++) {
+                Symbol *symbol = symbols[j];
+                if (sym_is_class_contract_symbol(symbol) &&
+                    loaded_class_implements_interface(context, symbol, interface_symbol)) {
+                    count++;
+                    if (count == 1) winner = symbol;
+                }
+            }
+
+            free(symbols);
+        }
+    }
+
+    if (context->master_context && context->master_context->importable_class_tree) {
+        struct class_tree_wrapper *it;
+        avl_tree_for_each_in_order(it, context->master_context->importable_class_tree, struct class_tree_wrapper, index_node) {
+            struct imported_class *candidate = it->cls;
+            Symbol *candidate_symbol = 0;
+            int matches = 0;
+            size_t k;
+
+            if (!candidate || candidate->contract_type != CLASS_DEF) continue;
+            candidate_symbol = sym_rfqn(context->ast, candidate->fqname);
+            if (candidate_symbol &&
+                sym_is_class_contract_symbol(candidate_symbol) &&
+                loaded_class_implements_interface(context, candidate_symbol, interface_symbol)) {
+                continue;
+            }
+
+            if (candidate->implements_count) {
+                for (k = 0; k < candidate->implements_count; k++) {
+                    if (strcmp(candidate->implements_fqnames[k], iface_fq) == 0) {
+                        matches = 1;
+                        break;
+                    }
+                }
+            }
+
+            if (!matches) {
+                if (!candidate_symbol) candidate_symbol = load_imported_contract(context, candidate);
+                if (candidate_symbol &&
+                    sym_is_class_contract_symbol(candidate_symbol) &&
+                    loaded_class_implements_interface(context, candidate_symbol, interface_symbol)) {
+                    matches = 1;
+                }
+            }
+
+            if (!matches) continue;
+
+            count++;
+            if (count == 1) {
+                if (candidate_symbol) winner = candidate_symbol;
+                else winner_import = candidate;
+            }
+        }
+    }
+
+    if (candidate_count) *candidate_count = count;
+    free(iface_fq);
+
+    if (count != 1) return 0;
+    if (winner) return winner;
+    if (winner_import) return load_imported_contract(context, winner_import);
+
+    return 0;
 }
 
 /* Free Func Tree and functions */
@@ -520,17 +777,44 @@ static char *generate_arg_source(ASTNode *node) {
     return buffer;
 }
 
-/* Build a minimal class stub source for an exposed class */
-static char* generate_class_stub_source(ASTNode *class_node) {
+static char **collect_implemented_interface_fqnames(Context *context, ASTNode *class_node, size_t *out_count) {
+    ASTNode *implements_node;
+    ASTNode *iface_ref;
+    char **result = 0;
+    size_t count = 0;
+
+    if (out_count) *out_count = 0;
+    if (!class_node || class_node->node_type != CLASS_DEF) return 0;
+
+    implements_node = ast_chld(class_node, IMPLEMENTS, 0);
+    if (!implements_node) return 0;
+
+    for (iface_ref = implements_node->child; iface_ref; iface_ref = iface_ref->sibling) {
+        Symbol *iface_symbol = iface_ref->symbolNode ? iface_ref->symbolNode->symbol : 0;
+        char *fqname;
+        if (!iface_symbol) iface_symbol = sym_rvfc(context->ast, iface_ref);
+        if (!iface_symbol) continue;
+        fqname = sym_frnm(iface_symbol);
+        if (!fqname) continue;
+        result = realloc(result, sizeof(char *) * (count + 1));
+        result[count++] = fqname;
+    }
+
+    if (out_count) *out_count = count;
+    return result;
+}
+
+/* Build a minimal contract stub source for an exposed class or interface */
+static char* generate_contract_stub_source(ASTNode *contract_node) {
     Symbol *cls_sym;
     char *fq = 0;
     char *ns = 0;
     char *buffer = 0;
 
-    if (!class_node || class_node->node_type != CLASS_DEF) return 0;
-    if (!class_node->symbolNode || !class_node->symbolNode->symbol) return 0;
+    if (!contract_node || (contract_node->node_type != CLASS_DEF && contract_node->node_type != INTERFACE_DEF)) return 0;
+    if (!contract_node->symbolNode || !contract_node->symbolNode->symbol) return 0;
 
-    cls_sym = class_node->symbolNode->symbol;
+    cls_sym = contract_node->symbolNode->symbol;
 
     /* Get namespace and short class name from FQ name */
     fq = sym_frnm(cls_sym);
@@ -554,13 +838,46 @@ static char* generate_class_stub_source(ASTNode *class_node) {
     const char *cls_name = fq + dot + 1;
 
     /* Start stub source */
-    buffer = mprintf("options levelb\nnamespace %s\n%s: class\n", ns, cls_name);
+    if (contract_node->node_type == CLASS_DEF) {
+        ASTNode *implements_node = ast_chld(contract_node, IMPLEMENTS, 0);
+        if (implements_node && implements_node->child) {
+            ASTNode *iface_ref = implements_node->child;
+            buffer = mprintf("options levelb\nnamespace %s\n%s: class", ns, cls_name);
+            while (iface_ref) {
+                char *tmp = mprintf("%s%s %.*s",
+                                    buffer,
+                                    iface_ref == implements_node->child ? " implements" : "",
+                                    (int)iface_ref->node_string_length,
+                                    iface_ref->node_string);
+                free(buffer);
+                buffer = tmp;
+                iface_ref = iface_ref->sibling;
+            }
+            {
+                char *tmp = mprintf("%s\n", buffer);
+                free(buffer);
+                buffer = tmp;
+            }
+        } else {
+            buffer = mprintf("options levelb\nnamespace %s\n%s: class\n", ns, cls_name);
+        }
+    } else {
+        buffer = mprintf("options levelb\nnamespace %s\n%s: interface\n", ns, cls_name);
+    }
 
-    /* Iterate class members for FACTORY/METHOD signatures */
+    /* Iterate contract members for FACTORY/METHOD signatures */
     ASTNode *m;
-    for (m = class_node->child; m; m = m->sibling) {
+    for (m = contract_node->child; m; m = m->sibling) {
         if (m->node_type == FACTORY) {
-            char *tmp = mprintf("%s  *: factory\n", buffer);
+            ASTNode *ret = ast_chld(m, CLASS, VOID);
+            char *tmp;
+            if (contract_node->node_type == INTERFACE_DEF && ret && ret->node_type != VOID) {
+                char *rtype = ast_n2tp(ret);
+                tmp = mprintf("%s  *: factory = %s\n", buffer, rtype);
+                free(rtype);
+            } else {
+                tmp = mprintf("%s  *: factory\n", buffer);
+            }
             free(buffer);
             buffer = tmp;
 
@@ -612,23 +929,35 @@ static char* generate_class_stub_source(ASTNode *class_node) {
 static walker_result class_signature_walker(walker_direction direction,
                                             ASTNode* node,
                                             void *pl) {
-    /* Walk entire imported AST and register exposed classes in the class tree */
-    if (direction == out && node->node_type == CLASS_DEF) {
+    /* Walk entire imported AST and register exposed contracts in the class tree */
+    if (direction == out && (node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF)) {
         class_import_payload *p = (class_import_payload*)pl;
         if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->exposed) {
             char *fqname = sym_frnm(node->symbolNode->symbol);
             if (fqname) {
-                char *stub_source = generate_class_stub_source(node);
+                size_t implements_count = 0;
+                char **implements_fqnames = collect_implemented_interface_fqnames(p->import_context, node, &implements_count);
+                char *stub_source = generate_contract_stub_source(node);
                 if (stub_source) {
                     Context *stub_ctx = parseRexx(p->parent_context, p->import_context->location, p->import_context->file_name,
                                                   LEVELB, p->parent_context->debug_mode, stub_source, strlen(stub_source));
                     if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
                         if (stub_ctx->ast->child) stub_ctx->ast->child->node_type = IMPORTED_FILE;
-                        rximpcl_f(p->parent_context, p->import_context->file_name, fqname, stub_ctx);
+                        rximpcl_f(p->parent_context, p->import_context->file_name, fqname, stub_ctx,
+                                  node->node_type, implements_fqnames, implements_count);
                     } else {
+                        if (implements_fqnames) {
+                            size_t i;
+                            for (i = 0; i < implements_count; i++) free(implements_fqnames[i]);
+                            free(implements_fqnames);
+                        }
                         if (stub_ctx) fre_cntx(stub_ctx);
                         else free(stub_source);
                     }
+                } else if (implements_fqnames) {
+                    size_t i;
+                    for (i = 0; i < implements_count; i++) free(implements_fqnames[i]);
+                    free(implements_fqnames);
                 }
                 free(fqname);
             }
@@ -718,13 +1047,24 @@ typedef struct class_meta_agg {
     char *ns;        /* namespace */
     char *name;      /* short class name */
     char *methods;   /* accumulated method/factory signature lines */
+    NodeType contract_type;
+    char **implements_fqnames;
+    size_t implements_count;
     struct class_meta_agg *next;
 } class_meta_agg;
 
-static class_meta_agg* agg_find_or_add(class_meta_agg **head, const char *fq) {
+static char *short_name_from_fq(const char *fq) {
+    const char *dot = strrchr(fq, '.');
+    return strdup(dot ? dot + 1 : fq);
+}
+
+static class_meta_agg* agg_find_or_add(class_meta_agg **head, const char *fq, NodeType contract_type) {
     class_meta_agg *it = *head;
     while (it) {
-        if (strcmp(it->fq, fq) == 0) return it;
+        if (strcmp(it->fq, fq) == 0) {
+            if (contract_type != 0) it->contract_type = contract_type;
+            return it;
+        }
         it = it->next;
     }
     /* Create */
@@ -743,6 +1083,9 @@ static class_meta_agg* agg_find_or_add(class_meta_agg **head, const char *fq) {
         n->name = strdup(fq);
     }
     n->methods = 0;
+    n->contract_type = contract_type;
+    n->implements_fqnames = 0;
+    n->implements_count = 0;
     n->next = *head;
     *head = n;
     return n;
@@ -767,9 +1110,36 @@ static void agg_free_all(class_meta_agg *head) {
         if (n->ns) free(n->ns);
         if (n->name) free(n->name);
         if (n->methods) free(n->methods);
+        if (n->implements_fqnames) {
+            size_t i;
+            for (i = 0; i < n->implements_count; i++) free(n->implements_fqnames[i]);
+            free(n->implements_fqnames);
+        }
         free(n);
         n = nx;
     }
+}
+
+static void agg_add_implements(class_meta_agg *agg, const char *iface_fq) {
+    size_t i;
+
+    if (!agg || !iface_fq) return;
+    for (i = 0; i < agg->implements_count; i++) {
+        if (strcmp(agg->implements_fqnames[i], iface_fq) == 0) return;
+    }
+
+    agg->implements_fqnames = realloc(agg->implements_fqnames, sizeof(char *) * (agg->implements_count + 1));
+    agg->implements_fqnames[agg->implements_count++] = strdup(iface_fq);
+}
+
+static char **clone_fqname_array(char **names, size_t count) {
+    char **copy;
+    size_t i;
+
+    if (!names || !count) return 0;
+    copy = malloc(sizeof(char *) * count);
+    for (i = 0; i < count; i++) copy[i] = strdup(names[i]);
+    return copy;
 }
 
 /* Get the global variable type by reading metadata */
@@ -854,7 +1224,7 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                                 class_fq = malloc(class_len + 1);
                                 memcpy(class_fq, fqname, class_len);
                                 class_fq[class_len] = 0;
-                                class_meta_agg *agg = agg_find_or_add(&class_aggs, class_fq);
+                                class_meta_agg *agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
 
                                 /* method name is after last dot */
                                 const char *mname = last_dot + 1;
@@ -913,9 +1283,63 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
             meta_class_constant *mentry = (meta_class_constant *) entry;
             char *cls_sym = get_const_string(constant, mentry->symbol);
             if (cls_sym) {
-                agg_find_or_add(&class_aggs, cls_sym);
+                agg_find_or_add(&class_aggs, cls_sym, CLASS_DEF);
                 free(cls_sym);
             }
+        }
+        else if (entry->type == META_INTERFACE) {
+            meta_interface_constant *mentry = (meta_interface_constant *) entry;
+            char *iface_sym = get_const_string(constant, mentry->symbol);
+            if (iface_sym) {
+                agg_find_or_add(&class_aggs, iface_sym, INTERFACE_DEF);
+                free(iface_sym);
+            }
+        }
+        else if (entry->type == META_IMPLEMENTS) {
+            meta_implements_constant *mentry = (meta_implements_constant *) entry;
+            char *class_sym = get_const_string(constant, mentry->symbol);
+            char *iface_sym = get_const_string(constant, mentry->interface_symbol);
+            if (class_sym && iface_sym) {
+                class_meta_agg *agg = agg_find_or_add(&class_aggs, class_sym, CLASS_DEF);
+                agg_add_implements(agg, iface_sym);
+            }
+            if (class_sym) free(class_sym);
+            if (iface_sym) free(iface_sym);
+        }
+        else if (entry->type == META_MEMBER) {
+            meta_member_constant *mentry = (meta_member_constant *) entry;
+            char *owner = get_const_string(constant, mentry->owner);
+            char *kind = get_const_string(constant, mentry->kind);
+            char *member = get_const_string(constant, mentry->member);
+            char *type_str = get_const_string(constant, mentry->type);
+            char *args_str = get_const_string(constant, mentry->args);
+
+            if (owner && kind && member) {
+                class_meta_agg *agg = agg_find_or_add(&class_aggs, owner, INTERFACE_DEF);
+                char *ln;
+                if (strcmp(kind, "factory") == 0) {
+                    if (type_str && *type_str && strcmp(type_str, ".void") != 0) {
+                        ln = mprintf("  *: factory = %s\n", type_str);
+                    } else {
+                        ln = mprintf("  *: factory\n");
+                    }
+                } else {
+                    ln = mprintf("  %s: method = %s\n", member, type_str ? type_str : ".void");
+                }
+                agg_append_line(agg, ln);
+                free(ln);
+                if (args_str && *args_str) {
+                    ln = mprintf("  arg %s\n", args_str);
+                    agg_append_line(agg, ln);
+                    free(ln);
+                }
+            }
+
+            if (owner) free(owner);
+            if (kind) free(kind);
+            if (member) free(member);
+            if (type_str) free(type_str);
+            if (args_str) free(args_str);
         }
 
         /* A exposed global variable */
@@ -942,17 +1366,42 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
         i += entry->size_in_pool;
     }
 
-    /* Synthesize and register class stubs from aggregated metadata */
+    /* Synthesize and register contract stubs from aggregated metadata */
     if (class_aggs) {
         class_meta_agg *a = class_aggs;
         while (a) {
-            if (a->methods && *a->methods) {
-                const char *meth = a->methods;
-                char *stub_source = mprintf("options levelb\nnamespace %s\n%s: class\n%s", a->ns, a->name, meth);
+            if (a->contract_type == CLASS_DEF || (a->methods && *a->methods)) {
+                char *stub_source;
+                if (a->contract_type == INTERFACE_DEF) {
+                    stub_source = mprintf("options levelb\nnamespace %s\n%s: interface\n%s",
+                                          a->ns, a->name, a->methods ? a->methods : "");
+                } else if (a->implements_count) {
+                    size_t j;
+                    stub_source = mprintf("options levelb\nnamespace %s\n%s: class", a->ns, a->name);
+                    for (j = 0; j < a->implements_count; j++) {
+                        char *short_name = short_name_from_fq(a->implements_fqnames[j]);
+                        char *tmp = mprintf("%s%s .%s",
+                                            stub_source,
+                                            j == 0 ? " implements" : "",
+                                            short_name);
+                        free(short_name);
+                        free(stub_source);
+                        stub_source = tmp;
+                    }
+                    {
+                        char *tmp = mprintf("%s\n%s", stub_source, a->methods ? a->methods : "");
+                        free(stub_source);
+                        stub_source = tmp;
+                    }
+                } else {
+                    stub_source = mprintf("options levelb\nnamespace %s\n%s: class\n%s",
+                                          a->ns, a->name, a->methods ? a->methods : "");
+                }
                 Context *stub_ctx = parseRexx(context, context->location, full_file_name, LEVELB, context->debug_mode, stub_source, strlen(stub_source));
                 if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
                     if (stub_ctx->ast->child) stub_ctx->ast->child->node_type = IMPORTED_FILE;
-                    rximpcl_f(context, full_file_name, a->fq, stub_ctx);
+                    rximpcl_f(context, full_file_name, a->fq, stub_ctx, a->contract_type,
+                              clone_fqname_array(a->implements_fqnames, a->implements_count), a->implements_count);
                 } else {
                     if (stub_ctx) fre_cntx(stub_ctx);
                     else free(stub_source);
@@ -1463,6 +1912,53 @@ static ValueType type_from_string(char* type) {
     return TP_OBJECT;
 }
 
+static int contract_label_matches(const ASTNode *node, const char *short_name) {
+    size_t start;
+    size_t len;
+    size_t i;
+
+    if (!node || !node->node_string || !short_name) return 0;
+
+    start = 0;
+    len = node->node_string_length;
+
+    if (len > 0 && node->node_string[len - 1] == ':') len--;
+
+    while (start < len && isspace((unsigned char)node->node_string[start])) start++;
+    while (len > start && isspace((unsigned char)node->node_string[len - 1])) len--;
+
+    if (len - start != strlen(short_name)) return 0;
+
+    for (i = 0; i < len - start; i++) {
+        if (tolower((unsigned char)node->node_string[start + i]) !=
+            tolower((unsigned char)short_name[i])) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+static int ast_declares_local_contract(ASTNode *node, const char *short_name) {
+    for (; node; node = node->sibling) {
+        if ((node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF) &&
+            contract_label_matches(node, short_name)) {
+            return 1;
+        }
+
+        if (node->child && ast_declares_local_contract(node->child, short_name)) return 1;
+    }
+
+    return 0;
+}
+
+static int current_source_declares_contract(Context *context, const char *short_name) {
+    if (!context || !context->ast || !short_name || !*short_name) return 0;
+
+    /* Only scan the current source tree, not imported sibling modules. */
+    return ast_declares_local_contract(context->ast->child, short_name);
+}
+
 /* Try and import an external class - return its symbol if successful */
 Symbol *sym_imcls(Context *context, ASTNode *node) {
     struct imported_class *found_cls = 0;
@@ -1492,6 +1988,18 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
     utf8lwr(name);
 #endif
 
+    /* Do not import a stale external artifact for a contract declared later in this source file. */
+    if (current_source_declares_contract(context, name)) {
+        found_symbol = sym_rvfn(context->ast, name);
+        if (found_symbol && found_symbol->defines_scope && found_symbol->defines_scope->defining_node &&
+            found_symbol->defines_scope->defining_node->context == context) {
+            free(name);
+            return found_symbol;
+        }
+        free(name);
+        return 0;
+    }
+
     /* Check if the class is already in the master AST */
     found_symbol = sym_rvfn(context->ast, name);
     if (found_symbol && found_symbol->symbol_type == CLASS_SYMBOL && found_symbol->exposed) {
@@ -1514,21 +2022,7 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
     if (context->debug_mode >= 2) fprintf(stderr, "Finished Importing files needed for file %s when Looking for Class %s\n", context->file_name, name);
 
     if (found_cls) {
-        ASTNode *new_stub = add_dast(context->ast, found_cls->context->ast->child);
-        context->changed_flags |= FLAG_FUNC;
-
-        /* Build symbols for the new stub immediately so it can be resolved */
-        Scope *old_scope = context->current_scope;
-        context->current_scope = context->ast->scope;
-        ast_wlkr(new_stub, build_symbols_walker, context);
-        context->current_scope = old_scope;
-
-        /* Resolution of the FQN in the main AST should now work */
-        found_symbol = sym_rfqn(context->ast, found_cls->fqname);
-        if (found_symbol) {
-            found_symbol->exposed = 1;
-            found_symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
-        }
+        found_symbol = load_imported_contract(context, found_cls);
     }
 
     free(name);
@@ -1608,6 +2102,11 @@ int sym_is_imcls(Context *context, ASTNode *node) {
 #else
     utf8lwr(name);
 #endif
+
+    if (current_source_declares_contract(context, name)) {
+        free(name);
+        return 0;
+    }
 
     if (src_fqcl(context, name, &found_cls)) {
         found = 1;
@@ -2041,8 +2540,8 @@ static int should_skip_importable_file(importable_file **list, file_type type, c
         if (list_has_module_for_type(list, REXX_FILE, name)) return 1;
     }
 
-    if (type == RXBIN_FILE) {
-        if (list_has_module_for_type(list, RXAS_FILE, name)) return 1;
+    if (type == RXAS_FILE) {
+        if (list_has_module_for_type(list, RXBIN_FILE, name)) return 1;
     }
 
     return 0;
@@ -2129,11 +2628,11 @@ importable_file **rxfl_lst(Context *context) {
     /* Read REXX files in the current directory */
     list_files_in_dir(context->location, REXX_FILE, context->file_name, skip_module, &list, &number, context->debug_mode);
 
-    /* Read RXAS files in the current directory */
-    list_files_in_dir(context->location, RXAS_FILE, 0, skip_module, &list, &number, context->debug_mode);
-
     /* Read RXBIN files in the current directory */
     list_files_in_dir(context->location, RXBIN_FILE, 0, skip_module, &list, &number, context->debug_mode);
+
+    /* Read RXAS files in the current directory */
+    list_files_in_dir(context->location, RXAS_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
     /* Read in native plugins  in the current directory */
     list_files_in_dir(context->location, NATIVE_FILE, 0, skip_module, &list, &number, context->debug_mode);
@@ -2145,11 +2644,11 @@ importable_file **rxfl_lst(Context *context) {
             /* Read in REXX files in the directory */
             list_files_in_dir(context->import_locations[d], REXX_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
-            /* Read in RXAS files in the directory */
-            list_files_in_dir(context->import_locations[d], RXAS_FILE, 0, skip_module, &list, &number, context->debug_mode);
-
             /* Read in RXBIN files in the directory */
             list_files_in_dir(context->import_locations[d], RXBIN_FILE, 0, skip_module, &list, &number, context->debug_mode);
+
+            /* Read in RXAS files in the directory */
+            list_files_in_dir(context->import_locations[d], RXAS_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
             /* Read in native plugins in the directory */
             list_files_in_dir(context->import_locations[d], NATIVE_FILE, 0, skip_module, &list, &number, context->debug_mode);
@@ -2161,11 +2660,11 @@ importable_file **rxfl_lst(Context *context) {
         /* Read in REXX files in the directory holding the compiler */
         list_files_in_dir(exe_dir, REXX_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
-        /* Read in RXAS files in the directory holding the compiler */
-        list_files_in_dir(exe_dir, RXAS_FILE, 0, skip_module, &list, &number, context->debug_mode);
-
         /* Read in RXBIN files in the directory holding the compiler */
         list_files_in_dir(exe_dir, RXBIN_FILE, 0, skip_module, &list, &number, context->debug_mode);
+
+        /* Read in RXAS files in the directory holding the compiler */
+        list_files_in_dir(exe_dir, RXAS_FILE, 0, skip_module, &list, &number, context->debug_mode);
 
         /* Read in native plugins in the directory holding the compiler */
         list_files_in_dir(exe_dir, NATIVE_FILE, 0, skip_module, &list, &number, context->debug_mode);

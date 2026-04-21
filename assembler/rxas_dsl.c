@@ -53,6 +53,9 @@ static CB_NodeType map_c_token_to_cb_type(Assembler_Token *t) {
         case KW_META:
         case KW_CLASS:
         case KW_ATTR:
+        case KW_INTERFACE:
+        case KW_IMPLEMENTS:
+        case KW_MEMBER:
         case KW_LOCALS:
         case KW_SRCFILE:
         case KW_SRC: return LEXER_PREPROCESSOR; // Directives -> Magenta

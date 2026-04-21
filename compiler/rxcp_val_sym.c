@@ -113,7 +113,7 @@ walker_result structure_symbols_walker(walker_direction direction,
             node->scope = context->current_scope;
         }
 
-        else if (node->node_type == CLASS_DEF) {
+        else if (node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF) {
             normalize_symbol_label(node);
 
             /* Check for duplicated */
@@ -136,7 +136,7 @@ walker_result structure_symbols_walker(walker_direction direction,
 
             sym_adnd(symbol, node, 0, 1);
 
-            /* Move down to the class scope */
+            /* Move down to the contract scope */
             if (symbol->defines_scope) {
                 context->current_scope = symbol->defines_scope;
             } else {
@@ -311,7 +311,8 @@ walker_result build_symbols_walker(walker_direction direction,
         /* IN - TOP DOWN */
 
         if (node->node_type == REXX_UNIVERSE || node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE ||
-            node->node_type == CLASS_DEF || node->node_type == PROCEDURE || node->node_type == METHOD ||
+            node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF ||
+            node->node_type == PROCEDURE || node->node_type == METHOD ||
             node->node_type == FACTORY || node->node_type == IMPORT ||
             node->node_type == DO || node->node_type == INSTRUCTIONS ||
             node->node_type == BLOCK_EXPR) {
@@ -1228,7 +1229,9 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         symbol->type = TP_OBJECT;
         sym_promote_symtype(context, symbol, VARIABLE_SYMBOL);
         symbol->value_dims = 0;
-        if (scope->parent && scope->parent->defining_node && scope->parent->defining_node->node_type == CLASS_DEF) {
+        if (scope->parent && scope->parent->defining_node &&
+            (scope->parent->defining_node->node_type == CLASS_DEF ||
+             scope->parent->defining_node->node_type == INTERFACE_DEF)) {
             if (symbol->value_class) free(symbol->value_class);
             symbol->value_class = malloc(strlen(scope->parent->name) + 1);
             strcpy(symbol->value_class, scope->parent->name);
@@ -1271,8 +1274,9 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
 
                 if (defining_node_link->node->node_type == FACTORY) {
                     symbol->type = TP_OBJECT;
-                    /* The FACTORY symbol is in the CLASS scope */
-                    if (scope->defining_node && scope->defining_node->node_type == CLASS_DEF) {
+                    if (scope->defining_node &&
+                        (scope->defining_node->node_type == CLASS_DEF ||
+                         scope->defining_node->node_type == INTERFACE_DEF)) {
                         if (symbol->value_class) free(symbol->value_class);
                         symbol->value_class = malloc(strlen(scope->name) + 1);
                         strcpy(symbol->value_class, scope->name);
@@ -1333,8 +1337,9 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             /* This sets the procedure symbol type */
             if (defining_node_link->node->node_type == FACTORY) {
                 symbol->type = TP_OBJECT;
-                /* The FACTORY symbol is in the CLASS scope */
-                if (scope->defining_node && scope->defining_node->node_type == CLASS_DEF) {
+                if (scope->defining_node &&
+                    (scope->defining_node->node_type == CLASS_DEF ||
+                     scope->defining_node->node_type == INTERFACE_DEF)) {
                     if (symbol->value_class) free(symbol->value_class);
                     symbol->value_class = malloc(strlen(scope->name) + 1);
                     strcpy(symbol->value_class, scope->name);

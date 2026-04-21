@@ -159,18 +159,19 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 }
             }
         }
-        else if (node->node_type == CLASS_DEF) {
+        else if (node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF) {
             if (node->parent->node_type != PROGRAM_FILE) {
-                mknd_err(node, "CANT_DEFINE_CLASS_HERE");
+                mknd_err(node, node->node_type == CLASS_DEF ? "CANT_DEFINE_CLASS_HERE" : "CANT_DEFINE_INTERFACE_HERE");
             }
             else {
-                /* Hoist siblings until next PROCEDURE or CLASS_DEF */
-                while ( ((next = node->sibling)) && next->node_type != PROCEDURE && next->node_type != CLASS_DEF) {
+                /* Hoist siblings until the next top-level callable/contract boundary */
+                while ( ((next = node->sibling)) && next->node_type != PROCEDURE &&
+                        next->node_type != CLASS_DEF && next->node_type != INTERFACE_DEF) {
                     /* Disconnect/remove next node from the AST tree */
                     node->sibling = next->sibling;
                     next->sibling = 0;
                     next->parent = 0;
-                    /* add next under CLASS_DEF child */
+                    /* add next under CLASS_DEF / INTERFACE_DEF child */
                     add_ast(node,next);
                 }
             }
@@ -201,7 +202,9 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
             if (node->node_type == PROCEDURE && node->parent->node_type != PROGRAM_FILE) {
                 mknd_err(node, "CANT_DEFINE_PROC_HERE");
             }
-            else if ((node->node_type == METHOD || node->node_type == FACTORY) && node->parent->node_type != CLASS_DEF) {
+            else if ((node->node_type == METHOD || node->node_type == FACTORY) &&
+                     node->parent->node_type != CLASS_DEF &&
+                     node->parent->node_type != INTERFACE_DEF) {
                 mknd_err(node, "CANT_DEFINE_METHOD_HERE");
             }
             else {
@@ -220,6 +223,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 next = node->sibling;
                 ASTNode *prev = node;
                 while (next && next->node_type != PROCEDURE && next->node_type != CLASS_DEF &&
+                       next->node_type != INTERFACE_DEF &&
                        next->node_type != METHOD && next->node_type != FACTORY) {
                     switch (next->node_type) {
                         case ARGS:
@@ -318,7 +322,8 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 last = NULL;
 
                 /* For each sibling until the next block */
-                while ( ((next = node->sibling)) && next->node_type != PROCEDURE && next->node_type != CLASS_DEF &&
+                while ( ((next = node->sibling)) && next->node_type != PROCEDURE &&
+                        next->node_type != CLASS_DEF && next->node_type != INTERFACE_DEF &&
                         next->node_type != METHOD && next->node_type != FACTORY) {
                     last = next; /* To check that there is a return */
                     /* 2. Disconnect/remove next node from the AST tree */
@@ -330,7 +335,10 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 }
 
                 if (last) { /* If there are no instructions at all it is a declaration */
-                    if (last->node_type != RETURN && !context->in_exit_bridge) {
+                    if (node->parent->node_type == INTERFACE_DEF) {
+                        mknd_err(node, "INTERFACE_MEMBER_BODY_NOT_ALLOWED");
+                    }
+                    else if (last->node_type != RETURN && !context->in_exit_bridge) {
                         /* We need to add a return */
                         new_child = ast_ft(context,RETURN);
                         add_ast(last->parent,new_child); /* Adds as the last sibling */
@@ -347,12 +355,12 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
 static int is_callable_boundary(ASTNode *node) {
     if (!node) return 0;
     return node->node_type == PROCEDURE || node->node_type == CLASS_DEF ||
-           node->node_type == METHOD || node->node_type == FACTORY;
+           node->node_type == INTERFACE_DEF || node->node_type == METHOD || node->node_type == FACTORY;
 }
 
 static int is_class_member_boundary(ASTNode *node) {
     if (!node) return 0;
-    return node->node_type == PROCEDURE || node->node_type == CLASS_DEF;
+    return node->node_type == PROCEDURE || node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF;
 }
 
 static void promote_program_file_children(ASTNode *node) {
@@ -387,7 +395,7 @@ static ASTNode *infer_main_return_type(Context *context, ASTNode *first_node) {
     n = first_node;
     while (1) {
         if (!n) return ast_ft(context, VOID);
-        if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF) return ast_ft(context, VOID);
+        if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF || n->node_type == INTERFACE_DEF) return ast_ft(context, VOID);
         if (n->node_type == RETURN) {
             if (n->child) return ast_ftt(context, CLASS, ".int");
             return ast_ft(context, VOID);
@@ -509,7 +517,9 @@ static void structure_callable_body(Context *context,
         mknd_err(node, "CANT_DEFINE_PROC_HERE");
         return;
     }
-    if ((node->node_type == METHOD || node->node_type == FACTORY) && node->parent->node_type != CLASS_DEF) {
+    if ((node->node_type == METHOD || node->node_type == FACTORY) &&
+        node->parent->node_type != CLASS_DEF &&
+        node->parent->node_type != INTERFACE_DEF) {
         mknd_err(node, "CANT_DEFINE_METHOD_HERE");
         return;
     }
@@ -618,7 +628,7 @@ static void wrap_program_file_main(Context *context, ASTNode *node) {
     if (!node || !node->child) return;
     child = node->child->sibling;
     if (!child) return;
-    if (child->node_type == PROCEDURE || child->node_type == CLASS_DEF) return;
+    if (child->node_type == PROCEDURE || child->node_type == CLASS_DEF || child->node_type == INTERFACE_DEF) return;
 
     instructions = ast_ftt(context, PROCEDURE, "main:");
     instructions->is_implicit_main = 1;
@@ -631,7 +641,8 @@ static void wrap_program_file_main(Context *context, ASTNode *node) {
     instructions = ast_ft(context, INSTRUCTIONS);
     add_ast(node->child->sibling, instructions);
 
-    while ((next = node->child->sibling->sibling) && next->node_type != PROCEDURE && next->node_type != CLASS_DEF) {
+    while ((next = node->child->sibling->sibling) && next->node_type != PROCEDURE &&
+           next->node_type != CLASS_DEF && next->node_type != INTERFACE_DEF) {
         node->child->sibling->sibling = next->sibling;
         next->sibling = 0;
         next->parent = 0;
@@ -653,9 +664,9 @@ walker_result ast_source_structure_walker(walker_direction direction,
     if (node->node_type == PROGRAM_FILE) {
         promote_program_file_children(node);
     }
-    else if (node->node_type == CLASS_DEF) {
+    else if (node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF) {
         if (node->parent->node_type != PROGRAM_FILE) {
-            mknd_err(node, "CANT_DEFINE_CLASS_HERE");
+            mknd_err(node, node->node_type == CLASS_DEF ? "CANT_DEFINE_CLASS_HERE" : "CANT_DEFINE_INTERFACE_HERE");
         }
         else {
             while (((next = node->sibling)) && !is_class_member_boundary(next)) {
@@ -693,6 +704,9 @@ walker_result ast_source_structure_walker(walker_direction direction,
         if (child && !child->child) {
             ast_del(child);
         }
+        else if (child && child->child && node->parent && node->parent->node_type == INTERFACE_DEF) {
+            mknd_err(node, "INTERFACE_MEMBER_BODY_NOT_ALLOWED");
+        }
     }
 
     return result_normal;
@@ -711,7 +725,12 @@ walker_result ast_work_structure_walker(walker_direction direction,
         wrap_program_file_main(context, node);
     }
     else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
-        structure_callable_body(context, node, 1, 1);
+        if (node->parent && node->parent->node_type == INTERFACE_DEF) {
+            structure_callable_body(context, node, 0, 0);
+        }
+        else {
+            structure_callable_body(context, node, 1, 1);
+        }
     }
 
     return result_normal;
@@ -997,6 +1016,9 @@ walker_result syntax_validation_walker(walker_direction direction,
         else if (node->node_type == ASSIGN) {
             if (node->parent && node->parent->node_type == CLASS_DEF) {
                 mknd_err(node, "CANT_ASSIGN_IN_CLASS_DEF");
+            }
+            else if (node->parent && node->parent->node_type == INTERFACE_DEF) {
+                mknd_err(node, "CANT_ASSIGN_IN_INTERFACE_DEF");
             }
         }
         else if (node->node_type == REPEAT) {

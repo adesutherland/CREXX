@@ -162,7 +162,10 @@ struct imported_class {
     char *fqname;
     char *name;
     Context *context; /* parsed import context providing the AST */
-    ASTNode *class_node; /* pointer into import AST for signature extraction */
+    ASTNode *contract_node; /* pointer into import AST for signature extraction */
+    NodeType contract_type;
+    char **implements_fqnames;
+    size_t implements_count;
 };
 
 /*  Importable Files */
@@ -215,6 +218,10 @@ int sym_is_imcls(Context *context, ASTNode *node);
 Symbol *sym_imcls(Context *context, ASTNode *node);
 /* Try and import an external class by name - return its symbol if successful */
 Symbol *ensure_class_imported(Context *context, const char *class_name, size_t class_name_length);
+int sym_is_interface_symbol(Symbol *symbol);
+int sym_is_class_contract_symbol(Symbol *symbol);
+int symbol_name_assignable_to(Context *context, const char *from_name, const char *to_name);
+Symbol *find_unique_implementing_class(Context *context, Symbol *interface_symbol, int *candidate_count);
 
 /* Set the type of a symbol from imported modules */
 void sym_imva(Context *context, Symbol *symbol);
