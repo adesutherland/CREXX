@@ -87,7 +87,7 @@ static char *build_runtime_member_name(const char *class_name, size_t class_name
     return proc_name;
 }
 
-static proc_constant *resolve_runtime_method(rxvm_context *context, const char *proc_name, size_t proc_name_length) {
+static proc_constant *resolve_runtime_procedure(rxvm_context *context, const char *proc_name, size_t proc_name_length) {
     size_t mod_index;
 
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
@@ -114,6 +114,168 @@ static proc_constant *resolve_runtime_method(rxvm_context *context, const char *
     }
 
     return 0;
+}
+
+static int compare_runtime_name(const char *left, size_t left_length,
+                                const char *right, size_t right_length) {
+    size_t min_length;
+    int cmp;
+
+    if (!left && !right) return 0;
+    if (!left) return -1;
+    if (!right) return 1;
+
+    min_length = left_length < right_length ? left_length : right_length;
+    cmp = memcmp(left, right, min_length);
+    if (cmp) return cmp;
+    if (left_length < right_length) return -1;
+    if (left_length > right_length) return 1;
+    return 0;
+}
+
+static char *dup_runtime_name(const char *name, size_t name_length) {
+    char *copy;
+
+    copy = malloc(name_length + 1);
+    if (!copy) return 0;
+
+    memcpy(copy, name, name_length);
+    copy[name_length] = 0;
+    return copy;
+}
+
+static char *build_interface_factory_error(const char *prefix,
+                                           const char *interface_name,
+                                           size_t interface_name_length) {
+    size_t prefix_length;
+    char *buffer;
+
+    prefix_length = strlen(prefix);
+    buffer = malloc(prefix_length + interface_name_length + 1);
+    if (!buffer) return 0;
+
+    memcpy(buffer, prefix, prefix_length);
+    memcpy(buffer + prefix_length, interface_name, interface_name_length);
+    buffer[prefix_length + interface_name_length] = 0;
+    return buffer;
+}
+
+static int resolve_runtime_factory(rxvm_context *context,
+                                   const char *interface_name,
+                                   size_t interface_name_length,
+                                   proc_constant **factory_out,
+                                   char **error_out) {
+    size_t mod_index;
+    proc_constant *best_factory;
+    rxinteger best_score;
+    char *best_class_name;
+    size_t best_class_name_length;
+    int saw_candidate;
+    int saw_positive_score;
+
+    if (factory_out) *factory_out = 0;
+    if (error_out) *error_out = 0;
+    if (!context || !interface_name || !interface_name_length || !factory_out) return 0;
+
+    best_factory = 0;
+    best_score = 0;
+    best_class_name = 0;
+    best_class_name_length = 0;
+    saw_candidate = 0;
+    saw_positive_score = 0;
+
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        module *mod;
+        int meta_ix;
+
+        mod = context->modules[mod_index];
+        meta_ix = mod->meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *meta;
+
+            meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+            if (meta->base.type == META_IMPLEMENTS) {
+                meta_implements_constant *impl_meta;
+                string_constant *class_symbol;
+                string_constant *interface_symbol;
+
+                impl_meta = (meta_implements_constant *) meta;
+                class_symbol = (string_constant *) (mod->segment.const_pool + impl_meta->symbol);
+                interface_symbol = (string_constant *) (mod->segment.const_pool + impl_meta->interface_symbol);
+
+                if (class_symbol->base.type == STRING_CONST &&
+                    interface_symbol->base.type == STRING_CONST &&
+                    interface_symbol->string_len == interface_name_length &&
+                    memcmp(interface_symbol->string, interface_name, interface_name_length) == 0) {
+                    char *factory_name;
+                    proc_constant *factory_proc;
+                    rxinteger score;
+
+                    saw_candidate = 1;
+
+                    factory_name = build_runtime_member_name(class_symbol->string,
+                                                             class_symbol->string_len,
+                                                             "\xc2\xa7" "factory",
+                                                             9);
+                    if (!factory_name) {
+                        if (error_out) *error_out = build_interface_factory_error("Failed to resolve factory provider for ", interface_name, interface_name_length);
+                        if (best_class_name) free(best_class_name);
+                        return 0;
+                    }
+
+                    factory_proc = resolve_runtime_procedure(context, factory_name, strlen(factory_name));
+                    free(factory_name);
+                    if (!factory_proc) {
+                        meta_ix = meta->next;
+                        continue;
+                    }
+
+                    score = 1;
+                    if (score > 0) {
+                        saw_positive_score = 1;
+                        if (!best_factory ||
+                            score > best_score ||
+                            (score == best_score &&
+                             compare_runtime_name(class_symbol->string, class_symbol->string_len,
+                                                  best_class_name, best_class_name_length) < 0)) {
+                            char *new_best_name;
+
+                            new_best_name = dup_runtime_name(class_symbol->string, class_symbol->string_len);
+                            if (!new_best_name) {
+                                if (error_out) *error_out = build_interface_factory_error("Failed to resolve factory provider for ", interface_name, interface_name_length);
+                                if (best_class_name) free(best_class_name);
+                                return 0;
+                            }
+
+                            if (best_class_name) free(best_class_name);
+                            best_class_name = new_best_name;
+                            best_class_name_length = class_symbol->string_len;
+                            best_score = score;
+                            best_factory = factory_proc;
+                        }
+                    }
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
+    if (best_class_name) free(best_class_name);
+
+    if (!saw_candidate) {
+        if (error_out) *error_out = build_interface_factory_error("No interface factory providers for ", interface_name, interface_name_length);
+        return 0;
+    }
+
+    if (!saw_positive_score || !best_factory) {
+        if (error_out) *error_out = build_interface_factory_error("No matching interface factory provider for ", interface_name, interface_name_length);
+        return 0;
+    }
+
+    *factory_out = best_factory;
+    return 1;
 }
 
 /* Decodes UTF8 Bytes and return number of bytes of character */
@@ -6439,7 +6601,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
                     DISPATCH
                 }
 
-                called_function = resolve_runtime_method(context, proc_name, strlen(proc_name));
+                called_function = resolve_runtime_procedure(context, proc_name, strlen(proc_name));
                 if (!called_function) {
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, proc_name);
                     free(proc_name);
@@ -6452,7 +6614,36 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             }
             DISPATCH
 
-        RESERVED_IMPL(RESERVED_058)
+        START_INSTRUCTION(SRCFPROC_REG_STRING_REG) CALC_DISPATCH(3)
+            {
+                proc_constant *called_function;
+                char *error_message;
+
+                DEBUG("TRACE - SRCFPROC R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
+                      (int) op2S->string_len, op2S->string, REG_IDX(3));
+
+                called_function = 0;
+                error_message = 0;
+
+                if (!resolve_runtime_factory(context,
+                                             op2S->string,
+                                             op2S->string_len,
+                                             &called_function,
+                                             &error_message)) {
+                    if (error_message) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, error_message);
+                        free(error_message);
+                    } else {
+                        SET_SIGNAL(RXSIGNAL_FAILURE);
+                    }
+                    DISPATCH
+                }
+
+                value_zero(op1R);
+                op1R->int_value = (rxinteger) called_function;
+            }
+            DISPATCH
+
         RESERVED_IMPL(RESERVED_059)
         RESERVED_IMPL(RESERVED_060)
         RESERVED_IMPL(RESERVED_061)

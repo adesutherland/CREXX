@@ -63,6 +63,9 @@ struct value {
     
     char *binary_value;
     size_t binary_length;
+
+    const char *object_type_name;    /* Runtime concrete class name */
+    size_t object_type_name_length;
     
     value **attributes;              /* For associative arrays/objects */
     size_t num_attributes;
@@ -72,6 +75,10 @@ struct value {
 };
 ```
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed strictly by the VM frames. There is no automated background Garbage Collector (GC). Instead, frame-bound variables are deterministically cleared (`clear_value`) and memory released when a `stack_frame` dies and exits scope.
+
+The two `object_type_name` fields are the current Level B hook for interface
+dispatch. Class factories stamp object values with `setobjtype`, and later VM
+lookups use that concrete class identity when resolving interface member calls.
 
 ## 3. The Execution Loop
 
@@ -105,3 +112,33 @@ In this example:
 - `op2RI` grabs the integer struct value mapped to Operand 2.
 - `REG_RETURN_INT` maps the result back into the memory of Operand 1.
 - `DISPATCH` safely jumps the Program Counter (`pc`) to the next instruction.
+
+## 4. Current Interface Dispatch in the VM
+
+The current Level B interface runtime slice adds three VM-facing pieces on top
+of the older object model:
+
+- `SETOBJTYPE_REG_STRING` stores a concrete class name on an object value
+- `SRCMETHOD_REG_REG_STRING` resolves a concrete method procedure from
+  `object_type_name + member_name`
+- `SRCFPROC_REG_STRING_REG` resolves the default `*` factory provider for an
+  interface name
+
+`srcmethod` and `srcfproc` both return a `proc_constant *` in a normal
+register, and the existing `dcall` path performs the actual invocation.
+
+### Current `srcfproc` semantics
+
+The current implementation is intentionally narrow:
+
+- it handles only the default `*` interface factory surface
+- it scans loaded module metadata for `META_IMPLEMENTS` links at runtime
+- for each candidate class, it derives the concrete `§factory` procedure name
+  and resolves that through the existing metadata/procedure tables
+- every current candidate is treated as if it had implicit score `1`
+- ties are broken alphabetically by fully qualified concrete class name
+- if no provider exists, the VM raises `FUNCTION_NOT_FOUND`
+
+Explicit class-side `match`, named factories, and a prebuilt load/link-time
+provider registry are still later work; they are not part of the current VM
+contract.

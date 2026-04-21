@@ -285,6 +285,20 @@ add_custom_target(run_tests_reflection ALL DEPENDS tests_reflection.rxbin)
 
 crexx_add_vm_dual_test(NAME rxasreflectiontests RXVM_ARGS tests_reflection)
 
+# Interface dispatch instruction tests
+add_custom_command(
+		OUTPUT tests_interfaces.rxbin
+		COMMAND $<TARGET_FILE:rxas> -o tests_interfaces ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_interfaces
+		DEPENDS tests/tests_interfaces.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Interface Dispatch Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_interfaces ALL DEPENDS tests_interfaces.rxbin)
+
+crexx_add_vm_dual_test(NAME rxasinterfacetests RXVM_ARGS tests_interfaces PASS_REGULAR_EXPRESSION "PASS: Interface Dispatch Suite")
+
 # Stress and Edge Case Instruction Tests
 add_custom_command(
 		OUTPUT tests_stress.rxbin

@@ -679,17 +679,8 @@ walker_result set_node_types_walker(walker_direction direction,
                         star_node.node_string = "\xc2\xa7" "factory";
                         star_node.node_string_length = 9;
                         if (sym_is_interface_symbol(class_sym)) {
-                            int candidate_count = 0;
                             if (!sym_lrsv(class_sym->defines_scope, &star_node) && (!context->changed_flags || context->is_final_pass)) {
                                 mknd_err(node, "FACTORY_NOT_FOUND");
-                                break;
-                            }
-                            dispatch_class_sym = find_unique_implementing_class(context, class_sym, &candidate_count);
-                            if (!dispatch_class_sym) {
-                                if (!context->changed_flags || context->is_final_pass) {
-                                    if (candidate_count == 0) mknd_err(node, "INTERFACE_IMPLEMENTATION_NOT_FOUND");
-                                    else mknd_err(node, "AMBIGUOUS_INTERFACE_IMPLEMENTATION");
-                                }
                                 break;
                             }
                         }
@@ -718,15 +709,8 @@ walker_result set_node_types_walker(walker_direction direction,
                                 star_node.node_string = "\xc2\xa7" "factory";
                                 star_node.node_string_length = 9;
                                 if (sym_is_interface_symbol(class_sym)) {
-                                    int candidate_count = 0;
                                     if (!sym_lrsv(class_sym->defines_scope, &star_node) && (!context->changed_flags || context->is_final_pass)) {
                                         mknd_err(node, "FACTORY_NOT_FOUND");
-                                        break;
-                                    }
-                                    dispatch_class_sym = find_unique_implementing_class(context, class_sym, &candidate_count);
-                                    if (!dispatch_class_sym) {
-                                        if (candidate_count == 0) mknd_err(node, "INTERFACE_IMPLEMENTATION_NOT_FOUND");
-                                        else mknd_err(node, "AMBIGUOUS_INTERFACE_IMPLEMENTATION");
                                         break;
                                     }
                                 }

@@ -51,6 +51,25 @@ static int is_interface_member_call(ASTNode *node) {
            defnode->parent->node_type == INTERFACE_DEF;
 }
 
+static int is_interface_factory_call(ASTNode *node) {
+    Symbol *fsym;
+    SymbolNode *defsn;
+    ASTNode *defnode;
+
+    if (!node || node->node_type != FACTORY_CALL || !node->symbolNode || !node->symbolNode->symbol) return 0;
+
+    fsym = node->symbolNode->symbol;
+    if (sym_nond(fsym) == 0) return 0;
+
+    defsn = sym_trnd(fsym, 0);
+    defnode = defsn ? defsn->node : 0;
+
+    return defnode &&
+           defnode->node_type == FACTORY &&
+           defnode->parent &&
+           defnode->parent->node_type == INTERFACE_DEF;
+}
+
 void emit_expression(ASTNode *node, void *payload) {
     walker_payload *wp = (walker_payload*)payload;
     char *op = 0;
@@ -168,6 +187,26 @@ void emit_expression(ASTNode *node, void *payload) {
                                 fsym->name);
                 output_append_text(node->output, temp1);
                 free(temp1);
+
+                temp1 = mprintf("   dcall %c%d,%c%d,r%d\n",
+                                ret_type, ret_num,
+                                ret_type, ret_num,
+                                node->additional_registers);
+            }
+            else if (is_interface_factory_call(node)) {
+                char *iface_name = 0;
+
+                if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->scope) {
+                    iface_name = scp_frnm(node->symbolNode->symbol->scope);
+                }
+
+                temp1 = mprintf("   srcfproc %c%d,\"%s\",r%d\n",
+                                ret_type, ret_num,
+                                iface_name ? iface_name : "",
+                                node->additional_registers);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                if (iface_name) free(iface_name);
 
                 temp1 = mprintf("   dcall %c%d,%c%d,r%d\n",
                                 ret_type, ret_num,

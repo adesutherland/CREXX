@@ -9,11 +9,16 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
 1. **Lexical Analysis (`re2c`)**:
    - Source defined in `assembler/rxasscan.re`.
    - Tokenizes input into REXX Assembly primitives: registers (`RREG`, `GREG`, `AREG`), literal types (`STRING`, `INT`, `FLOAT`, `DECIMAL`, `HEX`), symbols (`ID`, `LABEL`, `FUNC`), and assembler directives (e.g., `.locals`, `.globals`, `.expose`, `.meta`).
+   - The lexer also recognizes the interface metadata keywords used at the end of
+     `.meta` records: `.interface`, `.implements`, and `.member`.
 
 2. **Parsing (`Lemon`)**:
    - Grammar defined in `assembler/rxasgrmr.y`.
    - Enforces the structural integrity of the `.rxas` file (headers, function definitions, variable declarations, and instruction sequences).
    - The parser actions invoke Builder API functions directly (e.g., `rxasgen*`, `rxaslabl`, `rxasproc`), translating syntax rules into buffered internal data structures.
+   - Instruction names are derived from `binutils/include/rxops.h`, so new VM
+     opcodes become assembler mnemonics through that shared table. The current
+     interface-runtime additions are `setobjtype`, `srcmethod`, and `srcfproc`.
 
 3. **In-Memory Buffering & Constant Pooling**:
    - Handled in `assembler/rxasassm.c`.
@@ -43,6 +48,13 @@ context->binary.binary[context->binary.inst_size++].iconst = token->integer;
 ### Constant Pool
 Strings, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
 Types include: `STRING_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_REG`, etc.
+
+The interface/callable-contract work extends that same metadata path rather
+than introducing a second binary header mechanism. In addition to `META_CLASS`
+and `META_ATTR`, the assembler now serializes:
+- `META_INTERFACE` for one interface header
+- `META_IMPLEMENTS` for one concrete-class-to-interface link
+- `META_MEMBER` for one interface method or factory declaration
 
 ### Symbol Tracking (AVL Trees)
 To deduplicate constants and resolve identifiers in `O(log N)` time, the assembler leverages a custom AVL tree implementation (`avl_tree.h`). Active trees include:
@@ -86,3 +98,19 @@ The structural output consists of:
 2. **Global Counters**: e.g., Number of global registers (`context->binary.globals`).
 3. **The Constant Pool**: The exact byte stream accumulated in `context->binary.const_pool`, which includes linked-list pointers mapping exposed exports and metadata objects.
 4. **The Bytecode Stream**: The `context->binary.binary` sequence, representing the fully resolved executable operations.
+
+## 5. Current Interface-Dispatch Additions
+
+The current interface runtime slice relies on three assembler-visible opcodes
+and the metadata records above:
+
+- `setobjtype rX,"fully.qualified.class"` stamps a newly created object value
+  with its concrete runtime class identity
+- `srcmethod rProc,rObj,"member"` resolves a concrete procedure from an object
+  value plus a member name
+- `srcfproc rProc,"fully.qualified.interface",rArgs` resolves the default `*`
+  factory provider for an interface
+
+Today `srcfproc` supports only the default `*` factory surface. Provider
+selection is currently a VM concern: the assembler simply emits the opcode and
+the interface/class metadata needed for runtime lookup.

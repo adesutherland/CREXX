@@ -1,2 +1,0 @@
-Error in interface_ambiguous.rexx @ 6:13 - #AMBIGUOUS_INTERFACE_IMPLEMENTATION, ".vehicle(\"duo\")"
-1 error(s) in source file

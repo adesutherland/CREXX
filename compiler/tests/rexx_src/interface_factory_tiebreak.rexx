@@ -1,9 +1,10 @@
 options levelb
-namespace interface_ambiguous
+namespace interface_factory_tiebreak
 
 main: procedure
   current = .vehicle
   current = .vehicle("duo")
+  say current.describe()
   return
 
 vehicle: interface
@@ -12,17 +13,23 @@ vehicle: interface
   describe: method = .string
 
 car: class implements .vehicle
+  _name = .string
+
   *: factory = .vehicle
   arg name = .string
+  _name = name
   return
 
   describe: method = .string
-  return "car"
+  return "car:" || _name
 
 truck: class implements .vehicle
+  _name = .string
+
   *: factory = .vehicle
   arg name = .string
+  _name = name
   return
 
   describe: method = .string
-  return "truck"
+  return "truck:" || _name

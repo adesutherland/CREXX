@@ -1,6 +1,6 @@
 # Level B Interfaces and Callable Contracts Working Design
 
-Status: working design; tracer-bullet slice implemented; namespace-qualification foundation implemented; runtime interface-method dispatch slice implemented; factory-selection/runtime-completion work still pending
+Status: working design; tracer-bullet slice implemented; namespace-qualification foundation implemented; runtime interface-method dispatch slice implemented; runtime default-factory dispatch slice implemented; named-factory/explicit-match/runtime-registry work still pending
 
 Last updated: 2026-04-21
 
@@ -69,9 +69,9 @@ The existing codebase now behaves as follows.
   implementing one or more interfaces, and interface-centred factory usage.
 - The parser now accepts `interface` definitions and `class implements .iface`.
 - `.ClassName(...)` is parsed as a `FACTORY_CALL`.
-- Type checking now resolves interface methods against the interface contract
-  itself, while interface factories still use the tracer-bullet
-  single-implementation rule.
+- Type checking now resolves interface methods and default `*` interface
+  factories against the interface contract itself rather than lowering them
+  through a unique concrete class during validation.
 - Type compatibility now allows assignment from a concrete class to an
   implemented interface.
 - for class methods and factories, the compiler already emits an internal RXAS
@@ -83,11 +83,17 @@ The existing codebase now behaves as follows.
 - runtime values now carry concrete class identity set by class factories, and
   interface member calls use `srcmethod` plus `dcall` to resolve the concrete
   procedure in the VM at execution time
+- default `*` interface factory calls now use `srcfproc` plus `dcall` to
+  resolve a provider in the VM at execution time
+- the current default-factory runtime selection gives every candidate provider
+  an implicit score of `1` and breaks ties alphabetically by fully qualified
+  concrete class name
 - `rxvml` already scans `META_CLASS` records directly from module metadata.
 - Historical VM docs already sketched a `ptable` style runtime mapping for
-  interface dispatch. The current implementation takes a narrower first step:
-  runtime method lookup by concrete class + member name, with full interface
-  factory/provider tables still deferred.
+  interface dispatch. The current implementation takes an incremental path:
+  runtime method lookup by concrete class + member name, and runtime default
+  factory lookup by scanning `META_IMPLEMENTS` metadata on demand, with the
+  fuller load-time interface/provider registry still deferred.
 
 This means the interface work should extend the current metadata/import chain,
 not introduce a separate binary header system in parallel with it.
@@ -103,11 +109,15 @@ Implemented now:
 - default `*` factory declarations on interfaces
 - class-side implementations of the same method names and `*` factory
 - class-to-interface assignment compatibility
-- single-implementation lowering at compile time for interface factories and
-  interface method calls
+- the initial one-interface, one-implementation lowering path for interface
+  method calls and default `*` interface factories
 - import/export of interface/class header metadata through `.rxbin`
 - same-module, source-import, and `rxbin`-only import coverage for the
   one-interface, one-implementation path
+
+Parts of that original lowering path have since been superseded by the later
+runtime dispatch slices below. The tracer bullet remains important because it
+established the parser, type, import, and metadata foundation.
 
 Deliberately not implemented in this tracer bullet:
 
@@ -115,7 +125,9 @@ Deliberately not implemented in this tracer bullet:
 - named interface factories
 - `match`
 - multi-implementation runtime selection
-- VM-level interface dispatch instructions
+- named-factory runtime selection
+- VM-level interface dispatch instructions beyond the later `srcmethod` and
+  `srcfproc` additions
 
 ## Implemented Runtime Method Dispatch Slice
 
@@ -138,10 +150,41 @@ Implemented now:
 
 Current boundary of this implemented step:
 
-- interface factories still use the tracer-bullet single-implementation rule
-- named factories and `match` are still not implemented
+- named factories and explicit `match` are still not implemented
 - runtime lookup currently resolves concrete methods by full method symbol name;
   the fuller interface/provider registry for factories remains a later step
+
+## Implemented Runtime Default-Factory Dispatch Slice
+
+The next approved runtime step is now also implemented for the default `*`
+factory surface.
+
+Implemented now:
+
+- interface default `*` factories no longer lower through
+  `find_unique_implementing_class(...)`
+- type checking binds a default interface factory call to the interface's own
+  `§factory` contract and checks arguments against that shared signature
+- interface default factory calls compile to `srcfproc` plus the existing
+  `dcall` sequence
+- runtime factory lookup happens in C by scanning loaded `META_IMPLEMENTS`
+  metadata and resolving concrete `§factory` procedures for the requested
+  interface
+- every current candidate provider receives the implicit score `1`
+- when several providers are available, the current tie-break is alphabetical
+  by fully qualified concrete class name
+- if no provider exists at runtime, the VM raises `FUNCTION_NOT_FOUND`
+- same-module, source-import, and binary-import single-provider factory
+  coverage are now joined by same-module multi-provider tie-break and
+  no-provider runtime-failure coverage
+
+Current boundary of this implemented step:
+
+- selection currently applies only to the default `*` interface factory surface
+- named interface factories are still not implemented
+- explicit class-side `match` is still not implemented
+- the approved load/link-time provider registry is still pending; the current
+  implementation scans metadata on demand
 
 ## Implemented Namespace Qualification Foundation
 
@@ -168,13 +211,6 @@ Current boundary of this implemented step:
 - qualification is a disambiguation mechanism, not a second global symbol path
 - broader runtime/interface work still remains as described below
 
-Current tracer-bullet rule:
-
-- if an interface call site has exactly one known implementation, the compiler
-  lowers that call to the concrete class
-- if it has zero implementations, compilation fails
-- if it has more than one implementation, compilation fails
-
 Two implementation details matter for import stability:
 
 - modules only export contract metadata for locally defined classes/interfaces,
@@ -188,11 +224,14 @@ Relevant current implementation files:
 - `compiler/rxcp_emit_meta.c`
 - `compiler/rxcpfunc.c`
 - `compiler/rxcp_val_type.c`
+- `compiler/rxcp_emit_expr.c`
 - `compiler/rxcp_emit_proc.c`
 - `compiler/rxcp_emit_reg.c`
 - `compiler/rxcp_fixup.c`
 - `compiler/rxcp_val_sym.c`
 - `assembler/rxasassm.c`
+- `binutils/include/rxops.h`
+- `interpreter/rxvmintp.c`
 - `interpreter/rxvmload.c`
 - `interpreter/rxvalue.h`
 - `interpreter/rxvml.c`
@@ -203,11 +242,14 @@ The project is now at a clean staging point.
 
 - the tracer-bullet slice is implemented and tested
 - runtime interface method dispatch is implemented and tested
+- runtime default-factory dispatch is implemented and tested
 - the remaining core Level B design decisions have been approved
-- the next step is the remaining runtime/interface work, primarily interface
-  factory/provider selection and the broader registry/link path
+- the next step is the remaining runtime/interface work, primarily named
+  factories, explicit `match`, interface default bodies, and the broader
+  registry/link path
 - regressions should be treated as bugs to fix now unless they clearly depend
-  on later approved capabilities such as runtime multi-provider dispatch
+  on later approved capabilities such as named-factory dispatch or explicit
+  `match`
 
 The approved full-stage direction is:
 
