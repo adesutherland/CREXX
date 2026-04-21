@@ -48,3 +48,40 @@ file(GENERATE OUTPUT "${CREXX_CRXC_NOARGS_SMOKE_SCRIPT}" CONTENT "${CREXX_CRXC_N
 add_test(NAME crexx_crxc_noargs_smoke
          COMMAND ${CMAKE_COMMAND} -P "${CREXX_CRXC_NOARGS_SMOKE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+function(add_crexx_compile_only_import_test NAME MAIN_FILE DEP_FILE MODE)
+    get_filename_component(MAIN_BASENAME "${MAIN_FILE}" NAME)
+    get_filename_component(MAIN_MODULE "${MAIN_FILE}" NAME_WE)
+    get_filename_component(DEP_BASENAME "${DEP_FILE}" NAME)
+
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}.cmake")
+    set(SCRIPT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/${NAME}_ws\")\n")
+    string(APPEND SCRIPT_CONTENT "set(dep \"\${work}/dep\")\n")
+    string(APPEND SCRIPT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+    string(APPEND SCRIPT_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+    string(APPEND SCRIPT_CONTENT "file(MAKE_DIRECTORY \"\${dep}\")\n")
+    string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/${MAIN_FILE}\" \"\${work}/${MAIN_BASENAME}\" RESULT_VARIABLE res)\n")
+    string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage main source\")\nendif()\n")
+    string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/${DEP_FILE}\" \"\${dep}/${DEP_BASENAME}\" RESULT_VARIABLE res)\n")
+    string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage dependency source\")\nendif()\n")
+
+    if(MODE STREQUAL "source")
+        string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"--source\" \"\${dep}\" \"-noexec\" \"${MAIN_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    elseif(MODE STREQUAL "rxas")
+        string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"--import-rxas\" \"-i\${dep}\" \"-noexec\" \"${MAIN_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    else()
+        message(FATAL_ERROR "Unknown mode for add_crexx_compile_only_import_test: ${MODE}")
+    endif()
+
+    string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx compile-only import test failed: \\n\${out}\")\nendif()\n")
+    string(APPEND SCRIPT_CONTENT "if(NOT EXISTS \"\${work}/${MAIN_MODULE}.rxbin\")\n  message(FATAL_ERROR \"Expected ${MAIN_MODULE}.rxbin was not produced\")\nendif()\n")
+
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+
+    add_test(NAME ${NAME}
+             COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endfunction()
+
+add_crexx_compile_only_import_test(crexx_source_root_compile_only rexx_src/source_import_main.rexx rexx_src/source_import_dep.rexx source)
+add_crexx_compile_only_import_test(crexx_rxas_import_compile_only rexx_src/rxas_import_main.rexx rexx_src/wrapperasm.rxas rxas)

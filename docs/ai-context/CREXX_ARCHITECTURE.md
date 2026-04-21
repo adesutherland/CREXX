@@ -42,6 +42,30 @@ The pipeline of transforming REXX source code into executable bytecode is struct
    - Modules are loaded via `rxldmod`.
    - The execution loop happens inside the `rxvm_run` function (e.g., in `rxvmmain.c` / `rxvmintp.c`).
 
+## Compiler Import Discovery
+
+`rxc` does not treat every import location as both source and binary
+space anymore. Import discovery is now split into two root classes:
+
+- source roots for `.rexx`
+- binary roots for `.rxbin`, optional `.rxas`, and `.rxplugin`
+
+The primary source root is the directory containing the source file
+being compiled. Additional source roots come from `-s`. Binary roots
+come from any `-i` paths and the compiler executable directory.
+Repeated `-i` and `-s` options are accumulated in order. Search order
+keeps project source files ahead of deployed binary artifacts.
+
+For source discovery the compiler now performs a lightweight header scan
+before any full parse. That scan reads the leading `options`,
+`namespace`, and `import` clauses so namespace-invisible files can be
+rejected before `rexbpars()` and `rxcp_val()` are invoked. Full source
+parsing is still used once a source file is actually selected as an
+import candidate.
+
+Within a binary root, same-stem artifacts are collapsed to the freshest
+candidate. If timestamps tie, `.rxbin` is preferred over `.rxas`.
+
 ## Source Tree and Parser Mode
 
 cREXX now has an explicit split between the user-facing source model and the

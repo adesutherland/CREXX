@@ -34,6 +34,7 @@
 #include "rxcp_ast.h"
 #include "rxcp_sym.h"
 #include <stdint.h>
+#include <time.h>
 
 /* Walker Flags */
 #define FLAG_VAL_TRANS   (1 << 0)
@@ -53,6 +54,9 @@ struct Context {
     char* location;
     char* file_name;
     char** import_locations;
+    char import_locations_owns_buffer;
+    char** source_import_locations;
+    char source_import_locations_owns_buffer;
     importable_file **importable_file_list;
     FILE *file_pointer;
     FILE *traceFile;
@@ -117,6 +121,7 @@ struct Context {
     int in_factory;
     char in_exit_bridge;
     char disable_exits;
+    char auto_import_rxas;
     void *exit_registry; /* Pointer to the list of registered exits (primary and additional keywords) */
     void *exit_additional_keywords; /* Pointer to the list of all additional keywords across all exits */
     void *exit_helper_registry; /* Pointer to per-file helper definitions injected by exits */
@@ -174,6 +179,10 @@ struct importable_file {
     file_type type;
     char *location;
     char imported;
+    char source_root;
+    time_t mtime;
+    char *namespace_name;
+    char header_scanned;
 };
 
 /* RXC Main Function */
@@ -203,6 +212,8 @@ int rexbscan(Context* s);
 int rexbpars(Context *context);
 int opt_scan(Context* s);
 int opt_pars(Context *context);
+int rxcp_scan_source_header(const char *location, const char *file_name, RexxLevel cli_default_level,
+                            RexxLevel *level_out, char **namespace_out);
 /* Encodes a string into a malloced buffer */
 char* encdstrg(const char* string, size_t length);
 

@@ -31,7 +31,7 @@
  /* defaults for options for this program */
  native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
  execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=0;decimal=1
- binfiles='';lastfile=0
+ binfiles='';lastfile=0;sourceRoots='';binaryRoots='';importRxas=0
  
  esc             = '1b'X
  ANSI_RESET      = '[0m'
@@ -103,17 +103,73 @@
        if fn.i = '-nokeep'     then keep=0
        if fn.i = '-nodecimal'  then decimal=0
        if fn.i = '-decimal'    then decimal=1
+       if fn.i = '-import-rxas' then importRxas=1
 
-       if left(fn.i,2)= '-l' then do
-	 if left(fn.i,1)=' ' then do
-	   fn.i=fn.i||fn.i+1
-	   fn[i+1]=''
-	 end
-	 lastSlash = lastpos('/',fn.i)
-	 libs = libs';'rxpath||'bin'dirsep||substr(fn.i,3) /* for rxvm execution */
-	 module[modulenumber] = substr(fn.i, lastSlash + 1)
-	 libraries = libraries';'rxpath||substr(fn.i,3,lastSlash-2) /* for rxc compile */
-	 modulenumber = modulenumber+1
+       optarg = ''
+       if fn.i = '-source' | fn.i = '-s' then do
+         i = i + 1
+         if i > fn.0 then do
+           say 'missing source root after' fn.i
+           return 2
+         end
+         optarg = fn.i
+         sourceRoots = appendSemicolonValue(sourceRoots, optarg)
+       end
+       else if left(fn.i,2) = '-s' & fn.i <> '-source' then do
+         optarg = substr(fn.i,3)
+         if optarg = '' then do
+           say 'missing source root after' fn.i
+           return 2
+         end
+         sourceRoots = appendSemicolonValue(sourceRoots, optarg)
+       end
+
+       if fn.i = '-i' then do
+         i = i + 1
+         if i > fn.0 then do
+           say 'missing binary import root after -i'
+           return 2
+         end
+         optarg = fn.i
+         binaryRoots = appendSemicolonValue(binaryRoots, optarg)
+       end
+       else if left(fn.i,2) = '-i' & fn.i <> '-import-rxas' then do
+         optarg = substr(fn.i,3)
+         if optarg = '' then do
+           say 'missing binary import root after' fn.i
+           return 2
+         end
+         binaryRoots = appendSemicolonValue(binaryRoots, optarg)
+       end
+
+       if fn.i = '-l' then do
+         i = i + 1
+         if i > fn.0 then do
+           say 'missing library path after -l'
+           return 2
+         end
+         optarg = fn.i
+         fullLibrary = rxpath||'bin'dirsep||optarg
+         lastSlash = lastpos('/',fullLibrary)
+         if lastSlash = 0 then lastSlash = lastpos('\',fullLibrary)
+         libs = libs';'fullLibrary
+         if lastSlash > 0 then libraries = libraries';'left(fullLibrary,lastSlash-1)
+         else libraries = libraries';'fullLibrary
+         modulenumber = modulenumber+1
+       end
+       else if left(fn.i,2)= '-l' & fn.i <> '-l' then do
+         optarg = substr(fn.i,3)
+         if optarg = '' then do
+           say 'missing library path after' fn.i
+           return 2
+         end
+         fullLibrary = rxpath||'bin'dirsep||optarg
+         lastSlash = lastpos('/',fullLibrary)
+         if lastSlash = 0 then lastSlash = lastpos('\',fullLibrary)
+         libs = libs';'fullLibrary
+         if lastSlash > 0 then libraries = libraries';'left(fullLibrary,lastSlash-1)
+         else libraries = libraries';'fullLibrary
+         modulenumber = modulenumber+1
        end
      end
    end
@@ -150,8 +206,12 @@
      else say 'NOKEEP'
      if \optimize  then say 'NOOPTIMIZE'
      else say '  OPTIMIZE'
+     if importRxas then say '  IMPORT-RXAS'
+     else say 'NOIMPORT-RXAS'
 
      say 'VERBOSE' verbose
+     say 'SOURCE ROOTS' sourceRoots
+     say 'BINARY ROOTS' binaryRoots
      -- call formfeed
      say;say;say
      end
@@ -164,6 +224,8 @@ if version then call logo nocolor
 lpath = libraries
 
 if verbose>1 then say esc||ANSI_GREEN'using lpath     :'esc||ANSI_RESET lpath
+if verbose>1 then say esc||ANSI_GREEN'using s roots   :'esc||ANSI_RESET sourceRoots
+if verbose>1 then say esc||ANSI_GREEN'using i roots   :'esc||ANSI_RESET binaryRoots
 
 /* Output Arrays for command output */
 out = .string[]
@@ -206,7 +268,13 @@ do i=1 to words(filenames)
     if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
   end
   optiflag=''; if optimize=0 then optiflag= '-n'
-  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags '-i' rxpath||lpath filename
+  rxc_flags = ''
+  if sourceRoots <> '' then rxc_flags = rxc_flags' -s 'sourceRoots
+  binaryPath = rxpath||lpath
+  if binaryRoots <> '' then binaryPath = binaryPath';'binaryRoots
+  if binaryPath <> '' then rxc_flags = rxc_flags' -i 'binaryPath
+  if importRxas then rxc_flags = rxc_flags' --import-rxas'
+  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags filename
   if verbose>1 then
     do
       if compile then say esc||ANSI_GREEN'rxc command     :' rxcmd
@@ -334,9 +402,13 @@ say '-verbose[0-4]    -- report on progress; default verbose0'
 say '-colo[u]r        -- use colo[u]r (default)'
 say '-keep            -- keep .rxas source (default nokeep)'
 say '-decimal         -- use decimal arithmetic'
-say '-l[library path] -- use library'
+say '-l[library path] -- packaged binary/runtime library relative to CREXX_HOME/bin'
+say '-s[path]         -- additional source import root for the rxc phase'
+say '-i[path]         -- additional raw binary import root for the rxc phase'
+say '--import-rxas    -- allow the rxc phase to auto-import .rxas from binary roots'
 say
 say 'Headerless top-level scripts are compiled with --level levelb --import rxfnsb.'
+say 'Options -s, -i and --import-rxas affect compilation only; runtime/native loading still uses -l.'
 say
 say 'all options can also be prefixed with --'
 say 'all options can be prefixed with NO for the inverse value'
@@ -464,4 +536,10 @@ if lp >0 then
     return fn
   end
   return 'error in chop_suffix'
+
+appendSemicolonValue: procedure = .string
+arg current = .string, value = .string
+if value = '' then return current
+if current = '' then return value
+return current';'value
   

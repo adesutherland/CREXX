@@ -68,6 +68,59 @@ static void append_cli_import_name(char ***imports, size_t *count, const char *n
     (*count)++;
 }
 
+static void append_location_arg(char **locations, const char *value) {
+    size_t old_len;
+    size_t value_len;
+    char *combined;
+
+    if (!locations || !value || !value[0]) return;
+    if (!*locations) {
+        *locations = strdup(value);
+        if (!*locations) error_and_exit(255, "Out of memory copying location list");
+        return;
+    }
+
+    old_len = strlen(*locations);
+    value_len = strlen(value);
+    combined = realloc(*locations, old_len + 1 + value_len + 1);
+    if (!combined) error_and_exit(255, "Out of memory extending location list");
+    combined[old_len] = ';';
+    memcpy(combined + old_len + 1, value, value_len + 1);
+    *locations = combined;
+}
+
+static char **split_location_list(const char *locations) {
+    char *copy;
+    char *cursor;
+    char **result;
+    size_t count;
+    size_t index;
+
+    if (!locations || !locations[0]) return 0;
+
+    count = 1;
+    for (cursor = (char *) locations; *cursor; cursor++) {
+        if (*cursor == ';') count++;
+    }
+
+    result = calloc(count + 1, sizeof(char *));
+    if (!result) error_and_exit(255, "Out of memory splitting location list");
+
+    copy = strdup(locations);
+    if (!copy) error_and_exit(255, "Out of memory copying location list");
+
+    index = 0;
+    result[index++] = copy;
+    for (cursor = copy; *cursor; cursor++) {
+        if (*cursor == ';') {
+            *cursor = 0;
+            result[index++] = cursor + 1;
+        }
+    }
+    result[index] = 0;
+    return result;
+}
+
 static void help() {
     char* helpMessage =
             "cREXX Compiler\n"
@@ -80,9 +133,11 @@ static void help() {
             "  -d[level]       Debug Mode (Optional Level)\n"
             "  -dp             Stop after parsing and validation\n"
             "  -l location     Working Location (directory)\n"
-            "  -i import       Locations to import file - \";\" delimited list\n"
+            "  -s source       Source import locations - \";\" delimited list\n"
+            "  -i import       Binary import locations - \";\" delimited list\n"
             "  --level level   Default source level when OPTIONS omits one\n"
             "  --import ns     Inject a file-level IMPORT namespace (repeatable)\n"
+            "  --import-rxas   Enable auto-import scanning of .rxas in binary roots\n"
             "  -o output_file  REXX Assembler Output File\n"
             "  -n              No Optimising\n"
             "  -x              Disable compiler exits\n"
@@ -180,7 +235,15 @@ void fre_cntx(Context *context)  {
     size_t i;
     if (context->file_pointer) fclose(context->file_pointer);
 
-    if (context->import_locations) free(context->import_locations);
+    if (context->import_locations) {
+        if (context->import_locations_owns_buffer && context->import_locations[0]) free(context->import_locations[0]);
+        free(context->import_locations);
+    }
+
+    if (context->source_import_locations) {
+        if (context->source_import_locations_owns_buffer && context->source_import_locations[0]) free(context->source_import_locations[0]);
+        free(context->source_import_locations);
+    }
 
     source_tree_free(context);
 
@@ -253,13 +316,13 @@ int rxcmain(int argc, char *argv[]) {
     char *file_name;
     char *location = 0;
     char *import_locations = 0;
+    char *source_import_locations = 0;
     char *exe_path = 0;
     char *combined_import_locations = 0;
-    int num_import_locations;
-    size_t ix;
     char c;
     int do_optimise = 1;
     int disable_exits = 0;
+    int auto_import_rxas = 0;
     char *file_directory = 0;
     RexxLevel cli_default_level = UNKNOWN;
     char **cli_import_names = 0;
@@ -316,6 +379,20 @@ int rxcmain(int argc, char *argv[]) {
             continue;
         }
 
+        if (strcmp(argv[i], "--source") == 0) {
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing source location list after --source");
+            }
+            append_location_arg(&source_import_locations, argv[i]);
+            continue;
+        }
+
+        if (strcmp(argv[i], "--import-rxas") == 0) {
+            auto_import_rxas = 1;
+            continue;
+        }
+
         if (strncmp(argv[i], "-d", 2) == 0) {
             if (argv[i][2] == 'p') {
                 stop_after_parse = 1;
@@ -353,7 +430,15 @@ int rxcmain(int argc, char *argv[]) {
                 if (i >= argc) {
                     error_and_exit(2, "Missing import location list -i");
                 }
-                import_locations = argv[i];
+                append_location_arg(&import_locations, argv[i]);
+                break;
+
+            case 's': /* Source Import Locations */
+                i++;
+                if (i >= argc) {
+                    error_and_exit(2, "Missing source location list -s");
+                }
+                append_location_arg(&source_import_locations, argv[i]);
                 break;
 
             case 'n': /* No Optimisation */
@@ -405,18 +490,20 @@ int rxcmain(int argc, char *argv[]) {
         error_and_exit(2, "Unexpected Arguments");
     }
 
-    /* Add current and executable path to import locations */
+    /* Add the executable-path binary import root. */
     exe_path = exepath();
     if (import_locations) {
-        combined_import_locations = malloc(strlen(import_locations) + strlen(exe_path) + 5);
-        sprintf(combined_import_locations, ".;%s;%s", import_locations, exe_path);
+        combined_import_locations = malloc(strlen(import_locations) + strlen(exe_path) + 2);
+        sprintf(combined_import_locations, "%s;%s", import_locations, exe_path);
         import_locations = combined_import_locations;
     } else {
-        combined_import_locations = malloc(strlen(exe_path) + 5);
-        sprintf(combined_import_locations, ".;%s", exe_path);
+        combined_import_locations = malloc(strlen(exe_path) + 1);
+        sprintf(combined_import_locations, "%s", exe_path);
         import_locations = combined_import_locations;
     }
     free(exe_path);
+    if (source_import_locations && debug_mode >= 2) fprintf(stderr, "Combined source import roots: %s\n", source_import_locations);
+    if (import_locations && debug_mode >= 2) fprintf(stderr, "Combined binary import roots: %s\n", import_locations);
 
     char *allocated_output_file_name = 0;
     if (!output_file_name) {
@@ -439,33 +526,6 @@ int rxcmain(int argc, char *argv[]) {
     }
 
     if (debug_mode >= 2) fprintf(stderr, "Input file is %s\n", file_name);
-
-    /* Import location list */
-    if (import_locations) {
-        /* How many import locations */
-        num_import_locations = 1;
-        for (ix = 0; import_locations[ix]; ix++) if (import_locations[ix] == ';') num_import_locations++;
-
-        /* Malloc array */
-        context->import_locations = malloc((num_import_locations + 1) * sizeof(char*));
-
-        /* Copy Pointers */
-        num_import_locations = 0;
-        context->import_locations[num_import_locations] = import_locations;
-        for (ix = 0; import_locations[ix]; ix++) if (import_locations[ix] == ';') {
-            num_import_locations++;
-            import_locations[ix] = 0;
-            context->import_locations[num_import_locations] = import_locations + ix + 1;
-        }
-        context->import_locations[++num_import_locations] = 0;
-        if (debug_mode >= 2) {
-            // for debugging print the import locations
-            int di;
-            for (di = 0; di < num_import_locations; di++) {
-                fprintf(stderr, "Import location %d: %s\n", di, context->import_locations[di]);
-            }
-        }
-    }
 
     /* Open input file */
     const char* filename_extension = filenext(file_name);
@@ -509,8 +569,36 @@ int rxcmain(int argc, char *argv[]) {
     context->stop_after_parse = stop_after_parse;
     context->optimise = do_optimise;
     context->disable_exits = disable_exits || (getenv("RXCP_DISABLE_EXIT") != NULL);
+    context->auto_import_rxas = (char) auto_import_rxas;
     if (file_directory) context->location = strdup(file_directory);
     else context->location = location ? strdup(location) : 0;
+
+    if (import_locations) {
+        context->import_locations = split_location_list(import_locations);
+        context->import_locations_owns_buffer = 1;
+        if (debug_mode >= 2) {
+            int di;
+            for (di = 0; context->import_locations[di]; di++) {
+                fprintf(stderr, "Binary import location %d: %s\n", di, context->import_locations[di]);
+            }
+        }
+        free(import_locations);
+        import_locations = 0;
+        combined_import_locations = 0;
+    }
+
+    if (source_import_locations) {
+        context->source_import_locations = split_location_list(source_import_locations);
+        context->source_import_locations_owns_buffer = 1;
+        if (debug_mode >= 2) {
+            int di;
+            for (di = 0; context->source_import_locations[di]; di++) {
+                fprintf(stderr, "Source import location %d: %s\n", di, context->source_import_locations[di]);
+            }
+        }
+        free(source_import_locations);
+        source_import_locations = 0;
+    }
 
     /* Load VM Plugins */
     // Manually initialize the plugins that are statically linked with manual initializers (hardcoded)

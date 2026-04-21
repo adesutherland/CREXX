@@ -7,7 +7,7 @@ The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loa
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
 2. **Loading**: `rxvm_load()` ingests a `.rxbin` binary file, loading it into an internal `module` struct, resolving the constant pool and the bytecode instruction stream.
-3. **Linking**: `rxvm_link()` traverses multiple loaded modules to resolve exports and external imports into a unified memory map.
+3. **Linking**: `rxvm_link()` traverses newly loaded modules to resolve exports and external imports into a unified memory map. The call is now dirty-checked, so repeated bridge/runtime entry points become fast no-ops when no module state changed.
 4. **Preparation**: `rxvm_prepare()` optionally patches the bytecodes into direct threading pointers for maximum speed.
 5. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure (typically `main`) and launch the main interpreter loop.
 
@@ -22,10 +22,17 @@ typedef struct rxvm_context {
     module **modules;
     struct avl_tree_node *exposed_proc_tree;
     struct avl_tree_node *exposed_reg_tree;
+    char link_dirty;
+    char interface_factory_registry_dirty;
     char debug_mode;
     // ...
 } rxvm_context;
 ```
+
+`link_dirty` is raised when new modules are loaded. The separate
+`interface_factory_registry_dirty` flag tracks when the interface
+factory-provider cache needs rebuilding. This keeps repeated
+`rxvm_link()` calls cheap while still supporting late module loading.
 
 ### `stack_frame`
 To minimize heap allocation overhead, the VM uses a custom call stack model. `stack_frame` structs maintain scope, local variables, and return state. When a function returns, the `stack_frame` is not immediately freed; it is placed onto a `frame_free_list` associated with the procedure, allowing the VM to rapidly reuse stack blocks for repeated calls.
@@ -133,7 +140,8 @@ The current implementation is now:
 
 - it handles both the default `*` interface factory surface and named factory
   selectors
-- it rebuilds a factory-provider registry during VM link/load
+- it rebuilds a factory-provider registry only when newly loaded modules
+  invalidate that cache
 - registry rows are keyed by interface FQN plus factory member name
 - for each candidate class, it resolves the concrete `§factory` or
   `§factory.member` procedure through the existing metadata/procedure tables
@@ -143,3 +151,9 @@ The current implementation is now:
 
 Explicit class-side `match` is still later work; it is not part of the current
 VM contract.
+
+Runtime module loading matters here as well. `METALOADMODULE` marks the
+VM link state dirty, and the next `srcfproc` resolution forces
+`rxvm_link()` before consulting the interface-factory registry. That
+preserves correctness without paying the full relink cost on every
+bridge call or factory lookup.

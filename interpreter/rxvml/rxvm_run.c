@@ -40,13 +40,30 @@ struct module* rxvm_load_file(struct rxvm_context* ctx, char* filename) {
 
 int rxvm_link(struct rxvm_context* ctx) {
     size_t i;
+    int linked_any;
+
+    if (!ctx) return 0;
+    if (!ctx->link_dirty && !ctx->interface_factory_registry_dirty) return 0;
+
+    linked_any = 0;
     for (i = 0; i < ctx->num_modules; i++) {
         if (ctx->modules[i]->state < RXVM_MOD_LINKED) {
             rxvm_link_module(ctx, i);
             ctx->modules[i]->state = RXVM_MOD_LINKED;
+            linked_any = 1;
         }
     }
-    rxvm_rebuild_interface_factory_registry(ctx);
+
+    ctx->link_dirty = 0;
+
+    if (linked_any) {
+        ctx->interface_factory_registry_dirty = 1;
+    }
+
+    if (ctx->interface_factory_registry_dirty) {
+        rxvm_rebuild_interface_factory_registry(ctx);
+        ctx->interface_factory_registry_dirty = 0;
+    }
     return 0;
 }
 

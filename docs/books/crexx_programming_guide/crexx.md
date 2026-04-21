@@ -61,7 +61,19 @@ The following options are available (single and double dashes work for all optio
 : Option decimal (default) links to the decimal arithmetic vm plugin from the mc library. The alternative --nodecimal links in the alternative, high performance db decimal library.
 
 `-l[library path]`
-: Use plugin import library relative to the bin library, for example, using the rx_treemap requires a `-lrx_treemap` option
+: Use a packaged binary/runtime library relative to `CREXX_HOME/bin`. This affects both compilation and execution/native linking. For example, using `rx_treemap` requires `-lrx_treemap`.
+
+`-s[path]` or `--source path`
+: Add an extra source import root for the `rxc` phase. This is for off-directory `.rexx` modules that should be visible to source import discovery.
+
+`-i[path]`
+: Add an extra raw binary import root for the `rxc` phase. This is for `.rxbin` imports discovered during compilation.
+
+`--import-rxas`
+: Allow the `rxc` phase to auto-import `.rxas` files from binary roots. This is off by default.
+
+`-s`, `-i`, and `--import-rxas` are compile-time controls only. They do not automatically add runtime modules to `rxvme` or to native links. For runtime/native library loading, continue to use `-l`.
+
+Headerless top-level scripts are still compiled with `--level levelb --import rxfnsb`.
 
 ## Examples
-

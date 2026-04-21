@@ -218,6 +218,8 @@ typedef struct rxvm_context {
     rxvm_interface_factory_entry *interface_factories;
     size_t num_interface_factories;
     size_t interface_factory_capacity;
+    char link_dirty;
+    char interface_factory_registry_dirty;
 } rxvm_context;
 
 /* Function to get signal text from a signal code  */

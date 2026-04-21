@@ -67,6 +67,8 @@ void rxinimod(rxvm_context *context) {
     context->interface_factories = 0;
     context->num_interface_factories = 0;
     context->interface_factory_capacity = 0;
+    context->link_dirty = 0;
+    context->interface_factory_registry_dirty = 0;
 
     /* Support 128 modules initially - this grows automatically */
     context->module_buffer_size = 128;
@@ -335,6 +337,8 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
     context->modules[n]->file = file_module_section;
     context->modules[n]->native = file_module_section->native;
     context->modules[n]->state = RXVM_MOD_LOADED;
+    context->link_dirty = 1;
+    context->interface_factory_registry_dirty = 1;
 
     context->num_modules = context->modules[n]->module_number = n + 1;
 

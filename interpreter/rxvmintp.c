@@ -62,6 +62,8 @@
 #include "rxvmvars.h"
 #include "rxvmplugin_framework.h"
 
+int rxvm_link(rxvm_context *ctx);
+
 /* This defines the expected max number of args - if a call has more args than
  * this then an oversized block will be malloced
  * In terms of memory usage / waste each one is only 2 x pointer size */
@@ -411,6 +413,10 @@ static int resolve_runtime_factory(rxvm_context *context,
     if (factory_out) *factory_out = 0;
     if (error_out) *error_out = 0;
     if (!context || !selector || !selector_length || !factory_out) return 0;
+
+    if (context->link_dirty || context->interface_factory_registry_dirty) {
+        rxvm_link(context);
+    }
 
     parse_runtime_factory_selector(selector, selector_length,
                                    &interface_name, &interface_name_length,

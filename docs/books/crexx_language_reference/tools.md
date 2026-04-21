@@ -14,15 +14,31 @@ Options :
 
   \-l location     Working Location (directory)
 
-  \-i import       Locations to import file \- ";" delimited list
+  \-s source       Source import locations \- ";" delimited list
+
+  \-i import       Binary import locations \- ";" delimited list
 
   \--level level   Default source level when the source omits one
 
   \--import ns     Inject a file-level IMPORT namespace (repeatable)
 
+  \--import-rxas   Enable auto-import scanning of .rxas in binary roots
+
   \-o output\_file  REXX Assembler Output File
 
   \-n              No Optimising
+
+Source imports and binary imports are now searched separately. `.rexx`
+files are discovered only in source roots: the source file directory
+(or `-l` working directory when no directory is present in the source
+path) plus any extra `-s` directories. `.rxbin`, optional `.rxas`, and
+`.rxplugin` files are discovered in binary roots: the `-i` list and the
+compiler executable directory. `-i` and `-s` may both be repeated and
+their values are accumulated in order.
+
+This means qualification remains an import-time disambiguation feature,
+but the left side of `namespace::symbol` must still name an imported
+namespace. It is not a filesystem shortcut.
 
 ## **Assembler**
 
