@@ -183,8 +183,8 @@ do i=1 to words(filenames)
     if verbose>3 then do
       call printFileToSTDout filename'.rxpp'
     end
-    
-    'rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose0'
+    ''rxpath'/'lpath'/rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose 'verbose
+--    'rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose0'
     if verbose then do
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
 	else res = esc||ANSI_RED||RC||esc||ANSI_RESET
