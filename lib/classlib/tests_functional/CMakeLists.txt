@@ -32,7 +32,7 @@ foreach(_binfile ${REXXBINS})
 
 
     add_custom_target(${_basename})
-    add_dependencies(testbifs ${_basename})
+    add_dependencies(testbifs ${_basename} classlib)
     set(_rxc_flags -x)
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
@@ -45,3 +45,5 @@ foreach(_binfile ${REXXBINS})
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
+
+
