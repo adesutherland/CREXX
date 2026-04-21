@@ -337,6 +337,53 @@ static int same_contract_argument_signature(Context *context, ASTNode *left_memb
     return left_arg == 0 && right_arg == 0;
 }
 
+static int interface_member_has_default_body(ASTNode *member) {
+    ASTNode *instructions;
+
+    if (!member || member->node_type != METHOD) return 0;
+    if (member->is_interface_default_method) return 1;
+
+    instructions = ast_chld(member, INSTRUCTIONS, 0);
+    return instructions && instructions->child != 0;
+}
+
+static Symbol *resolve_class_interface_default_method(Context *context, Symbol *class_symbol, ASTNode *member_node) {
+    ASTNode *class_node;
+    ASTNode *implements_node;
+    ASTNode *iface_ref;
+
+    if (!context || !class_symbol || !member_node || !sym_is_class_contract_symbol(class_symbol)) return 0;
+
+    class_node = class_symbol->defines_scope ? class_symbol->defines_scope->defining_node : 0;
+    if (!class_node || class_node->node_type != CLASS_DEF) return 0;
+
+    implements_node = ast_chld(class_node, IMPLEMENTS, 0);
+    for (iface_ref = implements_node ? implements_node->child : 0; iface_ref; iface_ref = iface_ref->sibling) {
+        Symbol *iface_symbol = iface_ref->symbolNode ? iface_ref->symbolNode->symbol : 0;
+        Symbol *member_symbol = 0;
+        ASTNode *iface_member = 0;
+
+        if (!iface_symbol) {
+            iface_symbol = sym_rvfc(context->ast, iface_ref);
+            if (!iface_symbol) {
+                ensure_class_imported(context, iface_ref->node_string, iface_ref->node_string_length);
+                iface_symbol = sym_rvfc(context->ast, iface_ref);
+            }
+        }
+        if (!sym_is_interface_symbol(iface_symbol) || !iface_symbol->defines_scope) continue;
+
+        member_symbol = sym_lrsv(iface_symbol->defines_scope, member_node);
+        if (!member_symbol || member_symbol->symbol_type != FUNCTION_SYMBOL || sym_nond(member_symbol) == 0) continue;
+
+        iface_member = sym_trnd(member_symbol, 0)->node;
+        if (iface_member && iface_member->node_type == METHOD && interface_member_has_default_body(iface_member)) {
+            return member_symbol;
+        }
+    }
+
+    return 0;
+}
+
 static void validate_class_interface_contracts(Context *context, ASTNode *class_node) {
     ASTNode *implements_node;
     ASTNode *iface_ref;
@@ -451,14 +498,19 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
 
             iface_name = sym_frnm(iface_symbol);
             if (!class_member_symbol || class_member_symbol->symbol_type != FUNCTION_SYMBOL) {
-                mknd_err(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                if (!interface_member_has_default_body(iface_member)) {
+                    mknd_err(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                }
                 if (member_name) free(member_name);
                 if (iface_name) free(iface_name);
                 continue;
             }
 
             class_member_node = sym_trnd(class_member_symbol, 0)->node;
-            if (!same_contract_signature(context, iface_member, class_member_node)) {
+            if (interface_member_has_default_body(iface_member)) {
+                mknd_err(class_node, "INTERFACE_DEFAULT_METHOD_REDEFINED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+            }
+            else if (!same_contract_signature(context, iface_member, class_member_node)) {
                 mknd_err(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
             }
 
@@ -730,12 +782,20 @@ walker_result set_node_types_walker(walker_direction direction,
                         if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                             dispatch_class_sym = class_sym;
                             method_sym = sym_lrsv(dispatch_class_sym->defines_scope, node);
+                            if ((!method_sym || method_sym->symbol_type != FUNCTION_SYMBOL) &&
+                                !sym_is_interface_symbol(dispatch_class_sym)) {
+                                method_sym = resolve_class_interface_default_method(context, dispatch_class_sym, node);
+                            }
                         } else if (!context->changed_flags || context->is_final_pass) {
                             if (ensure_class_imported(context, cname, strlen(cname))) {
                                 class_sym = sym_rvfc(context->ast, &dummy);
                                 if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                                     dispatch_class_sym = class_sym;
                                     method_sym = sym_lrsv(dispatch_class_sym->defines_scope, node);
+                                    if ((!method_sym || method_sym->symbol_type != FUNCTION_SYMBOL) &&
+                                        !sym_is_interface_symbol(dispatch_class_sym)) {
+                                        method_sym = resolve_class_interface_default_method(context, dispatch_class_sym, node);
+                                    }
                                 }
                             }
                         }

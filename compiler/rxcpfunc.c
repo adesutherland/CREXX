@@ -62,6 +62,7 @@ typedef struct {
 
 static int load_another_file(Context *context);
 static size_t module_stem_length(const char *name);
+static void mark_source_import_interface_default_methods(Context *stub_ctx, ASTNode *contract_node);
 
 #define GET_INDEX(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func->fqname
 #define GET_VALUE(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func
@@ -1068,6 +1069,9 @@ static walker_result class_signature_walker(walker_direction direction,
                     Context *stub_ctx = parseRexx(p->parent_context, p->import_context->location, p->import_context->file_name,
                                                   LEVELB, p->parent_context->debug_mode, stub_source, strlen(stub_source));
                     if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
+                        if (node->node_type == INTERFACE_DEF) {
+                            mark_source_import_interface_default_methods(stub_ctx, node);
+                        }
                         if (stub_ctx->ast->child) stub_ctx->ast->child->node_type = IMPORTED_FILE;
                         rximpcl_f(p->parent_context, p->import_context->file_name, fqname, stub_ctx,
                                   node->node_type, implements_fqnames, implements_count);
@@ -1176,8 +1180,19 @@ typedef struct class_meta_agg {
     NodeType contract_type;
     char **implements_fqnames;
     size_t implements_count;
+    char **default_method_names;
+    size_t default_method_count;
     struct class_meta_agg *next;
 } class_meta_agg;
+
+static class_meta_agg* agg_find(class_meta_agg *head, const char *fq) {
+    class_meta_agg *it = head;
+    while (it) {
+        if (strcmp(it->fq, fq) == 0) return it;
+        it = it->next;
+    }
+    return 0;
+}
 
 static class_meta_agg* agg_find_or_add(class_meta_agg **head, const char *fq, NodeType contract_type) {
     class_meta_agg *it = *head;
@@ -1207,6 +1222,8 @@ static class_meta_agg* agg_find_or_add(class_meta_agg **head, const char *fq, No
     n->contract_type = contract_type;
     n->implements_fqnames = 0;
     n->implements_count = 0;
+    n->default_method_names = 0;
+    n->default_method_count = 0;
     n->next = *head;
     *head = n;
     return n;
@@ -1236,6 +1253,11 @@ static void agg_free_all(class_meta_agg *head) {
             for (i = 0; i < n->implements_count; i++) free(n->implements_fqnames[i]);
             free(n->implements_fqnames);
         }
+        if (n->default_method_names) {
+            size_t i;
+            for (i = 0; i < n->default_method_count; i++) free(n->default_method_names[i]);
+            free(n->default_method_names);
+        }
         free(n);
         n = nx;
     }
@@ -1251,6 +1273,84 @@ static void agg_add_implements(class_meta_agg *agg, const char *iface_fq) {
 
     agg->implements_fqnames = realloc(agg->implements_fqnames, sizeof(char *) * (agg->implements_count + 1));
     agg->implements_fqnames[agg->implements_count++] = strdup(iface_fq);
+}
+
+static void agg_add_default_method(class_meta_agg *agg, const char *member_name) {
+    size_t i;
+
+    if (!agg || !member_name) return;
+    for (i = 0; i < agg->default_method_count; i++) {
+        if (strcmp(agg->default_method_names[i], member_name) == 0) return;
+    }
+
+    agg->default_method_names = realloc(agg->default_method_names,
+                                        sizeof(char *) * (agg->default_method_count + 1));
+    agg->default_method_names[agg->default_method_count++] = strdup(member_name);
+}
+
+static void mark_imported_interface_default_methods(Context *stub_ctx, class_meta_agg *agg) {
+    ASTNode *file_node;
+    ASTNode *contract_node;
+    ASTNode *member;
+    size_t i;
+
+    if (!stub_ctx || !stub_ctx->ast || !stub_ctx->ast->child || !agg || !agg->default_method_count) return;
+
+    file_node = stub_ctx->ast->child;
+    contract_node = file_node ? file_node->child : 0;
+    while (contract_node && contract_node->node_type != INTERFACE_DEF) contract_node = contract_node->sibling;
+    if (!contract_node) return;
+
+    for (member = contract_node->child; member; member = member->sibling) {
+        if (member->node_type != METHOD || !member->node_string) continue;
+        for (i = 0; i < agg->default_method_count; i++) {
+            if (strlen(agg->default_method_names[i]) == member->node_string_length &&
+                memcmp(agg->default_method_names[i], member->node_string, member->node_string_length) == 0) {
+                member->is_interface_default_method = 1;
+                break;
+            }
+        }
+    }
+}
+
+static int contract_member_is_default_method(ASTNode *member) {
+    ASTNode *instructions;
+
+    if (!member || member->node_type != METHOD) return 0;
+    if (member->is_interface_default_method) return 1;
+
+    instructions = ast_chld(member, INSTRUCTIONS, 0);
+    return instructions && instructions->child != 0;
+}
+
+static void mark_source_import_interface_default_methods(Context *stub_ctx, ASTNode *contract_node) {
+    ASTNode *file_node;
+    ASTNode *stub_contract;
+    ASTNode *orig_member;
+
+    if (!stub_ctx || !stub_ctx->ast || !stub_ctx->ast->child || !contract_node ||
+        contract_node->node_type != INTERFACE_DEF) return;
+
+    file_node = stub_ctx->ast->child;
+    stub_contract = file_node ? file_node->child : 0;
+    while (stub_contract && stub_contract->node_type != INTERFACE_DEF) stub_contract = stub_contract->sibling;
+    if (!stub_contract) return;
+
+    for (orig_member = contract_node->child; orig_member; orig_member = orig_member->sibling) {
+        ASTNode *stub_member;
+
+        if (!contract_member_is_default_method(orig_member) || !orig_member->node_string) continue;
+
+        for (stub_member = stub_contract->child; stub_member; stub_member = stub_member->sibling) {
+            if (stub_member->node_type == METHOD &&
+                stub_member->node_string &&
+                stub_member->node_string_length == orig_member->node_string_length &&
+                memcmp(stub_member->node_string, orig_member->node_string, orig_member->node_string_length) == 0) {
+                stub_member->is_interface_default_method = 1;
+                break;
+            }
+        }
+    }
 }
 
 static char **clone_fqname_array(char **names, size_t count) {
@@ -1360,23 +1460,27 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                                     class_fq = malloc(class_len + 1);
                                     memcpy(class_fq, fqname, class_len);
                                     class_fq[class_len] = 0;
-                                    class_meta_agg *agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
+                                    class_meta_agg *agg = agg_find(class_aggs, class_fq);
 
-                                    /* method name is after last dot */
-                                    const char *mname = last_dot + 1;
-                                    if (type && *type) {
-                                        char *ln = mprintf("  %s: method = %s\n", mname, type);
-                                        agg_append_line(agg, ln);
-                                        free(ln);
-                                    } else {
-                                        char *ln = mprintf("  %s: method\n", mname);
-                                        agg_append_line(agg, ln);
-                                        free(ln);
-                                    }
-                                    if (args && *args) {
-                                        char *ln2 = mprintf("  arg %s\n", args);
-                                        agg_append_line(agg, ln2);
-                                        free(ln2);
+                                    if (!agg || agg->contract_type != INTERFACE_DEF) {
+                                        if (!agg) agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
+
+                                        /* method name is after last dot */
+                                        const char *mname = last_dot + 1;
+                                        if (type && *type) {
+                                            char *ln = mprintf("  %s: method = %s\n", mname, type);
+                                            agg_append_line(agg, ln);
+                                            free(ln);
+                                        } else {
+                                            char *ln = mprintf("  %s: method\n", mname);
+                                            agg_append_line(agg, ln);
+                                            free(ln);
+                                        }
+                                        if (args && *args) {
+                                            char *ln2 = mprintf("  arg %s\n", args);
+                                            agg_append_line(agg, ln2);
+                                            free(ln2);
+                                        }
                                     }
                                     free(class_fq);
                                 }
@@ -1450,6 +1554,9 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                     }
                 } else {
                     ln = mprintf("  %s: method = %s\n", member, type_str ? type_str : ".void");
+                    if (strstr(kind, "final")) {
+                        agg_add_default_method(agg, member);
+                    }
                 }
                 agg_append_line(agg, ln);
                 free(ln);
@@ -1524,6 +1631,9 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                 }
                 Context *stub_ctx = parseRexx(context, context->location, full_file_name, LEVELB, context->debug_mode, stub_source, strlen(stub_source));
                 if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
+                    if (a->contract_type == INTERFACE_DEF) {
+                        mark_imported_interface_default_methods(stub_ctx, a);
+                    }
                     if (stub_ctx->ast->child) stub_ctx->ast->child->node_type = IMPORTED_FILE;
                     rximpcl_f(context, full_file_name, a->fq, stub_ctx, a->contract_type,
                               clone_fqname_array(a->implements_fqnames, a->implements_count), a->implements_count);

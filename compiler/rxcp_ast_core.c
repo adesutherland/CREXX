@@ -291,6 +291,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->is_varg = 0;
     node->is_compiler_added = 0;
     node->is_implicit_main = 0;
+    node->is_interface_default_method = 0;
     node->is_internal_diagnostic = 0;
     node->is_source_diagnostic_recorded = 0;
     node->mark_internal_diagnostics = 0;
@@ -399,6 +400,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->is_varg = node->is_varg;
     new_node->is_compiler_added = node->is_compiler_added;
     new_node->is_implicit_main = node->is_implicit_main;
+    new_node->is_interface_default_method = node->is_interface_default_method;
     new_node->is_internal_diagnostic = node->is_internal_diagnostic;
     new_node->mark_internal_diagnostics = node->mark_internal_diagnostics;
     new_node->force_local_scope = node->force_local_scope;

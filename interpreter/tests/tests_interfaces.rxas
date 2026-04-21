@@ -12,6 +12,13 @@
 .meta "interface_factory_tiebreak.vehicle"="method" "describe" ".string" "" .member
 .meta "interface_factory_tiebreak.vehicle"="factory" "*" ".vehicle" "name=.string" .member
 .meta "interface_factory_tiebreak.vehicle"="factory" "from_name" ".vehicle" "name=.string" .member
+.meta "interface_default_vm.box"="b" ".unknown" .class
+.meta "interface_default_vm.box"="interface_default_vm.shape" .implements
+.meta "interface_default_vm.shape"="b" ".unknown" .interface
+.meta "interface_default_vm.shape"="method final" "describe" ".string" "" .member
+.meta "interface_default_vm.shape"="method final" "prefix" ".string" "" .member
+.meta "interface_default_vm.shape"="method" "summary" ".string" "" .member
+.meta "interface_default_vm.shape"="factory" "*" ".shape" "" .member
 
 .globals=0
 
@@ -57,6 +64,19 @@ main() .locals=10
    seq r4,r3,"truck:truck:named:duo"
    brf fail_named_tiebreak,r4
 
+   load r1,0
+   srcfproc r0,"interface_default_vm.shape",r1
+   dcall r0,r0,r1
+
+   load r1,1
+   settp r0,1
+   swap r2,r0
+   srcmethod r3,r2,"describe"
+   dcall r3,r3,r1
+   swap r0,r2
+   seq r4,r3,"iface:box"
+   brf fail_default_method,r4
+
    say "PASS: Interface Dispatch Suite"
    ret 0
 
@@ -75,6 +95,11 @@ fail_tiebreak:
 
 fail_named_tiebreak:
    say "FAIL: SRCFPROC Named Tie-Break"
+   say r3
+   ret 0
+
+fail_default_method:
+   say "FAIL: SRCMETHOD Default Body"
    say r3
    ret 0
 
@@ -205,3 +230,65 @@ fail_named_tiebreak:
    unlink r1
    ret r2
    .meta "interface_factory_tiebreak.truck.describe.§this"
+
+§interface_default_vm.box.§factory() .locals=1
+   .meta "interface_default_vm.box.§factory"="b" ".shape" §interface_default_vm.box.§factory() "" ""
+   setattrs r0,0
+   setobjtype r0,"interface_default_vm.box"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   ret r0
+
+§interface_default_vm.box.§match() .locals=0
+   .meta "interface_default_vm.box.§match"="b" ".int" §interface_default_vm.box.§match() "" ""
+   ret 10
+
+§interface_default_vm.shape.describe() .locals=5
+   .meta "interface_default_vm.shape.describe"="b" ".string" §interface_default_vm.shape.describe() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_default_vm.shape.describe.§this"="b" ".shape" a1
+   load r1,1
+   settp a1,1
+   swap r2,a1
+   srcmethod r3,r2,"prefix"
+   dcall r3,r3,r1
+   swap a1,r2
+   concat r3,r3,":"
+   load r1,1
+   settp a1,1
+   swap r2,a1
+   srcmethod r4,r2,"summary"
+   dcall r4,r4,r1
+   swap a1,r2
+   concat r4,r3,r4
+   ret r4
+   .meta "interface_default_vm.shape.describe.§this"
+
+§interface_default_vm.shape.prefix() .locals=1
+   .meta "interface_default_vm.shape.prefix"="b" ".string" §interface_default_vm.shape.prefix() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_default_vm.shape.prefix.§this"="b" ".shape" a1
+   ret "iface"
+   .meta "interface_default_vm.shape.prefix.§this"
+
+§interface_default_vm.box.summary() .locals=1
+   .meta "interface_default_vm.box.summary"="b" ".string" §interface_default_vm.box.summary() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_default_vm.box.summary.§this"="b" ".box" a1
+   ret "box"
+   .meta "interface_default_vm.box.summary.§this"

@@ -23,6 +23,7 @@ typedef struct rxvm_context {
     struct avl_tree_node *exposed_proc_tree;
     struct avl_tree_node *exposed_reg_tree;
     char link_dirty;
+    char interface_method_registry_dirty;
     char interface_factory_registry_dirty;
     char debug_mode;
     // ...
@@ -30,9 +31,9 @@ typedef struct rxvm_context {
 ```
 
 `link_dirty` is raised when new modules are loaded. The separate
-`interface_factory_registry_dirty` flag tracks when the interface
-factory-provider cache needs rebuilding. This keeps repeated
-`rxvm_link()` calls cheap while still supporting late module loading.
+`interface_method_registry_dirty` and `interface_factory_registry_dirty` flags
+track when the interface method and factory caches need rebuilding. This keeps
+repeated `rxvm_link()` calls cheap while still supporting late module loading.
 
 ### `stack_frame`
 To minimize heap allocation overhead, the VM uses a custom call stack model. `stack_frame` structs maintain scope, local variables, and return state. When a function returns, the `stack_frame` is not immediately freed; it is placed onto a `frame_free_list` associated with the procedure, allowing the VM to rapidly reuse stack blocks for repeated calls.
@@ -126,13 +127,29 @@ The current Level B interface runtime slice adds three VM-facing pieces on top
 of the older object model:
 
 - `SETOBJTYPE_REG_STRING` stores a concrete class name on an object value
-- `SRCMETHOD_REG_REG_STRING` resolves a concrete method procedure from
+- `SRCMETHOD_REG_REG_STRING` resolves the effective method procedure from
   `object_type_name + member_name`
 - `SRCFPROC_REG_STRING_REG` resolves an interface factory provider for either
   `interface_name` or `interface_name::factory_name`
 
 `srcmethod` and `srcfproc` both return a `proc_constant *` in a normal
 register, and the existing `dcall` path performs the actual invocation.
+
+### Current `srcmethod` semantics
+
+The current implementation is now:
+
+- it rebuilds an interface-method registry only when newly loaded modules
+  invalidate that cache
+- registry rows are keyed by fully qualified concrete class name plus member
+  name
+- for each `class implements interface` link, the VM resolves the effective
+  procedure for each interface member during link
+- if a concrete `class.member` procedure exists, that wins
+- otherwise, if the interface member kind is `method final`, the VM binds the
+  interface's emitted default-body procedure instead
+- if no registry row exists, `srcmethod` still falls back to a direct
+  `class.member` lookup before raising `FUNCTION_NOT_FOUND`
 
 ### Current `srcfproc` semantics
 

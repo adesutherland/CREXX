@@ -50,6 +50,7 @@ static rxpa_context *rxpa_context_f(rxvm_context *rxvm_context);
 static void free_rxpa_context(rxpa_context *context);
 
 static void free_interface_factory_registry(rxvm_context *context);
+static void free_interface_method_registry(rxvm_context *context);
 
 // End of RXPA Declarations for this file
 
@@ -67,7 +68,11 @@ void rxinimod(rxvm_context *context) {
     context->interface_factories = 0;
     context->num_interface_factories = 0;
     context->interface_factory_capacity = 0;
+    context->interface_methods = 0;
+    context->num_interface_methods = 0;
+    context->interface_method_capacity = 0;
     context->link_dirty = 0;
+    context->interface_method_registry_dirty = 0;
     context->interface_factory_registry_dirty = 0;
 
     /* Support 128 modules initially - this grows automatically */
@@ -80,6 +85,7 @@ void rxfremod(rxvm_context *context) {
     int j, k;
 
     free_interface_factory_registry(context);
+    free_interface_method_registry(context);
 
     /* Free Symbol Search Trees */
     DEBUG("Free Symbol Search Trees\n");
@@ -153,6 +159,28 @@ static void free_interface_factory_registry(rxvm_context *context) {
     context->interface_factories = 0;
     context->num_interface_factories = 0;
     context->interface_factory_capacity = 0;
+}
+
+static void free_interface_method_registry(rxvm_context *context) {
+    size_t i;
+
+    if (!context || !context->interface_methods) {
+        if (context) {
+            context->num_interface_methods = 0;
+            context->interface_method_capacity = 0;
+        }
+        return;
+    }
+
+    for (i = 0; i < context->num_interface_methods; i++) {
+        free(context->interface_methods[i].class_name);
+        free(context->interface_methods[i].member_name);
+    }
+
+    free(context->interface_methods);
+    context->interface_methods = 0;
+    context->num_interface_methods = 0;
+    context->interface_method_capacity = 0;
 }
 
 /* Link a loaded module */
@@ -338,6 +366,7 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
     context->modules[n]->native = file_module_section->native;
     context->modules[n]->state = RXVM_MOD_LOADED;
     context->link_dirty = 1;
+    context->interface_method_registry_dirty = 1;
     context->interface_factory_registry_dirty = 1;
 
     context->num_modules = context->modules[n]->module_number = n + 1;

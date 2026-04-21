@@ -1040,11 +1040,12 @@ Conclusion for Stage 3.2:
 - the stable stopping point is one `addressenvironment` class plus multiple
   registered objects and aliases
 - further generalization to truly separate environment classes is deferred
-  until the fuller Level B callable-contract / interface model gains interface
-  default bodies and any additional environment-specific refinements needed on
-  top of the now-implemented provider `match` selection
+  until the now-completed Level B callable-contract / interface model is
+  applied to `ADDRESS` itself, along with any additional
+  environment-specific refinements needed on top of the implemented provider
+  `match` selection and default-method support
 - see `compiler/docs/levelb_interfaces_working.md` for the follow-on design
-  record for that prerequisite
+  record for that prerequisite and its completed implementation state
 
 Rationale:
 

@@ -83,6 +83,16 @@ static int node_is_imported_definition(ASTNode *node) {
     return 0;
 }
 
+static const char *interface_member_kind_string(ASTNode *member) {
+    if (!member) return "";
+    if (member->node_type == FACTORY) return "factory";
+    if (member->node_type == METHOD) {
+        if (member->is_interface_default_method) return "method final";
+        return "method";
+    }
+    return "";
+}
+
 /* Adds Symbol metadata */
 void meta_set_symbol(Symbol *symbol, void *payload) {
     ASTNode* node = (ASTNode*)payload;
@@ -479,9 +489,10 @@ void add_class_symbol(Symbol *symbol, void *payload) {
                         member_name = malloc(member->node_string_length + 1);
                         memcpy(member_name, member->node_string, member->node_string_length);
                         member_name[member->node_string_length] = 0;
+                        const char *member_kind = interface_member_kind_string(member);
                         char *buf_member = mprintf(".meta \"%s\"=\"%s\" \"%s\" \"%s\" \"%s\" .member\n",
                                                    owner_fqn,
-                                                   member->node_type == FACTORY ? "factory" : "method",
+                                                   member_kind,
                                                    member_name,
                                                    rtype,
                                                    args);

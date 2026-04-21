@@ -58,6 +58,14 @@ typedef struct rxvm_interface_factory_entry {
     proc_constant *factory_proc;
 } rxvm_interface_factory_entry;
 
+typedef struct rxvm_interface_method_entry {
+    char *class_name;
+    size_t class_name_length;
+    char *member_name;
+    size_t member_name_length;
+    proc_constant *method_proc;
+} rxvm_interface_method_entry;
+
 struct stack_frame {
     stack_frame *prev_free;
     stack_frame *parent;
@@ -219,7 +227,11 @@ typedef struct rxvm_context {
     rxvm_interface_factory_entry *interface_factories;
     size_t num_interface_factories;
     size_t interface_factory_capacity;
+    rxvm_interface_method_entry *interface_methods;
+    size_t num_interface_methods;
+    size_t interface_method_capacity;
     char link_dirty;
+    char interface_method_registry_dirty;
     char interface_factory_registry_dirty;
 } rxvm_context;
 
@@ -243,6 +255,7 @@ void completely_free_frame(stack_frame *frame);
 /* Link a loaded module */
 void rxvm_link_module(rxvm_context *context, size_t module_number_to_link);
 void rxvm_rebuild_interface_factory_registry(rxvm_context *context);
+void rxvm_rebuild_interface_method_registry(rxvm_context *context);
 
 /* Loads a new module
  * returns 0  - Error

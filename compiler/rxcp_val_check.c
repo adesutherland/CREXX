@@ -90,6 +90,27 @@ static int has_no_concat_gap(ASTNode *left, ASTNode *right) {
  * ast_structure_fixup_walker
  * - Fixes up procedure / class tree structures.
  */
+static int interface_member_body_allowed(ASTNode *node) {
+    return node && node->node_type == METHOD;
+}
+
+static void update_interface_member_body_flag(ASTNode *node) {
+    ASTNode *instructions;
+
+    if (!node) return;
+    if (!node->parent || node->parent->node_type != INTERFACE_DEF) {
+        node->is_interface_default_method = 0;
+        return;
+    }
+
+    instructions = ast_chld(node, INSTRUCTIONS, 0);
+    node->is_interface_default_method = (char) (
+            node->node_type == METHOD &&
+            instructions &&
+            instructions->child != 0
+    );
+}
+
 walker_result ast_structure_fixup_walker(walker_direction direction,
                                          ASTNode* node, __attribute__((unused)) void *payload) {
     ASTNode *child, *new_child, *next, *last, *n;
@@ -340,7 +361,8 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 }
 
                 if (last) { /* If there are no instructions at all it is a declaration */
-                    if (node->parent->node_type == INTERFACE_DEF) {
+                    if (node->parent->node_type == INTERFACE_DEF &&
+                        !interface_member_body_allowed(node)) {
                         mknd_err(node, "INTERFACE_MEMBER_BODY_NOT_ALLOWED");
                     }
                     else if (last->node_type != RETURN && !context->in_exit_bridge) {
@@ -349,6 +371,8 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                         add_ast(last->parent,new_child); /* Adds as the last sibling */
                     }
                 }
+
+                update_interface_member_body_flag(node);
             }
         }
 
@@ -715,9 +739,12 @@ walker_result ast_source_structure_walker(walker_direction direction,
         if (child && !child->child) {
             ast_del(child);
         }
-        else if (child && child->child && node->parent && node->parent->node_type == INTERFACE_DEF) {
+        else if (child && child->child && node->parent && node->parent->node_type == INTERFACE_DEF &&
+                 !interface_member_body_allowed(node)) {
             mknd_err(node, "INTERFACE_MEMBER_BODY_NOT_ALLOWED");
         }
+
+        update_interface_member_body_flag(node);
     }
 
     return result_normal;

@@ -1,6 +1,6 @@
 # Level B Interfaces and Callable Contracts Working Design
 
-Status: working design; tracer-bullet slice implemented; namespace-qualification foundation implemented; runtime interface-method dispatch slice implemented; runtime default-factory dispatch slice implemented; named-factory/runtime-registry dispatch slice implemented; explicit-match selection slice implemented; interface-body work still pending
+Status: working design; tracer-bullet slice implemented; namespace-qualification foundation implemented; runtime interface-method dispatch slice implemented; runtime default-factory dispatch slice implemented; named-factory/runtime-registry dispatch slice implemented; explicit-match selection slice implemented; interface default-body slice implemented; Level B interface core implemented
 
 Last updated: 2026-04-21
 
@@ -151,9 +151,11 @@ Implemented now:
 
 Current boundary of this implemented step:
 
-- method dispatch is runtime-polymorphic, but interface method/default bodies
-  are still not implemented
-- runtime lookup currently resolves concrete methods by full method symbol name
+- runtime lookup now goes through a load/link-time method registry keyed by
+  concrete class plus member name
+- that registry prefers a concrete class method and otherwise falls back to the
+  interface default method when the interface member kind is `method final`
+- interface inheritance, interface state, and overloads remain out of scope
 
 ## Implemented Runtime Factory Dispatch Slice
 
@@ -191,9 +193,39 @@ Implemented now:
 
 Current boundary of this implemented step:
 
-- interface method/default bodies are still not implemented
+- interface factory bodies are still not implemented
 - the current selection path is runtime-scored, but still limited to factory
   providers already present in linked modules
+
+## Implemented Interface Default Method Body Slice
+
+The final approved Level B step is now implemented.
+
+Implemented now:
+
+- an interface method with a body is emitted as a real procedure and exported in
+  metadata as `method final`
+- an interface method without a body remains abstract
+- classes may omit interface methods that are provided as final/default methods
+- classes may not redefine final/default interface methods
+- nested calls inside an interface default method remain interface-dispatched on
+  the current receiver, not hard-wired to one concrete class
+- concrete-class-typed receiver calls now fall back to implemented interface
+  default methods when no concrete class method exists
+- runtime method lookup is now registry-backed and resolves the effective method
+  for `class + member` during VM link, preferring a concrete class procedure and
+  otherwise binding the interface default procedure
+- source-import stubs and `.rxbin`-import stubs both preserve the
+  final/default-method bit, so imported contracts validate the same way as
+  same-module contracts
+- same-module, source-import, binary-import, direct RXAS/VM, and negative
+  compile-fail coverage now all include interface default methods
+
+Current boundary of this implemented step:
+
+- Level B interfaces now have their core callable-contract surface implemented
+- interface inheritance, interface state, overloads, singleton syntax,
+  destructor syntax, and interface factory bodies remain outside Level B
 
 ## Implemented Namespace Qualification Foundation
 
@@ -253,12 +285,14 @@ The project is now at a clean staging point.
 - runtime interface method dispatch is implemented and tested
 - runtime default and named factory dispatch is implemented and tested
 - explicit class-side `match` selection is implemented and tested
-- the remaining core Level B design decisions have been approved
-- the next step is the remaining runtime/interface work, primarily interface
-  default bodies and the remaining validation/runtime refinements on top of the
-  current registry path
+- interface default methods are implemented and tested across same-module,
+  source-import, binary-import, and direct RXAS/VM paths
+- the remaining core Level B design decisions have now been implemented
+- the Level B interface/callable-contract programme is at its intended stable
+  closure point
 - regressions should be treated as bugs to fix now unless they clearly depend
-  on later approved capabilities such as interface default bodies
+  on later, explicitly out-of-scope capabilities such as interface inheritance
+  or interface state
 
 The approved full-stage direction is:
 
@@ -1029,37 +1063,25 @@ callifactory result_reg, iface_factory_selector, arg_array_reg
 This is simpler conceptually but pushes the VM and assembler toward new wide
 instruction formats earlier than necessary.
 
-## Approved Next Stage Plan
+## Approved Final Stage Plan (Completed)
 
-The next full-runtime stage starts from the implemented tracer bullet plus the
-implemented namespace-qualification foundation, and replaces the
-single-implementation lowering path with the approved full runtime model.
+The final approved runtime stage has now been completed. It delivered:
 
-1. Complete the lightweight interface header metadata so `.rxbin` import can
-   reconstruct interface surfaces, implemented-interface links, and factory
-   members without inspecting procedure bodies.
-2. Build runtime interface dispatch registries and factory candidate lists in C
-   during VM load/link, keyed by fully qualified interface identity and member
-   name/selector.
-3. Extend runtime values and VM support so interface method calls resolve by
-   interface contract plus receiver concrete type, then invoke through the
-   existing dynamic-call path.
-4. Add full interface-centred factory dispatch:
-   same-named class-side factory implementations, optional same-named `match`,
-   implicit `match = 1`, highest positive score wins, and alphabetical
-   tie-break by concrete class name.
-5. Add final/shared interface method bodies while keeping Level B interfaces
-   stateless and non-overridable.
-6. Harden validation and diagnostics for name collisions, `*` conflicts,
-   ambiguous implementations, missing implementations, rejected factories, and
-   qualified-name/import misuse.
-7. Expand tests and documentation so same-module, source-import, and `rxbin`
-   import cases cover the full runtime dispatch/factory path and its negative
-   cases.
+1. lightweight interface header metadata that preserves default/final method
+   identity through `.rxbin` import
+2. runtime interface method and factory registries built in C during VM
+   load/link
+3. concrete-runtime-type method dispatch through `srcmethod` plus `dcall`
+4. interface-centred factory dispatch through `srcfproc` plus `dcall`,
+   including explicit class-side `match`
+5. final/shared interface method bodies, with validation rejecting class
+   redefinition
+6. expanded same-module, source-import, binary-import, negative, and direct
+   RXAS/VM coverage
 
-## Explicit Non-Goals for the Next Stage
+## Explicit Non-Goals After Level B Closure
 
-Not proposed for the approved next implementation stage:
+Still not proposed for Level B:
 
 - interface inheritance
 - interface attributes/state

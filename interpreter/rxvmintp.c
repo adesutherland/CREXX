@@ -185,6 +185,49 @@ static void clear_runtime_interface_factories(rxvm_context *context) {
     context->interface_factory_capacity = 0;
 }
 
+static void clear_runtime_interface_methods(rxvm_context *context) {
+    size_t i;
+
+    if (!context || !context->interface_methods) {
+        if (context) {
+            context->num_interface_methods = 0;
+            context->interface_method_capacity = 0;
+        }
+        return;
+    }
+
+    for (i = 0; i < context->num_interface_methods; i++) {
+        free(context->interface_methods[i].class_name);
+        free(context->interface_methods[i].member_name);
+    }
+
+    free(context->interface_methods);
+    context->interface_methods = 0;
+    context->num_interface_methods = 0;
+    context->interface_method_capacity = 0;
+}
+
+static int runtime_member_kind_is_method(const string_constant *kind_symbol) {
+    if (!kind_symbol || kind_symbol->string_len < 6) return 0;
+    return memcmp(kind_symbol->string, "method", 6) == 0;
+}
+
+static int runtime_member_kind_is_final(const string_constant *kind_symbol) {
+    static const char final_flag[] = "final";
+    size_t i;
+
+    if (!runtime_member_kind_is_method(kind_symbol)) return 0;
+    if (kind_symbol->string_len < sizeof(final_flag) - 1) return 0;
+
+    for (i = 0; i + (sizeof(final_flag) - 1) <= kind_symbol->string_len; i++) {
+        if (memcmp(kind_symbol->string + i, final_flag, sizeof(final_flag) - 1) == 0) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 static string_constant *get_runtime_string_constant(module *mod, size_t offset) {
     string_constant *entry;
 
@@ -347,6 +390,206 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
     context->num_interface_factories++;
 
     return 1;
+}
+
+static int add_runtime_interface_method_entry(rxvm_context *context,
+                                              const char *class_name,
+                                              size_t class_name_length,
+                                              const char *member_name,
+                                              size_t member_name_length,
+                                              proc_constant *method_proc) {
+    rxvm_interface_method_entry *entry;
+    size_t i;
+
+    if (!context || !class_name || !member_name || !method_proc) return 0;
+
+    for (i = 0; i < context->num_interface_methods; i++) {
+        entry = &context->interface_methods[i];
+        if (entry->class_name_length == class_name_length &&
+            entry->member_name_length == member_name_length &&
+            memcmp(entry->class_name, class_name, class_name_length) == 0 &&
+            memcmp(entry->member_name, member_name, member_name_length) == 0) {
+            entry->method_proc = method_proc;
+            return 1;
+        }
+    }
+
+    if (context->num_interface_methods >= context->interface_method_capacity) {
+        size_t new_capacity;
+        rxvm_interface_method_entry *new_entries;
+
+        new_capacity = context->interface_method_capacity ? context->interface_method_capacity * 2 : 32;
+        new_entries = realloc(context->interface_methods,
+                              sizeof(rxvm_interface_method_entry) * new_capacity);
+        if (!new_entries) return 0;
+
+        context->interface_methods = new_entries;
+        context->interface_method_capacity = new_capacity;
+    }
+
+    entry = &context->interface_methods[context->num_interface_methods];
+    memset(entry, 0, sizeof(*entry));
+
+    entry->class_name = dup_runtime_name(class_name, class_name_length);
+    entry->member_name = dup_runtime_name(member_name, member_name_length);
+    if (!entry->class_name || !entry->member_name) {
+        free(entry->class_name);
+        free(entry->member_name);
+        memset(entry, 0, sizeof(*entry));
+        return 0;
+    }
+
+    entry->class_name_length = class_name_length;
+    entry->member_name_length = member_name_length;
+    entry->method_proc = method_proc;
+    context->num_interface_methods++;
+
+    return 1;
+}
+
+void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
+    size_t mod_index;
+
+    if (!context) return;
+
+    clear_runtime_interface_methods(context);
+
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        module *mod;
+        int meta_ix;
+
+        mod = context->modules[mod_index];
+        meta_ix = mod->meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *meta;
+
+            meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+            if (meta->base.type == META_IMPLEMENTS) {
+                meta_implements_constant *impl_meta;
+                string_constant *class_symbol;
+                string_constant *interface_symbol;
+                size_t iface_mod_index;
+
+                impl_meta = (meta_implements_constant *) meta;
+                class_symbol = get_runtime_string_constant(mod, impl_meta->symbol);
+                interface_symbol = get_runtime_string_constant(mod, impl_meta->interface_symbol);
+
+                if (!class_symbol || !interface_symbol) {
+                    meta_ix = meta->next;
+                    continue;
+                }
+
+                for (iface_mod_index = 0; iface_mod_index < context->num_modules; iface_mod_index++) {
+                    module *iface_mod;
+                    int iface_meta_ix;
+
+                    iface_mod = context->modules[iface_mod_index];
+                    iface_meta_ix = iface_mod->meta_head;
+
+                    while (iface_meta_ix != -1) {
+                        meta_entry *iface_meta;
+
+                        iface_meta = (meta_entry *) (iface_mod->segment.const_pool + iface_meta_ix);
+                        if (iface_meta->base.type == META_MEMBER) {
+                            meta_member_constant *member_meta;
+                            string_constant *owner_symbol;
+                            string_constant *kind_symbol;
+                            string_constant *member_symbol;
+
+                            member_meta = (meta_member_constant *) iface_meta;
+                            owner_symbol = get_runtime_string_constant(iface_mod, member_meta->owner);
+                            kind_symbol = get_runtime_string_constant(iface_mod, member_meta->kind);
+                            member_symbol = get_runtime_string_constant(iface_mod, member_meta->member);
+
+                            if (owner_symbol && kind_symbol && member_symbol &&
+                                runtime_member_kind_is_method(kind_symbol) &&
+                                owner_symbol->string_len == interface_symbol->string_len &&
+                                memcmp(owner_symbol->string, interface_symbol->string, interface_symbol->string_len) == 0) {
+                                char *class_proc_name;
+                                char *interface_proc_name;
+                                proc_constant *class_proc;
+                                proc_constant *interface_proc;
+                                proc_constant *effective_proc;
+
+                                class_proc_name = build_runtime_member_name(class_symbol->string,
+                                                                            class_symbol->string_len,
+                                                                            member_symbol->string,
+                                                                            member_symbol->string_len);
+                                interface_proc_name = build_runtime_member_name(interface_symbol->string,
+                                                                                interface_symbol->string_len,
+                                                                                member_symbol->string,
+                                                                                member_symbol->string_len);
+                                if (!class_proc_name || !interface_proc_name) {
+                                    if (class_proc_name) free(class_proc_name);
+                                    if (interface_proc_name) free(interface_proc_name);
+                                    iface_meta_ix = iface_meta->next;
+                                    continue;
+                                }
+
+                                class_proc = resolve_runtime_procedure(context, class_proc_name, strlen(class_proc_name));
+                                interface_proc = resolve_runtime_procedure(context, interface_proc_name, strlen(interface_proc_name));
+                                free(class_proc_name);
+                                free(interface_proc_name);
+
+                                effective_proc = class_proc;
+                                if (!effective_proc && runtime_member_kind_is_final(kind_symbol)) {
+                                    effective_proc = interface_proc;
+                                }
+
+                                if (effective_proc) {
+                                    add_runtime_interface_method_entry(context,
+                                                                       class_symbol->string,
+                                                                       class_symbol->string_len,
+                                                                       member_symbol->string,
+                                                                       member_symbol->string_len,
+                                                                       effective_proc);
+                                }
+                            }
+                        }
+
+                        iface_meta_ix = iface_meta->next;
+                    }
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+}
+
+static proc_constant *resolve_runtime_method(rxvm_context *context,
+                                             const char *class_name,
+                                             size_t class_name_length,
+                                             const char *member_name,
+                                             size_t member_name_length) {
+    size_t entry_index;
+    char *proc_name;
+    proc_constant *called_function;
+
+    if (!context || !class_name || !class_name_length || !member_name || !member_name_length) return 0;
+
+    if (context->link_dirty || context->interface_method_registry_dirty || context->interface_factory_registry_dirty) {
+        rxvm_link(context);
+    }
+
+    for (entry_index = 0; entry_index < context->num_interface_methods; entry_index++) {
+        rxvm_interface_method_entry *entry;
+
+        entry = &context->interface_methods[entry_index];
+        if (entry->class_name_length == class_name_length &&
+            entry->member_name_length == member_name_length &&
+            memcmp(entry->class_name, class_name, class_name_length) == 0 &&
+            memcmp(entry->member_name, member_name, member_name_length) == 0) {
+            return entry->method_proc;
+        }
+    }
+
+    proc_name = build_runtime_member_name(class_name, class_name_length, member_name, member_name_length);
+    if (!proc_name) return 0;
+    called_function = resolve_runtime_procedure(context, proc_name, strlen(proc_name));
+    free(proc_name);
+    return called_function;
 }
 
 void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
@@ -6879,7 +7122,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
 
         START_INSTRUCTION(SRCMETHOD_REG_REG_STRING) CALC_DISPATCH(3)
             {
-                char *proc_name;
                 proc_constant *called_function;
                 const char *class_name;
                 size_t class_name_length;
@@ -6892,6 +7134,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
                 called_function = 0;
 
                 if (!class_name || !class_name_length) {
+                    char *proc_name;
                     proc_name = build_runtime_member_name("<untyped>", 9, op3S->string, op3S->string_len);
                     if (proc_name) {
                         SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, proc_name);
@@ -6903,14 +7146,18 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
                     DISPATCH
                 }
 
-                proc_name = build_runtime_member_name(class_name, class_name_length, op3S->string, op3S->string_len);
-                if (!proc_name) {
-                    SET_SIGNAL(RXSIGNAL_FAILURE);
-                    DISPATCH
-                }
-
-                called_function = resolve_runtime_procedure(context, proc_name, strlen(proc_name));
+                called_function = resolve_runtime_method(context,
+                                                         class_name,
+                                                         class_name_length,
+                                                         op3S->string,
+                                                         op3S->string_len);
                 if (!called_function) {
+                    char *proc_name;
+                    proc_name = build_runtime_member_name(class_name, class_name_length, op3S->string, op3S->string_len);
+                    if (!proc_name) {
+                        SET_SIGNAL(RXSIGNAL_FAILURE);
+                        DISPATCH
+                    }
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, proc_name);
                     free(proc_name);
                     DISPATCH
@@ -6918,7 +7165,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
 
                 value_zero(op1R);
                 op1R->int_value = (rxinteger) called_function;
-                free(proc_name);
             }
             DISPATCH
 

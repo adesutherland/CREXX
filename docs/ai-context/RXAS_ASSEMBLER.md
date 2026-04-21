@@ -56,6 +56,10 @@ and `META_ATTR`, the assembler now serializes:
 - `META_IMPLEMENTS` for one concrete-class-to-interface link
 - `META_MEMBER` for one interface method or factory declaration
 
+For interface methods, the member-kind string now distinguishes:
+- `method` for an abstract interface method
+- `method final` for a Level B final/default interface method body
+
 ### Symbol Tracking (AVL Trees)
 To deduplicate constants and resolve identifiers in `O(log N)` time, the assembler leverages a custom AVL tree implementation (`avl_tree.h`). Active trees include:
 - `string_constants_tree`
@@ -116,6 +120,12 @@ and the metadata records above:
 `srcfproc` now supports both the default `*` surface and named factory
 selectors. Provider selection is a VM concern: the assembler simply emits the
 opcode and the interface/class metadata needed for runtime lookup.
+
+Interface default methods use that same path. The assembler does not introduce
+new opcodes for them; it simply carries `META_MEMBER` kind `method final` and
+emits the interface method body as an ordinary procedure. The VM method
+registry then decides whether `srcmethod` should bind `class.member` directly
+or fall back to the interface's emitted default-body procedure.
 
 At the current Level B stage, the runtime selection rule is:
 
