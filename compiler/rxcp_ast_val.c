@@ -124,7 +124,9 @@ static void validate_scope(Scope *scope, int *errors) {
                 (*errors)++;
             }
             if (scope->defining_node && scope->defining_node->node_type != PROCEDURE &&
-                scope->defining_node->node_type != METHOD && scope->defining_node->node_type != FACTORY) {
+                scope->defining_node->node_type != METHOD &&
+                scope->defining_node->node_type != FACTORY &&
+                scope->defining_node->node_type != MATCH) {
                 fprintf(stderr, "Scope Hierarchy Error: PROCEDURE scope %p has wrong defining node type %s\n",
                         (void*)scope, ast_ndtp(scope->defining_node->node_type));
                 (*errors)++;

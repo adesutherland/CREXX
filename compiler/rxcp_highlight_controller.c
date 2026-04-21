@@ -1002,6 +1002,7 @@ static int source_container_type(SourceNode *node, CB_NodeType *type) {
         case PROCEDURE:
         case METHOD:
         case FACTORY:
+        case MATCH:
             *type = PARSE_TREE_FUNCTION;
             return 1;
         case INSTRUCTIONS:

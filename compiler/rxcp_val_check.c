@@ -198,9 +198,13 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 }
             }
         }
-        else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
+        else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
             if (node->node_type == PROCEDURE && node->parent->node_type != PROGRAM_FILE) {
                 mknd_err(node, "CANT_DEFINE_PROC_HERE");
+            }
+            else if (node->node_type == MATCH &&
+                     node->parent->node_type != CLASS_DEF) {
+                mknd_err(node, "CANT_DEFINE_METHOD_HERE");
             }
             else if ((node->node_type == METHOD || node->node_type == FACTORY) &&
                      node->parent->node_type != CLASS_DEF &&
@@ -224,7 +228,8 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 ASTNode *prev = node;
                 while (next && next->node_type != PROCEDURE && next->node_type != CLASS_DEF &&
                        next->node_type != INTERFACE_DEF &&
-                       next->node_type != METHOD && next->node_type != FACTORY) {
+                       next->node_type != METHOD && next->node_type != FACTORY &&
+                       next->node_type != MATCH) {
                     switch (next->node_type) {
                         case ARGS:
                             if (args_node) {
@@ -355,7 +360,8 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
 static int is_callable_boundary(ASTNode *node) {
     if (!node) return 0;
     return node->node_type == PROCEDURE || node->node_type == CLASS_DEF ||
-           node->node_type == INTERFACE_DEF || node->node_type == METHOD || node->node_type == FACTORY;
+           node->node_type == INTERFACE_DEF || node->node_type == METHOD ||
+           node->node_type == FACTORY || node->node_type == MATCH;
 }
 
 static int is_class_member_boundary(ASTNode *node) {
@@ -515,6 +521,11 @@ static void structure_callable_body(Context *context,
 
     if (node->node_type == PROCEDURE && node->parent->node_type != PROGRAM_FILE) {
         mknd_err(node, "CANT_DEFINE_PROC_HERE");
+        return;
+    }
+    if (node->node_type == MATCH &&
+        node->parent->node_type != CLASS_DEF) {
+        mknd_err(node, "CANT_DEFINE_METHOD_HERE");
         return;
     }
     if ((node->node_type == METHOD || node->node_type == FACTORY) &&
@@ -698,7 +709,7 @@ walker_result ast_source_structure_walker(walker_direction direction,
             }
         }
     }
-    else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
+    else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
         structure_callable_body(context, node, 0, 0);
         child = find_child_of_type(node, INSTRUCTIONS);
         if (child && !child->child) {
@@ -724,7 +735,7 @@ walker_result ast_work_structure_walker(walker_direction direction,
     if (node->node_type == PROGRAM_FILE) {
         wrap_program_file_main(context, node);
     }
-    else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
+    else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
         if (node->parent && node->parent->node_type == INTERFACE_DEF) {
             structure_callable_body(context, node, 0, 0);
         }

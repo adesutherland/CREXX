@@ -178,6 +178,7 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case FACTORY:
+            case MATCH:
             case METHOD:
             case PROCEDURE:
                 /* Return Type */

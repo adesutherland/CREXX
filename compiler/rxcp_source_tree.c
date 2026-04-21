@@ -235,6 +235,7 @@ static SourceSemanticKind source_semantic_kind_from_node(ASTNode *node) {
         case PROCEDURE:
         case METHOD:
         case FACTORY:
+        case MATCH:
         case FUNCTION:
         case FUNC_SYMBOL:
         case CALL:
@@ -392,6 +393,7 @@ static void source_tree_sync_semantics_from_ast(SourceSemanticSyncState *state, 
                     case PROCEDURE:
                     case METHOD:
                     case FACTORY:
+                    case MATCH:
                     case CLASS_DEF:
                     case NAMESPACE:
                     case DEFINE:

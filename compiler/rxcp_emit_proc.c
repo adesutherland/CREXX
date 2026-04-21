@@ -121,6 +121,7 @@ void emit_proc(ASTNode *node, void *pl) {
             break;
 
         case FACTORY:
+        case MATCH:
         case METHOD:
         case PROCEDURE:
             if ((node->node_type == FACTORY || node->node_type == METHOD) &&

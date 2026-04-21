@@ -1130,13 +1130,14 @@ int sym_lord(Symbol *symbol) {
     return ord;
 }
 
-/* Returns the PROCEDURE, METHOD or FACTORY ASTNode of a Symbol */
+/* Returns the callable ASTNode of a Symbol */
 ASTNode* sym_proc(Symbol *symbol) {
     size_t i;
     SymbolNode* sn;
     for (i=0; i < sym_nond(symbol); i++) {
         sn = sym_trnd(symbol, i);
-        if (sn->node->node_type == PROCEDURE || sn->node->node_type == METHOD || sn->node->node_type == FACTORY) return sn->node;
+        if (sn->node->node_type == PROCEDURE || sn->node->node_type == METHOD ||
+            sn->node->node_type == FACTORY || sn->node->node_type == MATCH) return sn->node;
     }
     return 0;
 }

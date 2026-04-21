@@ -160,6 +160,7 @@ static walker_result emit_walker(walker_direction direction,
             case CLASS_DEF:
             case INTERFACE_DEF:
             case FACTORY:
+            case MATCH:
             case METHOD:
             case PROCEDURE:
                 emit_proc(node, pl);

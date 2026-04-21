@@ -1002,7 +1002,7 @@ size_t ast_nchd(ASTNode* node) {
     return n;
 }
 
-/* Returns the PROCEDURE, METHOD or FACTORY ASTNode of an AST node */
+/* Returns the nearest enclosing callable ASTNode of an AST node */
 ASTNode* ast_proc(ASTNode *node) {
     /* Prefer Scope hierarchy if available and linked to a defining node */
     if (node && node->scope) {
@@ -1014,7 +1014,7 @@ ASTNode* ast_proc(ASTNode *node) {
     }
     /* Fallback to AST hierarchy */
     while (node) {
-        if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) return node;
+        if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) return node;
         node = node->parent;
     }
     return 0;
@@ -1265,6 +1265,8 @@ const char *ast_ndtp(NodeType type) {
             return "VOID";
         case FACTORY:
             return "FACTORY";
+        case MATCH:
+            return "MATCH";
         case METHOD:
             return "METHOD";
         case WITH:

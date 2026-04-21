@@ -4,7 +4,7 @@
 namespace rxfnsb expose verify
 
 verify: procedure = .int
-       arg instring = .string, intab = .string, match='N', spos=1
+       arg instring = .string, intab = .string, match_mode='N', spos=1
 
    ilen=0
    tlen=0
@@ -12,10 +12,10 @@ verify: procedure = .int
    tab=""
    pos=0
 
-   if match='N' then imatch=0
-   else if match='n' then imatch=0
-   else if match='M' then imatch=1
-   else if match='m' then imatch=1
+   if match_mode='N' then imatch=0
+   else if match_mode='n' then imatch=0
+   else if match_mode='M' then imatch=1
+   else if match_mode='m' then imatch=1
 
    Assembler strlen ilen,instring        /* determine string length              */
    Assembler strlen tlen,intab           /* determine table  length              */

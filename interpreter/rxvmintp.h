@@ -54,6 +54,7 @@ typedef struct rxvm_interface_factory_entry {
     size_t factory_name_length;
     char *class_name;
     size_t class_name_length;
+    proc_constant *match_proc;
     proc_constant *factory_proc;
 } rxvm_interface_factory_entry;
 

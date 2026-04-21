@@ -12,7 +12,7 @@
 
 static const char* rexx_builtins[] = {
     "ADDRESS", "ASSEMBLER", "ARG", "CALL", "CLASS", "DO", "LOOP", "METHOD", "ELSE", "ERROR", "END", "EXIT",
-    "FACTORY", "IF", "IMPLEMENTS", "IMPORT", "INPUT", "INTERFACE", "ITERATE", "LEAVE", "NAMESPACE", "OF", "NOP", "NUMERIC", "OPTIONS",
+    "FACTORY", "IF", "IMPLEMENTS", "IMPORT", "INPUT", "INTERFACE", "ITERATE", "LEAVE", "MATCH", "NAMESPACE", "OF", "NOP", "NUMERIC", "OPTIONS",
     "OUTPUT", "PARSE", "PROCEDURE", "REGISTER", "RETURN", "SAY", "THEN", "BY", "EXPOSE", "FOR", "FOREVER", "TO",
     "UNTIL", "VOID", "WHILE", "WITH", "PULL", "PUSH", "QUEUE", "SELECT", "SIGNAL", "TRACE", "WHEN", "OFF",
     "ON", "DROP", "EXTERNAL", "INTERPRET", "LINEIN", "NAME", "NOVALUE", "SOURCE", "SYNTAX", "UPPER",
@@ -1568,7 +1568,8 @@ static int rxcp_append_helper(Context *ctx,
                     return -1;
                 }
                 helper_proc = child;
-            } else if (child->node_type == CLASS_DEF || child->node_type == METHOD || child->node_type == FACTORY) {
+            } else if (child->node_type == CLASS_DEF || child->node_type == METHOD ||
+                       child->node_type == FACTORY || child->node_type == MATCH) {
                 mknd_err_unique(node, "EXIT_BRIDGE_HELPER_BAD_SHAPE, \"%s\"", helper_id);
                 fre_cntx(frag);
                 return -1;

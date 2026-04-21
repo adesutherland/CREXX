@@ -223,6 +223,82 @@ static char *build_runtime_factory_proc_name(const char *class_name,
     return proc_name;
 }
 
+static char *build_runtime_match_proc_name(const char *class_name,
+                                           size_t class_name_length,
+                                           const char *factory_name,
+                                           size_t factory_name_length) {
+    static const char default_match_name[] = "\xc2\xa7" "match";
+    static const char match_prefix[] = "\xc2\xa7" "match.";
+    size_t prefix_length;
+    char *proc_name;
+
+    if (!class_name || !class_name_length || !factory_name || !factory_name_length) return 0;
+
+    if (factory_name_length == 1 && factory_name[0] == '*') {
+        return build_runtime_member_name(class_name, class_name_length,
+                                         default_match_name, sizeof(default_match_name) - 1);
+    }
+
+    prefix_length = sizeof(match_prefix) - 1;
+    proc_name = malloc(class_name_length + 1 + prefix_length + factory_name_length + 1);
+    if (!proc_name) return 0;
+
+    memcpy(proc_name, class_name, class_name_length);
+    proc_name[class_name_length] = '.';
+    memcpy(proc_name + class_name_length + 1, match_prefix, prefix_length);
+    memcpy(proc_name + class_name_length + 1 + prefix_length, factory_name, factory_name_length);
+    proc_name[class_name_length + 1 + prefix_length + factory_name_length] = 0;
+
+    return proc_name;
+}
+
+static int invoke_runtime_factory_match(rxvm_context *context,
+                                        proc_constant *match_proc,
+                                        rxinteger argc,
+                                        value **args,
+                                        rxinteger *score_out) {
+    proc_constant *saved_ext_proc;
+    int saved_ext_argc;
+    value **saved_ext_args;
+    value *saved_ext_ret;
+    value *match_ret;
+    char *dummy_argv[] = {"rxvm_factory_match"};
+
+    if (score_out) *score_out = 1;
+    if (!context || !match_proc) return 1;
+
+    saved_ext_proc = context->ext_proc;
+    saved_ext_argc = context->ext_argc;
+    saved_ext_args = context->ext_args;
+    saved_ext_ret = context->ext_ret;
+
+    context->ext_proc = match_proc;
+    context->ext_argc = (int) argc;
+    context->ext_args = args;
+    context->ext_ret = value_f();
+    match_ret = context->ext_ret;
+    if (!match_ret) {
+        context->ext_proc = saved_ext_proc;
+        context->ext_argc = saved_ext_argc;
+        context->ext_args = saved_ext_args;
+        context->ext_ret = saved_ext_ret;
+        return 0;
+    }
+
+    run(context, 0, dummy_argv);
+    if (score_out) *score_out = match_ret->int_value;
+
+    clear_value(match_ret);
+    free(match_ret);
+
+    context->ext_proc = saved_ext_proc;
+    context->ext_argc = saved_ext_argc;
+    context->ext_args = saved_ext_args;
+    context->ext_ret = saved_ext_ret;
+
+    return 1;
+}
+
 static int add_runtime_interface_factory_entry(rxvm_context *context,
                                                const char *interface_name,
                                                size_t interface_name_length,
@@ -230,6 +306,7 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
                                                size_t factory_name_length,
                                                const char *class_name,
                                                size_t class_name_length,
+                                               proc_constant *match_proc,
                                                proc_constant *factory_proc) {
     rxvm_interface_factory_entry *entry;
 
@@ -265,6 +342,7 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
     entry->interface_name_length = interface_name_length;
     entry->factory_name_length = factory_name_length;
     entry->class_name_length = class_name_length;
+    entry->match_proc = match_proc;
     entry->factory_proc = factory_proc;
     context->num_interface_factories++;
 
@@ -332,19 +410,30 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
                                 owner_symbol->string_len == interface_symbol->string_len &&
                                 memcmp(owner_symbol->string, interface_symbol->string, interface_symbol->string_len) == 0) {
                                 char *factory_proc_name;
+                                char *match_proc_name;
                                 proc_constant *factory_proc;
+                                proc_constant *match_proc;
 
                                 factory_proc_name = build_runtime_factory_proc_name(class_symbol->string,
                                                                                     class_symbol->string_len,
                                                                                     member_symbol->string,
                                                                                     member_symbol->string_len);
+                                match_proc_name = build_runtime_match_proc_name(class_symbol->string,
+                                                                               class_symbol->string_len,
+                                                                               member_symbol->string,
+                                                                               member_symbol->string_len);
                                 if (!factory_proc_name) {
+                                    if (match_proc_name) free(match_proc_name);
                                     iface_meta_ix = iface_meta->next;
                                     continue;
                                 }
 
                                 factory_proc = resolve_runtime_procedure(context, factory_proc_name, strlen(factory_proc_name));
+                                match_proc = match_proc_name ?
+                                             resolve_runtime_procedure(context, match_proc_name, strlen(match_proc_name)) :
+                                             0;
                                 free(factory_proc_name);
+                                if (match_proc_name) free(match_proc_name);
 
                                 if (factory_proc) {
                                     add_runtime_interface_factory_entry(context,
@@ -354,6 +443,7 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
                                                                         member_symbol->string_len,
                                                                         class_symbol->string,
                                                                         class_symbol->string_len,
+                                                                        match_proc,
                                                                         factory_proc);
                                 }
                             }
@@ -396,6 +486,8 @@ static void parse_runtime_factory_selector(const char *selector,
 static int resolve_runtime_factory(rxvm_context *context,
                                    const char *selector,
                                    size_t selector_length,
+                                   rxinteger argc,
+                                   value **args,
                                    proc_constant **factory_out,
                                    char **error_out) {
     const char *interface_name;
@@ -447,6 +539,12 @@ static int resolve_runtime_factory(rxvm_context *context,
 
         saw_candidate = 1;
         score = 1;
+        if (entry->match_proc &&
+            !invoke_runtime_factory_match(context, entry->match_proc, argc, args, &score)) {
+            if (error_out) *error_out = build_interface_factory_error("Failed to evaluate interface factory match for ", selector, selector_length);
+            if (best_class_name) free(best_class_name);
+            return 0;
+        }
         if (score > 0) {
             saw_positive_score = 1;
             if (!best_factory ||
@@ -6838,6 +6936,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
                 if (!resolve_runtime_factory(context,
                                              op2S->string,
                                              op2S->string_len,
+                                             (rxinteger) op3R->int_value,
+                                             (&(op3R)) + 1,
                                              &called_function,
                                              &error_message)) {
                     if (error_message) {

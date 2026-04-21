@@ -1,6 +1,6 @@
 # Level B Interfaces and Callable Contracts Working Design
 
-Status: working design; tracer-bullet slice implemented; namespace-qualification foundation implemented; runtime interface-method dispatch slice implemented; runtime default-factory dispatch slice implemented; named-factory/runtime-registry dispatch slice implemented; explicit-match and interface-body work still pending
+Status: working design; tracer-bullet slice implemented; namespace-qualification foundation implemented; runtime interface-method dispatch slice implemented; runtime default-factory dispatch slice implemented; named-factory/runtime-registry dispatch slice implemented; explicit-match selection slice implemented; interface-body work still pending
 
 Last updated: 2026-04-21
 
@@ -85,9 +85,12 @@ The existing codebase now behaves as follows.
   procedure in the VM at execution time
 - default `*` and named interface factory calls now use `srcfproc` plus
   `dcall` to resolve a provider in the VM at execution time
-- the current default-factory runtime selection gives every candidate provider
-  an implicit score of `1` and breaks ties alphabetically by fully qualified
-  concrete class name
+- interface factory runtime selection now calls the effective same-named class
+  `match` on every candidate provider, even when only one candidate exists
+- if a class omits that `match`, the runtime behaves as if an implicit
+  `match` returning `1` existed
+- the highest positive `match` score wins, and ties break alphabetically by
+  fully qualified concrete class name
 - `rxvml` already scans `META_CLASS` records directly from module metadata.
 - Historical VM docs already sketched a `ptable` style runtime mapping for
   interface dispatch. The current implementation takes an incremental path:
@@ -122,7 +125,6 @@ established the parser, type, import, and metadata foundation.
 Deliberately not implemented in this tracer bullet:
 
 - interface method bodies
-- `match`
 - multi-implementation runtime selection
 - named-factory runtime selection
 - VM-level interface dispatch instructions beyond the later `srcmethod` and
@@ -149,8 +151,8 @@ Implemented now:
 
 Current boundary of this implemented step:
 
-- method dispatch is runtime-polymorphic, but interface method bodies and
-  explicit class-side `match` are still not implemented
+- method dispatch is runtime-polymorphic, but interface method/default bodies
+  are still not implemented
 - runtime lookup currently resolves concrete methods by full method symbol name
 
 ## Implemented Runtime Factory Dispatch Slice
@@ -176,19 +178,22 @@ Implemented now:
 - the runtime registry now carries candidate rows keyed by interface plus
   factory member name and resolves concrete `§factory` / `§factory.member`
   procedures during link
-- every current candidate provider receives the implicit score `1`
-- when several providers are available, the current tie-break is alphabetical
-  by fully qualified concrete class name
+- the runtime registry also resolves optional class-side `§match` /
+  `§match.member` procedures during link
+- every current candidate provider is evaluated through its effective `match`,
+  falling back to the implicit score `1` when no explicit `match` exists
+- the highest positive score wins, with ties broken alphabetically by fully
+  qualified concrete class name
 - if no provider exists at runtime, the VM raises `FUNCTION_NOT_FOUND`
 - same-module, source-import, and binary-import coverage now include named
-  factories, same-module multi-provider tie-break, and no-provider
-  runtime-failure cases
+  factories, explicit `match`, same-module multi-provider tie-break, and
+  no-provider runtime-failure cases
 
 Current boundary of this implemented step:
 
-- explicit class-side `match` is still not implemented
-- the registry applies implicit score `1` only; explicit `match` is the next
-  selection step
+- interface method/default bodies are still not implemented
+- the current selection path is runtime-scored, but still limited to factory
+  providers already present in linked modules
 
 ## Implemented Namespace Qualification Foundation
 
@@ -247,13 +252,13 @@ The project is now at a clean staging point.
 - the tracer-bullet slice is implemented and tested
 - runtime interface method dispatch is implemented and tested
 - runtime default and named factory dispatch is implemented and tested
+- explicit class-side `match` selection is implemented and tested
 - the remaining core Level B design decisions have been approved
-- the next step is the remaining runtime/interface work, primarily explicit
-  `match`, interface default bodies, and the remaining validation/runtime
-  refinements on top of the current registry path
+- the next step is the remaining runtime/interface work, primarily interface
+  default bodies and the remaining validation/runtime refinements on top of the
+  current registry path
 - regressions should be treated as bugs to fix now unless they clearly depend
-  on later approved capabilities such as named-factory dispatch or explicit
-  `match`
+  on later approved capabilities such as interface default bodies
 
 The approved full-stage direction is:
 

@@ -50,6 +50,24 @@ static char *build_factory_symbol_name(ASTNode *node) {
     return name;
 }
 
+static char *build_match_symbol_name(ASTNode *node) {
+    static const char match_prefix[] = "\xc2\xa7" "match";
+
+    if (!node || !node->node_string || !node->node_string_length ||
+        (node->node_string_length == 1 && node->node_string[0] == '*')) {
+        return strdup(match_prefix);
+    }
+
+    char *name = malloc((sizeof(match_prefix) - 1) + 1 + node->node_string_length + 1);
+    if (!name) return 0;
+
+    memcpy(name, match_prefix, sizeof(match_prefix) - 1);
+    name[sizeof(match_prefix) - 1] = '.';
+    memcpy(name + sizeof(match_prefix), node->node_string, node->node_string_length);
+    name[(sizeof(match_prefix) - 1) + 1 + node->node_string_length] = 0;
+    return name;
+}
+
 static void normalize_symbol_label(ASTNode *node) {
     size_t start;
     size_t len;
@@ -164,7 +182,7 @@ walker_result structure_symbols_walker(walker_direction direction,
         }
 
 
-        else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
+        else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
             normalize_symbol_label(node);
 
             /* Set the return value node value_type */
@@ -200,6 +218,14 @@ walker_result structure_symbols_walker(walker_direction direction,
                     char *factory_symbol_name = build_factory_symbol_name(node);
                     symbol = factory_symbol_name ? sym_fn(context->current_scope, factory_symbol_name, strlen(factory_symbol_name)) : 0;
                     if (factory_symbol_name) free(factory_symbol_name);
+                    if (!symbol) {
+                        mknd_err(node, "OUT_OF_MEMORY");
+                        return result_normal;
+                    }
+                } else if (node->node_type == MATCH) {
+                    char *match_symbol_name = build_match_symbol_name(node);
+                    symbol = match_symbol_name ? sym_fn(context->current_scope, match_symbol_name, strlen(match_symbol_name)) : 0;
+                    if (match_symbol_name) free(match_symbol_name);
                     if (!symbol) {
                         mknd_err(node, "OUT_OF_MEMORY");
                         return result_normal;
@@ -337,7 +363,7 @@ walker_result build_symbols_walker(walker_direction direction,
         if (node->node_type == REXX_UNIVERSE || node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE ||
             node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF ||
             node->node_type == PROCEDURE || node->node_type == METHOD ||
-            node->node_type == FACTORY || node->node_type == IMPORT ||
+            node->node_type == FACTORY || node->node_type == MATCH || node->node_type == IMPORT ||
             node->node_type == DO || node->node_type == INSTRUCTIONS ||
             node->node_type == BLOCK_EXPR) {
             /* Pass 1 has already created these scopes and symbols. Just navigate. */
@@ -1294,7 +1320,8 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             /* Ok we are the first usage in this proc */
             if (defining_node_link->node->node_type == PROCEDURE ||
                 defining_node_link->node->node_type == METHOD ||
-                defining_node_link->node->node_type == FACTORY) {
+                defining_node_link->node->node_type == FACTORY ||
+                defining_node_link->node->node_type == MATCH) {
 
                 if (defining_node_link->node->node_type == FACTORY) {
                     symbol->type = TP_OBJECT;
@@ -1357,7 +1384,8 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         defining_node_link = sym_trnd(symbol, 0);
         if (defining_node_link->node->node_type == PROCEDURE ||
             defining_node_link->node->node_type == METHOD ||
-            defining_node_link->node->node_type == FACTORY) {
+            defining_node_link->node->node_type == FACTORY ||
+            defining_node_link->node->node_type == MATCH) {
             /* This sets the procedure symbol type */
             if (defining_node_link->node->node_type == FACTORY) {
                 symbol->type = TP_OBJECT;

@@ -145,12 +145,17 @@ The current implementation is now:
 - registry rows are keyed by interface FQN plus factory member name
 - for each candidate class, it resolves the concrete `§factory` or
   `§factory.member` procedure through the existing metadata/procedure tables
-- every current candidate is treated as if it had implicit score `1`
+- each candidate row may also carry an optional resolved `§match` or
+  `§match.member` procedure
+- `srcfproc` calls the effective `match` on every candidate with the same
+  argument list that will later be passed to the selected factory, even when
+  only one candidate exists
+- if a candidate has no explicit `match`, the VM behaves as if it had an
+  implicit `match` returning `1`
+- candidates scoring `<= 0` are rejected
+- the highest positive score wins
 - ties are broken alphabetically by fully qualified concrete class name
 - if no provider exists, the VM raises `FUNCTION_NOT_FOUND`
-
-Explicit class-side `match` is still later work; it is not part of the current
-VM contract.
 
 Runtime module loading matters here as well. `METALOADMODULE` marks the
 VM link state dirty, and the next `srcfproc` resolution forces

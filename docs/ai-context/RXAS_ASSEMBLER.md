@@ -116,3 +116,17 @@ and the metadata records above:
 `srcfproc` now supports both the default `*` surface and named factory
 selectors. Provider selection is a VM concern: the assembler simply emits the
 opcode and the interface/class metadata needed for runtime lookup.
+
+At the current Level B stage, the runtime selection rule is:
+
+- each provider row may carry an optional resolved class-side `§match` or
+  `§match.member` procedure
+- `srcfproc` causes the VM to call that effective `match` on every candidate
+  with the same argument list that will later be passed to the selected
+  factory
+- if no explicit `match` exists, the candidate behaves as if it had an
+  implicit `match` returning `1`
+- candidates with score `<= 0` are rejected
+- the highest positive score wins
+- tied highest scores break alphabetically by fully qualified concrete class
+  name

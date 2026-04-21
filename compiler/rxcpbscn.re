@@ -166,6 +166,7 @@ int rexbscan(Context* s) {
     'LOOP' { RET(TK_LOOP); }
     'IMPLEMENTS' { RET(TK_IMPLEMENTS); }
     'INTERFACE' { RET(TK_INTERFACE); }
+    'MATCH' { RET(TK_MATCH); }
     'METHOD' { RET(TK_METHOD); }
   //  'DROP' { RET(TK_DROP); }
     'ELSE' { RET(TK_ELSE); }

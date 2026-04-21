@@ -996,6 +996,7 @@ const char* node_type_to_string(NodeType type) {
         case WHILE: return "WHILE";
         case UNTIL: return "UNTIL";
         case FACTORY: return "FACTORY";
+        case MATCH: return "MATCH";
         case METHOD: return "METHOD";
         case WITH: return "WITH";
         case NODE_REGISTER: return "NODE_REGISTER";

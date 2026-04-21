@@ -1032,17 +1032,17 @@ Block discovered while closing this stage:
 - `.object` is too weak for this use because named method calls still need a
   concrete compile-time class contract
 - the current codebase now has runtime Level B interface method dispatch plus
-  default/named factory dispatch through the load/link-time registry, but not
-  the richer explicit-`match` selection step needed for `ADDRESS` environment
-  polymorphism
+  default/named factory dispatch through the load/link-time registry,
+  including explicit class-side `match` scoring for factory selection
 
 Conclusion for Stage 3.2:
 
 - the stable stopping point is one `addressenvironment` class plus multiple
   registered objects and aliases
 - further generalization to truly separate environment classes is deferred
-  until the fuller Level B callable-contract / interface dispatch model gains
-  explicit provider `match` selection
+  until the fuller Level B callable-contract / interface model gains interface
+  default bodies and any additional environment-specific refinements needed on
+  top of the now-implemented provider `match` selection
 - see `compiler/docs/levelb_interfaces_working.md` for the follow-on design
   record for that prerequisite
 

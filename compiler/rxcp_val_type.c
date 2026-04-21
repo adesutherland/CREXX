@@ -59,6 +59,24 @@ static char *build_factory_lookup_name(const char *member_name, size_t member_na
     return name;
 }
 
+static char *build_match_lookup_name(const char *member_name, size_t member_name_length) {
+    static const char match_prefix[] = "\xc2\xa7" "match";
+    char *name;
+
+    if (!member_name || !member_name_length || (member_name_length == 1 && member_name[0] == '*')) {
+        return strdup(match_prefix);
+    }
+
+    name = malloc((sizeof(match_prefix) - 1) + 1 + member_name_length + 1);
+    if (!name) return 0;
+
+    memcpy(name, match_prefix, sizeof(match_prefix) - 1);
+    name[sizeof(match_prefix) - 1] = '.';
+    memcpy(name + sizeof(match_prefix), member_name, member_name_length);
+    name[(sizeof(match_prefix) - 1) + 1 + member_name_length] = 0;
+    return name;
+}
+
 static const char *required_argument_name(ASTNode *arg_node) {
     if (arg_node && arg_node->child &&
         arg_node->child->symbolNode &&
@@ -294,6 +312,31 @@ static int same_contract_signature(Context *context, ASTNode *iface_member, ASTN
     return iface_arg == 0 && class_arg == 0;
 }
 
+static int same_contract_argument_signature(Context *context, ASTNode *left_member, ASTNode *right_member) {
+    ASTNode *left_args;
+    ASTNode *right_args;
+    ASTNode *left_arg;
+    ASTNode *right_arg;
+
+    left_args = ast_chld(left_member, ARGS, 0);
+    right_args = ast_chld(right_member, ARGS, 0);
+    left_arg = left_args ? left_args->child : 0;
+    right_arg = right_args ? right_args->child : 0;
+
+    while (left_arg && right_arg) {
+        ASTNode *left_target = left_arg->child ? left_arg->child->sibling : 0;
+        ASTNode *right_target = right_arg->child ? right_arg->child->sibling : 0;
+
+        if (!left_target || !right_target) return 0;
+        if (!same_contract_type_node(context, left_target, right_target)) return 0;
+
+        left_arg = left_arg->sibling;
+        right_arg = right_arg->sibling;
+    }
+
+    return left_arg == 0 && right_arg == 0;
+}
+
 static void validate_class_interface_contracts(Context *context, ASTNode *class_node) {
     ASTNode *implements_node;
     ASTNode *iface_ref;
@@ -301,61 +344,153 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
     if (!class_node || class_node->node_type != CLASS_DEF) return;
 
     implements_node = ast_chld(class_node, IMPLEMENTS, 0);
-    if (!implements_node) return;
 
-    for (iface_ref = implements_node->child; iface_ref; iface_ref = iface_ref->sibling) {
-        Symbol *iface_symbol = sym_rvfc(context->ast, iface_ref);
-        ASTNode *iface_member;
+    if (implements_node) {
+        for (iface_ref = implements_node->child; iface_ref; iface_ref = iface_ref->sibling) {
+            Symbol *iface_symbol = sym_rvfc(context->ast, iface_ref);
+            ASTNode *iface_member;
 
-        if (!iface_symbol) {
-            ensure_class_imported(context, iface_ref->node_string, iface_ref->node_string_length);
-            iface_symbol = sym_rvfc(context->ast, iface_ref);
-        }
+            if (!iface_symbol) {
+                ensure_class_imported(context, iface_ref->node_string, iface_ref->node_string_length);
+                iface_symbol = sym_rvfc(context->ast, iface_ref);
+            }
 
-        if (!sym_is_interface_symbol(iface_symbol)) {
-            mknd_err(iface_ref, "INTERFACE_NOT_FOUND");
-            continue;
-        }
+            if (!sym_is_interface_symbol(iface_symbol)) {
+                mknd_err(iface_ref, "INTERFACE_NOT_FOUND");
+                continue;
+            }
 
-        for (iface_member = iface_symbol->defines_scope ? iface_symbol->defines_scope->defining_node->child : 0;
-             iface_member;
-             iface_member = iface_member->sibling) {
+            for (iface_member = iface_symbol->defines_scope ? iface_symbol->defines_scope->defining_node->child : 0;
+                 iface_member;
+                 iface_member = iface_member->sibling) {
             Symbol *class_member_symbol;
             ASTNode *class_member_node;
-            char *member_name;
+            char *member_name = 0;
             char *iface_name;
 
             if (iface_member->node_type != METHOD && iface_member->node_type != FACTORY) continue;
 
             if (iface_member->node_type == FACTORY) {
-                ASTNode star_node;
-                memset(&star_node, 0, sizeof(ASTNode));
-                star_node.node_string = "\xc2\xa7" "factory";
-                star_node.node_string_length = 9;
-                class_member_symbol = sym_lrsv(class_node->scope, &star_node);
-                member_name = strdup("*");
-            } else {
-                class_member_symbol = sym_lrsv(class_node->scope, iface_member);
-                member_name = malloc(iface_member->node_string_length + 1);
+                ASTNode lookup_node;
+                Symbol *class_match_symbol = 0;
+                const char *member_name_src = "*";
+                size_t member_name_length = 1;
+                char *factory_lookup_name;
+                char *match_lookup_name;
+
+                if (iface_member->node_string && iface_member->node_string_length) {
+                    member_name_src = iface_member->node_string;
+                    member_name_length = iface_member->node_string_length;
+                }
+
+                factory_lookup_name = build_factory_lookup_name(member_name_src, member_name_length);
+                match_lookup_name = build_match_lookup_name(member_name_src, member_name_length);
+                memset(&lookup_node, 0, sizeof(ASTNode));
+                lookup_node.node_string = factory_lookup_name;
+                lookup_node.node_string_length = factory_lookup_name ? strlen(factory_lookup_name) : 0;
+                class_member_symbol = factory_lookup_name ? sym_lrsv(class_node->scope, &lookup_node) : 0;
+                lookup_node.node_string = match_lookup_name;
+                lookup_node.node_string_length = match_lookup_name ? strlen(match_lookup_name) : 0;
+                class_match_symbol = match_lookup_name ? sym_lrsv(class_node->scope, &lookup_node) : 0;
+
+                member_name = malloc(member_name_length + 1);
+                if (member_name) {
+                    memcpy(member_name, member_name_src, member_name_length);
+                    member_name[member_name_length] = 0;
+                }
+
+                iface_name = sym_frnm(iface_symbol);
+                if (!class_member_symbol || class_member_symbol->symbol_type != FUNCTION_SYMBOL) {
+                    mknd_err(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                    if (factory_lookup_name) free(factory_lookup_name);
+                    if (match_lookup_name) free(match_lookup_name);
+                    if (member_name) free(member_name);
+                    if (iface_name) free(iface_name);
+                    continue;
+                }
+
+                class_member_node = sym_trnd(class_member_symbol, 0)->node;
+                if (!same_contract_signature(context, iface_member, class_member_node)) {
+                    mknd_err(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                }
+
+                if (class_match_symbol && class_match_symbol->symbol_type == FUNCTION_SYMBOL) {
+                    ASTNode *class_match_node = sym_trnd(class_match_symbol, 0)->node;
+                    ASTNode *match_ret = ast_chld(class_match_node, CLASS, VOID);
+                    size_t match_dims = 0;
+                    int *match_base = 0;
+                    int *match_elems = 0;
+                    char *match_class = 0;
+                    ValueType match_ret_type = match_ret ? node_to_type(context, match_ret, &match_dims, &match_base, &match_elems, &match_class) : TP_VOID;
+
+                    if (class_match_node->node_type != MATCH ||
+                        !same_contract_argument_signature(context, iface_member, class_match_node) ||
+                        match_ret_type != TP_INTEGER ||
+                        match_dims != 0 || match_class != 0) {
+                        mknd_err(class_node, "INTERFACE_MATCH_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                    }
+
+                    if (match_base) free(match_base);
+                    if (match_elems) free(match_elems);
+                    if (match_class) free(match_class);
+                }
+
+                if (factory_lookup_name) free(factory_lookup_name);
+                if (match_lookup_name) free(match_lookup_name);
+                if (member_name) free(member_name);
+                if (iface_name) free(iface_name);
+                continue;
+            }
+
+            class_member_symbol = sym_lrsv(class_node->scope, iface_member);
+            member_name = malloc(iface_member->node_string_length + 1);
+            if (member_name) {
                 memcpy(member_name, iface_member->node_string, iface_member->node_string_length);
                 member_name[iface_member->node_string_length] = 0;
             }
 
             iface_name = sym_frnm(iface_symbol);
             if (!class_member_symbol || class_member_symbol->symbol_type != FUNCTION_SYMBOL) {
-                mknd_err(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name);
-                free(member_name);
+                mknd_err(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                if (member_name) free(member_name);
                 if (iface_name) free(iface_name);
                 continue;
             }
 
             class_member_node = sym_trnd(class_member_symbol, 0)->node;
             if (!same_contract_signature(context, iface_member, class_member_node)) {
-                mknd_err(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name);
+                mknd_err(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
             }
 
-            free(member_name);
+            if (member_name) free(member_name);
             if (iface_name) free(iface_name);
+            }
+        }
+    }
+
+    for (iface_ref = class_node->child; iface_ref; iface_ref = iface_ref->sibling) {
+        if (iface_ref->node_type == MATCH) {
+            ASTNode lookup_node;
+            Symbol *paired_factory_symbol;
+            const char *member_name_src = "*";
+            size_t member_name_length = 1;
+            char *factory_lookup_name;
+
+            if (iface_ref->node_string && iface_ref->node_string_length) {
+                member_name_src = iface_ref->node_string;
+                member_name_length = iface_ref->node_string_length;
+            }
+
+            factory_lookup_name = build_factory_lookup_name(member_name_src, member_name_length);
+            memset(&lookup_node, 0, sizeof(ASTNode));
+            lookup_node.node_string = factory_lookup_name;
+            lookup_node.node_string_length = factory_lookup_name ? strlen(factory_lookup_name) : 0;
+            paired_factory_symbol = factory_lookup_name ? sym_lrsv(class_node->scope, &lookup_node) : 0;
+            if (!paired_factory_symbol || paired_factory_symbol->symbol_type != FUNCTION_SYMBOL ||
+                sym_trnd(paired_factory_symbol, 0)->node->node_type != FACTORY) {
+                mknd_err(iface_ref, "MATCH_WITHOUT_FACTORY");
+            }
+            if (factory_lookup_name) free(factory_lookup_name);
         }
     }
 }
@@ -373,8 +508,8 @@ void infer_arguments(Context *context, ASTNode *node) {
 
     if (node->symbolNode && sym_nond(node->symbolNode->symbol) > 0) {
         n2 = sym_trnd(node->symbolNode->symbol, 0)->node;
-        /* n2 is PROCEDURE/METHOD/FACTORY. Go to the first arg */
-        if (n2 && (n2->node_type == PROCEDURE || n2->node_type == METHOD || n2->node_type == FACTORY)) {
+        /* n2 is a callable definition. Go to the first arg */
+        if (n2 && (n2->node_type == PROCEDURE || n2->node_type == METHOD || n2->node_type == FACTORY || n2->node_type == MATCH)) {
             n2 = ast_chld(n2, ARGS, 0);
             if (n2) n2 = n2->child;
         } else n2 = 0;
@@ -1699,8 +1834,8 @@ walker_result func_type_safety_walker(walker_direction direction,
 
                 if  (node->symbolNode && sym_nond(node->symbolNode->symbol) > 0) {
                     n2 = sym_trnd(node->symbolNode->symbol, 0)->node;
-                    /* n2 is PROCEDURE/METHOD/FACTORY. Go to the first arg */
-                    if (n2 && (n2->node_type == PROCEDURE || n2->node_type == METHOD || n2->node_type == FACTORY)) {
+                    /* n2 is a callable definition. Go to the first arg */
+                    if (n2 && (n2->node_type == PROCEDURE || n2->node_type == METHOD || n2->node_type == FACTORY || n2->node_type == MATCH)) {
                         n2 = ast_chld(n2, ARGS, 0);
                         if (n2) n2 = n2->child;
                     } else n2 = 0;
@@ -1850,6 +1985,7 @@ walker_result func_type_safety_walker(walker_direction direction,
             case INTERFACE_DEF:
             case METHOD:
             case FACTORY:
+            case MATCH:
                 if (node->node_type == CLASS_DEF && context->is_final_pass) {
                     validate_class_interface_contracts(context, node);
                 }

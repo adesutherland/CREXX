@@ -54,7 +54,7 @@ main() .locals=10
    srcmethod r3,r2,"describe"
    dcall r3,r3,r1
    swap r0,r2
-   seq r4,r3,"car:car:named:duo"
+   seq r4,r3,"truck:truck:named:duo"
    brf fail_named_tiebreak,r4
 
    say "PASS: Interface Dispatch Suite"
@@ -96,6 +96,12 @@ fail_named_tiebreak:
    .meta "interface_factory_tiebreak.car.§factory.name"
    .meta "interface_factory_tiebreak.car.§factory.§factory"
 
+§interface_factory_tiebreak.car.§match() .locals=1
+   .meta "interface_factory_tiebreak.car.§match"="b" ".int" §interface_factory_tiebreak.car.§match() "name=.string" ""
+   .meta "interface_factory_tiebreak.car.§match.name"="b" ".string" a1
+   ret 20
+   .meta "interface_factory_tiebreak.car.§match.name"
+
 §interface_factory_tiebreak.car.§factory.from_name() .locals=4
    .meta "interface_factory_tiebreak.car.§factory.from_name"="b" ".vehicle" §interface_factory_tiebreak.car.§factory.from_name() "name=.string" ""
    .src 1:1="from_name"
@@ -115,6 +121,12 @@ fail_named_tiebreak:
    ret r1
    .meta "interface_factory_tiebreak.car.§factory.from_name.name"
    .meta "interface_factory_tiebreak.car.§factory.from_name.§factory"
+
+§interface_factory_tiebreak.car.§match.from_name() .locals=1
+   .meta "interface_factory_tiebreak.car.§match.from_name"="b" ".int" §interface_factory_tiebreak.car.§match.from_name() "name=.string" ""
+   .meta "interface_factory_tiebreak.car.§match.from_name.name"="b" ".string" a1
+   ret 5
+   .meta "interface_factory_tiebreak.car.§match.from_name.name"
 
 §interface_factory_tiebreak.car.describe() .locals=3
    .meta "interface_factory_tiebreak.car.describe"="b" ".string" §interface_factory_tiebreak.car.describe() "" ""
@@ -148,6 +160,12 @@ fail_named_tiebreak:
    .meta "interface_factory_tiebreak.truck.§factory.name"
    .meta "interface_factory_tiebreak.truck.§factory.§factory"
 
+§interface_factory_tiebreak.truck.§match() .locals=1
+   .meta "interface_factory_tiebreak.truck.§match"="b" ".int" §interface_factory_tiebreak.truck.§match() "name=.string" ""
+   .meta "interface_factory_tiebreak.truck.§match.name"="b" ".string" a1
+   ret 5
+   .meta "interface_factory_tiebreak.truck.§match.name"
+
 §interface_factory_tiebreak.truck.§factory.from_name() .locals=4
    .meta "interface_factory_tiebreak.truck.§factory.from_name"="b" ".vehicle" §interface_factory_tiebreak.truck.§factory.from_name() "name=.string" ""
    .src 1:1="from_name"
@@ -167,6 +185,12 @@ fail_named_tiebreak:
    ret r1
    .meta "interface_factory_tiebreak.truck.§factory.from_name.name"
    .meta "interface_factory_tiebreak.truck.§factory.from_name.§factory"
+
+§interface_factory_tiebreak.truck.§match.from_name() .locals=1
+   .meta "interface_factory_tiebreak.truck.§match.from_name"="b" ".int" §interface_factory_tiebreak.truck.§match.from_name() "name=.string" ""
+   .meta "interface_factory_tiebreak.truck.§match.from_name.name"="b" ".string" a1
+   ret 50
+   .meta "interface_factory_tiebreak.truck.§match.from_name.name"
 
 §interface_factory_tiebreak.truck.describe() .locals=3
    .meta "interface_factory_tiebreak.truck.describe"="b" ".string" §interface_factory_tiebreak.truck.describe() "" ""

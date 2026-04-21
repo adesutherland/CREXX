@@ -589,6 +589,7 @@ keyword_instruction(I) ::= exit(K). { I = K; }
 keyword_instruction(I) ::= say(K). { I = K; }
 keyword_instruction(I) ::= numeric(K). { I = K; }
 keyword_instruction(I) ::= factory_def(K). { I = K; }
+keyword_instruction(I) ::= match_def(K). { I = K; }
 keyword_instruction(I) ::= method_def(K). { I = K; }
 keyword_instruction(I) ::= class_def(K). { I = K; }
 keyword_instruction(I) ::= interface_def(K). { I = K; }
@@ -1668,6 +1669,18 @@ factory_def(F) ::= TK_LABEL(L) TK_FACTORY opt_method_return_type(T).
   F = ast_f(context, FACTORY, L);
   if (T) add_ast(F, T);
   else add_ast(F, ast_ft(context, VOID));
+}
+
+match_def(M) ::= TK_MULT_LABEL(L) TK_MATCH.
+{
+  M = ast_f(context, MATCH, L);
+  add_ast(M, ast_ftt(context, CLASS, ".int"));
+}
+
+match_def(M) ::= TK_LABEL(L) TK_MATCH.
+{
+  M = ast_f(context, MATCH, L);
+  add_ast(M, ast_ftt(context, CLASS, ".int"));
 }
 
 method_def(M) ::= TK_LABEL(L) TK_METHOD opt_method_return_type(T).

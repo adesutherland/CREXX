@@ -237,7 +237,10 @@ void emit_expression(ASTNode *node, void *payload) {
                 Symbol *fsym = node->symbolNode->symbol;
                 if (fsym && sym_nond(fsym) > 0) {
                     SymbolNode *defsn = sym_trnd(fsym, 0);
-                    if (defsn && defsn->node && (defsn->node->node_type == METHOD || defsn->node->node_type == FACTORY)) {
+                    if (defsn && defsn->node &&
+                        (defsn->node->node_type == METHOD ||
+                         defsn->node->node_type == FACTORY ||
+                         defsn->node->node_type == MATCH)) {
                         use_mangled = 1;
                     }
                 }
