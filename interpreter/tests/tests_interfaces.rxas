@@ -11,6 +11,7 @@
 .meta "interface_factory_tiebreak.vehicle"="b" ".unknown" .interface
 .meta "interface_factory_tiebreak.vehicle"="method" "describe" ".string" "" .member
 .meta "interface_factory_tiebreak.vehicle"="factory" "*" ".vehicle" "name=.string" .member
+.meta "interface_factory_tiebreak.vehicle"="factory" "from_name" ".vehicle" "name=.string" .member
 
 .globals=0
 
@@ -41,6 +42,21 @@ main() .locals=10
    seq r4,r3,"car:duo"
    brf fail_tiebreak,r4
 
+   load r1,1
+   load r2,"duo"
+   settp r2,3
+   srcfproc r0,"interface_factory_tiebreak.vehicle::from_name",r1
+   dcall r0,r0,r1
+
+   load r1,1
+   settp r0,1
+   swap r2,r0
+   srcmethod r3,r2,"describe"
+   dcall r3,r3,r1
+   swap r0,r2
+   seq r4,r3,"car:car:named:duo"
+   brf fail_named_tiebreak,r4
+
    say "PASS: Interface Dispatch Suite"
    ret 0
 
@@ -54,6 +70,11 @@ fail_opcode_arity:
 
 fail_tiebreak:
    say "FAIL: SRCFPROC Tie-Break"
+   say r3
+   ret 0
+
+fail_named_tiebreak:
+   say "FAIL: SRCFPROC Named Tie-Break"
    say r3
    ret 0
 
@@ -74,6 +95,26 @@ fail_tiebreak:
    ret r1
    .meta "interface_factory_tiebreak.car.§factory.name"
    .meta "interface_factory_tiebreak.car.§factory.§factory"
+
+§interface_factory_tiebreak.car.§factory.from_name() .locals=4
+   .meta "interface_factory_tiebreak.car.§factory.from_name"="b" ".vehicle" §interface_factory_tiebreak.car.§factory.from_name() "name=.string" ""
+   .src 1:1="from_name"
+   setattrs r1,2
+   setobjtype r1,"interface_factory_tiebreak.car"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_factory_tiebreak.car.§factory.from_name.name"="b" ".string" a1
+   .meta "interface_factory_tiebreak.car.§factory.from_name.§factory"="b" ".car" r1
+   concat r3,"car:named:",a1
+   linkattr1 r2,r1,1
+   scopy r2,r3
+   unlink r2
+   ret r1
+   .meta "interface_factory_tiebreak.car.§factory.from_name.name"
+   .meta "interface_factory_tiebreak.car.§factory.from_name.§factory"
 
 §interface_factory_tiebreak.car.describe() .locals=3
    .meta "interface_factory_tiebreak.car.describe"="b" ".string" §interface_factory_tiebreak.car.describe() "" ""
@@ -106,6 +147,26 @@ fail_tiebreak:
    ret r1
    .meta "interface_factory_tiebreak.truck.§factory.name"
    .meta "interface_factory_tiebreak.truck.§factory.§factory"
+
+§interface_factory_tiebreak.truck.§factory.from_name() .locals=4
+   .meta "interface_factory_tiebreak.truck.§factory.from_name"="b" ".vehicle" §interface_factory_tiebreak.truck.§factory.from_name() "name=.string" ""
+   .src 1:1="from_name"
+   setattrs r1,2
+   setobjtype r1,"interface_factory_tiebreak.truck"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_factory_tiebreak.truck.§factory.from_name.name"="b" ".string" a1
+   .meta "interface_factory_tiebreak.truck.§factory.from_name.§factory"="b" ".truck" r1
+   concat r3,"truck:named:",a1
+   linkattr1 r2,r1,1
+   scopy r2,r3
+   unlink r2
+   ret r1
+   .meta "interface_factory_tiebreak.truck.§factory.from_name.name"
+   .meta "interface_factory_tiebreak.truck.§factory.from_name.§factory"
 
 §interface_factory_tiebreak.truck.describe() .locals=3
    .meta "interface_factory_tiebreak.truck.describe"="b" ".string" §interface_factory_tiebreak.truck.describe() "" ""

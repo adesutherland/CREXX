@@ -90,6 +90,7 @@ int rexbscan(Context* s) {
   simple = fsymchr symchr*;
   qualified = simple "::" simple;
   class = [.] (qualified|simple);
+  namedfactory = class "." simple;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
   str = sqstr|dqstr;
@@ -225,6 +226,7 @@ int rexbscan(Context* s) {
     'VOID' { RET(TK_VOID); }
     'WHILE' { RET(TK_WHILE); }
     'WITH' { RET(TK_WITH); }
+    namedfactory / "(" { RET(TK_CLASS_FACTORY); }
     class { RET(TK_CLASS_TYPE); }
     float { RET(TK_FLOAT); }
     decimal { RET(TK_DECIMAL); }

@@ -160,29 +160,121 @@ static char *build_interface_factory_error(const char *prefix,
     return buffer;
 }
 
-static int resolve_runtime_factory(rxvm_context *context,
-                                   const char *interface_name,
-                                   size_t interface_name_length,
-                                   proc_constant **factory_out,
-                                   char **error_out) {
+static void clear_runtime_interface_factories(rxvm_context *context) {
+    size_t i;
+
+    if (!context || !context->interface_factories) {
+        if (context) {
+            context->num_interface_factories = 0;
+            context->interface_factory_capacity = 0;
+        }
+        return;
+    }
+
+    for (i = 0; i < context->num_interface_factories; i++) {
+        free(context->interface_factories[i].interface_name);
+        free(context->interface_factories[i].factory_name);
+        free(context->interface_factories[i].class_name);
+    }
+
+    free(context->interface_factories);
+    context->interface_factories = 0;
+    context->num_interface_factories = 0;
+    context->interface_factory_capacity = 0;
+}
+
+static string_constant *get_runtime_string_constant(module *mod, size_t offset) {
+    string_constant *entry;
+
+    if (!mod || offset >= mod->segment.const_size) return 0;
+    entry = (string_constant *) (mod->segment.const_pool + offset);
+    if (entry->base.type != STRING_CONST) return 0;
+    return entry;
+}
+
+static char *build_runtime_factory_proc_name(const char *class_name,
+                                             size_t class_name_length,
+                                             const char *factory_name,
+                                             size_t factory_name_length) {
+    static const char default_factory_name[] = "\xc2\xa7" "factory";
+    static const char factory_prefix[] = "\xc2\xa7" "factory.";
+    size_t prefix_length;
+    char *proc_name;
+
+    if (!class_name || !class_name_length || !factory_name || !factory_name_length) return 0;
+
+    if (factory_name_length == 1 && factory_name[0] == '*') {
+        return build_runtime_member_name(class_name, class_name_length,
+                                         default_factory_name, sizeof(default_factory_name) - 1);
+    }
+
+    prefix_length = sizeof(factory_prefix) - 1;
+    proc_name = malloc(class_name_length + 1 + prefix_length + factory_name_length + 1);
+    if (!proc_name) return 0;
+
+    memcpy(proc_name, class_name, class_name_length);
+    proc_name[class_name_length] = '.';
+    memcpy(proc_name + class_name_length + 1, factory_prefix, prefix_length);
+    memcpy(proc_name + class_name_length + 1 + prefix_length, factory_name, factory_name_length);
+    proc_name[class_name_length + 1 + prefix_length + factory_name_length] = 0;
+
+    return proc_name;
+}
+
+static int add_runtime_interface_factory_entry(rxvm_context *context,
+                                               const char *interface_name,
+                                               size_t interface_name_length,
+                                               const char *factory_name,
+                                               size_t factory_name_length,
+                                               const char *class_name,
+                                               size_t class_name_length,
+                                               proc_constant *factory_proc) {
+    rxvm_interface_factory_entry *entry;
+
+    if (!context || !interface_name || !factory_name || !class_name || !factory_proc) return 0;
+
+    if (context->num_interface_factories >= context->interface_factory_capacity) {
+        size_t new_capacity;
+        rxvm_interface_factory_entry *new_entries;
+
+        new_capacity = context->interface_factory_capacity ? context->interface_factory_capacity * 2 : 16;
+        new_entries = realloc(context->interface_factories,
+                              sizeof(rxvm_interface_factory_entry) * new_capacity);
+        if (!new_entries) return 0;
+
+        context->interface_factories = new_entries;
+        context->interface_factory_capacity = new_capacity;
+    }
+
+    entry = &context->interface_factories[context->num_interface_factories];
+    memset(entry, 0, sizeof(*entry));
+
+    entry->interface_name = dup_runtime_name(interface_name, interface_name_length);
+    entry->factory_name = dup_runtime_name(factory_name, factory_name_length);
+    entry->class_name = dup_runtime_name(class_name, class_name_length);
+    if (!entry->interface_name || !entry->factory_name || !entry->class_name) {
+        free(entry->interface_name);
+        free(entry->factory_name);
+        free(entry->class_name);
+        memset(entry, 0, sizeof(*entry));
+        return 0;
+    }
+
+    entry->interface_name_length = interface_name_length;
+    entry->factory_name_length = factory_name_length;
+    entry->class_name_length = class_name_length;
+    entry->factory_proc = factory_proc;
+    context->num_interface_factories++;
+
+    return 1;
+}
+
+void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
     size_t mod_index;
-    proc_constant *best_factory;
-    rxinteger best_score;
-    char *best_class_name;
-    size_t best_class_name_length;
-    int saw_candidate;
-    int saw_positive_score;
 
-    if (factory_out) *factory_out = 0;
-    if (error_out) *error_out = 0;
-    if (!context || !interface_name || !interface_name_length || !factory_out) return 0;
+    if (!context) return;
 
-    best_factory = 0;
-    best_score = 0;
-    best_class_name = 0;
-    best_class_name_length = 0;
-    saw_candidate = 0;
-    saw_positive_score = 0;
+    clear_runtime_interface_factories(context);
 
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         module *mod;
@@ -199,61 +291,73 @@ static int resolve_runtime_factory(rxvm_context *context,
                 meta_implements_constant *impl_meta;
                 string_constant *class_symbol;
                 string_constant *interface_symbol;
+                size_t iface_mod_index;
 
                 impl_meta = (meta_implements_constant *) meta;
-                class_symbol = (string_constant *) (mod->segment.const_pool + impl_meta->symbol);
-                interface_symbol = (string_constant *) (mod->segment.const_pool + impl_meta->interface_symbol);
+                class_symbol = get_runtime_string_constant(mod, impl_meta->symbol);
+                interface_symbol = get_runtime_string_constant(mod, impl_meta->interface_symbol);
 
-                if (class_symbol->base.type == STRING_CONST &&
-                    interface_symbol->base.type == STRING_CONST &&
-                    interface_symbol->string_len == interface_name_length &&
-                    memcmp(interface_symbol->string, interface_name, interface_name_length) == 0) {
-                    char *factory_name;
-                    proc_constant *factory_proc;
-                    rxinteger score;
+                if (!class_symbol || !interface_symbol) {
+                    meta_ix = meta->next;
+                    continue;
+                }
 
-                    saw_candidate = 1;
+                for (iface_mod_index = 0; iface_mod_index < context->num_modules; iface_mod_index++) {
+                    module *iface_mod;
+                    int iface_meta_ix;
 
-                    factory_name = build_runtime_member_name(class_symbol->string,
-                                                             class_symbol->string_len,
-                                                             "\xc2\xa7" "factory",
-                                                             9);
-                    if (!factory_name) {
-                        if (error_out) *error_out = build_interface_factory_error("Failed to resolve factory provider for ", interface_name, interface_name_length);
-                        if (best_class_name) free(best_class_name);
-                        return 0;
-                    }
+                    iface_mod = context->modules[iface_mod_index];
+                    iface_meta_ix = iface_mod->meta_head;
 
-                    factory_proc = resolve_runtime_procedure(context, factory_name, strlen(factory_name));
-                    free(factory_name);
-                    if (!factory_proc) {
-                        meta_ix = meta->next;
-                        continue;
-                    }
+                    while (iface_meta_ix != -1) {
+                        meta_entry *iface_meta;
 
-                    score = 1;
-                    if (score > 0) {
-                        saw_positive_score = 1;
-                        if (!best_factory ||
-                            score > best_score ||
-                            (score == best_score &&
-                             compare_runtime_name(class_symbol->string, class_symbol->string_len,
-                                                  best_class_name, best_class_name_length) < 0)) {
-                            char *new_best_name;
+                        iface_meta = (meta_entry *) (iface_mod->segment.const_pool + iface_meta_ix);
+                        if (iface_meta->base.type == META_MEMBER) {
+                            meta_member_constant *member_meta;
+                            string_constant *owner_symbol;
+                            string_constant *kind_symbol;
+                            string_constant *member_symbol;
 
-                            new_best_name = dup_runtime_name(class_symbol->string, class_symbol->string_len);
-                            if (!new_best_name) {
-                                if (error_out) *error_out = build_interface_factory_error("Failed to resolve factory provider for ", interface_name, interface_name_length);
-                                if (best_class_name) free(best_class_name);
-                                return 0;
+                            member_meta = (meta_member_constant *) iface_meta;
+                            owner_symbol = get_runtime_string_constant(iface_mod, member_meta->owner);
+                            kind_symbol = get_runtime_string_constant(iface_mod, member_meta->kind);
+                            member_symbol = get_runtime_string_constant(iface_mod, member_meta->member);
+
+                            if (owner_symbol && kind_symbol && member_symbol &&
+                                kind_symbol->string_len == 7 &&
+                                memcmp(kind_symbol->string, "factory", 7) == 0 &&
+                                owner_symbol->string_len == interface_symbol->string_len &&
+                                memcmp(owner_symbol->string, interface_symbol->string, interface_symbol->string_len) == 0) {
+                                char *factory_proc_name;
+                                proc_constant *factory_proc;
+
+                                factory_proc_name = build_runtime_factory_proc_name(class_symbol->string,
+                                                                                    class_symbol->string_len,
+                                                                                    member_symbol->string,
+                                                                                    member_symbol->string_len);
+                                if (!factory_proc_name) {
+                                    iface_meta_ix = iface_meta->next;
+                                    continue;
+                                }
+
+                                factory_proc = resolve_runtime_procedure(context, factory_proc_name, strlen(factory_proc_name));
+                                free(factory_proc_name);
+
+                                if (factory_proc) {
+                                    add_runtime_interface_factory_entry(context,
+                                                                        interface_symbol->string,
+                                                                        interface_symbol->string_len,
+                                                                        member_symbol->string,
+                                                                        member_symbol->string_len,
+                                                                        class_symbol->string,
+                                                                        class_symbol->string_len,
+                                                                        factory_proc);
+                                }
                             }
-
-                            if (best_class_name) free(best_class_name);
-                            best_class_name = new_best_name;
-                            best_class_name_length = class_symbol->string_len;
-                            best_score = score;
-                            best_factory = factory_proc;
                         }
+
+                        iface_meta_ix = iface_meta->next;
                     }
                 }
             }
@@ -261,16 +365,116 @@ static int resolve_runtime_factory(rxvm_context *context,
             meta_ix = meta->next;
         }
     }
+}
+
+static void parse_runtime_factory_selector(const char *selector,
+                                           size_t selector_length,
+                                           const char **interface_name,
+                                           size_t *interface_name_length,
+                                           const char **factory_name,
+                                           size_t *factory_name_length) {
+    const char *sep;
+
+    if (interface_name) *interface_name = selector;
+    if (interface_name_length) *interface_name_length = selector_length;
+    if (factory_name) *factory_name = "*";
+    if (factory_name_length) *factory_name_length = 1;
+
+    if (!selector || !selector_length) return;
+
+    sep = strstr(selector, "::");
+    if (!sep) return;
+
+    if (interface_name) *interface_name = selector;
+    if (interface_name_length) *interface_name_length = (size_t) (sep - selector);
+    if (factory_name) *factory_name = sep + 2;
+    if (factory_name_length) *factory_name_length = selector_length - ((size_t) (sep - selector) + 2);
+}
+
+static int resolve_runtime_factory(rxvm_context *context,
+                                   const char *selector,
+                                   size_t selector_length,
+                                   proc_constant **factory_out,
+                                   char **error_out) {
+    const char *interface_name;
+    size_t interface_name_length;
+    const char *factory_name;
+    size_t factory_name_length;
+    size_t entry_index;
+    proc_constant *best_factory;
+    rxinteger best_score;
+    char *best_class_name;
+    size_t best_class_name_length;
+    int saw_candidate;
+    int saw_positive_score;
+
+    if (factory_out) *factory_out = 0;
+    if (error_out) *error_out = 0;
+    if (!context || !selector || !selector_length || !factory_out) return 0;
+
+    parse_runtime_factory_selector(selector, selector_length,
+                                   &interface_name, &interface_name_length,
+                                   &factory_name, &factory_name_length);
+    if (!interface_name_length || !factory_name_length) {
+        if (error_out) *error_out = build_interface_factory_error("No interface factory providers for ", selector, selector_length);
+        return 0;
+    }
+
+    best_factory = 0;
+    best_score = 0;
+    best_class_name = 0;
+    best_class_name_length = 0;
+    saw_candidate = 0;
+    saw_positive_score = 0;
+
+    for (entry_index = 0; entry_index < context->num_interface_factories; entry_index++) {
+        rxvm_interface_factory_entry *entry;
+        rxinteger score;
+
+        entry = &context->interface_factories[entry_index];
+        if (entry->interface_name_length != interface_name_length ||
+            memcmp(entry->interface_name, interface_name, interface_name_length) != 0 ||
+            entry->factory_name_length != factory_name_length ||
+            memcmp(entry->factory_name, factory_name, factory_name_length) != 0) {
+            continue;
+        }
+
+        saw_candidate = 1;
+        score = 1;
+        if (score > 0) {
+            saw_positive_score = 1;
+            if (!best_factory ||
+                score > best_score ||
+                (score == best_score &&
+                 compare_runtime_name(entry->class_name, entry->class_name_length,
+                                      best_class_name, best_class_name_length) < 0)) {
+                char *new_best_name;
+
+                new_best_name = dup_runtime_name(entry->class_name, entry->class_name_length);
+                if (!new_best_name) {
+                    if (error_out) *error_out = build_interface_factory_error("Failed to resolve factory provider for ", selector, selector_length);
+                    if (best_class_name) free(best_class_name);
+                    return 0;
+                }
+
+                if (best_class_name) free(best_class_name);
+                best_class_name = new_best_name;
+                best_class_name_length = entry->class_name_length;
+                best_score = score;
+                best_factory = entry->factory_proc;
+            }
+        }
+    }
 
     if (best_class_name) free(best_class_name);
 
     if (!saw_candidate) {
-        if (error_out) *error_out = build_interface_factory_error("No interface factory providers for ", interface_name, interface_name_length);
+        if (error_out) *error_out = build_interface_factory_error("No interface factory providers for ", selector, selector_length);
         return 0;
     }
 
     if (!saw_positive_score || !best_factory) {
-        if (error_out) *error_out = build_interface_factory_error("No matching interface factory provider for ", interface_name, interface_name_length);
+        if (error_out) *error_out = build_interface_factory_error("No matching interface factory provider for ", selector, selector_length);
         return 0;
     }
 

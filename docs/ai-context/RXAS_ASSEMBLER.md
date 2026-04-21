@@ -110,7 +110,9 @@ and the metadata records above:
   value plus a member name
 - `srcfproc rProc,"fully.qualified.interface",rArgs` resolves the default `*`
   factory provider for an interface
+- `srcfproc rProc,"fully.qualified.interface::factory_name",rArgs` resolves a
+  named factory provider for an interface
 
-Today `srcfproc` supports only the default `*` factory surface. Provider
-selection is currently a VM concern: the assembler simply emits the opcode and
-the interface/class metadata needed for runtime lookup.
+`srcfproc` now supports both the default `*` surface and named factory
+selectors. Provider selection is a VM concern: the assembler simply emits the
+opcode and the interface/class metadata needed for runtime lookup.

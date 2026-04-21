@@ -47,6 +47,16 @@ typedef struct interrupt_entry {
     size_t jump;                    /* Address to jump to */
 } interrupt_entry;
 
+typedef struct rxvm_interface_factory_entry {
+    char *interface_name;
+    size_t interface_name_length;
+    char *factory_name;
+    size_t factory_name_length;
+    char *class_name;
+    size_t class_name_length;
+    proc_constant *factory_proc;
+} rxvm_interface_factory_entry;
+
 struct stack_frame {
     stack_frame *prev_free;
     stack_frame *parent;
@@ -204,6 +214,10 @@ typedef struct rxvm_context {
     value **ext_args;
     value *ext_ret;
     int prepare_only;
+
+    rxvm_interface_factory_entry *interface_factories;
+    size_t num_interface_factories;
+    size_t interface_factory_capacity;
 } rxvm_context;
 
 /* Function to get signal text from a signal code  */
@@ -225,6 +239,7 @@ void completely_free_frame(stack_frame *frame);
 
 /* Link a loaded module */
 void rxvm_link_module(rxvm_context *context, size_t module_number_to_link);
+void rxvm_rebuild_interface_factory_registry(rxvm_context *context);
 
 /* Loads a new module
  * returns 0  - Error

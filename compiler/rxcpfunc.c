@@ -846,6 +846,59 @@ static char *generate_arg_source(ASTNode *node) {
     return buffer;
 }
 
+static char *copy_member_label_from_node(ASTNode *node) {
+    char *label;
+
+    if (!node || !node->node_string) return strdup("*");
+
+    label = malloc(node->node_string_length + 1);
+    if (!label) return 0;
+
+    memcpy(label, node->node_string, node->node_string_length);
+    label[node->node_string_length] = 0;
+    return label;
+}
+
+static int parse_class_factory_fqname(const char *fqname, char **class_fq_out, char **member_name_out) {
+    const char *marker;
+    size_t class_len;
+
+    if (class_fq_out) *class_fq_out = 0;
+    if (member_name_out) *member_name_out = 0;
+    if (!fqname) return 0;
+
+    marker = strstr(fqname, ".\xc2\xa7" "factory");
+    if (!marker) return 0;
+
+    class_len = (size_t) (marker - fqname);
+    if (!class_len || !memchr(fqname, '.', class_len)) return 0;
+
+    if (class_fq_out) {
+        *class_fq_out = malloc(class_len + 1);
+        if (!*class_fq_out) return 0;
+        memcpy(*class_fq_out, fqname, class_len);
+        (*class_fq_out)[class_len] = 0;
+    }
+
+    if (member_name_out) {
+        const char *suffix = marker + 10;
+        if (*suffix == 0) {
+            *member_name_out = strdup("*");
+        } else if (*suffix == '.') {
+            *member_name_out = strdup(suffix + 1);
+        }
+        if (!*member_name_out) {
+            if (class_fq_out && *class_fq_out) {
+                free(*class_fq_out);
+                *class_fq_out = 0;
+            }
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 static char **collect_implemented_interface_fqnames(Context *context, ASTNode *class_node, size_t *out_count) {
     ASTNode *implements_node;
     ASTNode *iface_ref;
@@ -939,16 +992,18 @@ static char* generate_contract_stub_source(ASTNode *contract_node) {
     for (m = contract_node->child; m; m = m->sibling) {
         if (m->node_type == FACTORY) {
             ASTNode *ret = ast_chld(m, CLASS, VOID);
+            char *factory_name = copy_member_label_from_node(m);
             char *tmp;
             if (contract_node->node_type == INTERFACE_DEF && ret && ret->node_type != VOID) {
                 char *rtype = ast_n2tp(ret);
-                tmp = mprintf("%s  *: factory = %s\n", buffer, rtype);
+                tmp = mprintf("%s  %s: factory = %s\n", buffer, factory_name ? factory_name : "*", rtype);
                 free(rtype);
             } else {
-                tmp = mprintf("%s  *: factory\n", buffer);
+                tmp = mprintf("%s  %s: factory\n", buffer, factory_name ? factory_name : "*");
             }
             free(buffer);
             buffer = tmp;
+            if (factory_name) free(factory_name);
 
             ASTNode *args_node = ast_chld(m, ARGS, 0);
             if (args_node) {
@@ -1279,30 +1334,34 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                     /* If this looks like a class method (fqname contains namespace.class.method) then
                      * accumulate a signature line for later class stub synthesis */
                     if (fqname) {
-                        const char *last_dot = strrchr(fqname, '.');
-                        if (last_dot) {
-                            /* Ensure there is at least another dot before last to separate namespace and class */
-                            char *class_fq = 0;
-                            size_t class_len = (size_t)(last_dot - fqname);
-                            if (memchr(fqname, '.', class_len) != 0) {
-                                class_fq = malloc(class_len + 1);
-                                memcpy(class_fq, fqname, class_len);
-                                class_fq[class_len] = 0;
-                                class_meta_agg *agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
+                        char *class_fq = 0;
+                        char *factory_member = 0;
+                        if (parse_class_factory_fqname(fqname, &class_fq, &factory_member)) {
+                            class_meta_agg *agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
+                            if (args && *args) {
+                                char *ln = mprintf("  %s: factory\n  arg %s\n", factory_member, args);
+                                agg_append_line(agg, ln);
+                                free(ln);
+                            } else {
+                                char *ln = mprintf("  %s: factory\n", factory_member);
+                                agg_append_line(agg, ln);
+                                free(ln);
+                            }
+                            free(factory_member);
+                            free(class_fq);
+                        } else {
+                            const char *last_dot = strrchr(fqname, '.');
+                            if (last_dot) {
+                                /* Ensure there is at least another dot before last to separate namespace and class */
+                                size_t class_len = (size_t)(last_dot - fqname);
+                                if (memchr(fqname, '.', class_len) != 0) {
+                                    class_fq = malloc(class_len + 1);
+                                    memcpy(class_fq, fqname, class_len);
+                                    class_fq[class_len] = 0;
+                                    class_meta_agg *agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
 
-                                /* method name is after last dot */
-                                const char *mname = last_dot + 1;
-                                if (strcmp(mname, "§factory") == 0) {
-                                    /* Factory: no return type in stub, only optional args */
-                                    if (args && *args) {
-                                        char *ln = mprintf("  *: factory\n  arg %s\n", args);
-                                        agg_append_line(agg, ln);
-                                        free(ln);
-                                    } else {
-                                        agg_append_line(agg, "  *: factory\n");
-                                    }
-                                } else {
-                                    /* Normal method with return type */
+                                    /* method name is after last dot */
+                                    const char *mname = last_dot + 1;
                                     if (type && *type) {
                                         char *ln = mprintf("  %s: method = %s\n", mname, type);
                                         agg_append_line(agg, ln);
@@ -1317,8 +1376,8 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                                         agg_append_line(agg, ln2);
                                         free(ln2);
                                     }
+                                    free(class_fq);
                                 }
-                                free(class_fq);
                             }
                         }
                     }
@@ -1383,9 +1442,9 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                 char *ln;
                 if (strcmp(kind, "factory") == 0) {
                     if (type_str && *type_str && strcmp(type_str, ".void") != 0) {
-                        ln = mprintf("  *: factory = %s\n", type_str);
+                        ln = mprintf("  %s: factory = %s\n", member, type_str);
                     } else {
-                        ln = mprintf("  *: factory\n");
+                        ln = mprintf("  %s: factory\n", member);
                     }
                 } else {
                     ln = mprintf("  %s: method = %s\n", member, type_str ? type_str : ".void");

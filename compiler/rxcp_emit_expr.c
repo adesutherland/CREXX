@@ -70,6 +70,28 @@ static int is_interface_factory_call(ASTNode *node) {
            defnode->parent->node_type == INTERFACE_DEF;
 }
 
+static char *build_interface_factory_selector(ASTNode *node) {
+    char *iface_name = 0;
+    char *selector = 0;
+
+    if (!node || !node->symbolNode || !node->symbolNode->symbol || !node->symbolNode->symbol->scope) return 0;
+
+    iface_name = scp_frnm(node->symbolNode->symbol->scope);
+    if (!iface_name) return 0;
+
+    if (node->association && node->association->node_string && node->association->node_string_length) {
+        selector = mprintf("%s::%.*s",
+                           iface_name,
+                           (int) node->association->node_string_length,
+                           node->association->node_string);
+    } else {
+        selector = strdup(iface_name);
+    }
+
+    free(iface_name);
+    return selector;
+}
+
 void emit_expression(ASTNode *node, void *payload) {
     walker_payload *wp = (walker_payload*)payload;
     char *op = 0;
@@ -194,19 +216,15 @@ void emit_expression(ASTNode *node, void *payload) {
                                 node->additional_registers);
             }
             else if (is_interface_factory_call(node)) {
-                char *iface_name = 0;
-
-                if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->scope) {
-                    iface_name = scp_frnm(node->symbolNode->symbol->scope);
-                }
+                char *selector = build_interface_factory_selector(node);
 
                 temp1 = mprintf("   srcfproc %c%d,\"%s\",r%d\n",
                                 ret_type, ret_num,
-                                iface_name ? iface_name : "",
+                                selector ? selector : "",
                                 node->additional_registers);
                 output_append_text(node->output, temp1);
                 free(temp1);
-                if (iface_name) free(iface_name);
+                if (selector) free(selector);
 
                 temp1 = mprintf("   dcall %c%d,%c%d,r%d\n",
                                 ret_type, ret_num,

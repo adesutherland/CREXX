@@ -41,6 +41,34 @@
 #include "rxbin.h" /* Needed for rxvmvars.h */
 #include "rxvmvars.h"
 
+static char *build_factory_lookup_name(const char *member_name, size_t member_name_length) {
+    static const char factory_prefix[] = "\xc2\xa7" "factory";
+    char *name;
+
+    if (!member_name || !member_name_length || (member_name_length == 1 && member_name[0] == '*')) {
+        return strdup(factory_prefix);
+    }
+
+    name = malloc((sizeof(factory_prefix) - 1) + 1 + member_name_length + 1);
+    if (!name) return 0;
+
+    memcpy(name, factory_prefix, sizeof(factory_prefix) - 1);
+    name[sizeof(factory_prefix) - 1] = '.';
+    memcpy(name + sizeof(factory_prefix), member_name, member_name_length);
+    name[(sizeof(factory_prefix) - 1) + 1 + member_name_length] = 0;
+    return name;
+}
+
+static const char *required_argument_name(ASTNode *arg_node) {
+    if (arg_node && arg_node->child &&
+        arg_node->child->symbolNode &&
+        arg_node->child->symbolNode->symbol &&
+        arg_node->child->symbolNode->symbol->name) {
+        return arg_node->child->symbolNode->symbol->name;
+    }
+    return "arg";
+}
+
 static int origin_subtree_has_error(ASTNode *node) {
     ASTNode *current;
 
@@ -668,23 +696,37 @@ walker_result set_node_types_walker(walker_direction direction,
                 if (node->value_type == TP_UNKNOWN) {
                     Symbol *class_sym = sym_rvfc(context->ast, node);
                     char *qualified_class_name = 0;
+                    const char *factory_member_name = "*";
+                    size_t factory_member_name_length = 1;
                     if (node->node_string && strstr(node->node_string, "::")) {
                         qualified_class_name = rxcp_normalize_source_symbol_name(node->node_string, node->node_string_length, 1, 1);
                     }
+                    if (node->association && node->association->node_string && node->association->node_string_length) {
+                        factory_member_name = node->association->node_string;
+                        factory_member_name_length = node->association->node_string_length;
+                    }
                     if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                         Symbol *dispatch_class_sym = class_sym;
-                        /* Resolve the Factory routine '§factory' within that class */
                         ASTNode star_node;
+                        char *factory_lookup_name;
                         memset(&star_node, 0, sizeof(ASTNode));
-                        star_node.node_string = "\xc2\xa7" "factory";
-                        star_node.node_string_length = 9;
+                        factory_lookup_name = build_factory_lookup_name(factory_member_name, factory_member_name_length);
+                        if (!factory_lookup_name) {
+                            mknd_err(node, "OUT_OF_MEMORY");
+                            if (qualified_class_name) free(qualified_class_name);
+                            break;
+                        }
+                        star_node.node_string = factory_lookup_name;
+                        star_node.node_string_length = strlen(factory_lookup_name);
                         if (sym_is_interface_symbol(class_sym)) {
                             if (!sym_lrsv(class_sym->defines_scope, &star_node) && (!context->changed_flags || context->is_final_pass)) {
+                                free(factory_lookup_name);
                                 mknd_err(node, "FACTORY_NOT_FOUND");
                                 break;
                             }
                         }
                         Symbol *factory_sym = sym_lrsv(dispatch_class_sym->defines_scope, &star_node);
+                        free(factory_lookup_name);
                         if (factory_sym && factory_sym->symbol_type == FUNCTION_SYMBOL) {
                             if (!node->symbolNode || node->symbolNode->symbol != factory_sym) {
                                 sym_adnd(factory_sym, node, 1, 0);
@@ -705,16 +747,25 @@ walker_result set_node_types_walker(walker_direction direction,
                             if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                                 Symbol *dispatch_class_sym = class_sym;
                                 ASTNode star_node;
+                                char *factory_lookup_name;
                                 memset(&star_node, 0, sizeof(ASTNode));
-                                star_node.node_string = "\xc2\xa7" "factory";
-                                star_node.node_string_length = 9;
+                                factory_lookup_name = build_factory_lookup_name(factory_member_name, factory_member_name_length);
+                                if (!factory_lookup_name) {
+                                    mknd_err(node, "OUT_OF_MEMORY");
+                                    if (qualified_class_name) free(qualified_class_name);
+                                    break;
+                                }
+                                star_node.node_string = factory_lookup_name;
+                                star_node.node_string_length = strlen(factory_lookup_name);
                                 if (sym_is_interface_symbol(class_sym)) {
                                     if (!sym_lrsv(class_sym->defines_scope, &star_node) && (!context->changed_flags || context->is_final_pass)) {
+                                        free(factory_lookup_name);
                                         mknd_err(node, "FACTORY_NOT_FOUND");
                                         break;
                                     }
                                 }
                                 Symbol *factory_sym = sym_lrsv(dispatch_class_sym->defines_scope, &star_node);
+                                free(factory_lookup_name);
                                 if (factory_sym && factory_sym->symbol_type == FUNCTION_SYMBOL) {
                                     if (!node->symbolNode || node->symbolNode->symbol != factory_sym) {
                                         sym_adnd(factory_sym, node, 1, 0);
@@ -1715,7 +1766,7 @@ walker_result func_type_safety_walker(walker_direction direction,
                             ast_svtn(n1, n2);
                             if (!n1->is_opt_arg) {
                                 mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num,
-                                         n2->child->symbolNode->symbol->name);
+                                         required_argument_name(n2));
                             }
                         } else {
                             ast_sttn(n1, n2);
@@ -1753,7 +1804,7 @@ walker_result func_type_safety_walker(walker_direction direction,
                         n1->is_ref_arg = n2->is_ref_arg;
                         n1->is_const_arg = n2->is_const_arg;
                         if (!n1->is_opt_arg) {
-                            mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num, n2->child->symbolNode->symbol->name);
+                            mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num, required_argument_name(n2));
                         }
                         n2 = n2->sibling;
                     }

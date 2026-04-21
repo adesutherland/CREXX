@@ -1,6 +1,6 @@
 # Level B Interfaces and Callable Contracts Working Design
 
-Status: working design; tracer-bullet slice implemented; namespace-qualification foundation implemented; runtime interface-method dispatch slice implemented; runtime default-factory dispatch slice implemented; named-factory/explicit-match/runtime-registry work still pending
+Status: working design; tracer-bullet slice implemented; namespace-qualification foundation implemented; runtime interface-method dispatch slice implemented; runtime default-factory dispatch slice implemented; named-factory/runtime-registry dispatch slice implemented; explicit-match and interface-body work still pending
 
 Last updated: 2026-04-21
 
@@ -83,17 +83,17 @@ The existing codebase now behaves as follows.
 - runtime values now carry concrete class identity set by class factories, and
   interface member calls use `srcmethod` plus `dcall` to resolve the concrete
   procedure in the VM at execution time
-- default `*` interface factory calls now use `srcfproc` plus `dcall` to
-  resolve a provider in the VM at execution time
+- default `*` and named interface factory calls now use `srcfproc` plus
+  `dcall` to resolve a provider in the VM at execution time
 - the current default-factory runtime selection gives every candidate provider
   an implicit score of `1` and breaks ties alphabetically by fully qualified
   concrete class name
 - `rxvml` already scans `META_CLASS` records directly from module metadata.
 - Historical VM docs already sketched a `ptable` style runtime mapping for
   interface dispatch. The current implementation takes an incremental path:
-  runtime method lookup by concrete class + member name, and runtime default
-  factory lookup by scanning `META_IMPLEMENTS` metadata on demand, with the
-  fuller load-time interface/provider registry still deferred.
+  runtime method lookup by concrete class + member name, and runtime factory
+  lookup through a load/link-time provider registry keyed by interface plus
+  factory member name.
 
 This means the interface work should extend the current metadata/import chain,
 not introduce a separate binary header system in parallel with it.
@@ -122,7 +122,6 @@ established the parser, type, import, and metadata foundation.
 Deliberately not implemented in this tracer bullet:
 
 - interface method bodies
-- named interface factories
 - `match`
 - multi-implementation runtime selection
 - named-factory runtime selection
@@ -150,41 +149,46 @@ Implemented now:
 
 Current boundary of this implemented step:
 
-- named factories and explicit `match` are still not implemented
-- runtime lookup currently resolves concrete methods by full method symbol name;
-  the fuller interface/provider registry for factories remains a later step
+- method dispatch is runtime-polymorphic, but interface method bodies and
+  explicit class-side `match` are still not implemented
+- runtime lookup currently resolves concrete methods by full method symbol name
 
-## Implemented Runtime Default-Factory Dispatch Slice
+## Implemented Runtime Factory Dispatch Slice
 
-The next approved runtime step is now also implemented for the default `*`
-factory surface.
+The next approved runtime step is now implemented for both the default `*`
+factory surface and named interface factories.
 
 Implemented now:
 
 - interface default `*` factories no longer lower through
   `find_unique_implementing_class(...)`
-- type checking binds a default interface factory call to the interface's own
-  `§factory` contract and checks arguments against that shared signature
-- interface default factory calls compile to `srcfproc` plus the existing
-  `dcall` sequence
-- runtime factory lookup happens in C by scanning loaded `META_IMPLEMENTS`
-  metadata and resolving concrete `§factory` procedures for the requested
-  interface
+- named factory declarations are now accepted on interfaces and classes
+- `.interface.named_factory(...)` is now parsed and type-checked as an
+  interface factory call
+- type checking binds both default and named interface factory calls to the
+  interface's own factory contract and checks arguments against that shared
+  signature
+- interface factory calls compile to `srcfproc` plus the existing `dcall`
+  sequence, using `iface.fqn` for default `*` and `iface.fqn::member` for
+  named factories
+- runtime factory lookup happens in C through a load/link-time registry built
+  from `META_INTERFACE`, `META_IMPLEMENTS`, and `META_MEMBER`
+- the runtime registry now carries candidate rows keyed by interface plus
+  factory member name and resolves concrete `§factory` / `§factory.member`
+  procedures during link
 - every current candidate provider receives the implicit score `1`
 - when several providers are available, the current tie-break is alphabetical
   by fully qualified concrete class name
 - if no provider exists at runtime, the VM raises `FUNCTION_NOT_FOUND`
-- same-module, source-import, and binary-import single-provider factory
-  coverage are now joined by same-module multi-provider tie-break and
-  no-provider runtime-failure coverage
+- same-module, source-import, and binary-import coverage now include named
+  factories, same-module multi-provider tie-break, and no-provider
+  runtime-failure cases
 
 Current boundary of this implemented step:
 
-- selection currently applies only to the default `*` interface factory surface
-- named interface factories are still not implemented
 - explicit class-side `match` is still not implemented
-- the approved load/link-time provider registry is still pending; the current
-  implementation scans metadata on demand
+- the registry applies implicit score `1` only; explicit `match` is the next
+  selection step
 
 ## Implemented Namespace Qualification Foundation
 
@@ -242,11 +246,11 @@ The project is now at a clean staging point.
 
 - the tracer-bullet slice is implemented and tested
 - runtime interface method dispatch is implemented and tested
-- runtime default-factory dispatch is implemented and tested
+- runtime default and named factory dispatch is implemented and tested
 - the remaining core Level B design decisions have been approved
-- the next step is the remaining runtime/interface work, primarily named
-  factories, explicit `match`, interface default bodies, and the broader
-  registry/link path
+- the next step is the remaining runtime/interface work, primarily explicit
+  `match`, interface default bodies, and the remaining validation/runtime
+  refinements on top of the current registry path
 - regressions should be treated as bugs to fix now unless they clearly depend
   on later approved capabilities such as named-factory dispatch or explicit
   `match`

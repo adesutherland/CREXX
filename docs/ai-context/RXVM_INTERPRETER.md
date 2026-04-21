@@ -121,24 +121,25 @@ of the older object model:
 - `SETOBJTYPE_REG_STRING` stores a concrete class name on an object value
 - `SRCMETHOD_REG_REG_STRING` resolves a concrete method procedure from
   `object_type_name + member_name`
-- `SRCFPROC_REG_STRING_REG` resolves the default `*` factory provider for an
-  interface name
+- `SRCFPROC_REG_STRING_REG` resolves an interface factory provider for either
+  `interface_name` or `interface_name::factory_name`
 
 `srcmethod` and `srcfproc` both return a `proc_constant *` in a normal
 register, and the existing `dcall` path performs the actual invocation.
 
 ### Current `srcfproc` semantics
 
-The current implementation is intentionally narrow:
+The current implementation is now:
 
-- it handles only the default `*` interface factory surface
-- it scans loaded module metadata for `META_IMPLEMENTS` links at runtime
-- for each candidate class, it derives the concrete `§factory` procedure name
-  and resolves that through the existing metadata/procedure tables
+- it handles both the default `*` interface factory surface and named factory
+  selectors
+- it rebuilds a factory-provider registry during VM link/load
+- registry rows are keyed by interface FQN plus factory member name
+- for each candidate class, it resolves the concrete `§factory` or
+  `§factory.member` procedure through the existing metadata/procedure tables
 - every current candidate is treated as if it had implicit score `1`
 - ties are broken alphabetically by fully qualified concrete class name
 - if no provider exists, the VM raises `FUNCTION_NOT_FOUND`
 
-Explicit class-side `match`, named factories, and a prebuilt load/link-time
-provider registry are still later work; they are not part of the current VM
-contract.
+Explicit class-side `match` is still later work; it is not part of the current
+VM contract.

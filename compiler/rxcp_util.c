@@ -607,6 +607,7 @@ const char* token_to_string(int token_id) {
         case TK_OPTIONS: return "TK_OPTIONS";
         case TK_NAMESPACE: return "TK_NAMESPACE";
         case TK_IMPORT: return "TK_IMPORT";
+        case TK_CLASS_FACTORY: return "TK_CLASS_FACTORY";
         case TK_CLASS_TYPE: return "TK_CLASS_TYPE";
         case TK_OPEN_BRACKET: return "TK_OPEN_BRACKET";
         case TK_CLOSE_BRACKET: return "TK_CLOSE_BRACKET";

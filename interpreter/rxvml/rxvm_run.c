@@ -46,6 +46,7 @@ int rxvm_link(struct rxvm_context* ctx) {
             ctx->modules[i]->state = RXVM_MOD_LINKED;
         }
     }
+    rxvm_rebuild_interface_factory_registry(ctx);
     return 0;
 }
 

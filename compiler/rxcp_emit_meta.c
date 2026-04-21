@@ -476,13 +476,9 @@ void add_class_symbol(Symbol *symbol, void *payload) {
                         char *rtype = ast_n2tp(ast_chld(member, CLASS, VOID));
                         char *args = meta_narg(ast_chld(member, ARGS, 0));
                         char *member_name;
-                        if (member->node_type == FACTORY) {
-                            member_name = strdup("*");
-                        } else {
-                            member_name = malloc(member->node_string_length + 1);
-                            memcpy(member_name, member->node_string, member->node_string_length);
-                            member_name[member->node_string_length] = 0;
-                        }
+                        member_name = malloc(member->node_string_length + 1);
+                        memcpy(member_name, member->node_string, member->node_string_length);
+                        member_name[member->node_string_length] = 0;
                         char *buf_member = mprintf(".meta \"%s\"=\"%s\" \"%s\" \"%s\" \"%s\" .member\n",
                                                    owner_fqn,
                                                    member->node_type == FACTORY ? "factory" : "method",

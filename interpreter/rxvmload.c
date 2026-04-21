@@ -49,6 +49,8 @@ static rxpa_context *rxpa_context_f(rxvm_context *rxvm_context);
 // Free statically linked functions list
 static void free_rxpa_context(rxpa_context *context);
 
+static void free_interface_factory_registry(rxvm_context *context);
+
 // End of RXPA Declarations for this file
 
 /* Initialise modules context */
@@ -62,6 +64,9 @@ void rxinimod(rxvm_context *context) {
     context->ext_argc = 0;
     context->ext_args = 0;
     context->ext_ret = 0;
+    context->interface_factories = 0;
+    context->num_interface_factories = 0;
+    context->interface_factory_capacity = 0;
 
     /* Support 128 modules initially - this grows automatically */
     context->module_buffer_size = 128;
@@ -71,6 +76,8 @@ void rxinimod(rxvm_context *context) {
 /* Free Module Context */
 void rxfremod(rxvm_context *context) {
     int j, k;
+
+    free_interface_factory_registry(context);
 
     /* Free Symbol Search Trees */
     DEBUG("Free Symbol Search Trees\n");
@@ -121,6 +128,29 @@ void rxfremod(rxvm_context *context) {
     }
     free(context->modules);
     if (context->location) free(context->location);
+}
+
+static void free_interface_factory_registry(rxvm_context *context) {
+    size_t i;
+
+    if (!context || !context->interface_factories) {
+        if (context) {
+            context->num_interface_factories = 0;
+            context->interface_factory_capacity = 0;
+        }
+        return;
+    }
+
+    for (i = 0; i < context->num_interface_factories; i++) {
+        free(context->interface_factories[i].interface_name);
+        free(context->interface_factories[i].factory_name);
+        free(context->interface_factories[i].class_name);
+    }
+
+    free(context->interface_factories);
+    context->interface_factories = 0;
+    context->num_interface_factories = 0;
+    context->interface_factory_capacity = 0;
 }
 
 /* Link a loaded module */

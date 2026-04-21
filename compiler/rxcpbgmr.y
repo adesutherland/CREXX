@@ -1153,6 +1153,28 @@ call(I) ::= TK_CALL(T) TK_STEM(S) stemparts(P) function_parameters(PP).
            I = ast_f(context, CALL, T);
            add_ast(I, F);
         }
+call(I) ::= TK_CALL(T) TK_CLASS_FACTORY(S) function_parameters(PP).
+        {
+           size_t split = 0;
+           size_t i;
+           ASTNode *F = ast_f(context, FACTORY_CALL, S);
+
+           for (i = 1; i < F->node_string_length; i++) {
+               if (F->node_string[i] == '.') split = i;
+           }
+
+           if (split) {
+               F->association = ast_f(context, VAR_SYMBOL, S);
+               F->association->node_string = S->token_string + split + 1;
+               F->association->node_string_length = S->length - split - 1;
+               F->node_string++;
+               F->node_string_length = split - 1;
+           }
+
+           if (PP) add_ast(F, PP);
+           I = ast_f(context, CALL, T);
+           add_ast(I, F);
+        }
 call(I) ::= TK_CALL(T) ANYTHING(E).
         { I = ast_f(context, CALL, T); add_ast(I,ast_err(context, "EXPECTED_PROCEDURE", E)); }
 
@@ -1195,6 +1217,23 @@ term(F)                ::= TK_STEM(S) stemparts(P) function_parameters(PP).
                                ASTNode *lhs = ast_f(context, VAR_SYMBOL, S);
                                if (P) add_ast(lhs, P);
                                add_ast(F, lhs);
+                               if (PP) add_ast(F, PP);
+                           }
+term(F)                ::= TK_CLASS_FACTORY(S) function_parameters(PP).
+                           {
+                               size_t split = 0;
+                               size_t i;
+                               F = ast_f(context, FACTORY_CALL, S);
+                               for (i = 1; i < F->node_string_length; i++) {
+                                   if (F->node_string[i] == '.') split = i;
+                               }
+                               if (split) {
+                                   F->association = ast_f(context, VAR_SYMBOL, S);
+                                   F->association->node_string = S->token_string + split + 1;
+                                   F->association->node_string_length = S->length - split - 1;
+                                   F->node_string++;
+                                   F->node_string_length = split - 1;
+                               }
                                if (PP) add_ast(F, PP);
                            }
 term(F)                ::= TK_STRING(S) function_parameters(P).
@@ -1270,6 +1309,20 @@ block_expr(A)        ::= TK_DO(T) TK_EOC TK_END.
 bracket(A)           ::= block_expr(B).
                          { A = B; }
 /* Standalone class factory call as a primary */
+bracket(F)           ::= TK_CLASS_TYPE(S) TK_CLASS_TYPE(M) function_parameters(P).
+                           {
+                               F = ast_f(context, FACTORY_CALL, S);
+                               if (P) add_ast(F,P);
+                               if (F->node_string && F->node_string[0] == '.') {
+                                   F->node_string++;
+                                   F->node_string_length--;
+                               }
+                               F->association = ast_f(context, VAR_SYMBOL, M);
+                               if (F->association->node_string && F->association->node_string[0] == '.') {
+                                   F->association->node_string++;
+                                   F->association->node_string_length--;
+                               }
+                           }
 bracket(F)           ::= TK_CLASS_TYPE(S) function_parameters(P).
                            {
                                F = ast_f(context, FACTORY_CALL, S);
@@ -1287,6 +1340,20 @@ command_bracket(A)   ::= term(T).
                          { A = T; }
 command_bracket(A)   ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
                          { A = B; }
+command_bracket(F)   ::= TK_CLASS_TYPE(S) TK_CLASS_TYPE(M) function_parameters(P).
+                           {
+                               F = ast_f(context, FACTORY_CALL, S);
+                               if (P) add_ast(F,P);
+                               if (F->node_string && F->node_string[0] == '.') {
+                                   F->node_string++;
+                                   F->node_string_length--;
+                               }
+                               F->association = ast_f(context, VAR_SYMBOL, M);
+                               if (F->association->node_string && F->association->node_string[0] == '.') {
+                                   F->association->node_string++;
+                                   F->association->node_string_length--;
+                               }
+                           }
 command_bracket(F)   ::= TK_CLASS_TYPE(S) function_parameters(P).
                            {
                                F = ast_f(context, FACTORY_CALL, S);
@@ -1590,6 +1657,13 @@ interface_def(C) ::= TK_LABEL(L) TK_INTERFACE.
 }
 
 factory_def(F) ::= TK_MULT_LABEL(L) TK_FACTORY opt_method_return_type(T).
+{
+  F = ast_f(context, FACTORY, L);
+  if (T) add_ast(F, T);
+  else add_ast(F, ast_ft(context, VOID));
+}
+
+factory_def(F) ::= TK_LABEL(L) TK_FACTORY opt_method_return_type(T).
 {
   F = ast_f(context, FACTORY, L);
   if (T) add_ast(F, T);

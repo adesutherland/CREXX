@@ -32,6 +32,24 @@
 #include "utf.h"
 #include "rxcp_val.h"
 
+static char *build_factory_symbol_name(ASTNode *node) {
+    static const char factory_prefix[] = "\xc2\xa7" "factory";
+
+    if (!node || !node->node_string || !node->node_string_length ||
+        (node->node_string_length == 1 && node->node_string[0] == '*')) {
+        return strdup(factory_prefix);
+    }
+
+    char *name = malloc((sizeof(factory_prefix) - 1) + 1 + node->node_string_length + 1);
+    if (!name) return 0;
+
+    memcpy(name, factory_prefix, sizeof(factory_prefix) - 1);
+    name[sizeof(factory_prefix) - 1] = '.';
+    memcpy(name + sizeof(factory_prefix), node->node_string, node->node_string_length);
+    name[(sizeof(factory_prefix) - 1) + 1 + node->node_string_length] = 0;
+    return name;
+}
+
 static void normalize_symbol_label(ASTNode *node) {
     size_t start;
     size_t len;
@@ -179,7 +197,13 @@ walker_result structure_symbols_walker(walker_direction direction,
             /* Make a new symbol */
             if (!symbol) { /* If there is a symbol we are in an error condition but are pressing on */
                 if (node->node_type == FACTORY) {
-                    symbol = sym_fn(context->current_scope, "§factory", 9);
+                    char *factory_symbol_name = build_factory_symbol_name(node);
+                    symbol = factory_symbol_name ? sym_fn(context->current_scope, factory_symbol_name, strlen(factory_symbol_name)) : 0;
+                    if (factory_symbol_name) free(factory_symbol_name);
+                    if (!symbol) {
+                        mknd_err(node, "OUT_OF_MEMORY");
+                        return result_normal;
+                    }
                 } else {
                     symbol = sym_f(context->current_scope, node);
                 }
