@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_const_arg_mutation.rexx
- * BUILT                  : 2026-04-15 10:55:41
+ * BUILT                  : 2026-04-21 11:35:29
  */
 
 .meta "inline_test_object_const_arg_mutation.box"="b" ".unknown" .class
@@ -73,6 +73,7 @@ mutateBox() .locals=5
    .meta "inline_test_object_const_arg_mutation.box.§factory"="b" ".void" §inline_test_object_const_arg_mutation.box.§factory() "initial=.string" ""
    .src 19:3="*: factory"
    setattrs r1,2
+   setobjtype r1,"inline_test_object_const_arg_mutation.box"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_return_assign.rexx
- * BUILT                  : 2026-03-26 21:25:21
+ * BUILT                  : 2026-04-21 11:35:28
  */
 
 .meta "inline_test_object_return_assign.box"="b" ".unknown" .class
@@ -128,6 +128,7 @@ replaceBoxRef() .locals=3
    .meta "inline_test_object_return_assign.box.§factory"="b" ".void" §inline_test_object_return_assign.box.§factory() "initial=.string" ""
    .src 31:3="*: factory"
    setattrs r1,2
+   setobjtype r1,"inline_test_object_return_assign.box"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

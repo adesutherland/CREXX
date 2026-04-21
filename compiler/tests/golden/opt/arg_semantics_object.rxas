@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_object.rexx
- * BUILT                  : 2026-04-15 11:20:43
+ * BUILT                  : 2026-04-21 11:35:26
  */
 
 .meta "arg_semantics_object.box"="b" ".unknown" .class
@@ -187,6 +187,7 @@ replaceBoxRef() .locals=3
    .meta "arg_semantics_object.box.§factory"="b" ".void" §arg_semantics_object.box.§factory() "initial=.string" ""
    .src 30:3="*: factory"
    setattrs r1,2
+   setobjtype r1,"arg_semantics_object.box"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

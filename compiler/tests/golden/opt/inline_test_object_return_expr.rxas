@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_return_expr.rexx
- * BUILT                  : 2026-03-27 15:10:43
+ * BUILT                  : 2026-04-21 11:35:28
  */
 
 .meta "inline_test_object_return_expr.box"="b" ".unknown" .class
@@ -105,6 +105,7 @@ describeBox() .locals=4
    .meta "inline_test_object_return_expr.box.§factory"="b" ".void" §inline_test_object_return_expr.box.§factory() "initial=.string" ""
    .src 22:3="*: factory"
    setattrs r1,2
+   setobjtype r1,"inline_test_object_return_expr.box"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

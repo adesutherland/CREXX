@@ -109,6 +109,8 @@ struct value {
     char *binary_value; // Must be malloced
     size_t binary_length; // binary_value length
     size_t binary_buffer_length; // binary_value buffer length
+    const char *object_type_name; // Runtime concrete class name, may point into a module constant pool
+    size_t object_type_name_length;
     value **attributes;
     value **unlinked_attributes;
     value **attribute_buffers;

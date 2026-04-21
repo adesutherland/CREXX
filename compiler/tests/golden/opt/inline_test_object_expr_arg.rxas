@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_expr_arg.rexx
- * BUILT                  : 2026-03-27 16:48:19
+ * BUILT                  : 2026-04-21 11:35:30
  */
 
 .meta "inline_test_object_expr_arg.box"="b" ".unknown" .class
@@ -87,6 +87,7 @@ makeBox() .locals=3
    .meta "inline_test_object_expr_arg.box.§factory"="b" ".void" §inline_test_object_expr_arg.box.§factory() "initial=.string" ""
    .src 19:3="*: factory"
    setattrs r1,2
+   setobjtype r1,"inline_test_object_expr_arg.box"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

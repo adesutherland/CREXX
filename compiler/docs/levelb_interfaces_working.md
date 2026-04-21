@@ -1,6 +1,6 @@
 # Level B Interfaces and Callable Contracts Working Design
 
-Status: working design; tracer-bullet slice implemented; namespace-qualification foundation implemented; full runtime stage approved for planning
+Status: working design; tracer-bullet slice implemented; namespace-qualification foundation implemented; runtime interface-method dispatch slice implemented; factory-selection/runtime-completion work still pending
 
 Last updated: 2026-04-21
 
@@ -69,8 +69,9 @@ The existing codebase now behaves as follows.
   implementing one or more interfaces, and interface-centred factory usage.
 - The parser now accepts `interface` definitions and `class implements .iface`.
 - `.ClassName(...)` is parsed as a `FACTORY_CALL`.
-- Type checking now supports one implemented interface path by resolving an
-  interface factory/method call to the sole known implementing class.
+- Type checking now resolves interface methods against the interface contract
+  itself, while interface factories still use the tracer-bullet
+  single-implementation rule.
 - Type compatibility now allows assignment from a concrete class to an
   implemented interface.
 - for class methods and factories, the compiler already emits an internal RXAS
@@ -79,10 +80,14 @@ The existing codebase now behaves as follows.
 - `.rxbin` now carries interface headers and class-interface links through
   `META_INTERFACE`, `META_IMPLEMENTS`, and `META_MEMBER`, and the compiler reads
   those back during import to synthesize contract stubs.
+- runtime values now carry concrete class identity set by class factories, and
+  interface member calls use `srcmethod` plus `dcall` to resolve the concrete
+  procedure in the VM at execution time
 - `rxvml` already scans `META_CLASS` records directly from module metadata.
 - Historical VM docs already sketched a `ptable` style runtime mapping for
-  interface dispatch, but no active assembler/interpreter path currently uses
-  that mechanism.
+  interface dispatch. The current implementation takes a narrower first step:
+  runtime method lookup by concrete class + member name, with full interface
+  factory/provider tables still deferred.
 
 This means the interface work should extend the current metadata/import chain,
 not introduce a separate binary header system in parallel with it.
@@ -111,6 +116,32 @@ Deliberately not implemented in this tracer bullet:
 - `match`
 - multi-implementation runtime selection
 - VM-level interface dispatch instructions
+
+## Implemented Runtime Method Dispatch Slice
+
+The next approved runtime step is now partly implemented.
+
+Implemented now:
+
+- class factories stamp the created object with its concrete runtime class name
+- interface member calls no longer lower through
+  `find_unique_implementing_class(...)`
+- interface member calls compile to `srcmethod` plus the existing `dcall`
+  sequence
+- runtime method lookup happens in C using the concrete class name carried on
+  the object plus the interface member name
+- multiple concrete classes may now implement the same interface for method
+  dispatch, as long as construction does not rely on the still-pending
+  multi-provider factory machinery
+- same-module, source-import, and binary-import interface method dispatch are
+  covered by tests, including a same-module multi-implementation case
+
+Current boundary of this implemented step:
+
+- interface factories still use the tracer-bullet single-implementation rule
+- named factories and `match` are still not implemented
+- runtime lookup currently resolves concrete methods by full method symbol name;
+  the fuller interface/provider registry for factories remains a later step
 
 ## Implemented Namespace Qualification Foundation
 
@@ -171,9 +202,10 @@ Relevant current implementation files:
 The project is now at a clean staging point.
 
 - the tracer-bullet slice is implemented and tested
+- runtime interface method dispatch is implemented and tested
 - the remaining core Level B design decisions have been approved
-- the next step is no longer design discovery; it is staged implementation of
-  the full runtime interface model
+- the next step is the remaining runtime/interface work, primarily interface
+  factory/provider selection and the broader registry/link path
 - regressions should be treated as bugs to fix now unless they clearly depend
   on later approved capabilities such as runtime multi-provider dispatch
 

@@ -72,6 +72,50 @@
 #undef SAFE_RECYCLED_STACKFRAMES
 
 /* Misc. Utilities here */
+static char *build_runtime_member_name(const char *class_name, size_t class_name_length,
+                                       const char *member_name, size_t member_name_length) {
+    char *proc_name;
+
+    proc_name = malloc(class_name_length + member_name_length + 2);
+    if (!proc_name) return 0;
+
+    memcpy(proc_name, class_name, class_name_length);
+    proc_name[class_name_length] = '.';
+    memcpy(proc_name + class_name_length + 1, member_name, member_name_length);
+    proc_name[class_name_length + member_name_length + 1] = 0;
+
+    return proc_name;
+}
+
+static proc_constant *resolve_runtime_method(rxvm_context *context, const char *proc_name, size_t proc_name_length) {
+    size_t mod_index;
+
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        module *mod = context->modules[mod_index];
+        int meta_ix = mod->meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+
+            if (meta->base.type == META_FUNC) {
+                meta_func_constant *meta_func = (meta_func_constant *) meta;
+                string_constant *symbol_name =
+                        (string_constant *) (mod->segment.const_pool + meta_func->symbol);
+
+                if (symbol_name->base.type == STRING_CONST &&
+                    symbol_name->string_len == proc_name_length &&
+                    memcmp(symbol_name->string, proc_name, proc_name_length) == 0) {
+                    return (proc_constant *) (mod->segment.const_pool + meta_func->func);
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
+    return 0;
+}
+
 /* Decodes UTF8 Bytes and return number of bytes of character */
 RX_INLINE int utf8codepoint_express(const uint8_t* p, uint32_t* codepoint) {
     uint8_t c0 = p[0];
@@ -6357,8 +6401,57 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             rc = op1RI;
             goto interprt_finished;
 
-        RESERVED_IMPL(RESERVED_056)
-        RESERVED_IMPL(RESERVED_057)
+        START_INSTRUCTION(SETOBJTYPE_REG_STRING) CALC_DISPATCH(2)
+            DEBUG("TRACE - SETOBJTYPE R%lu,\"%.*s\"\n", REG_IDX(1), (int) op2S->string_len, op2S->string);
+            op1R->object_type_name = op2S->string;
+            op1R->object_type_name_length = op2S->string_len;
+            DISPATCH
+
+        START_INSTRUCTION(SRCMETHOD_REG_REG_STRING) CALC_DISPATCH(3)
+            {
+                char *proc_name;
+                proc_constant *called_function;
+                const char *class_name;
+                size_t class_name_length;
+
+                DEBUG("TRACE - SRCMETHOD R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
+                      (int) op3S->string_len, op3S->string);
+
+                class_name = op2R->object_type_name;
+                class_name_length = op2R->object_type_name_length;
+                called_function = 0;
+
+                if (!class_name || !class_name_length) {
+                    proc_name = build_runtime_member_name("<untyped>", 9, op3S->string, op3S->string_len);
+                    if (proc_name) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, proc_name);
+                        free(proc_name);
+                    }
+                    else {
+                        SET_SIGNAL(RXSIGNAL_FAILURE);
+                    }
+                    DISPATCH
+                }
+
+                proc_name = build_runtime_member_name(class_name, class_name_length, op3S->string, op3S->string_len);
+                if (!proc_name) {
+                    SET_SIGNAL(RXSIGNAL_FAILURE);
+                    DISPATCH
+                }
+
+                called_function = resolve_runtime_method(context, proc_name, strlen(proc_name));
+                if (!called_function) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, proc_name);
+                    free(proc_name);
+                    DISPATCH
+                }
+
+                value_zero(op1R);
+                op1R->int_value = (rxinteger) called_function;
+                free(proc_name);
+            }
+            DISPATCH
+
         RESERVED_IMPL(RESERVED_058)
         RESERVED_IMPL(RESERVED_059)
         RESERVED_IMPL(RESERVED_060)

@@ -26,6 +26,8 @@ RX_INLINE void value_zero(value *v) {
     v->status.all_type_flags = 0;
     v->int_value = 0;
     v->float_value = 0;
+    v->object_type_name = 0;
+    v->object_type_name_length = 0;
     v->string_length = 0; // Lazy Free String - just zero the used length
     v->string_pos = 0;
 #ifndef NUTF8
@@ -420,6 +422,8 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     dest->status.all_type_flags = source->status.all_type_flags;
     dest->int_value = source->int_value;
     dest->float_value = source->float_value;
+    dest->object_type_name = source->object_type_name;
+    dest->object_type_name_length = source->object_type_name_length;
 
     /* Copy Decimal Value */
     if (source->decimal_value_length) {
@@ -483,6 +487,10 @@ RX_INLINE void move_value(value *dest, value *source) {
     dest->status.all_type_flags = source->status.all_type_flags;
     dest->int_value = source->int_value;
     dest->float_value = source->float_value;
+    dest->object_type_name = source->object_type_name;
+    dest->object_type_name_length = source->object_type_name_length;
+    source->object_type_name = 0;
+    source->object_type_name_length = 0;
 
     /* Move Decimal Value */
     if (source->decimal_value) {

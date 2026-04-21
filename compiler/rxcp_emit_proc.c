@@ -226,6 +226,7 @@ void emit_proc(ASTNode *node, void *pl) {
                 /* Level B Class Preamble */
                 if (node->node_type == FACTORY) {
                     int n_attrs = 0;
+                    char *class_fq = 0;
                     ASTNode *cls = node->parent;
                     /* Ensure we are looking at the CLASS_DEF */
                     while (cls && cls->node_type != CLASS_DEF) cls = cls->parent;
@@ -271,6 +272,14 @@ void emit_proc(ASTNode *node, void *pl) {
                     temp1 = mprintf("   setattrs r%d,%d\n", r_this, n_attrs);
                     output_append_text(node->output, temp1);
                     free(temp1);
+
+                    if (cls && cls->symbolNode && cls->symbolNode->symbol) {
+                        class_fq = sym_frnm(cls->symbolNode->symbol);
+                        temp1 = mprintf("   setobjtype r%d,\"%s\"\n", r_this, class_fq);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                        free(class_fq);
+                    }
                 } else if (node->node_type == METHOD) {
                     /* Associated in register_walker */
                 }

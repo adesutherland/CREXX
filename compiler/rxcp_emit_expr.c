@@ -32,6 +32,25 @@
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
 
+static int is_interface_member_call(ASTNode *node) {
+    Symbol *fsym;
+    SymbolNode *defsn;
+    ASTNode *defnode;
+
+    if (!node || node->node_type != MEMBER_CALL || !node->symbolNode || !node->symbolNode->symbol) return 0;
+
+    fsym = node->symbolNode->symbol;
+    if (sym_nond(fsym) == 0) return 0;
+
+    defsn = sym_trnd(fsym, 0);
+    defnode = defsn ? defsn->node : 0;
+
+    return defnode &&
+           defnode->node_type == METHOD &&
+           defnode->parent &&
+           defnode->parent->node_type == INTERFACE_DEF;
+}
+
 void emit_expression(ASTNode *node, void *payload) {
     walker_payload *wp = (walker_payload*)payload;
     char *op = 0;
@@ -140,7 +159,22 @@ void emit_expression(ASTNode *node, void *payload) {
             }
 
             /* Actual Call */
-            if (node->symbolNode) {
+            if (is_interface_member_call(node)) {
+                Symbol *fsym = node->symbolNode->symbol;
+
+                temp1 = mprintf("   srcmethod %c%d,r%d,\"%s\"\n",
+                                ret_type, ret_num,
+                                node->additional_registers + 1,
+                                fsym->name);
+                output_append_text(node->output, temp1);
+                free(temp1);
+
+                temp1 = mprintf("   dcall %c%d,%c%d,r%d\n",
+                                ret_type, ret_num,
+                                ret_type, ret_num,
+                                node->additional_registers);
+            }
+            else if (node->symbolNode) {
                 char *call_name;
                 int use_mangled = 0;
                 Symbol *fsym = node->symbolNode->symbol;
