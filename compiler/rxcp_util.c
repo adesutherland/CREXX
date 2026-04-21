@@ -79,6 +79,76 @@ char* rx_strndup(const char* s, size_t n) {
     return (char*)memcpy(result, s, len);
 }
 
+char* rxcp_normalize_source_symbol_name(const char* source, size_t length,
+                                        int strip_leading_dot, int strip_quotes) {
+    size_t start = 0;
+    size_t end = length;
+    size_t i;
+    size_t out_len = 0;
+    char *result;
+
+    if (!source) return 0;
+
+    if (strip_leading_dot && start < end && source[start] == '.') start++;
+
+    if (strip_quotes && end >= start + 2 &&
+        (source[start] == '\'' || source[start] == '"') &&
+        source[end - 1] == source[start]) {
+        start++;
+        end--;
+    }
+
+    result = malloc((end - start) + 1);
+    if (!result) return 0;
+
+    for (i = start; i < end; i++) {
+        if (source[i] == ':' && (i + 1) < end && source[i + 1] == ':') {
+            result[out_len++] = '.';
+            i++;
+            continue;
+        }
+        result[out_len++] = (char)tolower((unsigned char)source[i]);
+    }
+
+    result[out_len] = 0;
+    return result;
+}
+
+int rxcp_split_internal_symbol_name(const char* name, char **namespace_name, char **short_name) {
+    const char *dot;
+    size_t namespace_len;
+
+    if (namespace_name) *namespace_name = 0;
+    if (short_name) *short_name = 0;
+    if (!name || !*name) return 0;
+
+    dot = strchr(name, '.');
+    if (!dot || dot == name || !dot[1]) return 0;
+
+    namespace_len = (size_t)(dot - name);
+    if (namespace_name) *namespace_name = rx_strndup(name, namespace_len);
+    if (short_name) *short_name = strdup(dot + 1);
+
+    return 1;
+}
+
+char* rxcp_internal_name_to_source_qualified(const char* name, int leading_dot) {
+    char *namespace_name = 0;
+    char *short_name = 0;
+    char *result;
+
+    if (!name) return 0;
+
+    if (rxcp_split_internal_symbol_name(name, &namespace_name, &short_name)) {
+        result = mprintf("%s%s::%s", leading_dot ? "." : "", namespace_name, short_name);
+        free(namespace_name);
+        free(short_name);
+        return result;
+    }
+
+    return mprintf("%s%s", leading_dot ? "." : "", name);
+}
+
 /* Collect and Prune diagnostics walker */
 static walker_result collect_diagnostics_walker(walker_direction direction,
                                                 ASTNode* node,
@@ -483,6 +553,7 @@ const char* token_to_string(int token_id) {
         case TK_EOS: return "TK_EOS";
         case TK_EOC: return "TK_EOC";
         case TK_VAR_SYMBOL: return "TK_VAR_SYMBOL";
+        case TK_QUALIFIED_SYMBOL: return "TK_QUALIFIED_SYMBOL";
         case TK_INTEGER: return "TK_INTEGER";
         case TK_FLOAT: return "TK_FLOAT";
         case TK_DECIMAL: return "TK_DECIMAL";

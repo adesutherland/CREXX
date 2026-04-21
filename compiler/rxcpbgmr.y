@@ -45,7 +45,7 @@
 #include "rxcpmain.h"
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL.
 %wildcard ANYTHING.
 
 /* Low precedence */
@@ -1115,17 +1115,21 @@ nop(I) ::= TK_NOP(T).
 
 // EXPRESSIONS
 // precedence to disambiguate assignment vs equality
-%left TK_STRING TK_FLOAT TK_DECIMAL TK_INTEGER TK_VAR_SYMBOL.
+%left TK_STRING TK_FLOAT TK_DECIMAL TK_INTEGER TK_VAR_SYMBOL TK_QUALIFIED_SYMBOL.
 %left TK_OPEN_BRACKET.
 %nonassoc TK_EQUAL.
 
 function_name(N)       ::= TK_VAR_SYMBOL(S).
+                           { N = ast_f(context, FUNCTION, S); }
+function_name(N)       ::= TK_QUALIFIED_SYMBOL(S).
                            { N = ast_f(context, FUNCTION, S); }
 function_name(N)       ::= TK_STRING(S).
                            { N = ast_f(context, FUNCTION, S); }
 call(I) ::= TK_CALL(T) function_name(F) expression_list(E).
         { I = ast_f(context, CALL, T); add_ast(I,F); if (E) add_ast(F,E); }
 call(I) ::= TK_CALL(T) TK_VAR_SYMBOL(S) function_parameters(P). [TK_VAR_SYMBOL]
+        { I = ast_f(context, CALL, T); ASTNode *F = ast_f(context, FUNCTION, S); add_ast(I, F); if (P) add_ast(F, P); }
+call(I) ::= TK_CALL(T) TK_QUALIFIED_SYMBOL(S) function_parameters(P). [TK_QUALIFIED_SYMBOL]
         { I = ast_f(context, CALL, T); ASTNode *F = ast_f(context, FUNCTION, S); add_ast(I, F); if (P) add_ast(F, P); }
 /* Support member calls: CALL obj.method(args...) */
 call(I) ::= TK_CALL(T) TK_STEM(S) stemparts(P) function_parameters(PP).
@@ -1164,6 +1168,8 @@ expression_list(L)     ::= expression_list(L1) TK_COMMA.
 
 /* Expression terminal nodes */
 term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
+                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+term(F)                ::= TK_QUALIFIED_SYMBOL(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 term(F)                ::= TK_STEM(S) stemparts(P) function_parameters(PP).
                            {

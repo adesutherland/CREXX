@@ -220,6 +220,7 @@ Symbol *sym_imcls(Context *context, ASTNode *node);
 Symbol *ensure_class_imported(Context *context, const char *class_name, size_t class_name_length);
 int sym_is_interface_symbol(Symbol *symbol);
 int sym_is_class_contract_symbol(Symbol *symbol);
+int symbol_names_equivalent(Context *context, const char *left_name, const char *right_name);
 int symbol_name_assignable_to(Context *context, const char *from_name, const char *to_name);
 Symbol *find_unique_implementing_class(Context *context, Symbol *interface_symbol, int *candidate_count);
 

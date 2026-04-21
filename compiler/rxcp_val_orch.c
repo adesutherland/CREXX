@@ -640,23 +640,17 @@ ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_
             goto exit;
         }
 
-        /* TODO Class Support */
-        if (node->node_string[0] == '.') {
-            local_class_name = malloc(node->node_string_length);
-            for (i = 1; i < (int)node->node_string_length; i++) {
-                local_class_name[i-1] = (char)tolower(node->node_string[i]);
-            }
-            local_class_name[node->node_string_length - 1] = 0;
-        } else {
-            local_class_name = malloc(node->node_string_length + 1);
-            for (i = 0; i < (int)node->node_string_length; i++) {
-                local_class_name[i] = (char)tolower(node->node_string[i]);
-            }
-            local_class_name[node->node_string_length] = 0;
+        /* Contract/class support */
+        local_class_name = rxcp_normalize_source_symbol_name(node->node_string, node->node_string_length, 1, 0);
+        if (!local_class_name) {
+            result = TP_UNKNOWN;
+            goto exit;
         }
 
-        /* Try and import the class on-demand if it's not already known */
-        if (context->ast && !sym_rvfn(context->ast, local_class_name)) {
+        /* Try and import the class on-demand if it's not already known. */
+        if (context->ast &&
+            !((strchr(local_class_name, '.') ? sym_rfqv(context->ast, local_class_name)
+                                             : sym_rvfn(context->ast, local_class_name)))) {
             ensure_class_imported(context, node->node_string, node->node_string_length);
         }
 

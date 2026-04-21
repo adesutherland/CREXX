@@ -1,0 +1,2 @@
+Error in qualified_namespace_missing_import.rexx @ 5:11 - #CLASS_NOT_FOUND, ".qnsa::widget(\"oops\")"
+1 error(s) in source file

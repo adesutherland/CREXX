@@ -190,6 +190,37 @@ static int src_nscl(Context *context, char* namespace, char* name, struct import
     return 0;
 }
 
+static Scope *find_visible_namespace_scope(Context *context, int only_namespace, const char *namespace_name) {
+    size_t i;
+    Scope *scope;
+
+    if (!context || !context->ast || !context->ast->scope || !namespace_name || !*namespace_name) return 0;
+    scope = context->ast->scope;
+
+    if (only_namespace) {
+        Scope *module_scope = scp_noch(scope) > 0 ? scp_chd(scope, 0) : 0;
+        if (module_scope && module_scope->name && strcmp(module_scope->name, namespace_name) == 0) {
+            return module_scope;
+        }
+        return 0;
+    }
+
+    for (i = 0; i < scp_noch(scope); i++) {
+        Scope *candidate = scp_chd(scope, i);
+        if (candidate && candidate->name && strcmp(candidate->name, namespace_name) == 0) {
+            return candidate;
+        }
+    }
+
+    return 0;
+}
+
+static Symbol *lookup_loaded_symbol(Context *context, const char *name) {
+    if (!context || !context->ast || !name || !*name) return 0;
+    if (strchr(name, '.')) return sym_rfqv(context->ast, name);
+    return sym_rvfn(context->ast, (char *)name);
+}
+
 // Search for a class from name (checking for imported namespaces in the context)
 // Returns 1 if found and sets value
 // Returns 0 if not found
@@ -200,6 +231,18 @@ static int src_fqcl(Context *context, char* name, struct imported_class **cls) {
 
     if (!context || !context->ast || !context->ast->scope) return 0;
     scope = context->ast->scope;
+
+    if (rxcp_split_internal_symbol_name(name, &namespace, 0)) {
+        int found = 0;
+        char *short_name = 0;
+        rxcp_split_internal_symbol_name(name, 0, &short_name);
+        if (short_name && find_visible_namespace_scope(context, 0, namespace)) {
+            found = src_nscl(context, namespace, short_name, cls);
+        }
+        free(namespace);
+        if (short_name) free(short_name);
+        return found;
+    }
 
     if (context->debug_mode >= 2) fprintf(stderr, "Searching for Class %s in namespaces (context file: %s):\n", name, context->file_name);
 
@@ -245,11 +288,11 @@ static Symbol *resolve_contract_symbol(Context *context, const char *name) {
 
     if (!context || !name || !*name) return 0;
 
-    symbol = sym_rvfn(context->ast, (char *)name);
+    symbol = lookup_loaded_symbol(context, name);
     if (symbol && symbol->symbol_type == CLASS_SYMBOL) return symbol;
 
     ensure_class_imported(context, name, strlen(name));
-    symbol = sym_rvfn(context->ast, (char *)name);
+    symbol = lookup_loaded_symbol(context, name);
     if (symbol && symbol->symbol_type == CLASS_SYMBOL) return symbol;
 
     return 0;
@@ -291,7 +334,7 @@ int symbol_name_assignable_to(Context *context, const char *from_name, const cha
     Symbol *to_symbol;
 
     if (!from_name || !to_name) return 0;
-    if (strcmp(from_name, to_name) == 0) return 1;
+    if (symbol_names_equivalent(context, from_name, to_name)) return 1;
     if (!context) return 0;
 
     from_symbol = resolve_contract_symbol(context, from_name);
@@ -303,6 +346,19 @@ int symbol_name_assignable_to(Context *context, const char *from_name, const cha
     }
 
     return 0;
+}
+
+int symbol_names_equivalent(Context *context, const char *left_name, const char *right_name) {
+    Symbol *left_symbol;
+    Symbol *right_symbol;
+
+    if (!left_name || !right_name) return left_name == 0 && right_name == 0;
+    if (strcmp(left_name, right_name) == 0) return 1;
+    if (!context) return 0;
+
+    left_symbol = resolve_contract_symbol(context, left_name);
+    right_symbol = resolve_contract_symbol(context, right_name);
+    return left_symbol && right_symbol && left_symbol == right_symbol;
 }
 
 // Search for a function / variable from name (checking for imported namespaces in the context)
@@ -317,6 +373,18 @@ int src_fqfu(Context *context, int only_namespace, char* name, imported_func **f
 
     if (!context || !context->ast || !context->ast->scope) return 0;
     scope = context->ast->scope;
+
+    if (rxcp_split_internal_symbol_name(name, &namespace, 0)) {
+        int found = 0;
+        char *short_name = 0;
+        rxcp_split_internal_symbol_name(name, 0, &short_name);
+        if (short_name && find_visible_namespace_scope(context, only_namespace, namespace)) {
+            found = src_nsfu(context, namespace, short_name, func);
+        }
+        free(namespace);
+        if (short_name) free(short_name);
+        return found;
+    }
 
     if (context->debug_mode >= 2) fprintf(stderr, "Searching for Procedure %s in namespaces (context file: %s):\n", name, context->file_name);
 
@@ -416,6 +484,7 @@ static int add_func(Context *context, imported_func *func) {
 static int imported_contract_member_count(Context *ctx) {
     ASTNode *program;
     ASTNode *contract;
+    ASTNode *member;
     int count = 0;
 
     if (!ctx || !ctx->ast) return 0;
@@ -425,7 +494,7 @@ static int imported_contract_member_count(Context *ctx) {
     while (contract && contract->node_type == REXX_OPTIONS) contract = contract->sibling;
     if (!contract) return 0;
 
-    for (ASTNode *member = contract->child; member; member = member->sibling) {
+    for (member = contract->child; member; member = member->sibling) {
         if (member->node_type == METHOD || member->node_type == FACTORY) count++;
     }
 
@@ -1053,11 +1122,6 @@ typedef struct class_meta_agg {
     struct class_meta_agg *next;
 } class_meta_agg;
 
-static char *short_name_from_fq(const char *fq) {
-    const char *dot = strrchr(fq, '.');
-    return strdup(dot ? dot + 1 : fq);
-}
-
 static class_meta_agg* agg_find_or_add(class_meta_agg **head, const char *fq, NodeType contract_type) {
     class_meta_agg *it = *head;
     while (it) {
@@ -1379,12 +1443,12 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                     size_t j;
                     stub_source = mprintf("options levelb\nnamespace %s\n%s: class", a->ns, a->name);
                     for (j = 0; j < a->implements_count; j++) {
-                        char *short_name = short_name_from_fq(a->implements_fqnames[j]);
-                        char *tmp = mprintf("%s%s .%s",
+                        char *iface_name = rxcp_internal_name_to_source_qualified(a->implements_fqnames[j], 1);
+                        char *tmp = mprintf("%s%s %s",
                                             stub_source,
                                             j == 0 ? " implements" : "",
-                                            short_name);
-                        free(short_name);
+                                            iface_name);
+                        free(iface_name);
                         free(stub_source);
                         stub_source = tmp;
                     }
@@ -1953,10 +2017,26 @@ static int ast_declares_local_contract(ASTNode *node, const char *short_name) {
 }
 
 static int current_source_declares_contract(Context *context, const char *short_name) {
+    char *namespace_name = 0;
+    char *local_name = 0;
+    int result;
+
     if (!context || !context->ast || !short_name || !*short_name) return 0;
 
+    if (rxcp_split_internal_symbol_name(short_name, &namespace_name, &local_name)) {
+        if (!find_visible_namespace_scope(context, 1, namespace_name)) {
+            free(namespace_name);
+            free(local_name);
+            return 0;
+        }
+        free(namespace_name);
+        short_name = local_name;
+    }
+
     /* Only scan the current source tree, not imported sibling modules. */
-    return ast_declares_local_contract(context->ast->child, short_name);
+    result = ast_declares_local_contract(context->ast->child, short_name);
+    if (local_name) free(local_name);
+    return result;
 }
 
 /* Try and import an external class - return its symbol if successful */
@@ -1964,33 +2044,12 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
     struct imported_class *found_cls = 0;
     Symbol *found_symbol = 0;
     char *name;
-
-    size_t start = 0;
-    size_t len = node->node_string_length;
-
-    /* Make a null terminated string */
-    if (len > 0 && node->node_string[0] == '.') {
-        start = 1;
-        len--;
-    } else if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {
-        start = 1;
-        len -= 2;
-    }
-    name = (char*)malloc(len + 1);
-    memcpy(name, node->node_string + start, len);
-    name[len] = 0;
-
-    /* Lowercase symbol name */
-#ifdef NUTF8
-    char *c;
-    for (c = name; *c; ++c) *c = (char)tolower(*c);
-#else
-    utf8lwr(name);
-#endif
+    name = rxcp_normalize_source_symbol_name(node->node_string, node->node_string_length, 1, 1);
+    if (!name) return 0;
 
     /* Do not import a stale external artifact for a contract declared later in this source file. */
     if (current_source_declares_contract(context, name)) {
-        found_symbol = sym_rvfn(context->ast, name);
+        found_symbol = lookup_loaded_symbol(context, name);
         if (found_symbol && found_symbol->defines_scope && found_symbol->defines_scope->defining_node &&
             found_symbol->defines_scope->defining_node->context == context) {
             free(name);
@@ -2001,7 +2060,7 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
     }
 
     /* Check if the class is already in the master AST */
-    found_symbol = sym_rvfn(context->ast, name);
+    found_symbol = lookup_loaded_symbol(context, name);
     if (found_symbol && found_symbol->symbol_type == CLASS_SYMBOL && found_symbol->exposed) {
         free(name);
         return found_symbol;
@@ -2047,29 +2106,8 @@ int sym_is_glob_var(Context *context, ASTNode *node) {
     imported_func *func;
     char *name;
     int found = 0;
-
-    size_t start = 0;
-    size_t len = node->node_string_length;
-
-    /* Make a null terminated string */
-    if (len > 0 && node->node_string[0] == '.') {
-        start = 1;
-        len--;
-    } else if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {
-        start = 1;
-        len -= 2;
-    }
-    name = (char*)malloc(len + 1);
-    memcpy(name, node->node_string + start, len);
-    name[len] = 0;
-
-    /* Lowercase symbol name */
-#ifdef NUTF8
-    char *c;
-    for (c = name; *c; ++c) *c = (char)tolower(*c);
-#else
-    utf8lwr(name);
-#endif
+    name = rxcp_normalize_source_symbol_name(node->node_string, node->node_string_length, 1, 1);
+    if (!name) return 0;
 
     /* Check unread files */
     if (src_fqfu(context, 0, name, &func)) {
@@ -2085,23 +2123,8 @@ int sym_is_imcls(Context *context, ASTNode *node) {
     struct imported_class *found_cls = 0;
     char *name;
     int found = 0;
-
-    if (node->node_string[0] == '.') {
-        name = (char*)malloc(node->node_string_length);
-        memcpy(name, node->node_string + 1, node->node_string_length - 1);
-        name[node->node_string_length - 1] = 0;
-    } else {
-        name = (char*)malloc(node->node_string_length + 1);
-        memcpy(name, node->node_string, node->node_string_length);
-        name[node->node_string_length] = 0;
-    }
-
-#ifdef NUTF8
-    char *c;
-    for (c = name; *c; ++c) *c = (char)tolower(*c);
-#else
-    utf8lwr(name);
-#endif
+    name = rxcp_normalize_source_symbol_name(node->node_string, node->node_string_length, 1, 1);
+    if (!name) return 0;
 
     if (current_source_declares_contract(context, name)) {
         free(name);
@@ -2121,29 +2144,8 @@ int sym_is_imfn(Context *context, ASTNode *node) {
     imported_func *func;
     char *name;
     int found = 0;
-
-    size_t start = 0;
-    size_t len = node->node_string_length;
-
-    /* Make a null terminated string */
-    if (len > 0 && node->node_string[0] == '.') {
-        start = 1;
-        len--;
-    } else if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {
-        start = 1;
-        len -= 2;
-    }
-    name = (char*)malloc(len + 1);
-    memcpy(name, node->node_string + start, len);
-    name[len] = 0;
-
-    /* Lowercase symbol name */
-#ifdef NUTF8
-    char *c;
-    for (c = name; *c; ++c) *c = (char)tolower(*c);
-#else
-    utf8lwr(name);
-#endif
+    name = rxcp_normalize_source_symbol_name(node->node_string, node->node_string_length, 1, 1);
+    if (!name) return 0;
 
     /* sym_rvfn check removed: locally defined functions should not trigger shadowing warnings for themselves */
 
@@ -2170,32 +2172,11 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
     char error = 0;
     char* defining_file = context->file_name;
     char *name;
-
-    size_t start = 0;
-    size_t len = node->node_string_length;
-
-    /* Make a null terminated string */
-    if (len > 0 && node->node_string[0] == '.') {
-        start = 1;
-        len--;
-    } else if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {
-        start = 1;
-        len -= 2;
-    }
-    name = (char*)malloc(len + 1);
-    memcpy(name, node->node_string + start, len);
-    name[len] = 0;
-
-    /* Lowercase symbol name */
-#ifdef NUTF8
-    char *c;
-    for (c = name; *c; ++c) *c = (char)tolower(*c);
-#else
-    utf8lwr(name);
-#endif
+    name = rxcp_normalize_source_symbol_name(node->node_string, node->node_string_length, 1, 1);
+    if (!name) return 0;
 
     /* Check if the function is already in the master AST */
-    found_symbol = sym_rvfn(context->ast, name);
+    found_symbol = lookup_loaded_symbol(context, name);
     if (found_symbol && found_symbol->symbol_type == FUNCTION_SYMBOL && found_symbol->exposed) {
         free(name);
         return found_symbol;

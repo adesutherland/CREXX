@@ -1,6 +1,6 @@
 # Level B Interfaces and Callable Contracts Working Design
 
-Status: working design; tracer-bullet slice implemented; full runtime stage approved for planning
+Status: working design; tracer-bullet slice implemented; namespace-qualification foundation implemented; full runtime stage approved for planning
 
 Last updated: 2026-04-21
 
@@ -111,6 +111,31 @@ Deliberately not implemented in this tracer bullet:
 - `match`
 - multi-implementation runtime selection
 - VM-level interface dispatch instructions
+
+## Implemented Namespace Qualification Foundation
+
+The first follow-on step after the tracer bullet is also now implemented.
+
+Implemented now:
+
+- source syntax for `namespace::procedure(...)` and `.namespace::contract(...)`
+- exact import-gated lookup for qualified procedures, classes, interfaces, and
+  type references
+- shared normalization from source `namespace::name` to internal
+  `namespace.name`
+- qualified factory calls preserving the qualified contract identity, so an
+  explicitly qualified `.ns::thing(...)` can satisfy a `.ns::thing` target and
+  carry that same identity into subsequent member dispatch
+- same-module runtime coverage for current-namespace qualification
+- source-import and binary-import runtime coverage for collision
+  disambiguation across two imported namespaces
+- negative coverage proving qualification does not bypass `import`
+
+Current boundary of this implemented step:
+
+- unqualified references still use the existing search-order behaviour
+- qualification is a disambiguation mechanism, not a second global symbol path
+- broader runtime/interface work still remains as described below
 
 Current tracer-bullet rule:
 
@@ -923,32 +948,29 @@ instruction formats earlier than necessary.
 
 ## Approved Next Stage Plan
 
-The next stage starts from the implemented tracer bullet and replaces the
+The next full-runtime stage starts from the implemented tracer bullet plus the
+implemented namespace-qualification foundation, and replaces the
 single-implementation lowering path with the approved full runtime model.
 
-1. Add optional namespace-qualified references using `namespace::name`.
-   This applies to procedures, class/interface symbols, type references,
-   `implements`, `of`, `as`, and factory calls. The left side of `::` must be
-   a namespace and must already be imported.
-2. Complete the lightweight interface header metadata so `.rxbin` import can
+1. Complete the lightweight interface header metadata so `.rxbin` import can
    reconstruct interface surfaces, implemented-interface links, and factory
    members without inspecting procedure bodies.
-3. Build runtime interface dispatch registries and factory candidate lists in C
+2. Build runtime interface dispatch registries and factory candidate lists in C
    during VM load/link, keyed by fully qualified interface identity and member
    name/selector.
-4. Extend runtime values and VM support so interface method calls resolve by
+3. Extend runtime values and VM support so interface method calls resolve by
    interface contract plus receiver concrete type, then invoke through the
    existing dynamic-call path.
-5. Add full interface-centred factory dispatch:
+4. Add full interface-centred factory dispatch:
    same-named class-side factory implementations, optional same-named `match`,
    implicit `match = 1`, highest positive score wins, and alphabetical
    tie-break by concrete class name.
-6. Add final/shared interface method bodies while keeping Level B interfaces
+5. Add final/shared interface method bodies while keeping Level B interfaces
    stateless and non-overridable.
-7. Harden validation and diagnostics for name collisions, `*` conflicts,
+6. Harden validation and diagnostics for name collisions, `*` conflicts,
    ambiguous implementations, missing implementations, rejected factories, and
    qualified-name/import misuse.
-8. Expand tests and documentation so same-module, source-import, and `rxbin`
+7. Expand tests and documentation so same-module, source-import, and `rxbin`
    import cases cover the full runtime dispatch/factory path and its negative
    cases.
 

@@ -439,7 +439,7 @@ char* sym_2tp(Symbol *symbol) {
     int free_buffer = 0;
 
     if (symbol->value_class) {
-        buffer = mprintf(".%s", symbol->value_class);
+        buffer = rxcp_internal_name_to_source_qualified(symbol->value_class, 1);
         free_buffer = 1;
     }
     else buffer = type_nm(symbol->type);
@@ -718,6 +718,29 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
     return 0;
 }
 
+Symbol *sym_rfqv(ASTNode *root, const char* fqname) {
+    char *namespace_name = 0;
+    char *short_name = 0;
+    Symbol *result = 0;
+    size_t i;
+
+    if (!root || !root->scope || !fqname) return 0;
+    if (!rxcp_split_internal_symbol_name(fqname, &namespace_name, &short_name)) return 0;
+
+    for (i = 0; i < scp_noch(root->scope); i++) {
+        Scope *scope = scp_chd(root->scope, i);
+        if (!scope || !scope->name) continue;
+        if (strcmp(scope->name, namespace_name) != 0) continue;
+
+        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), short_name);
+        break;
+    }
+
+    if (namespace_name) free(namespace_name);
+    if (short_name) free(short_name);
+    return result;
+}
+
 /* Resolve a Symbol - only in the current procedure (and nested local scopes) */
 Symbol *sym_rslv_local(Scope *scope, ASTNode *node) {
     Symbol *result;
@@ -857,32 +880,14 @@ Symbol *sym_rslv_tiered(Scope *scope, ASTNode *node) {
  */
 Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
     Symbol *result;
-    char *c;
     char *name;
 
-    size_t start = 0;
-    size_t len = node->node_string_length;
+    name = rxcp_normalize_source_symbol_name(node->node_string, node->node_string_length, 1, 1);
+    if (!name) return 0;
 
-    /* Make a null terminated string */
-    if (len > 0 && node->node_string[0] == '.') {
-        start = 1;
-        len--;
-    } else if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {
-        start = 1;
-        len -= 2;
-    }
-    name = (char*)malloc(len + 1);
-    memcpy(name, node->node_string + start, len);
-    name[len] = 0;
+    if (strchr(name, '.')) result = sym_rfqv(root, name);
+    else result = sym_rvfn_deep(root, name);
 
-    /* Lowercase symbol name */
-#ifdef NUTF8
-    for (c = name ; *c; ++c) *c = (char)tolower(*c);
-#else
-    utf8lwr(name);
-#endif
-
-    result = sym_rvfn_deep(root, name);
     free(name);
     return result;
 }

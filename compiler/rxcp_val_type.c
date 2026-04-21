@@ -91,7 +91,9 @@ void validate_node_promotion_for_ref(Context *context, ASTNode* node) {
     if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) {
         if (node->value_type != node->target_type) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
         else if (node->value_class && node->target_class) {
-            if (strcmp(node->value_class, node->target_class) != 0) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+            if (!symbol_name_assignable_to(context, node->value_class, node->target_class)) {
+                mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+            }
         }
         else if (node->value_class || node->target_class) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
     }
@@ -208,7 +210,7 @@ static int same_contract_type_node(Context *context, ASTNode *left, ASTNode *rig
             }
         }
         if (same) {
-            if (left_class && right_class) same = strcmp(left_class, right_class) == 0;
+            if (left_class && right_class) same = symbol_names_equivalent(context, left_class, right_class);
             else same = left_class == 0 && right_class == 0;
         }
     }
@@ -693,6 +695,10 @@ walker_result set_node_types_walker(walker_direction direction,
                 if (ast_chld(node, ERROR, 0)) break;
                 if (node->value_type == TP_UNKNOWN) {
                     Symbol *class_sym = sym_rvfc(context->ast, node);
+                    char *qualified_class_name = 0;
+                    if (node->node_string && strstr(node->node_string, "::")) {
+                        qualified_class_name = rxcp_normalize_source_symbol_name(node->node_string, node->node_string_length, 1, 1);
+                    }
                     if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                         Symbol *dispatch_class_sym = class_sym;
                         /* Resolve the Factory routine '§factory' within that class */
@@ -721,8 +727,8 @@ walker_result set_node_types_walker(walker_direction direction,
                                 sym_adnd(factory_sym, node, 1, 0);
                                 context->changed_flags |= FLAG_VAL_TYPE;
                             }
-                            ast_set_value_type(0, node, TP_OBJECT, 0, 0, 0, class_sym->name);
-                            ast_set_target_type(0, node, TP_OBJECT, 0, 0, 0, class_sym->name);
+                            ast_set_value_type(0, node, TP_OBJECT, 0, 0, 0, qualified_class_name ? qualified_class_name : class_sym->name);
+                            ast_set_target_type(0, node, TP_OBJECT, 0, 0, 0, qualified_class_name ? qualified_class_name : class_sym->name);
                             infer_arguments(context, node);
                         } else if (!context->changed_flags || context->is_final_pass) {
                             mknd_err(node, "FACTORY_NOT_FOUND");
@@ -758,8 +764,8 @@ walker_result set_node_types_walker(walker_direction direction,
                                         sym_adnd(factory_sym, node, 1, 0);
                                         context->changed_flags |= FLAG_VAL_TYPE;
                                     }
-                                    ast_set_value_type(0, node, TP_OBJECT, 0, 0, 0, class_sym->name);
-                                    ast_set_target_type(0, node, TP_OBJECT, 0, 0, 0, class_sym->name);
+                                    ast_set_value_type(0, node, TP_OBJECT, 0, 0, 0, qualified_class_name ? qualified_class_name : class_sym->name);
+                                    ast_set_target_type(0, node, TP_OBJECT, 0, 0, 0, qualified_class_name ? qualified_class_name : class_sym->name);
                                     infer_arguments(context, node);
                                 }
                             } else {
@@ -779,6 +785,7 @@ walker_result set_node_types_walker(walker_direction direction,
                             }
                         }
                     }
+                    if (qualified_class_name) free(qualified_class_name);
                 }
                 break;
 

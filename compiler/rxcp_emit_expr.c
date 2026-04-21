@@ -165,7 +165,9 @@ void emit_expression(ASTNode *node, void *payload) {
                         call_name = sym_frnm(node->symbolNode->symbol);
                     } else {
                         /* For PROCEDURE, preserve case if possible */
-                        if (node->node_string) {
+                        if (node->node_string && strstr(node->node_string, "::")) {
+                            call_name = strdup(node->symbolNode->symbol->name);
+                        } else if (node->node_string) {
                             size_t start = 0;
                             size_t len = node->node_string_length;
                             if (len >= 2 && (node->node_string[0] == '\'' || node->node_string[0] == '\"') && node->node_string[len - 1] == node->node_string[0]) {

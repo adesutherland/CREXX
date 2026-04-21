@@ -88,7 +88,8 @@ int rexbscan(Context* s) {
   integer = digit+;
   decimal = float [d] | integer [d];
   simple = fsymchr symchr*;
-  class = [.] simple;
+  qualified = simple "::" simple;
+  class = [.] (qualified|simple);
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
   str = sqstr|dqstr;
@@ -228,6 +229,7 @@ int rexbscan(Context* s) {
     float { RET(TK_FLOAT); }
     decimal { RET(TK_DECIMAL); }
     integer { RET(TK_INTEGER); }
+    qualified { RET(TK_QUALIFIED_SYMBOL); }
     'ARG' / [.] {
       s->lexer_stem_mode = 1;
       RET(TK_ARG_STEM);

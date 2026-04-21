@@ -1564,6 +1564,38 @@ START_OF_INSTRUCTIONS
                         case META_ATTR:
                             /* TODO: Implement META_ATTR */
                             break;
+                        case META_INTERFACE:
+                            set_null_string(op1R->attributes[j], ".meta_interface");
+                            set_num_attributes(op1R->attributes[j], 3);
+                            x = (rxinteger) ((meta_interface_constant *) (pool + i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_interface_constant *) (pool + i))->option;
+                            set_const_string(op1R->attributes[j]->attributes[1], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_interface_constant *) (pool + i))->type;
+                            set_const_string(op1R->attributes[j]->attributes[2], (string_constant *) (pool + x));
+                            break;
+                        case META_IMPLEMENTS:
+                            set_null_string(op1R->attributes[j], ".meta_implements");
+                            set_num_attributes(op1R->attributes[j], 2);
+                            x = (rxinteger) ((meta_implements_constant *) (pool + i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_implements_constant *) (pool + i))->interface_symbol;
+                            set_const_string(op1R->attributes[j]->attributes[1], (string_constant *) (pool + x));
+                            break;
+                        case META_MEMBER:
+                            set_null_string(op1R->attributes[j], ".meta_member");
+                            set_num_attributes(op1R->attributes[j], 5);
+                            x = (rxinteger) ((meta_member_constant *) (pool + i))->owner;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_member_constant *) (pool + i))->kind;
+                            set_const_string(op1R->attributes[j]->attributes[1], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_member_constant *) (pool + i))->member;
+                            set_const_string(op1R->attributes[j]->attributes[2], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_member_constant *) (pool + i))->type;
+                            set_const_string(op1R->attributes[j]->attributes[3], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_member_constant *) (pool + i))->args;
+                            set_const_string(op1R->attributes[j]->attributes[4], (string_constant *) (pool + x));
+                            break;
                         case STRING_CONST:
                         case PROC_CONST:
                         case BINARY_CONST:

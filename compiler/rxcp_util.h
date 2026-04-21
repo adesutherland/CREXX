@@ -42,6 +42,16 @@ char* mprintf(const char* format, ...);
 /* Cross platform strndup */
 char* rx_strndup(const char* s, size_t n);
 
+/* Normalize source symbol text to the compiler's lowercase internal form. */
+char* rxcp_normalize_source_symbol_name(const char* source, size_t length,
+                                        int strip_leading_dot, int strip_quotes);
+
+/* Split an internal symbol name "namespace.name" into malloced pieces. */
+int rxcp_split_internal_symbol_name(const char* name, char **namespace_name, char **short_name);
+
+/* Format an internal symbol name into source syntax, optionally with a leading ".". */
+char* rxcp_internal_name_to_source_qualified(const char* name, int leading_dot);
+
 /* Encodes a string into a malloced buffer for output/assembly */
 char* encdstrg(const char* string, size_t length);
 

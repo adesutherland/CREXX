@@ -232,6 +232,12 @@ int sym_lord(Symbol *symbol);
 Symbol *sym_rfqn(ASTNode *root, const char* fqname);
 
 /*
+ * Resolve a visible symbol via a fully qualified name "namespace.symbol".
+ * The namespace must be visible in the current AST root.
+ */
+Symbol *sym_rfqv(ASTNode *root, const char* fqname);
+
+/*
  * Resolve or add a Symbol via a fully qualified Name
  * the root parameter should the AST root
  * Note: Symbols / Scopes are not linked to nodes

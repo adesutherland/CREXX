@@ -55,6 +55,7 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_EOS: return LEXER_STATEMENT_SEPARATOR;
         case TK_MINUSMINUS: return LEXER_COMMENT;
         case TK_VAR_SYMBOL:
+        case TK_QUALIFIED_SYMBOL:
         case TK_CLASS_STEM:
         case TK_STEM:
         case TK_STEMVAR:
