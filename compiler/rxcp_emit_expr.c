@@ -379,17 +379,17 @@ void emit_expression(ASTNode *node, void *payload) {
         case OP_COMPARE_LTE:
             if (!op) op="lte";
         case OP_COMPARE_S_EQ:
-            if (!op) op="eqs";
+            if (!op) op="eq";
         case OP_COMPARE_S_NEQ:
-            if (!op) op="nes";
+            if (!op) op="ne";
         case OP_COMPARE_S_GT:
-            if (!op) op="gts";
+            if (!op) op="gt";
         case OP_COMPARE_S_LT:
-            if (!op) op="lts";
+            if (!op) op="lt";
         case OP_COMPARE_S_GTE:
-            if (!op) op="gtes";
+            if (!op) op="gte";
         case OP_COMPARE_S_LTE:
-            if (!op) op="ltes";
+            if (!op) op="lte";
 
             tp_prefix = type_to_prefix(child1->target_type);
 

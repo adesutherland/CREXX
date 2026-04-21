@@ -1094,14 +1094,18 @@ walker_result type_safety_walker(walker_direction direction,
             case OP_COMPARE_LT:
             case OP_COMPARE_GTE:
             case OP_COMPARE_LTE:
+                set_node_target_type(context, child1, max_type(node));
+                set_node_target_type(context, child2, max_type(node));
+                break;
+
             case OP_COMPARE_S_EQ:
             case OP_COMPARE_S_NEQ:
             case OP_COMPARE_S_GT:
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
-                set_node_target_type(context, child1, max_type(node));
-                set_node_target_type(context, child2, max_type(node));
+                set_node_target_type(context, child1, TP_STRING);
+                set_node_target_type(context, child2, TP_STRING);
                 break;
 
             case OP_CONCAT:

@@ -348,6 +348,8 @@ walker_result register_walker(walker_direction direction,
                  * constant */
             case OP_COMPARE_EQUAL:
             case OP_COMPARE_NEQ:
+            case OP_COMPARE_S_EQ:
+            case OP_COMPARE_S_NEQ:
             case OP_ADD:
             case OP_MULT:
                 if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
@@ -370,8 +372,6 @@ walker_result register_walker(walker_direction direction,
             case OP_COMPARE_LT:
             case OP_COMPARE_GTE:
             case OP_COMPARE_LTE:
-            case OP_COMPARE_S_EQ:
-            case OP_COMPARE_S_NEQ:
             case OP_COMPARE_S_GT:
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:

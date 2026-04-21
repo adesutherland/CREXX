@@ -184,6 +184,7 @@ int main(int argc, char *argv[]) {
     scanner.file_name = 0;
     scanner.output_file_name = 0;
     scanner.location = 0;
+    scanner.quiet = 0;
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {

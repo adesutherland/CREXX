@@ -85,6 +85,7 @@ static void rewrite_to_float_constant(ASTNode* node, Payload* payload, double va
 static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* value);
 static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteger value);
 static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int value);
+static int strict_string_compare_operand(ASTNode *node);
 
 /*
  * Create a number_context of a node
@@ -116,7 +117,16 @@ static numeric_context* node_to_num_context(ASTNode* node) {
  */
 static value* node_to_value(ASTNode* node) {
     static value v;
-    value_zero(&v);
+    static int initialised = 0;
+
+    if (!initialised) {
+        value_init(&v);
+        initialised = 1;
+    }
+    else {
+        clear_value(&v);
+    }
+
     switch (node->value_type) {
         case TP_INTEGER:
             // v.status.type_int = 1; TODO This will be correct but only when the status values are defined and used correctly
@@ -368,7 +378,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
 static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
     double fdiff;
     rxinteger idiff;
-    int effective_digits;
+    int cmp;
 
     if (node1->value_type == TP_INTEGER) {
         idiff = node1->int_value - node2->int_value;
@@ -403,13 +413,157 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
     }
 
     /* Use STRING */
-    if ((idiff = memcmp(node1->node_string, node2->node_string,
-                        MIN(node1->node_string_length,
-                            node2->node_string_length)) != 0))
-        return (int)idiff;
+    cmp = memcmp(node1->node_string, node2->node_string,
+                 MIN(node1->node_string_length,
+                     node2->node_string_length));
+    if (cmp != 0)
+        return cmp > 0 ? 1 : -1;
     else {
         idiff = (rxinteger)node1->node_string_length - (rxinteger)node2->node_string_length;
         return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
+    }
+}
+
+static char *constant_node_to_effective_string(ASTNode *node, size_t *length) {
+    char *buffer;
+    value work_value;
+    value *node_value;
+
+    if (!node) return 0;
+
+    switch (node->value_type) {
+        case TP_STRING:
+            if (!node->node_string) {
+                buffer = malloc(1);
+                if (!buffer) return 0;
+                buffer[0] = 0;
+                if (length) *length = 0;
+                return buffer;
+            }
+            buffer = malloc(node->node_string_length + 1);
+            if (!buffer) return 0;
+            memcpy(buffer, node->node_string, node->node_string_length);
+            buffer[node->node_string_length] = 0;
+            if (length) *length = node->node_string_length;
+            return buffer;
+
+        case TP_BOOLEAN:
+            buffer = malloc(32);
+            if (!buffer) return 0;
+            if (length) *length = (size_t) snprintf(buffer, 32, "%d", node->int_value ? 1 : 0);
+            else snprintf(buffer, 32, "%d", node->int_value ? 1 : 0);
+            return buffer;
+
+        case TP_INTEGER:
+            value_init(&work_value);
+            node_value = node_to_value(node);
+            int_to_string(node_to_num_context(node), &work_value, node_value);
+            buffer = malloc(node_value->string_length + 1);
+            if (buffer) {
+                memcpy(buffer, node_value->string_value, node_value->string_length);
+                buffer[node_value->string_length] = 0;
+                if (length) *length = node_value->string_length;
+            }
+            clear_value(node_value);
+            clear_value(&work_value);
+            return buffer;
+
+        case TP_FLOAT:
+            value_init(&work_value);
+            node_value = node_to_value(node);
+            float_to_string(node_to_num_context(node), &work_value, node_value);
+            buffer = malloc(node_value->string_length + 1);
+            if (buffer) {
+                memcpy(buffer, node_value->string_value, node_value->string_length);
+                buffer[node_value->string_length] = 0;
+                if (length) *length = node_value->string_length;
+            }
+            clear_value(node_value);
+            clear_value(&work_value);
+            return buffer;
+
+        case TP_DECIMAL:
+            if (node->decimal_value == 0) {
+                buffer = malloc(1);
+                if (!buffer) return 0;
+                buffer[0] = 0;
+                if (length) *length = 0;
+                return buffer;
+            } else {
+                Context *context = node->context;
+                decplugin *plugin = context->decimal_plugin;
+                value *value = value_f();
+                char *result_string;
+
+                plugin->num_context = &(node->scope->num_context);
+                plugin->syncNumericContext(plugin);
+                plugin->decimalFromString(plugin, value, node->decimal_value);
+                result_string = malloc(plugin->getRequiredStringSize(plugin));
+                if (result_string) {
+                    plugin->decimalToString(plugin, value, result_string);
+                    if (length) *length = strlen(result_string);
+                }
+                clear_value(value);
+                free(value);
+                return result_string;
+            }
+
+        default:
+            if (node->node_string) {
+                buffer = malloc(node->node_string_length + 1);
+                if (!buffer) return 0;
+                memcpy(buffer, node->node_string, node->node_string_length);
+                buffer[node->node_string_length] = 0;
+                if (length) *length = node->node_string_length;
+                return buffer;
+            }
+            buffer = malloc(1);
+            if (!buffer) return 0;
+            buffer[0] = 0;
+            if (length) *length = 0;
+            return buffer;
+    }
+}
+
+static int compare_effective_strings(ASTNode *node1, ASTNode *node2) {
+    char *left;
+    char *right;
+    size_t left_length;
+    size_t right_length;
+    int cmp;
+
+    left = constant_node_to_effective_string(node1, &left_length);
+    right = constant_node_to_effective_string(node2, &right_length);
+    if (!left || !right) {
+        if (left) free(left);
+        if (right) free(right);
+        return 0;
+    }
+
+    cmp = memcmp(left, right, MIN(left_length, right_length));
+    free(left);
+    free(right);
+
+    if (cmp != 0) return cmp > 0 ? 1 : -1;
+    if (left_length > right_length) return 1;
+    if (left_length < right_length) return -1;
+    return 0;
+}
+
+static int strict_string_compare_operand(ASTNode *node) {
+    if (!node || !node->parent) return 0;
+
+    switch (node->parent->node_type) {
+        case OP_COMPARE_S_EQ:
+        case OP_COMPARE_S_NEQ:
+        case OP_COMPARE_S_GT:
+        case OP_COMPARE_S_LT:
+        case OP_COMPARE_S_GTE:
+        case OP_COMPARE_S_LTE:
+            return 1;
+
+        default:
+            return 0;
     }
 }
 
@@ -655,35 +809,35 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_COMPARE_S_EQ:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare == 0);
                         break;
 
                     case OP_COMPARE_S_NEQ:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare != 0);
                         break;
 
                     case OP_COMPARE_S_GT:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload, compare > 0);
                         break;
 
                     case OP_COMPARE_S_LT:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload, compare < 0);
                         break;
 
                     case OP_COMPARE_S_GTE:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare >= 0);
                         break;
 
                     case OP_COMPARE_S_LTE:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare <= 0);
                         break;
@@ -1071,12 +1225,46 @@ static walker_result opt1_walker(walker_direction direction,
                     case FLOAT:
                     case DECIMAL:
                     case INTEGER:
-                    case STRING:
+                    case STRING: {
+                        ValueType literal_type;
+                        NodeType literal_node_type;
+
+                        literal_node_type = node->node_type;
                         node->node_type = CONSTANT;
-                        string_to_type(node, node->target_type);
+                        if (node->target_type == TP_STRING && strict_string_compare_operand(node)) {
+                            literal_type = node->target_type;
+
+                            switch (literal_node_type) {
+                                case FLOAT:
+                                    literal_type = TP_FLOAT;
+                                    break;
+
+                                case DECIMAL:
+                                    literal_type = TP_DECIMAL;
+                                    break;
+
+                                case INTEGER:
+                                    literal_type = TP_INTEGER;
+                                    break;
+
+                                case STRING:
+                                    literal_type = TP_STRING;
+                                    break;
+
+                                default:
+                                    if (node->value_type != TP_STRING) literal_type = node->value_type;
+                                    break;
+                            }
+
+                            string_to_type(node, literal_type);
+                        }
+                        else {
+                            string_to_type(node, node->target_type);
+                        }
                         update_string(node);
                         payload->changed = 1;
                         break;
+                    }
 
                     case CONSTANT:
                         // TODO - This logic validates that a constant is in range if it is a array subscript - is this this right place for it?
@@ -1257,7 +1445,11 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
         n->node_string_length = node_string_length;
 
         /* Patch up to the right target type */
-        string_to_type(n, n->target_type);
+        if (!(n->target_type == TP_STRING &&
+              n->value_type != TP_STRING &&
+              strict_string_compare_operand(n))) {
+            string_to_type(n, n->target_type);
+        }
         update_string(n);
         payload->changed = 1;
     }

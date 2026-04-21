@@ -103,6 +103,7 @@ static ASTNode *inline_create_symbol_node(Context *context,
                                           unsigned int read_usage,
                                           unsigned int write_usage);
 static ASTNode *inline_create_integer_constant(Context *context, ASTNode *source_node, int value, ValueType type);
+static void inline_copy_numeric_context(Scope *target, const Scope *source);
 static Symbol *inline_create_temp_symbol(Context *context,
                                          Scope *inline_scope,
                                          ASTNode *source_node,
@@ -241,6 +242,16 @@ static int inline_append_symbol_map_entry(InlineCloneState *state, Symbol *old_s
 
 static ASTNode *inline_formal_target(ASTNode *param_arg) {
     return param_arg ? ast_chdn(param_arg, 0) : NULL;
+}
+
+static void inline_copy_numeric_context(Scope *target, const Scope *source) {
+    if (!target || !source) return;
+
+    target->num_context.digits = source->num_context.digits;
+    target->num_context.fuzz = source->num_context.fuzz;
+    target->num_context.form = source->num_context.form;
+    target->num_context.casetype = source->num_context.casetype;
+    target->num_context.standard = source->num_context.standard;
 }
 
 static ASTNode *inline_formal_default(ASTNode *param_arg) {
@@ -1552,6 +1563,7 @@ static Scope *inline_clone_scope(Context *context,
     if (!new_scope) return NULL;
 
     if (old_scope->name) new_scope->name = strdup(old_scope->name);
+    inline_copy_numeric_context(new_scope, old_scope);
 
     if (!inline_append_scope_map_entry(state, old_scope, new_scope)) return NULL;
     if (!inline_duplicate_scope_symbols(old_scope, new_scope, state)) return NULL;
@@ -1743,6 +1755,7 @@ static int inline_build_symbol_map(Scope *callee_scope,
     if (!state->node_entries) state->node_count = 0;
     state->callee_scope = callee_scope;
     state->inline_scope = inline_scope;
+    inline_copy_numeric_context(inline_scope, callee_scope);
 
     if (!inline_append_scope_map_entry(state, callee_scope, inline_scope)) return 0;
     return inline_duplicate_scope_symbols(callee_scope, inline_scope, state);

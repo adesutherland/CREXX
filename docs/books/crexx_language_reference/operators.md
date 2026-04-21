@@ -111,6 +111,9 @@ representation of the terms.
 Before the comparison, both operands are **promoted to the `.string` type**. This forces a character-by-character comparison 
 with no padding.
 
+The compiler applies this promotion before both optimization and code emission, so folded and non-folded expressions follow the same string-comparison rules.
+Numeric literals are compared by their numeric value after stringification, not by their source spelling, so `01 == 1` is true because both sides become the string `"1"`.
+
 * **No Padding**: If the strings have different lengths, they are not equal.
 * **No Numeric Interpretation**: `1.0 == 1` may be **false** because the operands are first converted to the 
 * strings `'1.0'` and `'1'`, which are not identical. Numeric types are converted to their string representation before comparison,

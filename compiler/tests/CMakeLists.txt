@@ -146,6 +146,35 @@ macro(add_crexx_parsing_test NAME SOURCE_FILE)
     set_tests_properties(${NAME}_parse PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 endmacro()
 
+set(RXAS_DIAG_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxas_invalid_diagnostic.cmake")
+set(RXAS_DIAG_CONTENT "")
+set(RXAS_DIAG_DOLLAR "$")
+string(APPEND RXAS_DIAG_CONTENT
+       "file(WRITE \"${CMAKE_CURRENT_BINARY_DIR}/rxas_invalid_diagnostic.rxas\" \"main() .locals=1\\n   bogus r0\\n\")\n")
+string(APPEND RXAS_DIAG_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxas>\" -o \"rxas_invalid_diagnostic\" \"${CMAKE_CURRENT_BINARY_DIR}/rxas_invalid_diagnostic.rxas\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE out\n"
+       "  ERROR_VARIABLE err\n"
+       "  RESULT_VARIABLE res\n"
+       ")\n")
+string(APPEND RXAS_DIAG_CONTENT
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{out}${RXAS_DIAG_DOLLAR}{err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"Expected rxas to fail on invalid mnemonic, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "if(NOT full_out MATCHES \"invalid instruction mnemonic\")\n"
+       "  message(FATAL_ERROR \"Expected rxas diagnostic was not emitted.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXAS_DIAG_SCRIPT}" CONTENT "${RXAS_DIAG_CONTENT}")
+
+add_test(NAME rxas_invalid_diagnostic
+         COMMAND ${CMAKE_COMMAND} -P "${RXAS_DIAG_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxas_invalid_diagnostic PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+
 # Robustness tests
 macro(add_crexx_robustness_test NAME MAIN_FILE)
     # The list of dependencies are passed as additional arguments
@@ -217,6 +246,7 @@ add_crexx_compiler_test(03_calc rexx_src/03_calc.rexx)
 add_crexx_compiler_test(04_literals rexx_src/04_literals.rexx)
 add_crexx_compiler_test(05_ops_common rexx_src/05_ops_common.rexx)
 add_crexx_compiler_test(05_ops_classic rexx_src/05_ops_classic.rexx)
+add_crexx_compiler_test(strict_compare_codegen rexx_src/strict_compare_codegen.rexx)
 add_crexx_compiler_test(address_expose rexx_src/address_expose.rexx)
 add_crexx_compiler_test(div_ops_common rexx_src/div_ops_common.rexx)
 add_crexx_compiler_test(div_ops_classic rexx_src/div_ops_classic.rexx)
@@ -718,6 +748,7 @@ add_crexx_run_test(block_expr_short_circuit rexx_src/block_expr_short_circuit.re
 add_crexx_run_test(repro_args_parse rexx_src/repro_args_parse.rexx)
 add_crexx_run_test(repro_args_alias rexx_src/repro_args_alias.rexx)
 add_crexx_run_test(repro_sconcat rexx_src/repro_sconcat.rexx)
+add_crexx_run_test(repro_strict_compare rexx_src/repro_strict_compare.rexx)
 add_crexx_run_test(repro_implicit_address_abuttal rexx_src/repro_implicit_address_abuttal.rexx)
 add_crexx_run_test(test_explicit_address rexx_src/test_explicit_address.rexx)
 add_crexx_run_test(test_address_redirect rexx_src/test_address_redirect.rexx)
