@@ -1044,8 +1044,8 @@ Conclusion for Stage 3.2:
   applied to `ADDRESS` itself, along with any additional
   environment-specific refinements needed on top of the implemented provider
   `match` selection and default-method support
-- see `compiler/docs/levelb_interfaces_working.md` for the follow-on design
-  record for that prerequisite and its completed implementation state
+- see `compiler/docs/classes.md` for the enduring compiler-side reference for
+  that prerequisite and its completed implementation state
 
 Rationale:
 

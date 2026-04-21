@@ -50,3 +50,39 @@ One of the key benefits of using namespaces is that it allows you to control the
 If a module does not explicitly include a namespace instruction, \crexx{} automatically assigns it to a default namespace which is derived from the file name without the `.rexx` file type. 
 
 By leveraging namespaces, \crexx{} programmers can create modular and well-organized programs, enhancing code readability, maintainability, and reusability. Namespaces promote a structured approach to program and library design, allowing developers to group related functionality together and control the visibility of elements across different modules.
+
+## Qualified references
+
+When two imported namespaces expose the same procedure, class, or interface
+name, qualify the reference with `namespace::`.
+
+The token to the left of `::` must be a namespace name that has already been
+made visible through `import`. Qualification does not bypass the import system;
+it only disambiguates among imported namespaces.
+
+```rexx
+options levelb
+namespace qualified_interface_main
+import qifa
+import qifb
+
+main: procedure
+  left = .qifa::vehicle("one")
+  right = .qifb::vehicle.from_name("two")
+
+  say left.describe()
+  say right.describe()
+  return
+```
+
+This same form also applies to procedures:
+
+```rexx
+answer = qifa::helper()
+```
+
+and to type references:
+
+```rexx
+current = .qifa::vehicle
+```

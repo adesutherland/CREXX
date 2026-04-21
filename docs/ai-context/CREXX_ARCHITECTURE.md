@@ -68,6 +68,59 @@ import candidate.
 Within a binary root, same-stem artifacts are collapsed to the freshest
 candidate. If timestamps tie, `.rxbin` is preferred over `.rxas`.
 
+## Level B Classes and Interfaces
+
+Level B interface support is now implemented across the compiler, assembler
+metadata path, and VM.
+
+### Compiler model
+
+The source surface includes:
+
+- `interface`
+- `class implements .iface ...`
+- interface methods with or without bodies
+- interface default `*` factories and named factories
+- class-side same-named factory implementations
+- optional class-side same-named `match`
+- namespace-qualified contracts such as `.pkg::thing()`
+
+Interface methods with bodies are emitted as final/default methods. The class
+must still implement abstract members, but it may not override a final/default
+interface member.
+
+Qualified references use `namespace::symbol`; the left side must be an imported
+namespace, not a class or interface name.
+
+### Metadata and import
+
+The contract model is carried through normal `.rxbin` metadata with:
+
+- `META_INTERFACE`
+- `META_IMPLEMENTS`
+- `META_MEMBER`
+
+That metadata is sufficient for import reconstruction of class/interface
+headers without parsing procedure bodies. Imported stubs are not re-exported as
+new local contracts, and richer imported stubs replace poorer duplicates.
+
+### Runtime dispatch
+
+Created objects carry their concrete class identity. The VM then resolves
+contract calls through load/link-time registries:
+
+- a method registry keyed by concrete class plus member name
+- a factory-provider registry keyed by interface plus factory member name
+
+`srcmethod` resolves the effective method for an interface/class receiver. The
+registry prefers a concrete class method and otherwise falls back to a final
+interface default method.
+
+`srcfproc` resolves interface factories. Every candidate provider is evaluated
+through its effective `match`; omitted `match` behaves as score `1`, scores
+`<= 0` reject, highest positive score wins, and tied scores are broken
+alphabetically by concrete class name.
+
 ## Source Tree and Parser Mode
 
 cREXX now has an explicit split between the user-facing source model and the

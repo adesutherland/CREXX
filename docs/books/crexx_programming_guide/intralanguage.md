@@ -40,3 +40,53 @@ import functions from a certain package.
 
 
 <!-- \section{At runtime} -->
+
+\section{Imported interfaces and classes}
+
+Level B extends the same import model to classes and interfaces. An imported
+namespace may expose:
+
+- procedures
+- interfaces
+- classes
+
+An interface call is normally written against the contract name:
+
+```rexx
+import garage
+
+current = .vehicle("mini")
+say current.describe()
+```
+
+When two imported namespaces expose the same contract name, qualify the
+reference with `namespace::`:
+
+```rexx
+import qifa
+import qifb
+
+left = .qifa::vehicle("one")
+right = .qifb::vehicle.from_name("two")
+```
+
+The token to the left of `::` must be an imported namespace. Qualification is a
+disambiguation mechanism; it does not create a second way to reach symbols that
+have not been imported.
+
+\section{Source and binary imports}
+
+At compile time, \code{rxc} now distinguishes between:
+
+- source roots, used for `.rexx`
+- binary roots, used for `.rxbin`, optional `.rxas`, and plugins
+
+The source file being compiled contributes its own directory as the primary
+source root. Additional source roots may be passed with `-s`. Binary roots are
+passed with `-i`.
+
+For ordinary project work this means:
+
+- keep project source modules in source roots
+- keep packaged binary libraries in binary roots
+- use namespace qualification only when imported namespaces collide
