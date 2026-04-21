@@ -1,0 +1,27 @@
+/* rexx */
+options levelb
+
+namespace rxfnsb expose _left
+import _rxsysb
+
+_left: procedure=.string
+  arg lstring=.string, leftlen=0, pad=' '
+  llen=0
+  assembler strlen llen,lstring
+
+  if leftlen<=0 | llen=0 then return ''     /* one of the length is zero, return empty string */
+  if leftlen = llen then return lstring     /* no length change, return original */
+  if leftlen < llen then do                 /* requested length is < then string length, just cut it off */
+     assembler substcut lstring,leftlen     /* just cut off string */
+     return lstring                         /* and return it */
+  end
+ /* left length > string length, this needs padding */
+  padchar=''
+  padstring=''
+  padlength=0
+  assembler strlen padLength, pad
+  if padLength > 1 then call raise "syntax", "40.23", pad
+  assembler strchar padchar, pad           /* padchar= utf8codepoint(pad) */
+  leftlen=leftlen-llen                     /* how many padding chars needed */
+  assembler padstr padstring, padchar, leftlen  /* create pad string */
+return lstring||padstring                  /* return padded string */

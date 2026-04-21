@@ -13,7 +13,6 @@ import rxfnsb
  * 
  */ 
 
-
 rexx: class
 val = .string
 
@@ -50,8 +49,16 @@ val = .string
     
 -- 		abs
   abs: method = .string
-    if left(val,1) = '-' then number = substr(val,2)
+    if _left(val,1) = '-' then number = _substr(val,2)
     return number
+
+-- b2x
+  b2x: method = .string
+    return _b2x(val)
+
+-- b2d
+  b2d: method = .string
+    return _b2d(val)
 
 -- 		c2x
   c2x: method = .string
