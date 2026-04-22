@@ -22,8 +22,8 @@ struct rxvml_context {
 /* rxvml_value is defined as an alias to value in the public header */
 
 /* Internal helper to find a procedure by name */
-static proc_constant* find_procedure(rxvm_context* ctx, const char* name) {
-    proc_constant* p = NULL;
+static proc_runtime* find_procedure(rxvm_context* ctx, const char* name) {
+    proc_runtime* p = NULL;
     if (src_node(ctx->exposed_proc_tree, (char*)name, (size_t*)&p)) {
         return p;
     }
@@ -237,7 +237,7 @@ int rxvml_call_procedure(
     if (ctx->vm.num_modules > 0) {
         rxvm_link(&ctx->vm);
     }
-    proc_constant* p = find_procedure(&ctx->vm, proc_name);
+    proc_runtime* p = find_procedure(&ctx->vm, proc_name);
     if (!p) {
         ctx->last_error = "Procedure not found";
         return -1;
@@ -295,7 +295,7 @@ int rxvml_call_method(
     if (ctx->vm.num_modules > 0) {
         rxvm_link(&ctx->vm);
     }
-    proc_constant* p = find_procedure(&ctx->vm, full_method_name);
+    proc_runtime* p = find_procedure(&ctx->vm, full_method_name);
     if (!p) {
         snprintf(full_method_name, sizeof(full_method_name), "%s.%s", class_name, method_name);
         p = find_procedure(&ctx->vm, full_method_name);

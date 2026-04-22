@@ -103,7 +103,7 @@ The structural output consists of:
 3. **The Constant Pool**: The exact byte stream accumulated in `context->binary.const_pool`, which includes linked-list pointers mapping exposed exports and metadata objects.
 4. **The Bytecode Stream**: The `context->binary.binary` sequence, representing the fully resolved executable operations.
 
-As of format version `002`, float operands are no longer stored inline as raw
+As of format version `002` and later, float operands are no longer stored inline as raw
 `double` payloads in operand slots. Instead, the operand slot carries an index
 to a deduplicated `FLOAT_CONST` record in the constant pool.
 

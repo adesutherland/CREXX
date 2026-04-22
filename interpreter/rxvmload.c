@@ -51,6 +51,8 @@ static void free_rxpa_context(rxpa_context *context);
 
 static void free_interface_factory_registry(rxvm_context *context);
 static void free_interface_method_registry(rxvm_context *context);
+static void build_module_runtime_procedures(module *mod);
+static proc_runtime *get_module_runtime_procedure(module *mod, size_t proc_offset);
 
 // End of RXPA Declarations for this file
 
@@ -96,24 +98,20 @@ void rxfremod(rxvm_context *context) {
 
     /* Free Program Modules */
     for (j=0; j<context->num_modules; j++) {
-        size_t i = 0;
+        size_t i;
         /* Drain procedure stack frame free lists */
-        while (i < context->modules[j]->segment.const_size) {
-            chameleon_constant *c_entry = (chameleon_constant *) (context->modules[j]->segment.const_pool + i);
-            if (c_entry->type == PROC_CONST) {
-                proc_constant *p_entry = (proc_constant *) c_entry;
-                /* Only drain if this module owns the procedure (it's not imported) */
-                if (p_entry->frame_free_list == &(p_entry->frame_free_list_head)) {
-                    stack_frame *f = *p_entry->frame_free_list;
-                    while (f) {
-                        stack_frame *next = f->prev_free;
-                        completely_free_frame(f);
-                        f = next;
-                    }
-                    *p_entry->frame_free_list = 0;
+        for (i = 0; i < context->modules[j]->procedure_count; i++) {
+            proc_runtime *p_entry = &context->modules[j]->procedures[i];
+            /* Only drain if this module owns the procedure (it's not imported) */
+            if (p_entry->frame_free_list == &(p_entry->frame_free_list_head)) {
+                stack_frame *f = *p_entry->frame_free_list;
+                while (f) {
+                    stack_frame *next = f->prev_free;
+                    completely_free_frame(f);
+                    f = next;
                 }
+                *p_entry->frame_free_list = 0;
             }
-            i += c_entry->size_in_pool;
         }
 
         free_module(context->modules[j]->file);
@@ -132,6 +130,9 @@ void rxfremod(rxvm_context *context) {
             free(temp_globals);
             if (temp_dont_free) free(temp_dont_free);
         }
+        if (context->modules[j]->prepared_dispatch) free(context->modules[j]->prepared_dispatch);
+        if (context->modules[j]->proc_runtime_lookup) free(context->modules[j]->proc_runtime_lookup);
+        if (context->modules[j]->procedures) free(context->modules[j]->procedures);
         free(context->modules[j]);
     }
     free(context->modules);
@@ -183,11 +184,69 @@ static void free_interface_method_registry(rxvm_context *context) {
     context->interface_method_capacity = 0;
 }
 
+static void build_module_runtime_procedures(module *mod) {
+    size_t i;
+    size_t proc_index;
+
+    mod->procedures = 0;
+    mod->procedure_count = 0;
+    mod->proc_runtime_lookup = 0;
+    mod->proc_runtime_lookup_size = (mod->segment.const_size + (size_t)7) >> 3;
+
+    i = 0;
+    while (i < mod->segment.const_size) {
+        chameleon_constant *c_entry = (chameleon_constant *) (mod->segment.const_pool + i);
+        if (c_entry->type == PROC_CONST) mod->procedure_count++;
+        i += c_entry->size_in_pool;
+    }
+
+    if (mod->procedure_count) {
+        mod->procedures = calloc(mod->procedure_count, sizeof(proc_runtime));
+        if (!mod->procedures) {
+            fprintf(stderr, "PANIC: Out of memory\n");
+            exit(-1);
+        }
+    }
+
+    if (mod->proc_runtime_lookup_size) {
+        mod->proc_runtime_lookup = calloc(mod->proc_runtime_lookup_size, sizeof(proc_runtime *));
+        if (!mod->proc_runtime_lookup) {
+            fprintf(stderr, "PANIC: Out of memory\n");
+            exit(-1);
+        }
+    }
+
+    i = 0;
+    proc_index = 0;
+    while (i < mod->segment.const_size) {
+        chameleon_constant *c_entry = (chameleon_constant *) (mod->segment.const_pool + i);
+        if (c_entry->type == PROC_CONST) {
+            proc_constant *definition = (proc_constant *) c_entry;
+            proc_runtime *runtime = &mod->procedures[proc_index++];
+
+            runtime->definition = definition;
+            runtime->locals = definition->locals;
+            runtime->binarySpace = (!mod->native && definition->start != SIZE_MAX) ? &mod->segment : 0;
+            runtime->frame_free_list_head = 0;
+            runtime->frame_free_list = &runtime->frame_free_list_head;
+            runtime->start = definition->start;
+            runtime->name = definition->name;
+            mod->proc_runtime_lookup[i >> 3] = runtime;
+        }
+        i += c_entry->size_in_pool;
+    }
+}
+
+static proc_runtime *get_module_runtime_procedure(module *mod, size_t proc_offset) {
+    if (!mod || proc_offset >= mod->segment.const_size || !mod->proc_runtime_lookup) return 0;
+    return mod->proc_runtime_lookup[proc_offset >> 3];
+}
+
 /* Link a loaded module */
 void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
     size_t i, mod_index;
     chameleon_constant *c_entry;
-    proc_constant *p_entry, *p_entry_linked;
+    proc_runtime *p_entry, *p_entry_linked;
     value *g_reg;
 
     DEBUG("Add Module Symbols\n");
@@ -198,24 +257,6 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
                 (chameleon_constant *) (
                         context->modules[mod_index]->segment.const_pool + i);
         switch (c_entry->type) {
-
-            case PROC_CONST:
-                if (((proc_constant *) c_entry)->start != SIZE_MAX) {
-                    if (context->modules[mod_index]->native) {
-                        ((proc_constant *) c_entry)->binarySpace = 0;
-                    }
-                    else {
-                        /* Mark the owning module segment address */
-                        ((proc_constant *) c_entry)->binarySpace =
-                                &context->modules[mod_index]->segment;
-                    }
-                    /* Stack Frame Free List */
-                    ((proc_constant *) c_entry)->frame_free_list =
-                            &(((proc_constant *) c_entry)
-                                    ->frame_free_list_head);
-                    *(((proc_constant *) c_entry)->frame_free_list) = 0;
-                }
-                break;
 
             case EXPOSE_REG_CONST:
                 /* Exposed Register */
@@ -244,11 +285,9 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
 
             case EXPOSE_PROC_CONST:
                 /* Exposed Procedure */
-                p_entry =
-                        (proc_constant *) (
-                                context->modules[mod_index]->segment.const_pool
-                                + ((expose_proc_constant *) c_entry)
-                                        ->procedure);
+                p_entry = get_module_runtime_procedure(
+                        context->modules[mod_index],
+                        ((expose_proc_constant *) c_entry)->procedure);
 
                 if (((expose_proc_constant *) c_entry)->imported) {
                     /* Imported - Add to the unresolved symbols count for later */
@@ -289,11 +328,9 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
                                      (size_t *) &p_entry_linked)) {
 
                             /* Patch the procedure entry with the linked one */
-                            p_entry =
-                                    (proc_constant *) (
-                                            context->modules[mod_index]->segment.const_pool
-                                            + ((expose_proc_constant *) c_entry)
-                                                    ->procedure);
+                            p_entry = get_module_runtime_procedure(
+                                    context->modules[mod_index],
+                                    ((expose_proc_constant *) c_entry)->procedure);
                             if (p_entry->start == SIZE_MAX ) { /* If not already linked up */
                                 p_entry->locals = p_entry_linked->locals;
                                 p_entry->start = p_entry_linked->start;
@@ -365,6 +402,12 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
     context->modules[n]->file = file_module_section;
     context->modules[n]->native = file_module_section->native;
     context->modules[n]->state = RXVM_MOD_LOADED;
+    context->modules[n]->procedures = 0;
+    context->modules[n]->procedure_count = 0;
+    context->modules[n]->proc_runtime_lookup = 0;
+    context->modules[n]->proc_runtime_lookup_size = 0;
+    context->modules[n]->prepared_dispatch = 0;
+    build_module_runtime_procedures(context->modules[n]);
     context->link_dirty = 1;
     context->interface_method_registry_dirty = 1;
     context->interface_factory_registry_dirty = 1;

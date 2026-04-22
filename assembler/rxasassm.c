@@ -1078,8 +1078,6 @@ static size_t define_proc(Assembler_Context *context, Assembler_Token *funcToken
     centry->locals = -1;
     centry->start = SIZE_MAX;
     centry->exposed = SIZE_MAX;
-
-    centry->binarySpace = 0;
     ref_header->defined = 1;
 //    ref_header->def_token = funcToken;
 

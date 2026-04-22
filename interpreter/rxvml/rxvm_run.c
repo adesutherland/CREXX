@@ -89,7 +89,7 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
     ctx->ext_ret = ret_val;
 
     if (proc_name && strcmp(proc_name, "main") != 0) {
-        proc_constant* p = NULL;
+        proc_runtime* p = NULL;
         if (src_node(ctx->exposed_proc_tree, proc_name, (size_t*)&p)) {
             int i;
             ctx->ext_proc = p;

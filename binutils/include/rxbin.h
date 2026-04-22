@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BIN_VERSION "002"
+#define BIN_VERSION "003"
 
 #define BIN_HEADER "cReXx" /* Do not change */
 
@@ -30,7 +30,6 @@ typedef struct instruction_coding {
 #pragma pack(push,4)
 typedef union bin_code {
     instruction_coding instruction;
-    void* impl_address;
     double fconst;
     rxinteger iconst;
     char cconst;
@@ -90,9 +89,6 @@ typedef struct proc_constant {
     chameleon_constant base;
     int next;
     int locals;
-    bin_space *binarySpace; // Pointer to the binary space in CREXX, for native functions this is set to NULL
-    stack_frame **frame_free_list;
-    stack_frame *frame_free_list_head;
     size_t start;
     size_t exposed;
     char name[1]; /* Must be last member */

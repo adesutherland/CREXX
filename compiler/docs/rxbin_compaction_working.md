@@ -1,6 +1,6 @@
 # RXBIN Compaction Working Notes
 
-Status: working, stage 1 implemented
+Status: working, stage 1 and runtime-state split implemented
 Last updated: 2026-04-22
 
 ## 1. Purpose
@@ -47,7 +47,7 @@ and loaded by `rxvm`.
 Important current facts:
 
 - the file already has a real module header, not a headerless stream
-- the current on-disk format version is `001`
+- the current on-disk format version is `003`
 - each module stores:
   - header
   - module name
@@ -116,19 +116,20 @@ Important consequence:
 The main structural issue is that some serialized records are also used as live
 runtime objects.
 
-Important current facts:
+Important historical facts before the refactor:
 
-- `module_file` has runtime-only fields such as `fromfile` and `native`, but
-  those wrapper flags are not themselves written into the file payload
-- `bin_code` reserves space for `impl_address`, which is runtime-only threaded
-  dispatch state
-- `proc_constant` includes runtime-only fields:
+- `module_file` had runtime-only wrapper flags such as `fromfile` and
+  `native`, though those flags were not themselves written into the file
+  payload
+- `bin_code` reserved space for `impl_address`, which was runtime-only
+  threaded dispatch state
+- `proc_constant` carried runtime-only fields:
   - `binarySpace`
   - `frame_free_list`
   - `frame_free_list_head`
-- runtime linking mutates imported procedure records by copying runtime fields
+- runtime linking mutated imported procedure records by copying runtime fields
   from the resolved exporter
-- `rxvm_prepare()` rewrites opcode slots in place into dispatch pointers
+- `rxvm_prepare()` rewrote opcode slots in place into dispatch pointers
 
 Important consequence:
 
@@ -284,6 +285,21 @@ Even after this split, shared mutable VM state would still exist in:
 - interface dispatch registries
 - module lifecycle state in `rxvm_context`
 
+### 6.5 Implementation status
+
+This refactor is now implemented in file format `003`.
+
+The implemented shape is:
+
+- `bin_code` no longer reserves `impl_address`
+- `proc_constant` is serialized metadata only
+- `rxvm` builds per-module `proc_runtime` tables during load
+- exposed-procedure lookup, runtime linking, reflection, and external call
+  entry points now use `proc_runtime *`
+- `rxvm_prepare()` populates per-module `prepared_dispatch` side tables instead
+  of mutating serialized instruction slots
+- frame recycling state now lives only in runtime procedure objects
+
 ## 7. Stage 2: serialized compression
 
 ### 7.1 Problem statement
@@ -424,16 +440,12 @@ The main approval points from this note are:
 
 ## 11. Immediate next step after approval
 
-If this direction is approved, the next implementation step should be only
-stage 1:
+With stage 1 and the runtime-state split complete, the next implementation
+step should be stage 2:
 
-- add a binary float constant-pool entry
-- teach the assembler to deduplicate float literals into that pool
-- change existing float operand encodings in `002` to use pool indexes
-- teach the VM/disassembler to read the new encoding
-- add focused tests and document the final chosen format changes
-
-The next planned structural step after stage 1 should then be:
-
-- split serialized module data from runtime-only procedure and prepared-code
-  state
+- define the exact code-stream packing algorithm for the current 64-bit slot
+  storage
+- define how packed code is expanded back into normal `bin_code` arrays at
+  load time
+- add constant-pool compression with Heatshrink or equivalent load-time
+  decompression

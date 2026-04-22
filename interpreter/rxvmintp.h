@@ -11,8 +11,19 @@
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
 
+typedef struct module module;
+typedef struct proc_runtime {
+    proc_constant *definition;
+    int locals;
+    bin_space *binarySpace;
+    stack_frame **frame_free_list;
+    stack_frame *frame_free_list_head;
+    size_t start;
+    char *name;
+} proc_runtime;
+
 /* Module Structure */
-typedef struct module {
+struct module {
     bin_space segment;         /* Binary and Constant Pool */
     char *name;                /* Module Name */
     char *description;         /* Module Description */
@@ -27,7 +38,12 @@ typedef struct module {
     size_t duplicated_symbols; /* Number of duplicated symbols ignored in module */
     module_file *file;         /* File section the module was loaded from */
     rxvm_mod_state state;      /* Module lifecycle state */
-} module;
+    proc_runtime *procedures;  /* Runtime procedure state */
+    size_t procedure_count;    /* Number of runtime procedures */
+    proc_runtime **proc_runtime_lookup; /* Constant pool offset -> runtime procedure */
+    size_t proc_runtime_lookup_size;
+    void **prepared_dispatch;  /* Prepared opcode dispatch table */
+};
 
 /* Interrupt Response Codes */
 typedef enum interrupt_response {
@@ -43,7 +59,7 @@ typedef enum interrupt_response {
 /* Interrupt Table Entry */
 typedef struct interrupt_entry {
     interrupt_response response;    /* Response to the interrupt */
-    proc_constant *function;        /* Address of the function to call */
+    proc_runtime *function;         /* Address of the function to call */
     size_t jump;                    /* Address to jump to */
 } interrupt_entry;
 
@@ -54,8 +70,8 @@ typedef struct rxvm_interface_factory_entry {
     size_t factory_name_length;
     char *class_name;
     size_t class_name_length;
-    proc_constant *match_proc;
-    proc_constant *factory_proc;
+    proc_runtime *match_proc;
+    proc_runtime *factory_proc;
 } rxvm_interface_factory_entry;
 
 typedef struct rxvm_interface_method_entry {
@@ -63,13 +79,13 @@ typedef struct rxvm_interface_method_entry {
     size_t class_name_length;
     char *member_name;
     size_t member_name_length;
-    proc_constant *method_proc;
+    proc_runtime *method_proc;
 } rxvm_interface_method_entry;
 
 struct stack_frame {
     stack_frame *prev_free;
     stack_frame *parent;
-    proc_constant *procedure;
+    proc_runtime *procedure;
     bin_code *return_pc;
     value *return_reg;
     size_t number_locals;
@@ -115,8 +131,8 @@ struct stack_frame {
 #define START_INSTRUCTION(inst) inst:
 #define START_INTERRUPT INTERRUPT:
 #define END_INTERRUPT goto *next_inst;
-#define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }
-#define CALC_DISPATCH_MANUAL       { next_inst = (next_pc)->impl_address; }
+#define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = current_module->prepared_dispatch[(size_t)(next_pc - current_module->segment.binary)]; }
+#define CALC_DISPATCH_MANUAL       { next_inst = current_module->prepared_dispatch[(size_t)(next_pc - current_module->segment.binary)]; }
 #define DISPATCH                   { pc = next_pc; goto *(interrupts && !current_frame->is_interrupt)?&&INTERRUPT:next_inst; }
 
 #endif
@@ -128,7 +144,7 @@ struct stack_frame {
 #define FLOAT_OP(n)                  FLOAT_CONST_VALUE(current_frame->procedure->binarySpace->const_pool, (pc+(n))->index)
 
 #define CONSTSTRING_OP(n)            ((string_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))
-#define PROC_OP(n)                   ((proc_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))
+#define PROC_OP(n)                   (current_frame->procedure->binarySpace->module->proc_runtime_lookup[((pc+(n))->index) >> 3])
 #define INT_VAL(vx)                  vx->int_value
 #define FLOAT_VAL(vx)                vx->float_value
 
@@ -218,7 +234,7 @@ typedef struct rxvm_context {
     char debug_mode;
 
     /* Extra fields for direct procedure call */
-    proc_constant *ext_proc;
+    proc_runtime *ext_proc;
     int ext_argc;
     value **ext_args;
     value *ext_ret;

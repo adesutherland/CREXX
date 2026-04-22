@@ -91,7 +91,7 @@ static char *build_runtime_member_name(const char *class_name, size_t class_name
     return proc_name;
 }
 
-static proc_constant *resolve_runtime_procedure(rxvm_context *context, const char *proc_name, size_t proc_name_length) {
+static proc_runtime *resolve_runtime_procedure(rxvm_context *context, const char *proc_name, size_t proc_name_length) {
     size_t mod_index;
 
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
@@ -109,7 +109,7 @@ static proc_constant *resolve_runtime_procedure(rxvm_context *context, const cha
                 if (symbol_name->base.type == STRING_CONST &&
                     symbol_name->string_len == proc_name_length &&
                     memcmp(symbol_name->string, proc_name, proc_name_length) == 0) {
-                    return (proc_constant *) (mod->segment.const_pool + meta_func->func);
+                    return mod->proc_runtime_lookup[meta_func->func >> 3];
                 }
             }
 
@@ -544,11 +544,11 @@ static char *build_runtime_match_proc_name(const char *class_name,
 }
 
 static int invoke_runtime_factory_match(rxvm_context *context,
-                                        proc_constant *match_proc,
+                                        proc_runtime *match_proc,
                                         rxinteger argc,
                                         value **args,
                                         rxinteger *score_out) {
-    proc_constant *saved_ext_proc;
+    proc_runtime *saved_ext_proc;
     int saved_ext_argc;
     value **saved_ext_args;
     value *saved_ext_ret;
@@ -597,8 +597,8 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
                                                size_t factory_name_length,
                                                const char *class_name,
                                                size_t class_name_length,
-                                               proc_constant *match_proc,
-                                               proc_constant *factory_proc) {
+                                               proc_runtime *match_proc,
+                                               proc_runtime *factory_proc) {
     rxvm_interface_factory_entry *entry;
 
     if (!context || !interface_name || !factory_name || !class_name || !factory_proc) return 0;
@@ -645,7 +645,7 @@ static int add_runtime_interface_method_entry(rxvm_context *context,
                                               size_t class_name_length,
                                               const char *member_name,
                                               size_t member_name_length,
-                                              proc_constant *method_proc) {
+                                              proc_runtime *method_proc) {
     rxvm_interface_method_entry *entry;
     size_t i;
 
@@ -756,9 +756,9 @@ void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
                                 memcmp(owner_symbol->string, interface_symbol->string, interface_symbol->string_len) == 0) {
                                 char *class_proc_name;
                                 char *interface_proc_name;
-                                proc_constant *class_proc;
-                                proc_constant *interface_proc;
-                                proc_constant *effective_proc;
+                                proc_runtime *class_proc;
+                                proc_runtime *interface_proc;
+                                proc_runtime *effective_proc;
 
                                 class_proc_name = build_runtime_member_name(class_symbol->string,
                                                                             class_symbol->string_len,
@@ -806,14 +806,14 @@ void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
     }
 }
 
-static proc_constant *resolve_runtime_method(rxvm_context *context,
-                                             const char *class_name,
-                                             size_t class_name_length,
-                                             const char *member_name,
-                                             size_t member_name_length) {
+static proc_runtime *resolve_runtime_method(rxvm_context *context,
+                                            const char *class_name,
+                                            size_t class_name_length,
+                                            const char *member_name,
+                                            size_t member_name_length) {
     size_t entry_index;
     char *proc_name;
-    proc_constant *called_function;
+    proc_runtime *called_function;
 
     if (!context || !class_name || !class_name_length || !member_name || !member_name_length) return 0;
 
@@ -902,8 +902,8 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
                                 memcmp(owner_symbol->string, interface_symbol->string, interface_symbol->string_len) == 0) {
                                 char *factory_proc_name;
                                 char *match_proc_name;
-                                proc_constant *factory_proc;
-                                proc_constant *match_proc;
+                                proc_runtime *factory_proc;
+                                proc_runtime *match_proc;
 
                                 factory_proc_name = build_runtime_factory_proc_name(class_symbol->string,
                                                                                     class_symbol->string_len,
@@ -991,14 +991,14 @@ static int resolve_runtime_factory(rxvm_context *context,
                                    size_t selector_length,
                                    rxinteger argc,
                                    value **args,
-                                   proc_constant **factory_out,
+                                   proc_runtime **factory_out,
                                    char **error_out) {
     const char *interface_name;
     size_t interface_name_length;
     const char *factory_name;
     size_t factory_name_length;
     size_t entry_index;
-    proc_constant *best_factory;
+    proc_runtime *best_factory;
     rxinteger best_score;
     char *best_class_name;
     size_t best_class_name_length;
@@ -1328,7 +1328,7 @@ unsigned char string_to_interrupt(const char *interrupt) {
 
 /* Stack Frame Factory */
 RX_INLINE stack_frame *frame_f(
-                    proc_constant *procedure,
+                    proc_runtime *procedure,
                     int no_args,
                     stack_frame *parent,
                     bin_code *return_pc,
@@ -1643,8 +1643,8 @@ RX_INLINE rxinteger ascii_back_blank( unsigned char *s, rxinteger start, rxinteg
 
 /* Interpreter */
 RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
-    proc_constant *procedure;
-    proc_constant *step_handler = 0;
+    proc_runtime *procedure;
+    proc_runtime *step_handler = 0;
     int rc = 0;
     unsigned int initSeed = 0;   /* keep last seed for Random function within REXX run */
     char hasSeed = 0; /* no seed set */
@@ -1669,6 +1669,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 #ifdef NTHREADED
     void *next_inst = 0;
 #else
+    module *current_module = 0;
     void *next_inst = &&IUNKNOWN;
 #endif
 
@@ -1762,11 +1763,19 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
 #ifndef NTHREADED
         {
+            module *mod = context->modules[mod_index];
             size_t i = 0, j;
+            if (!mod->prepared_dispatch && mod->segment.inst_size) {
+                mod->prepared_dispatch = malloc(sizeof(void *) * mod->segment.inst_size);
+                if (!mod->prepared_dispatch) {
+                    fprintf(stderr, "PANIC: Out of memory\n");
+                    exit(-1);
+                }
+            }
             while (i < context->modules[mod_index]->segment.inst_size) {
                 j = i;
                 i += context->modules[mod_index]->segment.binary[i].instruction.no_ops + 1;
-                context->modules[mod_index]->segment.binary[j].impl_address =
+                mod->prepared_dispatch[j] =
                         (void *)address_map[context->modules[mod_index]->segment
                                 .binary[j].instruction.opcode];
             }
@@ -1789,13 +1798,15 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
         for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
             int i = context->modules[mod_index]->proc_head;
             while (i != -1) {
-                procedure =
+                proc_constant *definition =
                         (proc_constant *) (context->modules[mod_index]->segment.const_pool +
                                            i);
-                if (procedure->base.type == PROC_CONST &&
-                    strcmp(procedure->name, "main") == 0)
+                if (definition->base.type == PROC_CONST &&
+                    strcmp(definition->name, "main") == 0) {
+                    procedure = context->modules[mod_index]->proc_runtime_lookup[i >> 3];
                     break;
-                i = procedure->next;
+                }
+                i = definition->next;
                 procedure = 0;
             }
             if (procedure) break;
@@ -1854,6 +1865,9 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
     /* Start */
     DEBUG("Starting inst# %s-0x%x\n", procedure->binarySpace->module->name, (int) procedure->start);
+#ifndef NTHREADED
+    current_module = current_frame->procedure->binarySpace->module;
+#endif
     next_pc = &(current_frame->procedure->binarySpace->binary[procedure->start]);
 
     CALC_DISPATCH_MANUAL
@@ -1950,7 +1964,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
         case RXSIGNAL_RESPONSE_CALL: {
             /* Call */
-            proc_constant *intr_function = current_frame->interrupt_table[last_interrupt-1].function;
+            proc_runtime *intr_function = current_frame->interrupt_table[last_interrupt-1].function;
             DEBUG("TRACE - INTR HANDLER -> CALL %s->%s()\n", interrupt_to_string(last_interrupt), intr_function->name);
 
             if (intr_function->start == SIZE_MAX) {
@@ -1985,6 +1999,9 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                 current_frame = frame_f(intr_function, 1, current_frame, pc, 0);
 
                 /* Prepare dispatch to procedure as early as possible */
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 next_pc = &(current_frame->procedure->binarySpace->binary[intr_function->start]);
                 CALC_DISPATCH_MANUAL
 
@@ -2011,7 +2028,6 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             {
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
-                CALC_DISPATCH_MANUAL
                 // Note that current_frame->is_interrupt cannot be set as a signal triggers us
                 /* back to the parent's stack frame */
                 temp_frame = current_frame;
@@ -2035,6 +2051,10 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                     goto interprt_finished;
                 }
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
+                CALC_DISPATCH_MANUAL
                 DISPATCH
             }
 
@@ -2060,7 +2080,7 @@ START_OF_INSTRUCTIONS
         /* Enable Breakpoints with op1 handler */
         START_INSTRUCTION(BPON_FUNC) CALC_DISPATCH(1)
             {
-                proc_constant *signal_function = PROC_OP(1);
+                proc_runtime *signal_function = PROC_OP(1);
                 DEBUG("TRACE - BPON %s()\n", signal_function->name);
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_CALL;
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].function = signal_function;
@@ -2138,7 +2158,7 @@ START_OF_INSTRUCTIONS
         /* Set Signal op2 Handle to Call op1 */
         START_INSTRUCTION(SIGCALL_FUNC_STRING) CALC_DISPATCH(2)
             {
-                proc_constant *signal_function = PROC_OP(1);
+                proc_runtime *signal_function = PROC_OP(1);
                 DEBUG("TRACE - SIGCALL %s(),\"%.*s\"\n", signal_function->name, (int)op2S->string_len, op2S->string);
 
                 size_t sig = string_to_interrupt(op2S->string);
@@ -2157,7 +2177,7 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(SIGCALLBR_ID_FUNC_STRING) CALC_DISPATCH(3)
             DEBUG("TRACE - SIGCALLBR 0x%x,%s(),\"%.*s\"\n", (unsigned int)REG_IDX(1), PROC_OP(2)->name, (int)op3S->string_len, op3S->string);
             {
-                proc_constant *signal_function = PROC_OP(2);
+                proc_runtime *signal_function = PROC_OP(2);
                 size_t sig = string_to_interrupt(op3S->string);
                 if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
@@ -2253,11 +2273,19 @@ START_OF_INSTRUCTIONS
                     int mod;
                     DEBUG("Threading\n");
                     for (mod = num_modules_before; mod < op1R->int_value; mod++) {
+                        module *loaded_module = context->modules[mod];
                         size_t i = 0, j;
+                        if (!loaded_module->prepared_dispatch && loaded_module->segment.inst_size) {
+                            loaded_module->prepared_dispatch = malloc(sizeof(void *) * loaded_module->segment.inst_size);
+                            if (!loaded_module->prepared_dispatch) {
+                                fprintf(stderr, "PANIC: Out of memory\n");
+                                exit(-1);
+                            }
+                        }
                         while (i < context->modules[mod]->segment.inst_size) {
                             j = i;
                             i += context->modules[mod]->segment.binary[i].instruction.no_ops + 1;
-                            context->modules[mod]->segment.binary[j].impl_address =
+                            loaded_module->prepared_dispatch[j] =
                                 (void *) address_map[context->modules[mod]->segment.binary[j].instruction.opcode];
                         }
                     }
@@ -2271,26 +2299,7 @@ START_OF_INSTRUCTIONS
             DEBUG("TRACE - METALOADINST R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
                 bin_code inst = context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value];
-#ifdef NTHREADED
-                /* Bytecode Version */
                 op1R->int_value = inst.instruction.opcode;
-#else
-                /* Threaded Version - basically we are unthreading, finding the
-                 * instruction with the corresponding implementation address
-                 * (quite slow ... but not an instruction used in normal code */
-                void *impl;
-                size_t a;
-                size_t num_instructions;
-                op1R->int_value = 0;
-                impl = inst.impl_address;
-                num_instructions = sizeof(address_map) / sizeof(address_map[0]);
-                for (a = 0; a < num_instructions; a++) {
-                    if (address_map[a] == impl) {
-                        op1R->int_value = (rxinteger)a;
-                        break;
-                    }
-                }
-#endif
             }
             DISPATCH
 
@@ -2354,7 +2363,8 @@ START_OF_INSTRUCTIONS
                             entry = op1R->attributes[entries];
                             set_num_attributes(entry, 2);
                             set_null_string(entry->attributes[0], e_entry->index);
-                            entry->attributes[1]->int_value = (rxinteger) p_entry;
+                            entry->attributes[1]->int_value =
+                                    (rxinteger) context->modules[mod]->proc_runtime_lookup[e_entry->procedure >> 3];
 
                             entries++;
                         }
@@ -2406,7 +2416,8 @@ START_OF_INSTRUCTIONS
                         entry = op1R->attributes[entries];
                         set_num_attributes(entry, 2);
                         set_null_string(entry->attributes[0], p_entry->name);
-                        entry->attributes[1]->int_value = (rxinteger) p_entry;
+                        entry->attributes[1]->int_value =
+                                (rxinteger) context->modules[mod]->proc_runtime_lookup[i >> 3];
                         entries++;
                     }
                     i = p_entry->next;
@@ -3624,7 +3635,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
        START_INSTRUCTION(CALL_FUNC) CALC_DISPATCH(1)
             /* New stackframe - grabbing procedure object from the caller frame */
             {
-                proc_constant *called_function = PROC_OP(1);
+                proc_runtime *called_function = PROC_OP(1);
                 DEBUG("TRACE - CALL %s()\n", called_function->name);
                 if (called_function->start == SIZE_MAX) {
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name)
@@ -3638,6 +3649,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     /* This is a CREXX Procedure */
                     current_frame = frame_f(called_function, 0, current_frame, next_pc, 0);
                     /* Prepare dispatch to procedure as early as possible */
+#ifndef NTHREADED
+                    current_module = current_frame->procedure->binarySpace->module;
+#endif
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                     CALC_DISPATCH_MANUAL
                     /* No Arguments - so nothing to do */
@@ -3650,7 +3664,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 /* Clear target return value register */
                 value_zero(op1R);
 
-                proc_constant *called_function = PROC_OP(2);
+                proc_runtime *called_function = PROC_OP(2);
                 DEBUG("TRACE - CALL R%lu,%s()\n", REG_IDX(1), called_function->name);
 
                 if (called_function->start == SIZE_MAX) {
@@ -3668,6 +3682,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame = frame_f(called_function, 0, current_frame, next_pc, op1R);
 
                     /* Prepare dispatch to procedure as early as possible */
+#ifndef NTHREADED
+                    current_module = current_frame->procedure->binarySpace->module;
+#endif
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                     CALC_DISPATCH_MANUAL
                     /* No Arguments - so nothing to do */
@@ -3677,7 +3694,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
 
         START_INSTRUCTION(CALL_REG_FUNC_REG) CALC_DISPATCH(3)
             {
-                proc_constant *called_function = PROC_OP(2);
+                proc_runtime *called_function = PROC_OP(2);
                 DEBUG("TRACE - CALL R%lu,%s,R%lu\n", REG_IDX(1), called_function->name, REG_IDX(3));
                 if (called_function->start == SIZE_MAX) {
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
@@ -3694,6 +3711,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     /* New stackframe - grabbing a procedure object from the caller frame */
                     current_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
                     /* Prepare dispatch to procedure as early as possible */
+#ifndef NTHREADED
+                    current_module = current_frame->procedure->binarySpace->module;
+#endif
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                     CALC_DISPATCH_MANUAL
 
@@ -3715,7 +3735,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(DCALL_REG_REG_REG) CALC_DISPATCH(3)
             {
                 /* Function pointer is in register 2 */
-                proc_constant *called_function = (proc_constant *) op2R->int_value;
+                proc_runtime *called_function = (proc_runtime *) op2R->int_value;
                 DEBUG("TRACE - DCALL R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
                 if (called_function->start == SIZE_MAX) {
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
@@ -3732,6 +3752,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
 
                     /* Prepare dispatch to procedure as early as possible */
+#ifndef NTHREADED
+                    current_module = current_frame->procedure->binarySpace->module;
+#endif
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                     CALC_DISPATCH_MANUAL
 
@@ -3789,6 +3812,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     goto interprt_finished;
                 }
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 CALC_DISPATCH_MANUAL
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
@@ -3858,6 +3884,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame->decimal->syncNumericContext(current_frame->decimal);
                 }
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 CALC_DISPATCH_MANUAL
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
@@ -3916,6 +3945,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame->decimal->syncNumericContext(current_frame->decimal);
                 }
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 CALC_DISPATCH_MANUAL
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
@@ -3975,6 +4007,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame->decimal->syncNumericContext(current_frame->decimal);
                 }
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 CALC_DISPATCH_MANUAL
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
@@ -4034,6 +4069,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame->decimal->syncNumericContext(current_frame->decimal);
                 }
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 CALC_DISPATCH_MANUAL
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
@@ -7385,7 +7423,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
 
         START_INSTRUCTION(SRCMETHOD_REG_REG_STRING) CALC_DISPATCH(3)
             {
-                proc_constant *called_function;
+                proc_runtime *called_function;
                 const char *class_name;
                 size_t class_name_length;
 
@@ -7433,7 +7471,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
 
         START_INSTRUCTION(SRCFPROC_REG_STRING_REG) CALC_DISPATCH(3)
             {
-                proc_constant *called_function;
+                proc_runtime *called_function;
                 char *error_message;
 
                 DEBUG("TRACE - SRCFPROC R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
@@ -7672,19 +7710,18 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     /* We need to loop through each procedure in each module */
     DEBUG("Deallocating Frames and Registers\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i = context->modules[mod_index]->proc_head;
-        while (i != -1) {
-            proc_constant *c_entry = (proc_constant*) (context->modules[mod_index]->segment.const_pool + i);
-            if ((c_entry)->start != SIZE_MAX) {
+        size_t i;
+        for (i = 0; i < context->modules[mod_index]->procedure_count; i++) {
+            proc_runtime *runtime_proc = &context->modules[mod_index]->procedures[i];
+            if (runtime_proc->frame_free_list == &runtime_proc->frame_free_list_head) {
                 /* Free frames in the procedures free list */
-                while (*(c_entry->frame_free_list)) {
-                    temp_frame = *(c_entry->frame_free_list);
-                    *(c_entry->frame_free_list) = temp_frame->prev_free;
+                while (*(runtime_proc->frame_free_list)) {
+                    temp_frame = *(runtime_proc->frame_free_list);
+                    *(runtime_proc->frame_free_list) = temp_frame->prev_free;
                     clear_frame(temp_frame);
                     free(temp_frame);
                 }
             }
-            i = c_entry->next;
         }
     }
 

@@ -25,8 +25,8 @@ struct module* rxvm_load_file(struct rxvm_context* ctx, char* filename);
 int rxvm_link(struct rxvm_context* ctx);
 
 /* --- Phase 3: Preparation (Threading) --- */
-/* Performs Opcode-to-Pointer transformation for threaded execution. */
-/* This operation is destructive but idempotent (guarded by state flags). */
+/* Populates runtime dispatch side tables for threaded execution. */
+/* This operation is non-destructive and idempotent (guarded by state flags). */
 /* Returns 0 on success, non-zero on error. */
 int rxvm_prepare(struct rxvm_context* ctx);
 

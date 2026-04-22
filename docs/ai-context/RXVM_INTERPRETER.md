@@ -1,6 +1,6 @@
 # cREXX Virtual Machine (Interpreter) Architecture
 
-The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design emphasizes performance through direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing.
+The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design emphasizes performance through direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. As of `rxbin` format `003`, serialized module data and runtime-only execution state are explicitly separated.
 
 ## 1. VM Lifecycle
 
@@ -8,7 +8,7 @@ The execution of a program within `rxvm` is handled in discrete phases (as defin
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
 2. **Loading**: `rxvm_load()` ingests a `.rxbin` binary file, loading it into an internal `module` struct, resolving the constant pool and the bytecode instruction stream.
 3. **Linking**: `rxvm_link()` traverses newly loaded modules to resolve exports and external imports into a unified memory map. The call is now dirty-checked, so repeated bridge/runtime entry points become fast no-ops when no module state changed.
-4. **Preparation**: `rxvm_prepare()` optionally patches the bytecodes into direct threading pointers for maximum speed.
+4. **Preparation**: `rxvm_prepare()` optionally populates per-module dispatch side tables for maximum speed without mutating serialized bytecode.
 5. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure (typically `main`) and launch the main interpreter loop.
 
 ## 2. Core Internal Structs
@@ -35,6 +35,24 @@ typedef struct rxvm_context {
 track when the interface method and factory caches need rebuilding. This keeps
 repeated `rxvm_link()` calls cheap while still supporting late module loading.
 
+### `proc_runtime`
+Serialized `PROC_CONST` entries now remain metadata-only. During module load,
+`rxvm` builds a parallel `proc_runtime` table that carries execution-only
+state such as resolved code ownership, prepared entry addresses, and frame
+recycling lists.
+
+```c
+typedef struct proc_runtime {
+    proc_constant *definition;      /* Serialized procedure metadata */
+    int locals;                     /* Resolved local-register count */
+    bin_space *binarySpace;         /* Owning code segment, or NULL for native */
+    stack_frame **frame_free_list;  /* Shared frame recycler head */
+    stack_frame *frame_free_list_head;
+    size_t start;                   /* Resolved code address / native entry */
+    char *name;                     /* Cached pointer to definition->name */
+} proc_runtime;
+```
+
 ### `stack_frame`
 To minimize heap allocation overhead, the VM uses a custom call stack model. `stack_frame` structs maintain scope, local variables, and return state. When a function returns, the `stack_frame` is not immediately freed; it is placed onto a `frame_free_list` associated with the procedure, allowing the VM to rapidly reuse stack blocks for repeated calls.
 
@@ -42,7 +60,7 @@ To minimize heap allocation overhead, the VM uses a custom call stack model. `st
 struct stack_frame {
     stack_frame *prev_free;          /* Pointer to next free recycled frame */
     stack_frame *parent;             /* Caller stack frame */
-    proc_constant *procedure;        /* Executing procedure metadata */
+    proc_runtime *procedure;         /* Executing runtime procedure state */
     bin_code *return_pc;             /* Program Counter to return to */
     value *return_reg;               /* Target register for return values */
     size_t number_locals;            /* Number of local registers */
@@ -94,14 +112,14 @@ The core execution engine lives in `run()` within `interpreter/rxvmintp.c`.
 
 ### Threaded vs Bytecode Dispatch
 The VM uses conditional compilation (`#ifdef NTHREADED`) to flip between two execution models:
-1. **Direct Threading (Default/Fast Mode)**: During the "Preparation" phase, opcodes are statically replaced with C `void*` pointers targeting the exact `&&label` implementing the opcode instruction. The instruction dispatch reduces to an incredibly fast computed goto: `goto *next_inst;`.
+1. **Direct Threading (Default/Fast Mode)**: During the "Preparation" phase, `rxvm_prepare()` fills a per-module `prepared_dispatch` array with C `void*` pointers targeting the exact `&&label` implementing each opcode. The instruction dispatch reduces to an incredibly fast computed goto: `goto *next_inst;`.
 2. **Standard Bytecode Mode (`NTHREADED`)**: Operates via a massive standard C `switch(opcode)` statement wrapped in a while loop.
 
 ### Dispatch Macros
 Instructions are executed via macro-driven blocks. For example, moving to the next instruction looks like:
 
 ```c
-#define CALC_DISPATCH(n) { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }
+#define CALC_DISPATCH(n) { next_pc = pc + (n) + 1; next_inst = current_module->prepared_dispatch[next_pc - current_module->segment.binary]; }
 #define DISPATCH         { pc = next_pc; goto *(interrupts && !current_frame->is_interrupt)?&&INTERRUPT:next_inst; }
 ```
 `DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively.
@@ -123,7 +141,7 @@ In this example:
 
 ### Pooled float operands
 
-As of `rxbin` format `002`, float literals are loaded from the constant pool
+As of `rxbin` format `002` and later, float literals are loaded from the constant pool
 instead of being stored inline in operand slots. The bytecode still keeps the
 same instruction formats (`FMT_F`, `FMT_R_F`, `FMT_R_R_F`, etc.), but the
 operand slot now contains an index into a `FLOAT_CONST` record in
@@ -145,7 +163,7 @@ of the older object model:
   or `.object`
 - `ASSERTTYPE_REG_STRING` raises `CONVERSION_ERROR` on a failed object cast
 
-`srcmethod` and `srcfproc` both return a `proc_constant *` in a normal
+`srcmethod` and `srcfproc` both return a `proc_runtime *` in a normal
 register, and the existing `dcall` path performs the actual invocation.
 
 ### Current `srcmethod` semantics
