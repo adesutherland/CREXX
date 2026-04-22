@@ -30,7 +30,7 @@
  
  /* defaults for options for this program */
  native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
- execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=0;decimal=1
+ execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=1;decimal=1
  binfiles='';lastfile=0;sourceRoots='';binaryRoots='';importRxas=0
  
  esc             = '1b'X
