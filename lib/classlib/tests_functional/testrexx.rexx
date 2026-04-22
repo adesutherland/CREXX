@@ -31,15 +31,15 @@ testrexx: class
     flag=.boolean
     flag = 1
     p1=.rexx('Print'); p2=.rexx('PRINT')
-    flag=flag & (p1.abbrev('Pri')='1')
-    flag=flag & (p2.abbrev('Pri')='0')
-    flag=flag & (p2.abbrev('PRI',2)='1')
-    flag=flag & (p2.abbrev('PRI',3)='1')
-    flag=flag & (p2.abbrev('PRI',4)='0')
-    flag=flag & (p2.abbrev('PRY')='0')
-    flag=flag & (p2.abbrev('')='1')
-    flag=flag & (p2.abbrev('',0)='1')
-    flag=flag & (p2.abbrev('',1)='0')
+    flag=flag & (p1.abbrev('Pri')=='1')
+    flag=flag & (p2.abbrev('Pri')=='0')
+    flag=flag & (p2.abbrev('PRI',2)=='1')
+    flag=flag & (p2.abbrev('PRI',3)=='1')
+    flag=flag & (p2.abbrev('PRI',4)=='0')
+    flag=flag & (p2.abbrev('PRY')=='0')
+    flag=flag & (p2.abbrev('')=='1')
+    flag=flag & (p2.abbrev('',0)=='1')
+    flag=flag & (p2.abbrev('',1)=='0')
     return \flag
 
   t_abs: method = .int
