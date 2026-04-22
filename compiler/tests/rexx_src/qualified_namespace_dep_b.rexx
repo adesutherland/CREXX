@@ -12,12 +12,12 @@ widget: class
   describe: method = .string
     return _name
 
-create: procedure = .qnsb::widget
+create: procedure = .qnsb..widget
   arg name = .string
-  value = .qnsb::widget
+  value = .qnsb..widget
   value = .widget(name)
   return value
 
 describe: procedure = .string
-  arg value = .qnsb::widget
+  arg value = .qnsb..widget
   return value.describe()

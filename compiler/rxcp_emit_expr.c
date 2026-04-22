@@ -80,7 +80,7 @@ static char *build_interface_factory_selector(ASTNode *node) {
     if (!iface_name) return 0;
 
     if (node->association && node->association->node_string && node->association->node_string_length) {
-        selector = mprintf("%s::%.*s",
+        selector = mprintf("%s..%.*s",
                            iface_name,
                            (int) node->association->node_string_length,
                            node->association->node_string);
@@ -90,6 +90,37 @@ static char *build_interface_factory_selector(ASTNode *node) {
 
     free(iface_name);
     return selector;
+}
+
+static char *build_source_type_name(ValueType type, const char *internal_class_name) {
+    if (type == TP_OBJECT && internal_class_name) {
+        return rxcp_internal_name_to_source_qualified(internal_class_name, 1);
+    }
+
+    return strdup(type_nm(type));
+}
+
+static int is_builtin_object_contract_name(const char *name) {
+    return name &&
+           (strcmp(name, "object") == 0 ||
+            strcmp(name, ".object") == 0);
+}
+
+static char *resolve_object_contract_name(ASTNode *type_node) {
+    Symbol *symbol;
+
+    if (!type_node) return 0;
+    symbol = type_node->symbolNode ? type_node->symbolNode->symbol : 0;
+    if (!symbol && type_node->context && type_node->context->ast) {
+        symbol = sym_rvfc(type_node->context->ast, type_node);
+    }
+    if (symbol) {
+        return sym_frnm(symbol);
+    }
+    if (type_node->target_class) {
+        return strdup(type_node->target_class);
+    }
+    return 0;
 }
 
 void emit_expression(ASTNode *node, void *payload) {
@@ -259,7 +290,7 @@ void emit_expression(ASTNode *node, void *payload) {
                         call_name = sym_frnm(node->symbolNode->symbol);
                     } else {
                         /* For PROCEDURE, preserve case if possible */
-                        if (node->node_string && strstr(node->node_string, "::")) {
+                        if (node->node_string && rxcp_source_symbol_is_qualified(node->node_string, node->node_string_length)) {
                             call_name = strdup(node->symbolNode->symbol->name);
                         } else if (node->node_string) {
                             size_t start = 0;
@@ -742,6 +773,125 @@ void emit_expression(ASTNode *node, void *payload) {
             free(temp1);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
 
+            type_promotion(node);
+            break;
+
+        case OP_TYPE_CAST:
+            temp2 = 0;
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+
+            if (node->register_type != child1->register_type ||
+                node->register_num != child1->register_num) {
+                char *child_prefix = type_to_prefix(child1->value_type);
+                temp1 = mprintf("   %scopy %c%d,%c%d\n",
+                                child_prefix,
+                                node->register_type,
+                                node->register_num,
+                                child1->register_type,
+                                child1->register_num);
+                output_append_text(node->output, temp1);
+                free(temp1);
+            }
+
+            if (node->target_type == TP_OBJECT &&
+                node->target_class &&
+                !is_builtin_object_contract_name(node->target_class)) {
+                temp2 = resolve_object_contract_name(child2);
+                if (!temp2) temp2 = strdup(node->target_class);
+                temp1 = mprintf("   asserttype %c%d,\"%s\"\n",
+                                node->register_type,
+                                node->register_num,
+                                temp2 ? temp2 : node->target_class);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                if (temp2) free(temp2);
+            } else if (node->target_type != TP_OBJECT) {
+                const char *promotion = emit_promotion[child1->value_type][node->target_type];
+                if (promotion) {
+                    temp1 = mprintf("   %s %c%d\n",
+                                    promotion,
+                                    node->register_type,
+                                    node->register_num);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                }
+            }
+
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            break;
+
+        case OP_TYPE_IS:
+            temp2 = 0;
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+
+            if (child2 &&
+                child2->target_type == TP_OBJECT &&
+                child2->target_class &&
+                !is_builtin_object_contract_name(child2->target_class) &&
+                child1 &&
+                child1->value_type == TP_OBJECT) {
+                temp2 = resolve_object_contract_name(child2);
+                if (!temp2) temp2 = strdup(child2->target_class);
+                temp1 = mprintf("   istype %c%d,%c%d,\"%s\"\n",
+                                node->register_type,
+                                node->register_num,
+                                child1->register_type,
+                                child1->register_num,
+                                temp2 ? temp2 : child2->target_class);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                if (temp2) free(temp2);
+            } else {
+                int matches = 0;
+
+                if (child2 && child2->target_type == TP_OBJECT) {
+                    matches = child1 &&
+                              child1->value_type == TP_OBJECT &&
+                              (!child2->target_class ||
+                               is_builtin_object_contract_name(child2->target_class));
+                } else if (child2 && child1) {
+                    matches = child1->value_type == child2->target_type;
+                }
+
+                temp1 = mprintf("   load %c%d,%d\n",
+                                node->register_type,
+                                node->register_num,
+                                matches);
+                output_append_text(node->output, temp1);
+                free(temp1);
+            }
+
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            type_promotion(node);
+            break;
+
+        case OP_TYPEOF:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+
+            if (child1 && child1->value_type == TP_OBJECT) {
+                temp1 = mprintf("   typeof %c%d,%c%d\n",
+                                node->register_type,
+                                node->register_num,
+                                child1->register_type,
+                                child1->register_num);
+                output_append_text(node->output, temp1);
+                free(temp1);
+            } else {
+                temp2 = build_source_type_name(child1 ? child1->value_type : TP_UNKNOWN, 0);
+                if (!temp2) break;
+                temp1 = mprintf("   load %c%d,\"%s\"\n",
+                                node->register_type,
+                                node->register_num,
+                                temp2);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                free(temp2);
+            }
+
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
             type_promotion(node);
             break;
 

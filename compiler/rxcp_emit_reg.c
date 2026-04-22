@@ -436,6 +436,11 @@ walker_result register_walker(walker_direction direction,
                 if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER; /* Don't assign register */
                 break;
 
+            case OP_TYPE_IS:
+            case OP_TYPE_CAST:
+                if (child2) child2->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
             default:
                 ;
         }
@@ -641,6 +646,19 @@ walker_result register_walker(walker_direction direction,
                     node->register_num = get_reg(node->scope);
 
                 /* Release child registers */
+                return_child_reg(child1);
+                break;
+
+            case OP_TYPE_IS:
+            case OP_TYPEOF:
+                if (node->register_num != DONT_ASSIGN_REGISTER)
+                    node->register_num = get_reg(node->scope);
+                return_child_reg(child1);
+                break;
+
+            case OP_TYPE_CAST:
+                if (node->register_num != DONT_ASSIGN_REGISTER)
+                    node->register_num = get_reg(node->scope);
                 return_child_reg(child1);
                 break;
 

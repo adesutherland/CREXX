@@ -74,6 +74,8 @@ int rxvm_link(rxvm_context *ctx);
 #undef SAFE_RECYCLED_STACKFRAMES
 
 /* Misc. Utilities here */
+static string_constant *get_runtime_string_constant(module *mod, size_t offset);
+
 static char *build_runtime_member_name(const char *class_name, size_t class_name_length,
                                        const char *member_name, size_t member_name_length) {
     char *proc_name;
@@ -159,6 +161,252 @@ static char *build_interface_factory_error(const char *prefix,
     memcpy(buffer, prefix, prefix_length);
     memcpy(buffer + prefix_length, interface_name, interface_name_length);
     buffer[prefix_length + interface_name_length] = 0;
+    return buffer;
+}
+
+static int runtime_type_name_is_builtin(const char *type_name, size_t type_name_length) {
+    static const char *builtins[] = {
+            ".boolean", ".int", ".float", ".decimal", ".string",
+            ".binary", ".object", ".void", ".unknown", 0
+    };
+    size_t i;
+
+    if (!type_name) return 0;
+
+    for (i = 0; builtins[i]; i++) {
+        if (strlen(builtins[i]) == type_name_length &&
+            memcmp(builtins[i], type_name, type_name_length) == 0) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static char *runtime_normalize_type_name(const char *type_name, size_t type_name_length) {
+    size_t i;
+    size_t out_length;
+    char *normalized;
+    size_t out_index;
+    size_t start;
+
+    if (!type_name) return 0;
+    if (runtime_type_name_is_builtin(type_name, type_name_length)) {
+        return dup_runtime_name(type_name, type_name_length);
+    }
+
+    start = (type_name_length > 0 && type_name[0] == '.') ? 1 : 0;
+    normalized = malloc(type_name_length + 1);
+    if (!normalized) return 0;
+
+    out_index = 0;
+    for (i = start; i < type_name_length; i++) {
+        if (i + 1 < type_name_length &&
+            ((type_name[i] == ':' && type_name[i + 1] == ':') ||
+             (type_name[i] == '.' && type_name[i + 1] == '.'))) {
+            normalized[out_index++] = '.';
+            i++;
+        } else {
+            normalized[out_index++] = type_name[i];
+        }
+    }
+
+    out_length = out_index;
+    normalized[out_length] = 0;
+    return normalized;
+}
+
+static char *runtime_internal_type_to_source_name(const char *type_name, size_t type_name_length) {
+    size_t dots = 0;
+    size_t i;
+    char *source_name;
+    size_t out_index;
+
+    if (!type_name) return 0;
+    if (runtime_type_name_is_builtin(type_name, type_name_length)) {
+        return dup_runtime_name(type_name, type_name_length);
+    }
+
+    for (i = 0; i < type_name_length; i++) {
+        if (type_name[i] == '.') dots++;
+    }
+
+    source_name = malloc(type_name_length + dots + 2);
+    if (!source_name) return 0;
+
+    out_index = 0;
+    source_name[out_index++] = '.';
+    for (i = 0; i < type_name_length; i++) {
+        if (type_name[i] == '.') {
+            source_name[out_index++] = '.';
+            source_name[out_index++] = '.';
+        } else {
+            source_name[out_index++] = type_name[i];
+        }
+    }
+    source_name[out_index] = 0;
+
+    return source_name;
+}
+
+typedef enum runtime_contract_kind {
+    RUNTIME_CONTRACT_UNKNOWN = 0,
+    RUNTIME_CONTRACT_CLASS,
+    RUNTIME_CONTRACT_INTERFACE
+} runtime_contract_kind;
+
+static runtime_contract_kind runtime_lookup_contract_kind(rxvm_context *context,
+                                                          const char *type_name,
+                                                          size_t type_name_length) {
+    size_t mod_index;
+
+    if (!context || !type_name || !type_name_length) return RUNTIME_CONTRACT_UNKNOWN;
+
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        module *mod = context->modules[mod_index];
+        int meta_ix = mod->meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+
+            if (meta->base.type == META_CLASS || meta->base.type == META_INTERFACE) {
+                size_t symbol_index = 0;
+                string_constant *symbol_name;
+
+                if (meta->base.type == META_CLASS) {
+                    symbol_index = ((meta_class_constant *) meta)->symbol;
+                } else {
+                    symbol_index = ((meta_interface_constant *) meta)->symbol;
+                }
+
+                symbol_name = get_runtime_string_constant(mod, symbol_index);
+                if (symbol_name &&
+                    symbol_name->string_len == type_name_length &&
+                    memcmp(symbol_name->string, type_name, type_name_length) == 0) {
+                    return meta->base.type == META_CLASS ? RUNTIME_CONTRACT_CLASS : RUNTIME_CONTRACT_INTERFACE;
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
+    return RUNTIME_CONTRACT_UNKNOWN;
+}
+
+static int runtime_class_implements_interface(rxvm_context *context,
+                                              const char *class_name,
+                                              size_t class_name_length,
+                                              const char *interface_name,
+                                              size_t interface_name_length) {
+    size_t mod_index;
+
+    if (!context || !class_name || !interface_name) return 0;
+
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        module *mod = context->modules[mod_index];
+        int meta_ix = mod->meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+
+            if (meta->base.type == META_IMPLEMENTS) {
+                meta_implements_constant *impl_meta = (meta_implements_constant *) meta;
+                string_constant *class_symbol = get_runtime_string_constant(mod, impl_meta->symbol);
+                string_constant *interface_symbol = get_runtime_string_constant(mod, impl_meta->interface_symbol);
+
+                if (class_symbol && interface_symbol &&
+                    class_symbol->string_len == class_name_length &&
+                    interface_symbol->string_len == interface_name_length &&
+                    memcmp(class_symbol->string, class_name, class_name_length) == 0 &&
+                    memcmp(interface_symbol->string, interface_name, interface_name_length) == 0) {
+                    return 1;
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
+    return 0;
+}
+
+static int runtime_value_matches_object_type(rxvm_context *context,
+                                             value *object_value,
+                                             const char *type_name,
+                                             size_t type_name_length) {
+    char *normalized_type_name;
+    runtime_contract_kind kind;
+    int matches;
+
+    if (!object_value || !type_name || !type_name_length) return 0;
+    if (context->link_dirty || context->interface_method_registry_dirty || context->interface_factory_registry_dirty) {
+        rxvm_link(context);
+    }
+
+    normalized_type_name = runtime_normalize_type_name(type_name, type_name_length);
+    if (!normalized_type_name) return 0;
+
+    if (strcmp(normalized_type_name, ".object") == 0) {
+        free(normalized_type_name);
+        return object_value->object_type_name && object_value->object_type_name_length > 0;
+    }
+
+    if (runtime_type_name_is_builtin(normalized_type_name, strlen(normalized_type_name))) {
+        free(normalized_type_name);
+        return 0;
+    }
+
+    matches = 0;
+    if (object_value->object_type_name && object_value->object_type_name_length > 0) {
+        kind = runtime_lookup_contract_kind(context, normalized_type_name, strlen(normalized_type_name));
+        if (kind == RUNTIME_CONTRACT_INTERFACE) {
+            matches = runtime_class_implements_interface(context,
+                                                         object_value->object_type_name,
+                                                         object_value->object_type_name_length,
+                                                         normalized_type_name,
+                                                         strlen(normalized_type_name));
+        } else {
+            matches = (object_value->object_type_name_length == strlen(normalized_type_name) &&
+                       memcmp(object_value->object_type_name, normalized_type_name,
+                              object_value->object_type_name_length) == 0);
+        }
+    }
+
+    free(normalized_type_name);
+    return matches;
+}
+
+static char *build_runtime_cast_error(value *object_value,
+                                      const char *target_type_name,
+                                      size_t target_type_name_length) {
+    char *target_source_name;
+    char *source_type_name;
+    char *buffer;
+    size_t buffer_length;
+
+    target_source_name = runtime_internal_type_to_source_name(target_type_name, target_type_name_length);
+    if (!target_source_name) return 0;
+
+    if (object_value && object_value->object_type_name && object_value->object_type_name_length > 0) {
+        source_type_name = runtime_internal_type_to_source_name(object_value->object_type_name,
+                                                                object_value->object_type_name_length);
+    } else {
+        source_type_name = strdup(".object");
+    }
+
+    if (!source_type_name) {
+        free(target_source_name);
+        return 0;
+    }
+
+    buffer_length = strlen("Cannot cast ") + strlen(source_type_name) + strlen(" to ") + strlen(target_source_name) + 1;
+    buffer = malloc(buffer_length);
+    if (buffer) {
+        snprintf(buffer, buffer_length, "Cannot cast %s to %s", source_type_name, target_source_name);
+    }
+    free(source_type_name);
+    free(target_source_name);
     return buffer;
 }
 
@@ -708,6 +956,8 @@ static void parse_runtime_factory_selector(const char *selector,
                                            size_t *interface_name_length,
                                            const char **factory_name,
                                            size_t *factory_name_length) {
+    const char *selector_start;
+    const char *selector_end;
     const char *sep;
 
     if (interface_name) *interface_name = selector;
@@ -717,13 +967,23 @@ static void parse_runtime_factory_selector(const char *selector,
 
     if (!selector || !selector_length) return;
 
-    sep = strstr(selector, "::");
+    selector_start = selector;
+    selector_end = selector_start + selector_length;
+    sep = 0;
+    while (!sep && selector + 1 < selector_end) {
+        if ((selector[0] == ':' && selector[1] == ':') ||
+            (selector[0] == '.' && selector[1] == '.')) {
+            sep = selector;
+            break;
+        }
+        selector++;
+    }
     if (!sep) return;
 
-    if (interface_name) *interface_name = selector;
-    if (interface_name_length) *interface_name_length = (size_t) (sep - selector);
+    if (interface_name) *interface_name = selector_start;
+    if (interface_name_length) *interface_name_length = (size_t) (sep - selector_start);
     if (factory_name) *factory_name = sep + 2;
-    if (factory_name_length) *factory_name_length = selector_length - ((size_t) (sep - selector) + 2);
+    if (factory_name_length) *factory_name_length = selector_length - ((size_t) (sep - selector_start) + 2);
 }
 
 static int resolve_runtime_factory(rxvm_context *context,
@@ -7200,9 +7460,55 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             }
             DISPATCH
 
-        RESERVED_IMPL(RESERVED_059)
-        RESERVED_IMPL(RESERVED_060)
-        RESERVED_IMPL(RESERVED_061)
+        START_INSTRUCTION(TYPEOF_REG_REG) CALC_DISPATCH(2)
+            {
+                char *type_name;
+
+                DEBUG("TRACE - TYPEOF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+
+                if (op2R->object_type_name && op2R->object_type_name_length > 0) {
+                    type_name = runtime_internal_type_to_source_name(op2R->object_type_name,
+                                                                     op2R->object_type_name_length);
+                } else {
+                    type_name = strdup(".object");
+                }
+
+                if (!type_name) {
+                    SET_SIGNAL(RXSIGNAL_FAILURE);
+                    DISPATCH
+                }
+
+                value_zero(op1R);
+                set_null_string(op1R, type_name);
+                free(type_name);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(ISTYPE_REG_REG_STRING) CALC_DISPATCH(3)
+            DEBUG("TRACE - ISTYPE R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
+                  (int) op3S->string_len, op3S->string);
+            value_zero(op1R);
+            set_int(op1R, runtime_value_matches_object_type(context,
+                                                            op2R,
+                                                            op3S->string,
+                                                            op3S->string_len));
+            DISPATCH
+
+        START_INSTRUCTION(ASSERTTYPE_REG_STRING) CALC_DISPATCH(2)
+            DEBUG("TRACE - ASSERTTYPE R%lu,\"%.*s\"\n", REG_IDX(1),
+                  (int) op2S->string_len, op2S->string);
+            if (!runtime_value_matches_object_type(context, op1R, op2S->string, op2S->string_len)) {
+                char *error_message = build_runtime_cast_error(op1R, op2S->string, op2S->string_len);
+                if (error_message) {
+                    SET_SIGNAL_MSG(RXSIGNAL_CONVERSION_ERROR, error_message);
+                    free(error_message);
+                } else {
+                    SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
+                }
+                DISPATCH
+            }
+            DISPATCH
+
         RESERVED_IMPL(RESERVED_062)
         RESERVED_IMPL(RESERVED_063)
         RESERVED_IMPL(RESERVED_064)

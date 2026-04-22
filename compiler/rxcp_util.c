@@ -102,7 +102,8 @@ char* rxcp_normalize_source_symbol_name(const char* source, size_t length,
     if (!result) return 0;
 
     for (i = start; i < end; i++) {
-        if (source[i] == ':' && (i + 1) < end && source[i + 1] == ':') {
+        if (((source[i] == ':' && (i + 1) < end && source[i + 1] == ':')) ||
+            ((source[i] == '.' && (i + 1) < end && source[i + 1] == '.'))) {
             result[out_len++] = '.';
             i++;
             continue;
@@ -112,6 +113,21 @@ char* rxcp_normalize_source_symbol_name(const char* source, size_t length,
 
     result[out_len] = 0;
     return result;
+}
+
+int rxcp_source_symbol_is_qualified(const char* source, size_t length) {
+    size_t i;
+
+    if (!source || length < 4) return 0;
+
+    for (i = 0; i + 1 < length; i++) {
+        if ((source[i] == ':' && source[i + 1] == ':') ||
+            (source[i] == '.' && source[i + 1] == '.')) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 int rxcp_split_internal_symbol_name(const char* name, char **namespace_name, char **short_name) {
@@ -140,7 +156,7 @@ char* rxcp_internal_name_to_source_qualified(const char* name, int leading_dot) 
     if (!name) return 0;
 
     if (rxcp_split_internal_symbol_name(name, &namespace_name, &short_name)) {
-        result = mprintf("%s%s::%s", leading_dot ? "." : "", namespace_name, short_name);
+        result = mprintf("%s%s..%s", leading_dot ? "." : "", namespace_name, short_name);
         free(namespace_name);
         free(short_name);
         return result;
@@ -607,8 +623,12 @@ const char* token_to_string(int token_id) {
         case TK_OPTIONS: return "TK_OPTIONS";
         case TK_NAMESPACE: return "TK_NAMESPACE";
         case TK_IMPORT: return "TK_IMPORT";
+        case TK_AS: return "TK_AS";
+        case TK_IS: return "TK_IS";
+        case TK_TYPEOF: return "TK_TYPEOF";
         case TK_CLASS_FACTORY: return "TK_CLASS_FACTORY";
         case TK_CLASS_TYPE: return "TK_CLASS_TYPE";
+        case TK_RESERVED_LABEL: return "TK_RESERVED_LABEL";
         case TK_OPEN_BRACKET: return "TK_OPEN_BRACKET";
         case TK_CLOSE_BRACKET: return "TK_CLOSE_BRACKET";
         case TK_OPEN_SBRACKET: return "TK_OPEN_SBRACKET";
@@ -963,6 +983,9 @@ const char* node_type_to_string(NodeType type) {
         case OP_COMPARE_S_LT: return "OP_COMPARE_S_LT";
         case OP_COMPARE_S_GTE: return "OP_COMPARE_S_GTE";
         case OP_COMPARE_S_LTE: return "OP_COMPARE_S_LTE";
+        case OP_TYPE_IS: return "OP_TYPE_IS";
+        case OP_TYPE_CAST: return "OP_TYPE_CAST";
+        case OP_TYPEOF: return "OP_TYPEOF";
         case OP_SCONCAT: return "OP_SCONCAT";
         case OPTIONS: return "OPTIONS";
         case PARSE: return "PARSE";

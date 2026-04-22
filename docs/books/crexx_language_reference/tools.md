@@ -37,8 +37,9 @@ compiler executable directory. `-i` and `-s` may both be repeated and
 their values are accumulated in order.
 
 This means qualification remains an import-time disambiguation feature,
-but the left side of `namespace::symbol` must still name an imported
-namespace. It is not a filesystem shortcut.
+but the left side of `namespace..symbol` must still name an imported
+namespace. `namespace::symbol` remains a compatibility alias. It is not a
+filesystem shortcut.
 
 ## **Assembler**
 

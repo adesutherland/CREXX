@@ -114,12 +114,21 @@ and the metadata records above:
   value plus a member name
 - `srcfproc rProc,"fully.qualified.interface",rArgs` resolves the default `*`
   factory provider for an interface
-- `srcfproc rProc,"fully.qualified.interface::factory_name",rArgs` resolves a
+- `srcfproc rProc,"fully.qualified.interface..factory_name",rArgs` resolves a
   named factory provider for an interface
+- `typeof rOut,rObj` returns the canonical source type name of an object value
+- `istype rOut,rObj,"type"` checks an object value against an interface,
+  class, or `.object`
+- `asserttype rObj,"type"` raises `CONVERSION_ERROR` if the object value does
+  not match the requested interface, class, or `.object`
 
 `srcfproc` now supports both the default `*` surface and named factory
 selectors. Provider selection is a VM concern: the assembler simply emits the
 opcode and the interface/class metadata needed for runtime lookup.
+
+`typeof`, `istype`, and `asserttype` are object-contract operations. Compiler
+generated code uses them for object casts/tests/introspection; scalar
+`typeof`/`is` cases are folded earlier by `rxc`.
 
 Interface default methods use that same path. The assembler does not introduce
 new opcodes for them; it simply carries `META_MEMBER` kind `method final` and

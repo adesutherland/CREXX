@@ -11,11 +11,11 @@
 #include "rxcp_val.h"
 
 static const char* rexx_builtins[] = {
-    "ADDRESS", "ASSEMBLER", "ARG", "CALL", "CLASS", "DO", "LOOP", "METHOD", "ELSE", "ERROR", "END", "EXIT",
+    "ADDRESS", "AS", "ASSEMBLER", "ARG", "CALL", "CLASS", "DO", "LOOP", "METHOD", "ELSE", "ERROR", "END", "EXIT",
     "FACTORY", "IF", "IMPLEMENTS", "IMPORT", "INPUT", "INTERFACE", "ITERATE", "LEAVE", "MATCH", "NAMESPACE", "OF", "NOP", "NUMERIC", "OPTIONS",
-    "OUTPUT", "PARSE", "PROCEDURE", "REGISTER", "RETURN", "SAY", "THEN", "BY", "EXPOSE", "FOR", "FOREVER", "TO",
+    "OUTPUT", "PARSE", "PROCEDURE", "REGISTER", "RETURN", "SAY", "THEN", "BY", "EXPOSE", "FOR", "FOREVER", "IS", "TO",
     "UNTIL", "VOID", "WHILE", "WITH", "PULL", "PUSH", "QUEUE", "SELECT", "SIGNAL", "TRACE", "WHEN", "OFF",
-    "ON", "DROP", "EXTERNAL", "INTERPRET", "LINEIN", "NAME", "NOVALUE", "SOURCE", "SYNTAX", "UPPER",
+    "ON", "DROP", "EXTERNAL", "INTERPRET", "LINEIN", "NAME", "NOVALUE", "SOURCE", "SYNTAX", "TYPEOF", "UPPER",
     "VAR", "VERSION", NULL
 };
 

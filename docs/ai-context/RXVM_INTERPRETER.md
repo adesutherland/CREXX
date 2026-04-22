@@ -130,7 +130,11 @@ of the older object model:
 - `SRCMETHOD_REG_REG_STRING` resolves the effective method procedure from
   `object_type_name + member_name`
 - `SRCFPROC_REG_STRING_REG` resolves an interface factory provider for either
-  `interface_name` or `interface_name::factory_name`
+  `interface_name` or `interface_name..factory_name`
+- `TYPEOF_REG_REG` returns the canonical source type name of an object value
+- `ISTYPE_REG_REG_STRING` tests an object value against an interface, class,
+  or `.object`
+- `ASSERTTYPE_REG_STRING` raises `CONVERSION_ERROR` on a failed object cast
 
 `srcmethod` and `srcfproc` both return a `proc_constant *` in a normal
 register, and the existing `dcall` path performs the actual invocation.

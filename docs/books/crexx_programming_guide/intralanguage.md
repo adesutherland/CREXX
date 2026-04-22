@@ -60,19 +60,36 @@ say current.describe()
 ```
 
 When two imported namespaces expose the same contract name, qualify the
-reference with `namespace::`:
+reference with `namespace..`:
 
 ```rexx
 import qifa
 import qifb
 
-left = .qifa::vehicle("one")
-right = .qifb::vehicle.from_name("two")
+left = .qifa..vehicle("one")
+right = .qifb..vehicle.from_name("two")
 ```
 
-The token to the left of `::` must be an imported namespace. Qualification is a
+The token to the left of `..` must be an imported namespace. Qualification is a
 disambiguation mechanism; it does not create a second way to reach symbols that
-have not been imported.
+have not been imported. `::` remains accepted as a compatibility alias.
+
+\section{Casts and type inspection}
+
+Object contracts can now be checked explicitly:
+
+```rexx
+generic = .car("roadster") as .object
+vehicle = generic as .garage..vehicle
+current = vehicle as .garage..car
+
+say typeof(current)
+say current is .garage..vehicle
+say current is .garage..car
+```
+
+`as` performs a checked object cast, `is` performs a boolean type test, and
+`typeof` returns the canonical runtime type name.
 
 \section{Source and binary imports}
 

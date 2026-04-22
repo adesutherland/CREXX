@@ -271,6 +271,13 @@ static int same_contract_type_node(Context *context, ASTNode *left, ASTNode *rig
     return same;
 }
 
+static int type_node_is_runtime_type_target(ASTNode *type_node) {
+    if (!type_node) return 0;
+    if (type_node->target_dims != 0) return 0;
+    if (type_node->target_type == TP_VOID) return 0;
+    return 1;
+}
+
 static int same_contract_signature(Context *context, ASTNode *iface_member, ASTNode *class_member) {
     ASTNode *iface_args;
     ASTNode *class_args;
@@ -893,7 +900,7 @@ walker_result set_node_types_walker(walker_direction direction,
                     char *qualified_class_name = 0;
                     const char *factory_member_name = "*";
                     size_t factory_member_name_length = 1;
-                    if (node->node_string && strstr(node->node_string, "::")) {
+                    if (node->node_string && rxcp_source_symbol_is_qualified(node->node_string, node->node_string_length)) {
                         qualified_class_name = rxcp_normalize_source_symbol_name(node->node_string, node->node_string_length, 1, 1);
                     }
                     if (node->association && node->association->node_string && node->association->node_string_length) {
@@ -1238,6 +1245,24 @@ walker_result set_node_types_walker(walker_direction direction,
                     /* context->changed_flags |= FLAG_VAL_TYPE; */ }
                 break;
 
+            case OP_TYPEOF:
+                if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_STRING);
+                }
+                break;
+
+            case OP_TYPE_IS:
+                if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_BOOLEAN);
+                }
+                break;
+
+            case OP_TYPE_CAST:
+                if (node->value_type == TP_UNKNOWN && child2 && child2->target_type != TP_UNKNOWN) {
+                    ast_svtn(node, child2);
+                }
+                break;
+
             default:;
         }
 
@@ -1301,6 +1326,22 @@ walker_result type_safety_walker(walker_direction direction,
             case OP_COMPARE_S_LTE:
                 set_node_target_type(context, child1, TP_STRING);
                 set_node_target_type(context, child2, TP_STRING);
+                break;
+
+            case OP_TYPE_IS:
+                if (!type_node_is_runtime_type_target(child2)) {
+                    mknd_err(node, "TYPE_MISMATCH");
+                }
+                break;
+
+            case OP_TYPE_CAST:
+                if (!type_node_is_runtime_type_target(child2) || child1->value_dims != 0) {
+                    mknd_err(node, "TYPE_MISMATCH");
+                } else if (child2->target_type == TP_OBJECT && child1->value_type != TP_OBJECT) {
+                    mknd_err(node, "TYPE_MISMATCH");
+                } else if (child2->target_type != TP_OBJECT && child1->value_type == TP_OBJECT) {
+                    mknd_err(node, "TYPE_MISMATCH");
+                }
                 break;
 
             case OP_CONCAT:

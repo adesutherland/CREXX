@@ -4,8 +4,8 @@ import qifa
 import qifb
 
 main: procedure
-  left = .qifa::vehicle("one")
-  right = .qifb::vehicle.from_name("two")
+  left = .qifa..vehicle("one")
+  right = .qifb..vehicle.from_name("two")
 
   say left.describe()
   say right.describe()

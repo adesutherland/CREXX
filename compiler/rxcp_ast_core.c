@@ -1205,6 +1205,12 @@ const char *ast_ndtp(NodeType type) {
             return "OP_COMPARE_S_GTE";
         case OP_COMPARE_S_LTE:
             return "OP_COMPARE_S_LTE";
+        case OP_TYPE_IS:
+            return "OP_TYPE_IS";
+        case OP_TYPE_CAST:
+            return "OP_TYPE_CAST";
+        case OP_TYPEOF:
+            return "OP_TYPEOF";
         case OP_SCONCAT:
             return "OP_SCONCAT";
         case OPTIONS:

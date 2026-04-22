@@ -88,7 +88,8 @@ int rexbscan(Context* s) {
   integer = digit+;
   decimal = float [d] | integer [d];
   simple = fsymchr symchr*;
-  qualified = simple "::" simple;
+  qual_sep = "::" | "..";
+  qualified = simple qual_sep simple;
   class = [.] (qualified|simple);
   namedfactory = class "." simple;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
@@ -158,8 +159,13 @@ int rexbscan(Context* s) {
     ";" { RET(TK_EOC); }
 
   //  'ADDRESS' { RET(TK_ADDRESS); }
+    'ARG' ob ":" { RET(TK_RESERVED_LABEL); }
+    'AS' ob ":" { RET(TK_RESERVED_LABEL); }
+    'IS' ob ":" { RET(TK_RESERVED_LABEL); }
+    'TYPEOF' ob ":" { RET(TK_RESERVED_LABEL); }
     'ASSEMBLER' { RET(TK_ASSEMBLER); }
     'ARG' { RET(TK_ARG); }
+    'AS' { RET(TK_AS); }
     'CALL' { RET(TK_CALL); }
     'CLASS' { RET(TK_CLASS); }
     'DO' { RET(TK_DO); }
@@ -177,6 +183,7 @@ int rexbscan(Context* s) {
     'FACTORY' { RET(TK_FACTORY); }
     'IF' { RET(TK_IF); }
     'IMPORT' { RET(TK_IMPORT); }
+    'IS' { RET(TK_IS); }
   //  'INPUT' { RET(TK_INPUT); }
   //  'INTERPRET' { RET(TK_INTERPRET); }
     'ITERATE' { RET(TK_ITERATE); }
@@ -220,6 +227,7 @@ int rexbscan(Context* s) {
   //  'SOURCE' { RET(TK_SOURCE); }
   //  'SYNTAX' { RET(TK_SYNTAX); }
     'TO' { RET(TK_TO); }
+    'TYPEOF' { RET(TK_TYPEOF); }
     'UNTIL' { RET(TK_UNTIL); }
   //  'UPPER' { RET(TK_UPPER); }
   //  'VAR' { RET(TK_VAR); }

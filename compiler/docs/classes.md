@@ -16,7 +16,10 @@ The implemented Level B surface is:
 - interface-declared default `*` factories and named factories
 - same-named class-side factory implementations
 - optional same-named class-side `match` for factory selection
-- namespace-qualified contract references such as `.pkg::thing()`
+- checked casts with `expr as .type`
+- boolean type tests with `expr is .type`
+- concrete type introspection with `typeof(expr)`
+- namespace-qualified contract references such as `.pkg..thing()`
 
 Each class also has an intrinsic interface of its own name, so `.box()` and
 `.box`-typed references remain valid even when the class also implements other
@@ -59,7 +62,7 @@ The parser accepts:
 - `interface`
 - `implements`
 - factory-call syntax such as `.vehicle()` and `.vehicle.from_name()`
-- namespace-qualified symbols such as `.qifa::vehicle()`
+- namespace-qualified symbols such as `.qifa..vehicle()`
 
 Interface member calls and interface factory calls are preserved as contract
 calls through validation. They are no longer lowered to a unique concrete class
@@ -135,14 +138,31 @@ At execution time `srcfproc`:
 
 If no provider survives selection, the VM raises `FUNCTION_NOT_FOUND`.
 
+## Type Operations
+
+Level B now supports:
+
+- `expr as .type` for checked casts
+- `expr is .type` for boolean type tests
+- `typeof(expr)` for concrete runtime type introspection
+
+Object casts are runtime-checked. `as .interface` succeeds when the concrete
+class implements that interface, while `as .class` requires the exact concrete
+class. Failed casts raise `CONVERSION_ERROR`.
+
+`typeof(expr)` is emitted as a compile-time constant for scalar expressions and
+as a VM lookup for object expressions, which return the concrete runtime class
+in source form such as `.pkg..thing`.
+
 ## Namespace Qualification
 
-Qualified source references use `namespace::symbol`. The token to the left of
-`::` must be a namespace name already made visible through `import`.
+Qualified source references use `namespace..symbol`. The token to the left of
+`..` must be a namespace name already made visible through `import`.
 
-The compiler normalizes `namespace::name` to the internal fully qualified form
-`namespace.name`, but qualification remains import-gated. It is a
-disambiguation mechanism, not a second global lookup path.
+The compiler normalizes both `namespace..name` and the compatibility alias
+`namespace::name` to the internal fully qualified form `namespace.name`, but
+qualification remains import-gated. It is a disambiguation mechanism, not a
+second global lookup path.
 
 ## Coverage
 

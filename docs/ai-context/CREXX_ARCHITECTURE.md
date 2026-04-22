@@ -83,14 +83,18 @@ The source surface includes:
 - interface default `*` factories and named factories
 - class-side same-named factory implementations
 - optional class-side same-named `match`
-- namespace-qualified contracts such as `.pkg::thing()`
+- checked casts with `expr as .type`
+- boolean type tests with `expr is .type`
+- concrete type introspection with `typeof(expr)`
+- namespace-qualified contracts such as `.pkg..thing()`
 
 Interface methods with bodies are emitted as final/default methods. The class
 must still implement abstract members, but it may not override a final/default
 interface member.
 
-Qualified references use `namespace::symbol`; the left side must be an imported
-namespace, not a class or interface name.
+Qualified references use `namespace..symbol`; the left side must be an
+imported namespace, not a class or interface name. `namespace::symbol`
+remains accepted as a compatibility alias.
 
 ### Metadata and import
 

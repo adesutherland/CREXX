@@ -54,11 +54,13 @@ By leveraging namespaces, \crexx{} programmers can create modular and well-organ
 ## Qualified references
 
 When two imported namespaces expose the same procedure, class, or interface
-name, qualify the reference with `namespace::`.
+name, qualify the reference with `namespace..`.
 
-The token to the left of `::` must be a namespace name that has already been
+The token to the left of `..` must be a namespace name that has already been
 made visible through `import`. Qualification does not bypass the import system;
-it only disambiguates among imported namespaces.
+it only disambiguates among imported namespaces. `namespace::symbol` remains
+accepted as a compatibility alias, but `namespace..symbol` is the canonical
+form.
 
 ```rexx
 options levelb
@@ -67,8 +69,8 @@ import qifa
 import qifb
 
 main: procedure
-  left = .qifa::vehicle("one")
-  right = .qifb::vehicle.from_name("two")
+  left = .qifa..vehicle("one")
+  right = .qifb..vehicle.from_name("two")
 
   say left.describe()
   say right.describe()
@@ -78,11 +80,11 @@ main: procedure
 This same form also applies to procedures:
 
 ```rexx
-answer = qifa::helper()
+answer = qifa..helper()
 ```
 
 and to type references:
 
 ```rexx
-current = .qifa::vehicle
+current = .qifa..vehicle
 ```

@@ -46,6 +46,9 @@ char* rx_strndup(const char* s, size_t n);
 char* rxcp_normalize_source_symbol_name(const char* source, size_t length,
                                         int strip_leading_dot, int strip_quotes);
 
+/* Return 1 if source text contains a namespace qualifier (`..` or legacy `::`). */
+int rxcp_source_symbol_is_qualified(const char* source, size_t length);
+
 /* Split an internal symbol name "namespace.name" into malloced pieces. */
 int rxcp_split_internal_symbol_name(const char* name, char **namespace_name, char **short_name);
 

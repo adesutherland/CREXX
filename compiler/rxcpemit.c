@@ -593,6 +593,9 @@ static walker_result emit_walker(walker_direction direction,
             case OP_NOT:
             case OP_NEG:
             case OP_PLUS:
+            case OP_TYPE_CAST:
+            case OP_TYPE_IS:
+            case OP_TYPEOF:
                 emit_expression(node, payload);
                 break;
 

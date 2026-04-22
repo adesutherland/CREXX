@@ -293,6 +293,8 @@ stempart(A)            ::= TK_STEMNOVAL(S).
 /* Labels */
 label(A)               ::= TK_LABEL(S).
                            { A = ast_f(context, LABEL, S); }
+label(A)               ::= TK_RESERVED_LABEL(S).
+                           { A = mknd_err(ast_f(context, VAR_SYMBOL, S), "KEYWORD"); }
 
 /* Language Options */
 rexx_options(I)    ::= TK_OPTIONS(T) junk(J) TK_EOC.
@@ -421,6 +423,12 @@ assignment(G)     ::= TK_IF(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_ARG(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_AS(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_IS(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_TYPEOF(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_ASSEMBLER(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_SAY(K) TK_EQUAL(T) expression(E).
@@ -476,6 +484,12 @@ define(G)     ::= TK_UNTIL(K) TK_EQUAL(T) type_def(E).
 define(G)     ::= TK_IF(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_ARG(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_AS(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_IS(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_TYPEOF(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_ASSEMBLER(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
@@ -796,6 +810,18 @@ procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V) expose(E).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); add_ast(P,E);}
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE expose(E).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_ft(context, VOID)); add_ast(P,E);}
+procedure(P)      ::= TK_RESERVED_LABEL(L) TK_PROCEDURE.
+                      { P = mknd_err(ast_f(context, VAR_SYMBOL, L), "KEYWORD"); }
+procedure(P)      ::= TK_RESERVED_LABEL(L) TK_PROCEDURE TK_EQUAL type_def.
+                      { P = mknd_err(ast_f(context, VAR_SYMBOL, L), "KEYWORD"); }
+procedure(P)      ::= TK_RESERVED_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID.
+                      { P = mknd_err(ast_f(context, VAR_SYMBOL, L), "KEYWORD"); }
+procedure(P)      ::= TK_RESERVED_LABEL(L) TK_PROCEDURE expose.
+                      { P = mknd_err(ast_f(context, VAR_SYMBOL, L), "KEYWORD"); }
+procedure(P)      ::= TK_RESERVED_LABEL(L) TK_PROCEDURE TK_EQUAL type_def expose.
+                      { P = mknd_err(ast_f(context, VAR_SYMBOL, L), "KEYWORD"); }
+procedure(P)      ::= TK_RESERVED_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID expose.
+                      { P = mknd_err(ast_f(context, VAR_SYMBOL, L), "KEYWORD"); }
 
 arg(P)            ::= TK_ARG arg_list(A).
                       { P = A;}
@@ -1126,6 +1152,14 @@ function_name(N)       ::= TK_QUALIFIED_SYMBOL(S).
                            { N = ast_f(context, FUNCTION, S); }
 function_name(N)       ::= TK_STRING(S).
                            { N = ast_f(context, FUNCTION, S); }
+function_name(N)       ::= TK_ARG(S).
+                           { N = mknd_err(ast_f(context, FUNCTION, S), "KEYWORD"); }
+function_name(N)       ::= TK_AS(S).
+                           { N = mknd_err(ast_f(context, FUNCTION, S), "KEYWORD"); }
+function_name(N)       ::= TK_IS(S).
+                           { N = mknd_err(ast_f(context, FUNCTION, S), "KEYWORD"); }
+function_name(N)       ::= TK_TYPEOF(S).
+                           { N = mknd_err(ast_f(context, FUNCTION, S), "KEYWORD"); }
 call(I) ::= TK_CALL(T) function_name(F) expression_list(E).
         { I = ast_f(context, CALL, T); add_ast(I,F); if (E) add_ast(F,E); }
 call(I) ::= TK_CALL(T) TK_VAR_SYMBOL(S) function_parameters(P). [TK_VAR_SYMBOL]
@@ -1282,6 +1316,14 @@ term(F)                ::= TK_ARG TK_OPEN_BRACKET(A) error TK_CLOSE_BRACKET.
 term(F)                ::= TK_ARG TK_OPEN_BRACKET ANYTHING(A).
                            { F = ast_err(context, "INVALID_ARG_SYNTAX", A); }
 
+/* Type inspection intrinsic */
+term(F)                ::= TK_TYPEOF(A) TK_OPEN_BRACKET expression(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           { F = ast_f(context, OP_TYPEOF, A); add_ast(F, E); }
+term(F)                ::= TK_TYPEOF TK_OPEN_BRACKET(A) error TK_CLOSE_BRACKET.
+                           { F = ast_err(context, "INVALID_TYPEOF_SYNTAX", A); }
+term(F)                ::= TK_TYPEOF TK_OPEN_BRACKET ANYTHING(A).
+                           { F = ast_err(context, "INVALID_TYPEOF_SYNTAX", A); }
+
 /* Special Operator - ? */
 term(F)                ::= TK_OPTIONAL TK_VAR_SYMBOL(S). [TK_VAR_SYMBOL]
                            { F = ast_f(context, OP_ARG_EXISTS, S); }
@@ -1372,6 +1414,10 @@ command_postfix(A)   ::= command_postfix(B) TK_CLASS_TYPE(S) function_parameters
                                A->node_string++;
                                A->node_string_length--; }
                            add_ast(A,B); if (PP) add_ast(A,PP); }
+command_postfix(A)   ::= command_postfix(B) TK_AS(O) type_def(T). [TK_CLASS_TYPE]
+                         { A = ast_f(context, OP_TYPE_CAST, O);
+                           add_ast(A, B);
+                           add_ast(A, T); }
 command_prefix_expression(P) ::= command_postfix(B). [ANYTHING] { P = B; }
 command_prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
@@ -1439,6 +1485,8 @@ command_comparison(A)        ::= command_comparison(B) TK_S_GTE(O) concatenation
                          { A = ast_f(context, OP_COMPARE_S_GTE, O); add_ast(A,B); add_ast(A,C); }
 command_comparison(A)        ::= command_comparison(B) TK_S_LTE(O) concatenation(C).
                          { A = ast_f(context, OP_COMPARE_S_LTE, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_IS(O) type_def(T).
+                         { A = ast_f(context, OP_TYPE_IS, O); add_ast(A,B); add_ast(A,T); }
 command_or_expression(P)     ::= command_comparison(E).
                          { P = E; }
 command_or_expression(A)     ::= command_or_expression(B) TK_OR(O) comparison(C).
@@ -1460,6 +1508,10 @@ postfix(A)           ::= postfix(B) TK_CLASS_TYPE(S) function_parameters(PP). [T
                                A->node_string++;
                                A->node_string_length--; }
                            add_ast(A,B); if (PP) add_ast(A,PP); }
+postfix(A)           ::= postfix(B) TK_AS(O) type_def(T). [TK_CLASS_TYPE]
+                         { A = ast_f(context, OP_TYPE_CAST, O);
+                           add_ast(A, B);
+                           add_ast(A, T); }
 
 prefix_expression(P) ::= postfix(B). [ANYTHING] { P = B; }
 prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
@@ -1517,6 +1569,10 @@ postfix_c(A)         ::= postfix_c(B) TK_CLASS_TYPE(S) function_parameters(PP). 
                                A->node_string++;
                                A->node_string_length--; }
                            add_ast(A,B); if (PP) add_ast(A,PP); }
+postfix_c(A)         ::= postfix_c(B) TK_AS(O) type_def(T). [TK_CLASS_TYPE]
+                         { A = ast_f(context, OP_TYPE_CAST, O);
+                           add_ast(A, B);
+                           add_ast(A, T); }
 
 prefix_expression_c(P) ::= postfix_c(B). [ANYTHING] { P = B; }
 
@@ -1584,6 +1640,8 @@ comparison(A)        ::= comparison(B) TK_S_GTE(O) concatenation(C).
                          { A = ast_f(context, OP_COMPARE_S_GTE, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_S_LTE(O) concatenation(C).
                          { A = ast_f(context, OP_COMPARE_S_LTE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_IS(O) type_def(T).
+                         { A = ast_f(context, OP_TYPE_IS, O); add_ast(A,B); add_ast(A,T); }
 or_expression(P)     ::= comparison(E).
                          { P = E; }
 or_expression(A)     ::= or_expression(B) TK_OR(O) comparison(C).
@@ -1634,6 +1692,10 @@ class_def(C) ::= TK_LABEL(L) TK_CLASS opt_of(O) opt_implements(I).
   if (O) add_ast(C, O);
   if (I) add_ast(C, I);
 }
+class_def(C) ::= TK_RESERVED_LABEL(L) TK_CLASS opt_of opt_implements.
+{
+  C = mknd_err(ast_f(context, VAR_SYMBOL, L), "KEYWORD");
+}
 
 opt_of(O) ::= . { O = NULL; }
 opt_of(O) ::= TK_OF type_def(T). { O = T; }
@@ -1656,6 +1718,10 @@ interface_def(C) ::= TK_LABEL(L) TK_INTERFACE.
 {
   C = ast_f(context, INTERFACE_DEF, L);
 }
+interface_def(C) ::= TK_RESERVED_LABEL(L) TK_INTERFACE.
+{
+  C = mknd_err(ast_f(context, VAR_SYMBOL, L), "KEYWORD");
+}
 
 factory_def(F) ::= TK_MULT_LABEL(L) TK_FACTORY opt_method_return_type(T).
 {
@@ -1670,6 +1736,10 @@ factory_def(F) ::= TK_LABEL(L) TK_FACTORY opt_method_return_type(T).
   if (T) add_ast(F, T);
   else add_ast(F, ast_ft(context, VOID));
 }
+factory_def(F) ::= TK_RESERVED_LABEL(L) TK_FACTORY opt_method_return_type.
+{
+  F = mknd_err(ast_f(context, VAR_SYMBOL, L), "KEYWORD");
+}
 
 match_def(M) ::= TK_MULT_LABEL(L) TK_MATCH.
 {
@@ -1682,12 +1752,20 @@ match_def(M) ::= TK_LABEL(L) TK_MATCH.
   M = ast_f(context, MATCH, L);
   add_ast(M, ast_ftt(context, CLASS, ".int"));
 }
+match_def(M) ::= TK_RESERVED_LABEL(L) TK_MATCH.
+{
+  M = mknd_err(ast_f(context, VAR_SYMBOL, L), "KEYWORD");
+}
 
 method_def(M) ::= TK_LABEL(L) TK_METHOD opt_method_return_type(T).
 {
   M = ast_f(context, METHOD, L);
   if (T) add_ast(M, T);
   else add_ast(M, ast_ft(context, VOID));
+}
+method_def(M) ::= TK_RESERVED_LABEL(L) TK_METHOD opt_method_return_type.
+{
+  M = mknd_err(ast_f(context, VAR_SYMBOL, L), "KEYWORD");
 }
 
 opt_method_return_type(T) ::= . { T = NULL; }

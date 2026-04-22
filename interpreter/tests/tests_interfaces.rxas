@@ -52,7 +52,7 @@ main() .locals=10
    load r1,1
    load r2,"duo"
    settp r2,3
-   srcfproc r0,"interface_factory_tiebreak.vehicle::from_name",r1
+   srcfproc r0,"interface_factory_tiebreak.vehicle..from_name",r1
    dcall r0,r0,r1
 
    load r1,1
@@ -76,6 +76,20 @@ main() .locals=10
    swap r0,r2
    seq r4,r3,"iface:box"
    brf fail_default_method,r4
+
+   typeof r5,r0
+   seq r4,r5,".interface_default_vm..box"
+   brf fail_typeof,r4
+
+   istype r5,r0,".interface_default_vm..shape"
+   ieq r4,r5,1
+   brf fail_istype_interface,r4
+
+   istype r5,r0,"interface_default_vm.box"
+   ieq r4,r5,1
+   brf fail_istype_class,r4
+
+   asserttype r0,".interface_default_vm..shape"
 
    say "PASS: Interface Dispatch Suite"
    ret 0
@@ -101,6 +115,21 @@ fail_named_tiebreak:
 fail_default_method:
    say "FAIL: SRCMETHOD Default Body"
    say r3
+   ret 0
+
+fail_typeof:
+   say "FAIL: TYPEOF Concrete Type"
+   say r5
+   ret 0
+
+fail_istype_interface:
+   say "FAIL: ISTYPE Interface"
+   say r5
+   ret 0
+
+fail_istype_class:
+   say "FAIL: ISTYPE Class"
+   say r5
    ret 0
 
 §interface_factory_tiebreak.car.§factory() .locals=3

@@ -8,7 +8,10 @@ Level B now implements the core class/interface model:
 - final/default interface methods
 - interface-centred default and named factories
 - factory provider selection through class-side `match`
-- namespace-qualified contract references such as `.pkg::thing()`
+- checked casts with `expr as .type`
+- boolean type tests with `expr is .type`
+- concrete type introspection with `typeof(expr)`
+- namespace-qualified contract references such as `.pkg..thing()`
 
 Level B does **not** currently implement interface inheritance, interface
 attributes/state, interface factory bodies, overloads, singleton declarations,
@@ -266,24 +269,56 @@ This example is mirrored by the test
 ## Namespace Qualification
 
 If two imported namespaces expose contracts with the same name, qualify the
-reference with `namespace::`.
+reference with `namespace..`.
 
 ```rexx
 import qifa
 import qifb
 
-left = .qifa::vehicle("one")
-right = .qifb::vehicle.from_name("two")
+left = .qifa..vehicle("one")
+right = .qifb..vehicle.from_name("two")
 ```
 
-The token to the left of `::` must be a namespace name that has already been
-imported. Qualification does not bypass `import`.
+The token to the left of `..` must be a namespace name that has already been
+imported. Qualification does not bypass `import`. `namespace::symbol` remains
+accepted as a compatibility alias, but `namespace..symbol` is the canonical
+form.
 
 This example is mirrored by:
 
 - `compiler/tests/rexx_src/qualified_interface_main.rexx`
 - `compiler/tests/rexx_src/qualified_interface_dep_a.rexx`
 - `compiler/tests/rexx_src/qualified_interface_dep_b.rexx`
+
+## Casts and Type Tests
+
+Level B now supports explicit object casts and runtime type inspection:
+
+```rexx
+vehicle = .car("roadster") as .vehicle
+current = vehicle as .car
+
+say typeof(current)
+say current is .vehicle
+say current is .car
+say current is .truck
+```
+
+Rules:
+
+- `expr as .interface` succeeds when the concrete class implements that
+  interface
+- `expr as .class` succeeds only for that exact concrete class
+- failed object casts raise `CONVERSION_ERROR`
+- `expr is .interface` checks interface implementation
+- `expr is .class` checks the exact concrete class
+- `typeof(expr)` returns the concrete runtime class for objects and the
+  canonical built-in type name for scalars
+
+These operations are mirrored by:
+
+- `compiler/tests/rexx_src/type_ops_showcase.rexx`
+- `compiler/tests/rexx_src/type_ops_fail.rexx`
 
 ## Notes and Current Boundaries
 
