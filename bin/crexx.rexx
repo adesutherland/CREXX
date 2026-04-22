@@ -202,7 +202,7 @@
      else say 'NOEXEC'
      if native  then say '  NATIVE'
      else say 'NONATIVE'
-     if \keep  then say '  KEEP'
+     if keep  then say '  KEEP'
      else say 'NOKEEP'
      if \optimize  then say 'NOOPTIMIZE'
      else say '  OPTIMIZE'
@@ -387,7 +387,10 @@ do i=1 to words(filenames)
   end
 end   -- do i
 
-  return 0
+  /* now determine if the rxas files need to be deleted */
+  if \keep then delrc = deleteFiles(binfiles,verbose)
+  
+return 0
 
 /*----------------------------------------------------------------------*/
 help: procedure = .string
@@ -515,19 +518,22 @@ do while lines(toread)
 end
 call lineout toread
 
-deleteFiles: procedure = .string
-arg filename = .string
-
--- when linux or macos
-'rm' filename'.rxas'
-
--- when windows
-
--- cmd.exe
-
--- terminal/powershell
-
-return 'done'
+/**
+* delete the files (when crexx option = --nokeep)
+* and log this when verbosity > 2
+* @parm filenames .string containing basenames
+* @return .int
+*/
+deleteFiles: procedure = .int
+arg filenames = .string, verbosity = .int
+loop i=1 to words(filenames)
+  filename = word(filenames,i)
+  if verbosity > 2 then say 'deleting' filename'.rxas' 
+  rc = deletefile(filename'.rxas')
+  if verbosity > 2 then say 'deleting' filename'.rxbin' 
+  rc = deletefile(filename'.rxbin')
+end
+return 0
 
 chop_suffix: procedure = .string
 arg fn = .string
