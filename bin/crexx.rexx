@@ -1,5 +1,5 @@
-/*
- * crexx compiler driver - copyright RexxLA, rvjansen 2021-2025
+/**
+ * crexx compiler driver - copyright RexxLA, rvjansen 2021-2026
  * crexx is an executable which controls the phases of the crexx
  * processor, compiles, assembles and executes rexx programs.
  * It optionally compiles the program to a native executable,
@@ -245,8 +245,8 @@ do i=1 to words(filenames)
     if verbose>3 then do
       call printFileToSTDout filename'.rxpp'
     end
-    
-    'rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose0'
+    ''rxpath'/'lpath'/rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose 'verbose
+--    'rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose0'
     if verbose then do
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
 	else res = esc||ANSI_RED||RC||esc||ANSI_RESET
@@ -320,12 +320,17 @@ do i=1 to words(filenames)
   
   if verbose>2 then call banner
 
-  
-  
+  /**
+   * here we determine which static libraries to include for ld whuch need the
+   * -force-load flag for clang. It turns out that this includes all plugin libraries
+   * which are included using --lxx, except for the classlib library, which is
+   * .rxbin from compiled rexx and is rxpacked (soon partly) like the bif library.rxbin
+   *
+   */
   if native then do
     forces = ''
     loop f=1 to words(modules)
-      if pos('classlib',word(modules,f)) > 0 then iterate -- temp fix for static linking
+      if pos('classlib',word(modules,f)) > 0 then iterate -- (not so) temp fix for static linking
       forces = forces '-Wl,-force_load,'word(modules,f)'_static.a'
     end
     pack_cmd = rxpath'bin'dirsep'rxcpack' filename rxpath'bin/library' rxpath'bin/classlib'

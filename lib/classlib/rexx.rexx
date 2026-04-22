@@ -13,7 +13,6 @@ import rxfnsb
  * 
  */ 
 
-
 rexx: class
 val = .string
 
@@ -50,8 +49,16 @@ val = .string
     
 -- 		abs
   abs: method = .string
-    if left(val,1) = '-' then number = substr(val,2)
+    if _left(val,1) = '-' then number = _substr(val,2)
     return number
+
+-- b2x
+  b2x: method = .string
+    return _b2x(val)
+
+-- b2d
+  b2d: method = .string
+    return _b2d(val)
 
 -- 		c2x
   c2x: method = .string
@@ -60,7 +67,7 @@ val = .string
     fz=""
     len=0
     assembler strlen len,from
-  if len=0 then return "00"
+    if len=0 then return "00"
     do  i=0 to len-1
       assembler hexchar fz,from,i
       stx=stx||fz
@@ -78,7 +85,7 @@ val = .string
       assembler hexchar fz,from,i
       stx=stx||fz
     end
-    return x2d(stx)
+    return _x2d(stx)
 -- 		center
   center: method = .string
     arg expose centlen = .int,  pad = " "

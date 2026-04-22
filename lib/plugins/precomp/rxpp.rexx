@@ -18,12 +18,15 @@ import rxfnsb
  *   ##INCLUDE  (nested)
  * ------------------------------------------------------------------
  */
+ main: procedure = .int
 arg command=.string[]
 internal_testing=0    ## activate only for rxpp internal tests
-verbose=1
-  infile = .string;
-  outfile = .string;
-  maclib = .string;
+
+  infile  = .string
+  outfile = .string
+  maclib  = .string
+  verbose = .int
+  cnext   = .string
   ElapsedTime=time('us')
 
   do i=1 to command.0
@@ -34,9 +37,8 @@ verbose=1
      else if command.i='-O' then outfile=command.j
      else if command.i='-OUT' then outfile=command.j
      else if command.i='-M' then maclib=command.j
-     else if command.i='-VERBOSE0' then verbose=0
+     else if command.i='-VERBOSE' then verbose=4
   end
-
   if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
   
   if internal_testing=1 then do
@@ -44,6 +46,7 @@ verbose=1
      outfile = 'C:/Users/PeterJ/CLionProjects/CREXX260401/lib/plugins/system/treemap_test.rexx'
      maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX260401/lib/plugins/precomp/Maclib.rexx'
   end
+
 
  if strip(infile)='' then do
      say 'CRX0100E+['time('l')'] no source file specified'
@@ -53,6 +56,7 @@ verbose=1
      say 'Input File:  ' infile
      say 'Output File: ' outfile
      say 'Macro Lib:   ' maclib
+     say 'Verbose:     ' verbose
   end
 
   syspath=rxppinit(infile,maclib)                   ## init global and environment variables
@@ -103,9 +107,9 @@ RXPPPassOne: procedure = .int
   /* Locals */
   maxmac = .string
 /* ---- 1a. Load Macros from MACLIB  */
-  macnum=readSource(maclib)
+  macnum=readSource(maclib,0)    /* error doesn't terminate program */
   if macnum<0 then do
-     if verbose then say 'CRX0900E+['time('l')'] Maclib not found, or not accessible: 'maclib
+     if verbose then say 'CRX0900W+['time('l')'] Maclib not found, or not accessible: 'maclib
   end
   else do
      call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
@@ -120,9 +124,9 @@ RXPPPassOne: procedure = .int
   assembler SETATTRS stype,0
 
 /* ---- 1b. Load System Macros from MACSYS  */
-  macnum=readSource(macsys)
+  macnum=readSource(macsys,0)    /* error doesn't terminate program */
   if macnum<0 then do
-     if verbose then say 'CRX0900E+['time('l')'] System Maclib not found, or not accessible: 'macsys
+     if verbose then say 'CRX0900W+['time('l')'] System Maclib not found, or not accessible: 'macsys
   end
   else do
      call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
@@ -135,7 +139,7 @@ RXPPPassOne: procedure = .int
   assembler SETATTRS source,0
   assembler SETATTRS stype,0
 /* ---- 1c. Load file to compile */
-  rexxLines=readSource(infile)
+  rexxLines=readSource(infile,1)
   if rexxLines<0 then do
      say 'CRX0910E+['time('l')'] source file missing: 'infile
      exit 8
@@ -352,14 +356,15 @@ return 0
  * ------------------------------------------------------------------
  */
 ReadSource: procedure=.int
-  arg file=.string
+  arg file=.string,mandatory=1
 ##  i=readall(source,file,-1)
   source=ReadLines(file,,,"noRaise")
-  if source[0]=1 & word(source[1],1)='-8' then do
+  if mandatory=1 & source[0]=1 & word(source[1],1)='-8' then do
      say 'CRX0950E+['time('l')'] missing source file: 'file
      say 'CRX0951E+['time('l')'] RXPP of: 'file' terminated'
      exit 8
   end
+  if word(source[1],1)='-8' then return -8
 return source[0]
 /* ------------------------------------------------------------------
  * Scans source for pre-compiler directives and macro definitions,
@@ -391,7 +396,6 @@ GetPrecomp: procedure
       ucmd=word(line,1)
       if ucmd='' then iterate
       ucmd=upper(ucmd)
-
       if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
       else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
       else if ucmd = 'FOR'    then call cmd_for lineNo,line
@@ -463,7 +467,9 @@ CMD_define: procedure=.int
          exit 8
       end
       nlen=nlen-1
-      if nlen>1 then body=strip(substr(body,1,nlen))' ; 'strip(source.nlino)
+      if nlen>1 then do
+         body=strip(substr(body,1,nlen))' ; 'strip(source.nlino)
+      end
       else body=strip(source.nlino)
       stype.nlino='D'
    end
@@ -854,12 +860,12 @@ resolveMacro: procedure=.string
    body=injectVariable(body)    ## inject pre-compiler variables, if there are any
    mexpanded=mexpanded+1
    ## test Macro is variadic
+   isVariadic=.int
    if pos('...', args,1) > 0 then do
       isVariadic = 1
       args = strip(changestr('...', '', args))
    end
    else isVariadic = 0
-
    if mspace=1 then do   ## command macros have stricter rule, they must be the first word of the line and they can't be nested
       if word(uline,1) \=strip(name) then return line  ## not a valid command macro call
    end

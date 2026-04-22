@@ -19,13 +19,19 @@ set(BIFS
 		_substr
 		_copies
 		_x2c
+		_x2d
 		_c2d
 		_reradix
 		_right
 		_length
 		_datatype
+		_left
+		_b2d
+		_b2x
 		abbrev
 		abs
+		b2x
+		b2d
 		c2x
 		c2d
 		center
