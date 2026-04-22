@@ -2441,7 +2441,9 @@ START_OF_INSTRUCTIONS
             /* Load Float Operand (op1 = (float)op2[op3]) */
         START_INSTRUCTION(METALOADFOPERAND_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - METALOADFOPERAND R%d,R%dR%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
-            op1R->float_value = context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value].fconst;
+            op1R->float_value =
+                    FLOAT_CONST_VALUE(context->modules[op2R->int_value - 1]->segment.const_pool,
+                                      context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value].index);
             DISPATCH
 
             /* Load String Operand (op1 = (string)op2[op3]) */
@@ -2614,6 +2616,7 @@ START_OF_INSTRUCTIONS
                             set_const_string(op1R->attributes[j]->attributes[4], (string_constant *) (pool + x));
                             break;
                         case STRING_CONST:
+                        case FLOAT_CONST:
                         case PROC_CONST:
                         case BINARY_CONST:
                         case DECIMAL_CONST:

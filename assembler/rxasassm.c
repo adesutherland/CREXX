@@ -100,6 +100,66 @@ static const OpInfo* find_opcode(const char *mnemonic, OperandType t1, OperandTy
 #include "utf.h"
 #endif
 
+struct float_wrapper {
+    uint64_t bits;
+    size_t value;
+    struct avl_tree_node index_node;
+};
+
+#define GET_FLOAT_BITS(i) avl_tree_entry((i), struct float_wrapper, index_node)->bits
+#define GET_FLOAT_VALUE(i) avl_tree_entry((i), struct float_wrapper, index_node)->value
+
+static uint64_t float_to_bits(double value) {
+    uint64_t bits = 0;
+    memcpy(&bits, &value, sizeof(bits));
+    return bits;
+}
+
+static int compare_float_node_node(const struct avl_tree_node *node1,
+                                   const struct avl_tree_node *node2) {
+    uint64_t n1 = GET_FLOAT_BITS(node1);
+    uint64_t n2 = GET_FLOAT_BITS(node2);
+    if (n1 < n2) return -1;
+    if (n1 > n2) return 1;
+    return 0;
+}
+
+static int compare_float_node_value(const void *value,
+                                    const struct avl_tree_node *nodeptr) {
+    uint64_t n1 = *(const uint64_t *)value;
+    uint64_t n2 = GET_FLOAT_BITS(nodeptr);
+    if (n1 < n2) return -1;
+    if (n1 > n2) return 1;
+    return 0;
+}
+
+static int add_float_node(struct avl_tree_node **root, uint64_t bits, size_t value) {
+    struct float_wrapper *entry = malloc(sizeof(struct float_wrapper));
+    entry->bits = bits;
+    entry->value = value;
+    if (avl_tree_insert(root, &entry->index_node, compare_float_node_node)) {
+        free(entry);
+        return 1;
+    }
+    return 0;
+}
+
+static int src_float_node(struct avl_tree_node *root, uint64_t bits, size_t *value) {
+    struct avl_tree_node *result = avl_tree_lookup(root, &bits, compare_float_node_value);
+    if (!result) return 0;
+    *value = GET_FLOAT_VALUE(result);
+    return 1;
+}
+
+static void free_float_tree(struct avl_tree_node **root) {
+    struct float_wrapper *entry;
+
+    avl_tree_for_each_in_postorder(entry, *root, struct float_wrapper, index_node) {
+        free(entry);
+    }
+    *root = 0;
+}
+
 /* Structure to handle "backpatching" - fixing forward references */
 struct backpatching_references;
 struct backpatching {
@@ -119,6 +179,7 @@ struct backpatching_references {
 void freeasbl(Assembler_Context *context) {
     if (context->string_constants_tree) free_tree(&context->string_constants_tree);
     if (context->decimal_constants_tree) free_tree(&context->decimal_constants_tree);
+    if (context->float_constants_tree) free_float_tree(&context->float_constants_tree);
     if (context->binary_constants_tree) free_tree(&context->binary_constants_tree);
     if (context->proc_constants_tree) free_tree(&context->proc_constants_tree);
     if (context->label_constants_tree) free_tree(&context->label_constants_tree);
@@ -509,6 +570,21 @@ static size_t add_decimal_to_pool(Assembler_Context *context, char* decimal) {
     return entry_index;
 }
 
+static size_t add_float_to_pool(Assembler_Context *context, double value) {
+    float_constant *entry;
+    size_t entry_index;
+    uint64_t bits = float_to_bits(value);
+
+    if (!src_float_node(context->float_constants_tree, bits, &entry_index)) {
+        entry_index = reserve_in_const_pool(context, sizeof(float_constant), FLOAT_CONST);
+        entry = FLOAT_CONST_AT(context->binary.const_pool, entry_index);
+        entry->double_value = value;
+        add_float_node(&context->float_constants_tree, bits, entry_index);
+    }
+
+    return entry_index;
+}
+
 static size_t add_binary_to_pool(Assembler_Context *context, char* hex) {
     string_constant *sentry;
     size_t entry_index;
@@ -692,8 +768,8 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
                     operandToken->token_value.integer;
             return;
         case FLOAT:
-            context->binary.binary[context->binary.inst_size++].fconst =
-                    operandToken->token_value.real;
+            s_index = add_float_to_pool(context, operandToken->token_value.real);
+            context->binary.binary[context->binary.inst_size++].index = s_index;
             return;
         case CHAR:
             context->binary.binary[context->binary.inst_size++].cconst =

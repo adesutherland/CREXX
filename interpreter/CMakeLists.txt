@@ -186,6 +186,26 @@ add_custom_target(run_tests_float_math ALL DEPENDS tests_float_math.rxbin)
 
 crexx_add_vm_dual_test(NAME rxasfloatmathtests RXVM_ARGS tests_float_math)
 
+# Float Constant Pool Format and Runtime Tests
+add_custom_command(
+        OUTPUT tests_float_pool.rxbin
+        COMMAND $<TARGET_FILE:rxas> -o tests_float_pool ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_float_pool
+        DEPENDS tests/tests_float_pool.rxas rxas rxvm mc_decimal_dynamic
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "cREXX RXAS Float Constant Pool Tests ..."
+)
+
+add_custom_target(run_tests_float_pool ALL DEPENDS tests_float_pool.rxbin)
+
+crexx_add_vm_dual_test(NAME rxasfloatpooltests RXVM_ARGS tests_float_pool)
+
+add_executable(test_float_pool_format tests/test_float_pool_format.c)
+target_include_directories(test_float_pool_format PRIVATE
+        ${CMAKE_SOURCE_DIR}/platform
+        ${CMAKE_SOURCE_DIR}/binutils/include)
+add_dependencies(test_float_pool_format run_tests_float_pool)
+add_test(NAME float_pool_format_check COMMAND test_float_pool_format WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 # String Instruction Tests
 add_custom_command(
 		OUTPUT tests_string.rxbin

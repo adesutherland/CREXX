@@ -22,8 +22,8 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
 
 3. **In-Memory Buffering & Constant Pooling**:
    - Handled in `assembler/rxasassm.c`.
-   - Instructions and inline constants are appended sequentially into a dynamic array of `bin_code` elements.
-   - Complex types (Strings, Decimals, Procedure Headers, Metadata) are deduplicated via AVL Trees and injected into a variable-length **Constant Pool**.
+   - Instructions and operand slots are appended sequentially into a dynamic array of `bin_code` elements.
+   - Complex and pooled literal types (Strings, Floats, Decimals, Procedure Headers, Metadata) are deduplicated via AVL Trees and injected into a variable-length **Constant Pool**.
 
 4. **Backpatching & Optimization (Second Pass)**:
    - Forward references (branches to undefined labels, calls to undefined procedures) are logged as a linked list of references.
@@ -46,8 +46,8 @@ context->binary.binary[context->binary.inst_size++].iconst = token->integer;
 ```
 
 ### Constant Pool
-Strings, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
-Types include: `STRING_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_REG`, etc.
+Strings, pooled float literals, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
+Types include: `STRING_CONST`, `FLOAT_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_REG`, etc.
 
 The interface/callable-contract work extends that same metadata path rather
 than introducing a second binary header mechanism. In addition to `META_CLASS`
@@ -95,13 +95,17 @@ When the `EOF` is reached, the `backptch(Assembler_Context *context)` function o
 
 ## 4. Binary Emission (`.rxbin`)
 
-Once parsing and backpatching conclude without errors, the assembler flushes the `Assembler_Context` state into a highly compressed `.rxbin` file.
+Once parsing and backpatching conclude without errors, the assembler flushes the `Assembler_Context` state into a packed `.rxbin` file.
 
 The structural output consists of:
 1. **Magic Header & Version**: Validates the file format.
 2. **Global Counters**: e.g., Number of global registers (`context->binary.globals`).
 3. **The Constant Pool**: The exact byte stream accumulated in `context->binary.const_pool`, which includes linked-list pointers mapping exposed exports and metadata objects.
 4. **The Bytecode Stream**: The `context->binary.binary` sequence, representing the fully resolved executable operations.
+
+As of format version `002`, float operands are no longer stored inline as raw
+`double` payloads in operand slots. Instead, the operand slot carries an index
+to a deduplicated `FLOAT_CONST` record in the constant pool.
 
 ## 5. Current Interface-Dispatch Additions
 

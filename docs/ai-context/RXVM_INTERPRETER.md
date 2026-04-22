@@ -121,6 +121,15 @@ In this example:
 - `REG_RETURN_INT` maps the result back into the memory of Operand 1.
 - `DISPATCH` safely jumps the Program Counter (`pc`) to the next instruction.
 
+### Pooled float operands
+
+As of `rxbin` format `002`, float literals are loaded from the constant pool
+instead of being stored inline in operand slots. The bytecode still keeps the
+same instruction formats (`FMT_F`, `FMT_R_F`, `FMT_R_R_F`, etc.), but the
+operand slot now contains an index into a `FLOAT_CONST` record in
+`const_pool`, and the interpreter resolves that record when a float operand is
+read.
+
 ## 4. Current Interface Dispatch in the VM
 
 The current Level B interface runtime slice adds three VM-facing pieces on top

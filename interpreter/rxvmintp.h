@@ -125,7 +125,7 @@ struct stack_frame {
 #define REG_VAL(n)                   current_frame->locals[n]
 #define REG_IDX(n)                   (pc+(n))->index
 #define INT_OP(n)                    (pc+(n))->iconst
-#define FLOAT_OP(n)                  (pc+(n))->fconst
+#define FLOAT_OP(n)                  FLOAT_CONST_VALUE(current_frame->procedure->binarySpace->const_pool, (pc+(n))->index)
 
 #define CONSTSTRING_OP(n)            ((string_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))
 #define PROC_OP(n)                   ((proc_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))

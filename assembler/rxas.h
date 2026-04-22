@@ -61,6 +61,7 @@ typedef struct Assembler_Context {
     int meta_tail;
     struct avl_tree_node *string_constants_tree;
     struct avl_tree_node *decimal_constants_tree;
+    struct avl_tree_node *float_constants_tree;
     struct avl_tree_node *binary_constants_tree;
     struct avl_tree_node *proc_constants_tree;
     struct avl_tree_node *label_constants_tree;

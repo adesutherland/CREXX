@@ -253,7 +253,8 @@ static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_le
 #endif
             break;
         case OP_FLOAT:
-            out_len = snprintf(buffer, buffer_len, "%f", pgm->binary[index].fconst);
+            out_len = snprintf(buffer, buffer_len, "%f",
+                               FLOAT_CONST_VALUE(pgm->const_pool, pgm->binary[index].index));
             break;
         case OP_CHAR:
             out_len = snprintf(buffer, buffer_len, "\'%c\'", pgm->binary[index].cconst);
@@ -799,11 +800,15 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     fprintf(stream, "* 0x%.6lx STRING %s\n", i, line_buffer);
                 }
                 break;
+            case FLOAT_CONST:
+                if (print_all_constant_pool) {
+                    fprintf(stream, "* 0x%.6lx FLOAT %f\n", i, ((float_constant *)entry)->double_value);
+                }
+                break;
             case BINARY_CONST:
                 if (print_all_constant_pool) {
-                    size_t ix = pgm->binary[i].index;
-                    char* c = ((string_constant *)(pgm->const_pool + ix))->string;
-                    size_t sz = ((string_constant *)(pgm->const_pool + ix))->string_len;
+                    char* c = ((string_constant *)(pgm->const_pool + i))->string;
+                    size_t sz = ((string_constant *)(pgm->const_pool + i))->string_len;
                     encode_binary_to_hex(line_buffer, MAX_LINE_SIZE, c, sz);
                     fprintf(stream, "* 0x%.6lx STRING %s\n", i, line_buffer);
                 }
@@ -1086,6 +1091,5 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     /* Free memory */
     free(source);
 }
-
 
 

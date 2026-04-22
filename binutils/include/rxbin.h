@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BIN_VERSION "001"
+#define BIN_VERSION "002"
 
 #define BIN_HEADER "cReXx" /* Do not change */
 
@@ -51,7 +51,7 @@ struct bin_space {
 #pragma pack(pop)
 
 enum const_pool_type {
-    STRING_CONST, BINARY_CONST, DECIMAL_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
+    STRING_CONST, BINARY_CONST, DECIMAL_CONST, FLOAT_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
     META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR,
     META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER
 };
@@ -73,6 +73,15 @@ typedef struct string_constant {
 #endif
     char string[1]; /* Must be the last member */
 } string_constant;
+
+/* cREXX Float entry in the constant pool - this is for FLOAT_CONST */
+typedef struct float_constant {
+    chameleon_constant base;
+    double double_value;
+} float_constant;
+
+#define FLOAT_CONST_AT(pool, index) ((float_constant *)((pool) + (index)))
+#define FLOAT_CONST_VALUE(pool, index) (FLOAT_CONST_AT((pool), (index))->double_value)
 
 typedef struct stack_frame stack_frame;
 
