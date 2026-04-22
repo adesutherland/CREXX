@@ -206,6 +206,26 @@ target_include_directories(test_float_pool_format PRIVATE
 add_dependencies(test_float_pool_format run_tests_float_pool)
 add_test(NAME float_pool_format_check COMMAND test_float_pool_format WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+# Packed RXBIN Format Tests
+add_custom_command(
+        OUTPUT tests_compact_format.rxbin
+        COMMAND $<TARGET_FILE:rxas> -o tests_compact_format ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_compact_format
+        DEPENDS tests/tests_compact_format.rxas rxas rxvm mc_decimal_dynamic
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "cREXX RXBIN packed-format tests ..."
+)
+
+add_custom_target(run_tests_compact_format ALL DEPENDS tests_compact_format.rxbin)
+
+crexx_add_vm_dual_test(NAME rxascompactformattests RXVM_ARGS tests_compact_format)
+
+add_executable(test_compact_format tests/test_compact_format.c)
+target_include_directories(test_compact_format PRIVATE
+        ${CMAKE_SOURCE_DIR}/platform
+        ${CMAKE_SOURCE_DIR}/binutils/include)
+add_dependencies(test_compact_format run_tests_compact_format)
+add_test(NAME compact_format_check COMMAND test_compact_format WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 # String Instruction Tests
 add_custom_command(
 		OUTPUT tests_string.rxbin

@@ -1,0 +1,14 @@
+/*
+ * Disassembler imported procedure roundtrip coverage.
+ */
+
+.srcfile="tests_disassembler_imported.rexx"
+.globals=0
+
+word() .expose=rxfnsb.word
+   .meta "rxfnsb.word"="b" ".string" word() "string=.string,wordnum=.int" ""
+
+main() .locals=0
+   .meta "disassembler_imported.main"="b" ".void" main() "" ""
+   sayx "PASS: Imported Roundtrip"
+   ret

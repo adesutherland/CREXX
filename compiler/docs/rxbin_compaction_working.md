@@ -1,6 +1,6 @@
 # RXBIN Compaction Working Notes
 
-Status: working, stage 1 and runtime-state split implemented
+Status: working, stages 1 and 2 plus runtime-state split implemented
 Last updated: 2026-04-22
 
 ## 1. Purpose
@@ -29,8 +29,7 @@ This work currently covers three stages:
      compressor
 3. add a build-time linker for modules
 
-This note does not yet commit the exact stage-2 code-stream algorithm. That
-still needs to be written down precisely before implementation.
+Stage 2 is now specified and implemented in the current `003` format.
 
 In addition, this programme now includes one supporting structural refactor:
 
@@ -310,54 +309,103 @@ an almost direct form. That is simple, but it leaves size on the table.
 This stage should assume that the supporting refactor in section 6 has either
 been completed or has been explicitly deferred with a clear reason.
 
-### 7.2 Code-stream compression direction
+### 7.2 Header shape in `003`
 
-The code stream already uses fixed-width slots. The intended stage-2 direction
-is:
+Stage 2 keeps the programme on `003`.
 
-- define a specific packing algorithm for the slot stream
-- optimize for common small integers, frequent indexes, and repeated opcode
-  patterns
-- decompress into the existing in-memory `bin_code` form during module load
+Compatibility note:
 
-The exact algorithm is still `TBD`. This note only records the required shape:
+- no compatibility is required with the earlier unpublished `003` baseline
+- the new `003` header layout is now the only supported `003` layout
 
-- compact on-disk representation
-- deterministic load-time expansion back to normal `bin_code` arrays
-- no per-instruction decompression inside the execution loop
+The header now carries both logical and stored sizes:
 
-### 7.3 Constant-pool compression direction
+- `instruction_size`: expanded number of `bin_code` slots after load
+- `instruction_stored_size`: number of bytes stored for the instruction section
+- `constant_size`: expanded constant-pool size after load
+- `constant_stored_size`: number of bytes stored for the constant section
+- `section_flags`: bit flags describing whether each section is raw or packed
 
-Preferred direction:
+Current flag allocation:
 
-- compress the serialized constant pool as a blob
-- decompress once during load
-- keep the in-memory constant-pool layout unchanged for the VM
+- bit `0`: instruction section packed with the stage-2 code-stream codec
+- bit `1`: constant section packed with the stage-2 blob codec
 
-Heatshrink is a plausible fit for the first pass because this is a file-size
-optimization problem, not a random-access runtime format problem.
+Important consequence:
 
-### 7.4 Header and loader implications
+- the loader always knows the final target size before it starts expanding a
+  packed section
 
-Stage 2 likely requires additional header information:
+### 7.3 Code-stream format
 
-- compression flags per section
-- compressed size
-- uncompressed size
+The instruction section is no longer serialized as raw `bin_code` memory when
+packing wins. It is serialized as a logical token stream:
 
-That lets the loader:
+- opcode
+- operand 1
+- operand 2
+- operand 3
 
-- detect whether a section is raw or compressed
-- allocate the final buffer once
-- restore the regular in-memory structures before linking or threading
+`no_ops` is not stored in the packed form. It is reconstructed from the opcode
+table during load.
 
-### 7.5 Open definition needed before implementation
+Packing rules:
 
-Before stage 2 starts, we still need:
+- all tokens are encoded as unsigned integers
+- signed `I` operands are ZigZag-transformed before encoding
+- all other operand classes use their current unsigned/index value directly
 
-- the exact code-stream packing algorithm
-- the section-level header changes
-- the compatibility story for mixed old/new modules
+The byte-level integer codec is:
+
+- `0xxxxxxx`: one value in the range `0..127`
+- `10aaabbb`: two consecutive values in the range `0..7`
+- `110xxxxx yyyyyyyy`: one 13-bit value
+- `1110xxxx yyyyyyyy zzzzzzzz`: one 20-bit value
+- `11110xxx ...`: one 27-bit value in 4 bytes total
+- `111110xx ...`: one 34-bit value in 5 bytes total
+- `1111110x ...`: one 41-bit value in 6 bytes total
+- `11111110` plus 6 payload bytes: one 48-bit value in 7 bytes total
+- `11111111` plus 8 payload bytes: one 64-bit value in 9 bytes total
+
+Payload bytes are stored most-significant first inside each multi-byte form.
+Writers emit the shortest canonical form.
+
+Operational rules:
+
+- packing is done across the full logical token stream, not per raw slot
+- the dual-tiny form may pair any two consecutive token values `0..7`,
+  including opcodes or ZigZag-transformed signed operands
+- the loader expands the packed stream back into ordinary `bin_code[]`
+  before the VM links or prepares the module
+
+### 7.4 Constant-pool format
+
+The constant pool stays structurally unchanged in memory.
+
+When compression wins, the stored constant section uses a lightweight
+Heatshrink-style LZSS blob codec:
+
+- one control byte describes the next 8 tokens
+- control bit `0`: literal byte
+- control bit `1`: back-reference token
+- back-reference token size: 2 bytes
+- window size: 4 KiB
+- encoded distance range: `1..4096`
+- encoded match length range: `3..18`
+
+This keeps the implementation self-contained while preserving the intended
+"Heatshrink or equivalent lightweight compressor" design point.
+
+### 7.5 Loader/runtime behaviour
+
+Stage 2 remains a load-time-only compaction design:
+
+- packed instruction streams are expanded once during module load
+- packed constant pools are expanded once during module load
+- the interpreter loop, linker, disassembler, and metadata walkers continue to
+  work on normal expanded in-memory data
+
+Section writers may still emit raw sections when packing does not reduce size.
 
 ## 8. Stage 3: build-time linker
 
@@ -432,20 +480,18 @@ The main approval points from this note are:
    operands pool-backed in `002`
 3. the serialized/runtime state split should be added to the programme as the
    next structural step after stage 1 and before compression/linking
-4. stage 2 is accepted as a two-part load-time decompression design:
-   - code-stream packing algorithm to be specified
-   - constant-pool compression via Heatshrink or similar
+4. stage 2 uses a two-part load-time decompression design inside `003`:
+   - packed logical token stream for the instruction section
+   - lightweight LZSS blob compression for the constant pool
 5. stage 3 should begin as a build-time packager/linker built on the existing
    multi-module file capability
 
 ## 11. Immediate next step after approval
 
-With stage 1 and the runtime-state split complete, the next implementation
-step should be stage 2:
+With stages 1 and 2 plus the runtime-state split complete, the next
+implementation step should be stage 3:
 
-- define the exact code-stream packing algorithm for the current 64-bit slot
-  storage
-- define how packed code is expanded back into normal `bin_code` arrays at
-  load time
-- add constant-pool compression with Heatshrink or equivalent load-time
-  decompression
+- add the build-time module linker/packager
+- start by reusing the existing multi-module file container model
+- treat cross-module deduplication and deeper relocation work as later linker
+  milestones

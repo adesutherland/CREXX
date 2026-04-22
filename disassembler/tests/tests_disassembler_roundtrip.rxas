@@ -1,0 +1,36 @@
+/*
+ * Disassembler metadata roundtrip coverage.
+ */
+
+.srcfile="tests_disassembler_roundtrip.rexx"
+.globals=1
+
+.meta "disassembler_roundtrip.box"="b" ".unknown" .class
+.meta "disassembler_roundtrip.box.value"="b" ".string" .attr 1
+.meta "disassembler_roundtrip.shape"="b" ".unknown" .interface
+.meta "disassembler_roundtrip.box"="disassembler_roundtrip.shape" .implements
+.meta "disassembler_roundtrip.shape"="method" "describe" ".string" "" .member
+.meta "disassembler_roundtrip.shape"="factory" "*" ".shape" "" .member
+
+g0 .expose=disassembler_roundtrip.shared
+
+main() .locals=6
+   .meta "disassembler_roundtrip.main"="b" ".void" main() "" ""
+   .src 1:1="local = \"hello\""
+   .meta "disassembler_roundtrip.main.local"="b" ".string" r1
+   .meta "disassembler_roundtrip.main.answer"="b" ".string" "forty-two"
+   load r1,"hello"
+   .src 2:1="decimal = 12.5d"
+   load r2,12.5d
+   .src 3:1="float = 1.5"
+   load r3,1.5
+   .src 4:1="global = local"
+   copy g0,r1
+   .src 5:1="say"
+   sayx "PASS: Disassembler Roundtrip"
+   ret
+   .meta "disassembler_roundtrip.main.local"
+
+helper() .locals=0 .expose=disassembler_roundtrip.helper
+   .meta "disassembler_roundtrip.helper"="b" ".void" helper() "" ""
+   ret

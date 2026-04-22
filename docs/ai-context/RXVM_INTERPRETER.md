@@ -1,12 +1,12 @@
 # cREXX Virtual Machine (Interpreter) Architecture
 
-The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design emphasizes performance through direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. As of `rxbin` format `003`, serialized module data and runtime-only execution state are explicitly separated.
+The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design emphasizes performance through direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. As of `rxbin` format `003`, serialized module data and runtime-only execution state are explicitly separated, and serialized instruction/constant sections may be compacted on disk before being expanded during load.
 
 ## 1. VM Lifecycle
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
-2. **Loading**: `rxvm_load()` ingests a `.rxbin` binary file, loading it into an internal `module` struct, resolving the constant pool and the bytecode instruction stream.
+2. **Loading**: `rxvm_load()` ingests a `.rxbin` binary file, reads the section flags and stored sizes, expands any packed instruction/constant sections back into normal buffers, and then loads the result into an internal `module` struct.
 3. **Linking**: `rxvm_link()` traverses newly loaded modules to resolve exports and external imports into a unified memory map. The call is now dirty-checked, so repeated bridge/runtime entry points become fast no-ops when no module state changed.
 4. **Preparation**: `rxvm_prepare()` optionally populates per-module dispatch side tables for maximum speed without mutating serialized bytecode.
 5. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure (typically `main`) and launch the main interpreter loop.
@@ -147,6 +147,17 @@ same instruction formats (`FMT_F`, `FMT_R_F`, `FMT_R_R_F`, etc.), but the
 operand slot now contains an index into a `FLOAT_CONST` record in
 `const_pool`, and the interpreter resolves that record when a float operand is
 read.
+
+As of the current `003` layout, the loader is also responsible for undoing the
+two stage-2 section codecs before execution begins:
+
+- the instruction section may arrive as a packed logical token stream with
+  operand counts reconstructed from the opcode table
+- the constant pool may arrive as a compressed LZSS blob
+
+Neither codec is visible inside the execution loop. By the time `run()` starts,
+the module again looks like a normal `bin_code[]` plus raw constant-pool
+buffer.
 
 ## 4. Current Interface Dispatch in the VM
 

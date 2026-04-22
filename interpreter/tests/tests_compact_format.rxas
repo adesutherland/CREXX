@@ -1,0 +1,47 @@
+/*
+ * interpreter/tests/tests_compact_format.rxas
+ *
+ * This fixture forces both stage-2 section codecs:
+ * - small opcodes/registers/signed ints in the packed code stream
+ * - multiple similar long strings in the constant pool
+ */
+
+.globals=0
+
+main() .locals=12
+    load r1, -1
+    load r2, -2
+    ieq r0, r1, -1
+    brf fail, r0
+    ieq r0, r2, -2
+    brf fail, r0
+
+    load r3, "compaction-string-alpha-0000-stage2-validation"
+    load r4, "compaction-string-alpha-0001-stage2-validation"
+    load r5, "compaction-string-alpha-0002-stage2-validation"
+    load r6, "compaction-string-alpha-0003-stage2-validation"
+    load r7, "compaction-string-alpha-0004-stage2-validation"
+    load r8, "compaction-string-alpha-0005-stage2-validation"
+
+    seq r0, r3, "compaction-string-alpha-0000-stage2-validation"
+    brf fail, r0
+    seq r0, r4, "compaction-string-alpha-0001-stage2-validation"
+    brf fail, r0
+    seq r0, r5, "compaction-string-alpha-0002-stage2-validation"
+    brf fail, r0
+    seq r0, r6, "compaction-string-alpha-0003-stage2-validation"
+    brf fail, r0
+    seq r0, r7, "compaction-string-alpha-0004-stage2-validation"
+    brf fail, r0
+    seq r0, r8, "compaction-string-alpha-0005-stage2-validation"
+    brf fail, r0
+
+    load r9, 1.5
+    feq r0, r9, 1.5
+    brf fail, r0
+
+    ret 0
+
+fail:
+    say "FAIL: compact format decode"
+    ret 1

@@ -8,9 +8,14 @@
 #ifndef CREXX_RXBIN_H
 #define CREXX_RXBIN_H
 
-#include <string.h>
+#include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "platform.h"
+#include "rxdefs.h"
 
 #define BIN_VERSION "003"
 
@@ -201,13 +206,21 @@ typedef struct meta_member_constant {
     size_t args;
 } meta_member_constant;
 
+enum rxbin_section_flags {
+    RXBIN_SECTION_INST_PACKED = 1u << 0,
+    RXBIN_SECTION_CONST_PACKED = 1u << 1
+};
+
 typedef struct module_header {
     char FILE_HEADER[sizeof(BIN_HEADER)];
     char FILE_VERSION[sizeof(BIN_VERSION)];
     size_t name_size;  /* number of byte/chars including null terminator */
     size_t description_size;  /* number of byte/chars including null terminator */
-    size_t instruction_size;  /* number of 64 bit instructions */
-    size_t constant_size; /* Number of bytes */
+    size_t instruction_size;  /* number of expanded 64 bit instructions */
+    size_t instruction_stored_size; /* number of bytes stored on disk */
+    size_t constant_size; /* number of bytes after decompression */
+    size_t constant_stored_size; /* number of bytes stored on disk */
+    unsigned int section_flags;
     int globals;
     int proc_head;
     int expose_head;
@@ -218,15 +231,40 @@ typedef struct module_file {
     module_header header;
     char* name; /* Null Terminated */
     char* description; /* Null Terminated */
-    void* instructions; /* Note - for a native module this is a dynamic library handle/pointer */
-    void* constant;
-    unsigned char fromfile : 1; /* Marks if the module file was loaded from a file (rather than statically linked) */
+    void* instructions; /* Expanded instruction stream in memory */
+    void* constant; /* Expanded constant pool in memory */
+    unsigned char fromfile : 1; /* Marks if the module owns heap allocations that free_module() should release */
     unsigned char native : 1;    /* Marks if the module is a native module */
 } module_file;
 
+typedef struct rxbin_byte_buffer {
+    unsigned char *data;
+    size_t size;
+    size_t capacity;
+} rxbin_byte_buffer;
+
+typedef struct rxbin_var_writer {
+    rxbin_byte_buffer *buffer;
+    unsigned char pending_tiny;
+    unsigned char have_pending_tiny;
+} rxbin_var_writer;
+
+typedef struct rxbin_var_reader {
+    const unsigned char *cursor;
+    const unsigned char *end;
+    uint64_t queued_value;
+    unsigned char have_queued_value;
+} rxbin_var_reader;
+
+#define RXBIN_LZSS_WINDOW 4096u
+#define RXBIN_LZSS_HASH_SIZE 8192u
+#define RXBIN_LZSS_MIN_MATCH 3u
+#define RXBIN_LZSS_MAX_MATCH 18u
+#define RXBIN_LZSS_MAX_CHAIN 64u
+
 /* Sets Header Version and initialises the header */
 static void init_module(module_file *module) {
-    memset(module,0,sizeof(module_file)); /* Zero module file (valgrind complains otherwise) */
+    memset(module, 0, sizeof(module_file)); /* Zero module file (valgrind complains otherwise) */
     memcpy(module->header.FILE_HEADER, BIN_HEADER, sizeof(BIN_HEADER));
     memcpy(module->header.FILE_VERSION, BIN_VERSION, sizeof(BIN_VERSION));
     module->fromfile = 0;
@@ -239,42 +277,768 @@ static void init_module(module_file *module) {
 static int check_header_version(module_header *header) {
     if (memcmp(header->FILE_HEADER, BIN_HEADER, sizeof(BIN_HEADER)) != 0) return 1;
     if (memcmp(header->FILE_VERSION, BIN_VERSION, sizeof(BIN_VERSION)) != 0) return 2;
+    if (header->section_flags & ~(RXBIN_SECTION_INST_PACKED | RXBIN_SECTION_CONST_PACKED)) return 2;
     return 0;
+}
+
+static int rxbin_get_operand_types(OpFormat format, OperandType *types) {
+    switch (format) {
+        case FMT_EMPTY: return 0;
+        case FMT_C: types[0] = OP_CHAR; return 1;
+        case FMT_F: types[0] = OP_FLOAT; return 1;
+        case FMT_I: types[0] = OP_INT; return 1;
+        case FMT_I_I: types[0] = OP_INT; types[1] = OP_INT; return 2;
+        case FMT_I_I_I: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_INT; return 3;
+        case FMT_I_I_R: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_REG; return 3;
+        case FMT_I_R: types[0] = OP_INT; types[1] = OP_REG; return 2;
+        case FMT_I_R_R: types[0] = OP_INT; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_L: types[0] = OP_ID; return 1;
+        case FMT_L_L_R: types[0] = OP_ID; types[1] = OP_ID; types[2] = OP_REG; return 3;
+        case FMT_L_P_S: types[0] = OP_ID; types[1] = OP_FUNC; types[2] = OP_STRING; return 3;
+        case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; return 2;
+        case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; return 3;
+        case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; return 2;
+        case FMT_P: types[0] = OP_FUNC; return 1;
+        case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
+        case FMT_R: types[0] = OP_REG; return 1;
+        case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
+        case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
+        case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
+        case FMT_R_F: types[0] = OP_REG; types[1] = OP_FLOAT; return 2;
+        case FMT_R_F_I: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_INT; return 3;
+        case FMT_R_F_R: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_REG; return 3;
+        case FMT_R_I: types[0] = OP_REG; types[1] = OP_INT; return 2;
+        case FMT_R_I_I: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_INT; return 3;
+        case FMT_R_I_R: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_REG; return 3;
+        case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; return 2;
+        case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; return 3;
+        case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; return 2;
+        case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; return 3;
+        case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; return 3;
+        case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; return 3;
+        case FMT_R_R_R: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_R_R_S: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_STRING; return 3;
+        case FMT_R_S: types[0] = OP_REG; types[1] = OP_STRING; return 2;
+        case FMT_R_S_I: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_INT; return 3;
+        case FMT_R_S_R: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_REG; return 3;
+        case FMT_R_S_S: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_STRING; return 3;
+        case FMT_S: types[0] = OP_STRING; return 1;
+        case FMT_S_R: types[0] = OP_STRING; types[1] = OP_REG; return 2;
+        case FMT_S_S: types[0] = OP_STRING; types[1] = OP_STRING; return 2;
+        case FMT_S_S_R: types[0] = OP_STRING; types[1] = OP_STRING; types[2] = OP_REG; return 3;
+        default: return 0;
+    }
+}
+
+static OpFormat rxbin_opcode_format(int opcode) {
+    static const OpFormat opcode_formats[OP_MAX_INSTRUCTIONS] = {
+#define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) [OPCODE] = FMT,
+#include "rxops.h"
+#undef X
+    };
+
+    if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) return FMT_EMPTY;
+    return opcode_formats[opcode];
+}
+
+static void rxbin_byte_buffer_init(rxbin_byte_buffer *buffer) {
+    buffer->data = 0;
+    buffer->size = 0;
+    buffer->capacity = 0;
+}
+
+static void rxbin_byte_buffer_free(rxbin_byte_buffer *buffer) {
+    if (buffer->data) free(buffer->data);
+    buffer->data = 0;
+    buffer->size = 0;
+    buffer->capacity = 0;
+}
+
+static int rxbin_byte_buffer_reserve(rxbin_byte_buffer *buffer, size_t extra) {
+    size_t required;
+    size_t new_capacity;
+    unsigned char *new_data;
+
+    if (extra > SIZE_MAX - buffer->size) return 0;
+    required = buffer->size + extra;
+    if (required <= buffer->capacity) return 1;
+
+    new_capacity = buffer->capacity ? buffer->capacity : 64;
+    while (new_capacity < required) {
+        if (new_capacity > SIZE_MAX / 2) {
+            new_capacity = required;
+            break;
+        }
+        new_capacity *= 2;
+    }
+
+    new_data = realloc(buffer->data, new_capacity);
+    if (!new_data) return 0;
+
+    buffer->data = new_data;
+    buffer->capacity = new_capacity;
+    return 1;
+}
+
+static int rxbin_byte_buffer_append_byte(rxbin_byte_buffer *buffer, unsigned char value) {
+    if (!rxbin_byte_buffer_reserve(buffer, 1)) return 0;
+    buffer->data[buffer->size++] = value;
+    return 1;
+}
+
+static int rxbin_byte_buffer_append_bytes(rxbin_byte_buffer *buffer, const unsigned char *data, size_t size) {
+    if (!size) return 1;
+    if (!rxbin_byte_buffer_reserve(buffer, size)) return 0;
+    memcpy(buffer->data + buffer->size, data, size);
+    buffer->size += size;
+    return 1;
+}
+
+static int rxbin_append_varuint_direct(rxbin_byte_buffer *buffer, uint64_t value) {
+    unsigned char bytes[9];
+    size_t count = 0;
+
+    if (value <= UINT64_C(0x7F)) {
+        bytes[count++] = (unsigned char)value;
+    } else if (value <= UINT64_C(0x1FFF)) {
+        bytes[count++] = (unsigned char)(0xC0u | ((value >> 8) & 0x1Fu));
+        bytes[count++] = (unsigned char)(value & 0xFFu);
+    } else if (value <= UINT64_C(0xFFFFF)) {
+        bytes[count++] = (unsigned char)(0xE0u | ((value >> 16) & 0x0Fu));
+        bytes[count++] = (unsigned char)((value >> 8) & 0xFFu);
+        bytes[count++] = (unsigned char)(value & 0xFFu);
+    } else if (value <= UINT64_C(0x7FFFFFF)) {
+        bytes[count++] = (unsigned char)(0xF0u | ((value >> 24) & 0x07u));
+        bytes[count++] = (unsigned char)((value >> 16) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 8) & 0xFFu);
+        bytes[count++] = (unsigned char)(value & 0xFFu);
+    } else if (value <= UINT64_C(0x3FFFFFFFF)) {
+        bytes[count++] = (unsigned char)(0xF8u | ((value >> 32) & 0x03u));
+        bytes[count++] = (unsigned char)((value >> 24) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 16) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 8) & 0xFFu);
+        bytes[count++] = (unsigned char)(value & 0xFFu);
+    } else if (value <= UINT64_C(0x1FFFFFFFFFF)) {
+        bytes[count++] = (unsigned char)(0xFCu | ((value >> 40) & 0x01u));
+        bytes[count++] = (unsigned char)((value >> 32) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 24) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 16) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 8) & 0xFFu);
+        bytes[count++] = (unsigned char)(value & 0xFFu);
+    } else if (value <= UINT64_C(0xFFFFFFFFFFFF)) {
+        bytes[count++] = 0xFEu;
+        bytes[count++] = (unsigned char)((value >> 40) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 32) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 24) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 16) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 8) & 0xFFu);
+        bytes[count++] = (unsigned char)(value & 0xFFu);
+    } else {
+        bytes[count++] = 0xFFu;
+        bytes[count++] = (unsigned char)((value >> 56) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 48) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 40) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 32) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 24) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 16) & 0xFFu);
+        bytes[count++] = (unsigned char)((value >> 8) & 0xFFu);
+        bytes[count++] = (unsigned char)(value & 0xFFu);
+    }
+
+    return rxbin_byte_buffer_append_bytes(buffer, bytes, count);
+}
+
+static void rxbin_var_writer_init(rxbin_var_writer *writer, rxbin_byte_buffer *buffer) {
+    writer->buffer = buffer;
+    writer->pending_tiny = 0;
+    writer->have_pending_tiny = 0;
+}
+
+static int rxbin_var_writer_write(rxbin_var_writer *writer, uint64_t value) {
+    if (value <= UINT64_C(7)) {
+        if (writer->have_pending_tiny) {
+            unsigned char pair_byte = (unsigned char)(0x80u | (writer->pending_tiny << 3) | (unsigned char)value);
+            writer->have_pending_tiny = 0;
+            return rxbin_byte_buffer_append_byte(writer->buffer, pair_byte);
+        }
+        writer->pending_tiny = (unsigned char)value;
+        writer->have_pending_tiny = 1;
+        return 1;
+    }
+
+    if (writer->have_pending_tiny) {
+        if (!rxbin_append_varuint_direct(writer->buffer, writer->pending_tiny)) return 0;
+        writer->have_pending_tiny = 0;
+    }
+
+    return rxbin_append_varuint_direct(writer->buffer, value);
+}
+
+static int rxbin_var_writer_flush(rxbin_var_writer *writer) {
+    if (!writer->have_pending_tiny) return 1;
+    writer->have_pending_tiny = 0;
+    return rxbin_append_varuint_direct(writer->buffer, writer->pending_tiny);
+}
+
+static void rxbin_var_reader_init(rxbin_var_reader *reader, const unsigned char *data, size_t size) {
+    reader->cursor = data;
+    reader->end = data + size;
+    reader->queued_value = 0;
+    reader->have_queued_value = 0;
+}
+
+static int rxbin_var_reader_read(rxbin_var_reader *reader, uint64_t *value) {
+    unsigned char first;
+
+    if (reader->have_queued_value) {
+        reader->have_queued_value = 0;
+        *value = reader->queued_value;
+        return 1;
+    }
+
+    if (reader->cursor >= reader->end) return 0;
+    first = *(reader->cursor++);
+
+    if ((first & 0x80u) == 0) {
+        *value = first;
+        return 1;
+    }
+
+    if ((first & 0xC0u) == 0x80u) {
+        *value = (uint64_t)((first >> 3) & 0x07u);
+        reader->queued_value = (uint64_t)(first & 0x07u);
+        reader->have_queued_value = 1;
+        return 1;
+    }
+
+    if ((first & 0xE0u) == 0xC0u) {
+        if (reader->end - reader->cursor < 1) return 0;
+        *value = ((uint64_t)(first & 0x1Fu) << 8) |
+                 (uint64_t)*(reader->cursor++);
+        return 1;
+    }
+
+    if ((first & 0xF0u) == 0xE0u) {
+        if (reader->end - reader->cursor < 2) return 0;
+        *value = ((uint64_t)(first & 0x0Fu) << 16) |
+                 ((uint64_t)reader->cursor[0] << 8) |
+                 (uint64_t)reader->cursor[1];
+        reader->cursor += 2;
+        return 1;
+    }
+
+    if ((first & 0xF8u) == 0xF0u) {
+        if (reader->end - reader->cursor < 3) return 0;
+        *value = ((uint64_t)(first & 0x07u) << 24) |
+                 ((uint64_t)reader->cursor[0] << 16) |
+                 ((uint64_t)reader->cursor[1] << 8) |
+                 (uint64_t)reader->cursor[2];
+        reader->cursor += 3;
+        return 1;
+    }
+
+    if ((first & 0xFCu) == 0xF8u) {
+        if (reader->end - reader->cursor < 4) return 0;
+        *value = ((uint64_t)(first & 0x03u) << 32) |
+                 ((uint64_t)reader->cursor[0] << 24) |
+                 ((uint64_t)reader->cursor[1] << 16) |
+                 ((uint64_t)reader->cursor[2] << 8) |
+                 (uint64_t)reader->cursor[3];
+        reader->cursor += 4;
+        return 1;
+    }
+
+    if ((first & 0xFEu) == 0xFCu) {
+        if (reader->end - reader->cursor < 5) return 0;
+        *value = ((uint64_t)(first & 0x01u) << 40) |
+                 ((uint64_t)reader->cursor[0] << 32) |
+                 ((uint64_t)reader->cursor[1] << 24) |
+                 ((uint64_t)reader->cursor[2] << 16) |
+                 ((uint64_t)reader->cursor[3] << 8) |
+                 (uint64_t)reader->cursor[4];
+        reader->cursor += 5;
+        return 1;
+    }
+
+    if (first == 0xFEu) {
+        if (reader->end - reader->cursor < 6) return 0;
+        *value = ((uint64_t)reader->cursor[0] << 40) |
+                 ((uint64_t)reader->cursor[1] << 32) |
+                 ((uint64_t)reader->cursor[2] << 24) |
+                 ((uint64_t)reader->cursor[3] << 16) |
+                 ((uint64_t)reader->cursor[4] << 8) |
+                 (uint64_t)reader->cursor[5];
+        reader->cursor += 6;
+        return 1;
+    }
+
+    if (reader->end - reader->cursor < 8) return 0;
+    *value = ((uint64_t)reader->cursor[0] << 56) |
+             ((uint64_t)reader->cursor[1] << 48) |
+             ((uint64_t)reader->cursor[2] << 40) |
+             ((uint64_t)reader->cursor[3] << 32) |
+             ((uint64_t)reader->cursor[4] << 24) |
+             ((uint64_t)reader->cursor[5] << 16) |
+             ((uint64_t)reader->cursor[6] << 8) |
+             (uint64_t)reader->cursor[7];
+    reader->cursor += 8;
+    return 1;
+}
+
+static uint64_t rxbin_zigzag_encode(rxinteger value) {
+    return (((uint64_t)value) << 1) ^
+           (uint64_t)(value >> ((sizeof(rxinteger) * CHAR_BIT) - 1));
+}
+
+static rxinteger rxbin_zigzag_decode(uint64_t value) {
+    return (rxinteger)((value >> 1) ^ (uint64_t)(-(int64_t)(value & 1u)));
+}
+
+static int rxbin_token_from_operand(const bin_code *operand, OperandType type, uint64_t *token) {
+    switch (type) {
+        case OP_INT:
+            *token = rxbin_zigzag_encode(operand->iconst);
+            return 1;
+        case OP_CHAR:
+            *token = (uint64_t)(unsigned char)operand->cconst;
+            return 1;
+        case OP_ID:
+        case OP_REG:
+        case OP_FUNC:
+        case OP_FLOAT:
+        case OP_STRING:
+        case OP_DECIMAL:
+        case OP_BINARY:
+            *token = (uint64_t)operand->index;
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int rxbin_operand_from_token(bin_code *operand, OperandType type, uint64_t token) {
+    switch (type) {
+        case OP_INT:
+            operand->iconst = rxbin_zigzag_decode(token);
+            return 1;
+        case OP_CHAR:
+            if (token > UCHAR_MAX) return 0;
+            operand->cconst = (char)(unsigned char)token;
+            return 1;
+        case OP_ID:
+        case OP_REG:
+        case OP_FUNC:
+        case OP_FLOAT:
+        case OP_STRING:
+        case OP_DECIMAL:
+        case OP_BINARY:
+            if (token > (uint64_t)SIZE_MAX) return 0;
+            operand->index = (size_t)token;
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int rxbin_encode_instruction_stream(const bin_code *instructions, size_t instruction_size, rxbin_byte_buffer *buffer) {
+    rxbin_var_writer writer;
+    size_t index = 0;
+
+    rxbin_var_writer_init(&writer, buffer);
+
+    while (index < instruction_size) {
+        OperandType types[3];
+        OpFormat format;
+        int operand_count;
+        int opcode = instructions[index].instruction.opcode;
+        int operand_index;
+
+        format = rxbin_opcode_format(opcode);
+        if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) return 0;
+
+        operand_count = rxbin_get_operand_types(format, types);
+        if (instructions[index].instruction.no_ops != operand_count) return 0;
+        if (index + (size_t)operand_count >= instruction_size) return 0;
+
+        if (!rxbin_var_writer_write(&writer, (uint64_t)opcode)) return 0;
+
+        for (operand_index = 0; operand_index < operand_count; operand_index++) {
+            uint64_t token = 0;
+
+            if (!rxbin_token_from_operand(&instructions[index + (size_t)operand_index + 1], types[operand_index], &token))
+                return 0;
+            if (!rxbin_var_writer_write(&writer, token)) return 0;
+        }
+
+        index += (size_t)operand_count + 1;
+    }
+
+    return rxbin_var_writer_flush(&writer);
+}
+
+static int rxbin_decode_instruction_stream(const unsigned char *encoded, size_t encoded_size, bin_code *instructions,
+                                           size_t instruction_size) {
+    rxbin_var_reader reader;
+    size_t index = 0;
+
+    rxbin_var_reader_init(&reader, encoded, encoded_size);
+
+    while (index < instruction_size) {
+        OperandType types[3];
+        OpFormat format;
+        uint64_t opcode_token = 0;
+        int operand_count;
+        int operand_index;
+
+        if (!rxbin_var_reader_read(&reader, &opcode_token)) return 0;
+        if (opcode_token >= (uint64_t)OP_MAX_INSTRUCTIONS) return 0;
+
+        format = rxbin_opcode_format((int)opcode_token);
+        operand_count = rxbin_get_operand_types(format, types);
+        if (index + (size_t)operand_count >= instruction_size) return 0;
+
+        instructions[index].instruction.opcode = (int)opcode_token;
+        instructions[index].instruction.no_ops = operand_count;
+
+        for (operand_index = 0; operand_index < operand_count; operand_index++) {
+            uint64_t token = 0;
+            if (!rxbin_var_reader_read(&reader, &token)) return 0;
+            if (!rxbin_operand_from_token(&instructions[index + (size_t)operand_index + 1], types[operand_index], token))
+                return 0;
+        }
+
+        index += (size_t)operand_count + 1;
+    }
+
+    return reader.cursor == reader.end && !reader.have_queued_value;
+}
+
+static unsigned int rxbin_lzss_hash(const unsigned char *input) {
+    return (unsigned int)(((unsigned int)input[0] * 251u +
+                           (unsigned int)input[1] * 11u +
+                           (unsigned int)input[2]) & (RXBIN_LZSS_HASH_SIZE - 1u));
+}
+
+static int rxbin_lzss_match_length(const unsigned char *input, size_t input_size, size_t left, size_t right) {
+    size_t max_length = input_size - right;
+    size_t length = 0;
+
+    if (max_length > RXBIN_LZSS_MAX_MATCH) max_length = RXBIN_LZSS_MAX_MATCH;
+    while (length < max_length && input[left + length] == input[right + length]) {
+        length++;
+    }
+    return (int)length;
+}
+
+static void rxbin_lzss_index_position(const unsigned char *input, size_t input_size, size_t position,
+                                      size_t *last_positions, size_t *prev_positions) {
+    unsigned int hash;
+
+    if (position + RXBIN_LZSS_MIN_MATCH > input_size) {
+        prev_positions[position] = SIZE_MAX;
+        return;
+    }
+
+    hash = rxbin_lzss_hash(input + position);
+    prev_positions[position] = last_positions[hash];
+    last_positions[hash] = position;
+}
+
+static int rxbin_compress_constant_pool(const unsigned char *input, size_t input_size, rxbin_byte_buffer *output) {
+    size_t *prev_positions = 0;
+    size_t last_positions[RXBIN_LZSS_HASH_SIZE];
+    size_t position = 0;
+    size_t control_index = 0;
+    unsigned char control = 0;
+    unsigned int control_bit = 0;
+    int group_open = 0;
+    unsigned int i;
+
+    if (!input_size) return 1;
+
+    prev_positions = malloc(sizeof(size_t) * input_size);
+    if (!prev_positions) return 0;
+
+    for (i = 0; i < RXBIN_LZSS_HASH_SIZE; i++) last_positions[i] = SIZE_MAX;
+
+    while (position < input_size) {
+        size_t best_length = 0;
+        size_t best_distance = 0;
+
+        if (!group_open) {
+            if (!rxbin_byte_buffer_append_byte(output, 0)) {
+                free(prev_positions);
+                return 0;
+            }
+            control_index = output->size - 1;
+            control = 0;
+            control_bit = 0;
+            group_open = 1;
+        }
+
+        if (position + RXBIN_LZSS_MIN_MATCH <= input_size) {
+            unsigned int hash = rxbin_lzss_hash(input + position);
+            size_t candidate = last_positions[hash];
+            unsigned int chain = 0;
+
+            while (candidate != SIZE_MAX && position > candidate && position - candidate <= RXBIN_LZSS_WINDOW &&
+                   chain < RXBIN_LZSS_MAX_CHAIN) {
+                size_t candidate_length = (size_t)rxbin_lzss_match_length(input, input_size, candidate, position);
+                if (candidate_length >= RXBIN_LZSS_MIN_MATCH && candidate_length > best_length) {
+                    best_length = candidate_length;
+                    best_distance = position - candidate;
+                    if (best_length == RXBIN_LZSS_MAX_MATCH) break;
+                }
+                candidate = prev_positions[candidate];
+                chain++;
+            }
+        }
+
+        if (best_length >= RXBIN_LZSS_MIN_MATCH) {
+            unsigned char token_a = (unsigned char)(((best_length - RXBIN_LZSS_MIN_MATCH) << 4) |
+                                                    (((best_distance - 1) >> 8) & 0x0Fu));
+            unsigned char token_b = (unsigned char)((best_distance - 1) & 0xFFu);
+            size_t offset;
+
+            control |= (unsigned char)(1u << control_bit);
+            if (!rxbin_byte_buffer_append_byte(output, token_a) ||
+                !rxbin_byte_buffer_append_byte(output, token_b)) {
+                free(prev_positions);
+                return 0;
+            }
+
+            for (offset = 0; offset < best_length; offset++) {
+                rxbin_lzss_index_position(input, input_size, position + offset, last_positions, prev_positions);
+            }
+            position += best_length;
+        } else {
+            if (!rxbin_byte_buffer_append_byte(output, input[position])) {
+                free(prev_positions);
+                return 0;
+            }
+            rxbin_lzss_index_position(input, input_size, position, last_positions, prev_positions);
+            position++;
+        }
+
+        control_bit++;
+        if (control_bit == 8) {
+            output->data[control_index] = control;
+            group_open = 0;
+        }
+    }
+
+    if (group_open) output->data[control_index] = control;
+
+    free(prev_positions);
+    return 1;
+}
+
+static int rxbin_decompress_constant_pool(const unsigned char *input, size_t input_size, unsigned char *output,
+                                          size_t output_size) {
+    size_t in_pos = 0;
+    size_t out_pos = 0;
+
+    while (out_pos < output_size) {
+        unsigned char control;
+        unsigned int bit;
+
+        if (in_pos >= input_size) return 0;
+        control = input[in_pos++];
+
+        for (bit = 0; bit < 8 && out_pos < output_size; bit++) {
+            if (control & (unsigned char)(1u << bit)) {
+                size_t length;
+                size_t distance;
+                size_t copied;
+
+                if (input_size - in_pos < 2) return 0;
+                length = (size_t)((input[in_pos] >> 4) + RXBIN_LZSS_MIN_MATCH);
+                distance = (size_t)((((size_t)input[in_pos] & 0x0Fu) << 8) | input[in_pos + 1]) + 1;
+                in_pos += 2;
+
+                if (!distance || distance > out_pos) return 0;
+                if (length > output_size - out_pos) return 0;
+
+                for (copied = 0; copied < length; copied++) {
+                    output[out_pos] = output[out_pos - distance];
+                    out_pos++;
+                }
+            } else {
+                if (in_pos >= input_size) return 0;
+                output[out_pos++] = input[in_pos++];
+            }
+        }
+    }
+
+    return in_pos == input_size;
+}
+
+static int rxbin_duplicate_block(void **out, const void *input, size_t size) {
+    void *copy;
+
+    *out = 0;
+    if (!size) return 1;
+
+    copy = malloc(size);
+    if (!copy) return 0;
+    memcpy(copy, input, size);
+    *out = copy;
+    return 1;
+}
+
+static int rxbin_read_file_block(FILE *file, void **out, size_t size) {
+    void *buffer;
+
+    *out = 0;
+    if (!size) return 1;
+
+    buffer = malloc(size);
+    if (!buffer) return 0;
+    if (fread(buffer, 1, size, file) != size) {
+        free(buffer);
+        return 0;
+    }
+
+    *out = buffer;
+    return 1;
+}
+
+static int rxbin_decode_instruction_section(module_file *module, const unsigned char *stored_data) {
+    size_t expanded_size = module->header.instruction_size * sizeof(bin_code);
+
+    module->instructions = 0;
+
+    if (!module->header.instruction_size) return 1;
+
+    module->instructions = malloc(expanded_size);
+    if (!module->instructions) return 0;
+
+    if (module->header.section_flags & RXBIN_SECTION_INST_PACKED) {
+        if (!rxbin_decode_instruction_stream(stored_data, module->header.instruction_stored_size,
+                                             module->instructions, module->header.instruction_size))
+            return 0;
+        return 1;
+    }
+
+    if (module->header.instruction_stored_size != expanded_size) return 0;
+    memcpy(module->instructions, stored_data, expanded_size);
+    return 1;
+}
+
+static int rxbin_decode_constant_section(module_file *module, const unsigned char *stored_data) {
+    module->constant = 0;
+
+    if (!module->header.constant_size) return 1;
+
+    module->constant = malloc(module->header.constant_size);
+    if (!module->constant) return 0;
+
+    if (module->header.section_flags & RXBIN_SECTION_CONST_PACKED) {
+        return rxbin_decompress_constant_pool(stored_data, module->header.constant_stored_size,
+                                              module->constant, module->header.constant_size);
+    }
+
+    if (module->header.constant_stored_size != module->header.constant_size) return 0;
+    memcpy(module->constant, stored_data, module->header.constant_size);
+    return 1;
+}
+
+static int rxbin_prepare_header_for_write(module_file *module, rxbin_byte_buffer *instruction_section,
+                                          rxbin_byte_buffer *constant_section) {
+    rxbin_byte_buffer packed_instructions;
+    rxbin_byte_buffer packed_constants;
+    size_t raw_instruction_bytes = module->header.instruction_size * sizeof(bin_code);
+    unsigned int section_flags = 0;
+
+    rxbin_byte_buffer_init(&packed_instructions);
+    rxbin_byte_buffer_init(&packed_constants);
+
+    if (module->header.instruction_size &&
+        rxbin_encode_instruction_stream((const bin_code *)module->instructions, module->header.instruction_size,
+                                        &packed_instructions) &&
+        packed_instructions.size < raw_instruction_bytes) {
+        section_flags |= RXBIN_SECTION_INST_PACKED;
+        *instruction_section = packed_instructions;
+    } else {
+        rxbin_byte_buffer_free(&packed_instructions);
+        if (!rxbin_byte_buffer_append_bytes(instruction_section, module->instructions, raw_instruction_bytes)) {
+            rxbin_byte_buffer_free(&packed_constants);
+            return 0;
+        }
+    }
+
+    if (module->header.constant_size &&
+        rxbin_compress_constant_pool((const unsigned char *)module->constant, module->header.constant_size,
+                                     &packed_constants) &&
+        packed_constants.size < module->header.constant_size) {
+        section_flags |= RXBIN_SECTION_CONST_PACKED;
+        *constant_section = packed_constants;
+    } else {
+        rxbin_byte_buffer_free(&packed_constants);
+        if (!rxbin_byte_buffer_append_bytes(constant_section, module->constant, module->header.constant_size)) {
+            return 0;
+        }
+    }
+
+    module->header.section_flags = section_flags;
+    module->header.instruction_stored_size = instruction_section->size;
+    module->header.constant_stored_size = constant_section->size;
+    return 1;
 }
 
 /* Write out the module */
 /* 0 on success, 1 on error (use perror) */
 static int write_module(module_file *module, FILE *outFile) {
-    if (fwrite(&(module->header), sizeof(module->header), 1, outFile) != 1)
-        return 1;
+    rxbin_byte_buffer instruction_section;
+    rxbin_byte_buffer constant_section;
+    int rc = 1;
 
-    if (fwrite(module->name, 1, module->header.name_size, outFile) != module->header.name_size)
-        return 1;
+    rxbin_byte_buffer_init(&instruction_section);
+    rxbin_byte_buffer_init(&constant_section);
+
+    if (!rxbin_prepare_header_for_write(module, &instruction_section, &constant_section)) goto done;
+
+    if (fwrite(&(module->header), sizeof(module->header), 1, outFile) != 1) goto done;
+
+    if (fwrite(module->name, 1, module->header.name_size, outFile) != module->header.name_size) goto done;
 
     if (fwrite(module->description, 1, module->header.description_size, outFile) != module->header.description_size)
-        return 1;
+        goto done;
 
-    if (fwrite(module->instructions, sizeof(bin_code), module->header.instruction_size, outFile) != module->header.instruction_size)
-        return 1;
+    if (instruction_section.size &&
+        fwrite(instruction_section.data, 1, instruction_section.size, outFile) != instruction_section.size)
+        goto done;
 
-    if (fwrite(module->constant, 1, module->header.constant_size, outFile) != module->header.constant_size)
-        return 1;
+    if (constant_section.size &&
+        fwrite(constant_section.data, 1, constant_section.size, outFile) != constant_section.size)
+        goto done;
 
-    return 0;
+    rc = 0;
+
+done:
+    rxbin_byte_buffer_free(&instruction_section);
+    rxbin_byte_buffer_free(&constant_section);
+    return rc;
 }
 
+static void free_module(module_file *module);
+
 /* Read in the module */
-/* The module is fromfile (with more than one malloc call) - it must be freed with free_module() */
+/* The module is heap backed and must be freed with free_module() */
 /* 0 on success,
  * 1 on eof
  * 2 on file version mismatch
  * -1 on error
  * (use perror), on an error you can/should use free_module() */
 static int read_module(module_file **module, FILE *inFile) {
+    void *stored_instructions = 0;
+    void *stored_constants = 0;
+
     *module = malloc(sizeof(module_file));
     if (*module == 0) return -1;
 
-    /* Zero these so free_module() will not crash after read_module() error */
+    init_module(*module);
     (*module)->fromfile = 1;
     (*module)->native = 0;
     (*module)->name = 0;
@@ -282,109 +1046,123 @@ static int read_module(module_file **module, FILE *inFile) {
     (*module)->instructions = 0;
     (*module)->constant = 0;
 
-    if (fread(*module, sizeof(module_header), 1, inFile) != 1) {
-       if (feof(inFile)) return 1; /* No module to read - useful for calling in a loop from one file */
-       else return -1; /* A real error */
+    if (fread(&(*module)->header, sizeof(module_header), 1, inFile) != 1) {
+        if (feof(inFile)) {
+            free(*module);
+            *module = 0;
+            return 1;
+        }
+        free(*module);
+        *module = 0;
+        return -1;
     }
 
-    /* Check Header */
     switch (check_header_version(&(*module)->header)) {
-        case 1: return -1; /* Unknown error */
-        case 2: return 2; /* Version mismatch */
+        case 1:
+            free(*module);
+            *module = 0;
+            return -1;
+        case 2:
+            free(*module);
+            *module = 0;
+            return 2;
         default:;
     }
 
-    (*module)->name = malloc((*module)->header.name_size);
-    if ( (*module)->name == 0 ) return -1;
+    if (!rxbin_read_file_block(inFile, (void **)&(*module)->name, (*module)->header.name_size)) goto error;
+    if (!rxbin_read_file_block(inFile, (void **)&(*module)->description, (*module)->header.description_size)) goto error;
+    if (!rxbin_read_file_block(inFile, &stored_instructions, (*module)->header.instruction_stored_size)) goto error;
+    if (!rxbin_read_file_block(inFile, &stored_constants, (*module)->header.constant_stored_size)) goto error;
 
-    (*module)->description = malloc((*module)->header.description_size);
-    if ( (*module)->description == 0 ) return -1;
+    if (!rxbin_decode_instruction_section(*module, stored_instructions)) goto error;
+    if (!rxbin_decode_constant_section(*module, stored_constants)) goto error;
 
-    (*module)->instructions = malloc((*module)->header.instruction_size * sizeof(bin_code));
-    if ( (*module)->instructions == 0 ) return -1;
-
-    (*module)->constant = malloc((*module)->header.constant_size);
-    if ( (*module)->constant == 0 ) return -1;
-
-    if (fread( (*module)->name, 1, (*module)->header.name_size, inFile) !=
-            (*module)->header.name_size)
-        return -1;
-
-    if (fread( (*module)->description, 1, (*module)->header.description_size, inFile) !=
-            (*module)->header.description_size)
-        return -1;
-
-    if (fread( (*module)->instructions, sizeof(bin_code), (*module)->header.instruction_size, inFile) !=
-            (*module)->header.instruction_size)
-        return -1;
-
-    if (fread( (*module)->constant, 1, (*module)->header.constant_size, inFile) !=
-            (*module)->header.constant_size)
-        return -1;
-
+    if (stored_instructions) free(stored_instructions);
+    if (stored_constants) free(stored_constants);
     return 0;
+
+error:
+    if (stored_instructions) free(stored_instructions);
+    if (stored_constants) free(stored_constants);
+    free_module(*module);
+    *module = 0;
+    return -1;
 }
 
 /* "Read" in the module from a memory buffer */
-/* The module is not fromfile however it "should" or at least "can" be freed with free_module() */
+/* The module is heap backed and can be freed with free_module() */
 /* end_of_buffer is the first byte AFTER the buffer - i.e. not part of the buffer */
 /* 0 on success,
  * 1 on eof
  * 2 on file version mismatch
  * -1 on error
  * (use perror), on an error you can/should use free_module() */
-static int read_module_mem(module_file **module, char** in_buffer, const char *end_of_buffer) {
+static int read_module_mem(module_file **module, char **in_buffer, const char *end_of_buffer) {
+    const unsigned char *stored_instructions;
+    const unsigned char *stored_constants;
+
     *module = 0;
-    if ( *in_buffer >= end_of_buffer) return 1; /* "eof" */
+    if (*in_buffer >= end_of_buffer) return 1; /* "eof" */
+
+    if ((size_t)(end_of_buffer - *in_buffer) < sizeof(module_header)) return -1;
 
     *module = malloc(sizeof(module_file));
     if (*module == 0) return -1;
 
-    /* Zero these so free_module() will not crash after read_module() error */
-    (*module)->fromfile = 0;
+    init_module(*module);
+    (*module)->fromfile = 1;
     (*module)->native = 0;
     (*module)->name = 0;
     (*module)->description = 0;
     (*module)->instructions = 0;
     (*module)->constant = 0;
 
-    if (*in_buffer + sizeof(module_header) > end_of_buffer) {
-        *module = 0;
-        return -1; /* "error" */
-    }
-
-    memcpy(*module, *in_buffer, sizeof(module_header));
+    memcpy(&(*module)->header, *in_buffer, sizeof(module_header));
     *in_buffer += sizeof(module_header);
 
-    /* Check Header */
     switch (check_header_version(&(*module)->header)) {
-        case 1: return -1; /* Unknown error */
-        case 2: return 2; /* Version mismatch */
+        case 1:
+            free(*module);
+            *module = 0;
+            return -1;
+        case 2:
+            free(*module);
+            *module = 0;
+            return 2;
         default:;
     }
 
-    (*module)->name = *in_buffer;
+    if ((size_t)(end_of_buffer - *in_buffer) < (*module)->header.name_size) goto error;
+    if (!rxbin_duplicate_block((void **)&(*module)->name, *in_buffer, (*module)->header.name_size)) goto error;
     *in_buffer += (*module)->header.name_size;
-    if (*in_buffer > end_of_buffer) return -1; /* "error" */
 
-    (*module)->description = *in_buffer;
+    if ((size_t)(end_of_buffer - *in_buffer) < (*module)->header.description_size) goto error;
+    if (!rxbin_duplicate_block((void **)&(*module)->description, *in_buffer, (*module)->header.description_size)) goto error;
     *in_buffer += (*module)->header.description_size;
-    if (*in_buffer > end_of_buffer) return -1; /* "error" */
 
-    (*module)->instructions = *in_buffer;
-    *in_buffer += (*module)->header.instruction_size * sizeof(bin_code);
-    if (*in_buffer > end_of_buffer) return -1; /* "error" */
+    if ((size_t)(end_of_buffer - *in_buffer) < (*module)->header.instruction_stored_size) goto error;
+    stored_instructions = (const unsigned char *)*in_buffer;
+    *in_buffer += (*module)->header.instruction_stored_size;
 
-    (*module)->constant = *in_buffer;
-    *in_buffer += (*module)->header.constant_size;
-    if (*in_buffer > end_of_buffer) return -1; /* "error" */
+    if ((size_t)(end_of_buffer - *in_buffer) < (*module)->header.constant_stored_size) goto error;
+    stored_constants = (const unsigned char *)*in_buffer;
+    *in_buffer += (*module)->header.constant_stored_size;
+
+    if (!rxbin_decode_instruction_section(*module, stored_instructions)) goto error;
+    if (!rxbin_decode_constant_section(*module, stored_constants)) goto error;
 
     return 0;
+
+error:
+    free_module(*module);
+    *module = 0;
+    return -1;
 }
 
 /* Free the module */
 /* Free's the module returned by read_module() or read_module_mem() */
 static void free_module(module_file *module) {
+    if (!module) return;
     if (module->fromfile || module->native) {
         if (module->name) free(module->name);
         if (module->description) free(module->description);

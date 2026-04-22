@@ -99,13 +99,22 @@ Once parsing and backpatching conclude without errors, the assembler flushes the
 
 The structural output consists of:
 1. **Magic Header & Version**: Validates the file format.
-2. **Global Counters**: e.g., Number of global registers (`context->binary.globals`).
-3. **The Constant Pool**: The exact byte stream accumulated in `context->binary.const_pool`, which includes linked-list pointers mapping exposed exports and metadata objects.
-4. **The Bytecode Stream**: The `context->binary.binary` sequence, representing the fully resolved executable operations.
+2. **Global Counters and Section Sizes**: e.g., Number of global registers (`context->binary.globals`), expanded section sizes, stored section sizes, and section flags.
+3. **The Constant Pool**: The assembled `context->binary.const_pool`, optionally blob-compressed on disk if that reduces size.
+4. **The Bytecode Stream**: The resolved `context->binary.binary` instruction slots, optionally packed on disk as a logical opcode/operand token stream.
 
 As of format version `002` and later, float operands are no longer stored inline as raw
 `double` payloads in operand slots. Instead, the operand slot carries an index
 to a deduplicated `FLOAT_CONST` record in the constant pool.
+
+As of the current `003` layout, `rxas` still builds the normal in-memory
+`bin_code[]` and raw constant pool first. The section compaction step happens
+when `write_module()` serializes the module:
+
+- instruction slots are packed as logical opcode/operand tokens
+- signed integer operands are ZigZag encoded in that packed stream
+- the constant pool is optionally compressed with the lightweight in-tree LZSS codec
+- the file header stores both the stored byte counts and the expanded target sizes
 
 ## 5. Current Interface-Dispatch Additions
 
