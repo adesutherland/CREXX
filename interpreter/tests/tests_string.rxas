@@ -92,6 +92,40 @@ substr_pass:
     say "PASS: SUBSTR"
 substr_end:
 
+    /* UTF8 HEXCHAR bounds regression: substring results must not walk past the buffer. */
+    load r1, "🔥fire"
+    load r2, 0
+    setstrpos r1, r2
+    load r3, 1
+    substr r4, r1, r3
+    load r5, ""
+
+    load r6, 0
+    hexchar r5, r4, r6
+    seq r0, r5, "25"
+    brf utf_hexchar_fail, r0
+
+    load r6, 1
+    hexchar r5, r4, r6
+    seq r0, r5, "00"
+    brf utf_hexchar_fail, r0
+
+    load r6, 2
+    hexchar r5, r4, r6
+    seq r0, r5, "00"
+    brf utf_hexchar_fail, r0
+
+    load r6, 3
+    hexchar r5, r4, r6
+    seq r0, r5, "00"
+    brf utf_hexchar_fail, r0
+
+    say "PASS: UTF HEXCHAR bounds"
+    br utf_hexchar_end
+utf_hexchar_fail:
+    say "FAIL: UTF HEXCHAR bounds"
+utf_hexchar_end:
+
     /* TRIML (3-reg) - Trims the character specified in R3 */
     load r1, "   TrimMe"
     load r2, " "

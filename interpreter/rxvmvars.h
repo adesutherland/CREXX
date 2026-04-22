@@ -839,6 +839,34 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
 #ifndef NUTF8
 /* This sets v's string_pos (the byte index) and v's string_char_pos
  * (the utf8 codepoint index) based on a new string_char_pos */
+RX_INLINE void string_step_forward(value *v) {
+    size_t step;
+    size_t remaining;
+
+    if (v->string_pos >= v->string_length) {
+        v->string_pos = v->string_length;
+        return;
+    }
+
+    step = utf8codepointcalcsize(v->string_value + v->string_pos);
+    remaining = v->string_length - v->string_pos;
+    if (step > remaining) step = remaining;
+    v->string_pos += step;
+}
+
+RX_INLINE void string_step_backward(value *v) {
+    size_t step;
+
+    if (v->string_pos == 0) {
+        v->string_pos = 0;
+        return;
+    }
+
+    step = utf8rcodepointcalcsize(v->string_value + v->string_pos);
+    if (step > v->string_pos) step = v->string_pos;
+    v->string_pos -= step;
+}
+
 RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
     assert (v->string_char_pos <= v->string_chars);
 
@@ -867,12 +895,12 @@ RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
 
     // Optimised for stepping one character forward or backward
     if (diff == 1) {
-        v->string_pos += utf8codepointcalcsize(v->string_value + v->string_pos);
+        string_step_forward(v);
         v->string_char_pos++;
         return;
     }
     if (diff == -1) {
-        v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
+        string_step_backward(v);
         v->string_char_pos--;
         return;
     }
@@ -888,7 +916,7 @@ RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
         v->string_char_pos = 0;
         v->string_pos = 0;
         while (v->string_char_pos < new_string_char_pos) {
-            v->string_pos += utf8codepointcalcsize(v->string_value + v->string_pos);
+            string_step_forward(v);
             v->string_char_pos++;
         }
     } else if (cost_from_end < cost_from_current) {
@@ -896,19 +924,19 @@ RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
         v->string_char_pos = v->string_chars;
         v->string_pos = v->string_length;
         while (v->string_char_pos > new_string_char_pos) {
-            v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
+            string_step_backward(v);
             v->string_char_pos--;
         }
     } else {
         // Seek from the current position
         if (diff > 0) { // Forward
             while (v->string_char_pos < new_string_char_pos) {
-                v->string_pos += utf8codepointcalcsize(v->string_value + v->string_pos);
+                string_step_forward(v);
                 v->string_char_pos++;
             }
         } else { // Backward
             while (v->string_char_pos > new_string_char_pos) {
-                v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
+                string_step_backward(v);
                 v->string_char_pos--;
             }
         }
