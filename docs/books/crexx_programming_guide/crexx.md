@@ -40,28 +40,50 @@ The following options are available (single and double dashes work for all optio
 : Display the version of this tool. This is the same as the compiler and interpretr version.
 
 `-exec`
-: Execute the compiled binaries. --noexec only compiles but does not run the `.rxbin`
+: Execute the compiled `.rxbin` under `rxvme` (default).
+
+`-noexec`
+: Compile only; do not execute the resulting `.rxbin`.
 
 `-compile`
-: compile all rexx program files on the command line to `.rxbin` files
+: Compile all REXX program files on the command line to `.rxbin` files (default).
+
+`-nocompile`
+: Skip the `rxc` and `rxas` phases and reuse an existing `<stem>.rxbin`.
 
 `-native`
-: Compile to a native executable; implies `--noexec`; default `--nonative`. This produces an executable file for the current operating system and instruction set architecture. Static versions of -l included plugins are linked into this load module.
+: Compile to a native executable; default `--nonative`. This produces an executable file for the current operating system and instruction set architecture. The native route now links the compiled program with `rxlink` before `rxcpack` generates C source.
+
+`-nonative`
+: Disable native packaging.
 
 `-verbose[0-4]`
 : Report on progress; default verbose0, which only issues error messages when the compile fails. Verbose 2 shows the command lines to the toolchain utilities rxc, rxas and rxvme. Verbose 3 includes options and source listings, while verbose 4 includes the contents of the generated assembly code.
 
-`-colo[u]r`
-: Can be color or colour; differentiates messages types in color.
+`-[no]colo[u]r`
+: Enable or disable colourized progress output.
+
+`-[no]optimize`
+: Enable or disable optimization.
 
 `-keep`
-: Keep .rxas source (default nokeep) (This does not work yet).
+: Keep compile/link intermediates (default).
+
+`-nokeep`
+: Delete compile/link intermediates after the run.
 
 `-decimal`
 : Option decimal (default) links to the decimal arithmetic vm plugin from the mc library. The alternative --nodecimal links in the alternative, high performance db decimal library.
 
 `-l[library path]`
 : Use a packaged binary/runtime library relative to `CREXX_HOME/bin`. This affects both compilation and execution/native linking. For example, using `rx_treemap` requires `-lrx_treemap`.
+
+For native packaging, `crexx` now separates `-l` inputs into two groups:
+
+- packaged REXX libraries (`.rxbin` inputs such as `classlib`) are passed into `rxlink`
+- plugin/static-native libraries are linked natively when a matching `_static.a` exists
+
+This keeps the direct interpreter path fast while still producing compact native executables.
 
 `-s[path]` or `--source path`
 : Add an extra source import root for the `rxc` phase. This is for off-directory `.rexx` modules that should be visible to source import discovery.
@@ -71,6 +93,12 @@ The following options are available (single and double dashes work for all optio
 
 `--import-rxas`
 : Allow the `rxc` phase to auto-import `.rxas` files from binary roots. This is off by default.
+
+`--linkmap path`
+: When using `-native`, ask `rxlink` to write a link map.
+
+`--link-keep-source`
+: When using `-native`, keep source/file metadata in the linked intermediate instead of using the default stripped output.
 
 `-s`, `-i`, and `--import-rxas` are compile-time controls only. They do not automatically add runtime modules to `rxvme` or to native links. For runtime/native library loading, continue to use `-l`.
 

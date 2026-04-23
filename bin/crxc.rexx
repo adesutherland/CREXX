@@ -13,13 +13,16 @@ end
 
 parse var execSpec execName '.' extension
 if extension<>'' then say 'filename extension ignored.'
+linkedName = execName || '_linked'
 
 address system '"' || crexx_home || '/rxc" -i "' || crexx_home || '" ' || execName
 if rc<>0 then exit rc
 address system '"' || crexx_home || '/rxas" ' || execName
 if rc<>0 then exit rc
-address system '"' || crexx_home || '/rxcpack" ' || execName || ' ' || crexx_home || '/library'
+address system '"' || crexx_home || '/rxlink" -s -o "' || linkedName || '" "' || execName || '" "' || crexx_home || '/library"'
 if rc<>0 then exit rc
-address system 'gcc -o ' || execName || ' -L "' || crexx_home || '" -lrxvml -lavl_tree -lplatform -lm ' || execName || '.c'
+address system '"' || crexx_home || '/rxcpack" -o "' || execName || '" "' || linkedName || '"'
+if rc<>0 then exit rc
+address system 'gcc -O3 -DNDEBUG -o ' || execName || ' -L "' || crexx_home || '" -lrxvml -lrxpashim -lrxvmplugin -lplatform -ldecnumber -lavl_tree -lrxpa -lm "' || crexx_home || '/rxvm_mc_decimal_manual.a" ' || execName || '.c'
 if rc<>0 then exit rc
 exit 0

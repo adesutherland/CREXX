@@ -11,6 +11,10 @@ Use `rxlink` when you want to:
 - shrink downstream `rxcpack` / wrapped artifacts by removing duplicated pool entries
 - optionally strip source/file metadata from deployable images
 
+This is now the normal native-packaging route for the shipped drivers too:
+`crexx`, `crxc`, `rxpp`, and related wrapped tools link a deployable image
+first and then pass that linked image to `rxcpack`.
+
 `rxlink` is not a replacement for the VM loader. The output still contains multiple module records, and `rxvm` still performs the final runtime link/load work.
 
 ## Output Format

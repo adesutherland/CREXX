@@ -121,18 +121,18 @@ This exec is delivered in the source tree, bin directory. At the moment
 it can be run by classic rexx interpreters and NetRexx, it will soon be
 runnable by \crexx{} itself. The exec works by compiling the Rexx program
 specified (again without the .rexx file extension) to an .rxbin Rexx
-bytecode file, which is then serialized to a C source file, containing
-the cRexx Virtual Machine and the library rxbin files, by the rxcpack
-command. It is a rather peculiar looking C source, but nevertheless it
-will compile to a working executable, which is done by the last step in
-the exec, here using the gcc compiler. And you will be able to run it
-without the overhead of checking, compiling, tokenizing to bytecode and
-linking, so it will be quite fast:
+bytecode file, which is then linked with the runtime library into a
+smaller deployable image before the rxcpack command serializes that
+linked image to a C source file containing the cRexx Virtual Machine
+and the linked program image. It is a rather peculiar looking C source,
+but nevertheless it will compile to a working executable, which is done
+by the last step in the exec, here using the gcc compiler. And you will
+be able to run it without the overhead of checking, compiling,
+tokenizing to bytecode and runtime linking, so it will be quite fast:
 
 \begin{verbatim}
 hello cRexx world!
 today is Saturday
 ./hello  0.00s user 0.00s system 61% cpu 0.009 total
 \end{verbatim}
-
 

@@ -29,9 +29,10 @@
  module = .string[]
  
  /* defaults for options for this program */
- native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
- execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=1;decimal=1
- binfiles='';lastfile=0;sourceRoots='';binaryRoots='';importRxas=0
+native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
+execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=1;decimal=1
+binfiles='';lastfile=0;sourceRoots='';binaryRoots='';importRxas=0
+linkStripSource=1;linkMap='';linkOptionsUsed=0;cleanupFiles=''
  
  esc             = '1b'X
  ANSI_RESET      = '[0m'
@@ -87,8 +88,12 @@
 	 /* allow for single- and double dash options */
        if left(fn.i,2) = '--'  then fn.i=substr(fn.i,2)
        if fn.i = '-help'       then ret = help(nocolor)
+       if fn.i = '-exec'       then execute=1
        if fn.i = '-noexec'     then execute=0
        if fn.i = '-native'     then native=1
+       if fn.i = '-nonative'   then native=0
+       if fn.i = '-compile'    then compile=1
+       if fn.i = '-nocompile'  then compile=0
        if fn.i = '-version'    then version=1
        if fn.i = '-verbose'    then verbose=1
        if fn.i = '-verbose0'   then verbose=0
@@ -96,14 +101,25 @@
        if fn.i = '-verbose2'   then verbose=2
        if fn.i = '-verbose3'   then verbose=3
        if fn.i = '-verbose4'   then verbose=4
+       if fn.i = '-color'      then nocolor=0
+       if fn.i = '-colour'     then nocolor=0
        if fn.i = '-nocolor'    then nocolor=1
        if fn.i = '-nocolour'   then nocolor=1
+       if fn.i = '-optimize'   then optimize=1
        if fn.i = '-nooptimize' then optimize=0
        if fn.i = '-keep'       then keep=1
        if fn.i = '-nokeep'     then keep=0
        if fn.i = '-nodecimal'  then decimal=0
        if fn.i = '-decimal'    then decimal=1
        if fn.i = '-import-rxas' then importRxas=1
+       if fn.i = '-link-keep-source' then do
+         linkStripSource = 0
+         linkOptionsUsed = 1
+       end
+       if fn.i = '-link-strip-source' then do
+         linkStripSource = 1
+         linkOptionsUsed = 1
+       end
 
        optarg = ''
        if fn.i = '-source' | fn.i = '-s' then do
@@ -157,7 +173,7 @@
          else libraries = libraries';'fullLibrary
          modulenumber = modulenumber+1
        end
-       else if left(fn.i,2)= '-l' & fn.i <> '-l' then do
+       else if left(fn.i,2)= '-l' & fn.i <> '-l' & left(fn.i,5) <> '-link' then do
          optarg = substr(fn.i,3)
          if optarg = '' then do
            say 'missing library path after' fn.i
@@ -170,6 +186,25 @@
          if lastSlash > 0 then libraries = libraries';'left(fullLibrary,lastSlash-1)
          else libraries = libraries';'fullLibrary
          modulenumber = modulenumber+1
+       end
+
+       if fn.i = '-linkmap' then do
+         i = i + 1
+         if i > fn.0 then do
+           say 'missing map path after -linkmap'
+           return 2
+         end
+         linkMap = fn.i
+         linkOptionsUsed = 1
+       end
+       else if left(fn.i,8) = '-linkmap' & fn.i <> '-linkmap' then do
+         optarg = substr(fn.i,9)
+         if optarg = '' then do
+           say 'missing map path after' fn.i
+           return 2
+         end
+         linkMap = optarg
+         linkOptionsUsed = 1
        end
      end
    end
@@ -227,6 +262,11 @@ if verbose>1 then say esc||ANSI_GREEN'using lpath     :'esc||ANSI_RESET lpath
 if verbose>1 then say esc||ANSI_GREEN'using s roots   :'esc||ANSI_RESET sourceRoots
 if verbose>1 then say esc||ANSI_GREEN'using i roots   :'esc||ANSI_RESET binaryRoots
 
+if linkOptionsUsed & \native then do
+  say 'link options require -native'
+  return 2
+end
+
 /* Output Arrays for command output */
 out = .string[]
 err = .string[]
@@ -252,7 +292,7 @@ do i=1 to words(filenames)
 	else res = esc||ANSI_RED||RC||esc||ANSI_RESET
 	  if compile then say '[ 'res' ] rxpp     - Preprocessed   ' esc||ANSI_BLUE||filename'.rxpp'||esc||ANSI_RESET
     end
-  if RC>0 then exit
+  if RC>0 then exit RC
 
     end
   end
@@ -281,72 +321,106 @@ do i=1 to words(filenames)
 	if compile=0 then
 	  do
 	  say 'rxc does not compile due to --nocompile option'
-	  RC = 0
 	end
     end
-  if compile then address cmd rxcmd output out error err /* Note that cmd has no meaning currently */
-  do j = 1 to out.0
-    say '> rxc output:' out.j
+  rxcOut = .string[]
+  rxcErr = .string[]
+  if compile then address cmd rxcmd output rxcOut error rxcErr /* Note that cmd has no meaning currently */
+  else RC = 0
+  do j = 1 to rxcOut.0
+    say '> rxc output:' rxcOut.j
   end
-  do j = 1 to err.0
-    say '> rxc error: ' err.j
+  do j = 1 to rxcErr.0
+    say '> rxc error: ' rxcErr.j
   end
   if verbose then do
     if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
     else res = esc||ANSI_RED||RC||esc||ANSI_RESET
-    if compile then say '[ 'res' ] rxc      - Compiled       ' esc||ANSI_BLUE||filename'.rexx'||esc||ANSI_RESET
+    if compile then say '[ 'res' ] rxc      - Compiled       ' esc||ANSI_BLUE||filename||esc||ANSI_RESET
     end
-  if RC>0 then exit
+  if RC>0 then exit RC
 
 
+  binfile = chop_suffix(filename)
+  binfiles = binfiles binfile
+
+  if compile then do
 /* print the file when verbose ibm style output is requested */
     if verbose>3 then do
       call printFileToSTDout filename'.rxas'
     end
 
-    binfile = chop_suffix(filename)
-    binfiles = binfiles binfile
+    cleanupFiles = appendWordUnique(cleanupFiles, binfile'.rxas')
+    cleanupFiles = appendWordUnique(cleanupFiles, binfile'.rxbin')
     asmcmd = rxpath'bin'dirsep'rxas' optiflag '-o' binfile binfile
     address cmd asmcmd output out error err
-  if verbose then do
-    if verbose>1 then say esc||ANSI_GREEN||'rxas command    :'   asmcmd
-    if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
-    else res = esc||ANSI_RED||RC||esc||ANSI_RESET
-    if compile then say '[ 'res' ] rxas     - Assembled      ' esc||ANSI_BLUE||filename'.rxas'||esc||ANSI_RESET
+    if verbose then do
+      if verbose>1 then say esc||ANSI_GREEN||'rxas command    :'   asmcmd
+      if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
+      else res = esc||ANSI_RED||RC||esc||ANSI_RESET
+      say '[ 'res' ] rxas     - Assembled      ' esc||ANSI_BLUE||binfile'.rxas'||esc||ANSI_RESET
+    end
+    if RC>0 then exit RC
   end
-  if RC>0 then exit
+  else do
+    existingRxbin = binfile'.rxbin'
+    if \fileExists(existingRxbin) then do
+      say 'missing existing bytecode for -nocompile:' existingRxbin
+      exit 2
+    end
+    if verbose>1 then say esc||ANSI_GREEN'using existing rxbin:'esc||ANSI_RESET existingRxbin
+  end
 
   modules = translate(libs,' ',';')
   
   if verbose>2 then call banner
 
-  /**
-   * here we determine which static libraries to include for ld whuch need the
-   * -force-load flag for clang. It turns out that this includes all plugin libraries
-   * which are included using --lxx, except for the classlib library, which is
-   * .rxbin from compiled rexx and is rxpacked (soon partly) like the bif library.rxbin
-   *
-   */
   if native then do
+    linkedOutput = binfile'_linked'
+    outputStem = binfile
     forces = ''
+    linkInputs = ''
+    linkInputs = appendWordUnique(linkInputs, binfile)
+    linkInputs = appendWordUnique(linkInputs, rxpath || 'bin' || dirsep || 'library')
     loop f=1 to words(modules)
-      if pos('classlib',word(modules,f)) > 0 then iterate -- (not so) temp fix for static linking
-      forces = forces '-Wl,-force_load,'word(modules,f)'_static.a'
+      modulePath = word(modules,f)
+      staticModule = modulePath || '_static.a'
+      if fileExists(staticModule) then
+        forces = appendWordUnique(forces, '-Wl,-force_load,'staticModule)
+      else
+        linkInputs = appendWordUnique(linkInputs, modulePath)
     end
-    pack_cmd = rxpath'bin'dirsep'rxcpack' filename rxpath'bin/library' rxpath'bin/classlib'
+
+    link_cmd = rxpath || 'bin' || dirsep || 'rxlink'
+    if linkStripSource then link_cmd = link_cmd || ' -s'
+    if linkMap <> '' then link_cmd = link_cmd || ' -m ' || linkMap
+    link_cmd = link_cmd || ' -o ' || linkedOutput
+    loop f=1 to words(linkInputs)
+      link_cmd = link_cmd || ' ' || word(linkInputs,f)
+    end
+    if verbose>1 then say esc||ANSI_GREEN'rxlink command  :'esc||ANSI_RESET link_cmd
+    address cmd link_cmd output out error err
+    if verbose then do
+      if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
+      else res = esc||ANSI_RED||RC||esc||ANSI_RESET
+      say '[ 'res' ] rxlink   - Linked         ' esc||ANSI_BLUE||linkedOutput'.rxbin'||esc||ANSI_RESET
+    end
+    if RC>0 then exit RC
+
+    pack_cmd = rxpath || 'bin' || dirsep || 'rxcpack -o ' || outputStem || ' ' || linkedOutput
     if verbose>1 then
     do
       say esc||ANSI_GREEN'rxcpack command :'esc||ANSI_RESET pack_cmd
       end
-    address system pack_cmd
+    address cmd pack_cmd output out error err
     if verbose then do
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
-      say '[ 'res' ] rxcpack  - C-Packed ' esc||ANSI_BLUE||filename||esc||ANSI_RESET
+      say '[ 'res' ] rxcpack  - C-Packed ' esc||ANSI_BLUE||outputStem||esc||ANSI_RESET
     end
 
     cc_command = ,
-    'gcc -O3 -DNDEBUG -Wl,-search_paths_first -o' filename ,
+    'gcc -O3 -DNDEBUG -Wl,-search_paths_first -o' outputStem ,
     '-Wl,-headerpad_max_install_names ',
     '-L'rxpath'bin' ,
     '-lrxvml',
@@ -359,7 +433,7 @@ do i=1 to words(filenames)
     '-lm',
     decstat ,
     forces,
-    filename'.c'
+    outputStem'.c'
 
     address system cc_command
     if verbose>1 then
@@ -372,9 +446,14 @@ do i=1 to words(filenames)
       do
 	if RC = 0 then res='OK'esc||ANSI_RESET
 	else res = esc||ANSI_RED||RC||esc||ANSI_RESET
-	say '[ 'res' ] gcc       - C-Compiled' esc||ANSI_BLUE||filename||esc||ANSI_RESET
+	say '[ 'res' ] gcc       - C-Compiled' esc||ANSI_BLUE||outputStem||esc||ANSI_RESET
 	end
-    if RC>0 then exit  
+    if RC>0 then exit RC  
+    if \keep then do
+      nativeCleanupFiles = linkedOutput'.rxbin' outputStem'.c'
+      if compile then nativeCleanupFiles = binfile'.rxas' binfile'.rxbin' nativeCleanupFiles
+      delrc = deleteFiles(nativeCleanupFiles,verbose)
+    end
     end
   else do
     ex_command = rxpath'bin'dirsep'rxvme' declib binfiles modules
@@ -387,8 +466,8 @@ do i=1 to words(filenames)
   end
 end   -- do i
 
-  /* now determine if the rxas files need to be deleted */
-  if \keep then delrc = deleteFiles(binfiles,verbose)
+  /* now determine if the compile/link intermediates need to be deleted */
+  if \keep & \native=0 then delrc = deleteFiles(cleanupFiles,verbose)
   
 return 0
 
@@ -403,23 +482,30 @@ say 'The following options are available:'
 say
 say '-help            -- display (this) help info'
 say '-version         -- display the version number'
-say '-exec            -- execute (default)'
-say '-compile         -- compile to rxbin (default)'
-say '-native          -- compile to native executable; implies noexec; default nonative'
+say '-exec            -- execute the compiled rxbin (default)'
+say '-noexec          -- compile only; do not execute with rxvme'
+say '-compile         -- enable compilation to rxbin (default)'
+say '-nocompile       -- skip rxc/rxas and reuse an existing .rxbin'
+say '-native          -- package a native executable from the compiled program'
+say '-nonative        -- disable native packaging (default)'
 say '-verbose[0-4]    -- report on progress; default verbose0'
-say '-colo[u]r        -- use colo[u]r (default)'
-say '-keep            -- keep .rxas source (default nokeep)'
+say '-[no]colo[u]r    -- enable or disable colo[u]r output'
+say '-[no]optimize    -- enable or disable optimization'
+say '-keep            -- keep compile/link intermediates (default)'
+say '-nokeep          -- delete compile/link intermediates after the run'
 say '-decimal         -- use decimal arithmetic'
 say '-l[library path] -- packaged binary/runtime library relative to CREXX_HOME/bin'
 say '-s[path]         -- additional source import root for the rxc phase'
 say '-i[path]         -- additional raw binary import root for the rxc phase'
 say '--import-rxas    -- allow the rxc phase to auto-import .rxas from binary roots'
+say '--linkmap path   -- write an rxlink map file when using -native'
+say '--link-keep-source -- keep source/file metadata in the linked native image'
 say
 say 'Headerless top-level scripts are compiled with --level levelb --import rxfnsb.'
 say 'Options -s, -i and --import-rxas affect compilation only; runtime/native loading still uses -l.'
+say 'Native packaging uses rxlink before rxcpack; plugin/static libraries are linked natively when a matching _static.a exists.'
 say
 say 'all options can also be prefixed with --'
-say 'all options can be prefixed with NO for the inverse value'
 return 'help done'
 
 /*----------------------------------------------------------------------*/
@@ -521,17 +607,15 @@ call lineout toread
 /**
 * delete the files (when crexx option = --nokeep)
 * and log this when verbosity > 2
-* @parm filenames .string containing basenames
-* @return .int
+ * @parm filenames .string containing file paths
+ * @return .int
 */
 deleteFiles: procedure = .int
 arg filenames = .string, verbosity = .int
 loop i=1 to words(filenames)
   filename = word(filenames,i)
-  if verbosity > 2 then say 'deleting' filename'.rxas' 
-  rc = deletefile(filename'.rxas')
-  if verbosity > 2 then say 'deleting' filename'.rxbin' 
-  rc = deletefile(filename'.rxbin')
+  if verbosity > 2 then say 'deleting' filename
+  rc = deletefile(filename)
 end
 return 0
 
@@ -553,4 +637,16 @@ arg current = .string, value = .string
 if value = '' then return current
 if current = '' then return value
 return current';'value
+
+appendWordUnique: procedure = .string
+arg current = .string, value = .string
+if value = '' then return current
+if current = '' then return value
+if wordpos(value, current) > 0 then return current
+return current value
+
+fileExists: procedure = .int
+arg filePath = .string
+if testfile(filePath) = 0 then return 1
+return 0
   

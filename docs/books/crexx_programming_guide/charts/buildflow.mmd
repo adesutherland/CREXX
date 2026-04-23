@@ -5,7 +5,8 @@ B --> C[(source.rxas)]
 C --> D[assemble: rxas source]
 D --> E[(source.rxbin)]
 E --> F(run: rxvme source)
-F -.-> G(pack: rxcpack source)
-G --> H[(source.c)]
-H --> I[native compile: gcc source]
-I --> J[(./source/ source.exe)]
+E -.-> G(link: rxlink source)
+G --> H(pack: rxcpack source)
+H --> I[(source.c)]
+I --> J[native compile: gcc source]
+J --> K[(./source/ source.exe)]
