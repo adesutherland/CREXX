@@ -1,0 +1,7 @@
+* dcall consumes an opaque argument register block.
+
+main() .locals=5
+    swap r1,r2
+    dcall r0,r3,r4
+    swap r1,r2
+    ret

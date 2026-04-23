@@ -1,0 +1,10 @@
+* call is an optimiser barrier.
+
+main() .locals=3
+    swap r1,r2
+    call helper()
+    swap r1,r2
+    ret
+
+helper() .locals=0
+    ret

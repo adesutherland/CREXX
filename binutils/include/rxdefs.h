@@ -89,7 +89,9 @@ typedef struct Instruction
 /* Instruction Flags */
 typedef enum {
     FLG_NONE = 0,
-    FLG_DEPRECATED = 1
+    FLG_DEPRECATED = 1,
+    FLG_OPT_BARRIER = 2,
+    FLG_IMPLICIT_REG_USE = 4
 } OpFlags;
 
 typedef struct {
@@ -100,6 +102,8 @@ typedef struct {
     int         flags;
     const char* description;
 } OpInfo;
+
+extern const OpInfo op_table[];
 
 /* Opcode Enum using X-Macro */
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) OP_##NAME = OPCODE,

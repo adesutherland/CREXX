@@ -1,0 +1,7 @@
+* signal changes control externally, so it is an optimiser barrier.
+
+main() .locals=3
+    swap r1,r2
+    signal "FAILURE"
+    swap r1,r2
+    ret

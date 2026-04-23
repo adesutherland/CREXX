@@ -1,0 +1,7 @@
+* linkarg r0,0 should not block unrelated local-register rules.
+
+main() .locals=5
+    swap r3,r4
+    linkarg r0,0
+    swap r3,r4
+    ret

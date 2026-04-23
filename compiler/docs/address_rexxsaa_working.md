@@ -898,9 +898,8 @@ Deliverables:
 
 ### Stage 3: runtime abstraction
 
-Status: Stage 3.1 complete; Stage 3.2 closed at a stable single-class
-endpoint; further object-model generalization is blocked on Level B callable
-contracts / interfaces
+Status: Stage 3.1 complete; Stage 3.2 complete with interface-based concrete
+environment classes
 
 Stage 2 and Stage 2.5 are complete. The next implementation work starts here.
 
@@ -991,8 +990,7 @@ Non-goals for Stage 3.1:
 
 ### Stage 3.2: canonical registration and bridge startup path
 
-Status: implemented at the stable single-class close-down point on
-2026-04-20
+Status: complete on 2026-04-23
 
 Implemented in this slice:
 
@@ -1008,44 +1006,37 @@ Implemented in this slice:
   - `PATH`
   - `CMS`
   - plus long-term synonyms `CMD` and `SHELL`
-- keep one Rexx `addressenvironment` class for all currently supported
-  environments, with separate registered objects representing the different
-  environments
+- represent the common callable contract as a real Level B
+  `addressenvironment` interface
+- register separate concrete Rexx environment objects behind that contract:
+  - `.systemaddressenvironment`
+  - `.pathaddressenvironment`
+  - `.cmsaddressenvironment`
 - keep `SYSTEM`, `COMMAND`, `CMD`, and `SHELL` on the existing spawn-backed
-  behaviour
+  behaviour via the registered `systemaddressenvironment` object
 - keep `PATH` on the same current spawn-backed transport for now; on POSIX this
-  already resolves the executable through process `PATH`
-- keep `CMS` as the deterministic Rexx-written test/demo environment
+  already resolves the executable through process `PATH`, but it now has its
+  own concrete `pathaddressenvironment` class/object
+- keep `CMS` as the deterministic Rexx-written test/demo environment, now
+  implemented as its own concrete `cmsaddressenvironment` class/object
+- make bridge/native construction follow the same source-visible class surface
+  by obtaining environment objects through class factories rather than
+  procedure-only helpers
 
-What this stage intentionally does not do:
+What this stage intentionally still does not do:
 
-- it does not introduce multiple distinct Rexx classes dispatched
-  polymorphically from Rexx source
 - it does not yet provide the fully general native-backed environment object
   model originally sketched for later Stage 3 work
 
-Block discovered while closing this stage:
-
-- bridge/native callers can name an explicit class when calling methods, but
-  normal Rexx source cannot express that same kind of shared-contract dispatch
-  across distinct classes in Level B today
-- `.object` is too weak for this use because named method calls still need a
-  concrete compile-time class contract
-- the current codebase now has runtime Level B interface method dispatch plus
-  default/named factory dispatch through the load/link-time registry,
-  including explicit class-side `match` scoring for factory selection
-
 Conclusion for Stage 3.2:
 
-- the stable stopping point is one `addressenvironment` class plus multiple
-  registered objects and aliases
-- further generalization to truly separate environment classes is deferred
-  until the now-completed Level B callable-contract / interface model is
-  applied to `ADDRESS` itself, along with any additional
-  environment-specific refinements needed on top of the implemented provider
-  `match` selection and default-method support
+- the runtime now uses the intended source-level object model for this stage:
+  one shared `addressenvironment` contract with multiple concrete
+  implementations registered under environment names and aliases
+- this closes the Stage 3.2 follow-on that was previously deferred behind the
+  Level B callable-contract / interface work
 - see `compiler/docs/classes.md` for the enduring compiler-side reference for
-  that prerequisite and its completed implementation state
+  the callable-contract machinery that now enables this model
 
 Rationale:
 
@@ -1053,8 +1044,8 @@ Rationale:
 - using the same registration path for Rexx and external callers avoids
   bifurcating the model
 - this closes the practical runtime-registration/startup goal for Stage 3.2
-  without inventing an ad hoc pseudo-interface mechanism inside `ADDRESS`
-  itself
+  using the real Level B interface dispatch model rather than an ad hoc
+  pseudo-interface mechanism inside `ADDRESS` itself
 
 ### Stage 3.3: unified native-backed environment objects
 
@@ -1077,10 +1068,10 @@ Deliverables:
   object model rather than treating native environments as a separate class of
   registration target
 
-Current prerequisite before resuming this stage:
+Stage 3.2 prerequisite status:
 
-- a minimal Level B callable-contract / interface mechanism that allows Rexx
-  code to call one shared method set across different concrete classes
+- the required Level B callable-contract / interface mechanism is now in place
+  and applied to `ADDRESS`
 
 Explicitly deferred from Stage 3.3:
 
@@ -1234,6 +1225,14 @@ Deliverables:
     registration path for both Rexx code and external `rxvml` embedders
   - Stage 3.3 is now framed as unified native-backed environment objects rather
     than a separate Rexx vs non-Rexx registration model
+- 2026-04-23: Stage 3.2 completed on top of the shipped callable-contract /
+  interface model:
+  - `addressenvironment` is now a real interface rather than a kind-switched
+    concrete class
+  - `SYSTEM`, `PATH`, and `CMS` now register separate concrete environment
+    objects implementing that shared contract
+  - bridge coverage now constructs the environment object through the exposed
+    class factory before registering it through the canonical runtime path
 
 ## 10. Evidence and code anchors
 

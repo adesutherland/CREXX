@@ -1,0 +1,7 @@
+* load 0,1 should not block rules involving unrelated local registers.
+
+main() .locals=5
+    swap r3,r4
+    load 0,1
+    swap r3,r4
+    ret

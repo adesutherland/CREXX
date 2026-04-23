@@ -152,36 +152,34 @@ addressresponse: class
     arg index = .int
     return _diagnostics[index]
 
-addressenvironment: class
-  _kind = .string
-  _msg_mode = .string
-
-  *: factory
-    arg kind = "SYSTEM"
-    _kind = normalize_environment_name(kind)
-    _msg_mode = "ON"
-    return
-
-  get_kind: method = .string
-    return _kind
-
-  set_kind: method = .void
-    arg kind = .string
-    _kind = normalize_environment_name(kind)
-
+addressenvironment: interface
   execute: method = .addressresponse
     arg request = .addressrequest
 
-    if _kind = "SYSTEM" | _kind = "COMMAND" | _kind = "CMD" | _kind = "SHELL" | _kind = "PATH" then return spawn_request(request)
-    if _kind = "CMS" then return execute_cms(request)
+systemaddressenvironment: class implements .addressenvironment
+  *: factory
+    return
 
-    response = .addressresponse(0)
-    call response.set_rc(-3)
-    call response.set_condition_name("FAILURE")
-    call response.add_diagnostic("Address environment not implemented")
-    return response
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    return spawn_request(request)
 
-  execute_cms: method = .addressresponse
+pathaddressenvironment: class implements .addressenvironment
+  *: factory
+    return
+
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    return spawn_request(request)
+
+cmsaddressenvironment: class implements .addressenvironment
+  _msg_mode = .string
+
+  *: factory
+    _msg_mode = "ON"
+    return
+
+  execute: method = .addressresponse
     arg request = .addressrequest
 
     normalized = .string
@@ -207,15 +205,6 @@ addressenvironment: class
     if prefix4 = "TYPE" then return execute_system_command(request, "echo CMS TYPE DEMO")
 
     return unknown_command_response("CMS", request.get_command())
-
-systemaddressenvironment: procedure = .addressenvironment
-  return .addressenvironment("SYSTEM")
-
-pathaddressenvironment: procedure = .addressenvironment
-  return .addressenvironment("PATH")
-
-cmsaddressenvironment: procedure = .addressenvironment
-  return .addressenvironment("CMS")
 
 /* This is the function that the compiler calls for the ADDRESS instruction */
 _address: procedure = .int
@@ -305,9 +294,9 @@ _reset_address_environments: procedure = .int expose _address_runtime_ready _add
 ensure_address_runtime: procedure expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
   if _address_runtime_ready = 1 then return
 
-  system_env = systemaddressenvironment()
-  path_env = pathaddressenvironment()
-  cms_env = cmsaddressenvironment()
+  system_env = .systemaddressenvironment()
+  path_env = .pathaddressenvironment()
+  cms_env = .cmsaddressenvironment()
 
   _address_environment_names = .string[]
   _address_environment_objects = .addressenvironment[]
@@ -361,7 +350,7 @@ dispatch_address_request: procedure = .addressresponse expose _address_runtime_r
   idx = find_address_environment_index(_address_environment_names, env_name)
   if idx = 0 then return unknown_environment_response(env_name)
 
-  env_obj = _address_environment_objects[idx]
+  env_obj = _address_environment_objects[idx] as .addressenvironment
   return env_obj.execute(request)
 
 execute_system_command: procedure = .addressresponse expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
@@ -387,7 +376,7 @@ execute_system_command: procedure = .addressresponse expose _address_runtime_rea
   idx = find_address_environment_index(_address_environment_names, "SYSTEM")
   if idx = 0 then return unknown_environment_response("SYSTEM")
 
-  env_obj = _address_environment_objects[idx]
+  env_obj = _address_environment_objects[idx] as .addressenvironment
   return env_obj.execute(request)
 
 spawn_request: procedure = .addressresponse

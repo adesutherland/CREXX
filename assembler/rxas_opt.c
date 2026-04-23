@@ -5,6 +5,7 @@
 #include "rxasassm.h"
 #include "rxdefs.h"
 
+#include <ctype.h>
 #include "string.h"
 
 /* This defines an instruction to be searched for or as a template output */
@@ -64,6 +65,9 @@ typedef struct op_map {
    Assembler_Token *branch_token[MAX_OP_MAP];
    Assembler_Token *label_token[MAX_OP_MAP];
    Assembler_Token *proc_token[MAX_OP_MAP];
+   Assembler_Token *literal_reg_token[MAX_OP_MAP];
+   size_t literal_reg[MAX_OP_MAP];
+   char literal_regtp[MAX_OP_MAP];
 
    /* Instructions matched in the rules */
    rule *inst_mapped[OPTIMISER_TARGET_MAX_QUEUE_SIZE + OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE];
@@ -92,12 +96,14 @@ typedef struct op_map {
  * output 2 *
  * input    *  {END_OF_RULE},  ...
  *
- *  op1/op2/op3 are the parameter types of the instruction, r: register, l: label, b: branch, s: string, d: decimal,
+ *  op1/op2/op3 are the parameter types of the instruction, r: register capture, R/G/A: literal local/global/arg register,
+ *                                                          l: label, b: branch, s: string, d: decimal,
  *                                                          h: hex (binary), c: character, f: float
  *  v1/v2/v3 is the temporary variable number in which the parameter content is kept, for the optimising statement.
  *     0:    parameter is not kept
  *     1-10: parameter is kept in the specified variable
  *     This number can be used in the optimised template and allows to merge parts of several input templates
+ *     For R/G/A operands this is a literal register number, not a capture slot.
  * e) the variable must also be used to make sure that instructions belong together, assume we want to replace
  *    the 2 following instructions by a new instruction:
  *    1. we can optimise
@@ -128,16 +134,16 @@ typedef struct op_map {
  *
  * NO_HAZARD
  * In this mode, there may be other instructions in the source code between the
- * matched input instructions as long as they are not hazardous including being
- * 'irrelevant', meaning that they do not use any of the register operands in
- * the matching rules. Again see examples!
+ * matched input instructions as long as they do not block the rule. Blocking
+ * instructions include control-flow barriers, procedure calls, explicit
+ * optimiser barriers from the instruction database, and instructions that use
+ * a register involved in the rule. Again see examples!
  *
- * Hazardous instructions, change the data flow and include:
- * - labels (causes un-analysable flow control)
- * - branches (causes un-analysable flow control)
- * - function calls (these use dynamic registers)
- * - Procedure boundaries
- * - instructions not part of the ruleset but using registers used in the ruleset
+ * The optimiser gets control-flow and barrier metadata from rxops.h:
+ * - non-FLOW_NEXT instructions are barriers
+ * - FLG_OPT_BARRIER marks FLOW_NEXT instructions that must not be skipped
+ * - FLG_IMPLICIT_REG_USE marks instructions such as inc0/dec0 whose register
+ *   use is not visible as a normal operand
  *
  * If there is a match then each found instruction is removed from the queue
  * and replaced with the output instruction templates (if any).
@@ -292,6 +298,25 @@ typedef struct op_map {
 rule rules[] =
 
         {
+            /* Fixed-register arithmetic shortcuts */
+            {NO_HAZARD, OP_CODE,"inc", 'R', 0, 0, 0, 0, 0,
+                        OP_CODE,"inc0", 0, 0, 0, 0, 0, 0},
+            {END_OF_RULE},
+            {NO_HAZARD, OP_CODE,"dec", 'R', 0, 0, 0, 0, 0,
+                        OP_CODE,"dec0", 0, 0, 0, 0, 0, 0},
+            {END_OF_RULE},
+            {NO_HAZARD, OP_CODE,"inc", 'R', 1, 0, 0, 0, 0,
+                        OP_CODE,"inc1", 0, 0, 0, 0, 0, 0},
+            {END_OF_RULE},
+            {NO_HAZARD, OP_CODE,"dec", 'R', 1, 0, 0, 0, 0,
+                        OP_CODE,"dec1", 0, 0, 0, 0, 0, 0},
+            {END_OF_RULE},
+            {NO_HAZARD, OP_CODE,"inc", 'R', 2, 0, 0, 0, 0,
+                        OP_CODE,"inc2", 0, 0, 0, 0, 0, 0},
+            {END_OF_RULE},
+            {NO_HAZARD, OP_CODE,"dec", 'R', 2, 0, 0, 0, 0,
+                        OP_CODE,"dec2", 0, 0, 0, 0, 0, 0},
+            {END_OF_RULE},
 
             /* Two swaps cancelling out: swap r0,r1; swap r0,r1 */
             {NO_HAZARD, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
@@ -421,14 +446,159 @@ static char reg_type(Assembler_Token *opToken) {
     }
 }
 
-/* Check if a hazardous instruction is at the end of the queue. For
- * example a branch instruction (i.e. an instruction with a label or function
- * target changes the flow of control, breaking simple keyhole logic).
- * In which case we flush the queue before adding the next instruction */
-static int is_hazardous(enum queue_item_type type, Assembler_Token *instrToken, Assembler_Token *operand1Token,
-                        Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
+static int literal_reg_type_matches(Assembler_Token *opToken, char op_type) {
+    switch (op_type) {
+        case 'R':
+            return opToken->token_type == RREG;
+        case 'G':
+            return opToken->token_type == GREG;
+        case 'A':
+            return opToken->token_type == AREG;
+        default:
+            return 0;
+    }
+}
+
+static char literal_reg_type(char op_type) {
+    switch (op_type) {
+        case 'R':
+            return 'r';
+        case 'G':
+            return 'g';
+        case 'A':
+            return 'a';
+        default:
+            return 0;
+    }
+}
+
+static int can_map_literal_register(Assembler_Token *opToken, char op_type, size_t op_num) {
+    if (!literal_reg_type_matches(opToken, op_type)) return 0;
+    return opToken->token_value.integer == op_num;
+}
+
+static int map_literal_register(op_map *map, Assembler_Token *opToken, char op_type, size_t op_num) {
+    int i;
+    char regtp;
+
+    if (!can_map_literal_register(opToken, op_type, op_num)) return 0;
+
+    regtp = literal_reg_type(op_type);
+    for (i = 0; i < MAX_OP_MAP; i++) {
+        if (map->literal_reg_token[i] &&
+            map->literal_regtp[i] == regtp &&
+            map->literal_reg[i] == op_num) {
+            return 1;
+        }
+    }
+
+    for (i = 0; i < MAX_OP_MAP; i++) {
+        if (!map->literal_reg_token[i]) {
+            map->literal_reg_token[i] = opToken;
+            map->literal_regtp[i] = regtp;
+            map->literal_reg[i] = op_num;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static OperandType operand_type(Assembler_Token *opToken) {
+    if (!opToken) return OP_NONE;
+
+    switch(opToken->token_type) {
+        case ID:
+            return OP_ID;
+        case RREG:
+        case GREG:
+        case AREG:
+            return OP_REG;
+        case FUNC:
+            return OP_FUNC;
+        case INT:
+            return OP_INT;
+        case FLOAT:
+            return OP_FLOAT;
+        case CHAR:
+            return OP_CHAR;
+        case STRING:
+            return OP_STRING;
+        case DECIMAL:
+            return OP_DECIMAL;
+        case HEX:
+            return OP_BINARY;
+        default:
+            return OP_NONE;
+    }
+}
+
+static int op_operands_match(OpFormat format, OperandType t1, OperandType t2, OperandType t3, int actual_operands) {
+    OperandType types[3];
+    int expected_operands;
+
+    expected_operands = rxbin_get_operand_types(format, types);
+    if (expected_operands != actual_operands) return 0;
+    if (actual_operands > 0 && types[0] != t1) return 0;
+    if (actual_operands > 1 && types[1] != t2) return 0;
+    if (actual_operands > 2 && types[2] != t3) return 0;
+    return 1;
+}
+
+static int mnemonic_matches(const char *mnemonic, const char *table_name) {
+    int i = 0;
+    while (mnemonic[i]) {
+        if (toupper((unsigned char)mnemonic[i]) != table_name[i]) return 0;
+        i++;
+    }
+    if (table_name[i] == 0 || table_name[i] == '_') return 1;
+    return 0;
+}
+
+static const OpInfo *find_optimiser_opcode(Assembler_Token *instrToken,
+                                           Assembler_Token *operand1Token,
+                                           Assembler_Token *operand2Token,
+                                           Assembler_Token *operand3Token) {
+    const char *mnemonic;
+    OperandType t1;
+    OperandType t2;
+    OperandType t3;
+    int actual_operands;
+    int i;
+
+    if (!instrToken) return 0;
+
+    mnemonic = (const char *) instrToken->token_value.string;
+    t1 = operand_type(operand1Token);
+    t2 = operand_type(operand2Token);
+    t3 = operand_type(operand3Token);
+    actual_operands = 0;
+    if (operand1Token) actual_operands = 1;
+    if (operand2Token) actual_operands = 2;
+    if (operand3Token) actual_operands = 3;
+
+    for (i = 0; op_table[i].mnemonic != NULL; i++) {
+        if (op_operands_match(op_table[i].format, t1, t2, t3, actual_operands) &&
+            mnemonic_matches(mnemonic, op_table[i].mnemonic)) {
+            return &op_table[i];
+        }
+    }
+
+    return 0;
+}
+
+/* Check if a skipped instruction is a hard barrier for NO_HAZARD rules. */
+static int is_rule_barrier(enum queue_item_type type, Assembler_Token *instrToken, Assembler_Token *operand1Token,
+                           Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
+    const OpInfo *op_info;
 
     if (type == OP_CODE) {
+        op_info = find_optimiser_opcode(instrToken, operand1Token, operand2Token, operand3Token);
+        if (op_info) {
+            if (op_info->flow != FLOW_NEXT) return 1;
+            if (op_info->flags & FLG_OPT_BARRIER) return 1;
+        }
+
         /* Calls or branches */
         if (operand1Token &&
             (operand1Token->token_type == ID || operand1Token->token_type == FUNC))
@@ -441,11 +611,6 @@ static int is_hazardous(enum queue_item_type type, Assembler_Token *instrToken, 
         if (operand3Token &&
             (operand3Token->token_type == ID || operand3Token->token_type == FUNC))
             return 1;
-
-        /* Other hazardous instructions - hard coded */
-        /*
-        if (!strcmp((char*)(instrToken->token_value.string), "a_hazardous_instruction")) return 1;
-        */
     }
 
     else if (type == ASM_LABEL) return 1;
@@ -453,24 +618,94 @@ static int is_hazardous(enum queue_item_type type, Assembler_Token *instrToken, 
     return 0;
 }
 
+static int map_has_register(op_map *map, char reg_type, size_t reg_num) {
+    int i;
+
+    for (i = 0; i < MAX_OP_MAP; i++) {
+        if (map->reg_token[i] &&
+            map->regtp[i] == reg_type &&
+            map->reg[i] == reg_num) {
+            return 1;
+        }
+        if (map->literal_reg_token[i] &&
+            map->literal_regtp[i] == reg_type &&
+            map->literal_reg[i] == reg_num) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int implicit_int_register_relevant(op_map *map, Assembler_Token *token, char reg_type) {
+    if (!token || token->token_type != INT) return 0;
+    if (token->token_value.integer < 0) return 0;
+    return map_has_register(map, reg_type, (size_t) token->token_value.integer);
+}
+
+static int implicit_register_relevant(op_map *map,
+                                      const OpInfo *op_info,
+                                      Assembler_Token *operand1Token,
+                                      Assembler_Token *operand2Token,
+                                      Assembler_Token *operand3Token) {
+    if (!op_info || !(op_info->flags & FLG_IMPLICIT_REG_USE)) return 0;
+
+    switch (op_info->opcode) {
+        case OP_LOAD_INT_INT:
+            return implicit_int_register_relevant(map, operand1Token, 'r') ||
+                   implicit_int_register_relevant(map, operand2Token, 'r');
+        case OP_LOAD_INT_REG:
+            return implicit_int_register_relevant(map, operand1Token, 'r');
+        case OP_INC0:
+        case OP_DEC0:
+            return map_has_register(map, 'r', 0);
+        case OP_INC1:
+        case OP_DEC1:
+            return map_has_register(map, 'r', 1);
+        case OP_INC2:
+        case OP_DEC2:
+            return map_has_register(map, 'r', 2);
+        case OP_LINKARG_REG_INT:
+            return implicit_int_register_relevant(map, operand2Token, 'a');
+        default:
+            return 1;
+    }
+}
+
 /*
  * Return 1 if the instrToken is relevant.
  * Relevant means it uses a mapped register
  */
 static int is_relevant(op_map *map, Assembler_Token *opToken) {
-    int i;
     char r_tp;
 
     if (!opToken) return 0;
     r_tp = reg_type(opToken);
     if (!r_tp) return 0;
 
-    for (i=0; i<MAX_OP_MAP; i++) {
-        if (map->reg_token[i] &&
-            map->regtp[i] == r_tp &&
-            map->reg[i] == opToken->token_value.integer) return 1;
+    return map_has_register(map, r_tp, (size_t) opToken->token_value.integer);
+}
+
+static int instruction_is_relevant(op_map *map, instruction_queue *instruction) {
+    const OpInfo *op_info;
+
+    if (is_relevant(map, instruction->operand1Token) ||
+        is_relevant(map, instruction->operand2Token) ||
+        is_relevant(map, instruction->operand3Token)) {
+        return 1;
     }
-    return 0;
+
+    if (instruction->instrType != OP_CODE) return 0;
+
+    op_info = find_optimiser_opcode(instruction->instrToken,
+                                    instruction->operand1Token,
+                                    instruction->operand2Token,
+                                    instruction->operand3Token);
+    return implicit_register_relevant(map,
+                                      op_info,
+                                      instruction->operand1Token,
+                                      instruction->operand2Token,
+                                      instruction->operand3Token);
 }
 
 /* Checks if a instrToken can map against an op_type
@@ -497,6 +732,11 @@ static int can_map_operand(op_map *map, Assembler_Token *opToken, char op_type, 
                     return 0; /* Wrong register */
             }
             return 1;
+
+        case 'R': /* Literal local register */
+        case 'G': /* Literal global register */
+        case 'A': /* Literal argument register */
+            return can_map_literal_register(opToken, op_type, op_num);
 
         case 'i': /* Integer */
             if (opToken->token_type != INT ) return 0; /* Wrong Type */
@@ -618,6 +858,11 @@ static int map_operand(op_map *map, Assembler_Token *opToken, char op_type, size
                 map->reg[op_num] = opToken->token_value.integer;
             }
             return 1;
+
+        case 'R': /* Literal local register */
+        case 'G': /* Literal global register */
+        case 'A': /* Literal argument register */
+            return map_literal_register(map, opToken, op_type, op_num);
 
         case 'i': /* Integer */
             if (opToken->token_type != INT ) return 0; /* Wrong Type */
@@ -934,8 +1179,8 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
 
                     if (r->flag == NO_GAP) return 0; /* No gap allowed! */
                     if (r->flag == NO_HAZARD) {
-                        /* Is it a hazardous instruction like a branch? */
-                        if (is_hazardous(
+                        /* Is it a barrier instruction like a branch or procedure call? */
+                        if (is_rule_barrier(
                                 context->optimiser_queue[inst_no].instrType,
                                 context->optimiser_queue[inst_no].instrToken,
                                 context->optimiser_queue[inst_no].operand1Token,
@@ -944,10 +1189,8 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                             return 0;
 
                         /* Is the instruction relevant (using some of the mapped registers) this
-                         * is also a hazard */
-                        if (is_relevant(map, context->optimiser_queue[inst_no].operand1Token) ||
-                            is_relevant(map, context->optimiser_queue[inst_no].operand2Token) ||
-                            is_relevant(map, context->optimiser_queue[inst_no].operand3Token))
+                         * also blocks the rule. */
+                        if (instruction_is_relevant(map, &context->optimiser_queue[inst_no]))
                             return 0;
                     }
                 }

@@ -143,6 +143,29 @@ and the metadata records above:
 selectors. Provider selection is a VM concern: the assembler simply emits the
 opcode and the interface/class metadata needed for runtime lookup.
 
+For `call ... , rArgs`, `dcall`, and `srcfproc ... , rArgs`, the trailing
+register operand names the argument-count register. The actual argument values
+are taken from the contiguous registers immediately after that count register.
+That hidden contiguous argument block is semantically part of the instruction
+use set, so optimiser passes must treat those opcodes as barriers unless they
+fully model the implicit register consumption.
+
+The peephole optimiser also consumes instruction metadata from
+`binutils/include/rxops.h`. `FLOW_JUMP`, `FLOW_COND`, and `FLOW_TERM` block
+`NO_HAZARD` rule skips automatically. `FLG_OPT_BARRIER` is for `FLOW_NEXT`
+instructions that still must not be skipped, such as calls, signal handler
+configuration, explicit signal/check instructions, and opaque argument-block
+operations. `FLG_IMPLICIT_REG_USE` is for linear instructions whose register
+effects are not represented as normal operands. For example, `inc0`, `dec0`,
+`inc1`, and friends are still linear execution, but the optimiser treats them
+as using the corresponding fixed local register when checking whether an
+intervening instruction is relevant to a rule.
+
+Optimiser rule operands use lowercase `r` for a captured register. Uppercase
+`R`, `G`, and `A` match literal local/global/argument register numbers. The
+assembler uses this to express rules such as `inc r0 -> inc0` without adding
+mnemonic-specific C code to the optimiser engine.
+
 `typeof`, `istype`, and `asserttype` are object-contract operations. Compiler
 generated code uses them for object casts/tests/introspection; scalar
 `typeof`/`is` cases are folded earlier by `rxc`.

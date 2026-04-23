@@ -1,0 +1,8 @@
+* Fused float branch opcodes are control-flow barriers.
+
+main() .locals=5
+    swap r1,r2
+    fltbr done,r3,r4
+    swap r1,r2
+done:
+    ret

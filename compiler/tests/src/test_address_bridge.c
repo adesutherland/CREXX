@@ -29,7 +29,7 @@ int main(void) {
         goto cleanup;
     }
 
-    if (rxvml_call_procedure(ctx, "_rxsysb.cmsaddressenvironment", 0, NULL, &env_obj) != 0 || !env_obj) {
+    if (rxvml_call_factory(ctx, "_rxsysb.cmsaddressenvironment", 0, NULL, &env_obj) != 0 || !env_obj) {
         print_last_error(ctx, "Failed to obtain CMS address environment");
         goto cleanup;
     }
