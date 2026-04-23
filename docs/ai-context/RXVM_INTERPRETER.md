@@ -6,7 +6,7 @@ The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loa
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
-2. **Loading**: `rxvm_load()` ingests a `.rxbin` binary file, reads the section flags and stored sizes, expands any packed instruction/constant sections back into normal buffers, and then loads the result into an internal `module` struct.
+2. **Loading**: `rxvm_load()` ingests a `.rxbin` binary file, reads the section flags and stored sizes, expands any packed instruction/constant sections back into normal buffers, and then loads the result into an internal `module` struct. In the current `003` layout the reader accepts three record kinds: `MODULE_LOCAL`, `POOL_SHARED`, and `MODULE_SHARED`. Shared-backed modules borrow the current shared pool in memory rather than copying it.
 3. **Linking**: `rxvm_link()` traverses newly loaded modules to resolve exports and external imports into a unified memory map. The call is now dirty-checked, so repeated bridge/runtime entry points become fast no-ops when no module state changed.
 4. **Preparation**: `rxvm_prepare()` optionally populates per-module dispatch side tables for maximum speed without mutating serialized bytecode.
 5. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure (typically `main`) and launch the main interpreter loop.
@@ -34,6 +34,9 @@ typedef struct rxvm_context {
 `interface_method_registry_dirty` and `interface_factory_registry_dirty` flags
 track when the interface method and factory caches need rebuilding. This keeps
 repeated `rxvm_link()` calls cheap while still supporting late module loading.
+Because linked images may share one constant pool across multiple modules,
+module-local runtime walkers now follow `proc_head`, `expose_head`, and
+`meta_head` chains instead of sweeping the entire pool.
 
 ### `proc_runtime`
 Serialized `PROC_CONST` entries now remain metadata-only. During module load,
@@ -105,6 +108,10 @@ Variables (`locals` arrays) consist of arrays of `value*` pointers managed stric
 The two `object_type_name` fields are the current Level B hook for interface
 dispatch. Class factories stamp object values with `setobjtype`, and later VM
 lookups use that concrete class identity when resolving interface member calls.
+In UTF builds, `string_length` is the byte length while `string_chars` is the
+codepoint count. Any instruction that synthesizes or truncates a string must
+keep both in sync and reset `string_pos` / `string_char_pos` to the start of
+the new value.
 
 ## 3. The Execution Loop
 

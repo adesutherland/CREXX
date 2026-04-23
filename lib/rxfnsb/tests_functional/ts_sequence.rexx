@@ -15,4 +15,9 @@ if sequence('i','y') \= 'ijklmnopqrstuvwxy' then do
   say 'SEQUENCE failed in test 2'
 end
 
+if sequence('α','γ') \= 'αβγ' then do
+  errors=errors+1
+  say 'SEQUENCE failed in test 3'
+end
+
 return errors<>0

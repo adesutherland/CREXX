@@ -188,11 +188,7 @@ struct stack_frame {
   #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_length; }
 #endif
 
-#ifndef NUTF8
-  #define PUTSTRLEN(v,i)   { v->string_length=i; v->string_chars=i;}
-#else
-  #define PUTSTRLEN(v,i)   { v->string_length=i; }
-#endif
+#define PUTSTRLEN(v,i)      { string_set_ascii_length((v), (size_t)(i)); }
 
 
 

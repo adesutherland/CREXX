@@ -1,0 +1,17 @@
+/*
+ * linker/tests/tests_link_root.rxas
+ */
+
+.globals=0
+
+helper() .expose=linktest.helper
+   .meta "linktest.helper"="b" ".int" helper() "" ""
+
+main() .locals=2
+   .meta "linktest.root.main"="b" ".void" main() "" ""
+   load r1,0
+   call r0,helper(),r1
+   say "PASS: Root Returned"
+   itos r0
+   say r0
+   ret 0

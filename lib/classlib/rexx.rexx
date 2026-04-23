@@ -76,16 +76,16 @@ val = .string
 -- 		c2d
   c2d: method = .int
     from = val
-    stx=""
-    fz=""
     len=0
+    offset=0
+    code=0
     assembler strlen len,from
-    if len=0 then return 0
-    do  i=0 to len-1
-      assembler hexchar fz,from,i
-      stx=stx||fz
+    if len \= 1 then do
+      assembler signal "CONVERSION_ERROR", "C2D expects exactly one character"
+      return 0
     end
-    return _x2d(stx)
+    assembler strchar code,from,offset
+    return code
 -- 		center
   center: method = .string
     arg expose centlen = .int,  pad = " "
@@ -230,20 +230,18 @@ d2b: method = .string
 -- 		d2c
   d2c: method = .string
     arg from = .int, slen=-1
-    xlen=0
     if slen=0 then return ''
-    if slen>0 then xstr=d2x(from,slen+slen)
-    else xstr=d2x(from)
-      
-      xstr=_x2c(xstr)
-      assembler strlen xlen,xstr
-      
-      if slen>0 then do
-	slen=slen+2  /* double bytes */
-	assembler strlen xlen,xstr
-	xlen=slen-xlen
-      end
-      return xstr
+    if slen > 1 | slen < -1 then do
+      assembler signal "CONVERSION_ERROR", "D2C supports only omitted length, 0, or 1 with Unicode semantics"
+      return ''
+    end
+    if from < 0 | from > 1114111 | (from >= 55296 & from <= 57343) then do
+      assembler signal "CONVERSION_ERROR", "D2C invalid Unicode code point"
+      return ''
+    end
+    xstr=''
+    assembler appendchar xstr,from
+    return xstr
 
 -- 		d2x
   d2x: method = .string
@@ -1207,9 +1205,7 @@ subject = _upper(subject)
     assembler isub diff,toVal,fromVal
     
     loop i=0 to diff
-      assembler itos fromVal
-      val=_reradix(fromVal,10,16)
-      resultString=resultString||_x2c(val)
+      assembler appendchar resultString,fromVal
       assembler inc fromVal
     end
     

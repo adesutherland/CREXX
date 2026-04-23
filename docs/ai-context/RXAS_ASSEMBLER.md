@@ -49,6 +49,10 @@ context->binary.binary[context->binary.inst_size++].iconst = token->integer;
 Strings, pooled float literals, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
 Types include: `STRING_CONST`, `FLOAT_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_REG`, etc.
 
+The serialized `expose_head` chain includes both `EXPOSE_REG_CONST` and
+`EXPOSE_PROC_CONST` records. Runtime linking and other module-local walkers now
+rely on that chain instead of scanning the whole constant pool.
+
 The interface/callable-contract work extends that same metadata path rather
 than introducing a second binary header mechanism. In addition to `META_CLASS`
 and `META_ATTR`, the assembler now serializes:

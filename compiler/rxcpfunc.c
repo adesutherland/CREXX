@@ -1396,7 +1396,7 @@ static meta_reg_constant* get_variable_type(char* name, void* constant, int meta
 
 static void read_constant_pool_for_functions(Context *context, char *full_file_name, void* constant, size_t constant_size, int meta_head) {
     chameleon_constant *entry;
-    size_t i;
+    int i;
     size_t exposed_ix;
     expose_proc_constant *exposed;
     char* fqname;
@@ -1408,10 +1408,12 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
     /* Aggregator for class metadata to synthesize class stubs */
     class_meta_agg *class_aggs = 0;
 
-    /* Loop through all the constant entries */
-    i = 0;
-    while (i < constant_size) {
-        entry = (chameleon_constant *) (constant + i);
+    (void)constant_size;
+
+    /* Walk only the module metadata chain so shared constant pools stay module-local in effect. */
+    i = meta_head;
+    while (i != -1) {
+        entry = (chameleon_constant *) (constant + (size_t)i);
 
         /* A function/method definition */
         if (entry->type == META_FUNC) {
@@ -1595,7 +1597,7 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
             }
         }
 
-        i += entry->size_in_pool;
+        i = ((meta_entry *)entry)->next;
     }
 
     /* Synthesize and register contract stubs from aggregated metadata */

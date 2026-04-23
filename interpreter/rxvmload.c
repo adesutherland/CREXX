@@ -185,19 +185,59 @@ static void free_interface_method_registry(rxvm_context *context) {
 }
 
 static void build_module_runtime_procedures(module *mod) {
-    size_t i;
+    int i;
     size_t proc_index;
+    unsigned char *seen;
 
     mod->procedures = 0;
     mod->procedure_count = 0;
     mod->proc_runtime_lookup = 0;
     mod->proc_runtime_lookup_size = (mod->segment.const_size + (size_t)7) >> 3;
+    seen = 0;
 
-    i = 0;
-    while (i < mod->segment.const_size) {
-        chameleon_constant *c_entry = (chameleon_constant *) (mod->segment.const_pool + i);
-        if (c_entry->type == PROC_CONST) mod->procedure_count++;
-        i += c_entry->size_in_pool;
+    if (mod->proc_runtime_lookup_size) {
+        seen = calloc(mod->proc_runtime_lookup_size, sizeof(unsigned char));
+        if (!seen) {
+            fprintf(stderr, "PANIC: Out of memory\n");
+            exit(-1);
+        }
+    }
+
+    i = mod->proc_head;
+    while (i != -1) {
+        proc_constant *definition = (proc_constant *)(mod->segment.const_pool + (size_t)i);
+        if (definition->base.type != PROC_CONST) {
+            fprintf(stderr, "PANIC: Invalid procedure chain in module %s\n", mod->name);
+            exit(-1);
+        }
+        if (!seen[(size_t)i >> 3]) {
+            seen[(size_t)i >> 3] = 1;
+            mod->procedure_count++;
+        }
+        i = definition->next;
+    }
+
+    i = mod->expose_head;
+    while (i != -1) {
+        chameleon_constant *entry = (chameleon_constant *)(mod->segment.const_pool + (size_t)i);
+        if (entry->type == EXPOSE_PROC_CONST) {
+            expose_proc_constant *exposed = (expose_proc_constant *)entry;
+            proc_constant *definition = (proc_constant *)(mod->segment.const_pool + exposed->procedure);
+            if (definition->base.type != PROC_CONST) {
+                fprintf(stderr, "PANIC: Invalid exposed procedure in module %s\n", mod->name);
+                exit(-1);
+            }
+            if (!seen[exposed->procedure >> 3]) {
+                seen[exposed->procedure >> 3] = 1;
+                mod->procedure_count++;
+            }
+            i = exposed->next;
+        } else if (entry->type == EXPOSE_REG_CONST) {
+            i = ((expose_reg_constant *)entry)->next;
+        } else {
+            fprintf(stderr, "PANIC: Invalid expose chain in module %s\n", mod->name);
+            exit(-1);
+        }
     }
 
     if (mod->procedure_count) {
@@ -214,14 +254,14 @@ static void build_module_runtime_procedures(module *mod) {
             fprintf(stderr, "PANIC: Out of memory\n");
             exit(-1);
         }
+        memset(seen, 0, mod->proc_runtime_lookup_size);
     }
 
-    i = 0;
+    i = mod->proc_head;
     proc_index = 0;
-    while (i < mod->segment.const_size) {
-        chameleon_constant *c_entry = (chameleon_constant *) (mod->segment.const_pool + i);
-        if (c_entry->type == PROC_CONST) {
-            proc_constant *definition = (proc_constant *) c_entry;
+    while (i != -1) {
+        proc_constant *definition = (proc_constant *)(mod->segment.const_pool + (size_t)i);
+        if (!seen[(size_t)i >> 3]) {
             proc_runtime *runtime = &mod->procedures[proc_index++];
 
             runtime->definition = definition;
@@ -231,10 +271,38 @@ static void build_module_runtime_procedures(module *mod) {
             runtime->frame_free_list = &runtime->frame_free_list_head;
             runtime->start = definition->start;
             runtime->name = definition->name;
-            mod->proc_runtime_lookup[i >> 3] = runtime;
+            mod->proc_runtime_lookup[(size_t)i >> 3] = runtime;
+            seen[(size_t)i >> 3] = 1;
         }
-        i += c_entry->size_in_pool;
+        i = definition->next;
     }
+
+    i = mod->expose_head;
+    while (i != -1) {
+        chameleon_constant *entry = (chameleon_constant *)(mod->segment.const_pool + (size_t)i);
+        if (entry->type == EXPOSE_PROC_CONST) {
+            expose_proc_constant *exposed = (expose_proc_constant *)entry;
+            if (!seen[exposed->procedure >> 3]) {
+                proc_constant *definition = (proc_constant *)(mod->segment.const_pool + exposed->procedure);
+                proc_runtime *runtime = &mod->procedures[proc_index++];
+
+                runtime->definition = definition;
+                runtime->locals = definition->locals;
+                runtime->binarySpace = (!mod->native && definition->start != SIZE_MAX) ? &mod->segment : 0;
+                runtime->frame_free_list_head = 0;
+                runtime->frame_free_list = &runtime->frame_free_list_head;
+                runtime->start = definition->start;
+                runtime->name = definition->name;
+                mod->proc_runtime_lookup[exposed->procedure >> 3] = runtime;
+                seen[exposed->procedure >> 3] = 1;
+            }
+            i = exposed->next;
+        } else {
+            i = ((expose_reg_constant *)entry)->next;
+        }
+    }
+
+    if (seen) free(seen);
 }
 
 static proc_runtime *get_module_runtime_procedure(module *mod, size_t proc_offset) {
@@ -244,18 +312,17 @@ static proc_runtime *get_module_runtime_procedure(module *mod, size_t proc_offse
 
 /* Link a loaded module */
 void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
-    size_t i, mod_index;
+    int i;
+    size_t mod_index;
     chameleon_constant *c_entry;
     proc_runtime *p_entry, *p_entry_linked;
     value *g_reg;
 
     DEBUG("Add Module Symbols\n");
-    i = 0;
+    i = context->modules[module_number_to_link]->expose_head;
     mod_index = module_number_to_link;
-    while (i < context->modules[mod_index]->segment.const_size) {
-        c_entry =
-                (chameleon_constant *) (
-                        context->modules[mod_index]->segment.const_pool + i);
+    while (i != -1) {
+        c_entry = (chameleon_constant *)(context->modules[mod_index]->segment.const_pool + (size_t)i);
         switch (c_entry->type) {
 
             case EXPOSE_REG_CONST:
@@ -308,18 +375,16 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
             default:;
         }
 
-        i += c_entry->size_in_pool;
+        i = ((expose_reg_constant *)c_entry)->next;
     }
 
     DEBUG("Resolve Symbols\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         /* Skip modules without any unresolved symbols */
         if (!context->modules[mod_index]->unresolved_symbols) continue;
-        i = 0;
-        while (i < context->modules[mod_index]->segment.const_size) {
-            c_entry =
-                    (chameleon_constant *) (
-                            context->modules[mod_index]->segment.const_pool + i);
+        i = context->modules[mod_index]->expose_head;
+        while (i != -1) {
+            c_entry = (chameleon_constant *)(context->modules[mod_index]->segment.const_pool + (size_t)i);
             switch (c_entry->type) {
                 case EXPOSE_PROC_CONST:
                     if (((expose_proc_constant *) c_entry)->imported) {
@@ -350,7 +415,7 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
                 default:;
             }
 
-            i += c_entry->size_in_pool;
+            i = ((expose_proc_constant *)c_entry)->next;
         }
     }
 
@@ -746,6 +811,8 @@ void add_proc_to_module(rxpa_context* context , char* index, rxpa_libfunc func) 
 
     /* Set structure data */
     memcpy(proc->name, index, strlen(index) + 1);
+    proc->next = -1;
+    proc->locals = 0;
     proc->start = (size_t)func;
 
     /* Create Exposed Procedure Entry */
@@ -761,6 +828,9 @@ void add_proc_to_module(rxpa_context* context , char* index, rxpa_libfunc func) 
     /* Chain the exposed constant entries */
     exposed_proc->next = context->plugin_being_loaded->header.expose_head;
     context->plugin_being_loaded->header.expose_head = (int)exposed_proc_index;
+
+    proc = (proc_constant *) (context->plugin_being_loaded->constant + proc_index);
+    proc->exposed = exposed_proc_index;
 }
 
 // RXPA Add Function Implementation

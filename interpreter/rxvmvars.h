@@ -574,6 +574,118 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
 
 /* Compares two strings. returns -1, 0, 1 as appropriate */
 #define MIN(a,b) (((a)<(b))?(a):(b))
+
+#ifndef NUTF8
+RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos);
+
+RX_INLINE void string_reset_cursor(value *v) {
+    v->string_pos = 0;
+    v->string_char_pos = 0;
+}
+
+RX_INLINE void string_set_lengths(value *v, size_t byte_length, size_t char_length) {
+    v->string_length = byte_length;
+    v->string_chars = char_length;
+    string_reset_cursor(v);
+}
+
+RX_INLINE void string_set_ascii_length(value *v, size_t length) {
+    string_set_lengths(v, length, length);
+}
+
+RX_INLINE size_t string_chars_remaining(const value *v) {
+    if (v->string_char_pos >= v->string_chars) return 0;
+    return v->string_chars - v->string_char_pos;
+}
+
+RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_count) {
+    size_t byte_pos = source->string_pos;
+    size_t actual_chars = MIN(char_count, string_chars_remaining(source));
+    size_t byte_length = actual_chars;
+
+    if (actual_chars == 0) {
+        if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
+        string_set_ascii_length(dest, 0);
+        return;
+    }
+
+#if ASCII_FAST_PATH
+    if (source->string_chars != source->string_length)
+#endif
+    {
+        size_t end_pos = byte_pos;
+        size_t i;
+
+        for (i = 0; i < actual_chars; ++i) {
+            end_pos += utf8codepointcalcsize(source->string_value + end_pos);
+        }
+        byte_length = end_pos - byte_pos;
+    }
+
+    if (dest == source) {
+        memmove(dest->string_value, source->string_value + byte_pos, byte_length);
+    } else {
+        prep_string_buffer(dest, byte_length);
+        memcpy(dest->string_value, source->string_value + byte_pos, byte_length);
+    }
+
+    string_set_lengths(dest, byte_length, actual_chars);
+    null_terminate_string_buffer(dest);
+}
+
+RX_INLINE void string_truncate_chars(value *v, size_t char_count) {
+    string_set_byte_pos(v, char_count);
+    string_set_lengths(v, v->string_pos, v->string_char_pos);
+    null_terminate_string_buffer(v);
+}
+#else
+RX_INLINE void string_reset_cursor(value *v) {
+    v->string_pos = 0;
+}
+
+RX_INLINE void string_set_lengths(value *v, size_t byte_length, size_t char_length) {
+    (void)char_length;
+    v->string_length = byte_length;
+    string_reset_cursor(v);
+}
+
+RX_INLINE void string_set_ascii_length(value *v, size_t length) {
+    string_set_lengths(v, length, length);
+}
+
+RX_INLINE size_t string_chars_remaining(const value *v) {
+    if (v->string_pos >= v->string_length) return 0;
+    return v->string_length - v->string_pos;
+}
+
+RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_count) {
+    size_t byte_pos = source->string_pos;
+    size_t byte_length = MIN(char_count, string_chars_remaining(source));
+
+    if (byte_length == 0) {
+        if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
+        string_set_ascii_length(dest, 0);
+        return;
+    }
+
+    if (dest == source) {
+        memmove(dest->string_value, source->string_value + byte_pos, byte_length);
+    } else {
+        prep_string_buffer(dest, byte_length);
+        memcpy(dest->string_value, source->string_value + byte_pos, byte_length);
+    }
+
+    string_set_ascii_length(dest, byte_length);
+    null_terminate_string_buffer(dest);
+}
+
+RX_INLINE void string_truncate_chars(value *v, size_t char_count) {
+    size_t new_length = MIN(char_count, v->string_length);
+    string_set_ascii_length(v, new_length);
+    null_terminate_string_buffer(v);
+}
+#endif
+
 RX_INLINE int string_cmp(char *value1, size_t length1, char *value2, size_t length2) {
     int ret;
 

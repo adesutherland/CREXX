@@ -174,10 +174,11 @@ Preferred direction for stage 1:
 
 - add a dedicated constant-pool entry for binary 64-bit floating literals
 - deduplicate those entries in the assembler
-- in `002`, keep the existing float instructions but store float operands as
+- in the final unpublished `003` layout, keep the existing float instructions
+  but store float operands as
   constant-pool indexes instead of inline `double` payloads in the code stream
 - materialize the `double` from the pool during execution
-- bump the file-format version from `001` to `002`
+- keep the programme on `003` rather than carrying a transient published `002`
 
 The preferred pool representation is:
 
@@ -193,7 +194,7 @@ The stage-1 direction is now fixed:
 
 - do not add sibling opcodes just for pool-backed floats
 - keep the existing float instructions
-- under file format `002`, interpret float operands as indexes of
+- under the final `003` format, interpret float operands as indexes of
   `FLOAT_CONST` records in the constant pool
 
 This keeps the instruction set stable while changing only the serialized
@@ -213,9 +214,10 @@ Expected consequences:
 Compatibility decision:
 
 - no backward compatibility is required for this programme
-- `001` and `002` are cleanly separated by the version gate
-- it is acceptable for the updated tools to reject `001` rather than support
-  dual decoding paths
+- `001` is not supported by the current tools
+- earlier unpublished `003` layouts are also not supported
+- it is acceptable for the updated tools to reject old layouts rather than
+  support dual decoding paths
 
 ### 5.5 Acceptance target
 
@@ -224,7 +226,7 @@ Stage 1 is complete when:
 - repeated float literals are emitted once into the constant pool
 - produced binaries execute with the same observable numeric behaviour as
   before
-- the tools consistently emit and expect `002`
+- the tools consistently emit and expect the final `003` layout
 - focused tests cover repeated literals, negative zero, and mixed float/decimal
   instruction cases
 
@@ -417,32 +419,277 @@ but it does not reduce file size for known module sets built together.
 This stage should also assume that the supporting refactor in section 6 has
 been completed first.
 
-### 8.2 Preferred direction
+### 8.2 Tool placement and repository structure
 
-Preferred direction for the first linker milestone:
+Recommended repository placement:
 
-- accept multiple module inputs
-- resolve static imports/exports at build time where possible
-- emit one packaged output
-- retain module boundaries internally for correctness and simpler migration
-
-There are two reasonable container directions:
-
-1. reuse the existing "multiple serialized modules in one file" capability
-2. define a new linked-container format
-
-Preferred option: `1` for the first pass
+- add the linker as a new top-level sibling tool directory, alongside
+  `assembler`, `disassembler`, and `interpreter`
+- keep `binutils` as the low-level shared format/helper layer
+- do not move `assembler` or `disassembler` under `binutils`
 
 Reason:
 
-- the loader already understands repeated module records
-- it minimizes the amount of new format machinery needed early
-- it leaves room for a later fully linked single-image format if that becomes
-  worthwhile
+- the repository already models user-facing tools as top-level siblings
+- `binutils` currently holds shared format tables and helpers, not standalone
+  tools
+- the linker will be a product/tool in its own right, even if it reuses
+  `rxbin` helpers from `binutils`
 
-### 8.3 Non-goal for the first linker pass
+Recommended working name in this note:
 
-The first linker should not try to replace runtime linking entirely.
+- use `rxlink` as the placeholder tool name
+- the final executable name can still be approved separately
+
+### 8.3 Stage-3 product model
+
+The linker should be treated as a standalone build-time tool with two inputs:
+
+- command-line arguments for the common/simple case
+- a control file for repeatable builds and manual member selection overrides
+
+The intended job is:
+
+- accept one or more `.rxbin` inputs
+- treat each serialized module record as a candidate member
+- choose which members to include
+- emit one linked/package output
+
+The mainframe-style control-file requirement is sensible and should be part of
+stage 3 from the start, not an afterthought.
+
+### 8.4 Command-line and control-file model
+
+Recommended control model:
+
+- CLI for simple direct use:
+  - output path
+  - explicit root inputs
+  - optional control file path
+  - optional map/report output
+- control file for:
+  - forced include
+  - forced omit
+  - explicit roots
+  - reusable input lists
+  - output/map defaults
+
+Recommended control-file style:
+
+- simple line-oriented control statements
+- case-insensitive keywords
+- comments allowed
+- no heavy parser needed
+
+Recommended minimum directives:
+
+- `OUTPUT <file>`
+- `INPUT <file>`
+- `ROOT <member>`
+- `INCLUDE <member>`
+- `OMIT <member>`
+- `MAP <file>`
+
+Recommended member naming rule:
+
+- bare module/member name is allowed when unique
+- otherwise the qualified form should be `input-path::module-name`
+
+Recommended precedence:
+
+- `OMIT` removes a candidate from automatic resolution
+- `INCLUDE` force-adds a member even if not otherwise referenced
+- omitting a forced root should be an error
+- omitting a needed provider should surface as an unresolved-symbol error
+
+### 8.5 Automatic member selection
+
+The existing `rxvm_link()` logic is the right starting point for symbol
+resolution, but automatic member selection must go slightly beyond it.
+
+Recommended dependency rules:
+
+- hard dependency edges come from imported `EXPOSE_PROC_CONST` entries
+- interface/factory metadata should also create dependency edges:
+  - `META_IMPLEMENTS` in an included module should pull in the matching
+    interface-defining module when present
+- exposed registers should not, by themselves, force module inclusion
+
+Reason:
+
+- runtime linking already resolves procedure imports by exposed name
+- runtime interface/factory registries are built by scanning metadata across
+  all loaded modules, so contract modules matter for correct behaviour
+- exposed registers are soft shared-state bindings and do not imply that some
+  other module must exist
+
+Recommended ambiguity rule:
+
+- duplicate providers should be a linker error by default
+- `INCLUDE` / `OMIT` should be the way to disambiguate intentionally
+
+This is stricter than the current runtime linker, which mostly warns and keeps
+the first exporter inserted into the search tree. The build-time linker should
+prefer deterministic and reviewable output over silent first-wins behaviour.
+
+### 8.6 Unified `003` record-stream container
+
+Stage 3 now uses one unified top-level `rxbin` shape in `003`, but it remains
+streamable and concatenable by raw byte copy.
+
+The file is a sequence of self-delimiting records read until EOF.
+
+Record types:
+
+- `MODULE_LOCAL`
+  - one code module plus its private constant pool
+  - this is what `rxas` emits
+- `POOL_SHARED`
+  - one shared constant-pool blob with no code section
+  - this is emitted by `rxlink`
+- `MODULE_SHARED`
+  - one code module/header with no local pool payload
+  - this is emitted by `rxlink`
+
+Reader model:
+
+- `MODULE_LOCAL` loads normally and ignores any current shared pool
+- `POOL_SHARED` installs or replaces the current shared pool
+- `MODULE_SHARED` attaches to the current shared pool without copying it
+
+Consequences:
+
+- ordinary single-module output is still just one serialized record
+- plain archive creation remains byte concatenation of existing files
+- linked images are written as one `POOL_SHARED` record followed by one or
+  more `MODULE_SHARED` records
+- concatenating multiple linked images is valid because each new
+  `POOL_SHARED` record resets the active shared pool
+
+### 8.7 Shared-pool rewrite strategy
+
+One shared constant pool with separate code modules is feasible and is now the
+implemented first pass.
+
+What stays module-local:
+
+- instruction/code sections
+- procedure start addresses
+- metadata instruction addresses
+- per-module globals count and chain heads
+
+What becomes shared within a linked image:
+
+- the constant-pool address space
+- literal constants
+- procedure/expose/meta record storage
+
+What the linker rewrites:
+
+- module header offsets such as `proc_head`, `expose_head`, and `meta_head`
+- instruction operands that carry constant-pool indexes
+- internal constant-pool references such as:
+  - `proc_constant.exposed`
+  - `expose_proc_constant.procedure`
+  - metadata string/type/arg/member references
+  - metadata `prev` / `next` links
+
+First-pass consolidation policy:
+
+- copy all module-structural records into the shared pool
+- deduplicate only leaf literal constants across members:
+  - `STRING_CONST`
+  - `BINARY_CONST`
+  - `DECIMAL_CONST`
+  - `FLOAT_CONST`
+- do not try to deduplicate `PROC_CONST`, `EXPOSE_*`, or `META_*` records in
+  the first pass
+
+### 8.8 Why code modules stay separate
+
+Advantages:
+
+- no need to flatten all code into one giant instruction stream
+- no cross-module code-address relocation for `proc.start` or `meta.address`
+- the runtime execution model still treats procedures as belonging to a
+  specific code segment/module
+- debugging and disassembly remain module-oriented
+- the linker work stays focused on member selection and constant-pool rebasing
+
+Main cost:
+
+- all module-local walkers must now follow `proc_head`, `expose_head`, and
+  `meta_head` rather than sweeping the whole constant pool
+- all shared-pool references must be rebased consistently
+
+Overall recommendation:
+
+- keep code modules separate in stage 3
+- do not flatten instruction addressing in the first linker pass
+
+### 8.9 What was reused from `rxvm`
+
+The linker reuses the following ideas from `rxvm`:
+
+- catalog exports by exposed procedure name
+- resolve imported procedures against that catalog
+- reuse the existing `read_module()` / `read_module_mem()` entry points
+- reuse the current notion that one input file may contain multiple module
+  members
+
+Important differences from `rxvm`:
+
+- the linker decides inclusion/exclusion of members before runtime
+- the linker rewrites serialized offsets into a shared-pool address space
+- duplicate providers are deterministic linker errors rather than runtime
+  warnings
+- unresolved imports are preserved as imported stubs so later runtime loading
+  can still satisfy them if desired
+
+### 8.10 Current implementation status
+
+Stage 3 is now implemented in `003`.
+
+Implemented pieces:
+
+- standalone top-level tool: `rxlink`
+- CLI options:
+  - output path
+  - control file path
+  - explicit roots
+  - optional map file
+  - optional location/debug flags
+- control-file directives:
+  - `INPUT`
+  - `ROOT`
+  - `INCLUDE`
+  - `OMIT`
+  - `OUTPUT`
+  - `MAP`
+- selector forms:
+  - bare member name
+  - qualified `input-path::member`
+- automatic member selection:
+  - explicit roots/includes first
+  - otherwise `main()`-containing modules, then first-input fallback
+  - import closure over exposed procedures
+  - interface/implements closure over metadata
+- linked-image writer:
+  - one `POOL_SHARED` record
+  - one `MODULE_SHARED` record per selected module
+  - one deduplicated shared pool across those modules
+
+Supporting runtime/tool changes that were required:
+
+- `read_module()` and `read_module_mem()` now understand all three record
+  types
+- shared-pool modules borrow the active pool without copying it
+- `rxvm`, compiler import scanning, and `rxdas` now use module-local
+  `proc_head` / `expose_head` / `meta_head` traversal where needed
+
+### 8.11 Non-goals for the first linker pass
+
+The first linker does not try to replace runtime linking entirely.
 
 Runtime linking is still needed for:
 
@@ -450,16 +697,29 @@ Runtime linking is still needed for:
 - native plugins
 - mixed static/dynamic deployments
 
-### 8.4 Later size wins the linker may unlock
+The first linker also does not yet try to:
 
-A later linker pass could additionally:
+- flatten all code into one instruction image
+- strip every unused metadata record
+- canonicalize or deduplicate all structural metadata records
+- remove every imported-procedure stub from the serialized image
+- preserve shared-pool packaging when disassembling and reassembling through a
+  single `.rxas` file; that repackaging step remains the linker's job
 
-- deduplicate shared string constants across input modules
-- deduplicate shared float constants across input modules
+### 8.12 Later linker wins
+
+Later linker passes could additionally:
+
+- rewrite imported-procedure stubs to direct provider procedure references and
+  then drop redundant imported records
 - strip unused exports or metadata
+- deduplicate selected structural metadata records
 - precompute more relocation/import information
+- optionally define a later fully flattened single-code-image format if that
+  ever becomes worthwhile
 
-Those are useful extensions, but they are not required to begin stage 3.
+Those are useful extensions, but they are not required for the first stage-3
+milestone.
 
 ## 9. Cross-cutting constraints
 
@@ -474,24 +734,35 @@ The whole programme should preserve these properties:
 
 The main approval points from this note are:
 
-1. stage 1 should move to file format `002` with no backward compatibility for
-   `001`
+1. the whole unpublished programme should stay on the final `003` layout with
+   no backward compatibility for `001` or earlier unpublished `003` variants
 2. stage 1 should keep the existing float instructions and make their float
-   operands pool-backed in `002`
+   operands pool-backed in `003`
 3. the serialized/runtime state split should be added to the programme as the
    next structural step after stage 1 and before compression/linking
 4. stage 2 uses a two-part load-time decompression design inside `003`:
    - packed logical token stream for the instruction section
    - lightweight LZSS blob compression for the constant pool
-5. stage 3 should begin as a build-time packager/linker built on the existing
-   multi-module file capability
+5. stage 3 should add a standalone top-level linker tool rather than placing
+   the tool itself under `binutils`
+6. stage 3 should support both CLI arguments and a mainframe-style control file
+   with `INCLUDE` / `OMIT` overrides
+7. stage 3 should use a unified record-stream `rxbin` container with
+   `MODULE_LOCAL`, `POOL_SHARED`, and `MODULE_SHARED` records
+8. stage 3 linked output should use one shared constant pool with separate
+   per-module code sections
+9. stage 3 automatic member selection should follow both imported procedures
+   and interface/factory metadata dependencies
+10. stage 3 should treat duplicate providers as linker errors unless the user
+    disambiguates them explicitly
 
-## 11. Immediate next step after approval
+## 11. Potential follow-up after stage 3
 
-With stages 1 and 2 plus the runtime-state split complete, the next
-implementation step should be stage 3:
+With stages 1, 2, and 3 now implemented, the next worthwhile follow-up items
+would be:
 
-- add the build-time module linker/packager
-- start by reusing the existing multi-module file container model
-- treat cross-module deduplication and deeper relocation work as later linker
-  milestones
+- decide whether to rewrite imported stubs directly to provider procedures
+- decide whether unresolved imports should remain runtime-linkable or become
+  hard linker errors
+- decide whether a later optional code-flattening mode is worth the extra
+  relocation complexity

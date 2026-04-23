@@ -1089,34 +1089,6 @@ static int resolve_runtime_factory(rxvm_context *context,
     return 1;
 }
 
-/* Decodes UTF8 Bytes and return number of bytes of character */
-RX_INLINE int utf8codepoint_express(const uint8_t* p, uint32_t* codepoint) {
-    uint8_t c0 = p[0];
-
-    if ((c0 & 0x80) == 0x00) {
-        *codepoint = c0;
-        return 1;
-    } else if ((c0 & 0xE0) == 0xC0) {
-        *codepoint = ((c0 & 0x1F) << 6) |
-                     (p[1] & 0x3F);
-        return 2;
-    } else if ((c0 & 0xF0) == 0xE0) {
-        *codepoint = ((c0 & 0x0F) << 12) |
-                     ((p[1] & 0x3F) << 6) |
-                     (p[2] & 0x3F);
-        return 3;
-    } else if ((c0 & 0xF8) == 0xF0) {
-        *codepoint = ((c0 & 0x07) << 18) |
-                     ((p[1] & 0x3F) << 12) |
-                     ((p[2] & 0x3F) << 6) |
-                     (p[3] & 0x3F);
-        return 4;
-    } else {
-        *codepoint = 0xFFFD;  /* ungültiges Startbyte */
-        return -1;
-    }
-}
-
 /* Constant to get create the compile time data in ta "iso" like format */
 /* __DATE__ format "Mmm dd yyyy" -> Convert to yyyymmdd */
 const char compile_date[8+1] =
@@ -6466,14 +6438,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  SUBSTR_REG_REG_REG op1=substr(op2,op3) substring from  offset op3  pej 12 November 2021
- *  -----------------------------------------------------------------------------------
- */
-/* ------------------------------------------------------------------------------------
  *  SUBSTR_REG_REG_REG op1 = substr(op2, length)
- *  Extracts 'length' characters from op2, starting at byte offset op2R->string_pos
- *  Assumes string_set_byte_pos(op2R, offset) was called externally.
- *  pej updated July 2025
+ *  Extracts 'length' codepoints from op2, starting at the cursor previously set by
+ *  SETSTRPOS. The source cursor is stored as byte + codepoint positions on the value.
  * ----------------------------------------------------------------------------------- */
 
         START_INSTRUCTION(SUBSTR_REG_REG_REG)
@@ -6481,49 +6448,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SUBSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             {
                 rxinteger length = op3R->int_value;
-                rxinteger total_len;
-                int ch, i;
-
-                // Bounds check
-                PUTSTRLEN(op1R, 0);               // Clear result string
-                GETSTRLEN(total_len, op2R);       // Pickup total string length
-                if (length > total_len) length = total_len;
-                if (length <= 0) goto noChars;
-
-#ifndef NUTF8
-                rxinteger byte_pos = op2R->string_pos;   //  pointer must be externally set by SETSTRPOS string1,start
-#if ASCII_FAST_PATH       // fast path substr for ASCII strings only
-                if (op2R->string_chars==op2R->string_length) {
-                   prep_string_buffer(op1R, (size_t)length + 1);
-                   memcpy(op1R->string_value, op2R->string_value + byte_pos, (size_t)length);
-                   PUTSTRLEN(op1R, length);
-                   goto noChars;
+                if (length <= 0) {
+                    PUTSTRLEN(op1R, 0);
+                } else {
+                    string_slice_from_cursor(op1R, op2R, (size_t) length);
                 }
-#endif
-                prep_string_buffer(op1R, 4 * length + 1);
-                int temp_len = 0;
-                for (i = 0; i < length; i++) {
-                    uint32_t u_ch;
-                    int char_len = utf8codepoint_express((const uint8_t*)(op2R->string_value + byte_pos), &u_ch);
-                    ch = (int)u_ch;
-                    memcpy(op1R->string_value + temp_len, op2R->string_value + byte_pos, char_len);
-                    temp_len += char_len;
-                    byte_pos += char_len;
-                }
-                op1R->string_value[temp_len] = '\0';    // maybe not necessary, just to be safe
-                PUTSTRLEN(op1R, temp_len);
-#else
-                // Non-UTF8 fallback: just copy bytes
-                rxinteger byte_pos = op2R->string_pos;
-
-                if (byte_pos + length > op2R->string_length) length = op2R->string_length - byte_pos;
-                prep_string_buffer(op1R, length + 1);
-                memcpy(op1R->string_value, op2R->string_value + byte_pos, length);
-                op1R->string_value[length] = '\0';
-                PUTSTRLEN(op1R, length);
-#endif
-            noChars:
-                ;
             }
             DISPATCH
 
@@ -6534,15 +6463,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(SUBSTCUT_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SUBSTCUT R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
 
-        /* input parm op2 defines the last character position (not byte position), everything after that will be stripped off
-         * string_set_byte_pos(op1R, op2R->int_value) sets: the following variables:
-         *       op1R->string_char_pos:     position of the character in string, is identical to the input cut parameter
-         *       op1R->string_pos     :     byte position in the string, this is the new length of the string, the cut position
-         *  no edge testing necessary, cut values exceeding the length will be reset to max length
-         *  op2R->int_value is 1 based
-         */
-           string_set_byte_pos(op1R, op2R->int_value); // sets string position to the last character to remain in string
-           PUTSTRLEN(op1R,op1R->string_pos)
+        /* input parm op2 defines how many leading codepoints remain in the string */
+           string_truncate_chars(op1R, (size_t) op2R->int_value);
            DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6571,6 +6493,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  *  find substring in string                                           pej 27 June 2025
  *  the initial offset is in R1: it is 1-based
  *  returned is the offset 1-based both for better performance in calling REXX scripts
+ *  In UTF builds, both the input and output positions are codepoint-based.
  *  0 means nothing found
  *  -----------------------------------------------------------------------------------
  */
@@ -6578,17 +6501,51 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - STRPOS R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 char *charpos;
-                rxinteger offset=op1RI;
-                offset--;    // make position an offset
-                if (offset < 0 || offset >= op3R->string_length) {
-                    REG_RETURN_INT(0);  // Or -1, depending on your logic
+                rxinteger start_pos = op1RI;
+
+                if (start_pos <= 0) {
+                    REG_RETURN_INT(0);
                 } else {
                     null_terminate_string_buffer(op2R);
                     null_terminate_string_buffer(op3R);
-                    charpos = strstr(op3R->string_value + offset, op2R->string_value);
-                    if (charpos > 0) offset = charpos - op3R->string_value;
-                    else offset = -1;
-                    REG_RETURN_INT(offset + 1)       // make offset a position
+#ifndef NUTF8
+                    {
+                        size_t start_offset;
+                        size_t saved_string_pos = op3R->string_pos;
+                        size_t saved_string_char_pos = op3R->string_char_pos;
+                        char *search_start;
+
+                        start_offset = (size_t)(start_pos - 1);
+                        if (start_offset >= op3R->string_chars) {
+                            REG_RETURN_INT(0);
+                        } else {
+                            string_set_byte_pos(op3R, start_offset);
+                            search_start = op3R->string_value + op3R->string_pos;
+                            charpos = (char *)utf8str(search_start, op2R->string_value);
+                            op3R->string_pos = saved_string_pos;
+                            op3R->string_char_pos = saved_string_char_pos;
+
+                            if (charpos) {
+                                size_t byte_offset = (size_t)(charpos - op3R->string_value);
+                                REG_RETURN_INT((rxinteger)(utf8nlen(op3R->string_value, byte_offset) + 1));
+                            } else {
+                                REG_RETURN_INT(0);
+                            }
+                        }
+                    }
+#else
+                    {
+                        rxinteger offset = start_pos - 1;    // make position an offset
+                        if (offset >= op3R->string_length) {
+                            REG_RETURN_INT(0);
+                        } else {
+                            charpos = strstr(op3R->string_value + offset, op2R->string_value);
+                            if (charpos) offset = (rxinteger)(charpos - op3R->string_value);
+                            else offset = -1;
+                            REG_RETURN_INT(offset + 1);      // make offset a position
+                        }
+                    }
+#endif
                 }
             }
             DISPATCH

@@ -330,6 +330,59 @@ static int get_next_meta_at(module_file *module, int addr, size_t address) {
     return addr;
 }
 
+static void mark_module_procedure_sources(module_file *module, bin_space *pgm, code_line *source) {
+    int i = module->header.proc_head;
+
+    while (i != -1) {
+        proc_constant *entry = (proc_constant *)(module->constant + i);
+
+        if (entry->base.type != PROC_CONST) break;
+        if (entry->start < pgm->inst_size) {
+            source[entry->start].flags = show_proc;
+            source[entry->start].proc_index = (size_t)i;
+        }
+        i = entry->next;
+    }
+}
+
+static void output_module_exposed_summary(FILE *stream, module_file *module, bin_space *pgm) {
+    int i = module->header.expose_head;
+
+    while (i != -1) {
+        chameleon_constant *entry = (chameleon_constant *)(module->constant + i);
+
+        if (entry->type == EXPOSE_PROC_CONST) {
+            expose_proc_constant *eentry = (expose_proc_constant *)entry;
+            proc_constant *pentry = (proc_constant *)(pgm->const_pool + eentry->procedure);
+
+            if (eentry->imported) {
+                fprintf(stream,
+                        "* 0x%.6x EXPOSED-PROC %s() <-- as %s\n",
+                        i,
+                        pentry->name,
+                        eentry->index);
+            } else {
+                fprintf(stream,
+                        "* 0x%.6x EXPOSED-PROC %s() --> as %s\n",
+                        i,
+                        pentry->name,
+                        eentry->index);
+            }
+            i = eentry->next;
+        } else if (entry->type == EXPOSE_REG_CONST) {
+            expose_reg_constant *rentry = (expose_reg_constant *)entry;
+            fprintf(stream,
+                    "* 0x%.6x EXPOSED-REG g%d <-> as %s\n",
+                    i,
+                    rentry->global_reg,
+                    rentry->index);
+            i = rentry->next;
+        } else {
+            break;
+        }
+    }
+}
+
 /* Print Meta Data for a single procedure - an imported one */
 static void output_imported_proc_meta(FILE *stream, module_file *module, bin_space *pgm, size_t func) {
     char line_buffer[MAX_LINE_SIZE];
@@ -796,104 +849,90 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     if (print_all_constant_pool) fprintf(stream, "Dump of all entries (option -p used):\n\n");
     else fprintf(stream, "Dump of EXPOSED entries only (option -p not used):\n\n");
 
-    i = 0;
-    while (i < pgm->const_size) {
-        entry = (chameleon_constant *)(pgm->const_pool + i);
-        switch(entry->type) {
-            case STRING_CONST:
-                if (print_all_constant_pool) {
+    if (print_all_constant_pool) {
+        i = 0;
+        while (i < pgm->const_size) {
+            entry = (chameleon_constant *)(pgm->const_pool + i);
+            switch(entry->type) {
+                case STRING_CONST:
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, i);
                     fprintf(stream, "* 0x%.6lx STRING %s\n", i, line_buffer);
-                }
-                break;
-            case DECIMAL_CONST:
-                if (print_all_constant_pool) {
+                    break;
+                case DECIMAL_CONST:
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, i);
                     fprintf(stream, "* 0x%.6lx DECIMAL %s\n", i, line_buffer);
-                }
-                break;
-            case FLOAT_CONST:
-                if (print_all_constant_pool) {
+                    break;
+                case FLOAT_CONST:
                     fprintf(stream, "* 0x%.6lx FLOAT %f\n", i, ((float_constant *)entry)->double_value);
-                }
-                break;
-            case BINARY_CONST:
-                if (print_all_constant_pool) {
+                    break;
+                case BINARY_CONST:
+                {
                     char* c = ((string_constant *)(pgm->const_pool + i))->string;
                     size_t sz = ((string_constant *)(pgm->const_pool + i))->string_len;
                     encode_binary_to_hex(line_buffer, MAX_LINE_SIZE, c, sz);
                     fprintf(stream, "* 0x%.6lx BINARY %s\n", i, line_buffer);
                 }
-                break;
-            case PROC_CONST:
-                if (((proc_constant *) entry)->start == SIZE_MAX) {
-                    if (print_all_constant_pool) {
+                    break;
+                case PROC_CONST:
+                    if (((proc_constant *) entry)->start == SIZE_MAX) {
                         fprintf(stream,
                                 "* 0x%.6lx PROC %s() exposed from external <-- %s\n",
                                 i,
                                 ((proc_constant *) entry)->name,
                                 ((expose_proc_constant*)(pgm->const_pool + ((proc_constant *) entry)->exposed))->index
-                                );
-                    }
-                } else {
-                    if (print_all_constant_pool) {
+                        );
+                    } else {
                         fprintf(stream,
                                 "* 0x%.6lx PROC @ 0x%.6lx %s() (locals=%d)\n",
                                 i,
                                 ((proc_constant *) entry)->start,
                                 ((proc_constant *) entry)->name,
                                 ((proc_constant *) entry)->locals
-                            );
+                        );
                     }
-                    source[((proc_constant *) entry)->start].flags = show_proc;
-                    source[((proc_constant *) entry)->start].proc_index = i;
-                }
-                break;
+                    break;
 
-            case EXPOSE_REG_CONST:
-                fprintf(stream,
-                        "* 0x%.6lx EXPOSED-REG g%d <-> as %s\n",
-                        i,
-                        ((expose_reg_constant *) entry)->global_reg,
-                        ((expose_reg_constant *) entry)->index);
-                break;
-
-            case EXPOSE_PROC_CONST:
-                pentry = (proc_constant *) (pgm->const_pool + ((expose_proc_constant *) entry)->procedure);
-
-                if (((expose_proc_constant *) entry)->imported) {
+                case EXPOSE_REG_CONST:
                     fprintf(stream,
-                            "* 0x%.6lx EXPOSED-PROC %s() <-- as %s\n",
+                            "* 0x%.6lx EXPOSED-REG g%d <-> as %s\n",
                             i,
-                            pentry->name,
-                            ((expose_proc_constant *) entry)->index
-                    );
-                } else {
-                    fprintf(stream,
-                            "* 0x%.6lx EXPOSED-PROC %s() --> as %s\n",
-                            i,
-                            pentry->name,
-                            ((expose_proc_constant *) entry)->index
-                    );
-                }
-                break;
+                            ((expose_reg_constant *) entry)->global_reg,
+                            ((expose_reg_constant *) entry)->index);
+                    break;
 
-            case META_SRC:
-                if (print_all_constant_pool) {
+                case EXPOSE_PROC_CONST:
+                    pentry = (proc_constant *) (pgm->const_pool + ((expose_proc_constant *) entry)->procedure);
+
+                    if (((expose_proc_constant *) entry)->imported) {
+                        fprintf(stream,
+                                "* 0x%.6lx EXPOSED-PROC %s() <-- as %s\n",
+                                i,
+                                pentry->name,
+                                ((expose_proc_constant *) entry)->index
+                        );
+                    } else {
+                        fprintf(stream,
+                                "* 0x%.6lx EXPOSED-PROC %s() --> as %s\n",
+                                i,
+                                pentry->name,
+                                ((expose_proc_constant *) entry)->index
+                        );
+                    }
+                    break;
+
+                case META_SRC:
+                {
                     meta_src_constant *mentry = (meta_src_constant *) entry;
                     fprintf(stream, "* 0x%.6lx META-SRC @0x%.6lx %d:%d ",
                             i, mentry->base.address,
                             (int) mentry->line, (int) mentry->column);
-
-                    /* Source */
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->source);
                     fprintf(stream, "%s\n", line_buffer);
                 }
-                break;
+                    break;
 
-            case META_FUNC:
-                if (print_all_constant_pool) {
-                    /* META function symbol */
+                case META_FUNC:
+                {
                     meta_func_constant *mentry = (meta_func_constant *)entry;
                     fprintf(stream, "* 0x%.6lx META-FUNC @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
@@ -908,13 +947,11 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     fprintf(stream, " %s",line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->inliner);
                     fprintf(stream, " %s\n",line_buffer);
-
                 }
-                break;
+                    break;
 
-            case META_CLASS:
-                if (print_all_constant_pool) {
-                    /* META class */
+                case META_CLASS:
+                {
                     meta_class_constant *mentry = (meta_class_constant *)entry;
                     fprintf(stream, "* 0x%.6lx META-CLASS @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
@@ -924,11 +961,10 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
                     fprintf(stream, " %s\n", line_buffer);
                 }
-                break;
+                    break;
 
-            case META_ATTR:
-                if (print_all_constant_pool) {
-                    /* META attribute */
+                case META_ATTR:
+                {
                     meta_attr_constant *mentry = (meta_attr_constant *)entry;
                     fprintf(stream, "* 0x%.6lx META-ATTR @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
@@ -939,20 +975,19 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     fprintf(stream, " %s", line_buffer);
                     fprintf(stream, " %d\n", (int)mentry->reg);
                 }
-                break;
+                    break;
 
-            case META_FILE:
-                if (print_all_constant_pool) {
-                    /* META file */
+                case META_FILE:
+                {
                     meta_file_constant *mentry = (meta_file_constant *)entry;
                     fprintf(stream, "* 0x%.6lx META-FILE @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->file);
                     fprintf(stream, " %s\n", line_buffer);
                 }
-                break;
+                    break;
 
-            case META_INTERFACE:
-                if (print_all_constant_pool) {
+                case META_INTERFACE:
+                {
                     meta_interface_constant *mentry = (meta_interface_constant *)entry;
                     fprintf(stream, "* 0x%.6lx META-INTERFACE @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
@@ -962,10 +997,10 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
                     fprintf(stream, " %s\n", line_buffer);
                 }
-                break;
+                    break;
 
-            case META_IMPLEMENTS:
-                if (print_all_constant_pool) {
+                case META_IMPLEMENTS:
+                {
                     meta_implements_constant *mentry = (meta_implements_constant *)entry;
                     fprintf(stream, "* 0x%.6lx META-IMPLEMENTS @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
@@ -973,10 +1008,10 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->interface_symbol);
                     fprintf(stream, " %s\n", line_buffer);
                 }
-                break;
+                    break;
 
-            case META_MEMBER:
-                if (print_all_constant_pool) {
+                case META_MEMBER:
+                {
                     meta_member_constant *mentry = (meta_member_constant *)entry;
                     fprintf(stream, "* 0x%.6lx META-MEMBER @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->owner);
@@ -990,11 +1025,10 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
                     fprintf(stream, " %s\n", line_buffer);
                 }
-                break;
+                    break;
 
-            case META_REG:
-                if (print_all_constant_pool) {
-                    /* META clear symbol */
+                case META_REG:
+                {
                     meta_reg_constant *mentry = (meta_reg_constant *)entry;
                     fprintf(stream, "* 0x%.6lx META-REG @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
@@ -1005,11 +1039,10 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     fprintf(stream, " %s",line_buffer);
                     fprintf(stream, " r%d\n",(int)mentry->reg);
                 }
-                break;
+                    break;
 
-            case META_CONST:
-                if (print_all_constant_pool) {
-                    /* META const symbol */
+                case META_CONST:
+                {
                     meta_const_constant *mentry = (meta_const_constant *)entry;
                     fprintf(stream, "* 0x%.6lx META-CONST @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
@@ -1021,24 +1054,28 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->constant);
                     fprintf(stream, " %s\n",line_buffer);
                 }
-                break;
+                    break;
 
-            case META_CLEAR:
-                if (print_all_constant_pool) {
-                    /* META clear symbol */
+                case META_CLEAR:
+                {
                     meta_clear_constant *mentry = (meta_clear_constant *) entry;
                     fprintf(stream, "* 0x%.6lx META-CLEAR @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
                     fprintf(stream, " %s\n", line_buffer);
                 }
-                break;
+                    break;
 
-            default:
-                fprintf(stream, "* 0x%.6lx UNKNOWN\n", i);
+                default:
+                    fprintf(stream, "* 0x%.6lx UNKNOWN\n", i);
+            }
+
+            i += entry->size_in_pool;
         }
-
-        i += entry->size_in_pool;
+    } else {
+        output_module_exposed_summary(stream, module, pgm);
     }
+
+    mark_module_procedure_sources(module, pgm, source);
 
     /* Pass 2a - Generate listing output - number of globals & header information */
     int globals = pgm->globals;
@@ -1048,34 +1085,31 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
 
     /* Pass 2b - Exposed Registers and procedures exposed from external modules
      * Note that the compiler does not put all these at the top - but hey this is the easiest way for us */
-    i = 0;
-    while (i < pgm->const_size) {
+    i = module->header.expose_head;
+    while (i != -1) {
         entry = (chameleon_constant *)(pgm->const_pool + i);
-        switch(entry->type) {
-            case PROC_CONST:
-                if ( ((proc_constant*)entry)->start == SIZE_MAX ) {
-                    eentry = (expose_proc_constant *)(pgm->const_pool + ((proc_constant *) entry)->exposed);
-                    fprintf(stream,
-                            "%s() .expose=%s\n",
-                            ((proc_constant *) entry)->name,
-                            eentry->index
-                    );
-                    output_imported_proc_meta(stream, module, pgm, i);
-                }
-                break;
-
-            case EXPOSE_REG_CONST:
+        if (entry->type == EXPOSE_PROC_CONST) {
+            eentry = (expose_proc_constant *)entry;
+            if (eentry->imported) {
+                pentry = (proc_constant *)(pgm->const_pool + eentry->procedure);
                 fprintf(stream,
-                        "g%d .expose=%s\n",
-                        ((expose_reg_constant *) entry)->global_reg,
-                        ((expose_reg_constant *) entry)->index
+                        "%s() .expose=%s\n",
+                        pentry->name,
+                        eentry->index
                 );
-                break;
-
-            default: ;
+                output_imported_proc_meta(stream, module, pgm, eentry->procedure);
+            }
+            i = eentry->next;
+        } else if (entry->type == EXPOSE_REG_CONST) {
+            fprintf(stream,
+                    "g%d .expose=%s\n",
+                    ((expose_reg_constant *) entry)->global_reg,
+                    ((expose_reg_constant *) entry)->index
+            );
+            i = ((expose_reg_constant *)entry)->next;
+        } else {
+            break;
         }
-
-        i += entry->size_in_pool;
     }
 
     /* Pass 2c - The assembler code itself */

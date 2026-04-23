@@ -211,9 +211,16 @@ enum rxbin_section_flags {
     RXBIN_SECTION_CONST_PACKED = 1u << 1
 };
 
+enum rxbin_record_type {
+    RXBIN_RECORD_MODULE_LOCAL = 1,
+    RXBIN_RECORD_POOL_SHARED = 2,
+    RXBIN_RECORD_MODULE_SHARED = 3
+};
+
 typedef struct module_header {
     char FILE_HEADER[sizeof(BIN_HEADER)];
     char FILE_VERSION[sizeof(BIN_VERSION)];
+    unsigned int record_type;
     size_t name_size;  /* number of byte/chars including null terminator */
     size_t description_size;  /* number of byte/chars including null terminator */
     size_t instruction_size;  /* number of expanded 64 bit instructions */
@@ -227,15 +234,32 @@ typedef struct module_header {
     int meta_head;
 } module_header;
 
+typedef struct rxbin_shared_constant_pool {
+    unsigned char *data;
+    size_t size;
+    size_t stored_size;
+    unsigned int section_flags;
+    size_t refcount;
+} rxbin_shared_constant_pool;
+
 typedef struct module_file {
     module_header header;
     char* name; /* Null Terminated */
     char* description; /* Null Terminated */
     void* instructions; /* Expanded instruction stream in memory */
     void* constant; /* Expanded constant pool in memory */
+    rxbin_shared_constant_pool *shared_constant_pool; /* Shared pool backing, if any */
     unsigned char fromfile : 1; /* Marks if the module owns heap allocations that free_module() should release */
     unsigned char native : 1;    /* Marks if the module is a native module */
 } module_file;
+
+typedef struct rxbin_reader {
+    FILE *file;
+    char **buffer_cursor;
+    const char *buffer_end;
+    unsigned char from_memory : 1;
+    rxbin_shared_constant_pool *active_shared_pool;
+} rxbin_reader;
 
 typedef struct rxbin_byte_buffer {
     unsigned char *data;
@@ -267,6 +291,7 @@ static void init_module(module_file *module) {
     memset(module, 0, sizeof(module_file)); /* Zero module file (valgrind complains otherwise) */
     memcpy(module->header.FILE_HEADER, BIN_HEADER, sizeof(BIN_HEADER));
     memcpy(module->header.FILE_VERSION, BIN_VERSION, sizeof(BIN_VERSION));
+    module->header.record_type = RXBIN_RECORD_MODULE_LOCAL;
     module->fromfile = 0;
 }
 
@@ -278,6 +303,15 @@ static int check_header_version(module_header *header) {
     if (memcmp(header->FILE_HEADER, BIN_HEADER, sizeof(BIN_HEADER)) != 0) return 1;
     if (memcmp(header->FILE_VERSION, BIN_VERSION, sizeof(BIN_VERSION)) != 0) return 2;
     if (header->section_flags & ~(RXBIN_SECTION_INST_PACKED | RXBIN_SECTION_CONST_PACKED)) return 2;
+    if (header->record_type < RXBIN_RECORD_MODULE_LOCAL || header->record_type > RXBIN_RECORD_MODULE_SHARED)
+        return 2;
+    if (header->record_type == RXBIN_RECORD_POOL_SHARED) {
+        if (header->instruction_size || header->instruction_stored_size) return 2;
+        if (header->section_flags & RXBIN_SECTION_INST_PACKED) return 2;
+    } else if (header->record_type == RXBIN_RECORD_MODULE_SHARED) {
+        if (header->constant_size || header->constant_stored_size) return 2;
+        if (header->section_flags & RXBIN_SECTION_CONST_PACKED) return 2;
+    }
     return 0;
 }
 
@@ -904,6 +938,24 @@ static int rxbin_read_file_block(FILE *file, void **out, size_t size) {
     return 1;
 }
 
+static void rxbin_shared_pool_retain(rxbin_shared_constant_pool *pool) {
+    if (!pool) return;
+    pool->refcount++;
+}
+
+static void rxbin_shared_pool_release(rxbin_shared_constant_pool **pool_ref) {
+    rxbin_shared_constant_pool *pool;
+
+    if (!pool_ref || !*pool_ref) return;
+    pool = *pool_ref;
+    if (pool->refcount) pool->refcount--;
+    if (!pool->refcount) {
+        if (pool->data) free(pool->data);
+        free(pool);
+    }
+    *pool_ref = 0;
+}
+
 static int rxbin_decode_instruction_section(module_file *module, const unsigned char *stored_data) {
     size_t expanded_size = module->header.instruction_size * sizeof(bin_code);
 
@@ -944,6 +996,48 @@ static int rxbin_decode_constant_section(module_file *module, const unsigned cha
     return 1;
 }
 
+static int rxbin_decode_shared_constant_pool(const module_header *header, const unsigned char *stored_data,
+                                             rxbin_shared_constant_pool **pool_out) {
+    rxbin_shared_constant_pool *pool;
+
+    *pool_out = 0;
+
+    pool = calloc(1, sizeof(rxbin_shared_constant_pool));
+    if (!pool) return 0;
+
+    pool->size = header->constant_size;
+    pool->stored_size = header->constant_stored_size;
+    pool->section_flags = header->section_flags & RXBIN_SECTION_CONST_PACKED;
+    pool->refcount = 1;
+
+    if (header->constant_size) {
+        pool->data = malloc(header->constant_size);
+        if (!pool->data) {
+            free(pool);
+            return 0;
+        }
+
+        if (header->section_flags & RXBIN_SECTION_CONST_PACKED) {
+            if (!rxbin_decompress_constant_pool(stored_data, header->constant_stored_size,
+                                                pool->data, header->constant_size)) {
+                free(pool->data);
+                free(pool);
+                return 0;
+            }
+        } else {
+            if (header->constant_stored_size != header->constant_size) {
+                free(pool->data);
+                free(pool);
+                return 0;
+            }
+            memcpy(pool->data, stored_data, header->constant_size);
+        }
+    }
+
+    *pool_out = pool;
+    return 1;
+}
+
 static int rxbin_prepare_header_for_write(module_file *module, rxbin_byte_buffer *instruction_section,
                                           rxbin_byte_buffer *constant_section) {
     rxbin_byte_buffer packed_instructions;
@@ -954,7 +1048,8 @@ static int rxbin_prepare_header_for_write(module_file *module, rxbin_byte_buffer
     rxbin_byte_buffer_init(&packed_instructions);
     rxbin_byte_buffer_init(&packed_constants);
 
-    if (module->header.instruction_size &&
+    if (module->header.record_type != RXBIN_RECORD_POOL_SHARED &&
+        module->header.instruction_size &&
         rxbin_encode_instruction_stream((const bin_code *)module->instructions, module->header.instruction_size,
                                         &packed_instructions) &&
         packed_instructions.size < raw_instruction_bytes) {
@@ -962,13 +1057,15 @@ static int rxbin_prepare_header_for_write(module_file *module, rxbin_byte_buffer
         *instruction_section = packed_instructions;
     } else {
         rxbin_byte_buffer_free(&packed_instructions);
-        if (!rxbin_byte_buffer_append_bytes(instruction_section, module->instructions, raw_instruction_bytes)) {
+        if (module->header.record_type != RXBIN_RECORD_POOL_SHARED &&
+            !rxbin_byte_buffer_append_bytes(instruction_section, module->instructions, raw_instruction_bytes)) {
             rxbin_byte_buffer_free(&packed_constants);
             return 0;
         }
     }
 
-    if (module->header.constant_size &&
+    if (module->header.record_type != RXBIN_RECORD_MODULE_SHARED &&
+        module->header.constant_size &&
         rxbin_compress_constant_pool((const unsigned char *)module->constant, module->header.constant_size,
                                      &packed_constants) &&
         packed_constants.size < module->header.constant_size) {
@@ -976,7 +1073,8 @@ static int rxbin_prepare_header_for_write(module_file *module, rxbin_byte_buffer
         *constant_section = packed_constants;
     } else {
         rxbin_byte_buffer_free(&packed_constants);
-        if (!rxbin_byte_buffer_append_bytes(constant_section, module->constant, module->header.constant_size)) {
+        if (module->header.record_type != RXBIN_RECORD_MODULE_SHARED &&
+            !rxbin_byte_buffer_append_bytes(constant_section, module->constant, module->header.constant_size)) {
             return 0;
         }
     }
@@ -984,6 +1082,13 @@ static int rxbin_prepare_header_for_write(module_file *module, rxbin_byte_buffer
     module->header.section_flags = section_flags;
     module->header.instruction_stored_size = instruction_section->size;
     module->header.constant_stored_size = constant_section->size;
+    if (module->header.record_type == RXBIN_RECORD_POOL_SHARED) {
+        module->header.instruction_size = 0;
+        module->header.instruction_stored_size = 0;
+    }
+    if (module->header.record_type == RXBIN_RECORD_MODULE_SHARED) {
+        module->header.constant_stored_size = 0;
+    }
     return 1;
 }
 
@@ -1024,6 +1129,211 @@ done:
 
 static void free_module(module_file *module);
 
+static void rxbin_reader_init_file(rxbin_reader *reader, FILE *inFile) {
+    memset(reader, 0, sizeof(rxbin_reader));
+    reader->file = inFile;
+}
+
+static void rxbin_reader_init_mem(rxbin_reader *reader, char **in_buffer, const char *end_of_buffer) {
+    memset(reader, 0, sizeof(rxbin_reader));
+    reader->from_memory = 1;
+    reader->buffer_cursor = in_buffer;
+    reader->buffer_end = end_of_buffer;
+}
+
+static void rxbin_reader_close(rxbin_reader *reader) {
+    if (!reader) return;
+    if (reader->active_shared_pool) rxbin_shared_pool_release(&reader->active_shared_pool);
+    reader->file = 0;
+    reader->buffer_cursor = 0;
+    reader->buffer_end = 0;
+    reader->from_memory = 0;
+}
+
+static int rxbin_reader_read_header(rxbin_reader *reader, module_header *header) {
+    if (reader->from_memory) {
+        if (*reader->buffer_cursor >= reader->buffer_end) return 1;
+        if ((size_t)(reader->buffer_end - *reader->buffer_cursor) < sizeof(module_header)) return -1;
+        memcpy(header, *reader->buffer_cursor, sizeof(module_header));
+        *reader->buffer_cursor += sizeof(module_header);
+        return 0;
+    }
+
+    if (fread(header, sizeof(module_header), 1, reader->file) != 1) {
+        if (feof(reader->file)) return 1;
+        return -1;
+    }
+    return 0;
+}
+
+static int rxbin_reader_take_block(rxbin_reader *reader, void **out, size_t size) {
+    if (reader->from_memory) {
+        *out = 0;
+        if (!size) return 1;
+        if ((size_t)(reader->buffer_end - *reader->buffer_cursor) < size) return 0;
+        if (!rxbin_duplicate_block(out, *reader->buffer_cursor, size)) return 0;
+        *reader->buffer_cursor += size;
+        return 1;
+    }
+    return rxbin_read_file_block(reader->file, out, size);
+}
+
+static int rxbin_reader_view_block(rxbin_reader *reader, const unsigned char **out, size_t size) {
+    *out = 0;
+    if (!size) return 1;
+
+    if (reader->from_memory) {
+        if ((size_t)(reader->buffer_end - *reader->buffer_cursor) < size) return 0;
+        *out = (const unsigned char *)*reader->buffer_cursor;
+        *reader->buffer_cursor += size;
+        return 1;
+    }
+
+    return rxbin_read_file_block(reader->file, (void **)out, size);
+}
+
+static int rxbin_reader_next_module(rxbin_reader *reader, module_file **module) {
+    module_header header;
+    const unsigned char *stored_instructions;
+    const unsigned char *stored_constants;
+    void *owned_name;
+    void *owned_description;
+    void *owned_stored_instructions;
+    void *owned_stored_constants;
+    rxbin_shared_constant_pool *shared_pool;
+    int rc;
+
+    *module = 0;
+
+    while (1) {
+        stored_instructions = 0;
+        stored_constants = 0;
+        owned_name = 0;
+        owned_description = 0;
+        owned_stored_instructions = 0;
+        owned_stored_constants = 0;
+        shared_pool = 0;
+
+        rc = rxbin_reader_read_header(reader, &header);
+        if (rc != 0) return rc;
+
+        switch (check_header_version(&header)) {
+            case 1:
+                return -1;
+            case 2:
+                return 2;
+            default:;
+        }
+
+        if (!rxbin_reader_take_block(reader, &owned_name, header.name_size)) goto error;
+        if (!rxbin_reader_take_block(reader, &owned_description, header.description_size)) goto error;
+        if (!rxbin_reader_view_block(reader, &stored_instructions, header.instruction_stored_size)) goto error;
+        if (!reader->from_memory) owned_stored_instructions = (void *)stored_instructions;
+        if (!rxbin_reader_view_block(reader, &stored_constants, header.constant_stored_size)) goto error;
+        if (!reader->from_memory) owned_stored_constants = (void *)stored_constants;
+
+        if (header.record_type == RXBIN_RECORD_POOL_SHARED) {
+            if (!rxbin_decode_shared_constant_pool(&header, stored_constants, &shared_pool)) goto error;
+            if (owned_name) free(owned_name);
+            if (owned_description) free(owned_description);
+            if (owned_stored_instructions) free(owned_stored_instructions);
+            if (owned_stored_constants) free(owned_stored_constants);
+            if (reader->active_shared_pool) rxbin_shared_pool_release(&reader->active_shared_pool);
+            reader->active_shared_pool = shared_pool;
+            continue;
+        }
+
+        *module = malloc(sizeof(module_file));
+        if (!*module) goto error;
+
+        init_module(*module);
+        (*module)->header = header;
+        (*module)->fromfile = 1;
+        (*module)->native = 0;
+        (*module)->name = owned_name;
+        (*module)->description = owned_description;
+        (*module)->instructions = 0;
+        (*module)->constant = 0;
+        (*module)->shared_constant_pool = 0;
+        owned_name = 0;
+        owned_description = 0;
+
+        if (!rxbin_decode_instruction_section(*module, stored_instructions)) goto error;
+
+        if (header.record_type == RXBIN_RECORD_MODULE_LOCAL) {
+            if (!rxbin_decode_constant_section(*module, stored_constants)) goto error;
+        } else {
+            if (!reader->active_shared_pool) goto error;
+            rxbin_shared_pool_retain(reader->active_shared_pool);
+            (*module)->shared_constant_pool = reader->active_shared_pool;
+            (*module)->constant = reader->active_shared_pool->data;
+            (*module)->header.constant_size = reader->active_shared_pool->size;
+            (*module)->header.constant_stored_size = reader->active_shared_pool->stored_size;
+        }
+
+        if (owned_stored_instructions) free(owned_stored_instructions);
+        if (owned_stored_constants) free(owned_stored_constants);
+        return 0;
+
+error:
+        if (owned_name) free(owned_name);
+        if (owned_description) free(owned_description);
+        if (owned_stored_instructions) free(owned_stored_instructions);
+        if (owned_stored_constants) free(owned_stored_constants);
+        if (shared_pool) rxbin_shared_pool_release(&shared_pool);
+        if (*module) {
+            free_module(*module);
+            *module = 0;
+        }
+        return -1;
+    }
+}
+
+typedef struct rxbin_file_reader_state {
+    FILE *file;
+    rxbin_reader reader;
+    struct rxbin_file_reader_state *next;
+} rxbin_file_reader_state;
+
+typedef struct rxbin_mem_reader_state {
+    char **cursor_ref;
+    rxbin_reader reader;
+    struct rxbin_mem_reader_state *next;
+} rxbin_mem_reader_state;
+
+static rxbin_file_reader_state *rxbin_file_reader_states = 0;
+static rxbin_mem_reader_state *rxbin_mem_reader_states = 0;
+
+static void rxbin_close_file_reader(FILE *inFile) {
+    rxbin_file_reader_state **node = &rxbin_file_reader_states;
+
+    while (*node) {
+        if ((*node)->file == inFile) {
+            rxbin_file_reader_state *current = *node;
+            *node = current->next;
+            rxbin_reader_close(&current->reader);
+            free(current);
+            return;
+        }
+        node = &(*node)->next;
+    }
+}
+
+static void rxbin_close_mem_reader(char **in_buffer) {
+    rxbin_mem_reader_state **node = &rxbin_mem_reader_states;
+
+    while (*node) {
+        if ((*node)->cursor_ref == in_buffer) {
+            rxbin_mem_reader_state *current = *node;
+            *node = current->next;
+            rxbin_reader_close(&current->reader);
+            free(current);
+            return;
+        }
+        node = &(*node)->next;
+    }
+}
+
 /* Read in the module */
 /* The module is heap backed and must be freed with free_module() */
 /* 0 on success,
@@ -1032,61 +1342,22 @@ static void free_module(module_file *module);
  * -1 on error
  * (use perror), on an error you can/should use free_module() */
 static int read_module(module_file **module, FILE *inFile) {
-    void *stored_instructions = 0;
-    void *stored_constants = 0;
+    rxbin_file_reader_state *node = rxbin_file_reader_states;
+    int rc;
 
-    *module = malloc(sizeof(module_file));
-    if (*module == 0) return -1;
-
-    init_module(*module);
-    (*module)->fromfile = 1;
-    (*module)->native = 0;
-    (*module)->name = 0;
-    (*module)->description = 0;
-    (*module)->instructions = 0;
-    (*module)->constant = 0;
-
-    if (fread(&(*module)->header, sizeof(module_header), 1, inFile) != 1) {
-        if (feof(inFile)) {
-            free(*module);
-            *module = 0;
-            return 1;
-        }
-        free(*module);
-        *module = 0;
-        return -1;
+    while (node && node->file != inFile) node = node->next;
+    if (!node) {
+        node = calloc(1, sizeof(rxbin_file_reader_state));
+        if (!node) return -1;
+        node->file = inFile;
+        rxbin_reader_init_file(&node->reader, inFile);
+        node->next = rxbin_file_reader_states;
+        rxbin_file_reader_states = node;
     }
 
-    switch (check_header_version(&(*module)->header)) {
-        case 1:
-            free(*module);
-            *module = 0;
-            return -1;
-        case 2:
-            free(*module);
-            *module = 0;
-            return 2;
-        default:;
-    }
-
-    if (!rxbin_read_file_block(inFile, (void **)&(*module)->name, (*module)->header.name_size)) goto error;
-    if (!rxbin_read_file_block(inFile, (void **)&(*module)->description, (*module)->header.description_size)) goto error;
-    if (!rxbin_read_file_block(inFile, &stored_instructions, (*module)->header.instruction_stored_size)) goto error;
-    if (!rxbin_read_file_block(inFile, &stored_constants, (*module)->header.constant_stored_size)) goto error;
-
-    if (!rxbin_decode_instruction_section(*module, stored_instructions)) goto error;
-    if (!rxbin_decode_constant_section(*module, stored_constants)) goto error;
-
-    if (stored_instructions) free(stored_instructions);
-    if (stored_constants) free(stored_constants);
-    return 0;
-
-error:
-    if (stored_instructions) free(stored_instructions);
-    if (stored_constants) free(stored_constants);
-    free_module(*module);
-    *module = 0;
-    return -1;
+    rc = rxbin_reader_next_module(&node->reader, module);
+    if (rc != 0) rxbin_close_file_reader(inFile);
+    return rc;
 }
 
 /* "Read" in the module from a memory buffer */
@@ -1098,71 +1369,32 @@ error:
  * -1 on error
  * (use perror), on an error you can/should use free_module() */
 static int read_module_mem(module_file **module, char **in_buffer, const char *end_of_buffer) {
-    const unsigned char *stored_instructions;
-    const unsigned char *stored_constants;
+    rxbin_mem_reader_state *node = rxbin_mem_reader_states;
+    int rc;
 
-    *module = 0;
-    if (*in_buffer >= end_of_buffer) return 1; /* "eof" */
-
-    if ((size_t)(end_of_buffer - *in_buffer) < sizeof(module_header)) return -1;
-
-    *module = malloc(sizeof(module_file));
-    if (*module == 0) return -1;
-
-    init_module(*module);
-    (*module)->fromfile = 1;
-    (*module)->native = 0;
-    (*module)->name = 0;
-    (*module)->description = 0;
-    (*module)->instructions = 0;
-    (*module)->constant = 0;
-
-    memcpy(&(*module)->header, *in_buffer, sizeof(module_header));
-    *in_buffer += sizeof(module_header);
-
-    switch (check_header_version(&(*module)->header)) {
-        case 1:
-            free(*module);
-            *module = 0;
-            return -1;
-        case 2:
-            free(*module);
-            *module = 0;
-            return 2;
-        default:;
+    while (node && node->cursor_ref != in_buffer) node = node->next;
+    if (!node) {
+        node = calloc(1, sizeof(rxbin_mem_reader_state));
+        if (!node) return -1;
+        node->cursor_ref = in_buffer;
+        rxbin_reader_init_mem(&node->reader, in_buffer, end_of_buffer);
+        node->next = rxbin_mem_reader_states;
+        rxbin_mem_reader_states = node;
     }
 
-    if ((size_t)(end_of_buffer - *in_buffer) < (*module)->header.name_size) goto error;
-    if (!rxbin_duplicate_block((void **)&(*module)->name, *in_buffer, (*module)->header.name_size)) goto error;
-    *in_buffer += (*module)->header.name_size;
-
-    if ((size_t)(end_of_buffer - *in_buffer) < (*module)->header.description_size) goto error;
-    if (!rxbin_duplicate_block((void **)&(*module)->description, *in_buffer, (*module)->header.description_size)) goto error;
-    *in_buffer += (*module)->header.description_size;
-
-    if ((size_t)(end_of_buffer - *in_buffer) < (*module)->header.instruction_stored_size) goto error;
-    stored_instructions = (const unsigned char *)*in_buffer;
-    *in_buffer += (*module)->header.instruction_stored_size;
-
-    if ((size_t)(end_of_buffer - *in_buffer) < (*module)->header.constant_stored_size) goto error;
-    stored_constants = (const unsigned char *)*in_buffer;
-    *in_buffer += (*module)->header.constant_stored_size;
-
-    if (!rxbin_decode_instruction_section(*module, stored_instructions)) goto error;
-    if (!rxbin_decode_constant_section(*module, stored_constants)) goto error;
-
-    return 0;
-
-error:
-    free_module(*module);
-    *module = 0;
-    return -1;
+    rc = rxbin_reader_next_module(&node->reader, module);
+    if (rc != 0) rxbin_close_mem_reader(in_buffer);
+    return rc;
 }
 
 /* Free the module */
 /* Free's the module returned by read_module() or read_module_mem() */
 static void free_module(module_file *module) {
     if (!module) return;
+    if (module->shared_constant_pool) {
+        rxbin_shared_pool_release(&module->shared_constant_pool);
+        module->constant = 0;
+    }
     if (module->fromfile || module->native) {
         if (module->name) free(module->name);
         if (module->description) free(module->description);

@@ -80,7 +80,7 @@ strlen_end:
 
     /* SUBSTR - using SETSTRPOS */
     load r1, "Hello World"
-    load r2, 6 /* Byte position for 'W' */
+    load r2, 6 /* 0-based character offset for 'W' */
     setstrpos r1, r2
     load r3, 5 /* Length */
     substr r4, r1, r3
@@ -92,38 +92,93 @@ substr_pass:
     say "PASS: SUBSTR"
 substr_end:
 
-    /* UTF8 HEXCHAR bounds regression: substring results must not walk past the buffer. */
+    /* UTF8 SUBSTR regression: one codepoint substring must keep correct char count. */
     load r1, "🔥fire"
     load r2, 0
     setstrpos r1, r2
     load r3, 1
     substr r4, r1, r3
     load r5, ""
+    strlen r7, r4
+    ieq r0, r7, 1
+    brf utf_substr_fail, r0
 
     load r6, 0
     hexchar r5, r4, r6
     seq r0, r5, "25"
-    brf utf_hexchar_fail, r0
+    brf utf_substr_fail, r0
 
     load r6, 1
     hexchar r5, r4, r6
     seq r0, r5, "00"
-    brf utf_hexchar_fail, r0
+    brf utf_substr_fail, r0
 
     load r6, 2
     hexchar r5, r4, r6
     seq r0, r5, "00"
-    brf utf_hexchar_fail, r0
+    brf utf_substr_fail, r0
 
     load r6, 3
     hexchar r5, r4, r6
     seq r0, r5, "00"
-    brf utf_hexchar_fail, r0
+    brf utf_substr_fail, r0
 
-    say "PASS: UTF HEXCHAR bounds"
+    /* UTF8 SUBSTR from an interior cursor must use codepoint lengths, not byte lengths. */
+    load r1, "A🔥éZ"
+    load r2, 1
+    setstrpos r1, r2
+    load r3, 2
+    substr r4, r1, r3
+    seq r0, r4, "🔥é"
+    brf utf_substr_fail, r0
+    strlen r7, r4
+    ieq r0, r7, 2
+    brf utf_substr_fail, r0
+
+    /* Same-register SUBSTR must remain safe. */
+    load r1, "A🔥éZ"
+    load r2, 1
+    setstrpos r1, r2
+    load r3, 2
+    substr r1, r1, r3
+    seq r0, r1, "🔥é"
+    brf utf_substr_fail, r0
+    strlen r7, r1
+    ieq r0, r7, 2
+    brf utf_substr_fail, r0
+
+    /* Length is clipped to remaining codepoints from the current cursor. */
+    load r1, "A🔥éZ"
+    load r2, 2
+    setstrpos r1, r2
+    load r3, 9
+    substr r4, r1, r3
+    seq r0, r4, "éZ"
+    brf utf_substr_fail, r0
+    strlen r7, r4
+    ieq r0, r7, 2
+    brf utf_substr_fail, r0
+
+    load r1, "🔥fire"
+    load r2, 1
+    substcut r1, r2
+    strlen r7, r1
+    ieq r0, r7, 1
+    brf utf_substr_fail, r0
+
+    load r1, "A🔥éZ"
+    load r2, 3
+    substcut r1, r2
+    seq r0, r1, "A🔥é"
+    brf utf_substr_fail, r0
+    strlen r7, r1
+    ieq r0, r7, 3
+    brf utf_substr_fail, r0
+
+    say "PASS: UTF substring metadata"
     br utf_hexchar_end
-utf_hexchar_fail:
-    say "FAIL: UTF HEXCHAR bounds"
+utf_substr_fail:
+    say "FAIL: UTF substring metadata"
 utf_hexchar_end:
 
     /* TRIML (3-reg) - Trims the character specified in R3 */
@@ -184,6 +239,19 @@ strupper_end:
 strpos_pass:
     say "PASS: STRPOS"
 strpos_end:
+
+    /* UTF STRPOS - start/result must be codepoint based, not byte based. */
+    load r1, 3 /* start at codepoint 3 */
+    load r2, "→"
+    load r3, "a→b→c"
+    strpos r1, r2, r3
+    ieq r0, r1, 4
+    brt strpos_utf_pass, r0
+    say "FAIL: UTF STRPOS"
+    br strpos_utf_end
+strpos_utf_pass:
+    say "PASS: UTF STRPOS"
+strpos_utf_end:
 
     /* FNDBLNK - R1 result, R2 string, R3 start (0-based) */
     load r2, "One Two Three"

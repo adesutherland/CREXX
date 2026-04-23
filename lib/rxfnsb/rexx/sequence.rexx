@@ -28,11 +28,8 @@ diff=0
 assembler isub diff,toVal,fromVal
 
 loop i=0 to diff
-  assembler itos fromVal
-  val=reradix(fromVal,10,16)
-  resultString=resultString||x2c(val)
+  assembler appendchar resultString,fromVal
   assembler inc fromVal
 end
 
 return resultString
-

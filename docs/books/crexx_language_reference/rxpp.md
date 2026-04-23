@@ -126,6 +126,8 @@ These options allow for clean, modular macro organization and reuse across multi
   * `macros_margs.`
   * `macros_mbody.`
 
+* If the same macro header is defined again later, the newer definition replaces the earlier one. This lets source-local macros override entries loaded from `maclib`.
+
 ### 2. **Detection**
 
 * RXPP scans each line of the source for macro invocations by looking for known macro names followed by `(`
@@ -989,4 +991,3 @@ Silent debug
 <!-- > Tip: If a step fails, test each script individually (e.g., `source rxprecomp.sh`) to isolate the issue. -->
 
 <!-- --- -->
-

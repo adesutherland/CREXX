@@ -486,19 +486,23 @@ CMD_define: procedure=.int
    end
 
  /* Register macro */
-   i = macros_mname.0
- ## todo this is a sledgehammer approach, count the entries, if the counter says it is 0
-   if i=0 then do i=1 to 150
-      if macros_mname.i = '' then leave
-      i=i+1
+   if dspace=1 then macro_name = upper(name)' '
+   else macro_name = upper(name)'('
+
+   macro_index = 0
+   do scan_index=1 to macros_mname.0
+      if macros_mname.scan_index = macro_name then do
+         macro_index = scan_index
+         leave
+      end
    end
 
-   if macros_mname.i \= '' then i = i + 1
-   if dspace=1 then macros_mname.i = upper(name)' '
-   else macros_mname.i = upper(name)'('
-   macros_margs.i = strip(arglist)
-   macros_mbody.i = body
-   macros_mspace.i= dspace
+   if macro_index = 0 then macro_index = macros_mname.0 + 1
+
+   macros_mname.macro_index = macro_name
+   macros_margs.macro_index = strip(arglist)
+   macros_mbody.macro_index = body
+   macros_mspace.macro_index = dspace
 return nlino
 /* ------------------------------------------------------------------
  * Concatenate all parameters into a comma-separated list.
@@ -1102,46 +1106,73 @@ return str
 /* ------------------------------------------------------------------
  * replaceArg: Replaces a parameter occurrence respecting identifier boundaries
  * also supports NAME## terminator.
- *  - Matches bare  name  only at identifier boundaries
- *  - Also matches   name##   unconditionally and consumes the '##'
+ *  - Matches bare name only at identifier boundaries
+ *  - Also matches name## unconditionally and consumes the '##'
+ *  - Preserves quoted literals exactly, including doubled quotes
  * ------------------------------------------------------------------ */
 replaceArg: procedure=.string
   arg str=.string, name=.string, value=.string
-  posn = 1
-  p = fpos(name, str, posn)
-  nlen=length(name)
-  do while p > 0
-     before = ''
-     if p > 1 then before = substr(str, p - 1, 1)
+  out = ''
+  nlen = length(name)
+  slen = length(str)
+  uname = upper(name)
+  i = 1
 
-     after1 = substr(str, p + nlen, 1)          /* next 1 char */
-     after2 = substr(str, p + nlen, 2)          /* next 2 chars */
-  /* ---- Fast path: explicit end-of-param "##" right after name ---- */
-     if after2 = '##' then do
-        /* replace NAME## with VALUE (consume the hashes) */
-        str  = splice(value, str, p, nlen+2)  ## str  = insertatc(value, str, p, nlen+2)
-        posn = p + length(value)
-        p    = fpos(name, str, posn)
+  do while i <= slen
+     ch = substr(str, i, 1)
+
+     if ch = "'" | ch = '"' then do
+        quote_char = ch
+        out = out || ch
+        i = i + 1
+        do while i <= slen
+           qch = substr(str, i, 1)
+           out = out || qch
+           if qch = quote_char then do
+              if i < slen & substr(str, i + 1, 1) = quote_char then do
+                 out = out || quote_char
+                 i = i + 2
+                 iterate
+              end
+              i = i + 1
+              leave
+           end
+           i = i + 1
+        end
         iterate
      end
 
-     /* ---- Original boundary check: only replace full identifiers ---- */
-     verbb = verify(before, alphaN, 'N')  /* 0 => before is [A-Za-z0-9_] */
-     verba = verify(after1, alphaN, 'N')  /* 0 => after  is [A-Za-z0-9_] */
-     if length(before) = 0 then verbb = 1
-     if length(after1)  = 0 then verba = 1
+     if i + nlen - 1 <= slen then do
+        current = upper(substr(str, i, nlen))
+        if current = uname then do
+           before = ''
+           if i > 1 then before = substr(str, i - 1, 1)
+           after1 = substr(str, i + nlen, 1)
+           after2 = substr(str, i + nlen, 2)
 
-     if verbb = 0 | verba = 0 then do   /* Not a standalone identifier (e.g., nameX or Yname); skip ahead */
-        posn = p + 1
-        p    = fpos(name, str, posn)   /* BUGFIX: was `p = posn` */
-        iterate
+           if after2 = '##' then do
+              out = out || value
+              i = i + nlen + 2
+              iterate
+           end
+
+           verbb = verify(before, alphaN, 'N')
+           verba = verify(after1, alphaN, 'N')
+           if before = '' then verbb = 1
+           if after1 = '' then verba = 1
+
+           if verbb \= 0 & verba \= 0 then do
+              out = out || value
+              i = i + nlen
+              iterate
+           end
+        end
      end
-     /* ---- Valid standalone `name` ---- */
-     str  = splice(value, str, p, nlen)   ## str  = insertatc(value, str, p, nlen)   /* C-function */
-     posn = p + length(value)
-     p    = fpos(name, str, posn)
+
+     out = out || ch
+     i = i + 1
   end
-return str
+return out
 /* ------------------------------------------------------------------
  * InsertAt: Pure string insert/replace helper (legacy).
  * ------------------------------------------------------------------

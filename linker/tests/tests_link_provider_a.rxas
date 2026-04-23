@@ -1,0 +1,10 @@
+/*
+ * linker/tests/tests_link_provider_a.rxas
+ */
+
+.globals=0
+
+helper() .locals=0 .expose=linktest.helper
+   .meta "linktest.helper"="b" ".int" helper() "" ""
+   say "PASS: Provider A"
+   ret 10

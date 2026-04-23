@@ -468,6 +468,24 @@ void rxassetg(Assembler_Context *context, Assembler_Token *globalsToken) {
 }
 
 /* Expose a global register */
+static void append_expose_entry(Assembler_Context *context, size_t entry_index) {
+    expose_reg_constant *tail_entry;
+    expose_reg_constant *new_entry = (expose_reg_constant *)(context->binary.const_pool + entry_index);
+
+    new_entry->next = -1;
+
+    if (context->expose_head != -1) {
+        tail_entry = (expose_reg_constant *)(context->binary.const_pool + context->expose_tail);
+        tail_entry->next = (int)entry_index;
+        context->expose_tail = (int)entry_index;
+    }
+    else {
+        context->expose_head = (int)entry_index;
+        context->expose_tail = (int)entry_index;
+    }
+}
+
+/* Expose a global register */
 void rxasexre(Assembler_Context *context, Assembler_Token *registerToken,
               Assembler_Token *exposeToken) {
     size_t entry_size, entry_index;
@@ -502,6 +520,7 @@ void rxasexre(Assembler_Context *context, Assembler_Token *registerToken,
            strlen((char*)exposeToken->token_value.string) + 1);
 
     centry->global_reg = (int)registerToken->token_value.integer;
+    append_expose_entry(context, entry_index);
 }
 
 static void gen_instr(Assembler_Context *context, int opcode, int operands) {
@@ -1078,6 +1097,7 @@ static size_t define_proc(Assembler_Context *context, Assembler_Token *funcToken
     centry->locals = -1;
     centry->start = SIZE_MAX;
     centry->exposed = SIZE_MAX;
+    centry->next = -1;
     ref_header->defined = 1;
 //    ref_header->def_token = funcToken;
 
@@ -1202,17 +1222,7 @@ void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
     centry->procedure = pentry_index;
     centry->imported = 0;
 
-    /* Chain the exposed constant entries */
-    if (context->expose_head != -1) {
-        ((expose_proc_constant*)(context->binary.const_pool + context->expose_tail))->next = (int)entry_index;
-        context->expose_tail = (int)entry_index;
-        centry->next = -1;
-    }
-    else {
-        context->expose_head = (int)entry_index;
-        context->expose_tail = (int)entry_index;
-        centry->next = -1;
-    }
+    append_expose_entry(context, entry_index);
 
     /* Proc Entry has a pointer to the external entry */
     pentry = (proc_constant*)(context->binary.const_pool + pentry_index); /* It might have moved */
@@ -1257,17 +1267,7 @@ void rxasdecl(Assembler_Context *context, Assembler_Token *funcToken,
     centry->procedure = pentry_index;
     centry->imported = 1;
 
-    /* Chain the exposed constant entries */
-    if (context->expose_head != -1) {
-        ((expose_proc_constant*)(context->binary.const_pool + context->expose_tail))->next = (int)entry_index;
-        context->expose_tail = (int)entry_index;
-        centry->next = -1;
-    }
-    else {
-        context->expose_head = (int)entry_index;
-        context->expose_tail = (int)entry_index;
-        centry->next = -1;
-    }
+    append_expose_entry(context, entry_index);
 
     /* Proc Entry has a pointer to the external entry */
     pentry = (proc_constant*)(context->binary.const_pool + pentry_index); /* It might have moved */
