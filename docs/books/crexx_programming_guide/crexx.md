@@ -81,7 +81,7 @@ The following options are available (single and double dashes work for all optio
 For native packaging, `crexx` now separates `-l` inputs into two groups:
 
 - packaged REXX libraries (`.rxbin` inputs such as `classlib`) are passed into `rxlink`
-- plugin/static-native libraries are linked natively when a matching `_static.a` exists
+- plugin/static-native libraries are linked natively when a matching platform static library is available
 
 This keeps the direct interpreter path fast while still producing compact native executables.
 

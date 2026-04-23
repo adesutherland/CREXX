@@ -56,11 +56,12 @@ linkStripSource=1;linkMap='';linkOptionsUsed=0;cleanupFiles=''
  assembler getenv rxpath,env_wanted
  
  /* if not set, then */
- rexx_version = ''
- assembler rxvers rexx_version
- dirsep = '/'
- platform = word(rexx_version,1)
- if  platform = 'windows' then dirsep = '\'
+rexx_version = ''
+assembler rxvers rexx_version
+dirsep = '/'
+platform = word(rexx_version,1)
+platformUpper = translate(platform)
+if  platformUpper = 'WINDOWS' then dirsep = '\'
  if rxpath='' then do
    rxpath=getLoadPath()
    lastSegment=lastpos(dirsep,rxpath)
@@ -378,15 +379,19 @@ do i=1 to words(filenames)
   if native then do
     linkedOutput = binfile'_linked'
     outputStem = binfile
-    forces = ''
+    staticFlags = ''
     linkInputs = ''
     linkInputs = appendWordUnique(linkInputs, binfile)
     linkInputs = appendWordUnique(linkInputs, rxpath || 'bin' || dirsep || 'library')
     loop f=1 to words(modules)
       modulePath = word(modules,f)
-      staticModule = modulePath || '_static.a'
-      if fileExists(staticModule) then
-        forces = appendWordUnique(forces, '-Wl,-force_load,'staticModule)
+      staticModule = findStaticModule(modulePath)
+      if staticModule <> '' then do
+        if isMacPlatform(platformUpper) then
+          staticFlags = staticFlags ' -Wl,-force_load,'staticModule
+        else
+          staticFlags = staticFlags ' -Wl,--whole-archive 'staticModule' -Wl,--no-whole-archive'
+      end
       else
         linkInputs = appendWordUnique(linkInputs, modulePath)
     end
@@ -418,29 +423,24 @@ do i=1 to words(filenames)
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
       say '[ 'res' ] rxcpack  - C-Packed ' esc||ANSI_BLUE||outputStem||esc||ANSI_RESET
     end
+    if RC>0 then exit RC
 
-    cc_command = ,
-    'gcc -O3 -DNDEBUG -Wl,-search_paths_first -o' outputStem ,
-    '-Wl,-headerpad_max_install_names ',
-    '-L'rxpath'bin' ,
-    '-lrxvml',
-    '-lrxpashim',
-    '-lrxvmplugin',
-    '-lplatform',
-    '-ldecnumber',
-    '-lavl_tree',
-    '-lrxpa',
-    '-lm',
-    decstat ,
-    forces,
-    outputStem'.c'
+    cc_command = 'gcc -O3 -DNDEBUG'
+    if isMacPlatform(platformUpper) then
+      cc_command = cc_command ' -Wl,-search_paths_first -Wl,-headerpad_max_install_names'
+    cc_command = cc_command ' -o 'outputStem
+    cc_command = cc_command ' -L'rxpath'bin'
+    cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lplatform -ldecnumber -lavl_tree -lrxpa -lm'
+    cc_command = cc_command ' 'decstat
+    if staticFlags <> '' then cc_command = cc_command staticFlags
+    cc_command = cc_command ' 'outputStem'.c'
 
-    address system cc_command
     if verbose>1 then
       do
 	say 'cc compile command:'
 	say cc_command
 	end
+    address system cc_command
     
     if verbose then
       do
@@ -503,7 +503,7 @@ say '--link-keep-source -- keep source/file metadata in the linked native image'
 say
 say 'Headerless top-level scripts are compiled with --level levelb --import rxfnsb.'
 say 'Options -s, -i and --import-rxas affect compilation only; runtime/native loading still uses -l.'
-say 'Native packaging uses rxlink before rxcpack; plugin/static libraries are linked natively when a matching _static.a exists.'
+say 'Native packaging uses rxlink before rxcpack; plugin/static libraries are linked natively with platform-appropriate linker flags.'
 say
 say 'all options can also be prefixed with --'
 return 'help done'
@@ -644,6 +644,20 @@ if value = '' then return current
 if current = '' then return value
 if wordpos(value, current) > 0 then return current
 return current value
+
+findStaticModule: procedure = .string
+arg modulePath = .string
+staticModule = modulePath || '_static.a'
+if fileExists(staticModule) then return staticModule
+staticModule = modulePath || '_static.lib'
+if fileExists(staticModule) then return staticModule
+return ''
+
+isMacPlatform: procedure = .int
+arg platformName = .string
+platformUpper = translate(platformName)
+if platformUpper = 'MACOS' | platformUpper = 'MACOSX' then return 1
+return 0
 
 fileExists: procedure = .int
 arg filePath = .string
