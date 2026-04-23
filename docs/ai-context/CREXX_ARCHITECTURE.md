@@ -1,9 +1,10 @@
 # cREXX Architecture
 
-`crexx` is a custom REXX-to-bytecode toolchain that translates Classic REXX semantics into an optimized bytecode format executed by a specialized VM. The process happens through three main binaries:
+`crexx` is a custom REXX-to-bytecode toolchain that translates Classic REXX semantics into an optimized bytecode format executed by a specialized VM. The process happens through four main binaries:
 1. `rxc` - The Compiler
 2. `rxas` - The Assembler
-3. `rxvm` - The Virtual Machine (Interpreter)
+3. `rxlink` - The Linker
+4. `rxvm` - The Virtual Machine (Interpreter)
 
 ## The Compilation Pipeline
 
@@ -39,7 +40,12 @@ The pipeline of transforming REXX source code into executable bytecode is struct
    - Translates human-readable IR assembly into packed binary format (`rxbin` bytecode).
    - Generates the final executable bytecode file.
 
-6. **Interpreter (`rxvm`)**
+6. **Linker (`rxlink`, optional)**
+   - Combines one or more `.rxbin` modules into a single linked image with one shared constant-pool record and one shared-backed module record per selected module.
+   - Resolves imports and interface-provider relationships up front, while preserving the module boundaries needed by the VM loader.
+   - Can strip source/file metadata (`META_SRC` and `META_FILE`) for smaller deployable artifacts without removing runtime contract metadata.
+
+7. **Interpreter (`rxvm`)**
    - `rxvm` reads and executes the `rxbin` bytecode.
    - Modules are loaded via `rxldmod`.
    - The execution loop happens inside the `rxvm_run` function (e.g., in `rxvmmain.c` / `rxvmintp.c`).

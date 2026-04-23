@@ -4,11 +4,12 @@
 
 ## Project Context
 
-`crexx` is a custom REXX-to-bytecode toolchain with three main CMake-built binaries:
+`crexx` is a custom REXX-to-bytecode toolchain with four main CMake-built binaries:
 
 1. `rxc`: compiler from REXX source to `rxas` assembly
 2. `rxas`: assembler from `rxas` assembly to `rxbin` bytecode
-3. `rxvm`: interpreter for register-based `rxbin` bytecode
+3. `rxlink`: linker for combining one or more `rxbin` modules into a shared-pool linked image
+4. `rxvm`: interpreter for register-based `rxbin` bytecode
 
 ## Core Knowledge Sources
 
@@ -16,12 +17,16 @@ Before changing compiler logic or making claims about syntax, AST shape, validat
 
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `docs/ai-context/CREXX_DEBUGGING.md`
+- `docs/ai-context/CREXX_LEVELB_AUTHORING.md`
 - `docs/cREXX Level B Language Reference.md`
 - `docs/ai-context/RXAS_ASSEMBLER.md`
+- `docs/ai-context/RXLINK_LINKER.md`
 - `docs/ai-context/RXVM_INTERPRETER.md`
 - `docs/ai-context/CREXX_LIBS.md`
 
 Read only what is needed for the task, but do not rely on memory for cREXX syntax or compiler internals when the docs cover it.
+
+For tasks that write or edit Level B `.rexx`, start with `docs/ai-context/CREXX_LEVELB_AUTHORING.md` and copy patterns from the referenced repo examples instead of inventing syntax from generic training data.
 
 ## Working Rules
 

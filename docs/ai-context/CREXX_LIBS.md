@@ -14,6 +14,9 @@ A significant portion of the Classic REXX Built-In Functions (such as `abs()`, `
 
 This approach minimizes the VM footprint and demonstrates the capability of the cREXX compiler to handle system-level logic.
 
+For repo-native Level B authoring patterns, argument signature examples, and
+wayfinding to real `.rexx` examples, see `docs/ai-context/CREXX_LEVELB_AUTHORING.md`.
+
 ### Anatomy of a cREXX BIF
 Functions written in cREXX follow standard language rules, utilizing namespaces and type enforcement:
 

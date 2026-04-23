@@ -137,6 +137,7 @@ we built cRexx on. These are
 | crexx   | cRexx compiler driver                           |
 | rxc     | cRexx compiler                                  |
 | rxas    | cRexx assembler                                 |
+| rxlink  | cRexx linker                                    |
 | rxdas   | cRexx disassembler                              |
 | rxvm    | cRexx VM, threaded interpreter                  |
 | rxpp    | cRexx macro preprocessor                        |
@@ -188,5 +189,4 @@ All executables and libraries are delivered in the `bin` directory of the distri
 Table: Optional plugin build  options. {#tbl:id}
 
 Some libraries, with dependencies on installed software products, are only produced when they are opted-in with CMake build options. The defaults for these options are \code{OFF}.
-
 

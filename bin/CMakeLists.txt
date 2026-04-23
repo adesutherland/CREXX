@@ -5,13 +5,17 @@ project(driver C)
 set(CMAKE_C_STANDARD 90)
 
 add_custom_command(
+        BYPRODUCTS
+                ${CMAKE_CURRENT_BINARY_DIR}/crexx.rxbin
+                ${CMAKE_CURRENT_BINARY_DIR}/crexx_linked.rxbin
         COMMAND $<TARGET_FILE:rxc> -i "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_BINARY_DIR}/lib/plugins/system\"" -o crexx ${CMAKE_CURRENT_SOURCE_DIR}/crexx
         COMMAND $<TARGET_FILE:rxas> crexx
-        COMMAND $<TARGET_FILE:rxcpack> crexx ${CMAKE_BINARY_DIR}/bin/library
-        DEPENDS rxas rxc crexx.rexx library rxcpack rxpa _system compiler_exit_bin
+        COMMAND $<TARGET_FILE:rxlink> -s -o crexx_linked crexx ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND $<TARGET_FILE:rxcpack> -o crexx crexx_linked
+        DEPENDS rxas rxc rxlink crexx.rexx library rxcpack rxpa _system compiler_exit_bin
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/crexx.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "cREXX compile, assemble and package crexx ..."
+        COMMENT "cREXX compile, assemble, link and package crexx ..."
 )
 
 add_executable(crexx ${CMAKE_CURRENT_BINARY_DIR}/crexx.c)

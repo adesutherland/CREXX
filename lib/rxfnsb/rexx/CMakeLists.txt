@@ -135,6 +135,8 @@ foreach (BIF ${BIFS})
 	set(REXXSRC ${REXXSRC} ${BIF}.rexx)
 endforeach ()
 
+set(RXXFNSB_REXX_SELECTORS ${BIFS} PARENT_SCOPE)
+
 unset(_prev_target)
 foreach(_binfile ${REXXBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)

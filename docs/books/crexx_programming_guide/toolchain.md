@@ -12,10 +12,13 @@ Source can be edited with any text editor\footnote{Vi, Emacs, Xedit,
 file extension of \code{.rexx} and contains (Unicode, UTF-8) text. The \code{rxc} \crexx{} compiler
 produces a text file which will have a file extension of
 \code{.rxas}. The next file in this sequence is produced by the
-\code{rxas} assembler and is a binary \code{.rxbin} file. This file is
-executable by the \crexx{} \code{rxvme} virtual machine.\newline\newline
+\code{rxas} assembler and is a binary \code{.rxbin} file. This file can be
+executed directly by the \crexx{} \code{rxvme} virtual machine, or one or more
+\code{.rxbin} files can first be combined by the \code{rxlink} linker into a
+single linked image with a shared constant pool.\newline\newline
 \fussy
-If you choose to compile a series of \code{*.rxbin} files to a native
+If you choose to compile a series of \code{*.rxbin} files, or an already linked
+\code{.rxbin} image, to a native
 executable, the \code{rxcpack} program produces a \code{.c} file,
 which can be compiled by any C compiler toolchain.\newline\newline
 \fussy

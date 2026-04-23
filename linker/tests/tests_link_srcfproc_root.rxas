@@ -1,0 +1,28 @@
+/*
+ * linker/tests/tests_link_srcfproc_root.rxas
+ */
+
+.globals=0
+
+main() .locals=6
+   load r1,1
+   load r2,"mini"
+   settp r2,3
+   srcfproc r0,"link_iface.shape..from_name",r1
+   dcall r0,r0,r1
+
+   load r1,1
+   settp r0,1
+   swap r2,r0
+   srcmethod r3,r2,"describe"
+   dcall r3,r3,r1
+   swap r0,r2
+   seq r4,r3,"linked-named-box"
+   brf fail,r4
+   say "PASS: SRCFPROC Linked"
+   ret 0
+
+fail:
+   say "FAIL: SRCFPROC Linked"
+   say r3
+   ret 0

@@ -27,6 +27,8 @@ foreach(CLS IN LISTS CLSS)
   list(APPEND CLSBINS "${CMAKE_CURRENT_BINARY_DIR}/${CLS}.rxbin")
 endforeach()
 
+set(CLASSLIB_SELECTORS ${CLSS})
+
 foreach(_binfile IN LISTS CLSBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
 
@@ -54,13 +56,27 @@ foreach(_binfile IN LISTS CLSBINS)
   )
 endforeach()
 
+set(_classlib_control_file ${CMAKE_CURRENT_BINARY_DIR}/classlib_link_$<CONFIG>.ctl)
+string(CONCAT _classlib_control_text
+  "* Auto-generated control file for the consolidated cREXX class library\n")
+foreach(_cls_bin IN LISTS CLSBINS)
+  string(APPEND _classlib_control_text "INPUT ${_cls_bin}\n")
+endforeach()
+foreach(_selector IN LISTS CLASSLIB_SELECTORS)
+  string(APPEND _classlib_control_text "INCLUDE ${_selector}\n")
+endforeach()
+string(APPEND _classlib_control_text
+  "$<$<NOT:$<CONFIG:Debug>>:STRIP SOURCE\n>"
+  "OUTPUT ${CMAKE_BINARY_DIR}/bin/classlib\n")
+
+file(GENERATE OUTPUT ${_classlib_control_file} CONTENT "${_classlib_control_text}")
+
 add_custom_command(
   OUTPUT "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin"
-  COMMAND ${CMAKE_COMMAND} -E cat ${CLSBINS} > "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
-  DEPENDS ${CLSBINS}
+  COMMAND $<TARGET_FILE:rxlink> -c ${_classlib_control_file}
+  DEPENDS rxlink ${CLSBINS} ${_classlib_control_file}
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-  COMMENT "cREXX REXX Class Library ..."
+  COMMENT "cREXX Linked Class Library Image ..."
   VERBATIM
 )
 

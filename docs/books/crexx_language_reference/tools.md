@@ -67,6 +67,30 @@ Options :
 
 Note that the rxbin files can be simply concatenated together to form a library archive. 
 
+## **Linker**
+
+Usage   : rxlink \[options\] input\_file \[input\_file ...]
+
+Options :
+
+  \-h              Help message
+
+  \-l location     Working Location (directory)
+
+  \-o output\_file  Linked output file
+
+  \-c control\_file Control file with INPUT / ROOT / INCLUDE / OMIT / OUTPUT / MAP / STRIP
+
+  \-r root\_member  Root module selector (may be repeated)
+
+  \-m map\_file     Link map output
+
+  \-s              Strip source/file metadata from the linked output
+
+  \-d              Debug / verbose mode
+
+`rxlink` combines one or more `.rxbin` modules into a linked image with one shared constant pool. This is the preferred way to build a compact deployable binary image while preserving module boundaries for the VM.
+
 ## **Disassembler**
 
 Usage   : rxdas \[options\] binary\_file

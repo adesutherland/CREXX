@@ -20,6 +20,18 @@ static void free_loaded_modules(module_file **modules, size_t count) {
     }
 }
 
+static int module_has_source_metadata(const module_file *module) {
+    int meta = module->header.meta_head;
+
+    while (meta != -1) {
+        const meta_entry *entry = (const meta_entry *)(module->constant + meta);
+        if (entry->base.type == META_SRC || entry->base.type == META_FILE) return 1;
+        meta = entry->next;
+    }
+
+    return 0;
+}
+
 static int check_linked_success_format(void) {
     FILE *fp;
     module_header header;
@@ -106,6 +118,41 @@ done:
     return rc == 0;
 }
 
+static int check_stripped_format(void) {
+    FILE *fp;
+    rxbin_reader reader;
+    module_file *module_a = 0;
+    module_file *module_b = 0;
+    int ok = 0;
+
+    fp = fopen("tests_linked_stripped.rxbin", "rb");
+    if (!fp) {
+        fprintf(stderr, "Failed to open tests_linked_stripped.rxbin\n");
+        return 0;
+    }
+
+    rxbin_reader_init_file(&reader, fp);
+    if (rxbin_reader_next_module(&reader, &module_a) != 0 ||
+        rxbin_reader_next_module(&reader, &module_b) != 0) {
+        fprintf(stderr, "Failed to decode stripped linked modules through rxbin_reader\n");
+        goto done;
+    }
+
+    if (module_has_source_metadata(module_a) || module_has_source_metadata(module_b)) {
+        fprintf(stderr, "Stripped linked image still contains source/file metadata\n");
+        goto done;
+    }
+
+    ok = 1;
+
+done:
+    rxbin_reader_close(&reader);
+    fclose(fp);
+    free_module(module_a);
+    free_module(module_b);
+    return ok;
+}
+
 static int check_record_stream_concatenation(void) {
     FILE *fp;
     rxbin_reader reader;
@@ -171,6 +218,7 @@ done:
 
 int main(void) {
     if (!check_linked_success_format()) return 1;
+    if (!check_stripped_format()) return 1;
     if (!check_record_stream_concatenation()) return 1;
     return 0;
 }

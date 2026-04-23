@@ -94,6 +94,10 @@ target_include_directories(test_disassembler_dump PRIVATE
         ../assembler
         ../platform
         ../binutils/include)
+set_target_properties(test_disassembler_dump PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_custom_command(TARGET test_disassembler_dump POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_BINARY_DIR}/bin/test_disassembler_dump)
 
 add_test(
         NAME rxdas_dump_support

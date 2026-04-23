@@ -16,6 +16,14 @@ set(CMAKE_C_STANDARD 90)
 
 enable_testing()
 
+add_custom_target(linked_opt_sweep
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L linked_opt
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS crexx rxlink
+        USES_TERMINAL
+        COMMENT "Running linked opt-runtime coverage through CTest"
+)
+
 set(ASMTESTBINS ascommon.rxbin asutf.rxbin)
 set(REXXTESTBINS basic.rxbin levelbfunc.rxbin)
 

@@ -1,4 +1,5 @@
 include(CMakeParseArguments)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
 
 function(_crexx_register_runtime_test)
     set(options)
@@ -6,14 +7,39 @@ function(_crexx_register_runtime_test)
     set(multiValueArgs RUNTIME_ARGS TEST_LABELS)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    add_test(
-            NAME ${CREXX_NAME}
-            COMMAND ${CREXX_RUNNER} ${CREXX_PROGRAM} ${CREXX_RUNTIME_ARGS}
-            WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
-    )
+    set(_crexx_runner_cmd ${CREXX_RUNNER})
+    if(NOT "${CREXX_RUNNER}" MATCHES "^\\$<" AND TARGET ${CREXX_RUNNER})
+        set(_crexx_runner_cmd $<TARGET_FILE:${CREXX_RUNNER}>)
+    endif()
 
-    if(CREXX_TEST_LABELS)
-        set_tests_properties(${CREXX_NAME} PROPERTIES LABELS "${CREXX_TEST_LABELS}")
+    set(_crexx_labels ${CREXX_TEST_LABELS})
+    if(CREXX_NAME MATCHES "_opt$")
+        set(_crexx_script "${CMAKE_CURRENT_BINARY_DIR}/${CREXX_NAME}_linked_runtime.cmake")
+        crexx_write_linked_runtime_script(
+                OUTPUT "${_crexx_script}"
+                NAME "${CREXX_NAME}"
+                WORKING_DIRECTORY "${CREXX_WORKING_DIRECTORY}"
+                RUNNER "${_crexx_runner_cmd}"
+                RXLINK "$<TARGET_FILE:rxlink>"
+                PROGRAM "${CREXX_PROGRAM}"
+                EXTRA_ARGS ${CREXX_RUNTIME_ARGS}
+        )
+        add_test(
+                NAME ${CREXX_NAME}
+                COMMAND ${CMAKE_COMMAND} -P "${_crexx_script}"
+                WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
+        )
+        list(APPEND _crexx_labels linked_opt)
+    else()
+        add_test(
+                NAME ${CREXX_NAME}
+                COMMAND ${_crexx_runner_cmd} ${CREXX_PROGRAM} ${CREXX_RUNTIME_ARGS}
+                WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
+        )
+    endif()
+
+    if(_crexx_labels)
+        set_tests_properties(${CREXX_NAME} PROPERTIES LABELS "${_crexx_labels}")
     endif()
 endfunction()
 

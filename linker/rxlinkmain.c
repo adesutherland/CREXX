@@ -22,6 +22,7 @@ typedef struct link_module_info {
     string_list imports;
     string_list defined_interfaces;
     string_list implemented_interfaces;
+    string_list referenced_interfaces;
     string_list unresolved_imports;
     int has_main;
     int selected;
@@ -43,6 +44,7 @@ typedef struct link_config {
     char *output_path;
     char *map_path;
     char *location;
+    int strip_source_metadata;
     int debug_mode;
 } link_config;
 
@@ -75,6 +77,7 @@ typedef struct rxlink_build_context {
     leaf_dedupe_entry *leaf_entries;
     size_t leaf_count;
     size_t leaf_capacity;
+    int strip_source_metadata;
 } rxlink_build_context;
 
 static void string_list_init(string_list *list) {
@@ -159,6 +162,7 @@ static void module_list_free(module_list *list) {
         string_list_free(&list->items[i].imports);
         string_list_free(&list->items[i].defined_interfaces);
         string_list_free(&list->items[i].implemented_interfaces);
+        string_list_free(&list->items[i].referenced_interfaces);
         string_list_free(&list->items[i].unresolved_imports);
     }
     free(list->items);
@@ -202,6 +206,7 @@ static void build_context_init(rxlink_build_context *context) {
     context->leaf_entries = 0;
     context->leaf_count = 0;
     context->leaf_capacity = 0;
+    context->strip_source_metadata = 0;
 }
 
 static void build_context_free(rxlink_build_context *context) {
@@ -255,6 +260,7 @@ static void init_link_config(link_config *config) {
     config->output_path = 0;
     config->map_path = 0;
     config->location = 0;
+    config->strip_source_metadata = 0;
     config->debug_mode = 0;
 }
 
@@ -322,6 +328,15 @@ static int parse_control_file(link_config *config, const char *path) {
             if (!set_single_path(&config->output_path, value)) goto oom;
         } else if (keyword_equals(keyword, "MAP")) {
             if (!set_single_path(&config->map_path, value)) goto oom;
+        } else if (keyword_equals(keyword, "STRIP")) {
+            if (keyword_equals(value, "SOURCE")) {
+                config->strip_source_metadata = 1;
+            } else {
+                fprintf(stderr, "ERROR: unknown STRIP mode %s on line %lu\n",
+                        value, (unsigned long)line_number);
+                fclose(fp);
+                return 0;
+            }
         } else {
             fprintf(stderr, "ERROR: unknown control directive %s on line %lu\n",
                     keyword, (unsigned long)line_number);
@@ -364,6 +379,7 @@ static int module_selector_matches(const link_module_info *module, const char *s
 static int load_module_metadata(link_module_info *info) {
     int ix;
     module_file *module = info->module;
+    size_t code_index;
 
     ix = module->header.proc_head;
     while (ix != -1) {
@@ -413,6 +429,47 @@ static int load_module_metadata(link_module_info *info) {
         ix = entry->next;
     }
 
+    code_index = 0;
+    while (code_index < module->header.instruction_size) {
+        OperandType types[3];
+        int operand_count;
+        int operand_index;
+        int opcode;
+
+        opcode = ((bin_code *)module->instructions)[code_index].instruction.opcode;
+        operand_count = rxbin_get_operand_types(rxbin_opcode_format(opcode), types);
+        if (opcode == OP_SRCFPROC_REG_STRING_REG) {
+            for (operand_index = 0; operand_index < operand_count; operand_index++) {
+                if (types[operand_index] == OP_STRING) {
+                    size_t selector_offset;
+                    string_constant *selector;
+                    const char *separator;
+                    size_t interface_length;
+                    char *interface_name;
+                    int ok;
+
+                    selector_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
+                    if (selector_offset >= module->header.constant_size) return 0;
+                    selector = (string_constant *)((unsigned char *)module->constant + selector_offset);
+                    if (selector->base.type != STRING_CONST) return 0;
+
+                    separator = strstr(selector->string, "..");
+                    interface_length = separator ? (size_t)(separator - selector->string) : strlen(selector->string);
+                    if (!interface_length) continue;
+
+                    interface_name = malloc(interface_length + 1);
+                    if (!interface_name) return 0;
+                    memcpy(interface_name, selector->string, interface_length);
+                    interface_name[interface_length] = '\0';
+                    ok = string_list_append_unique(&info->referenced_interfaces, interface_name);
+                    free(interface_name);
+                    if (!ok) return 0;
+                }
+            }
+        }
+        code_index += (size_t)operand_count + 1;
+    }
+
     return 1;
 }
 
@@ -442,6 +499,7 @@ static int load_input_modules(module_list *modules, const link_config *config) {
                 string_list_init(&info.imports);
                 string_list_init(&info.defined_interfaces);
                 string_list_init(&info.implemented_interfaces);
+                string_list_init(&info.referenced_interfaces);
                 string_list_init(&info.unresolved_imports);
                 info.module = module;
                 info.input_path = strdup(input_path);
@@ -457,6 +515,7 @@ static int load_input_modules(module_list *modules, const link_config *config) {
                     string_list_free(&info.imports);
                     string_list_free(&info.defined_interfaces);
                     string_list_free(&info.implemented_interfaces);
+                    string_list_free(&info.referenced_interfaces);
                     string_list_free(&info.unresolved_imports);
                     fclose(fp);
                     return 0;
@@ -670,6 +729,22 @@ static int select_modules(module_list *modules, const link_config *config) {
             }
         }
 
+        for (iface_index = 0; iface_index < module->referenced_interfaces.count; iface_index++) {
+            size_t candidate;
+            for (candidate = 0; candidate < modules->count; candidate++) {
+                if (modules->items[candidate].omitted) continue;
+                if (string_list_contains(&modules->items[candidate].defined_interfaces,
+                                         module->referenced_interfaces.items[iface_index]) ||
+                    string_list_contains(&modules->items[candidate].implemented_interfaces,
+                                         module->referenced_interfaces.items[iface_index])) {
+                    if (!select_module_by_index(modules, &queue, &queue_count, &queue_capacity, candidate)) {
+                        free(queue);
+                        return 0;
+                    }
+                }
+            }
+        }
+
         for (iface_index = 0; iface_index < module->defined_interfaces.count; iface_index++) {
             size_t candidate;
             for (candidate = 0; candidate < modules->count; candidate++) {
@@ -792,6 +867,235 @@ static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleo
 static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_module *output_module,
                                    module_file *input_module, size_t old_offset, int *ok);
 
+static int is_meta_constant_type(enum const_pool_type type) {
+    switch (type) {
+        case META_SRC:
+        case META_FILE:
+        case META_FUNC:
+        case META_REG:
+        case META_CONST:
+        case META_CLEAR:
+        case META_CLASS:
+        case META_ATTR:
+        case META_INTERFACE:
+        case META_IMPLEMENTS:
+        case META_MEMBER:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int should_strip_meta_constant(const rxlink_build_context *context, enum const_pool_type type) {
+    return context->strip_source_metadata && (type == META_SRC || type == META_FILE);
+}
+
+static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_module *output_module,
+                                 module_file *input_module, chameleon_constant *entry,
+                                 size_t new_offset, int prev_offset, int next_offset, int *ok) {
+    switch (entry->type) {
+        case META_SRC: {
+            meta_src_constant *source = (meta_src_constant *)entry;
+            size_t source_offset = link_constant_offset(context, output_module, input_module, source->source, ok);
+            meta_src_constant *meta = (meta_src_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->source = source_offset;
+            return *ok;
+        }
+        case META_FILE: {
+            meta_file_constant *source = (meta_file_constant *)entry;
+            size_t file_offset = link_constant_offset(context, output_module, input_module, source->file, ok);
+            meta_file_constant *meta = (meta_file_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->file = file_offset;
+            return *ok;
+        }
+        case META_FUNC: {
+            meta_func_constant *source = (meta_func_constant *)entry;
+            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
+            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
+            size_t func = link_constant_offset(context, output_module, input_module, source->func, ok);
+            size_t args = link_constant_offset(context, output_module, input_module, source->args, ok);
+            size_t inliner = link_constant_offset(context, output_module, input_module, source->inliner, ok);
+            meta_func_constant *meta = (meta_func_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->option = option;
+            meta->type = type;
+            meta->func = func;
+            meta->args = args;
+            meta->inliner = inliner;
+            return *ok;
+        }
+        case META_REG: {
+            meta_reg_constant *source = (meta_reg_constant *)entry;
+            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
+            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
+            meta_reg_constant *meta = (meta_reg_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->option = option;
+            meta->type = type;
+            return *ok;
+        }
+        case META_CONST: {
+            meta_const_constant *source = (meta_const_constant *)entry;
+            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
+            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
+            size_t constant = link_constant_offset(context, output_module, input_module, source->constant, ok);
+            meta_const_constant *meta = (meta_const_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->option = option;
+            meta->type = type;
+            meta->constant = constant;
+            return *ok;
+        }
+        case META_CLEAR: {
+            meta_clear_constant *source = (meta_clear_constant *)entry;
+            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+            meta_clear_constant *meta = (meta_clear_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            return *ok;
+        }
+        case META_CLASS: {
+            meta_class_constant *source = (meta_class_constant *)entry;
+            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
+            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
+            meta_class_constant *meta = (meta_class_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->option = option;
+            meta->type = type;
+            return *ok;
+        }
+        case META_ATTR: {
+            meta_attr_constant *source = (meta_attr_constant *)entry;
+            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
+            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
+            meta_attr_constant *meta = (meta_attr_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->option = option;
+            meta->type = type;
+            return *ok;
+        }
+        case META_INTERFACE: {
+            meta_interface_constant *source = (meta_interface_constant *)entry;
+            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
+            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
+            meta_interface_constant *meta = (meta_interface_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->option = option;
+            meta->type = type;
+            return *ok;
+        }
+        case META_IMPLEMENTS: {
+            meta_implements_constant *source = (meta_implements_constant *)entry;
+            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+            size_t interface_symbol = link_constant_offset(context, output_module, input_module,
+                                                           source->interface_symbol, ok);
+            meta_implements_constant *meta = (meta_implements_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->interface_symbol = interface_symbol;
+            return *ok;
+        }
+        case META_MEMBER: {
+            meta_member_constant *source = (meta_member_constant *)entry;
+            size_t owner = link_constant_offset(context, output_module, input_module, source->owner, ok);
+            size_t kind = link_constant_offset(context, output_module, input_module, source->kind, ok);
+            size_t member = link_constant_offset(context, output_module, input_module, source->member, ok);
+            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
+            size_t args = link_constant_offset(context, output_module, input_module, source->args, ok);
+            meta_member_constant *meta = (meta_member_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->owner = owner;
+            meta->kind = kind;
+            meta->member = member;
+            meta->type = type;
+            meta->args = args;
+            return *ok;
+        }
+        default:
+            *ok = 0;
+            return 0;
+    }
+}
+
+static int link_meta_chain(rxlink_build_context *context, rxlink_output_module *output_module,
+                           module_file *input_module, int old_head, int *ok) {
+    int old_offset = old_head;
+    int new_head = -1;
+    int previous_new = -1;
+
+    while (old_offset != -1) {
+        chameleon_constant *entry;
+        meta_entry *old_meta;
+        size_t new_offset;
+
+        if ((size_t)old_offset >= input_module->header.constant_size) {
+            *ok = 0;
+            return -1;
+        }
+
+        entry = (chameleon_constant *)((unsigned char *)input_module->constant + (size_t)old_offset);
+        if (!is_meta_constant_type(entry->type)) {
+            *ok = 0;
+            return -1;
+        }
+
+        old_meta = (meta_entry *)entry;
+        if (should_strip_meta_constant(context, entry->type)) {
+            old_offset = old_meta->next;
+            continue;
+        }
+
+        if (!reserve_pool_entry(context, entry->size_in_pool, entry->type, &new_offset)) {
+            *ok = 0;
+            return -1;
+        }
+        if (!add_const_map(output_module, (size_t)old_offset, new_offset)) {
+            *ok = 0;
+            return -1;
+        }
+
+        memcpy(context->shared_pool.data + new_offset, entry, entry->size_in_pool);
+        if (!rewrite_meta_constant(context, output_module, input_module, entry, new_offset, previous_new, -1, ok)) {
+            return -1;
+        }
+
+        if (previous_new != -1) {
+            ((meta_entry *)(context->shared_pool.data + (size_t)previous_new))->next = (int)new_offset;
+        } else {
+            new_head = (int)new_offset;
+        }
+        previous_new = (int)new_offset;
+        old_offset = old_meta->next;
+    }
+
+    return new_head;
+}
+
 static int link_constant_offset_int(rxlink_build_context *context, rxlink_output_module *output_module,
                                     module_file *input_module, int old_offset, int *ok) {
     size_t new_offset;
@@ -874,167 +1178,23 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
             proc->procedure = procedure;
             break;
         }
-        case META_SRC: {
-            meta_src_constant *source = (meta_src_constant *)entry;
-            int prev = link_constant_offset_int(context, output_module, input_module, source->base.prev, ok);
-            int next = link_constant_offset_int(context, output_module, input_module, source->base.next, ok);
-            size_t source_offset = link_constant_offset(context, output_module, input_module, source->source, ok);
-            meta_src_constant *meta = (meta_src_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev;
-            meta->base.next = next;
-            meta->source = source_offset;
-            break;
-        }
-        case META_FILE: {
-            meta_file_constant *source = (meta_file_constant *)entry;
-            int prev = link_constant_offset_int(context, output_module, input_module, source->base.prev, ok);
-            int next = link_constant_offset_int(context, output_module, input_module, source->base.next, ok);
-            size_t file_offset = link_constant_offset(context, output_module, input_module, source->file, ok);
-            meta_file_constant *meta = (meta_file_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev;
-            meta->base.next = next;
-            meta->file = file_offset;
-            break;
-        }
-        case META_FUNC: {
-            meta_func_constant *source = (meta_func_constant *)entry;
-            int prev = link_constant_offset_int(context, output_module, input_module, source->base.prev, ok);
-            int next = link_constant_offset_int(context, output_module, input_module, source->base.next, ok);
-            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
-            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
-            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
-            size_t func = link_constant_offset(context, output_module, input_module, source->func, ok);
-            size_t args = link_constant_offset(context, output_module, input_module, source->args, ok);
-            size_t inliner = link_constant_offset(context, output_module, input_module, source->inliner, ok);
-            meta_func_constant *meta = (meta_func_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev;
-            meta->base.next = next;
-            meta->symbol = symbol;
-            meta->option = option;
-            meta->type = type;
-            meta->func = func;
-            meta->args = args;
-            meta->inliner = inliner;
-            break;
-        }
-        case META_REG: {
-            meta_reg_constant *source = (meta_reg_constant *)entry;
-            int prev = link_constant_offset_int(context, output_module, input_module, source->base.prev, ok);
-            int next = link_constant_offset_int(context, output_module, input_module, source->base.next, ok);
-            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
-            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
-            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
-            meta_reg_constant *meta = (meta_reg_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev;
-            meta->base.next = next;
-            meta->symbol = symbol;
-            meta->option = option;
-            meta->type = type;
-            break;
-        }
-        case META_CONST: {
-            meta_const_constant *source = (meta_const_constant *)entry;
-            int prev = link_constant_offset_int(context, output_module, input_module, source->base.prev, ok);
-            int next = link_constant_offset_int(context, output_module, input_module, source->base.next, ok);
-            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
-            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
-            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
-            size_t constant = link_constant_offset(context, output_module, input_module, source->constant, ok);
-            meta_const_constant *meta = (meta_const_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev;
-            meta->base.next = next;
-            meta->symbol = symbol;
-            meta->option = option;
-            meta->type = type;
-            meta->constant = constant;
-            break;
-        }
-        case META_CLEAR: {
-            meta_clear_constant *source = (meta_clear_constant *)entry;
-            int prev = link_constant_offset_int(context, output_module, input_module, source->base.prev, ok);
-            int next = link_constant_offset_int(context, output_module, input_module, source->base.next, ok);
-            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
-            meta_clear_constant *meta = (meta_clear_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev;
-            meta->base.next = next;
-            meta->symbol = symbol;
-            break;
-        }
-        case META_CLASS: {
-            meta_class_constant *source = (meta_class_constant *)entry;
-            int prev = link_constant_offset_int(context, output_module, input_module, source->base.prev, ok);
-            int next = link_constant_offset_int(context, output_module, input_module, source->base.next, ok);
-            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
-            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
-            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
-            meta_class_constant *meta = (meta_class_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev;
-            meta->base.next = next;
-            meta->symbol = symbol;
-            meta->option = option;
-            meta->type = type;
-            break;
-        }
-        case META_ATTR: {
-            meta_attr_constant *source = (meta_attr_constant *)entry;
-            int prev = link_constant_offset_int(context, output_module, input_module, source->base.prev, ok);
-            int next = link_constant_offset_int(context, output_module, input_module, source->base.next, ok);
-            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
-            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
-            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
-            meta_attr_constant *meta = (meta_attr_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev;
-            meta->base.next = next;
-            meta->symbol = symbol;
-            meta->option = option;
-            meta->type = type;
-            break;
-        }
-        case META_INTERFACE: {
-            meta_interface_constant *source = (meta_interface_constant *)entry;
-            int prev = link_constant_offset_int(context, output_module, input_module, source->base.prev, ok);
-            int next = link_constant_offset_int(context, output_module, input_module, source->base.next, ok);
-            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
-            size_t option = link_constant_offset(context, output_module, input_module, source->option, ok);
-            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
-            meta_interface_constant *meta = (meta_interface_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev;
-            meta->base.next = next;
-            meta->symbol = symbol;
-            meta->option = option;
-            meta->type = type;
-            break;
-        }
-        case META_IMPLEMENTS: {
-            meta_implements_constant *source = (meta_implements_constant *)entry;
-            int prev = link_constant_offset_int(context, output_module, input_module, source->base.prev, ok);
-            int next = link_constant_offset_int(context, output_module, input_module, source->base.next, ok);
-            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
-            size_t interface_symbol = link_constant_offset(context, output_module, input_module, source->interface_symbol, ok);
-            meta_implements_constant *meta = (meta_implements_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev;
-            meta->base.next = next;
-            meta->symbol = symbol;
-            meta->interface_symbol = interface_symbol;
-            break;
-        }
+        case META_SRC:
+        case META_FILE:
+        case META_FUNC:
+        case META_REG:
+        case META_CONST:
+        case META_CLEAR:
+        case META_CLASS:
+        case META_ATTR:
+        case META_INTERFACE:
+        case META_IMPLEMENTS:
         case META_MEMBER: {
-            meta_member_constant *source = (meta_member_constant *)entry;
-            int prev = link_constant_offset_int(context, output_module, input_module, source->base.prev, ok);
-            int next = link_constant_offset_int(context, output_module, input_module, source->base.next, ok);
-            size_t owner = link_constant_offset(context, output_module, input_module, source->owner, ok);
-            size_t kind = link_constant_offset(context, output_module, input_module, source->kind, ok);
-            size_t member = link_constant_offset(context, output_module, input_module, source->member, ok);
-            size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
-            size_t args = link_constant_offset(context, output_module, input_module, source->args, ok);
-            meta_member_constant *meta = (meta_member_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev;
-            meta->base.next = next;
-            meta->owner = owner;
-            meta->kind = kind;
-            meta->member = member;
-            meta->type = type;
-            meta->args = args;
+            meta_entry *meta = (meta_entry *)entry;
+            int prev = link_constant_offset_int(context, output_module, input_module, meta->prev, ok);
+            int next = link_constant_offset_int(context, output_module, input_module, meta->next, ok);
+            if (!rewrite_meta_constant(context, output_module, input_module, entry, new_offset, prev, next, ok)) {
+                return 0;
+            }
             break;
         }
         default:
@@ -1086,7 +1246,7 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
         output_module->module->header.expose_head =
                 link_constant_offset_int(context, output_module, input, input->header.expose_head, &ok);
         output_module->module->header.meta_head =
-                link_constant_offset_int(context, output_module, input, input->header.meta_head, &ok);
+                link_meta_chain(context, output_module, input, input->header.meta_head, &ok);
         if (!ok) return 0;
     }
 
@@ -1218,10 +1378,11 @@ static void print_help(void) {
     printf("Usage: rxlink [options] input_file [input_file ...]\n");
     printf("Options:\n");
     printf("  -o output_file  Linked output file\n");
-    printf("  -c control_file Control file with INPUT/ROOT/INCLUDE/OMIT/OUTPUT/MAP\n");
+    printf("  -c control_file Control file with INPUT/ROOT/INCLUDE/OMIT/OUTPUT/MAP/STRIP\n");
     printf("  -r root_member  Root module selector (may be repeated)\n");
     printf("  -m map_file     Write a simple link map\n");
     printf("  -l location     Working location for input/output resolution\n");
+    printf("  -s              Strip source/file metadata from linked output\n");
     printf("  -d              Debug mode\n");
     printf("  -h              Help\n");
 }
@@ -1258,6 +1419,9 @@ int main(int argc, char *argv[]) {
             case 'M':
                 if (++argi >= argc || !set_single_path(&config.map_path, argv[argi])) goto fail;
                 break;
+            case 'S':
+                config.strip_source_metadata = 1;
+                break;
             case 'L':
                 if (++argi >= argc) goto fail;
                 config.location = argv[argi];
@@ -1278,6 +1442,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (control_path && !parse_control_file(&config, control_path)) goto fail;
+    build_context.strip_source_metadata = config.strip_source_metadata;
 
     while (argi < argc) {
         if (!string_list_append(&config.inputs, argv[argi++])) goto fail;

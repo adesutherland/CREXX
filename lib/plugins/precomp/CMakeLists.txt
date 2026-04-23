@@ -13,13 +13,17 @@ add_static_plugin_target(precomp precomp.c)
 add_dynamic_plugin_target(precomp precomp.c)
 
 add_custom_command(
+        BYPRODUCTS
+                ${CMAKE_CURRENT_BINARY_DIR}/rxpp.rxbin
+                ${CMAKE_CURRENT_BINARY_DIR}/rxpp_linked.rxbin
         COMMAND $<TARGET_FILE:rxc> -i "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}\"" -o rxpp ${CMAKE_CURRENT_SOURCE_DIR}/rxpp
         COMMAND $<TARGET_FILE:rxas> rxpp
-        COMMAND $<TARGET_FILE:rxcpack> rxpp ${CMAKE_BINARY_DIR}/bin/library
-        DEPENDS precomp rxas rxc rxpp.rexx library compiler_exit_bin rxcpack rxpa
+        COMMAND $<TARGET_FILE:rxlink> -s -o rxpp_linked rxpp ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND $<TARGET_FILE:rxcpack> -o rxpp rxpp_linked
+        DEPENDS precomp rxas rxc rxlink rxpp.rexx library compiler_exit_bin rxcpack rxpa
         OUTPUT rxpp.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "rxpp compile, assemble and package rxpp ..."
+        COMMENT "rxpp compile, assemble, link and package rxpp ..."
 )
 
 add_executable(rxpp rxpp.c)

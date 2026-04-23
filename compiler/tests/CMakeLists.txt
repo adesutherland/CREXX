@@ -66,6 +66,7 @@ if (ENABLE_PARSER_MODE)
 endif()
 
 enable_testing()
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
 
 # Compiler flags for optimization levels
 # Based on rxcpmain.c: -n is for No Optimising, and it's on by default.
@@ -418,6 +419,16 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
     # Opt script
+    set(OPT_LINK_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_opt_linked.cmake")
+    crexx_write_linked_runtime_script(
+            OUTPUT "${OPT_LINK_SCRIPT}"
+            NAME "${NAME}_run_opt"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            RUNNER "$<TARGET_FILE:rxvm>"
+            RXLINK "$<TARGET_FILE:rxlink>"
+            PROGRAM "${NAME}_run_opt.rxbin"
+            EXTRA_ARGS "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    )
     set(OPT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_opt.cmake")
     set(OPT_CONTENT "set(full_out \"\")\n")
     string(APPEND OPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"${NAME}_run_opt\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
@@ -427,10 +438,10 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
     string(APPEND OPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${NAME}_run_opt.rxbin\" \"${NAME}_run_opt\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
     string(APPEND OPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND OPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
-    
-    string(APPEND OPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${NAME}_run_opt.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+
+    string(APPEND OPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${OPT_LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
     string(APPEND OPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
-    string(APPEND OPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed: \${out}\")\nendif()\n")
+    string(APPEND OPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"linked rxvm failed: \${out}\")\nendif()\n")
     
     string(APPEND OPT_CONTENT "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out\" golden_out)\n")
     string(APPEND OPT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"\${full_out}\")\n")
@@ -441,6 +452,7 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
     add_test(NAME ${NAME}_run_opt
              COMMAND ${CMAKE_COMMAND} -P "${OPT_SCRIPT}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME}_run_opt PROPERTIES LABELS "linked_opt")
 endmacro()
 
 function(add_crexx_interface_import_run_test NAME MAIN_FILE DEP_FILE MODE)
@@ -457,9 +469,32 @@ function(add_crexx_interface_import_run_test NAME MAIN_FILE DEP_FILE MODE)
             set(TEST_SUFFIX "_run_opt")
         endif()
 
+        set(WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/${NAME}_${MODE}_${TEST_MODE}_ws")
+        if(TEST_MODE STREQUAL "opt")
+            set(LINK_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_${MODE}_${TEST_MODE}_linked.cmake")
+            if(MODE STREQUAL "source")
+                set(LINK_EXTRA_ARGS
+                        "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                        "${WORK_DIR}/${DEP_MODULE}${TEST_SUFFIX}.rxbin")
+            else()
+                set(LINK_EXTRA_ARGS
+                        "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                        "${WORK_DIR}/${DEP_MODULE}.rxbin")
+            endif()
+            crexx_write_linked_runtime_script(
+                    OUTPUT "${LINK_SCRIPT}"
+                    NAME "${NAME}${TEST_SUFFIX}"
+                    WORKING_DIRECTORY "${WORK_DIR}"
+                    RUNNER "$<TARGET_FILE:rxvm>"
+                    RXLINK "$<TARGET_FILE:rxlink>"
+                    PROGRAM "${WORK_DIR}/main${TEST_SUFFIX}.rxbin"
+                    EXTRA_ARGS ${LINK_EXTRA_ARGS}
+            )
+        endif()
+
         set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_${MODE}_${TEST_MODE}.cmake")
         set(SCRIPT_CONTENT "set(full_out \"\")\n")
-        string(APPEND SCRIPT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/${NAME}_${MODE}_${TEST_MODE}_ws\")\n")
+        string(APPEND SCRIPT_CONTENT "set(work \"${WORK_DIR}\")\n")
         string(APPEND SCRIPT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
         string(APPEND SCRIPT_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
         string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/${MAIN_FILE}\" \"\${work}/${MAIN_BASENAME}\" RESULT_VARIABLE res)\n")
@@ -480,7 +515,11 @@ function(add_crexx_interface_import_run_test NAME MAIN_FILE DEP_FILE MODE)
             string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${DEP_MODULE}${TEST_SUFFIX}.rxbin\" \"${DEP_MODULE}${TEST_SUFFIX}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
             string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on source-import dependency: \${out}\")\nendif()\n")
-            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            if(TEST_MODE STREQUAL "opt")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            else()
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            endif()
         else()
             string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_FLAG} -o \"${DEP_MODULE}${TEST_SUFFIX}\" \"\${work}/${DEP_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
@@ -495,7 +534,11 @@ function(add_crexx_interface_import_run_test NAME MAIN_FILE DEP_FILE MODE)
             string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"main${TEST_SUFFIX}.rxbin\" \"main${TEST_SUFFIX}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
             string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on binary-import main: \${out}\")\nendif()\n")
-            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_MODULE}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            if(TEST_MODE STREQUAL "opt")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            else()
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_MODULE}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            endif()
         endif()
 
         string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
@@ -510,7 +553,11 @@ function(add_crexx_interface_import_run_test NAME MAIN_FILE DEP_FILE MODE)
         add_test(NAME ${NAME}${TEST_SUFFIX}
                  COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+        if(TEST_MODE STREQUAL "opt")
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK} LABELS "linked_opt")
+        else()
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+        endif()
     endforeach()
 endfunction()
 
@@ -530,9 +577,34 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
             set(TEST_SUFFIX "_run_opt")
         endif()
 
+        set(WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/${NAME}_${MODE}_${TEST_MODE}_ws")
+        if(TEST_MODE STREQUAL "opt")
+            set(LINK_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_${MODE}_${TEST_MODE}_linked.cmake")
+            if(MODE STREQUAL "source")
+                set(LINK_EXTRA_ARGS
+                        "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                        "${WORK_DIR}/${DEP_A_MODULE}${TEST_SUFFIX}.rxbin"
+                        "${WORK_DIR}/${DEP_B_MODULE}${TEST_SUFFIX}.rxbin")
+            else()
+                set(LINK_EXTRA_ARGS
+                        "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                        "${WORK_DIR}/${DEP_A_MODULE}.rxbin"
+                        "${WORK_DIR}/${DEP_B_MODULE}.rxbin")
+            endif()
+            crexx_write_linked_runtime_script(
+                    OUTPUT "${LINK_SCRIPT}"
+                    NAME "${NAME}${TEST_SUFFIX}"
+                    WORKING_DIRECTORY "${WORK_DIR}"
+                    RUNNER "$<TARGET_FILE:rxvm>"
+                    RXLINK "$<TARGET_FILE:rxlink>"
+                    PROGRAM "${WORK_DIR}/main${TEST_SUFFIX}.rxbin"
+                    EXTRA_ARGS ${LINK_EXTRA_ARGS}
+            )
+        endif()
+
         set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_${MODE}_${TEST_MODE}.cmake")
         set(SCRIPT_CONTENT "set(full_out \"\")\n")
-        string(APPEND SCRIPT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/${NAME}_${MODE}_${TEST_MODE}_ws\")\n")
+        string(APPEND SCRIPT_CONTENT "set(work \"${WORK_DIR}\")\n")
         string(APPEND SCRIPT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
         string(APPEND SCRIPT_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
         string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/${MAIN_FILE}\" \"\${work}/${MAIN_BASENAME}\" RESULT_VARIABLE res)\n")
@@ -559,7 +631,11 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
                 string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
                 string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on source-import dependency ${DEP_MODULE}: \${out}\")\nendif()\n")
             endforeach()
-            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_A_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/${DEP_B_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            if(TEST_MODE STREQUAL "opt")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            else()
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_A_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/${DEP_B_MODULE}${TEST_SUFFIX}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            endif()
         else()
             foreach(DEP_SPEC IN ITEMS "${DEP_A_MODULE};${DEP_A_BASENAME}" "${DEP_B_MODULE};${DEP_B_BASENAME}")
                 list(GET DEP_SPEC 0 DEP_MODULE)
@@ -578,7 +654,11 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
             string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"main${TEST_SUFFIX}.rxbin\" \"main${TEST_SUFFIX}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
             string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
             string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on binary-import main: \${out}\")\nendif()\n")
-            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_A_MODULE}.rxbin\" \"\${work}/${DEP_B_MODULE}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            if(TEST_MODE STREQUAL "opt")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            else()
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${DEP_A_MODULE}.rxbin\" \"\${work}/${DEP_B_MODULE}.rxbin\" \"\${work}/main${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+            endif()
         endif()
 
         string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
@@ -593,7 +673,11 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
         add_test(NAME ${NAME}${TEST_SUFFIX}
                  COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+        if(TEST_MODE STREQUAL "opt")
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK} LABELS "linked_opt")
+        else()
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+        endif()
     endforeach()
 endfunction()
 
@@ -609,9 +693,23 @@ function(add_crexx_isolated_run_test NAME SOURCE_FILE)
             set(TEST_SUFFIX "_run_opt")
         endif()
 
+        set(WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/${NAME}_isolated_${TEST_MODE}_ws")
+        if(TEST_MODE STREQUAL "opt")
+            set(LINK_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_isolated_${TEST_MODE}_linked.cmake")
+            crexx_write_linked_runtime_script(
+                    OUTPUT "${LINK_SCRIPT}"
+                    NAME "${NAME}${TEST_SUFFIX}"
+                    WORKING_DIRECTORY "${WORK_DIR}"
+                    RUNNER "$<TARGET_FILE:rxvm>"
+                    RXLINK "$<TARGET_FILE:rxlink>"
+                    PROGRAM "${WORK_DIR}/${NAME}${TEST_SUFFIX}.rxbin"
+                    EXTRA_ARGS "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+            )
+        endif()
+
         set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_isolated_${TEST_MODE}.cmake")
         set(SCRIPT_CONTENT "set(full_out \"\")\n")
-        string(APPEND SCRIPT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/${NAME}_isolated_${TEST_MODE}_ws\")\n")
+        string(APPEND SCRIPT_CONTENT "set(work \"${WORK_DIR}\")\n")
         string(APPEND SCRIPT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
         string(APPEND SCRIPT_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
         string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\" \"\${work}/${SOURCE_BASENAME}\" RESULT_VARIABLE res)\n")
@@ -622,9 +720,13 @@ function(add_crexx_isolated_run_test NAME SOURCE_FILE)
         string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${NAME}${TEST_SUFFIX}.rxbin\" \"${NAME}${TEST_SUFFIX}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
         string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
         string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
-        string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${NAME}${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+        if(TEST_MODE STREQUAL "opt")
+            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+        else()
+            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${NAME}${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+        endif()
         string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
-        string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed: \${out}\")\nendif()\n")
+        string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"linked rxvm failed: \${out}\")\nendif()\n")
         string(APPEND SCRIPT_CONTENT "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out\" golden_out)\n")
         string(APPEND SCRIPT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"\${full_out}\")\n")
         string(APPEND SCRIPT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" golden_out \"\${golden_out}\")\n")
@@ -635,7 +737,11 @@ function(add_crexx_isolated_run_test NAME SOURCE_FILE)
         add_test(NAME ${NAME}${TEST_SUFFIX}
                  COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+        if(TEST_MODE STREQUAL "opt")
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK} LABELS "linked_opt")
+        else()
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+        endif()
     endforeach()
 endfunction()
 
@@ -651,9 +757,24 @@ function(add_crexx_isolated_run_fail_test NAME SOURCE_FILE)
             set(TEST_SUFFIX "_run_opt")
         endif()
 
+        set(WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/${NAME}_isolated_fail_${TEST_MODE}_ws")
+        if(TEST_MODE STREQUAL "opt")
+            set(LINK_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_isolated_fail_${TEST_MODE}_linked.cmake")
+            crexx_write_linked_runtime_script(
+                    OUTPUT "${LINK_SCRIPT}"
+                    NAME "${NAME}${TEST_SUFFIX}"
+                    WORKING_DIRECTORY "${WORK_DIR}"
+                    RUNNER "$<TARGET_FILE:rxvm>"
+                    RXLINK "$<TARGET_FILE:rxlink>"
+                    PROGRAM "${WORK_DIR}/${NAME}${TEST_SUFFIX}.rxbin"
+                    ALLOW_RUN_FAILURE
+                    EXTRA_ARGS "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+            )
+        endif()
+
         set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_isolated_fail_${TEST_MODE}.cmake")
         set(SCRIPT_CONTENT "set(full_out \"\")\n")
-        string(APPEND SCRIPT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/${NAME}_isolated_fail_${TEST_MODE}_ws\")\n")
+        string(APPEND SCRIPT_CONTENT "set(work \"${WORK_DIR}\")\n")
         string(APPEND SCRIPT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
         string(APPEND SCRIPT_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
         string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\" \"\${work}/${SOURCE_BASENAME}\" RESULT_VARIABLE res)\n")
@@ -664,7 +785,11 @@ function(add_crexx_isolated_run_fail_test NAME SOURCE_FILE)
         string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${NAME}${TEST_SUFFIX}.rxbin\" \"${NAME}${TEST_SUFFIX}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
         string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
         string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
-        string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${NAME}${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+        if(TEST_MODE STREQUAL "opt")
+            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+        else()
+            string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/${NAME}${TEST_SUFFIX}.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+        endif()
         string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
         string(APPEND SCRIPT_CONTENT "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out\" golden_out)\n")
         string(APPEND SCRIPT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"\${full_out}\")\n")
@@ -676,7 +801,11 @@ function(add_crexx_isolated_run_fail_test NAME SOURCE_FILE)
         add_test(NAME ${NAME}${TEST_SUFFIX}
                  COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+        if(TEST_MODE STREQUAL "opt")
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK} LABELS "linked_opt")
+        else()
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+        endif()
     endforeach()
 endfunction()
 
@@ -711,6 +840,17 @@ macro(add_crexx_run_args_test NAME SOURCE_FILE)
              COMMAND ${CMAKE_COMMAND} -P "${NOOPT_SCRIPT}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+    set(OPT_LINK_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_args_opt_linked.cmake")
+    crexx_write_linked_runtime_script(
+            OUTPUT "${OPT_LINK_SCRIPT}"
+            NAME "${NAME}_run_args_opt"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            RUNNER "$<TARGET_FILE:rxvm>"
+            RXLINK "$<TARGET_FILE:rxlink>"
+            PROGRAM "${NAME}_run_args_opt.rxbin"
+            EXTRA_ARGS "${CMAKE_BINARY_DIR}/bin/library.rxbin" -a ${PROGRAM_ARGS}
+    )
+
     set(OPT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_args_opt.cmake")
     set(OPT_CONTENT "set(full_out \"\")\n")
     string(APPEND OPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"${NAME}_run_args_opt\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
@@ -721,9 +861,9 @@ macro(add_crexx_run_args_test NAME SOURCE_FILE)
     string(APPEND OPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND OPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
 
-    string(APPEND OPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${NAME}_run_args_opt.rxbin\" -a${PROGRAM_ARGS_TEXT} OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND OPT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${OPT_LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
     string(APPEND OPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
-    string(APPEND OPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed: \${out}\")\nendif()\n")
+    string(APPEND OPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"linked rxvm failed: \${out}\")\nendif()\n")
 
     string(APPEND OPT_CONTENT "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out\" golden_out)\n")
     string(APPEND OPT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"\${full_out}\")\n")
@@ -734,6 +874,7 @@ macro(add_crexx_run_args_test NAME SOURCE_FILE)
     add_test(NAME ${NAME}_run_args_opt
              COMMAND ${CMAKE_COMMAND} -P "${OPT_SCRIPT}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME}_run_args_opt PROPERTIES LABELS "linked_opt")
 endmacro()
 
 add_crexx_run_test(repro_dotted_index rexx_src/repro_dotted_index.rexx)
