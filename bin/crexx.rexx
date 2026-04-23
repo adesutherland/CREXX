@@ -429,12 +429,22 @@ do i=1 to words(filenames)
     if isMacPlatform(platformUpper) then
       cc_command = cc_command ' -Wl,-search_paths_first -Wl,-headerpad_max_install_names'
     cc_command = cc_command ' -o 'outputStem
-    cc_command = cc_command ' -L'rxpath'bin'
-    cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lplatform'
-    cc_command = cc_command ' 'decstat
-    cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm'
-    if staticFlags <> '' then cc_command = cc_command staticFlags
     cc_command = cc_command ' 'outputStem'.c'
+    cc_command = cc_command ' -L'rxpath'bin'
+    if isMacPlatform(platformUpper) then do
+      cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lplatform'
+      cc_command = cc_command ' 'decstat
+      cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm'
+      if staticFlags <> '' then cc_command = cc_command staticFlags
+    end
+    else do
+      cc_command = cc_command ' -Wl,--start-group'
+      if staticFlags <> '' then cc_command = cc_command staticFlags
+      cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lplatform'
+      cc_command = cc_command ' 'decstat
+      cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm'
+      cc_command = cc_command ' -Wl,--end-group'
+    end
 
     if verbose>1 then
       do
