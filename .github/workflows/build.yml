@@ -317,26 +317,13 @@ jobs:
 
       - name: Delete releases older than 30 days
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           RELEASE_NAME_TO_CLEAN: "Development Snapshot"
+          AGE_LIMIT_DAYS: "30"
         run: |
-          AGE_LIMIT_DAYS=30
-          echo "Checking for releases named '$RELEASE_NAME_TO_CLEAN' older than $AGE_LIMIT_DAYS days..."
-          CUTOFF_SECONDS=$(date -d "-$AGE_LIMIT_DAYS days" +%s)
-          gh release list --json name,tagName,createdAt --jq '.[] | select(.name == env.RELEASE_NAME_TO_CLEAN)' | \
-          jq -c '.' | \
-          while read -r release_json; do
-            tag=$(echo "$release_json" | jq -r '.tagName')
-            createdAt=$(echo "$release_json" | jq -r '.createdAt')
-            release_seconds=$(date -d "$createdAt" +%s)
-            if (( release_seconds < CUTOFF_SECONDS )); then
-              echo "Deleting release with tag '$tag' (created on $createdAt)..."
-              gh release delete "$tag" --yes --cleanup-tag
-            else
-              echo "Keeping release with tag '$tag' (created on $createdAt)..."
-            fi
-          done
-          echo "Cleanup complete."
+          ./.github/scripts/cleanup-snapshot-releases.sh
 
   #**************************************************#
   # This job runs for pushes to 'master'
