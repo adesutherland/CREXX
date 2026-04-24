@@ -6,6 +6,8 @@
 
 #define rxpa_version "crexx-dev-260110"
 
+#include <stddef.h>
+
 // plugin debug set to 1 if needed, else 0  added by pej 28. OCT 2024
 //    debug is created in GETSTRING/GETINT/GETFLOAD calls and typically outputs the REXX input parameters
 // #define pluginDEBUG 0
@@ -29,6 +31,19 @@ typedef long long rxinteger;
 
 // Typedef for attribute value which is an opaque pointer
 typedef void* rxpa_attribute_value;
+
+#ifndef RXVM_NATIVE_PAYLOAD_OPS_DEFINED
+#define RXVM_NATIVE_PAYLOAD_OPS_DEFINED
+#define RXVM_NATIVE_PAYLOAD_FLAG_BITCOPY_SAFE 0x00000001u
+
+typedef struct rxvm_native_payload_ops {
+    const char *type_name;
+    void (*copy)(void *dest_value, void *source_value);
+    void (*finalize)(void *value);
+} rxvm_native_payload_ops;
+#endif
+
+typedef rxvm_native_payload_ops rxpa_native_payload_ops;
 
 // Typedef definition of a library function
 // Parameters are the number of arguments, an array of rxpa_attribute_value,
@@ -72,6 +87,15 @@ typedef void (*rxpa_func_setint)(rxpa_attribute_value attributeValue, rxinteger 
 typedef rxinteger (*rxpa_func_getint)(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
 typedef void (*rxpa_func_setfloat)(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
 typedef double (*rxpa_func_getfloat)(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
+typedef int (*rxpa_func_setnativepayload)(rxpa_attribute_value attributeValue,
+                                          const void *payload,
+                                          size_t length,
+                                          const rxpa_native_payload_ops *ops,
+                                          unsigned int flags); /* Set a native binary payload */
+typedef void* (*rxpa_func_getnativepayload)(rxpa_attribute_value attributeValue,
+                                            size_t *out_length,
+                                            const rxpa_native_payload_ops **out_ops,
+                                            unsigned int *out_flags); /* Get a native binary payload */
 
 // Array / Object Functions - these access the child attributes of an attribute value
 /* Get the number of child attributes */
@@ -106,6 +130,8 @@ struct rxpa_initctxptr {
     rxpa_func_getint getint;
     rxpa_func_setfloat setfloat;
     rxpa_func_getfloat getfloat;
+    rxpa_func_setnativepayload setnativepayload;
+    rxpa_func_getnativepayload getnativepayload;
     rxpa_func_getnumattrs getnumattrs;
     rxpa_func_setnumattrs setnumattrs;
     rxpa_func_getattr getattr;
@@ -163,6 +189,8 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define RETURNFLOAT(value) _rxpa_context->setfloat(RETURN,(value))
 #define GETFLOAT(attr) _rxpa_context->getfloat((attr))
 #define GETFARRAY(pnum,index) GETFLOAT(GETATTR(pnum, index))
+#define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) _rxpa_context->setnativepayload((attr),(payload),(length),(ops),(flags))
+#define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) _rxpa_context->getnativepayload((attr),(out_length),(out_ops),(out_flags))
 #define GETNUMATTRS(attr) _rxpa_context->getnumattrs((attr))
 #define GETARRAYHI(attr) _rxpa_context->getnumattrs((attr))
 #define SETNUMATTRS(attr, num) _rxpa_context->setnumattrs((attr),(num))
@@ -256,6 +284,11 @@ void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger value); /* Set a
 rxinteger rxpa_getint(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
 void rxpa_setfloat(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
 double rxpa_getfloat(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
+int rxpa_setnativepayload(rxpa_attribute_value attributeValue, const void *payload, size_t length,
+                          const rxpa_native_payload_ops *ops, unsigned int flags); /* Set a native binary payload */
+void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
+                            const rxpa_native_payload_ops **out_ops,
+                            unsigned int *out_flags); /* Get a native binary payload */
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue); /* Get the number of child attributes */
 void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs); /* Set the number of child attributes */
 rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger index); /* Get the nth child attribute */
@@ -290,6 +323,8 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define GETINT(attr) rxpa_getint((attr))
 #define SETFLOAT(attr, value) rxpa_setfloat((attr),(value))
 #define GETFLOAT(attr) rxpa_getfloat((attr))
+#define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) rxpa_setnativepayload((attr),(payload),(length),(ops),(flags))
+#define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) rxpa_getnativepayload((attr),(out_length),(out_ops),(out_flags))
 #define GETNUMATTRS(attr) rxpa_getnumattrs((attr))
 #define SETNUMATTRS(attr, num) rxpa_setnumattrs((attr),(num))
 #define GETATTR(attr, index) rxpa_getattr((attr),(index))

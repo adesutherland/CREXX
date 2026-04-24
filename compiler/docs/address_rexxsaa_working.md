@@ -1273,8 +1273,12 @@ Current provider routes:
 - hybrid Rexx/C: define the class/factory in Rexx and delegate selected
   methods to native functions declared through RXAS metadata
 - pure C: source-declarable at the contract level through RXPA metadata
-  macros, with object-construction helpers still to be designed for providers
-  that need to create typed Rexx objects entirely from C
+  macros. This means a native module can publish "there is a class/interface
+  with these factories and methods" so imports and type checks work. It does
+  not yet mean native C can allocate a fully typed Rexx object instance with
+  class identity and method dispatch. Providers that need full object creation
+  still need either a Rexx factory/class shim or a future RXPA construction
+  helper.
 
 Implemented pure-C declaration slice:
 
@@ -1294,7 +1298,16 @@ Implemented pure-C declaration slice:
 Recommended remaining pure-C follow-on:
 
 - add an RXPA object-construction API for native factories that need to return
-  typed class instances without a Rexx shim
+  typed class instances without a Rexx shim. This helper should cover the
+  currently missing operation: creating or obtaining a Rexx object that really
+  has the declared class/interface type, rather than just filling a primitive
+  RXPA return slot.
+- native-backed object payloads should use the VM binary payload slot plus
+  shared native payload operations when the payload owns C resources. The
+  provider must supply a finalizer and, for unique resources, a copy hook that
+  retains/clones/duplicates the resource. If no copy hook is supplied the VM
+  byte-copies the payload, so bit-copy safety becomes the provider's
+  responsibility.
 - consider ADDRESS-specific convenience macros once the lower-level contract
   remains stable
 - until native object construction exists, a hybrid Rexx provider class backed

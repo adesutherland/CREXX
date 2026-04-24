@@ -93,7 +93,7 @@ crexx_add_rexx_opt_matrix(
         NAME rxpa_dynlink_run
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink.rexx
         TARGET_GROUP rxpa_dynlink_run
-        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
         DEPENDS library _rxpa_dynlink
         RUNTIME_ARGS rx_rxpa_dynlink ${CMAKE_BINARY_DIR}/bin/library
 )
@@ -104,7 +104,7 @@ crexx_add_rexx_opt_matrix(
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink.rexx
         TARGET_GROUP rxpa_staticlink_run
         COMPILER_TARGET rxc_staticlink
-        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNNER testvm
         RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
@@ -196,9 +196,11 @@ set(FUNC_TESTS
         int_funcs
         float_funcs
         array_push_funcs
+        native_payload_funcs
 )
 set(OUTPUTS
         Signal
+        OK
         OK
         OK
         OK
@@ -216,7 +218,7 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
             NAME rxpa_${_rexxtest}_dynamic
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest_source}
             TARGET_GROUP rxpa_${_rexxtest}_dynamic
-            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+            IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
             DEPENDS library funcvm _testfuncs_dynamic
             RUNTIME_ARGS rx_testfuncs_dynamic ${CMAKE_BINARY_DIR}/bin/library
     )
@@ -231,7 +233,7 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
             NAME rxpa_${_rexxtest}_static
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest_source}
             TARGET_GROUP rxpa_${_rexxtest}_static
-            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+            IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
             DEPENDS library funcvm _testfuncs_dynamic
             RUNNER funcvm
             RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library

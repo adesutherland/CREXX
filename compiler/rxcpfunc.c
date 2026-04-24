@@ -1785,6 +1785,16 @@ void rxpa_setfloat(rxpa_attribute_value attributeValue, double value)  /* Set a 
 double rxpa_getfloat(rxpa_attribute_value attributeValue)  /* Get a float from an attribute value */
     { disablerFunction("rxpa_getfloat"); return 0.0; }
 
+int rxpa_setnativepayload(rxpa_attribute_value attributeValue, const void *payload, size_t length,
+                          const rxpa_native_payload_ops *ops,
+                          unsigned int flags)  /* Set a native binary payload */
+    { disablerFunction("rxpa_setnativepayload"); return -1; }
+
+void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
+                            const rxpa_native_payload_ops **out_ops,
+                            unsigned int *out_flags)  /* Get a native binary payload */
+    { disablerFunction("rxpa_getnativepayload"); return NULL; }
+
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue)  /* Get the number of child attributes */
     { disablerFunction("rxpa_getnumattrs"); return 0; }
 
@@ -1890,6 +1900,8 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
     rxpa_context.getint = rxpa_getint;
     rxpa_context.setfloat = rxpa_setfloat;
     rxpa_context.getfloat = rxpa_getfloat;
+    rxpa_context.setnativepayload = rxpa_setnativepayload;
+    rxpa_context.getnativepayload = rxpa_getnativepayload;
     rxpa_context.getnumattrs = rxpa_getnumattrs;
     rxpa_context.setnumattrs = rxpa_setnumattrs;
     rxpa_context.getattr = rxpa_getattr;

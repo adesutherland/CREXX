@@ -13,6 +13,10 @@ void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
 rxinteger rxvm_getint(rxpa_attribute_value attributeValue);
 void rxvm_setfloat(rxpa_attribute_value attributeValue, double double_value);
 double rxvm_getfloat(rxpa_attribute_value attributeValue);
+int rxvm_setnativepayload(rxpa_attribute_value attributeValue, const void *payload, size_t length,
+                          const rxpa_native_payload_ops *ops, unsigned int flags);
+void* rxvm_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
+                            const rxpa_native_payload_ops **out_ops, unsigned int *out_flags);
 rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue);
 void rxvm_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs);
 rxpa_attribute_value rxvm_getattr(rxpa_attribute_value attributeValue, rxinteger index);
@@ -65,6 +69,16 @@ void rxpa_setfloat(rxpa_attribute_value attributeValue, double value) {
 
 double rxpa_getfloat(rxpa_attribute_value attributeValue) {
     return rxvm_getfloat(attributeValue);
+}
+
+int rxpa_setnativepayload(rxpa_attribute_value attributeValue, const void *payload, size_t length,
+                          const rxpa_native_payload_ops *ops, unsigned int flags) {
+    return rxvm_setnativepayload(attributeValue, payload, length, ops, flags);
+}
+
+void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
+                            const rxpa_native_payload_ops **out_ops, unsigned int *out_flags) {
+    return rxvm_getnativepayload(attributeValue, out_length, out_ops, out_flags);
 }
 
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue) {

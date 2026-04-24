@@ -389,6 +389,17 @@ void rxvml_set_str(rxvml_value* v, const char* s, size_t len) {
     else set_null_string((value*)v, "");
 }
 
+int rxvml_set_native_payload(rxvml_value* v, const void* payload, size_t len,
+                             const rxvm_native_payload_ops* ops, unsigned int flags) {
+    return set_native_payload((value*)v, payload, len, ops, flags);
+}
+
+void* rxvml_get_native_payload(rxvml_value* v, size_t* out_len,
+                               const rxvm_native_payload_ops** out_ops,
+                               unsigned int* out_flags) {
+    return get_native_payload((value*)v, out_len, out_ops, out_flags);
+}
+
 rxvml_value* rxvml_object_new(rxvml_context* ctx, size_t num_attrs) {
     value* v = value_f();
     set_num_attributes(v, num_attrs);

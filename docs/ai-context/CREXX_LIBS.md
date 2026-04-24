@@ -55,6 +55,10 @@ The VM passes arguments as opaque handles mapped to internal VM registers. The R
 - `ARG(n)`: Retrieves the opaque handle for the *n*th argument.
 - `GETINT()`, `GETFLOAT()`, `GETSTRING()`: Extracts the native C value from a register handle.
 - `SETINT()`, `SETFLOAT()`, `SETSTRING()`: Writes a native C value into a target register.
+- `SETNATIVEPAYLOAD()` / `GETNATIVEPAYLOAD()`: Attach or read a hidden
+  native binary payload for object-shaped native values. Use this only with a
+  clear copy/finalizer contract; ordinary Rexx code still sees an object value,
+  not a C pointer.
 - `RETURN`: The specific target register designated for the function's return value.
 
 ### Error Handling
@@ -142,8 +146,81 @@ Available declaration macros:
 
 These declarations are consumed from both dynamic `.rxplugin` modules and
 static `DECL_ONLY` declaration libraries. They make contracts visible for type
-checking and runtime metadata discovery. Native factories that need to create
-typed Rexx objects entirely in C still need a future RXPA object-construction
-helper; today, use a Rexx factory shim for complete object creation. When a
-native procedure signature references a declared class or interface, place the
-class/interface declaration macros before the dependent `ADDPROC`.
+checking and runtime metadata discovery.
+
+Declaration is not construction. `ADDCLASS`, `ADDINTERFACE`,
+`ADDIMPLEMENTS`, and the member macros tell the compiler and VM that a contract
+exists, but they do not by themselves run a factory or stamp class identity on
+a return value. Existing RXPA return helpers such as `SETSTRING`, `SETINT`, and
+array attribute helpers fill a return value slot; factory/class construction is
+still a separate operation.
+
+That means a native procedure can advertise a typed signature, for example:
+
+```c
+ADDPROC(make_env, "demo.make", "b", ".environment", "");
+```
+
+but the C body must still create or receive an object value that has the right
+shape and class identity. For complete object creation today, use a small Rexx
+factory/class shim to create the typed Rexx object, and let that object
+delegate selected work to native C functions. A future RXPA helper should cover
+the pure-C operation of constructing/stamping a typed object directly.
+
+Ordering matters when a native procedure signature references a class or
+interface type. Put the relevant `ADDCLASS`/`ADDINTERFACE` metadata before the
+dependent `ADDPROC` so the compiler knows the type before it validates the
+procedure signature:
+
+```c
+LOADFUNCS
+ADDINTERFACE("demo.environment");
+ADDMETHOD("demo.environment", "describe", ".string", "");
+
+ADDPROC(make_env, "demo.make", "b", ".environment", "");
+ENDLOADFUNCS
+```
+
+### Native payload ownership
+
+When a native implementation needs to hide a C-side handle inside a Rexx object,
+the preferred physical storage is the value's binary payload. Attach shared
+static payload operations with `SETNATIVEPAYLOAD()` if the payload owns native
+resources:
+
+```c
+static const rxpa_native_payload_ops env_payload_ops;
+
+static void env_finalize(rxpa_attribute_value value) {
+    EnvHandle **slot = (EnvHandle **)GETNATIVEPAYLOAD(value, NULL, NULL, NULL);
+    if (slot && *slot) env_release(*slot);
+}
+
+static void env_copy(rxpa_attribute_value dest, rxpa_attribute_value source) {
+    EnvHandle **slot = (EnvHandle **)GETNATIVEPAYLOAD(source, NULL, NULL, NULL);
+    EnvHandle *copy = slot && *slot ? env_retain(*slot) : NULL;
+    SETNATIVEPAYLOAD(dest, &copy, sizeof(copy), &env_payload_ops, 0);
+}
+
+static const rxpa_native_payload_ops env_payload_ops = {
+    "demo.EnvHandle",
+    env_copy,
+    env_finalize
+};
+```
+
+The ops object is provided by the native module and shared across instances;
+the value stores only a pointer to it. The VM owns the per-value binary payload
+buffer. `SETNATIVEPAYLOAD()` mallocs VM-owned storage, copies the supplied
+payload bytes into it, and records the shared ops pointer and flags. Copy hooks
+must install the destination payload through `SETNATIVEPAYLOAD()` rather than
+storing externally allocated memory directly in the destination value. On
+`clear_value()`, the finalizer runs before the VM frees the binary buffer; the
+finalizer releases nested native resources but must not free the payload buffer
+itself. On `move_value()`, the buffer and ops pointer move together. On
+`copy_value()`, the VM calls the copy hook if set; if it is not set, the VM
+byte-copies the payload and copies the ops pointer. That fallback is only safe
+when the payload was deliberately designed to tolerate duplicate finalization,
+such as a registry handle or refcounted pointer. Use
+`RXVM_NATIVE_PAYLOAD_FLAG_BITCOPY_SAFE` to document that intent on such
+payloads.

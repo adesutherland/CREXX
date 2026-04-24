@@ -20,6 +20,10 @@ void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
 rxinteger rxvm_getint(rxpa_attribute_value attributeValue);
 void rxvm_setfloat(rxpa_attribute_value attributeValue, double double_value);
 double rxvm_getfloat(rxpa_attribute_value attributeValue);
+int rxvm_setnativepayload(rxpa_attribute_value attributeValue, const void *payload, size_t length,
+                          const rxpa_native_payload_ops *ops, unsigned int flags);
+void* rxvm_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
+                            const rxpa_native_payload_ops **out_ops, unsigned int *out_flags);
 rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue);
 void rxvm_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs);
 rxpa_attribute_value rxvm_getattr(rxpa_attribute_value attributeValue, rxinteger index);
@@ -654,6 +658,8 @@ int rxldmod(rxvm_context *context, char *file_name) {
             rxpa_functions.getint = rxvm_getint;
             rxpa_functions.setfloat = rxvm_setfloat;
             rxpa_functions.getfloat = rxvm_getfloat;
+            rxpa_functions.setnativepayload = rxvm_setnativepayload;
+            rxpa_functions.getnativepayload = rxvm_getnativepayload;
             rxpa_functions.getnumattrs = rxvm_getnumattrs;
             rxpa_functions.setnumattrs = rxvm_setnumattrs;
             rxpa_functions.getattr = rxvm_getattr;
@@ -1053,6 +1059,8 @@ int rxldmodp(rxvm_context *context) {
     rxpa_functions.getint = rxvm_getint;
     rxpa_functions.setfloat = rxvm_setfloat;
     rxpa_functions.getfloat = rxvm_getfloat;
+    rxpa_functions.setnativepayload = rxvm_setnativepayload;
+    rxpa_functions.getnativepayload = rxvm_getnativepayload;
     rxpa_functions.getnumattrs = rxvm_getnumattrs;
     rxpa_functions.setnumattrs = rxvm_setnumattrs;
     rxpa_functions.getattr = rxvm_getattr;
