@@ -9,6 +9,33 @@
 typedef struct rxvml_context rxvml_context;
 typedef value   rxvml_value;
 
+typedef struct rxvml_address_binding {
+    const char* kind;
+    const char* internal_name;
+    const char* external_alias;
+    const char* value;
+    const char* flags;
+} rxvml_address_binding;
+
+typedef struct rxvml_address_request {
+    const char* environment_name;
+    const char* command;
+    size_t binding_count;
+    const rxvml_address_binding* bindings;
+} rxvml_address_request;
+
+typedef struct rxvml_address_response {
+    int rc;
+    const char* condition_name;
+    const char* diagnostic;
+} rxvml_address_response;
+
+typedef int (*rxvml_address_callback)(
+    rxvml_context* ctx,
+    const rxvml_address_request* request,
+    rxvml_address_response* response,
+    void* userdata);
+
 /* Context lifecycle */
 rxvml_context* rxvml_create(const char* location, unsigned flags);
 void           rxvml_destroy(rxvml_context* ctx);
@@ -56,6 +83,12 @@ int rxvml_address_register_environment(
     rxvml_context* ctx,
     const char* env_name,
     rxvml_value* env_obj);
+
+int rxvml_address_register_callback_environment(
+    rxvml_context* ctx,
+    const char* env_name,
+    rxvml_address_callback callback,
+    void* userdata);
 
 int rxvml_address_set_environment(
     rxvml_context* ctx,

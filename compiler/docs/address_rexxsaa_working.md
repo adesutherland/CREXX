@@ -1047,26 +1047,124 @@ Rationale:
   using the real Level B interface dispatch model rather than an ad hoc
   pseudo-interface mechanism inside `ADDRESS` itself
 
-### Stage 3.3: unified native-backed environment objects
+### Stage 3.3: modern `rxvml` native address callback contract
+
+Status: implemented in debug build; verification green on 2026-04-23
 
 Primary goal:
 
-- preserve one environment object model while allowing environments whose
-  methods are implemented partly or wholly in native code
+- let a C host embed CREXX through `rxvml`, register a native callback-backed
+  address environment, start Rexx code, and receive calls from Rexx
+  `ADDRESS` dispatch without introducing a REXXSAA compatibility layer first
+
+Design intent:
+
+- the modern `rxvml` contract is canonical for this stage
+- REXXSAA source-compatible wrappers remain a longer-term adapter over this
+  modern contract
+- Rexx-written and native-backed environments still share one logical
+  `addressenvironment` object model
+- the C callback API should be simple enough for host applications and LLM
+  debugging clients to exercise directly
+- the first implementation should optimize for observability and testability,
+  not full compatibility coverage
 
 Deliverables:
 
-- define the recommended shape for a native-backed environment object:
-  - Rexx-visible object identity
-  - normal method dispatch
-  - object receiver passed as the first argument in the usual method call path
-- preserve one registry/current-environment model for Rexx-written and
-  native-backed environments
-- keep the source-level `ADDRESS` model unchanged while broadening runtime
-  implementation choices
-- allow proxy/adaptor objects where useful, but keep them inside the unified
-  object model rather than treating native environments as a separate class of
-  registration target
+- added a public `rxvml` callback registration surface:
+  - `rxvml_address_register_callback_environment(ctx, name, callback, userdata)`
+  - `rxvml_address_callback(ctx, request, response, userdata)`
+- defined small C request/response structs for the first callback contract:
+  - environment name
+  - command string
+  - binding count
+  - binding kind, internal name, external alias, value, and flags
+  - return code
+  - optional condition/diagnostic text
+- implemented the native callback path as a Rexx-visible
+  `nativeaddressenvironment` proxy that
+  implements `.addressenvironment`, rather than as a parallel environment
+  registry
+- kept `_register_address_environment(name, env_obj)` as the canonical runtime
+  registration path; the new `rxvml` helper should delegate into that path
+  after constructing or obtaining the proxy object
+- preserved current/default environment semantics:
+  - explicit `ADDRESS env` can still seed or switch the current environment
+  - implicit commands still dispatch to the current environment
+- added a deliberately simple dummy C host/client test that:
+  - creates an `rxvml_context`
+  - loads the standard library and a tiny Rexx fixture
+  - registers an `EDITOR` environment backed by a C callback
+  - runs Rexx code that calls `ADDRESS EDITOR`
+  - verifies explicit `ADDRESS`, implicit command dispatch after `ADDRESS
+    EDITOR`, binding/expose capture, and RC propagation
+- keep the dummy client boring and debugger-friendly:
+  - record call count
+  - record the last command
+  - record exposed bindings
+  - return deterministic RC values for known commands
+  - fail loudly with useful diagnostics when callback flow is not reached
+
+Implemented dummy Rexx fixture shape:
+
+```rexx
+address editor "OPEN demo.txt" expose buffer
+address editor
+"CURSOR 7 9"
+address "" "RETURN 42"
+```
+
+Implemented dummy callback behaviour:
+
+- `OPEN ...` records exposed bindings and returns `0`
+- `CURSOR` proves implicit command dispatch after `ADDRESS EDITOR`
+- `RETURN 42` returns `42` to prove callback RC propagation
+
+Implemented first C API shape:
+
+```c
+typedef struct rxvml_address_binding {
+    const char *kind;
+    const char *internal_name;
+    const char *external_alias;
+    const char *value;
+    const char *flags;
+} rxvml_address_binding;
+
+typedef struct rxvml_address_request {
+    const char *environment_name;
+    const char *command;
+    size_t binding_count;
+    const rxvml_address_binding *bindings;
+} rxvml_address_request;
+
+typedef struct rxvml_address_response {
+    int rc;
+    const char *condition_name;
+    const char *diagnostic;
+} rxvml_address_response;
+
+typedef int (*rxvml_address_callback)(
+    rxvml_context *ctx,
+    const rxvml_address_request *request,
+    rxvml_address_response *response,
+    void *userdata);
+```
+
+The string pointers supplied in `rxvml_address_request` are callback-duration
+views over VM values. A host that needs to retain them after the callback should
+copy them.
+
+Stage 3.3 exit criteria:
+
+- a C-only dummy host can register `EDITOR`, run Rexx, and observe
+  `ADDRESS EDITOR` callbacks
+- explicit and implicit ADDRESS dispatch both reach the native callback
+- exposed binding names/aliases/values are visible to the callback
+- callback RC propagates back to Rexx
+- existing Rexx-written environments (`SYSTEM`, `PATH`, `CMS`) still pass
+  their current tests
+- the public `rxvml` API remains independent of REXXSAA naming and ABI details
 
 Stage 3.2 prerequisite status:
 
@@ -1076,6 +1174,10 @@ Stage 3.2 prerequisite status:
 Explicitly deferred from Stage 3.3:
 
 - full REXXSAA subcommand registration compatibility
+- REXXSAA `RexxStart()` / `RexxRegisterSubcomExe()` style source-compatible
+  wrappers
+- full variable-pool writeback and `RexxVariablePool()` compatibility
+- redirect endpoint abstraction and host-side stream pumping
 - transport-specific remote adapters
 
 ### Stage 3.4: redirect endpoint abstraction
@@ -1233,6 +1335,25 @@ Deliverables:
     objects implementing that shared contract
   - bridge coverage now constructs the environment object through the exposed
     class factory before registering it through the canonical runtime path
+- 2026-04-23: Stage 3.3 direction approved and refined:
+  - the next implementation slice targets a modern `rxvml` native address
+    callback contract, not a REXXSAA compatibility layer
+  - the first proof/debug target is a simple C dummy host that registers an
+    `EDITOR` address environment and verifies Rexx `ADDRESS` calls back into C
+  - REXXSAA source-compatible wrappers remain a longer-term adapter over the
+    modern `rxvml` contract
+- 2026-04-23: Stage 3.3 implemented and verified:
+  - `rxvml.h` now exposes the native ADDRESS callback request/response
+    contract and `rxvml_address_register_callback_environment()`
+  - `rxvml.c` registers a static native `_rxsysb._native_address_execute`
+    trampoline, owns callback handles per `rxvml_context`, and delegates
+    registration through the canonical Rexx `_register_address_environment`
+    path via `.nativeaddressenvironment`
+  - `compiler/tests/src/test_address_callback_host.c` and
+    `compiler/tests/rexx_src/address_callback_host.rexx` provide the dummy
+    host/fixture for debugger-friendly validation
+  - focused ADDRESS/interface/bridge verification passed `82/82`
+  - full debug CTest passed `852/852`
 
 ## 10. Evidence and code anchors
 

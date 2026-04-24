@@ -1,6 +1,6 @@
 /* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
-namespace _rxsysb expose _address _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _noredir _redir2array _redir2string _array2redir _string2redir addressbinding addressrequest addressresponse addressenvironment systemaddressenvironment pathaddressenvironment cmsaddressenvironment
+namespace _rxsysb expose _address _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _noredir _redir2array _redir2string _array2redir _string2redir addressbinding addressrequest addressresponse addressenvironment systemaddressenvironment pathaddressenvironment cmsaddressenvironment nativeaddressenvironment
 import rxfnsb
 
 addressbinding: class
@@ -205,6 +205,20 @@ cmsaddressenvironment: class implements .addressenvironment
     if prefix4 = "TYPE" then return execute_system_command(request, "echo CMS TYPE DEMO")
 
     return unknown_command_response("CMS", request.get_command())
+
+nativeaddressenvironment: class implements .addressenvironment
+  _native_handle = .int
+
+  *: factory
+    arg native_handle = .int
+    _native_handle = native_handle
+    return
+
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    rc = .int
+    rc = _native_address_execute(_native_handle, request)
+    return .addressresponse(rc)
 
 /* This is the function that the compiler calls for the ADDRESS instruction */
 _address: procedure = .int

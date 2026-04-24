@@ -1216,6 +1216,25 @@ target_link_libraries(test_address_bridge PRIVATE rxvml rxpashim)
 target_include_directories(test_address_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
 add_dependencies(test_address_bridge library)
 
+add_custom_command(
+        OUTPUT address_callback_host.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_callback_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_callback_host.rexx
+        COMMAND $<TARGET_FILE:rxas> address_callback_host
+        DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_callback_host.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling address_callback_host.rexx ..."
+)
+
+add_custom_target(address_callback_host_bin DEPENDS address_callback_host.rxbin)
+
+add_executable(test_address_callback_host src/test_address_callback_host.c)
+target_link_libraries(test_address_callback_host PRIVATE rxvml rxpashim)
+target_include_directories(test_address_callback_host PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_compile_definitions(test_address_callback_host PRIVATE
+        CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
+        CREXX_TEST_ADDRESS_CALLBACK_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_callback_host.rxbin")
+add_dependencies(test_address_callback_host address_callback_host_bin library)
+
 add_executable(test_source_provenance src/test_source_provenance.c)
 target_link_libraries(test_source_provenance PRIVATE rxclib)
 target_include_directories(test_source_provenance PRIVATE
@@ -1289,6 +1308,8 @@ add_test(NAME address_bridge COMMAND test_address_bridge)
 set_tests_properties(address_bridge PROPERTIES
         LABELS "compiler;stage3"
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+add_test(NAME address_callback_host COMMAND test_address_callback_host)
+set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME source_provenance COMMAND test_source_provenance)
 set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")
 

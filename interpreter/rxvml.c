@@ -12,11 +12,18 @@ typedef struct rxvml_registry_entry {
     char class_name[256];
 } rxvml_registry_entry;
 
+typedef struct rxvml_address_callback_entry {
+    rxvml_address_callback callback;
+    void* userdata;
+} rxvml_address_callback_entry;
+
 struct rxvml_context {
     rxvm_context vm;
     const char* last_error;
     rxvml_registry_entry* registry;
     size_t registry_size;
+    rxvml_address_callback_entry* address_callbacks;
+    size_t address_callback_size;
 };
 
 /* rxvml_value is defined as an alias to value in the public header */
@@ -31,6 +38,181 @@ static proc_runtime* find_procedure(rxvm_context* ctx, const char* name) {
 }
 
 int rxvm_link(rxvm_context* ctx);
+void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args);
+
+static rxvml_context* rxvml_active_context = NULL;
+
+static const char* rxvml_value_cstr(value* v) {
+    if (!v) return "";
+    null_terminate_string_buffer(v);
+    return v->string_value ? v->string_value : "";
+}
+
+static void rxvml_reset_native_signal(rxpa_attribute_value signal) {
+    value* signal_value = (value*)signal;
+    if (!signal_value) return;
+    set_int(signal_value, SIGNAL_NONE);
+    set_null_string(signal_value, "");
+}
+
+static void rxvml_set_native_failure(rxpa_attribute_value signal, int code, const char* message) {
+    value* signal_value = (value*)signal;
+    if (!signal_value) return;
+    set_int(signal_value, code);
+    set_null_string(signal_value, message ? message : "");
+}
+
+static rxvml_address_callback_entry* rxvml_get_address_callback(
+    rxvml_context* ctx,
+    int handle) {
+
+    if (!ctx || handle <= 0 || handle > (int)ctx->address_callback_size) return NULL;
+    if (!ctx->address_callbacks[handle - 1].callback) return NULL;
+    return &ctx->address_callbacks[handle - 1];
+}
+
+static void rxvml_free_address_callback_handle(rxvml_context* ctx, int handle) {
+    rxvml_address_callback_entry* entry = rxvml_get_address_callback(ctx, handle);
+    if (!entry) return;
+    entry->callback = NULL;
+    entry->userdata = NULL;
+}
+
+static int rxvml_alloc_address_callback_handle(
+    rxvml_context* ctx,
+    rxvml_address_callback callback,
+    void* userdata) {
+
+    size_t i;
+
+    if (!ctx || !callback) return 0;
+
+    for (i = 0; i < ctx->address_callback_size; i++) {
+        if (!ctx->address_callbacks[i].callback) {
+            ctx->address_callbacks[i].callback = callback;
+            ctx->address_callbacks[i].userdata = userdata;
+            return (int)i + 1;
+        }
+    }
+
+    {
+        size_t old_size = ctx->address_callback_size;
+        size_t new_size = old_size == 0 ? 8 : old_size * 2;
+        rxvml_address_callback_entry* new_callbacks =
+            realloc(ctx->address_callbacks, sizeof(rxvml_address_callback_entry) * new_size);
+        if (!new_callbacks) return 0;
+
+        ctx->address_callbacks = new_callbacks;
+        for (i = old_size; i < new_size; i++) {
+            ctx->address_callbacks[i].callback = NULL;
+            ctx->address_callbacks[i].userdata = NULL;
+        }
+
+        ctx->address_callbacks[old_size].callback = callback;
+        ctx->address_callbacks[old_size].userdata = userdata;
+        ctx->address_callback_size = new_size;
+        return (int)old_size + 1;
+    }
+}
+
+static void rxvml_native_address_execute(
+    rxinteger argc,
+    rxpa_attribute_value* args,
+    rxpa_attribute_value ret,
+    rxpa_attribute_value signal) {
+
+    rxvml_context* ctx = rxvml_active_context;
+    rxvml_address_callback_entry* entry;
+    rxvml_address_request request;
+    rxvml_address_response response;
+    rxvml_address_binding* bindings = NULL;
+    value* request_value;
+    value* binding_array;
+    int handle;
+    int callback_rc;
+    size_t binding_count;
+    size_t i;
+
+    rxvml_reset_native_signal(signal);
+    if (ret) set_int((value*)ret, -1);
+
+    if (argc != 2 || !args) {
+        rxvml_set_native_failure(signal, SIGNAL_INVALID_ARGUMENTS, "native ADDRESS bridge expected handle and request");
+        return;
+    }
+
+    if (!ctx) {
+        rxvml_set_native_failure(signal, SIGNAL_FAILURE, "native ADDRESS bridge has no active rxvml context");
+        return;
+    }
+
+    handle = (int)((value*)args[0])->int_value;
+    entry = rxvml_get_address_callback(ctx, handle);
+    if (!entry) {
+        rxvml_set_native_failure(signal, SIGNAL_FAILURE, "native ADDRESS callback handle is not registered");
+        return;
+    }
+
+    request_value = (value*)args[1];
+    if (!request_value || request_value->num_attributes < 8) {
+        rxvml_set_native_failure(signal, SIGNAL_INVALID_ARGUMENTS, "native ADDRESS request object is malformed");
+        return;
+    }
+
+    if (request_value->attributes[0]->int_value < 0) {
+        rxvml_set_native_failure(signal, SIGNAL_INVALID_ARGUMENTS, "native ADDRESS request binding count is negative");
+        return;
+    }
+
+    /*
+     * Level B object attributes are emitted in metadata order, not source
+     * declaration order. These indexes match _rxsysb.addressrequest and
+     * _rxsysb.addressbinding metadata from lib/rxfnsb/rexx/_address.rexx.
+     */
+    binding_count = (size_t)request_value->attributes[0]->int_value;
+    binding_array = request_value->attributes[1];
+    if (!binding_array && binding_count > 0) {
+        rxvml_set_native_failure(signal, SIGNAL_INVALID_ARGUMENTS, "native ADDRESS request bindings are malformed");
+        return;
+    }
+    if (binding_array && binding_count > binding_array->num_attributes) {
+        binding_count = binding_array->num_attributes;
+    }
+
+    if (binding_count > 0) {
+        bindings = calloc(binding_count, sizeof(rxvml_address_binding));
+        if (!bindings) {
+            rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to allocate native ADDRESS binding view");
+            return;
+        }
+
+        for (i = 0; i < binding_count; i++) {
+            value* binding = binding_array->attributes[i];
+            if (binding && binding->num_attributes >= 5) {
+                bindings[i].external_alias = rxvml_value_cstr(binding->attributes[0]);
+                bindings[i].flags = rxvml_value_cstr(binding->attributes[1]);
+                bindings[i].internal_name = rxvml_value_cstr(binding->attributes[2]);
+                bindings[i].kind = rxvml_value_cstr(binding->attributes[3]);
+                bindings[i].value = rxvml_value_cstr(binding->attributes[4]);
+            }
+        }
+    }
+
+    request.command = rxvml_value_cstr(request_value->attributes[2]);
+    request.environment_name = rxvml_value_cstr(request_value->attributes[3]);
+    request.binding_count = binding_count;
+    request.bindings = bindings;
+
+    response.rc = 0;
+    response.condition_name = NULL;
+    response.diagnostic = NULL;
+
+    callback_rc = entry->callback(ctx, &request, &response, entry->userdata);
+    if (callback_rc != 0 && response.rc == 0) response.rc = callback_rc;
+
+    if (ret) set_int((value*)ret, (rxinteger)response.rc);
+    if (bindings) free(bindings);
+}
 
 rxvml_context* rxvml_create(const char* location, unsigned flags) {
     rxvml_context* ctx;
@@ -46,6 +228,16 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     ctx->last_error = NULL;
     ctx->registry = NULL;
     ctx->registry_size = 0;
+    ctx->address_callbacks = NULL;
+    ctx->address_callback_size = 0;
+
+    rxvm_addfunc(rxvml_native_address_execute, "_rxsysb._native_address_execute", 0, 0, 0);
+    if (rxldmodp(&ctx->vm) == -1) {
+        rxfremod(&ctx->vm);
+        free(ctx);
+        return NULL;
+    }
+
     return ctx;
 }
 
@@ -61,6 +253,7 @@ void rxvml_destroy(rxvml_context* ctx) {
         }
         free(ctx->registry);
     }
+    if (ctx->address_callbacks) free(ctx->address_callbacks);
     rxfremod(&ctx->vm);
     free(ctx);
 }
@@ -260,8 +453,11 @@ int rxvml_call_procedure(
     /* Run the VM */
     {
         char* dummy_argv[] = {"rxc_bridge_proc"};
+        rxvml_context* previous_active_context = rxvml_active_context;
+        rxvml_active_context = ctx;
         rxvm_prepare(&ctx->vm);
         run(&ctx->vm, 0, dummy_argv);
+        rxvml_active_context = previous_active_context;
     }
 
     if (response_out) {
@@ -327,8 +523,11 @@ int rxvml_call_method(
     /* Run the VM */
     {
         char* dummy_argv[] = {"rxc_plugin_method"};
+        rxvml_context* previous_active_context = rxvml_active_context;
+        rxvml_active_context = ctx;
         rxvm_prepare(&ctx->vm);
         run(&ctx->vm, 0, dummy_argv);
+        rxvml_active_context = previous_active_context;
     }
 
     if (response_out) {
@@ -428,6 +627,56 @@ int rxvml_address_register_environment(
 
     rxvml_value_free(name_arg);
     return rc_value;
+}
+
+int rxvml_address_register_callback_environment(
+    rxvml_context* ctx,
+    const char* env_name,
+    rxvml_address_callback callback,
+    void* userdata) {
+
+    rxvml_value* handle_arg = NULL;
+    rxvml_value* env_obj = NULL;
+    rxvml_value* factory_args[1];
+    int handle;
+    int register_rc;
+
+    if (!ctx || !env_name || !callback) {
+        if (ctx) ctx->last_error = "Invalid native address callback registration arguments";
+        return -1;
+    }
+
+    handle = rxvml_alloc_address_callback_handle(ctx, callback, userdata);
+    if (handle == 0) {
+        ctx->last_error = "Failed to allocate native address callback handle";
+        return -1;
+    }
+
+    handle_arg = rxvml_value_new(ctx);
+    if (!handle_arg) {
+        rxvml_free_address_callback_handle(ctx, handle);
+        ctx->last_error = "Failed to allocate native address callback factory argument";
+        return -1;
+    }
+    rxvml_set_int(handle_arg, handle);
+    factory_args[0] = handle_arg;
+
+    if (rxvml_call_factory(ctx, "_rxsysb.nativeaddressenvironment", 1, factory_args, &env_obj) != 0 || !env_obj) {
+        rxvml_value_free(handle_arg);
+        rxvml_free_address_callback_handle(ctx, handle);
+        if (!ctx->last_error) ctx->last_error = "Failed to create native address environment proxy";
+        return -1;
+    }
+
+    register_rc = rxvml_address_register_environment(ctx, env_name, env_obj);
+    rxvml_value_free(env_obj);
+    rxvml_value_free(handle_arg);
+
+    if (register_rc != 0) {
+        rxvml_free_address_callback_handle(ctx, handle);
+    }
+
+    return register_rc;
 }
 
 int rxvml_address_set_environment(
