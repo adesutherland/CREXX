@@ -101,6 +101,23 @@ static void normalize_symbol_label(ASTNode *node) {
     node->node_string_length = len - start;
 }
 
+static int node_is_inside_imported_file(ASTNode *node) {
+    while (node) {
+        if (node->node_type == IMPORTED_FILE) return 1;
+        if (node->node_type == PROGRAM_FILE) return 0;
+        node = node->parent;
+    }
+    return 0;
+}
+
+static int node_label_equals(ASTNode *node, const char *label) {
+    size_t label_len;
+    if (!node || !node->node_string || !label) return 0;
+    label_len = strlen(label);
+    return node->node_string_length == label_len &&
+           memcmp(node->node_string, label, label_len) == 0;
+}
+
 /* Step 2a
  * - Builds the Structure Symbol Table (Pass 1)
  *   Handles Namespaces, Classes, and Procedures.
@@ -157,7 +174,10 @@ walker_result structure_symbols_walker(walker_direction direction,
             if (symbol && symbol->scope == context->current_scope) {
                 /* If it's a different node, then it's a duplicate */
                 if (sym_trnd(symbol, 0)->node != node) {
-                    mknd_err(node, "DUPLICATE_SYMBOL");
+                    if (!node_is_inside_imported_file(node) ||
+                        !node_is_inside_imported_file(sym_trnd(symbol, 0)->node)) {
+                        mknd_err(node, "DUPLICATE_SYMBOL");
+                    }
                 }
             } else {
                 symbol = 0;
@@ -206,7 +226,11 @@ walker_result structure_symbols_walker(walker_direction direction,
             if (symbol && symbol->scope == context->current_scope) {
                 /* If it's a different node, then it's a duplicate */
                 if (sym_trnd(symbol, 0)->node != node) {
-                    mknd_err(node, "DUPLICATE_SYMBOL");
+                    if (!node_is_inside_imported_file(node) ||
+                        !node_is_inside_imported_file(sym_trnd(symbol, 0)->node) ||
+                        !node_label_equals(node, "main")) {
+                        mknd_err(node, "DUPLICATE_SYMBOL");
+                    }
                 }
             } else {
                 symbol = 0;

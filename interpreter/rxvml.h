@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include "rxvalue.h"
 
-#define RXVML_ABI_VERSION 1
+#define RXVML_ABI_VERSION 3
 #define RXVML_ADDRESS_ENVIRONMENT_INTERFACE "_rxsysb.addressenvironment"
 #define RXVML_ADDRESS_ENVIRONMENT_FACTORY_PROC "_rxsysb._new_address_environment"
 
@@ -24,12 +24,15 @@ typedef struct rxvml_address_request {
     const char* command;
     size_t binding_count;
     const rxvml_address_binding* bindings;
+    rxvml_value* sandbox;
 } rxvml_address_request;
 
 typedef struct rxvml_address_response {
     int rc;
     const char* condition_name;
     const char* diagnostic;
+    size_t updated_binding_count;
+    const rxvml_address_binding* updated_bindings;
 } rxvml_address_response;
 
 typedef int (*rxvml_address_callback)(
@@ -105,6 +108,13 @@ int rxvml_address_create_environment(
 int rxvml_address_set_environment(
     rxvml_context* ctx,
     const char* env_name);
+
+int rxvml_address_sandbox_get(
+    const rxvml_address_request* request,
+    const char* name,
+    char* out_value,
+    size_t out_value_len);
+
 
 /* Persistent Registry for Stateful Exits */
 int          rxvml_reg_alloc(rxvml_context* ctx, rxvml_value* v, const char* class_name);

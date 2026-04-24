@@ -64,9 +64,11 @@ The active lowering path is now the certified/system exit bridge in
 - `EXIT_EXTENDED` and `IMPLICIT_CMD` nodes can be lowered by the exit bridge.
 - the current `ADDRESS` lowering still targets:
   - `rc = _address(...)`
-- explicit `ADDRESS` currently requires both an environment and a command
-  expression
-- implicit command dispatch currently hardcodes `'SYSTEM'` as the environment
+- explicit `ADDRESS env` can set the current/default environment without
+  executing a command, and explicit `ADDRESS env command` still executes
+  immediately
+- implicit command dispatch uses the runtime current/default environment,
+  initially `SYSTEM`
 - redirect operands are still normalized through the existing helper calls:
   - `_noredir()`
   - `_string2redir()`
@@ -97,14 +99,17 @@ The current runtime path is:
 
 Important current facts:
 
-- `_address` currently ignores its `env` argument completely.
-- So `ADDRESS shell`, `ADDRESS cmd`, `ADDRESS system`, and any other
-  environment literal all currently use the same backend path.
-- there is no real runtime current/default address-environment state yet
-- `EXPOSE` on `ADDRESS` currently means "pass named variables as environment
-  variables to the spawned command", not "grant arbitrary access to the Rexx
-  variable pool".
-- On POSIX, `shellspawn()` uppercases exposed variable names before `setenv()`.
+- `_address` builds an `addressrequest` and dispatches it through the current
+  `.addressenvironment` provider.
+- `SYSTEM`, `COMMAND`, `CMD`, and `SHELL` use the spawn-backed system provider.
+- `PATH` uses its own provider object over the same spawn transport.
+- native `rxvml` hosts can register callback-backed providers through the same
+  factory/registration path.
+- `EXPOSE` on `ADDRESS` currently passes explicit string variable bindings to
+  the environment and applies explicit response updates back to those exposed
+  variables. This is not yet arbitrary variable-pool access.
+- On POSIX, the spawn path still uppercases exposed variable names before
+  `setenv()` when delegating through the system provider.
 
 ### 3.4 Shell behaviour is platform-dependent
 
@@ -165,8 +170,8 @@ Current limitations relevant to this programme:
   indices to hoist
 - that return format cannot express:
   - typed hoists
-  - aliases
-  - pools
+  - explicit exposure declarations
+  - sandbox declarations
   - contextual keyword positions
   - richer planning metadata
 
@@ -256,16 +261,17 @@ The following points are now approved for this programme.
 4. The exit framework must be able to inform the compiler about more than
    hoisted names. At minimum it needs richer information for:
    - contextual keywords
-   - typed exposures
-   - aliases
-   - pool exports
+   - explicit string-oriented exposures
+   - optional sandbox objects for command-processor state
    - editor/highlighter support
 5. The internal address-environment protocol should be separated from transport.
    A future `rexxsaa.h` adapter must be possible, but it must sit on top of the
    canonical modern CREXX protocol rather than define it.
-6. Compatibility-facing variable-pool operations still need support.
+6. Compatibility-facing variable-pool operations still need support through the
+   explicit sandbox contract.
 7. The preferred modern authoring model should remain explicit and
-   capability-based.
+   capability-based: named `EXPOSE` bindings for small exchanges, and
+   caller-supplied sandbox objects for broader command-processor workspaces.
 8. Redirect handling should evolve toward reusable endpoints that can later
    support pipelines built from Rexx, but the current phase only needs the
    abstraction layer and documented future potential.
@@ -315,8 +321,8 @@ Minimum information needed from that response:
 - `hoist` list
 - optional type metadata for hoisted symbols
 - contextual keyword information
-- aliases for exported names
-- pool exposure declarations
+- explicit exposure declarations
+- optional sandbox declaration
 - other per-occurrence planning data
 
 A good internal shape would be an object/class contract. If later needed for
@@ -339,7 +345,8 @@ Approved direction:
 - define a standard-shaped address environment contract
 - keep transport pluggable
 - keep compatibility-style variable-pool operations in the modern address
-  contract rather than only in an adapter layer
+  contract, but express them through an explicit sandbox object rather than
+  arbitrary access to the caller's local variables
 - keep current/default address-environment state in the runtime/library layer
   so explicit `ADDRESS env` can update it without inventing a compiler-only
   special case
@@ -348,7 +355,7 @@ That contract should be able to:
 
 - track and update the current/default address environment
 - receive command text
-- receive redirect and exposure plans
+- receive redirect plans, explicit exposure bindings, and an optional sandbox
 - execute or delegate the command
 - return RC and diagnostics
 - apply allowed exports back to the Rexx side
@@ -360,39 +367,93 @@ This would support:
 - a future REXXSAA adapter over the canonical internal protocol
 - a future JSON/socket adapter over the canonical internal protocol
 
-### 6.4 Exposure model
+### 6.4 Exposure and sandbox model
 
 Approved compatibility and preference split:
 
 - compatibility support must cover:
-  - explicit exposure forms such as `expose var`, `expose var as`, and
-    `expose pool`
-  - compatibility-style variable-pool operations where required
-- the preferred modern source-level direction is `expose var`
+  - explicit exposure of named string variables for small modern integrations
+  - a separate sandbox string-container for legacy Rexx and command processors
+    that expect a variable-pool-like workspace
+- the preferred command-processor direction is `sandbox`, because it gives
+  variable-pool-style behaviour a clear object boundary and does not expose the
+  caller's whole local scope
 
 Notes:
 
-- `var` is a list concept, not a single-name-only form
-- the external environment is expected to know the variable name and infer or
-  negotiate its role from command semantics where possible
+- explicit `EXPOSE` is a list concept, not a single-name-only form
+- explicit `EXPOSE` should keep internal and external names aligned for now;
+  aliasing is deferred unless a real use case demands it
+- explicit `EXPOSE` values are string-oriented; the near-term supported shapes
+  should be `.string`, `.string[]`, and the sandbox string-container interface
+- the external environment is expected to know exposed variable names and infer
+  or negotiate their role from command semantics where possible
 
 Interpretation:
 
-- `var` exports explicit variable capabilities
-- `var as` exports the same capability under a negotiated external name
-- `pool` exports a map-like object, not unrestricted caller namespace access
+- `EXPOSE name ...` exports explicit string variable capabilities and allows
+  returned updates only to those names
+- `SANDBOX pool` passes a controlled string map implementing the ADDRESS
+  sandbox interface
+- a sandbox key is just a string, so classic-style names such as `VALUE.3` are
+  represented as key `"VALUE.3"` mapped to a string value
+- sandbox access is intentionally broader than explicit `EXPOSE`, but is
+  confined to the supplied object; it is not unrestricted caller namespace
+  access
+
+Recommended syntax direction:
+
+```rexx
+address editor "GET CURSOR" expose row col
+address cms "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
+address cms sandbox a_pool
+```
+
+The third form sets the current/default `CMS` environment and the current
+default sandbox without executing a command. A later implicit command sent to
+that environment can then use the default sandbox. A command form with an
+explicit environment and `SANDBOX` clause also updates the current/default
+environment and sandbox before dispatch. This mirrors classic ADDRESS state:
+the command is sent now, and the selected environment/sandbox remain current
+for later implicit commands.
+
+Standard sandbox contract:
+
+- define a real Level B interface, working name `.addresssandbox`
+- provide a standard string-map class implementing that interface
+- the interface stores and returns strings; non-string callers must convert at
+  the boundary
+- the standard class must use case-insensitive key access, normalising names
+  such as `value.3`, `VALUE.3`, and `Value.3` to the same entry for classic
+  Rexx uppercase compatibility
+- the intended interface surface is fetch/get, set, drop, exists, and
+  iteration over keys for compatibility-style enumeration
+
+Tracer implementation note:
+
+- the current `.addresssandbox` interface exposes a single
+  `access(operation, name, value)` method so imported provider fixtures can
+  compile reliably while class/interface metadata import is still being
+  hardened
+- `.standardaddresssandbox` already provides the clearer `get`, `set`, `drop`,
+  `exists`, and `next` methods as class conveniences
+- after the compiler import/type work is cleaned up, the interface should move
+  to the clearer direct method surface and providers should be able to type
+  sandbox arguments directly as `.addresssandbox`
+
+Compatibility stance:
+
+- a future REXXSAA adapter should translate `RexxVariablePool()` and `SHVBLOCK`
+  operations onto the sandbox interface
+- Level C / classic Rexx assets should prefer sandbox over explicit `EXPOSE`
+  when they expect dynamic stem names, `VALUE.3`-style access, or variable-pool
+  enumeration
 
 Marker-based binding:
 
-- an embedded-SQL-style marker approach is approved as an additional mechanism
-  for community feedback and safety experiments
-- markers would constrain access to explicitly referenced variables
-- this should be treated as additive to, not automatically a replacement for,
-  `expose var`
-- the exact marker syntax should be proposed in Stage 1 with normal Rexx style
-  and typical syntax in mind
-- markers and `expose` bindings should merge into one internal list of Rexx
-  variables plus external aliases rather than remain separate internal models
+- embedded-SQL-style markers remain deferred/experimental
+- markers should not be part of the main ADDRESS operating model until explicit
+  `EXPOSE` and `SANDBOX` have proved sufficient or insufficient in real use
 
 ### 6.5 Redirect and pipeline model
 
@@ -411,12 +472,13 @@ Approved direction for this phase:
 1. Propose the exact compiler-facing data shape that replaces the current
    space-separated `pre_process()` string response.
 2. Define how compatibility-style variable-pool operations sit inside the
-   modern address contract.
-3. Propose exact marker syntax in a form that feels natural in Rexx source.
-4. Define the merged internal binding model so `expose` and marker references
-   feed one list of internal Rexx variables and external aliases.
-5. Define conflict and duplicate-handling rules inside that merged binding
-   list.
+   modern address contract through an explicit sandbox object.
+3. Define the explicit `EXPOSE` binding model for small string-oriented
+   integrations.
+4. Define the `SANDBOX` object contract for command processors and
+   compatibility-style variable-pool behaviour.
+5. Record marker syntax as a deferred experiment rather than part of the first
+   ADDRESS operating model.
 
 ### 7.1 Certified/system exit ownership proposal
 
@@ -516,16 +578,16 @@ Recommended `bindingplan` fields:
 
 - `kind`
   - `var`
-  - `pool`
-  - `compat_pool`
+  - `array`
+  - `sandbox`
 - `internal_name`
 - `external_alias`
 - `value_type`
 - `dimensions`
 - `provenance`
   - `expose`
-  - `marker`
-  - `compat`
+  - `sandbox`
+  - `marker` (deferred)
 - `flags`
 
 Recommended `keywordclaim` fields:
@@ -614,7 +676,8 @@ Recommended classes:
 - `rxcp.addressresponse`
 - `rxcp.addressbinding`
 - `rxcp.addressenvironment`
-- `rxcp.addresspool`
+- `rxcp.addresssandbox`
+- `rxcp.standardaddresssandbox`
 
 Recommended `addressenvironment` method shape:
 
@@ -684,10 +747,10 @@ Recommended `addressrequest` fields:
 - `environment_name`
 - `command`
 - `bindings = .addressbinding[]`
+- `sandbox = .addresssandbox`
 - `stdin_endpoint`
 - `stdout_endpoint`
 - `stderr_endpoint`
-- `compat_pool = .addresspool`
 - `flags`
 
 Recommended `addressresponse` fields:
@@ -701,27 +764,46 @@ Recommended `addressbinding` fields:
 
 - `kind`
   - `var`
-  - `pool`
-  - `compat_pool`
+  - `array`
 - `internal_name`
 - `external_alias`
 - `value`
 - `flags`
 
-Recommended `addresspool` methods:
+For the simplified ADDRESS model, `addressbinding` is for explicit `EXPOSE`
+bindings only. Sandbox access should not be represented as another binding
+kind; it is a separate object on the request.
 
-- `fetch(name)`
-- `set(name, value)`
-- `drop(name)`
-- `next(cursor)`
-- `exists(name)`
+Recommended `addresssandbox` methods:
+
+- near-term tracer interface:
+  - `access(operation, name, value)`
+- intended direct interface after compiler metadata cleanup:
+  - `get(name)`
+  - `set(name, value)`
+  - `drop(name)`
+  - `exists(name)`
+  - `next(cursor)` or an equivalent key-iteration method
+
+`operation` is case-insensitive and currently supports `GET`, `SET`, `DROP`,
+`EXISTS`, and `NEXT`. The standard sandbox class also exposes the direct
+methods as conveniences today, but cross-module providers should use
+`access(...)` through the `.addresssandbox` interface until the compiler import
+cleanup is complete.
+
+Case rules:
+
+- standard sandbox lookup is case-insensitive
+- keys are normalised to uppercase after trimming surrounding whitespace
+- this is intentional: it keeps `VALUE.3`, `value.3`, and `Value.3` compatible
+  with classic Rexx uppercase variable-pool expectations
 
 Compatibility statement:
 
 - compatibility-style variable-pool access should be represented through the
-  common contract, not as a separate hidden side channel
+  sandbox contract, not as a separate hidden side channel
 - a future `rexxsaa.h` adapter should translate `RexxVariablePool()` and
-  related behaviour onto `addresspool`
+  related behaviour onto `addresssandbox`
 
 Phase-1 implementation guidance:
 
@@ -742,37 +824,68 @@ Current-address state proposal:
 - external embedders should be able to seed or override this state through the
   current `rxvml` entry point
 
-### 7.5 Exposure syntax proposal
+### 7.5 Exposure and sandbox syntax proposal
 
-Preferred modern syntax:
+Preferred explicit exposure syntax:
 
 ```rexx
-address shell cmd expose var userid orderid
-address shell cmd expose var userid as "USERID"
-address shell cmd expose pool session
+address editor "GET CURSOR" expose row col
+address tool command expose status message
 ```
 
 Interpretation:
 
-- `expose var` declares explicit variable capabilities
-- `expose var ... as "alias"` declares explicit aliasing
-- `expose pool` declares a named map-like pool capability
+- `EXPOSE` declares exact variable capabilities by name
+- internal and external names are the same for now
+- values are string-oriented; string arrays can be added as an explicit binding
+  kind when needed
+- providers inspect the exposed names and return updates for names they
+  understand
+
+Preferred sandbox syntax:
+
+```rexx
+address cms "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
+address cms sandbox a_pool
+```
+
+Interpretation:
+
+- `SANDBOX` passes a caller-supplied string-container object implementing the
+  ADDRESS sandbox interface
+- the provider can read and write any keys in that sandbox object
+- keys are strings, so `VALUE.3`, `RESULT`, `RC`, or command-processor-specific
+  names are ordinary map keys
+- the no-command form sets the current/default address environment and current
+  default sandbox
+- the standard sandbox class performs case-insensitive lookup and stores keys
+  in uppercase form
 
 Compatibility stance:
 
-- compatibility-oriented environments may still use broader variable-pool
-  behaviour
-- the preferred modern authoring experience should still encourage explicit
-  `expose var` and `expose pool`
+- explicit `EXPOSE` remains useful for small, modern, safe integrations
+- `SANDBOX` is the preferred model for legacy Rexx assets, command processors,
+  dynamic stem names, and future REXXSAA variable-pool compatibility
+
+Native tracer stance:
+
+- `rxvml_address_request` now carries the sandbox object pointer
+- `rxvml_address_sandbox_get()` lets a native callback read from the standard
+  sandbox with the same case-insensitive key rules
+- native providers should not mutate the standard sandbox by relying on object
+  layout; native sandbox writes need a future method-call helper so updates go
+  through the `.addresssandbox` interface just like Rexx provider updates
 
 ### 7.6 Marker syntax proposal
 
 Proposal:
 
-- support host-variable style markers inside literal command text
-- markers are additive to `expose`, not a replacement for it
+- marker syntax is deferred until explicit `EXPOSE` and `SANDBOX` usage has
+  produced enough evidence
+- if markers return later, they should be additive to explicit `EXPOSE`, not a
+  replacement for sandbox
 
-Recommended syntax:
+Previously considered syntax:
 
 - `:name`
   - internal Rexx variable `name`
@@ -791,7 +904,7 @@ address cms "listfile :fn(FILE) :ft(TYPE) :fm(MODE)"
 address shell "run-tool --user :userid(USERID)"
 ```
 
-Recommended parsing rule:
+Potential parsing rule if revived:
 
 - markers should be recognized only inside literal command text segments that
   are available to the compiler exit during planning
@@ -806,45 +919,47 @@ Reasoning:
 - keeping marker discovery tied to compiler-visible literal text preserves the
   safety goal
 
-### 7.7 Merged binding model proposal
+### 7.7 Explicit binding and sandbox model proposal
 
 Proposal:
 
-- all explicit `expose` bindings and all marker-derived bindings should be
-  normalized into one binding list before runtime dispatch
-- the environment should see one list of:
+- all explicit `EXPOSE` names should be normalized into one binding list before
+  runtime dispatch
+- the environment should see one explicit binding list of:
   - internal Rexx names
-  - external aliases
+  - external names, currently the same as internal names while aliasing is
+    deferred
   - binding kinds
+- the environment should separately receive an optional sandbox object
+- sandbox access should not be converted into individual bindings
 
 Normalization rules:
 
-- marker-only references should implicitly create `var` bindings
-- explicit `expose` entries should add bindings even if no marker references
-  exist
+- explicit `EXPOSE` entries should add bindings even if no command text
+  references exist
 - exact duplicate bindings should be coalesced
 - the normalized uniqueness key should be:
   - `kind`
   - `internal_name`
   - `external_alias`
+- because aliasing is deferred, `external_alias` should equal `internal_name`
+  in the near-term implementation
 
 Conflict rules:
 
-- same external alias mapped to different internal names is a compile-time
-  error
-- same internal name mapped to multiple external aliases is allowed
-- an explicit alias wins over an implicit same-name alias when both describe the
-  same binding intent
-- conflict diagnostics should name both the internal name and the external
-  alias involved
+- duplicate exposed names should be coalesced
+- non-string explicit EXPOSE values should be rejected or converted only when a
+  later rule explicitly defines the conversion
+- same external alias mapped to different internal names remains a future
+  compile-time error if aliasing is reintroduced
 
 Result:
 
-- the runtime environment receives one coherent binding table
-- there is no separate internal model for marker bindings versus `expose`
-  bindings
-- compatibility pool capabilities can live alongside explicit bindings in the
-  same request object without being confused with them
+- the runtime environment receives one coherent explicit binding table plus one
+  optional sandbox object
+- explicit bindings cover small, intentional variable exchange
+- sandbox covers command-processor variable-pool behaviour without exposing
+  caller locals directly
 
 ### 7.8 Documentation scope proposal
 
@@ -877,19 +992,19 @@ Stage 1 deliverables:
 - define the common-class address environment protocol
 - define exposure semantics, compatibility boundaries, and security rules
 - define compatibility-style variable-pool support in the modern address
-  contract
-- propose marker-based binding syntax in a Rexx-appropriate style
-- define the merged binding model for `expose` and marker references
+  contract through the sandbox model
+- define explicit `EXPOSE` binding syntax and sandbox syntax
+- define how explicit bindings and the optional sandbox appear on
+  `addressrequest`
 - update compiler-exit documentation to match the certified/system-exit model
 
 Stage 1 exit criteria:
 
 - one approved proposal for the richer exit-planning response
-- one approved proposal for marker syntax, or an explicit decision not to ship
-  markers in the first implementation wave
-- one approved definition of the merged internal binding model
-- one approved statement of how compatibility pool operations appear in the
-  modern address contract
+- one approved proposal for explicit exposure syntax and sandbox syntax
+- one approved definition of the explicit binding model
+- one approved statement of how compatibility pool operations appear through
+  the sandbox contract
 - an agreed documentation update scope for compiler exits and `ADDRESS`
 
 ### Stage 2: compiler refactor
@@ -1176,6 +1291,8 @@ typedef struct rxvml_address_response {
     int rc;
     const char *condition_name;
     const char *diagnostic;
+    size_t updated_binding_count;
+    const rxvml_address_binding *updated_bindings;
 } rxvml_address_response;
 
 typedef int (*rxvml_address_callback)(
@@ -1187,14 +1304,20 @@ typedef int (*rxvml_address_callback)(
 
 The string pointers supplied in `rxvml_address_request` are callback-duration
 views over VM values. A host that needs to retain them after the callback should
-copy them.
+copy them. `updated_bindings` pointers supplied on `rxvml_address_response`
+only need to remain valid until the callback returns; `rxvml` copies them into
+the Rexx `addressresponse` object immediately.
 
 Stage 3.3 exit criteria:
 
 - a C-only dummy host can register `EDITOR`, run Rexx, and observe
   `ADDRESS EDITOR` callbacks
 - explicit and implicit ADDRESS dispatch both reach the native callback
-- exposed binding names/aliases/values are visible to the callback
+- exposed binding names and values are visible to the callback; the binding
+  shape still carries an alias/name field for future compatibility, but current
+  explicit `EXPOSE` keeps it equal to the internal name
+- callback-provided updated bindings can be written back to explicitly exposed
+  Rexx variables
 - callback RC propagates back to Rexx
 - existing Rexx-written environments (`SYSTEM`, `PATH`, `CMS`) still pass
   their current tests
@@ -1324,11 +1447,94 @@ Explicitly deferred from Stage 3.3:
 - full REXXSAA subcommand registration compatibility
 - REXXSAA `RexxStart()` / `RexxRegisterSubcomExe()` style source-compatible
   wrappers
-- full variable-pool writeback and `RexxVariablePool()` compatibility
+- full compatibility variable-pool operations and `RexxVariablePool()`
+  compatibility
+- sandbox interface implementation, standard sandbox class, and compatibility
+  pool enumeration
+- non-string EXPOSE writeback
 - redirect endpoint abstraction and host-side stream pumping
 - transport-specific remote adapters
 
-### Stage 3.4: redirect endpoint abstraction
+### Stage 3.4: explicit EXPOSE writeback
+
+Status: implemented in debug build; focused verification green on 2026-04-24
+
+Primary goal:
+
+- make `ADDRESS ... EXPOSE name` useful for host/editor experiments by letting
+  environments return explicit binding updates that `_address` applies back to
+  the exposed Rexx variables
+
+Implemented design:
+
+- `addressresponse` now carries `updated_bindings = .addressbinding[]`
+- `_address` applies only response updates whose `var` binding name or alias
+  matches a variable explicitly supplied through the `EXPOSE` tail
+- writeback is string-only for this tracer bullet, matching the current
+  compiler lowering of `arg expose ... = .string`
+- Rexx providers call `response.add_updated_binding(...)`
+- native callbacks set `response->updated_binding_count` and
+  `response->updated_bindings`; `rxvml` copies those callback-duration views
+  into the Rexx response object before returning from the native trampoline
+- no general variable-pool access is granted yet
+
+Verification coverage:
+
+- `address_cms_provider` proves pure Rexx provider writeback
+- `address_callback_host` proves native callback writeback
+- existing ADDRESS compiler-exit and library ADDRESS tests still pass
+
+### Stage 3.5: ADDRESS sandbox interface
+
+Primary goal:
+
+- introduce a controlled string-container object for command processors and
+  legacy Rexx compatibility without exposing arbitrary caller variables
+
+Planned syntax:
+
+```rexx
+address cms "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
+address cms sandbox a_pool
+```
+
+Implemented tracer deliverables:
+
+- defined the `.addresssandbox` interface
+- provided `.standardaddresssandbox`, a case-insensitive string-map
+  implementation
+- extended `addressrequest` with a sandbox object
+- extended the ADDRESS certified exit to parse `SANDBOX pool`
+- allowed `ADDRESS env SANDBOX pool` to set both current/default environment and
+  current/default sandbox without executing a command
+- kept explicit `EXPOSE` as a separate small-binding model
+- added Rexx CMS-provider tests showing sandbox read/write and response-update
+  application through the sandbox interface
+- added native callback-host coverage showing a C callback reading the supplied
+  standard sandbox through `rxvml_address_sandbox_get()`
+
+Non-goals for this stage:
+
+- arbitrary caller variable-pool access
+- full REXXSAA adapter surface
+- typed object exchange through `ADDRESS`
+- direct native mutation of sandbox object internals
+
+Known follow-ups recorded for the next compiler/runtime cleanup:
+
+- move `.addresssandbox` from the generic `access(operation, name, value)`
+  tracer interface to the direct `get/set/drop/exists/next` interface once
+  imported interface metadata is robust enough across library/provider modules
+- allow `_address_with_sandbox` and related wrappers to type the sandbox
+  parameter as `.addresssandbox` directly instead of accepting `.object` and
+  casting internally
+- harden class/interface metadata import so repeated imported stubs do not
+  leak duplicate synthetic `main` procedures or duplicate class/interface
+  declarations into validation/linking
+- add a native method-call helper for sandbox writes; native providers must
+  update via the interface contract, not by mutating class layout directly
+
+### Stage 3.6: redirect endpoint abstraction
 
 Primary goal:
 
@@ -1356,25 +1562,27 @@ Deliverables:
 - 2026-04-17: core direction approved:
   - `ADDRESS` may become a certified exit
   - the internal modern protocol is canonical
-  - the preferred exposure direction is explicit `expose var`
+  - the initial exposure direction was explicit `EXPOSE`; later sandbox work
+    refined this into `EXPOSE` for small bindings and `SANDBOX` for
+    command-processor state
   - compatibility support remains mandatory
   - redirect work is abstraction-only in this phase
   - address environments should follow a common class shape
 - 2026-04-17: further direction approved:
   - compatibility-style variable-pool support belongs in the modern address
     contract
-  - marker-based binding should be prototyped
-  - marker syntax should be proposed during Stage 1
-  - `expose` and marker bindings should merge into one internal list of Rexx
-    variables and external aliases
+  - marker-based binding was considered for prototype feedback, but has since
+    been deferred behind explicit `EXPOSE` and `SANDBOX`
+  - compatibility-style variable pools should now be expressed through an
+    explicit sandbox object
   - Stage 1 is now in progress
 - 2026-04-17: Stage 1 proposals documented:
   - certified/system exit ownership model
   - structured planning contract
   - contextual keyword claim model
-  - common address request/response/pool contract
-  - preferred `expose` forms and marker syntax proposal
-  - merged binding normalization and conflict rules
+  - common address request/response/environment contract
+  - preferred explicit exposure and sandbox syntax
+  - explicit binding normalization and sandbox boundary rules
 - 2026-04-17: Stage 2 implementation landed:
   - `ADDRESS` and `PARSE` now run through the certified exit path
   - structured `exitplan` planning is active for binding hoists and contextual
@@ -1454,7 +1662,9 @@ Deliverables:
     - Stage 3.1 Rexx environment proof of concept
     - Stage 3.2 `rxvml` startup registration
     - Stage 3.3 generalized Rexx/non-Rexx environment model
-    - Stage 3.4 redirect endpoint abstraction
+    - Stage 3.4 explicit EXPOSE writeback
+    - Stage 3.5 ADDRESS sandbox interface
+    - Stage 3.6 redirect endpoint abstraction
 - 2026-04-18: Stage 3.1 prototype implemented:
   - `_address(...)` now dispatches through runtime request/response objects
   - runtime now owns the current/default address environment and named
@@ -1529,6 +1739,34 @@ Deliverables:
     constant pool for runtime factory/provider discovery
   - focused RXPA/ADDRESS/interface coverage passed `89/89`
   - full debug CTest passed `860/860`
+- 2026-04-24: Stage 3.4 explicit EXPOSE writeback implemented:
+  - `addressresponse` now carries updated binding objects
+  - `_address` applies returned `var` updates only to variables explicitly
+    supplied through `ADDRESS ... EXPOSE`
+  - `rxvml_address_response` now includes callback-duration updated binding
+    views, copied into the Rexx response object by the native trampoline
+  - CMS/Rexx and native callback fixtures both prove exposed `buffer`
+    writeback
+  - focused ADDRESS writeback coverage passed `11/11`
+- 2026-04-24: sandbox direction accepted for the next ADDRESS design slice:
+  - `SANDBOX` is now the preferred model for command processors, legacy Rexx
+    assets, dynamic stems, and future REXXSAA variable-pool compatibility
+  - explicit `EXPOSE` remains as the small string-binding model for modern
+    integrations
+  - marker/alias ideas are deferred until the simpler operating model has been
+    tested with real providers
+- 2026-04-24: Stage 3.5 sandbox tracer implemented:
+  - ADDRESS now accepts `SANDBOX pool` and `ADDRESS env SANDBOX pool`
+  - `addressrequest` carries a sandbox object through Rexx and native
+    dispatch
+  - `.standardaddresssandbox` provides case-insensitive string-map access for
+    classic Rexx-style keys such as `VALUE.3`
+  - Rexx CMS-provider tests prove method-based sandbox read/write and
+    response-applied sandbox updates
+  - native callback tests prove a C caller can read the supplied standard
+    sandbox through `rxvml_address_sandbox_get()`
+  - compiler/import issues discovered by this tracer are recorded as the next
+    cleanup slice rather than expanded in this stage
 
 ## 10. Evidence and code anchors
 

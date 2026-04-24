@@ -19,6 +19,44 @@ typedef struct rxvml_address_callback_entry {
     void* userdata;
 } rxvml_address_callback_entry;
 
+enum {
+    RXVML_ADDRESS_BINDING_EXTERNAL_ALIAS = 0,
+    RXVML_ADDRESS_BINDING_FLAGS = 1,
+    RXVML_ADDRESS_BINDING_INTERNAL_NAME = 2,
+    RXVML_ADDRESS_BINDING_KIND = 3,
+    RXVML_ADDRESS_BINDING_VALUE = 4,
+    RXVML_ADDRESS_BINDING_ATTR_COUNT = 5
+};
+
+enum {
+    RXVML_ADDRESS_RESPONSE_UPDATED_BINDING_COUNT = 4,
+    RXVML_ADDRESS_RESPONSE_UPDATED_BINDINGS = 5
+};
+
+enum {
+    RXVML_ADDRESS_REQUEST_BINDING_COUNT = 0,
+    RXVML_ADDRESS_REQUEST_BINDINGS = 1,
+    RXVML_ADDRESS_REQUEST_COMMAND = 2,
+    RXVML_ADDRESS_REQUEST_ENVIRONMENT_NAME = 3,
+    RXVML_ADDRESS_REQUEST_FLAGS = 4,
+    RXVML_ADDRESS_REQUEST_SANDBOX = 5,
+    RXVML_ADDRESS_REQUEST_STDERR_ENDPOINT = 6,
+    RXVML_ADDRESS_REQUEST_STDIN_ENDPOINT = 7,
+    RXVML_ADDRESS_REQUEST_STDOUT_ENDPOINT = 8,
+    RXVML_ADDRESS_REQUEST_ATTR_COUNT = 9
+};
+
+enum {
+    RXVML_STANDARD_ADDRESS_SANDBOX_KEY_COUNT = 0,
+    RXVML_STANDARD_ADDRESS_SANDBOX_KEYS = 1,
+    RXVML_STANDARD_ADDRESS_SANDBOX_PRESENT = 2,
+    RXVML_STANDARD_ADDRESS_SANDBOX_VALUES = 3,
+    RXVML_STANDARD_ADDRESS_SANDBOX_ATTR_COUNT = 4
+};
+
+static const char RXVML_ADDRESS_BINDING_TYPE_NAME[] = "_rxsysb.addressbinding";
+static const char RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME[] = "_rxsysb.standardaddresssandbox";
+
 struct rxvml_context {
     rxvm_context vm;
     const char* last_error;
@@ -50,6 +88,47 @@ static const char* rxvml_value_cstr(value* v) {
     return v->string_value ? v->string_value : "";
 }
 
+static void rxvml_set_value_cstr(value* v, const char* s) {
+    set_null_string(v, s ? s : "");
+}
+
+static void rxvml_populate_address_binding_value(value* binding_value, const rxvml_address_binding* binding) {
+    clear_value(binding_value);
+    value_init(binding_value);
+    binding_value->object_type_name = RXVML_ADDRESS_BINDING_TYPE_NAME;
+    binding_value->object_type_name_length = sizeof(RXVML_ADDRESS_BINDING_TYPE_NAME) - 1;
+    set_num_attributes(binding_value, RXVML_ADDRESS_BINDING_ATTR_COUNT);
+
+    rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_EXTERNAL_ALIAS], binding ? binding->external_alias : "");
+    rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_FLAGS], binding ? binding->flags : "");
+    rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_INTERNAL_NAME], binding ? binding->internal_name : "");
+    rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_KIND], binding ? binding->kind : "var");
+    rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_VALUE], binding ? binding->value : "");
+}
+
+static int rxvml_copy_address_response_updates(value* response_value, const rxvml_address_response* response) {
+    value* updated_bindings;
+    size_t i;
+
+    if (!response_value || !response) return -1;
+    if (response_value->num_attributes <= RXVML_ADDRESS_RESPONSE_UPDATED_BINDINGS) return -1;
+
+    updated_bindings = response_value->attributes[RXVML_ADDRESS_RESPONSE_UPDATED_BINDINGS];
+    if (!updated_bindings) return -1;
+
+    if (response->updated_binding_count > 0 && !response->updated_bindings) return -1;
+
+    set_int(response_value->attributes[RXVML_ADDRESS_RESPONSE_UPDATED_BINDING_COUNT],
+            (rxinteger)response->updated_binding_count);
+    set_num_attributes(updated_bindings, response->updated_binding_count);
+
+    for (i = 0; i < response->updated_binding_count; i++) {
+        rxvml_populate_address_binding_value(updated_bindings->attributes[i], &response->updated_bindings[i]);
+    }
+
+    return 0;
+}
+
 static void rxvml_normalize_address_name(const char* env_name, char* out, size_t out_size) {
     const unsigned char* start;
     const unsigned char* end;
@@ -69,6 +148,83 @@ static void rxvml_normalize_address_name(const char* env_name, char* out, size_t
         out[i++] = (char)toupper(*start++);
     }
     out[i] = 0;
+}
+
+static int rxvml_is_standard_address_sandbox(value* sandbox) {
+    if (!sandbox || !sandbox->object_type_name) return 0;
+    return sandbox->object_type_name_length == sizeof(RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME) - 1 &&
+           memcmp(sandbox->object_type_name,
+                  RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME,
+                  sandbox->object_type_name_length) == 0;
+}
+
+static void rxvml_normalize_sandbox_key(const char* name, char* out, size_t out_size) {
+    rxvml_normalize_address_name(name, out, out_size);
+}
+
+static int rxvml_standard_sandbox_find(value* sandbox, const char* name) {
+    char key[256];
+    value* key_count_value;
+    value* keys;
+    value* present;
+    rxinteger key_count;
+    rxinteger i;
+
+    if (!rxvml_is_standard_address_sandbox(sandbox)) return 0;
+    if (sandbox->num_attributes < RXVML_STANDARD_ADDRESS_SANDBOX_ATTR_COUNT) return 0;
+
+    key_count_value = sandbox->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_KEY_COUNT];
+    keys = sandbox->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_KEYS];
+    present = sandbox->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_PRESENT];
+    if (!key_count_value || !keys || !present) return 0;
+
+    rxvml_normalize_sandbox_key(name, key, sizeof(key));
+    if (key[0] == 0) return 0;
+
+    key_count = key_count_value->int_value;
+    if (key_count < 0) return 0;
+    if ((size_t)key_count > keys->num_attributes) key_count = (rxinteger)keys->num_attributes;
+    if ((size_t)key_count > present->num_attributes) key_count = (rxinteger)present->num_attributes;
+
+    for (i = 1; i <= key_count; i++) {
+        value* present_value = present->attributes[i - 1];
+        value* key_value = keys->attributes[i - 1];
+        if (!present_value || present_value->int_value != 1 || !key_value) continue;
+        if (strcmp(rxvml_value_cstr(key_value), key) == 0) return (int)i;
+    }
+
+    return 0;
+}
+
+int rxvml_address_sandbox_get(
+    const rxvml_address_request* request,
+    const char* name,
+    char* out_value,
+    size_t out_value_len) {
+
+    value* sandbox;
+    value* values;
+    int index;
+    const char* text;
+
+    if (out_value && out_value_len > 0) out_value[0] = 0;
+    if (!request || !request->sandbox || !out_value || out_value_len == 0) return -1;
+
+    sandbox = (value*)request->sandbox;
+    if (!rxvml_is_standard_address_sandbox(sandbox)) return -2;
+    if (sandbox->num_attributes < RXVML_STANDARD_ADDRESS_SANDBOX_ATTR_COUNT) return -2;
+
+    values = sandbox->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_VALUES];
+    if (!values) return -2;
+
+    index = rxvml_standard_sandbox_find(sandbox, name);
+    if (index <= 0 || (size_t)index > values->num_attributes) return 1;
+
+    text = rxvml_value_cstr(values->attributes[index - 1]);
+    if (!text) text = "";
+    strncpy(out_value, text, out_value_len - 1);
+    out_value[out_value_len - 1] = 0;
+    return 0;
 }
 
 static void rxvml_reset_native_signal(rxpa_attribute_value signal) {
@@ -193,6 +349,7 @@ static void rxvml_native_address_execute(
     rxvml_address_response response;
     rxvml_address_binding* bindings = NULL;
     value* request_value;
+    value* response_value;
     value* binding_array;
     int handle;
     int callback_rc;
@@ -202,8 +359,8 @@ static void rxvml_native_address_execute(
     rxvml_reset_native_signal(signal);
     if (ret) set_int((value*)ret, -1);
 
-    if (argc != 2 || !args) {
-        rxvml_set_native_failure(signal, SIGNAL_INVALID_ARGUMENTS, "native ADDRESS bridge expected handle and request");
+    if (argc != 3 || !args) {
+        rxvml_set_native_failure(signal, SIGNAL_INVALID_ARGUMENTS, "native ADDRESS bridge expected handle, request, and response");
         return;
     }
 
@@ -220,12 +377,13 @@ static void rxvml_native_address_execute(
     }
 
     request_value = (value*)args[1];
-    if (!request_value || request_value->num_attributes < 8) {
+    response_value = (value*)args[2];
+    if (!request_value || request_value->num_attributes < RXVML_ADDRESS_REQUEST_ATTR_COUNT) {
         rxvml_set_native_failure(signal, SIGNAL_INVALID_ARGUMENTS, "native ADDRESS request object is malformed");
         return;
     }
 
-    if (request_value->attributes[0]->int_value < 0) {
+    if (request_value->attributes[RXVML_ADDRESS_REQUEST_BINDING_COUNT]->int_value < 0) {
         rxvml_set_native_failure(signal, SIGNAL_INVALID_ARGUMENTS, "native ADDRESS request binding count is negative");
         return;
     }
@@ -235,8 +393,8 @@ static void rxvml_native_address_execute(
      * declaration order. These indexes match _rxsysb.addressrequest and
      * _rxsysb.addressbinding metadata from lib/rxfnsb/rexx/_address.rexx.
      */
-    binding_count = (size_t)request_value->attributes[0]->int_value;
-    binding_array = request_value->attributes[1];
+    binding_count = (size_t)request_value->attributes[RXVML_ADDRESS_REQUEST_BINDING_COUNT]->int_value;
+    binding_array = request_value->attributes[RXVML_ADDRESS_REQUEST_BINDINGS];
     if (!binding_array && binding_count > 0) {
         rxvml_set_native_failure(signal, SIGNAL_INVALID_ARGUMENTS, "native ADDRESS request bindings are malformed");
         return;
@@ -255,26 +413,35 @@ static void rxvml_native_address_execute(
         for (i = 0; i < binding_count; i++) {
             value* binding = binding_array->attributes[i];
             if (binding && binding->num_attributes >= 5) {
-                bindings[i].external_alias = rxvml_value_cstr(binding->attributes[0]);
-                bindings[i].flags = rxvml_value_cstr(binding->attributes[1]);
-                bindings[i].internal_name = rxvml_value_cstr(binding->attributes[2]);
-                bindings[i].kind = rxvml_value_cstr(binding->attributes[3]);
-                bindings[i].value = rxvml_value_cstr(binding->attributes[4]);
+                bindings[i].external_alias = rxvml_value_cstr(binding->attributes[RXVML_ADDRESS_BINDING_EXTERNAL_ALIAS]);
+                bindings[i].flags = rxvml_value_cstr(binding->attributes[RXVML_ADDRESS_BINDING_FLAGS]);
+                bindings[i].internal_name = rxvml_value_cstr(binding->attributes[RXVML_ADDRESS_BINDING_INTERNAL_NAME]);
+                bindings[i].kind = rxvml_value_cstr(binding->attributes[RXVML_ADDRESS_BINDING_KIND]);
+                bindings[i].value = rxvml_value_cstr(binding->attributes[RXVML_ADDRESS_BINDING_VALUE]);
             }
         }
     }
 
-    request.command = rxvml_value_cstr(request_value->attributes[2]);
-    request.environment_name = rxvml_value_cstr(request_value->attributes[3]);
+    request.command = rxvml_value_cstr(request_value->attributes[RXVML_ADDRESS_REQUEST_COMMAND]);
+    request.environment_name = rxvml_value_cstr(request_value->attributes[RXVML_ADDRESS_REQUEST_ENVIRONMENT_NAME]);
     request.binding_count = binding_count;
     request.bindings = bindings;
+    request.sandbox = (rxvml_value*)request_value->attributes[RXVML_ADDRESS_REQUEST_SANDBOX];
 
     response.rc = 0;
     response.condition_name = NULL;
     response.diagnostic = NULL;
+    response.updated_binding_count = 0;
+    response.updated_bindings = NULL;
 
     callback_rc = entry->callback(ctx, &request, &response, entry->userdata);
     if (callback_rc != 0 && response.rc == 0) response.rc = callback_rc;
+
+    if (rxvml_copy_address_response_updates(response_value, &response) != 0) {
+        rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to copy native ADDRESS response updates");
+        if (bindings) free(bindings);
+        return;
+    }
 
     if (ret) set_int((value*)ret, (rxinteger)response.rc);
     if (bindings) free(bindings);

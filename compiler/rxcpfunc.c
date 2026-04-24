@@ -1340,6 +1340,36 @@ static int contract_member_is_default_method(ASTNode *member) {
     return instructions && instructions->child != 0;
 }
 
+static int ast_node_label_equals(ASTNode *node, const char *label) {
+    size_t label_len;
+    if (!node || !node->node_string || !label) return 0;
+    label_len = strlen(label);
+    return node->node_string_length == label_len &&
+           memcmp(node->node_string, label, label_len) == 0;
+}
+
+static void remove_import_stub_implicit_main(Context *stub_ctx) {
+    ASTNode *file_node;
+    ASTNode *prev = 0;
+    ASTNode *child;
+
+    if (!stub_ctx || !stub_ctx->ast || !stub_ctx->ast->child) return;
+
+    file_node = stub_ctx->ast->child;
+    child = file_node->child;
+    while (child) {
+        ASTNode *next = child->sibling;
+        if (child->node_type == PROCEDURE && ast_node_label_equals(child, "main")) {
+            if (prev) prev->sibling = next;
+            else file_node->child = next;
+            child->sibling = 0;
+        } else {
+            prev = child;
+        }
+        child = next;
+    }
+}
+
 static void mark_source_import_interface_default_methods(Context *stub_ctx, ASTNode *contract_node) {
     ASTNode *file_node;
     ASTNode *stub_contract;
@@ -1416,6 +1446,7 @@ static void import_class_meta_aggs(Context *context, char *full_file_name, class
             }
             Context *stub_ctx = parseRexx(context, context->location, full_file_name, LEVELB, context->debug_mode, stub_source, strlen(stub_source));
             if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
+                remove_import_stub_implicit_main(stub_ctx);
                 if (a->contract_type == INTERFACE_DEF) {
                     mark_imported_interface_default_methods(stub_ctx, a);
                 }

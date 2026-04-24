@@ -12,11 +12,14 @@
 
 typedef struct host_state {
     int calls;
-    char envs[4][32];
-    char commands[4][64];
-    int binding_counts[4];
+    char envs[5][32];
+    char commands[5][64];
+    int binding_counts[5];
     char first_binding_name[32];
     char first_binding_value[64];
+    char updated_value[64];
+    char sandbox_value[64];
+    rxvml_address_binding updates[1];
 } host_state;
 
 static void copy_text(char* dest, size_t dest_len, const char* src) {
@@ -44,7 +47,7 @@ static int editor_callback(
     (void)ctx;
 
     if (!state || !request || !response) return -99;
-    if (state->calls >= 4) return -98;
+    if (state->calls >= 5) return -98;
 
     slot = state->calls;
     copy_text(state->envs[slot], sizeof(state->envs[slot]), request->environment_name);
@@ -58,8 +61,28 @@ static int editor_callback(
 
     state->calls++;
 
+    if (strcmp(request->command, "OPEN demo.txt") == 0 && request->binding_count > 0) {
+        copy_text(state->updated_value, sizeof(state->updated_value), "native-updated");
+        state->updates[0].kind = "var";
+        state->updates[0].internal_name = request->bindings[0].internal_name;
+        state->updates[0].external_alias = request->bindings[0].external_alias;
+        state->updates[0].value = state->updated_value;
+        state->updates[0].flags = "";
+        response->updated_binding_count = 1;
+        response->updated_bindings = state->updates;
+    }
+
     if (strcmp(request->command, "RETURN 42") == 0) {
         response->rc = 42;
+        return 0;
+    }
+
+    if (strcmp(request->command, "SANDBOX ROUNDTRIP") == 0) {
+        if (rxvml_address_sandbox_get(request, "VALUE.3", state->sandbox_value, sizeof(state->sandbox_value)) != 0) {
+            response->rc = -7;
+            return 0;
+        }
+        response->rc = 0;
         return 0;
     }
 
@@ -124,8 +147,8 @@ int main(void) {
         goto cleanup;
     }
 
-    if (state.calls != 3) {
-        fprintf(stderr, "Expected 3 callback calls, got %d\n", state.calls);
+    if (state.calls != 4) {
+        fprintf(stderr, "Expected 4 callback calls, got %d\n", state.calls);
         goto cleanup;
     }
 
@@ -137,6 +160,7 @@ int main(void) {
     }
     if (check_equal("first binding name", state.first_binding_name, "buffer")) goto cleanup;
     if (check_equal("first binding value", state.first_binding_value, "example-value")) goto cleanup;
+    if (check_equal("updated value", state.updated_value, "native-updated")) goto cleanup;
 
     if (check_equal("call 2 env", state.envs[1], "EDITOR")) goto cleanup;
     if (check_equal("call 2 command", state.commands[1], "CURSOR 7 9")) goto cleanup;
@@ -147,6 +171,10 @@ int main(void) {
 
     if (check_equal("call 3 env", state.envs[2], "EDITOR")) goto cleanup;
     if (check_equal("call 3 command", state.commands[2], "RETURN 42")) goto cleanup;
+
+    if (check_equal("call 4 env", state.envs[3], "EDITOR")) goto cleanup;
+    if (check_equal("call 4 command", state.commands[3], "SANDBOX ROUNDTRIP")) goto cleanup;
+    if (check_equal("sandbox value", state.sandbox_value, "native-input")) goto cleanup;
 
     status = 0;
 

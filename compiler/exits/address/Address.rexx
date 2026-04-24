@@ -41,6 +41,8 @@ addressexit: class
         error_end = .int
         expose_start = .int
         expose_end = .int
+        sandbox_start = .int
+        sandbox_end = .int
         section = .string
         depth = .int
 
@@ -71,6 +73,8 @@ addressexit: class
         error_end = -1
         expose_start = 0
         expose_end = -1
+        sandbox_start = 0
+        sandbox_end = -1
         section = "COMMAND"
         depth = 0
 
@@ -86,6 +90,7 @@ addressexit: class
                 else if section = "OUTPUT" then output_end = i - 1
                 else if section = "ERROR" then error_end = i - 1
                 else if section = "EXPOSE" then expose_end = i - 1
+                else if section = "SANDBOX" then sandbox_end = i - 1
                 if utext = "INPUT" then do
                     if input_start > 0 then return error_result(i, "ADDRESS INPUT clause repeated")
                     input_start = i + 1
@@ -101,6 +106,10 @@ addressexit: class
                 else if utext = "EXPOSE" then do
                     if expose_start > 0 then return error_result(i, "ADDRESS EXPOSE clause repeated")
                     expose_start = i + 1
+                end
+                else if utext = "SANDBOX" then do
+                    if sandbox_start > 0 then return error_result(i, "ADDRESS SANDBOX clause repeated")
+                    sandbox_start = i + 1
                 end
                 section = utext
                 if i = tokens.0 then return error_result(i, "ADDRESS clause requires an operand")
@@ -118,21 +127,31 @@ addressexit: class
         else if section = "OUTPUT" then output_end = tokens.0
         else if section = "ERROR" then error_end = tokens.0
         else if section = "EXPOSE" then expose_end = tokens.0
+        else if section = "SANDBOX" then sandbox_end = tokens.0
 
-        if command_end < command_start then return error_result(clause_start, "ADDRESS requires a command expression")
+        if command_end < command_start then do
+            if explicit = 1 & sandbox_start > 0 & input_start = 0 & output_start = 0 & error_start = 0 & expose_start = 0 then do
+                if sandbox_end < sandbox_start then return error_result(sandbox_start - 1, "ADDRESS SANDBOX clause requires an operand")
+                return set_environment_sandbox_result(env_expr, emitTokenRange(tokens, sandbox_start, sandbox_end))
+            end
+            return error_result(clause_start, "ADDRESS requires a command expression")
+        end
         if input_start > 0 & input_end < input_start then return error_result(input_start - 1, "ADDRESS INPUT clause requires an operand")
         if output_start > 0 & output_end < output_start then return error_result(output_start - 1, "ADDRESS OUTPUT clause requires an operand")
         if error_start > 0 & error_end < error_start then return error_result(error_start - 1, "ADDRESS ERROR clause requires an operand")
         if expose_start > 0 & expose_end < expose_start then return error_result(expose_start - 1, "ADDRESS EXPOSE clause requires an operand")
+        if sandbox_start > 0 & sandbox_end < sandbox_start then return error_result(sandbox_start - 1, "ADDRESS SANDBOX clause requires an operand")
         if redirectNeedsResolution(tokens, input_start, input_end) then return pending_result()
         if redirectNeedsResolution(tokens, output_start, output_end) then return pending_result()
         if redirectNeedsResolution(tokens, error_start, error_end) then return pending_result()
 
-        replacement = "rc=_address(" || env_expr
+        if sandbox_start > 0 then replacement = "rc=_address_with_sandbox(" || env_expr
+        else replacement = "rc=_address(" || env_expr
         replacement = replacement || "," || emitTokenRange(tokens, command_start, command_end)
         replacement = replacement || "," || buildRedirect(tokens, input_start, input_end, "IN")
         replacement = replacement || "," || buildRedirect(tokens, output_start, output_end, "OUT")
         replacement = replacement || "," || buildRedirect(tokens, error_start, error_end, "OUT")
+        if sandbox_start > 0 then replacement = replacement || "," || emitTokenRange(tokens, sandbox_start, sandbox_end) || " as .object"
         replacement = replacement || buildExposeArgs(tokens, expose_start, expose_end)
         replacement = replacement || ")"
 
@@ -144,6 +163,12 @@ set_environment_result: procedure = .exitresult
     arg env_expr = .string
     result = .exitresult("REPLACE")
     call result.add_replacement_line("rc=_set_address_environment(" || env_expr || ")")
+    return result
+
+set_environment_sandbox_result: procedure = .exitresult
+    arg env_expr = .string, sandbox_expr = .string
+    result = .exitresult("REPLACE")
+    call result.add_replacement_line("rc=_set_address_environment_with_sandbox(" || env_expr || "," || sandbox_expr || " as .object)")
     return result
 
 pending_result: procedure = .exitresult
@@ -169,7 +194,7 @@ maybe_add_implicit_warning: procedure = .void
 
 isClauseKeyword: procedure = .int
     arg text = .string
-    if text = "INPUT" | text = "OUTPUT" | text = "ERROR" | text = "EXPOSE" then return 1
+    if text = "INPUT" | text = "OUTPUT" | text = "ERROR" | text = "EXPOSE" | text = "SANDBOX" then return 1
     return 0
 
 redirectNeedsResolution: procedure = .int
