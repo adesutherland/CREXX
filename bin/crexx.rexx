@@ -287,14 +287,12 @@ do i=1 to words(filenames)
       call printFileToSTDout filename'.rxpp'
     end
     ''rxpath'/'lpath'/rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose 'verbose
---    'rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose0'
     if verbose then do
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
-	else res = esc||ANSI_RED||RC||esc||ANSI_RESET
-	  if compile then say '[ 'res' ] rxpp     - Preprocessed   ' esc||ANSI_BLUE||filename'.rxpp'||esc||ANSI_RESET
-    end
-  if RC>0 then exit RC
-
+      else res = esc||ANSI_RED||RC||esc||ANSI_RESET
+	if compile then say '[ 'res' ] rxpp     - Preprocessed   ' esc||ANSI_BLUE||filename'.rxpp'||esc||ANSI_RESET
+      end
+      if RC>0 then exit RC
     end
   end
   /* if all is well, we now have a .rexx ready for compilation    */  
@@ -616,11 +614,11 @@ end
 call lineout toread
 
 /**
-* delete the files (when crexx option = --nokeep)
-* and log this when verbosity > 2
+ * delete the files (when crexx option = --nokeep)
+ * and log this when verbosity > 2
  * @parm filenames .string containing file paths
  * @return .int
-*/
+ */
 deleteFiles: procedure = .int
 arg filenames = .string, verbosity = .int
 loop i=1 to words(filenames)

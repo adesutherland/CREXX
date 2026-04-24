@@ -18,8 +18,8 @@ size_ = .int
 val_  = .stem
 
 /**
-* Factory method, returns an empty StemList object.
-*/
+ * Factory method, returns an empty StemList object.
+ */
   *: factory
     size_ = 0
     val_ = .stem()
@@ -34,11 +34,11 @@ val_  = .stem
     return 1
     
     /**
-    * Appends an element to the end of the list.
-    *
-    * @param item  The element to add.
-    * @return      1 on success
-    */
+     * Appends an element to the end of the list.
+     *
+     * @param item  The element to add.
+     * @return      1 on success
+     */
   add: method = .int
     arg item = .string
     size_ = size_ + 1
@@ -46,11 +46,11 @@ val_  = .stem
     return 1
     
     /**
-    * Returns the element at the specified index.
-    *
-    * @param index  1-based index of the element.
-    * @return       The element at the given index, or 0 if out of bounds.
-    */
+     * Returns the element at the specified index.
+     *
+     * @param index  1-based index of the element.
+     * @return       The element at the given index, or 0 if out of bounds.
+     */
   get: method = .string
     arg index = .int
     
@@ -60,12 +60,12 @@ val_  = .stem
     return val_.get(index)
     
     /**
-    * Replaces the element at the specified index.
-    *
-    * @param index  1-based index of the element.
-    * @param item   The new value.
-    * @return       1 on success, 0 if out of bounds
-    */
+     * Replaces the element at the specified index.
+     *
+     * @param index  1-based index of the element.
+     * @param item   The new value.
+     * @return       1 on success, 0 if out of bounds
+     */
   set: method = .int
     arg index = .int, item = .string
     
@@ -76,14 +76,14 @@ val_  = .stem
     return 1
     
     /**
-    * Inserts an element at the specified index.
-    *
-    * Elements at and after the index are shifted to the right.
-    *
-    * @param index  1-based index where the element will be inserted.
-    * @param item   The element to insert.
-    * @return       1 on success
-    */
+     * Inserts an element at the specified index.
+     *
+     * Elements at and after the index are shifted to the right.
+     *
+     * @param index  1-based index where the element will be inserted.
+     * @param item   The element to insert.
+     * @return       1 on success
+     */
   insert: method = .int
     arg index = .int, item = .string
     
@@ -100,13 +100,13 @@ val_  = .stem
     return 1
     
     /**
-    * Removes and returns the element at the specified index.
-    *
-    * Elements after the index are shifted left.
-    *
-    * @param index  1-based index of the element to remove.
-    * @return       The removed element, or 0 if out of bounds.
-    */
+     * Removes and returns the element at the specified index.
+     *
+     * Elements after the index are shifted left.
+     *
+     * @param index  1-based index of the element to remove.
+     * @return       The removed element, or 0 if out of bounds.
+     */
   remove: method = .string
     arg index = .int
     
@@ -127,26 +127,26 @@ val_  = .stem
     return item
     
     /**
-    * Returns the number of elements in the list.
-    *
-    * @return The size of the list.
-    */
+     * Returns the number of elements in the list.
+     *
+     * @return The size of the list.
+     */
   size: method = .int
     return size_
     
     /**
-    * Tests whether the list is empty.
-    *
-    * @return 1 if empty, 0 otherwise.
-    */
+     * Tests whether the list is empty.
+     *
+     * @return 1 if empty, 0 otherwise.
+     */
   isEmpty: method = .int
     return size_ = 0
     
     /**
-    * Removes all elements from the list.
-    *
-    * @return 1 on success
-    */
+     * Removes all elements from the list.
+     *
+     * @return 1 on success
+     */
   clear: method = .int
     do i = 1 to size_
       val_.i = ""
@@ -154,21 +154,21 @@ val_  = .stem
     size_ = 0
     return 1
 
-    /*
-    * method toStem returns the stem object
-    * from this StemList
-    * @return .stem val_
-    */
+    /**
+     * method toStem returns the stem object
+     * from this StemList
+     * @return .stem val_
+     */
   toStem: method = .stem    
     return val_    
     
     /**
-    * Returns an iterator over this list.
-    *
-    * @return a StemListIterator object.
-    */
-    -- iterator: method = .object
-    --   return .ListIterator(this)
-    iterator: method = .StemListIterator
-      return .StemListIterator(val_)
+     * Returns an iterator over this list.
+     *
+     * @return a StemListIterator object.
+     */
+     -- iterator: method = .object
+     --   return .ListIterator(this)
+  iterator: method = .StemListIterator
+    return .StemListIterator(val_)
     

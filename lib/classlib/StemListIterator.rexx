@@ -27,10 +27,10 @@ index_ = .int
 
 
 /**
-* Factory method.
-*
-* @param list  The List to iterate over.
-*/
+ * Factory method.
+ *
+ * @param list  The List to iterate over.
+ */
   *: factory
     arg s = .stem
     list_  = s
@@ -38,20 +38,20 @@ index_ = .int
     return
 
     /**
-    * Returns 1 if more elements are available.
-    *
-    * @return 1 if there is a next element, 0 otherwise.
-    */
+     * Returns 1 if more elements are available.
+     *
+     * @return 1 if there is a next element, 0 otherwise.
+     */
   hasNext: method = .int
     return index_ < list_.size()
     
     /**
-    * Returns the next element in the iteration.
-    *
-    * Advances the cursor.
-    *
-    * @return The next element, or 0 if none available.
-    */
+     * Returns the next element in the iteration.
+     *
+     * Advances the cursor.
+     *
+     * @return The next element, or 0 if none available.
+     */
   next: method = .string
     if index_ > list_.size() then
       return 'error'  -- TODO exception
@@ -60,16 +60,16 @@ index_ = .int
       return list_.get(index_)
       
       /**
-      * Returns the current index (1-based).
-      *
-      * @return Current position in the list.
-      */
+       * Returns the current index (1-based).
+       *
+       * @return Current position in the list.
+       */
   index: method = .int
     return index_
     
     /**
-    * Resets the iterator to the start.
-    */
+     * Resets the iterator to the start.
+     */
   reset: method = .void
     index_ = 0
     return
