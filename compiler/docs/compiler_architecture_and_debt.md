@@ -89,6 +89,8 @@ The 8-character symbol limit is a legacy constraint rooted in mainframe compatib
 | **High** | Monolithic Files | `rxcpast.c` and `rxcpemit.c` were too large. | **RESOLVED** |
 | **High** | Optimizer Refactor | `rxcp_opt.c` needs refactoring to support new decimal types. | Pending |
 | **Medium** | Plugin Interface | Implement "Analyze-Consult-Negotiate" loop in `rxcp_val_orch.c`. | **RESOLVED** |
+| **Medium** | RXAS Import Stub Fidelity | `rximpf_f()` still rebuilds imported procedure declarations by parsing synthetic Rexx source from RXAS metadata. This now preserves `expose` and scalar optional arguments well enough for ADDRESS sandbox imports, but richer metadata or a direct AST importer is needed so original defaults and complex typed optionals are not approximated. | Partially Fixed |
+| **Medium** | Interface Object Reference Semantics | ADDRESS sandbox tracing showed that interface-typed object mutation is reliable when the wrapper calls the exposed object directly, but not when routed through helper calls or temporary interface variables. This needs a focused compiler/runtime test and fix before more object-heavy provider abstractions are layered on top. | Open |
 | **Medium** | Static Globals | Extensive use of static globals prevents reentrancy. | In Progress |
 | **Low** | Memory Management | Lack of clear ownership model or pool allocation for AST nodes. | Open |
 | **Low** | Bridge Overhead | Compiler now links with `rxvml`, increasing binary size and complexity. | Open |

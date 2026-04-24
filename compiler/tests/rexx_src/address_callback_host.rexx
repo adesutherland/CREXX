@@ -25,5 +25,6 @@ address_callback_host: procedure = .int
   rc = -1
   address editor "SANDBOX ROUNDTRIP" sandbox pool
   if rc \= 0 then return 5
+  if pool.get("RESULT") \= "native-input:native" then return 6
 
   return 0

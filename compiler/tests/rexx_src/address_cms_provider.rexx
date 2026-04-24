@@ -46,10 +46,10 @@ cmsaddressenvironment: class implements .addressenvironment
     if prefix4 = "TYPE" then return _address_execute_system_command(request, "echo CMS TYPE DEMO")
 
     if normalized = "SANDBOX ROUNDTRIP" then do
-      sandbox = request.get_sandbox() as .addresssandbox
-      sandbox_value = sandbox.access("GET", "VALUE.3", "")
-      call sandbox.access("SET", "result", sandbox_value || ":cms")
-      call sandbox.access("SET", "value.4", "cms-four")
+      sandbox = request.get_sandbox()
+      sandbox_value = sandbox.get("VALUE.3")
+      call sandbox.set("result", sandbox_value || ":cms")
+      call sandbox.set("value.4", "cms-four")
       return .addressresponse(0)
     end
 

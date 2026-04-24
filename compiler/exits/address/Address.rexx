@@ -151,7 +151,7 @@ addressexit: class
         replacement = replacement || "," || buildRedirect(tokens, input_start, input_end, "IN")
         replacement = replacement || "," || buildRedirect(tokens, output_start, output_end, "OUT")
         replacement = replacement || "," || buildRedirect(tokens, error_start, error_end, "OUT")
-        if sandbox_start > 0 then replacement = replacement || "," || emitTokenRange(tokens, sandbox_start, sandbox_end) || " as .object"
+        if sandbox_start > 0 then replacement = replacement || "," || emitTokenRange(tokens, sandbox_start, sandbox_end)
         replacement = replacement || buildExposeArgs(tokens, expose_start, expose_end)
         replacement = replacement || ")"
 
@@ -168,7 +168,7 @@ set_environment_result: procedure = .exitresult
 set_environment_sandbox_result: procedure = .exitresult
     arg env_expr = .string, sandbox_expr = .string
     result = .exitresult("REPLACE")
-    call result.add_replacement_line("rc=_set_address_environment_with_sandbox(" || env_expr || "," || sandbox_expr || " as .object)")
+    call result.add_replacement_line("rc=_set_address_environment_with_sandbox(" || env_expr || "," || sandbox_expr || ")")
     return result
 
 pending_result: procedure = .exitresult

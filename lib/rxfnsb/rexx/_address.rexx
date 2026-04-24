@@ -35,8 +35,20 @@ addressbinding: class
     return _flags
 
 addresssandbox: interface
-  access: method = .string
-    arg operation = .string, name = .string, value = .string
+  get: method = .string
+    arg name = .string
+
+  set: method = .void
+    arg name = .string, value = .string
+
+  drop: method = .void
+    arg name = .string
+
+  exists: method = .int
+    arg name = .string
+
+  next: method = .string
+    arg cursor_text = .string
 
 standardaddresssandbox: class implements .addresssandbox
   _key_count = .int
@@ -47,27 +59,6 @@ standardaddresssandbox: class implements .addresssandbox
   *: factory
     _key_count = 0
     return
-
-  access: method = .string
-    arg operation = .string, name = .string, value = .string
-    op = .string
-
-    op = normalize_environment_name(operation)
-    if op = "GET" then return get(name)
-    if op = "SET" then do
-      call set(name, value)
-      return value
-    end
-    if op = "DROP" then do
-      call drop(name)
-      return ""
-    end
-    if op = "EXISTS" then do
-      if exists(name) = 1 then return "1"
-      return "0"
-    end
-    if op = "NEXT" then return next(name)
-    return ""
 
   get: method = .string
     arg name = .string
@@ -132,7 +123,7 @@ addressrequest: class
   _stderr_endpoint = .binary
   _binding_count = .int
   _bindings = .addressbinding[]
-  _sandbox = .object
+  _sandbox = .addresssandbox
   _flags = .string
 
   *: factory
@@ -143,7 +134,7 @@ addressrequest: class
     _stdout_endpoint = stdout_endpoint
     _stderr_endpoint = stderr_endpoint
     _binding_count = 0
-    _sandbox = .standardaddresssandbox() as .object
+    _sandbox = .standardaddresssandbox()
     _flags = flags
     return
 
@@ -185,11 +176,11 @@ addressrequest: class
   get_flags: method = .string
     return _flags
 
-  get_sandbox: method = .object
+  get_sandbox: method = .addresssandbox
     return _sandbox
 
   set_sandbox: method = .void
-    arg sandbox = .object
+    arg sandbox = .addresssandbox
     _sandbox = sandbox
 
   add_binding: method = .void
@@ -403,8 +394,8 @@ _address: procedure = .int
       if update_internal = "" then update_internal = update_alias
       if update_internal = "" then iterate
       update_value = update.get_value()
-      sandbox = request.get_sandbox() as .addresssandbox
-      call sandbox.access("SET", update_internal, update_value)
+      sandbox = request.get_sandbox()
+      call sandbox.set(update_internal, update_value)
       iterate
     end
     if update_kind \= "VAR" then iterate
@@ -428,7 +419,7 @@ _address: procedure = .int
 
 /* ADDRESS dispatch with an explicit caller-supplied sandbox object. */
 _address_with_sandbox: procedure = .int
-  arg env = "", command = "", in = .binary, out = .binary, err = .binary, sandbox = .object, expose ... = .string
+  arg env = "", command = "", in = .binary, out = .binary, err = .binary, expose sandbox = .addresssandbox, expose ... = .string
 
   request = .addressrequest
   response = .addressresponse
@@ -440,7 +431,6 @@ _address_with_sandbox: procedure = .int
   update_alias = .string
   exposed_name = .string
   update_value = .string
-  sandbox_update = .addresssandbox
   j = .int
 
   call ensure_address_runtime
@@ -479,8 +469,7 @@ _address_with_sandbox: procedure = .int
       if update_internal = "" then update_internal = update_alias
       if update_internal = "" then iterate
       update_value = update.get_value()
-      sandbox_update = sandbox as .addresssandbox
-      call sandbox_update.access("SET", update_internal, update_value)
+      call sandbox.set(update_internal, update_value)
       iterate
     end
     if update_kind \= "VAR" then iterate
@@ -572,7 +561,7 @@ _set_address_environment: procedure = .int expose _address_runtime_ready _addres
   return 0
 
 _set_address_environment_with_sandbox: procedure = .int expose _address_runtime_ready _address_current_name _address_current_sandbox _address_environment_names _address_environment_objects
-  arg env_name = .string, sandbox = .object
+  arg env_name = .string, expose sandbox = .addresssandbox
 
   rc = .int
 
@@ -587,14 +576,14 @@ _current_address_environment: procedure = .string expose _address_runtime_ready 
   if _address_current_name = "" then _address_current_name = "SYSTEM"
   return _address_current_name
 
-_current_address_sandbox: procedure = .object expose _address_runtime_ready _address_current_name _address_current_sandbox _address_environment_names _address_environment_objects
+_current_address_sandbox: procedure = .addresssandbox expose _address_runtime_ready _address_current_name _address_current_sandbox _address_environment_names _address_environment_objects
   call ensure_address_runtime
   return _address_current_sandbox
 
 _reset_address_environments: procedure = .int expose _address_runtime_ready _address_current_name _address_current_sandbox _address_environment_names _address_environment_objects
   _address_runtime_ready = 0
   _address_current_name = ""
-  _address_current_sandbox = .standardaddresssandbox() as .object
+  _address_current_sandbox = .standardaddresssandbox()
   _address_environment_names = .string[]
   _address_environment_objects = .addressenvironment[]
   call ensure_address_runtime
@@ -624,7 +613,7 @@ ensure_address_runtime: procedure expose _address_runtime_ready _address_current
   _address_environment_names = .string[]
   _address_environment_objects = .addressenvironment[]
   _address_current_name = "SYSTEM"
-  _address_current_sandbox = .standardaddresssandbox() as .object
+  _address_current_sandbox = .standardaddresssandbox()
   _address_runtime_ready = 1
 
   call _ensure_address_environment("SYSTEM")

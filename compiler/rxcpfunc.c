@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <ctype.h>
 #include <sys/stat.h>
 #include "avl_tree.h"
@@ -448,6 +449,111 @@ static int safe_strcmp(const char *s1, const char* s2) {
     if (s1==0) return -1;
     if (s2==0) return 1;
     return strcmp(s1,s2);
+}
+
+static int append_arg_text(char **buffer, size_t *capacity, size_t *length, const char *text, size_t text_len) {
+    char *tmp;
+
+    if (*length + text_len + 1 >= *capacity) {
+        while (*length + text_len + 1 >= *capacity) *capacity = *capacity * 2 + text_len + 16;
+        tmp = realloc(*buffer, *capacity);
+        if (!tmp) {
+            free(*buffer);
+            *buffer = 0;
+            return 0;
+        }
+        *buffer = tmp;
+    }
+
+    memcpy(*buffer + *length, text, text_len);
+    *length += text_len;
+    (*buffer)[*length] = 0;
+    return 1;
+}
+
+static const char *default_source_for_metadata_type(const char *type_start, const char *type_end) {
+    size_t len;
+
+    while (type_start < type_end && isspace((unsigned char)*type_start)) type_start++;
+    while (type_end > type_start && isspace((unsigned char)*(type_end - 1))) type_end--;
+    len = (size_t)(type_end - type_start);
+
+    if (len == 7 && memcmp(type_start, ".string", 7) == 0) return "\"\"";
+    if (len == 4 && memcmp(type_start, ".int", 4) == 0) return "0";
+    if (len == 6 && memcmp(type_start, ".float", 6) == 0) return "0";
+    if (len == 5 && memcmp(type_start, ".bool", 5) == 0) return "0";
+    return 0;
+}
+
+static char *metadata_args_to_source_args(const char *args) {
+    const char *p;
+    char *buffer;
+    size_t capacity;
+    size_t length;
+
+    if (!args || !*args) return strdup("");
+
+    capacity = strlen(args) + 32;
+    buffer = malloc(capacity);
+    if (!buffer) return 0;
+    buffer[0] = 0;
+    length = 0;
+    p = args;
+
+    while (*p) {
+        const char *segment_start;
+        const char *segment_end;
+        const char *equals;
+        int optional = 0;
+
+        while (*p && isspace((unsigned char)*p)) p++;
+        segment_start = p;
+        while (*p && *p != ',') p++;
+        segment_end = p;
+        while (segment_end > segment_start && isspace((unsigned char)*(segment_end - 1))) segment_end--;
+
+        if (length > 0 && !append_arg_text(&buffer, &capacity, &length, ", ", 2)) return 0;
+
+        if ((size_t)(segment_end - segment_start) >= 7 &&
+            strncasecmp(segment_start, "expose ", 7) == 0) {
+            if (!append_arg_text(&buffer, &capacity, &length, "expose ", 7)) return 0;
+            segment_start += 7;
+            while (segment_start < segment_end && isspace((unsigned char)*segment_start)) segment_start++;
+        }
+
+        /*
+         * RXAS metadata marks optional args with a leading '?'. Convert it to
+         * valid Rexx source while preserving reference (`expose`) arguments.
+         * Optional/default and `expose` are independent: this synthetic default
+         * is only for the temporary import stub because RXAS metadata does not
+         * currently carry the original source default expression.
+         */
+        if (segment_start < segment_end && *segment_start == '?') {
+            optional = 1;
+            segment_start++;
+            while (segment_start < segment_end && isspace((unsigned char)*segment_start)) segment_start++;
+        }
+
+        equals = memchr(segment_start, '=', (size_t)(segment_end - segment_start));
+        if (optional && equals) {
+            const char *default_value = default_source_for_metadata_type(equals + 1, segment_end);
+            if (default_value) {
+                if (!append_arg_text(&buffer, &capacity, &length,
+                                     segment_start, (size_t)(equals - segment_start + 1))) return 0;
+                if (!append_arg_text(&buffer, &capacity, &length, default_value, strlen(default_value))) return 0;
+            } else {
+                if (!append_arg_text(&buffer, &capacity, &length,
+                                     segment_start, (size_t)(segment_end - segment_start))) return 0;
+            }
+        } else {
+            if (!append_arg_text(&buffer, &capacity, &length,
+                                 segment_start, (size_t)(segment_end - segment_start))) return 0;
+        }
+
+        if (*p == ',') p++;
+    }
+
+    return buffer;
 }
 
 /* Adds a func / variable to the master context*/
@@ -2837,8 +2943,11 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
     if (func->is_variable == 0) {
         /* Generate Function Declaration AST - only if we are a function not a variable */
         // TODO This only does Level B
+        char *source_args = metadata_args_to_source_args(func->args);
+        if (!source_args) source_args = strdup("");
         buffer = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\narg %s\n", func->namespace, func->name,
-                         func->type, func->args);
+                         func->type, source_args);
+        free(source_args);
         if (context->debug_mode >= 2) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
         func->context = parseRexx(context, context->location, func->file_name, LEVELB, context->debug_mode, buffer,
                                   strlen(buffer));

@@ -19,6 +19,7 @@ typedef struct host_state {
     char first_binding_value[64];
     char updated_value[64];
     char sandbox_value[64];
+    char sandbox_updated_value[96];
     rxvml_address_binding updates[1];
 } host_state;
 
@@ -78,10 +79,20 @@ static int editor_callback(
     }
 
     if (strcmp(request->command, "SANDBOX ROUNDTRIP") == 0) {
+        char updated[96];
         if (rxvml_address_sandbox_get(request, "VALUE.3", state->sandbox_value, sizeof(state->sandbox_value)) != 0) {
             response->rc = -7;
             return 0;
         }
+        snprintf(updated, sizeof(updated), "%s:native", state->sandbox_value);
+        copy_text(state->sandbox_updated_value, sizeof(state->sandbox_updated_value), updated);
+        state->updates[0].kind = "SANDBOX";
+        state->updates[0].internal_name = "result";
+        state->updates[0].external_alias = "result";
+        state->updates[0].value = state->sandbox_updated_value;
+        state->updates[0].flags = "";
+        response->updated_binding_count = 1;
+        response->updated_bindings = state->updates;
         response->rc = 0;
         return 0;
     }

@@ -429,17 +429,15 @@ Standard sandbox contract:
 - the intended interface surface is fetch/get, set, drop, exists, and
   iteration over keys for compatibility-style enumeration
 
-Tracer implementation note:
+Implemented tracer contract:
 
-- the current `.addresssandbox` interface exposes a single
-  `access(operation, name, value)` method so imported provider fixtures can
-  compile reliably while class/interface metadata import is still being
-  hardened
-- `.standardaddresssandbox` already provides the clearer `get`, `set`, `drop`,
-  `exists`, and `next` methods as class conveniences
-- after the compiler import/type work is cleaned up, the interface should move
-  to the clearer direct method surface and providers should be able to type
-  sandbox arguments directly as `.addresssandbox`
+- `.addresssandbox` now exposes direct `get`, `set`, `drop`, `exists`, and
+  `next` methods
+- `.standardaddresssandbox` implements that direct method surface and remains a
+  case-insensitive string-map
+- imported providers and ADDRESS helper wrappers type sandbox arguments as
+  `.addresssandbox`; the earlier generic `access(operation, name, value)` shim
+  has been removed
 
 Compatibility stance:
 
@@ -774,22 +772,18 @@ For the simplified ADDRESS model, `addressbinding` is for explicit `EXPOSE`
 bindings only. Sandbox access should not be represented as another binding
 kind; it is a separate object on the request.
 
-Recommended `addresssandbox` methods:
+Implemented `addresssandbox` methods:
 
-- near-term tracer interface:
-  - `access(operation, name, value)`
-- intended direct interface after compiler metadata cleanup:
-  - `get(name)`
-  - `set(name, value)`
-  - `drop(name)`
-  - `exists(name)`
-  - `next(cursor)` or an equivalent key-iteration method
+- `get(name)`
+- `set(name, value)`
+- `drop(name)`
+- `exists(name)`
+- `next(cursor)` for key iteration
 
-`operation` is case-insensitive and currently supports `GET`, `SET`, `DROP`,
-`EXISTS`, and `NEXT`. The standard sandbox class also exposes the direct
-methods as conveniences today, but cross-module providers should use
-`access(...)` through the `.addresssandbox` interface until the compiler import
-cleanup is complete.
+These methods are the provider contract for both pure Rexx and hybrid providers.
+The generic `access(operation, name, value)` tracer shim has been removed now
+that the compiler can import the direct interface signatures needed by the
+ADDRESS fixtures.
 
 Case rules:
 
@@ -872,9 +866,14 @@ Native tracer stance:
 - `rxvml_address_request` now carries the sandbox object pointer
 - `rxvml_address_sandbox_get()` lets a native callback read from the standard
   sandbox with the same case-insensitive key rules
-- native providers should not mutate the standard sandbox by relying on object
-  layout; native sandbox writes need a future method-call helper so updates go
-  through the `.addresssandbox` interface just like Rexx provider updates
+- native providers write sandbox values by returning `SANDBOX` entries in
+  `rxvml_address_response.updated_bindings`
+- the Rexx ADDRESS wrapper applies those updates through `sandbox.set(...)` on
+  the caller-supplied sandbox; native providers must not mutate the standard
+  sandbox object layout directly
+- direct re-entrant calls from a native callback into sandbox methods are not the
+  current contract; response updates keep the callback boundary simple and match
+  the existing explicit `EXPOSE` writeback model
 
 ### 7.6 Marker syntax proposal
 
@@ -1511,7 +1510,8 @@ Implemented tracer deliverables:
 - added Rexx CMS-provider tests showing sandbox read/write and response-update
   application through the sandbox interface
 - added native callback-host coverage showing a C callback reading the supplied
-  standard sandbox through `rxvml_address_sandbox_get()`
+  standard sandbox through `rxvml_address_sandbox_get()` and writing back through
+  `SANDBOX` response updates
 
 Non-goals for this stage:
 
@@ -1522,17 +1522,20 @@ Non-goals for this stage:
 
 Known follow-ups recorded for the next compiler/runtime cleanup:
 
-- move `.addresssandbox` from the generic `access(operation, name, value)`
-  tracer interface to the direct `get/set/drop/exists/next` interface once
-  imported interface metadata is robust enough across library/provider modules
-- allow `_address_with_sandbox` and related wrappers to type the sandbox
-  parameter as `.addresssandbox` directly instead of accepting `.object` and
-  casting internally
+- replace the current RXAS-metadata-to-temporary-source import path with a richer
+  metadata importer, or extend metadata so original optional/default expressions
+  are not approximated during stub reconstruction
+- keep `expose` and optional/default semantics independent in import handling;
+  RXAS metadata uses `?` for optional arguments and `expose` for reference
+  arguments, and neither marker implies the other
+- harden object/reference semantics for interface-typed object variables. The
+  ADDRESS wrapper currently applies native `SANDBOX` response updates directly
+  on the exposed `sandbox` parameter because routing the update through helper
+  calls or temporary interface variables did not reliably mutate the caller's
+  sandbox object
 - harden class/interface metadata import so repeated imported stubs do not
   leak duplicate synthetic `main` procedures or duplicate class/interface
   declarations into validation/linking
-- add a native method-call helper for sandbox writes; native providers must
-  update via the interface contract, not by mutating class layout directly
 
 ### Stage 3.6: redirect endpoint abstraction
 
@@ -1767,6 +1770,18 @@ Deliverables:
     sandbox through `rxvml_address_sandbox_get()`
   - compiler/import issues discovered by this tracer are recorded as the next
     cleanup slice rather than expanded in this stage
+- 2026-04-24: Stage 3.5 sandbox cleanup implemented:
+  - `.addresssandbox` now uses the direct `get/set/drop/exists/next` method
+    contract; the temporary generic `access(...)` shim has been removed
+  - `_address_with_sandbox` and default sandbox helpers now type sandbox values
+    as `.addresssandbox`
+  - RXAS import stub reconstruction now preserves `expose` while converting
+    metadata optional markers into parseable temporary declarations
+  - native callback tests now prove both C reads and C-originated sandbox writes;
+    writes are returned as `SANDBOX` response updates and applied by Rexx through
+    the sandbox interface
+  - object/reference mutation behaviour seen while abstracting sandbox update
+    application is recorded as a compiler/runtime follow-up
 
 ## 10. Evidence and code anchors
 
