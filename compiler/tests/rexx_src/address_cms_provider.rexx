@@ -1,4 +1,4 @@
-/* Pure Rexx CMS-style ADDRESS environment provider */
+/* Pure Rexx CMS-style ADDRESS environment provider used by tests */
 options levelb
 namespace _rxsysb expose cmsaddressenvironment
 import _rxsysb

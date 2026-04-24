@@ -2,6 +2,14 @@
 #include <string.h>
 #include "rxvml.h"
 
+#ifndef CREXX_TEST_LIBRARY_PATH
+#define CREXX_TEST_LIBRARY_PATH "library"
+#endif
+
+#ifndef CREXX_TEST_CMS_ADDRESS_MODULE
+#define CREXX_TEST_CMS_ADDRESS_MODULE "address_cms_provider.rxbin"
+#endif
+
 static void print_last_error(rxvml_context* ctx, const char* prefix) {
     const char* err = NULL;
     rxvml_last_error(ctx, &err);
@@ -24,8 +32,13 @@ int main(void) {
         return 1;
     }
 
-    if (rxvml_load_module_file(ctx, "library") <= 0) {
+    if (rxvml_load_module_file(ctx, CREXX_TEST_LIBRARY_PATH) <= 0) {
         print_last_error(ctx, "Failed to load library");
+        goto cleanup;
+    }
+
+    if (rxvml_load_module_file(ctx, CREXX_TEST_CMS_ADDRESS_MODULE) <= 0) {
+        print_last_error(ctx, "Failed to load CMS address provider fixture");
         goto cleanup;
     }
 

@@ -1216,7 +1216,30 @@ add_dependencies(test_bridge stub_plugin_bin)
 add_executable(test_address_bridge src/test_address_bridge.c)
 target_link_libraries(test_address_bridge PRIVATE rxvml rxpashim)
 target_include_directories(test_address_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
-add_dependencies(test_address_bridge library)
+target_compile_definitions(test_address_bridge PRIVATE
+        CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
+        CREXX_TEST_CMS_ADDRESS_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_cms_provider.rxbin")
+
+add_custom_command(
+        OUTPUT address_cms_provider.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_provider.rexx
+        COMMAND $<TARGET_FILE:rxas> address_cms_provider
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_provider.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling address_cms_provider.rexx ..."
+)
+
+add_custom_command(
+        OUTPUT address_cms_host.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_host.rexx
+        COMMAND $<TARGET_FILE:rxas> address_cms_host
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_host.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling address_cms_host.rexx ..."
+)
+
+add_custom_target(address_cms_fixture_bin DEPENDS address_cms_provider.rxbin address_cms_host.rxbin)
+add_dependencies(test_address_bridge address_cms_fixture_bin library)
 
 add_custom_command(
         OUTPUT address_callback_host.rxbin
@@ -1310,6 +1333,12 @@ add_test(NAME address_bridge COMMAND test_address_bridge)
 set_tests_properties(address_bridge PROPERTIES
         LABELS "compiler;stage3"
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+add_test(NAME address_cms_provider COMMAND
+        $<TARGET_FILE:rxvm>
+        ${CMAKE_BINARY_DIR}/bin/library.rxbin
+        ${CMAKE_CURRENT_BINARY_DIR}/address_cms_provider.rxbin
+        ${CMAKE_CURRENT_BINARY_DIR}/address_cms_host.rxbin)
+set_tests_properties(address_cms_provider PROPERTIES LABELS "compiler;stage3")
 add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME source_provenance COMMAND test_source_provenance)

@@ -1239,12 +1239,13 @@ Implemented refinement:
 - a low-score `unknownaddressenvironment` gives unknown names a normal
   `addressresponse` failure object instead of requiring factory exceptions for
   normal dispatch errors
-- `CMS` has been moved out of `_address.rexx` into
-  `lib/rxfnsb/rexx/cmsaddress.rexx`, a pure Rexx provider implementing
+- `CMS` has been moved out of the shipped library and is now a pure Rexx test
+  provider in `compiler/tests/rexx_src/address_cms_provider.rexx`, implementing
   `.addressenvironment`
-- `cmsaddress.rexx` imports the ADDRESS helper classes/procedures and implements
-  the imported `_rxsysb.addressenvironment` interface directly
-- `cmsaddress.rexx` is dynamically selected by `.addressenvironment("CMS")`
+- `address_cms_provider.rexx` imports the ADDRESS helper classes/procedures and
+  implements the imported `_rxsysb.addressenvironment` interface directly
+- the CMS test provider is dynamically selected by `.addressenvironment("CMS")`
+  when its fixture module is explicitly loaded beside the linked library
 - `nativeaddressenvironment` is now a hybrid provider:
   - Rexx declares the provider class, `match`, and factory
   - `rxvml.c` provides `_native_address_match`,
@@ -1506,8 +1507,10 @@ Deliverables:
     advertise themselves with class-side `*: match`/`*: factory`
   - `_address` creates providers on demand through `.addressenvironment(name)`
     and caches them in the runtime registry
-  - CMS moved from the core `_address.rexx` module to the pure Rexx provider
-    `lib/rxfnsb/rexx/cmsaddress.rexx`
+  - CMS moved from the core `_address.rexx` module to a pure Rexx provider;
+    it now lives as the compiler-test fixture
+    `compiler/tests/rexx_src/address_cms_provider.rexx`, not in the shipped
+    linked library
   - native callback environments now use Rexx-visible provider matching backed
     by `_native_address_match`, `_native_address_handle`, and
     `_native_address_execute`
@@ -1538,7 +1541,8 @@ Deliverables:
 - `compiler/exits/parse/Parse.rexx`
 - `compiler/exits/execio/Execio.rexx`
 - `lib/rxfnsb/rexx/_address.rexx`
-- `lib/rxfnsb/rexx/cmsaddress.rexx`
+- `compiler/tests/rexx_src/address_cms_provider.rexx`
+- `compiler/tests/rexx_src/address_cms_host.rexx`
 - `lib/rxfnsb/rxas/_rxvml_address_native.rxas`
 - `interpreter/rxvml.h`
 - `interpreter/rxvml.c`
