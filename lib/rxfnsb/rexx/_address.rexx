@@ -1,6 +1,6 @@
 /* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
-namespace _rxsysb expose _address _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _noredir _redir2array _redir2string _array2redir _string2redir addressbinding addressrequest addressresponse addressenvironment systemaddressenvironment pathaddressenvironment cmsaddressenvironment nativeaddressenvironment
+namespace _rxsysb expose _address _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressbinding addressrequest addressresponse addressenvironment systemaddressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
 import rxfnsb
 
 addressbinding: class
@@ -153,11 +153,22 @@ addressresponse: class
     return _diagnostics[index]
 
 addressenvironment: interface
+  *: factory = .addressenvironment
+    arg env_name = .string
+
   execute: method = .addressresponse
     arg request = .addressrequest
 
 systemaddressenvironment: class implements .addressenvironment
+  *: match
+    arg env_name = .string
+    name = .string
+    name = normalize_environment_name(env_name)
+    if name = "SYSTEM" | name = "COMMAND" | name = "CMD" | name = "SHELL" then return 100
+    return 0
+
   *: factory
+    arg env_name = .string
     return
 
   execute: method = .addressresponse
@@ -165,53 +176,49 @@ systemaddressenvironment: class implements .addressenvironment
     return spawn_request(request)
 
 pathaddressenvironment: class implements .addressenvironment
+  *: match
+    arg env_name = .string
+    if normalize_environment_name(env_name) = "PATH" then return 100
+    return 0
+
   *: factory
+    arg env_name = .string
     return
 
   execute: method = .addressresponse
     arg request = .addressrequest
     return spawn_request(request)
 
-cmsaddressenvironment: class implements .addressenvironment
-  _msg_mode = .string
+unknownaddressenvironment: class implements .addressenvironment
+  _environment_name = .string
+
+  *: match
+    arg env_name = .string
+    return 1
 
   *: factory
-    _msg_mode = "ON"
+    arg env_name = .string
+    _environment_name = normalize_environment_name(env_name)
     return
 
   execute: method = .addressresponse
     arg request = .addressrequest
-
-    normalized = .string
-    prefix8 = .string
-    prefix4 = .string
-
-    normalized = normalize_command(request.get_command())
-    prefix8 = first_chars(normalized, 8)
-    prefix4 = first_chars(normalized, 4)
-
-    if normalized = "CP SET MSG ON" then do
-      _msg_mode = "ON"
-      return .addressresponse(0)
-    end
-
-    if normalized = "CP SET MSG OFF" then do
-      _msg_mode = "OFF"
-      return .addressresponse(0)
-    end
-
-    if normalized = "CP QUERY USERID" then return execute_system_command(request, "echo CMSUSER")
-    if prefix8 = "LISTFILE" then return execute_system_command(request, "echo DEMO EXEC A1")
-    if prefix4 = "TYPE" then return execute_system_command(request, "echo CMS TYPE DEMO")
-
-    return unknown_command_response("CMS", request.get_command())
+    env_name = .string
+    env_name = _environment_name
+    if env_name = "" then env_name = request.get_environment_name()
+    return unknown_environment_response(env_name)
 
 nativeaddressenvironment: class implements .addressenvironment
   _native_handle = .int
 
+  *: match
+    arg env_name = .string
+    if native_address_runtime_enabled() = 0 then return 0
+    return _native_address_match(env_name)
+
   *: factory
-    arg native_handle = .int
-    _native_handle = native_handle
+    arg env_name = .string
+    _native_handle = _native_address_handle(env_name)
     return
 
   execute: method = .addressresponse
@@ -257,6 +264,31 @@ _address: procedure = .int
   response = dispatch_address_request(request)
   return response.get_rc()
 
+_new_address_environment: procedure = .addressenvironment
+  arg env_name = .string
+  return .addressenvironment(normalize_environment_name(env_name))
+
+_ensure_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+  arg env_name = .string
+
+  name = .string
+  idx = .int
+  env_obj = .addressenvironment
+
+  call ensure_address_runtime
+
+  name = normalize_environment_name(env_name)
+  if name = "" then return -3
+
+  idx = find_address_environment_index(_address_environment_names, name)
+  if idx \= 0 then return 0
+
+  env_obj = .addressenvironment(name)
+  idx = _address_environment_names.0 + 1
+  _address_environment_names.idx = name
+  _address_environment_objects.idx = env_obj
+  return 0
+
 _register_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
   arg env_name = .string, env_obj = .addressenvironment
 
@@ -280,11 +312,15 @@ _set_address_environment: procedure = .int expose _address_runtime_ready _addres
 
   name = .string
   idx = .int
+  ensure_rc = .int
 
   call ensure_address_runtime
 
   name = normalize_environment_name(env_name)
   if name = "" then return -3
+
+  ensure_rc = _ensure_address_environment(name)
+  if ensure_rc \= 0 then return ensure_rc
 
   idx = find_address_environment_index(_address_environment_names, name)
   if idx = 0 then return -3
@@ -305,37 +341,65 @@ _reset_address_environments: procedure = .int expose _address_runtime_ready _add
   call ensure_address_runtime
   return 0
 
+_enable_native_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+  idx = .int
+
+  call ensure_address_runtime
+  idx = find_address_environment_index(_address_environment_names, "__NATIVE_ADDRESS_PROVIDER__")
+  if idx = 0 then do
+    idx = _address_environment_names.0 + 1
+    _address_environment_names.idx = "__NATIVE_ADDRESS_PROVIDER__"
+    _address_environment_objects.idx = .unknownaddressenvironment("__NATIVE_ADDRESS_PROVIDER__")
+  end
+
+  return 0
+
+native_address_runtime_enabled: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+  call ensure_address_runtime
+  if find_address_environment_index(_address_environment_names, "__NATIVE_ADDRESS_PROVIDER__") \= 0 then return 1
+  return 0
+
 ensure_address_runtime: procedure expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
   if _address_runtime_ready = 1 then return
-
-  system_env = .systemaddressenvironment()
-  path_env = .pathaddressenvironment()
-  cms_env = .cmsaddressenvironment()
 
   _address_environment_names = .string[]
   _address_environment_objects = .addressenvironment[]
   _address_current_name = "SYSTEM"
-
-  _address_environment_names.1 = "SYSTEM"
-  _address_environment_objects.1 = system_env
-
-  _address_environment_names.2 = "COMMAND"
-  _address_environment_objects.2 = system_env
-
-  _address_environment_names.3 = "CMD"
-  _address_environment_objects.3 = system_env
-
-  _address_environment_names.4 = "SHELL"
-  _address_environment_objects.4 = system_env
-
-  _address_environment_names.5 = "PATH"
-  _address_environment_objects.5 = path_env
-
-  _address_environment_names.6 = "CMS"
-  _address_environment_objects.6 = cms_env
-
   _address_runtime_ready = 1
+
+  call _ensure_address_environment("SYSTEM")
+  call alias_address_environment("COMMAND", "SYSTEM")
+  call alias_address_environment("CMD", "SYSTEM")
+  call alias_address_environment("SHELL", "SYSTEM")
+  call _ensure_address_environment("PATH")
+
   return
+
+alias_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+  arg alias_name = .string, target_name = .string
+
+  alias = .string
+  target = .string
+  alias_idx = .int
+  target_idx = .int
+  ensure_rc = .int
+
+  alias = normalize_environment_name(alias_name)
+  target = normalize_environment_name(target_name)
+  if alias = "" | target = "" then return -3
+
+  ensure_rc = _ensure_address_environment(target)
+  if ensure_rc \= 0 then return ensure_rc
+
+  target_idx = find_address_environment_index(_address_environment_names, target)
+  if target_idx = 0 then return -3
+
+  alias_idx = find_address_environment_index(_address_environment_names, alias)
+  if alias_idx = 0 then alias_idx = _address_environment_names.0 + 1
+
+  _address_environment_names.alias_idx = alias
+  _address_environment_objects.alias_idx = _address_environment_objects[target_idx] as .addressenvironment
+  return 0
 
 find_address_environment_index: procedure = .int
   arg expose env_names = .string[], env_name = .string
@@ -362,6 +426,10 @@ dispatch_address_request: procedure = .addressresponse expose _address_runtime_r
   if env_name = "" then env_name = _current_address_environment()
 
   idx = find_address_environment_index(_address_environment_names, env_name)
+  if idx = 0 then do
+    call _ensure_address_environment(env_name)
+    idx = find_address_environment_index(_address_environment_names, env_name)
+  end
   if idx = 0 then return unknown_environment_response(env_name)
 
   env_obj = _address_environment_objects[idx] as .addressenvironment
@@ -387,11 +455,32 @@ execute_system_command: procedure = .addressresponse expose _address_runtime_rea
   end
 
   call ensure_address_runtime
+  call _ensure_address_environment("SYSTEM")
   idx = find_address_environment_index(_address_environment_names, "SYSTEM")
   if idx = 0 then return unknown_environment_response("SYSTEM")
 
   env_obj = _address_environment_objects[idx] as .addressenvironment
   return env_obj.execute(request)
+
+_address_execute_system_command: procedure = .addressresponse
+  arg source_request = .addressrequest, command = .string
+  return execute_system_command(source_request, command)
+
+_address_unknown_command_response: procedure = .addressresponse
+  arg env_name = .string, command = .string
+  return unknown_command_response(env_name, command)
+
+_address_normalize_environment_name: procedure = .string
+  arg env_name = .string
+  return normalize_environment_name(env_name)
+
+_address_normalize_command: procedure = .string
+  arg command = .string
+  return normalize_command(command)
+
+_address_first_chars: procedure = .string
+  arg text = .string, count = .int
+  return first_chars(text, count)
 
 spawn_request: procedure = .addressresponse
   arg request = .addressrequest

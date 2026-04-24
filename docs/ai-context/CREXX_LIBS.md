@@ -109,3 +109,41 @@ ENDLOADFUNCS
 5. **Arguments**: The exact type signature expected by the compiler. It supports standard types, array syntax (`.int[]`), and reference passing (`expose`). 
 
 During compilation, `rxc` parses this block to strictly enforce type safety when the REXX code invokes the native plugin. During execution, `rxvm` uses this block to dynamically link the `.rxplugin` shared library symbol into the execution space.
+
+## 5. Declaring Native Classes and Interfaces
+
+RXPA can also publish class/interface contract metadata to the compiler and VM.
+Use this when a native or hybrid provider needs to expose the same class-shaped
+contract that Rexx source would normally declare.
+
+```c
+LOADFUNCS
+ADDINTERFACE("demo.environment");
+ADDFACTORY("demo.environment", "*", ".environment", "name=.string");
+ADDMETHOD("demo.environment", "describe", ".string", "");
+
+ADDCLASS("demo.nativeenvironment");
+ADDIMPLEMENTS("demo.nativeenvironment", "demo.environment");
+ADDFACTORY("demo.nativeenvironment", "*", ".nativeenvironment", "name=.string");
+ADDMETHOD("demo.nativeenvironment", "describe", ".string", "");
+
+ADDPROC(make_env, "demo.make", "b", ".environment", "");
+ENDLOADFUNCS
+```
+
+Available declaration macros:
+- `ADDCLASS(name)` and `ADDCLASSX(name, option, type)`
+- `ADDINTERFACE(name)` and `ADDINTERFACEX(name, option, type)`
+- `ADDIMPLEMENTS(class_name, interface_name)`
+- `ADDFACTORY(owner, member, return_type, args)`
+- `ADDMETHOD(owner, member, return_type, args)`
+- `ADDDEFAULTMETHOD(owner, member, return_type, args)`
+- `ADDMEMBER(owner, kind, member, return_type, args)` for the generic form
+
+These declarations are consumed from both dynamic `.rxplugin` modules and
+static `DECL_ONLY` declaration libraries. They make contracts visible for type
+checking and runtime metadata discovery. Native factories that need to create
+typed Rexx objects entirely in C still need a future RXPA object-construction
+helper; today, use a Rexx factory shim for complete object creation. When a
+native procedure signature references a declared class or interface, place the
+class/interface declaration macros before the dependent `ADDPROC`.

@@ -61,6 +61,11 @@ typedef enum rxsignal {
 // The following functions are used to interact with the REXX interpreter
 typedef void (*rxpa_func_addfunc)(rxpa_libfunc func, char* name,
                                   char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+typedef void (*rxpa_func_addclass)(char* name, char* option, char* type); /* Add class metadata */
+typedef void (*rxpa_func_addinterface)(char* name, char* option, char* type); /* Add interface metadata */
+typedef void (*rxpa_func_addimplements)(char* name, char* interface_name); /* Add class/interface implementation metadata */
+typedef void (*rxpa_func_addmember)(char* owner, char* kind, char* member,
+                                    char* type, char* args); /* Add class/interface member metadata */
 typedef char* (*rxpa_func_getstring)(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
 typedef void (*rxpa_func_setstring)(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
 typedef void (*rxpa_func_setint)(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
@@ -91,6 +96,10 @@ typedef void (*rxpa_reset_say_exit)(); /* Set Say exit function */
 typedef struct rxpa_initctxptr* rxpa_initctxptr;
 struct rxpa_initctxptr {
     rxpa_func_addfunc addfunc;
+    rxpa_func_addclass addclass;
+    rxpa_func_addinterface addinterface;
+    rxpa_func_addimplements addimplements;
+    rxpa_func_addmember addmember;
     rxpa_func_getstring getstring;
     rxpa_func_setstring setstring;
     rxpa_func_setint setint;
@@ -119,6 +128,15 @@ static struct rxpa_initctxptr _rxpa_initctx;
 static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 // Macro is used to register a procedure - dynamic linkage
 #define ADDPROC(func, name, option, type, args) _rxpa_context->addfunc((func),(name),(option),(type),(args))
+#define ADDCLASS(name) _rxpa_context->addclass((name),"b",".unknown")
+#define ADDCLASSX(name, option, type) _rxpa_context->addclass((name),(option),(type))
+#define ADDINTERFACE(name) _rxpa_context->addinterface((name),"b",".unknown")
+#define ADDINTERFACEX(name, option, type) _rxpa_context->addinterface((name),(option),(type))
+#define ADDIMPLEMENTS(name, interface_name) _rxpa_context->addimplements((name),(interface_name))
+#define ADDMEMBER(owner, kind, member, type, args) _rxpa_context->addmember((owner),(kind),(member),(type),(args))
+#define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+#define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+#define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
 #define ENDPROC {back2caller: RESETSIGNAL}     // cleanup of ADDPROC
 #define PROCRETURN {goto back2caller;}
 #define GETSTRING(attr) _rxpa_context->getstring((attr))
@@ -228,6 +246,10 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 
 // Helper functions provided by the REXX interpreter
 void rxpa_addfunc(rxpa_libfunc func, char* name, __attribute__((unused)) char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+void rxpa_addclass(char* name, char* option, char* type); /* Add class metadata */
+void rxpa_addinterface(char* name, char* option, char* type); /* Add interface metadata */
+void rxpa_addimplements(char* name, char* interface_name); /* Add class/interface implementation metadata */
+void rxpa_addmember(char* owner, char* kind, char* member, char* type, char* args); /* Add class/interface member metadata */
 char* rxpa_getstring(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
 void rxpa_setstring(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
 void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
@@ -251,6 +273,15 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #else
 #define ADDPROC(func, name, option, type, args) rxpa_addfunc(0,(name),(option),(type),(args))
 #endif
+#define ADDCLASS(name) rxpa_addclass((name),"b",".unknown")
+#define ADDCLASSX(name, option, type) rxpa_addclass((name),(option),(type))
+#define ADDINTERFACE(name) rxpa_addinterface((name),"b",".unknown")
+#define ADDINTERFACEX(name, option, type) rxpa_addinterface((name),(option),(type))
+#define ADDIMPLEMENTS(name, interface_name) rxpa_addimplements((name),(interface_name))
+#define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+#define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+#define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+#define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
 #define ENDPROC {back2caller: RESETSIGNAL}     // cleanup of ADDPROC
 #define PROCRETURN {goto back2caller;}
 #define GETSTRING(attr) rxpa_getstring((attr))

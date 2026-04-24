@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 set(BIFS
 		_address
+		cmsaddress
 		_rxsystem
 		_datei
 		_dateo
@@ -143,8 +144,20 @@ set(REXX_IMPORT_RXAS
 unset(_prev_target)
 foreach(_binfile ${REXXBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
+	set(_rxc_import_args -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas)
+	set(_rxc_prepare_imports)
+	if(_basename STREQUAL "cmsaddress")
+		set(_cmsaddress_import_dir ${CMAKE_CURRENT_BINARY_DIR}/cmsaddress-import)
+		list(PREPEND _rxc_import_args -i ${_cmsaddress_import_dir})
+		set(_rxc_prepare_imports
+				COMMAND ${CMAKE_COMMAND} -E make_directory ${_cmsaddress_import_dir}
+				COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/_address.rxbin ${_cmsaddress_import_dir}/_address.rxbin
+		)
+	endif()
 	add_custom_command(
-		  COMMAND $<TARGET_FILE:rxc> -x --import-rxas -o ${_basename} -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+		  COMMAND ${CMAKE_COMMAND} -E rm -f ${_basename}.rxas
+		  ${_rxc_prepare_imports}
+		  COMMAND $<TARGET_FILE:rxc> -x --import-rxas -o ${_basename} ${_rxc_import_args} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
 		  COMMAND $<TARGET_FILE:rxas> ${_basename}
 		  DEPENDS rxas rxc library-rxas ${REXXSRC} ${REXX_IMPORT_RXAS} ${_prev_target}
 		  OUTPUT ${_binfile}

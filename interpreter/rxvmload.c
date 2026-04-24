@@ -10,6 +10,10 @@
 
 /* Context for RXPA Functions / callbacks */
 void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args);
+void rxvm_addclass(char* name, char* option, char* type);
+void rxvm_addinterface(char* name, char* option, char* type);
+void rxvm_addimplements(char* name, char* interface_name);
+void rxvm_addmember(char* owner, char* kind, char* member, char* type, char* args);
 char* rxvm_getstring(rxpa_attribute_value attributeValue);
 void rxvm_setstring(rxpa_attribute_value attributeValue, char* string);
 void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
@@ -30,6 +34,7 @@ typedef  struct rxpa_context {
     module_file *plugin_being_loaded;
     size_t const_buffer_size;
     size_t const_buffer_top;
+    int meta_tail;
 } rxpa_context;
 
 /* Statically Linked Plugin List */
@@ -39,6 +44,20 @@ struct static_linked_function {
     struct static_linked_function *next;
 };
 static struct static_linked_function *static_linked_functions = 0;
+
+struct static_linked_metadata {
+    char *kind;
+    char *symbol;
+    char *option;
+    char *type;
+    char *interface_symbol;
+    char *owner;
+    char *member_kind;
+    char *member;
+    char *args;
+    struct static_linked_metadata *next;
+};
+static struct static_linked_metadata *static_linked_metadata = 0;
 
 // Local Global Context Variable
 static rxpa_context *current_rxpa_context = 0;
@@ -625,6 +644,10 @@ int rxldmod(rxvm_context *context, char *file_name) {
             // Create the rxpa_initctxptr context
             struct rxpa_initctxptr rxpa_functions;
             rxpa_functions.addfunc = rxvm_addfunc;
+            rxpa_functions.addclass = rxvm_addclass;
+            rxpa_functions.addinterface = rxvm_addinterface;
+            rxpa_functions.addimplements = rxvm_addimplements;
+            rxpa_functions.addmember = rxvm_addmember;
             rxpa_functions.getstring = rxvm_getstring;
             rxpa_functions.setstring = rxvm_setstring;
             rxpa_functions.setint = rxvm_setint;
@@ -743,6 +766,7 @@ static rxpa_context *rxpa_context_f(rxvm_context *rxvm_context) {
     new_rxpa_context->rxvm_context = rxvm_context;
     new_rxpa_context->const_buffer_size = 0;
     new_rxpa_context->const_buffer_top = 0;
+    new_rxpa_context->meta_tail = -1;
     return new_rxpa_context;
 }
 
@@ -796,6 +820,103 @@ static size_t reserve_in_const_pool(rxpa_context *context, size_t size, enum con
     context->const_buffer_top += size;
 
     return index;
+}
+
+static size_t add_native_string_to_pool(rxpa_context *context, const char *value) {
+    string_constant *sentry;
+    size_t entry_index;
+    size_t entry_size;
+    size_t string_len;
+
+    if (!value) value = "";
+    string_len = strlen(value);
+    entry_size = sizeof(string_constant) + string_len;
+    entry_index = reserve_in_const_pool(context, entry_size, STRING_CONST);
+    sentry = (string_constant *) (context->plugin_being_loaded->constant + entry_index);
+    sentry->string_len = string_len;
+#ifndef NUTF8
+    sentry->string_chars = string_len;
+#endif
+    memcpy(sentry->string, value, string_len + 1);
+    return entry_index;
+}
+
+static size_t add_native_meta_entry(rxpa_context *context, size_t entry_size, enum const_pool_type type) {
+    meta_entry *entry;
+    size_t entry_index;
+
+    entry_index = reserve_in_const_pool(context, entry_size, type);
+    entry = (meta_entry*)(context->plugin_being_loaded->constant + entry_index);
+
+    if (context->plugin_being_loaded->header.meta_head != -1) {
+        ((meta_entry*)(context->plugin_being_loaded->constant + context->meta_tail))->next = (int)entry_index;
+        entry->prev = context->meta_tail;
+        context->meta_tail = (int)entry_index;
+        entry->next = -1;
+    }
+    else {
+        context->plugin_being_loaded->header.meta_head = (int)entry_index;
+        context->meta_tail = (int)entry_index;
+        entry->next = -1;
+        entry->prev = -1;
+    }
+
+    entry->address = 0;
+    return entry_index;
+}
+
+static void add_class_meta_to_module(rxpa_context *context, char *name, char *option, char *type) {
+    size_t s_name = add_native_string_to_pool(context, name);
+    size_t s_option = add_native_string_to_pool(context, option);
+    size_t s_type = add_native_string_to_pool(context, type);
+    size_t entry = add_native_meta_entry(context, sizeof(meta_class_constant), META_CLASS);
+    meta_class_constant *meta;
+
+    meta = (meta_class_constant*)(context->plugin_being_loaded->constant + entry);
+    meta->symbol = s_name;
+    meta->option = s_option;
+    meta->type = s_type;
+}
+
+static void add_interface_meta_to_module(rxpa_context *context, char *name, char *option, char *type) {
+    size_t s_name = add_native_string_to_pool(context, name);
+    size_t s_option = add_native_string_to_pool(context, option);
+    size_t s_type = add_native_string_to_pool(context, type);
+    size_t entry = add_native_meta_entry(context, sizeof(meta_interface_constant), META_INTERFACE);
+    meta_interface_constant *meta;
+
+    meta = (meta_interface_constant*)(context->plugin_being_loaded->constant + entry);
+    meta->symbol = s_name;
+    meta->option = s_option;
+    meta->type = s_type;
+}
+
+static void add_implements_meta_to_module(rxpa_context *context, char *name, char *interface_name) {
+    size_t s_name = add_native_string_to_pool(context, name);
+    size_t s_interface = add_native_string_to_pool(context, interface_name);
+    size_t entry = add_native_meta_entry(context, sizeof(meta_implements_constant), META_IMPLEMENTS);
+    meta_implements_constant *meta;
+
+    meta = (meta_implements_constant*)(context->plugin_being_loaded->constant + entry);
+    meta->symbol = s_name;
+    meta->interface_symbol = s_interface;
+}
+
+static void add_member_meta_to_module(rxpa_context *context, char *owner, char *kind, char *member, char *type, char *args) {
+    size_t s_owner = add_native_string_to_pool(context, owner);
+    size_t s_kind = add_native_string_to_pool(context, kind);
+    size_t s_member = add_native_string_to_pool(context, member);
+    size_t s_type = add_native_string_to_pool(context, type);
+    size_t s_args = add_native_string_to_pool(context, args);
+    size_t entry = add_native_meta_entry(context, sizeof(meta_member_constant), META_MEMBER);
+    meta_member_constant *meta;
+
+    meta = (meta_member_constant*)(context->plugin_being_loaded->constant + entry);
+    meta->owner = s_owner;
+    meta->kind = s_kind;
+    meta->member = s_member;
+    meta->type = s_type;
+    meta->args = s_args;
 }
 
 // Add a statically linked function to the constant pool being created
@@ -855,19 +976,77 @@ void rxvm_addfunc(rxpa_libfunc func, char* name, __attribute__((unused)) char* o
     }
 }
 
+static void append_static_metadata(char *kind, char *symbol, char *option, char *type,
+                                   char *interface_symbol, char *owner, char *member_kind,
+                                   char *member, char *args) {
+    struct static_linked_metadata *new_meta = malloc(sizeof(struct static_linked_metadata));
+
+    new_meta->kind = kind;
+    new_meta->symbol = symbol;
+    new_meta->option = option;
+    new_meta->type = type;
+    new_meta->interface_symbol = interface_symbol;
+    new_meta->owner = owner;
+    new_meta->member_kind = member_kind;
+    new_meta->member = member;
+    new_meta->args = args;
+    new_meta->next = static_linked_metadata;
+    static_linked_metadata = new_meta;
+}
+
+void rxvm_addclass(char* name, char* option, char* type) {
+    if (current_rxpa_context) {
+        add_class_meta_to_module(current_rxpa_context, name, option, type);
+    }
+    else {
+        append_static_metadata("class", name, option, type, 0, 0, 0, 0, 0);
+    }
+}
+
+void rxvm_addinterface(char* name, char* option, char* type) {
+    if (current_rxpa_context) {
+        add_interface_meta_to_module(current_rxpa_context, name, option, type);
+    }
+    else {
+        append_static_metadata("interface", name, option, type, 0, 0, 0, 0, 0);
+    }
+}
+
+void rxvm_addimplements(char* name, char* interface_name) {
+    if (current_rxpa_context) {
+        add_implements_meta_to_module(current_rxpa_context, name, interface_name);
+    }
+    else {
+        append_static_metadata("implements", name, 0, 0, interface_name, 0, 0, 0, 0);
+    }
+}
+
+void rxvm_addmember(char* owner, char* kind, char* member, char* type, char* args) {
+    if (current_rxpa_context) {
+        add_member_meta_to_module(current_rxpa_context, owner, kind, member, type, args);
+    }
+    else {
+        append_static_metadata("member", 0, 0, type, 0, owner, kind, member, args);
+    }
+}
+
 /* Loads statically loaded plugins
  * returns -1  - Error
  *         >=0 - Last Module Number loaded (1 based) (more than one (or none) might have been loaded ...)  */
 int rxldmodp(rxvm_context *context) {
     size_t n;
 
-    if (static_linked_functions == 0) return 0;
+    if (static_linked_functions == 0 && static_linked_metadata == 0) return 0;
 
     DEBUG("Loading Statically linked Plugins\n");
 
     // Create the rxpa_initctxptr context
     struct rxpa_initctxptr rxpa_functions;
     rxpa_functions.addfunc = rxvm_addfunc;
+    rxpa_functions.addclass = rxvm_addclass;
+    rxpa_functions.addinterface = rxvm_addinterface;
+    rxpa_functions.addimplements = rxvm_addimplements;
+    rxpa_functions.addmember = rxvm_addmember;
     rxpa_functions.getstring = rxvm_getstring;
     rxpa_functions.setstring = rxvm_setstring;
     rxpa_functions.setint = rxvm_setint;
@@ -910,6 +1089,24 @@ int rxldmodp(rxvm_context *context) {
         static_func = static_func->next;
     }
 
+    struct static_linked_metadata *static_meta = static_linked_metadata;
+    while (static_meta) {
+        if (strcmp(static_meta->kind, "class") == 0) {
+            rxvm_addclass(static_meta->symbol, static_meta->option, static_meta->type);
+        }
+        else if (strcmp(static_meta->kind, "interface") == 0) {
+            rxvm_addinterface(static_meta->symbol, static_meta->option, static_meta->type);
+        }
+        else if (strcmp(static_meta->kind, "implements") == 0) {
+            rxvm_addimplements(static_meta->symbol, static_meta->interface_symbol);
+        }
+        else if (strcmp(static_meta->kind, "member") == 0) {
+            rxvm_addmember(static_meta->owner, static_meta->member_kind, static_meta->member,
+                           static_meta->type, static_meta->args);
+        }
+        static_meta = static_meta->next;
+    }
+
     // Link as a plugin
     n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
 
@@ -923,6 +1120,11 @@ int rxldmodp(rxvm_context *context) {
         struct static_linked_function *next = static_linked_functions->next;
         free(static_linked_functions);
         static_linked_functions = next;
+    }
+    while (static_linked_metadata) {
+        struct static_linked_metadata *next = static_linked_metadata->next;
+        free(static_linked_metadata);
+        static_linked_metadata = next;
     }
 
     return (int)(n); /* Module Number */

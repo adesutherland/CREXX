@@ -1,7 +1,7 @@
 # ADDRESS and REXXSAA Working Notes
 
 Status: draft, direction partially approved
-Last updated: 2026-04-18
+Last updated: 2026-04-24
 
 ## 1. Purpose
 
@@ -619,9 +619,38 @@ Recommended classes:
 Recommended `addressenvironment` method shape:
 
 ```rexx
+*: factory = .addressenvironment
+    arg env_name = .string
+
 execute: method = .addressresponse
     arg request = .addressrequest
 ```
+
+Provider selection shape:
+
+```rexx
+someenvironment: class implements .addressenvironment
+  *: match
+    arg env_name = .string
+    /* return positive score to claim the environment, 0 to reject */
+
+  *: factory
+    arg env_name = .string
+    /* initialise the selected provider object */
+```
+
+Interpretation:
+
+- `addressenvironment` is both the common runtime interface and the factory
+  surface for dynamic environment discovery.
+- providers should expose a `match` method next to the factory; this is the
+  same class/interface factory-provider mechanism documented for Level B
+  classes.
+- `_address` should ask `.addressenvironment(name)` for providers on demand
+  and then cache the resulting object in the runtime registry.
+- high scores win; `0` rejects; a low-scoring unknown/failure provider may be
+  used as a safe fallback to keep dispatch errors representable as
+  `addressresponse` values.
 
 Canonical registration shape:
 
@@ -641,6 +670,11 @@ Interpretation:
 - a native environment should still be surfaced as a Rexx-visible object, with
   methods dispatched normally; the implementation behind those methods may be C
   or plugin code
+- native declarations can now expose callable procedures plus class/interface
+  contract metadata through RXPA macros, so the compiler and runtime can see
+  that a C provider class implements an interface; full pure-C object
+  construction still needs either a Rexx factory shim or a future RXPA helper
+  that can stamp a native-created return value as a typed Rexx object
 - if convenience wrappers are later added on `rxvml_context`, they should
   delegate to this canonical registration path rather than define a second
   registration model
@@ -1166,6 +1200,106 @@ Stage 3.3 exit criteria:
   their current tests
 - the public `rxvml` API remains independent of REXXSAA naming and ABI details
 
+Stage 3.3 factory/provider refinement:
+
+Status: working proposal implemented on 2026-04-24
+
+Reason for the refinement:
+
+- the first Stage 3.3 tracer bullet proved callback dispatch, but the
+  registration path still manually constructed a native proxy object by handle
+  and the CMS fake environment still lived inside the core `_address.rexx`
+  module
+- the intended design is cleaner if all environments are providers for the
+  `.addressenvironment(name)` interface factory
+- this factory-provider shape is also a natural prerequisite for later stages:
+  `ADDRESS` dispatch can discover pure Rexx, hybrid Rexx/C, and eventually
+  pure C providers through one contract
+
+Implemented refinement:
+
+- `.addressenvironment` now declares the default factory:
+
+```rexx
+*: factory = .addressenvironment
+  arg env_name = .string
+```
+
+- concrete providers implement class-side `*: match` and `*: factory`
+  members taking the same `env_name` argument
+- `_new_address_environment(name)` creates an environment object through the
+  interface factory
+- `_ensure_address_environment(name)` materialises and caches a provider on
+  demand
+- `_set_address_environment(name)` and request dispatch now call the same
+  dynamic ensure path rather than relying on a fixed startup registry
+- `SYSTEM`, `COMMAND`, `CMD`, and `SHELL` are selected by
+  `systemaddressenvironment`
+- `PATH` is selected by `pathaddressenvironment`
+- a low-score `unknownaddressenvironment` gives unknown names a normal
+  `addressresponse` failure object instead of requiring factory exceptions for
+  normal dispatch errors
+- `CMS` has been moved out of `_address.rexx` into
+  `lib/rxfnsb/rexx/cmsaddress.rexx`, a pure Rexx provider implementing
+  `.addressenvironment`
+- `cmsaddress.rexx` imports the ADDRESS helper classes/procedures and implements
+  the imported `_rxsysb.addressenvironment` interface directly
+- `cmsaddress.rexx` is dynamically selected by `.addressenvironment("CMS")`
+- `nativeaddressenvironment` is now a hybrid provider:
+  - Rexx declares the provider class, `match`, and factory
+  - `rxvml.c` provides `_native_address_match`,
+    `_native_address_handle`, and `_native_address_execute`
+  - host callback registrations are keyed by normalised environment name
+  - native match scores higher than built-in providers so an embedder can
+    intentionally override a shipped name
+  - ordinary `rxvm` execution does not call `rxvml`-only native hooks; `rxvml`
+    enables the native provider before constructing native callback
+    environments
+- `rxvml_address_register_callback_environment(...)` now creates the provider
+  through the interface factory and registers the resulting object through the
+  canonical `_register_address_environment(...)` path
+- `rxvml_address_create_environment(ctx, name, &obj)` has been added as a
+  small C helper for clients/tests that want to obtain any dynamic provider
+  through the canonical factory
+
+Current provider routes:
+
+- pure Rexx: define a Rexx class implementing `.addressenvironment` with
+  `*: match`, `*: factory`, and `execute`
+- separate provider modules can implement imported interface factory contracts;
+  the compiler signature checker now treats implicit class-factory returns as
+  the enclosing class and accepts concrete class returns assignable to the
+  imported interface return type
+- hybrid Rexx/C: define the class/factory in Rexx and delegate selected
+  methods to native functions declared through RXAS metadata
+- pure C: source-declarable at the contract level through RXPA metadata
+  macros, with object-construction helpers still to be designed for providers
+  that need to create typed Rexx objects entirely from C
+
+Implemented pure-C declaration slice:
+
+- RXPA/native declaration macros now publish class/interface metadata in the
+  same logical shape as compiler-emitted RXAS metadata:
+  - `ADDCLASS(class_name)`
+  - `ADDINTERFACE(interface_name)`
+  - `ADDIMPLEMENTS(class_name, interface_name)`
+  - `ADDFACTORY(class_name, factory_name, return_type, args)`
+  - `ADDMETHOD(class_name, method_name, return_type, args)`
+- the declaration path works for dynamically loaded `.rxplugin` modules and
+  statically linked `DECL_ONLY` compiler declaration libraries
+- the VM records native plugin class/interface metadata in the native module
+  constant pool, so runtime factory/provider discovery can inspect the same
+  contract metadata for native modules
+
+Recommended remaining pure-C follow-on:
+
+- add an RXPA object-construction API for native factories that need to return
+  typed class instances without a Rexx shim
+- consider ADDRESS-specific convenience macros once the lower-level contract
+  remains stable
+- until native object construction exists, a hybrid Rexx provider class backed
+  by C functions remains the cleanest complete ADDRESS provider pattern
+
 Stage 3.2 prerequisite status:
 
 - the required Level B callable-contract / interface mechanism is now in place
@@ -1354,6 +1488,31 @@ Deliverables:
     host/fixture for debugger-friendly validation
   - focused ADDRESS/interface/bridge verification passed `82/82`
   - full debug CTest passed `852/852`
+- 2026-04-24: Stage 3.3 factory/provider refinement implemented:
+  - `.addressenvironment` now owns the dynamic factory contract and providers
+    advertise themselves with class-side `*: match`/`*: factory`
+  - `_address` creates providers on demand through `.addressenvironment(name)`
+    and caches them in the runtime registry
+  - CMS moved from the core `_address.rexx` module to the pure Rexx provider
+    `lib/rxfnsb/rexx/cmsaddress.rexx`
+  - native callback environments now use Rexx-visible provider matching backed
+    by `_native_address_match`, `_native_address_handle`, and
+    `_native_address_execute`
+  - `rxvml_address_create_environment()` exposes the canonical factory path to
+    C callers
+  - compiler factory feedback fixed imported-interface provider signature
+    checking for implicit class-factory returns
+  - focused ADDRESS/interface/bridge tests passed `85/85`
+  - full debug CTest passed `856/856`
+- 2026-04-24: RXPA class/interface declaration slice implemented:
+  - `crexxpa.h` now exposes native declaration macros for classes,
+    interfaces, implementations, factories, methods, and default methods
+  - dynamic plugin import and static `DECL_ONLY` compiler import both consume
+    the new metadata
+  - native plugin loading now records class/interface metadata in the VM module
+    constant pool for runtime factory/provider discovery
+  - focused RXPA/ADDRESS/interface coverage passed `89/89`
+  - full debug CTest passed `860/860`
 
 ## 10. Evidence and code anchors
 
@@ -1366,10 +1525,12 @@ Deliverables:
 - `compiler/exits/parse/Parse.rexx`
 - `compiler/exits/execio/Execio.rexx`
 - `lib/rxfnsb/rexx/_address.rexx`
+- `lib/rxfnsb/rexx/cmsaddress.rexx`
+- `lib/rxfnsb/rxas/_rxvml_address_native.rxas`
+- `interpreter/rxvml.h`
+- `interpreter/rxvml.c`
 - `interpreter/rxspawn.c`
 - `interpreter/rxvmintp.c`
-- `interpreter/rxvml.c`
-- `interpreter/rxvml.h`
 - `compiler/tests/src/test_bridge.c`
 - `rexxsaa.h`
 - `docs/books/crexx_language_reference/statements.md`

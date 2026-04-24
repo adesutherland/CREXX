@@ -29,8 +29,8 @@ int main(void) {
         goto cleanup;
     }
 
-    if (rxvml_call_factory(ctx, "_rxsysb.cmsaddressenvironment", 0, NULL, &env_obj) != 0 || !env_obj) {
-        print_last_error(ctx, "Failed to obtain CMS address environment");
+    if (rxvml_address_create_environment(ctx, "CMS", &env_obj) != 0 || !env_obj) {
+        print_last_error(ctx, "Failed to obtain CMS address environment through the ADDRESS factory");
         goto cleanup;
     }
 
@@ -40,6 +40,8 @@ int main(void) {
         else fprintf(stderr, "Address registration returned rc=%d\n", register_rc);
         goto cleanup;
     }
+    rxvml_value_free(env_obj);
+    env_obj = NULL;
 
     set_rc = rxvml_address_set_environment(ctx, embed_name);
     if (set_rc != 0) {
@@ -61,6 +63,7 @@ int main(void) {
     status = 0;
 
 cleanup:
+    if (env_obj) rxvml_value_free(env_obj);
     if (current_env) rxvml_value_free(current_env);
     rxvml_destroy(ctx);
     return status;

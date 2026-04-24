@@ -624,7 +624,7 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
             foreach(DEP_SPEC IN ITEMS "${DEP_A_MODULE};${DEP_A_BASENAME}" "${DEP_B_MODULE};${DEP_B_BASENAME}")
                 list(GET DEP_SPEC 0 DEP_MODULE)
                 list(GET DEP_SPEC 1 DEP_BASENAME)
-                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_FLAG} -o \"${DEP_MODULE}${TEST_SUFFIX}\" \"\${work}/${DEP_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"\${work}\" -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_FLAG} -o \"${DEP_MODULE}${TEST_SUFFIX}\" \"\${work}/${DEP_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
                 string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
                 string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on source-import dependency ${DEP_MODULE}: \${out}\")\nendif()\n")
                 string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${DEP_MODULE}${TEST_SUFFIX}.rxbin\" \"${DEP_MODULE}${TEST_SUFFIX}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
@@ -640,7 +640,7 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
             foreach(DEP_SPEC IN ITEMS "${DEP_A_MODULE};${DEP_A_BASENAME}" "${DEP_B_MODULE};${DEP_B_BASENAME}")
                 list(GET DEP_SPEC 0 DEP_MODULE)
                 list(GET DEP_SPEC 1 DEP_BASENAME)
-                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_FLAG} -o \"${DEP_MODULE}${TEST_SUFFIX}\" \"\${work}/${DEP_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"\${work}\" -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_FLAG} -o \"${DEP_MODULE}${TEST_SUFFIX}\" \"\${work}/${DEP_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
                 string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
                 string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on binary-import dependency ${DEP_MODULE}: \${out}\")\nendif()\n")
                 string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${DEP_MODULE}.rxbin\" \"${DEP_MODULE}${TEST_SUFFIX}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
@@ -927,6 +927,8 @@ add_crexx_interface_import_run_test(interface_match_source_import rexx_src/inter
 add_crexx_interface_import_run_test(interface_match_binary_import rexx_src/interface_match_main.rexx rexx_src/interface_match_dep_contract.rexx binary)
 add_crexx_interface_import_run_test(interface_named_factory_source_import rexx_src/interface_named_factory_main.rexx rexx_src/interface_named_factory_dep_contract.rexx source)
 add_crexx_interface_import_run_test(interface_named_factory_binary_import rexx_src/interface_named_factory_main.rexx rexx_src/interface_named_factory_dep_contract.rexx binary)
+add_crexx_dual_import_run_test(interface_import_provider_source rexx_src/interface_import_provider_main.rexx rexx_src/interface_import_provider_contract.rexx rexx_src/interface_import_provider_impl.rexx source)
+add_crexx_dual_import_run_test(interface_import_provider_binary rexx_src/interface_import_provider_main.rexx rexx_src/interface_import_provider_contract.rexx rexx_src/interface_import_provider_impl.rexx binary)
 add_crexx_dual_import_run_test(qualified_interface_import rexx_src/qualified_interface_main.rexx rexx_src/qualified_interface_dep_a.rexx rexx_src/qualified_interface_dep_b.rexx source)
 add_crexx_dual_import_run_test(qualified_interface_binary_import rexx_src/qualified_interface_main.rexx rexx_src/qualified_interface_dep_a.rexx rexx_src/qualified_interface_dep_b.rexx binary)
 add_crexx_run_args_test(test_parse_arg_filename rexx_src/test_parse_arg_filename.rexx demo.rexx)
@@ -1220,7 +1222,7 @@ add_custom_command(
         OUTPUT address_callback_host.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_callback_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_callback_host.rexx
         COMMAND $<TARGET_FILE:rxas> address_callback_host
-        DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_callback_host.rexx
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_callback_host.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling address_callback_host.rexx ..."
 )

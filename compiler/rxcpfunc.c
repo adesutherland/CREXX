@@ -305,6 +305,8 @@ static int loaded_class_implements_interface(Context *context, Symbol *class_sym
     ASTNode *class_node;
     ASTNode *implements_node;
     ASTNode *iface_ref;
+    char *interface_fqname = 0;
+    int matched = 0;
 
     if (!context || !sym_is_class_contract_symbol(class_symbol) || !sym_is_interface_symbol(interface_symbol)) {
         return 0;
@@ -316,6 +318,8 @@ static int loaded_class_implements_interface(Context *context, Symbol *class_sym
     implements_node = ast_chld(class_node, IMPLEMENTS, 0);
     if (!implements_node) return 0;
 
+    interface_fqname = sym_frnm(interface_symbol);
+
     iface_ref = implements_node->child;
     while (iface_ref) {
         Symbol *implemented_symbol = sym_rvfc(context->ast, iface_ref);
@@ -324,12 +328,25 @@ static int loaded_class_implements_interface(Context *context, Symbol *class_sym
             implemented_symbol = sym_rvfc(context->ast, iface_ref);
         }
 
-        if (implemented_symbol == interface_symbol) return 1;
+        if (implemented_symbol == interface_symbol) {
+            matched = 1;
+            break;
+        }
+
+        if (implemented_symbol && interface_fqname) {
+            char *implemented_fqname = sym_frnm(implemented_symbol);
+            if (implemented_fqname && strcmp(implemented_fqname, interface_fqname) == 0) {
+                matched = 1;
+            }
+            if (implemented_fqname) free(implemented_fqname);
+            if (matched) break;
+        }
 
         iface_ref = iface_ref->sibling;
     }
 
-    return 0;
+    if (interface_fqname) free(interface_fqname);
+    return matched;
 }
 
 int symbol_name_assignable_to(Context *context, const char *from_name, const char *to_name) {
@@ -1363,6 +1380,57 @@ static char **clone_fqname_array(char **names, size_t count) {
     return copy;
 }
 
+static void import_class_meta_aggs(Context *context, char *full_file_name, class_meta_agg *class_aggs) {
+    class_meta_agg *a;
+
+    if (!class_aggs) return;
+
+    a = class_aggs;
+    while (a) {
+        if (a->contract_type == CLASS_DEF || (a->methods && *a->methods)) {
+            char *stub_source;
+            if (a->contract_type == INTERFACE_DEF) {
+                stub_source = mprintf("options levelb\nnamespace %s\n%s: interface\n%s",
+                                      a->ns, a->name, a->methods ? a->methods : "");
+            } else if (a->implements_count) {
+                size_t j;
+                stub_source = mprintf("options levelb\nnamespace %s\n%s: class", a->ns, a->name);
+                for (j = 0; j < a->implements_count; j++) {
+                    char *iface_name = rxcp_internal_name_to_source_qualified(a->implements_fqnames[j], 1);
+                    char *tmp = mprintf("%s%s %s",
+                                        stub_source,
+                                        j == 0 ? " implements" : "",
+                                        iface_name);
+                    free(iface_name);
+                    free(stub_source);
+                    stub_source = tmp;
+                }
+                {
+                    char *tmp = mprintf("%s\n%s", stub_source, a->methods ? a->methods : "");
+                    free(stub_source);
+                    stub_source = tmp;
+                }
+            } else {
+                stub_source = mprintf("options levelb\nnamespace %s\n%s: class\n%s",
+                                      a->ns, a->name, a->methods ? a->methods : "");
+            }
+            Context *stub_ctx = parseRexx(context, context->location, full_file_name, LEVELB, context->debug_mode, stub_source, strlen(stub_source));
+            if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
+                if (a->contract_type == INTERFACE_DEF) {
+                    mark_imported_interface_default_methods(stub_ctx, a);
+                }
+                if (stub_ctx->ast->child) stub_ctx->ast->child->node_type = IMPORTED_FILE;
+                rximpcl_f(context, full_file_name, a->fq, stub_ctx, a->contract_type,
+                          clone_fqname_array(a->implements_fqnames, a->implements_count), a->implements_count);
+            } else {
+                if (stub_ctx) fre_cntx(stub_ctx);
+                else free(stub_source);
+            }
+        }
+        a = a->next;
+    }
+}
+
 /* Get the global variable type by reading metadata */
 /* name is null terminated fqname of the variable */
 /* returns found meta_reg_constant entry - or 0 if not found */
@@ -1546,8 +1614,11 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
             char *args_str = get_const_string(constant, mentry->args);
 
             if (owner && kind && member) {
-                class_meta_agg *agg = agg_find_or_add(&class_aggs, owner, INTERFACE_DEF);
+                class_meta_agg *agg = agg_find(class_aggs, owner);
                 char *ln;
+
+                if (!agg) agg = agg_find_or_add(&class_aggs, owner, INTERFACE_DEF);
+
                 if (strcmp(kind, "factory") == 0) {
                     if (type_str && *type_str && strcmp(type_str, ".void") != 0) {
                         ln = mprintf("  %s: factory = %s\n", member, type_str);
@@ -1600,52 +1671,8 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
         i = ((meta_entry *)entry)->next;
     }
 
-    /* Synthesize and register contract stubs from aggregated metadata */
     if (class_aggs) {
-        class_meta_agg *a = class_aggs;
-        while (a) {
-            if (a->contract_type == CLASS_DEF || (a->methods && *a->methods)) {
-                char *stub_source;
-                if (a->contract_type == INTERFACE_DEF) {
-                    stub_source = mprintf("options levelb\nnamespace %s\n%s: interface\n%s",
-                                          a->ns, a->name, a->methods ? a->methods : "");
-                } else if (a->implements_count) {
-                    size_t j;
-                    stub_source = mprintf("options levelb\nnamespace %s\n%s: class", a->ns, a->name);
-                    for (j = 0; j < a->implements_count; j++) {
-                        char *iface_name = rxcp_internal_name_to_source_qualified(a->implements_fqnames[j], 1);
-                        char *tmp = mprintf("%s%s %s",
-                                            stub_source,
-                                            j == 0 ? " implements" : "",
-                                            iface_name);
-                        free(iface_name);
-                        free(stub_source);
-                        stub_source = tmp;
-                    }
-                    {
-                        char *tmp = mprintf("%s\n%s", stub_source, a->methods ? a->methods : "");
-                        free(stub_source);
-                        stub_source = tmp;
-                    }
-                } else {
-                    stub_source = mprintf("options levelb\nnamespace %s\n%s: class\n%s",
-                                          a->ns, a->name, a->methods ? a->methods : "");
-                }
-                Context *stub_ctx = parseRexx(context, context->location, full_file_name, LEVELB, context->debug_mode, stub_source, strlen(stub_source));
-                if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
-                    if (a->contract_type == INTERFACE_DEF) {
-                        mark_imported_interface_default_methods(stub_ctx, a);
-                    }
-                    if (stub_ctx->ast->child) stub_ctx->ast->child->node_type = IMPORTED_FILE;
-                    rximpcl_f(context, full_file_name, a->fq, stub_ctx, a->contract_type,
-                              clone_fqname_array(a->implements_fqnames, a->implements_count), a->implements_count);
-                } else {
-                    if (stub_ctx) fre_cntx(stub_ctx);
-                    else free(stub_source);
-                }
-            }
-            a = a->next;
-        }
+        import_class_meta_aggs(context, full_file_name, class_aggs);
         agg_free_all(class_aggs);
     }
 }
@@ -1653,6 +1680,86 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
 // RXPA Disabler Function
 static char* plugin_being_loaded = "statically linked";
 static Context* plugin_being_loaded_context = 0;
+static struct static_linked_metadata *plugin_being_loaded_metadata = 0;
+
+static void append_rxpa_metadata(struct static_linked_metadata **head, char *kind, char *symbol,
+                                 char *option, char *type, char *interface_symbol,
+                                 char *owner, char *member_kind, char *member, char *args) {
+    struct static_linked_metadata *new_meta = malloc(sizeof(struct static_linked_metadata));
+
+    new_meta->kind = kind;
+    new_meta->symbol = symbol;
+    new_meta->option = option;
+    new_meta->type = type;
+    new_meta->interface_symbol = interface_symbol;
+    new_meta->owner = owner;
+    new_meta->member_kind = member_kind;
+    new_meta->member = member;
+    new_meta->args = args;
+    new_meta->next = *head;
+    *head = new_meta;
+}
+
+static void free_rxpa_metadata_list(struct static_linked_metadata **head) {
+    while (*head) {
+        struct static_linked_metadata *next = (*head)->next;
+        free(*head);
+        *head = next;
+    }
+}
+
+static void import_rxpa_metadata_list(Context *context, char *file_name, struct static_linked_metadata *metadata) {
+    class_meta_agg *class_aggs = 0;
+    struct static_linked_metadata *entry = metadata;
+
+    while (entry) {
+        if (entry->kind && strcmp(entry->kind, "class") == 0 && entry->symbol) {
+            agg_find_or_add(&class_aggs, entry->symbol, CLASS_DEF);
+        }
+        else if (entry->kind && strcmp(entry->kind, "interface") == 0 && entry->symbol) {
+            agg_find_or_add(&class_aggs, entry->symbol, INTERFACE_DEF);
+        }
+        else if (entry->kind && strcmp(entry->kind, "implements") == 0 &&
+                 entry->symbol && entry->interface_symbol) {
+            class_meta_agg *agg = agg_find_or_add(&class_aggs, entry->symbol, CLASS_DEF);
+            agg_add_implements(agg, entry->interface_symbol);
+        }
+        else if (entry->kind && strcmp(entry->kind, "member") == 0 &&
+                 entry->owner && entry->member_kind && entry->member) {
+            class_meta_agg *agg = agg_find(class_aggs, entry->owner);
+            char *ln;
+
+            if (!agg) agg = agg_find_or_add(&class_aggs, entry->owner, INTERFACE_DEF);
+
+            if (strcmp(entry->member_kind, "factory") == 0) {
+                if (entry->type && *entry->type && strcmp(entry->type, ".void") != 0) {
+                    ln = mprintf("  %s: factory = %s\n", entry->member, entry->type);
+                } else {
+                    ln = mprintf("  %s: factory\n", entry->member);
+                }
+            } else {
+                ln = mprintf("  %s: method = %s\n", entry->member, entry->type ? entry->type : ".void");
+                if (strstr(entry->member_kind, "final")) {
+                    agg_add_default_method(agg, entry->member);
+                }
+            }
+            agg_append_line(agg, ln);
+            free(ln);
+            if (entry->args && *entry->args) {
+                ln = mprintf("  arg %s\n", entry->args);
+                agg_append_line(agg, ln);
+                free(ln);
+            }
+        }
+
+        entry = entry->next;
+    }
+
+    if (class_aggs) {
+        import_class_meta_aggs(context, file_name, class_aggs);
+        agg_free_all(class_aggs);
+    }
+}
 
 static void disablerFunction(char* fname) {
     fprintf(stderr, "RXC Panic: When loading %s plugin, it called %s() illegally\n", plugin_being_loaded, fname);
@@ -1708,6 +1815,10 @@ void rxpa_resetsayexit()  /* Reset Say exit function */
 // oir is called during initialising a statically linked plugin
 void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args) {
     if (plugin_being_loaded_context) {
+        if (plugin_being_loaded_metadata) {
+            import_rxpa_metadata_list(plugin_being_loaded_context, plugin_being_loaded, plugin_being_loaded_metadata);
+            free_rxpa_metadata_list(&plugin_being_loaded_metadata);
+        }
         if (plugin_being_loaded_context->debug_mode >= 2) printf("Importing Procedures - Loading %s\n", name);
         rximpf_f(plugin_being_loaded_context, plugin_being_loaded, name, option, type, args, 0, 0);
     }
@@ -1723,15 +1834,56 @@ void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char*
     }
 }
 
+void rxpa_addclass(char* name, char* option, char* type) {
+    if (plugin_being_loaded_context) {
+        append_rxpa_metadata(&plugin_being_loaded_metadata, "class", name, option, type, 0, 0, 0, 0, 0);
+    }
+    else {
+        append_rxpa_metadata(&static_linked_metadata, "class", name, option, type, 0, 0, 0, 0, 0);
+    }
+}
+
+void rxpa_addinterface(char* name, char* option, char* type) {
+    if (plugin_being_loaded_context) {
+        append_rxpa_metadata(&plugin_being_loaded_metadata, "interface", name, option, type, 0, 0, 0, 0, 0);
+    }
+    else {
+        append_rxpa_metadata(&static_linked_metadata, "interface", name, option, type, 0, 0, 0, 0, 0);
+    }
+}
+
+void rxpa_addimplements(char* name, char* interface_name) {
+    if (plugin_being_loaded_context) {
+        append_rxpa_metadata(&plugin_being_loaded_metadata, "implements", name, 0, 0, interface_name, 0, 0, 0, 0);
+    }
+    else {
+        append_rxpa_metadata(&static_linked_metadata, "implements", name, 0, 0, interface_name, 0, 0, 0, 0);
+    }
+}
+
+void rxpa_addmember(char* owner, char* kind, char* member, char* type, char* args) {
+    if (plugin_being_loaded_context) {
+        append_rxpa_metadata(&plugin_being_loaded_metadata, "member", 0, 0, type, 0, owner, kind, member, args);
+    }
+    else {
+        append_rxpa_metadata(&static_linked_metadata, "member", 0, 0, type, 0, owner, kind, member, args);
+    }
+}
+
 static void loadPluginFileForFunctions(Context *context, char* file_name, char* location) {
 
     /* Update context */
     plugin_being_loaded = file_name;
     plugin_being_loaded_context = context;
+    plugin_being_loaded_metadata = 0;
 
     // Create the rxpa_initctxptr context
     struct rxpa_initctxptr rxpa_context;
     rxpa_context.addfunc = rxpa_addfunc;
+    rxpa_context.addclass = rxpa_addclass;
+    rxpa_context.addinterface = rxpa_addinterface;
+    rxpa_context.addimplements = rxpa_addimplements;
+    rxpa_context.addmember = rxpa_addmember;
     rxpa_context.getstring = rxpa_getstring;
     rxpa_context.setstring = rxpa_setstring;
     rxpa_context.setint = rxpa_setint;
@@ -1753,10 +1905,13 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
     int rc = load_plugin(&rxpa_context, location, file_name);
     if (!rc) {
         if (context->debug_mode >= 2) printf("Importing Procedures - CREXX Plugin %s loaded successfully\n", file_name);
+        import_rxpa_metadata_list(context, file_name, plugin_being_loaded_metadata);
     }
     else {
         fprintf(stderr, "Importing Procedures - Failed to load plugin %s\n", file_name);
     }
+
+    free_rxpa_metadata_list(&plugin_being_loaded_metadata);
 }
 
 static void parseRxasFileForFunctions(Context *context, char* file_name, char* location) {
@@ -2157,8 +2312,16 @@ static int load_another_file(Context *context) {
     }
 
     // Process any statically linked functions
-    if (static_linked_functions) {
-        struct static_linked_function *static_func = static_linked_functions;
+    if (static_linked_functions || static_linked_metadata) {
+        struct static_linked_function *functions = static_linked_functions;
+        struct static_linked_function *static_func = functions;
+        struct static_linked_metadata *metadata = static_linked_metadata;
+
+        static_linked_functions = 0;
+        static_linked_metadata = 0;
+
+        import_rxpa_metadata_list(context, "statically-linked", metadata);
+
         while (static_func) {
             rximpf_f(context, "statically-linked",
                      static_func->name, static_func->option, static_func->type,
@@ -2167,8 +2330,9 @@ static int load_another_file(Context *context) {
         }
 
         // Free the list of statically linked functions -  we only load these once
+        static_linked_functions = functions;
+        static_linked_metadata = metadata;
         free_static_linked_functions();
-        static_linked_functions = 0;
         return 1;
     }
 
@@ -3000,6 +3164,7 @@ void free_static_linked_functions()
         free(static_linked_functions);
         static_linked_functions = next;
     }
+    free_rxpa_metadata_list(&static_linked_metadata);
 }
 
 /* Public API: eagerly scan importable files to populate functions and register classes */

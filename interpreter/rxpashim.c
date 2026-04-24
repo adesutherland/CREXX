@@ -3,6 +3,10 @@
 
 /* Forward declarations of VM implementation */
 void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args);
+void rxvm_addclass(char* name, char* option, char* type);
+void rxvm_addinterface(char* name, char* option, char* type);
+void rxvm_addimplements(char* name, char* interface_name);
+void rxvm_addmember(char* owner, char* kind, char* member, char* type, char* args);
 char* rxvm_getstring(rxpa_attribute_value attributeValue);
 void rxvm_setstring(rxpa_attribute_value attributeValue, char* string);
 void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
@@ -21,6 +25,22 @@ void rxvm_resetsayexit();
 /* Shims */
 void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args) {
     rxvm_addfunc(func, name, option, type, args);
+}
+
+void rxpa_addclass(char* name, char* option, char* type) {
+    rxvm_addclass(name, option, type);
+}
+
+void rxpa_addinterface(char* name, char* option, char* type) {
+    rxvm_addinterface(name, option, type);
+}
+
+void rxpa_addimplements(char* name, char* interface_name) {
+    rxvm_addimplements(name, interface_name);
+}
+
+void rxpa_addmember(char* owner, char* kind, char* member, char* type, char* args) {
+    rxvm_addmember(owner, kind, member, type, args);
 }
 
 char* rxpa_getstring(rxpa_attribute_value attributeValue) {

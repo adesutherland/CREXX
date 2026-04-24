@@ -5,6 +5,8 @@
 #include "rxvalue.h"
 
 #define RXVML_ABI_VERSION 1
+#define RXVML_ADDRESS_ENVIRONMENT_INTERFACE "_rxsysb.addressenvironment"
+#define RXVML_ADDRESS_ENVIRONMENT_FACTORY_PROC "_rxsysb._new_address_environment"
 
 typedef struct rxvml_context rxvml_context;
 typedef value   rxvml_value;
@@ -89,6 +91,11 @@ int rxvml_address_register_callback_environment(
     const char* env_name,
     rxvml_address_callback callback,
     void* userdata);
+
+int rxvml_address_create_environment(
+    rxvml_context* ctx,
+    const char* env_name,
+    rxvml_value** env_obj_out);
 
 int rxvml_address_set_environment(
     rxvml_context* ctx,
