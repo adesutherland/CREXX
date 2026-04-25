@@ -679,6 +679,37 @@ void infer_arguments(Context *context, ASTNode *node) {
     }
 }
 
+static int resolve_factory_call_as_qualified_function(Context *context, ASTNode *node) {
+    Symbol *func_sym = 0;
+
+    if (!context || !node || node->node_type != FACTORY_CALL) return 0;
+    if (node->association) return 0;
+    if (!node->node_string ||
+        !rxcp_source_symbol_is_qualified(node->node_string, node->node_string_length)) {
+        return 0;
+    }
+
+    func_sym = sym_rvfc(context->ast, node);
+    if (!func_sym || func_sym->symbol_type != FUNCTION_SYMBOL) {
+        func_sym = sym_imfn(context, node);
+    }
+
+    if (!func_sym || func_sym->symbol_type != FUNCTION_SYMBOL) return 0;
+
+    if (node->symbolNode && node->symbolNode->symbol != func_sym) {
+        sym_dno(node->symbolNode->symbol, node);
+    }
+    if (!node->symbolNode) {
+        sym_adnd(func_sym, node, 1, 0);
+    }
+
+    node->node_type = FUNCTION;
+    ast_svtp(node, func_sym);
+    infer_arguments(context, node);
+    context->changed_flags |= FLAG_VAL_TYPE;
+    return 1;
+}
+
 /* Reset node types at the start of each validation pass so they can be re-evaluated on a clean slate */
 walker_result clear_node_types_walker(walker_direction direction,
                                              ASTNode* node,
@@ -1058,7 +1089,9 @@ walker_result set_node_types_walker(walker_direction direction,
                                     infer_arguments(context, node);
                                 }
                             } else {
-                                context->changed_flags |= FLAG_VAL_TYPE; 
+                                if (!resolve_factory_call_as_qualified_function(context, node)) {
+                                    context->changed_flags |= FLAG_VAL_TYPE;
+                                }
                             }
                         } else {
                             /* Defer error if imports may provide class stubs */
@@ -1067,7 +1100,9 @@ walker_result set_node_types_walker(walker_direction direction,
                                 ASTNode *pfch = context->ast->child->child;
                                 while (pfch) { if (pfch->node_type == IMPORT) { has_import = 1; break; } pfch = pfch->sibling; }
                             }
-                            if (has_import && !context->after_rewrite) {
+                            if (resolve_factory_call_as_qualified_function(context, node)) {
+                                /* Resolved as a namespace-qualified imported procedure. */
+                            } else if (has_import && !context->after_rewrite) {
                                 /* defer error on first pass */
                             } else {
                                 mknd_err(node, "CLASS_NOT_FOUND");
