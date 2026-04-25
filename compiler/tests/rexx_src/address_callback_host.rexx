@@ -18,7 +18,7 @@ address_callback_host: procedure = .int
   if rc \= 0 then return 2
 
   rc = -1
-  "RETURN 42"
+  address "RETURN 42"
   if rc \= 42 then return 3
 
   pool = .standardaddresssandbox()

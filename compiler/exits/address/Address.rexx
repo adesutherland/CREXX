@@ -52,10 +52,16 @@ addressexit: class
         if upper(strip(tokens[1].get_text())) = "ADDRESS" then explicit = 1
 
         if explicit = 1 then do
-            env_expr = emitEnvironment(tokens[2])
-            if tokens.0 = 2 then return set_environment_result(env_expr)
-            if tokens.0 < 3 then return error_result(1, "ADDRESS requires an environment and command")
-            clause_start = 3
+            if tokens.0 < 2 then return error_result(1, "ADDRESS requires an environment or command")
+            if strip(tokens[2].get_type()) = "string_literal" then do
+                env_expr = "''"
+                clause_start = 2
+            end
+            else do
+                env_expr = emitEnvironment(tokens[2])
+                if tokens.0 = 2 then return set_environment_result(env_expr)
+                clause_start = 3
+            end
         end
         else do
             env_expr = "''"

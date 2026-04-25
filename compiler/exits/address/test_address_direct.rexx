@@ -10,6 +10,9 @@ main: procedure
   failures = failures + test_descriptor()
   failures = failures + test_set_environment()
   failures = failures + test_explicit_address()
+  failures = failures + test_explicit_quoted_command()
+  failures = failures + test_explicit_quoted_command_clauses()
+  failures = failures + test_explicit_quoted_command_sandbox()
   failures = failures + test_implicit_address()
   failures = failures + test_implicit_join_before()
   failures = failures + test_implicit_string_no_warning()
@@ -60,7 +63,7 @@ test_explicit_address: procedure = .int
 
   tokens = newtokens()
   call pushidentifier tokens, "ADDRESS"
-  call pushstring tokens, "'system'"
+  call pushidentifier tokens, "system"
   call pushidentifier tokens, "cmd", ".string", 0
   call pushidentifier tokens, "INPUT"
   call pushidentifier tokens, "input_lines", ".string[]", 1
@@ -82,6 +85,87 @@ test_explicit_address: procedure = .int
   if check_contains("address explicit output", replacement, "_redir2array(output_lines)") = 0 then failures = failures + 1
   if check_contains("address explicit error", replacement, "_redir2array(error_lines)") = 0 then failures = failures + 1
   if check_contains("address explicit expose", replacement, "'request_id', request_id") = 0 then failures = failures + 1
+
+  return failures
+
+test_explicit_quoted_command: procedure = .int
+  failures = .int
+  addr = .addressexit(1007)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushstring tokens, '"echo QUOTED"'
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address quoted command pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address quoted command process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address quoted command current env", replacement, "_address('',") = 0 then failures = failures + 1
+  if check_contains("address quoted command text", replacement, '"echo QUOTED"') = 0 then failures = failures + 1
+  if check_equal("address quoted command warning count", "0", result.get_diagnostic_count()) = 0 then failures = failures + 1
+
+  return failures
+
+test_explicit_quoted_command_clauses: procedure = .int
+  failures = .int
+  addr = .addressexit(1008)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushstring tokens, '"SET BUFFER UPDATED"'
+  call pushidentifier tokens, "OUTPUT"
+  call pushidentifier tokens, "output_lines", ".string[]", 1
+  call pushidentifier tokens, "EXPOSE"
+  call pushidentifier tokens, "buffer", ".string", 0
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address quoted clauses pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address quoted clauses process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address quoted clauses current env", replacement, "_address('',") = 0 then failures = failures + 1
+  if check_contains("address quoted clauses text", replacement, '"SET BUFFER UPDATED"') = 0 then failures = failures + 1
+  if check_contains("address quoted clauses output", replacement, "_redir2array(output_lines)") = 0 then failures = failures + 1
+  if check_contains("address quoted clauses expose", replacement, "'buffer', buffer") = 0 then failures = failures + 1
+  if check_equal("address quoted clauses warning count", "0", result.get_diagnostic_count()) = 0 then failures = failures + 1
+
+  return failures
+
+test_explicit_quoted_command_sandbox: procedure = .int
+  failures = .int
+  addr = .addressexit(1009)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushstring tokens, '"SANDBOX ROUNDTRIP"'
+  call pushidentifier tokens, "SANDBOX"
+  call pushidentifier tokens, "pool", ".addresssandbox", 0
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address quoted sandbox pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address quoted sandbox process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address quoted sandbox current env", replacement, "_address_with_sandbox('',") = 0 then failures = failures + 1
+  if check_contains("address quoted sandbox text", replacement, '"SANDBOX ROUNDTRIP"') = 0 then failures = failures + 1
+  if check_contains("address quoted sandbox operand", replacement, ",pool)") = 0 then failures = failures + 1
+  if check_equal("address quoted sandbox warning count", "0", result.get_diagnostic_count()) = 0 then failures = failures + 1
 
   return failures
 

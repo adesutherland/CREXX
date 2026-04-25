@@ -1,7 +1,7 @@
 # ADDRESS and REXXSAA Working Notes
 
 Status: draft, direction partially approved
-Last updated: 2026-04-24
+Last updated: 2026-04-25
 
 ## 1. Purpose
 
@@ -65,8 +65,10 @@ The active lowering path is now the certified/system exit bridge in
 - the current `ADDRESS` lowering still targets:
   - `rc = _address(...)`
 - explicit `ADDRESS env` can set the current/default environment without
-  executing a command, and explicit `ADDRESS env command` still executes
-  immediately
+  executing a command, where `env` is currently the unquoted identifier form
+- explicit `ADDRESS env command` executes immediately in `env`
+- explicit `ADDRESS "command"` executes the quoted command in the
+  current/default environment; quoted second tokens are not environment names
 - implicit command dispatch uses the runtime current/default environment,
   initially `SYSTEM`
 - redirect operands are still normalized through the existing helper calls:
@@ -408,13 +410,35 @@ Interpretation:
 Recommended syntax direction:
 
 ```rexx
-address editor "GET CURSOR" expose row col
-address cms "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
 address cms
+address "CP QUERY USERID"
+address cms "CP QUERY USERID"
+address editor "GET CURSOR" expose row col
+address "GET CURSOR" expose row col
+address cms "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
 "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
+address "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
 ```
 
-`ADDRESS env` sets the current/default environment without executing a command.
+Supported syntax for review:
+
+- `ADDRESS env` sets the current/default environment without executing a
+  command. The supported selector form is an unquoted identifier, for example
+  `ADDRESS cms`.
+- `ADDRESS env command-expression` executes immediately in `env`; this also
+  makes `env` the current/default environment.
+- `ADDRESS "command"` executes the quoted command in the current/default
+  environment. This is the explicit form of the common Rexx use case after
+  `ADDRESS env`.
+- A bare string command line such as `"command"` also executes in the
+  current/default environment and does not emit the implicit-command warning.
+- A bare non-string command expression such as `cmd` executes in the
+  current/default environment but emits `IMPLICIT_ADDRESS` so the use is visible
+  during migration.
+- `INPUT`, `OUTPUT`, `ERROR`, `EXPOSE name`, `EXPOSE name[]`, and
+  `SANDBOX pool` attach to a command dispatch, including current-environment
+  `ADDRESS "command"` dispatches.
+
 `SANDBOX pool` is deliberately per-command: it passes a caller-owned Rexx object
 to the provider only for that dispatch. A sandbox is not retained as ADDRESS
 state, because it is an ordinary Rexx variable/capability and may go out of
@@ -848,7 +872,9 @@ Preferred explicit exposure syntax:
 
 ```rexx
 address editor "GET CURSOR" expose row col
+address "GET CURSOR" expose row col
 address editor "LIST OPEN BUFFERS" expose buffers[]
+address "LIST OPEN BUFFERS" expose buffers[]
 address tool command expose status message
 ```
 
@@ -866,8 +892,8 @@ Preferred sandbox syntax:
 
 ```rexx
 address cms "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
-address cms
 "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
+address "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
 ```
 
 Interpretation:
@@ -883,6 +909,8 @@ Interpretation:
   objects are not retained and must be supplied on each command that needs one
 - the standard sandbox class performs case-insensitive lookup and stores keys
   in uppercase form
+- `ADDRESS "command" SANDBOX pool` is the explicit current-environment form;
+  quoted second tokens are commands, not environment selectors
 
 Compatibility stance:
 
@@ -1858,7 +1886,11 @@ Deliverables:
     dispatch left as the fallback for non-standard implementations
   - ADDRESS examples now prefer implicit current-environment command lines after
     `ADDRESS env`, rather than the ugly `ADDRESS "" "cmd"` form
-  - focused ADDRESS coverage passed `24/24`
+  - explicit `ADDRESS "command"` now dispatches in the current/default
+    environment, matching the usual Rexx distinction between `ADDRESS cmd`
+    and `ADDRESS "cmd"`
+  - focused ADDRESS coverage passed `24/24`; full debug-tree coverage passed
+    `866/866` on 2026-04-25
 
 ## 10. Evidence and code anchors
 
