@@ -213,7 +213,8 @@ readlines: procedure = .string[]
   assembler fclose rc,fileid
   if rc\=0 then call raise "error", "40.27", "cannot close "fname
 return lines
-
+/* Load entire non Binary file into one stream and returns it
+ */
 loadtext: procedure = .string
   arg fname=.string
 

@@ -1,7 +1,7 @@
 options levelb
 import rxfnsb
 
-main: procedure
+## main: procedure
 
  name[1]  = "Fred"
  qty[1]   = 3
