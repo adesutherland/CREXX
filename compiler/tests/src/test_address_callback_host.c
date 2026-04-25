@@ -12,13 +12,14 @@
 
 typedef struct host_state {
     int calls;
-    char envs[5][32];
-    char commands[5][64];
-    int binding_counts[5];
+    char envs[7][32];
+    char commands[7][64];
+    int binding_counts[7];
     char first_binding_name[32];
     char first_binding_value[64];
     char updated_value[64];
     char sandbox_value[64];
+    char stem_value[64];
     char sandbox_updated_value[96];
     rxvml_address_binding updates[1];
 } host_state;
@@ -44,11 +45,10 @@ static int editor_callback(
 
     host_state* state = (host_state*)userdata;
     int slot;
-
-    (void)ctx;
+    size_t i;
 
     if (!state || !request || !response) return -99;
-    if (state->calls >= 5) return -98;
+    if (state->calls >= 7) return -98;
 
     slot = state->calls;
     copy_text(state->envs[slot], sizeof(state->envs[slot]), request->environment_name);
@@ -78,6 +78,15 @@ static int editor_callback(
         return 0;
     }
 
+    if (strcmp(request->command, "SANDBOX DIRECT METHOD") == 0) {
+        if (rxvml_address_sandbox_set(ctx, request, "direct", "native-direct") != 0) {
+            response->rc = -8;
+            return 0;
+        }
+        response->rc = 0;
+        return 0;
+    }
+
     if (strcmp(request->command, "SANDBOX ROUNDTRIP") == 0) {
         char updated[96];
         if (rxvml_address_sandbox_get(request, "VALUE.3", state->sandbox_value, sizeof(state->sandbox_value)) != 0) {
@@ -97,6 +106,41 @@ static int editor_callback(
         return 0;
     }
 
+    if (strcmp(request->command, "EXPOSE ARRAY") == 0) {
+        for (i = 0; i < request->binding_count; i++) {
+            const rxvml_address_binding* binding = &request->bindings[i];
+            if (strcmp(binding->kind, "stem") == 0 &&
+                strcmp(binding->internal_name, "items") == 0) {
+                int helper_rc = rxvml_address_binding_stem_get(binding, "1", state->stem_value, sizeof(state->stem_value));
+                if (helper_rc != 0) {
+                    fprintf(stderr, "stem get helper returned %d\n", helper_rc);
+                    response->rc = -9;
+                    return 0;
+                }
+                helper_rc = rxvml_address_binding_stem_set(ctx, binding, "2", "native-two-updated");
+                if (helper_rc != 0) {
+                    fprintf(stderr, "stem set helper for 2 returned %d\n", helper_rc);
+                    response->rc = -10;
+                    return 0;
+                }
+                helper_rc = rxvml_address_binding_stem_set(ctx, binding, "3", "native-three");
+                if (helper_rc != 0) {
+                    fprintf(stderr, "stem set helper for 3 returned %d\n", helper_rc);
+                    response->rc = -10;
+                    return 0;
+                }
+                helper_rc = rxvml_address_binding_stem_set(ctx, binding, "0", "3");
+                if (helper_rc != 0) {
+                    fprintf(stderr, "stem set helper for 0 returned %d\n", helper_rc);
+                    response->rc = -10;
+                    return 0;
+                }
+            }
+        }
+        response->rc = 0;
+        return 0;
+    }
+
     response->rc = 0;
     return 0;
 }
@@ -111,7 +155,7 @@ static void dump_state(const host_state* state) {
     int i;
     fprintf(stderr, "callback calls=%d\n", state ? state->calls : -1);
     if (!state) return;
-    for (i = 0; i < state->calls && i < 4; i++) {
+    for (i = 0; i < state->calls && i < 7; i++) {
         fprintf(stderr, "call %d env='%s' command='%s' bindings=%d\n",
                 i + 1, state->envs[i], state->commands[i], state->binding_counts[i]);
     }
@@ -158,8 +202,8 @@ int main(void) {
         goto cleanup;
     }
 
-    if (state.calls != 4) {
-        fprintf(stderr, "Expected 4 callback calls, got %d\n", state.calls);
+    if (state.calls != 7) {
+        fprintf(stderr, "Expected 7 callback calls, got %d\n", state.calls);
         goto cleanup;
     }
 
@@ -184,8 +228,22 @@ int main(void) {
     if (check_equal("call 3 command", state.commands[2], "RETURN 42")) goto cleanup;
 
     if (check_equal("call 4 env", state.envs[3], "EDITOR")) goto cleanup;
-    if (check_equal("call 4 command", state.commands[3], "SANDBOX ROUNDTRIP")) goto cleanup;
+    if (check_equal("call 4 command", state.commands[3], "SANDBOX DIRECT METHOD")) goto cleanup;
+
+    if (check_equal("call 5 env", state.envs[4], "EDITOR")) goto cleanup;
+    if (check_equal("call 5 command", state.commands[4], "SANDBOX ROUNDTRIP")) goto cleanup;
     if (check_equal("sandbox value", state.sandbox_value, "native-input")) goto cleanup;
+
+    if (check_equal("call 6 env", state.envs[5], "EDITOR")) goto cleanup;
+    if (check_equal("call 6 command", state.commands[5], "SANDBOX DIRECT METHOD")) goto cleanup;
+
+    if (check_equal("call 7 env", state.envs[6], "EDITOR")) goto cleanup;
+    if (check_equal("call 7 command", state.commands[6], "EXPOSE ARRAY")) goto cleanup;
+    if (state.binding_counts[6] != 1) {
+        fprintf(stderr, "Expected 1 binding on array call, got %d\n", state.binding_counts[6]);
+        goto cleanup;
+    }
+    if (check_equal("stem value", state.stem_value, "native-one")) goto cleanup;
 
     status = 0;
 

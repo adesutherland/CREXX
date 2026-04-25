@@ -8,13 +8,12 @@ address_cms_host: procedure = .int
   cms_out = .string[]
   list_out = .string[]
   type_out = .string[]
-  cmd = .string
   buffer = .string
   pool = .standardaddresssandbox
+  items = .string[]
 
   address cms
-  cmd = "CP SET MSG OFF"
-  address "" cmd
+  "CP SET MSG OFF"
   if rc <> 0 then errors = errors + 1
 
   address cms "CP QUERY USERID" output cms_out
@@ -29,8 +28,7 @@ address_cms_host: procedure = .int
   address cms "CP SET MSG ON"
   if rc <> 0 then errors = errors + 1
 
-  cmd = "CP QUERY USERID"
-  address "" cmd
+  "CP QUERY USERID"
   if rc <> 0 then errors = errors + 1
 
   buffer = "cms-before"
@@ -50,10 +48,19 @@ address_cms_host: procedure = .int
   if pool.get("response") <> "cms-response" then errors = errors + 1
 
   pool = .standardaddresssandbox()
-  call pool.set("value.3", "default-input")
-  address cms sandbox pool
-  "SANDBOX ROUNDTRIP"
+  call pool.set("value.3", "current-env-input")
+  address cms
+  "SANDBOX ROUNDTRIP" sandbox pool
   if rc <> 0 then errors = errors + 1
-  if pool.get("result") <> "default-input:cms" then errors = errors + 1
+  if pool.get("result") <> "current-env-input:cms" then errors = errors + 1
+
+  items[1] = "cms-one"
+  items[2] = "cms-two"
+  address cms "EXPOSE ARRAY" expose items[]
+  if rc <> 0 then errors = errors + 1
+  if items[1] <> "cms-one" then errors = errors + 1
+  if items[2] <> "cms-two-updated" then errors = errors + 1
+  if items[3] <> "cms-three" then errors = errors + 1
+  if items.0 <> 3 then errors = errors + 1
 
   return errors

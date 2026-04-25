@@ -385,7 +385,8 @@ Notes:
 - explicit `EXPOSE` should keep internal and external names aligned for now;
   aliasing is deferred unless a real use case demands it
 - explicit `EXPOSE` values are string-oriented; the near-term supported shapes
-  should be `.string`, `.string[]`, and the sandbox string-container interface
+  are scalar `.string` variables plus explicit `.string[]` array bindings
+  written as `EXPOSE name[]`
 - the external environment is expected to know exposed variable names and infer
   or negotiate their role from command semantics where possible
 
@@ -393,6 +394,9 @@ Interpretation:
 
 - `EXPOSE name ...` exports explicit string variable capabilities and allows
   returned updates only to those names
+- `EXPOSE name[]` exports a `.string[]` array through a request-owned
+  `.addressstem` binding; the array is packed from `name.1` through `name.0`
+  and written back after dispatch, including provider changes to key `"0"`
 - `SANDBOX pool` passes a controlled string map implementing the ADDRESS
   sandbox interface
 - a sandbox key is just a string, so classic-style names such as `VALUE.3` are
@@ -406,16 +410,17 @@ Recommended syntax direction:
 ```rexx
 address editor "GET CURSOR" expose row col
 address cms "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
-address cms sandbox a_pool
+address cms
+"EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
 ```
 
-The third form sets the current/default `CMS` environment and the current
-default sandbox without executing a command. A later implicit command sent to
-that environment can then use the default sandbox. A command form with an
-explicit environment and `SANDBOX` clause also updates the current/default
-environment and sandbox before dispatch. This mirrors classic ADDRESS state:
-the command is sent now, and the selected environment/sandbox remain current
-for later implicit commands.
+`ADDRESS env` sets the current/default environment without executing a command.
+`SANDBOX pool` is deliberately per-command: it passes a caller-owned Rexx object
+to the provider only for that dispatch. A sandbox is not retained as ADDRESS
+state, because it is an ordinary Rexx variable/capability and may go out of
+scope after the caller frame returns. This keeps ADDRESS environment selection
+classic, while keeping command-processor variable-pool access explicit and
+safe.
 
 Standard sandbox contract:
 
@@ -429,6 +434,20 @@ Standard sandbox contract:
 - the intended interface surface is fetch/get, set, drop, exists, and
   iteration over keys for compatibility-style enumeration
 
+Standard exposed-stem contract:
+
+- define a real Level B interface, working name `.addressstem`
+- provide `.standardaddressstem`, a case-insensitive string-map class with the
+  same `get`, `set`, `drop`, `exists`, and `next` surface as the sandbox
+- `EXPOSE name[]` is explicit syntax, not type inference; this keeps scalar
+  `EXPOSE name` lowering immediate and avoids letting `ADDRESS env` identifiers
+  be symbolised while an exit waits for type convergence
+- the request owns exposed stem bindings during dispatch; Rexx providers use
+  `request.get_binding_stem_value(index, key)` and
+  `request.set_binding_stem_value(index, key, value)`, while C providers use
+  `rxvml_address_binding_stem_get()` and
+  `rxvml_address_binding_stem_set()`
+
 Implemented tracer contract:
 
 - `.addresssandbox` now exposes direct `get`, `set`, `drop`, `exists`, and
@@ -438,6 +457,11 @@ Implemented tracer contract:
 - imported providers and ADDRESS helper wrappers type sandbox arguments as
   `.addresssandbox`; the earlier generic `access(operation, name, value)` shim
   has been removed
+- `addressrequest` exposes `get_sandbox_value(name)` and
+  `set_sandbox_value(name, value)` for Rexx providers that need to read/write
+  the caller sandbox without depending on object-return aliasing
+- explicit `SANDBOX pool` requests keep the request sandbox linked to the
+  selected sandbox object for the duration of dispatch
 
 Compatibility stance:
 
@@ -824,6 +848,7 @@ Preferred explicit exposure syntax:
 
 ```rexx
 address editor "GET CURSOR" expose row col
+address editor "LIST OPEN BUFFERS" expose buffers[]
 address tool command expose status message
 ```
 
@@ -831,8 +856,9 @@ Interpretation:
 
 - `EXPOSE` declares exact variable capabilities by name
 - internal and external names are the same for now
-- values are string-oriented; string arrays can be added as an explicit binding
-  kind when needed
+- scalar exposure is string-oriented
+- `EXPOSE name[]` declares a `.string[]` binding and is lowered through a
+  request-owned `.addressstem` object rather than by passing the array directly
 - providers inspect the exposed names and return updates for names they
   understand
 
@@ -840,18 +866,21 @@ Preferred sandbox syntax:
 
 ```rexx
 address cms "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
-address cms sandbox a_pool
+address cms
+"EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
 ```
 
 Interpretation:
 
 - `SANDBOX` passes a caller-supplied string-container object implementing the
   ADDRESS sandbox interface
-- the provider can read and write any keys in that sandbox object
+- the provider can read and write any keys through the request sandbox contract
+  (`request.get_sandbox_value(...)` / `request.set_sandbox_value(...)` in Rexx,
+  or the `rxvml_address_sandbox_*` helpers in C)
 - keys are strings, so `VALUE.3`, `RESULT`, `RC`, or command-processor-specific
   names are ordinary map keys
-- the no-command form sets the current/default address environment and current
-  default sandbox
+- the no-command form sets only the current/default address environment; sandbox
+  objects are not retained and must be supplied on each command that needs one
 - the standard sandbox class performs case-insensitive lookup and stores keys
   in uppercase form
 
@@ -866,14 +895,19 @@ Native tracer stance:
 - `rxvml_address_request` now carries the sandbox object pointer
 - `rxvml_address_sandbox_get()` lets a native callback read from the standard
   sandbox with the same case-insensitive key rules
-- native providers write sandbox values by returning `SANDBOX` entries in
-  `rxvml_address_response.updated_bindings`
-- the Rexx ADDRESS wrapper applies those updates through `sandbox.set(...)` on
-  the caller-supplied sandbox; native providers must not mutate the standard
-  sandbox object layout directly
-- direct re-entrant calls from a native callback into sandbox methods are not the
-  current contract; response updates keep the callback boundary simple and match
-  the existing explicit `EXPOSE` writeback model
+- `rxvml_address_sandbox_set()` lets a native callback update the request
+  sandbox; the standard sandbox/stem classes are updated through direct VM
+  layout helpers, with interface method dispatch reserved as the fallback for
+  non-standard implementations
+- `rxvml_address_binding_stem_get()` and
+  `rxvml_address_binding_stem_set()` let a native callback read and write an
+  exposed `EXPOSE name[]` binding through the request-owned stem object
+- native providers may still return `SANDBOX` entries in
+  `rxvml_address_response.updated_bindings` when they want a batched response
+  model matching explicit `EXPOSE` writeback
+- native providers must not mutate the standard sandbox object layout directly;
+  reads and writes go through the ADDRESS sandbox helpers or the Rexx
+  `.addresssandbox` method contract
 
 ### 7.6 Marker syntax proposal
 
@@ -1259,7 +1293,7 @@ Implemented dummy Rexx fixture shape:
 address editor "OPEN demo.txt" expose buffer
 address editor
 "CURSOR 7 9"
-address "" "RETURN 42"
+"RETURN 42"
 ```
 
 Implemented dummy callback behaviour:
@@ -1276,6 +1310,7 @@ typedef struct rxvml_address_binding {
     const char *internal_name;
     const char *external_alias;
     const char *value;
+    rxvml_value *value_object;
     const char *flags;
 } rxvml_address_binding;
 
@@ -1284,6 +1319,7 @@ typedef struct rxvml_address_request {
     const char *command;
     size_t binding_count;
     const rxvml_address_binding *bindings;
+    rxvml_value *sandbox;
 } rxvml_address_request;
 
 typedef struct rxvml_address_response {
@@ -1306,6 +1342,11 @@ views over VM values. A host that needs to retain them after the callback should
 copy them. `updated_bindings` pointers supplied on `rxvml_address_response`
 only need to remain valid until the callback returns; `rxvml` copies them into
 the Rexx `addressresponse` object immediately.
+
+For `kind == "stem"` bindings, `value_object` points at the request-owned
+`.addressstem` object for the callback duration. Native providers should use
+`rxvml_address_binding_stem_get()` / `rxvml_address_binding_stem_set()` rather
+than retaining or directly dereferencing that object.
 
 Stage 3.3 exit criteria:
 
@@ -1494,7 +1535,9 @@ Planned syntax:
 
 ```rexx
 address cms "EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
-address cms sandbox a_pool
+address cms
+"EXECIO * DISKR FILE A STEM VALUE." sandbox a_pool
+address cms "QUERY BUFFERS" expose buffers[]
 ```
 
 Implemented tracer deliverables:
@@ -1503,22 +1546,32 @@ Implemented tracer deliverables:
 - provided `.standardaddresssandbox`, a case-insensitive string-map
   implementation
 - extended `addressrequest` with a sandbox object
+- added request-level sandbox read/write methods for Rexx providers so writes do
+  not depend on mutating an object value returned by `get_sandbox()`
 - extended the ADDRESS certified exit to parse `SANDBOX pool`
-- allowed `ADDRESS env SANDBOX pool` to set both current/default environment and
-  current/default sandbox without executing a command
+- rejected commandless `ADDRESS env SANDBOX pool`; use `ADDRESS env` to select
+  the default environment and pass `SANDBOX pool` on each command that needs it
 - kept explicit `EXPOSE` as a separate small-binding model
 - added Rexx CMS-provider tests showing sandbox read/write and response-update
   application through the sandbox interface
+- strengthened the CMS provider test with an `rxvml` host assertion so the Rexx
+  fixture's returned error count is checked directly
 - added native callback-host coverage showing a C callback reading the supplied
-  standard sandbox through `rxvml_address_sandbox_get()` and writing back through
-  `SANDBOX` response updates
+  standard sandbox through `rxvml_address_sandbox_get()`, writing through
+  `rxvml_address_sandbox_set()`, and writing through `SANDBOX` response updates
+- added `.addressstem` / `.standardaddressstem` and `EXPOSE name[]` lowering for
+  explicit string-array bindings; Rexx and C providers now mutate the
+  request-owned stem and the caller array is resized/written back after dispatch
+- added C stem helpers:
+  `rxvml_address_binding_stem_get()` and
+  `rxvml_address_binding_stem_set()`
 
 Non-goals for this stage:
 
 - arbitrary caller variable-pool access
 - full REXXSAA adapter surface
 - typed object exchange through `ADDRESS`
-- direct native mutation of sandbox object internals
+- arbitrary native mutation of non-standard object internals
 
 Known follow-ups recorded for the next compiler/runtime cleanup:
 
@@ -1528,11 +1581,11 @@ Known follow-ups recorded for the next compiler/runtime cleanup:
 - keep `expose` and optional/default semantics independent in import handling;
   RXAS metadata uses `?` for optional arguments and `expose` for reference
   arguments, and neither marker implies the other
-- harden object/reference semantics for interface-typed object variables. The
-  ADDRESS wrapper currently applies native `SANDBOX` response updates directly
-  on the exposed `sandbox` parameter because routing the update through helper
-  calls or temporary interface variables did not reliably mutate the caller's
-  sandbox object
+- add focused object/reference regression tests around interface-typed helper
+  returns and temporary variables. ADDRESS now avoids relying on those aliases
+  by using request-level sandbox read/write helpers and live request links, but
+  the wider object-aliasing contract still needs direct compiler/runtime
+  coverage before more abstractions depend on it
 - harden class/interface metadata import so repeated imported stubs do not
   leak duplicate synthetic `main` procedures or duplicate class/interface
   declarations into validation/linking
@@ -1759,7 +1812,7 @@ Deliverables:
   - marker/alias ideas are deferred until the simpler operating model has been
     tested with real providers
 - 2026-04-24: Stage 3.5 sandbox tracer implemented:
-  - ADDRESS now accepts `SANDBOX pool` and `ADDRESS env SANDBOX pool`
+  - ADDRESS now accepts per-command `SANDBOX pool` clauses
   - `addressrequest` carries a sandbox object through Rexx and native
     dispatch
   - `.standardaddresssandbox` provides case-insensitive string-map access for
@@ -1773,15 +1826,39 @@ Deliverables:
 - 2026-04-24: Stage 3.5 sandbox cleanup implemented:
   - `.addresssandbox` now uses the direct `get/set/drop/exists/next` method
     contract; the temporary generic `access(...)` shim has been removed
-  - `_address_with_sandbox` and default sandbox helpers now type sandbox values
-    as `.addresssandbox`
+  - `_address_with_sandbox` now types sandbox values as `.addresssandbox`
+  - retained default sandbox state was removed; sandbox objects are caller-owned
+    capabilities and must be passed on each command that needs one
+  - Rexx providers now use `addressrequest.get_sandbox_value()` and
+    `addressrequest.set_sandbox_value()` for stable sandbox mutation
   - RXAS import stub reconstruction now preserves `expose` while converting
     metadata optional markers into parseable temporary declarations
   - native callback tests now prove both C reads and C-originated sandbox writes;
-    writes are returned as `SANDBOX` response updates and applied by Rexx through
-    the sandbox interface
-  - object/reference mutation behaviour seen while abstracting sandbox update
-    application is recorded as a compiler/runtime follow-up
+    writes are covered both through `rxvml_address_sandbox_set()` and through
+    `SANDBOX` response updates applied by Rexx
+  - VM `rxvml` nested calls now preserve the outer external-call trampoline, so
+    callback-originated Rexx calls no longer corrupt the callback return path;
+    standard ADDRESS sandbox/stem writes now avoid repeated method dispatch by
+    using direct VM-layout helpers
+  - remaining object/reference mutation edge cases are recorded as focused
+    compiler/runtime follow-up tests, not as ADDRESS API restrictions
+- 2026-04-25: Stage 3.5 exposed-array/stem cleanup implemented:
+  - `EXPOSE name[]` is now the explicit syntax for exposing `.string[]` values
+    to ADDRESS providers
+  - `.addressstem` and `.standardaddressstem` mirror the sandbox string-map
+    method surface and use case-insensitive keys
+  - generated ADDRESS lowering packs caller arrays into request-owned stem
+    bindings, dispatches, then resizes and writes the caller array back from
+    the request binding
+  - Rexx providers use `request.get_binding_stem_value()` and
+    `request.set_binding_stem_value()`; native callbacks use
+    `rxvml_address_binding_stem_get()` and
+    `rxvml_address_binding_stem_set()`
+  - standard sandbox/stem C writes now use direct VM-layout helpers, with method
+    dispatch left as the fallback for non-standard implementations
+  - ADDRESS examples now prefer implicit current-environment command lines after
+    `ADDRESS env`, rather than the ugly `ADDRESS "" "cmd"` form
+  - focused ADDRESS coverage passed `24/24`
 
 ## 10. Evidence and code anchors
 

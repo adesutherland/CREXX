@@ -13,6 +13,7 @@ main: procedure
   failures = failures + test_implicit_address()
   failures = failures + test_implicit_join_before()
   failures = failures + test_implicit_string_no_warning()
+  failures = failures + test_expose_array_stem()
 
   call report_result failures
   return
@@ -149,5 +150,35 @@ test_implicit_string_no_warning: procedure = .int
   result = addr.process(tokens)
   if check_equal("address implicit string process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
   if check_equal("address implicit string warning count", "0", result.get_diagnostic_count()) = 0 then failures = failures + 1
+
+  return failures
+
+test_expose_array_stem: procedure = .int
+  failures = .int
+  addr = .addressexit(1006)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "cms"
+  call pushstring tokens, '"EXPOSE ARRAY"'
+  call pushidentifier tokens, "EXPOSE"
+  call pushidentifier tokens, "items", ".string[]", 1
+  call pushbracket tokens, "["
+  call pushbracket tokens, "]"
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address expose array pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address expose array process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address expose array stem object", replacement, ".standardaddressstem()") = 0 then failures = failures + 1
+  if check_contains("address expose array binding", replacement, ".addressbinding('stem','items','items','','')") = 0 then failures = failures + 1
+  if check_contains("address expose array request update", replacement, "_address_apply_response_request_stem") = 0 then failures = failures + 1
+  if check_contains("address expose array writeback", replacement, "get_binding_stem_value") = 0 then failures = failures + 1
 
   return failures

@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include "rxvalue.h"
 
-#define RXVML_ABI_VERSION 3
+#define RXVML_ABI_VERSION 5
 #define RXVML_ADDRESS_ENVIRONMENT_INTERFACE "_rxsysb.addressenvironment"
 #define RXVML_ADDRESS_ENVIRONMENT_FACTORY_PROC "_rxsysb._new_address_environment"
 
@@ -16,6 +16,7 @@ typedef struct rxvml_address_binding {
     const char* internal_name;
     const char* external_alias;
     const char* value;
+    rxvml_value* value_object;
     const char* flags;
 } rxvml_address_binding;
 
@@ -109,11 +110,44 @@ int rxvml_address_set_environment(
     rxvml_context* ctx,
     const char* env_name);
 
+/* Read from the standard ADDRESS sandbox layout. */
 int rxvml_address_sandbox_get(
     const rxvml_address_request* request,
     const char* name,
     char* out_value,
     size_t out_value_len);
+
+/* Write to the request sandbox through the standard layout, or method fallback. */
+int rxvml_address_sandbox_set(
+    rxvml_context* ctx,
+    const rxvml_address_request* request,
+    const char* name,
+    const char* value);
+
+/* ADDRESS stem helpers for exposed .string[] / addressstem bindings. */
+int rxvml_address_stem_get(
+    const rxvml_value* stem,
+    const char* name,
+    char* out_value,
+    size_t out_value_len);
+
+int rxvml_address_stem_set(
+    rxvml_context* ctx,
+    rxvml_value* stem,
+    const char* name,
+    const char* value);
+
+int rxvml_address_binding_stem_get(
+    const rxvml_address_binding* binding,
+    const char* name,
+    char* out_value,
+    size_t out_value_len);
+
+int rxvml_address_binding_stem_set(
+    rxvml_context* ctx,
+    const rxvml_address_binding* binding,
+    const char* name,
+    const char* value);
 
 
 /* Persistent Registry for Stateful Exits */

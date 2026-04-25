@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include "rxvml.h"
@@ -19,13 +20,21 @@ typedef struct rxvml_address_callback_entry {
     void* userdata;
 } rxvml_address_callback_entry;
 
+typedef struct rxvml_external_call_state {
+    proc_runtime* ext_proc;
+    int ext_argc;
+    value** ext_args;
+    value* ext_ret;
+} rxvml_external_call_state;
+
 enum {
     RXVML_ADDRESS_BINDING_EXTERNAL_ALIAS = 0,
     RXVML_ADDRESS_BINDING_FLAGS = 1,
     RXVML_ADDRESS_BINDING_INTERNAL_NAME = 2,
     RXVML_ADDRESS_BINDING_KIND = 3,
     RXVML_ADDRESS_BINDING_VALUE = 4,
-    RXVML_ADDRESS_BINDING_ATTR_COUNT = 5
+    RXVML_ADDRESS_BINDING_VALUE_OBJECT = 5,
+    RXVML_ADDRESS_BINDING_ATTR_COUNT = 6
 };
 
 enum {
@@ -56,6 +65,7 @@ enum {
 
 static const char RXVML_ADDRESS_BINDING_TYPE_NAME[] = "_rxsysb.addressbinding";
 static const char RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME[] = "_rxsysb.standardaddresssandbox";
+static const char RXVML_STANDARD_ADDRESS_STEM_TYPE_NAME[] = "_rxsysb.standardaddressstem";
 
 struct rxvml_context {
     rxvm_context vm;
@@ -65,6 +75,8 @@ struct rxvml_context {
     rxvml_address_callback_entry* address_callbacks;
     size_t address_callback_size;
 };
+
+static rxvml_context* rxvml_active_context = NULL;
 
 /* rxvml_value is defined as an alias to value in the public header */
 
@@ -77,10 +89,105 @@ static proc_runtime* find_procedure(rxvm_context* ctx, const char* name) {
     return NULL;
 }
 
+static void rxvml_save_external_call_state(
+    rxvm_context* vm,
+    rxvml_external_call_state* state) {
+
+    state->ext_proc = vm->ext_proc;
+    state->ext_argc = vm->ext_argc;
+    state->ext_args = vm->ext_args;
+    state->ext_ret = vm->ext_ret;
+}
+
+static void rxvml_restore_external_call_state(
+    rxvm_context* vm,
+    const rxvml_external_call_state* state) {
+
+    vm->ext_proc = state->ext_proc;
+    vm->ext_argc = state->ext_argc;
+    vm->ext_args = state->ext_args;
+    vm->ext_ret = state->ext_ret;
+}
+
+static int rxvml_invoke_external_proc(
+    rxvml_context* ctx,
+    proc_runtime* proc,
+    size_t argc,
+    rxvml_value** args,
+    const char* dummy_argv0,
+    rxvml_value** response_out) {
+
+    rxvml_external_call_state saved_state;
+    rxvml_context* previous_active_context;
+    value** call_args = NULL;
+    value* call_ret;
+    char* dummy_argv[1];
+
+    if (!ctx || !proc) return -1;
+    if (argc > (size_t)INT_MAX) {
+        ctx->last_error = "Too many rxvml call arguments";
+        return -1;
+    }
+    if (argc > 0 && !args) {
+        ctx->last_error = "Missing rxvml call argument vector";
+        return -1;
+    }
+
+    if (argc > 0) {
+        size_t i;
+        call_args = malloc(sizeof(value*) * argc);
+        if (!call_args) {
+            ctx->last_error = "Failed to allocate rxvml call arguments";
+            return -1;
+        }
+        for (i = 0; i < argc; i++) {
+            if (!args[i]) {
+                free(call_args);
+                ctx->last_error = "Null rxvml call argument";
+                return -1;
+            }
+            call_args[i] = (value*)args[i];
+        }
+    }
+
+    call_ret = value_f();
+    if (!call_ret) {
+        if (call_args) free(call_args);
+        ctx->last_error = "Failed to allocate rxvml return value";
+        return -1;
+    }
+
+    /*
+     * rxvml entry points may be called from a native callback while run() is
+     * already active. Preserve the outer call trampoline so nested method calls
+     * do not corrupt the callback's return path.
+     */
+    rxvml_save_external_call_state(&ctx->vm, &saved_state);
+    ctx->vm.ext_proc = proc;
+    ctx->vm.ext_argc = (int)argc;
+    ctx->vm.ext_args = call_args;
+    ctx->vm.ext_ret = call_ret;
+
+    previous_active_context = rxvml_active_context;
+    rxvml_active_context = ctx;
+    rxvm_prepare(&ctx->vm);
+    dummy_argv[0] = (char*)(dummy_argv0 ? dummy_argv0 : "rxvml_call");
+    run(&ctx->vm, 0, dummy_argv);
+    rxvml_active_context = previous_active_context;
+
+    if (response_out) {
+        *response_out = (rxvml_value*)call_ret;
+    } else {
+        rxvml_value_free((rxvml_value*)call_ret);
+    }
+
+    if (call_args) free(call_args);
+    rxvml_restore_external_call_state(&ctx->vm, &saved_state);
+    return 0;
+}
+
 int rxvm_link(rxvm_context* ctx);
 void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args);
-
-static rxvml_context* rxvml_active_context = NULL;
 
 static const char* rxvml_value_cstr(value* v) {
     if (!v) return "";
@@ -158,11 +265,19 @@ static int rxvml_is_standard_address_sandbox(value* sandbox) {
                   sandbox->object_type_name_length) == 0;
 }
 
+static int rxvml_is_standard_address_stem(value* stem) {
+    if (!stem || !stem->object_type_name) return 0;
+    return stem->object_type_name_length == sizeof(RXVML_STANDARD_ADDRESS_STEM_TYPE_NAME) - 1 &&
+           memcmp(stem->object_type_name,
+                  RXVML_STANDARD_ADDRESS_STEM_TYPE_NAME,
+                  stem->object_type_name_length) == 0;
+}
+
 static void rxvml_normalize_sandbox_key(const char* name, char* out, size_t out_size) {
     rxvml_normalize_address_name(name, out, out_size);
 }
 
-static int rxvml_standard_sandbox_find(value* sandbox, const char* name) {
+static int rxvml_standard_string_map_find(value* sandbox, const char* name) {
     char key[256];
     value* key_count_value;
     value* keys;
@@ -170,7 +285,7 @@ static int rxvml_standard_sandbox_find(value* sandbox, const char* name) {
     rxinteger key_count;
     rxinteger i;
 
-    if (!rxvml_is_standard_address_sandbox(sandbox)) return 0;
+    if (!rxvml_is_standard_address_sandbox(sandbox) && !rxvml_is_standard_address_stem(sandbox)) return 0;
     if (sandbox->num_attributes < RXVML_STANDARD_ADDRESS_SANDBOX_ATTR_COUNT) return 0;
 
     key_count_value = sandbox->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_KEY_COUNT];
@@ -196,6 +311,49 @@ static int rxvml_standard_sandbox_find(value* sandbox, const char* name) {
     return 0;
 }
 
+static int rxvml_standard_string_map_set(value* map, const char* name, const char* value_text) {
+    char key[256];
+    value* key_count_value;
+    value* keys;
+    value* present;
+    value* values;
+    rxinteger key_count;
+    int index;
+
+    if (!rxvml_is_standard_address_sandbox(map) && !rxvml_is_standard_address_stem(map)) return -2;
+    if (map->num_attributes < RXVML_STANDARD_ADDRESS_SANDBOX_ATTR_COUNT) return -2;
+
+    key_count_value = map->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_KEY_COUNT];
+    keys = map->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_KEYS];
+    present = map->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_PRESENT];
+    values = map->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_VALUES];
+    if (!key_count_value || !keys || !present || !values) return -2;
+
+    rxvml_normalize_sandbox_key(name, key, sizeof(key));
+    if (key[0] == 0) return 0;
+
+    index = rxvml_standard_string_map_find(map, key);
+    if (index <= 0) {
+        key_count = key_count_value->int_value;
+        if (key_count < 0) key_count = 0;
+        key_count++;
+        index = (int)key_count;
+        set_int(key_count_value, key_count);
+        set_num_attributes(keys, key_count);
+        set_num_attributes(present, key_count);
+        set_num_attributes(values, key_count);
+        rxvml_set_value_cstr(keys->attributes[index - 1], key);
+    } else {
+        if ((size_t)index > keys->num_attributes) set_num_attributes(keys, (size_t)index);
+        if ((size_t)index > present->num_attributes) set_num_attributes(present, (size_t)index);
+        if ((size_t)index > values->num_attributes) set_num_attributes(values, (size_t)index);
+    }
+
+    set_int(present->attributes[index - 1], 1);
+    rxvml_set_value_cstr(values->attributes[index - 1], value_text ? value_text : "");
+    return 0;
+}
+
 int rxvml_address_sandbox_get(
     const rxvml_address_request* request,
     const char* name,
@@ -217,7 +375,7 @@ int rxvml_address_sandbox_get(
     values = sandbox->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_VALUES];
     if (!values) return -2;
 
-    index = rxvml_standard_sandbox_find(sandbox, name);
+    index = rxvml_standard_string_map_find(sandbox, name);
     if (index <= 0 || (size_t)index > values->num_attributes) return 1;
 
     text = rxvml_value_cstr(values->attributes[index - 1]);
@@ -225,6 +383,172 @@ int rxvml_address_sandbox_get(
     strncpy(out_value, text, out_value_len - 1);
     out_value[out_value_len - 1] = 0;
     return 0;
+}
+
+int rxvml_address_sandbox_set(
+    rxvml_context* ctx,
+    const rxvml_address_request* request,
+    const char* name,
+    const char* value_text) {
+
+    value* sandbox;
+    char class_name[512];
+    rxvml_value* name_arg;
+    rxvml_value* value_arg;
+    rxvml_value* args[2];
+    rxvml_value* method_result = NULL;
+    int rc;
+
+    if (!ctx || !request || !request->sandbox || !name) {
+        if (ctx) ctx->last_error = "Invalid ADDRESS sandbox set arguments";
+        return -1;
+    }
+
+    sandbox = (value*)request->sandbox;
+    if (rxvml_is_standard_address_sandbox(sandbox)) {
+        return rxvml_standard_string_map_set(sandbox, name, value_text);
+    }
+
+    if (!sandbox->object_type_name || sandbox->object_type_name_length == 0 ||
+        sandbox->object_type_name_length >= sizeof(class_name)) {
+        ctx->last_error = "ADDRESS sandbox object has no callable class name";
+        return -2;
+    }
+
+    memcpy(class_name, sandbox->object_type_name, sandbox->object_type_name_length);
+    class_name[sandbox->object_type_name_length] = 0;
+
+    name_arg = rxvml_value_new(ctx);
+    value_arg = rxvml_value_new(ctx);
+    if (!name_arg || !value_arg) {
+        if (name_arg) rxvml_value_free(name_arg);
+        if (value_arg) rxvml_value_free(value_arg);
+        ctx->last_error = "Failed to allocate ADDRESS sandbox set arguments";
+        return -3;
+    }
+
+    rxvml_set_str(name_arg, name, strlen(name));
+    rxvml_set_str(value_arg, value_text ? value_text : "", strlen(value_text ? value_text : ""));
+
+    args[0] = name_arg;
+    args[1] = value_arg;
+    rc = rxvml_call_method(ctx, (rxvml_value*)sandbox, class_name, "set", 2, args, &method_result);
+
+    if (method_result) rxvml_value_free(method_result);
+    rxvml_value_free(name_arg);
+    rxvml_value_free(value_arg);
+    return rc;
+}
+
+int rxvml_address_stem_get(
+    const rxvml_value* stem_value,
+    const char* name,
+    char* out_value,
+    size_t out_value_len) {
+
+    value* stem = (value*)stem_value;
+    value* values;
+    int index;
+    const char* text;
+
+    if (out_value && out_value_len > 0) out_value[0] = 0;
+    if (!stem || !out_value || out_value_len == 0) return -1;
+
+    if (!rxvml_is_standard_address_stem(stem)) return -2;
+    if (stem->num_attributes < RXVML_STANDARD_ADDRESS_SANDBOX_ATTR_COUNT) return -2;
+
+    values = stem->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_VALUES];
+    if (!values) return -2;
+
+    index = rxvml_standard_string_map_find(stem, name);
+    if (index <= 0 || (size_t)index > values->num_attributes) return 1;
+
+    text = rxvml_value_cstr(values->attributes[index - 1]);
+    if (!text) text = "";
+    strncpy(out_value, text, out_value_len - 1);
+    out_value[out_value_len - 1] = 0;
+    return 0;
+}
+
+int rxvml_address_stem_set(
+    rxvml_context* ctx,
+    rxvml_value* stem_value,
+    const char* name,
+    const char* value_text) {
+
+    value* stem = (value*)stem_value;
+    char class_name[512];
+    rxvml_value* name_arg;
+    rxvml_value* value_arg;
+    rxvml_value* args[2];
+    rxvml_value* method_result = NULL;
+    int rc;
+
+    if (!ctx || !stem || !name) {
+        if (ctx) ctx->last_error = "Invalid ADDRESS stem set arguments";
+        return -1;
+    }
+
+    if (rxvml_is_standard_address_stem(stem)) {
+        return rxvml_standard_string_map_set(stem, name, value_text);
+    }
+
+    if (!stem->object_type_name || stem->object_type_name_length == 0 ||
+        stem->object_type_name_length >= sizeof(class_name)) {
+        ctx->last_error = "ADDRESS stem object has no callable class name";
+        return -2;
+    }
+
+    memcpy(class_name, stem->object_type_name, stem->object_type_name_length);
+    class_name[stem->object_type_name_length] = 0;
+
+    name_arg = rxvml_value_new(ctx);
+    value_arg = rxvml_value_new(ctx);
+    if (!name_arg || !value_arg) {
+        if (name_arg) rxvml_value_free(name_arg);
+        if (value_arg) rxvml_value_free(value_arg);
+        ctx->last_error = "Failed to allocate ADDRESS stem set arguments";
+        return -3;
+    }
+
+    rxvml_set_str(name_arg, name, strlen(name));
+    rxvml_set_str(value_arg, value_text ? value_text : "", strlen(value_text ? value_text : ""));
+
+    args[0] = name_arg;
+    args[1] = value_arg;
+    rc = rxvml_call_method(ctx, (rxvml_value*)stem, class_name, "set", 2, args, &method_result);
+
+    if (method_result) rxvml_value_free(method_result);
+    rxvml_value_free(name_arg);
+    rxvml_value_free(value_arg);
+
+    return rc;
+}
+
+int rxvml_address_binding_stem_get(
+    const rxvml_address_binding* binding,
+    const char* name,
+    char* out_value,
+    size_t out_value_len) {
+
+    if (!binding || !binding->value_object) {
+        if (out_value && out_value_len > 0) out_value[0] = 0;
+        return -1;
+    }
+    return rxvml_address_stem_get(binding->value_object, name, out_value, out_value_len);
+}
+
+int rxvml_address_binding_stem_set(
+    rxvml_context* ctx,
+    const rxvml_address_binding* binding,
+    const char* name,
+    const char* value_text) {
+
+    if (!binding || !binding->value_object) {
+        if (ctx) ctx->last_error = "ADDRESS binding has no stem object";
+        return -1;
+    }
+    return rxvml_address_stem_set(ctx, binding->value_object, name, value_text);
 }
 
 static void rxvml_reset_native_signal(rxpa_attribute_value signal) {
@@ -418,6 +742,9 @@ static void rxvml_native_address_execute(
                 bindings[i].internal_name = rxvml_value_cstr(binding->attributes[RXVML_ADDRESS_BINDING_INTERNAL_NAME]);
                 bindings[i].kind = rxvml_value_cstr(binding->attributes[RXVML_ADDRESS_BINDING_KIND]);
                 bindings[i].value = rxvml_value_cstr(binding->attributes[RXVML_ADDRESS_BINDING_VALUE]);
+                if (binding->num_attributes > RXVML_ADDRESS_BINDING_VALUE_OBJECT) {
+                    bindings[i].value_object = (rxvml_value*)binding->attributes[RXVML_ADDRESS_BINDING_VALUE_OBJECT];
+                }
             }
         }
     }
@@ -724,44 +1051,7 @@ int rxvml_call_procedure(
         return -1;
     }
 
-    /* Set up the external call context */
-    ctx->vm.ext_proc = p;
-    ctx->vm.ext_argc = argc;
-    if (argc > 0) {
-        ctx->vm.ext_args = malloc(sizeof(value*) * argc);
-        for (size_t i = 0; i < argc; i++) {
-            ctx->vm.ext_args[i] = (value*)args[i];
-        }
-    } else {
-        ctx->vm.ext_args = NULL;
-    }
-
-    ctx->vm.ext_ret = value_f();
-
-    /* Run the VM */
-    {
-        char* dummy_argv[] = {"rxc_bridge_proc"};
-        rxvml_context* previous_active_context = rxvml_active_context;
-        rxvml_active_context = ctx;
-        rxvm_prepare(&ctx->vm);
-        run(&ctx->vm, 0, dummy_argv);
-        rxvml_active_context = previous_active_context;
-    }
-
-    if (response_out) {
-        *response_out = (rxvml_value*)ctx->vm.ext_ret;
-    } else {
-        rxvml_value_free((rxvml_value*)ctx->vm.ext_ret);
-    }
-
-    /* Clear the ext call fields */
-    ctx->vm.ext_proc = 0;
-    ctx->vm.ext_argc = 0;
-    if (ctx->vm.ext_args) free(ctx->vm.ext_args);
-    ctx->vm.ext_args = 0;
-    ctx->vm.ext_ret = 0;
-
-    return 0;
+    return rxvml_invoke_external_proc(ctx, p, argc, args, "rxc_bridge_proc", response_out);
 }
 
 int rxvml_call_method(
@@ -797,41 +1087,30 @@ int rxvml_call_method(
         return -1;
     }
 
-    /* Set up the external call context */
-    ctx->vm.ext_proc = p;
-    ctx->vm.ext_argc = argc + 1;
-    ctx->vm.ext_args = malloc(sizeof(value*) * (argc + 1));
-    ctx->vm.ext_args[0] = (value*)obj;
-    for (size_t i = 0; i < argc; i++) {
-        ctx->vm.ext_args[i + 1] = (value*)args[i];
-    }
-
-    ctx->vm.ext_ret = value_f();
-
-    /* Run the VM */
     {
-        char* dummy_argv[] = {"rxc_plugin_method"};
-        rxvml_context* previous_active_context = rxvml_active_context;
-        rxvml_active_context = ctx;
-        rxvm_prepare(&ctx->vm);
-        run(&ctx->vm, 0, dummy_argv);
-        rxvml_active_context = previous_active_context;
+        rxvml_value** method_args = malloc(sizeof(rxvml_value*) * (argc + 1));
+        int rc;
+        size_t i;
+
+        if (!method_args) {
+            ctx->last_error = "Failed to allocate rxvml method arguments";
+            return -1;
+        }
+
+        method_args[0] = obj;
+        for (i = 0; i < argc; i++) method_args[i + 1] = args[i];
+
+        rc = rxvml_invoke_external_proc(
+            ctx,
+            p,
+            argc + 1,
+            method_args,
+            "rxc_plugin_method",
+            response_out);
+
+        free(method_args);
+        return rc;
     }
-
-    if (response_out) {
-        *response_out = (rxvml_value*)ctx->vm.ext_ret;
-    } else {
-        rxvml_value_free((rxvml_value*)ctx->vm.ext_ret);
-    }
-
-    /* Clear the ext call fields */
-    ctx->vm.ext_proc = 0;
-    ctx->vm.ext_argc = 0;
-    if (ctx->vm.ext_args) free(ctx->vm.ext_args);
-    ctx->vm.ext_args = 0;
-    ctx->vm.ext_ret = 0;
-
-    return 0;
 }
 
 int rxvml_call_factory(

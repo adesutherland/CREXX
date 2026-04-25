@@ -176,6 +176,26 @@ Finalizers release the nested native resource referenced by the payload; they
 must not free the `binary_value` buffer itself, because the VM frees that
 buffer after the finalizer returns.
 
+### Nested rxvml Calls
+
+The public `rxvml_call_procedure()` and `rxvml_call_method()` entry points run
+Rexx procedures by installing a temporary external-call trampoline
+(`ext_proc`, `ext_argc`, `ext_args`, and `ext_ret`) and then entering `run()`.
+These calls are allowed from native callbacks, including ADDRESS environment
+callbacks, while another `run()` invocation is already active.
+
+Nested `rxvml` calls must save and restore both the external-call trampoline
+and the active `rxvml_context`. Without that preservation, a callback that calls
+back into a Rexx method can overwrite the outer callback invocation state and
+cause the original `run()` to return through the wrong procedure or with the
+wrong argument/return vector.
+
+The ADDRESS sandbox/stem helpers use direct VM-layout mutation for the standard
+`.standardaddresssandbox` and `.standardaddressstem` classes, with nested method
+dispatch reserved as the fallback for non-standard interface implementations.
+This keeps repeated native callback writes stable while still allowing future
+custom Rexx objects to implement the same ADDRESS interfaces.
+
 ## 3. The Execution Loop
 
 The core execution engine lives in `run()` within `interpreter/rxvmintp.c`. 
