@@ -15,14 +15,32 @@
 #include <ctype.h>
 #include <errno.h>
 #include <float.h>
+#include <string.h>
 
 /* Forward declarations */
 static void extract_double_decimal(numeric_context* num_context, value *coefficient, value *exponent, double value);
 static void extract_integer_decimal(numeric_context* num_context, value *coefficient, value *exponent, rxinteger value);
 static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_value, value *exponent_value, value *formatted_output_value);
 
+/* Clears the binary payload and runs native cleanup if the payload owns native resources. */
+RX_INLINE void clear_binary_payload(value *v) {
+    if (!v) return;
+    if (v->native_payload_ops && v->native_payload_ops->finalize) {
+        v->native_payload_ops->finalize(v);
+    }
+    if (v->binary_value) free(v->binary_value);
+    v->binary_value = 0;
+    v->binary_length = 0;
+    v->binary_buffer_length = 0;
+    v->native_payload_ops = 0;
+    v->native_payload_flags = 0;
+}
+
 /* Zeros a register value */
 RX_INLINE void value_zero(value *v) {
+    if (v->native_payload_ops) {
+        clear_binary_payload(v);
+    }
     v->status.all_type_flags = 0;
     v->int_value = 0;
     v->float_value = 0;
@@ -54,6 +72,8 @@ RX_INLINE void value_init(value *v) {
     v->max_num_attributes = 0;
     v->binary_value = 0;
     v->binary_buffer_length = 0;
+    v->native_payload_ops = 0;
+    v->native_payload_flags = 0;
     v->decimal_value = 0;
     v->decimal_value_length = 0;
     v->decimal_buffer_length = 0;
@@ -259,10 +279,7 @@ RX_MOSTLYINLINE void clear_value(value* v) {
     v->decimal_buffer_length = 0;
 
     /* Free binary */
-    if (v->binary_value) free(v->binary_value);
-    v->binary_value = 0;
-    v->binary_length = 0;
-    v->binary_buffer_length = 0;
+    clear_binary_payload(v);
 
     value_zero(v);
 }
@@ -345,13 +362,16 @@ RX_INLINE void unset_type(value *v) {
 */
 
 RX_INLINE void set_int(value *v, rxinteger value) {
+    if (v->native_payload_ops) clear_binary_payload(v);
     v->int_value = value;
 }
 RX_INLINE void set_float(value *v, double value) {
+    if (v->native_payload_ops) clear_binary_payload(v);
     v->float_value = value;
 }
 
 RX_INLINE void set_string(value *v, char *value, size_t length) {
+    if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v,length);
     memcpy(v->string_value, value, v->string_length);
     v->string_pos = 0;
@@ -363,6 +383,7 @@ RX_INLINE void set_string(value *v, char *value, size_t length) {
 
 /* set value string from null string value */
 RX_INLINE void set_null_string(value *v, const char *from) {
+    if (v->native_payload_ops) clear_binary_payload(v);
     if (v->string_value == from) return;
     prep_string_buffer(v, strlen(from));
     memcpy(v->string_value, from, v->string_length);
@@ -374,6 +395,7 @@ RX_INLINE void set_null_string(value *v, const char *from) {
 }
 
 RX_INLINE void set_const_string(value *v, string_constant *from) {
+    if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v,from->string_len);
     memcpy(v->string_value, from->string, v->string_length);
     v->string_pos = 0;
@@ -384,6 +406,8 @@ RX_INLINE void set_const_string(value *v, string_constant *from) {
 }
 
 RX_INLINE void set_value_string(value *v, value *from) {
+    if (v == from) return;
+    if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v, from->string_length);
     memcpy(v->string_value, from->string_value, v->string_length);
     v->string_pos = 0;
@@ -402,6 +426,7 @@ RX_INLINE void set_buffer_string(
         , size_t string_chars
 #endif
 ) {
+    if (v->native_payload_ops) clear_binary_payload(v);
     if (v->string_value != v->small_string_buffer) free(v->string_value);
     v->string_value = buffer;
     v->string_length = length;
@@ -413,11 +438,46 @@ RX_INLINE void set_buffer_string(
 #endif
 }
 
+RX_INLINE int set_native_payload(value *v,
+                                 const void *payload,
+                                 size_t length,
+                                 const rxvm_native_payload_ops *ops,
+                                 unsigned int flags) {
+    if (!v) return -1;
+
+    clear_binary_payload(v);
+    if (length) {
+        v->binary_value = malloc(length);
+        if (!v->binary_value) return -1;
+        if (payload) memcpy(v->binary_value, payload, length);
+        else memset(v->binary_value, 0, length);
+        v->binary_length = length;
+        v->binary_buffer_length = length;
+    }
+    v->native_payload_ops = ops;
+    v->native_payload_flags = flags;
+    return 0;
+}
+
+RX_INLINE void* get_native_payload(value *v,
+                                   size_t *out_length,
+                                   const rxvm_native_payload_ops **out_ops,
+                                   unsigned int *out_flags) {
+    if (out_length) *out_length = v ? v->binary_length : 0;
+    if (out_ops) *out_ops = v ? v->native_payload_ops : 0;
+    if (out_flags) *out_flags = v ? v->native_payload_flags : 0;
+    return v ? v->binary_value : 0;
+}
+
 /* Copy a value */
 RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     size_t i;
 
     if (dest == source) return;
+
+    if (dest->native_payload_ops || source->native_payload_ops) {
+        clear_binary_payload(dest);
+    }
 
     dest->status.all_type_flags = source->status.all_type_flags;
     dest->int_value = source->int_value;
@@ -458,15 +518,22 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     }
 
     /* Copy Binary */
-    if (source->binary_length) {
+    if (source->native_payload_ops && source->native_payload_ops->copy) {
+        source->native_payload_ops->copy(dest, source);
+    }
+    else if (source->binary_length) {
         dest->binary_length = source->binary_length;
         dest->binary_buffer_length = dest->binary_length;
         if (dest->binary_value) dest->binary_value = realloc(dest->binary_value, dest->binary_length);
         else dest->binary_value = malloc(dest->binary_length);
         memcpy(dest->binary_value, source->binary_value, dest->binary_length);
+        dest->native_payload_ops = source->native_payload_ops;
+        dest->native_payload_flags = source->native_payload_flags;
     }
     else {
         dest->binary_length = 0;
+        dest->native_payload_ops = 0;
+        dest->native_payload_flags = 0;
     }
 
     /* Copy Attributes */
@@ -532,9 +599,19 @@ RX_INLINE void move_value(value *dest, value *source) {
         dest->binary_length = source->binary_length;
         dest->binary_value = source->binary_value;
         dest->binary_buffer_length = source->binary_buffer_length;
+        dest->native_payload_ops = source->native_payload_ops;
+        dest->native_payload_flags = source->native_payload_flags;
         source->binary_value = 0;
         source->binary_length = 0;
         source->binary_buffer_length = 0;
+        source->native_payload_ops = 0;
+        source->native_payload_flags = 0;
+    }
+    else {
+        dest->native_payload_ops = source->native_payload_ops;
+        dest->native_payload_flags = source->native_payload_flags;
+        source->native_payload_ops = 0;
+        source->native_payload_flags = 0;
     }
 
     /* Move Attributes */

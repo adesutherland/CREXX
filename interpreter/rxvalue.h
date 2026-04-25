@@ -74,6 +74,17 @@ typedef struct numeric_context {
 
 typedef struct value value;
 
+#ifndef RXVM_NATIVE_PAYLOAD_OPS_DEFINED
+#define RXVM_NATIVE_PAYLOAD_OPS_DEFINED
+#define RXVM_NATIVE_PAYLOAD_FLAG_BITCOPY_SAFE 0x00000001u
+
+typedef struct rxvm_native_payload_ops {
+    const char *type_name;
+    void (*copy)(void *dest_value, void *source_value);
+    void (*finalize)(void *value);
+} rxvm_native_payload_ops;
+#endif
+
 typedef union {
     /* todo - these flag definitions are not used and are not correct */
     /*
@@ -109,6 +120,8 @@ struct value {
     char *binary_value; // Must be malloced
     size_t binary_length; // binary_value length
     size_t binary_buffer_length; // binary_value buffer length
+    const rxvm_native_payload_ops *native_payload_ops; // Shared native payload operations, or NULL
+    unsigned int native_payload_flags;
     const char *object_type_name; // Runtime concrete class name, may point into a module constant pool
     size_t object_type_name_length;
     value **attributes;

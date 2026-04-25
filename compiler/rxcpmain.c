@@ -40,6 +40,7 @@
 
 // Static Linked Functions
 struct static_linked_function *static_linked_functions;
+struct static_linked_metadata *static_linked_metadata;
 
 static RexxLevel parse_cli_level_name(const char *level_name) {
     if (!level_name) return UNKNOWN;

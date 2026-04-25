@@ -60,6 +60,11 @@ and `META_ATTR`, the assembler now serializes:
 - `META_IMPLEMENTS` for one concrete-class-to-interface link
 - `META_MEMBER` for one interface method or factory declaration
 
+Metadata-only modules are valid. For example, an interface contract file may
+compile to `.rxas` containing `.meta` records and no function bodies; `rxas`
+must still emit a `.rxbin` so import and runtime factory resolution can load
+the contract metadata.
+
 For interface methods, the member-kind string now distinguishes:
 - `method` for an abstract interface method
 - `method final` for a Level B final/default interface method body

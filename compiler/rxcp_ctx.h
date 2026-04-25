@@ -307,7 +307,20 @@ struct static_linked_function {
     char *args;
     struct static_linked_function *next;
 };
+struct static_linked_metadata {
+    char *kind;
+    char *symbol;
+    char *option;
+    char *type;
+    char *interface_symbol;
+    char *owner;
+    char *member_kind;
+    char *member;
+    char *args;
+    struct static_linked_metadata *next;
+};
 extern struct static_linked_function *static_linked_functions;
+extern struct static_linked_metadata *static_linked_metadata;
 void free_static_linked_functions();
 
 #endif //CREXX_RXCP_CTX_H

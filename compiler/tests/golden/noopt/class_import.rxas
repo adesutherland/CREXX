@@ -38,7 +38,7 @@ main() .locals=5
 /* Imported Declaration from file: class_import_lib.rexx */
 
 §class_import_lib.counter.§factory() .expose=class_import_lib.counter.§factory
-   .meta "class_import_lib.counter.§factory"="b" ".void" §class_import_lib.counter.§factory() "" ""
+   .meta "class_import_lib.counter.§factory"="b" ".counter" §class_import_lib.counter.§factory() "" ""
 
 §class_import_lib.counter.inc() .expose=class_import_lib.counter.inc
    .meta "class_import_lib.counter.inc"="b" ".void" §class_import_lib.counter.inc() "" ""

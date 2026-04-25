@@ -14,7 +14,7 @@ main: procedure
   return
 
 vehicle: interface
-  *: factory = .vehicle
+  *: factory
   arg name = .string
   type: method = .string
   describe: method = .string
@@ -22,7 +22,7 @@ vehicle: interface
 car: class implements .vehicle
   _name = .string
 
-  *: factory = .vehicle
+  *: factory
   arg name = .string
   _name = name
   return
@@ -36,7 +36,7 @@ car: class implements .vehicle
 truck: class implements .vehicle
   _name = .string
 
-  *: factory = .vehicle
+  *: factory
   arg name = .string
   _name = name
   return

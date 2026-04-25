@@ -1,0 +1,2 @@
+Error in err_address_commandless_sandbox.rexx @ 5:15 - #ADDRESS SANDBOX must be attached to a command, "sandbox"
+1 error(s) in source file

@@ -174,6 +174,25 @@ double rxvm_getfloat(rxpa_attribute_value attributeValue) {
     else return 0.0;
 }
 
+/* Set a native binary payload in an attribute value */
+int rxvm_setnativepayload(rxpa_attribute_value attributeValue,
+                          const void *payload,
+                          size_t length,
+                          const rxpa_native_payload_ops *ops,
+                          unsigned int flags) {
+    value* val = (value*)attributeValue;
+    if (!val) return -1;
+    return set_native_payload(val, payload, length, ops, flags);
+}
+
+/* Get a native binary payload from an attribute value */
+void* rxvm_getnativepayload(rxpa_attribute_value attributeValue,
+                            size_t *out_length,
+                            const rxpa_native_payload_ops **out_ops,
+                            unsigned int *out_flags) {
+    return get_native_payload((value*)attributeValue, out_length, out_ops, out_flags);
+}
+
 /* Get the number of child attributes */
 rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;

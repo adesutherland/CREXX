@@ -20,10 +20,15 @@ or destructor/finalizer syntax.
 ## Core Model
 
 Interfaces define callable contracts. Classes implement those contracts.
+Factory declarations do not carry an explicit return type. The return contract
+is implied by the owner: an interface factory returns that interface contract,
+and a class factory returns that concrete class. In a class factory, bare
+`return` returns the constructed object; there is no source-level `this` value
+to return explicitly.
 
 ```rexx
 vehicle: interface
-  *: factory = .vehicle
+  *: factory
   arg name = .string
   describe: method = .string
 
@@ -63,7 +68,7 @@ body, but it may not override it.
 
 ```rexx
 shape: interface
-  *: factory = .shape
+  *: factory
 
   describe: method = .string
     return prefix() || ":" || summary()
@@ -93,6 +98,11 @@ box: class implements .shape
 The class must implement every abstract member from its effective interface
 set. If an interface already provides a final/default method body, the class may
 omit that member.
+
+Factories are the exception to the ordinary `name: callable = .type` spelling:
+write `*: factory` or `name: factory`, then declare arguments with `arg` as
+usual. A factory return type written after `=` is not part of the Level B source
+syntax.
 
 Assignment compatibility in the current Level B implementation flows from a
 concrete class value to an implemented interface. In practice that means a
@@ -142,9 +152,9 @@ Selection rules:
 
 ```rexx
 asset: interface
-  *: factory = .asset
+  *: factory
   arg spec = .string
-  from_size: factory = .asset
+  from_size: factory
   arg size = .int
 
   describe: method = .string
@@ -232,7 +242,7 @@ surface remains coherent.
 
 ```rexx
 named: interface
-  *: factory = .named
+  *: factory
   arg label = .string, length = .int
   name: method = .string
 
@@ -283,6 +293,111 @@ The token to the left of `..` must be a namespace name that has already been
 imported. Qualification does not bypass `import`. `namespace::symbol` remains
 accepted as a compatibility alias, but `namespace..symbol` is the canonical
 form.
+
+## Same-File Contract and Provider Pattern
+
+An interface and one or more implementation classes may live in the same source
+file and namespace. This is often the clearest shape when the contract and
+providers are developed together.
+
+```rexx
+options levelb
+namespace automotive expose vehicle mycar
+
+vehicle: interface
+  *: factory
+  arg name = .string
+  describe: method = .string
+
+mycar: class implements .vehicle
+  _name = .string
+
+  *: factory
+  arg name = .string
+  _name = name
+  return
+
+  describe: method = .string
+  return "dep:" || _name
+```
+
+The interface owns the public factory contract. The class supplies the
+implementation with the same factory name and argument signature; its concrete
+class return is accepted because the class implements the interface.
+
+This same-file shape is mirrored by
+`compiler/tests/rexx_src/interface_dep_contract.rexx`.
+
+## Split-File Contract and Provider Pattern
+
+When an interface and its provider class live in different source files, each
+file is still compiled as a separate module. Multiple files may contribute
+symbols to the same namespace, just as the Level B standard library contributes
+many `rxfnsb` functions from separate files, but the provider compile must still
+be able to find the interface contract through the import path.
+
+The provider may use the same namespace as the contract:
+
+```rexx
+/* vehicle.rexx */
+options levelb
+namespace automotive expose vehicle
+
+vehicle: interface
+  *: factory
+  arg name = .string
+  describe: method = .string
+```
+
+```rexx
+/* mycar.rexx */
+options levelb
+namespace automotive expose mycar
+
+mycar: class implements .vehicle
+  _name = .string
+
+  *: factory
+  arg name = .string
+  _name = name
+  return
+
+  describe: method = .string
+  return "dep:" || _name
+```
+
+It is also valid to put provider classes in a separate provider namespace when
+that better matches packaging or ownership:
+
+```rexx
+options levelb
+namespace automotive_provider expose mycar
+import automotive
+
+mycar: class implements .vehicle
+  /* implementation as above */
+```
+
+Pure contract modules are valid: a source file that contains only interface or
+class/interface metadata can compile and assemble into a metadata-only `.rxbin`.
+
+The class factory must have the same argument signature as the interface
+factory. The return contract is implicit on both sides: the interface factory
+returns the interface, and the class factory returns the concrete class. The
+compiler checks that the concrete class value is assignable to the interface
+return type.
+
+If a provider reports `#INTERFACE_MEMBER_SIGNATURE_MISMATCH` for member `*`,
+check these first:
+
+- the provider compile can find the source or binary module that exposes the
+  interface
+- the class factory argument list exactly matches the interface factory argument
+  list
+- stale `.rxas` or `.rxbin` artifacts for the interface are not being found
+  before the updated source
+- the provider module is loaded or linked into any program that calls the
+  interface factory
 
 This example is mirrored by:
 

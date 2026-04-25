@@ -2,9 +2,9 @@ options levelb
 namespace interface_match_dep_contract expose vehicle car bike truck
 
 vehicle: interface
-  *: factory = .vehicle
+  *: factory
   arg name = .string
-  from_name: factory = .vehicle
+  from_name: factory
   arg name = .string
   describe: method = .string
 

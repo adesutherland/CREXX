@@ -2,7 +2,7 @@ options levelb
 namespace interface_match_bad_args
 
 vehicle: interface
-  *: factory = .vehicle
+  *: factory
   arg name = .string
 
 car: class implements .vehicle

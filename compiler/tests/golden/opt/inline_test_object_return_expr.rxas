@@ -102,7 +102,7 @@ describeBox() .locals=4
    .meta "inline_test_object_return_expr.describebox.value"
 
 §inline_test_object_return_expr.box.§factory() .locals=3
-   .meta "inline_test_object_return_expr.box.§factory"="b" ".void" §inline_test_object_return_expr.box.§factory() "initial=.string" ""
+   .meta "inline_test_object_return_expr.box.§factory"="b" ".box" §inline_test_object_return_expr.box.§factory() "initial=.string" ""
    .src 22:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_return_expr.box"

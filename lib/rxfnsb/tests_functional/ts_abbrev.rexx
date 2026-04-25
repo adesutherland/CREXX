@@ -18,4 +18,9 @@ if abbrev('quicker','fast') <> 0 then do
   say 'ABBREV failed in test 3'
 end
 
+if .rxfnsb..abbrev('quicker','quick',1) <> 1 then do
+  errors=errors+1
+  say 'ABBREV failed in qualified namespace test'
+end
+
 return errors<>0

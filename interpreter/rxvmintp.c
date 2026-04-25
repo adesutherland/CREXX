@@ -7075,17 +7075,14 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - FREADB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
         {
             if (op3R->int_value == 0) {
-                if (op1R->binary_value) free(op1R->binary_value);
-                op1R->binary_value = 0;
-                op1R->binary_length = 0;
-                op1R->binary_buffer_length = 0;
+                clear_binary_payload(op1R);
             }
 
             else {
                 /* If the binary size is the same (and this is likely to be the case if we are in a loop) we can just
                  * reuse the buffer - otherwise free/malloc */
-                if (op1R->binary_length != op3R->int_value) {
-                    if (op1R->binary_value) free(op1R->binary_value);
+                if (op1R->native_payload_ops || op1R->binary_length != op3R->int_value) {
+                    clear_binary_payload(op1R);
                     op1R->binary_value = malloc(op3R->int_value);
                     op1R->binary_length = op3R->int_value;
                     op1R->binary_buffer_length = op1R->binary_length;

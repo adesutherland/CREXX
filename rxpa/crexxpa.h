@@ -6,6 +6,8 @@
 
 #define rxpa_version "crexx-dev-260110"
 
+#include <stddef.h>
+
 // plugin debug set to 1 if needed, else 0  added by pej 28. OCT 2024
 //    debug is created in GETSTRING/GETINT/GETFLOAD calls and typically outputs the REXX input parameters
 // #define pluginDEBUG 0
@@ -29,6 +31,19 @@ typedef long long rxinteger;
 
 // Typedef for attribute value which is an opaque pointer
 typedef void* rxpa_attribute_value;
+
+#ifndef RXVM_NATIVE_PAYLOAD_OPS_DEFINED
+#define RXVM_NATIVE_PAYLOAD_OPS_DEFINED
+#define RXVM_NATIVE_PAYLOAD_FLAG_BITCOPY_SAFE 0x00000001u
+
+typedef struct rxvm_native_payload_ops {
+    const char *type_name;
+    void (*copy)(void *dest_value, void *source_value);
+    void (*finalize)(void *value);
+} rxvm_native_payload_ops;
+#endif
+
+typedef rxvm_native_payload_ops rxpa_native_payload_ops;
 
 // Typedef definition of a library function
 // Parameters are the number of arguments, an array of rxpa_attribute_value,
@@ -61,12 +76,26 @@ typedef enum rxsignal {
 // The following functions are used to interact with the REXX interpreter
 typedef void (*rxpa_func_addfunc)(rxpa_libfunc func, char* name,
                                   char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+typedef void (*rxpa_func_addclass)(char* name, char* option, char* type); /* Add class metadata */
+typedef void (*rxpa_func_addinterface)(char* name, char* option, char* type); /* Add interface metadata */
+typedef void (*rxpa_func_addimplements)(char* name, char* interface_name); /* Add class/interface implementation metadata */
+typedef void (*rxpa_func_addmember)(char* owner, char* kind, char* member,
+                                    char* type, char* args); /* Add class/interface member metadata */
 typedef char* (*rxpa_func_getstring)(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
 typedef void (*rxpa_func_setstring)(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
 typedef void (*rxpa_func_setint)(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
 typedef rxinteger (*rxpa_func_getint)(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
 typedef void (*rxpa_func_setfloat)(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
 typedef double (*rxpa_func_getfloat)(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
+typedef int (*rxpa_func_setnativepayload)(rxpa_attribute_value attributeValue,
+                                          const void *payload,
+                                          size_t length,
+                                          const rxpa_native_payload_ops *ops,
+                                          unsigned int flags); /* Set a native binary payload */
+typedef void* (*rxpa_func_getnativepayload)(rxpa_attribute_value attributeValue,
+                                            size_t *out_length,
+                                            const rxpa_native_payload_ops **out_ops,
+                                            unsigned int *out_flags); /* Get a native binary payload */
 
 // Array / Object Functions - these access the child attributes of an attribute value
 /* Get the number of child attributes */
@@ -91,12 +120,18 @@ typedef void (*rxpa_reset_say_exit)(); /* Set Say exit function */
 typedef struct rxpa_initctxptr* rxpa_initctxptr;
 struct rxpa_initctxptr {
     rxpa_func_addfunc addfunc;
+    rxpa_func_addclass addclass;
+    rxpa_func_addinterface addinterface;
+    rxpa_func_addimplements addimplements;
+    rxpa_func_addmember addmember;
     rxpa_func_getstring getstring;
     rxpa_func_setstring setstring;
     rxpa_func_setint setint;
     rxpa_func_getint getint;
     rxpa_func_setfloat setfloat;
     rxpa_func_getfloat getfloat;
+    rxpa_func_setnativepayload setnativepayload;
+    rxpa_func_getnativepayload getnativepayload;
     rxpa_func_getnumattrs getnumattrs;
     rxpa_func_setnumattrs setnumattrs;
     rxpa_func_getattr getattr;
@@ -119,6 +154,15 @@ static struct rxpa_initctxptr _rxpa_initctx;
 static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 // Macro is used to register a procedure - dynamic linkage
 #define ADDPROC(func, name, option, type, args) _rxpa_context->addfunc((func),(name),(option),(type),(args))
+#define ADDCLASS(name) _rxpa_context->addclass((name),"b",".unknown")
+#define ADDCLASSX(name, option, type) _rxpa_context->addclass((name),(option),(type))
+#define ADDINTERFACE(name) _rxpa_context->addinterface((name),"b",".unknown")
+#define ADDINTERFACEX(name, option, type) _rxpa_context->addinterface((name),(option),(type))
+#define ADDIMPLEMENTS(name, interface_name) _rxpa_context->addimplements((name),(interface_name))
+#define ADDMEMBER(owner, kind, member, type, args) _rxpa_context->addmember((owner),(kind),(member),(type),(args))
+#define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+#define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+#define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
 #define ENDPROC {back2caller: RESETSIGNAL}     // cleanup of ADDPROC
 #define PROCRETURN {goto back2caller;}
 #define GETSTRING(attr) _rxpa_context->getstring((attr))
@@ -145,6 +189,8 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define RETURNFLOAT(value) _rxpa_context->setfloat(RETURN,(value))
 #define GETFLOAT(attr) _rxpa_context->getfloat((attr))
 #define GETFARRAY(pnum,index) GETFLOAT(GETATTR(pnum, index))
+#define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) _rxpa_context->setnativepayload((attr),(payload),(length),(ops),(flags))
+#define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) _rxpa_context->getnativepayload((attr),(out_length),(out_ops),(out_flags))
 #define GETNUMATTRS(attr) _rxpa_context->getnumattrs((attr))
 #define GETARRAYHI(attr) _rxpa_context->getnumattrs((attr))
 #define SETNUMATTRS(attr, num) _rxpa_context->setnumattrs((attr),(num))
@@ -228,12 +274,21 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 
 // Helper functions provided by the REXX interpreter
 void rxpa_addfunc(rxpa_libfunc func, char* name, __attribute__((unused)) char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+void rxpa_addclass(char* name, char* option, char* type); /* Add class metadata */
+void rxpa_addinterface(char* name, char* option, char* type); /* Add interface metadata */
+void rxpa_addimplements(char* name, char* interface_name); /* Add class/interface implementation metadata */
+void rxpa_addmember(char* owner, char* kind, char* member, char* type, char* args); /* Add class/interface member metadata */
 char* rxpa_getstring(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
 void rxpa_setstring(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
 void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
 rxinteger rxpa_getint(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
 void rxpa_setfloat(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
 double rxpa_getfloat(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
+int rxpa_setnativepayload(rxpa_attribute_value attributeValue, const void *payload, size_t length,
+                          const rxpa_native_payload_ops *ops, unsigned int flags); /* Set a native binary payload */
+void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
+                            const rxpa_native_payload_ops **out_ops,
+                            unsigned int *out_flags); /* Get a native binary payload */
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue); /* Get the number of child attributes */
 void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs); /* Set the number of child attributes */
 rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger index); /* Get the nth child attribute */
@@ -251,6 +306,15 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #else
 #define ADDPROC(func, name, option, type, args) rxpa_addfunc(0,(name),(option),(type),(args))
 #endif
+#define ADDCLASS(name) rxpa_addclass((name),"b",".unknown")
+#define ADDCLASSX(name, option, type) rxpa_addclass((name),(option),(type))
+#define ADDINTERFACE(name) rxpa_addinterface((name),"b",".unknown")
+#define ADDINTERFACEX(name, option, type) rxpa_addinterface((name),(option),(type))
+#define ADDIMPLEMENTS(name, interface_name) rxpa_addimplements((name),(interface_name))
+#define ADDMEMBER(owner, kind, member, type, args) rxpa_addmember((owner),(kind),(member),(type),(args))
+#define ADDFACTORY(owner, member, type, args) ADDMEMBER((owner),"factory",(member),(type),(args))
+#define ADDMETHOD(owner, member, type, args) ADDMEMBER((owner),"method",(member),(type),(args))
+#define ADDDEFAULTMETHOD(owner, member, type, args) ADDMEMBER((owner),"final method",(member),(type),(args))
 #define ENDPROC {back2caller: RESETSIGNAL}     // cleanup of ADDPROC
 #define PROCRETURN {goto back2caller;}
 #define GETSTRING(attr) rxpa_getstring((attr))
@@ -259,6 +323,8 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define GETINT(attr) rxpa_getint((attr))
 #define SETFLOAT(attr, value) rxpa_setfloat((attr),(value))
 #define GETFLOAT(attr) rxpa_getfloat((attr))
+#define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) rxpa_setnativepayload((attr),(payload),(length),(ops),(flags))
+#define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) rxpa_getnativepayload((attr),(out_length),(out_ops),(out_flags))
 #define GETNUMATTRS(attr) rxpa_getnumattrs((attr))
 #define SETNUMATTRS(attr, num) rxpa_setnumattrs((attr),(num))
 #define GETATTR(attr, index) rxpa_getattr((attr),(index))

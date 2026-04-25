@@ -7,21 +7,21 @@ main: procedure
   return
 
 vehicle: interface
-  *: factory = .vehicle
+  *: factory
   arg name = .string
-  from_name: factory = .vehicle
+  from_name: factory
   arg name = .string
   describe: method = .string
 
 car: class implements .vehicle
   _name = .string
 
-  *: factory = .vehicle
+  *: factory
   arg name = .string
   _name = name
   return
 
-  from_name: factory = .vehicle
+  from_name: factory
   arg name = .string
   _name = "car:" || name
   return
@@ -32,12 +32,12 @@ car: class implements .vehicle
 truck: class implements .vehicle
   _name = .string
 
-  *: factory = .vehicle
+  *: factory
   arg name = .string
   _name = name
   return
 
-  from_name: factory = .vehicle
+  from_name: factory
   arg name = .string
   _name = "truck:" || name
   return

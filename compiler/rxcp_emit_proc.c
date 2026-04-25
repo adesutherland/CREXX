@@ -137,7 +137,7 @@ void emit_proc(ASTNode *node, void *pl) {
             }
             if (ast_chld(node, INSTRUCTIONS, NOP)->node_type == NOP) {
                 /* A declaration - external */
-                char* type = ast_n2tp(ast_chld(node, CLASS, VOID));
+                char* type = callable_effective_return_type(node);
                 char* args = meta_narg(ast_chld(node, ARGS, 0));
                 char *proc_label, *proc_expose, *proc_fqn;
                 if (node->node_type == PROCEDURE) {
@@ -171,7 +171,7 @@ void emit_proc(ASTNode *node, void *pl) {
             }
             else {
                 /* Definition */
-                char* type = ast_n2tp(ast_chld(node, CLASS, VOID));
+                char* type = callable_effective_return_type(node);
                 char* args = meta_narg(ast_chld(node, ARGS, 0));
                 char *proc_label, *proc_expose, *proc_fqn;
                 if (node->node_type == PROCEDURE) {

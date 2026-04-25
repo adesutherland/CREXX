@@ -2,6 +2,18 @@
 #include <string.h>
 #include "rxvml.h"
 
+#ifndef CREXX_TEST_LIBRARY_PATH
+#define CREXX_TEST_LIBRARY_PATH "library"
+#endif
+
+#ifndef CREXX_TEST_CMS_ADDRESS_MODULE
+#define CREXX_TEST_CMS_ADDRESS_MODULE "address_cms_provider.rxbin"
+#endif
+
+#ifndef CREXX_TEST_CMS_ADDRESS_HOST_MODULE
+#define CREXX_TEST_CMS_ADDRESS_HOST_MODULE "address_cms_host.rxbin"
+#endif
+
 static void print_last_error(rxvml_context* ctx, const char* prefix) {
     const char* err = NULL;
     rxvml_last_error(ctx, &err);
@@ -12,8 +24,10 @@ int main(void) {
     rxvml_context* ctx = NULL;
     rxvml_value* env_obj = NULL;
     rxvml_value* current_env = NULL;
+    rxvml_value* host_result = NULL;
     const char* current_name = NULL;
     const char* embed_name = "EMBEDCMS";
+    rxinteger host_errors = -1;
     int register_rc = -1;
     int set_rc = -1;
     int status = 1;
@@ -24,13 +38,33 @@ int main(void) {
         return 1;
     }
 
-    if (rxvml_load_module_file(ctx, "library") <= 0) {
+    if (rxvml_load_module_file(ctx, CREXX_TEST_LIBRARY_PATH) <= 0) {
         print_last_error(ctx, "Failed to load library");
         goto cleanup;
     }
 
-    if (rxvml_call_factory(ctx, "_rxsysb.cmsaddressenvironment", 0, NULL, &env_obj) != 0 || !env_obj) {
-        print_last_error(ctx, "Failed to obtain CMS address environment");
+    if (rxvml_load_module_file(ctx, CREXX_TEST_CMS_ADDRESS_MODULE) <= 0) {
+        print_last_error(ctx, "Failed to load CMS address provider fixture");
+        goto cleanup;
+    }
+
+    if (rxvml_load_module_file(ctx, CREXX_TEST_CMS_ADDRESS_HOST_MODULE) <= 0) {
+        print_last_error(ctx, "Failed to load CMS address host fixture");
+        goto cleanup;
+    }
+
+    if (rxvml_call_procedure(ctx, "address_cms_host.address_cms_host", 0, NULL, &host_result) != 0 || !host_result) {
+        print_last_error(ctx, "Failed to run CMS address host fixture");
+        goto cleanup;
+    }
+
+    if (rxvml_to_int(ctx, host_result, &host_errors) != 0 || host_errors != 0) {
+        fprintf(stderr, "CMS address host fixture reported %lld errors\n", (long long)host_errors);
+        goto cleanup;
+    }
+
+    if (rxvml_address_create_environment(ctx, "CMS", &env_obj) != 0 || !env_obj) {
+        print_last_error(ctx, "Failed to obtain CMS address environment through the ADDRESS factory");
         goto cleanup;
     }
 
@@ -40,6 +74,8 @@ int main(void) {
         else fprintf(stderr, "Address registration returned rc=%d\n", register_rc);
         goto cleanup;
     }
+    rxvml_value_free(env_obj);
+    env_obj = NULL;
 
     set_rc = rxvml_address_set_environment(ctx, embed_name);
     if (set_rc != 0) {
@@ -61,7 +97,9 @@ int main(void) {
     status = 0;
 
 cleanup:
+    if (env_obj) rxvml_value_free(env_obj);
     if (current_env) rxvml_value_free(current_env);
+    if (host_result) rxvml_value_free(host_result);
     rxvml_destroy(ctx);
     return status;
 }

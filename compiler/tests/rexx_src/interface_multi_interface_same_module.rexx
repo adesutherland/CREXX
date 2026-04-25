@@ -14,7 +14,7 @@ main: procedure
   return
 
 named: interface
-  *: factory = .named
+  *: factory
   arg label = .string, length = .int
   name: method = .string
 
