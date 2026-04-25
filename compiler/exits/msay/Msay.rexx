@@ -58,6 +58,6 @@ msayexit: class
         end
         call result.set_status("REPLACE")
         _replacement='say fmtmask('parms')'
-         call LineOut("c:\temp\CREXX\LOG.txt",987 _replacement)
+##         call LineOut("c:\temp\CREXX\LOG.txt",987 _replacement)
         call result.add_replacement_line(_replacement)
         return result

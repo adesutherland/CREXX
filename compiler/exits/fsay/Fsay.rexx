@@ -48,6 +48,6 @@ fsayexit: class
 
         call result.set_status("REPLACE")
         _replacement='say 'fsayfmt(tokens[2].get_text())
-        call LineOut("c:\temp\CREXX\LOG.txt",_replacement)
+##        call LineOut("c:\temp\CREXX\LOG.txt",_replacement)
         call result.add_replacement_line(_replacement)
         return result
