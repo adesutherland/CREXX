@@ -1054,6 +1054,90 @@ int rxvml_call_procedure(
     return rxvml_invoke_external_proc(ctx, p, argc, args, "rxc_bridge_proc", response_out);
 }
 
+static proc_runtime* rxvml_find_last_module_procedure(rxvm_context* vm, const char* name) {
+    size_t mod_index;
+
+    if (!vm || !name) return NULL;
+    for (mod_index = vm->num_modules; mod_index > 0; mod_index--) {
+        module* mod = vm->modules[mod_index - 1];
+        int i = mod ? mod->proc_head : -1;
+        while (i != -1) {
+            proc_constant* definition = (proc_constant*)(mod->segment.const_pool + i);
+            if (definition->base.type == PROC_CONST && strcmp(definition->name, name) == 0) {
+                return mod->proc_runtime_lookup[(size_t)i >> 3];
+            }
+            i = definition->next;
+        }
+    }
+    return NULL;
+}
+
+int rxvml_run(
+    rxvml_context* ctx,
+    int argc,
+    const char** argv,
+    int* program_rc) {
+
+    proc_runtime* main_proc;
+    rxvml_value* arg_array = NULL;
+    rxvml_value* arg_values[1];
+    rxvml_value* result = NULL;
+    rxinteger int_result = 0;
+    int i;
+    int rc = -1;
+
+    if (program_rc) *program_rc = 0;
+    if (!ctx || argc < 0) return -1;
+    if (argc > 0 && !argv) {
+        ctx->last_error = "Missing rxvml run argument vector";
+        return -1;
+    }
+
+    arg_array = rxvml_array_new(ctx, (size_t)argc);
+    if (!arg_array) {
+        ctx->last_error = "Failed to allocate rxvml run argument array";
+        goto cleanup;
+    }
+    for (i = 0; i < argc; i++) {
+        rxvml_value* arg_value = rxvml_value_new(ctx);
+        if (!arg_value) {
+            ctx->last_error = "Failed to allocate rxvml run argument";
+            goto cleanup;
+        }
+        rxvml_set_str(arg_value, argv[i] ? argv[i] : "", strlen(argv[i] ? argv[i] : ""));
+        if (rxvml_array_set(ctx, arg_array, (size_t)i + 1, arg_value) != 0) {
+            rxvml_value_free(arg_value);
+            ctx->last_error = "Failed to set rxvml run argument";
+            goto cleanup;
+        }
+        rxvml_value_free(arg_value);
+    }
+
+    if (ctx->vm.num_modules > 0) {
+        rxvm_link(&ctx->vm);
+    }
+    main_proc = rxvml_find_last_module_procedure(&ctx->vm, "main");
+    if (!main_proc) {
+        ctx->last_error = "Program main procedure not found";
+        goto cleanup;
+    }
+
+    arg_values[0] = arg_array;
+    if (rxvml_invoke_external_proc(ctx, main_proc, 1, arg_values, "rxvml_run", &result) != 0) {
+        goto cleanup;
+    }
+
+    if (result && rxvml_to_int(ctx, result, &int_result) == 0 && program_rc) {
+        *program_rc = (int)int_result;
+    }
+    rc = 0;
+
+cleanup:
+    if (result) rxvml_value_free(result);
+    if (arg_array) rxvml_value_free(arg_array);
+    return rc;
+}
+
 int rxvml_call_method(
     rxvml_context* ctx,
     rxvml_value* obj,
