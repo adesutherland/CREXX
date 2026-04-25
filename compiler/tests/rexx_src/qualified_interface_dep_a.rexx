@@ -2,21 +2,21 @@ options levelb
 namespace qifa expose vehicle
 
 vehicle: interface
-  *: factory = .vehicle
+  *: factory
   arg name = .string
-  from_name: factory = .vehicle
+  from_name: factory
   arg name = .string
   describe: method = .string
 
 car: class implements .vehicle
   _name = .string
 
-  *: factory = .vehicle
+  *: factory
     arg name = .string
     _name = "A-" || name
     return
 
-  from_name: factory = .vehicle
+  from_name: factory
     arg name = .string
     _name = "A:named-" || name
     return

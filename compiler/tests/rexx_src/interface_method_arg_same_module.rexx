@@ -9,7 +9,7 @@ main: procedure
   return
 
 speaker: interface
-  *: factory = .speaker
+  *: factory
   arg prefix = .string
 
   greet: method = .string
@@ -18,7 +18,7 @@ speaker: interface
 echospeaker: class implements .speaker
   _prefix = .string
 
-  *: factory = .speaker
+  *: factory
     arg prefix = .string
     _prefix = prefix
     return

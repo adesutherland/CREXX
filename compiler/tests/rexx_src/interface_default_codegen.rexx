@@ -6,7 +6,7 @@ main: procedure
   return
 
 shape: interface
-  *: factory = .shape
+  *: factory
   describe: method = .string
     return prefix() || ":" || summary()
   prefix: method = .string

@@ -283,6 +283,7 @@ add_crexx_compiler_fail_test(err_loop_class rexx_src/err_loop_class.rexx err_loo
 add_crexx_compiler_fail_test(err_select_no_when rexx_src/err_select_no_when.rexx err_select_no_when.txt)
 add_crexx_compiler_fail_test(err_select_c_no_when rexx_src/err_select_c_no_when.rexx err_select_c_no_when.txt)
 add_crexx_compiler_fail_test(err_class_assign rexx_src/err_class_assign.rexx err_class_assign.txt)
+add_crexx_compiler_fail_test(err_address_commandless_sandbox rexx_src/err_address_commandless_sandbox.rexx err_address_commandless_sandbox.txt)
 add_crexx_compiler_fail_test(err_block_expr_type_mismatch rexx_src/err_block_expr_type_mismatch.rexx err_block_expr_type_mismatch.txt)
 add_crexx_compiler_fail_test(err_block_expr_no_leave rexx_src/err_block_expr_no_leave.rexx err_block_expr_no_leave.txt)
 add_crexx_compiler_fail_test(err_block_expr_leave_plain rexx_src/err_block_expr_leave_plain.rexx err_block_expr_leave_plain.txt)
@@ -293,6 +294,7 @@ add_crexx_compiler_fail_test(interface_missing_impl rexx_src/interface_missing_i
 add_crexx_compiler_fail_test(interface_match_bad_args rexx_src/interface_match_bad_args.rexx interface_match_bad_args.txt)
 add_crexx_compiler_fail_test(interface_match_without_factory rexx_src/interface_match_without_factory.rexx interface_match_without_factory.txt)
 add_crexx_compiler_fail_test(interface_default_redefine rexx_src/interface_default_redefine.rexx interface_default_redefine.txt)
+add_crexx_compiler_fail_test(interface_factory_return_type rexx_src/interface_factory_return_type.rexx interface_factory_return_type.txt)
 add_crexx_compiler_fail_test(qualified_namespace_missing_import rexx_src/qualified_namespace_missing_import.rexx qualified_namespace_missing_import.txt)
 add_crexx_compiler_fail_test(type_ops_reserved_keyword rexx_src/type_ops_reserved_keyword.rexx type_ops_reserved_keyword.txt)
 add_test(NAME err_address_exit_disabled_fail
@@ -624,7 +626,7 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
             foreach(DEP_SPEC IN ITEMS "${DEP_A_MODULE};${DEP_A_BASENAME}" "${DEP_B_MODULE};${DEP_B_BASENAME}")
                 list(GET DEP_SPEC 0 DEP_MODULE)
                 list(GET DEP_SPEC 1 DEP_BASENAME)
-                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_FLAG} -o \"${DEP_MODULE}${TEST_SUFFIX}\" \"\${work}/${DEP_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"\${work}\" -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_FLAG} -o \"${DEP_MODULE}${TEST_SUFFIX}\" \"\${work}/${DEP_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
                 string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
                 string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on source-import dependency ${DEP_MODULE}: \${out}\")\nendif()\n")
                 string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${DEP_MODULE}${TEST_SUFFIX}.rxbin\" \"${DEP_MODULE}${TEST_SUFFIX}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
@@ -640,7 +642,7 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
             foreach(DEP_SPEC IN ITEMS "${DEP_A_MODULE};${DEP_A_BASENAME}" "${DEP_B_MODULE};${DEP_B_BASENAME}")
                 list(GET DEP_SPEC 0 DEP_MODULE)
                 list(GET DEP_SPEC 1 DEP_BASENAME)
-                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_FLAG} -o \"${DEP_MODULE}${TEST_SUFFIX}\" \"\${work}/${DEP_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+                string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"\${work}\" -i \"${CMAKE_BINARY_DIR}/bin\" ${COMPILER_FLAG} -o \"${DEP_MODULE}${TEST_SUFFIX}\" \"\${work}/${DEP_BASENAME}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
                 string(APPEND SCRIPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
                 string(APPEND SCRIPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on binary-import dependency ${DEP_MODULE}: \${out}\")\nendif()\n")
                 string(APPEND SCRIPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"${DEP_MODULE}.rxbin\" \"${DEP_MODULE}${TEST_SUFFIX}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
@@ -900,6 +902,7 @@ add_crexx_run_test(test_address_redirect rexx_src/test_address_redirect.rexx)
 add_crexx_run_test(test_implicit_address rexx_src/test_implicit_address.rexx)
 add_crexx_run_test(test_parse_statement rexx_src/test_parse_statement.rexx)
 add_crexx_isolated_run_test(qualified_namespace_same_module rexx_src/qualified_namespace_same_module.rexx)
+add_crexx_isolated_run_test(qualified_bif_direct_namespace rexx_src/qualified_bif_direct_namespace.rexx)
 add_crexx_dual_import_run_test(qualified_namespace_import_source rexx_src/qualified_namespace_main.rexx rexx_src/qualified_namespace_dep_a.rexx rexx_src/qualified_namespace_dep_b.rexx source)
 add_crexx_dual_import_run_test(qualified_namespace_import_binary rexx_src/qualified_namespace_main.rexx rexx_src/qualified_namespace_dep_a.rexx rexx_src/qualified_namespace_dep_b.rexx binary)
 add_crexx_isolated_run_test(interface_tracer rexx_src/interface_tracer.rexx)
@@ -927,6 +930,10 @@ add_crexx_interface_import_run_test(interface_match_source_import rexx_src/inter
 add_crexx_interface_import_run_test(interface_match_binary_import rexx_src/interface_match_main.rexx rexx_src/interface_match_dep_contract.rexx binary)
 add_crexx_interface_import_run_test(interface_named_factory_source_import rexx_src/interface_named_factory_main.rexx rexx_src/interface_named_factory_dep_contract.rexx source)
 add_crexx_interface_import_run_test(interface_named_factory_binary_import rexx_src/interface_named_factory_main.rexx rexx_src/interface_named_factory_dep_contract.rexx binary)
+add_crexx_dual_import_run_test(interface_import_provider_source rexx_src/interface_import_provider_main.rexx rexx_src/interface_import_provider_contract.rexx rexx_src/interface_import_provider_impl.rexx source)
+add_crexx_dual_import_run_test(interface_import_provider_binary rexx_src/interface_import_provider_main.rexx rexx_src/interface_import_provider_contract.rexx rexx_src/interface_import_provider_impl.rexx binary)
+add_crexx_dual_import_run_test(interface_split_same_namespace_source rexx_src/interface_split_same_namespace_main.rexx rexx_src/interface_split_same_namespace_contract.rexx rexx_src/interface_split_same_namespace_provider.rexx source)
+add_crexx_dual_import_run_test(interface_split_same_namespace_binary rexx_src/interface_split_same_namespace_main.rexx rexx_src/interface_split_same_namespace_contract.rexx rexx_src/interface_split_same_namespace_provider.rexx binary)
 add_crexx_dual_import_run_test(qualified_interface_import rexx_src/qualified_interface_main.rexx rexx_src/qualified_interface_dep_a.rexx rexx_src/qualified_interface_dep_b.rexx source)
 add_crexx_dual_import_run_test(qualified_interface_binary_import rexx_src/qualified_interface_main.rexx rexx_src/qualified_interface_dep_a.rexx rexx_src/qualified_interface_dep_b.rexx binary)
 add_crexx_run_args_test(test_parse_arg_filename rexx_src/test_parse_arg_filename.rexx demo.rexx)
@@ -1214,7 +1221,50 @@ add_dependencies(test_bridge stub_plugin_bin)
 add_executable(test_address_bridge src/test_address_bridge.c)
 target_link_libraries(test_address_bridge PRIVATE rxvml rxpashim)
 target_include_directories(test_address_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
-add_dependencies(test_address_bridge library)
+target_compile_definitions(test_address_bridge PRIVATE
+        CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
+        CREXX_TEST_CMS_ADDRESS_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_cms_provider.rxbin"
+        CREXX_TEST_CMS_ADDRESS_HOST_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_cms_host.rxbin")
+
+add_custom_command(
+        OUTPUT address_cms_provider.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_provider.rexx
+        COMMAND $<TARGET_FILE:rxas> address_cms_provider
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_provider.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling address_cms_provider.rexx ..."
+)
+
+add_custom_command(
+        OUTPUT address_cms_host.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_host.rexx
+        COMMAND $<TARGET_FILE:rxas> address_cms_host
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_host.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling address_cms_host.rexx ..."
+)
+
+add_custom_target(address_cms_fixture_bin DEPENDS address_cms_provider.rxbin address_cms_host.rxbin)
+add_dependencies(test_address_bridge address_cms_fixture_bin library)
+
+add_custom_command(
+        OUTPUT address_callback_host.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_callback_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_callback_host.rexx
+        COMMAND $<TARGET_FILE:rxas> address_callback_host
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_callback_host.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling address_callback_host.rexx ..."
+)
+
+add_custom_target(address_callback_host_bin DEPENDS address_callback_host.rxbin)
+
+add_executable(test_address_callback_host src/test_address_callback_host.c)
+target_link_libraries(test_address_callback_host PRIVATE rxvml rxpashim)
+target_include_directories(test_address_callback_host PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_compile_definitions(test_address_callback_host PRIVATE
+        CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
+        CREXX_TEST_ADDRESS_CALLBACK_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_callback_host.rxbin")
+add_dependencies(test_address_callback_host address_callback_host_bin library)
 
 add_executable(test_source_provenance src/test_source_provenance.c)
 target_link_libraries(test_source_provenance PRIVATE rxclib)
@@ -1289,6 +1339,14 @@ add_test(NAME address_bridge COMMAND test_address_bridge)
 set_tests_properties(address_bridge PROPERTIES
         LABELS "compiler;stage3"
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+add_test(NAME address_cms_provider COMMAND
+        $<TARGET_FILE:rxvm>
+        ${CMAKE_BINARY_DIR}/bin/library.rxbin
+        ${CMAKE_CURRENT_BINARY_DIR}/address_cms_provider.rxbin
+        ${CMAKE_CURRENT_BINARY_DIR}/address_cms_host.rxbin)
+set_tests_properties(address_cms_provider PROPERTIES LABELS "compiler;stage3")
+add_test(NAME address_callback_host COMMAND test_address_callback_host)
+set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME source_provenance COMMAND test_source_provenance)
 set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")
 

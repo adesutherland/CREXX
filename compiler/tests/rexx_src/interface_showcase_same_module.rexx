@@ -20,9 +20,9 @@ main: procedure
   return
 
 asset: interface
-  *: factory = .asset
+  *: factory
   arg spec = .string
-  from_size: factory = .asset
+  from_size: factory
   arg size = .int
 
   describe: method = .string

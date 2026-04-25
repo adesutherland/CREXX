@@ -41,6 +41,8 @@ addressexit: class
         error_end = .int
         expose_start = .int
         expose_end = .int
+        sandbox_start = .int
+        sandbox_end = .int
         section = .string
         depth = .int
 
@@ -50,10 +52,16 @@ addressexit: class
         if upper(strip(tokens[1].get_text())) = "ADDRESS" then explicit = 1
 
         if explicit = 1 then do
-            env_expr = emitEnvironment(tokens[2])
-            if tokens.0 = 2 then return set_environment_result(env_expr)
-            if tokens.0 < 3 then return error_result(1, "ADDRESS requires an environment and command")
-            clause_start = 3
+            if tokens.0 < 2 then return error_result(1, "ADDRESS requires an environment or command")
+            if strip(tokens[2].get_type()) = "string_literal" then do
+                env_expr = "''"
+                clause_start = 2
+            end
+            else do
+                env_expr = emitEnvironment(tokens[2])
+                if tokens.0 = 2 then return set_environment_result(env_expr)
+                clause_start = 3
+            end
         end
         else do
             env_expr = "''"
@@ -71,6 +79,8 @@ addressexit: class
         error_end = -1
         expose_start = 0
         expose_end = -1
+        sandbox_start = 0
+        sandbox_end = -1
         section = "COMMAND"
         depth = 0
 
@@ -86,6 +96,7 @@ addressexit: class
                 else if section = "OUTPUT" then output_end = i - 1
                 else if section = "ERROR" then error_end = i - 1
                 else if section = "EXPOSE" then expose_end = i - 1
+                else if section = "SANDBOX" then sandbox_end = i - 1
                 if utext = "INPUT" then do
                     if input_start > 0 then return error_result(i, "ADDRESS INPUT clause repeated")
                     input_start = i + 1
@@ -101,6 +112,10 @@ addressexit: class
                 else if utext = "EXPOSE" then do
                     if expose_start > 0 then return error_result(i, "ADDRESS EXPOSE clause repeated")
                     expose_start = i + 1
+                end
+                else if utext = "SANDBOX" then do
+                    if sandbox_start > 0 then return error_result(i, "ADDRESS SANDBOX clause repeated")
+                    sandbox_start = i + 1
                 end
                 section = utext
                 if i = tokens.0 then return error_result(i, "ADDRESS clause requires an operand")
@@ -118,21 +133,51 @@ addressexit: class
         else if section = "OUTPUT" then output_end = tokens.0
         else if section = "ERROR" then error_end = tokens.0
         else if section = "EXPOSE" then expose_end = tokens.0
+        else if section = "SANDBOX" then sandbox_end = tokens.0
 
-        if command_end < command_start then return error_result(clause_start, "ADDRESS requires a command expression")
+        if command_end < command_start then do
+            if explicit = 1 & sandbox_start > 0 & input_start = 0 & output_start = 0 & error_start = 0 & expose_start = 0 then do
+                if sandbox_end < sandbox_start then return error_result(sandbox_start - 1, "ADDRESS SANDBOX clause requires an operand")
+                return error_result(sandbox_start - 1, "ADDRESS SANDBOX must be attached to a command")
+            end
+            return error_result(clause_start, "ADDRESS requires a command expression")
+        end
         if input_start > 0 & input_end < input_start then return error_result(input_start - 1, "ADDRESS INPUT clause requires an operand")
         if output_start > 0 & output_end < output_start then return error_result(output_start - 1, "ADDRESS OUTPUT clause requires an operand")
         if error_start > 0 & error_end < error_start then return error_result(error_start - 1, "ADDRESS ERROR clause requires an operand")
         if expose_start > 0 & expose_end < expose_start then return error_result(expose_start - 1, "ADDRESS EXPOSE clause requires an operand")
+        if sandbox_start > 0 & sandbox_end < sandbox_start then return error_result(sandbox_start - 1, "ADDRESS SANDBOX clause requires an operand")
         if redirectNeedsResolution(tokens, input_start, input_end) then return pending_result()
         if redirectNeedsResolution(tokens, output_start, output_end) then return pending_result()
         if redirectNeedsResolution(tokens, error_start, error_end) then return pending_result()
 
-        replacement = "rc=_address(" || env_expr
+        i = expose_start
+        do while i <= expose_end
+            if i = 0 then leave
+            ti = tokens[i]
+            type = strip(ti.get_type())
+            if type = "comma" then do
+                i = i + 1
+                iterate
+            end
+            if type \= "identifier" then return error_result(i, "ADDRESS EXPOSE only accepts variable names")
+            if isExposeArrayAt(tokens, i, expose_end) then do
+                if strip(ti.get_value_type()) \= ".unknown" & left(strip(ti.get_value_type()), 7) \= ".string" then return error_result(i, "ADDRESS EXPOSE array bindings must be .string[]")
+            end
+            i = nextExposeIndex(tokens, i, expose_end)
+        end
+
+        if exposeNeedsGeneratedRequest(tokens, expose_start, expose_end) then do
+            return emitGeneratedRequestResult(result, tokens, env_expr, command_start, command_end, input_start, input_end, output_start, output_end, error_start, error_end, expose_start, expose_end, sandbox_start, sandbox_end)
+        end
+
+        if sandbox_start > 0 then replacement = "rc=_address_with_sandbox(" || env_expr
+        else replacement = "rc=_address(" || env_expr
         replacement = replacement || "," || emitTokenRange(tokens, command_start, command_end)
         replacement = replacement || "," || buildRedirect(tokens, input_start, input_end, "IN")
         replacement = replacement || "," || buildRedirect(tokens, output_start, output_end, "OUT")
         replacement = replacement || "," || buildRedirect(tokens, error_start, error_end, "OUT")
+        if sandbox_start > 0 then replacement = replacement || "," || emitTokenRange(tokens, sandbox_start, sandbox_end)
         replacement = replacement || buildExposeArgs(tokens, expose_start, expose_end)
         replacement = replacement || ")"
 
@@ -169,7 +214,7 @@ maybe_add_implicit_warning: procedure = .void
 
 isClauseKeyword: procedure = .int
     arg text = .string
-    if text = "INPUT" | text = "OUTPUT" | text = "ERROR" | text = "EXPOSE" then return 1
+    if text = "INPUT" | text = "OUTPUT" | text = "ERROR" | text = "EXPOSE" | text = "SANDBOX" then return 1
     return 0
 
 redirectNeedsResolution: procedure = .int
@@ -256,6 +301,149 @@ buildRedirect: procedure = .string
 
     if isArray then return "_redir2array(" || expr || ")"
     return "_redir2string(" || expr || ")"
+
+isExposeArrayToken: procedure = .int
+    arg tok = .token
+    if tok.get_value_dims() > 0 then return 1
+    if pos("[", strip(tok.get_value_type())) > 0 then return 1
+    return 0
+
+isExposeArrayAt: procedure = .int
+    arg tokens = .token[], start_index = .int, end_index = .int
+    open_tok = .token
+    close_tok = .token
+
+    if start_index = 0 | start_index > end_index then return 0
+    if isExposeArrayToken(tokens[start_index]) then return 1
+
+    if start_index + 2 > end_index then return 0
+    open_tok = tokens[start_index + 1]
+    close_tok = tokens[start_index + 2]
+    if strip(open_tok.get_type()) = "bracket" & strip(open_tok.get_text()) = "[" & strip(close_tok.get_type()) = "bracket" & strip(close_tok.get_text()) = "]" then return 1
+    return 0
+
+nextExposeIndex: procedure = .int
+    arg tokens = .token[], start_index = .int, end_index = .int
+    if isExposeArrayAt(tokens, start_index, end_index) & start_index + 2 <= end_index then return start_index + 3
+    return start_index + 1
+
+exposeNeedsGeneratedRequest: procedure = .int
+    arg tokens = .token[], start_index = .int, end_index = .int
+    if start_index = 0 | end_index < start_index then return 0
+
+    i = start_index
+    do while i <= end_index
+        ti = tokens[i]
+        type = strip(ti.get_type())
+        if type = "comma" then do
+            i = i + 1
+            iterate
+        end
+        if isExposeArrayAt(tokens, i, end_index) then return 1
+        i = nextExposeIndex(tokens, i, end_index)
+    end
+    return 0
+
+emitGeneratedRequestResult: procedure = .exitresult
+    arg result = .exitresult, tokens = .token[], env_expr = .string, command_start = .int, command_end = .int, input_start = .int, input_end = .int, output_start = .int, output_end = .int, error_start = .int, error_end = .int, expose_start = .int, expose_end = .int, sandbox_start = .int, sandbox_end = .int
+
+    request_var = "__rxaddr_request"
+    response_var = "__rxaddr_response"
+    command_expr = .string
+    input_expr = .string
+    output_expr = .string
+    error_expr = .string
+    sandbox_expr = .string
+    stem_index = .int
+    binding_index = .int
+
+    command_expr = emitTokenRange(tokens, command_start, command_end)
+    input_expr = buildRedirect(tokens, input_start, input_end, "IN")
+    output_expr = buildRedirect(tokens, output_start, output_end, "OUT")
+    error_expr = buildRedirect(tokens, error_start, error_end, "OUT")
+
+    call result.set_status("REPLACE")
+    call result.add_replacement_line(request_var || "=_address_new_request(" || env_expr || "," || command_expr || "," || input_expr || "," || output_expr || "," || error_expr || ")")
+
+    if sandbox_start > 0 then do
+        sandbox_expr = emitTokenRange(tokens, sandbox_start, sandbox_end)
+        call result.add_replacement_line("call _address_link_request_sandbox(" || request_var || "," || sandbox_expr || ")")
+    end
+
+    stem_index = 0
+    binding_index = 0
+    i = expose_start
+    do while i <= expose_end
+        if i = 0 then leave
+        ti = tokens[i]
+        type = strip(ti.get_type())
+        if type = "comma" then do
+            i = i + 1
+            iterate
+        end
+
+        name = strip(ti.get_text())
+        binding_index = binding_index + 1
+        if isExposeArrayAt(tokens, i, expose_end) then do
+            stem_index = stem_index + 1
+            stem_var = "__rxaddr_stem_" || stem_index
+            loop_var = "__rxaddr_i_" || stem_index
+            binding_var = "__rxaddr_binding_" || binding_index
+            call result.add_replacement_line(stem_var || "=.standardaddressstem()")
+            call result.add_replacement_line("call " || stem_var || ".set('0'," || name || ".0 || '')")
+            call result.add_replacement_line("do " || loop_var || " = 1 to " || name || ".0")
+            call result.add_replacement_line("call " || stem_var || ".set(" || loop_var || " || ''," || name || "[" || loop_var || "])")
+            call result.add_replacement_line("end")
+            call result.add_replacement_line(binding_var || "=.addressbinding('stem','" || name || "','" || name || "','','')")
+            call result.add_replacement_line("assembler linktoattr1 6, " || binding_var || ", " || stem_var)
+            call result.add_replacement_line("call " || request_var || ".add_binding_plan(" || binding_var || ")")
+        end
+        else do
+            call result.add_replacement_line("call " || request_var || ".add_binding('var','" || name || "','" || name || "'," || name || ")")
+        end
+        i = nextExposeIndex(tokens, i, expose_end)
+    end
+
+    call result.add_replacement_line(response_var || "=_address_dispatch_request(" || request_var || ")")
+
+    if sandbox_start > 0 then do
+        call result.add_replacement_line("call _address_apply_response_sandbox(" || response_var || "," || sandbox_expr || ")")
+    end
+
+    stem_index = 0
+    binding_index = 0
+    i = expose_start
+    do while i <= expose_end
+        if i = 0 then leave
+        ti = tokens[i]
+        type = strip(ti.get_type())
+        if type = "comma" then do
+            i = i + 1
+            iterate
+        end
+
+        name = strip(ti.get_text())
+        binding_index = binding_index + 1
+        if isExposeArrayAt(tokens, i, expose_end) then do
+            stem_index = stem_index + 1
+            stem_var = "__rxaddr_stem_" || stem_index
+            loop_var = "__rxaddr_i_" || stem_index
+            count_var = "__rxaddr_count_" || stem_index
+            call result.add_replacement_line("call _address_apply_response_request_stem(" || response_var || "," || request_var || "," || binding_index || ",'" || name || "')")
+            call result.add_replacement_line(count_var || "=" || request_var || ".get_binding_stem_value(" || binding_index || ",'0') + 0")
+            call result.add_replacement_line("assembler SETATTRS " || name || "," || count_var)
+            call result.add_replacement_line("do " || loop_var || " = 1 to " || count_var)
+            call result.add_replacement_line(name || "[" || loop_var || "]=" || request_var || ".get_binding_stem_value(" || binding_index || "," || loop_var || " || '')")
+            call result.add_replacement_line("end")
+        end
+        else do
+            call result.add_replacement_line("call _address_apply_response_var(" || response_var || ",'" || name || "'," || name || ")")
+        end
+        i = nextExposeIndex(tokens, i, expose_end)
+    end
+
+    call result.add_replacement_line("rc=" || response_var || ".get_rc()")
+    return result
 
 buildExposeArgs: procedure = .string
     arg tokens = .token[], start_index = .int, end_index = .int

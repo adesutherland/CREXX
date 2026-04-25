@@ -34,7 +34,7 @@
 // Program Structure
 program ::= headers functions EOS.
 program ::= functions EOS.
-program ::= headers EOS. { rxaserrf(context, 0, 0, 1, "Error no instructions in file"); }
+program ::= headers EOS.
 
 // Program error messages
 program ::= ANYTHING(T) NEWLINE EOS. { rxaserat(context, T, "Error unexpected parse failure (2)"); }

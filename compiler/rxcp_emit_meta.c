@@ -32,6 +32,7 @@
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
 #include "rxcp_val.h"
+#include "rxcp_util.h"
 
 #define REGTP_VAL 1
 #define REGTP_NOTSYM 2
@@ -91,6 +92,51 @@ static const char *interface_member_kind_string(ASTNode *member) {
         return "method";
     }
     return "";
+}
+
+char *callable_effective_return_type(ASTNode *node) {
+    ASTNode *return_node;
+
+    if (!node) return strdup(".void");
+
+    return_node = ast_chld(node, CLASS, VOID);
+    if (!return_node) return strdup(".void");
+    if (node->node_type == FACTORY && return_node && return_node->node_type == VOID) {
+        ASTNode *owner = node->parent;
+        while (owner && owner->node_type != CLASS_DEF && owner->node_type != INTERFACE_DEF) {
+            owner = owner->parent;
+        }
+        if (owner) {
+            const char *name = 0;
+            char *normalized = 0;
+            char *result;
+            size_t len;
+
+            if (owner->symbolNode && owner->symbolNode->symbol && owner->symbolNode->symbol->name) {
+                name = owner->symbolNode->symbol->name;
+            }
+            else if (owner->node_string) {
+                normalized = rxcp_normalize_source_symbol_name(owner->node_string,
+                                                               owner->node_string_length,
+                                                               1,
+                                                               1);
+                name = normalized;
+            }
+
+            if (name && name[0]) {
+                len = strlen(name);
+                result = malloc(len + 2);
+                result[0] = '.';
+                memcpy(result + 1, name, len);
+                result[len + 1] = 0;
+                if (normalized) free(normalized);
+                return result;
+            }
+            if (normalized) free(normalized);
+        }
+    }
+
+    return ast_n2tp(return_node);
 }
 
 /* Adds Symbol metadata */
@@ -483,7 +529,7 @@ void add_class_symbol(Symbol *symbol, void *payload) {
                     ASTNode *member = sym_trnd(s, 0)->node;
                     if (member && (member->node_type == METHOD || member->node_type == FACTORY)) {
                         char *owner_fqn = sym_frnm(symbol);
-                        char *rtype = ast_n2tp(ast_chld(member, CLASS, VOID));
+                        char *rtype = callable_effective_return_type(member);
                         char *args = meta_narg(ast_chld(member, ARGS, 0));
                         char *member_name;
                         member_name = malloc(member->node_string_length + 1);

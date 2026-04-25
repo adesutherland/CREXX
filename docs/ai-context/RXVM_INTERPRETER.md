@@ -93,6 +93,9 @@ struct value {
     char *binary_value;
     size_t binary_length;
 
+    const rxvm_native_payload_ops *native_payload_ops;
+    unsigned int native_payload_flags;
+
     const char *object_type_name;    /* Runtime concrete class name */
     size_t object_type_name_length;
     
@@ -112,6 +115,86 @@ In UTF builds, `string_length` is the byte length while `string_chars` is the
 codepoint count. Any instruction that synthesizes or truncates a string must
 keep both in sync and reset `string_pos` / `string_char_pos` to the start of
 the new value.
+
+### Copy, Move, and Native Payloads
+
+Rexx objects are not user-visible native pointers. A Rexx object value is still
+a VM `value`: it may have attributes, a concrete `object_type_name`, scalar
+storage, and an optional binary payload. Class/interface dispatch is based on
+the stamped object type plus metadata, not on exposing a C pointer to Rexx code.
+
+The VM has two distinct value-transfer paths:
+
+- `copy_value(dest, source)` preserves the source and duplicates the current
+  value state into `dest`. Strings, decimals, ordinary binaries, and attributes
+  are copied into destination-owned storage.
+- `move_value(dest, source)` transfers ownership of malloced buffers and
+  attribute arrays into `dest`, then reinitializes `source`. This is used for
+  returning true local values from a Rexx procedure and is the efficient path
+  for unique ownership.
+- Rexx `RET_REG` moves only when returning a real local register. Returning an
+  argument, global, or linked attribute is copied so the caller-visible source
+  remains valid.
+- Rexx procedure calls initially link caller argument registers into callee
+  locals. The compiler/emitter is responsible for adding defensive copies for
+  by-value writable formals when required by the language contract.
+
+Native-backed objects should use the binary slot as their physical payload
+carrier, but only with an explicit `rxvm_native_payload_ops` descriptor when
+the payload owns native resources. The descriptor is normally a static provider
+object shared by many values; the value stores just a pointer to it plus flags,
+so there is no per-instance ops allocation.
+
+When `native_payload_ops` is set:
+
+- `clear_value()` calls the payload finalizer, if any, before freeing the
+  `binary_value` buffer.
+- `move_value()` transfers both the binary buffer and the ops pointer to the
+  destination and clears the source, so finalization still happens exactly once.
+- `copy_value()` calls the provider copy hook if one is supplied. If no copy
+  hook is supplied, the VM falls back to the same byte copy used for ordinary
+  `.binary` values and copies the ops pointer as-is. A copy hook is responsible
+  for installing the destination payload, normally by calling
+  `SETNATIVEPAYLOAD()` or the corresponding internal helper.
+- The VM must own every `binary_value` buffer. Copy hooks should never install
+  externally allocated memory directly into `binary_value`; they should call
+  `SETNATIVEPAYLOAD()` / `rxvml_set_native_payload()` with the bytes to store.
+  The helper mallocs the destination buffer, copies those bytes, and records
+  the shared ops pointer.
+- Scalar/string setters clear an attached native payload before replacing the
+  visible value, so stale native resources are not accidentally copied after a
+  register is reused as an integer, float, or string.
+
+That fallback is intentional but dangerous for unique native ownership. A
+provider that supplies a finalizer but no copy hook must ensure bit-copied
+payloads are safe to finalize more than once, for example by storing a shared
+registry handle or a refcounted object. Providers that store raw pointers,
+file descriptors, sockets, thread handles, or other unique resources must
+provide a copy hook that retains/clones/duplicates the resource, or avoid
+value-owned native payloads and use a context-owned registry handle instead.
+Finalizers release the nested native resource referenced by the payload; they
+must not free the `binary_value` buffer itself, because the VM frees that
+buffer after the finalizer returns.
+
+### Nested rxvml Calls
+
+The public `rxvml_call_procedure()` and `rxvml_call_method()` entry points run
+Rexx procedures by installing a temporary external-call trampoline
+(`ext_proc`, `ext_argc`, `ext_args`, and `ext_ret`) and then entering `run()`.
+These calls are allowed from native callbacks, including ADDRESS environment
+callbacks, while another `run()` invocation is already active.
+
+Nested `rxvml` calls must save and restore both the external-call trampoline
+and the active `rxvml_context`. Without that preservation, a callback that calls
+back into a Rexx method can overwrite the outer callback invocation state and
+cause the original `run()` to return through the wrong procedure or with the
+wrong argument/return vector.
+
+The ADDRESS sandbox/stem helpers use direct VM-layout mutation for the standard
+`.standardaddresssandbox` and `.standardaddressstem` classes, with nested method
+dispatch reserved as the fallback for non-standard interface implementations.
+This keeps repeated native callback writes stable while still allowing future
+custom Rexx objects to implement the same ADDRESS interfaces.
 
 ## 3. The Execution Loop
 

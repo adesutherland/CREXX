@@ -4,10 +4,43 @@
 #include <stddef.h>
 #include "rxvalue.h"
 
-#define RXVML_ABI_VERSION 1
+#define RXVML_ABI_VERSION 5
+#define RXVML_ADDRESS_ENVIRONMENT_INTERFACE "_rxsysb.addressenvironment"
+#define RXVML_ADDRESS_ENVIRONMENT_FACTORY_PROC "_rxsysb._new_address_environment"
 
 typedef struct rxvml_context rxvml_context;
 typedef value   rxvml_value;
+
+typedef struct rxvml_address_binding {
+    const char* kind;
+    const char* internal_name;
+    const char* external_alias;
+    const char* value;
+    rxvml_value* value_object;
+    const char* flags;
+} rxvml_address_binding;
+
+typedef struct rxvml_address_request {
+    const char* environment_name;
+    const char* command;
+    size_t binding_count;
+    const rxvml_address_binding* bindings;
+    rxvml_value* sandbox;
+} rxvml_address_request;
+
+typedef struct rxvml_address_response {
+    int rc;
+    const char* condition_name;
+    const char* diagnostic;
+    size_t updated_binding_count;
+    const rxvml_address_binding* updated_bindings;
+} rxvml_address_response;
+
+typedef int (*rxvml_address_callback)(
+    rxvml_context* ctx,
+    const rxvml_address_request* request,
+    rxvml_address_response* response,
+    void* userdata);
 
 /* Context lifecycle */
 rxvml_context* rxvml_create(const char* location, unsigned flags);
@@ -21,6 +54,11 @@ int rxvml_load_module_buffer(rxvml_context* ctx, const void* buf, size_t len);
 rxvml_value* rxvml_value_new(rxvml_context* ctx);
 void         rxvml_set_int(rxvml_value* v, rxinteger i);
 void         rxvml_set_str(rxvml_value* v, const char* s, size_t len);
+int          rxvml_set_native_payload(rxvml_value* v, const void* payload, size_t len,
+                                      const rxvm_native_payload_ops* ops, unsigned int flags);
+void*        rxvml_get_native_payload(rxvml_value* v, size_t* out_len,
+                                      const rxvm_native_payload_ops** out_ops,
+                                      unsigned int* out_flags);
 void         rxvml_value_free(rxvml_value* v);
 
 /* Object & Array construction */
@@ -57,9 +95,60 @@ int rxvml_address_register_environment(
     const char* env_name,
     rxvml_value* env_obj);
 
+int rxvml_address_register_callback_environment(
+    rxvml_context* ctx,
+    const char* env_name,
+    rxvml_address_callback callback,
+    void* userdata);
+
+int rxvml_address_create_environment(
+    rxvml_context* ctx,
+    const char* env_name,
+    rxvml_value** env_obj_out);
+
 int rxvml_address_set_environment(
     rxvml_context* ctx,
     const char* env_name);
+
+/* Read from the standard ADDRESS sandbox layout. */
+int rxvml_address_sandbox_get(
+    const rxvml_address_request* request,
+    const char* name,
+    char* out_value,
+    size_t out_value_len);
+
+/* Write to the request sandbox through the standard layout, or method fallback. */
+int rxvml_address_sandbox_set(
+    rxvml_context* ctx,
+    const rxvml_address_request* request,
+    const char* name,
+    const char* value);
+
+/* ADDRESS stem helpers for exposed .string[] / addressstem bindings. */
+int rxvml_address_stem_get(
+    const rxvml_value* stem,
+    const char* name,
+    char* out_value,
+    size_t out_value_len);
+
+int rxvml_address_stem_set(
+    rxvml_context* ctx,
+    rxvml_value* stem,
+    const char* name,
+    const char* value);
+
+int rxvml_address_binding_stem_get(
+    const rxvml_address_binding* binding,
+    const char* name,
+    char* out_value,
+    size_t out_value_len);
+
+int rxvml_address_binding_stem_set(
+    rxvml_context* ctx,
+    const rxvml_address_binding* binding,
+    const char* name,
+    const char* value);
+
 
 /* Persistent Registry for Stateful Exits */
 int          rxvml_reg_alloc(rxvml_context* ctx, rxvml_value* v, const char* class_name);

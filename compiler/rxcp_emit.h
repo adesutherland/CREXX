@@ -98,6 +98,7 @@ void add_all_class_metadata(ASTNode* scope_node, ASTNode* output_node);
 void meta_clear_symbol(Symbol *symbol, void *payload);
 void meta_clear_global_symbol(Symbol *symbol, void *payload);
 char *meta_narg(ASTNode *node);
+char *callable_effective_return_type(ASTNode *node);
 
 /* Procedure Emitter */
 void emit_proc(ASTNode *node, void *payload);

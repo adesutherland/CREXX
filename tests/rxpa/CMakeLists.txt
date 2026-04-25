@@ -23,6 +23,12 @@ add_dynamic_plugin_target(_rxpa_dynlink rxpa_dynlink.c)
 localize_test_plugin_output(_rxpa_dynlink)
 add_dependencies(_rxpa_dynlink rxpa library rxvm rxc) # The test (not plugin) depends on rxpa, library, rxvm, and rxc
 
+# Native declaration plugin used to prove RXPA class/interface metadata is
+# visible to the compiler without a Rexx-side contract shim.
+add_dynamic_plugin_target(_rxpa_classdecl rxpa_classdecl.c)
+localize_test_plugin_output(_rxpa_classdecl)
+add_dependencies(_rxpa_classdecl rxpa library rxvm rxc)
+
 # Create a version of rxc that statically links the _rxpa_static library
 # Create static link module for rxc
 # The static declaration library
@@ -35,6 +41,13 @@ configure_linker_for_decl_lib(rxc_staticlink _rxpalink)
 # Add the dependencies and link libraries
 add_dependencies(rxc_staticlink rxclib _rxpalink_decl rxpa library rxvm)
 target_link_libraries(rxc_staticlink rxclib _rxpalink_decl)
+
+add_decl_plugin_target(_rxpa_classdecl_static rxpa_classdecl.c)
+add_executable(rxc_classdecl_static "${CMAKE_SOURCE_DIR}/compiler/rxc_main.c")
+target_include_directories(rxc_classdecl_static PRIVATE ${CMAKE_SOURCE_DIR}/platform)
+configure_linker_for_decl_lib(rxc_classdecl_static _rxpa_classdecl_static)
+add_dependencies(rxc_classdecl_static rxclib _rxpa_classdecl_static_decl rxpa library rxvm)
+target_link_libraries(rxc_classdecl_static rxclib _rxpa_classdecl_static_decl)
 
 # Create static link module for rxvm
 # The static definition library
@@ -80,7 +93,7 @@ crexx_add_rexx_opt_matrix(
         NAME rxpa_dynlink_run
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink.rexx
         TARGET_GROUP rxpa_dynlink_run
-        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
         DEPENDS library _rxpa_dynlink
         RUNTIME_ARGS rx_rxpa_dynlink ${CMAKE_BINARY_DIR}/bin/library
 )
@@ -91,7 +104,7 @@ crexx_add_rexx_opt_matrix(
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink.rexx
         TARGET_GROUP rxpa_staticlink_run
         COMPILER_TARGET rxc_staticlink
-        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNNER testvm
         RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
@@ -115,6 +128,18 @@ foreach(_mode IN ITEMS noopt opt)
     add_test(
             NAME rxpa_staticlink_compile_${_mode}
             COMMAND rxc_staticlink -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_staticlink_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    add_test(
+            NAME rxpa_classdecl_dynamic_compile_${_mode}
+            COMMAND $<TARGET_FILE:rxc> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_dynamic_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.rexx
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    add_test(
+            NAME rxpa_classdecl_static_compile_${_mode}
+            COMMAND $<TARGET_FILE:rxc_classdecl_static> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_static_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.rexx
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 endforeach()
@@ -171,9 +196,11 @@ set(FUNC_TESTS
         int_funcs
         float_funcs
         array_push_funcs
+        native_payload_funcs
 )
 set(OUTPUTS
         Signal
+        OK
         OK
         OK
         OK
@@ -191,7 +218,7 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
             NAME rxpa_${_rexxtest}_dynamic
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest_source}
             TARGET_GROUP rxpa_${_rexxtest}_dynamic
-            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+            IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
             DEPENDS library funcvm _testfuncs_dynamic
             RUNTIME_ARGS rx_testfuncs_dynamic ${CMAKE_BINARY_DIR}/bin/library
     )
@@ -206,7 +233,7 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
             NAME rxpa_${_rexxtest}_static
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest_source}
             TARGET_GROUP rxpa_${_rexxtest}_static
-            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+            IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
             DEPENDS library funcvm _testfuncs_dynamic
             RUNNER funcvm
             RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library

@@ -20,11 +20,13 @@
 - **Copy vs. Link**: 
     - **Assignment**: Most operations (`set_string`, `copy_value`, `set_value_string`) perform a **Deep Copy** (malloc + memcpy).
     - **Argument Passing**: Procedure calls (`CALL_FUNC`, etc.) **Link** registers. The callee's `locals` pointers are updated to point to the caller's `Value` objects. The frame's original `Value` objects are shadowed but preserved in `baselocals`.
-    - **Return Values**: Values are **Deep Copied** back to the caller's return register using `copy_value` or `move_value`.
+    - **Return Values**: Values are copied or moved back to the caller's return register. `RET_REG` uses `move_value` only for true local registers; arguments, globals, and linked attributes are copied with `copy_value`.
+    - **Native Payloads**: Native-backed object payloads live in the binary slot. If a payload ops descriptor is attached, `copy_value` calls its copy hook when present and otherwise byte-copies the payload; a copy hook is responsible for installing the destination payload. `move_value` transfers the binary buffer and ops pointer.
+    - **Scalar Overwrite**: Scalar and string setters clear an attached native payload before replacing the visible value, preventing stale native resources from following a reused register.
 
 ### Cleanup (The "Lazy Free" Pattern)
 - **`value_zero()`**: Resets `string_length` to 0 but **does NOT free** the malloced buffer. This allows for buffer reuse within the same register life.
-- **`clear_value()`**: Explicitly `free`s the malloced `string_value` (if not the small buffer) and other resources (decimal, binary, attributes).
+- **`clear_value()`**: Explicitly `free`s the malloced `string_value` (if not the small buffer) and other resources (decimal, binary, attributes). If a native payload ops descriptor is attached to the binary slot, its finalizer runs before the binary buffer is freed.
 - **Final Deallocation**: `Value` structures themselves are freed only when their container (Frame, Module, or `run` loop) is destroyed.
 
 ## 2. Life of a Frame (Cache -> Use -> Recycle)

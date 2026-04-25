@@ -3,12 +3,20 @@
 
 /* Forward declarations of VM implementation */
 void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args);
+void rxvm_addclass(char* name, char* option, char* type);
+void rxvm_addinterface(char* name, char* option, char* type);
+void rxvm_addimplements(char* name, char* interface_name);
+void rxvm_addmember(char* owner, char* kind, char* member, char* type, char* args);
 char* rxvm_getstring(rxpa_attribute_value attributeValue);
 void rxvm_setstring(rxpa_attribute_value attributeValue, char* string);
 void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
 rxinteger rxvm_getint(rxpa_attribute_value attributeValue);
 void rxvm_setfloat(rxpa_attribute_value attributeValue, double double_value);
 double rxvm_getfloat(rxpa_attribute_value attributeValue);
+int rxvm_setnativepayload(rxpa_attribute_value attributeValue, const void *payload, size_t length,
+                          const rxpa_native_payload_ops *ops, unsigned int flags);
+void* rxvm_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
+                            const rxpa_native_payload_ops **out_ops, unsigned int *out_flags);
 rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue);
 void rxvm_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs);
 rxpa_attribute_value rxvm_getattr(rxpa_attribute_value attributeValue, rxinteger index);
@@ -21,6 +29,22 @@ void rxvm_resetsayexit();
 /* Shims */
 void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args) {
     rxvm_addfunc(func, name, option, type, args);
+}
+
+void rxpa_addclass(char* name, char* option, char* type) {
+    rxvm_addclass(name, option, type);
+}
+
+void rxpa_addinterface(char* name, char* option, char* type) {
+    rxvm_addinterface(name, option, type);
+}
+
+void rxpa_addimplements(char* name, char* interface_name) {
+    rxvm_addimplements(name, interface_name);
+}
+
+void rxpa_addmember(char* owner, char* kind, char* member, char* type, char* args) {
+    rxvm_addmember(owner, kind, member, type, args);
 }
 
 char* rxpa_getstring(rxpa_attribute_value attributeValue) {
@@ -45,6 +69,16 @@ void rxpa_setfloat(rxpa_attribute_value attributeValue, double value) {
 
 double rxpa_getfloat(rxpa_attribute_value attributeValue) {
     return rxvm_getfloat(attributeValue);
+}
+
+int rxpa_setnativepayload(rxpa_attribute_value attributeValue, const void *payload, size_t length,
+                          const rxpa_native_payload_ops *ops, unsigned int flags) {
+    return rxvm_setnativepayload(attributeValue, payload, length, ops, flags);
+}
+
+void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
+                            const rxpa_native_payload_ops **out_ops, unsigned int *out_flags) {
+    return rxvm_getnativepayload(attributeValue, out_length, out_ops, out_flags);
 }
 
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue) {

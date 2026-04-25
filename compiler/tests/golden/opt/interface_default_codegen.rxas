@@ -74,7 +74,7 @@ main() .locals=3
    .meta "interface_default_codegen.shape.prefix.§this"
 
 §interface_default_codegen.box.§factory() .locals=1
-   .meta "interface_default_codegen.box.§factory"="b" ".void" §interface_default_codegen.box.§factory() "" ""
+   .meta "interface_default_codegen.box.§factory"="b" ".box" §interface_default_codegen.box.§factory() "" ""
    .src 17:3="*: factory"
    setattrs r0,0
    setobjtype r0,"interface_default_codegen.box"

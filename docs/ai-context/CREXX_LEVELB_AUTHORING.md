@@ -177,6 +177,35 @@ References:
 - `compiler/exits/ExitTestSupport.rexx`
 - `docs/books/crexx_language_reference/data_types.md`
 
+### Class and interface factories omit return types
+
+Use `*: factory` or `name: factory`; do not write `= .type` on a factory. The
+factory result is inferred from the owning contract: an interface factory
+returns that interface and a class factory returns that concrete class. In a
+class factory, bare `return` returns the constructed object, so there is no
+source-level `this` value to mention.
+
+```rexx
+vehicle: interface
+  *: factory
+  arg name = .string
+  describe: method = .string
+
+car: class implements .vehicle
+  _name = .string
+
+  *: factory
+    arg name = .string
+    _name = name
+    return
+
+  describe: method = .string
+    return _name
+```
+
+Reference:
+- `docs/books/crexx_language_reference/classes_and_interfaces.md`
+
 ### `address command` is the standard shell-out pattern
 
 When Level B code shells out, copy the repo pattern instead of inventing a new

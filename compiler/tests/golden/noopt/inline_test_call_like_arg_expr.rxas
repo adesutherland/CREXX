@@ -76,7 +76,7 @@ addOne() .locals=2
    .meta "inline_test_call_like_arg_expr.addone.val"
 
 §inline_test_call_like_arg_expr.box.§factory() .locals=3
-   .meta "inline_test_call_like_arg_expr.box.§factory"="b" ".void" §inline_test_call_like_arg_expr.box.§factory() "initialvalue=.int" ""
+   .meta "inline_test_call_like_arg_expr.box.§factory"="b" ".box" §inline_test_call_like_arg_expr.box.§factory() "initialvalue=.int" ""
    .src 19:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_call_like_arg_expr.box"

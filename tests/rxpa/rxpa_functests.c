@@ -6,6 +6,89 @@
 // Do not need to define functions for static linking to the compiler - only REXX declarations are needed
 #ifndef DECL_ONLY
 
+typedef struct native_payload_test {
+    int id;
+} native_payload_test;
+
+static int native_payload_copy_count = 0;
+static int native_payload_finalize_count = 0;
+
+static void native_payload_copy(void *dest_value, void *source_value);
+static void native_payload_finalize(void *value);
+
+static const rxpa_native_payload_ops native_payload_test_ops = {
+    "rxpatests.native_payload_test",
+    native_payload_copy,
+    native_payload_finalize
+};
+
+static void native_payload_copy(void *dest_value, void *source_value) {
+    native_payload_test *source_payload;
+    native_payload_test copied_payload;
+
+    source_payload = (native_payload_test*)GETNATIVEPAYLOAD(source_value, NULL, NULL, NULL);
+    if (!source_payload) return;
+
+    copied_payload = *source_payload;
+    native_payload_copy_count++;
+    SETNATIVEPAYLOAD(dest_value, &copied_payload, sizeof(copied_payload), &native_payload_test_ops, 0);
+}
+
+static void native_payload_finalize(void *value) {
+    native_payload_test *payload;
+
+    payload = (native_payload_test*)GETNATIVEPAYLOAD(value, NULL, NULL, NULL);
+    if (payload) native_payload_finalize_count++;
+}
+
+PROCEDURE(native_payload_reset)
+{
+    native_payload_copy_count = 0;
+    native_payload_finalize_count = 0;
+    RESETSIGNAL
+}
+
+PROCEDURE(native_payload_make)
+{
+    native_payload_test payload;
+
+    if( NUM_ARGS != 1) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "1 argument expected")
+
+    payload.id = (int)GETINT(ARG(0));
+    SETNATIVEPAYLOAD(RETURN, &payload, sizeof(payload), &native_payload_test_ops, 0);
+    RESETSIGNAL
+}
+
+PROCEDURE(native_payload_id)
+{
+    native_payload_test *payload;
+
+    if( NUM_ARGS != 1) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "1 argument expected")
+
+    payload = (native_payload_test*)GETNATIVEPAYLOAD(ARG(0), NULL, NULL, NULL);
+    SETINT(RETURN, payload ? payload->id : -1);
+    RESETSIGNAL
+}
+
+PROCEDURE(native_payload_clear)
+{
+    if( NUM_ARGS != 1) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "1 argument expected")
+
+    SETNATIVEPAYLOAD(ARG(0), NULL, 0, NULL, 0);
+    RESETSIGNAL
+}
+
+PROCEDURE(native_payload_copies)
+{
+    SETINT(RETURN, native_payload_copy_count);
+    RESETSIGNAL
+}
+
+PROCEDURE(native_payload_finalizers)
+{
+    SETINT(RETURN, native_payload_finalize_count);
+    RESETSIGNAL
+}
 
 // Throw a signal
 PROCEDURE(throw_signal)
@@ -182,4 +265,10 @@ ADDPROC(add_floats,        "rxpatests.add_floats",          "b",     ".float",  
 ADDPROC(add_floats_ref,    "rxpatests.add_floats_ref",      "b",     ".void",      "f1 = .float, f2 = .float, expose f3 = .float");
 ADDPROC(bubble_sort,       "rxpatests.bubble_sort",         "b",     ".void",      "expose a = .int[]");
 ADDPROC(fill_push_arrays,  "rxpatests.fill_push_arrays",    "b",     ".void",      "expose ints = .int[], expose strings = .string[]");
+ADDPROC(native_payload_reset,      "rxpatests.native_payload_reset",      "b",     ".void",   "");
+ADDPROC(native_payload_make,       "rxpatests.native_payload_make",       "b",     ".binary", "id = .int");
+ADDPROC(native_payload_id,         "rxpatests.native_payload_id",         "b",     ".int",    "payload = .binary");
+ADDPROC(native_payload_clear,      "rxpatests.native_payload_clear",      "b",     ".void",   "expose payload = .binary");
+ADDPROC(native_payload_copies,     "rxpatests.native_payload_copies",     "b",     ".int",    "");
+ADDPROC(native_payload_finalizers, "rxpatests.native_payload_finalizers", "b",     ".int",    "");
 ENDLOADFUNCS

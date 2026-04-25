@@ -271,6 +271,96 @@ static int same_contract_type_node(Context *context, ASTNode *left, ASTNode *rig
     return same;
 }
 
+static ValueType contract_member_return_type(Context *context,
+                                             ASTNode *member,
+                                             size_t *dims,
+                                             int **dim_base,
+                                             int **dim_elements,
+                                             char **class_name) {
+    ASTNode *return_node;
+
+    if (class_name && *class_name) {
+        free(*class_name);
+        *class_name = 0;
+    }
+    if (dim_base && *dim_base) {
+        free(*dim_base);
+        *dim_base = 0;
+    }
+    if (dim_elements && *dim_elements) {
+        free(*dim_elements);
+        *dim_elements = 0;
+    }
+    if (dims) *dims = 0;
+
+    if (!member) return TP_VOID;
+
+    return_node = member->child;
+    if (member->node_type == FACTORY &&
+        return_node && return_node->node_type == VOID) {
+        ASTNode *owner = member->parent;
+        while (owner && owner->node_type != CLASS_DEF && owner->node_type != INTERFACE_DEF) {
+            owner = owner->parent;
+        }
+        if (owner && (owner->node_type == CLASS_DEF || owner->node_type == INTERFACE_DEF)) {
+            char *owner_name = 0;
+            if (owner->symbolNode && owner->symbolNode->symbol) {
+                owner_name = sym_frnm(owner->symbolNode->symbol);
+            }
+            if (!owner_name) {
+                owner_name = rxcp_normalize_source_symbol_name(owner->node_string,
+                                                               owner->node_string_length,
+                                                               0,
+                                                               1);
+            }
+            if (class_name) *class_name = owner_name;
+            else if (owner_name) free(owner_name);
+            return TP_OBJECT;
+        }
+    }
+
+    return node_to_type(context, return_node ? return_node : member, dims, dim_base, dim_elements, class_name);
+}
+
+static int same_contract_return_signature(Context *context, ASTNode *iface_member, ASTNode *class_member) {
+    size_t iface_dims = 0, class_dims = 0;
+    int *iface_base = 0, *iface_elems = 0, *class_base = 0, *class_elems = 0;
+    char *iface_class = 0, *class_class = 0;
+    ValueType iface_type;
+    ValueType class_type;
+    int same = 0;
+
+    iface_type = contract_member_return_type(context, iface_member, &iface_dims, &iface_base, &iface_elems, &iface_class);
+    class_type = contract_member_return_type(context, class_member, &class_dims, &class_base, &class_elems, &class_class);
+
+    if (iface_type == class_type && iface_dims == class_dims) {
+        size_t i;
+        same = 1;
+        for (i = 0; i < iface_dims; i++) {
+            if (iface_base[i] != class_base[i] || iface_elems[i] != class_elems[i]) {
+                same = 0;
+                break;
+            }
+        }
+        if (same) {
+            if (iface_class && class_class) {
+                same = symbol_names_equivalent(context, iface_class, class_class) ||
+                       symbol_name_assignable_to(context, class_class, iface_class);
+            }
+            else same = iface_class == 0 && class_class == 0;
+        }
+    }
+
+    if (iface_base) free(iface_base);
+    if (iface_elems) free(iface_elems);
+    if (iface_class) free(iface_class);
+    if (class_base) free(class_base);
+    if (class_elems) free(class_elems);
+    if (class_class) free(class_class);
+
+    return same;
+}
+
 static int type_node_is_runtime_type_target(ASTNode *type_node) {
     if (!type_node) return 0;
     if (type_node->target_dims != 0) return 0;
@@ -288,17 +378,7 @@ static int same_contract_signature(Context *context, ASTNode *iface_member, ASTN
 
     iface_ret = iface_member;
     class_ret = class_member;
-    if (!same_contract_type_node(context, iface_ret, class_ret)) {
-        if (iface_ret && class_ret &&
-            iface_ret->value_type == TP_OBJECT && class_ret->value_type == TP_OBJECT &&
-            !iface_ret->value_dims && !class_ret->value_dims &&
-            iface_ret->value_class && class_ret->value_class &&
-            symbol_name_assignable_to(context, class_ret->value_class, iface_ret->value_class)) {
-            /* Concrete class return types may satisfy interface returns in the tracer-bullet slice. */
-        } else {
-            return 0;
-        }
-    }
+    if (!same_contract_return_signature(context, iface_ret, class_ret)) return 0;
 
     iface_args = ast_chld(iface_member, ARGS, 0);
     class_args = ast_chld(class_member, ARGS, 0);
@@ -597,6 +677,37 @@ void infer_arguments(Context *context, ASTNode *node) {
         }
         n1 = n1->sibling;
     }
+}
+
+static int resolve_factory_call_as_qualified_function(Context *context, ASTNode *node) {
+    Symbol *func_sym = 0;
+
+    if (!context || !node || node->node_type != FACTORY_CALL) return 0;
+    if (node->association) return 0;
+    if (!node->node_string ||
+        !rxcp_source_symbol_is_qualified(node->node_string, node->node_string_length)) {
+        return 0;
+    }
+
+    func_sym = sym_rvfc(context->ast, node);
+    if (!func_sym || func_sym->symbol_type != FUNCTION_SYMBOL) {
+        func_sym = sym_imfn(context, node);
+    }
+
+    if (!func_sym || func_sym->symbol_type != FUNCTION_SYMBOL) return 0;
+
+    if (node->symbolNode && node->symbolNode->symbol != func_sym) {
+        sym_dno(node->symbolNode->symbol, node);
+    }
+    if (!node->symbolNode) {
+        sym_adnd(func_sym, node, 1, 0);
+    }
+
+    node->node_type = FUNCTION;
+    ast_svtp(node, func_sym);
+    infer_arguments(context, node);
+    context->changed_flags |= FLAG_VAL_TYPE;
+    return 1;
 }
 
 /* Reset node types at the start of each validation pass so they can be re-evaluated on a clean slate */
@@ -978,7 +1089,9 @@ walker_result set_node_types_walker(walker_direction direction,
                                     infer_arguments(context, node);
                                 }
                             } else {
-                                context->changed_flags |= FLAG_VAL_TYPE; 
+                                if (!resolve_factory_call_as_qualified_function(context, node)) {
+                                    context->changed_flags |= FLAG_VAL_TYPE;
+                                }
                             }
                         } else {
                             /* Defer error if imports may provide class stubs */
@@ -987,7 +1100,9 @@ walker_result set_node_types_walker(walker_direction direction,
                                 ASTNode *pfch = context->ast->child->child;
                                 while (pfch) { if (pfch->node_type == IMPORT) { has_import = 1; break; } pfch = pfch->sibling; }
                             }
-                            if (has_import && !context->after_rewrite) {
+                            if (resolve_factory_call_as_qualified_function(context, node)) {
+                                /* Resolved as a namespace-qualified imported procedure. */
+                            } else if (has_import && !context->after_rewrite) {
                                 /* defer error on first pass */
                             } else {
                                 mknd_err(node, "CLASS_NOT_FOUND");
