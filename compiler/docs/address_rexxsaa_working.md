@@ -1633,9 +1633,40 @@ Deliverables:
 
 ### Stage 4: compatibility and transport adapters
 
-- prototype an optional REXXSAA adapter
-- prototype an optional loose-coupled transport, likely JSON/socket or similar
-- decide which adapters ship and at what support level
+Stage 4 now starts JSON-first rather than REXXSAA-first.
+
+Rationale:
+
+- JSON is a reusable foundation for web-service APIs, LLM provider calls,
+  request/response debugging, and a future loose-coupled ADDRESS transport.
+- REXXSAA remains important, but it should be an adapter over the modern
+  `rxvml`/ADDRESS/sandbox contract rather than the design driver for the core
+  protocol.
+
+Stage 4.1 JSON foundation deliverables:
+
+- provide a pure Level B `rxjson` library module with string-oriented JSON
+  validation, quoting, path extraction, member enumeration, and object/array
+  construction
+- support LLM-shaped request/response tests without binding CREXX to a specific
+  model provider
+- keep the API path simple and Rexx-friendly: dot-separated object keys plus
+  one-based array indexes such as `choices.1.message.content`
+
+Stage 4.2 transport / web-service direction:
+
+- layer HTTP/socket work on top of JSON once the JSON body and response
+  extraction primitives are stable
+- use provider-specific LLM APIs as practical examples, but keep the lower
+  library generic
+
+Stage 4.3 REXXSAA adapter direction:
+
+- prototype optional REXXSAA source-compatible wrappers over the modern
+  runtime contract
+- map subcommand registration to ADDRESS environments
+- map `RexxVariablePool()` / `SHVBLOCK` operations to sandbox/stem helpers
+- decide which compatibility surfaces ship and at what support level
 
 ## 9. Progress
 
@@ -1891,6 +1922,17 @@ Deliverables:
     and `ADDRESS "cmd"`
   - focused ADDRESS coverage passed `24/24`; full debug-tree coverage passed
     `866/866` on 2026-04-25
+- 2026-04-25: Stage 4 JSON-first direction accepted and initial pure Rexx
+  `rxjson` Level B library module implemented:
+  - `rxjson` exposes `jsonvalid`, `jsontype`, `jsonget`, `jsoncount`,
+    `jsonmembers`, `jsonquote`, `jsonunquote`, `jsonarray`, and `jsonobject`
+  - the API is deliberately string-oriented for request bodies, response-field
+    extraction, and future JSON/socket ADDRESS transport experiments
+  - path lookup uses case-sensitive object keys and one-based array indexes,
+    e.g. `choices.1.message.content`
+  - the library contract is documented in `lib/rxfnsb/rexx/rxjson.md`
+  - focused `rxjson` no-opt and linked-opt coverage passed `2/2`; full
+    debug-tree coverage passed `868/868`
 
 ## 10. Evidence and code anchors
 
@@ -1903,6 +1945,9 @@ Deliverables:
 - `compiler/exits/parse/Parse.rexx`
 - `compiler/exits/execio/Execio.rexx`
 - `lib/rxfnsb/rexx/_address.rexx`
+- `lib/rxfnsb/rexx/rxjson.rexx`
+- `lib/rxfnsb/rexx/rxjson.md`
+- `lib/rxfnsb/tests_functional/ts_rxjson.rexx`
 - `compiler/tests/rexx_src/address_cms_provider.rexx`
 - `compiler/tests/rexx_src/address_cms_host.rexx`
 - `lib/rxfnsb/rxas/_rxvml_address_native.rxas`

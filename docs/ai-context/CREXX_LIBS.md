@@ -8,6 +8,27 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 - `lib/rxmath/` (Math extensions)
 - `lib/plugins/` (General-purpose extensions like `fileio`, `regex`, `strings`, `socket`, etc.)
 
+`lib/rxfnsb/rexx/rxjson.rexx` contains the first JSON foundation library module
+for Level B web-service and transport work. It is implemented in Rexx, ships in
+`library.rxbin`, and intentionally exposes string-oriented helpers first:
+
+- `jsonvalid(json)`
+- `jsontype(json, path)`
+- `jsonget(json, path)`
+- `jsoncount(json, path)`
+- `jsonmembers(json, path, names[])`
+- `jsonquote(text)`
+- `jsonunquote(json)`
+- `jsonarray(values[])`
+- `jsonobject(keys[], values[])`
+
+Paths are Rexx-friendly and one-based for arrays, for example
+`choices.1.message.content`. This is enough to build LLM-style request JSON and
+extract common response fields without introducing a full object mapper yet.
+
+For the full API contract, path syntax, examples, limits, and test location, see
+`lib/rxfnsb/rexx/rxjson.md`.
+
 ## 1. BIFs Implemented in cREXX (`lib/rxfnsb/rexx/`)
 
 A significant portion of the Classic REXX Built-In Functions (such as `abs()`, `date()`, `length()`, `substr()`) are written entirely in cREXX. These are located in `lib/rxfnsb/rexx/`. 

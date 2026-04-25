@@ -128,6 +128,7 @@ set(BIFS
 		runmask
 		parseExec
 		stem
+		rxjson
 )
 
 foreach (BIF ${BIFS})
