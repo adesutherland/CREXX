@@ -82,6 +82,12 @@ int rxvml_call_procedure(
     rxvml_value** args,
     rxvml_value** response_out);
 
+int rxvml_run(
+    rxvml_context* ctx,
+    int argc,
+    const char** argv,
+    int* program_rc);
+
 int rxvml_call_factory(
     rxvml_context* ctx,
     const char* class_name,
