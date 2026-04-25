@@ -84,7 +84,7 @@ makeBox() .locals=3
    .meta "inline_test_object_expr_arg.makebox.box"
 
 §inline_test_object_expr_arg.box.§factory() .locals=3
-   .meta "inline_test_object_expr_arg.box.§factory"="b" ".void" §inline_test_object_expr_arg.box.§factory() "initial=.string" ""
+   .meta "inline_test_object_expr_arg.box.§factory"="b" ".box" §inline_test_object_expr_arg.box.§factory() "initial=.string" ""
    .src 19:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_expr_arg.box"

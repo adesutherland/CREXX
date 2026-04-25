@@ -184,7 +184,7 @@ helper() .locals=2
    .meta "inline_test2.helper.v"
 
 §inline_test2.myclass.§factory() .locals=1
-   .meta "inline_test2.myclass.§factory"="b" ".void" §inline_test2.myclass.§factory() "" ""
+   .meta "inline_test2.myclass.§factory"="b" ".myclass" §inline_test2.myclass.§factory() "" ""
    .src 47:3="*: factory"
    setattrs r0,0
    setobjtype r0,"inline_test2.myclass"

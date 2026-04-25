@@ -2,14 +2,14 @@ options levelb
 namespace interface_dep_contract expose vehicle car
 
 vehicle: interface
-  *: factory = .vehicle
+  *: factory
   arg name = .string
   describe: method = .string
 
 car: class implements .vehicle
   _name = .string
 
-  *: factory = .vehicle
+  *: factory
   arg name = .string
   _name = name
   return

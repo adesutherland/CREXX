@@ -1726,15 +1726,15 @@ interface_def(C) ::= TK_RESERVED_LABEL(L) TK_INTERFACE.
 factory_def(F) ::= TK_MULT_LABEL(L) TK_FACTORY opt_method_return_type(T).
 {
   F = ast_f(context, FACTORY, L);
-  if (T) add_ast(F, T);
-  else add_ast(F, ast_ft(context, VOID));
+  add_ast(F, ast_ft(context, VOID));
+  if (T) mknd_err(F, "FACTORY_RETURN_TYPE_NOT_ALLOWED");
 }
 
 factory_def(F) ::= TK_LABEL(L) TK_FACTORY opt_method_return_type(T).
 {
   F = ast_f(context, FACTORY, L);
-  if (T) add_ast(F, T);
-  else add_ast(F, ast_ft(context, VOID));
+  add_ast(F, ast_ft(context, VOID));
+  if (T) mknd_err(F, "FACTORY_RETURN_TYPE_NOT_ALLOWED");
 }
 factory_def(F) ::= TK_RESERVED_LABEL(L) TK_FACTORY opt_method_return_type.
 {

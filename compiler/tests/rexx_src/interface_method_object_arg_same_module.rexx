@@ -11,7 +11,7 @@ main: procedure
   return
 
 runner: interface
-  *: factory = .runner
+  *: factory
   execute: method = .string
   arg item = .payload
 
@@ -27,7 +27,7 @@ payload: class
     return _text
 
 echo_runner: class implements .runner
-  *: factory = .runner
+  *: factory
     return
 
   execute: method = .string

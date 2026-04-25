@@ -397,7 +397,7 @@ addressresponse: class
     return _updated_bindings[index]
 
 addressenvironment: interface
-  *: factory = .addressenvironment
+  *: factory
     arg env_name = .string
 
   execute: method = .addressresponse

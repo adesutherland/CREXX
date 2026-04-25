@@ -302,7 +302,7 @@ static ValueType contract_member_return_type(Context *context,
         while (owner && owner->node_type != CLASS_DEF && owner->node_type != INTERFACE_DEF) {
             owner = owner->parent;
         }
-        if (owner && owner->node_type == CLASS_DEF) {
+        if (owner && (owner->node_type == CLASS_DEF || owner->node_type == INTERFACE_DEF)) {
             char *owner_name = 0;
             if (owner->symbolNode && owner->symbolNode->symbol) {
                 owner_name = sym_frnm(owner->symbolNode->symbol);

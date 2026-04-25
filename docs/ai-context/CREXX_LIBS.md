@@ -156,6 +156,11 @@ ADDPROC(make_env, "demo.make", "b", ".environment", "");
 ENDLOADFUNCS
 ```
 
+Rexx source factories omit return types (`*: factory`). RXPA declaration
+macros still carry a return-type string because they emit low-level metadata
+directly; use the owner contract type for that metadata until RXPA grows an
+owner-derived factory helper.
+
 Available declaration macros:
 - `ADDCLASS(name)` and `ADDCLASSX(name, option, type)`
 - `ADDINTERFACE(name)` and `ADDINTERFACEX(name, option, type)`

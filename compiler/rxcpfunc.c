@@ -1117,16 +1117,9 @@ static char* generate_contract_stub_source(ASTNode *contract_node) {
     ASTNode *m;
     for (m = contract_node->child; m; m = m->sibling) {
         if (m->node_type == FACTORY) {
-            ASTNode *ret = ast_chld(m, CLASS, VOID);
             char *factory_name = copy_member_label_from_node(m);
             char *tmp;
-            if (contract_node->node_type == INTERFACE_DEF && ret && ret->node_type != VOID) {
-                char *rtype = ast_n2tp(ret);
-                tmp = mprintf("%s  %s: factory = %s\n", buffer, factory_name ? factory_name : "*", rtype);
-                free(rtype);
-            } else {
-                tmp = mprintf("%s  %s: factory\n", buffer, factory_name ? factory_name : "*");
-            }
+            tmp = mprintf("%s  %s: factory\n", buffer, factory_name ? factory_name : "*");
             free(buffer);
             buffer = tmp;
             if (factory_name) free(factory_name);
@@ -1757,11 +1750,7 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                 if (!agg) agg = agg_find_or_add(&class_aggs, owner, INTERFACE_DEF);
 
                 if (strcmp(kind, "factory") == 0) {
-                    if (type_str && *type_str && strcmp(type_str, ".void") != 0) {
-                        ln = mprintf("  %s: factory = %s\n", member, type_str);
-                    } else {
-                        ln = mprintf("  %s: factory\n", member);
-                    }
+                    ln = mprintf("  %s: factory\n", member);
                 } else {
                     ln = mprintf("  %s: method = %s\n", member, type_str ? type_str : ".void");
                     if (strstr(kind, "final")) {
@@ -1869,11 +1858,7 @@ static void import_rxpa_metadata_list(Context *context, char *file_name, struct 
             if (!agg) agg = agg_find_or_add(&class_aggs, entry->owner, INTERFACE_DEF);
 
             if (strcmp(entry->member_kind, "factory") == 0) {
-                if (entry->type && *entry->type && strcmp(entry->type, ".void") != 0) {
-                    ln = mprintf("  %s: factory = %s\n", entry->member, entry->type);
-                } else {
-                    ln = mprintf("  %s: factory\n", entry->member);
-                }
+                ln = mprintf("  %s: factory\n", entry->member);
             } else {
                 ln = mprintf("  %s: method = %s\n", entry->member, entry->type ? entry->type : ".void");
                 if (strstr(entry->member_kind, "final")) {

@@ -2,7 +2,7 @@ options levelb
 namespace interface_import_provider_contract expose environment
 
 environment: interface
-  *: factory = .environment
+  *: factory
     arg name = .string
   describe: method = .string
 

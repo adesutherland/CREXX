@@ -728,7 +728,7 @@ Recommended classes:
 Recommended `addressenvironment` method shape:
 
 ```rexx
-*: factory = .addressenvironment
+*: factory
     arg env_name = .string
 
 execute: method = .addressresponse
@@ -1412,12 +1412,15 @@ Implemented refinement:
 - `.addressenvironment` now declares the default factory:
 
 ```rexx
-*: factory = .addressenvironment
+*: factory
   arg env_name = .string
 ```
 
 - concrete providers implement class-side `*: match` and `*: factory`
   members taking the same `env_name` argument
+- factory declarations no longer spell a return type in source; the interface
+  factory returns `.addressenvironment`, while each provider factory returns its
+  concrete provider class and is checked for assignability
 - `_new_address_environment(name)` creates an environment object through the
   interface factory
 - `_ensure_address_environment(name)` materialises and caches a provider on
@@ -1462,6 +1465,9 @@ Current provider routes:
   the compiler signature checker now treats implicit class-factory returns as
   the enclosing class and accepts concrete class returns assignable to the
   imported interface return type
+- class factories use bare `return` to return the constructed object; the
+  compiler rewrites this through its internal factory object rather than
+  requiring a source-level `this`
 - hybrid Rexx/C: define the class/factory in Rexx and delegate selected
   methods to native functions declared through RXAS metadata
 - pure C: source-declarable at the contract level through RXPA metadata
@@ -1481,6 +1487,9 @@ Implemented pure-C declaration slice:
   - `ADDIMPLEMENTS(class_name, interface_name)`
   - `ADDFACTORY(class_name, factory_name, return_type, args)`
   - `ADDMETHOD(class_name, method_name, return_type, args)`
+- the RXPA `ADDFACTORY` argument is metadata-level only; Rexx source factories
+  omit return types and the compiler derives them from the owning interface or
+  class
 - the declaration path works for dynamically loaded `.rxplugin` modules and
   statically linked `DECL_ONLY` compiler declaration libraries
 - the VM records native plugin class/interface metadata in the native module

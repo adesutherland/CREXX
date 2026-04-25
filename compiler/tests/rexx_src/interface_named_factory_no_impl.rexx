@@ -7,6 +7,6 @@ main: procedure
   return
 
 vehicle: interface
-  from_name: factory = .vehicle
+  from_name: factory
   arg name = .string
   describe: method = .string
