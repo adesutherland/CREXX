@@ -26,7 +26,7 @@ delword: procedure = .string
      return substr(string,1,wpos-1)
   end
 
-  do dw=1 to 8192                   /* temporary solution, until we have a do forever */
+  do forever
      assembler strlen slen,string   /* length of original string */
      if slen<1 then return ""
      wpos=wordindex(string,wnum)    /* locate position of word x */
