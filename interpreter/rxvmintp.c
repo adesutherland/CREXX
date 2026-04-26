@@ -61,6 +61,7 @@
 
 #include "rxvmvars.h"
 #include "rxvmplugin_framework.h"
+#include "rxvmsock.h"
 
 int rxvm_link(rxvm_context *ctx);
 
@@ -7504,26 +7505,106 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             }
             DISPATCH
 
-        RESERVED_IMPL(RESERVED_062)
-        RESERVED_IMPL(RESERVED_063)
-        RESERVED_IMPL(RESERVED_064)
-        RESERVED_IMPL(RESERVED_065)
-        RESERVED_IMPL(RESERVED_066)
-        RESERVED_IMPL(RESERVED_067)
-        RESERVED_IMPL(RESERVED_068)
-        RESERVED_IMPL(RESERVED_069)
-        RESERVED_IMPL(RESERVED_070)
-        RESERVED_IMPL(RESERVED_071)
-        RESERVED_IMPL(RESERVED_072)
-        RESERVED_IMPL(RESERVED_073)
-        RESERVED_IMPL(RESERVED_074)
-        RESERVED_IMPL(RESERVED_075)
-        RESERVED_IMPL(RESERVED_076)
-        RESERVED_IMPL(RESERVED_077)
-        RESERVED_IMPL(RESERVED_078)
-        RESERVED_IMPL(RESERVED_079)
-        RESERVED_IMPL(RESERVED_080)
-        RESERVED_IMPL(RESERVED_081)
+        START_INSTRUCTION(SOCKNEW_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - SOCKNEW R%lu\n", REG_IDX(1));
+            set_int(op1R, rxvm_socket_new(context));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKCLOSE_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKCLOSE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            set_int(op1R, rxvm_socket_close(context, op2R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKCONNECT_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKCONNECT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            rxvm_socket_connect(context, op1R->int_value, op2R, op3R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKBIND_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKBIND R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            rxvm_socket_bind(context, op1R->int_value, op2R, op3R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKLISTEN_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKLISTEN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_listen(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKACCEPT_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKACCEPT R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            set_int(op1R, rxvm_socket_accept(context, op2R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKSHUTDOWN_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKSHUTDOWN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_shutdown(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKSEND_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKSEND R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_send_string(context, op2R->int_value, op3R));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKSENDB_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKSENDB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_send_binary(context, op2R->int_value, op3R));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKRECV_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKRECV R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            rxvm_socket_recv_string(context, op1R, op2R->int_value, op3R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKRECVB_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKRECVB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            rxvm_socket_recv_binary(context, op1R, op2R->int_value, op3R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKPENDING_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKPENDING R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            set_int(op1R, rxvm_socket_pending(context, op2R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKTIMEOUT_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKTIMEOUT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_timeout(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKBLOCKING_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKBLOCKING R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_blocking(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKNODELAY_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKNODELAY R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_nodelay(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKKEEPALIVE_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKKEEPALIVE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_keepalive(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKPEER_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKPEER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            rxvm_socket_peer(context, op1R, op2R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKLOCAL_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKLOCAL R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            rxvm_socket_local(context, op1R, op2R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKSTATUS_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKSTATUS R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            set_int(op1R, rxvm_socket_status(context, op2R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKERROR_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKERROR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            rxvm_socket_error(context, op1R, op2R->int_value);
+            DISPATCH
+
         RESERVED_IMPL(RESERVED_082)
         RESERVED_IMPL(RESERVED_083)
         RESERVED_IMPL(RESERVED_084)

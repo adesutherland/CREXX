@@ -1,0 +1,227 @@
+/*
+ * interpreter/tests/tests_socket.rxas
+ */
+
+.globals=0
+
+main() .locals=24
+    say "Test Suite: Core Socket Instructions"
+
+    socknew r1
+    igt r0, r1, 0
+    brt socknew_pass, r0
+    say "FAIL: SOCKNEW"
+    ret 1
+socknew_pass:
+    say "PASS: SOCKNEW"
+
+    load r2, "127.0.0.1"
+    load r3, 32123
+    load r4, 32163
+bind_try:
+    sockbind r1, r2, r3
+    sockstatus r5, r1
+    ieq r0, r5, 0
+    brt bind_pass, r0
+    sockclose r6, r1
+    socknew r1
+    iadd r3, r3, 1
+    ilte r0, r3, r4
+    brt bind_try, r0
+    say "FAIL: SOCKBIND"
+    ret 1
+bind_pass:
+    say "PASS: SOCKBIND"
+
+    socklocal r13, r1
+    sne r0, r13, ""
+    brt local_server_pass, r0
+    say "FAIL: SOCKLOCAL server"
+    ret 1
+local_server_pass:
+    say "PASS: SOCKLOCAL server"
+
+    load r8, 5000
+    socktimeout r6, r1, r8
+    ieq r0, r6, 0
+    brt timeout_server_pass, r0
+    say "FAIL: SOCKTIMEOUT server"
+    ret 1
+timeout_server_pass:
+    say "PASS: SOCKTIMEOUT server"
+
+    load r8, 5
+    socklisten r6, r1, r8
+    ieq r0, r6, 0
+    brt listen_pass, r0
+    say "FAIL: SOCKLISTEN"
+    ret 1
+listen_pass:
+    say "PASS: SOCKLISTEN"
+
+    socknew r5
+    igt r0, r5, 0
+    brt client_new_pass, r0
+    say "FAIL: SOCKNEW client"
+    ret 1
+client_new_pass:
+    say "PASS: SOCKNEW client"
+
+    load r8, 5000
+    socktimeout r6, r5, r8
+    ieq r0, r6, 0
+    brt timeout_client_pass, r0
+    say "FAIL: SOCKTIMEOUT client"
+    ret 1
+timeout_client_pass:
+    say "PASS: SOCKTIMEOUT client"
+
+    sockconnect r5, r2, r3
+    sockstatus r6, r5
+    ieq r0, r6, 0
+    brt connect_pass, r0
+    sockerror r13, r5
+    say r13
+    say "FAIL: SOCKCONNECT"
+    ret 1
+connect_pass:
+    say "PASS: SOCKCONNECT"
+
+    load r8, 1
+    sockblocking r6, r5, r8
+    ieq r0, r6, 0
+    brt blocking_pass, r0
+    say "FAIL: SOCKBLOCKING"
+    ret 1
+blocking_pass:
+    say "PASS: SOCKBLOCKING"
+
+    socknodelay r6, r5, r8
+    ieq r0, r6, 0
+    brt nodelay_pass, r0
+    say "FAIL: SOCKNODELAY"
+    ret 1
+nodelay_pass:
+    say "PASS: SOCKNODELAY"
+
+    sockkeepalive r6, r5, r8
+    ieq r0, r6, 0
+    brt keepalive_pass, r0
+    say "FAIL: SOCKKEEPALIVE"
+    ret 1
+keepalive_pass:
+    say "PASS: SOCKKEEPALIVE"
+
+    sockaccept r7, r1
+    igt r0, r7, 0
+    brt accept_pass, r0
+    sockerror r13, r1
+    say r13
+    say "FAIL: SOCKACCEPT"
+    ret 1
+accept_pass:
+    say "PASS: SOCKACCEPT"
+
+    sockpeer r13, r5
+    sne r0, r13, ""
+    brt peer_pass, r0
+    say "FAIL: SOCKPEER"
+    ret 1
+peer_pass:
+    say "PASS: SOCKPEER"
+
+    socklocal r14, r5
+    sne r0, r14, ""
+    brt local_client_pass, r0
+    say "FAIL: SOCKLOCAL client"
+    ret 1
+local_client_pass:
+    say "PASS: SOCKLOCAL client"
+
+    load r8, "ping"
+    socksend r9, r5, r8
+    ieq r0, r9, 4
+    brt send_client_pass, r0
+    sockerror r13, r5
+    say r13
+    say "FAIL: SOCKSEND client"
+    ret 1
+send_client_pass:
+    say "PASS: SOCKSEND client"
+
+    sockpending r12, r7
+    igte r0, r12, 0
+    brt pending_pass, r0
+    say "FAIL: SOCKPENDING"
+    ret 1
+pending_pass:
+    say "PASS: SOCKPENDING"
+
+    load r10, 4
+    sockrecv r11, r7, r10
+    seq r0, r11, "ping"
+    brt recv_server_pass, r0
+    sockerror r13, r7
+    say r13
+    say "FAIL: SOCKRECV server"
+    ret 1
+recv_server_pass:
+    say "PASS: SOCKRECV server"
+
+    load r8, "pong"
+    socksend r9, r7, r8
+    ieq r0, r9, 4
+    brt send_server_pass, r0
+    sockerror r13, r7
+    say r13
+    say "FAIL: SOCKSEND server"
+    ret 1
+send_server_pass:
+    say "PASS: SOCKSEND server"
+
+    load r10, 4
+    sockrecv r11, r5, r10
+    seq r0, r11, "pong"
+    brt recv_client_pass, r0
+    sockerror r13, r5
+    say r13
+    say "FAIL: SOCKRECV client"
+    ret 1
+recv_client_pass:
+    say "PASS: SOCKRECV client"
+
+    load r8, 2
+    sockshutdown r6, r5, r8
+    ieq r0, r6, 0
+    brt shutdown_pass, r0
+    say "FAIL: SOCKSHUTDOWN"
+    ret 1
+shutdown_pass:
+    say "PASS: SOCKSHUTDOWN"
+
+    sockclose r6, r5
+    ieq r0, r6, 0
+    brt close_client_pass, r0
+    say "FAIL: SOCKCLOSE client"
+    ret 1
+close_client_pass:
+    say "PASS: SOCKCLOSE client"
+
+    sockclose r6, r7
+    ieq r0, r6, 0
+    brt close_accept_pass, r0
+    say "FAIL: SOCKCLOSE accepted"
+    ret 1
+close_accept_pass:
+    say "PASS: SOCKCLOSE accepted"
+
+    sockclose r6, r1
+    ieq r0, r6, 0
+    brt close_server_pass, r0
+    say "FAIL: SOCKCLOSE server"
+    ret 1
+close_server_pass:
+    say "PASS: SOCKCLOSE server"
+
+    say "PASS: Core Socket Instructions"
+    ret 0

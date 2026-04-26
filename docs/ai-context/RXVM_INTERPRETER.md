@@ -25,6 +25,7 @@ typedef struct rxvm_context {
     char link_dirty;
     char interface_method_registry_dirty;
     char interface_factory_registry_dirty;
+    struct rxvm_socket_registry *socket_registry;
     char debug_mode;
     // ...
 } rxvm_context;
@@ -37,6 +38,12 @@ repeated `rxvm_link()` calls cheap while still supporting late module loading.
 Because linked images may share one constant pool across multiple modules,
 module-local runtime walkers now follow `proc_head`, `expose_head`, and
 `meta_head` chains instead of sweeping the entire pool.
+
+`socket_registry` is the context-owned table for core TCP sockets. Rexx and
+RXAS code see small positive integer handles, not native descriptors. The
+registry closes every live socket during `rxfremod()`, which keeps sockets out
+of `value` payload ownership and avoids stale OS resources after a VM context
+is destroyed.
 
 ### `proc_runtime`
 Serialized `PROC_CONST` entries now remain metadata-only. During module load,
@@ -175,6 +182,35 @@ value-owned native payloads and use a context-owned registry handle instead.
 Finalizers release the nested native resource referenced by the payload; they
 must not free the `binary_value` buffer itself, because the VM frees that
 buffer after the finalizer returns.
+
+### Core Socket Registry
+
+Core sockets deliberately follow the context-owned registry pattern described
+above. `interpreter/rxvmsock.c` implements a small TCP wrapper over POSIX
+sockets on Unix-like platforms and Winsock2 on Windows. It does not depend on
+OpenSSL, Homebrew libraries, or deploy-time plugin lookup; the only platform
+library needed on Windows is `ws2_32`.
+
+The VM supports IPv4/IPv6 name resolution through `getaddrinfo()` and creates
+TCP streams on demand during `sockconnect` or `sockbind`. Timeouts, blocking
+mode, `TCP_NODELAY`, and `SO_KEEPALIVE` are properties of the VM socket entry
+and are applied to the native descriptor when one is open. Accepted sockets
+inherit timeout and blocking mode from the listening socket.
+
+Every socket entry carries a last-status slot and last-error string:
+
+- `0` means success
+- `1` means EOF/peer closed
+- `2` means timeout
+- `3` means the operation would block
+- negative values are VM or OS errors such as invalid handle, DNS failure,
+  bad argument, or socket-not-open
+
+`sockstatus` reads the numeric slot and `sockerror` reads a short diagnostic
+string. Operations that return data or byte counts still update the status
+slot, so callers can distinguish an empty receive from timeout/EOF by checking
+status afterwards. TLS is intentionally outside this first core layer; higher
+libraries can add HTTPS/TLS once the raw TCP substrate is stable.
 
 ### Nested rxvml Calls
 

@@ -68,6 +68,7 @@ set(REXXBINS
         ts_arraydelete.rxbin
         ts_stem.rxbin
         ts_rxjson.rxbin
+        ts_rxsocket.rxbin
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)

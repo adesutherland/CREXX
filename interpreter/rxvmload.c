@@ -4,6 +4,7 @@
 #include "rxvmintp.h"
 #include "rxastree.h"
 #include "rxvmvars.h"
+#include "rxvmsock.h"
 #include "rxpa.h"
 
 // RXPA (Plugin Architecture) Support declarations  for this file
@@ -96,6 +97,7 @@ void rxinimod(rxvm_context *context) {
     context->interface_methods = 0;
     context->num_interface_methods = 0;
     context->interface_method_capacity = 0;
+    context->socket_registry = 0;
     context->link_dirty = 0;
     context->interface_method_registry_dirty = 0;
     context->interface_factory_registry_dirty = 0;
@@ -111,6 +113,7 @@ void rxfremod(rxvm_context *context) {
 
     free_interface_factory_registry(context);
     free_interface_method_registry(context);
+    rxvm_socket_free_registry(context);
 
     /* Free Symbol Search Trees */
     DEBUG("Free Symbol Search Trees\n");

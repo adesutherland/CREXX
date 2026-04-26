@@ -242,6 +242,7 @@ typedef struct rxvm_context {
     rxvm_interface_method_entry *interface_methods;
     size_t num_interface_methods;
     size_t interface_method_capacity;
+    struct rxvm_socket_registry *socket_registry;
     char link_dirty;
     char interface_method_registry_dirty;
     char interface_factory_registry_dirty;

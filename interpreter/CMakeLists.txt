@@ -84,6 +84,22 @@ target_include_directories(rxbvml PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 
+function(crexx_enable_core_sockets target_name)
+    target_sources(${target_name} PRIVATE rxvmsock.c rxvmsock.h)
+    if(WIN32)
+        get_target_property(_crexx_socket_target_type ${target_name} TYPE)
+        if(_crexx_socket_target_type STREQUAL "STATIC_LIBRARY")
+            target_link_libraries(${target_name} PUBLIC ws2_32)
+        else()
+            target_link_libraries(${target_name} PRIVATE ws2_32)
+        endif()
+    endif()
+endfunction()
+
+foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
+    crexx_enable_core_sockets(${_rxvm_core_target})
+endforeach()
+
 # libcrexxsaa is intentionally thin and shared. On ELF platforms, every static
 # archive pulled into it must be compiled as PIC.
 foreach(_crexxsaa_static_dep rxvml rxvmplugin mc_decimal_manual avl_tree rxpa platform decnumber)
@@ -324,6 +340,20 @@ add_custom_command(
 add_custom_target(run_tests_system_io ALL DEPENDS tests_system_io.rxbin)
 
 crexx_add_vm_dual_test(NAME rxassystemiotests RXVM_ARGS tests_system_io)
+
+# Socket Instruction Tests
+add_custom_command(
+		OUTPUT tests_socket.rxbin
+		COMMAND $<TARGET_FILE:rxas> -o tests_socket ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_socket
+		DEPENDS tests/tests_socket.rxas rxas rxvm rxbvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Socket Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_socket ALL DEPENDS tests_socket.rxbin)
+
+crexx_add_vm_dual_test(NAME rxassockettests RXVM_ARGS tests_socket PASS_REGULAR_EXPRESSION "PASS: Core Socket Instructions")
 
 # Decimal Instruction Tests
 add_custom_command(
