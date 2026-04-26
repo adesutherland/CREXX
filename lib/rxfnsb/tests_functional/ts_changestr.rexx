@@ -23,4 +23,6 @@ if changestr('quicker',x,'fast') \= 'the quick brown fox jumps over the lazy dog
   say 'CHANGESTR failed in test 3'
 end
 
+say '<><><><' changestr('e','Elephant','X')
+
 return errors<>0

@@ -6,10 +6,6 @@ import rxfnsb
 /* 
  * class rexx is a wrapper for .string
  * enabling oo style incvocation of its bifs
- * note that for the moment we have the source
- * of the bifs herein because the recursion
- * issue that happens when we cannot call
- * prefixed by namespace.
  * 
  */ 
 
@@ -60,13 +56,13 @@ val = .string
 
 -- 		changestr
   changestr: method = .string
-    arg haystack = .string, nneedle = .string
-    return .rxfnsb::changestr(val,haystack,needle)
+    arg needle = .string, nneedle = .string
+    return .rxfnsb::changestr(needle,val,nneedle)
       
 -- 		compare
   compare: method = .string
     arg astr = .string, pad = " "
-    return .rxfnsb::changestr(val,astr,pad)
+    return .rxfnsb::compare(val,astr,pad)
 
 -- 		copies
   copies: method =.string
@@ -75,7 +71,7 @@ val = .string
 
 -- 		countstr
   countstr: method = .int
-    arg haystack = .string /* Pass by reference */
+    arg haystack = .string
     return .rxfnsb::countstr(val,haystack)
     
 -- 		d2b
