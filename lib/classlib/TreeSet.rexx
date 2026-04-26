@@ -4,12 +4,12 @@ import treemap
 import TreeSetIterator
 
 /**
-* class TreeSet implements a Set, backed by a treemap instance. 
-* It stores the elements, which are strings, in their natural order.
-* 
-* @author René Vincent Jansen
-* @author Peter Jacob
-*/
+ * class TreeSet implements a Set, backed by a treemap instance. 
+ * It stores the elements, which are strings, in their natural order.
+ * 
+ * @author René Vincent Jansen
+ * @author Peter Jacob
+ */
 
 TreeSet: class
 val = .int
@@ -32,12 +32,12 @@ val = .int
     arg key = .string
     return tmput(val, key, key)
 
-/**
- * method fromArray adds elements to this TreeSet instance
- * from an array, and deduplicates and orders them.
- * @parm .string items
- * @result .int added
- */
+   /**
+    * method fromArray adds elements to this TreeSet instance
+    * from an array, and deduplicates and orders them.
+    * @parm .string items
+    * @result .int added
+    */
   fromArray: method = .int
     arg items = .string[]
     added = 0
@@ -48,24 +48,24 @@ val = .int
     return added
     
     /**
-    * method contains returns 1 (true) if this set contains
-    * the specified element.
-    * @parm .string element
-    * @return .int 
-    */
+     * method contains returns 1 (true) if this set contains
+     * the specified element.
+     * @parm .string element
+     * @return .int 
+     */
   contains: method = .int
     arg key = .string
     return tmcontainsKey(val, key)
 
     /**
-    * method remove removes an element from this TreeSet
-    * @parm .string key
-    * @return .int 0 for success, 4 for failure
-    */
+     * method remove removes an element from this TreeSet
+     * @parm .string key
+     * @return .int 0 for success, 4 for failure
+     */
   remove: method = .int
     arg key = .string
     return tmremove(val, key)
-
+    
     /**
      * Returns the number of elements in this TreeSet.
      * return .int size
@@ -88,31 +88,31 @@ val = .int
      */
   last: method = .string
     return tmlastkey(val)
-
+    
     /**
-    * method iterator returns a TreeSetIterator 
-    * which iterates over the elements currently in this set.
-    * @return .TreeMapIterator 
-    */
+     * method iterator returns a TreeSetIterator 
+     * which iterates over the elements currently in this set.
+     * @return .TreeMapIterator 
+     */
   iterator: method = .TreeSetIterator
     return .TreeSetIterator(val)
-
+    
     /**
-    * method toArray returns the items in this TreeSet 
-    * as a rexx array
-    */
+     * method toArray returns the items in this TreeSet 
+     * as a rexx array
+     */
   toArray: method = .string[]
     list = .string[]
     n = tmkeys(val, list)
     return list
 
     /**
-    * method keystem returns the elements in this TreeSet 
-    * as a string
-    */
+     * method keystem returns the elements in this TreeSet 
+     * as a string
+     */
   toString: method = .string
     if size() = 0 then return '{}'
-
+    
     it = iterator()
     result = '{'
     first = 1

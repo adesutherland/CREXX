@@ -23,34 +23,34 @@ closed = .int
     return
 
     /** method hasNext() returns 1 (true)
-    * as long as there are more items
-    * to be returned by this iterator
-    */
+     * as long as there are more items
+     * to be returned by this iterator
+     */
   hasNext: method = .int
     if closed then return 0
     return stemiterhasnext(token)
 
     /**
-    * method next() returns the next item
-    * available from this iterator
-    */
+     * method next() returns the next item
+     * available from this iterator
+     */
   next: method = .string
     if closed then return ''
     return stemiternext(token)
-
+    
   nextKey: method = .string
     if closed then return ''
     return stemiternext(token)
-
+    
   nextValue: method = .string
     if closed then return ''
     return stemitervalue(token)
 
     /**
-    * method close() closes this 
-    * iterator. After this, hasNext()
-    * returns 0
-    */
+     * method close() closes this 
+     * iterator. After this, hasNext()
+     * returns 0
+     */
   close: method = .int
     if \closed then do
       call stemiterfree(token)

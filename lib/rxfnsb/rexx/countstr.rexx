@@ -16,7 +16,7 @@ countstr: procedure = .int
   if hlen<1 then return 0   /* empty haystack, nothing to count */
 
 
-  do i=1 to 8192      /* use a large do loop until we get a do forever */
+  do forever
      assembler strpos offset,needle,haystack
      if offset<=0 then return count
      offset=offset+nlen

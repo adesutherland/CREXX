@@ -18,7 +18,7 @@ val = .int
 nextid = .int
 
 /** method factory creates an instance of the LinkedList
-* class and returns it.
+ * class and returns it.
  */
   *: factory
     val	   = nextid
@@ -179,11 +179,11 @@ nextid = .int
     end
     return list
 
-  -- /**
-  --  * method fromArray rebuilds this LinkedList from a rexx stem.
-  --  * @parm .string[] list
-  --  * @return .int
-  --  */
+  /**
+   * method fromArray rebuilds this LinkedList from a rexx stem.
+   * @parm .string[] list
+   * @return .int
+   */
   fromArray: method = .int
     arg list = .string[]
     rc = clear()
@@ -198,7 +198,7 @@ nextid = .int
    */
   debug: method = .int
     return _debug(val)
-
+    
   /**
    * method toString returns the content of the LinkedList
    * as a string.

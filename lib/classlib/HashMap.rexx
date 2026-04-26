@@ -25,31 +25,31 @@ val = .int
     return
 
     /**
-    * Associates the specified value with the specified key in this map.
-    * @parm .string key
-    * @parm .string value
-    * @return .int
-    */  
+     * Associates the specified value with the specified key in this map.
+     * @parm .string key
+     * @parm .string value
+     * @return .int
+     */  
   put: method = .int
     arg key = .string, value = .string
     return stemput(val, key, value)
     
     /**
-    * Returns the value to which the specified key is mapped, 
-    * or nothing if this map contains no mapping for the key.
-    *  @parm .string key
-    * @return .string the found value
-    */
+     * Returns the value to which the specified key is mapped, 
+     * or nothing if this map contains no mapping for the key.
+     *  @parm .string key
+     * @return .string the found value
+     */
   get: method = .string
     arg key = .string
     return stemget(val, key)
 
     /**
-    * method containsKey returns 1 (true) if this map contains
-    * a mapping for the specified key.
-    * @parm .string key
-    * @return .int 
-    */
+     * method containsKey returns 1 (true) if this map contains
+     * a mapping for the specified key.
+     * @parm .string key
+     * @return .int 
+     */
   containsKey: method = .int
     arg key = .string
     return stemcontainskey(val, key)
@@ -64,9 +64,9 @@ val = .int
     return stemremove(val, key)
 
     /**
-    * Returns the number of key-value mappings in this HashMap.
-    * return .int size
-    */
+     * Returns the number of key-value mappings in this HashMap.
+     * return .int size
+     */
   size: method = .int
     return stemsize(val)
 
@@ -100,10 +100,10 @@ val = .int
     return ts
 
     /**
-    * method valueSet returns the values in this HashMap 
-    * as a TreeSet, containing unique and ordered values
-    * @return .TreeSet 
-    */
+     * method valueSet returns the values in this HashMap 
+     * as a TreeSet, containing unique and ordered values
+     * @return .TreeSet 
+     */
   valueSet: method = .TreeSet
     ts = .TreeSet()
     rc = ts.fromArray(valueArray())
@@ -118,10 +118,10 @@ val = .int
     return .HashMapIterator(val)
 
     /**
-    * method toString() returns the content of the TreeMap
-    * as a string.
-    * @return .string
-    */
+     * method toString() returns the content of the TreeMap
+     * as a string.
+     * @return .string
+     */
   toString: method = .string
     keys = .string[]
     vals = .string[]

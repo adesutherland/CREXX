@@ -13,7 +13,7 @@ changestr: procedure = .string
   assembler strlen nnlen,nneedle
   newstr=haystack
 
-  do i=1 to 8192      /* use a large do loop until we get a do forever */
+  do forever
      offset=pos(needle,newstr,offset)
      if offset=0 then return newstr
      if offset=1 then newstr=nneedle||substr(newstr,offset+nlen)

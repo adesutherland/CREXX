@@ -54,7 +54,7 @@
 (defconst rexx-keywords
   '("address" "arg" "assembler" "break" "call" "class" "do" "drop"
     "echo" "else" "end" "exit"
-    "factory" "forever" "if" "import" "interpret" "iterate" "leave" "method"
+    "factory" "forever" "if" "import" "interface" "interpret" "iterate" "leave" "method"
     "namespace" "nop" "numeric" "options" "otherwise"
     "parse" "procedure" "push" "pull" "expose"
     "queue" "return" "say" "select" "shell" "signal"
@@ -73,8 +73,12 @@
   "\\(?:\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)"
   "Regexp matching a top-level Rexx label token.")
 
+;; (defconst rexx-label-regexp
+;;   (concat "^\\(" rexx-top-label-token-regexp "\\)[ \t]*:")
+;;   "Regexp matching a top-level label.")
+
 (defconst rexx-label-regexp
-  (concat "^\\(" rexx-top-label-token-regexp "\\)[ \t]*:")
+  (concat "^[ \t]*\\(" rexx-top-label-token-regexp "\\)[ \t]*:")
   "Regexp matching a top-level label.")
 
 (defconst rexx-member-start-regexp
@@ -97,6 +101,14 @@
 (defconst rexx-factory-regexp
   "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<factory\\_>"
   "Regexp matching factory definitions.")
+
+(defconst rexx-interface-regexp
+  "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<interface\\_>"
+  "Regexp matching interface definitions.")
+
+(defconst rexx-class-or-interface-regexp
+  "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<\\(class\\|interface\\)\\_>"
+  "Regexp matching class or interface definitions.")
 
 (defconst rexx-return-type-regexp
   "=[ \t]*\\(\\.[A-Za-z_][A-Za-z0-9_]*\\)"
@@ -149,18 +161,27 @@
     ("Classes"   ,rexx-class-regexp   1)
     ("Methods"   ,rexx-method-regexp  1)
     ("Factories" ,rexx-factory-regexp 1)
+    ("Interfaces" ,rexx-interface-regexp 1)
     ))
 ;; ------------------------------
 ;; Font lock
 ;; ------------------------------
 
+;; (defconst rexx-defining-label-regexp
+;;   "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<\\(class\\|method\\|factory\\)\\_>"
+;;   "Regexp matching a label that defines a class, method, or factory.")
+
 (defconst rexx-defining-label-regexp
-  "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<\\(class\\|method\\|factory\\)\\_>"
-  "Regexp matching a label that defines a class, method, or factory.")
+  "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<\\(class\\|method\\|factory\\|interface\\)\\_>"
+  "Regexp matching a label that defines a class, method, factory, or interface.")
 
 (defvar rexx-font-lock-keywords
   `(
-    ;; Labels that define class/method/factory
+    ;; Class and interface labels: underline like function/method calls.
+    (,rexx-class-or-interface-regexp
+     (1 '(:inherit font-lock-function-name-face :underline t) prepend))
+
+    ;; Labels that define class/method/factory/interface.
     (,rexx-defining-label-regexp
      (1 font-lock-function-name-face prepend))
 
@@ -275,6 +296,53 @@ Return non-nil if such a line exists."
        ((looking-at "\\s-*\\_<\\(when\\|otherwise\\)\\_>") 'mid)
        (t nil)))))
 
+(defun rexx--doc-comment-start-line-p ()
+  "Return non-nil if current line starts a Javadoc-style block comment."
+  (save-excursion
+    (beginning-of-line)
+    (looking-at "^[ \t]*/\\*\\*")))
+
+(defun rexx--inside-doc-comment-p ()
+  "Return non-nil if point is in a Javadoc-style /** */ block comment."
+  (let ((comment-start (nth 8 (syntax-ppss))))
+    (and comment-start
+         (save-excursion
+           (goto-char comment-start)
+           (looking-at "/\\*\\*")))))
+
+(defun rexx--doc-comment-continuation-line-p ()
+  "Return non-nil if current line is a leading `*' line inside a /** */ comment."
+  (save-excursion
+    (beginning-of-line)
+    (and (rexx--inside-doc-comment-p)
+         ;; Match only doc-comment continuation lines like "   * text".
+         ;; Do not match method bodies or other ordinary code.
+         (looking-at "^[ \t]*\\*\\(?:[ \t].*\\)?$"))))
+
+(defun rexx--doc-comment-end-line-p ()
+  "Return non-nil if current line is the closing `*/' line of a /** */ comment."
+  (save-excursion
+    (beginning-of-line)
+    (and (rexx--inside-doc-comment-p)
+         (looking-at "^[ \t]*\\*/"))))
+
+(defun rexx--doc-comment-base-indent ()
+  "Return the indentation of the opening /** line for the current doc comment."
+  (save-excursion
+    (let ((comment-start (nth 8 (syntax-ppss))))
+      (if comment-start
+          (progn
+            (goto-char comment-start)
+            (current-indentation))
+        (current-indentation)))))
+
+(defun rexx--class-or-interface-line-p ()
+  "Return non-nil if current line is a CLASS or INTERFACE label."
+  (save-excursion
+    (beginning-of-line)
+    (looking-at
+     "^[ \t]*\\(\\*\\|[A-Za-z_][A-Za-z0-9_]*\\)[ \t]*:[ \t]*\\_<\\(class\\|interface\\)\\_>")))
+
 (defun rexx--member-start-line-p ()
   "Return non-nil if current line is a METHOD/FACTORY header."
   (save-excursion
@@ -355,6 +423,10 @@ Highlights every variable name on an ARG line that appears before =."
 
       ;; Base indentation by line type.
       (cond
+       ;; Class/interface labels are always flush left.
+       ((rexx--class-or-interface-line-p)
+        (setq indent 0))
+
        ;; Member header itself: 2 spaces.
        ((rexx--member-start-line-p)
         (setq indent rexx-member-header-indent))
@@ -397,7 +469,31 @@ Highlights every variable name on an ARG line that appears before =."
   "Indent current line according to Rexx rules."
   (interactive)
   (let ((col (current-column)))
-    (indent-line-to (rexx-calculate-indentation))
+    (cond
+     ;; Keep Javadoc-style block comments stable at any indentation:
+     ;;     /**
+     ;;      * text
+     ;;      */
+     ;; The opening line stays where the user put it.  Continuation
+     ;; lines align one column after the opening indentation.
+     ((rexx--doc-comment-start-line-p)
+      (indent-line-to (current-indentation)))
+
+     ((rexx--doc-comment-end-line-p)
+      (indent-line-to (1+ (rexx--doc-comment-base-indent))))
+
+     ((rexx--doc-comment-continuation-line-p)
+      (indent-line-to (1+ (rexx--doc-comment-base-indent))))
+
+     ;; Absolute override: CLASS and INTERFACE definitions are top-level
+     ;; declarations in CREXX and must always start in column 0.
+     ((save-excursion
+        (beginning-of-line)
+        (looking-at rexx-class-or-interface-regexp))
+      (indent-line-to 0))
+
+     (t
+      (indent-line-to (rexx-calculate-indentation))))
     (when (> col (current-indentation))
       (move-to-column col))))
 
