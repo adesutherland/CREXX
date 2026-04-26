@@ -1368,7 +1368,9 @@ set_tests_properties(address_cms_provider PROPERTIES LABELS "compiler;stage3")
 add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME crexxsaa_variables COMMAND test_crexxsaa_variables)
-set_tests_properties(crexxsaa_variables PROPERTIES LABELS "compiler;stage3")
+set_tests_properties(crexxsaa_variables PROPERTIES
+        LABELS "compiler;stage3"
+        ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${CMAKE_BINARY_DIR}/bin")
 add_test(NAME source_provenance COMMAND test_source_provenance)
 set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")
 
