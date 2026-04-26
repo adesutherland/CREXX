@@ -23,7 +23,7 @@ function(enable_test_vm_core_sockets target)
             ${CMAKE_SOURCE_DIR}/interpreter/rxvmsock.c
             ${CMAKE_SOURCE_DIR}/interpreter/rxvmsock.h)
     if(WIN32)
-        target_link_libraries(${target} PRIVATE ws2_32)
+        target_link_libraries(${target} ws2_32)
     endif()
 endfunction()
 
