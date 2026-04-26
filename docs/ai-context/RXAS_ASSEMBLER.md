@@ -17,8 +17,9 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
    - Enforces the structural integrity of the `.rxas` file (headers, function definitions, variable declarations, and instruction sequences).
    - The parser actions invoke Builder API functions directly (e.g., `rxasgen*`, `rxaslabl`, `rxasproc`), translating syntax rules into buffered internal data structures.
    - Instruction names are derived from `binutils/include/rxops.h`, so new VM
-     opcodes become assembler mnemonics through that shared table. The current
-     interface-runtime additions are `setobjtype`, `srcmethod`, and `srcfproc`.
+     opcodes become assembler mnemonics through that shared table. Recent core
+     runtime additions include the object/interface instructions and the
+     `sock*` TCP socket instructions.
 
 3. **In-Memory Buffering & Constant Pooling**:
    - Handled in `assembler/rxasassm.c`.
@@ -194,3 +195,41 @@ At the current Level B stage, the runtime selection rule is:
 - the highest positive score wins
 - tied highest scores break alphabetically by fully qualified concrete class
   name
+
+## 6. Core Socket Instructions
+
+Core TCP sockets are exposed as normal RXAS mnemonics generated from
+`binutils/include/rxops.h`. They use VM-managed integer handles rather than OS
+file descriptors or pointers, so programs cannot accidentally retain a native
+socket after the VM context is freed. All socket instructions are
+`FLG_OPT_BARRIER` because they perform external I/O or mutate context-owned
+handle state.
+
+The current instruction surface is intentionally raw TCP:
+
+- `socknew rSock`
+- `sockclose rRc,rSock`
+- `sockconnect rSock,rHost,rPort`
+- `sockbind rSock,rHost,rPort`
+- `socklisten rRc,rSock,rBacklog`
+- `sockaccept rClient,rServer`
+- `sockshutdown rRc,rSock,rHow`
+- `socksend rBytes,rSock,rText`
+- `socksendb rBytes,rSock,rBin`
+- `sockrecv rText,rSock,rMax`
+- `sockrecvb rBin,rSock,rMax`
+- `sockpending rBytes,rSock`
+- `socktimeout rRc,rSock,rMillis`
+- `sockblocking rRc,rSock,rFlag`
+- `socknodelay rRc,rSock,rFlag`
+- `sockkeepalive rRc,rSock,rFlag`
+- `sockpeer rText,rSock`
+- `socklocal rText,rSock`
+- `sockstatus rStatus,rSock`
+- `sockerror rText,rSock`
+
+`sockconnect` and `sockbind` keep the socket handle in their first operand and
+record the result in the handle's status slot; use `sockstatus` or
+`sockerror` immediately after those operations. The higher-level
+`rxsocket.rexx` wrapper turns these into function return codes for ordinary
+Level B code.

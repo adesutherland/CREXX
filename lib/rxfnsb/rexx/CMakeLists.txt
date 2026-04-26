@@ -109,6 +109,7 @@ set(BIFS
 		parseExec
 		stem
 		rxjson
+		rxsocket
 )
 
 foreach (BIF ${BIFS})

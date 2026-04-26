@@ -1,7 +1,12 @@
 # ADDRESS and REXXSAA Working Notes
 
-Status: draft, direction partially approved
-Last updated: 2026-04-25
+Status: retired working record; as-built details have moved to stable docs
+Last updated: 2026-04-26
+
+Retirement note: the current implemented `crexxsaa` host API, ADDRESS callback
+model, variable helper surface, and cache behaviour are now documented in
+`docs/books/crexx_programming_guide/crexxsaa.md`. This file remains as the
+historical design and progress record for the ADDRESS programme.
 
 ## 1. Purpose
 
@@ -217,6 +222,49 @@ Working interpretation:
   internal protocol
 - for the current implementation wave, `rxvml` is the real external CREXX
   entry point; any `RexxStart()` / REXXSAA adapter remains later work
+
+### 4.1 Initial `crexxsaa` variable facade
+
+The first implemented variable-pool bridge is deliberately narrower than a full
+`RexxVariablePool()` clone.
+
+`crexxsaa` now exposes host-side helpers for active `ADDRESS` callbacks:
+
+- `crexxsaa_address_variable_get_alloc()`
+- `crexxsaa_address_variable_set()`
+- `crexxsaa_free()`
+
+These helpers operate only while a native `ADDRESS` callback is active. They
+resolve variables in this order:
+
+1. Direct scalar `ADDRESS ... expose name` bindings.
+2. Direct stem/array `ADDRESS ... expose name[]` bindings.
+3. The active `ADDRESS ... sandbox pool` object.
+4. The request's standard sandbox fallback.
+
+The host therefore gets one simple name-based API, while the CREXX script
+chooses whether the command should use direct exposure or sandbox storage.
+Compound names such as `FILENAME.1` are mapped to exposed stems by splitting at
+the first dot and using the remaining text as the stem key. Names are matched
+case-insensitively at this facade layer to fit legacy REXXSAA/THE expectations;
+the standard CREXX sandbox already normalises keys internally.
+
+For compatibility with legacy command processors that treat a scalar result as
+a one-item stem, an exposed scalar also has a limited compound view:
+
+- `name.0` reads as `"1"`
+- `name.1` reads the scalar value
+- writes to `name.0` are accepted and ignored
+- writes to any other `name.tail` update the scalar value
+
+This rule is applied only when no exposed stem with the same base name exists.
+Real `EXPOSE name[]` stems therefore keep their normal stem semantics.
+
+This is enough for THE's existing `set_rexx_variable()` and
+`get_rexx_variable()` call sites to be mapped onto CREXX without making THE know
+whether a variable lives in an exposed CREXX variable, an exposed CREXX array, or
+a sandbox. It is not yet a general variable-pool enumerator and it does not
+provide arbitrary access to unexposed CREXX locals.
 
 ## 5. Approved decisions and requirements
 

@@ -18,6 +18,15 @@ function(localize_test_plugin_output target)
     )
 endfunction()
 
+function(enable_test_vm_core_sockets target)
+    target_sources(${target} PRIVATE
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvmsock.c
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvmsock.h)
+    if(WIN32)
+        target_link_libraries(${target} ws2_32)
+    endif()
+endfunction()
+
 # Create dynamic plugin module
 add_dynamic_plugin_target(_rxpa_dynlink rxpa_dynlink.c)
 localize_test_plugin_output(_rxpa_dynlink)
@@ -74,6 +83,7 @@ add_executable(testvm
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 # Ensure the linker includes the plugin
 configure_linker_for_static_lib(testvm _rxpalink)
+enable_test_vm_core_sockets(testvm)
 # Add the dependencies and link libraries
 add_dependencies(testvm avl_tree rxpa platform _rxpalink_static)
 target_link_libraries(testvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim _rxpalink_static)
@@ -175,6 +185,7 @@ add_executable(funcvm
 # set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 # Ensure the linker includes the plugin
 configure_linker_for_static_lib(funcvm _testfuncs)
+enable_test_vm_core_sockets(funcvm)
 # Add the dependencies and link libraries
 add_dependencies(funcvm avl_tree rxpa platform _testfuncs_static)
 target_link_libraries(funcvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim _testfuncs_static)

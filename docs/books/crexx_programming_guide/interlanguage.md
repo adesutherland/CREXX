@@ -13,6 +13,11 @@ Address
 Plugins
  : the plugin system that is available to the \crexx{} environment.
 
+crexxsaa
+: the host integration facade for C applications that want to embed CREXX,
+    register ADDRESS environments, and run `.rxbin` or source files through
+    the CREXX toolchain and runtime.
+
 <!-- ## Future Mechanisms -->
 
 <!-- RexxSaa -->
@@ -23,4 +28,3 @@ Plugins
 
 <!-- Generic Call Interface -->
 <!-- : the Generic Call Interface is a direct way to call functions in a dll or shared object file. -->
-

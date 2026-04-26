@@ -7,6 +7,13 @@ project(Interpreter C)
 set(CMAKE_C_STANDARD 99) # enables inline keyword
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice
 
+set(CREXX_SOCKET_TARGET_LIBS)
+set(CREXX_SOCKET_MANUAL_LINK_LIBS)
+if(WIN32)
+    set(CREXX_SOCKET_TARGET_LIBS ws2_32)
+    set(CREXX_SOCKET_MANUAL_LINK_LIBS -lws2_32)
+endif()
+
 ##########################################
 # Bare Interpreter
 # Threaded Version
@@ -83,6 +90,17 @@ target_link_libraries(rxbvml rxvmplugin mc_decimal_manual avl_tree rxpa)
 target_include_directories(rxbvml PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
+
+function(crexx_enable_core_sockets target_name)
+    target_sources(${target_name} PRIVATE rxvmsock.c rxvmsock.h)
+    if(CREXX_SOCKET_TARGET_LIBS)
+        target_link_libraries(${target_name} ${CREXX_SOCKET_TARGET_LIBS})
+    endif()
+endfunction()
+
+foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
+    crexx_enable_core_sockets(${_rxvm_core_target})
+endforeach()
 
 # libcrexxsaa is intentionally thin and shared. On ELF platforms, every static
 # archive pulled into it must be compiled as PIC.
@@ -325,6 +343,20 @@ add_custom_target(run_tests_system_io ALL DEPENDS tests_system_io.rxbin)
 
 crexx_add_vm_dual_test(NAME rxassystemiotests RXVM_ARGS tests_system_io)
 
+# Socket Instruction Tests
+add_custom_command(
+		OUTPUT tests_socket.rxbin
+		COMMAND $<TARGET_FILE:rxas> -o tests_socket ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_socket
+		DEPENDS tests/tests_socket.rxas rxas rxvm rxbvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Socket Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_socket ALL DEPENDS tests_socket.rxbin)
+
+crexx_add_vm_dual_test(NAME rxassockettests RXVM_ARGS tests_socket PASS_REGULAR_EXPRESSION "PASS: Core Socket Instructions")
+
 # Decimal Instruction Tests
 add_custom_command(
 		OUTPUT tests_decimal.rxbin
@@ -447,6 +479,7 @@ add_custom_command(
                 $<TARGET_FILE:rxpa>
                 -lm
                 $<TARGET_FILE:db_decimal_manual>
+                ${CREXX_SOCKET_MANUAL_LINK_LIBS}
         DEPENDS
                 tests/test_db_decimal_archive_link.c
                 rxvml

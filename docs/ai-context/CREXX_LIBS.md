@@ -29,6 +29,28 @@ extract common response fields without introducing a full object mapper yet.
 For the full API contract, path syntax, examples, limits, and test location, see
 `lib/rxfnsb/rexx/rxjson.md`.
 
+`lib/rxfnsb/rexx/rxsocket.rexx` provides the Level B wrapper for the VM's core
+TCP socket instructions. It ships in `library.rxbin` and exposes a small raw
+socket API for loopback clients, servers, and future web-service work:
+
+- `socketcreate()`, `socketclose(sock)`
+- `socketconnect(sock, host, port)`
+- `socketbind(sock, host, port)`, `socketlisten(sock, backlog)`,
+  `socketaccept(sock)`
+- `socketsend(sock, text)`, `socketrecv(sock, maxbytes)`
+- `socketsendb(sock, data)`, `socketrecvb(sock, maxbytes)`
+- `sockettimeout(sock, milliseconds)`, `socketblocking(sock, enabled)`,
+  `socketnodelay(sock, enabled)`, `socketkeepalive(sock, enabled)`
+- `socketpending(sock)`, `socketshutdown(sock, how)`
+- `socketpeer(sock)`, `socketlocal(sock)`, `socketstatus(sock)`,
+  `socketerror(sock)`
+
+The library is intentionally raw TCP and does not attempt TLS or HTTP parsing.
+Its core value is deployment stability: VM opcodes use platform socket APIs
+directly, avoiding dynamic `.rxplugin` discovery and third-party dylib/DLL
+dependencies. For API details, status codes, and examples, see
+`lib/rxfnsb/rexx/rxsocket.md`.
+
 ## 1. BIFs Implemented in cREXX (`lib/rxfnsb/rexx/`)
 
 A significant portion of the Classic REXX Built-In Functions (such as `abs()`, `date()`, `length()`, `substr()`) are written entirely in cREXX. These are located in `lib/rxfnsb/rexx/`. 

@@ -108,3 +108,9 @@ Type
     rxvm -h 
 
 for command format / options
+
+## Host Integration
+
+- [crexxsaa host integration](books/crexx_programming_guide/crexxsaa.md)
+  documents the initial C host facade, ADDRESS callback model, variable helper
+  surface, and compiled-script cache.

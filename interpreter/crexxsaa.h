@@ -3,16 +3,24 @@
 
 #include <stddef.h>
 
-#define CREXXSAA_ABI_VERSION 1
+#define CREXXSAA_ABI_VERSION 2
 
 #define CREXXSAA_CACHE_DISABLE 0x01u
 #define CREXXSAA_CACHE_REFRESH 0x02u
+
+#define CREXXSAA_VARIABLE_OK 0
+#define CREXXSAA_VARIABLE_NOT_FOUND 1
+#define CREXXSAA_VARIABLE_NO_ACTIVE_REQUEST 2
+#define CREXXSAA_VARIABLE_UNSUPPORTED 3
+#define CREXXSAA_VARIABLE_BAD_NAME 4
+#define CREXXSAA_VARIABLE_NO_MEMORY 5
 
 typedef struct crexxsaa_context crexxsaa_context;
 
 typedef struct crexxsaa_address_request {
     const char* environment_name;
     const char* command;
+    crexxsaa_context* context;
 } crexxsaa_address_request;
 
 typedef struct crexxsaa_address_response {
@@ -52,6 +60,20 @@ int crexxsaa_set_compiler(
 int crexxsaa_set_cache_dir(
     crexxsaa_context* ctx,
     const char* cache_dir);
+
+int crexxsaa_address_variable_set(
+    crexxsaa_context* ctx,
+    const char* name,
+    const char* value,
+    size_t value_len);
+
+int crexxsaa_address_variable_get_alloc(
+    crexxsaa_context* ctx,
+    const char* name,
+    char** value_out,
+    size_t* value_len_out);
+
+void crexxsaa_free(void* ptr);
 
 int crexxsaa_run_rxbin(
     crexxsaa_context* ctx,

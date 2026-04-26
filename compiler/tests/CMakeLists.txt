@@ -391,6 +391,8 @@ add_crexx_compiler_test(inline_test_binary_arg_return rexx_src/inline_test_binar
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
+    set(RUNTIME_MODULES ${ARGN})
+
     # Keep no-opt and opt runtime coverage paired so semantic shifts in
     # argument handling or inlining are caught even when compiler-output
     # goldens still match within one mode.
@@ -406,7 +408,7 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
     string(APPEND NOOPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND NOOPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
     
-    string(APPEND NOOPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${NAME}_run_noopt.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND NOOPT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" ${RUNTIME_MODULES} \"${NAME}_run_noopt.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
     string(APPEND NOOPT_CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND NOOPT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed: \${out}\")\nendif()\n")
     
@@ -429,7 +431,7 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
             RUNNER "$<TARGET_FILE:rxvm>"
             RXLINK "$<TARGET_FILE:rxlink>"
             PROGRAM "${NAME}_run_opt.rxbin"
-            EXTRA_ARGS "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+            EXTRA_ARGS "${CMAKE_BINARY_DIR}/bin/library.rxbin" ${RUNTIME_MODULES}
     )
     set(OPT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_${NAME}_opt.cmake")
     set(OPT_CONTENT "set(full_out \"\")\n")
@@ -896,6 +898,7 @@ add_crexx_run_test(repro_args_parse rexx_src/repro_args_parse.rexx)
 add_crexx_run_test(repro_args_alias rexx_src/repro_args_alias.rexx)
 add_crexx_run_test(repro_sconcat rexx_src/repro_sconcat.rexx)
 add_crexx_run_test(repro_strict_compare rexx_src/repro_strict_compare.rexx)
+add_crexx_run_test(repro_rexx_compare_method rexx_src/repro_rexx_compare_method.rexx "${CMAKE_BINARY_DIR}/bin/classlib.rxbin")
 add_crexx_run_test(repro_implicit_address_abuttal rexx_src/repro_implicit_address_abuttal.rexx)
 add_crexx_run_test(test_explicit_address rexx_src/test_explicit_address.rexx)
 add_crexx_run_test(test_address_redirect rexx_src/test_address_redirect.rexx)
@@ -1266,6 +1269,26 @@ target_compile_definitions(test_address_callback_host PRIVATE
         CREXX_TEST_ADDRESS_CALLBACK_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_callback_host.rxbin")
 add_dependencies(test_address_callback_host address_callback_host_bin library)
 
+add_custom_command(
+        OUTPUT crexxsaa_variables_host.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o crexxsaa_variables_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_variables_host.rexx
+        COMMAND $<TARGET_FILE:rxas> crexxsaa_variables_host
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_variables_host.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling crexxsaa_variables_host.rexx ..."
+)
+
+add_custom_target(crexxsaa_variables_host_bin DEPENDS crexxsaa_variables_host.rxbin)
+
+add_executable(test_crexxsaa_variables src/test_crexxsaa_variables.c)
+target_link_libraries(test_crexxsaa_variables PRIVATE crexxsaa)
+target_include_directories(test_crexxsaa_variables PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
+target_compile_definitions(test_crexxsaa_variables PRIVATE
+        CREXX_TEST_LOCATION="${CMAKE_BINARY_DIR}/bin"
+        CREXX_TEST_LIBRARY_RXBIN="${CMAKE_BINARY_DIR}/bin/library.rxbin"
+        CREXX_TEST_CREXXSAA_VARIABLE_MODULE="${CMAKE_CURRENT_BINARY_DIR}/crexxsaa_variables_host.rxbin")
+add_dependencies(test_crexxsaa_variables crexxsaa_variables_host_bin library crexxsaa)
+
 add_executable(test_source_provenance src/test_source_provenance.c)
 target_link_libraries(test_source_provenance PRIVATE rxclib)
 target_include_directories(test_source_provenance PRIVATE
@@ -1347,6 +1370,10 @@ add_test(NAME address_cms_provider COMMAND
 set_tests_properties(address_cms_provider PROPERTIES LABELS "compiler;stage3")
 add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
+add_test(NAME crexxsaa_variables COMMAND test_crexxsaa_variables)
+set_tests_properties(crexxsaa_variables PROPERTIES
+        LABELS "compiler;stage3"
+        ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${CMAKE_BINARY_DIR}/bin")
 add_test(NAME source_provenance COMMAND test_source_provenance)
 set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")
 

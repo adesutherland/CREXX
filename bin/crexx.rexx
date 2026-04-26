@@ -424,6 +424,8 @@ do i=1 to words(filenames)
     if RC>0 then exit RC
 
     cc_command = 'gcc -O3 -DNDEBUG'
+    socketLibs = ''
+    if isWindowsPlatform(platformUpper) then socketLibs = ' -lws2_32'
     if isMacPlatform(platformUpper) then
       cc_command = cc_command ' -Wl,-search_paths_first -Wl,-headerpad_max_install_names'
     cc_command = cc_command ' -o 'outputStem
@@ -432,7 +434,7 @@ do i=1 to words(filenames)
     if isMacPlatform(platformUpper) then do
       cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lplatform'
       cc_command = cc_command ' 'decstat
-      cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm'
+      cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm' || socketLibs
       if staticFlags <> '' then cc_command = cc_command staticFlags
     end
     else do
@@ -440,7 +442,7 @@ do i=1 to words(filenames)
       if staticFlags <> '' then cc_command = cc_command staticFlags
       cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lplatform'
       cc_command = cc_command ' 'decstat
-      cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm'
+      cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm' || socketLibs
       cc_command = cc_command ' -Wl,--end-group'
     end
 
@@ -666,6 +668,12 @@ isMacPlatform: procedure = .int
 arg platformName = .string
 platformUpper = translate(platformName)
 if platformUpper = 'MACOS' | platformUpper = 'MACOSX' then return 1
+return 0
+
+isWindowsPlatform: procedure = .int
+arg platformName = .string
+platformUpper = translate(platformName)
+if platformUpper = 'WINDOWS' | platformUpper = 'WIN32' | platformUpper = 'WIN64' then return 1
 return 0
 
 fileExists: procedure = .int

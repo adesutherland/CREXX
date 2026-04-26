@@ -60,7 +60,7 @@ val = .string
     return .rxfnsb::changestr(needle,val,nneedle)
       
 -- 		compare
-  compare: method = .string
+  compare: method = .int
     arg astr = .string, pad = " "
     return .rxfnsb::compare(val,astr,pad)
 

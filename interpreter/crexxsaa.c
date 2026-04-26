@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -43,6 +44,7 @@
 #define CREXXSAA_FNV_PRIME UINT64_C(1099511628211)
 
 typedef struct crexxsaa_address_registration {
+    crexxsaa_context* ctx;
     crexxsaa_address_callback callback;
     void* userdata;
 } crexxsaa_address_registration;
@@ -64,6 +66,14 @@ struct crexxsaa_context {
     rxvml_context* rxvml;
     crexxsaa_address_registration** registrations;
     size_t registration_count;
+    const rxvml_address_request* active_address_request;
+    rxvml_address_response* active_address_response;
+    rxvml_address_binding* response_updates;
+    size_t response_update_count;
+    size_t response_update_capacity;
+    char** response_update_strings;
+    size_t response_update_string_count;
+    size_t response_update_string_capacity;
     char* library_rxbin_path;
     char* rxc_path;
     char* rxas_path;
@@ -118,6 +128,204 @@ static int crexxsaa_replace_string(crexxsaa_context* ctx, char** target, const c
     free(*target);
     *target = copy;
     return 0;
+}
+
+static char* crexxsaa_strndup(const char* value, size_t len) {
+    char* copy;
+    if (!value && len > 0) return NULL;
+    copy = (char*)malloc(len + 1);
+    if (!copy) return NULL;
+    if (len > 0) memcpy(copy, value, len);
+    copy[len] = '\0';
+    return copy;
+}
+
+static int crexxsaa_char_equal_ci(char left, char right) {
+    return toupper((unsigned char)left) == toupper((unsigned char)right);
+}
+
+static int crexxsaa_name_equal(const char* left, const char* right) {
+    if (!left || !right) return 0;
+    while (*left && *right) {
+        if (!crexxsaa_char_equal_ci(*left, *right)) return 0;
+        left++;
+        right++;
+    }
+    return *left == '\0' && *right == '\0';
+}
+
+static int crexxsaa_binding_kind_is(const rxvml_address_binding* binding, const char* kind) {
+    return binding && crexxsaa_name_equal(binding->kind, kind);
+}
+
+static int crexxsaa_split_variable_name(
+    const char* name,
+    char* base,
+    size_t base_len,
+    const char** tail_out) {
+
+    const char* dot;
+    size_t len;
+
+    if (tail_out) *tail_out = NULL;
+    if (!name || !*name || !base || base_len == 0) return CREXXSAA_VARIABLE_BAD_NAME;
+
+    dot = strchr(name, '.');
+    len = dot ? (size_t)(dot - name) : strlen(name);
+    if (len == 0 || len >= base_len) return CREXXSAA_VARIABLE_BAD_NAME;
+
+    memcpy(base, name, len);
+    base[len] = '\0';
+    if (dot && tail_out) *tail_out = dot + 1;
+    return CREXXSAA_VARIABLE_OK;
+}
+
+static void crexxsaa_clear_response_updates(crexxsaa_context* ctx) {
+    size_t i;
+    if (!ctx) return;
+    for (i = 0; i < ctx->response_update_string_count; i++) {
+        free(ctx->response_update_strings[i]);
+    }
+    ctx->response_update_string_count = 0;
+    ctx->response_update_count = 0;
+    if (ctx->active_address_response) {
+        ctx->active_address_response->updated_binding_count = 0;
+        ctx->active_address_response->updated_bindings = NULL;
+    }
+}
+
+static char* crexxsaa_track_response_string(crexxsaa_context* ctx, const char* value) {
+    char** strings;
+    char* copy;
+    size_t new_capacity;
+
+    if (!ctx) return NULL;
+    copy = crexxsaa_strdup(value ? value : "");
+    if (!copy) return NULL;
+
+    if (ctx->response_update_string_count == ctx->response_update_string_capacity) {
+        new_capacity = ctx->response_update_string_capacity ? ctx->response_update_string_capacity * 2 : 8;
+        strings = (char**)realloc(ctx->response_update_strings, new_capacity * sizeof(char*));
+        if (!strings) {
+            free(copy);
+            return NULL;
+        }
+        ctx->response_update_strings = strings;
+        ctx->response_update_string_capacity = new_capacity;
+    }
+
+    ctx->response_update_strings[ctx->response_update_string_count++] = copy;
+    return copy;
+}
+
+static int crexxsaa_ensure_response_update_capacity(crexxsaa_context* ctx) {
+    rxvml_address_binding* updates;
+    size_t new_capacity;
+
+    if (!ctx) return CREXXSAA_VARIABLE_UNSUPPORTED;
+    if (ctx->response_update_count < ctx->response_update_capacity) return CREXXSAA_VARIABLE_OK;
+
+    new_capacity = ctx->response_update_capacity ? ctx->response_update_capacity * 2 : 8;
+    updates = (rxvml_address_binding*)realloc(
+        ctx->response_updates,
+        new_capacity * sizeof(rxvml_address_binding));
+    if (!updates) return CREXXSAA_VARIABLE_NO_MEMORY;
+
+    ctx->response_updates = updates;
+    ctx->response_update_capacity = new_capacity;
+    return CREXXSAA_VARIABLE_OK;
+}
+
+static rxvml_address_binding* crexxsaa_find_pending_var_update(
+    crexxsaa_context* ctx,
+    const rxvml_address_binding* binding) {
+
+    size_t i;
+
+    if (!ctx || !binding) return NULL;
+    for (i = ctx->response_update_count; i > 0; i--) {
+        rxvml_address_binding* update = &ctx->response_updates[i - 1];
+        if (!crexxsaa_binding_kind_is(update, "var")) continue;
+        if (crexxsaa_name_equal(update->internal_name, binding->internal_name) ||
+            crexxsaa_name_equal(update->external_alias, binding->external_alias)) {
+            return update;
+        }
+    }
+    return NULL;
+}
+
+static int crexxsaa_add_var_update(
+    crexxsaa_context* ctx,
+    const rxvml_address_binding* binding,
+    const char* value) {
+
+    rxvml_address_binding* update;
+    char* value_copy;
+    char* kind_copy;
+    char* internal_copy;
+    char* alias_copy;
+    char* flags_copy;
+    int rc;
+
+    if (!ctx || !binding || !ctx->active_address_response) return CREXXSAA_VARIABLE_NO_ACTIVE_REQUEST;
+
+    value_copy = crexxsaa_track_response_string(ctx, value);
+    if (!value_copy) return CREXXSAA_VARIABLE_NO_MEMORY;
+
+    update = crexxsaa_find_pending_var_update(ctx, binding);
+    if (update) {
+        update->value = value_copy;
+        return CREXXSAA_VARIABLE_OK;
+    }
+
+    kind_copy = crexxsaa_track_response_string(ctx, "var");
+    internal_copy = crexxsaa_track_response_string(ctx, binding->internal_name);
+    alias_copy = crexxsaa_track_response_string(ctx, binding->external_alias);
+    flags_copy = crexxsaa_track_response_string(ctx, binding->flags);
+    if (!kind_copy || !internal_copy || !alias_copy || !flags_copy)
+        return CREXXSAA_VARIABLE_NO_MEMORY;
+
+    rc = crexxsaa_ensure_response_update_capacity(ctx);
+    if (rc != CREXXSAA_VARIABLE_OK) return rc;
+
+    update = &ctx->response_updates[ctx->response_update_count++];
+    update->kind = kind_copy;
+    update->internal_name = internal_copy;
+    update->external_alias = alias_copy;
+    update->value = value_copy;
+    update->value_object = NULL;
+    update->flags = flags_copy;
+
+    ctx->active_address_response->updated_binding_count = ctx->response_update_count;
+    ctx->active_address_response->updated_bindings = ctx->response_updates;
+    return CREXXSAA_VARIABLE_OK;
+}
+
+static const rxvml_address_binding* crexxsaa_find_binding(
+    const rxvml_address_request* request,
+    const char* base,
+    const char* kind) {
+
+    size_t i;
+
+    if (!request || !base || !kind) return NULL;
+    for (i = 0; i < request->binding_count; i++) {
+        const rxvml_address_binding* binding = &request->bindings[i];
+        if (!crexxsaa_binding_kind_is(binding, kind)) continue;
+        if (crexxsaa_name_equal(binding->internal_name, base) ||
+            crexxsaa_name_equal(binding->external_alias, base)) {
+            return binding;
+        }
+    }
+    return NULL;
+}
+
+static int crexxsaa_tail_is_zero(const char* tail) {
+    return tail && strcmp(tail, "0") == 0;
+}
+
+static int crexxsaa_tail_is_one(const char* tail) {
+    return tail && strcmp(tail, "1") == 0;
 }
 
 static int crexxsaa_env_truthy(const char* name) {
@@ -843,8 +1051,11 @@ static int crexxsaa_address_trampoline(
     void* userdata) {
 
     crexxsaa_address_registration* registration;
+    crexxsaa_context* ctx;
     crexxsaa_address_request request;
     crexxsaa_address_response response;
+    const rxvml_address_request* previous_request;
+    rxvml_address_response* previous_response;
     int rc;
 
     (void)rxvml;
@@ -855,15 +1066,29 @@ static int crexxsaa_address_trampoline(
         return -1;
     }
 
+    ctx = registration->ctx;
     request.environment_name = rxvml_request->environment_name;
     request.command = rxvml_request->command;
+    request.context = ctx;
 
     memset(&response, 0, sizeof(response));
+    previous_request = ctx ? ctx->active_address_request : NULL;
+    previous_response = ctx ? ctx->active_address_response : NULL;
+    if (ctx) {
+        ctx->active_address_request = rxvml_request;
+        ctx->active_address_response = rxvml_response;
+        crexxsaa_clear_response_updates(ctx);
+    }
+
     rc = registration->callback(&request, &response, registration->userdata);
 
     rxvml_response->rc = response.rc;
     rxvml_response->condition_name = response.condition_name;
     rxvml_response->diagnostic = response.diagnostic;
+    if (ctx) {
+        ctx->active_address_request = previous_request;
+        ctx->active_address_response = previous_response;
+    }
 
     return rc;
 }
@@ -913,6 +1138,9 @@ void crexxsaa_destroy(crexxsaa_context* ctx) {
     size_t i;
     if (!ctx) return;
     if (ctx->rxvml) rxvml_destroy(ctx->rxvml);
+    crexxsaa_clear_response_updates(ctx);
+    free(ctx->response_updates);
+    free(ctx->response_update_strings);
     for (i = 0; i < ctx->registration_count; i++) {
         free(ctx->registrations[i]);
     }
@@ -953,6 +1181,7 @@ int crexxsaa_register_address_environment(
         crexxsaa_set_error(ctx, "Failed to allocate ADDRESS registration");
         return -1;
     }
+    registration->ctx = ctx;
     registration->callback = callback;
     registration->userdata = userdata;
     ctx->registrations[ctx->registration_count++] = registration;
@@ -1007,6 +1236,179 @@ int crexxsaa_set_cache_dir(
 
     if (!ctx) return -1;
     return crexxsaa_replace_string(ctx, &ctx->cache_dir, cache_dir);
+}
+
+int crexxsaa_address_variable_set(
+    crexxsaa_context* ctx,
+    const char* name,
+    const char* value,
+    size_t value_len) {
+
+    const rxvml_address_request* request;
+    const rxvml_address_binding* binding;
+    char base[256];
+    const char* tail = NULL;
+    char* value_text;
+    int rc;
+
+    if (!ctx || !ctx->rxvml) return CREXXSAA_VARIABLE_UNSUPPORTED;
+    request = ctx->active_address_request;
+    if (!request) {
+        crexxsaa_set_error(ctx, "No active CREXXSAA ADDRESS request");
+        return CREXXSAA_VARIABLE_NO_ACTIVE_REQUEST;
+    }
+
+    rc = crexxsaa_split_variable_name(name, base, sizeof(base), &tail);
+    if (rc != CREXXSAA_VARIABLE_OK) {
+        crexxsaa_set_error(ctx, "Invalid CREXXSAA variable name");
+        return rc;
+    }
+
+    value_text = crexxsaa_strndup(value ? value : "", value ? value_len : 0);
+    if (!value_text) {
+        crexxsaa_set_error(ctx, "Failed to allocate CREXXSAA variable value");
+        return CREXXSAA_VARIABLE_NO_MEMORY;
+    }
+
+    if (tail && *tail) {
+        binding = crexxsaa_find_binding(request, base, "stem");
+        if (binding) {
+            rc = rxvml_address_binding_stem_set(ctx->rxvml, binding, tail, value_text);
+            free(value_text);
+            if (rc == 0) return CREXXSAA_VARIABLE_OK;
+            crexxsaa_copy_rxvml_error(ctx, "Failed to update CREXX ADDRESS stem binding");
+            return CREXXSAA_VARIABLE_UNSUPPORTED;
+        }
+
+        binding = crexxsaa_find_binding(request, base, "var");
+        if (binding) {
+            if (crexxsaa_tail_is_zero(tail)) {
+                free(value_text);
+                return CREXXSAA_VARIABLE_OK;
+            }
+            rc = crexxsaa_add_var_update(ctx, binding, value_text);
+            free(value_text);
+            if (rc != CREXXSAA_VARIABLE_OK)
+                crexxsaa_set_error(ctx, "Failed to record CREXX ADDRESS variable update");
+            return rc;
+        }
+    } else if (!tail) {
+        binding = crexxsaa_find_binding(request, base, "var");
+        if (binding) {
+            rc = crexxsaa_add_var_update(ctx, binding, value_text);
+            free(value_text);
+            if (rc != CREXXSAA_VARIABLE_OK)
+                crexxsaa_set_error(ctx, "Failed to record CREXX ADDRESS variable update");
+            return rc;
+        }
+    }
+
+    rc = rxvml_address_sandbox_set(ctx->rxvml, request, name, value_text);
+    free(value_text);
+    if (rc == 0) return CREXXSAA_VARIABLE_OK;
+
+    crexxsaa_copy_rxvml_error(ctx, "Failed to update CREXX ADDRESS sandbox variable");
+    return CREXXSAA_VARIABLE_UNSUPPORTED;
+}
+
+int crexxsaa_address_variable_get_alloc(
+    crexxsaa_context* ctx,
+    const char* name,
+    char** value_out,
+    size_t* value_len_out) {
+
+    const rxvml_address_request* request;
+    const rxvml_address_binding* binding;
+    rxvml_address_binding* pending;
+    char base[256];
+    const char* tail = NULL;
+    const char* direct_value = NULL;
+    char* value = NULL;
+    int rc;
+
+    if (value_out) *value_out = NULL;
+    if (value_len_out) *value_len_out = 0;
+    if (!ctx || !ctx->rxvml || !value_out) return CREXXSAA_VARIABLE_UNSUPPORTED;
+
+    request = ctx->active_address_request;
+    if (!request) {
+        crexxsaa_set_error(ctx, "No active CREXXSAA ADDRESS request");
+        return CREXXSAA_VARIABLE_NO_ACTIVE_REQUEST;
+    }
+
+    rc = crexxsaa_split_variable_name(name, base, sizeof(base), &tail);
+    if (rc != CREXXSAA_VARIABLE_OK) {
+        crexxsaa_set_error(ctx, "Invalid CREXXSAA variable name");
+        return rc;
+    }
+
+    if (tail && *tail) {
+        binding = crexxsaa_find_binding(request, base, "stem");
+        if (binding) {
+            value = (char*)malloc(65536);
+            if (!value) {
+                crexxsaa_set_error(ctx, "Failed to allocate CREXXSAA stem value buffer");
+                return CREXXSAA_VARIABLE_NO_MEMORY;
+            }
+            rc = rxvml_address_binding_stem_get(binding, tail, value, 65536);
+            if (rc == 0) {
+                *value_out = value;
+                if (value_len_out) *value_len_out = strlen(value);
+                return CREXXSAA_VARIABLE_OK;
+            }
+            free(value);
+        }
+
+        binding = crexxsaa_find_binding(request, base, "var");
+        if (binding && (crexxsaa_tail_is_zero(tail) || crexxsaa_tail_is_one(tail))) {
+            pending = crexxsaa_find_pending_var_update(ctx, binding);
+            direct_value = crexxsaa_tail_is_zero(tail) ? "1" : (pending ? pending->value : binding->value);
+            if (!direct_value) direct_value = "";
+            value = crexxsaa_strdup(direct_value);
+            if (!value) {
+                crexxsaa_set_error(ctx, "Failed to allocate CREXXSAA variable value");
+                return CREXXSAA_VARIABLE_NO_MEMORY;
+            }
+            *value_out = value;
+            if (value_len_out) *value_len_out = strlen(value);
+            return CREXXSAA_VARIABLE_OK;
+        }
+    } else if (!tail) {
+        binding = crexxsaa_find_binding(request, base, "var");
+        if (binding) {
+            pending = crexxsaa_find_pending_var_update(ctx, binding);
+            direct_value = pending ? pending->value : binding->value;
+            if (!direct_value) direct_value = "";
+            value = crexxsaa_strdup(direct_value);
+            if (!value) {
+                crexxsaa_set_error(ctx, "Failed to allocate CREXXSAA variable value");
+                return CREXXSAA_VARIABLE_NO_MEMORY;
+            }
+            *value_out = value;
+            if (value_len_out) *value_len_out = strlen(value);
+            return CREXXSAA_VARIABLE_OK;
+        }
+    }
+
+    value = (char*)malloc(65536);
+    if (!value) {
+        crexxsaa_set_error(ctx, "Failed to allocate CREXXSAA sandbox value buffer");
+        return CREXXSAA_VARIABLE_NO_MEMORY;
+    }
+    rc = rxvml_address_sandbox_get(request, name, value, 65536);
+    if (rc == 0) {
+        *value_out = value;
+        if (value_len_out) *value_len_out = strlen(value);
+        return CREXXSAA_VARIABLE_OK;
+    }
+    free(value);
+
+    crexxsaa_set_error(ctx, "CREXXSAA variable was not exposed and was not found in the ADDRESS sandbox");
+    return CREXXSAA_VARIABLE_NOT_FOUND;
+}
+
+void crexxsaa_free(void* ptr) {
+    free(ptr);
 }
 
 int crexxsaa_run_rxbin(

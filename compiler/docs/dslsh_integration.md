@@ -96,6 +96,12 @@ The current request flow is:
 8. DSLSH reconstructs the tree and flattens it into per-character editor
    attributes.
 
+When the editor sends a DSLSH hypothesis request, the DSLSH transport applies
+the supplied transactions to a scratch copy of the current document session and
+then calls the same cREXX parser-mode entry point. The committed parser mirror
+and the editor's real `CodeBuffer` version are not advanced. This is intended
+for completion previews and similar "what would this look like?" queries.
+
 ## DSLSH Features Used
 
 cREXX parser mode currently uses these DSLSH concepts:
@@ -242,6 +248,13 @@ The cache is invalidated when relevant inputs change, including:
 - effective search-path key,
 - configured exit-module name,
 - watched import or module timestamps and sizes.
+
+DSLSH can keep multiple document sessions in one parser process. cREXX's
+retained parser-mode cache is still keyed by document identity and search-path
+inputs, so switching documents may invalidate and rebuild the retained root
+context. The protocol-level document session prevents buffer content from being
+cross-applied between files; a future optimization can shard the retained cREXX
+cache per document if cross-file switching becomes too expensive.
 
 The controller also remembers when exit discovery has already completed for a
 generation, including the valid "no exits discovered" case, so it does not

@@ -334,7 +334,10 @@ address system '"' || crexx_home || '/rxlink" -s -o "' || linkedName || '" "' ||
 if rc<>0 then exit rc
 address system '"' || crexx_home || '/rxcpack" -o "' || execName || '" "' || linkedName || '"'
 if rc<>0 then exit rc
-address system 'gcc -O3 -DNDEBUG -o ' || execName || ' -L "' || crexx_home || '" -lrxvml -lrxpashim -lrxvmplugin -lplatform -ldecnumber -lavl_tree -lrxpa -lm "' || crexx_home || '/rxvm_mc_decimal_manual.a" ' || execName || '.c'
+socketLib = ''
+crexx_home_upper = translate(crexx_home)
+if pos('\', crexx_home) > 0 | substr(crexx_home,2,1) = ':' | pos('/MINGW', crexx_home_upper) > 0 | pos('/MSYS', crexx_home_upper) > 0 then socketLib = ' -lws2_32'
+address system 'gcc -O3 -DNDEBUG -o ' || execName || ' -L "' || crexx_home || '" -lrxvml -lrxpashim -lrxvmplugin -lplatform -ldecnumber -lavl_tree -lrxpa -lm' || socketLib || ' "' || crexx_home || '/rxvm_mc_decimal_manual.a" ' || execName || '.c'
 if rc<>0 then exit rc
 \end{verbatim}
 
