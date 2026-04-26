@@ -7,6 +7,13 @@ project(Interpreter C)
 set(CMAKE_C_STANDARD 99) # enables inline keyword
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice
 
+set(CREXX_SOCKET_TARGET_LIBS)
+set(CREXX_SOCKET_MANUAL_LINK_LIBS)
+if(WIN32)
+    set(CREXX_SOCKET_TARGET_LIBS ws2_32)
+    set(CREXX_SOCKET_MANUAL_LINK_LIBS -lws2_32)
+endif()
+
 ##########################################
 # Bare Interpreter
 # Threaded Version
@@ -86,8 +93,8 @@ target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 
 function(crexx_enable_core_sockets target_name)
     target_sources(${target_name} PRIVATE rxvmsock.c rxvmsock.h)
-    if(WIN32)
-        target_link_libraries(${target_name} ws2_32)
+    if(CREXX_SOCKET_TARGET_LIBS)
+        target_link_libraries(${target_name} ${CREXX_SOCKET_TARGET_LIBS})
     endif()
 endfunction()
 
@@ -472,6 +479,7 @@ add_custom_command(
                 $<TARGET_FILE:rxpa>
                 -lm
                 $<TARGET_FILE:db_decimal_manual>
+                ${CREXX_SOCKET_MANUAL_LINK_LIBS}
         DEPENDS
                 tests/test_db_decimal_archive_link.c
                 rxvml

@@ -1,9 +1,12 @@
 filename=$1
 thisdir=$CREXX_HOME
+socket_libs=
+case "$(uname -s 2>/dev/null)" in
+    MINGW*|MSYS*|CYGWIN*) socket_libs=-lws2_32 ;;
+esac
 gcc  \
-    -lrxvml -lavl_tree -lplatform -lm  \
+    -lrxvml -lavl_tree -lplatform -lm ${socket_libs} \
     -L$thisdir/interpreter \
     -L$thisdir/avl_tree \
     -L$thisdir/platform \
     ${filename}
-
