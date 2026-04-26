@@ -84,6 +84,51 @@ target_include_directories(rxbvml PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 
+# libcrexxsaa is intentionally thin and shared. On ELF platforms, every static
+# archive pulled into it must be compiled as PIC.
+foreach(_crexxsaa_static_dep rxvml rxvmplugin mc_decimal_manual avl_tree rxpa platform decnumber)
+    if(TARGET ${_crexxsaa_static_dep})
+        set_target_properties(${_crexxsaa_static_dep} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    endif()
+endforeach()
+
+add_library(crexxsaa SHARED crexxsaa.c crexxsaa.h)
+target_link_libraries(crexxsaa PUBLIC rxvml rxvmplugin mc_decimal_manual avl_tree rxpa)
+target_include_directories(crexxsaa PUBLIC
+        .
+        ./rxvmplugin
+        ../assembler
+        ../binutils/include
+        ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform
+        ../avl_tree
+        ../utf8
+        ../inc)
+set_target_properties(crexxsaa PROPERTIES
+        OUTPUT_NAME crexxsaa
+        POSITION_INDEPENDENT_CODE ON)
+install(TARGETS crexxsaa
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION bin
+        ARCHIVE DESTINATION lib)
+install(FILES crexxsaa.h DESTINATION include)
+
+add_executable(crexxsaa_tool crexxsaa_tool.c)
+target_link_libraries(crexxsaa_tool PRIVATE crexxsaa)
+target_include_directories(crexxsaa_tool PRIVATE .)
+set_target_properties(crexxsaa_tool PROPERTIES
+        OUTPUT_NAME crexxsaa)
+if(APPLE)
+    set_target_properties(crexxsaa_tool PROPERTIES
+            BUILD_RPATH "${CMAKE_BINARY_DIR}/bin"
+            INSTALL_RPATH "@loader_path")
+elseif(UNIX)
+    set_target_properties(crexxsaa_tool PROPERTIES
+            BUILD_RPATH "${CMAKE_BINARY_DIR}/bin"
+            INSTALL_RPATH "$ORIGIN")
+endif()
+install(TARGETS crexxsaa_tool RUNTIME DESTINATION bin)
+
 # RXPA Shim Library - Provides standard rxpa_ symbols for standalone targets
 add_library(rxpashim STATIC rxpashim.c)
 target_include_directories(rxpashim PUBLIC . ${CMAKE_SOURCE_DIR}/rxpa)
@@ -99,6 +144,18 @@ target_link_libraries(ts_regvalue_tester m)
 
 # Enable testing
 enable_testing()
+
+add_test(
+        NAME crexxsaa_cache_tool_location
+        COMMAND crexxsaa_tool --cache-dir ${CMAKE_CURRENT_BINARY_DIR}/crexxsaa-cache-tool-test --location)
+set_tests_properties(crexxsaa_cache_tool_location PROPERTIES
+        PASS_REGULAR_EXPRESSION "crexxsaa-cache-tool-test")
+
+add_test(
+        NAME crexxsaa_cache_tool_clear
+        COMMAND crexxsaa_tool --cache-dir ${CMAKE_CURRENT_BINARY_DIR}/crexxsaa-cache-tool-test --clear --list)
+set_tests_properties(crexxsaa_cache_tool_clear PROPERTIES
+        PASS_REGULAR_EXPRESSION "cleared")
 
 function(crexx_add_vm_dual_test)
     set(options)

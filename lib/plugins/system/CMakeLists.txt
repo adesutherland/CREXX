@@ -28,4 +28,13 @@ target_include_directories(_system_static PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/include
     ${CMAKE_SOURCE_DIR}/rxpa
     )
-  
+
+set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
+add_test(
+        NAME test_system
+        COMMAND $<TARGET_FILE:rxvm> system_test_noopt.rxbin ${LIBRPATH}
+)
+
+set_tests_properties(test_system PROPERTIES
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)

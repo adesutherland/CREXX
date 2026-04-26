@@ -1,7 +1,7 @@
 options levelb
 import rxfnsb
 
-main: procedure
+## main: procedure
 /* --------------------------------------------------------------
  * test_parse.rexx
  *

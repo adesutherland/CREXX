@@ -25,6 +25,7 @@ import rxfnsb
 
  do i=1 to name[0]
     total = qty.i * price.i
-    fsay "{i:>3} {name.i:<12} {qty.i:>5} {price.i:>6.2} Total={total:>6.2}"
+    msay "999 XXXXXXXXXXXX 99999 9999.99",i, name.i, qty[i], price.i
+    fsay "{i:>3} {name.i:<12} {qty.i:>5} {price.i:>4.2} Total={total:>6.2}"
  end
  say 'SUCCESS'

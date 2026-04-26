@@ -1669,13 +1669,244 @@ Stage 4.2 transport / web-service direction:
 - use provider-specific LLM APIs as practical examples, but keep the lower
   library generic
 
-Stage 4.3 REXXSAA adapter direction:
+Stage 4.3 `crexxsaa` compatibility layer direction:
 
-- prototype optional REXXSAA source-compatible wrappers over the modern
-  runtime contract
+- build the initial `crexxsaa.h` / C wrapper layer as the compatibility surface
+  over the modern runtime contract
+- use real integration needs to decide how much of the historical REXXSAA shape
+  belongs in `crexxsaa`, rather than treating the old ABI as an all-or-nothing
+  implementation target
+- treat THE as the first large non-mainframe proving ground for that layer, not
+  as a one-off THE-specific facade
 - map subcommand registration to ADDRESS environments
 - map `RexxVariablePool()` / `SHVBLOCK` operations to sandbox/stem helpers
+- put CREXX program compilation/loading orchestration behind the `RexxStart()`-
+  shaped entry point, including source/instore compile, assemble/link/cache, and
+  `rxvml` load/run as needed
+- keep source compilation exact: host integrations should provide valid CREXX
+  source for the language level they need; `crexxsaa` should not inject
+  `OPTIONS`, an `ADDRESS` prelude, or other host-specific clauses
+- manage compiled-script cache state in `crexxsaa`, using a host namespace,
+  source-path bucket, source/content hash, compiler/library fingerprint, and
+  explicit invalidate/refresh hooks
 - decide which compatibility surfaces ship and at what support level
+
+Coherence target:
+
+- new integrations should prefer the modern `rxvml` / ADDRESS / sandbox
+  contracts directly
+- legacy integrations should be able to enter through `crexxsaa` where useful
+- the two paths should converge on the same internal request/response,
+  environment, sandbox, and stem contracts so compatibility does not become a
+  second runtime model
+- full arbitrary variable-pool emulation remains a deliberate decision point;
+  the first compatibility slice should implement only the request-pool behaviour
+  justified by real host integrations
+
+### Stage 4.3.1: temporary `crexxsaa` user and cache documentation
+
+This section is deliberately written as user-facing and implementor-facing
+documentation inside the working note. It should be moved into the permanent
+`crexxsaa` documentation once the integration surface settles.
+
+Current scope:
+
+- `crexxsaa` is the initial CREXX compatibility API for hosts that want a
+  REXXSAA-shaped entry point without requiring the full historical REXXSAA
+  surface
+- the first supported host model is command-environment execution:
+  - host C code creates a `crexxsaa_context`
+  - registers one or more ADDRESS callback environments
+  - configures the CREXX compiler/assembler paths
+  - runs either an existing `.rxbin` or source that `crexxsaa` compiles and
+    caches
+- variable-pool / `SHVBLOCK` emulation is not part of this first slice
+- source is compiled exactly as supplied; `crexxsaa` does not add
+  `OPTIONS LEVELB`, `ADDRESS`, host preludes, or compatibility boilerplate
+
+Writing source for a host integration:
+
+- write normal CREXX source at the language level required by the current
+  compiler
+- if the host expects Level B, put `options levelb` in the script
+- if commands should be routed to the host environment, put the relevant
+  `address <environment>` clause in the script
+- for THE-hosted scripts today, that means the profile or macro should start
+  with the equivalent of:
+
+```rexx
+options levelb
+address the
+'emsg CREXX_PROFILE_HOSTED'
+```
+
+The important point is ownership: the script declares its language level and
+host command environment. `crexxsaa` only compiles, caches, loads, and runs it.
+
+Minimal host-side flow:
+
+```c
+crexxsaa_context *ctx = NULL;
+
+crexxsaa_create(location, library_rxbin, &ctx);
+crexxsaa_set_compiler(ctx, rxc_path, rxas_path, import_dir);
+crexxsaa_register_address_environment(ctx, "THE", the_callback, userdata);
+crexxsaa_set_address_environment(ctx, "THE");
+crexxsaa_run_source(ctx, profile_path, "THE", 0, argc, argv, &program_rc);
+crexxsaa_destroy(ctx);
+```
+
+The host namespace argument, `"THE"` in this example, is part of the cache
+identity. Two different hosts may compile the same source path without sharing a
+cache bucket accidentally.
+
+User cache tool:
+
+- the CREXX build/install now includes a `crexxsaa` maintenance binary in the
+  normal `bin` directory
+- it is a troubleshooting tool for the compiled-script cache; it is not the
+  script runner
+- common commands:
+
+```sh
+crexxsaa --location
+crexxsaa --list
+crexxsaa --clear
+crexxsaa --cache-dir /tmp/crexxsaa-cache --list
+crexxsaa --cache-dir /tmp/crexxsaa-cache --clear --list
+```
+
+Default invocation with no arguments prints the cache location and lists cache
+entries. `--location` alone prints only the resolved cache directory, which is
+useful in scripts.
+
+Example list output:
+
+```text
+cache: /Users/adrian/Library/Caches/crexx/crexxsaa
+source: /path/to/profile.the
+  bucket: 0379ad70148bf7ca
+  rxbin: /Users/adrian/Library/Caches/crexx/crexxsaa/v1/0379ad70148bf7ca/b0ec3f1ffcc51e4c.rxbin
+  rxbin_size: 1216
+  source_hash: 9100aa6921615883
+  config_hash: 5af0757a39c4eba1
+```
+
+Cache location rules:
+
+- `CREXXSAA_CACHE_DIR` overrides the platform default
+- a host may also call `crexxsaa_set_cache_dir()`
+- for THE specifically, `THE_CREXX_CACHE_DIR` is accepted by THE and forwarded
+  to `crexxsaa`
+- if both `CREXXSAA_CACHE_DIR` and a host-provided cache directory are present,
+  `CREXXSAA_CACHE_DIR` wins
+- platform defaults:
+  - macOS: `$HOME/Library/Caches/crexx/crexxsaa`
+  - Windows: `%LOCALAPPDATA%\crexx\crexxsaa`, falling back under
+    `%USERPROFILE%\AppData\Local`
+  - other Unix-like systems: `$XDG_CACHE_HOME/crexx/crexxsaa`, falling back to
+    `$HOME/.cache/crexx/crexxsaa`
+
+Runtime cache controls:
+
+- `CREXXSAA_CACHE_DISABLE=1`
+  - compile source through temporary files only
+  - do not read or write the persistent cache
+- `CREXXSAA_CACHE_REFRESH=1`
+  - ignore a valid cache hit
+  - compile again and replace the manifest for that source bucket
+- `CREXXSAA_CACHE_TRACE=1`
+  - write cache decisions to `stderr`
+  - currently emits events such as `miss`, `hit`, `stale`, `refresh`, and
+    `disabled`
+
+Compiler path controls:
+
+- hosts normally call `crexxsaa_set_compiler(ctx, rxc, rxas, import_dir)`
+- the environment variables `CREXXSAA_RXC`, `CREXXSAA_RXAS`, and
+  `CREXXSAA_IMPORT_DIR` override the configured compiler values
+- THE also has host-level variables:
+  - `THE_CREXX_RXC`
+  - `THE_CREXX_RXAS`
+  - `THE_CREXX_IMPORT_DIR`
+  - `THE_CREXX_LOCATION`
+  - `THE_CREXX_LIBRARY_RXBIN`
+
+Technical cache layout:
+
+- the cache schema is versioned; current entries live under `v1`
+- each source path has a source bucket:
+
+```text
+<cache-root>/v1/<source-key>/
+  manifest
+  <object-hash>.rxbin
+```
+
+- `source-key` is an FNV-1a 64-bit hash rendered as 16 hex characters
+- the source-key hash includes:
+  - host namespace
+  - canonical source path when available, otherwise the supplied source path
+- `object-hash` is also an FNV-1a 64-bit hash rendered as 16 hex characters
+- the object hash includes:
+  - source content hash
+  - compiler/library configuration hash
+
+Manifest fields:
+
+```text
+version=1
+source_path=/absolute/or/supplied/source/path
+source_hash=<16-hex-content-hash>
+source_size=<bytes>
+source_mtime=<mtime>
+config_hash=<16-hex-config-hash>
+rxbin=<absolute/cache/path/to/object.rxbin>
+```
+
+The content hash, not only the timestamp, decides whether source changed. Size
+and mtime are recorded for diagnostics and human inspection.
+
+The configuration hash includes:
+
+- cache schema and `CREXXSAA_ABI_VERSION`
+- configured or environment-overridden `rxc` path
+- configured or environment-overridden `rxas` path
+- configured or environment-overridden import directory
+- loaded `library.rxbin` path
+- file size and mtime for the compiler, assembler, import directory, and
+  library path where the platform can stat them
+
+This means normal source edits, CREXX rebuilds, compiler path changes, and
+library rebuilds cause a recompile without manual cache clearing.
+
+Compile and update sequence:
+
+- compute source hash and configuration hash
+- read the source bucket manifest if it exists
+- on a valid hit, load the cached `.rxbin`
+- on miss, stale, or refresh:
+  - run `rxc -i <import-dir> -o <temp-base> <source>`
+  - run `rxas -o <temp-base> <temp-base>.rxas`
+  - rename the temporary `.rxbin` into the source bucket
+  - write a new manifest through a temporary file and rename it into place
+  - remove the previous cached `.rxbin` for the bucket when it has been
+    superseded
+
+Invalidation:
+
+- C API:
+  - `crexxsaa_invalidate_source(ctx, source_path, namespace)`
+  - `crexxsaa_invalidate_all(ctx)`
+  - `crexxsaa_clear_cache(cache_dir_override)`
+- CLI:
+  - `crexxsaa --clear`
+  - `crexxsaa --cache-dir DIR --clear`
+- the cache is disposable; deleting it should affect performance only, not
+  program semantics
+- the current implementation uses atomic file replacement for compiled objects
+  and manifests, but it is not yet a full cross-process locking protocol; for
+  troubleshooting, prefer clearing the cache while the host application is idle
 
 ## 9. Progress
 
@@ -1942,6 +2173,55 @@ Stage 4.3 REXXSAA adapter direction:
   - the library contract is documented in `lib/rxfnsb/rexx/rxjson.md`
   - focused `rxjson` no-opt and linked-opt coverage passed `2/2`; full
     debug-tree coverage passed `868/868`
+- 2026-04-25: `crexxsaa` integration stance clarified:
+  - the compatibility layer should be an initial CREXX compatibility API whose
+    roadmap is guided by real integration needs
+  - THE is expected to be the first major non-mainframe legacy-style integration
+    and a practical proving ground, not the sole design target
+  - `RexxStart()`-shaped entry should hide CREXX source/instore compilation,
+    caching, loading, environment seeding, and execution orchestration
+  - legacy entry points and modern `rxvml`/ADDRESS/sandbox usage should converge
+    on one coherent internal runtime model
+- 2026-04-25: initial THE tracer integration added, later superseded by the
+  embedded profile driver:
+  - THE discovers a CREXX `rxvm` runner from sibling build/install locations,
+    exposes a batch-valid `CREXX` command, and can run a supplied `.rxbin`
+  - an optional `USE_CREXX_AS_REXX` build switch routes THE's existing `REXX`
+    command spelling to that tracer while the fuller `crexxsaa` entry point is
+    still being developed
+  - the batch smoke path compiles a tiny CREXX program to `.rxbin`, starts THE
+    in batch mode, and verifies `rxvm` output flows back through THE
+- 2026-04-25: first embedded THE profile driver implemented:
+  - `crexxsaa.h` / `libcrexxsaa` now wrap the `rxvml` ADDRESS callback path as
+    the initial compatibility API surface
+  - THE can build with `USE_CREXX`, register `ADDRESS THE`, compile a profile
+    source with `rxc`/`rxas`, and run the resulting `.rxbin` in-process
+  - callback execution routes CREXX ADDRESS commands to THE's existing
+    `command_line()` dispatcher, preserving the long-standing THE command
+    integration point
+  - the temporary THE `CREXX` command and `USE_CREXX_AS_REXX` tracer switch have
+    been removed in favour of the embedded profile path
+  - variable-pool / `SHVBLOCK` compatibility remains deliberately deferred;
+    this first slice is command-environment execution only
+- 2026-04-25: `crexxsaa` compiled-script cache added:
+  - source execution moved behind `crexxsaa_run_source()`, with THE reduced to
+    compiler/cache configuration plus `ADDRESS THE` registration
+  - cache roots default to the platform user cache area, with
+    `CREXXSAA_CACHE_DIR` and host-provided cache directories available for test
+    and integration control
+  - cache entries are keyed by host namespace, canonical source path, source
+    content hash, and compiler/library fingerprint; edits and CREXX build-output
+    changes recompile automatically
+  - `CREXXSAA_CACHE_DISABLE`, `CREXXSAA_CACHE_REFRESH`,
+    `crexxsaa_invalidate_source()`, and `crexxsaa_invalidate_all()` provide
+    bypass and invalidation controls
+  - source is compiled as supplied; THE's profile test is now explicit Level B
+    source with its own `OPTIONS LEVELB` and `ADDRESS THE`
+- 2026-04-25: `crexxsaa` cache maintenance tool added:
+  - the `crexxsaa` binary in the CREXX build/install `bin` directory can print
+    the resolved cache location, list cached entries, and clear the cache
+  - `--cache-dir` supports troubleshooting or test-specific cache roots without
+    changing the platform default
 
 ## 10. Evidence and code anchors
 
@@ -1959,6 +2239,9 @@ Stage 4.3 REXXSAA adapter direction:
 - `lib/rxfnsb/tests_functional/ts_rxjson.rexx`
 - `compiler/tests/rexx_src/address_cms_provider.rexx`
 - `compiler/tests/rexx_src/address_cms_host.rexx`
+- `interpreter/crexxsaa.h`
+- `interpreter/crexxsaa.c`
+- `interpreter/crexxsaa_tool.c`
 - `lib/rxfnsb/rxas/_rxvml_address_native.rxas`
 - `interpreter/rxvml.h`
 - `interpreter/rxvml.c`
