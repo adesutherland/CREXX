@@ -298,7 +298,7 @@ do i=1 to words(filenames)
     end
   end
   /* if all is well, we now have a .rexx ready for compilation    */  
-
+    if lower(right(filename,5))='.rexx' then filename=substr(filename,1,length(filename)-5)   /* if file has .rexx extension, chop it off */
   /* print the file when verbose ibm style output is requested */
     if verbose>3 then do
       call printFileToSTDout filename'.rexx'
