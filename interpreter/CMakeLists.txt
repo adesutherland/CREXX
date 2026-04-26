@@ -84,6 +84,14 @@ target_include_directories(rxbvml PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 
+# libcrexxsaa is intentionally thin and shared. On ELF platforms, every static
+# archive pulled into it must be compiled as PIC.
+foreach(_crexxsaa_static_dep rxvml rxvmplugin mc_decimal_manual avl_tree rxpa platform decnumber)
+    if(TARGET ${_crexxsaa_static_dep})
+        set_target_properties(${_crexxsaa_static_dep} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    endif()
+endforeach()
+
 add_library(crexxsaa SHARED crexxsaa.c crexxsaa.h)
 target_link_libraries(crexxsaa PUBLIC rxvml rxvmplugin mc_decimal_manual avl_tree rxpa)
 target_include_directories(crexxsaa PUBLIC
