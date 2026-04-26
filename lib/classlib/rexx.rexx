@@ -64,9 +64,9 @@ val = .string
     return .rxfnsb::changestr(val,haystack,needle)
       
 -- 		compare
-  compare: method = .string
+  compare: method = .int
     arg astr = .string, pad = " "
-    return .rxfnsb::changestr(val,astr,pad)
+    return .rxfnsb::compare(val,astr,pad)
 
 -- 		copies
   copies: method =.string

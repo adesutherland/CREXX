@@ -3,7 +3,7 @@ options levelb
 
 namespace rxfnsb expose compare
 
-compare: procedure = .string
+compare: procedure = .int
   arg string = .string, astr = .string, pad = " "
   slen=0
   alen=0

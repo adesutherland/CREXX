@@ -106,6 +106,25 @@ static int is_builtin_object_contract_name(const char *name) {
             strcmp(name, ".object") == 0);
 }
 
+static ValueType operand_type_from_prefix(char *tp_prefix, ASTNode *node) {
+    if (tp_prefix) {
+        switch (*tp_prefix) {
+            case 's':
+                return TP_STRING;
+            case 'f':
+                return TP_FLOAT;
+            case 'd':
+                return TP_DECIMAL;
+            case 'i':
+                return TP_INTEGER;
+            default:
+                break;
+        }
+    }
+
+    return node ? node->target_type : TP_UNKNOWN;
+}
+
 static char *resolve_object_contract_name(ASTNode *type_node) {
     Symbol *symbol;
 
@@ -455,7 +474,7 @@ void emit_expression(ASTNode *node, void *payload) {
             /* If the register is not set then the child is a constant */
             if (child1->register_num == DONT_ASSIGN_REGISTER) {
                 if (child2->output) output_concat(node->output, child2->output);
-                temp2 = format_constant(child1->value_type, child1);
+                temp2 = format_constant(operand_type_from_prefix(tp_prefix, child1), child1);
                 temp1 = mprintf("   %s%s %c%d,%s,%c%d\n",
                                 tp_prefix,
                                 op,
@@ -473,7 +492,7 @@ void emit_expression(ASTNode *node, void *payload) {
             /* If the register is not set then the child is a constant */
             else if (child2->register_num == DONT_ASSIGN_REGISTER) {
                 if (child1->output) output_concat(node->output, child1->output);
-                temp2 = format_constant(child2->value_type, child2);
+                temp2 = format_constant(operand_type_from_prefix(tp_prefix, child2), child2);
                 temp1 = mprintf("   %s%s %c%d,%c%d,%s\n",
                                 tp_prefix,
                                 op,
