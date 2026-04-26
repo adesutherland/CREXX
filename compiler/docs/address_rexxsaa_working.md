@@ -1,7 +1,12 @@
 # ADDRESS and REXXSAA Working Notes
 
-Status: draft, direction partially approved
-Last updated: 2026-04-25
+Status: retired working record; as-built details have moved to stable docs
+Last updated: 2026-04-26
+
+Retirement note: the current implemented `crexxsaa` host API, ADDRESS callback
+model, variable helper surface, and cache behaviour are now documented in
+`docs/books/crexx_programming_guide/crexxsaa.md`. This file remains as the
+historical design and progress record for the ADDRESS programme.
 
 ## 1. Purpose
 
