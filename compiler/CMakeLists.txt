@@ -58,9 +58,8 @@ target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CU
         ${CMAKE_SOURCE_DIR}/binutils/include)
 
 if (ENABLE_PARSER_MODE)
-    target_link_libraries(rxclib dslsyntax_parser)
+    target_link_libraries(rxclib DSLSH::parser)
     target_compile_definitions(rxclib PRIVATE ENABLE_PARSER_MODE)
-    target_include_directories(rxclib PRIVATE ${DSL_SH_SOURCE_DIR}/codebuffer)
 endif()
 
 add_executable(rxc rxc_main.c)

@@ -39,22 +39,45 @@ endif()
 option(ENABLE_ODBC "Enable ODBC support" OFF)
 option(ENABLE_GTK  "Enable GTK support"  OFF)
 option(ENABLE_PARSER_MODE "Enable Parser Mode (requires DSL-Syntax-Highlighter)" ON)
+set(DSLSH_LOCAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../DSL-Syntax-Highlighter"
+        CACHE PATH "Path to a local DSL-Syntax-Highlighter checkout")
+option(DSLSH_PREFER_LOCAL "Prefer a local/sibling DSL-Syntax-Highlighter checkout when present" ON)
+set(DSLSH_GIT_REPOSITORY "https://github.com/adesutherland/DSL-Syntax-Highlighter.git"
+        CACHE STRING "DSL-Syntax-Highlighter Git repository")
+set(DSLSH_GIT_TAG "develop"
+        CACHE STRING "DSL-Syntax-Highlighter Git branch, tag, or commit SHA")
 
 if (ENABLE_PARSER_MODE)
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../DSL-Syntax-Highlighter/CMakeLists.txt")
-        message(STATUS "Found DSL-Syntax-Highlighter as sibling directory.")
-        set(DSL_SH_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../DSL-Syntax-Highlighter")
-        add_subdirectory(${DSL_SH_SOURCE_DIR} dsl-syntax-highlighter)
+    if(DSLSH_PREFER_LOCAL AND EXISTS "${DSLSH_LOCAL_DIR}/codebuffer/CMakeLists.txt")
+        message(STATUS "Using local DSL-Syntax-Highlighter at ${DSLSH_LOCAL_DIR}")
+        set(DSLSH_SOURCE_DIR "${DSLSH_LOCAL_DIR}")
+        add_subdirectory("${DSLSH_SOURCE_DIR}/codebuffer" "${CMAKE_CURRENT_BINARY_DIR}/dslsyntax-codebuffer" EXCLUDE_FROM_ALL)
     else()
-        message(STATUS "Downloading DSL-Syntax-Highlighter from GitHub...")
         include(FetchContent)
+        message(STATUS "Fetching DSL-Syntax-Highlighter ${DSLSH_GIT_TAG} from ${DSLSH_GIT_REPOSITORY}")
         FetchContent_Declare(
             dsl_syntax_highlighter
-            GIT_REPOSITORY https://github.com/adesutherland/DSL-Syntax-Highlighter.git
-            GIT_TAG        develop
+            GIT_REPOSITORY ${DSLSH_GIT_REPOSITORY}
+            GIT_TAG        ${DSLSH_GIT_TAG}
+            SOURCE_SUBDIR  codebuffer
         )
         FetchContent_MakeAvailable(dsl_syntax_highlighter)
-        set(DSL_SH_SOURCE_DIR ${dsl_syntax_highlighter_SOURCE_DIR})
+        FetchContent_GetProperties(dsl_syntax_highlighter)
+        set(DSLSH_SOURCE_DIR "${dsl_syntax_highlighter_SOURCE_DIR}")
+    endif()
+
+    add_subdirectory("${DSLSH_SOURCE_DIR}/tools" "${CMAKE_CURRENT_BINARY_DIR}/dslsyntax-tools")
+    if(TARGET dslsyntax_editor)
+        target_include_directories(dslsyntax_editor PUBLIC "${DSLSH_SOURCE_DIR}/codebuffer")
+    endif()
+    if(TARGET dslsyntax_parser)
+        target_include_directories(dslsyntax_parser PUBLIC "${DSLSH_SOURCE_DIR}/codebuffer")
+    endif()
+    if(NOT TARGET DSLSH::editor AND TARGET dslsyntax_editor)
+        add_library(DSLSH::editor ALIAS dslsyntax_editor)
+    endif()
+    if(NOT TARGET DSLSH::parser AND TARGET dslsyntax_parser)
+        add_library(DSLSH::parser ALIAS dslsyntax_parser)
     endif()
 endif()
 

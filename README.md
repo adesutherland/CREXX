@@ -41,3 +41,26 @@ Key Links:
 This is the "As Built" documentation, specific to its release; the current [develop branch](https://adesutherland.github.io/CREXX/) version is available as a website.
 
 The documentation is stored in the code repository/branch under the [/doc](https://github.com/adesutherland/CREXX/tree/develop/docs) directory as markdown files.
+
+## DSL Syntax Highlighter Dependency
+
+Parser mode uses the DSLSH middleware libraries from
+`DSL-Syntax-Highlighter/codebuffer` and the `parser_tester` middleware tool. It
+does not build DSLSH parser adapters.
+
+If `../DSL-Syntax-Highlighter` exists, CMake uses that local checkout. If not,
+CMake fetches DSLSH from `DSLSH_GIT_REPOSITORY` at `DSLSH_GIT_TAG`.
+
+```bash
+# Follow the configured branch, currently develop.
+cmake -S . -B cmake-build-debug
+
+# Pin to a stable tag or exact WIP commit.
+cmake -S . -B cmake-build-debug -DDSLSH_GIT_TAG=<tag-or-commit-sha>
+
+# Ignore a sibling checkout and fetch the configured ref.
+cmake -S . -B cmake-build-debug -DDSLSH_PREFER_LOCAL=OFF
+```
+
+Use a branch name for easy "latest DSLSH" development. Use a tag or commit SHA
+when CREXX needs a reproducible DSLSH version.

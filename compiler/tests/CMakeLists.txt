@@ -17,8 +17,7 @@ add_dependencies(crexx_test_driver rxc)
 
 if (ENABLE_PARSER_MODE)
     add_executable(crexx_fake_editor src/fake_editor.c)
-    target_link_libraries(crexx_fake_editor dslsyntax_editor)
-    target_include_directories(crexx_fake_editor PRIVATE ${DSL_SH_SOURCE_DIR}/codebuffer)
+    target_link_libraries(crexx_fake_editor DSLSH::editor)
 
     function(add_crexx_syntax_highlight_test NAME SOURCE_FILE)
         set(options)
@@ -1305,7 +1304,7 @@ target_include_directories(test_source_provenance PRIVATE
 
 if (ENABLE_PARSER_MODE)
     add_executable(test_highlight_cache src/test_highlight_cache.c)
-    target_link_libraries(test_highlight_cache PRIVATE rxclib dslsyntax_editor)
+    target_link_libraries(test_highlight_cache PRIVATE rxclib DSLSH::editor)
     target_compile_definitions(test_highlight_cache PRIVATE ENABLE_PARSER_MODE)
     target_include_directories(test_highlight_cache PRIVATE
             ${CMAKE_SOURCE_DIR}/compiler
@@ -1317,11 +1316,10 @@ if (ENABLE_PARSER_MODE)
             ${CMAKE_SOURCE_DIR}/rxpa
             ${CMAKE_SOURCE_DIR}/interpreter
             ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
-            ${CMAKE_SOURCE_DIR}/binutils/include
-            ${DSL_SH_SOURCE_DIR}/codebuffer)
+            ${CMAKE_SOURCE_DIR}/binutils/include)
 
     add_executable(test_source_semantics src/test_source_semantics.c)
-    target_link_libraries(test_source_semantics PRIVATE rxclib dslsyntax_editor)
+    target_link_libraries(test_source_semantics PRIVATE rxclib DSLSH::editor)
     target_compile_definitions(test_source_semantics PRIVATE ENABLE_PARSER_MODE)
     target_include_directories(test_source_semantics PRIVATE
             ${CMAKE_SOURCE_DIR}/compiler
@@ -1333,11 +1331,10 @@ if (ENABLE_PARSER_MODE)
             ${CMAKE_SOURCE_DIR}/rxpa
             ${CMAKE_SOURCE_DIR}/interpreter
             ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
-            ${CMAKE_SOURCE_DIR}/binutils/include
-            ${DSL_SH_SOURCE_DIR}/codebuffer)
+            ${CMAKE_SOURCE_DIR}/binutils/include)
 
     add_executable(test_highlight_editor_diagnostics src/test_highlight_editor_diagnostics.c)
-    target_link_libraries(test_highlight_editor_diagnostics PRIVATE rxclib dslsyntax_editor)
+    target_link_libraries(test_highlight_editor_diagnostics PRIVATE rxclib DSLSH::editor)
     target_compile_definitions(test_highlight_editor_diagnostics PRIVATE
             ENABLE_PARSER_MODE
             RXC_SYNTAXHIGHLIGHT_CMD="$<TARGET_FILE:rxc> --syntaxhighlight")
@@ -1351,8 +1348,7 @@ if (ENABLE_PARSER_MODE)
             ${CMAKE_SOURCE_DIR}/rxpa
             ${CMAKE_SOURCE_DIR}/interpreter
             ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
-            ${CMAKE_SOURCE_DIR}/binutils/include
-            ${DSL_SH_SOURCE_DIR}/codebuffer)
+            ${CMAKE_SOURCE_DIR}/binutils/include)
     add_dependencies(test_highlight_editor_diagnostics rxc)
 endif()
 

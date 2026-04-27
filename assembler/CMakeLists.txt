@@ -28,9 +28,8 @@ add_dependencies(rxaslib re2c lemon avl_tree platform)
 target_include_directories(rxaslib PRIVATE . ${CMAKE_CURRENT_BINARY_DIR} ../platform ../avl_tree ../utf8 ../binutils/include)
 
 if (ENABLE_PARSER_MODE)
-    target_link_libraries(rxaslib dslsyntax_parser)
+    target_link_libraries(rxaslib DSLSH::parser)
     target_compile_definitions(rxaslib PRIVATE ENABLE_PARSER_MODE)
-    target_include_directories(rxaslib PRIVATE ${DSL_SH_SOURCE_DIR}/codebuffer)
 endif()
 
 # RXAS Exec
@@ -42,6 +41,5 @@ target_include_directories(rxas PRIVATE . ${CMAKE_CURRENT_BINARY_DIR} ../platfor
 if (ENABLE_PARSER_MODE)
     target_compile_definitions(rxas PRIVATE ENABLE_PARSER_MODE)
     add_executable(rxas_test_flatten rxas_test_flatten.c)
-    target_link_libraries(rxas_test_flatten dslsyntax_parser)
-    target_include_directories(rxas_test_flatten PRIVATE ${DSL_SH_SOURCE_DIR}/codebuffer)
+    target_link_libraries(rxas_test_flatten DSLSH::parser)
 endif()
