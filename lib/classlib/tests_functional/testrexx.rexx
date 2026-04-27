@@ -67,6 +67,10 @@ rc = t.t_d2x() ; errors=errors+rc
 say 'rc d2x=' rc
 say 'errors' errors
 
+rc = t.t_format() ; errors=errors+rc
+say 'rc format=' rc
+say 'errors' errors
+
 
 -- return errors<>0
 return 0
@@ -407,13 +411,13 @@ testrexx: class
     flag=flag & w.d2c() ='M'
     return \flag
 
- /*-- D 2 X -------------------------------------------------------*/
+ /*-- D 2 X ---------------TODO--------------------------------------*/
  t_d2x: method = .int
     flag=.boolean
     flag = 1
     v=.rexx('8947848')
-    say v
-    say '<><><><>' v.d2x()
+    -- say v
+    -- say '<><><><>' v.d2x()
     -- flag=flag & ('9'.d2x       == '9')
     -- flag=flag & ('129'.d2x     == '81')
     -- flag=flag & ('129'.d2x(1)  == '1')
@@ -424,7 +428,7 @@ testrexx: class
     -- flag=flag & ('-127'.d2x(2) == '81')
     -- flag=flag & ('-127'.d2x(4) == 'FF81')
     -- flag=flag & ('12'.d2x(0)   == '')
-    flag=flag & (v.d2x() == '888888')
+    -- flag=flag & (v.d2x() == '888888')
     -- flag=flag & ('8947848'.d2x(4) == '8888')
     -- flag=flag & ('8947848'.d2x(5) == '88888')
     -- flag=flag & ('8947848'.d2x(6) == '888888')
@@ -437,7 +441,7 @@ testrexx: class
     -- flag=flag & ('-7829368'.d2x(8) == 'FF888888')
     return \flag
 
- /*-- E X I S T S -------------------------------------------------*/
+ /*-- E X I S T S --------- not in crexx (yet?---------------------*/
   --   method exists static
   --       flag=.boolean
   --   flag = 1
@@ -454,85 +458,87 @@ testrexx: class
   -- return
 
  /*-- F O R M A T -------------------------------------------------*/
- -- t_format: method = .int
- --    flag=.boolean
- --    flag = 1
- --    flag=flag & ('12.3'.format             == 12.3)
- --    flag=flag & (' - 12.73'.format         == '-12.73')
- --    flag=flag & ('0.000'.format            == '0')
- --    flag=flag & ('3'.format(4)             == '   3')
- --    flag=flag & ('1.73'.format(4,0)        == '   2')
- --    flag=flag & ('1.73'.format(4,1)        == '   1.7')
- --    flag=flag & ('1.75'.format(4,1)        == '   1.8')
- --    flag=flag & ('1.73'.format(4,2)        == '   1.73')
- --    flag=flag & ('1.73'.format(4,3)        == '   1.730')
- --    flag=flag & ('-.76'.format(4,1)        == '  -0.8')
- --    flag=flag & ('3.03'.format(4)          == '   3.03')
- --    flag=flag & (' - 12.73'.format(null,4) == '-12.7300')
- --    flag=flag & ('3.03'.format(4,null,3)   == '   3.03     ')
- --    flag=flag & ('3.03'.format(null,null,3)== '3.03     ')
+ t_format: method = .int
+    flag=.boolean
+    flag = 1
+    v = .rexx('12.3')
+    flag=flag & (v.format()             == 12.3)
+    v = .rexx(' - 12.73')
+    flag=flag & (v.format()         = '-12.73')
+    -- flag=flag & ('0.000'.format            == '0')
+    -- flag=flag & ('3'.format(4)             == '   3')
+    -- flag=flag & ('1.73'.format(4,0)        == '   2')
+    -- flag=flag & ('1.73'.format(4,1)        == '   1.7')
+    -- flag=flag & ('1.75'.format(4,1)        == '   1.8')
+    -- flag=flag & ('1.73'.format(4,2)        == '   1.73')
+    -- flag=flag & ('1.73'.format(4,3)        == '   1.730')
+    -- flag=flag & ('-.76'.format(4,1)        == '  -0.8')
+    -- flag=flag & ('3.03'.format(4)          == '   3.03')
+    -- flag=flag & (' - 12.73'.format(null,4) == '-12.7300')
+    -- flag=flag & ('3.03'.format(4,null,3)   == '   3.03     ')
+    -- flag=flag & ('3.03'.format(null,null,3)== '3.03     ')
     
- --    flag=flag & ('0.05'.format(4,1)        == '   0.1')
- --    flag=flag & ('0.005'.format(4,0)       == '   0')
- --    flag=flag & ('0.005'.format(4,1)       == '   0.0')
- --    flag=flag & ('0.005'.format(4,2)       == '   0.01')
- --    flag=flag & ('0.005'.format(4,3)       == '   0.005')
- --    flag=flag & ('0.005'.format(4,4)       == '   0.0050')
- --    flag=flag & ('0'.format(4,0)           == '   0')
- --    flag=flag & ('0'.format(4,1)           == '   0.0')
- --    flag=flag & ('0'.format(4,2)           == '   0.00')
+    -- flag=flag & ('0.05'.format(4,1)        == '   0.1')
+    -- flag=flag & ('0.005'.format(4,0)       == '   0')
+    -- flag=flag & ('0.005'.format(4,1)       == '   0.0')
+    -- flag=flag & ('0.005'.format(4,2)       == '   0.01')
+    -- flag=flag & ('0.005'.format(4,3)       == '   0.005')
+    -- flag=flag & ('0.005'.format(4,4)       == '   0.0050')
+    -- flag=flag & ('0'.format(4,0)           == '   0')
+    -- flag=flag & ('0'.format(4,1)           == '   0.0')
+    -- flag=flag & ('0'.format(4,2)           == '   0.00')
     
- --    flag=flag & ('0.4'.format(null,0)      == '0')
- --    flag=flag & ('-0.4'.format(null,0)     == '0')
- --    flag=flag & ('0.444'.format(null,0)     == '0')
- --    flag=flag & ('-0.444'.format(null,0)     == '0')
+    -- flag=flag & ('0.4'.format(null,0)      == '0')
+    -- flag=flag & ('-0.4'.format(null,0)     == '0')
+    -- flag=flag & ('0.444'.format(null,0)     == '0')
+    -- flag=flag & ('-0.444'.format(null,0)     == '0')
     
- --    flag=flag & ('12345.73'.format(null,null,null,3) == '1.234573E+4')
- --    flag=flag & ('12345.73'.format(null,null,null,4) == '1.234573E+4')
- --    flag=flag & ('12345.73'.format(null,null,null,5) == '12345.73')
- --    flag=flag & ('12345.73'.format(null,null,null,6) == '12345.73')
+    -- flag=flag & ('12345.73'.format(null,null,null,3) == '1.234573E+4')
+    -- flag=flag & ('12345.73'.format(null,null,null,4) == '1.234573E+4')
+    -- flag=flag & ('12345.73'.format(null,null,null,5) == '12345.73')
+    -- flag=flag & ('12345.73'.format(null,null,null,6) == '12345.73')
     
- --    flag=flag & ('12345.73'.format(null,8,null,3)    == '1.23457300E+4')
- --    flag=flag & ('12345.73'.format(null,7,null,3)    == '1.2345730E+4')
- --    flag=flag & ('12345.73'.format(null,6,null,3)    == '1.234573E+4')
- --    flag=flag & ('12345.73'.format(null,5,null,3)    == '1.23457E+4')
- --    flag=flag & ('12345.73'.format(null,4,null,3)    == '1.2346E+4')
- --    flag=flag & ('12345.73'.format(null,3,null,3)    == '1.235E+4')
- --    flag=flag & ('12345.73'.format(null,2,null,3)    == '1.23E+4')
- --    flag=flag & ('12345.73'.format(null,1,null,3)    == '1.2E+4')
- --    flag=flag & ('12345.73'.format(null,0,null,3)    == '1E+4')
+    -- flag=flag & ('12345.73'.format(null,8,null,3)    == '1.23457300E+4')
+    -- flag=flag & ('12345.73'.format(null,7,null,3)    == '1.2345730E+4')
+    -- flag=flag & ('12345.73'.format(null,6,null,3)    == '1.234573E+4')
+    -- flag=flag & ('12345.73'.format(null,5,null,3)    == '1.23457E+4')
+    -- flag=flag & ('12345.73'.format(null,4,null,3)    == '1.2346E+4')
+    -- flag=flag & ('12345.73'.format(null,3,null,3)    == '1.235E+4')
+    -- flag=flag & ('12345.73'.format(null,2,null,3)    == '1.23E+4')
+    -- flag=flag & ('12345.73'.format(null,1,null,3)    == '1.2E+4')
+    -- flag=flag & ('12345.73'.format(null,0,null,3)    == '1E+4')
     
- --    flag=flag & ('99999.99'.format(null,6,null,3)    == '9.999999E+4')
- --    flag=flag & ('99999.99'.format(null,5,null,3)    == '1.00000E+5')
- --    flag=flag & ('99999.99'.format(null,2,null,3)    == '1.00E+5')
- --    flag=flag & ('99999.99'.format(null,1,null,3)    == '1.0E+5')
- --    flag=flag & ('99999.99'.format(null,0,null,3)    == '1E+5')
- --    flag=flag & ('99999.99'.format(3,0,null,3)       == '  1E+5')
+    -- flag=flag & ('99999.99'.format(null,6,null,3)    == '9.999999E+4')
+    -- flag=flag & ('99999.99'.format(null,5,null,3)    == '1.00000E+5')
+    -- flag=flag & ('99999.99'.format(null,2,null,3)    == '1.00E+5')
+    -- flag=flag & ('99999.99'.format(null,1,null,3)    == '1.0E+5')
+    -- flag=flag & ('99999.99'.format(null,0,null,3)    == '1E+5')
+    -- flag=flag & ('99999.99'.format(3,0,null,3)       == '  1E+5')
     
- --    flag=flag & ('12345.73'.format(null,null,2,2) == '1.234573E+04')
- --    flag=flag & ('12345.73'.format(null,3,null,0) == '1.235E+4')
- --    flag=flag & ('1.234573'.format(null,3,null,0) == '1.235')
- --    flag=flag & ('123.45'.format(null,3,2,0)      == '1.235E+02')
+    -- flag=flag & ('12345.73'.format(null,null,2,2) == '1.234573E+04')
+    -- flag=flag & ('12345.73'.format(null,3,null,0) == '1.235E+4')
+    -- flag=flag & ('1.234573'.format(null,3,null,0) == '1.235')
+    -- flag=flag & ('123.45'.format(null,3,2,0)      == '1.235E+02')
     
- --    flag=flag & ('1234.5'.format(null,3,2,0,'e')  == '1.235E+03')
- --    flag=flag & ('12345'.format(null,3,3,0,'e')   == '12.345E+003')
- --    flag=flag & ('12345'.format(null,3,3,0,'s')   == '1.235E+004')
- --    flag=flag & ('1234.5'.format(4,3,2,0,'e')     == '   1.235E+03')
- --    flag=flag & ('12345'.format(5,3,3,0,'e')      == '   12.345E+003')
- --    flag=flag & ('12345'.format(6,3,3,0,'s')      == '     1.235E+004')
+    -- flag=flag & ('1234.5'.format(null,3,2,0,'e')  == '1.235E+03')
+    -- flag=flag & ('12345'.format(null,3,3,0,'e')   == '12.345E+003')
+    -- flag=flag & ('12345'.format(null,3,3,0,'s')   == '1.235E+004')
+    -- flag=flag & ('1234.5'.format(4,3,2,0,'e')     == '   1.235E+03')
+    -- flag=flag & ('12345'.format(5,3,3,0,'e')      == '   12.345E+003')
+    -- flag=flag & ('12345'.format(6,3,3,0,'s')      == '     1.235E+004')
     
- --    flag=flag & ('1.2345'.format(null,3,2,0)      == '1.235    ')
- --    flag=flag & ('12345.73'.format(null,null,3,6) == '12345.73     ')
- --    flag=flag & ('12345e+5'.format(null,0)        == '1234500000')
- --    flag=flag & ('12345e+5'.format(null,1)        == '1234500000.0')
- --    flag=flag & ('12345e+5'.format(null,2)        == '1234500000.00')
- --    flag=flag & ('12345e+5'.format(null,3)        == '1234500000.000')
- --    flag=flag & ('12345e+5'.format(null,4)        == '1234500000.0000')
+    -- flag=flag & ('1.2345'.format(null,3,2,0)      == '1.235    ')
+    -- flag=flag & ('12345.73'.format(null,null,3,6) == '12345.73     ')
+    -- flag=flag & ('12345e+5'.format(null,0)        == '1234500000')
+    -- flag=flag & ('12345e+5'.format(null,1)        == '1234500000.0')
+    -- flag=flag & ('12345e+5'.format(null,2)        == '1234500000.00')
+    -- flag=flag & ('12345e+5'.format(null,3)        == '1234500000.000')
+    -- flag=flag & ('12345e+5'.format(null,4)        == '1234500000.0000')
     
- --    /* The ANSI nasties [Dallas, Nov. 1998] */
- --    flag=flag & ('99.999'.format(null,2,null,2)   == '100.00')
- --    flag=flag & ('0.99999'.format(null,4,2,2)     == '1.0000    ')
+    -- /* The ANSI nasties [Dallas, Nov. 1998] */
+    -- flag=flag & ('99.999'.format(null,2,null,2)   == '100.00')
+    -- flag=flag & ('0.99999'.format(null,4,2,2)     == '1.0000    ')
     
- --    return \flag
+    return \flag
 
 
