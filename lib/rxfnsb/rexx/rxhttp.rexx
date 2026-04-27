@@ -1,0 +1,429 @@
+options levelb
+
+namespace rxhttp expose httpclient http
+import rxfnsb
+import rxsocket
+
+httpclient: interface
+  *: factory
+    arg host = "127.0.0.1", port = 80, timeout = 30000
+
+  send: method = .string
+    arg verb = .string, path = .string, body = "", contentType = ""
+
+  post: method = .string
+    arg path = .string, body = .string, contentType = "application/octet-stream"
+
+  buildRequest: method = .string
+    arg verb = .string, path = .string, body = "", contentType = ""
+
+  extractBody: method = .string
+    arg response = .string
+
+  header: method = .string
+    arg name = .string
+
+  status: method = .int
+
+  httpStatus: method = .int
+
+  error: method = .string
+
+  lastHttp: method = .string
+
+  lastBody: method = .string
+
+http: class implements .httpclient
+  _host = .string
+  _port = .int
+  _timeout = .int
+  _status = .int
+  _http_status = .int
+  _error = .string
+  _last_http = .string
+  _last_header = .string
+  _last_body = .string
+
+  *: factory
+    arg host = "127.0.0.1", port = 80, timeout = 30000
+    _host = host
+    _port = port
+    _timeout = timeout
+    _status = 0
+    _http_status = 0
+    _error = ""
+    _last_http = ""
+    _last_header = ""
+    _last_body = ""
+    return
+
+  send: method = .string
+    arg verb = .string, path = .string, body = "", contentType = ""
+    _last_body = ""
+    _last_header = ""
+    _last_http = _send(buildRequest(verb, path, body, contentType))
+    if _status <> 0 then return ""
+    _last_body = extractBody(_last_http)
+    return _last_body
+
+  post: method = .string
+    arg path = .string, body = .string, contentType = "application/octet-stream"
+    return send("POST", path, body, contentType)
+
+  buildRequest: method = .string
+    arg verb = .string, path = .string, body = "", contentType = ""
+    crlf = "0d0a"x
+    if path = "" then path = "/"
+
+    requestText = verb || " " || path || " HTTP/1.1" || crlf || ,
+                  "Host: " || _host || ":" || _port || crlf || ,
+                  "User-Agent: cREXX-rxhttp/0" || crlf || ,
+                  "Accept: */*" || crlf || ,
+                  "Accept-Encoding: identity" || crlf || ,
+                  "Connection: close" || crlf
+
+    if contentType <> "" then requestText = requestText || "Content-Type: " || contentType || crlf
+    requestText = requestText || "Content-Length: " || _byte_length(body) || crlf || crlf || body
+    return requestText
+
+  extractBody: method = .string
+    arg response = .string
+    _last_http = response
+    _last_body = ""
+    _last_header = ""
+    _http_status = 0
+
+    bodyStart = _body_start(response)
+    if bodyStart = 0 then do
+      call _set_error -20, "HTTP response has no header/body boundary"
+      return ""
+    end
+
+    _last_header = left(response, bodyStart - 1)
+    body = substr(response, bodyStart)
+    _http_status = _parse_status(response)
+    if _http_status = 0 then do
+      call _set_error -21, "HTTP response status is invalid"
+      return body
+    end
+
+    if _is_chunked(_last_header) = 1 then do
+      body = _decode_chunked_body(body)
+      if _status <> 0 then do
+        _last_body = body
+        return body
+      end
+    end
+    else do
+      contentLength = _content_length(_last_header)
+      if contentLength >= 0 then do
+        if _byte_length(body) < contentLength then do
+          call _set_error -31, "HTTP response ended before Content-Length bytes"
+          _last_body = body
+          return body
+        end
+        body = _take_bytes(body, contentLength)
+      end
+    end
+
+    _last_body = body
+    if _http_status < 200 | _http_status >= 300 then do
+      call _set_error _http_status, "HTTP status " || _http_status
+      return body
+    end
+
+    call _set_error 0, ""
+    return body
+
+  header: method = .string
+    arg name = .string
+    return _header_value(_last_header, name)
+
+  status: method = .int
+    return _status
+
+  httpStatus: method = .int
+    return _http_status
+
+  error: method = .string
+    return _error
+
+  lastHttp: method = .string
+    return _last_http
+
+  lastBody: method = .string
+    return _last_body
+
+  _send: method = .string
+    arg request = .string
+    sock = socketcreate()
+    response = ""
+
+    if sock <= 0 then do
+      call _set_error -1, "socketcreate failed"
+      return ""
+    end
+
+    if sockettimeout(sock, _timeout) <> 0 then do
+      call _set_error -2, "sockettimeout failed: " || socketerror(sock)
+      drop_rc = socketclose(sock)
+      return ""
+    end
+
+    if socketconnect(sock, _host, _port) <> 0 then do
+      call _set_error -3, "socketconnect failed: " || socketerror(sock)
+      drop_rc = socketclose(sock)
+      return ""
+    end
+
+    sent = socketsend(sock, request)
+    if sent <> _byte_length(request) then do
+      call _set_error -4, "socketsend failed: " || socketerror(sock)
+      drop_rc = socketclose(sock)
+      return ""
+    end
+
+    response = _read_response(sock)
+    drop_rc = socketclose(sock)
+    return response
+
+  _read_response: method = .string
+    arg sock = .int
+    response = ""
+
+    do forever
+      chunk = socketrecv(sock, 8192)
+      state = socketstatus(sock)
+
+      if chunk <> "" then response = response || chunk
+
+      if _has_complete_body(response) = 1 then leave
+      if state = 1 then leave
+      if state = 2 then do
+        call _set_error -5, "socket receive timed out"
+        leave
+      end
+      if state = 3 then do
+        call _set_error -6, "socket receive would block"
+        leave
+      end
+      if state < 0 then do
+        call _set_error -7, "socket receive failed: " || socketerror(sock)
+        leave
+      end
+      if chunk = "" then leave
+    end
+
+    return response
+
+  _has_complete_body: method = .int
+    arg response = .string
+    bodyStart = _body_start(response)
+    if bodyStart = 0 then return 0
+
+    header = left(response, bodyStart - 1)
+    body = substr(response, bodyStart)
+    if _is_chunked(header) = 1 then return _chunked_complete(body)
+
+    contentLength = _content_length(header)
+    if contentLength < 0 then return 0
+    if _byte_length(body) >= contentLength then return 1
+    return 0
+
+  _body_start: method = .int
+    arg response = .string
+    p = pos("0d0a0d0a"x, response)
+    if p > 0 then return p + 4
+
+    p = pos("0a0a"x, response)
+    if p > 0 then return p + 2
+
+    return 0
+
+  _content_length: method = .int
+    arg header = .string
+    value = _header_value(header, "Content-Length")
+    if value = "" then return -1
+    if datatype(value, "W") = 0 then return -1
+    return value
+
+  _is_chunked: method = .int
+    arg header = .string
+    value = translate(_header_value(header, "Transfer-Encoding"))
+    if pos("CHUNKED", value) > 0 then return 1
+    return 0
+
+  _header_value: method = .string
+    arg header = .string, name = .string
+    wanted = translate(name)
+    p = 1
+
+    do while p <= length(header)
+      termLen = 2
+      lineEnd = pos("0d0a"x, header, p)
+      if lineEnd = 0 then do
+        termLen = 1
+        lineEnd = pos("0a"x, header, p)
+      end
+      if lineEnd = 0 then lineEnd = length(header) + 1
+
+      line = substr(header, p, lineEnd - p)
+      colon = pos(":", line)
+      if colon > 0 then do
+        key = translate(strip(left(line, colon - 1)))
+        if key = wanted then return strip(substr(line, colon + 1))
+      end
+
+      if lineEnd > length(header) then leave
+      p = lineEnd + termLen
+    end
+
+    return ""
+
+  _decode_chunked_body: method = .string
+    arg body = .string
+    crlf = "0d0a"x
+    out = ""
+    p = 1
+
+    do while p <= length(body)
+      termLen = 2
+      lineEnd = pos(crlf, body, p)
+      if lineEnd = 0 then do
+        termLen = 1
+        lineEnd = pos("0a"x, body, p)
+      end
+      if lineEnd = 0 then do
+        call _set_error -30, "Chunked HTTP response has an incomplete chunk header"
+        return out
+      end
+
+      sizeText = strip(substr(body, p, lineEnd - p))
+      semi = pos(";", sizeText)
+      if semi > 0 then sizeText = strip(left(sizeText, semi - 1))
+      size = _hex_to_int(sizeText)
+      if size < 0 then do
+        call _set_error -30, "Chunked HTTP response has an invalid chunk size"
+        return out
+      end
+
+      p = lineEnd + termLen
+      if size = 0 then do
+        call _set_error 0, ""
+        return out
+      end
+
+      chunk = _take_bytes(substr(body, p), size)
+      if _byte_length(chunk) <> size then do
+        call _set_error -30, "Chunked HTTP response ended inside a chunk"
+        return out
+      end
+
+      out = out || chunk
+      p = p + length(chunk)
+      if substr(body, p, 2) = crlf then p = p + 2
+      else if substr(body, p, 1) = "0a"x then p = p + 1
+      else do
+        call _set_error -30, "Chunked HTTP response is missing a chunk terminator"
+        return out
+      end
+    end
+
+    call _set_error -30, "Chunked HTTP response is missing the final chunk"
+    return out
+
+  _chunked_complete: method = .int
+    arg body = .string
+    crlf = "0d0a"x
+    p = 1
+
+    do while p <= length(body)
+      termLen = 2
+      lineEnd = pos(crlf, body, p)
+      if lineEnd = 0 then do
+        termLen = 1
+        lineEnd = pos("0a"x, body, p)
+      end
+      if lineEnd = 0 then return 0
+
+      sizeText = strip(substr(body, p, lineEnd - p))
+      semi = pos(";", sizeText)
+      if semi > 0 then sizeText = strip(left(sizeText, semi - 1))
+      size = _hex_to_int(sizeText)
+      if size < 0 then return 0
+
+      p = lineEnd + termLen
+      if size = 0 then return 1
+
+      chunk = _take_bytes(substr(body, p), size)
+      if _byte_length(chunk) <> size then return 0
+      p = p + length(chunk)
+      if substr(body, p, 2) = crlf then p = p + 2
+      else if substr(body, p, 1) = "0a"x then p = p + 1
+      else return 0
+    end
+
+    return 0
+
+  _byte_length: method = .int
+    arg text = .string
+    bytes = 0
+    do i = 1 to length(text)
+      code = c2d(substr(text, i, 1))
+      if code < 128 then bytes = bytes + 1
+      else if code < 2048 then bytes = bytes + 2
+      else if code < 65536 then bytes = bytes + 3
+      else bytes = bytes + 4
+    end
+    return bytes
+
+  _take_bytes: method = .string
+    arg text = .string, count = .int
+    bytes = 0
+    out = ""
+    do i = 1 to length(text)
+      c = substr(text, i, 1)
+      code = c2d(c)
+      if code < 128 then step = 1
+      else if code < 2048 then step = 2
+      else if code < 65536 then step = 3
+      else step = 4
+      if bytes + step > count then leave
+      out = out || c
+      bytes = bytes + step
+      if bytes = count then leave
+    end
+    return out
+
+  _hex_to_int: method = .int
+    arg text = .string
+    if text = "" then return -1
+    value = 0
+    do i = 1 to length(text)
+      digit = _hex_digit_value(substr(text, i, 1))
+      if digit < 0 then return -1
+      value = value * 16 + digit
+    end
+    return value
+
+  _hex_digit_value: method = .int
+    arg c = .string
+    p = pos(translate(c), "0123456789ABCDEF")
+    if p = 0 then return -1
+    return p - 1
+
+  _parse_status: method = .int
+    arg response = .string
+    lineEnd = pos("0d0a"x, response)
+    if lineEnd = 0 then lineEnd = pos("0a"x, response)
+    if lineEnd = 0 then return 0
+
+    statusText = word(left(response, lineEnd - 1), 2)
+    if datatype(statusText, "W") = 0 then return 0
+    return statusText
+
+  _set_error: method
+    arg code = .int, message = .string
+    _status = code
+    _error = message
+    return

@@ -59,6 +59,7 @@ if failures <> 0 then do
   exit 1
 end
 
+say "PASS: rxjson helpers"
 exit 0
 
 check_int: procedure = .int

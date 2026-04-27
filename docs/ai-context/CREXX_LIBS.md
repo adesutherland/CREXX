@@ -4,6 +4,7 @@ The `crexx` toolchain implements its Standard Libraries and Built-In Functions (
 
 Libraries are housed in the `lib/` directory, which is divided into domains like:
 - `lib/rxfnsb/` (Classic REXX Built-In Functions for Level B)
+- `lib/rxfnsg/` (Level G class-shaped general-purpose interfaces)
 - `lib/rxfnsc/` (Level C standard library functions)
 - `lib/rxmath/` (Math extensions)
 - `lib/plugins/` (General-purpose extensions like `fileio`, `regex`, `strings`, `socket`, etc.)
@@ -50,6 +51,31 @@ Its core value is deployment stability: VM opcodes use platform socket APIs
 directly, avoiding dynamic `.rxplugin` discovery and third-party dylib/DLL
 dependencies. For API details, status codes, and examples, see
 `lib/rxfnsb/rexx/rxsocket.md`.
+
+`lib/rxfnsb/rexx/rxhttp.rexx` provides a reusable Level B plain-HTTP client on
+top of `rxsocket`. It builds request text with UTF-8 byte-counted
+`Content-Length`, reads raw socket responses, decodes `Content-Length` and
+HTTP/1.1 chunked bodies, preserves non-2xx response bodies for diagnostics, and
+exposes the last raw response/body through the `httpclient` interface. It sends
+`Accept-Encoding: identity` and `Connection: close`; TLS and compressed content
+remain out of scope. See `lib/rxfnsb/rexx/rxhttp.md`.
+
+`lib/rxfnsg/rexx/llm.rexx` contains the first Level G LLM integration surface.
+Level G is layered on the Level B foundation: the module is `options levelg`,
+builds into `rxfnsg.rxbin`, and imports the Level B `rxfnsb`, `rxjson`, and
+`rxhttp` modules rather than duplicating their work. It exposes a
+class-shaped interface in the `rxfnsg` namespace:
+
+- `llm`: provider-selecting interface
+- `ollama`: concrete local Ollama implementation over plain HTTP
+
+The first provider posts JSON to a local Ollama `/api/generate` endpoint with
+`stream:false`, using `rxhttp` for HTTP transport and `rxjson` for
+request/response JSON. It keeps the last raw HTTP response plus decoded JSON
+body available for diagnostics. TLS and remote authenticated providers remain
+out of scope until the core SSL/TLS layer exists. See `lib/rxfnsg/rexx/llm.md`
+and
+`demos/llm/ollama_generate.rexx`.
 
 ## 1. BIFs Implemented in cREXX (`lib/rxfnsb/rexx/`)
 
