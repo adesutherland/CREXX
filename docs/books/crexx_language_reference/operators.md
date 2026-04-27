@@ -47,7 +47,7 @@ The `OPTIONS {NUMERIC_CLASSIC|NUMERIC_COMMON}` setting determines which symbols 
 
 ### Strict Operators renamed to String Comparison Operators
 
-CREXX Level B refers to what other REXX dialects call strict comparison (e.g., ==, >>) as string comparison.
+\crexx{} Level B refers to what other \rexx{} dialects call strict comparison (e.g., ==, >>) as string comparison.
 
 This terminology is used intentionally to make the operator's semantics explicit within a typed language. 
 The core principle of a string comparison is that it unconditionally promotes both of its operands to the 
@@ -57,7 +57,7 @@ which clarifies its behaviour and purpose.
 
 ### Comparison Operator Categories
 
-CREXX provides a comprehensive set of comparison operators that fall into four categories based on two distinctions: **loose vs. string** and **case-sensitive vs. case-insensitive**.
+\crexx{} provides a comprehensive set of comparison operators that fall into four categories based on two distinctions: **loose vs. string** and **case-sensitive vs. case-insensitive**.
 
 * **Loose** operators (like `=`) perform padding to make strings of unequal length comparable and can be numeric-aware.
 * **String** operators (like `==`) require strings to be identical in length and always operate on the string representation of terms.
@@ -68,7 +68,7 @@ The complete set of equality operators is summarised below:
 
 | Operator  | Type       | Case-Sensitive?   | Padding?   | Description                                        |
 |:----------|:-----------|:------------------|:-----------|:---------------------------------------------------|
-| `=`       | Loose      | Yes               | **Yes**    | Standard REXX equality (numeric or padded string). |
+| `=`       | Loose      | Yes               | **Yes**    | Standard Rexx equality (numeric or padded string). |
 | `==`      | **String** | Yes               | No         | **String** character-for-character equality.       |
 | `~~`      | **Loose**  | **No**            | **Yes**    | **Case-insensitive, padded string equality.**      |
 | `~~~`     | **String** | **No**            | No         | **String, case-insensitive equality.**             |
@@ -84,7 +84,7 @@ Otherwise, they perform a character comparison where the shorter string is padde
 
 > **\crexx{} Level B Unicode String Comparison**
 >
-> To ensure accuracy with Unicode, CREXX Level B enhances the standard string comparison. Before the padding and 
+> To ensure accuracy with Unicode, \crexx{} Level B enhances the standard string comparison. Before the padding and 
 > comparison steps, both strings are first brought into a consistent representation by applying Unicode Normalization 
 > Form C (NFC). 
 
@@ -104,8 +104,8 @@ Table: Standard Comparison Operators {#tbl:id}
 
 ### String Comparison (Case-Sensitive) a.k.a. Strict Comparison
 
-These operators perform what is known in other REXX dialects as a **strict** comparison. 
-CREXX refers to them as **string comparisons** to emphasize their semantics: they *always* operate on the string 
+These operators perform what is known in other rexx dialects as a **strict** comparison. 
+\crexx{} refers to them as **string comparisons** to emphasize their semantics: they *always* operate on the string 
 representation of the terms.
 
 Before the comparison, both operands are **promoted to the `.string` type**. This forces a character-by-character comparison 

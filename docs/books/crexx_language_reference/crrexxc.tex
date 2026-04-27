@@ -1,7 +1,8 @@
-\chapter{Built-in functions for \crexx{} strings}\label{refbmeth}
-\index{R\textsc{exx},class/functions of}
- This section describes the set of functions defined for \crexx{}
-strings These are called \emph{built-in
+\chapter{Built-in functions for the .rexx class}
+
+This section describes the set of methods defined for the \rexx{} class,
+a container for a \crexx{} string which enables object-oriented
+manipulation. These methods implement the traditional \emph{built-in
 functions}, and include character manipulation, word manipulation,
 conversion, and arithmetic functions.
  
@@ -10,15 +11,10 @@ class (for example, to implement the \crexx{} operators or to provide
 constructors with primitive arguments), but these are not part of the
 \crexx{} language.
 
-Functions of the \keyword{RexxStream}, \keyword{RexxTime} and
-\keyword{RexxDate} classes are, while not strictly part of the
-\keyword{Rexx} string class, listed here, followed by a suitable
-referral to the proper class documentation.
-\footnote{
-\emph{Details of the functions provided in the reference implementation are
-included in  Appendix C %% (see page \pageref{refappc}
-) .}
-}
+Use of these functions needs import of the rxfnsb pachage:
+\code{import rexx}.
+\rexx{} strings must be constructed with a \code{var =
+  .rexx('astring')} factory constructor.
 
 \textbf{General notes on the built-in functions:}
 \begin{enumerate}
@@ -27,7 +23,7 @@ is referred to by the name \emph{string} in the descriptions of the
 functions.  For example, if the \textbf{word} method were invoked using
 the term:
 \begin{lstlisting}
-"Three word phrase".word(2)
+v=.rexx("Three word phrase"); v.word(2)
 \end{lstlisting}
 then in the description of \textbf{word} the name
 \emph{string} refers to the string "\textbf{Three word
@@ -75,12 +71,12 @@ if either of these conditions is not met.
 the length of \emph{info}.
  \textbf{Examples:}
 \begin{lstlisting}
-'Print'.abbrev('Pri')   == 1
-'PRINT'.abbrev('Pri')   == 0
-'PRINT'.abbrev('PRI',4) == 0
-'PRINT'.abbrev('PRY')   == 0
-'PRINT'.abbrev('')      == 1
-'PRINT'.abbrev('',1)    == 0
+v=.rexx('Print'); v.abbrev('Pri')   == 1
+w=.rexx('PRINT'); w.abbrev('Pri')   == 0
+w=.rexx('PRINT'); w.abbrev('PRI',4) == 0
+w=.rexx('PRINT'); w.abbrev('PRY')   == 0
+w=.rexx('PRINT'); w.abbrev('')      == 1
+w=.rexx('PRINT'); w.abbrev('',1)    == 0
 \end{lstlisting}
 \textbf{Note: }A null string will always match if a length of 0 (or the default)
 is used.
@@ -89,8 +85,8 @@ This allows a default keyword to be selected automatically if desired.
 \begin{lstlisting}
 say 'Enter option:';  option=ask
 select  /* keyword1 is to be the default */
-  when 'keyword1'.abbrev(option) then ...
-  when 'keyword2'.abbrev(option) then ...
+  v=.rexx('keyword1'); when v.abbrev(option) then ...
+  w=.rexx('keyword2'); when w.abbrev(option) then ...
      ...
   otherwise ...
   end
@@ -110,10 +106,10 @@ Scientific notation is used, if necessary.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'12.3'.abs              == 12.3
-' -0.307'.abs           == 0.307
-'123.45E+16'.abs        == 1.2345E+18
-'- 1234567.7654321'.abs == 1234567.7654321
+v=.rexx('12.3'); v.abs              == 12.3
+w=.rexx(' -0.307'); w.abs           == 0.307
+x=.rexx('123.45E+16'); x.abs        == 1.2345E+18
+y=.rexx('- 1234567.7654321'); y.abs == 1234567.7654321
 \end{lstlisting}
 
 \section{b2d([n{]})}\label{refb2x}
@@ -135,11 +131,11 @@ conversion to make a total that is a multiple of four.
 
 \textbf{Examples:}
 \begin{lstlisting}
-'01110'.b2d == 14 
-'10000001'.b2d == 129 
-'111110000001'.b2d == 3969 
-'1111111110000001'.b2d == 65409 
-'1100011011110000'.b2d == 50928 
+v=.rexx('01110'); v.b2d == 14 
+w=.rexx('10000001'); w.b2d == 129 
+x=.rexx('111110000001'); x.b2d == 3969 
+y=.rexx('1111111110000001'); y.b2d == 65409 
+z=.rexx('1100011011110000'); z.b2d == 50928 
 \end{lstlisting}
 If n is specified, string is taken as a signed number expressed in n binary characters. If the most significant (left-most) bit is zero then the number is positive; otherwise it is a negative number in twos-complement form. In both cases it is converted to a NetRexx number which may, therefore, be negative. If n is 0, 0 is always returned.
 
@@ -147,13 +143,13 @@ If necessary, string is padded on the left with '0' characters (note, not “sig
 
 \textbf{Examples:}
 \begin{lstlisting}
-'10000001'.b2d(8) == -127 
-'10000001'.b2d(16) == 129 
-'1111000010000001'.b2d(16) == -3967 
-'1111000010000001'.b2d(12) == 129 
-'1111000010000001'.b2d(8) == -127 
-'1111000010000001'.b2d(4) == 1 
-'0000000000110001'.b2d(0) == 0
+v=.rexx('10000001'); v.b2d(8) == -127 
+v=.rexx('10000001'); v.b2d(16) == 129 
+w=.rexx('1111000010000001'); w.b2d(16) == -3967 
+w=.rexx('1111000010000001'); w.b2d(12) == 129 
+w=.rexx('1111000010000001'); w.b2d(8) == -127 
+w=.rexx('1111000010000001'); w.b2d(4) == 1 
+x=.rexx('0000000000110001'); x.b2d(0) == 0
 \end{lstlisting} 
 \section{b2x()}\label{refb2x}
 \index{B2X method}
@@ -173,11 +169,11 @@ conversion to make a total that is a multiple of four.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'11000011'.b2x  == 'C3'
-'10111'.b2x     == '17'
-'0101'.b2x      == '5'
-'101'.b2x       == '5'
-'111110000'.b2x == '1F0'
+v=.rexx('11000011'); v.b2x  == 'C3'
+w=.rexx('10111'); w.b2x     == '17'
+x=.rexx('0101'); x.b2x      == '5'
+y=.rexx('101'); y.b2x       == '5'
+z=.rexx('111110000'); z.b2x == '1F0'
 \end{lstlisting}
   
 \section{center(length [,pad{]})}\label{refcenter}
@@ -202,10 +198,10 @@ end loses or gains one more character than the left hand end.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'ABC'.centre(7)          == '  ABC  '
-'ABC'.center(8,'-')      == '--ABC---'
-'The blue sky'.centre(8) == 'e blue s'
-'The blue sky'.center(7) == 'e blue '
+v=.rexx('ABC'); v.centre(7)          == '  ABC  '
+v=.rexx('ABC'); v.center(8,'-')      == '--ABC---'
+w=.rexx('The blue sky'); w.centre(8) == 'e blue s'
+w=.rexx('The blue sky'); w.center(7) == 'e blue '
 \end{lstlisting}
 \textbf{Note: }This method may be called either \textbf{centre} or \textbf{center},
 which avoids difficulties due to the difference between the British and
@@ -230,11 +226,11 @@ If the \emph{needle} is the null string, the result is a copy of
  
 \textbf{Examples:}
 \begin{lstlisting}
-'elephant'.changestr('e','X')    == 'XlXphant'
-'elephant'.changestr('ph','X')   == 'eleXant'
-'elephant'.changestr('ph','hph') == 'elehphant'
-'elephant'.changestr('e','')     == 'lphant'
-'elephant'.changestr('','!!')    == 'elephant'
+v=.rexx('elephant'); v.changestr('e','X')    == 'XlXphant'
+v=.rexx('elephant'); v.changestr('ph','X')   == 'eleXant'
+v=.rexx('elephant'); v.changestr('ph','hph') == 'elehphant'
+v=.rexx('elephant'); v.changestr('e','')     == 'lphant'
+v=.rexx('elephant'); v.changestr('','!!')    == 'elephant'
 \end{lstlisting}
 %%  The  \textbf{countstr} method (see page \pageref{refcoustr})  can be used to
 %% count the number of changes that could be made to a string in this
@@ -266,12 +262,12 @@ The default \emph{pad} character is a blank.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'abc'.compare('abc')      == 0
-'abc'.compare('ak')       == 2
-'ab '.compare('ab')       == 0
-'ab '.compare('ab',' ')   == 0
-'ab '.compare('ab','x')   == 3
-'ab-- '.compare('ab','-') == 5
+v=.rexx('abc'); v.compare('abc')      == 0
+v=.rexx('abc'); v.compare('ak')       == 2
+w=.rexx('ab '); w.compare('ab')       == 0
+w=.rexx('ab '); w.compare('ab',' ')   == 0
+w=.rexx('ab '); w.compare('ab','x')   == 3
+x=.rexx('ab-- '); x.compare('ab','-') == 5
 \end{lstlisting}
 \section{copies(n)}\label{refcopies}
 \index{COPIES method,}
@@ -284,9 +280,9 @@ returns \emph{n} directly concatenated copies of
  
 \textbf{Examples:}
 \begin{lstlisting}
-'abc'.copies(3) == 'abcabcabc'
-'abc'.copies(0) == ''
-''.copies(2)    == ''
+v=.rexx('abc'); v.copies(3) == 'abcabcabc'
+v=.rexx('abc'); v.copies(0) == ''
+w=.rexx(''); w.copies(2)    == ''
 \end{lstlisting}
 % \section{copyindexed(sub)}\label{refcopyind}
 % \index{COPYINDEXED method,}
@@ -340,9 +336,9 @@ If the \emph{needle} is the null string, \textbf{0} is returned.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'elephant'.countstr('e')  == '2'
-'elephant'.countstr('ph') == '1'
-'elephant'.countstr('')   == '0'
+v=.rexx('elephant'); v.countstr('e')  == '2'
+v=.rexx('elephant'); v.countstr('ph') == '1'
+v=.rexx('elephant'); v.countstr('')   == '0'
 \end{lstlisting}
  The  \textbf{changestr} method %% (see page \pageref{refchastr})
  can be used to
@@ -364,11 +360,11 @@ insignificant leading zeros, or decimal part.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'M'.c2d  == '77'  -- ASCII or Unicode
-'🔥'.c2d == '128293'
-'7'.c2d  == '247' -- EBCDIC
-'\textbackslash{}r'.c2d == '13'  -- ASCII or Unicode
-'\textbackslash{}0'.c2d == '0'
+v=.rexx('M'); v.c2d  == '77'  -- ASCII or Unicode
+w=.rexx('🔥'); w.c2d == '128293'
+x=.rexx('7'); x.c2d  == '247' -- EBCDIC
+y=.rexx('\textbackslash{}r'); y.c2d == '13'  -- ASCII or Unicode
+z=.rexx('\textbackslash{}0'); z.c2d == '0'
 \end{lstlisting}
  The  \textbf{c2x} method %% (see page \pageref{refc2x})
  can be used to
@@ -391,10 +387,10 @@ Insignificant leading zeros are removed.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'M'.c2x  == '4D' -- ASCII or Unicode
-'7'.c2x  == 'F7' -- EBCDIC
-'\textbackslash{}r'.c2x == 'D'  -- ASCII or Unicode
-'\textbackslash{}0'.c2x == '0'
+v=.rexx('M'); v.c2x  == '4D' -- ASCII or Unicode
+w=.rexx('7'); w.c2x  == 'F7' -- EBCDIC
+x=.rexx('\textbackslash{}r'); x.c2x == 'D'  -- ASCII or Unicode
+y=.rexx('\textbackslash{}0'); y.c2x == '0'
 \end{lstlisting}
  The  \textbf{c2d} method %% (see page \pageref{refc2d})
  can be used to
@@ -468,16 +464,16 @@ characters from the ranges "a-f", "A-F", and "0-9".
  
 \textbf{Examples:}
 \begin{lstlisting}
-'101'.datatype('B')    == 1
-'12.3'.datatype('D')   == 0
-'12.3'.datatype('N')   == 1
-'12.3'.datatype('W')   == 0
-'LaArca'.datatype('M') == 1
-''.datatype('M')       == 0
-'Llanes'.datatype('L') == 0
-'3 d'.datatype('s')    == 0
-'BCd3'.datatype('X')   == 1
-'BCgd3'.datatype('X')  == 0
+v=.rexx('101'); v.datatype('B')    == 1
+w=.rexx('12.3'); w.datatype('D')   == 0
+w=.rexx('12.3'); w.datatype('N')   == 1
+w=.rexx('12.3'); w.datatype('W')   == 0
+x=.rexx('LaArca'); x.datatype('M') == 1
+y=.rexx(''); y.datatype('M')       == 0
+z=.rexx('Llanes'); z.datatype('L') == 0
+v1=.rexx('3 d'); v1.datatype('s')    == 0
+v2=.rexx('BCd3'); v2.datatype('X')   == 1
+v3=.rexx('BCgd3'); v3.datatype('X')  == 0
 \end{lstlisting}
 \textbf{Note: }The \textbf{datatype} method tests the meaning of the characters
 in a string, independent of the encoding of those characters.  Extra
@@ -503,9 +499,9 @@ length of \emph{string}, the string is returned unchanged.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'abcd'.delstr(3)    == 'ab'
-'abcde'.delstr(3,2) == 'abe'
-'abcde'.delstr(6)   == 'abcde'
+v=.rexx('abcd'); v.delstr(3)    == 'ab'
+w=.rexx('abcde'); w.delstr(3,2) == 'abe'
+w=.rexx('abcde'); w.delstr(6)   == 'abcde'
 \end{lstlisting}
 \section{delword(n [,length])}\label{refdelword}
 \index{DELWORD method,}
@@ -527,9 +523,9 @@ involved, but none of the blanks preceding the first word involved.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'Now is the  time'.delword(2,2) == 'Now time'
-'Now is the time '.delword(3)   == 'Now is '
-'Now  time'.delword(5)          == 'Now  time'
+v=.rexx('Now is the  time'); v.delword(2,2) == 'Now time'
+w=.rexx('Now is the time '); w.delword(3)   == 'Now is '
+x=.rexx('Now  time'); x.delword(5)          == 'Now  time'
 \end{lstlisting}
 
 \index{D2B method,}
@@ -557,18 +553,18 @@ whole number.
 
  \textbf{Examples:}
 \begin{lstlisting}
-'0'.d2b == 0 
-'9'.d2b == 1001 
-'19'.d2b == 10011 
-'129'.d2b == 10000001 
-'129'.d2b(1) == 1 
-'129'.d2b(8) == 10000001 
-'127'.d2b(12) == 000001111111 
-'129'.d2b(16) == 0000000010000001 
-'257'.d2b(8) == 00000001 
-'-127'.d2b(8) == 10000001 
-'-127'.d2b(16) == 1111111110000001 
-'12'.d2b(0) == 
+v=.rexx('0'); v.d2b == 0 
+w=.rexx('9'); w.d2b == 1001 
+x=.rexx('19'); x.d2b == 10011 
+y=.rexx('129'); y.d2b == 10000001 
+y=.rexx('129'); y.d2b(1) == 1 
+y=.rexx('129'); y.d2b(8) == 10000001 
+z=.rexx('127'); z.d2b(12) == 000001111111 
+y=.rexx('129'); y.d2b(16) == 0000000010000001 
+v1=.rexx('257'); v1.d2b(8) == 00000001 
+v2=.rexx('-127'); v2.d2b(8) == 10000001 
+v2=.rexx('-127'); v2.d2b(16) == 1111111110000001 
+v3=.rexx('12'); v3.d2b(0) == 
 \end{lstlisting}
 
 \index{D2C method,}
@@ -594,13 +590,13 @@ If \emph{length} is specified under Unicode semantics, it may be \textbf{0} or
  
 \textbf{Examples:}
 \begin{lstlisting}
-'77'.d2c  == 'M' -- ASCII or Unicode
-'77'.d2c(1) == 'M'
-'12'.d2c(0) == ''
-'128293'.d2c == '🔥'
-'+77'.d2c == 'M' -- ASCII or Unicode
-'247'.d2c == '7' -- EBCDIC
-'0'.d2c   == '\textbackslash 0'
+v=.rexx('77'); v.d2c  == 'M' -- ASCII or Unicode
+v=.rexx('77'); v.d2c(1) == 'M'
+w=.rexx('12'); w.d2c(0) == ''
+x=.rexx('128293'); x.d2c == '🔥'
+y=.rexx('+77'); y.d2c == 'M' -- ASCII or Unicode
+z=.rexx('247'); z.d2c == '7' -- EBCDIC
+v1=.rexx('0'); v1.d2c   == '\textbackslash 0'
 \end{lstlisting}
 \section{d2x([n])}\label{refd2x}
 \index{D2X method,}
@@ -630,16 +626,16 @@ truncated on the left.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'9'.d2x       == '9'
-'129'.d2x     == '81'
-'129'.d2x(1)  == '1'
-'129'.d2x(2)  == '81'
-'127'.d2x(3)  == '07F'
-'129'.d2x(4)  == '0081'
-'257'.d2x(2)  == '01'
-'-127'.d2x(2) == '81'
-'-127'.d2x(4) == 'FF81'
-'12'.d2x(0)   == ''
+v=.rexx('9'); v.d2x       == '9'
+w=.rexx('129'); w.d2x     == '81'
+w=.rexx('129'); w.d2x(1)  == '1'
+w=.rexx('129'); w.d2x(2)  == '81'
+x=.rexx('127'); x.d2x(3)  == '07F'
+w=.rexx('129'); w.d2x(4)  == '0081'
+y=.rexx('257'); y.d2x(2)  == '01'
+z=.rexx('-127'); z.d2x(2) == '81'
+z=.rexx('-127'); z.d2x(4) == 'FF81'
+v1=.rexx('12'); v1.d2x(0)   == ''
 \end{lstlisting}
 
 \section{exists(index)}\label{refexists}
@@ -707,14 +703,14 @@ decimal part or decimal point).
  
 \textbf{Examples:}
 \begin{lstlisting}
-' - 12.73'.format         == '-12.73'
-'0.000'.format            == '0'
-'3'.format(4)             == '   3'
-'1.73'.format(4,0)        == '   2'
-'1.73'.format(4,3)        == '   1.730'
-'-.76'.format(4,1)        == '  -0.8'
-'3.03'.format(4)          == '   3.03'
-' - 12.73'.format(null,4) == '-12.7300'
+v=.rexx(' - 12.73'); v.format         == '-12.73'
+w=.rexx('0.000'); w.format            == '0'
+x=.rexx('3'); x.format(4)             == '   3'
+y=.rexx('1.73'); y.format(4,0)        == '   2'
+y=.rexx('1.73'); y.format(4,3)        == '   1.730'
+z=.rexx('-.76'); z.format(4,1)        == '  -0.8'
+v1=.rexx('3.03'); v1.format(4)          == '   3.03'
+v=.rexx(' - 12.73'); v.format(null,4) == '-12.7300'
 \end{lstlisting}
  
 Further arguments may be passed to the \keyword{format} method to control
@@ -765,14 +761,14 @@ needed for the integer part of the result (\emph{before}).
  
 \textbf{Examples:}
 \begin{lstlisting}
-'12345.73'.format(null,null,2,2) == '1.234573E+04'
-'12345.73'.format(null,3,null,0) == '1.235E+4'
-'1.234573'.format(null,3,null,0) == '1.235'
-'123.45'.format(null,3,2,0)      == '1.235E+02'
-'1234.5'.format(null,3,2,0,'e')  == '1.235E+03'
-'1.2345'.format(null,3,2,0)      == '1.235    '
-'12345.73'.format(null,null,3,6) == '12345.73     '
-'12345e+5'.format(null,3)        == '1234500000.000'
+v=.rexx('12345.73'); v.format(null,null,2,2) == '1.234573E+04'
+v=.rexx('12345.73'); v.format(null,3,null,0) == '1.235E+4'
+w=.rexx('1.234573'); w.format(null,3,null,0) == '1.235'
+x=.rexx('123.45'); x.format(null,3,2,0)      == '1.235E+02'
+y=.rexx('1234.5'); y.format(null,3,2,0,'e')  == '1.235E+03'
+z=.rexx('1.2345'); z.format(null,3,2,0)      == '1.235    '
+v=.rexx('12345.73'); v.format(null,null,3,6) == '12345.73     '
+v1=.rexx('12345e+5'); v1.format(null,3)        == '1234500000.000'
 \end{lstlisting}
  \textbf{Implementation minimum:} If exponents are supported in an
 implementation, then they must be supported for exponents whose
@@ -798,11 +794,11 @@ a blank.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'abc'.insert('123')         == '123abc'
-'abcdef'.insert(' ',3)      == 'abc def'
-'abc'.insert('123',5,6)     == 'abc  123   '
-'abc'.insert('123',5,6,'+') == 'abc++123+++'
-'abc'.insert('123',0,5,'-') == '123--abc'
+v=.rexx('abc'); v.insert('123')         == '123abc'
+w=.rexx('abcdef'); w.insert(' ',3)      == 'abc def'
+v=.rexx('abc'); v.insert('123',5,6)     == 'abc  123   '
+v=.rexx('abc'); v.insert('123',5,6,'+') == 'abc++123+++'
+v=.rexx('abc'); v.insert('123',0,5,'-') == '123--abc'
 \end{lstlisting}
 
 \index{LASTPOS method,}
@@ -825,11 +821,11 @@ value or if not specified (with a minimum default value of one).
  
 \textbf{Examples:}
 \begin{lstlisting}
-'abc def ghi'.lastpos(' ')   == 8
-'abc def ghi'.lastpos(' ',7) == 4
-'abcdefghi'.lastpos(' ')     == 0
-'abcdefghi'.lastpos('cd')    == 3
-''.lastpos('?')              == 0
+v=.rexx('abc def ghi'); v.lastpos(' ')   == 8
+v=.rexx('abc def ghi'); v.lastpos(' ',7) == 4
+w=.rexx('abcdefghi'); w.lastpos(' ')     == 0
+w=.rexx('abcdefghi'); w.lastpos('cd')    == 3
+x=.rexx(''); x.lastpos('?')              == 0
 \end{lstlisting}
 
 \index{LEFT method,}
@@ -848,9 +844,9 @@ This method is exactly equivalent to
  
 \textbf{Examples:}
 \begin{lstlisting}
-'abc d'.left(8)     == 'abc d   '
-'abc d'.left(8,'.') == 'abc d...'
-'abc defg'.left(6)  == 'abc de'
+v=.rexx('abc d'); v.left(8)     == 'abc d   '
+v=.rexx('abc d'); v.left(8,'.') == 'abc d...'
+w=.rexx('abc defg'); w.left(6)  == 'abc de'
 \end{lstlisting}
 
 \index{LENGTH,method}
@@ -862,8 +858,8 @@ returns the number of characters in \emph{string}.
 
 \textbf{Examples:}
 \begin{lstlisting}
-'abcdefgh'.length == 8
-''.length         == 0
+v=.rexx('abcdefgh'); v.length == 8
+w=.rexx(''); w.length         == 0
 \end{lstlisting}
 
 \section{linein(name,string)} reads a line from the stream named by the first argument,
@@ -895,11 +891,11 @@ string (including the \emph{n}\emph{th} character) is assumed.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'SumA'.lower      == 'suma'
-'SumA'.lower(2)   == 'Suma'
-'SuMB'.lower(1,1) == 'suMB'
-'SUMB'.lower(2,2) == 'SumB'
-''.lower          == ''
+v=.rexx('SumA'); v.lower      == 'suma'
+v=.rexx('SumA'); v.lower(2)   == 'Suma'
+w=.rexx('SuMB'); w.lower(1,1) == 'suMB'
+x=.rexx('SUMB'); x.lower(2,2) == 'SumB'
+y=.rexx(''); y.lower          == ''
 \end{lstlisting}
 
 \section{max(number)}\label{refmax}
@@ -925,12 +921,12 @@ Scientific notation is used, if necessary.
 \textbf{Examples:}
 \begin{lstlisting}
 0.max(1)          ==1
-'-1'.max(1)       ==1
-'+1'.max(-1)      ==1
-'1.0'.max(1.00)   =='1.0'
-'1.00'.max(1.0)   =='1.00'
-'123456700000'.max(1234567E+5)   == '123456700000'
-'1234567E+5'.max('123456700000') == '1.234567E+11'
+v=.rexx('-1'); v.max(1)       ==1
+w=.rexx('+1'); w.max(-1)      ==1
+x=.rexx('1.0'); x.max(1.00)   =='1.0'
+y=.rexx('1.00'); y.max(1.0)   =='1.00'
+z=.rexx('123456700000'); z.max(1234567E+5)   == '123456700000'
+v1=.rexx('1234567E+5'); v1.max('123456700000') == '1.234567E+11'
 \end{lstlisting}
 
 \section{min(number)}\label{refmin}
@@ -956,12 +952,12 @@ Scientific notation is used, if necessary.
 \textbf{Examples:}
 \begin{lstlisting}
 0.min(1)          ==0
-'-1'.min(1)       =='-1'
-'+1'.min(-1)      =='-1'
-'1.0'.min(1.00)   =='1.0'
-'1.00'.min(1.0)   =='1.00'
-'123456700000'.min(1234567E+5)   == '123456700000'
-'1234567E+5'.min('123456700000') == '1.234567E+11'
+v=.rexx('-1'); v.min(1)       =='-1'
+w=.rexx('+1'); w.min(-1)      =='-1'
+x=.rexx('1.0'); x.min(1.00)   =='1.0'
+y=.rexx('1.00'); y.min(1.0)   =='1.00'
+z=.rexx('123456700000'); z.min(1234567E+5)   == '123456700000'
+v1=.rexx('1234567E+5'); v1.min('123456700000') == '1.234567E+11'
 \end{lstlisting}
 
 \index{OVERLAY method,}
@@ -985,11 +981,11 @@ The default value for \emph{length} is the length of \emph{new}.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'abcdef'.overlay(' ',3)      == 'ab def'
-'abcdef'.overlay('.',3,2)    == 'ab. ef'
-'abcd'.overlay('qq')         == 'qqcd'
-'abcd'.overlay('qq',4)       == 'abcqq'
-'abc'.overlay('123',5,6,'+') == 'abc+123+++'
+v=.rexx('abcdef'); v.overlay(' ',3)      == 'ab def'
+v=.rexx('abcdef'); v.overlay('.',3,2)    == 'ab. ef'
+w=.rexx('abcd'); w.overlay('qq')         == 'qqcd'
+w=.rexx('abcd'); w.overlay('qq',4)       == 'abcqq'
+x=.rexx('abc'); x.overlay('123',5,6,'+') == 'abc+123+++'
 \end{lstlisting}
 
 \index{POS position method,}
@@ -1010,10 +1006,10 @@ positive whole number), the point at which to start the search; if
 is returned.
  \textbf{Examples:}
 \begin{lstlisting}
-'Saturday'.pos('day')    == 6
-'abc def ghi'.pos('x')   == 0
-'abc def ghi'.pos(' ')   == 4
-'abc def ghi'.pos(' ',5) == 8
+v=.rexx('Saturday'); v.pos('day')    == 6
+w=.rexx('abc def ghi'); w.pos('x')   == 0
+w=.rexx('abc def ghi'); w.pos(' ')   == 4
+w=.rexx('abc def ghi'); w.pos(' ',5) == 8
 \end{lstlisting}
 
 \index{REVERSE method,}
@@ -1023,9 +1019,9 @@ returns a copy of \emph{string}, swapped end for end.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'ABc.'.reverse        == '.cBA'
-'XYZ '.reverse        == ' ZYX'
-'Tranquility'.reverse == 'ytiliuqnarT'
+v=.rexx('ABc.'); v.reverse        == '.cBA'
+w=.rexx('XYZ '); w.reverse        == ' ZYX'
+x=.rexx('Tranquility'); x.reverse == 'ytiliuqnarT'
 \end{lstlisting}
 
 \section{right(length [,pad{]})}\label{refright}
@@ -1044,9 +1040,9 @@ left as needed.  The default \emph{pad} character is a blank.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'abc  d'.right(8)  == '  abc  d'
-'abc def'.right(5) == 'c def'
-'12'.right(5,'0')  == '00012'
+v=.rexx('abc  d'); v.right(8)  == '  abc  d'
+w=.rexx('abc def'); w.right(5) == 'c def'
+x=.rexx('12'); x.right(5,'0')  == '00012'
 \end{lstlisting}
 
 \index{SEQUENCE method,}
@@ -1062,9 +1058,9 @@ reported.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'a'.sequence('f')           == 'abcdef'
-'\\0'.sequence('\\x03')       == '\\x00\\x01\\x02\\x03'
-'\\ufffe'.sequence('\\uffff') == '\\ufffe\\uffff'
+v=.rexx('a'); v.sequence('f')           == 'abcdef'
+w=.rexx('\\0'); w.sequence('\\x03')       == '\\x00\\x01\\x02\\x03'
+x=.rexx('\\ufffe'); x.sequence('\\uffff') == '\\ufffe\\uffff'
 \end{lstlisting}
 
 \index{SIGN method,}
@@ -1082,9 +1078,9 @@ otherwise \textbf{'1'} is returned.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'12.3'.sign    ==  1
-'0.0'.sign     ==  0
-' -0.307'.sign == -1
+v=.rexx('12.3'); v.sign    ==  1
+w=.rexx('0.0'); w.sign     ==  0
+x=.rexx(' -0.307'); x.sign == -1
 \end{lstlisting}
 
 \index{SOUNDEX method,}
@@ -1097,7 +1093,7 @@ is for the English language.
 
 \textbf{Examples:}
 \begin{lstlisting}
-'EULER'.soundex()  == 'E460'
+v=.rexx('EULER'); v.soundex()  == 'E460'
 \end{lstlisting}
 
 \index{SPACE method,}
@@ -1116,11 +1112,11 @@ character is a blank.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'abc  def  '.space        == 'abc def'
-'  abc def '.space(3)     == 'abc   def'
-'abc  def  '.space(1)     == 'abc def'
-'abc  def  '.space(0)     == 'abcdef'
-'abc  def  '.space(2,'+') == 'abc++def'
+v=.rexx('abc  def  '); v.space        == 'abc def'
+w=.rexx('  abc def '); w.space(3)     == 'abc   def'
+v=.rexx('abc  def  '); v.space(1)     == 'abc def'
+v=.rexx('abc  def  '); v.space(0)     == 'abcdef'
+v=.rexx('abc  def  '); v.space(2,'+') == 'abc++def'
 \end{lstlisting}
 
 \section{stream(name, [operation{]}, [stream\_command{]})}q (Operations)
@@ -1147,11 +1143,11 @@ If given, \emph{char} must be exactly one character long.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'  ab c  '.strip        == 'ab c'
-'  ab c  '.strip('L')   == 'ab c  '
-'  ab c  '.strip('t')   == '  ab c'
-'12.70000'.strip('t',0) == '12.7'
-'0012.700'.strip('b',0) == '12.7'
+v=.rexx('  ab c  '); v.strip        == 'ab c'
+v=.rexx('  ab c  '); v.strip('L')   == 'ab c  '
+v=.rexx('  ab c  '); v.strip('t')   == '  ab c'
+w=.rexx('12.70000'); w.strip('t',0) == '12.7'
+x=.rexx('0012.700'); x.strip('b',0) == '12.7'
 \end{lstlisting}
 
 \index{SUBSTR method,}
@@ -1172,11 +1168,11 @@ The default \emph{pad} character is a blank.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'abc'.substr(2)       == 'bc'
-'abc'.substr(2,4)     == 'bc  '
-'abc'.substr(5,4)     == '    '
-'abc'.substr(2,6,'.') == 'bc....'
-'abc'.substr(5,6,'.') == '......'
+v=.rexx('abc'); v.substr(2)       == 'bc'
+v=.rexx('abc'); v.substr(2,4)     == 'bc  '
+v=.rexx('abc'); v.substr(5,4)     == '    '
+v=.rexx('abc'); v.substr(2,6,'.') == 'bc....'
+v=.rexx('abc'); v.substr(5,6,'.') == '......'
 \end{lstlisting}
 \textbf{Note: }In some situations the positional (numeric) patterns of parsing
 templates are more convenient for selecting sub-strings, especially if
@@ -1200,9 +1196,9 @@ will include all blanks between the selected words.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'Now is the  time'.subword(2,2) == 'is the'
-'Now is the  time'.subword(3)   == 'the  time'
-'Now is the  time'.subword(5)   == ''
+v=.rexx('Now is the  time'); v.subword(2,2) == 'is the'
+v=.rexx('Now is the  time'); v.subword(3)   == 'the  time'
+v=.rexx('Now is the  time'); v.subword(5)   == ''
 \end{lstlisting}
 
 %% \section{time()} see page \pageref{refrexxtime}
@@ -1236,11 +1232,11 @@ The default \emph{pad} is a blank.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'abbc'.translate('&','b')           == 'a&&c'
-'abcdef'.translate('12','ec')       == 'ab2d1f'
-'abcdef'.translate('12','abcd','.') == '12..ef'
-'4123'.translate('abcd','1234')     == 'dabc'
-'4123'.translate('hods','1234')     == 'shod'
+v=.rexx('abbc'); v.translate('&','b')           == 'a&&c'
+w=.rexx('abcdef'); w.translate('12','ec')       == 'ab2d1f'
+w=.rexx('abcdef'); w.translate('12','abcd','.') == '12..ef'
+x=.rexx('4123'); x.translate('abcd','1234')     == 'dabc'
+x=.rexx('4123'); x.translate('hods','1234')     == 'shod'
 \end{lstlisting}
 \textbf{Note: }The last two examples show how the \textbf{translate} method
 may be used to move around the characters in a string.
@@ -1249,7 +1245,7 @@ first argument and its last character would be moved to the beginning of
 the string.
 Similarly, the term:
 \begin{lstlisting}
-'gh.ef.abcd'.translate(19970827,'abcdefgh')
+v=.rexx('gh.ef.abcd'); v.translate(19970827,'abcdefgh')
 \end{lstlisting}
 (which returns "\textbf{27.08.1997}") shows how a string (in
 this case perhaps a date) might be re-formatted and merged with other
@@ -1277,11 +1273,11 @@ The result will never be in exponential form.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'12.3'.trunc         == 12
-'127.09782'.trunc(3) == 127.097
-'127.1'.trunc(3)     == 127.100
-'127'.trunc(2)       == 127.00
-'0'.trunc(2)         == 0.00
+v=.rexx('12.3'); v.trunc         == 12
+w=.rexx('127.09782'); w.trunc(3) == 127.097
+x=.rexx('127.1'); x.trunc(3)     == 127.100
+y=.rexx('127'); y.trunc(2)       == 127.00
+z=.rexx('0'); z.trunc(2)         == 0.00
 \end{lstlisting}
 
 \index{UPPER method,}
@@ -1305,13 +1301,13 @@ string (including the \emph{n}\emph{th} character) is assumed.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'Fou-Baa'.upper        == 'FOU-BAA'
-'Mad Sheep'.upper      == 'MAD SHEEP'
-'Mad sheep'.upper(5)   == 'Mad SHEEP'
-'Mad sheep'.upper(5,1) == 'Mad Sheep'
-'Mad sheep'.upper(5,4) == 'Mad SHEEp'
-'tinganon'.upper(1,1)  == 'Tinganon'
-''.upper               == ''
+v=.rexx('Fou-Baa'); v.upper        == 'FOU-BAA'
+w=.rexx('Mad Sheep'); w.upper      == 'MAD SHEEP'
+x=.rexx('Mad sheep'); x.upper(5)   == 'Mad SHEEP'
+x=.rexx('Mad sheep'); x.upper(5,1) == 'Mad Sheep'
+x=.rexx('Mad sheep'); x.upper(5,4) == 'Mad SHEEp'
+y=.rexx('tinganon'); y.upper(1,1)  == 'Tinganon'
+z=.rexx(''); z.upper               == ''
 \end{lstlisting}
 
 \index{VERIFY method,}
@@ -1345,12 +1341,12 @@ which case 0 is returned.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'123'.verify('1234567890')          == 0
-'1Z3'.verify('1234567890')          == 2
-'AB4T'.verify('1234567890','M')     == 3
-'1P3Q4'.verify('1234567890','N',3)  == 4
-'ABCDE'.verify('','n',3)            == 3
-'AB3CD5'.verify('1234567890','m',4) == 6
+v=.rexx('123'); v.verify('1234567890')          == 0
+w=.rexx('1Z3'); w.verify('1234567890')          == 2
+x=.rexx('AB4T'); x.verify('1234567890','M')     == 3
+y=.rexx('1P3Q4'); y.verify('1234567890','N',3)  == 4
+z=.rexx('ABCDE'); z.verify('','n',3)            == 3
+v1=.rexx('AB3CD5'); v1.verify('1234567890','m',4) == 6
 \end{lstlisting}
 
 \index{WORD method,}
@@ -1367,8 +1363,8 @@ This method is exactly equivalent to
  
 \textbf{Examples:}
 \begin{lstlisting}
-'Now is the time'.word(3) == 'the'
-'Now is the time'.word(5) == ''
+v=.rexx('Now is the time'); v.word(3) == 'the'
+v=.rexx('Now is the time'); v.word(5) == ''
 \end{lstlisting}
 
 \index{WORDINDEX method,}
@@ -1382,8 +1378,8 @@ If there are fewer than \emph{n} words in the string, 0 is returned.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'Now is the time'.wordindex(3) == 8
-'Now is the time'.wordindex(6) == 0
+v=.rexx('Now is the time'); v.wordindex(3) == 8
+v=.rexx('Now is the time'); v.wordindex(6) == 0
 \end{lstlisting}
 
 \index{WORDLENGTH method,}
@@ -1397,9 +1393,9 @@ If there are fewer than \emph{n} words in the string, 0 is returned.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'Now is the time'.wordlength(2)    == 2
-'Now comes the time'.wordlength(2) == 5
-'Now is the time'.wordlength(6)    == 0
+v=.rexx('Now is the time'); v.wordlength(2)    == 2
+w=.rexx('Now comes the time'); w.wordlength(2) == 5
+v=.rexx('Now is the time'); v.wordlength(6)    == 0
 \end{lstlisting}
 
 \index{WORDPOS method,}
@@ -1422,13 +1418,13 @@ positive), the word at which to start the search.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'now is the time'.wordpos('the')       == 3
-'now is the time'.wordpos('The')       == 0
-'now is the time'.wordpos('is the')    == 2
-'now is the time'.wordpos('is    the') == 2
-'now is the time'.wordpos('is  time')  == 0
-'To be or not to be'.wordpos('be')     == 2
-'To be or not to be'.wordpos('be',3)   == 6
+v=.rexx('now is the time'); v.wordpos('the')       == 3
+v=.rexx('now is the time'); v.wordpos('The')       == 0
+v=.rexx('now is the time'); v.wordpos('is the')    == 2
+v=.rexx('now is the time'); v.wordpos('is    the') == 2
+v=.rexx('now is the time'); v.wordpos('is  time')  == 0
+w=.rexx('To be or not to be'); w.wordpos('be')     == 2
+w=.rexx('To be or not to be'); w.wordpos('be',3)   == 6
 \end{lstlisting}
 
 \index{WORDS method,}
@@ -1440,9 +1436,9 @@ returns the number of blank-delimited words in \emph{string}.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'Now is the time'.words == 4
-' '.words               == 0
-''.words                == 0
+v=.rexx('Now is the time'); v.words == 4
+w=.rexx(' '); w.words               == 0
+x=.rexx(''); x.words                == 0
 \end{lstlisting}
 
 \index{X2B method,}
@@ -1464,9 +1460,9 @@ will not include any blanks.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'C3'.x2b  == '11000011'
-'7'.x2b   == '0111'
-'1C1'.x2b == '000111000001'
+v=.rexx('C3'); v.x2b  == '11000011'
+w=.rexx('7'); w.x2b   == '0111'
+x=.rexx('1C1'); x.x2b == '000111000001'
 \end{lstlisting}
 
 \index{X2C method,}
@@ -1497,10 +1493,10 @@ character for the implementation (for example, if it has more
 significant bits than the implementation's encoding for characters).
  \textbf{Examples:}
 \begin{lstlisting}
-'004D'.x2c == 'M' -- ASCII or Unicode
-'4d'.x2c   == 'M' -- ASCII or Unicode
-'A2'.x2c   == 's' -- EBCDIC
-'0'.x2c    == '\textbackslash 0'
+v=.rexx('004D'); v.x2c == 'M' -- ASCII or Unicode
+w=.rexx('4d'); w.x2c   == 'M' -- ASCII or Unicode
+x=.rexx('A2'); x.x2c   == 's' -- EBCDIC
+y=.rexx('0'); y.x2c    == '\textbackslash 0'
 \end{lstlisting}
  The  \textbf{d2c} method %% (see page \pageref{refd2c}) 
  can be used to
@@ -1521,11 +1517,11 @@ be an unsigned number.
  
 \textbf{Examples:}
 \begin{lstlisting}
-'0E'.x2d    == 14
-'81'.x2d    == 129
-'F81'.x2d   == 3969
-'FF81'.x2d  == 65409
-'c6f0'.x2d  == 50928
+v=.rexx('0E'); v.x2d    == 14
+w=.rexx('81'); w.x2d    == 129
+x=.rexx('F81'); x.x2d   == 3969
+y=.rexx('FF81'); y.x2d  == 65409
+z=.rexx('c6f0'); z.x2d  == 50928
 \end{lstlisting}
  
 If \emph{n} is specified, \emph{string} is taken as a signed
@@ -1544,15 +1540,15 @@ had been executed.)
  
 \textbf{Examples:}
 \begin{lstlisting}
-'81'.x2d(2)   == -127
-'81'.x2d(4)   == 129
-'F081'.x2d(4) == -3967
-'F081'.x2d(3) == 129
-'F081'.x2d(2) == -127
-'F081'.x2d(1) == 1
-'0031'.x2d(0) == 0
+v=.rexx('81'); v.x2d(2)   == -127
+v=.rexx('81'); v.x2d(4)   == 129
+w=.rexx('F081'); w.x2d(4) == -3967
+w=.rexx('F081'); w.x2d(3) == 129
+w=.rexx('F081'); w.x2d(2) == -127
+w=.rexx('F081'); w.x2d(1) == 1
+x=.rexx('0031'); x.x2d(0) == 0
 \end{lstlisting}
  The  \textbf{c2d} method %% (see page \pageref{refc2d})
  can be used to convert
 a character to a decimal representation of its encoding.
-%\end{description}
+%% \end{description}

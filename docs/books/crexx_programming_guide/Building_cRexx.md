@@ -6,12 +6,12 @@ when a binary distribution is unavailable, it will be beneficial to be
 able to build the \crexx{} system using a standard C toolchain.
 
 This chapter aims to show all you need to know about how to build
-cRexx from scratch, and then run it. It will show what you need, what to
+\crexx{} from scratch, and then run it. It will show what you need, what to
 do and when it is build, how to make working programs with it.
 
 ## Requirements
 
-Currently cRexx builds on Windows, macOS and
+Currently \crexx{} builds on Windows, macOS and
 Linux[^linux].
 
 [^linux]: There is a separate instruction for VM/370 (and later)
@@ -50,7 +50,7 @@ Here it is assumed that all tools are installed and working, and
 available on your PATH environment variable.
 
 Choose or make a suitably named directory on your system to contain the
-source code. Note that the cRexx source is kept in a different directory
+source code. Note that the \crexx{} source is kept in a different directory
 on you system than where it is built in, or will run from. Now run this
 command:
 
@@ -59,7 +59,7 @@ git clone https://github.com/adesutherland/CREXX.git
 \end{verbatim}
 
 This will give you a CREXX subdirectory in the current directory,
-containing the source of cRexx and its dependencies. This is the
+containing the source of \crexx{} and its dependencies. This is the
 `develop' branch, which is the one you would normally want to use. All
 of these are written in the C99 version of the C programming language,
 which should be widely supported by C compilers on most platforms.
@@ -80,7 +80,7 @@ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../CREXX && ninja && ctest
 ```
 
 This will do a lot of things. In fact, if all goes well, you will have a
-built and tested cRexx system.
+built and tested \crexx{} system.
 
 ## Explaining the build process
 
@@ -119,10 +119,10 @@ success.
 
 ## Use of \crexx{} to build \crexx{}
 
-\crexx{} is used to build the library of built-in functions that written in Rexx (and Rexx
-Assembler) and need to be compiled (carefully observing the
+\crexx{} is used to build the library of built-in functions that are written in Rexx (and,
+for a very small part in Rexx Assembler) and need to be compiled (carefully observing the
 dependencies on other Rexx built-in functions) before they are added to the
-library and the cRexx executables in their binary form.
+library and the \crexx{} executables in their binary form.
 
 
 ## What do we have after a successful build
@@ -130,21 +130,21 @@ library and the cRexx executables in their binary form.
 ### Native executables
 
 When all went well, we have a set of native executables for the platform
-we built cRexx on. These are
+we built \crexx{} on. These are
 
 | Name    | Function                                        |
 |---------|-------------------------------------------------|
-| crexx   | cRexx compiler driver                           |
-| rxc     | cRexx compiler                                  |
-| rxas    | cRexx assembler                                 |
-| rxlink  | cRexx linker                                    |
-| rxdas   | cRexx disassembler                              |
-| rxvm    | cRexx VM, threaded interpreter                  |
-| rxpp    | cRexx macro preprocessor                        |
-| rxbvm   | cRexx VM, non-threaded conventional interpreter |
-| rxvme   | cRexx VM, with linked-in Rexx library           |
-| rxdb    | cRexx debugger                                  |
-| rxcpack | cRexx C-generator for native executables        |
+| \crexx{}   | \crexx{} compiler driver                           |
+| rxc     | \crexx{} compiler                                  |
+| rxas    | \crexx{} assembler                                 |
+| rxlink  | \crexx{} linker                                    |
+| rxdas   | \crexx{} disassembler                              |
+| rxvm    | \crexx{} VM, threaded interpreter                  |
+| rxpp    | \crexx{} macro preprocessor                        |
+| rxbvm   | \crexx{} VM, non-threaded conventional interpreter |
+| rxvme   | \crexx{} VM, with linked-in Rexx library           |
+| rxdb    | \crexx{} debugger                                  |
+| rxcpack | \crexx{} C-generator for native executables        |
 
 Table: Delivered products. {#tbl:id}
 
@@ -157,7 +157,7 @@ executable file.
 
 The executables in the above table need to be on the `PATH` environment
 variable. These are to be found in the compiler, assembler,
-disassembler, debugger and cpacker directories of the crexx-build
+disassembler, debugger and cpacker directories of the \crexx{}-build
 directory we created earlier. It is up to you to add all these
 separately to the `PATH` environment, or to just collect them all into one
 directory that is already on the `PATH`.

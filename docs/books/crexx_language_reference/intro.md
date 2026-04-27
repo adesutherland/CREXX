@@ -13,8 +13,8 @@ ISO standard Classic \textsc{Rexx}.
 In addition to the mentioned \textsc{Rexx} variants, \crexx{} level B contains 
 static typing and binary arithmetic.
 
-Later levels will contain an object model, exception
-handling and a library of classes. The resulting language not only provides the scripting
+This levels will already contain an object model, exception
+handling and a functional class library. The resulting language not only provides the scripting
 capabilities and decimal arithmetic of R\textsc{exx}, but also seamlessly
 extends to large application development with fast binary arithmetic.
 
@@ -53,9 +53,9 @@ Also from a software point of view the world has changed. Apart from
 fads and silver bullets, some developments have stuck and are
 sometimes missed in \rexx{}, which at this point in time is more than
 40 years old. The introduction of Object Orientation in the 1990's was
-a long and arduous process, that might have taken too much time than
-was time-to-market and user expectations allowed. The product was announced early and the
-product delivery took a long time - as a 'user switchable'
+a long and arduous process. It might have taken too much time-to-market than user expectations allowed. 
+The product was announced early and the
+product was introduced as a 'user switchable'[^switch]
 implementation on a moribund operating
 system\footnote{IBM's OS/2.}; IBM's mainframe operating systems z/VM and z/OS were left
 without an implementation. Further announcements and retractions
@@ -63,6 +63,8 @@ of its owner regarding its open sourcing status did not help it in any way.
 Another variant, for the Java Virtual Machine, has shown the
 divergence in ideas between \rexx{}'s original architect, Mike
 Cowlishaw, and the Object Rexx implementation, of more or less the same ideas.
+
+[^switch]: e.g. not the default implementation.
 
 We would like to try to avoid this by opening up architecture, source
 and discussion in the user community. While \rexx{} variants may have
