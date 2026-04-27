@@ -258,19 +258,20 @@ _json_array_info: procedure = .string
   return "error 0 0"
 
 _json_child_key: procedure = .string
-  arg json = .string, info = .string, key = .string
+  arg json = .string, info = .string, wanted = .string
   if word(info, 1) \= "object" then return "missing 0 0"
   p = _json_skip_ws(json, word(info, 2) + 1)
-  endpos = word(info, 3)
+  endpos = word(info, 3) + 0
   if p < endpos & substr(json, p, 1) = "}" then return "missing 0 0"
   do while p < endpos
     key_info = _json_string_info(json, p)
     if word(key_info, 1) = "error" then return key_info
+    candidate = _json_unquote_span(json, word(key_info, 2), word(key_info, 3))
     p = _json_skip_ws(json, word(key_info, 3))
     if p >= endpos | substr(json, p, 1) \= ":" then return "error 0 0"
     value_info = _json_value_info(json, p + 1)
     if word(value_info, 1) = "error" then return value_info
-    if _json_unquote_span(json, word(key_info, 2), word(key_info, 3)) = key then return value_info
+    if candidate = wanted then return value_info
     p = _json_skip_ws(json, word(value_info, 3))
     if p < endpos & substr(json, p, 1) = "," then p = _json_skip_ws(json, p + 1)
     else leave
@@ -282,7 +283,7 @@ _json_child_index: procedure = .string
   if word(info, 1) \= "array" then return "missing 0 0"
   if index < 1 then return "missing 0 0"
   p = _json_skip_ws(json, word(info, 2) + 1)
-  endpos = word(info, 3)
+  endpos = word(info, 3) + 0
   current = 1
   if p < endpos & substr(json, p, 1) = "]" then return "missing 0 0"
   do while p < endpos

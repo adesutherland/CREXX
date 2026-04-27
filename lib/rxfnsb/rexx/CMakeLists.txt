@@ -110,6 +110,7 @@ set(BIFS
 		stem
 		rxjson
 		rxsocket
+		rxhttp
 )
 
 foreach (BIF ${BIFS})

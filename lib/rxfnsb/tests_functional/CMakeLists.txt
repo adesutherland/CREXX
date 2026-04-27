@@ -69,6 +69,7 @@ set(REXXBINS
         ts_stem.rxbin
         ts_rxjson.rxbin
         ts_rxsocket.rxbin
+        ts_rxhttp.rxbin
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
@@ -111,3 +112,10 @@ foreach(_binfile ${REXXBINS})
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
+
+set_tests_properties(ts_rxjson_noopt ts_rxjson_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxjson helpers")
+set_tests_properties(ts_rxsocket_noopt ts_rxsocket_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxsocket loopback")
+set_tests_properties(ts_rxhttp_noopt ts_rxhttp_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxhttp helpers")
