@@ -1,0 +1,12 @@
+/*
+ * CREXX Interpreter test for fallback panic source reporting.
+ */
+
+.srcfile="panic_source.rexx"
+.globals=0
+
+main() .locals=1
+    .src 7:3="bad = 'abc' + 0.0"
+    load r0, "abc"
+    stof r0
+    ret 0

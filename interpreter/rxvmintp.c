@@ -486,6 +486,74 @@ static string_constant *get_runtime_string_constant(module *mod, size_t offset) 
     return entry;
 }
 
+typedef struct rxvm_source_context {
+    string_constant *file;
+    string_constant *source;
+    size_t line;
+    size_t column;
+} rxvm_source_context;
+
+static void resolve_runtime_source_context(module *mod, size_t address, rxvm_source_context *source_context) {
+    int meta_ix;
+
+    source_context->file = 0;
+    source_context->source = 0;
+    source_context->line = 0;
+    source_context->column = 0;
+
+    if (!mod) return;
+
+    meta_ix = mod->meta_head;
+    while (meta_ix != -1) {
+        meta_entry *meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+        if (meta->address > address) break;
+
+        if (meta->base.type == META_FILE) {
+            meta_file_constant *file_meta = (meta_file_constant *) meta;
+            source_context->file = get_runtime_string_constant(mod, file_meta->file);
+        } else if (meta->base.type == META_SRC) {
+            meta_src_constant *src_meta = (meta_src_constant *) meta;
+            source_context->line = src_meta->line;
+            source_context->column = src_meta->column;
+            source_context->source = get_runtime_string_constant(mod, src_meta->source);
+        }
+
+        meta_ix = meta->next;
+    }
+}
+
+static void print_runtime_panic_location(rxvm_context *context, rxinteger module_number, rxinteger address) {
+    module *mod;
+    rxvm_source_context source_context;
+    size_t module_index;
+    size_t instruction_address;
+
+    if (!context || module_number <= 0 || address < 0) return;
+
+    module_index = (size_t) module_number - 1;
+    if (module_index >= context->num_modules) return;
+
+    mod = context->modules[module_index];
+    instruction_address = (size_t) address;
+
+    fprintf(stderr, "  at module %zu", (size_t) module_number);
+    if (mod && mod->name) fprintf(stderr, " (%s)", mod->name);
+    fprintf(stderr, " address %zu (0x%zx)\n", instruction_address, instruction_address);
+
+    resolve_runtime_source_context(mod, instruction_address, &source_context);
+    if (source_context.source) {
+        fprintf(stderr, "  source: ");
+        if (source_context.file) {
+            fprintf(stderr, "%.*s:", (int) source_context.file->string_len, source_context.file->string);
+        }
+        fprintf(stderr, "%zu:%zu: %.*s\n",
+                source_context.line,
+                source_context.column,
+                (int) source_context.source->string_len,
+                source_context.source->string);
+    }
+}
+
 static char *build_runtime_factory_proc_name(const char *class_name,
                                              size_t class_name_length,
                                              const char *factory_name,
@@ -1501,6 +1569,7 @@ void clear_signal(unsigned char signal) {
 // Macro to detect and throw a signal if a RXVM plugin-raised error is present
 #define RXSIGNAL_IF_RXVM_PLUGIN_ERROR(signal) \
 if ((signal)->base.signal_number  && (signal)->base.signal_number < RXSIGNAL_MAX) { \
+if (!current_frame->is_interrupt) interrupted_pc = pc; \
 interrupts |= 1 << ((signal)->base.signal_number - 1); \
 value_zero(interrupt_object[(signal)->base.signal_number]); \
 set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.signal_string); \
@@ -1508,22 +1577,25 @@ set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.s
 
 // Macro to throw a signal
 #define SET_SIGNAL(signal) \
-{interrupts |= 1 << ((signal) - 1); \
+{if (!current_frame->is_interrupt) interrupted_pc = pc; \
+interrupts |= 1 << ((signal) - 1); \
 value_zero(interrupt_object[(signal)]);}
 
 // Macro to throw a signal with a message
 #define SET_SIGNAL_MSG(signal, message) \
-{interrupts |= 1 << ((signal) - 1); \
+{if (!current_frame->is_interrupt) interrupted_pc = pc; \
+interrupts |= 1 << ((signal) - 1); \
 value_zero(interrupt_object[(signal)]); \
 set_null_string(interrupt_object[(signal)], (message));}
 
 // Macro to throw a signal with a payload
 #define SET_SIGNAL_PAYLOAD(signal, payload) \
-{interrupts |= 1 << ((signal) - 1); \
+{if (!current_frame->is_interrupt) interrupted_pc = pc; \
+interrupts |= 1 << ((signal) - 1); \
 copy_value(interrupt_object[(signal)], (payload));}
 
 // Macro and function to detect and throw a signal if a RXPA plugin-raised error is present
-#define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) interrupt_from_rxpa_signal(signal,interrupt_object);
+#define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) { if (!current_frame->is_interrupt) interrupted_pc = pc; interrupt_from_rxpa_signal(signal,interrupt_object); }
 
 void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_MAX]) {
     size_t int_num;
@@ -1622,6 +1694,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     unsigned int initSeed = 0;   /* keep last seed for Random function within REXX run */
     char hasSeed = 0; /* no seed set */
     bin_code *pc, *next_pc;
+    bin_code *interrupted_pc = 0;
     int mod_index;
     value *interrupt_arg;
     value *signal_value = value_f();
@@ -1885,8 +1958,9 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     last_interrupt = 0;
     for (signal_code = 0; signal_code < RXSIGNAL_MAX; signal_code++) {
         if (interrupts & (1 << signal_code)) {
+            bin_code *signal_pc = (interrupted_pc && signal_code + 1 != RXSIGNAL_BREAKPOINT) ? interrupted_pc : pc;
             last_interrupted_module[signal_code + 1] = (rxinteger) current_frame->procedure->binarySpace->module->module_number;
-            last_interrupted_address[signal_code + 1] = (rxinteger) (pc - current_frame->procedure->binarySpace->binary);
+            last_interrupted_address[signal_code + 1] = (rxinteger) (signal_pc - current_frame->procedure->binarySpace->binary);
             if (current_frame->interrupt_table[signal_code].response == RXSIGNAL_RESPONSE_IGNORE) {
                 DEBUG("TRACE - INTR IGNORE %s\n", interrupt_to_string(signal_code + 1));
                 interrupts &= ~(1 << signal_code);
@@ -1896,6 +1970,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             }
         }
     }
+    interrupted_pc = 0;
 
     if (!last_interrupt || last_interrupt >= RXSIGNAL_MAX) {
         /* No un-ignored interrupts pending */
@@ -1919,6 +1994,9 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                 fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(interrupt_object[last_interrupt]->string_length), interrupt_object[last_interrupt]->string_value, interrupt_to_string(last_interrupt));
             } else {
                 fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(last_interrupt));
+                print_runtime_panic_location(context,
+                                             last_interrupted_module[last_interrupt],
+                                             last_interrupted_address[last_interrupt]);
             }
             rc = (int)last_interrupt;
             goto interprt_finished;

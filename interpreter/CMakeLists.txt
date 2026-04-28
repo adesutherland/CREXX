@@ -219,6 +219,33 @@ add_custom_target(run_tests_signals ALL DEPENDS tests_signals.rxbin)
 
 crexx_add_vm_dual_test(NAME rxassignalstests RXVM_ARGS tests_signals PASS_REGULAR_EXPRESSION "PANIC:")
 
+# Instruction Sanity Tests - fallback panic location and source reporting
+add_custom_command(
+		OUTPUT tests_panic_source.rxbin
+		COMMAND $<TARGET_FILE:rxas> -o tests_panic_source ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_panic_source
+		DEPENDS tests/tests_panic_source.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Instruction Tests (fallback panic source reporting) ..."
+)
+
+add_custom_target(run_tests_panic_source ALL DEPENDS tests_panic_source.rxbin)
+
+crexx_add_vm_dual_test(NAME rxaspanicaddresstests RXVM_ARGS tests_panic_source PASS_REGULAR_EXPRESSION "address [0-9]+ \\(0x[0-9a-fA-F]+\\)")
+crexx_add_vm_dual_test(NAME rxaspanicsourcetests RXVM_ARGS tests_panic_source PASS_REGULAR_EXPRESSION "source: panic_source\\.rexx:7:3:")
+
+# Instruction Sanity Tests - breakpoint reports the next instruction address
+add_custom_command(
+		OUTPUT tests_breakpoint_address.rxbin
+		COMMAND $<TARGET_FILE:rxas> -o tests_breakpoint_address ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_breakpoint_address
+		DEPENDS tests/tests_breakpoint_address.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Instruction Tests (breakpoint address reporting) ..."
+)
+
+add_custom_target(run_tests_breakpoint_address ALL DEPENDS tests_breakpoint_address.rxbin)
+
+crexx_add_vm_dual_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'")
+
 # Basic Instruction Tests
 add_custom_command(
 		OUTPUT tests_basic.rxbin

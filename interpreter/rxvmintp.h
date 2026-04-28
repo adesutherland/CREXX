@@ -122,7 +122,7 @@ struct stack_frame {
 #define END_INTERRUPT goto CASE_START;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; }
 #define CALC_DISPATCH_MANUAL
-#define DISPATCH                   { pc = next_pc; goto *(interrupts && !current_frame->is_interrupt)?&&INTERRUPT:&&CASE_START; }
+#define DISPATCH                   { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; goto CASE_START; }
 
 #else
 
@@ -133,7 +133,7 @@ struct stack_frame {
 #define END_INTERRUPT goto *next_inst;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = current_module->prepared_dispatch[(size_t)(next_pc - current_module->segment.binary)]; }
 #define CALC_DISPATCH_MANUAL       { next_inst = current_module->prepared_dispatch[(size_t)(next_pc - current_module->segment.binary)]; }
-#define DISPATCH                   { pc = next_pc; goto *(interrupts && !current_frame->is_interrupt)?&&INTERRUPT:next_inst; }
+#define DISPATCH                   { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; goto *next_inst; }
 
 #endif
 

@@ -6,6 +6,11 @@ import _rxsysb
 
 format: procedure = .string
    arg innum = .string, before = 0, after = 0, expp = 0, expt=-1
+   innum = strip(innum)
+   if left(innum,1) = '-' | left(innum,1) = '+' then do
+      sign = left(innum,1)
+      innum = sign||strip(substr(innum,2),'L')
+   end
 /* --------------------------------------------------------------------------------------
  * Formatting without Exponent
  * --------------------------------------------------------------------------------------
@@ -53,4 +58,3 @@ format: procedure = .string
       return formatx"E"||sign||formatz /* return result          */
    end
 return ''
-

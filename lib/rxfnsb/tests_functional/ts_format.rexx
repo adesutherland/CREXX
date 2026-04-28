@@ -5,6 +5,14 @@ import rxfnsb
 /* RXVM ts_format format right left _itrunc _ftrunc copies pos substr length */
 /* TODO */
 errors=0
+if format(' - 12.73') \== '-12.73' then do
+   say "FAIL: format blank-separated negative sign"
+   return 1
+end
+if format(' - 12.73',,4) \== '-12.7300' then do
+   say "FAIL: format blank-separated negative sign with decimals"
+   return 1
+end
 
 say 'format(-31415921111111,,4,1,1) "'format(-31415921111111.6,,4,1,1)'"'
 say 'format(-31415.92111111,,4,1,1) "'format(-31415.9211111116,,4,5,1)'"'

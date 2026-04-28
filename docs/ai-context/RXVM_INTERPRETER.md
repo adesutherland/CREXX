@@ -246,9 +246,9 @@ Instructions are executed via macro-driven blocks. For example, moving to the ne
 
 ```c
 #define CALC_DISPATCH(n) { next_pc = pc + (n) + 1; next_inst = current_module->prepared_dispatch[next_pc - current_module->segment.binary]; }
-#define DISPATCH         { pc = next_pc; goto *(interrupts && !current_frame->is_interrupt)?&&INTERRUPT:next_inst; }
+#define DISPATCH         { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; goto *next_inst; }
 ```
-`DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively.
+`DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively. Internal signal-raising macros stamp `interrupted_pc` with the faulting instruction before dispatch advances `pc`; breakpoint and asynchronous interrupts leave it unset so their handlers continue to receive the next instruction/resume address. The default fallback panic report uses the stamped address when present to print the module/address and, when `META_FILE` / `META_SRC` metadata is present, the closest preceding REXX source line. Linked images built with source stripping may only have the module/address.
 
 ### Instruction Flow Example
 Inside the `run()` loop, implementations are declared using `START_INSTRUCTION`. The assembler passes operands inline sequentially in the binary array.
