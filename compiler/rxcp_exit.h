@@ -52,6 +52,7 @@ typedef struct ExitEntry {
 #define RXCP_EXIT_FLAG_CERTIFIED        0x0001u
 #define RXCP_EXIT_FLAG_RESERVED_KEYWORD 0x0002u
 #define RXCP_EXIT_FLAG_IMPLICIT_COMMAND 0x0004u
+#define RXCP_EXIT_FLAG_DIAGNOSTIC_MAPPER 0x0008u
 
 /* Registry for all additional keywords across all exits */
 typedef struct ExitAdditionalKeywords {
@@ -67,5 +68,6 @@ int rxcp_is_exit_additional(Context *ctx, const char *keyword, size_t len);
 unsigned int rxcp_get_exit_flags(Context *ctx, const char *keyword, size_t len);
 int rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node);
 int rxcp_exit_bridge_plan_invoke(Context *ctx, ASTNode *node);
+void rxcp_exit_rewrite_diagnostics(Context *ctx);
 
 #endif

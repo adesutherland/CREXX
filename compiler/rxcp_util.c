@@ -676,22 +676,25 @@ typedef struct SourceMapEntry {
     size_t end;
     int line;
     int column;
+    char *file_name;
+    Token *token_start;
+    Token *token_end;
+    char *source_start;
+    char *source_end;
     SourceNode *source_node;
     char provenance;
 } SourceMapEntry;
 
-typedef struct SourceMap {
+struct SourceMap {
     SourceMapEntry *entries;
     size_t count;
     size_t capacity;
-} SourceMap;
+};
 
 static void add_source_map_entry(SourceMap *map,
                                  size_t start,
                                  size_t end,
-                                 int line,
-                                 int column,
-                                 SourceNode *source_node,
+                                 ASTNode *anchor,
                                  ASTSourceProvenance provenance) {
     if (map->count == map->capacity) {
         map->capacity = map->capacity == 0 ? 8 : map->capacity * 2;
@@ -699,9 +702,14 @@ static void add_source_map_entry(SourceMap *map,
     }
     map->entries[map->count].start = start;
     map->entries[map->count].end = end;
-    map->entries[map->count].line = line;
-    map->entries[map->count].column = column;
-    map->entries[map->count].source_node = source_node;
+    map->entries[map->count].line = anchor ? anchor->line : 0;
+    map->entries[map->count].column = anchor ? anchor->column : 0;
+    map->entries[map->count].file_name = anchor ? anchor->file_name : NULL;
+    map->entries[map->count].token_start = anchor ? anchor->token_start : NULL;
+    map->entries[map->count].token_end = anchor ? anchor->token_end : NULL;
+    map->entries[map->count].source_start = anchor ? anchor->source_start : NULL;
+    map->entries[map->count].source_end = anchor ? anchor->source_end : NULL;
+    map->entries[map->count].source_node = anchor ? anchor->source_node : NULL;
     map->entries[map->count].provenance = (char)provenance;
     map->count++;
 }
@@ -724,6 +732,11 @@ static walker_result fragment_fixup_walker(walker_direction direction, ASTNode *
                 if (pos >= map->entries[i].start && pos < map->entries[i].end) {
                     node->line = map->entries[i].line;
                     node->column = map->entries[i].column;
+                    node->file_name = map->entries[i].file_name;
+                    node->token_start = map->entries[i].token_start;
+                    node->token_end = map->entries[i].token_end;
+                    node->source_start = map->entries[i].source_start;
+                    node->source_end = map->entries[i].source_end;
                     if (map->entries[i].source_node) {
                         ast_set_primary_source_node(node,
                                                     map->entries[i].source_node,
@@ -741,41 +754,122 @@ static walker_result fragment_fixup_walker(walker_direction direction, ASTNode *
     return result_normal;
 }
 
-int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_code, ASTNode **node_map, size_t num_tokens) {
-    SourceMap map = {NULL, 0, 0};
-    size_t code_len = strlen(rexx_code);
-    char *interpolated = malloc(code_len * 2 + 1024); /* Conservative buffer */
-    size_t int_pos = 0;
-    size_t i = 0;
+void ast_free_exit_source_map(SourceMap *map) {
+    if (!map) return;
+    if (map->entries) free(map->entries);
+    free(map);
+}
 
-    /* Add "options levelb\n" offset */
-    const char* prefix = "options levelb\n";
-    size_t prefix_len = strlen(prefix);
-    strcpy(interpolated, prefix);
-    int_pos = prefix_len;
+void ast_apply_exit_source_map(ASTNode *tree, SourceMap *map) {
+    ast_wlkr(tree, fragment_fixup_walker, map);
+}
 
+static int append_interpolated_char(char **buffer,
+                                    size_t *capacity,
+                                    size_t *position,
+                                    char value) {
+    char *new_buffer;
+
+    if (!buffer || !capacity || !position) return 0;
+    if (*position + 1 >= *capacity) {
+        *capacity = *capacity ? *capacity * 2 : 256;
+        new_buffer = realloc(*buffer, *capacity);
+        if (!new_buffer) return 0;
+        *buffer = new_buffer;
+    }
+    (*buffer)[(*position)++] = value;
+    return 1;
+}
+
+static int append_interpolated_text(char **buffer,
+                                    size_t *capacity,
+                                    size_t *position,
+                                    const char *text,
+                                    size_t text_len) {
+    char *new_buffer;
+
+    if (!buffer || !capacity || !position || !text) return 0;
+    while (*position + text_len + 1 >= *capacity) {
+        *capacity = *capacity ? *capacity * 2 : 256;
+    }
+    new_buffer = realloc(*buffer, *capacity);
+    if (!new_buffer) return 0;
+    *buffer = new_buffer;
+    memcpy(*buffer + *position, text, text_len);
+    *position += text_len;
+    return 1;
+}
+
+char *ast_interpolate_exit_fragment(const char *prefix,
+                                    const char *rexx_code,
+                                    ASTNode **node_map,
+                                    size_t num_tokens,
+                                    SourceMap **map_out,
+                                    size_t *length_out) {
+    SourceMap *map;
+    size_t code_len;
+    size_t prefix_len;
+    size_t capacity;
+    char *interpolated;
+    size_t int_pos;
+    size_t i;
+
+    if (map_out) *map_out = NULL;
+    if (length_out) *length_out = 0;
+    if (!rexx_code) return NULL;
+
+    map = calloc(1, sizeof(SourceMap));
+    if (!map) return NULL;
+
+    code_len = strlen(rexx_code);
+    prefix_len = prefix ? strlen(prefix) : 0;
+    capacity = prefix_len + code_len + 256;
+    interpolated = malloc(capacity);
+    if (!interpolated) {
+        ast_free_exit_source_map(map);
+        return NULL;
+    }
+
+    int_pos = 0;
+    if (prefix_len > 0) {
+        if (!append_interpolated_text(&interpolated, &capacity, &int_pos, prefix, prefix_len)) {
+            free(interpolated);
+            ast_free_exit_source_map(map);
+            return NULL;
+        }
+    }
+
+    i = 0;
     while (i < code_len) {
-        if (rexx_code[i] == '{' && isdigit(rexx_code[i+1])) {
-            size_t start = i;
+        if (rexx_code[i] == '{' && i + 1 < code_len && isdigit((unsigned char)rexx_code[i + 1])) {
+            size_t start;
+            int n;
+
+            start = i;
             i++;
-            int n = 0;
-            while (isdigit(rexx_code[i])) {
+            n = 0;
+            while (i < code_len && isdigit((unsigned char)rexx_code[i])) {
                 n = n * 10 + (rexx_code[i] - '0');
                 i++;
             }
-            if (rexx_code[i] == '}' && n > 0 && (size_t)n <= num_tokens && node_map[n-1]) {
+            if (i < code_len && rexx_code[i] == '}' && n > 0 && (size_t)n <= num_tokens && node_map && node_map[n - 1]) {
+                ASTNode *token_node;
+                const char *text;
+                size_t text_len;
+                char *source_text;
+
                 i++;
-                ASTNode *token_node = node_map[n-1];
-                /* Get raw text of the token */
-                const char *text = NULL;
-                size_t text_len = 0;
-                char *source_text = NULL;
+                token_node = node_map[n - 1];
+                text = NULL;
+                text_len = 0;
+                source_text = NULL;
+
                 if (token_node->token) {
                     if (token_node->token_start && token_node->token_end &&
                         token_node->token_start != token_node->token_end) {
                         source_text = ast_nsrc(token_node);
                         text = source_text;
-                        text_len = strlen(source_text);
+                        text_len = source_text ? strlen(source_text) : 0;
                     } else {
                         text = token_node->token->token_string;
                         text_len = token_node->token->length;
@@ -785,33 +879,64 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
                     text_len = token_node->node_string_length;
                 }
 
-                if (text) {
-                    add_source_map_entry(&map,
+                if (text && text_len > 0) {
+                    add_source_map_entry(map,
                                          int_pos,
                                          int_pos + text_len,
-                                         token_node->line,
-                                         token_node->column,
-                                         token_node->source_node,
+                                         token_node,
                                          AST_SOURCE_EXACT);
-                    memcpy(interpolated + int_pos, text, text_len);
-                    int_pos += text_len;
+                    if (!append_interpolated_text(&interpolated, &capacity, &int_pos, text, text_len)) {
+                        if (source_text) free(source_text);
+                        free(interpolated);
+                        ast_free_exit_source_map(map);
+                        return NULL;
+                    }
                 }
                 if (source_text) free(source_text);
             } else {
-                /* Not a valid {n} or n out of range, copy literally */
-                interpolated[int_pos++] = '{';
+                if (!append_interpolated_char(&interpolated, &capacity, &int_pos, '{')) {
+                    free(interpolated);
+                    ast_free_exit_source_map(map);
+                    return NULL;
+                }
                 i = start + 1;
             }
         } else {
-            interpolated[int_pos++] = rexx_code[i++];
+            if (!append_interpolated_char(&interpolated, &capacity, &int_pos, rexx_code[i++])) {
+                free(interpolated);
+                ast_free_exit_source_map(map);
+                return NULL;
+            }
         }
     }
-    interpolated[int_pos] = 0;
+
+    if (!append_interpolated_char(&interpolated, &capacity, &int_pos, '\0')) {
+        free(interpolated);
+        ast_free_exit_source_map(map);
+        return NULL;
+    }
+    int_pos--;
+
+    if (map_out) *map_out = map;
+    else ast_free_exit_source_map(map);
+    if (length_out) *length_out = int_pos;
+    return interpolated;
+}
+
+int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_code, ASTNode **node_map, size_t num_tokens) {
+    SourceMap *map;
+    char *interpolated;
+    size_t int_pos;
+    const char* prefix = "options levelb\n";
+    map = NULL;
+    int_pos = 0;
+    interpolated = ast_interpolate_exit_fragment(prefix, rexx_code, node_map, num_tokens, &map, &int_pos);
+    if (!interpolated) return -1;
 
     Context* frag = cntx_f();
     if (!frag) {
         free(interpolated);
-        if (map.entries) free(map.entries);
+        ast_free_exit_source_map(map);
         return -1;
     }
 
@@ -835,7 +960,7 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
         if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_GRFT: Parsing FAILED\n");
         mknd_err(target_node, "EXIT_BRIDGE_PARSE_FAILED");
         fre_cntx(frag);
-        if (map.entries) free(map.entries);
+        ast_free_exit_source_map(map);
         return -1;
     }
 
@@ -852,7 +977,7 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
     }
 
     /* Fix up fragment: copy strings and apply source map */
-    ast_wlkr(frag->ast, fragment_fixup_walker, &map);
+    ast_apply_exit_source_map(frag->ast, map);
 
     if (frag->ast) {
         ASTNode *search = ast_fndn(ctx, frag->ast, INSTRUCTIONS);
@@ -905,7 +1030,7 @@ int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_c
     }
 
     fre_cntx(frag);
-    if (map.entries) free(map.entries);
+    ast_free_exit_source_map(map);
     return 0;
 }
 

@@ -103,6 +103,16 @@ describe: method = .exitdescriptor
 In this example, `rxfnsb` is a default import. It is unconditional for the
 exit class.
 
+Supported descriptor flags are:
+
+- `certified`: the exit owns a compiler-certified language keyword or fallback
+  path
+- `reserved_keyword`: the primary keyword is a reserved Rexx keyword
+- `implicit_command`: the exit may handle ordinary implicit command fallback
+  forms
+- `diagnostic_mapper`: the exit implements optional `map_diagnostic()` rewriting
+  for diagnostics that arise from its generated helper code
+
 #### 5.2 `pre_process()`
 
 `pre_process()` is the only structural phase.
@@ -196,7 +206,37 @@ process: method = .exitresult
     return result
 ```
 
-#### 5.4 Status Semantics
+Replacement lines and helper-plan lines may contain `{n}` placeholders. `n` is
+the one-based token index from the `.token[]` input. The compiler replaces the
+placeholder with the original token spelling and maps the generated AST node
+back to that token's source span.
+
+#### 5.4 `map_diagnostic()`
+
+`map_diagnostic()` is optional. It is called only for exits whose descriptor
+adds the `diagnostic_mapper` flag, and only for diagnostics found under
+compiler-generated helper procedures.
+
+Shape:
+
+```rexx
+map_diagnostic: method = .exitdiagnostic
+    arg code = .string, message = .string, source = .string, origin = .string
+```
+
+Inputs:
+
+- `code`: the compiler diagnostic code, without the leading `#`
+- `message`: the compiler diagnostic payload text, when one exists
+- `source`: source text for the best user-facing anchor, often the mapped `{n}`
+  token
+- `origin`: the generated helper procedure name
+
+Return `.exitdiagnostic("none", 0, "", "")` to leave the diagnostic unchanged.
+Return an error or warning diagnostic to replace the compiler diagnostic text.
+The compiler keeps the mapped source anchor when reporting the replacement.
+
+#### 5.5 Status Semantics
 
 `exitplan.status`:
 
@@ -220,7 +260,7 @@ Guidance:
 - do not use `process()` to "finish planning later"
 - use `ERROR` when the occurrence is invalid regardless of future iterations
 
-#### 5.5 Token Semantics
+#### 5.6 Token Semantics
 
 The compiler marshals exit input as semantic token categories rather than raw
 parser internals.

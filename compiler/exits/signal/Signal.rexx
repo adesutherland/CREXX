@@ -16,6 +16,7 @@ signalexit: class
         desc = .exitdescriptor("SIGNAL")
         call desc.add_flag("certified")
         call desc.add_flag("reserved_keyword")
+        call desc.add_flag("diagnostic_mapper")
         call desc.add_import("rxfnsb", "signal", "")
         return desc
 
@@ -23,9 +24,8 @@ signalexit: class
         arg tokens = .token[]
         plan = .exitplan("READY")
         start = firstPayloadToken(tokens)
-        handler = .string
-        handler = findSignalOnHandler(tokens, start)
-        if handler \= "" then call plan.add_helper(makeSignalHelper(handler))
+        handler_index = findSignalOnHandlerIndex(tokens, start)
+        if handler_index > 0 then call plan.add_helper(makeSignalHelper(tokens[handler_index].get_text(), handler_index))
         return plan
 
     process: method = .exitresult
@@ -35,6 +35,26 @@ signalexit: class
         if upper(tokens[start].get_text()) = "ON" then return processSignalOn(tokens, start + 1)
         if upper(tokens[start].get_text()) = "OFF" then return processSignalOff(tokens, start + 1)
         return processSignalRaise(tokens, start)
+
+    map_diagnostic: method = .exitdiagnostic
+        arg code = .string, message = .string, source = .string, origin = .string
+        c = upper(strip(code))
+        handler = strip(source)
+        helper_prefix = "__rxsignal_"
+
+        if left(strip(origin), length(helper_prefix)) \= helper_prefix then return .exitdiagnostic("none", 0, "", "")
+        if handler = "" then handler = substr(strip(origin), length(helper_prefix) + 1)
+        if right(handler, 1) = ":" then handler = left(handler, length(handler) - 1)
+
+        if c = "FUNCTION_NOT_FOUND" | c = "NOT_A_FUNCTION" then do
+            return .exitdiagnostic("error", 0, "SIGNAL_HANDLER_NOT_FOUND", handler)
+        end
+
+        if isSignalHandlerSignatureCode(c) then do
+            return .exitdiagnostic("error", 0, "SIGNAL_HANDLER_BAD_SIGNATURE", handler)
+        end
+
+        return .exitdiagnostic("none", 0, "", "")
 
 firstPayloadToken: procedure = .int
     arg tokens = .token[]
@@ -216,12 +236,18 @@ findTopLevelComma: procedure = .int
 
 findSignalOnHandler: procedure = .string
     arg tokens = .token[], start = .int
-    if start = 0 then return ""
-    if upper(tokens[start].get_text()) \= "ON" then return ""
+    handler_index = findSignalOnHandlerIndex(tokens, start)
+    if handler_index = 0 then return ""
+    return tokens[handler_index].get_text()
+
+findSignalOnHandlerIndex: procedure = .int
+    arg tokens = .token[], start = .int
+    if start = 0 then return 0
+    if upper(tokens[start].get_text()) \= "ON" then return 0
     call_index = findKeyword(tokens, start + 1, "CALL")
-    if call_index = 0 then return ""
-    if call_index + 1 > tokens.0 then return ""
-    return tokens[call_index + 1].get_text()
+    if call_index = 0 then return 0
+    if call_index + 1 > tokens.0 then return 0
+    return call_index + 1
 
 findKeyword: procedure = .int
     arg tokens = .token[], start = .int, keyword = .string
@@ -231,13 +257,14 @@ findKeyword: procedure = .int
     return 0
 
 makeSignalHelper: procedure = .helperplan
-    arg handler = .string
+    arg handler = .string, handler_token_index = .int
     helper = .helperplan(helperName(handler), "file_tail", helperName(handler), "")
     call helper.add_line(helperName(handler) || ": procedure = .string")
     call helper.add_line("  arg __rxsignal_raw = .object")
     call helper.add_line("  __rxsignal_condition = .runtime_signal("""")")
     call helper.add_line("  call __rxsignal_condition.set_raw(__rxsignal_raw)")
-    call helper.add_line("  __rxsignal_action = " || handler || "(__rxsignal_condition)")
+    call helper.add_line("  __rxsignal_action = .signalaction")
+    call helper.add_line("  __rxsignal_action = {" || handler_token_index || "}(__rxsignal_condition)")
     call helper.add_line("  if __rxsignal_action.kind() = ""retry"" then return ""__rxsignal_retry""")
     call helper.add_line("  if __rxsignal_action.kind() = ""skip"" then return ""__rxsignal_skip""")
     call helper.add_line("  return ""__rxsignal_fail""")
@@ -294,6 +321,19 @@ canRaiseSignal: procedure = .int
     arg name = .string
     if name = "BREAKPOINT" then return 0
     return 1
+
+isSignalHandlerSignatureCode: procedure = .int
+    arg code = .string
+    if code = "BAD_CONVERSION" then return 1
+    if code = "UNEXPECTED_ARGUMENT" then return 1
+    if code = "ARGUMENT_REQUIRED" then return 1
+    if code = "NOT_AN_OBJECT" then return 1
+    if code = "RETURNS_VOID" then return 1
+    if code = "TYPE_MISMATCH" then return 1
+    if code = "MISSING_VALUE" then return 1
+    if code = "UNEXPECTED_VALUE" then return 1
+    if code = "REFERENCE_TYPE_MISMATCH" then return 1
+    return 0
 
 defaultSignalInstruction: procedure = .string
     arg name = .string

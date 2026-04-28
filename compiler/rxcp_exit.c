@@ -338,6 +338,7 @@ static unsigned int rxcp_parse_descriptor_flags(rxvml_context *vctx,
             if (strncasecmp(flag_text, "certified", flag_len) == 0) flags |= RXCP_EXIT_FLAG_CERTIFIED;
             else if (strncasecmp(flag_text, "reserved_keyword", flag_len) == 0) flags |= RXCP_EXIT_FLAG_RESERVED_KEYWORD;
             else if (strncasecmp(flag_text, "implicit_command", flag_len) == 0) flags |= RXCP_EXIT_FLAG_IMPLICIT_COMMAND;
+            else if (strncasecmp(flag_text, "diagnostic_mapper", flag_len) == 0) flags |= RXCP_EXIT_FLAG_DIAGNOSTIC_MAPPER;
         }
 
         rxvml_value_free(flag_value);
@@ -1114,6 +1115,298 @@ static int rxcp_apply_diagnostics(Context *ctx,
     return saw_error ? -1 : 0;
 }
 
+static char *rxcp_diagnostic_code_dup(const char *text) {
+    const char *start;
+    const char *end;
+
+    if (!text) return strdup("");
+
+    start = text;
+    while (*start && isspace((unsigned char)*start)) start++;
+    if (*start == '#') start++;
+    if (strncasecmp(start, "NOTE ", 5) == 0) start += 5;
+    while (*start && isspace((unsigned char)*start)) start++;
+
+    end = start;
+    while (*end && *end != ',' && !isspace((unsigned char)*end)) end++;
+    return rx_strndup(start, (size_t)(end - start));
+}
+
+static char *rxcp_diagnostic_message_dup(const char *text) {
+    const char *start;
+    const char *end;
+
+    if (!text) return strdup("");
+
+    start = strchr(text, ',');
+    if (!start) return strdup("");
+    start++;
+    while (*start && isspace((unsigned char)*start)) start++;
+
+    end = start + strlen(start);
+    while (end > start && isspace((unsigned char)*(end - 1))) end--;
+
+    if (end - start >= 2 &&
+        ((*start == '"' && *(end - 1) == '"') || (*start == '\'' && *(end - 1) == '\''))) {
+        start++;
+        end--;
+    }
+
+    return rx_strndup(start, (size_t)(end - start));
+}
+
+static char *rxcp_node_text_dup(ASTNode *node) {
+    if (!node) return strdup("");
+    if (node->token && node->token->token_string) {
+        return rx_strndup(node->token->token_string, (size_t)node->token->length);
+    }
+    if (node->node_string) {
+        return rx_strndup(node->node_string, node->node_string_length);
+    }
+    return strdup("");
+}
+
+static char *rxcp_helper_origin_dup(ASTNode *helper_proc) {
+    if (!helper_proc) return strdup("");
+    if (helper_proc->node_string) {
+        return rx_strndup(helper_proc->node_string, helper_proc->node_string_length);
+    }
+    return rxcp_node_text_dup(helper_proc);
+}
+
+static ASTNode *rxcp_enclosing_helper_proc(ASTNode *node) {
+    while (node) {
+        if (node->node_type == PROCEDURE && node->is_compiler_added) return node;
+        node = node->parent;
+    }
+    return NULL;
+}
+
+static ASTNode *rxcp_find_exact_call_descendant(ASTNode *node) {
+    ASTNode *child;
+    ASTNode *found;
+
+    if (!node) return NULL;
+    if ((node->node_type == FUNCTION || node->node_type == MEMBER_CALL || node->node_type == FACTORY_CALL) &&
+        node->source_node &&
+        node->source_provenance == AST_SOURCE_EXACT) {
+        return node;
+    }
+
+    child = node->child;
+    while (child) {
+        if (child->node_type != ERROR && child->node_type != WARNING) {
+            found = rxcp_find_exact_call_descendant(child);
+            if (found) return found;
+        }
+        child = child->sibling;
+    }
+    return NULL;
+}
+
+static ASTNode *rxcp_find_diagnostic_anchor(ASTNode *offending) {
+    ASTNode *current;
+    ASTNode *found;
+
+    found = rxcp_find_exact_call_descendant(offending);
+    if (found) return found;
+
+    current = offending;
+    while (current) {
+        if ((current->node_type == FUNCTION || current->node_type == MEMBER_CALL || current->node_type == FACTORY_CALL) &&
+            current->source_node &&
+            current->source_provenance == AST_SOURCE_EXACT) {
+            return current;
+        }
+        if (current->node_type == PROCEDURE) break;
+        current = current->parent;
+    }
+
+    if (offending && offending->source_node) return offending;
+    return NULL;
+}
+
+static void rxcp_replace_diagnostic(ASTNode *diagnostic,
+                                    const char *severity,
+                                    const char *code,
+                                    const char *message,
+                                    ASTNode *anchor) {
+    char *formatted;
+
+    if (!diagnostic || !code || !code[0]) return;
+
+    formatted = rxcp_format_diagnostic_text(severity ? severity : "error", code, message ? message : "");
+    if (!formatted) return;
+
+    if (diagnostic->free_node_string && diagnostic->node_string) free(diagnostic->node_string);
+    diagnostic->node_string = formatted;
+    diagnostic->node_string_length = strlen(formatted);
+    diagnostic->free_node_string = 1;
+    diagnostic->is_internal_diagnostic = 0;
+
+    if (anchor) ast_copy_source_anchor(diagnostic, anchor, AST_SOURCE_INHERITED);
+}
+
+static int rxcp_exit_mapper_rewrite(Context *ctx,
+                                    rxvml_context *vctx,
+                                    ExitEntry *entry,
+                                    ASTNode *diagnostic,
+                                    ASTNode *offending,
+                                    ASTNode *helper_proc) {
+    rxvml_value *nid_val;
+    rxvml_value *obj;
+    rxvml_value *args[4];
+    rxvml_value *mapped;
+    char *code;
+    char *message;
+    char *source;
+    char *origin;
+    char *mapped_severity;
+    char *mapped_code;
+    char *mapped_message;
+    ASTNode *anchor;
+    int i;
+    int rc;
+    int rewritten;
+
+    if (!ctx || !vctx || !entry || !diagnostic || !offending || !helper_proc) return 0;
+
+    nid_val = NULL;
+    obj = NULL;
+    mapped = NULL;
+    code = NULL;
+    message = NULL;
+    source = NULL;
+    origin = NULL;
+    mapped_severity = NULL;
+    mapped_code = NULL;
+    mapped_message = NULL;
+    rewritten = 0;
+    for (i = 0; i < 4; i++) args[i] = NULL;
+
+    code = rxcp_diagnostic_code_dup(diagnostic->node_string);
+    message = rxcp_diagnostic_message_dup(diagnostic->node_string);
+    anchor = rxcp_find_diagnostic_anchor(offending);
+    source = rxcp_node_text_dup(anchor ? anchor : offending);
+    origin = rxcp_helper_origin_dup(helper_proc);
+
+    nid_val = rxvml_value_new(vctx);
+    if (!nid_val) goto cleanup;
+    rxvml_set_int(nid_val, 0);
+    if (rxvml_call_factory(vctx, entry->class_name, 1, &nid_val, &obj) != 0 || !obj) goto cleanup;
+
+    for (i = 0; i < 4; i++) {
+        args[i] = rxvml_value_new(vctx);
+        if (!args[i]) goto cleanup;
+    }
+    rxvml_set_str(args[0], code ? code : "", strlen(code ? code : ""));
+    rxvml_set_str(args[1], message ? message : "", strlen(message ? message : ""));
+    rxvml_set_str(args[2], source ? source : "", strlen(source ? source : ""));
+    rxvml_set_str(args[3], origin ? origin : "", strlen(origin ? origin : ""));
+
+    rc = rxvml_call_method(vctx, obj, entry->class_name, "map_diagnostic", 4, args, &mapped);
+    if (rc != 0 || !mapped) goto cleanup;
+
+    rxcp_get_method_string_dup(vctx, mapped, "rxcp.exitdiagnostic", "get_severity", &mapped_severity, NULL);
+    rxcp_get_method_string_dup(vctx, mapped, "rxcp.exitdiagnostic", "get_code", &mapped_code, NULL);
+    rxcp_get_method_string_dup(vctx, mapped, "rxcp.exitdiagnostic", "get_message", &mapped_message, NULL);
+
+    if (mapped_code && mapped_code[0] &&
+        (!mapped_severity || strcasecmp(mapped_severity, "none") != 0)) {
+        rxcp_replace_diagnostic(diagnostic,
+                                mapped_severity && mapped_severity[0] ? mapped_severity : "error",
+                                mapped_code,
+                                mapped_message ? mapped_message : "",
+                                anchor ? anchor : offending);
+        rewritten = 1;
+    }
+
+cleanup:
+    if (mapped_message) free(mapped_message);
+    if (mapped_code) free(mapped_code);
+    if (mapped_severity) free(mapped_severity);
+    if (mapped) rxvml_value_free(mapped);
+    for (i = 0; i < 4; i++) {
+        if (args[i]) rxvml_value_free(args[i]);
+    }
+    if (obj) rxvml_value_free(obj);
+    if (nid_val) rxvml_value_free(nid_val);
+    if (origin) free(origin);
+    if (source) free(source);
+    if (message) free(message);
+    if (code) free(code);
+    return rewritten;
+}
+
+static int rxcp_rewrite_one_diagnostic(Context *ctx,
+                                       rxvml_context *vctx,
+                                       ASTNode *diagnostic,
+                                       ASTNode *offending) {
+    Context *root;
+    ExitEntry *entry;
+    ASTNode *helper_proc;
+
+    if (!ctx || !vctx || !diagnostic || !offending) return 0;
+
+    helper_proc = rxcp_enclosing_helper_proc(offending);
+    if (!helper_proc) return 0;
+
+    root = ctx->master_context ? ctx->master_context : ctx;
+    entry = (ExitEntry *)root->exit_registry;
+    while (entry) {
+        if ((entry->flags & RXCP_EXIT_FLAG_DIAGNOSTIC_MAPPER) &&
+            rxcp_exit_mapper_rewrite(ctx, vctx, entry, diagnostic, offending, helper_proc)) {
+            return 1;
+        }
+        entry = entry->next;
+    }
+    return 0;
+}
+
+static void rxcp_rewrite_diagnostics_in_tree(Context *ctx,
+                                             rxvml_context *vctx,
+                                             ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return;
+
+    child = node->child;
+    while (child) {
+        if (child->node_type == ERROR || child->node_type == WARNING) {
+            rxcp_rewrite_one_diagnostic(ctx, vctx, child, node);
+        } else {
+            rxcp_rewrite_diagnostics_in_tree(ctx, vctx, child);
+        }
+        child = child->sibling;
+    }
+}
+
+void rxcp_exit_rewrite_diagnostics(Context *ctx) {
+    Context *root;
+    ExitEntry *entry;
+    rxvml_context *vctx;
+    int has_mapper;
+
+    if (!ctx) return;
+    root = ctx->master_context ? ctx->master_context : ctx;
+    if (root->disable_exits) return;
+
+    has_mapper = 0;
+    entry = (ExitEntry *)root->exit_registry;
+    while (entry) {
+        if (entry->flags & RXCP_EXIT_FLAG_DIAGNOSTIC_MAPPER) {
+            has_mapper = 1;
+            break;
+        }
+        entry = entry->next;
+    }
+    if (!has_mapper) return;
+
+    vctx = rxcp_init_bridge(ctx);
+    if (!vctx) return;
+    rxcp_rewrite_diagnostics_in_tree(ctx, vctx, ctx->ast);
+}
+
 static void rxcp_log_notes(Context *ctx,
                            rxvml_context *vctx,
                            rxvml_value *owner,
@@ -1385,7 +1678,9 @@ static void rxcp_mark_helper_subtree(ASTNode *node, ASTNode *source_anchor) {
 
     current = node;
     while (current) {
-        ast_copy_source_anchor(current, source_anchor, AST_SOURCE_SYNTHETIC);
+        if (!current->source_node || current->source_provenance != AST_SOURCE_EXACT) {
+            ast_copy_source_anchor(current, source_anchor, AST_SOURCE_SYNTHETIC);
+        }
         current->is_compiler_added = 1;
         current->skip_exit_dispatch = 1;
         if (current->child) rxcp_mark_helper_subtree(current->child, source_anchor);
@@ -1509,7 +1804,9 @@ static int rxcp_store_helper_source(Context *ctx,
 static int rxcp_append_helper(Context *ctx,
                               ASTNode *node,
                               const char *helper_id,
-                              const char *helper_source) {
+                              const char *helper_source,
+                              ASTNode **node_map,
+                              size_t num_tokens) {
     Context *frag;
     ASTNode *file_node;
     ASTNode *program_file;
@@ -1517,23 +1814,44 @@ static int rxcp_append_helper(Context *ctx,
     ASTNode *helper_proc;
     int registration_rc;
     char *prefixed_source;
+    SourceMap *source_map;
+    size_t prefixed_len;
 
     if (!ctx || !node || !helper_id || !helper_id[0] || !helper_source || !helper_source[0]) return -1;
 
     file_node = rxcp_find_file_container(node);
     if (!file_node) return -1;
 
-    registration_rc = rxcp_check_helper_source(ctx, file_node, helper_id, helper_source);
-    if (registration_rc == 0) return 0;
-    if (registration_rc < 0) {
-        mknd_err_unique(node, "EXIT_BRIDGE_HELPER_CONFLICT, \"%s\"", helper_id);
+    source_map = NULL;
+    prefixed_len = 0;
+    prefixed_source = ast_interpolate_exit_fragment("options levelb\n",
+                                                    helper_source,
+                                                    node_map,
+                                                    num_tokens,
+                                                    &source_map,
+                                                    &prefixed_len);
+    if (!prefixed_source) {
+        mknd_err_unique(node, "EXIT_BRIDGE_HELPER_INTERPOLATION_FAILED, \"%s\"", helper_id);
         return -1;
     }
 
-    prefixed_source = mprintf("options levelb\n%s", helper_source);
+    registration_rc = rxcp_check_helper_source(ctx, file_node, helper_id, prefixed_source);
+    if (registration_rc == 0) {
+        ast_free_exit_source_map(source_map);
+        free(prefixed_source);
+        return 0;
+    }
+    if (registration_rc < 0) {
+        mknd_err_unique(node, "EXIT_BRIDGE_HELPER_CONFLICT, \"%s\"", helper_id);
+        ast_free_exit_source_map(source_map);
+        free(prefixed_source);
+        return -1;
+    }
+
     frag = cntx_f();
     if (!frag) {
         mknd_err_unique(node, "EXIT_BRIDGE_HELPER_CONTEXT_FAILED, \"%s\"", helper_id);
+        ast_free_exit_source_map(source_map);
         free(prefixed_source);
         return -1;
     }
@@ -1552,9 +1870,10 @@ static int rxcp_append_helper(Context *ctx,
     frag->comments_slash = ctx->comments_slash;
     frag->comments_dash = ctx->comments_dash;
 
-    cntx_buf(frag, prefixed_source, strlen(prefixed_source));
+    cntx_buf(frag, prefixed_source, prefixed_len);
     if (rexbpars(frag)) {
         mknd_err_unique(node, "EXIT_BRIDGE_HELPER_PARSE_FAILED, \"%s\"", helper_id);
+        ast_free_exit_source_map(source_map);
         fre_cntx(frag);
         return -1;
     }
@@ -1570,6 +1889,8 @@ static int rxcp_append_helper(Context *ctx,
         ast_wlkr(frag->ast, decimal2float_walker, (void *) frag);
     }
 
+    ast_apply_exit_source_map(frag->ast, source_map);
+
     program_file = ast_fndn(frag, frag->ast, PROGRAM_FILE);
     helper_proc = NULL;
     if (program_file) {
@@ -1578,6 +1899,7 @@ static int rxcp_append_helper(Context *ctx,
             if (child->node_type == PROCEDURE) {
                 if (helper_proc) {
                     mknd_err_unique(node, "EXIT_BRIDGE_HELPER_MULTI_DEF, \"%s\"", helper_id);
+                    ast_free_exit_source_map(source_map);
                     fre_cntx(frag);
                     return -1;
                 }
@@ -1585,6 +1907,7 @@ static int rxcp_append_helper(Context *ctx,
             } else if (child->node_type == CLASS_DEF || child->node_type == METHOD ||
                        child->node_type == FACTORY || child->node_type == MATCH) {
                 mknd_err_unique(node, "EXIT_BRIDGE_HELPER_BAD_SHAPE, \"%s\"", helper_id);
+                ast_free_exit_source_map(source_map);
                 fre_cntx(frag);
                 return -1;
             }
@@ -1594,6 +1917,7 @@ static int rxcp_append_helper(Context *ctx,
 
     if (!helper_proc) {
         mknd_err_unique(node, "EXIT_BRIDGE_HELPER_MISSING_DEF, \"%s\"", helper_id);
+        ast_free_exit_source_map(source_map);
         fre_cntx(frag);
         return -1;
     }
@@ -1602,8 +1926,9 @@ static int rxcp_append_helper(Context *ctx,
     rxcp_clear_helper_semantics(helper_proc);
     helper_proc = add_dast(file_node, helper_proc);
     rxcp_mark_helper_subtree(helper_proc, node);
-    if (rxcp_store_helper_source(ctx, file_node, helper_id, helper_source) < 0) {
+    if (rxcp_store_helper_source(ctx, file_node, helper_id, prefixed_source) < 0) {
         mknd_err_unique(node, "EXIT_BRIDGE_HELPER_REGISTRY_FAILED, \"%s\"", helper_id);
+        ast_free_exit_source_map(source_map);
         fre_cntx(frag);
         return -1;
     }
@@ -1611,13 +1936,16 @@ static int rxcp_append_helper(Context *ctx,
     ctx->changed_flags |= FLAG_EXIT;
 
     fre_cntx(frag);
+    ast_free_exit_source_map(source_map);
     return 1;
 }
 
 static int rxcp_apply_plan_helpers(Context *ctx,
                                    ASTNode *node,
                                    rxvml_context *vctx,
-                                   rxvml_value *plan) {
+                                   rxvml_value *plan,
+                                   ASTNode **node_map,
+                                   size_t num_tokens) {
     rxinteger helper_count;
     rxinteger i;
 
@@ -1663,7 +1991,7 @@ static int rxcp_apply_plan_helpers(Context *ctx,
             return -1;
         }
 
-        if (rxcp_append_helper(ctx, node, helper_id, source_text) < 0) {
+        if (rxcp_append_helper(ctx, node, helper_id, source_text, node_map, num_tokens) < 0) {
             free(source_text);
             if (scope) free(scope);
             if (helper_id) free(helper_id);
@@ -1702,7 +2030,7 @@ static int rxcp_apply_exit_plan(Context *ctx,
     rxcp_apply_plan_imports(ctx, node, vctx, plan);
     rxcp_apply_plan_bindings(ctx, node, vctx, plan);
     rxcp_apply_plan_keywords(node_map, num_tokens, vctx, plan);
-    if (rxcp_apply_plan_helpers(ctx, node, vctx, plan) < 0) {
+    if (rxcp_apply_plan_helpers(ctx, node, vctx, plan, node_map, num_tokens) < 0) {
         free(status);
         return -1;
     }

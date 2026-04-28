@@ -1,6 +1,6 @@
 # Level B Signals And Trace Working Design
 
-Status: draft design record with initial syntax decisions, not yet implemented
+Status: draft design record with phase 1 signal support partially implemented
 Last updated: 2026-04-28
 
 ## Purpose
@@ -152,6 +152,9 @@ Facts relevant to Level B signals:
 - `SIGNAL` is also listed as a built-in keyword and its old lexer token is
   commented out
 - a simple `SIGNAL name` statement could be implemented as a certified exit
+- phase 1 includes procedure-handler helpers for
+  `signal on ... call handler` plus exit-specific diagnostic rewriting for bad
+  handler signatures
 - structured error handling may need compiler-owned AST/control-flow support,
   because exit replacement alone cannot safely own arbitrary block boundaries
   unless the syntax remains a normal statement that lowers to existing control
@@ -381,6 +384,12 @@ handle_conversion: procedure = .signalaction
   say condition.source()
   return .signalaction.skip()
 ```
+
+Generated procedure-handler glue embeds the user handler token with bridge
+`{n}` interpolation. Validation errors from that glue can therefore be reported
+at the original handler token. The signal exit maps missing-handler errors to
+`SIGNAL_HANDLER_NOT_FOUND` and signature/return-shape errors to
+`SIGNAL_HANDLER_BAD_SIGNATURE`.
 
 `skip` maps to the current `SIGCALL` resume behaviour. `retry` and `fail`
 require VM support to interpret the handler's return value when an interrupt
@@ -646,6 +655,9 @@ Status on 2026-04-28:
 - procedure handlers receive `.signal`; returning `.signalaction.skip()` resumes
   after the signal, `.retry()` resumes at the interrupted address, and
   `.fail()` falls through to the default panic report with source metadata
+- bad procedure handler signatures now report at the handler token with
+  `SIGNAL_HANDLER_BAD_SIGNATURE`; missing procedure handlers report
+  `SIGNAL_HANDLER_NOT_FOUND`
 - inline cloning now preserves named interface factory selector metadata, so
   handler code returning `.signalaction.skip()` keeps the `..skip` selector in
   optimized builds even when a generated helper body is optimized

@@ -152,6 +152,8 @@ Current bridge behavior:
 
 - supported scope is `file_tail`
 - helper source is parsed as a fragment
+- helper source supports `{n}` token interpolation with source mapping, using
+  the same token numbering as replacement fragments
 - helper procedures are appended to the containing file AST
 - helpers are deduplicated by file plus `helper_id`
 - conflicting helper bodies with the same `helper_id` are a compiler error
@@ -171,6 +173,11 @@ When a result returns `REPLACE`, the bridge:
 
 The bridge intentionally preserves source-valid token text where possible so
 quoted literals stay quoted in generated Rexx code.
+
+`{n}` placeholders are one-based indexes into the marshalled `.token[]`. The
+bridge copies the original token spelling into the generated fragment and maps
+the generated AST node back to that token's file, line, column, and source
+span. Helper fragments use the same interpolation path.
 
 Important scope note:
 
@@ -196,6 +203,14 @@ Compiler behavior:
 - errors enter the normal compiler diagnostic stream and fail the occurrence
 - warnings enter the normal warning stream
 - notes are currently logged for debug-oriented tracing when debug mode is high
+
+Exits can also opt into post-validation diagnostic rewriting with the
+`diagnostic_mapper` descriptor flag. The bridge calls the exit's
+`map_diagnostic(code, message, source, origin)` method for diagnostics under
+compiler-generated helper procedures. A non-empty returned `exitdiagnostic`
+replaces the compiler diagnostic text while retaining the best mapped source
+anchor. This is intended for narrow cases where helper-generated validation
+errors need an exit-specific code, such as signal handler signature errors.
 
 ## 9. Testing Strategy
 

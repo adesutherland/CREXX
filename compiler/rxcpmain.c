@@ -674,6 +674,7 @@ int rxcmain(int argc, char *argv[]) {
     }
 
     rxcp_val(context);
+    rxcp_exit_rewrite_diagnostics(context);
     source_tree_sync_diagnostics(context);
     source_tree_sync_semantics(context);
 
