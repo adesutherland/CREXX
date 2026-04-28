@@ -52,6 +52,7 @@
 %left EXIT_REDUCE.
 %right ANYTHING.
 %left TK_EOC.
+%left TK_END.
 %left IMPLICIT_CONCAT.
 %left TK_DOT TK_CLASS_TYPE.
 
@@ -310,6 +311,10 @@ option(C)          ::= TK_VAR_SYMBOL(S).
 
 /* Namespace Instructions */
 literal(L)               ::= TK_VAR_SYMBOL(N).
+                         { L = ast_f(context, LITERAL, N); }
+literal(L)               ::= TK_SIGNAL(N).
+                         { L = ast_f(context, LITERAL, N); }
+literal(L)               ::= TK_ON(N).
                          { L = ast_f(context, LITERAL, N); }
 namespace_list(I)        ::= namespace_instruction(L).
                          { I = L; }
@@ -636,6 +641,10 @@ group(I) ::= select(K). { I = K; }
 /* Groups */
 
 /* Simple DO Group */
+simple_do(G) ::= TK_DO(T) TK_EOC instruction_list(I) signal_handler_list(H) TK_END.
+          { G = ast_f(context, SIGNAL_BLOCK, T); add_ast(G,I); add_ast(G,H); }
+simple_do(G) ::= TK_DO(T) TK_EOC signal_handler_list(H) TK_END.
+          { G = ast_f(context, SIGNAL_BLOCK, T); add_ast(G,ast_ft(context, NOP)); add_ast(G,H); }
 simple_do(G) ::= TK_DO TK_EOC instruction_list(I) TK_END.
           { G = I; }
 simple_do(G) ::= TK_DO TK_EOC TK_END.
@@ -650,6 +659,84 @@ simple_do(G) ::= TK_DO(E) TK_EOC instruction_list(I) TK_EOS.
           { G = I; add_ast(G,ast_err(context, "INCOMPLETE_DO", E)); }
 simple_do(G) ::= TK_DO TK_EOC instruction_list(I) ANYTHING(E).
           { G = I; add_ast(G,ast_err(context, "INCOMPLETE_DO", E)); }
+
+signal_handler_list(L) ::= signal_handler(H).
+          { L = H; }
+signal_handler_list(L) ::= signal_handler_list(L1) signal_handler(H).
+          { L = L1; add_sbtr(L,H); }
+
+signal_handler(H) ::= TK_ON(O) TK_SIGNAL signal_names(N) signal_as_opt(A) TK_EOC signal_instruction_list(I). [TK_END]
+          { H = ast_f(context, SIGNAL_HANDLER, O); add_ast(H,N); add_ast(H,A); add_ast(H,I); }
+
+signal_instruction_list(I) ::= signal_labeled_instruction(L).
+                         { I = ast_ft(context, INSTRUCTIONS); add_ast(I,L); }
+signal_instruction_list(I) ::= signal_instruction_list(I1) signal_labeled_instruction(L).
+                         { I = I1; add_ast(I,L); }
+
+signal_labeled_instruction(I) ::= group(B). { I = B; }
+signal_labeled_instruction(I) ::= signal_single_instruction(B) junk(J) TK_EOC.
+                           { I = B; add_sbtr(I,J); }
+signal_labeled_instruction(I) ::= label(B). { I = B; }
+signal_labeled_instruction(E) ::= TK_BADCOMMENT(C).
+                           { E = ast_err(context, "BAD_COMMENT", C); }
+
+signal_single_instruction(I)  ::= assignment(B). { I = B; }
+signal_single_instruction(I)  ::= define(B). { I = B; }
+signal_single_instruction(I)  ::= exit_extended(B). { I = B; }
+signal_single_instruction(I)  ::= command(B). { I = B; }
+signal_single_instruction(I)  ::= signal_keyword_instruction(B). { I = B; }
+
+signal_keyword_instruction(I) ::= assembler(K). { I = K; }
+signal_keyword_instruction(I) ::= arg(K). { I = K; }
+signal_keyword_instruction(I) ::= call(K). { I = K; }
+signal_keyword_instruction(I) ::= iterate(K). { I = K; }
+signal_keyword_instruction(I) ::= leave(K). { I = K; }
+signal_keyword_instruction(I) ::= nop(K). { I = K; }
+signal_keyword_instruction(I) ::= procedure(K). { I = K; }
+signal_keyword_instruction(I) ::= return(K). { I = K; }
+signal_keyword_instruction(I) ::= exit(K). { I = K; }
+signal_keyword_instruction(I) ::= say(K). { I = K; }
+signal_keyword_instruction(I) ::= numeric(K). { I = K; }
+signal_keyword_instruction(I) ::= factory_def(K). { I = K; }
+signal_keyword_instruction(I) ::= match_def(K). { I = K; }
+signal_keyword_instruction(I) ::= method_def(K). { I = K; }
+signal_keyword_instruction(I) ::= class_def(K). { I = K; }
+signal_keyword_instruction(I) ::= interface_def(K). { I = K; }
+signal_keyword_instruction(I) ::= TK_THEN(T) error. { I = ast_err(context, "UNEXPECTED_THEN", T); }
+signal_keyword_instruction(I) ::= TK_ELSE(T) error. { I = ast_err(context, "UNEXPECTED_ELSE", T); }
+signal_keyword_instruction(I) ::= TK_WHEN(T) error. { I = ast_err(context, "UNEXPECTED_WHEN", T); }
+signal_keyword_instruction(I) ::= TK_OTHERWISE(T) error. { I = ast_err(context, "UNEXPECTED_OTHERWISE", T); }
+signal_keyword_instruction(I) ::= TK_NAMESPACE(T) ANYTHING error.
+                           { I = ast_err(context, "BAD_NAMESPACE", T); }
+signal_keyword_instruction(I) ::= TK_IMPORT(T) ANYTHING error.
+                           { I = ast_err(context, "BAD_IMPORT", T); }
+signal_keyword_instruction(I) ::= TK_NAMESPACE(T) error.
+                           { I = ast_err(context, "BAD_NAMESPACE", T); }
+signal_keyword_instruction(I) ::= TK_IMPORT(T) error.
+                           { I = ast_err(context, "BAD_IMPORT", T); }
+
+signal_names(N) ::= .
+          { N = ast_ft(context, SIGNAL_NAMES); }
+signal_names(N) ::= signal_name_list(L).
+          { N = ast_ft(context, SIGNAL_NAMES); add_ast(N,L); }
+
+signal_name_list(L) ::= signal_name(N).
+          { L = N; }
+signal_name_list(L) ::= signal_name_list(L1) TK_COMMA signal_name(N).
+          { L = L1; add_sbtr(L,N); }
+
+signal_name(N) ::= TK_VAR_SYMBOL(S).
+          { N = ast_f(context, SIGNAL_NAME, S); }
+signal_name(N) ::= TK_QUALIFIED_SYMBOL(S).
+          { N = ast_f(context, SIGNAL_NAME, S); }
+
+signal_as_opt(A) ::= .
+          { A = ast_ft(context, NOP); }
+signal_as_opt(A) ::= TK_AS(K) TK_VAR_SYMBOL(S).
+          { A = ast_f(context, DEFINE, K);
+            ASTNode *V = ast_f(context, VAR_TARGET, S);
+            add_ast(A,V);
+            add_ast(A,ast_ftt(context, CLASS, ".signal")); }
 
 /* DO Group */
 
@@ -935,7 +1022,9 @@ assembler_instruction(I) ::= assembler_op(OP) assembler_arg(A1) TK_COMMA assembl
 assembler_instruction(I) ::= assembler_op(OP) assembler_arg(A1) TK_COMMA assembler_arg(A2) TK_COMMA assembler_arg(A3).
     { I = OP; add_ast(I,A1); add_ast(I,A2); add_ast(I,A3);}
 assembler_op(OP)         ::= TK_VAR_SYMBOL(S).
-                         { OP = ast_f(context, ASSEMBLER, S); }
+                             { OP = ast_f(context, ASSEMBLER, S); }
+assembler_op(OP)         ::= TK_SIGNAL(S).
+                             { OP = ast_f(context, ASSEMBLER, S); }
 assembler_op(OP)         ::= TK_SAY(S). /* SAY is also a REXX keyword */
                          { OP = ast_f(context, ASSEMBLER, S); }
 assembler_op(OP)         ::= TK_EXIT(S). /* EXIT is also a REXX keyword */

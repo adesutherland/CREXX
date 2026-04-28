@@ -171,6 +171,11 @@ Signal support adds action-aware and dynamic-name forms:
 
 - `sigcalla proc(),"NAME"` installs a handler that returns an internal action
   marker interpreted by the VM as `skip`, `retry`, or `fail`
+- `sigpush "NAME"` saves the current handler entry for `NAME` on the current
+  frame's handler stack
+- `sigpop "NAME"` restores the most recent saved handler entry for `NAME`
+- `sigbrv label,rSignal,"NAME"` installs a branch handler that wraps the raw
+  interrupt object as a Level B `.signal` value in `rSignal` before branching
 - `signal rName` raises a signal whose name is read from a string register
 - `signal rName,rPayload` raises a dynamic-name signal with a payload object
 

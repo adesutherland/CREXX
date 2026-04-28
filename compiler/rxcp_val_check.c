@@ -71,6 +71,47 @@ static int has_no_concat_gap(ASTNode *left, ASTNode *right) {
     return result;
 }
 
+static char *validation_signal_canonical_name(ASTNode *node) {
+    char *name;
+    size_t i;
+
+    if (!node || !node->node_string || node->node_string_length == 0) return 0;
+    name = malloc(node->node_string_length + 1);
+    if (!name) return 0;
+    for (i = 0; i < node->node_string_length; i++) {
+        name[i] = (char)toupper((unsigned char)node->node_string[i]);
+    }
+    name[node->node_string_length] = 0;
+    if (strcmp(name, "SYNTAX") == 0) {
+        free(name);
+        return strdup("ERROR");
+    }
+    return name;
+}
+
+static int validation_signal_known(const char *name) {
+    static const char *known[] = {
+            "KILL", "FAILURE", "ERROR", "OVERFLOW_UNDERFLOW", "DIVISION_BY_ZERO",
+            "CONVERSION_ERROR", "INVALID_ARGUMENTS", "OUT_OF_RANGE", "UNICODE_ERROR",
+            "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND", "NOT_IMPLEMENTED",
+            "INVALID_SIGNAL_CODE", "NOTREADY", "QUIT", "TERM", "POSIX_INT",
+            "POSIX_HUP", "POSIX_USR1", "POSIX_USR2", "POSIX_CHLD", "OTHER",
+            "BREAKPOINT", 0
+    };
+    const char **candidate;
+
+    if (!name) return 0;
+    for (candidate = known; *candidate; candidate++) {
+        if (strcmp(name, *candidate) == 0) return 1;
+    }
+    return 0;
+}
+
+static int validation_signal_maskable(const char *name) {
+    if (!name) return 0;
+    return strcmp(name, "KILL") != 0 && strcmp(name, "BREAKPOINT") != 0;
+}
+
 /* Step 1
  * - Fixes up procedure / class tree structures.
  *   Note: This stage is critical for Level B Rexx as the single-lookahead Lemon parser
@@ -655,33 +696,57 @@ static void structure_callable_body(Context *context,
     }
 }
 
+static int is_program_header_node(ASTNode *node) {
+    return node &&
+           (node->node_type == REXX_OPTIONS ||
+            node->node_type == NAMESPACE ||
+            node->node_type == IMPORT);
+}
+
+static int is_top_level_callable_boundary(ASTNode *node) {
+    return node &&
+           (node->node_type == PROCEDURE ||
+            node->node_type == CLASS_DEF ||
+            node->node_type == INTERFACE_DEF);
+}
+
 static void wrap_program_file_main(Context *context, ASTNode *node) {
+    ASTNode *anchor;
     ASTNode *child;
     ASTNode *instructions;
     ASTNode *next;
+    ASTNode *body;
 
     if (!node || !node->child) return;
-    child = node->child->sibling;
+    anchor = 0;
+    child = node->child;
+    while (is_program_header_node(child)) {
+        anchor = child;
+        child = child->sibling;
+    }
     if (!child) return;
-    if (child->node_type == PROCEDURE || child->node_type == CLASS_DEF || child->node_type == INTERFACE_DEF) return;
+    if (is_top_level_callable_boundary(child)) return;
 
     instructions = ast_ftt(context, PROCEDURE, "main:");
     instructions->is_implicit_main = 1;
     instructions->parent = node;
     instructions->sibling = child;
-    node->child->sibling = instructions;
+    if (anchor) {
+        anchor->sibling = instructions;
+    } else {
+        node->child = instructions;
+    }
 
     add_ast(instructions, infer_main_return_type(context, child));
     add_ast(instructions, ast_ft(context, ARGS));
-    instructions = ast_ft(context, INSTRUCTIONS);
-    add_ast(node->child->sibling, instructions);
+    body = ast_ft(context, INSTRUCTIONS);
+    add_ast(instructions, body);
 
-    while ((next = node->child->sibling->sibling) && next->node_type != PROCEDURE &&
-           next->node_type != CLASS_DEF && next->node_type != INTERFACE_DEF) {
-        node->child->sibling->sibling = next->sibling;
+    while ((next = instructions->sibling) && !is_top_level_callable_boundary(next)) {
+        instructions->sibling = next->sibling;
         next->sibling = 0;
         next->parent = 0;
-        add_ast(instructions, next);
+        add_ast(body, next);
     }
 }
 
@@ -1088,6 +1153,22 @@ walker_result syntax_validation_walker(walker_direction direction,
                 /* Need to add implicit "BY" node - to avoid an infinite loop! */
                 add_ast(node, ast_ft(context, BY));
             }
+        }
+
+        else if (node->node_type == SIGNAL_BLOCK) {
+            if (context->level != LEVELB) {
+                mknd_err(node, "SIGNAL_BLOCK_ONLY_LEVELB");
+            }
+        }
+
+        else if (node->node_type == SIGNAL_NAME) {
+            char *name = validation_signal_canonical_name(node);
+            if (!validation_signal_known(name)) {
+                mknd_err(node, "UNKNOWN_SIGNAL_NAME");
+            } else if (!validation_signal_maskable(name)) {
+                mknd_err(node, "SIGNAL_CANNOT_BE_MASKED");
+            }
+            if (name) free(name);
         }
 
         else if (node->node_type == OP_SCONCAT) {

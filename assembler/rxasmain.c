@@ -51,6 +51,7 @@ static void prt_ops_new() {
             case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; num_ops = 2; break;
             case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; num_ops = 3; break;
             case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_L_R_S: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_STRING; num_ops = 3; break;
             case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; num_ops = 2; break;
             case FMT_P: types[0] = OP_FUNC; num_ops = 1; break;
             case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; num_ops = 2; break;

@@ -1,6 +1,7 @@
 # Level B Signals And Trace Working Design
 
-Status: draft design record with phase 1 signal support partially implemented
+Status: design record with phase 2 block-scoped signal support implemented;
+trace extraction remains planned
 Last updated: 2026-04-28
 
 ## Purpose
@@ -402,7 +403,12 @@ This form is for frame/procedure-scoped handlers. Block-scoped handlers use the
 ### Block Handlers
 
 Do not add user-visible label handlers. The block-local syntax should express
-the protected body and its handlers directly:
+the protected body and its handlers directly.
+
+The syntax is attached only to a simple `do ... end` group: a `do` with no
+repetitor, conditional, or expression-block value. This is a placement rule,
+not a practical restriction. Code that needs a protected region inside a loop
+can nest a simple `do ... end` exactly where the protected region is needed.
 
 ```rexx
 do
@@ -418,11 +424,24 @@ on signal
 end
 ```
 
+For example, loop code can protect each iteration by nesting the signal block:
+
+```rexx
+do i = 1 to count
+  do
+    risky_work(i)
+  on signal error as problem
+    call log_problem(problem)
+  end
+end
+```
+
 Semantics:
 
+- `on signal` clauses are valid only on a simple `do ... end` group
 - statements before the first `on signal` clause are the protected body
 - `on signal` clauses are handlers, not labels
-- `on signal` with no signal names catches all signals
+- `on signal` with no signal names catches all maskable signals
 - normal execution of the protected body skips all handler clauses
 - `as name` binds the current `.signal` object to that local name
 - if `as name` is omitted, the signal object is not available in that handler
@@ -446,9 +465,10 @@ Decision:
 Because the VM handler table is per-frame, not per-block, the compiler must
 restore prior handlers around block-scoped handling.
 
-There is no RXAS instruction today that snapshots/restores a handler table
-entry. The compiler can emit simple set/unset instructions only if it knows the
-previous state.
+RXAS provides push/pop forms that snapshot and restore a single signal handler
+entry in the current stack frame. The compiler emits those forms around
+block-scoped handlers instead of trying to reconstruct the previous state from
+source.
 
 Decision:
 
@@ -662,18 +682,32 @@ Status on 2026-04-28:
   handler code returning `.signalaction.skip()` keeps the `..skip` selector in
   optimized builds even when a generated helper body is optimized
 - `signal off` restores the VM root default (`sighalt` or `sigignore` for the
-  VM's default-ignored signals); true handler stack push/pop remains Phase 2
+  VM's default-ignored signals)
 
 ### Phase 2: Block-Scoped Error Handling
 
 - Add handler push/pop support if not already implemented in phase 1.
-- Implement `do ... on signal ... end`.
+- Implement `do ... on signal ... end` on simple `do` groups only.
 - Implement `on signal` with no names as the catch-all signal handler.
 - Implement optional `as name`; without it, no signal object is bound.
 - Ensure normal execution skips handler clauses.
 - Ensure handler completion leaves the protected block.
 - Add tests for nested blocks, nested procedures, handler restoration, and
   signal propagation.
+
+Status on 2026-04-28:
+
+- added VM/RXAS `sigpush`, `sigpop`, and `sigbrv` handler forms
+- added a per-frame signal handler stack that is cleared when a frame exits or
+  is recycled
+- added parser/compiler support for simple-`do` block handlers:
+  - `do ... on signal name[, name...] [as local] ... end`
+  - `do ... on signal [as local] ... end` for catch-all maskable handling
+- generated block handlers receive a `.signal` object only when `as local` is
+  present
+- normal protected-body completion pops installed handlers and skips the
+  handler clauses; handler completion pops installed handlers and leaves the
+  block
 
 ### Phase 3: Trace Runtime Extraction
 

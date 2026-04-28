@@ -78,6 +78,7 @@ struct stack_frame {
     size_t number_args;              /* Argument count for the frame */
     unsigned char is_interrupt;      /* Signal currently being handled, or zero */
     interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Signal / Exception handlers */
+    interrupt_saved_entry *interrupt_stack; /* Block-scoped signal handler saves */
     numeric_context num_context;     /* Numeric context for the procedure */
     struct decplugin *decimal;       /* Decimal plugin context */
     char decimal_loaded_here;        /* Whether this frame loaded decimal support */
@@ -95,14 +96,17 @@ marker. `frame_f()` copies the caller's table into a newly entered child frame,
 so handlers installed by a caller are visible to procedures it calls later, but
 changes made in a child frame do not mutate the caller's table. Returning from a
 procedure restores the caller's signal state by returning to the caller frame.
-There is no VM-level block-scoped handler stack today; any block-local save and
-restore semantics must be emitted by the compiler or added as new VM support.
+Each frame also owns an `interrupt_stack` used by block-scoped handlers. The
+`sigpush` and `sigpop` instructions save and restore individual handler entries
+on that stack. Frame cleanup clears any remaining pushed entries, which gives
+block-scoped handling a safety net for frame exit and frame recycling.
 
 Signal codes are defined in `interpreter/rxsignal.h`. The handler responses are
-`IGNORE`, `HALT`, `SILENT_HALT`, `RETURN`, `BRANCH`, `CALL`, and `CALL_BRANCH`,
-exposed in RXAS as `sigignore`, `sighalt`, `sigshalt`, `sigret`, `sigbr`,
-`sigcall`, and `sigcallbr`. `KILL` is always halt-only. `BREAKPOINT` is the
-debugger/trace signal rather than an ordinary error condition.
+`IGNORE`, `HALT`, `SILENT_HALT`, `RETURN`, `BRANCH`, `BRANCH_VALUE`, `CALL`,
+and `CALL_BRANCH`, exposed in RXAS as `sigignore`, `sighalt`, `sigshalt`,
+`sigret`, `sigbr`, `sigbrv`, `sigcall`, and `sigcallbr`. `KILL` is always
+halt-only. `BREAKPOINT` is the debugger/trace signal rather than an ordinary
+error condition.
 
 `sigcalla` installs an action-aware call handler. It receives the same raw
 five-attribute interrupt object as `sigcall`, but the handler's return string
@@ -139,7 +143,10 @@ class should wrap it rather than requiring ordinary Rexx code to use
 Level B's `rxfnsb.runtime_signal` wraps this raw VM object. Its normal factory
 keeps the public `.signal(name, message)` shape, and generated handler wrappers
 attach the raw VM object through the internal `set_raw` method before invoking
-user code typed as `.signal`.
+user code typed as `.signal`. Branch-value handlers installed with `sigbrv`
+perform the same wrapping in the VM before branching to the handler label, so
+compiler-generated block handlers can bind an `as name` local directly as a
+user-facing `.signal` value.
 
 Address semantics matter. VM-raised fault signals stamp the faulting
 instruction address before dispatch advances. `BREAKPOINT` and native or

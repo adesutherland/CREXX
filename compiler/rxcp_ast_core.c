@@ -1309,6 +1309,14 @@ const char *ast_ndtp(NodeType type) {
             return "WHEN";
         case OTHERWISE:
             return "OTHERWISE";
+        case SIGNAL_BLOCK:
+            return "SIGNAL_BLOCK";
+        case SIGNAL_HANDLER:
+            return "SIGNAL_HANDLER";
+        case SIGNAL_NAMES:
+            return "SIGNAL_NAMES";
+        case SIGNAL_NAME:
+            return "SIGNAL_NAME";
         default: return "*UNKNOWN*";
     }
 }

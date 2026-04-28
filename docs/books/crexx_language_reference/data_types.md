@@ -264,8 +264,17 @@ that provide a finalizer and, where needed, a copy/duplicate hook.
 
 Raised signal object.
 
-The current VM passes signal handlers an internal object-like value containing
-the signal code, module number, address, signal name, and payload/message
-object. This raw transport shape is intended for runtime/debugger support code.
-The Level B user-facing signal object is still being designed and should expose
-friendly named fields rather than requiring direct access to the VM attributes.
+Level B exposes signals through the `rxfnsb.signal` interface. User code should
+work with the interface rather than the raw VM interrupt transport. The current
+methods include:
+
+* `name()` - canonical signal name
+* `code()` - VM signal code
+* `module()` and `address()` - VM source address for runtime-raised signals
+* `message()` and `payload()` - associated message or object payload
+* `file()`, `line()`, `column()`, and `source()` - source metadata when present
+
+The VM still passes handlers a raw object-like value containing the signal
+code, module number, address, signal name, and payload/message object. The
+`rxfnsb.runtime_signal` class wraps that raw shape so procedure and block
+handlers receive a normal `.signal` value.

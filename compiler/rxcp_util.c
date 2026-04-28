@@ -617,6 +617,8 @@ const char* token_to_string(int token_id) {
         case TK_SAY: return "TK_SAY";
         case TK_RETURN: return "TK_RETURN";
         case TK_EXIT: return "TK_EXIT";
+        case TK_SIGNAL: return "TK_SIGNAL";
+        case TK_ON: return "TK_ON";
         case TK_PROCEDURE: return "TK_PROCEDURE";
         case TK_EXPOSE: return "TK_EXPOSE";
         case TK_CALL: return "TK_CALL";
@@ -1162,6 +1164,10 @@ const char* node_type_to_string(NodeType type) {
         case SWITCH: return "SWITCH";
         case WHEN: return "WHEN";
         case OTHERWISE: return "OTHERWISE";
+        case SIGNAL_BLOCK: return "SIGNAL_BLOCK";
+        case SIGNAL_HANDLER: return "SIGNAL_HANDLER";
+        case SIGNAL_NAMES: return "SIGNAL_NAMES";
+        case SIGNAL_NAME: return "SIGNAL_NAME";
     }
     return "UNKNOWN";
 }

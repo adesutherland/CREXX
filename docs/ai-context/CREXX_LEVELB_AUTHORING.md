@@ -223,6 +223,33 @@ References:
 - `bin/crexx.rexx`
 - `tests/demo/countlines.rexx`
 
+### Signal handlers live on simple `do` groups
+
+Block-scoped signal handling is written with `on signal` clauses on a simple
+`do ... end` group:
+
+```rexx
+do
+  risky_work()
+on signal conversion_error as problem
+  say problem.source()
+on signal
+  call cleanup()
+end
+```
+
+Do not attach `on signal` directly to counted, conditional, forever, or
+expression-form `do` loops. To protect part of a loop, nest a simple
+signal-handling `do ... end` group inside the loop body.
+
+If `as name` is omitted, the handler has no local signal object. That is fine
+for fixed cleanup/logging handlers.
+
+References:
+- `docs/books/crexx_language_reference/statements.md`
+- `docs/ai-context/LEVELB_SIGNALS_TRACE_WORKING.md`
+- `compiler/exits/signal/test_signal_block.rexx`
+
 ### Headerless scripts are a driver convenience, not a style rule
 
 The `crexx` driver can compile simple headerless top-level scripts with

@@ -315,7 +315,8 @@ walker_result structure_symbols_walker(walker_direction direction,
             }
         }
 
-        else if (node->node_type == BLOCK_EXPR ||
+        else if (node->node_type == SIGNAL_BLOCK ||
+                 node->node_type == BLOCK_EXPR ||
                  (node->node_type == INSTRUCTIONS && node->force_local_scope)) {
             if (node->scope) {
                 context->current_scope = node->scope;
@@ -388,7 +389,7 @@ walker_result build_symbols_walker(walker_direction direction,
             node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF ||
             node->node_type == PROCEDURE || node->node_type == METHOD ||
             node->node_type == FACTORY || node->node_type == MATCH || node->node_type == IMPORT ||
-            node->node_type == DO || node->node_type == INSTRUCTIONS ||
+            node->node_type == DO || node->node_type == SIGNAL_BLOCK || node->node_type == INSTRUCTIONS ||
             node->node_type == BLOCK_EXPR) {
             /* Pass 1 has already created these scopes and symbols. Just navigate. */
             if (node->scope) {
@@ -396,6 +397,7 @@ walker_result build_symbols_walker(walker_direction direction,
             } else if (node->node_type == INSTRUCTIONS && node->inherit_parent_scope) {
                 node->scope = context->current_scope;
             } else if (node->node_type == DO ||
+                      node->node_type == SIGNAL_BLOCK ||
                       node->node_type == BLOCK_EXPR ||
                       (node->node_type == INSTRUCTIONS &&
                        (node->force_local_scope ||
@@ -710,7 +712,7 @@ walker_result build_symbols_walker(walker_direction direction,
             return request_skip;
         }
 
-        else if (node->node_type == DO || node->node_type == BLOCK_EXPR) {
+        else if (node->node_type == DO || node->node_type == SIGNAL_BLOCK || node->node_type == BLOCK_EXPR) {
             /* Create/Navigate to scope - handled in the navigation block above */
         }
 

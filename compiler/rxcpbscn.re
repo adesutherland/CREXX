@@ -208,12 +208,12 @@ int rexbscan(Context* s) {
     'RETURN' { RET(TK_RETURN); }
     'SAY' { RET(TK_SAY); }
     'SELECT' { RET(TK_SELECT); }
-  //  'SIGNAL' { RET(TK_SIGNAL); }
+    'SIGNAL' { RET(TK_SIGNAL); }
     'THEN' { RET(TK_THEN); }
   //  'TRACE' { RET(TK_TRACE); }
     'WHEN' { RET(TK_WHEN); }
   //  'OFF' { RET(TK_OFF); }
-  //  'ON' { RET(TK_ON); }
+    'ON' { RET(TK_ON); }
     'BY' { RET(TK_BY); }
   //  'ERROR' { RET(TK_ERROR); }
     'EXPOSE' { RET(TK_EXPOSE); }

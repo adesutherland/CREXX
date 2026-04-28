@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
@@ -41,6 +42,104 @@ static int flow_needs_attr_copy(ASTNode *node) {
            node->target_type == TP_STRING ||
            node->target_type == TP_OBJECT ||
            node->target_type == TP_BINARY;
+}
+
+static const char *signal_block_catch_all_names[] = {
+        "FAILURE", "ERROR", "OVERFLOW_UNDERFLOW", "DIVISION_BY_ZERO",
+        "CONVERSION_ERROR", "INVALID_ARGUMENTS", "OUT_OF_RANGE", "UNICODE_ERROR",
+        "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND", "NOT_IMPLEMENTED",
+        "INVALID_SIGNAL_CODE", "NOTREADY", "QUIT", "TERM", "POSIX_INT",
+        "POSIX_HUP", "POSIX_USR1", "POSIX_USR2", "POSIX_CHLD", "OTHER", 0
+};
+
+typedef struct signal_emit_names {
+    char **items;
+    size_t count;
+    size_t capacity;
+} signal_emit_names;
+
+static void signal_emit_names_add(signal_emit_names *names, const char *name) {
+    if (!names || !name) return;
+    if (names->count == names->capacity) {
+        size_t new_capacity = names->capacity ? names->capacity * 2 : 8;
+        char **new_items = realloc(names->items, sizeof(char*) * new_capacity);
+        if (!new_items) return;
+        names->items = new_items;
+        names->capacity = new_capacity;
+    }
+    names->items[names->count++] = strdup(name);
+}
+
+static void signal_emit_names_free(signal_emit_names *names) {
+    size_t i;
+    if (!names) return;
+    for (i = 0; i < names->count; i++) free(names->items[i]);
+    free(names->items);
+    names->items = 0;
+    names->count = 0;
+    names->capacity = 0;
+}
+
+static char *signal_emit_canonical_name(ASTNode *node) {
+    char *name;
+    size_t i;
+
+    if (!node || !node->node_string || node->node_string_length == 0) return 0;
+    name = malloc(node->node_string_length + 1);
+    if (!name) return 0;
+    for (i = 0; i < node->node_string_length; i++) {
+        name[i] = (char)toupper((unsigned char)node->node_string[i]);
+    }
+    name[node->node_string_length] = 0;
+    if (strcmp(name, "SYNTAX") == 0) {
+        free(name);
+        return strdup("ERROR");
+    }
+    return name;
+}
+
+static void signal_emit_collect_names(ASTNode *names_node, signal_emit_names *names) {
+    ASTNode *name_node;
+    const char **catch_all;
+
+    if (!names_node || !names) return;
+    if (!names_node->child) {
+        for (catch_all = signal_block_catch_all_names; *catch_all; catch_all++) {
+            signal_emit_names_add(names, *catch_all);
+        }
+        return;
+    }
+
+    name_node = names_node->child;
+    while (name_node) {
+        char *name = signal_emit_canonical_name(name_node);
+        if (name) {
+            signal_emit_names_add(names, name);
+            free(name);
+        }
+        name_node = ast_nsib(name_node);
+    }
+}
+
+static ASTNode *signal_handler_binding_target(ASTNode *handler) {
+    ASTNode *binding;
+
+    if (!handler) return 0;
+    binding = ast_chdn(handler, 1);
+    if (!binding || binding->node_type != DEFINE) return 0;
+    return binding->child;
+}
+
+static void signal_emit_pop_names(OutputFragment *output, signal_emit_names *installed) {
+    size_t i;
+    char *line;
+
+    if (!output || !installed) return;
+    for (i = installed->count; i > 0; i--) {
+        line = mprintf("   sigpop \"%s\"\n", installed->items[i - 1]);
+        output_append_text(output, line);
+        free(line);
+    }
 }
 
 void emit_flow(ASTNode *node, void *pl) {
@@ -88,6 +187,95 @@ void emit_flow(ASTNode *node, void *pl) {
             if (comment_meta[0]) output_prepend_text(comment_meta, node->output);
             free(comment_meta);
             break;
+
+        case SIGNAL_BLOCK: {
+            signal_emit_names installed = {0};
+            ASTNode *handler;
+            size_t handler_index;
+
+            if (!node->output) node->output = output_f();
+
+            comment_meta = get_metaline_token_at(node);
+            output_append_text(node->output, comment_meta);
+            free(comment_meta);
+
+            handler = child2;
+            handler_index = 0;
+            while (handler) {
+                signal_emit_names handler_names = {0};
+                ASTNode *binding = signal_handler_binding_target(handler);
+
+                signal_emit_collect_names(handler->child, &handler_names);
+                for (j = 0; j < (int)handler_names.count; j++) {
+                    int binding_register = binding ? binding->register_num : UNSET_REGISTER;
+                    char binding_register_type = binding ? binding->register_type : 'r';
+
+                    if (binding && binding->symbolNode && binding->symbolNode->symbol) {
+                        binding_register = binding->symbolNode->symbol->register_num;
+                        binding_register_type = binding->symbolNode->symbol->register_type;
+                    }
+
+                    temp1 = mprintf("   sigpush \"%s\"\n", handler_names.items[j]);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    signal_emit_names_add(&installed, handler_names.items[j]);
+
+                    if (binding) {
+                        temp1 = mprintf("   sigbrv l%dsignalhandler%zu,%c%d,\"%s\"\n",
+                                        node->node_number,
+                                        handler_index,
+                                        binding_register_type,
+                                        binding_register,
+                                        handler_names.items[j]);
+                    } else {
+                        temp1 = mprintf("   sigbr l%dsignalhandler%zu,\"%s\"\n",
+                                        node->node_number,
+                                        handler_index,
+                                        handler_names.items[j]);
+                    }
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                }
+                signal_emit_names_free(&handler_names);
+                handler = ast_nsib(handler);
+                handler_index++;
+            }
+
+            if (child1 && child1->output) output_concat(node->output, child1->output);
+            if (child1 && child1->cleanup) output_concat(node->output, child1->cleanup);
+
+            signal_emit_pop_names(node->output, &installed);
+            temp1 = mprintf("   br l%dsignalend\n", node->node_number);
+            output_append_text(node->output, temp1);
+            free(temp1);
+
+            handler = child2;
+            handler_index = 0;
+            while (handler) {
+                ASTNode *handler_body = ast_chdn(handler, 2);
+
+                temp1 = mprintf("l%dsignalhandler%zu:\n", node->node_number, handler_index);
+                output_append_text(node->output, temp1);
+                free(temp1);
+
+                signal_emit_pop_names(node->output, &installed);
+                if (handler_body && handler_body->output) output_concat(node->output, handler_body->output);
+                if (handler_body && handler_body->cleanup) output_concat(node->output, handler_body->cleanup);
+
+                temp1 = mprintf("   br l%dsignalend\n", node->node_number);
+                output_append_text(node->output, temp1);
+                free(temp1);
+
+                handler = ast_nsib(handler);
+                handler_index++;
+            }
+
+            temp1 = mprintf("l%dsignalend:\n", node->node_number);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            signal_emit_names_free(&installed);
+            break;
+        }
 
         case NOP:
             if (!node->output) node->output = output_f();

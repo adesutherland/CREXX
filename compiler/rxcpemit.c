@@ -1088,6 +1088,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case DO: /* DO LOOP */
+            case SIGNAL_BLOCK:
                 emit_flow(node, pl);
                 break;
 

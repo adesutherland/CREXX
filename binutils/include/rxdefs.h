@@ -20,6 +20,7 @@ typedef enum {
     FMT_L_R,
     FMT_L_R_I,
     FMT_L_R_R,
+    FMT_L_R_S,
     FMT_L_S,
     FMT_P,
     FMT_P_S,

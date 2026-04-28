@@ -25,6 +25,12 @@ crexx_add_compiler_exit_runtime_test(
         RUN_SUFFIX ${CMAKE_BINARY_DIR}/bin/exittestsupport.rxbin ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${LIBRPATH}
 )
 
+crexx_add_compiler_exit_runtime_test(
+        test_signal_block
+        test_signal_block.rexx
+        RUN_SUFFIX ${LIBRPATH}
+)
+
 set(SIGNAL_COMPILE_FAIL_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/signal_compile_fail.cmake")
 file(WRITE "${SIGNAL_COMPILE_FAIL_SCRIPT}" [=[
 execute_process(
@@ -82,4 +88,10 @@ crexx_add_signal_compile_fail_test(
         test_signal_missing_handler_diagnostic
         test_signal_missing_handler.rexx
         "Error in test_signal_missing_handler\\.rexx @ [0-9]+:[0-9]+ - #SIGNAL_HANDLER_NOT_FOUND, \"missing_handler\", \"missing_handler\""
+)
+
+crexx_add_signal_compile_fail_test(
+        test_signal_block_counted_bad_diagnostic
+        test_signal_block_counted_bad.rexx
+        "#SYNTAX_ERROR, \"on\""
 )

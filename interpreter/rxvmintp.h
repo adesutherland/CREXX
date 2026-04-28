@@ -50,6 +50,7 @@ typedef enum interrupt_response {
     RXSIGNAL_RESPONSE_IGNORE = 0,   /* Ignore the interrupt */
     RXSIGNAL_RESPONSE_RETURN,       /* Return to the stack frame - the stack is unwound to the frame */
     RXSIGNAL_RESPONSE_BRANCH,       /* Branch to an address in a stack frame - the stack is unwound to the frame */
+    RXSIGNAL_RESPONSE_BRANCH_VALUE, /* Branch to an address and bind a .signal object in the handler frame */
     RXSIGNAL_RESPONSE_CALL,         /* Call a function - will return to the current instruction */
     RXSIGNAL_RESPONSE_CALL_BRANCH,  /* Call a function - will return to the BRANCH address (the stack is unwound to the frame) */
     RXSIGNAL_RESPONSE_CALL_ACTION,  /* Call a function and interpret its returned signal action */
@@ -62,7 +63,15 @@ typedef struct interrupt_entry {
     interrupt_response response;    /* Response to the interrupt */
     proc_runtime *function;         /* Address of the function to call */
     size_t jump;                    /* Address to jump to */
+    stack_frame *frame;             /* Frame that owns branch/jump handlers */
+    size_t value_register;          /* Destination register for branch handlers with a signal object */
 } interrupt_entry;
+
+typedef struct interrupt_saved_entry {
+    unsigned char signal;
+    interrupt_entry entry;
+    struct interrupt_saved_entry *next;
+} interrupt_saved_entry;
 
 typedef struct rxvm_interface_factory_entry {
     char *interface_name;
@@ -95,6 +104,7 @@ struct stack_frame {
     unsigned char is_interrupt;  /* Set to the interrupt number that the frame is handling (or zero) */
     unsigned char is_interrupt_action; /* Set when an interrupt handler return value is action-aware */
     interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Interrupt Table */
+    interrupt_saved_entry *interrupt_stack; /* Block-scoped saved interrupt handlers */
     numeric_context num_context; /* Numeric context for the procedure */
     struct decplugin *decimal;
     char decimal_loaded_here;

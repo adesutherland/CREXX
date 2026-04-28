@@ -347,6 +347,9 @@ walker_result pdot_walker_handler(walker_direction direction,
             case IMPORTED_FILE:
             case INSTRUCTIONS:
             case DO:
+            case SIGNAL_BLOCK:
+            case SIGNAL_HANDLER:
+            case SIGNAL_NAMES:
             case BY:
             case IF:
             case REXX_OPTIONS:

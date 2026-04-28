@@ -25,6 +25,7 @@ static int get_operand_types(OpFormat format, OperandType *types) {
         case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; return 2;
         case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; return 3;
         case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_L_R_S: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_STRING; return 3;
         case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; return 2;
         case FMT_P: types[0] = OP_FUNC; return 1;
         case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
@@ -1031,6 +1032,7 @@ void rxasgen(Assembler_Context *context, Assembler_Token *instrToken, Assembler_
             case FMT_L_P_S:
             case FMT_L_R_I:
             case FMT_L_R_R:
+            case FMT_L_R_S:
             case FMT_R_D_R:
             case FMT_R_F_I:
             case FMT_R_F_R:

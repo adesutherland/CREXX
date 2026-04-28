@@ -2170,6 +2170,10 @@ walker_result func_type_safety_walker(walker_direction direction,
             case PROGRAM_FILE:
             case IMPORTED_FILE:
             case INSTRUCTIONS:
+            case SIGNAL_BLOCK:
+            case SIGNAL_HANDLER:
+            case SIGNAL_NAMES:
+            case SIGNAL_NAME:
             case PROCEDURE:
             case EXPOSED:
             case SAY:

@@ -136,6 +136,36 @@ static void rxcp_inject_cli_imports(Context *context) {
     }
 }
 
+static int rxcp_subtree_has_signal_block(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    if (node->node_type == SIGNAL_BLOCK) return 1;
+    child = node->child;
+    while (child) {
+        if (rxcp_subtree_has_signal_block(child)) return 1;
+        child = child->sibling;
+    }
+    return 0;
+}
+
+static void rxcp_inject_signal_imports(Context *context) {
+    ASTNode *program_file;
+
+    if (!context || !context->ast) return;
+
+    program_file = context->ast->child;
+    while (program_file) {
+        if (program_file->node_type == PROGRAM_FILE &&
+            rxcp_subtree_has_signal_block(program_file) &&
+            !rxcp_program_has_import(program_file, "rxfnsb")) {
+            rxcp_insert_program_import(context, program_file, "rxfnsb");
+            context->changed_flags |= FLAG_ORCH;
+        }
+        program_file = program_file->sibling;
+    }
+}
+
 /* Convert a node (i.e. type INTEGER) to an integer - no error correction as the lexer will have done that */
 int node_to_integer(ASTNode* node) {
     int result;
@@ -996,6 +1026,7 @@ void validate_ast(Context *context) {
 
     context->ast = context->work_ast;
     rxcp_inject_cli_imports(context);
+    rxcp_inject_signal_imports(context);
     context->current_scope = 0;
     context->in_factory = 0;
     ast_wlkr(context->ast, ast_work_structure_walker, (void *) context);

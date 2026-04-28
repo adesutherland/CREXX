@@ -30,6 +30,12 @@ The DO/END statement is the command employed to iterate and group multiple state
 
 When `DO ... END` appears where an expression is expected, it is parsed as a block expression. In that form the body must yield a value using `LEAVE WITH expr`.
 
+Simple `DO ... END` groups may also carry block-scoped signal handlers using
+`ON SIGNAL` clauses. The handler clauses are valid only on a simple `DO` group,
+not on counted, conditional, forever, or expression-form `DO`. To protect code
+inside a loop, nest a simple signal-handling `DO ... END` group inside the loop
+body.
+
 ## EXIT
 
 EXIT \[ expr \] ;
@@ -109,6 +115,61 @@ There are two styles of the SELECT statement in cREXX:
 2. **C-Style SELECT (SWITCH):** Includes an initial `expression` after the `SELECT` keyword. The `expression` is evaluated once, and its result is implicitly compared for equality (`=`) against each `WHEN` expression.
 
 If a `WHEN` condition is met, its associated `THEN` instruction is executed, and control exits the `SELECT` block. If no `WHEN` condition is met, the `OTHERWISE` block (if present) is executed. If no `WHEN` condition is met and an `OTHERWISE` block is absent, the `SELECT` statement acts as a `NOP` (null operation) and does nothing.
+
+## SIGNAL
+
+Signals are Level B error/condition objects implementing `.signal`.
+Rexx-created signals can be raised with a signal object or with the compact
+named forms:
+
+```rexx
+signal .signal("error", "message")
+signal error
+signal error "message"
+```
+
+Procedure-scoped handlers are installed with `SIGNAL ON` and removed with
+`SIGNAL OFF`:
+
+```rexx
+signal on conversion_error call handle_conversion
+signal on error, syntax call handle_problem
+signal off conversion_error
+
+handle_conversion: procedure = .signalaction
+  arg problem = .signal
+  say problem.source()
+  return .signalaction.skip()
+```
+
+The handler procedure receives one `.signal` argument and returns a
+`.signalaction`: `.signalaction.skip()`, `.signalaction.retry()`, or
+`.signalaction.fail()`.
+
+Block-scoped handlers use `ON SIGNAL` clauses on a simple `DO ... END` group:
+
+```rexx
+do
+  risky_work()
+on signal conversion_error as problem
+  say problem.source()
+on signal error, syntax
+  call cleanup()
+on signal
+  call log_unhandled_signal()
+end
+```
+
+The statements before the first `ON SIGNAL` clause are the protected body.
+Normal completion skips the handlers. A handler that completes normally leaves
+the `DO` block. `ON SIGNAL` with no names catches all maskable signals.
+`AS name` binds the current `.signal` object; if `AS` is omitted, no signal
+object is available to that handler.
+
+Only a simple `DO ... END` group can carry `ON SIGNAL` clauses. Counted,
+conditional, forever, and expression-form `DO` loops do not carry handlers
+directly. To protect code inside a loop, put a simple signal-handling
+`DO ... END` group inside the loop body.
 
 ## TRACE
 

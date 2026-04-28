@@ -1396,6 +1396,59 @@ static value *rxsignal_handler_payload(stack_frame *handler_frame) {
     return arg->attributes[4];
 }
 
+static void rxsignal_apply_native_interrupt_mode(unsigned char sig, interrupt_entry *entry) {
+    if (!entry || sig == 0 || sig >= RXSIGNAL_MAX) return;
+    if (entry->response == RXSIGNAL_RESPONSE_IGNORE) {
+        if (sig != RXSIGNAL_KILL) ignore_interrupt((int)sig);
+    } else {
+        enable_interrupt((int)sig);
+    }
+}
+
+static void rxsignal_push_handler(stack_frame *frame, unsigned char sig) {
+    interrupt_saved_entry *saved;
+
+    if (!frame || sig == 0 || sig >= RXSIGNAL_MAX) return;
+
+    saved = malloc(sizeof(interrupt_saved_entry));
+    if (!saved) return;
+    saved->signal = sig;
+    saved->entry = frame->interrupt_table[sig - 1];
+    saved->next = frame->interrupt_stack;
+    frame->interrupt_stack = saved;
+}
+
+static int rxsignal_pop_handler(stack_frame *frame, unsigned char sig) {
+    interrupt_saved_entry *saved;
+    interrupt_saved_entry *previous;
+
+    if (!frame || sig == 0 || sig >= RXSIGNAL_MAX) return 0;
+
+    previous = 0;
+    saved = frame->interrupt_stack;
+    while (saved) {
+        if (saved->signal == sig) {
+            frame->interrupt_table[sig - 1] = saved->entry;
+            rxsignal_apply_native_interrupt_mode(sig, &frame->interrupt_table[sig - 1]);
+            if (previous) previous->next = saved->next;
+            else frame->interrupt_stack = saved->next;
+            free(saved);
+            return 1;
+        }
+        previous = saved;
+        saved = saved->next;
+    }
+
+    return 0;
+}
+
+static void rxsignal_clear_handler_stack(stack_frame *frame) {
+    if (!frame) return;
+    while (frame->interrupt_stack) {
+        rxsignal_pop_handler(frame, frame->interrupt_stack->signal);
+    }
+}
+
 /* Stack Frame Factory */
 RX_INLINE stack_frame *frame_f(
                     proc_runtime *procedure,
@@ -1503,6 +1556,13 @@ RX_INLINE stack_frame *frame_f(
         }
     }
     else {
+        for (i = 0; i < RXSIGNAL_MAX; i++) {
+            this->interrupt_table[i].function = 0;
+            this->interrupt_table[i].jump = 0;
+            this->interrupt_table[i].frame = 0;
+            this->interrupt_table[i].value_register = 0;
+        }
+
         /* Set up the default interrupt mask */
         this->interrupt_table[RXSIGNAL_KILL-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_ERROR-1].response = RXSIGNAL_RESPONSE_HALT;
@@ -1539,6 +1599,7 @@ RX_INLINE stack_frame *frame_f(
         this->num_context.casetype = CASE_LOWER;
         this->num_context.standard = NUMERIC_STANDARD_COMMON;
     }
+    this->interrupt_stack = 0;
     this->decimal_loaded_here = 0;
     this->unicode_loaded_here = 0;
     this->return_pc = return_pc;
@@ -1554,6 +1615,7 @@ RX_INLINE stack_frame *frame_f(
 /* Clear Stack Frame - deallocating register contents and plugins */
 RX_INLINE void clear_frame(stack_frame *frame) {
     int i, offset;
+    rxsignal_clear_handler_stack(frame);
     /* Reset Local Registers and a0 */
     for (i = 0; i < frame->procedure->locals; i++) {
         clear_value(frame->baselocals[i]);
@@ -1573,9 +1635,49 @@ RX_INLINE void clear_frame(stack_frame *frame) {
 
 /* Free Stack Frame */
 RX_INLINE void free_frame(stack_frame *frame) {
+    rxsignal_clear_handler_stack(frame);
     /* Add to free list */
     frame->prev_free = *(frame->procedure->frame_free_list);
     *(frame->procedure->frame_free_list) = frame;
+}
+
+static stack_frame *rxsignal_unwind_to_frame(stack_frame *current, stack_frame *target) {
+    stack_frame *discard;
+
+    if (!target) return current;
+
+    while (current && current != target) {
+        discard = current;
+        current = current->parent;
+        free_frame(discard);
+    }
+
+    return current ? current : target;
+}
+
+static void rxsignal_populate_raw_interrupt(value *raw,
+                                            unsigned char interrupt,
+                                            rxinteger module,
+                                            rxinteger address,
+                                            value *payload) {
+    value_zero(raw);
+    set_num_attributes(raw, 5);
+    raw->attributes[0]->int_value = (rxinteger)interrupt;
+    raw->attributes[1]->int_value = module;
+    raw->attributes[2]->int_value = address;
+    set_null_string(raw->attributes[3], interrupt_to_string(interrupt));
+    move_value(raw->attributes[4], payload);
+}
+
+static void rxsignal_populate_runtime_signal(value *dest, value *raw) {
+    static char runtime_signal_type[] = "rxfnsb.runtime_signal";
+
+    value_zero(dest);
+    set_num_attributes(dest, 6);
+    dest->object_type_name = runtime_signal_type;
+    dest->object_type_name_length = strlen(runtime_signal_type);
+    dest->attributes[0]->int_value = 1;
+    copy_value(dest->attributes[4], raw);
 }
 
 void completely_free_frame(stack_frame *frame) {
@@ -1816,6 +1918,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 #define FMT_L_R_MAP 2, OP_ID, OP_REG, OP_NONE
 #define FMT_L_R_I_MAP 3, OP_ID, OP_REG, OP_INT
 #define FMT_L_R_R_MAP 3, OP_ID, OP_REG, OP_REG
+#define FMT_L_R_S_MAP 3, OP_ID, OP_REG, OP_STRING
 #define FMT_L_S_MAP 2, OP_ID, OP_STRING, OP_NONE
 #define FMT_P_MAP 1, OP_FUNC, OP_NONE, OP_NONE
 #define FMT_P_S_MAP 2, OP_FUNC, OP_STRING, OP_NONE
@@ -2053,7 +2156,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     }
 
     // Handle the interrupt
-    switch (current_frame->interrupt_table[last_interrupt - 1].response) {
+    interrupt_entry signal_handler = current_frame->interrupt_table[last_interrupt - 1];
+    switch (signal_handler.response) {
 
         case RXSIGNAL_RESPONSE_HALT:
             /* Halt */
@@ -2078,15 +2182,19 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
         case RXSIGNAL_RESPONSE_CALL_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> SET BRANCH FOR CALL RETURN ");
-            next_pc = current_frame->procedure->binarySpace->binary + current_frame->interrupt_table[last_interrupt -1 ].jump;
+            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
+#ifndef NTHREADED
+            current_module = current_frame->procedure->binarySpace->module;
+#endif
+            next_pc = current_frame->procedure->binarySpace->binary + signal_handler.jump;
             pc = next_pc;
             // Fall through to CALL
 
         case RXSIGNAL_RESPONSE_CALL_ACTION:
         case RXSIGNAL_RESPONSE_CALL: {
             /* Call */
-            proc_runtime *intr_function = current_frame->interrupt_table[last_interrupt-1].function;
-            char action_aware = current_frame->interrupt_table[last_interrupt-1].response == RXSIGNAL_RESPONSE_CALL_ACTION;
+            proc_runtime *intr_function = signal_handler.function;
+            char action_aware = signal_handler.response == RXSIGNAL_RESPONSE_CALL_ACTION;
             DEBUG("TRACE - INTR HANDLER -> CALL %s->%s()\n", interrupt_to_string(last_interrupt), intr_function->name);
 
             if (intr_function->start == SIZE_MAX) {
@@ -2095,15 +2203,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             }
 
             /* Populate the interrupt argument object */
-            value_zero(interrupt_arg);
-            set_num_attributes(interrupt_arg, 5);
-            interrupt_arg->attributes[0]->int_value = (rxinteger)last_interrupt;
-            interrupt_arg->attributes[1]->int_value = last_interrupted_module[last_interrupt];
-            interrupt_arg->attributes[2]->int_value = last_interrupted_address[last_interrupt];
-            // Copy the signal name to the 4th attribute
-            set_null_string(interrupt_arg->attributes[3], interrupt_to_string(last_interrupt));
-            // Move the object to the 5th attribute
-            move_value(interrupt_arg->attributes[4], interrupt_object[last_interrupt]);
+            rxsignal_populate_raw_interrupt(interrupt_arg,
+                                            last_interrupt,
+                                            last_interrupted_module[last_interrupt],
+                                            last_interrupted_address[last_interrupt],
+                                            interrupt_object[last_interrupt]);
 
             if (intr_function->binarySpace == 0) {
                 /* This is a native plugin function */
@@ -2143,7 +2247,27 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
         case RXSIGNAL_RESPONSE_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> BRANCH %s\n", interrupt_to_string(last_interrupt));
-            next_pc = current_frame->procedure->binarySpace->binary + current_frame->interrupt_table[last_interrupt -1].jump;
+            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
+#ifndef NTHREADED
+            current_module = current_frame->procedure->binarySpace->module;
+#endif
+            next_pc = current_frame->procedure->binarySpace->binary + signal_handler.jump;
+            CALC_DISPATCH_MANUAL
+            DISPATCH
+
+        case RXSIGNAL_RESPONSE_BRANCH_VALUE:
+            DEBUG("TRACE - INTR HANDLER -> BRANCH VALUE %s\n", interrupt_to_string(last_interrupt));
+            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
+#ifndef NTHREADED
+            current_module = current_frame->procedure->binarySpace->module;
+#endif
+            rxsignal_populate_raw_interrupt(interrupt_arg,
+                                            last_interrupt,
+                                            last_interrupted_module[last_interrupt],
+                                            last_interrupted_address[last_interrupt],
+                                            interrupt_object[last_interrupt]);
+            rxsignal_populate_runtime_signal(current_frame->locals[signal_handler.value_register], interrupt_arg);
+            next_pc = current_frame->procedure->binarySpace->binary + signal_handler.jump;
             CALC_DISPATCH_MANUAL
             DISPATCH
 
@@ -2228,6 +2352,10 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_IGNORE;
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     ignore_interrupt((int)sig); // Set the corresponding native interrupt to ignore
                 }
             }
@@ -2243,6 +2371,10 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_HALT;
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -2258,6 +2390,10 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_SILENT_HALT;
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -2274,6 +2410,28 @@ START_OF_INSTRUCTIONS
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_BRANCH;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].frame = current_frame;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
+                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
+                }
+            }
+            DISPATCH
+
+        /* Set Signal op3 Handle to Branch to op1 and bind a .signal object to op2 */
+        START_INSTRUCTION(SIGBRV_ID_REG_STRING) CALC_DISPATCH(3)
+            DEBUG("TRACE - SIGBRV 0x%x,R%d,\"%.*s\"\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)op3S->string_len, op3S->string);
+            {
+                size_t sig = string_to_interrupt(op3S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                }
+                else {
+                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_BRANCH_VALUE;
+                    current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].frame = current_frame;
+                    current_frame->interrupt_table[sig-1].value_register = REG_IDX(2);
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -2292,6 +2450,9 @@ START_OF_INSTRUCTIONS
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL;
                     current_frame->interrupt_table[sig-1].function = signal_function;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -2310,6 +2471,9 @@ START_OF_INSTRUCTIONS
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL_ACTION;
                     current_frame->interrupt_table[sig-1].function = signal_function;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -2328,6 +2492,8 @@ START_OF_INSTRUCTIONS
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL_BRANCH;
                     current_frame->interrupt_table[sig-1].function = signal_function;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
+                    current_frame->interrupt_table[sig-1].frame = current_frame;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -2343,7 +2509,35 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_RETURN;
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
+                }
+            }
+            DISPATCH
+
+        /* Push current Signal op1 handler on the current frame handler stack */
+        START_INSTRUCTION(SIGPUSH_STRING) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGPUSH \"%.*s\"\n", (int)op1S->string_len, op1S->string);
+            {
+                size_t sig = string_to_interrupt(op1S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) {
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                } else {
+                    rxsignal_push_handler(current_frame, (unsigned char)sig);
+                }
+            }
+            DISPATCH
+
+        /* Pop and restore current Signal op1 handler from the current frame handler stack */
+        START_INSTRUCTION(SIGPOP_STRING) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGPOP \"%.*s\"\n", (int)op1S->string_len, op1S->string);
+            {
+                size_t sig = string_to_interrupt(op1S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL || !rxsignal_pop_handler(current_frame, (unsigned char)sig)) {
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
             }
             DISPATCH
