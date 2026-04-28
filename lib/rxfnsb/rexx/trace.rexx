@@ -1,7 +1,7 @@
 /* REXX Level B trace runtime internals */
 options levelb
 
-namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw
+namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_handler
 
 trace_interrupt_raw: class
   _code = .int with register.1.int
@@ -259,6 +259,60 @@ tracecontroller: class
     arg mod_num = .int, name = .string
     return _trace_find_proc(mod_num, name)
 
+_trace_set: procedure = .void expose _trace_runtime_ready _trace_controller _trace_last_line
+  arg mode = .string
+  call _trace_ensure_runtime
+  normalized = _trace_normalize_mode(mode)
+  _trace_last_line = ""
+
+  if normalized = "OFF" then do
+    call _trace_controller.disable_breakpoints()
+    return
+  end
+
+  call _trace_controller.set_mode(normalized)
+  return
+
+_trace_handler: procedure = .int expose _trace_runtime_ready _trace_controller _trace_last_line
+  arg expose raw = .trace_interrupt_raw
+  call _trace_ensure_runtime
+
+  event = .tracecontext
+  event = _trace_controller.context_from_interrupt(raw)
+  if _trace_controller.should_trace(event) = 0 then return 0
+
+  line = .string
+  if _trace_controller.mode() = "ASM" then do
+    line = event.asm_line()
+    if event.has_source() <> 0 then line = line || " " || event.source_line()
+  end
+  else do
+    if event.has_source() = 0 then return 0
+    line = event.source_line()
+    if line = _trace_last_line then return 0
+  end
+
+  if line = "" then return 0
+  _trace_last_line = line
+  say line
+  return 0
+
+_trace_ensure_runtime: procedure expose _trace_runtime_ready _trace_controller _trace_last_line
+  if _trace_runtime_ready = 1 then return
+  _trace_controller = .tracecontroller()
+  _trace_last_line = ""
+  _trace_runtime_ready = 1
+  return
+
+_trace_normalize_mode: procedure = .string
+  arg mode = .string
+  normalized = upper(strip(mode))
+  if normalized = "" then return "REXX"
+  if normalized = "NORMAL" then return "REXX"
+  if normalized = "ASM" then return "ASM"
+  if normalized = "OFF" then return "OFF"
+  return "REXX"
+
 _trace_exact_source: procedure = .int
   arg module = .int, addr = .int, expose line = .int, expose column = .int, expose source = .string, expose result = .string
   meta_array = 0
@@ -414,12 +468,18 @@ _trace_is_default_excluded: procedure = .int
   if pos("rxdb", n) > 0 then return 1
   if pos("tracecontroller", n) > 0 then return 1
   if pos("tracecontext", n) > 0 then return 1
+  if left(n, 7) = "_trace_" then return 1
+  if pos("._trace_", n) > 0 then return 1
   if pos("runtime_signal", n) > 0 then return 1
   if pos("signalaction", n) > 0 then return 1
   if pos("rxcptest", n) > 0 then return 1
   if pos("rxcpexits", n) > 0 then return 1
   if pos("rxcp", n) > 0 then return 1
   if pos("_rxsysb", n) > 0 then return 1
+  if n = "trace" then return 1
+  if n = "library" then return 1
+  if right(n, 8) = "/library" then return 1
+  if right(n, 8) = "\library" then return 1
   if pos("/rxfnsb/", n) > 0 then return 1
   if pos("\\rxfnsb\\", n) > 0 then return 1
   return 0

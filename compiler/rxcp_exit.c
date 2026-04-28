@@ -38,6 +38,8 @@ static const CertifiedExitSpec certified_exit_specs[] = {
       RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
     { "SIGNAL",
       RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
+    { "TRACE",
+      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
     { NULL, 0 }
 };
 

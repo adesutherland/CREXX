@@ -317,6 +317,13 @@ add_test(NAME err_parse_inline_then_exit_disabled_fail
          $<TARGET_FILE:rxc> -x ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_parse_inline_then_exit_disabled.rexx)
 set_tests_properties(err_parse_inline_then_exit_disabled_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
+add_test(NAME err_trace_exit_disabled_fail
+         COMMAND crexx_test_driver --expect-fail
+         ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_trace_exit_disabled.txt
+         ${CMAKE_CURRENT_BINARY_DIR}/err_trace_exit_disabled_fail.txt
+         $<TARGET_FILE:rxc> -x ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_trace_exit_disabled.rexx)
+set_tests_properties(err_trace_exit_disabled_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+
 add_crexx_compiler_fail_test(err_parse_missing_arguments rexx_src/err_parse_missing_arguments.rexx err_parse_missing_arguments.txt)
 
 # Warning tests
@@ -1175,6 +1182,17 @@ if (ENABLE_PARSER_MODE)
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"trim\""
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"into\""
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"var\""
+    )
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_trace_keywords
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_trace_keywords.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"trace\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"off\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"normal\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"rexx\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"asm\""
     )
 
     add_crexx_syntax_highlight_test(

@@ -173,7 +173,26 @@ directly. To protect code inside a loop, put a simple signal-handling
 
 ## TRACE
 
-CURRENT STATUS: not implemented (Debugging Approach TBC)
+`TRACE` enables or disables VM breakpoint-backed tracing for the current call
+frame and procedures called from it.
+
+The initial supported forms are:
+
+```rexx
+trace off
+trace normal
+trace rexx
+trace asm
+```
+
+`TRACE NORMAL` and `TRACE REXX` currently both trace authored Rexx clauses and
+skip the runtime/debugger internals by default. `TRACE ASM` traces VM/RXAS
+instruction information and includes source text where metadata is available.
+`TRACE OFF` disables breakpoint tracing and resets the trace runtime state.
+
+TRACE is implemented as a certified compiler exit. It requires normal compiler
+exit loading; compiling with exits disabled rejects the statement rather than
+treating it as an implicit command.
 
 # Procedures and Arguments
 

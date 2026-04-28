@@ -61,7 +61,7 @@ exposes the last raw response/body through the `httpclient` interface. It sends
 remain out of scope. See `lib/rxfnsb/rexx/rxhttp.md`.
 
 `lib/rxfnsb/rexx/trace.rexx` provides the Level B trace/debugger internals used
-by `rxdb` and intended for the future `TRACE` compiler exit:
+by `rxdb` and by the `TRACE` certified compiler exit:
 
 - `.tracecontroller`: breakpoint enable/disable, module/procedure helpers,
   source/ASM lookup, and default runtime/debugger filtering
@@ -69,6 +69,10 @@ by `rxdb` and intended for the future `TRACE` compiler exit:
   snapshot
 - `.trace_interrupt_raw`: internal register-mapped view of the VM interrupt
   object used by breakpoint handlers
+- `_trace_set(mode)` and `_trace_handler(raw)`: the compiler-exit-facing
+  runtime surface for setting trace mode and servicing `BREAKPOINT` events.
+  The exit still emits caller-frame assembler to enable/disable breakpoints and
+  install the handler, because VM signal tables are frame-owned.
 
 The helpers rely on VM metadata instructions such as `metaloaddata`,
 `metaloadinst`, `metadecodeinst`, and `metaloadedmodules`, so deployable linked

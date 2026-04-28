@@ -762,10 +762,14 @@ Status on 2026-04-28:
 
 ### Phase 4: TRACE Certified Exit
 
-- Add `TRACE` to the certified exit allowlist and `rxcexits` bundle.
-- Lower trace statements to runtime API calls.
-- Add tests for on/off, REXX mode, ASM mode, and default exclusions.
-- Add parser-mode/highlighting tests for trace keywords.
+- Added `TRACE` to the certified exit allowlist and `rxcexits` bundle.
+- Lowered trace statements to the trace runtime plus caller-frame assembler.
+  The runtime owns mode/filter/printing state; the exit generates a small
+  file-local `__rxtrace_handler` wrapper and the generated assembler installs or
+  disables `BREAKPOINT` handling in the current frame so VM frame-copy semantics
+  remain correct.
+- Added focused tests for on/off, REXX/NORMAL mode, ASM mode, invalid options,
+  and parser-mode/highlighting coverage for trace keywords.
 
 ## Approval Gates
 
