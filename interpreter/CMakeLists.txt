@@ -198,6 +198,18 @@ function(crexx_add_vm_dual_test)
     endif()
 endfunction()
 
+function(crexx_add_rxas_vm_binary SOURCE_NAME DESCRIPTION)
+    add_custom_command(
+            OUTPUT ${SOURCE_NAME}.rxbin
+            COMMAND $<TARGET_FILE:rxas> -o ${SOURCE_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests/${SOURCE_NAME}
+            DEPENDS tests/${SOURCE_NAME}.rxas rxas rxvm mc_decimal_dynamic
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "cREXX RXAS Instruction Tests (${DESCRIPTION}) ..."
+    )
+
+    add_custom_target(run_${SOURCE_NAME} ALL DEPENDS ${SOURCE_NAME}.rxbin)
+endfunction()
+
 # Value Tests
 add_test(
 		NAME ts_regvalue_tester
@@ -245,6 +257,29 @@ add_custom_command(
 add_custom_target(run_tests_breakpoint_address ALL DEPENDS tests_breakpoint_address.rxbin)
 
 crexx_add_vm_dual_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'")
+
+# Instruction Sanity Tests - focused signal handler mode coverage
+crexx_add_rxas_vm_binary(tests_signal_call_attrs "signal call argument attributes")
+crexx_add_vm_dual_test(NAME rxassignalattrcodetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-code: 30")
+crexx_add_vm_dual_test(NAME rxassignalattrnametests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-name: OTHER")
+crexx_add_vm_dual_test(NAME rxassignalattrpayloadtests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-payload: attr payload")
+crexx_add_vm_dual_test(NAME rxassignalattrsourcetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-source: signal other")
+
+crexx_add_rxas_vm_binary(tests_signal_handler_modes "signal handler response modes")
+crexx_add_vm_dual_test(NAME rxassignalmodeignoretests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ignore-ok")
+crexx_add_vm_dual_test(NAME rxassignalmodebranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-branch-hit")
+crexx_add_vm_dual_test(NAME rxassignalmodecallbranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-callbr-handler: callbr payload")
+crexx_add_vm_dual_test(NAME rxassignalmodereturntests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ret-after")
+
+crexx_add_rxas_vm_binary(tests_signal_silent_halt "signal silent halt response")
+crexx_add_vm_dual_test(NAME rxassignalsilenthalttests RXVM_ARGS tests_signal_silent_halt PASS_REGULAR_EXPRESSION "silent-before")
+
+crexx_add_rxas_vm_binary(tests_signal_frame_scope "signal frame handler table scope")
+crexx_add_vm_dual_test(NAME rxassignalframescopechildtests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: from child")
+crexx_add_vm_dual_test(NAME rxassignalframescopeparenttests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: after child ignore")
+
+crexx_add_rxas_vm_binary(tests_signal_nested_pending "nested pending signal delivery")
+crexx_add_vm_dual_test(NAME rxassignalnestedpendingtests RXVM_ARGS tests_signal_nested_pending PASS_REGULAR_EXPRESSION "nested:outer-before>outer-after>inner>main-after")
 
 # Basic Instruction Tests
 add_custom_command(

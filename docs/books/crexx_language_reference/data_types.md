@@ -262,7 +262,10 @@ that provide a finalizer and, where needed, a copy/duplicate hook.
 
 ### Signal
 
-Raised signal object
+Raised signal object.
 
-* int\_value = Signal code
-* string\_value = Any other signal context
+The current VM passes signal handlers an internal object-like value containing
+the signal code, module number, address, signal name, and payload/message
+object. This raw transport shape is intended for runtime/debugger support code.
+The Level B user-facing signal object is still being designed and should expose
+friendly named fields rather than requiring direct access to the VM attributes.

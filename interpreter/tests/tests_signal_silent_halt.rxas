@@ -1,0 +1,12 @@
+/*
+ * CREXX Interpreter test for SIGSHALT.
+ */
+
+.globals=0
+
+main() .locals=0
+    say "silent-before"
+    sigshalt "OTHER"
+    signal "OTHER","silent halt payload"
+    signal "FAILURE","silent halt did not stop execution"
+    ret 0

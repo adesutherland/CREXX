@@ -74,11 +74,62 @@ struct stack_frame {
     bin_code *return_pc;             /* Program Counter to return to */
     value *return_reg;               /* Target register for return values */
     size_t number_locals;            /* Number of local registers */
+    size_t nominal_number_locals;    /* Procedure-declared local count */
+    size_t number_args;              /* Argument count for the frame */
+    unsigned char is_interrupt;      /* Signal currently being handled, or zero */
     interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Signal / Exception handlers */
+    numeric_context num_context;     /* Numeric context for the procedure */
+    struct decplugin *decimal;       /* Decimal plugin context */
+    char decimal_loaded_here;        /* Whether this frame loaded decimal support */
+    struct uniplugin *unicode;       /* Unicode plugin context */
+    char unicode_loaded_here;        /* Whether this frame loaded Unicode support */
     value **baselocals;              /* Array of initial / fixed pointers */
     value **locals;                  /* Active pointer map to variable values */
 };
 ```
+
+### Signal / Interrupt Handling
+The VM signal model is implemented directly in the interpreter loop. Each
+`stack_frame` owns an `interrupt_table[RXSIGNAL_MAX]` and an `is_interrupt`
+marker. `frame_f()` copies the caller's table into a newly entered child frame,
+so handlers installed by a caller are visible to procedures it calls later, but
+changes made in a child frame do not mutate the caller's table. Returning from a
+procedure restores the caller's signal state by returning to the caller frame.
+There is no VM-level block-scoped handler stack today; any block-local save and
+restore semantics must be emitted by the compiler or added as new VM support.
+
+Signal codes are defined in `interpreter/rxsignal.h`. The handler responses are
+`IGNORE`, `HALT`, `SILENT_HALT`, `RETURN`, `BRANCH`, `CALL`, and `CALL_BRANCH`,
+exposed in RXAS as `sigignore`, `sighalt`, `sigshalt`, `sigret`, `sigbr`,
+`sigcall`, and `sigcallbr`. `KILL` is always halt-only. `BREAKPOINT` is the
+debugger/trace signal rather than an ordinary error condition.
+
+Pending signals are held in the global `interrupts` bitset. `DISPATCH` checks
+that bitset after each instruction when the current frame is not already inside
+an interrupt handler. The VM scans signal codes in numeric order, clears ignored
+signals during the scan, and clears the selected non-breakpoint signal before
+handling it. `BREAKPOINT` remains pending until `bpoff`, which lets the
+debugger/trace path keep stepping.
+
+For `CALL` and `CALL_BRANCH` handlers the VM passes a raw object-like argument
+with five attributes:
+
+1. signal code
+2. module number
+3. address in module
+4. signal name
+5. payload/message object
+
+This raw shape is used by debugger/runtime code. A user-facing Level B signal
+class should wrap it rather than requiring ordinary Rexx code to use
+`linkattr1` directly.
+
+Address semantics matter. VM-raised fault signals stamp the faulting
+instruction address before dispatch advances. `BREAKPOINT` and native or
+asynchronous interrupts use the next-instruction/resume address. Panic/error
+reporting should resolve closest preceding source metadata for a fault address;
+REXX-level stepping should usually use exact-address `.src` metadata so it
+stops on authored clause boundaries.
 
 ### `value` (Dynamic Typing Representation)
 Classic REXX is a dynamically typed language where "everything is a string" conceptually, but performance dictates native type usage when possible. The `value` struct (from `interpreter/rxvalue.h`) is a polymorphic container storing a REXX variable's state. 

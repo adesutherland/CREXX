@@ -1,0 +1,43 @@
+/*
+ * CREXX Interpreter test for non-halting signal handler response modes.
+ */
+
+.globals=0
+
+main() .locals=0
+    sigignore "OTHER"
+    signal "OTHER"
+    say "mode-ignore-ok"
+
+    sigbr branch_hit,"OTHER"
+    signal "OTHER"
+    signal "FAILURE","branch handler did not fire"
+
+branch_after:
+    sigcallbr callbr_after,mode_handler(),"OTHER"
+    signal "OTHER","callbr payload"
+    signal "FAILURE","call_branch handler did not branch"
+
+callbr_after:
+    say "mode-callbr-after"
+
+    sigret "OTHER"
+    call child_return()
+    say "mode-ret-after"
+    ret 0
+
+branch_hit:
+    say "mode-branch-hit"
+    br branch_after
+
+child_return() .locals=0
+    say "mode-ret-before"
+    signal "OTHER"
+    signal "FAILURE","sigret did not return from child frame"
+    ret
+
+mode_handler() .locals=1
+    linkattr1 r0,a1,5
+    sayx "mode-callbr-handler: "
+    say r0
+    ret
