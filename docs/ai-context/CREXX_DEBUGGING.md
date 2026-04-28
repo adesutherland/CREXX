@@ -40,7 +40,37 @@ assembly input is already known and the question is whether peephole rules,
 instruction-flow metadata, or hidden register-use handling changed the bytecode
 incorrectly.
 
-### 6. Known Build and Platform Issues
+### 6. RXDB Trace Debugger
+
+`debugger/rxdb.rexx` is the early Level B debugger prototype. It now delegates
+source lookup, ASM instruction decoding, module/procedure lookup, breakpoint
+enable/disable, and default trace filtering to `rxfnsb.trace` classes:
+
+- `.tracecontroller`
+- `.tracecontext`
+
+Debugger presentation lives outside the runtime library in
+`debugger/rxdb_gui.rexx`, which exposes `.rxdbtextgui` for banners, prompts,
+ANSI cursor control, and plain text output.
+
+The default `rxdb` UI still uses ANSI cursor control. For log-friendly or
+LLM-readable output, run:
+
+```sh
+rxdb llm
+```
+
+`text` and `plain` are accepted aliases. The text mode is intentionally a
+small prototype surface for debugging the trace runtime without escape
+sequences. `llm` mode batches Enter-driven stepping in groups of 50 trace
+events and prints that policy in the banner and running prompt.
+
+Keep watch-value reads in the interrupt handler unless the VM exposes a
+frame-safe abstraction: `metalinkpreg` must inspect the interrupted child frame,
+and moving that logic behind an ordinary method call changes the frame being
+linked.
+
+### 7. Known Build and Platform Issues
 When encountering unusual build or execution errors on new platforms (e.g., macOS ARM, Windows), keep these documented issues in mind:
 *   **OpenSSL Resolution:** If CMake cannot find OpenSSL on macOS or Linux, ensure `CREXX_FORCE_SYSTEM_OPENSSL` is correctly handled. In `lib/plugins/socket/CMakeLists.txt`, hardcoded MSYS2 paths (`C:/msys64/...`) must be protected by an `if(WIN32)` check to prevent them from breaking path resolution on other OSs.
 *   **Massive Memory Leaks / Explosions (50+GB):** If the compiler (`rxc`) or assembler unexpectedly consumes gigabytes of memory and hangs, suspect a failure in `file2buf` (`platform/platform.c` or `S370/cmsutil.c`). Endpoint security tools (like ThreatLocker) or stream abstractions can cause `ftell()` or `fseek()` to fail, returning `-1`. If this `-1` is cast directly to a `size_t` without error checking, it overflows to `SIZE_MAX`. A subsequent `malloc(*bytes + 2)` wraps around to `1`, and `fread()` then performs a massive heap buffer overflow trying to read `SIZE_MAX` bytes, corrupting allocator headers and causing the OS to infinitely allocate memory. Always ensure `ftell()` is stored in a signed integer (e.g., `long`) and checked for errors (`< 0`) before casting to `size_t`.

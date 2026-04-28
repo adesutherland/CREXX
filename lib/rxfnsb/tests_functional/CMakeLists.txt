@@ -39,6 +39,7 @@ set(REXXBINS
 	    ts_symbol.rxbin
         ts_test.rxbin
         ts_time.rxbin
+        ts_trace.rxbin
         ts_translate.rxbin
         ts_trunc.rxbin
         ts_upper.rxbin
@@ -119,3 +120,5 @@ set_tests_properties(ts_rxsocket_noopt ts_rxsocket_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxsocket loopback")
 set_tests_properties(ts_rxhttp_noopt ts_rxhttp_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxhttp helpers")
+set_tests_properties(ts_trace_noopt ts_trace_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: trace helpers")

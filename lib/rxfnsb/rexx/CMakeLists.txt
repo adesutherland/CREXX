@@ -55,6 +55,7 @@ set(BIFS
 		raise
 		reverse
 		signal
+		trace
 		sign
 		space
 		strip

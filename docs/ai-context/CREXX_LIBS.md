@@ -60,6 +60,20 @@ exposes the last raw response/body through the `httpclient` interface. It sends
 `Accept-Encoding: identity` and `Connection: close`; TLS and compressed content
 remain out of scope. See `lib/rxfnsb/rexx/rxhttp.md`.
 
+`lib/rxfnsb/rexx/trace.rexx` provides the Level B trace/debugger internals used
+by `rxdb` and intended for the future `TRACE` compiler exit:
+
+- `.tracecontroller`: breakpoint enable/disable, module/procedure helpers,
+  source/ASM lookup, and default runtime/debugger filtering
+- `.tracecontext`: immutable per-event module/address/source/ASM/procedure
+  snapshot
+
+The helpers rely on VM metadata instructions such as `metaloaddata`,
+`metaloadinst`, `metadecodeinst`, and `metaloadedmodules`, so deployable linked
+images that strip source metadata may still provide ASM/module data while
+source-line lookup returns empty. Debugger UI text and menu rendering belong to
+`debugger/rxdb_gui.rexx`, not the library trace internals.
+
 `lib/rxfnsg/rexx/llm.rexx` contains the first Level G LLM integration surface.
 Level G is layered on the Level B foundation: the module is `options levelg`,
 builds into `rxfnsg.rxbin`, and imports the Level B `rxfnsb`, `rxjson`, and

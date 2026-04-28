@@ -7,144 +7,138 @@
 options levelb
 namespace rxdb expose stephandler
 import rxfnsb
+import rxdbgui
 import globals
 
-main: procedure = .int expose next_instruction last_instruction mode
+main: procedure = .int expose controller gui next_instruction last_instruction mode watch auto_steps_remaining
     arg cmd_line = .string[]
-    esc = '1B'x
-    green = esc"[32m"
-    reset = esc"[0m"
-    topleft = esc"[1;1H"
-    clear = esc"[2J"
+    ui_mode = "ansi"
 
     /* Very Rudermentary Command Line Parsing */
-    if cmd_line.0 > 0 then do
-        say "RXDB - REXX Debugger"
-        say "Usage: just rxdb - no arguments"
+    if cmd_line.0 > 1 then do
+        gui = .rxdbtextgui("text")
+        call gui.usage()
         return 0
     end
+    if cmd_line.0 = 1 then do
+        option = lower(cmd_line.1)
+        if option = "text" | option = "plain" | option = "llm" then ui_mode = option
+        else do
+            gui = .rxdbtextgui("text")
+            call gui.usage()
+            return 0
+        end
+    end
 
-    say green"RXDB Version 0.1.3"
-    say ""
+    controller = .tracecontroller()
+    gui = .rxdbtextgui(ui_mode)
+
+    call gui.banner()
     say "Loading CREXX Runtime Library Modules"
-    call load_library "../cmake-build-debug/lib/rxfnsb"
+    if controller.load_library("../cmake-build-debug/lib/rxfnsb") = 0 then say "Error Loading CREXX Runtime Library Modules"
 
     last_loaded_module = ""
     first_client_module = 0
     assembler metaloadedmodules first_client_module /* get the number of modules making the debugger - the next modules will be the client  */
     first_client_module = first_client_module + 1
+    call controller.set_first_client_module(first_client_module)
+    call controller.set_latest_module_only(1)
 
     /* REXX MODE */
     mode = 'REXX'
+    call controller.set_mode(mode)
+    watch = ""
+    auto_steps_remaining = 0
 
     do forever
         cmd = ""
-        say "Non-running state command (h=help) - Mode="mode":"
+        call gui.non_running_prompt(mode)
         assembler readline cmd
 
         c1 = word(cmd,1)
         c2 = word(cmd,2)
 
         if cmd = 'h' then do
-           say 'help:'
-           say '  q        - Quit'
-           say '  m        - Toggle mode (REXX/ASM)'
-           say '  e        - Print exposed procedures in modules to be debugged'
-           say '  a        - Print exposed procedures (all modules)'
-           say '  r        - Run loaded procedure'
-           say '  l rxbin  - Load rxbin module file {rxbin}'
+           call gui.print_non_running_help()
         end
         else if cmd = 'q' then do
           leave
         end
         else if cmd = 'm' then do
-           if mode = 'REXX' then mode = "ASM"
-           else mode = 'REXX'
+           mode = controller.toggle_mode()
         end
         else if cmd = 'e' then do
-          modules = 0
-          assembler metaloadedmodules modules /* get the last module number */
-          call dump_procs modules
+          call gui.print_procs(controller, controller.loaded_module_count())
         end
         else if cmd = 'a' then do
-          call dump_procs 0
+          call gui.print_procs(controller, 0)
         end
         else if c1 = 'l' then do
           if c2 = "" then say "File name missing"
           else do
-            mod_num = load_module(c2)
-            if mod_num > 0 then do
+            mod_num = controller.load_module(c2)
+            if mod_num = 0 then say "Error Loading module" c2
+            else do
               say "Module" c2 "loaded #"mod_num
               last_loaded_module = c2
             end
           end
         end
         else if c1 = 'r' then do
-          call_id = find_proc(first_client_module,"main")
-          if call_id = 0 then say "Entry point not found in module" last_loaded_module
+          if controller.loaded_module_count() < first_client_module then say "No client module loaded"
           else do
-            rc = 0
-            no_args = 0
-            say clear || topleft
-            assembler sigcall stephandler(),"BREAKPOINT"
-            last_instruction = ""
-            next_instruction = ""
-            assembler bpon
-            assembler dcall rc,call_id,no_args
-            assembler bpoff
-            say green"RXDB:" c2 "returned" rc
+            call_id = controller.find_proc(first_client_module,"main")
+            if call_id = 0 then say "Entry point not found in module" last_loaded_module
+            else do
+              rc = 0
+              no_args = 0
+              call gui.clear_run_screen()
+              assembler sigcall stephandler(),"BREAKPOINT"
+              last_instruction = ""
+              next_instruction = ""
+              call controller.enable_breakpoints()
+              assembler dcall rc,call_id,no_args
+              call controller.disable_breakpoints()
+              say gui.green() || "RXDB:" c2 "returned" rc
+            end
           end
         end
         else say 'unknown command'
     end
 
-    say "RXDB Exiting"reset
+    call gui.exit_line("RXDB Exiting")
 return 0
 
 /* This is the interrupt handler that is called before every rxas instruction */
 /* Note that interrupts are automatically disabled */
-stephandler: procedure = .int expose next_instruction last_instruction mode watch
-  arg expose address_object = .int;
+stephandler: procedure = .int expose controller gui next_instruction last_instruction mode watch auto_steps_remaining
+  arg expose address_object = .object;
   cmd = ""
   addr = 0
   module = 0
   r = 0
-  watch = .string
-  assembler linkattr1 module,address_object,2  /* 2 = Module number */
-  assembler linkattr1 addr,address_object,3 /* 3 = Address in module */
+  event = .tracecontext
+  event = controller.context_from_interrupt(address_object)
+  module = event.module()
+  addr = event.address()
 
-  /* Are we the last module */
-  modules = 0
-  assembler metaloadedmodules modules
-  if modules <> module then return 0 /* Don't debug the debugger! */
+  if controller.should_trace(event) = 0 then return 0
 
   instruction = next_instruction
   if mode = "REXX" then do
-    next_rexx_instruction = ""
-    rc = next_rexx(module, addr, next_rexx_instruction)
-    if rc = 0 then return 0 /* Not a rexx clause */
-    next_instruction = next_rexx_instruction
+    if event.has_source() = 0 then return 0 /* Not a rexx clause */
+    next_instruction = event.source_line()
   end
   else do
-    call next_asm module, addr, next_instruction
+    next_instruction = event.asm_line()
   end
   last_instruction = instruction
 
-  esc = '1B'x
-  green = esc"[32m"
-  reset = esc"[0m"
-  topleft = esc"[1;1H"
-  clear = esc"[2J"
-  clearline = esc"[2K"
-  cursorup = esc"[A"
-  line2 = esc"[2;1H"
-  line5 = esc"[5;1H"
-  bottom = esc"[99;1H" || esc"[A"
+  reset = gui.reset()
+  clearline = gui.clear_line()
+  bottom = gui.bottom()
   do forever
-    say topleft || clearline || green || last_instruction;
-    say line2 || clearline || green">"
-    say clearline || next_instruction
-    say clearline
+    call gui.render_step_header(last_instruction, next_instruction, mode)
 
     /* Print watches - can't move into a procedure because it needs to
        access the child's stackframe */
@@ -251,37 +245,37 @@ stephandler: procedure = .int expose next_instruction last_instruction mode watc
       end
     end
 
-    say clearline
-    say clearline"Running state command (ENTER=step, h=help) - Mode="mode":"
-    say clearline || cursorup
+    if gui.step_batch() > 1 & auto_steps_remaining > 0 then do
+      auto_steps_remaining = auto_steps_remaining - 1
+      say reset || bottom
+      return 0
+    end
+
+    call gui.running_prompt(mode)
 
     assembler readline cmd
 
     c1 = word(cmd,1)
 
-    if cmd = '' then leave
+    if cmd = '' then do
+      if gui.step_batch() > 1 then auto_steps_remaining = gui.step_batch() - 1
+      leave
+    end
     else if cmd = 'h' then do
-       say clearline'help:'
-       say clearline'  ENTER    - Step to next instruction'
-       say clearline'  q        - Quit'
-       say clearline'  w n ...  - Watch regs (numbers) or variables (names) ... (space delimited list of numbers and variable names)'
-       say clearline'  e        - Print exposed procedures in module being debugged (last module loaded)'
-       say clearline'  a        - Print exposed procedures (all modules)'
-       say clearline'  m        - Toggle mode (REXX/ASM)'
+       call gui.print_running_help()
     end
     else if cmd = 'q' then do
       say reset"Exiting"
       assembler exit
     end
     else if cmd = 'm' then do
-      if mode = 'REXX' then mode = "ASM"
-      else mode = 'REXX'
+      mode = controller.toggle_mode()
     end
     else if cmd = 'e' then do
-      call dump_procs module
+      call gui.print_procs(controller, module)
     end
     else if cmd = 'a' then do
-      call dump_procs 0
+      call gui.print_procs(controller, 0)
     end
     else if c1 = 'w' then do
       watch = cmd;
@@ -289,209 +283,6 @@ stephandler: procedure = .int expose next_instruction last_instruction mode watc
     else say clearline'unknown command'
   end
   say reset || bottom
-  return 0
-
-/* This gets the rexx source code - returns 0 if the address does not start a rexx clause */
-next_rexx: procedure = .int
-  arg module = .int, addr = .int, expose result  = .string
-
-  rc = 0;
-  result = ""
-
-  meta_array = 0    /* Set to integer as the compiler doesn't understand arrays yet! */
-  meta_entry = ""   /* Is an object really */
-  line = 0;
-  column = 0;
-  source = "";
-
-  /* Get the meta data for that address */
-  assembler metaloaddata meta_array,module,addr
-  do i = 1 to meta_array
-    assembler linkattr1 meta_entry,meta_array,i
-    if meta_entry = ".meta_src" then do /* Object type */
-      rc = 1; /* We are at the start of a clause */
-      assembler linkattr1 line,meta_entry,1
-      assembler linkattr1 column,meta_entry,2
-      assembler linkattr1 source,meta_entry,3
-      result = result || "(" || line || ":" || column || ") '" || source || "'; "
-    end
-  end
-
-  return rc
-
-/* This disassembles the code at address */
-next_asm: procedure = .int
-  arg module = .int, addr = .int, expose result  = .string
-  opcode = 0;               /* Holds the opcode at the address */
-  instruction = ""          /* Mnemonic */
-  description = ""          /* Instruction Description */
-  no_operands = 0           /* Number of operands */
-  op1_type = 0              /* Operand Types */
-  op2_type = 0
-  op3_type = 0
-
-  instruction_object = 0    /* Set to 0 as the compiler doesn't understand objects yet! */
-
-  /* Load the opcode from the address */
-  assembler metaloadinst opcode,module,addr
-
-  /* Decode the opcode populating the instruction_object */
-  assembler metadecodeinst instruction_object,opcode
-
-  /* Get the instruction mnemonic attribute */
-  /* This makes the instruction variable link/point to the attribute */
-  assembler linkattr1 instruction,instruction_object,2 /* 2 = instruction/mnemonic */
-
-  /* Get the instruction description attribute */
-  assembler linkattr1 description,instruction_object,3 /* 3 = description */
-
-  /* Get the number of operands */
-  assembler linkattr1 no_operands,instruction_object,4 /* 4 = number of operands (0-3) */
-
-  /* Get the operand types */
-  assembler linkattr1 op1_type,instruction_object,5 /* 5 = operand 1 type */
-  assembler linkattr1 op2_type,instruction_object,6 /* 6 = operand 2 type */
-  assembler linkattr1 op3_type,instruction_object,7 /* 7 = operand 3 type */
-
-  /* Job Done */
-  result = " " right(d2x(opcode),3,"0") "@" right(d2x(module),3,"0")":"right(d2x(addr),4,"0") instruction,
-          opdesc(op1_type,module,addr+1)","opdesc(op2_type,module,addr+2)","opdesc(op3_type,module,addr+3),
-           "*" description
-
-  return no_operands
-
-opdesc: procedure = .string
-  arg code = .int, module = .int, addr = .int
-  desc = "unknown"
-  int_val = 0
-  float_val = 0.0
-  string_val = ""
-
-  if code = 0 then desc = ""
-  else if code = 1 then do
-    assembler metaloadioperand int_val,module,addr
-    desc = "@" || right(d2x(int_val),4,'0')
-  end
-  else if code = 2 then do
-    assembler metaloadioperand int_val,module,addr
-    desc = "r" || int_val
-  end
-  else if code = 3 then do
-    assembler metaloadpoperand string_val,module,addr
-    desc = string_val || "()"
-  end
-  else if code = 4 then do
-    assembler metaloadioperand int_val,module,addr
-    desc = int_val
-  end
-  else if code = 5 then do
-    assembler metaloadfoperand float_val,module,addr
-    desc = float_val || "f"
-  end
-  else if code = 6 then do
-    assembler metaloadioperand int_val,module,addr
-    desc = int_val || "c"
-  end
-  else if code = 7 then do
-    assembler metaloadsoperand string_val,module,addr
-    desc = '"' || string_val || '"'
-  end
-
-  return desc
-
-/* Load a module */
-load_module: procedure = .int
-   arg module_name = .string
-   mod_num = 0
-   assembler metaloadmodule mod_num, module_name
-   if mod_num = 0 then do
-     say "Error Loading module" module_name
-   end
-
-   return mod_num
-
-
-/* Print procedures in a module or all modules if mod_num = 0 */
-dump_procs: procedure = .int
-  arg mod_num = .int
-
-  modules = 0 /* Compiler doesn't understand arrays yet */
-  module = ""
-  proc_name = ""
-  proc_id = 0
-  proc = 0
-  procs = 0
-  start = 0
-  finish = 0
-
-  assembler metaloadedmodules modules
-
-  if mod_num = 0 then do
-    say "There are" modules "modules"
-    start = 1
-    finish = modules
-  end
-  else do
-    start = mod_num
-    finish = mod_num
-  end
-
-  do i = start to finish
-    assembler linkattr1 module,modules,i
-    say "Module" i module
-    assembler metaloadedprocs procs,i
-    do j = 1 to procs
-      assembler linkattr1 proc,procs,j
-      assembler linkattr1 proc_name,proc,1
-      assembler linkattr1 proc_id,proc,2
-      say "Procedure" proc_name '@' proc_id
-    end
-  end
-  return 0
-
-
-/* Find procedure of a name in a module */
-find_proc: procedure = .int
-  arg mod_num = .int, name = .string
-
-  modules = 0 /* Compiler doesn't understand arrays yet */
-  module = ""
-  proc_name = ""
-  proc_id = 0
-  proc = 0
-  procs = 0
-  found_id = 0
-  start = 0
-  finish = 0
-
-  assembler metaloadedmodules modules
-  if mod_num = 0 then do
-    start = 1
-    finish = modules
-  end
-  else do
-    start = mod_num
-    finish = mod_num
-  end
-
-  do mod_num = start to finish
-    assembler linkattr1 module,modules,mod_num
-    assembler metaloadedprocs procs,mod_num
-    do j = 1 to procs
-      assembler linkattr1 proc,procs,j
-      assembler linkattr1 proc_name,proc,1
-      assembler linkattr1 proc_id,proc,2
-say "proc_name"  proc_name
-      if proc_name = name then do
-        return proc_id
-      end
-    end
-  end
-  return 0
-
-load_library: procedure = .int
-  arg dir = .string
-  call load_module dir || "/library"
   return 0
 
 /* Poor mans datatype */
@@ -505,5 +296,3 @@ isint: procedure = .int
     if c < '0' then return 0
   end
   return 1
-
-

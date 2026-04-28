@@ -498,22 +498,28 @@ namespace rxfnsb expose tracecontroller tracecontext
 
 Recommended user/runtime names:
 
-- `.tracecontroller`: owns breakpoint installation, filtering, and trace output
+- `.tracecontroller`: owns trace state, breakpoint toggles, filtering, and
+  metadata lookup
 - `.tracecontext`: immutable per-event context passed to output/filter logic
 
 Responsibilities:
 
-- install/uninstall the `BREAKPOINT` handler with `sigcall` and `bpon/bpoff`
+- support debugger/trace code that installs `BREAKPOINT` handling, and wrap the
+  `bpon/bpoff` breakpoint toggles
 - receive the raw VM interrupt object
 - convert module/address to a trace context
 - resolve exact REXX source for stepping and closest preceding source for
   diagnostics
 - decode RXAS instructions when ASM-level trace is enabled
 - apply filters
-- print or otherwise emit trace lines
+- provide trace data to callers that print or otherwise emit trace lines
 
-The existing `rxdb` can later become a client of this class rather than owning
-all trace logic itself.
+The existing `rxdb` is now a client of these classes for source/ASM lookup,
+module/procedure lookup, mode state, breakpoint enable/disable, and filtering.
+Debugger presentation is local to `debugger/rxdb_gui.rexx`. `rxdb` still owns
+watch-value inspection because `metalinkpreg` must run in the interrupted child
+frame; moving that through an ordinary method call would inspect the
+debugger/helper frame instead.
 
 ### Trace Context
 
@@ -715,6 +721,24 @@ Status on 2026-04-28:
 - Add trace context/source helper.
 - Add default namespace/procedure filtering.
 - Refactor rxdb to use the class where practical.
+
+Status on 2026-04-28:
+
+- added `lib/rxfnsb/rexx/trace.rexx` to the Level B `rxfnsb` library bundle
+- added `.tracecontext` for signal/module/address/source/ASM/procedure event
+  snapshots
+- added `.tracecontroller` for breakpoint control, source and ASM metadata
+  lookup, module/procedure helpers, and default runtime/debugger filtering
+- added `debugger/rxdb_gui.rexx` with `.rxdbtextgui` and refactored `rxdb` to
+  keep UI text out of the runtime trace library
+- added `rxdb llm`/`rxdb text`/`rxdb plain` as escape-free debugger modes for
+  log and LLM-facing trace-runtime debugging
+- `rxdb llm` batches Enter-driven stepping in groups of 50 trace events and
+  announces the policy in the text banner/prompt
+- kept watch-value reads in `rxdb`'s interrupt handler because they rely on the
+  interrupted frame
+- added focused `ts_trace` coverage for controller mode state, source/ASM
+  metadata lookup where source metadata is present, and plain-text GUI mode
 
 ### Phase 4: TRACE Certified Exit
 
