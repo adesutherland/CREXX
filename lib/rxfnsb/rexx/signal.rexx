@@ -1,7 +1,7 @@
 /* REXX Level B Signal Objects */
 options levelb
 
-namespace rxfnsb expose signal standard_signal runtime_signal signalaction standard_signalaction
+namespace rxfnsb expose signal standard_signal runtime_signal runtime_signal_raw signalaction standard_signalaction
 
 signal: interface
   *: factory
@@ -59,12 +59,38 @@ standard_signal: class implements .signal
   source: method = .string
     return ""
 
+runtime_signal_raw: class
+  _code = .int with register.1.int
+  _module = .int with register.2.int
+  _address = .int with register.3.int
+  _name = .string with register.4.string
+  _message = .string with register.5.string
+  _payload = .object with register.5.object
+
+  name: method = .string
+    return _name
+
+  code: method = .int
+    return _code
+
+  module: method = .int
+    return _module
+
+  address: method = .int
+    return _address
+
+  message: method = .string
+    return _message
+
+  payload: method = .object
+    return _payload
+
 runtime_signal: class implements .signal
-  _raw = .object
-  _name = .string
-  _message = .string
-  _payload = .object
-  _has_raw = .int
+  _has_raw = .int with register.1.int
+  _name = .string with register.2.string
+  _message = .string with register.3.string
+  _payload = .object with register.4.object
+  _raw = .runtime_signal_raw with register.5.object
 
   *: factory
     arg name = .string, message = ""
@@ -74,46 +100,34 @@ runtime_signal: class implements .signal
     return
 
   set_raw: method = .void
-    arg raw = .object
+    arg raw = .runtime_signal_raw
     _raw = raw
     _has_raw = 1
     return
 
   name: method = .string
-    result = .string
     if _has_raw = 0 then return _name
-    assembler linkattr1 result, _raw, 4
-    return result
+    return _raw.name()
 
   code: method = .int
-    result = .int
     if _has_raw = 0 then return _signal_code(_name)
-    assembler linkattr1 result, _raw, 1
-    return result
+    return _raw.code()
 
   module: method = .int
-    result = .int
     if _has_raw = 0 then return 0
-    assembler linkattr1 result, _raw, 2
-    return result
+    return _raw.module()
 
   address: method = .int
-    result = .int
     if _has_raw = 0 then return 0
-    assembler linkattr1 result, _raw, 3
-    return result
+    return _raw.address()
 
   message: method = .string
-    result = .string
     if _has_raw = 0 then return _message
-    assembler linkattr1 result, _raw, 5
-    return result
+    return _raw.message()
 
   payload: method = .object
-    result = .object
     if _has_raw = 0 then return _payload
-    assembler linkattr1 result, _raw, 5
-    return result
+    return _raw.payload()
 
   file: method = .string
     return _signal_metadata_string(module(), address(), ".meta_file", 1)

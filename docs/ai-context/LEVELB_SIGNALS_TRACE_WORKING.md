@@ -95,8 +95,9 @@ five attributes:
 4. signal name
 5. payload/message object
 
-Current debugger code accesses these with `linkattr1`. User-facing Level B code
-should not be required to know this raw VM shape.
+Runtime/debugger code maps this shape through Level B classes with explicit
+`with register.N` attributes. User-facing Level B code should not be required to
+know this raw VM shape.
 
 The old language-reference note that a signal object is just `int_value` plus
 `string_value` is incomplete for the current VM.
@@ -252,10 +253,11 @@ not with a concrete signal class.
 Keep the public `.signal` factory shape focused on Rexx-created signals:
 `.signal(name, message)`. The raw VM object is implementation transport. The
 current `runtime_signal` implementation uses the ordinary factory to create the
-wrapper object and an internal `set_raw(raw)` method to attach the VM interrupt
-object inside compiler-generated handler glue. That avoids making every
-`.signal` implementation support a VM-only factory signature and leaves normal
-interface factory/match selection semantics undisturbed.
+wrapper object and an internal `set_raw(raw = .runtime_signal_raw)` method to
+attach the VM interrupt object inside compiler-generated handler glue. That
+avoids making every `.signal` implementation support a VM-only factory
+signature and leaves normal interface factory/match selection semantics
+undisturbed.
 
 `runtime_signal` should use Level B's low-level physical attribute/register
 mapping rather than copying the VM object through a hand-written adapter. The
@@ -265,7 +267,7 @@ keeps VM integration clean: the public `.signal` methods can expose friendly
 fields and source metadata while the internal representation stays close to the
 VM transport.
 
-Recommended attributes:
+Recommended public attributes:
 
 - `code = .int`
 - `name = .string`
@@ -278,8 +280,20 @@ Recommended attributes:
 - `column = .int`
 - `source = .string`
 
-The raw VM interrupt object should remain an internal transport. The public
-runtime should wrap it as `.signal` / `runtime_signal` by:
+The raw VM interrupt object should remain an internal transport. The
+`runtime_signal_raw` class maps the transport slots directly:
+
+```rexx
+runtime_signal_raw: class
+  _code = .int with register.1.int
+  _module = .int with register.2.int
+  _address = .int with register.3.int
+  _name = .string with register.4.string
+  _message = .string with register.5.string
+  _payload = .object with register.5.object
+```
+
+The public runtime should wrap it as `.signal` / `runtime_signal` by:
 
 1. reading the five VM attributes
 2. resolving closest preceding `META_FILE` / `META_SRC` for module/address
@@ -292,8 +306,9 @@ Decision:
   not already a string
 - use the Level B library namespace (`rxfnsb`) for public `.signal` and
   `.signalaction`
-- keep any implementation-only helpers unexposed, or in the internal runtime
-  namespace when they are not part of the Level B library contract
+- expose raw VM helper classes only when compiler-generated or debugger code must
+  type the incoming VM object; they remain implementation transport rather than
+  user-facing signal APIs
 
 ### Raising Signals
 
@@ -493,7 +508,7 @@ Recommendation:
 Extract reusable logic from `debugger/rxdb.rexx` into Level B library classes:
 
 ```rexx
-namespace rxfnsb expose tracecontroller tracecontext
+namespace rxfnsb expose tracecontroller tracecontext trace_interrupt_raw
 ```
 
 Recommended user/runtime names:
@@ -501,12 +516,14 @@ Recommended user/runtime names:
 - `.tracecontroller`: owns trace state, breakpoint toggles, filtering, and
   metadata lookup
 - `.tracecontext`: immutable per-event context passed to output/filter logic
+- `.trace_interrupt_raw`: maps the VM interrupt slots for debugger/trace
+  handlers
 
 Responsibilities:
 
 - support debugger/trace code that installs `BREAKPOINT` handling, and wrap the
   `bpon/bpoff` breakpoint toggles
-- receive the raw VM interrupt object
+- receive the raw VM interrupt object through a register-mapped raw class
 - convert module/address to a trace context
 - resolve exact REXX source for stepping and closest preceding source for
   diagnostics
@@ -668,7 +685,8 @@ This phase deliberately avoids block-local handlers.
 
 Status on 2026-04-28:
 
-- added `rxfnsb.signal`, `rxfnsb.runtime_signal`, and `rxfnsb.signalaction`
+- added `rxfnsb.signal`, `rxfnsb.runtime_signal`,
+  `rxfnsb.runtime_signal_raw`, and `rxfnsb.signalaction`
 - added certified `SIGNAL` compiler exit support for:
   - `signal name`
   - `signal name payload`
@@ -727,6 +745,8 @@ Status on 2026-04-28:
 - added `lib/rxfnsb/rexx/trace.rexx` to the Level B `rxfnsb` library bundle
 - added `.tracecontext` for signal/module/address/source/ASM/procedure event
   snapshots
+- added `.trace_interrupt_raw` to map the VM breakpoint/signal interrupt object
+  without hand-written `linkattr1` in the trace library
 - added `.tracecontroller` for breakpoint control, source and ASM metadata
   lookup, module/procedure helpers, and default runtime/debugger filtering
 - added `debugger/rxdb_gui.rexx` with `.rxdbtextgui` and refactored `rxdb` to

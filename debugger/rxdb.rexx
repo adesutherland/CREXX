@@ -112,13 +112,13 @@ return 0
 /* This is the interrupt handler that is called before every rxas instruction */
 /* Note that interrupts are automatically disabled */
 stephandler: procedure = .int expose controller gui next_instruction last_instruction mode watch auto_steps_remaining
-  arg expose address_object = .object;
+  arg expose address_object = .trace_interrupt_raw;
   cmd = ""
   addr = 0
   module = 0
   r = 0
   event = .tracecontext
-  event = controller.context_from_interrupt(address_object)
+  event = .tracecontext(address_object.module(), address_object.address(), mode, address_object.code(), address_object.name())
   module = event.module()
   addr = event.address()
 

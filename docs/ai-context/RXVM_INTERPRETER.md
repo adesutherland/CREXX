@@ -136,17 +136,18 @@ with five attributes:
 4. signal name
 5. payload/message object
 
-This raw shape is used by debugger/runtime code. A user-facing Level B signal
-class should wrap it rather than requiring ordinary Rexx code to use
-`linkattr1` directly.
+This raw shape is used by debugger/runtime code. Level B maps it through small
+raw interop classes with explicit `with register.N` attributes, rather than
+requiring library code to hand-write `linkattr1` for each slot.
 
-Level B's `rxfnsb.runtime_signal` wraps this raw VM object. Its normal factory
-keeps the public `.signal(name, message)` shape, and generated handler wrappers
-attach the raw VM object through the internal `set_raw` method before invoking
-user code typed as `.signal`. Branch-value handlers installed with `sigbrv`
-perform the same wrapping in the VM before branching to the handler label, so
-compiler-generated block handlers can bind an `as name` local directly as a
-user-facing `.signal` value.
+Level B's `rxfnsb.runtime_signal_raw` maps the five raw VM slots, and
+`rxfnsb.runtime_signal` wraps that mapped raw object behind the public `.signal`
+interface. Its normal factory keeps the public `.signal(name, message)` shape,
+and generated handler wrappers attach the raw VM object through the internal
+`set_raw` method before invoking user code typed as `.signal`. Branch-value
+handlers installed with `sigbrv` perform the same wrapping in the VM before
+branching to the handler label, so compiler-generated block handlers can bind an
+`as name` local directly as a user-facing `.signal` value.
 
 Address semantics matter. VM-raised fault signals stamp the faulting
 instruction address before dispatch advances. `BREAKPOINT` and native or

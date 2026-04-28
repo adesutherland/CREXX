@@ -11,9 +11,11 @@ When in doubt, copy the nearest repo pattern instead of inventing syntax.
 
 For Level B authoring, these sources are more reliable than model memory:
 
-- `docs/cREXX Level B Language Reference.md`
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `docs/ai-context/CREXX_LIBS.md`
+- `docs/books/crexx_language_reference/classes_and_interfaces.md`
+- `docs/books/crexx_language_reference/data_types.md`
+- `docs/books/crexx_language_reference/statements.md`
 - nearby working `.rexx` files in `lib/`, `bin/`, `compiler/exits/`, `debugger/`, and `tests/`
 
 ## Repo-Native Level B Patterns

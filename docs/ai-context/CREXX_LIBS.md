@@ -67,6 +67,8 @@ by `rxdb` and intended for the future `TRACE` compiler exit:
   source/ASM lookup, and default runtime/debugger filtering
 - `.tracecontext`: immutable per-event module/address/source/ASM/procedure
   snapshot
+- `.trace_interrupt_raw`: internal register-mapped view of the VM interrupt
+  object used by breakpoint handlers
 
 The helpers rely on VM metadata instructions such as `metaloaddata`,
 `metaloadinst`, `metadecodeinst`, and `metaloadedmodules`, so deployable linked

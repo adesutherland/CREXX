@@ -94,8 +94,6 @@ Version: Snapshot July 2024 \- 2
 
 [Redirect(s)	22](\#redirect(s))
 
-[Signal	22](\#signal)
-
 [**Literals	22**](\#literals)
 
 [String Literals	22](\#string-literals)
@@ -416,61 +414,6 @@ Version: Snapshot July 2024 \- 2
 # 
 
 # 
-
-# Signal {#signal}
-
-Level B signal handling uses the `rxfnsb.signal` interface. Rexx-created
-signals can be raised with a signal object or with the compact named forms:
-
-```rexx
-signal .signal("error", "message")
-signal error
-signal error "message"
-```
-
-Procedure-scoped handlers are installed with `signal on` and removed with
-`signal off`:
-
-```rexx
-signal on conversion_error call handle_conversion
-signal on error, syntax call handle_problem
-signal off conversion_error
-
-handle_conversion: procedure = .signalaction
-  arg problem = .signal
-  say problem.source()
-  return .signalaction.skip()
-```
-
-The handler procedure receives one `.signal` argument and returns a
-`.signalaction`: `.signalaction.skip()`, `.signalaction.retry()`, or
-`.signalaction.fail()`.
-
-Block-scoped handlers are written as `on signal` clauses on a simple
-`do ... end` group:
-
-```rexx
-do
-  risky_work()
-on signal conversion_error as problem
-  say problem.source()
-on signal error, syntax
-  call cleanup()
-on signal
-  call log_unhandled_signal()
-end
-```
-
-Only a simple `do ... end` group can carry `on signal` clauses. Counted,
-conditional, forever, and expression-form `do` loops do not carry handlers
-directly. To protect code inside a loop, place a simple `do ... end` signal
-block inside the loop body.
-
-The statements before the first `on signal` clause are the protected body.
-Normal completion of the protected body skips all handlers. A handler that
-completes normally leaves the `do` block. `on signal` with no names catches all
-maskable signals. `as name` binds the current `.signal` object; when `as` is
-omitted, no signal object is made available to that handler.
 
 # Built-in Functions {#built-in-functions}
 

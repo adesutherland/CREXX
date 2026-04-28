@@ -460,6 +460,19 @@ static ASTNode *find_child_of_type(ASTNode *parent, NodeType type) {
     return 0;
 }
 
+static void lower_signal_handler_binding(Context *context, ASTNode *handler) {
+    ASTNode *binding;
+    ASTNode *define;
+
+    binding = ast_chdn(handler, 1);
+    if (!binding || binding->node_type != VAR_TARGET) return;
+
+    define = ast_f(context, DEFINE, binding->token ? binding->token : handler->token);
+    ast_rpl(binding, define);
+    add_ast(define, binding);
+    add_ast(define, ast_ftt(context, CLASS, ".signal"));
+}
+
 static ASTNode *infer_main_return_type(Context *context, ASTNode *first_node) {
     ASTNode *n;
 
@@ -834,6 +847,9 @@ walker_result ast_work_structure_walker(walker_direction direction,
         else {
             structure_callable_body(context, node, 1, 1);
         }
+    }
+    else if (node->node_type == SIGNAL_HANDLER) {
+        lower_signal_handler_binding(context, node);
     }
 
     return result_normal;

@@ -276,5 +276,6 @@ methods include:
 
 The VM still passes handlers a raw object-like value containing the signal
 code, module number, address, signal name, and payload/message object. The
-`rxfnsb.runtime_signal` class wraps that raw shape so procedure and block
-handlers receive a normal `.signal` value.
+`rxfnsb.runtime_signal_raw` class maps those slots with `with register.N`
+attributes, and `rxfnsb.runtime_signal` wraps that raw shape so procedure and
+block handlers receive a normal `.signal` value.

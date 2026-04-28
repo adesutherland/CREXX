@@ -123,9 +123,31 @@ For ordinary classes, let the compiler allocate storage automatically and keep
 external callers on factories and methods.
 
 Explicit physical layout should be reserved for genuine low-level interop. When
-that is needed, use the existing `with register...` mapping forms described in
-the architecture and data-type references rather than treating them as the
-normal class style.
+that is needed, append `with register.N` to the attribute definition, where `N`
+is the one-based VM object-attribute slot:
+
+```rexx
+raw_event: class
+  _code = .int with register.1.int
+  _module = .int with register.2.int
+  _address = .int with register.3.int
+  _name = .string with register.4.string
+```
+
+The optional suffix after the index is the VM register value view to use for the
+slot. Valid views are `.int`, `.float`, `.string`, and `.object`:
+
+```rexx
+  _message = .string with register.5.string
+  _payload = .object with register.5.object
+```
+
+The compiler emits the attribute linking code for methods that read or write
+these attributes. Source code should still access them through methods, not
+through hand-written assembler. It is valid for VM-integration classes to define
+more than one typed view over the same physical slot, as shown for a signal
+payload/message slot above. Ordinary application classes should not use explicit
+register mappings unless they are matching a fixed VM or native object layout.
 
 ## Factory Selection with `match`
 

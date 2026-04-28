@@ -391,7 +391,11 @@ exit_tokens(L) ::= . { L = 0; }
 exit_token(T) ::= TK_EXIT_TOKEN(K). { T = ast_f(context, EXIT_TOKEN, K); }
 exit_token(T) ::= ANYTHING(A).       { T = ast_f(context, EXIT_TOKEN, A); }
 
-/* Assignments trying to assign to a keywords */
+/* Assignments trying to assign to a keywords.
+ * Keep TK_END out of this recovery set: END must remain a structural
+ * terminator for DO and ON SIGNAL bodies. Keyword-instruction recovery handles
+ * stray END diagnostics without making END a valid assignment target.
+ */
 assignment(G)     ::= TK_DO(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_LOOP(K) TK_EQUAL(T) expression(E).
@@ -411,8 +415,6 @@ assignment(G)     ::= TK_WHEN(K) TK_EQUAL(T) expression(E).
 assignment(G)     ::= TK_OTHERWISE(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_SELECT(K) TK_EQUAL(T) expression(E).
-      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-assignment(G)     ::= TK_END(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_BY(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
@@ -473,8 +475,6 @@ define(G)     ::= TK_WHEN(K) TK_EQUAL(T) type_def(E).
 define(G)     ::= TK_OTHERWISE(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_SELECT(K) TK_EQUAL(T) type_def(E).
-      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-define(G)     ::= TK_END(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_BY(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
@@ -665,55 +665,12 @@ signal_handler_list(L) ::= signal_handler(H).
 signal_handler_list(L) ::= signal_handler_list(L1) signal_handler(H).
           { L = L1; add_sbtr(L,H); }
 
-signal_handler(H) ::= TK_ON(O) TK_SIGNAL signal_names(N) signal_as_opt(A) TK_EOC signal_instruction_list(I). [TK_END]
+/* Handler bodies reuse the ordinary instruction grammar. TK_ON is not an
+ * ordinary instruction starter, so the next ON SIGNAL naturally terminates the
+ * previous handler body.
+ */
+signal_handler(H) ::= TK_ON(O) TK_SIGNAL signal_names(N) signal_as_opt(A) TK_EOC instruction_list(I). [TK_END]
           { H = ast_f(context, SIGNAL_HANDLER, O); add_ast(H,N); add_ast(H,A); add_ast(H,I); }
-
-signal_instruction_list(I) ::= signal_labeled_instruction(L).
-                         { I = ast_ft(context, INSTRUCTIONS); add_ast(I,L); }
-signal_instruction_list(I) ::= signal_instruction_list(I1) signal_labeled_instruction(L).
-                         { I = I1; add_ast(I,L); }
-
-signal_labeled_instruction(I) ::= group(B). { I = B; }
-signal_labeled_instruction(I) ::= signal_single_instruction(B) junk(J) TK_EOC.
-                           { I = B; add_sbtr(I,J); }
-signal_labeled_instruction(I) ::= label(B). { I = B; }
-signal_labeled_instruction(E) ::= TK_BADCOMMENT(C).
-                           { E = ast_err(context, "BAD_COMMENT", C); }
-
-signal_single_instruction(I)  ::= assignment(B). { I = B; }
-signal_single_instruction(I)  ::= define(B). { I = B; }
-signal_single_instruction(I)  ::= exit_extended(B). { I = B; }
-signal_single_instruction(I)  ::= command(B). { I = B; }
-signal_single_instruction(I)  ::= signal_keyword_instruction(B). { I = B; }
-
-signal_keyword_instruction(I) ::= assembler(K). { I = K; }
-signal_keyword_instruction(I) ::= arg(K). { I = K; }
-signal_keyword_instruction(I) ::= call(K). { I = K; }
-signal_keyword_instruction(I) ::= iterate(K). { I = K; }
-signal_keyword_instruction(I) ::= leave(K). { I = K; }
-signal_keyword_instruction(I) ::= nop(K). { I = K; }
-signal_keyword_instruction(I) ::= procedure(K). { I = K; }
-signal_keyword_instruction(I) ::= return(K). { I = K; }
-signal_keyword_instruction(I) ::= exit(K). { I = K; }
-signal_keyword_instruction(I) ::= say(K). { I = K; }
-signal_keyword_instruction(I) ::= numeric(K). { I = K; }
-signal_keyword_instruction(I) ::= factory_def(K). { I = K; }
-signal_keyword_instruction(I) ::= match_def(K). { I = K; }
-signal_keyword_instruction(I) ::= method_def(K). { I = K; }
-signal_keyword_instruction(I) ::= class_def(K). { I = K; }
-signal_keyword_instruction(I) ::= interface_def(K). { I = K; }
-signal_keyword_instruction(I) ::= TK_THEN(T) error. { I = ast_err(context, "UNEXPECTED_THEN", T); }
-signal_keyword_instruction(I) ::= TK_ELSE(T) error. { I = ast_err(context, "UNEXPECTED_ELSE", T); }
-signal_keyword_instruction(I) ::= TK_WHEN(T) error. { I = ast_err(context, "UNEXPECTED_WHEN", T); }
-signal_keyword_instruction(I) ::= TK_OTHERWISE(T) error. { I = ast_err(context, "UNEXPECTED_OTHERWISE", T); }
-signal_keyword_instruction(I) ::= TK_NAMESPACE(T) ANYTHING error.
-                           { I = ast_err(context, "BAD_NAMESPACE", T); }
-signal_keyword_instruction(I) ::= TK_IMPORT(T) ANYTHING error.
-                           { I = ast_err(context, "BAD_IMPORT", T); }
-signal_keyword_instruction(I) ::= TK_NAMESPACE(T) error.
-                           { I = ast_err(context, "BAD_NAMESPACE", T); }
-signal_keyword_instruction(I) ::= TK_IMPORT(T) error.
-                           { I = ast_err(context, "BAD_IMPORT", T); }
 
 signal_names(N) ::= .
           { N = ast_ft(context, SIGNAL_NAMES); }
@@ -732,11 +689,8 @@ signal_name(N) ::= TK_QUALIFIED_SYMBOL(S).
 
 signal_as_opt(A) ::= .
           { A = ast_ft(context, NOP); }
-signal_as_opt(A) ::= TK_AS(K) TK_VAR_SYMBOL(S).
-          { A = ast_f(context, DEFINE, K);
-            ASTNode *V = ast_f(context, VAR_TARGET, S);
-            add_ast(A,V);
-            add_ast(A,ast_ftt(context, CLASS, ".signal")); }
+signal_as_opt(A) ::= TK_AS TK_VAR_SYMBOL(S).
+          { A = ast_f(context, VAR_TARGET, S); }
 
 /* DO Group */
 

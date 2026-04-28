@@ -212,6 +212,13 @@ The compiler uses two distinct recovery mechanisms, with different goals:
 
 This policy exists to keep the Lemon grammar stable. If a recovery rule preserves meaningful AST continuity, keep it in the grammar. If a rule exists only to improve terminal error reporting and is making the grammar fragile, prefer the fallback diagnoser instead.
 
+`END` should remain a structural terminator in the grammar. Do not add
+keyword-assignment or keyword-definition recovery that makes `END` look like a
+normal variable. The `TK_END error` keyword-instruction recovery is kept only for
+diagnostics such as stray `end`; productions that must terminate on `END`, such
+as simple-`DO` `ON SIGNAL` handlers, should carry explicit `TK_END` precedence so
+they reduce instead of consuming the terminator as recovery.
+
 ### 5.3 Semantic Errors (Walker)
 The walker (`initial_checks_walker`) validates logic that cannot be expressed purely in grammar (or is deferred for checking).
 *   **Mechanism**: The walker traverses the AST and calls `mknd_err` to attach errors to specific nodes.

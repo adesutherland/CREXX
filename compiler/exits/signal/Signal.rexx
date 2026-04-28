@@ -260,7 +260,7 @@ makeSignalHelper: procedure = .helperplan
     arg handler = .string, handler_token_index = .int
     helper = .helperplan(helperName(handler), "file_tail", helperName(handler), "")
     call helper.add_line(helperName(handler) || ": procedure = .string")
-    call helper.add_line("  arg __rxsignal_raw = .object")
+    call helper.add_line("  arg __rxsignal_raw = .runtime_signal_raw")
     call helper.add_line("  __rxsignal_condition = .runtime_signal("""")")
     call helper.add_line("  call __rxsignal_condition.set_raw(__rxsignal_raw)")
     call helper.add_line("  __rxsignal_action = .signalaction")

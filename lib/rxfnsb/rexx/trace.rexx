@@ -1,7 +1,25 @@
 /* REXX Level B trace runtime internals */
 options levelb
 
-namespace rxfnsb expose tracecontext tracecontroller
+namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw
+
+trace_interrupt_raw: class
+  _code = .int with register.1.int
+  _module = .int with register.2.int
+  _address = .int with register.3.int
+  _name = .string with register.4.string
+
+  code: method = .int
+    return _code
+
+  module: method = .int
+    return _module
+
+  address: method = .int
+    return _address
+
+  name: method = .string
+    return _name
 
 tracecontext: class
   _signal_code = .int
@@ -146,18 +164,8 @@ tracecontroller: class
     return .tracecontext(module, addr, mode)
 
   context_from_interrupt: method = .tracecontext
-    arg interrupt = .object
-    code = .int
-    module = .int
-    addr = .int
-    name = .string
-    code = 31
-    name = "BREAKPOINT"
-    assembler linkattr1 code, interrupt, 1
-    assembler linkattr1 module, interrupt, 2
-    assembler linkattr1 addr, interrupt, 3
-    assembler linkattr1 name, interrupt, 4
-    return .tracecontext(module, addr, _mode, code, name)
+    arg interrupt = .trace_interrupt_raw
+    return .tracecontext(interrupt.module(), interrupt.address(), _mode, interrupt.code(), interrupt.name())
 
   should_trace: method = .int
     arg event = .tracecontext
