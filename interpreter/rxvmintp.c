@@ -1367,6 +1367,35 @@ unsigned char string_to_interrupt(const char *interrupt) {
     return RXSIGNAL_MAX; // Invalid Signal Code
 }
 
+typedef enum rxsignal_handler_action {
+    RXSIGNAL_HANDLER_ACTION_NONE = 0,
+    RXSIGNAL_HANDLER_ACTION_SKIP,
+    RXSIGNAL_HANDLER_ACTION_FAIL,
+    RXSIGNAL_HANDLER_ACTION_RETRY
+} rxsignal_handler_action;
+
+static rxsignal_handler_action rxsignal_read_handler_action(value *action) {
+    if (!action || action->string_length <= 0) return RXSIGNAL_HANDLER_ACTION_NONE;
+
+    null_terminate_string_buffer(action);
+    if (strcmp(action->string_value, "__rxsignal_skip") == 0) return RXSIGNAL_HANDLER_ACTION_SKIP;
+    if (strcmp(action->string_value, "__rxsignal_fail") == 0) return RXSIGNAL_HANDLER_ACTION_FAIL;
+    if (strcmp(action->string_value, "__rxsignal_retry") == 0) return RXSIGNAL_HANDLER_ACTION_RETRY;
+    return RXSIGNAL_HANDLER_ACTION_NONE;
+}
+
+static value *rxsignal_handler_payload(stack_frame *handler_frame) {
+    size_t arg_index;
+    value *arg;
+
+    if (!handler_frame || !handler_frame->procedure || !handler_frame->procedure->binarySpace) return NULL;
+    arg_index = handler_frame->procedure->binarySpace->globals + handler_frame->procedure->locals + 1;
+    if (arg_index >= handler_frame->number_locals) return NULL;
+    arg = handler_frame->baselocals[arg_index];
+    if (!arg || arg->num_attributes < 5 || !arg->attributes) return NULL;
+    return arg->attributes[4];
+}
+
 /* Stack Frame Factory */
 RX_INLINE stack_frame *frame_f(
                     proc_runtime *procedure,
@@ -1517,6 +1546,7 @@ RX_INLINE stack_frame *frame_f(
     this->number_args = no_args;
     this->return_reg = return_reg;
     this->procedure = procedure;
+    this->is_interrupt_action = 0;
 
     return this;
 }
@@ -1594,6 +1624,21 @@ set_null_string(interrupt_object[(signal)], (message));}
 interrupts |= 1 << ((signal) - 1); \
 copy_value(interrupt_object[(signal)], (payload));}
 
+#define SET_SIGNAL_FROM_NAME(name) \
+{ unsigned char signal__ = string_to_interrupt((name)); \
+if (signal__ == RXSIGNAL_MAX) { SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE); } \
+else { SET_SIGNAL(signal__); } }
+
+#define SET_SIGNAL_MSG_FROM_NAME(name, message) \
+{ unsigned char signal__ = string_to_interrupt((name)); \
+if (signal__ == RXSIGNAL_MAX) { SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE); } \
+else { SET_SIGNAL_MSG(signal__, (message)); } }
+
+#define SET_SIGNAL_PAYLOAD_FROM_NAME(name, payload) \
+{ unsigned char signal__ = string_to_interrupt((name)); \
+if (signal__ == RXSIGNAL_MAX) { SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE); } \
+else { SET_SIGNAL_PAYLOAD(signal__, (payload)); } }
+
 // Macro and function to detect and throw a signal if a RXPA plugin-raised error is present
 #define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) { if (!current_frame->is_interrupt) interrupted_pc = pc; interrupt_from_rxpa_signal(signal,interrupt_object); }
 
@@ -1618,6 +1663,29 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
 
     // Set the interrupt
     interrupts |= 1 << (int_num - 1);
+}
+
+#define HANDLE_INTERRUPT_ACTION_RETURN() \
+if (is_interrupt && temp_frame->is_interrupt_action) { \
+    rxsignal_handler_action action__ = rxsignal_read_handler_action(interrupt_action_value); \
+    if (action__ == RXSIGNAL_HANDLER_ACTION_RETRY) { \
+        if (current_frame && current_frame->procedure && current_frame->procedure->binarySpace) { \
+            next_pc = current_frame->procedure->binarySpace->binary + last_interrupted_address[is_interrupt]; \
+        } \
+    } else if (action__ != RXSIGNAL_HANDLER_ACTION_SKIP) { \
+        value *payload__ = rxsignal_handler_payload(temp_frame); \
+        if (payload__ && payload__->string_length) { \
+            fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(payload__->string_length), payload__->string_value, interrupt_to_string(is_interrupt)); \
+        } else { \
+            fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(is_interrupt)); \
+        } \
+        print_runtime_panic_location(context, last_interrupted_module[is_interrupt], last_interrupted_address[is_interrupt]); \
+        value_zero(interrupt_action_value); \
+        rc = (int)is_interrupt; \
+        free_frame(temp_frame); \
+        goto interprt_finished; \
+    } \
+    value_zero(interrupt_action_value); \
 }
 
 #define IS_UNICODE_WHITESPACE(cp) ( \
@@ -1698,6 +1766,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     int mod_index;
     value *interrupt_arg;
     value *signal_value = value_f();
+    value *interrupt_action_value = value_f();
     unsigned char signal_code = 0;
     value *arguments_array = 0;                /* note that the needs mallocing / freeing */
     unsigned char last_interrupt = 0; /* Interrupt being handled */
@@ -2013,9 +2082,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             pc = next_pc;
             // Fall through to CALL
 
+        case RXSIGNAL_RESPONSE_CALL_ACTION:
         case RXSIGNAL_RESPONSE_CALL: {
             /* Call */
             proc_runtime *intr_function = current_frame->interrupt_table[last_interrupt-1].function;
+            char action_aware = current_frame->interrupt_table[last_interrupt-1].response == RXSIGNAL_RESPONSE_CALL_ACTION;
             DEBUG("TRACE - INTR HANDLER -> CALL %s->%s()\n", interrupt_to_string(last_interrupt), intr_function->name);
 
             if (intr_function->start == SIZE_MAX) {
@@ -2047,7 +2118,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                 DISPATCH
             } else {
                 /* A CREXX Procedure */
-                current_frame = frame_f(intr_function, 1, current_frame, pc, 0);
+                if (action_aware) value_zero(interrupt_action_value);
+                current_frame = frame_f(intr_function, 1, current_frame, pc, action_aware ? interrupt_action_value : 0);
 
                 /* Prepare dispatch to procedure as early as possible */
 #ifndef NTHREADED
@@ -2058,6 +2130,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
                 /* Interrupt being handled */
                 current_frame->is_interrupt = last_interrupt;
+                current_frame->is_interrupt_action = action_aware;
 
                 /* Argument */
                 size_t arg_index = intr_function->binarySpace->globals + intr_function->locals + 1;
@@ -2224,6 +2297,24 @@ START_OF_INSTRUCTIONS
             }
             DISPATCH
 
+        /* Set Signal op2 Handle to action-aware Call op1 */
+        START_INSTRUCTION(SIGCALLA_FUNC_STRING) CALC_DISPATCH(2)
+            {
+                proc_runtime *signal_function = PROC_OP(1);
+                DEBUG("TRACE - SIGCALLA %s(),\"%.*s\"\n", signal_function->name, (int)op2S->string_len, op2S->string);
+
+                size_t sig = string_to_interrupt(op2S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                }
+                else {
+                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL_ACTION;
+                    current_frame->interrupt_table[sig-1].function = signal_function;
+                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
+                }
+            }
+            DISPATCH
+
         /* Set Signal op3 Handle to Call op2 returning to op1 */
         START_INSTRUCTION(SIGCALLBR_ID_FUNC_STRING) CALC_DISPATCH(3)
             DEBUG("TRACE - SIGCALLBR 0x%x,%s(),\"%.*s\"\n", (unsigned int)REG_IDX(1), PROC_OP(2)->name, (int)op3S->string_len, op3S->string);
@@ -2260,14 +2351,21 @@ START_OF_INSTRUCTIONS
         /* RXSIGNAL_STRING Signal type op1 */
         START_INSTRUCTION(SIGNAL_STRING) CALC_DISPATCH(1)
             DEBUG("TRACE - SIGNAL \"%.*s\"\n", (int)op1S->string_len, op1S->string);
-            SET_SIGNAL(string_to_interrupt(op1S->string));
+            SET_SIGNAL_FROM_NAME(op1S->string);
+            DISPATCH
+
+        /* SIGNAL_REG Signal type op1 */
+        START_INSTRUCTION(SIGNAL_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGNAL R%d\n", (int)REG_IDX(1));
+            null_terminate_string_buffer(op1R);
+            SET_SIGNAL_FROM_NAME(op1R->string_value);
             DISPATCH
 
         /* SIGNALT_STRING_REG Signal type op1 if op2 true */
         START_INSTRUCTION(SIGNALT_STRING_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SIGNALT \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
             if (op2RI) {
-                SET_SIGNAL(string_to_interrupt(op1S->string));
+                SET_SIGNAL_FROM_NAME(op1S->string);
             }
             DISPATCH
 
@@ -2275,27 +2373,34 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(SIGNALF_STRING_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SIGNALF \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
             if (!op2RI) {
-                SET_SIGNAL(string_to_interrupt(op1S->string));
+                SET_SIGNAL_FROM_NAME(op1S->string);
             }
             DISPATCH
 
         /* SIGNAL_STRING_STRING Signal type op1 (message op2) */
         START_INSTRUCTION(SIGNAL_STRING_STRING) CALC_DISPATCH(2)
             DEBUG("TRACE - SIGNAL \"%.*s\",\"%.*s\"\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string);
-            SET_SIGNAL_MSG(string_to_interrupt(op1S->string), op2S->string);
+            SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
             DISPATCH
 
         /* SIGNAL_STRING_REG Signal type op1 (payload op2) */
         START_INSTRUCTION(SIGNAL_STRING_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SIGNAL \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
-            SET_SIGNAL_PAYLOAD(string_to_interrupt(op1S->string), op2R);
+            SET_SIGNAL_PAYLOAD_FROM_NAME(op1S->string, op2R);
+            DISPATCH
+
+        /* SIGNAL_REG_REG Signal type op1 (payload op2) */
+        START_INSTRUCTION(SIGNAL_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SIGNAL R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            null_terminate_string_buffer(op1R);
+            SET_SIGNAL_PAYLOAD_FROM_NAME(op1R->string_value, op2R);
             DISPATCH
 
         /* SIGNALT_STRING_STRING_REG Signal type op1 (message op2) if op3 true */
         START_INSTRUCTION(SIGNALT_STRING_STRING_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SIGNALT \"%.*s\",\"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string, (int)REG_IDX(2));
             if (op3RI) {
-                SET_SIGNAL_MSG(string_to_interrupt(op1S->string), op2S->string);
+                SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
             }
             DISPATCH
 
@@ -2303,7 +2408,7 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(SIGNALF_STRING_STRING_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SIGNALF \"%.*s\",\"%.*s\"\",R%d\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string, (int)REG_IDX(2));
             if (!op3RI) {
-                SET_SIGNAL_MSG(string_to_interrupt(op1S->string), op2S->string);
+                SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
             }
             DISPATCH
 
@@ -3862,6 +3967,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
                 }
+                HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
 #ifndef NTHREADED
                 current_module = current_frame->procedure->binarySpace->module;
@@ -3934,6 +4040,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame->decimal->num_context = &current_frame->num_context;
                     current_frame->decimal->syncNumericContext(current_frame->decimal);
                 }
+                HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
 #ifndef NTHREADED
                 current_module = current_frame->procedure->binarySpace->module;
@@ -3995,6 +4102,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame->decimal->num_context = &current_frame->num_context;
                     current_frame->decimal->syncNumericContext(current_frame->decimal);
                 }
+                HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
 #ifndef NTHREADED
                 current_module = current_frame->procedure->binarySpace->module;
@@ -4057,6 +4165,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame->decimal->num_context = &current_frame->num_context;
                     current_frame->decimal->syncNumericContext(current_frame->decimal);
                 }
+                HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
 #ifndef NTHREADED
                 current_module = current_frame->procedure->binarySpace->module;
@@ -4119,6 +4228,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame->decimal->num_context = &current_frame->num_context;
                     current_frame->decimal->syncNumericContext(current_frame->decimal);
                 }
+                HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
 #ifndef NTHREADED
                 current_module = current_frame->procedure->binarySpace->module;
@@ -7841,6 +7951,10 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     /* Free signal value */
     clear_value(signal_value);
     free(signal_value);
+
+    /* Free interrupt action value */
+    clear_value(interrupt_action_value);
+    free(interrupt_action_value);
 
     /* Free work registers */
     clear_value(work1);

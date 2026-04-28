@@ -1,0 +1,342 @@
+options levelb
+namespace rxcpexits expose signalexit
+
+import rxcp
+import rxfnsb
+
+signalexit: class
+    _id = .int
+
+    *: factory
+        arg id = 0
+        _id = id
+        return
+
+    describe: method = .exitdescriptor
+        desc = .exitdescriptor("SIGNAL")
+        call desc.add_flag("certified")
+        call desc.add_flag("reserved_keyword")
+        call desc.add_import("rxfnsb", "signal", "")
+        return desc
+
+    pre_process: method = .exitplan
+        arg tokens = .token[]
+        plan = .exitplan("READY")
+        start = firstPayloadToken(tokens)
+        handler = .string
+        handler = findSignalOnHandler(tokens, start)
+        if handler \= "" then call plan.add_helper(makeSignalHelper(handler))
+        return plan
+
+    process: method = .exitresult
+        arg tokens = .token[]
+        start = firstPayloadToken(tokens)
+        if start = 0 then return error_result(1, "SIGNAL_REQUIRES_OPERAND")
+        if upper(tokens[start].get_text()) = "ON" then return processSignalOn(tokens, start + 1)
+        if upper(tokens[start].get_text()) = "OFF" then return processSignalOff(tokens, start + 1)
+        return processSignalRaise(tokens, start)
+
+firstPayloadToken: procedure = .int
+    arg tokens = .token[]
+    if tokens.0 < 1 then return 0
+    if upper(tokens[1].get_text()) = "SIGNAL" then do
+        if tokens.0 < 2 then return 0
+        return 2
+    end
+    return 1
+
+processSignalOn: procedure = .exitresult
+    arg tokens = .token[], start = .int
+    result = .exitresult("REPLACE")
+    call_index = findKeyword(tokens, start, "CALL")
+    if call_index = 0 then return error_result(start, "SIGNAL_ON_REQUIRES_CALL")
+    if call_index + 1 > tokens.0 then return error_result(call_index, "SIGNAL_ON_REQUIRES_HANDLER")
+
+    handler = tokens[call_index + 1].get_text()
+    helper = helperName(handler)
+    emitted = 0
+    do i = start to call_index - 1
+        text = strip(tokens[i].get_text())
+        if text = "" | text = "," then iterate
+        name = canonicalSignalName(text)
+        if name = "" then return error_result(i, "UNKNOWN_SIGNAL_NAME")
+        if canMaskSignal(name) = 0 then return error_result(i, "SIGNAL_CANNOT_BE_MASKED")
+        call result.add_replacement_line("assembler sigcalla " || helper || "(),""" || name || """")
+        emitted = emitted + 1
+    end
+
+    if emitted = 0 then return error_result(start, "SIGNAL_ON_REQUIRES_SIGNAL_NAME")
+    return result
+
+processSignalOff: procedure = .exitresult
+    arg tokens = .token[], start = .int
+    result = .exitresult("REPLACE")
+    emitted = 0
+    do i = start to tokens.0
+        text = strip(tokens[i].get_text())
+        if text = "" | text = "," then iterate
+        name = canonicalSignalName(text)
+        if name = "" then return error_result(i, "UNKNOWN_SIGNAL_NAME")
+        if canMaskSignal(name) = 0 then return error_result(i, "SIGNAL_CANNOT_BE_MASKED")
+        call result.add_replacement_line("assembler " || defaultSignalInstruction(name) || " """ || name || """")
+        emitted = emitted + 1
+    end
+
+    if emitted = 0 then return error_result(start, "SIGNAL_OFF_REQUIRES_SIGNAL_NAME")
+    return result
+
+processSignalRaise: procedure = .exitresult
+    arg tokens = .token[], start = .int
+    if isSignalFactory(tokens, start) then return processFactoryRaise(tokens, start)
+    return processCompactRaise(tokens, start)
+
+processCompactRaise: procedure = .exitresult
+    arg tokens = .token[], start = .int
+    result = .exitresult("REPLACE")
+    name = canonicalSignalName(tokens[start].get_text())
+    if name = "" then return error_result(start, "UNKNOWN_SIGNAL_NAME")
+    if canRaiseSignal(name) = 0 then return error_result(start, "SIGNAL_CANNOT_BE_RAISED")
+
+    if start = tokens.0 then do
+        call result.add_replacement_line("assembler signal """ || name || """")
+        return result
+    end
+
+    if start + 1 = tokens.0 & strip(tokens[start + 1].get_type()) = "string_literal" then do
+        call result.add_replacement_line("assembler signal """ || name || """," || tokens[start + 1].get_text())
+        return result
+    end
+
+    payload_expr = emitTokenRange(tokens, start + 1, tokens.0)
+    call result.add_replacement_line("__rxsignal_payload=" || payload_expr)
+    call result.add_replacement_line("assembler signal """ || name || """,__rxsignal_payload")
+    return result
+
+processFactoryRaise: procedure = .exitresult
+    arg tokens = .token[], start = .int
+    name_start = .int
+    name_end = .int
+    payload_start = .int
+    payload_end = .int
+    result = .exitresult("REPLACE")
+    open = factoryOpenIndex(tokens, start)
+    close = findMatchingClose(tokens, open)
+    if open = 0 | close = 0 then return error_result(start, "SIGNAL_FACTORY_BAD_SHAPE")
+    comma = findTopLevelComma(tokens, open + 1, close - 1)
+
+    if comma = 0 then do
+        name_start = open + 1
+        name_end = close - 1
+        payload_start = 0
+        payload_end = 0
+    end
+    else do
+        name_start = open + 1
+        name_end = comma - 1
+        payload_start = comma + 1
+        payload_end = close - 1
+    end
+
+    if name_start > name_end then return error_result(open, "SIGNAL_FACTORY_REQUIRES_NAME")
+
+    if name_start = name_end & strip(tokens[name_start].get_type()) = "string_literal" then do
+        name = canonicalSignalName(unquote(tokens[name_start].get_text()))
+        if name = "" then return error_result(name_start, "UNKNOWN_SIGNAL_NAME")
+        if canRaiseSignal(name) = 0 then return error_result(name_start, "SIGNAL_CANNOT_BE_RAISED")
+        if payload_start = 0 then call result.add_replacement_line("assembler signal """ || name || """")
+        else do
+            payload_expr = emitTokenRange(tokens, payload_start, payload_end)
+            if payload_start = payload_end & strip(tokens[payload_start].get_type()) = "string_literal" then do
+                call result.add_replacement_line("assembler signal """ || name || """," || payload_expr)
+            end
+            else do
+                call result.add_replacement_line("__rxsignal_payload=" || payload_expr)
+                call result.add_replacement_line("assembler signal """ || name || """,__rxsignal_payload")
+            end
+        end
+        return result
+    end
+
+    name_expr = emitTokenRange(tokens, name_start, name_end)
+    call result.add_replacement_line("__rxsignal_name=" || name_expr)
+    if payload_start = 0 then do
+        call result.add_replacement_line("assembler signal __rxsignal_name")
+        return result
+    end
+
+    payload_expr = emitTokenRange(tokens, payload_start, payload_end)
+    call result.add_replacement_line("__rxsignal_payload=" || payload_expr)
+    call result.add_replacement_line("assembler signal __rxsignal_name,__rxsignal_payload")
+    return result
+
+isSignalFactory: procedure = .int
+    arg tokens = .token[], start = .int
+    text = upper(strip(tokens[start].get_text()))
+    if text = ".SIGNAL" then return 1
+    if text = "." & start + 1 <= tokens.0 then do
+        if upper(strip(tokens[start + 1].get_text())) = "SIGNAL" then return 1
+    end
+    return 0
+
+factoryOpenIndex: procedure = .int
+    arg tokens = .token[], start = .int
+    text = upper(strip(tokens[start].get_text()))
+    if text = ".SIGNAL" then do
+        if start + 1 <= tokens.0 & strip(tokens[start + 1].get_text()) = "(" then return start + 1
+        return 0
+    end
+    if text = "." then do
+        if start + 2 <= tokens.0 & upper(strip(tokens[start + 1].get_text())) = "SIGNAL" & strip(tokens[start + 2].get_text()) = "(" then return start + 2
+    end
+    return 0
+
+findMatchingClose: procedure = .int
+    arg tokens = .token[], open = .int
+    depth = 0
+    do i = open to tokens.0
+        text = strip(tokens[i].get_text())
+        if text = "(" then depth = depth + 1
+        else if text = ")" then do
+            depth = depth - 1
+            if depth = 0 then return i
+        end
+    end
+    return 0
+
+findTopLevelComma: procedure = .int
+    arg tokens = .token[], start = .int, finish = .int
+    depth = 0
+    do i = start to finish
+        text = strip(tokens[i].get_text())
+        if text = "(" | text = "[" then depth = depth + 1
+        else if text = ")" | text = "]" then depth = depth - 1
+        else if text = "," & depth = 0 then return i
+    end
+    return 0
+
+findSignalOnHandler: procedure = .string
+    arg tokens = .token[], start = .int
+    if start = 0 then return ""
+    if upper(tokens[start].get_text()) \= "ON" then return ""
+    call_index = findKeyword(tokens, start + 1, "CALL")
+    if call_index = 0 then return ""
+    if call_index + 1 > tokens.0 then return ""
+    return tokens[call_index + 1].get_text()
+
+findKeyword: procedure = .int
+    arg tokens = .token[], start = .int, keyword = .string
+    do i = start to tokens.0
+        if upper(strip(tokens[i].get_text())) = upper(keyword) then return i
+    end
+    return 0
+
+makeSignalHelper: procedure = .helperplan
+    arg handler = .string
+    helper = .helperplan(helperName(handler), "file_tail", helperName(handler), "")
+    call helper.add_line(helperName(handler) || ": procedure = .string")
+    call helper.add_line("  arg __rxsignal_raw = .object")
+    call helper.add_line("  __rxsignal_condition = .runtime_signal("""")")
+    call helper.add_line("  call __rxsignal_condition.set_raw(__rxsignal_raw)")
+    call helper.add_line("  __rxsignal_action = " || handler || "(__rxsignal_condition)")
+    call helper.add_line("  if __rxsignal_action.kind() = ""retry"" then return ""__rxsignal_retry""")
+    call helper.add_line("  if __rxsignal_action.kind() = ""skip"" then return ""__rxsignal_skip""")
+    call helper.add_line("  return ""__rxsignal_fail""")
+    return helper
+
+helperName: procedure = .string
+    arg handler = .string
+    result = "__rxsignal_" || handler
+    result = changestr(":", result, "_")
+    result = changestr(".", result, "_")
+    return result
+
+canonicalSignalName: procedure = .string
+    arg text = .string
+    n = upper(strip(text))
+    if n = "SYNTAX" then n = "ERROR"
+    if isKnownSignal(n) then return n
+    return ""
+
+isKnownSignal: procedure = .int
+    arg name = .string
+    if name = "KILL" then return 1
+    if name = "FAILURE" then return 1
+    if name = "ERROR" then return 1
+    if name = "OVERFLOW_UNDERFLOW" then return 1
+    if name = "DIVISION_BY_ZERO" then return 1
+    if name = "CONVERSION_ERROR" then return 1
+    if name = "INVALID_ARGUMENTS" then return 1
+    if name = "OUT_OF_RANGE" then return 1
+    if name = "UNICODE_ERROR" then return 1
+    if name = "UNKNOWN_INSTRUCTION" then return 1
+    if name = "FUNCTION_NOT_FOUND" then return 1
+    if name = "NOT_IMPLEMENTED" then return 1
+    if name = "INVALID_SIGNAL_CODE" then return 1
+    if name = "NOTREADY" then return 1
+    if name = "QUIT" then return 1
+    if name = "TERM" then return 1
+    if name = "POSIX_INT" then return 1
+    if name = "POSIX_HUP" then return 1
+    if name = "POSIX_USR1" then return 1
+    if name = "POSIX_USR2" then return 1
+    if name = "POSIX_CHLD" then return 1
+    if name = "OTHER" then return 1
+    if name = "BREAKPOINT" then return 1
+    return 0
+
+canMaskSignal: procedure = .int
+    arg name = .string
+    if name = "KILL" then return 0
+    if name = "BREAKPOINT" then return 0
+    return 1
+
+canRaiseSignal: procedure = .int
+    arg name = .string
+    if name = "BREAKPOINT" then return 0
+    return 1
+
+defaultSignalInstruction: procedure = .string
+    arg name = .string
+    if name = "OVERFLOW_UNDERFLOW" then return "sigignore"
+    if name = "POSIX_HUP" then return "sigignore"
+    if name = "POSIX_USR1" then return "sigignore"
+    if name = "POSIX_USR2" then return "sigignore"
+    if name = "POSIX_CHLD" then return "sigignore"
+    return "sighalt"
+
+unquote: procedure = .string
+    arg text = .string
+    if length(text) < 2 then return text
+    first = left(text, 1)
+    last = right(text, 1)
+    if (first = "'" & last = "'") | (first = '"' & last = '"') then return substr(text, 2, length(text) - 2)
+    return text
+
+emitTokenRange: procedure = .string
+    arg tokens = .token[], start_index = .int, end_index = .int
+    expr = .string
+    previous = .string
+    join_before = .string
+    expr = ""
+    previous = ""
+    if start_index = 0 | end_index < start_index then return ""
+    do i = start_index to end_index
+        text = strip(tokens[i].get_text())
+        join_before = upper(strip(tokens[i].get_join_before()))
+        if text = "" then iterate
+        if expr = "" then expr = text
+        else if join_before = "CONCAT" then expr = expr || text
+        else if join_before = "SCONCAT" then expr = expr || " " || text
+        else if text = ")" | text = "]" | text = "," | text = "." then expr = expr || text
+        else if previous = "(" | previous = "[" | previous = "." then expr = expr || text
+        else if text = "(" | text = "[" then expr = expr || text
+        else expr = expr || " " || text
+        previous = text
+    end
+    return expr
+
+error_result: procedure = .exitresult
+    arg token_index = .int, message = .string
+    result = .exitresult("ERROR")
+    call result.set_error(token_index, message)
+    return result

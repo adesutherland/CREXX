@@ -70,6 +70,7 @@ More precisely:
 - The callee must be a normal procedure, not a method or factory.
 - Arguments and return values must stay within the currently implemented safe slice: scalars, object values, binary values, optional/default formals, and array-shaped formals/returns are now supported across the local plain-procedure slice.
 - The callee must satisfy the existing safety checks: plain local procedure only, small body, no recursion cycle, and no unsupported vararg indexing. Value-producing procedures still require a final `RETURN`; void statement-call sites may inline through bare-return and fallthrough shapes.
+- A plain procedure body may contain ordinary method or factory calls. Those calls are cloned and remain runtime dispatch sites; they are not themselves inlined as methods or factories. Named interface factory selector metadata must be preserved during cloning so `.iface.named(...)` still emits `srcfproc "...iface..named"` after inlining.
 - `expose`/by-reference formals are supported when the actual argument is an aliasable variable-like target, including indexed and stem-style forms.
 - For nontrivial by-reference actuals, the inline rewrite captures the locator expressions once into inline-scope temps so the callee still sees call-time binding semantics.
 - Optional formals now inline through the same rewrite path as other supported local plain-procedure calls, with omitted-actual/default-formal semantics preserved during binding.
@@ -253,7 +254,7 @@ That does not mean every syntactic use of a local procedure is now inlined. It m
 
 The remaining discriminator behaviour is intentional and milestone-driven:
 
-- methods and factories are still out because they belong to milestone 2
+- inlining method and factory bodies is still out because it belongs to milestone 2; plain procedures that call methods or factories keep those operations as normal runtime calls
 - imported callees are still out because they belong to milestone 3
 
 So the milestone 1 closure is: local plain procedures are structurally and semantically covered; the remaining exclusions are later-milestone boundaries, not plain-procedure semantic gaps.

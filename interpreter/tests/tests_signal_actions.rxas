@@ -1,0 +1,22 @@
+/*
+ * CREXX Interpreter test for action-aware SIGCALLA handlers and dynamic signal names.
+ */
+
+.globals=0
+
+main() .locals=2
+    sigcalla action_skip(),"OTHER"
+    signal "OTHER","skip payload"
+    say "action-skip-after"
+
+    load r0,"OTHER"
+    load r1,"dynamic payload"
+    signal r0,r1
+    say "action-dynamic-after"
+    ret 0
+
+action_skip() .locals=1
+    linkattr1 r0,a1,5
+    sayx "action-handler: "
+    say r0
+    ret "__rxsignal_skip"

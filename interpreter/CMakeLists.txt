@@ -281,6 +281,10 @@ crexx_add_vm_dual_test(NAME rxassignalframescopeparenttests RXVM_ARGS tests_sign
 crexx_add_rxas_vm_binary(tests_signal_nested_pending "nested pending signal delivery")
 crexx_add_vm_dual_test(NAME rxassignalnestedpendingtests RXVM_ARGS tests_signal_nested_pending PASS_REGULAR_EXPRESSION "nested:outer-before>outer-after>inner>main-after")
 
+crexx_add_rxas_vm_binary(tests_signal_actions "action-aware signal handlers")
+crexx_add_vm_dual_test(NAME rxassignalactionskiptests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-skip-after")
+crexx_add_vm_dual_test(NAME rxassignalactiondynamictests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-handler: dynamic payload")
+
 # Basic Instruction Tests
 add_custom_command(
 		OUTPUT tests_basic.rxbin

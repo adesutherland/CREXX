@@ -167,6 +167,16 @@ effects are not represented as normal operands. For example, `inc0`, `dec0`,
 as using the corresponding fixed local register when checking whether an
 intervening instruction is relevant to a rule.
 
+Signal support adds action-aware and dynamic-name forms:
+
+- `sigcalla proc(),"NAME"` installs a handler that returns an internal action
+  marker interpreted by the VM as `skip`, `retry`, or `fail`
+- `signal rName` raises a signal whose name is read from a string register
+- `signal rName,rPayload` raises a dynamic-name signal with a payload object
+
+Unknown dynamic names raise `INVALID_SIGNAL_CODE`. Literal `signal "NAME"`
+forms are still assembled directly against the static signal table.
+
 Optimiser rule operands use lowercase `r` for a captured register. Uppercase
 `R`, `G`, and `A` match literal local/global/argument register numbers. The
 assembler uses this to express rules such as `inc r0 -> inc0` without adding

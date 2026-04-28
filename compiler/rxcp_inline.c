@@ -1602,6 +1602,20 @@ static Scope *inline_prepare_cloned_node_scope(Context *context,
     return node_scope;
 }
 
+static ASTNode *inline_clone_factory_selector_association(Context *context,
+                                                          ASTNode *node,
+                                                          Scope *node_scope) {
+    ASTNode *selector;
+
+    if (!context || !node || node->node_type != FACTORY_CALL || !node->association) return NULL;
+
+    selector = ast_dup(context, node->association);
+    if (!selector) return NULL;
+
+    selector->scope = node_scope;
+    return selector;
+}
+
 static ASTNode *inline_clone_subtree_in_scope(Context *context,
                                               ASTNode *node,
                                               InlineCloneState *state,
@@ -1691,6 +1705,10 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
     if (node->association) {
         mapped_association = inline_find_mapped_node(state, node->association);
         if (mapped_association) new_node->association = mapped_association;
+        else if (node->node_type == FACTORY_CALL) {
+            new_node->association = inline_clone_factory_selector_association(context, node, node_scope);
+            if (!new_node->association) return NULL;
+        }
     }
 
     if (node->symbolNode && node->symbolNode->symbol) {

@@ -104,6 +104,18 @@ exposed in RXAS as `sigignore`, `sighalt`, `sigshalt`, `sigret`, `sigbr`,
 `sigcall`, and `sigcallbr`. `KILL` is always halt-only. `BREAKPOINT` is the
 debugger/trace signal rather than an ordinary error condition.
 
+`sigcalla` installs an action-aware call handler. It receives the same raw
+five-attribute interrupt object as `sigcall`, but the handler's return string
+is interpreted as a VM action marker:
+
+- `__rxsignal_skip`: resume after the signal point
+- `__rxsignal_retry`: resume at the recorded interrupted address
+- `__rxsignal_fail` or any missing/unknown action: fall through to the default
+  panic path, including the closest preceding source location
+
+The Level B `SIGNAL` compiler exit hides those internal marker strings behind
+`.signalaction.skip()`, `.signalaction.retry()`, and `.signalaction.fail()`.
+
 Pending signals are held in the global `interrupts` bitset. `DISPATCH` checks
 that bitset after each instruction when the current frame is not already inside
 an interrupt handler. The VM scans signal codes in numeric order, clears ignored
@@ -123,6 +135,11 @@ with five attributes:
 This raw shape is used by debugger/runtime code. A user-facing Level B signal
 class should wrap it rather than requiring ordinary Rexx code to use
 `linkattr1` directly.
+
+Level B's `rxfnsb.runtime_signal` wraps this raw VM object. Its normal factory
+keeps the public `.signal(name, message)` shape, and generated handler wrappers
+attach the raw VM object through the internal `set_raw` method before invoking
+user code typed as `.signal`.
 
 Address semantics matter. VM-raised fault signals stamp the faulting
 instruction address before dispatch advances. `BREAKPOINT` and native or

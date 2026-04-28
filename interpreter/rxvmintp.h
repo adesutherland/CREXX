@@ -52,6 +52,7 @@ typedef enum interrupt_response {
     RXSIGNAL_RESPONSE_BRANCH,       /* Branch to an address in a stack frame - the stack is unwound to the frame */
     RXSIGNAL_RESPONSE_CALL,         /* Call a function - will return to the current instruction */
     RXSIGNAL_RESPONSE_CALL_BRANCH,  /* Call a function - will return to the BRANCH address (the stack is unwound to the frame) */
+    RXSIGNAL_RESPONSE_CALL_ACTION,  /* Call a function and interpret its returned signal action */
     RXSIGNAL_RESPONSE_HALT,         /* Unmasked Interrupt, halt the interpreter with an error message and return interrupt code */
     RXSIGNAL_RESPONSE_SILENT_HALT   /* Halt the interpreter without any message - return 0 */
 } interrupt_response;
@@ -92,6 +93,7 @@ struct stack_frame {
     size_t nominal_number_locals;
     size_t number_args;
     unsigned char is_interrupt;  /* Set to the interrupt number that the frame is handling (or zero) */
+    unsigned char is_interrupt_action; /* Set when an interrupt handler return value is action-aware */
     interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Interrupt Table */
     numeric_context num_context; /* Numeric context for the procedure */
     struct decplugin *decimal;

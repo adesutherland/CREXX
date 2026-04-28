@@ -36,6 +36,8 @@ static const CertifiedExitSpec certified_exit_specs[] = {
       RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD | RXCP_EXIT_FLAG_IMPLICIT_COMMAND },
     { "PARSE",
       RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
+    { "SIGNAL",
+      RXCP_EXIT_FLAG_CERTIFIED | RXCP_EXIT_FLAG_RESERVED_KEYWORD },
     { NULL, 0 }
 };
 
@@ -1391,6 +1393,18 @@ static void rxcp_mark_helper_subtree(ASTNode *node, ASTNode *source_anchor) {
     }
 }
 
+static void rxcp_clear_helper_semantics(ASTNode *node) {
+    ASTNode *current;
+
+    current = node;
+    while (current) {
+        current->scope = NULL;
+        current->symbolNode = NULL;
+        if (current->child) rxcp_clear_helper_semantics(current->child);
+        current = current->sibling;
+    }
+}
+
 static char *rxcp_join_helper_source(rxvml_context *vctx, rxvml_value *helper_plan) {
     rxinteger line_count;
     rxinteger i;
@@ -1585,8 +1599,9 @@ static int rxcp_append_helper(Context *ctx,
     }
 
     helper_proc->sibling = NULL;
+    rxcp_clear_helper_semantics(helper_proc);
+    helper_proc = add_dast(file_node, helper_proc);
     rxcp_mark_helper_subtree(helper_proc, node);
-    add_dast(file_node, helper_proc);
     if (rxcp_store_helper_source(ctx, file_node, helper_id, helper_source) < 0) {
         mknd_err_unique(node, "EXIT_BRIDGE_HELPER_REGISTRY_FAILED, \"%s\"", helper_id);
         fre_cntx(frag);

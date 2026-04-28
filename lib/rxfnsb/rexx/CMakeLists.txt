@@ -54,6 +54,7 @@ set(BIFS
 		right
 		raise
 		reverse
+		signal
 		sign
 		space
 		strip

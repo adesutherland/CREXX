@@ -539,3 +539,6 @@ X(METALOADCALLERADDR_REG, 537, FMT_R, FLOW_NEXT, 0, "Load caller address object 
 X(INTERRUPT, 538, FMT_EMPTY, FLOW_NEXT, FLG_OPT_BARRIER, "")
 X(IUNKNOWN, 539, FMT_EMPTY, FLOW_NEXT, FLG_OPT_BARRIER, "")
 X(CNOP, 540, FMT_EMPTY, FLOW_NEXT, 0, "no operation")
+X(SIGCALLA_FUNC_STRING, 541, FMT_P_S, FLOW_NEXT, FLG_OPT_BARRIER, "Set Signal op2 Handle to action-aware Call op1")
+X(SIGNAL_REG, 542, FMT_R, FLOW_NEXT, FLG_OPT_BARRIER, "Signal type from op1 string register")
+X(SIGNAL_REG_REG, 543, FMT_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Signal type from op1 string register with payload op2")

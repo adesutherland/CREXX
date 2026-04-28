@@ -245,6 +245,14 @@ That gives the language a stable signal contract while leaving room for
 multiple signal implementations. User code should normally work with `.signal`,
 not with a concrete signal class.
 
+Keep the public `.signal` factory shape focused on Rexx-created signals:
+`.signal(name, message)`. The raw VM object is implementation transport. The
+current `runtime_signal` implementation uses the ordinary factory to create the
+wrapper object and an internal `set_raw(raw)` method to attach the VM interrupt
+object inside compiler-generated handler glue. That avoids making every
+`.signal` implementation support a VM-only factory signature and leaves normal
+interface factory/match selection semantics undisturbed.
+
 `runtime_signal` should use Level B's low-level physical attribute/register
 mapping rather than copying the VM object through a hand-written adapter. The
 raw VM interrupt object already has fixed slots for code, module, address,
@@ -622,6 +630,27 @@ Status on 2026-04-28:
 - Document exact handler resume semantics.
 
 This phase deliberately avoids block-local handlers.
+
+Status on 2026-04-28:
+
+- added `rxfnsb.signal`, `rxfnsb.runtime_signal`, and `rxfnsb.signalaction`
+- added certified `SIGNAL` compiler exit support for:
+  - `signal name`
+  - `signal name payload`
+  - `signal .signal(name[, payload])`
+  - `signal on name[, name...] call procedure`
+  - `signal off name[, name...]`
+- added VM/RXAS `sigcalla` for action-aware procedure handlers
+- added dynamic-name RXAS signal forms backed by `INVALID_SIGNAL_CODE` on
+  unknown runtime names
+- procedure handlers receive `.signal`; returning `.signalaction.skip()` resumes
+  after the signal, `.retry()` resumes at the interrupted address, and
+  `.fail()` falls through to the default panic report with source metadata
+- inline cloning now preserves named interface factory selector metadata, so
+  handler code returning `.signalaction.skip()` keeps the `..skip` selector in
+  optimized builds even when a generated helper body is optimized
+- `signal off` restores the VM root default (`sighalt` or `sigignore` for the
+  VM's default-ignored signals); true handler stack push/pop remains Phase 2
 
 ### Phase 2: Block-Scoped Error Handling
 
