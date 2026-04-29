@@ -105,6 +105,10 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode* nod
 walker_result inline_procedure_walker(walker_direction direction, ASTNode* node, void *payload);
 int rxcp_inline_pass(Context *context);
 void rxcp_inline_prune(Context *context, ASTNode *tree);
+char *rxcp_inline_export_payload(Context *context, ASTNode *callable);
+int rxcp_inline_payload_is_supported(const char *payload);
+int rxcp_inline_attach_imported_body(Context *context, const char *payload);
+int rxcp_inline_attach_imported_symbol(Context *context, Symbol *symbol, const char *payload);
 
 /* misc */
 walker_result set_node_ordinals_walker(walker_direction direction, ASTNode* node, void *payload);

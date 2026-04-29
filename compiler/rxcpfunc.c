@@ -1225,7 +1225,7 @@ static walker_result procedure_signature_walker(walker_direction direction,
     imported_func *func;
     char *type;
     char *args;
-//    char *impl;
+    char *impl;
     char *fqname;
 
     if (direction == out) {
@@ -1248,8 +1248,16 @@ static walker_result procedure_signature_walker(walker_direction direction,
                     /* Add the function to the "database" of functions */
                     type = ast_n2tp(type_node);
                     args = meta_narg(args_node);
+                    impl = rxcp_inline_export_payload(context, node);
 
-                    func = rximpf_f(context, node->file_name, fqname, "b", type, args, 0, 0);
+                    func = rximpf_f(context,
+                                    node->file_name,
+                                    fqname,
+                                    "b",
+                                    type,
+                                    args,
+                                    impl && *impl ? impl : 0,
+                                    0);
 
                     /* Check Type <> unknown */
                     if ( !type || strcmp(type, ".unknown") == 0 ) {
@@ -1258,6 +1266,7 @@ static walker_result procedure_signature_walker(walker_direction direction,
 
                     free(type);
                     free(args);
+                    free(impl);
                 }
             }
             free(fqname);
@@ -2784,6 +2793,9 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
                 found_symbol->is_opt_arg = 0;
                 found_symbol->is_ref_arg = 0;
                 found_symbol->is_const_arg = 0;
+                if (rxcp_inline_payload_is_supported(found_func->implementation)) {
+                    rxcp_inline_attach_imported_symbol(context, found_symbol, found_func->implementation);
+                }
             }
         }
     }
@@ -2948,6 +2960,10 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
 
         /* Fixup the node type */
         func->context->ast->child->node_type = IMPORTED_FILE;
+
+        if (func->implementation && rxcp_inline_payload_is_supported(func->implementation)) {
+            rxcp_inline_attach_imported_body(func->context, func->implementation);
+        }
     }
 
     if (add_func(context, func)) {

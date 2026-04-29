@@ -31,6 +31,7 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
+#include "rxcp_val.h"
 
 void emit_proc(ASTNode *node, void *pl) {
     walker_payload *payload = (walker_payload*) pl;
@@ -139,7 +140,8 @@ void emit_proc(ASTNode *node, void *pl) {
                 if (!node->output) node->output = output_f();
                 break;
             }
-            if (ast_chld(node, INSTRUCTIONS, NOP)->node_type == NOP) {
+            ASTNode *body_marker = ast_chld(node, INSTRUCTIONS, NOP);
+            if (!body_marker || body_marker->node_type == NOP) {
                 /* A declaration - external */
                 char* type = callable_effective_return_type(node);
                 char* args = meta_narg(ast_chld(node, ARGS, 0));
@@ -177,6 +179,7 @@ void emit_proc(ASTNode *node, void *pl) {
                 /* Definition */
                 char* type = callable_effective_return_type(node);
                 char* args = meta_narg(ast_chld(node, ARGS, 0));
+                char *inline_payload = rxcp_inline_export_payload(payload->context, node);
                 char *proc_label, *proc_expose, *proc_fqn;
                 if (node->node_type == PROCEDURE) {
                     if (node->node_string) {
@@ -196,29 +199,32 @@ void emit_proc(ASTNode *node, void *pl) {
                 char* buf;
                 if (node->symbolNode->symbol->exposed) {
                     buf = mprintf("\n%s() .locals=%d .expose=%s\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\" \"\"\n",
+                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\" \"%s\"\n",
                                   proc_label,
                                   (int) node->scope->num_registers,
                                   proc_expose,
                                   proc_fqn,
                                   type,
                                   proc_label,
-                                  args);
+                                  args,
+                                  inline_payload);
                 }
                 else {
                     buf = mprintf("\n%s() .locals=%d\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\" \"\"\n",
+                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\" \"%s\"\n",
                                   proc_label,
                                   (int) node->scope->num_registers,
                                   proc_fqn,
                                   type,
                                   proc_label,
-                                  args);
+                                  args,
+                                  inline_payload);
                 }
                 if (node->output) output_prepend_text(buf, node->output);
                 else node->output = output_fs(buf);
                 free(type);
                 free(args);
+                free(inline_payload);
                 free(buf);
                 free(proc_fqn);
                 free(proc_expose);

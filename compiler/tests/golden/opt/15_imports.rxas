@@ -7,7 +7,7 @@
 .srcfile="15_imports.rexx"
 .globals=0
 
-main() .locals=3
+main() .locals=2
    .meta "15_imports.main"="b" ".void" main() "" ""
    setnumdgts 18
    setnumfuz 0
@@ -15,11 +15,15 @@ main() .locals=3
    setnumcas 1
    setnumstd 1
    .src 6:1="say myfunc(10)"
-   load r0,1
-   load r1,10
-   call r2,mymath.myfunc(),r0
-   itos r2
-   say r2
+   .src 6:5="myfunc"
+   .src 4:6=""
+   load r0,100
+   icopy r1,r0
+   acopy r1,r0
+   br l39bexprend
+l39bexprend:
+   itos r1
+   say r1
    .src 6:15=""
    ret
 

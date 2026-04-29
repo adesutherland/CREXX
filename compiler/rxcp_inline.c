@@ -3326,6 +3326,11 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         InlinableCheck check;
 
         sym = node->symbolNode ? node->symbolNode->symbol : NULL;
+        if (node->parent && node->parent->node_type == IMPORTED_FILE &&
+            sym && sym->is_inlinable && inline_symbol_has_callable_template(sym)) {
+            return result_normal;
+        }
+
         if (!sym || sym->is_main || !sym->scope ||
             (node->node_type == PROCEDURE && sym->scope->type == SCOPE_CLASS) ||
             ((node->node_type == METHOD || node->node_type == FACTORY) &&
@@ -3576,4 +3581,1105 @@ void rxcp_inline_prune(Context *context, ASTNode *tree) {
         changed = inline_prune_unreferenced_candidates(context, tree, live_symbols, live_count);
         free(live_symbols);
     } while (changed);
+}
+
+typedef struct {
+    char *text;
+    size_t length;
+    size_t capacity;
+    int ok;
+} InlineMetaText;
+
+typedef struct {
+    Symbol *symbol;
+    size_t id;
+} InlineMetaSymbolEntry;
+
+typedef struct {
+    Scope *scope;
+    size_t id;
+    size_t parent_id;
+} InlineMetaScopeEntry;
+
+typedef struct {
+    Scope *root_scope;
+    InlineMetaScopeEntry *scopes;
+    size_t scope_count;
+    InlineMetaSymbolEntry *symbols;
+    size_t symbol_count;
+} InlineMetaExport;
+
+typedef struct {
+    Symbol **symbols;
+    size_t symbol_count;
+    Scope **scopes;
+    size_t scope_count;
+    ASTNode **stack;
+    size_t stack_count;
+    ASTNode *root;
+    Scope *scope;
+    int version;
+    int ok;
+} InlineMetaImport;
+
+#define INLINE_META_NODE_SCOPE_DEF 4096u
+
+static void inline_meta_text_init(InlineMetaText *text) {
+    text->capacity = 128;
+    text->length = 0;
+    text->text = malloc(text->capacity);
+    text->ok = text->text != NULL;
+    if (text->text) text->text[0] = 0;
+}
+
+static int inline_meta_text_reserve(InlineMetaText *text, size_t extra) {
+    char *new_text;
+    size_t new_capacity;
+
+    if (!text || !text->ok) return 0;
+    if (text->length + extra + 1 <= text->capacity) return 1;
+
+    new_capacity = text->capacity;
+    while (text->length + extra + 1 > new_capacity) new_capacity *= 2;
+
+    new_text = realloc(text->text, new_capacity);
+    if (!new_text) {
+        text->ok = 0;
+        return 0;
+    }
+
+    text->text = new_text;
+    text->capacity = new_capacity;
+    return 1;
+}
+
+static int inline_meta_text_append(InlineMetaText *text, const char *fragment) {
+    size_t length;
+
+    if (!fragment) fragment = "";
+    length = strlen(fragment);
+    if (!inline_meta_text_reserve(text, length)) return 0;
+    memcpy(text->text + text->length, fragment, length + 1);
+    text->length += length;
+    return 1;
+}
+
+static int inline_meta_text_appendf(InlineMetaText *text, const char *format, ...) {
+    va_list args;
+    size_t needed;
+    char *buffer;
+
+    if (!text || !text->ok || !format) return 0;
+
+    va_start(args, format);
+    needed = (size_t)vsnprintf(NULL, 0, format, args);
+    va_end(args);
+
+    buffer = malloc(needed + 1);
+    if (!buffer) {
+        text->ok = 0;
+        return 0;
+    }
+
+    va_start(args, format);
+    vsnprintf(buffer, needed + 1, format, args);
+    va_end(args);
+
+    if (!inline_meta_text_append(text, buffer)) {
+        free(buffer);
+        return 0;
+    }
+
+    free(buffer);
+    return 1;
+}
+
+static char inline_meta_hex_digit(unsigned int value) {
+    return (char)(value < 10 ? ('0' + value) : ('A' + (value - 10)));
+}
+
+static char *inline_meta_hex_encode(const char *text, size_t length) {
+    char *encoded;
+    size_t i;
+
+    if (!text || !length) return strdup("-");
+
+    encoded = malloc((length * 2) + 1);
+    if (!encoded) return NULL;
+
+    for (i = 0; i < length; i++) {
+        unsigned char value = (unsigned char)text[i];
+        encoded[i * 2] = inline_meta_hex_digit((unsigned int)(value >> 4));
+        encoded[(i * 2) + 1] = inline_meta_hex_digit((unsigned int)(value & 0x0f));
+    }
+    encoded[length * 2] = 0;
+    return encoded;
+}
+
+static int inline_meta_hex_value(char ch) {
+    if (ch >= '0' && ch <= '9') return ch - '0';
+    if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+    if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+    return -1;
+}
+
+static char *inline_meta_hex_decode(const char *encoded, size_t *length_out) {
+    char *decoded;
+    size_t encoded_length;
+    size_t i;
+
+    if (length_out) *length_out = 0;
+    if (!encoded || strcmp(encoded, "-") == 0) return strdup("");
+
+    encoded_length = strlen(encoded);
+    if (encoded_length % 2 != 0) return NULL;
+
+    decoded = malloc((encoded_length / 2) + 1);
+    if (!decoded) return NULL;
+
+    for (i = 0; i < encoded_length; i += 2) {
+        int hi = inline_meta_hex_value(encoded[i]);
+        int lo = inline_meta_hex_value(encoded[i + 1]);
+        if (hi < 0 || lo < 0) {
+            free(decoded);
+            return NULL;
+        }
+        decoded[i / 2] = (char)((hi << 4) | lo);
+    }
+    decoded[encoded_length / 2] = 0;
+    if (length_out) *length_out = encoded_length / 2;
+    return decoded;
+}
+
+static unsigned int inline_meta_symbol_flags(Symbol *symbol) {
+    unsigned int flags;
+
+    flags = 0;
+    if (!symbol) return flags;
+    if (symbol->is_arg) flags |= 1u;
+    if (symbol->is_ref_arg) flags |= 2u;
+    if (symbol->is_opt_arg) flags |= 4u;
+    if (symbol->is_const_arg) flags |= 8u;
+    if (symbol->has_vargs) flags |= 16u;
+    if (symbol->exposed) flags |= 32u;
+    if (symbol->is_this) flags |= 64u;
+    if (symbol->is_factory) flags |= 128u;
+    if (symbol->needs_default_initiation) flags |= 256u;
+    return flags;
+}
+
+static unsigned int inline_meta_node_flags(ASTNode *node) {
+    unsigned int flags;
+
+    flags = 0;
+    if (!node) return flags;
+    if (node->is_ref_arg) flags |= 1u;
+    if (node->is_opt_arg) flags |= 2u;
+    if (node->is_const_arg) flags |= 4u;
+    if (node->is_varg) flags |= 8u;
+    if (node->is_compiler_added) flags |= 16u;
+    if (node->is_implicit_main) flags |= 32u;
+    if (node->is_interface_default_method) flags |= 64u;
+    if (node->force_local_scope) flags |= 128u;
+    if (node->inherit_parent_scope) flags |= 256u;
+    if (node->inherit_parent_reg_scope) flags |= 512u;
+    if (node->suppress_shadow_warnings) flags |= 1024u;
+    if (node->skip_exit_dispatch) flags |= 2048u;
+    if (node->scope && node->scope->defining_node == node) flags |= INLINE_META_NODE_SCOPE_DEF;
+    return flags;
+}
+
+static void inline_meta_apply_symbol_flags(Symbol *symbol, unsigned int flags) {
+    if (!symbol) return;
+    symbol->is_arg = (flags & 1u) != 0;
+    symbol->is_ref_arg = (flags & 2u) != 0;
+    symbol->is_opt_arg = (flags & 4u) != 0;
+    symbol->is_const_arg = (flags & 8u) != 0;
+    symbol->has_vargs = (flags & 16u) != 0;
+    symbol->exposed = (flags & 32u) != 0;
+    symbol->is_this = (flags & 64u) != 0;
+    symbol->is_factory = (flags & 128u) != 0;
+    symbol->needs_default_initiation = (flags & 256u) != 0;
+}
+
+static void inline_meta_apply_node_flags(ASTNode *node, unsigned int flags) {
+    if (!node) return;
+    node->is_ref_arg = (flags & 1u) != 0;
+    node->is_opt_arg = (flags & 2u) != 0;
+    node->is_const_arg = (flags & 4u) != 0;
+    node->is_varg = (flags & 8u) != 0;
+    node->is_compiler_added = (flags & 16u) != 0;
+    node->is_implicit_main = (flags & 32u) != 0;
+    node->is_interface_default_method = (flags & 64u) != 0;
+    node->force_local_scope = (flags & 128u) != 0;
+    node->inherit_parent_scope = (flags & 256u) != 0;
+    node->inherit_parent_reg_scope = (flags & 512u) != 0;
+    node->suppress_shadow_warnings = (flags & 1024u) != 0;
+    node->skip_exit_dispatch = (flags & 2048u) != 0;
+}
+
+static int inline_meta_symbol_is_exportable(Symbol *symbol) {
+    if (!symbol) return 1;
+    if (symbol->value_dims || symbol->dim_base || symbol->dim_elements || symbol->value_class) return 0;
+    return symbol->symbol_type == VARIABLE_SYMBOL || symbol->symbol_type == CONSTANT_SYMBOL;
+}
+
+static int inline_meta_node_is_exportable(ASTNode *node) {
+    if (!node) return 1;
+    if (node->association) return 0;
+    if (node->value_dims || node->target_dims ||
+        node->value_dim_base || node->value_dim_elements ||
+        node->target_dim_base || node->target_dim_elements ||
+        node->value_class || node->target_class) {
+        return 0;
+    }
+
+    switch (node->node_type) {
+        case INSTRUCTIONS:
+        case IF:
+        case RETURN:
+        case SAY:
+        case DEFINE:
+        case ASSIGN:
+        case CLASS:
+        case VAR_TARGET:
+        case VAR_SYMBOL:
+        case VAR_REFERENCE:
+        case CONST_SYMBOL:
+        case INTEGER:
+        case FLOAT:
+        case DECIMAL:
+        case STRING:
+        case BINARY:
+        case CONSTANT:
+        case NOVAL:
+        case VOID:
+        case LITERAL:
+        case OP_ADD:
+        case OP_MINUS:
+        case OP_MULT:
+        case OP_DIV:
+        case OP_IDIV:
+        case OP_MOD:
+        case OP_POWER:
+        case OP_NEG:
+        case OP_PLUS:
+        case OP_CONCAT:
+        case OP_SCONCAT:
+        case OP_AND:
+        case OP_OR:
+        case OP_NOT:
+        case OP_COMPARE_EQUAL:
+        case OP_COMPARE_NEQ:
+        case OP_COMPARE_GT:
+        case OP_COMPARE_LT:
+        case OP_COMPARE_GTE:
+        case OP_COMPARE_LTE:
+        case OP_COMPARE_S_EQ:
+        case OP_COMPARE_S_NEQ:
+        case OP_COMPARE_S_GT:
+        case OP_COMPARE_S_LT:
+        case OP_COMPARE_S_GTE:
+        case OP_COMPARE_S_LTE:
+        case OP_TYPE_IS:
+        case OP_TYPE_CAST:
+        case OP_TYPEOF:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int inline_meta_find_scope_id(InlineMetaExport *meta, Scope *scope, size_t *id_out) {
+    size_t i;
+
+    if (id_out) *id_out = 0;
+    if (!meta || !scope) return 0;
+
+    for (i = 0; i < meta->scope_count; i++) {
+        if (meta->scopes[i].scope == scope) {
+            if (id_out) *id_out = meta->scopes[i].id;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int inline_meta_scope_is_exportable(InlineMetaExport *meta, Scope *scope) {
+    Scope *cursor;
+
+    if (!meta || !scope) return 0;
+    if (scope == meta->root_scope) return 1;
+    if (scope->type != SCOPE_LOCAL) return 0;
+
+    cursor = scope->parent;
+    while (cursor) {
+        if (cursor == meta->root_scope) return 1;
+        if (cursor->type != SCOPE_LOCAL) return 0;
+        cursor = cursor->parent;
+    }
+
+    return 0;
+}
+
+static int inline_meta_collect_scope(InlineMetaExport *meta, Scope *scope) {
+    InlineMetaScopeEntry *new_scopes;
+    size_t parent_id;
+
+    if (!scope) return 1;
+    if (!meta || !meta->root_scope) return 0;
+    if (!inline_meta_scope_is_exportable(meta, scope)) return 0;
+    if (inline_meta_find_scope_id(meta, scope, NULL)) return 1;
+
+    parent_id = (size_t)-1;
+    if (scope != meta->root_scope) {
+        if (!inline_meta_collect_scope(meta, scope->parent)) return 0;
+        if (!inline_meta_find_scope_id(meta, scope->parent, &parent_id)) return 0;
+    }
+
+    new_scopes = realloc(meta->scopes, sizeof(InlineMetaScopeEntry) * (meta->scope_count + 1));
+    if (!new_scopes) return 0;
+
+    meta->scopes = new_scopes;
+    meta->scopes[meta->scope_count].scope = scope;
+    meta->scopes[meta->scope_count].id = meta->scope_count;
+    meta->scopes[meta->scope_count].parent_id = parent_id;
+    meta->scope_count++;
+    return 1;
+}
+
+static int inline_meta_find_symbol_id(InlineMetaExport *meta, Symbol *symbol, size_t *id_out) {
+    size_t i;
+
+    if (id_out) *id_out = (size_t)-1;
+    if (!meta || !symbol) return 0;
+
+    for (i = 0; i < meta->symbol_count; i++) {
+        if (meta->symbols[i].symbol == symbol) {
+            if (id_out) *id_out = meta->symbols[i].id;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int inline_meta_collect_symbol(InlineMetaExport *meta, Symbol *symbol) {
+    InlineMetaSymbolEntry *new_symbols;
+
+    if (!symbol) return 1;
+    if (!inline_meta_symbol_is_exportable(symbol)) return 0;
+    if (!inline_meta_collect_scope(meta, symbol->scope)) return 0;
+    if (inline_meta_find_symbol_id(meta, symbol, NULL)) return 1;
+
+    new_symbols = realloc(meta->symbols, sizeof(InlineMetaSymbolEntry) * (meta->symbol_count + 1));
+    if (!new_symbols) return 0;
+
+    meta->symbols = new_symbols;
+    meta->symbols[meta->symbol_count].symbol = symbol;
+    meta->symbols[meta->symbol_count].id = meta->symbol_count;
+    meta->symbol_count++;
+    return 1;
+}
+
+static int inline_meta_collect(ASTNode *node, InlineMetaExport *meta) {
+    ASTNode *child;
+
+    if (!node) return 1;
+    if (!inline_meta_node_is_exportable(node)) return 0;
+    if (!inline_meta_collect_scope(meta, node->scope)) return 0;
+    if (node->symbolNode && !inline_meta_collect_symbol(meta, node->symbolNode->symbol)) return 0;
+
+    child = node->child;
+    while (child) {
+        if (!inline_meta_collect(child, meta)) return 0;
+        child = child->sibling;
+    }
+
+    return 1;
+}
+
+static int inline_meta_emit_scopes(InlineMetaText *text, InlineMetaExport *meta) {
+    size_t i;
+
+    for (i = 0; i < meta->scope_count; i++) {
+        Scope *scope = meta->scopes[i].scope;
+        long parent_id = meta->scopes[i].parent_id == (size_t)-1 ? -1L : (long)meta->scopes[i].parent_id;
+
+        if (!inline_meta_text_appendf(text,
+                                      ";q,%zu,%ld,%d",
+                                      meta->scopes[i].id,
+                                      parent_id,
+                                      scope ? (int)scope->type : (int)SCOPE_LOCAL)) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+static int inline_meta_emit_symbols(InlineMetaText *text, InlineMetaExport *meta) {
+    size_t i;
+
+    for (i = 0; i < meta->symbol_count; i++) {
+        Symbol *symbol = meta->symbols[i].symbol;
+        size_t scope_id;
+        char *name_hex = inline_meta_hex_encode(symbol->name, strlen(symbol->name));
+        if (!name_hex) return 0;
+        if (!inline_meta_find_scope_id(meta, symbol->scope, &scope_id)) {
+            free(name_hex);
+            return 0;
+        }
+
+        if (!inline_meta_text_appendf(text,
+                                      ";s,%zu,%zu,%s,%d,%zu,%u",
+                                      meta->symbols[i].id,
+                                      scope_id,
+                                      name_hex,
+                                      (int)symbol->type,
+                                      symbol->value_dims,
+                                      inline_meta_symbol_flags(symbol))) {
+            free(name_hex);
+            return 0;
+        }
+        free(name_hex);
+    }
+
+    return 1;
+}
+
+static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, ASTNode *node) {
+    ASTNode *child;
+    size_t symbol_id;
+    size_t scope_id;
+    char *node_hex;
+    char *decimal_hex;
+    char int_buffer[64];
+
+    if (!node) return 1;
+
+    symbol_id = (size_t)-1;
+    if (node->symbolNode && node->symbolNode->symbol) {
+        if (!inline_meta_find_symbol_id(meta, node->symbolNode->symbol, &symbol_id)) return 0;
+    }
+    if (node->scope) {
+        if (!inline_meta_find_scope_id(meta, node->scope, &scope_id)) return 0;
+    } else {
+        scope_id = 0;
+    }
+
+    node_hex = inline_meta_hex_encode(node->node_string, node->node_string_length);
+    decimal_hex = inline_meta_hex_encode(node->decimal_value, node->decimal_value ? strlen(node->decimal_value) : 0);
+    if (!node_hex || !decimal_hex) {
+        if (node_hex) free(node_hex);
+        if (decimal_hex) free(decimal_hex);
+        return 0;
+    }
+
+#ifdef __32BIT__
+    snprintf(int_buffer, sizeof(int_buffer), "%ld", node->int_value);
+#else
+    snprintf(int_buffer, sizeof(int_buffer), "%lld", (long long)node->int_value);
+#endif
+
+    if (!inline_meta_text_appendf(text,
+                                  ";>,%zu,%d,%d,%d,%zu,%zu,%u,%ld,%s,%d,%.17g,%s,%s",
+                                  scope_id,
+                                  (int)node->node_type,
+                                  (int)node->value_type,
+                                  (int)node->target_type,
+                                  node->value_dims,
+                                  node->target_dims,
+                                  inline_meta_node_flags(node),
+                                  symbol_id == (size_t)-1 ? -1L : (long)symbol_id,
+                                  int_buffer,
+                                  node->bool_value,
+                                  node->float_value,
+                                  node_hex,
+                                  decimal_hex)) {
+        free(node_hex);
+        free(decimal_hex);
+        return 0;
+    }
+
+    free(node_hex);
+    free(decimal_hex);
+
+    child = node->child;
+    while (child) {
+        if (!inline_meta_emit_node(text, meta, child)) return 0;
+        child = child->sibling;
+    }
+
+    return inline_meta_text_append(text, ";<");
+}
+
+char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
+    Symbol *symbol;
+    ASTNode *instrs;
+    InlineReturnShape return_shape;
+    InlinableCheck check;
+    InlineMetaExport meta;
+    InlineMetaText text;
+
+    (void)context;
+
+    if (!callable || callable->node_type != PROCEDURE) return strdup("");
+    if (callable->is_inline_pruned) return strdup("");
+    if (inline_proc_has_procedure_expose(callable)) return strdup("");
+
+    symbol = inline_symbol_from_proc_def(callable);
+    if (!symbol || !symbol->exposed) return strdup("");
+    if (symbol->is_main || symbol->is_implicit_main) return strdup("");
+
+    instrs = ast_chld(callable, INSTRUCTIONS, 0);
+    if (!instrs) return strdup("");
+
+    if (!inline_analyse_return_shape(callable, &return_shape)) return strdup("");
+    if (!return_shape.final_is_return && symbol->type != TP_VOID) return strdup("");
+    if (symbol->type != TP_VOID && return_shape.return_count == 0) return strdup("");
+
+    memset(&check, 0, sizeof(check));
+    check.root_proc = callable;
+    ast_wlkr(callable, inlinable_check_walker, &check);
+    if (check.node_count > INLINE_MAX_NODES ||
+        check.return_count != return_shape.return_count ||
+        check.has_unsupported_assembler_alias ||
+        check.has_unsupported_varg_access) {
+        return strdup("");
+    }
+
+    memset(&meta, 0, sizeof(meta));
+    meta.root_scope = callable->scope;
+    if (!inline_meta_collect_scope(&meta, callable->scope)) {
+        free(meta.scopes);
+        return strdup("");
+    }
+    if (!inline_meta_collect(instrs, &meta)) {
+        free(meta.scopes);
+        free(meta.symbols);
+        return strdup("");
+    }
+
+    inline_meta_text_init(&text);
+    if (!text.ok ||
+        !inline_meta_text_append(&text, "I2") ||
+        !inline_meta_emit_scopes(&text, &meta) ||
+        !inline_meta_emit_symbols(&text, &meta) ||
+        !inline_meta_emit_node(&text, &meta, instrs)) {
+        free(meta.scopes);
+        free(meta.symbols);
+        if (text.text) free(text.text);
+        return strdup("");
+    }
+
+    free(meta.scopes);
+    free(meta.symbols);
+    return text.text;
+}
+
+int rxcp_inline_payload_is_supported(const char *payload) {
+    return payload && payload[0] == 'I' && (payload[1] == '1' || payload[1] == '2') &&
+           (payload[2] == 0 || payload[2] == ';');
+}
+
+static ASTNode *inline_meta_find_first_procedure(ASTNode *node) {
+    ASTNode *child;
+    ASTNode *found;
+
+    if (!node) return NULL;
+    if (node->node_type == PROCEDURE) return node;
+
+    child = node->child;
+    while (child) {
+        found = inline_meta_find_first_procedure(child);
+        if (found) return found;
+        child = child->sibling;
+    }
+
+    return NULL;
+}
+
+static char *inline_meta_next_field(char **cursor) {
+    char *field;
+    char *comma;
+
+    if (!cursor || !*cursor) return NULL;
+    field = *cursor;
+    comma = strchr(field, ',');
+    if (comma) {
+        *comma = 0;
+        *cursor = comma + 1;
+    } else {
+        *cursor = NULL;
+    }
+    return field;
+}
+
+static int inline_meta_ensure_symbol_slot(InlineMetaImport *meta, size_t id) {
+    Symbol **new_symbols;
+    size_t old_count;
+    size_t i;
+
+    if (!meta) return 0;
+    if (id < meta->symbol_count) return 1;
+
+    old_count = meta->symbol_count;
+    new_symbols = realloc(meta->symbols, sizeof(Symbol *) * (id + 1));
+    if (!new_symbols) return 0;
+
+    meta->symbols = new_symbols;
+    meta->symbol_count = id + 1;
+    for (i = old_count; i < meta->symbol_count; i++) meta->symbols[i] = NULL;
+    return 1;
+}
+
+static int inline_meta_ensure_scope_slot(InlineMetaImport *meta, size_t id) {
+    Scope **new_scopes;
+    size_t old_count;
+    size_t i;
+
+    if (!meta) return 0;
+    if (id < meta->scope_count) return 1;
+
+    old_count = meta->scope_count;
+    new_scopes = realloc(meta->scopes, sizeof(Scope *) * (id + 1));
+    if (!new_scopes) return 0;
+
+    meta->scopes = new_scopes;
+    meta->scope_count = id + 1;
+    for (i = old_count; i < meta->scope_count; i++) meta->scopes[i] = NULL;
+    return 1;
+}
+
+static Scope *inline_meta_scope_by_id(InlineMetaImport *meta, size_t id) {
+    if (!meta) return NULL;
+    if (id >= meta->scope_count) return NULL;
+    return meta->scopes[id];
+}
+
+static int inline_meta_import_scope(Context *context, InlineMetaImport *meta, char *record) {
+    char *cursor;
+    char *id_field;
+    char *parent_field;
+    char *type_field;
+    size_t id;
+    long parent_id;
+    ScopeType type;
+    Scope *parent;
+    Scope *scope;
+
+    if (!context || !meta || !record) return 0;
+
+    cursor = record + 2;
+    id_field = inline_meta_next_field(&cursor);
+    parent_field = inline_meta_next_field(&cursor);
+    type_field = inline_meta_next_field(&cursor);
+    if (!id_field || !parent_field || !type_field) return 0;
+
+    id = (size_t)strtoul(id_field, NULL, 10);
+    parent_id = strtol(parent_field, NULL, 10);
+    type = (ScopeType)atoi(type_field);
+
+    if (!inline_meta_ensure_scope_slot(meta, id)) return 0;
+
+    if (id == 0) {
+        if (type != SCOPE_PROCEDURE) return 0;
+        meta->scopes[0] = meta->scope;
+        return 1;
+    }
+
+    if (type != SCOPE_LOCAL || parent_id < 0) return 0;
+    parent = inline_meta_scope_by_id(meta, (size_t)parent_id);
+    if (!parent) return 0;
+
+    if (meta->scopes[id]) return 1;
+
+    scope = scp_f(context, parent, NULL, NULL, type);
+    if (!scope) return 0;
+
+    meta->scopes[id] = scope;
+    return 1;
+}
+
+static Symbol *inline_meta_find_or_create_symbol(Context *context,
+                                                 Scope *scope,
+                                                 const char *name,
+                                                 ValueType type,
+                                                 size_t dims,
+                                                 unsigned int flags) {
+    ASTNode lookup_node;
+    Symbol *symbol;
+
+    if (!context || !scope || !name || dims != 0) return NULL;
+
+    memset(&lookup_node, 0, sizeof(lookup_node));
+    lookup_node.node_string = (char *)name;
+    lookup_node.node_string_length = strlen(name);
+
+    symbol = sym_lrsv(scope, &lookup_node);
+    if (!symbol) symbol = sym_fn(scope, name, strlen(name));
+    if (!symbol) return NULL;
+
+    symbol->type = type;
+    symbol->value_dims = dims;
+    if (symbol->symbol_type == UNKNOWN_SYMBOL) symbol->symbol_type = VARIABLE_SYMBOL;
+    if (symbol->status == SYM_STATUS_UNRESOLVED) symbol->status = SYM_STATUS_LOCAL_VAR;
+    inline_meta_apply_symbol_flags(symbol, flags);
+
+    return symbol;
+}
+
+static int inline_meta_import_symbol(Context *context, InlineMetaImport *meta, char *record) {
+    char *cursor;
+    char *id_field;
+    char *scope_field;
+    char *name_field;
+    char *type_field;
+    char *dims_field;
+    char *flags_field;
+    size_t id;
+    size_t scope_id;
+    size_t name_length;
+    char *name;
+    Scope *scope;
+    Symbol *symbol;
+
+    cursor = record + 2;
+    id_field = inline_meta_next_field(&cursor);
+    scope_field = NULL;
+    if (meta->version >= 2) scope_field = inline_meta_next_field(&cursor);
+    name_field = inline_meta_next_field(&cursor);
+    type_field = inline_meta_next_field(&cursor);
+    dims_field = inline_meta_next_field(&cursor);
+    flags_field = inline_meta_next_field(&cursor);
+    if (!id_field || !name_field || !type_field || !dims_field || !flags_field) return 0;
+
+    id = (size_t)strtoul(id_field, NULL, 10);
+    if (!inline_meta_ensure_symbol_slot(meta, id)) return 0;
+
+    scope_id = 0;
+    if (scope_field) scope_id = (size_t)strtoul(scope_field, NULL, 10);
+    scope = meta->version >= 2 ? inline_meta_scope_by_id(meta, scope_id) : meta->scope;
+    if (!scope) return 0;
+
+    name = inline_meta_hex_decode(name_field, &name_length);
+    if (!name) return 0;
+
+    symbol = inline_meta_find_or_create_symbol(context,
+                                               scope,
+                                               name,
+                                               (ValueType)atoi(type_field),
+                                               (size_t)strtoul(dims_field, NULL, 10),
+                                               (unsigned int)strtoul(flags_field, NULL, 10));
+    free(name);
+    if (!symbol) return 0;
+
+    meta->symbols[id] = symbol;
+    return 1;
+}
+
+static int inline_meta_push_node(InlineMetaImport *meta, ASTNode *node) {
+    ASTNode **new_stack;
+
+    new_stack = realloc(meta->stack, sizeof(ASTNode *) * (meta->stack_count + 1));
+    if (!new_stack) return 0;
+
+    meta->stack = new_stack;
+    meta->stack[meta->stack_count] = node;
+    meta->stack_count++;
+    return 1;
+}
+
+static int inline_meta_import_node(Context *context, InlineMetaImport *meta, char *record) {
+    char *cursor;
+    char *scope_field;
+    char *node_type_field;
+    char *value_type_field;
+    char *target_type_field;
+    char *value_dims_field;
+    char *target_dims_field;
+    char *flags_field;
+    char *symbol_field;
+    char *int_field;
+    char *bool_field;
+    char *float_field;
+    char *node_string_field;
+    char *decimal_field;
+    ASTNode *node;
+    char *node_string;
+    char *decimal_string;
+    size_t node_string_length;
+    size_t decimal_length;
+    size_t scope_id;
+    long symbol_id;
+    unsigned int flags;
+    Scope *node_scope;
+
+    cursor = record + 2;
+    scope_field = NULL;
+    if (meta->version >= 2) scope_field = inline_meta_next_field(&cursor);
+    node_type_field = inline_meta_next_field(&cursor);
+    value_type_field = inline_meta_next_field(&cursor);
+    target_type_field = inline_meta_next_field(&cursor);
+    value_dims_field = inline_meta_next_field(&cursor);
+    target_dims_field = inline_meta_next_field(&cursor);
+    flags_field = inline_meta_next_field(&cursor);
+    symbol_field = inline_meta_next_field(&cursor);
+    int_field = inline_meta_next_field(&cursor);
+    bool_field = inline_meta_next_field(&cursor);
+    float_field = inline_meta_next_field(&cursor);
+    node_string_field = inline_meta_next_field(&cursor);
+    decimal_field = inline_meta_next_field(&cursor);
+    if (!node_type_field || !value_type_field || !target_type_field ||
+        !value_dims_field || !target_dims_field || !flags_field ||
+        !symbol_field || !int_field || !bool_field || !float_field ||
+        !node_string_field || !decimal_field) {
+        return 0;
+    }
+
+    scope_id = 0;
+    if (scope_field) scope_id = (size_t)strtoul(scope_field, NULL, 10);
+    node_scope = meta->version >= 2 ? inline_meta_scope_by_id(meta, scope_id) : meta->scope;
+    if (!node_scope) return 0;
+
+    node = ast_ft(context, (NodeType)atoi(node_type_field));
+    if (!node) return 0;
+
+    node->value_type = (ValueType)atoi(value_type_field);
+    node->target_type = (ValueType)atoi(target_type_field);
+    node->value_dims = (size_t)strtoul(value_dims_field, NULL, 10);
+    node->target_dims = (size_t)strtoul(target_dims_field, NULL, 10);
+    node->int_value = (rxinteger)atoll(int_field);
+    node->bool_value = atoi(bool_field);
+    node->float_value = atof(float_field);
+    node->scope = node_scope;
+    flags = (unsigned int)strtoul(flags_field, NULL, 10);
+    inline_meta_apply_node_flags(node, flags);
+    if ((flags & INLINE_META_NODE_SCOPE_DEF) && node_scope != meta->scope) node_scope->defining_node = node;
+
+    node_string = inline_meta_hex_decode(node_string_field, &node_string_length);
+    decimal_string = inline_meta_hex_decode(decimal_field, &decimal_length);
+    if (!node_string || !decimal_string) {
+        if (node_string) free(node_string);
+        if (decimal_string) free(decimal_string);
+        return 0;
+    }
+
+    ast_sstr(node, node_string, node_string_length);
+    if (decimal_length) node->decimal_value = decimal_string;
+    else free(decimal_string);
+
+    symbol_id = strtol(symbol_field, NULL, 10);
+    if (symbol_id >= 0) {
+        Symbol *symbol;
+        if ((size_t)symbol_id >= meta->symbol_count) return 0;
+        symbol = meta->symbols[symbol_id];
+        if (!symbol) return 0;
+
+        if (node->node_type == VAR_TARGET) sym_adnd(symbol, node, 0, 1);
+        else sym_adnd(symbol, node, 1, 0);
+    }
+
+    if (meta->stack_count) add_ast(meta->stack[meta->stack_count - 1], node);
+    else meta->root = node;
+
+    return inline_meta_push_node(meta, node);
+}
+
+static Symbol *inline_meta_clone_signature_symbol(Context *context, Scope *scope, Symbol *old_symbol) {
+    Symbol *symbol;
+
+    if (!context || !scope || !old_symbol || !old_symbol->name) return NULL;
+
+    symbol = inline_meta_find_or_create_symbol(context,
+                                               scope,
+                                               old_symbol->name,
+                                               old_symbol->type,
+                                               old_symbol->value_dims,
+                                               inline_meta_symbol_flags(old_symbol));
+    if (!symbol) return NULL;
+
+    symbol->symbol_type = old_symbol->symbol_type;
+    symbol->status = old_symbol->status;
+    symbol->fixed_args = old_symbol->fixed_args;
+    symbol->has_vargs = old_symbol->has_vargs;
+    symbol->needs_default_initiation = old_symbol->needs_default_initiation;
+    symbol->register_num = UNSET_REGISTER;
+    symbol->register_type = 'r';
+    return symbol;
+}
+
+static ASTNode *inline_meta_clone_signature_with_symbols(Context *context, ASTNode *node, Scope *scope) {
+    ASTNode *clone;
+    ASTNode *child;
+
+    if (!context || !node || !scope) return NULL;
+
+    clone = ast_dup(context, node);
+    if (!clone) return NULL;
+    clone->scope = scope;
+    if (node->symbolNode && node->symbolNode->symbol) {
+        Symbol *symbol = inline_meta_clone_signature_symbol(context, scope, node->symbolNode->symbol);
+        if (!symbol) return NULL;
+        sym_adnd(symbol, clone, node->symbolNode->readUsage, node->symbolNode->writeUsage);
+    }
+
+    child = node->child;
+    while (child) {
+        ASTNode *child_clone = inline_meta_clone_signature_with_symbols(context, child, scope);
+        if (!child_clone) return NULL;
+        add_ast(clone, child_clone);
+        child = child->sibling;
+    }
+
+    return clone;
+}
+
+static ASTNode *inline_meta_create_template_proc(Context *context, ASTNode *proc, Scope **scope_out) {
+    ASTNode *template_proc;
+    ASTNode *child;
+    Scope *template_scope;
+
+    if (scope_out) *scope_out = NULL;
+    if (!context || !proc || !proc->scope || !proc->symbolNode || !proc->symbolNode->symbol) return NULL;
+
+    template_proc = ast_dup(context, proc);
+    if (!template_proc) return NULL;
+
+    template_scope = scp_f(context, NULL, template_proc, NULL, SCOPE_PROCEDURE);
+    if (!template_scope) return NULL;
+    if (proc->scope->name) template_scope->name = strdup(proc->scope->name);
+    inline_copy_numeric_context(template_scope, proc->scope);
+
+    template_proc->scope = template_scope;
+    sym_adnd(proc->symbolNode->symbol,
+             template_proc,
+             proc->symbolNode->readUsage,
+             proc->symbolNode->writeUsage);
+
+    child = proc->child;
+    while (child) {
+        if (child->node_type != INSTRUCTIONS && child->node_type != NOP) {
+            ASTNode *child_clone = inline_meta_clone_signature_with_symbols(context, child, template_scope);
+            if (!child_clone) return NULL;
+            add_ast(template_proc, child_clone);
+        }
+        child = child->sibling;
+    }
+
+    if (scope_out) *scope_out = template_scope;
+    return template_proc;
+}
+
+static int inline_meta_finish_template(ASTNode *proc, ASTNode *template_proc, ASTNode *body_root) {
+    if (!proc || !template_proc || !proc->symbolNode || !proc->symbolNode->symbol || !body_root) return 0;
+
+    add_ast(template_proc, body_root);
+
+    proc->symbolNode->symbol->is_inlinable = 1;
+    proc->symbolNode->symbol->ast_template = template_proc;
+    return 1;
+}
+
+static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const char *payload) {
+    InlineMetaImport meta;
+    ASTNode *template_proc;
+    Scope *template_scope;
+    char *copy;
+    char *record;
+
+    if (!context || !rxcp_inline_payload_is_supported(payload)) return 0;
+    if (!proc || !proc->scope || !proc->symbolNode || !proc->symbolNode->symbol) return 0;
+
+    template_scope = NULL;
+    template_proc = inline_meta_create_template_proc(context, proc, &template_scope);
+    if (!template_proc || !template_scope) return 0;
+
+    memset(&meta, 0, sizeof(meta));
+    meta.scope = template_scope;
+    meta.ok = 1;
+
+    copy = strdup(payload);
+    if (!copy) return 0;
+
+    record = strtok(copy, ";");
+    if (!record) {
+        free(copy);
+        return 0;
+    }
+    if (strcmp(record, "I1") == 0) meta.version = 1;
+    else if (strcmp(record, "I2") == 0) meta.version = 2;
+    else {
+        free(copy);
+        return 0;
+    }
+
+    if (!inline_meta_ensure_scope_slot(&meta, 0)) {
+        free(copy);
+        return 0;
+    }
+    meta.scopes[0] = meta.scope;
+
+    while ((record = strtok(NULL, ";")) != NULL) {
+        if (strcmp(record, "<") == 0) {
+            if (!meta.stack_count) {
+                meta.ok = 0;
+                break;
+            }
+            meta.stack_count--;
+        } else if (record[0] == 'q' && record[1] == ',') {
+            if (meta.version < 2 || !inline_meta_import_scope(context, &meta, record)) {
+                meta.ok = 0;
+                break;
+            }
+        } else if (record[0] == 's' && record[1] == ',') {
+            if (!inline_meta_import_symbol(context, &meta, record)) {
+                meta.ok = 0;
+                break;
+            }
+        } else if (record[0] == '>' && record[1] == ',') {
+            if (!inline_meta_import_node(context, &meta, record)) {
+                meta.ok = 0;
+                break;
+            }
+        } else {
+            meta.ok = 0;
+            break;
+        }
+    }
+
+    if (meta.stack_count != 0 || !meta.root || meta.root->node_type != INSTRUCTIONS) meta.ok = 0;
+
+    free(copy);
+    free(meta.symbols);
+    free(meta.scopes);
+    free(meta.stack);
+
+    if (!meta.ok) return 0;
+
+    return inline_meta_finish_template(proc, template_proc, meta.root);
+}
+
+int rxcp_inline_attach_imported_body(Context *context, const char *payload) {
+    ASTNode *proc;
+
+    if (!context || !context->ast || !rxcp_inline_payload_is_supported(payload)) return 0;
+
+    proc = inline_meta_find_first_procedure(context->ast);
+    if (!proc) return 0;
+
+    return inline_meta_attach_to_proc(context, proc, payload);
+}
+
+int rxcp_inline_attach_imported_symbol(Context *context, Symbol *symbol, const char *payload) {
+    ASTNode *proc;
+
+    if (!context || !symbol || !rxcp_inline_payload_is_supported(payload)) return 0;
+
+    proc = sym_proc(symbol);
+    if (!proc) return 0;
+
+    return inline_meta_attach_to_proc(context, proc, payload);
 }

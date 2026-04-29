@@ -331,35 +331,127 @@ and not raw C struct memory. Source text is attractive for source imports, but
 it is not enough for `.rxbin` imports and it reopens parse/validation drift.
 Raw AST memory is not portable and cannot survive compiler version changes.
 
-A compact text form is acceptable for phase 1. It should be versioned and
-structured as a preorder tree walk with explicit scope and symbol records. The
-minimum shape is:
+The original source language should be irrelevant by this stage. Level B,
+Level C, exit-generated code, and other front-end inputs should all export the
+same canonical inline format once they have been lowered into the common
+validated AST. Source language, source file, and original text can remain as
+debug/provenance fields, but they must not be required to reconstruct or prove
+an inline body.
+
+Cross-file inlining must remain subset-based. The exported subset may grow over
+time, but the first rule is that a scenario which cannot be proved safe locally
+must not become eligible merely because the callee came from another file. The
+writer and reader therefore both have eligibility responsibilities:
+
+- The writer exports inline-body metadata only for callables that are locally
+  structurally inlineable independent of a particular call site.
+- The reader reconstructs the imported callable as a template and still runs
+  the normal inliner eligibility, arity, recursion, argument, and call-site
+  bucket checks before rewriting a specific call.
+- A callable can be exportable but not inlineable at a particular target site.
+  For example, the callee body may be safe, while the caller uses it under an
+  unsupported composed expression parent.
+- A callable that fails writer-side structural gates should not carry inline
+  metadata at all, because the metadata consumes space and cannot be used
+  correctly by any reader.
+
+Writer-side export should happen after local optimisation has reached its
+inline fixed point. If a procedure has locally inlined another procedure, the
+exported body for the outer procedure should include that already-inlined AST
+shape, subject to the same total node-count and safety gates. This is required
+so cross-file inlining can naturally support "inlining an already-inlined
+function" without inventing a second expansion model.
+
+Each callable still owns its own export decision and, if eligible, its own
+exported body. For example, if `b()` inlines `c()` locally and `a()` inlines
+`b()` locally, the writer may export the final body of `a()` and the final body
+of `b()` separately, with each body containing whatever local inlining was
+accepted before export. The node-count limit applies to each exported final
+body, not merely to the original source body before local inlining.
+
+This also means AST serialization and local tree surgery must agree on a stable
+post-optimisation shape. Export must not serialize transient call-site state,
+inline ancestry stacks, or mutable template nodes that the local fixed-point
+pass still expects to revisit.
+
+All procedures may eventually have serialized AST payloads for tooling,
+diagnostics, or future compiler uses, including `main`. That is separate from
+inline-body eligibility. A payload for `main` or another non-inlineable callable
+must not be marked as an inline-consumable body unless the writer-side gates say
+it is structurally inlineable and the reader-side call-site gates also accept
+the target use.
+
+A compact text form is used for the first implementation slice. It is versioned
+and structured as a preorder tree walk with explicit scope and symbol records.
+It is not JSON and it is not raw source text. The active version is `I2` and is
+stored in the existing `META_FUNC.inliner` string. The importer still accepts
+`I1` payloads for compatibility with the original scope-flattened prototype.
 
 ```text
-inline-body-v1 compiler=<version> ast=<schema>
-proc kind=<procedure|method|factory> name=<fqname> type=<type> args=<signature>
-scope <id> parent=<id|none> kind=<procedure|local|class> numeric=<...>
-symbol <id> scope=<id> kind=<variable|function|class> type=<type> flags=<...>
-node <id> type=<NodeType> text=<encoded> scope=<id> symbol=<id|none> assoc=<id|none> types=<...> source=<...>
-down
-node ...
-up
-endproc
+I2
+;q,<scope-id>,<parent-scope-id|-1>,<ScopeType>
+;s,<id>,<scope-id>,<hex-name>,<ValueType>,<dims>,<flags>
+;>,<scope-id>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<flags>,<symbol-id|-1>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
+;>
+...
+;<
+;<
 ```
 
-The important point is the `node` / `down` / `up` stream: it lets the importer
-reconstruct the tree without depending on pointer addresses. The explicit
-symbol and scope sections let the existing inline clone/bind core continue to
-operate on normal AST, `Scope`, and `Symbol` objects after import.
+The important point is the `>` / `<` stream: it lets the importer reconstruct
+the tree without depending on pointer addresses. Symbol records precede the
+tree records and give the importer enough `Symbol` data for the current clone
+and remap paths. Text fields are hex encoded so the payload remains safe inside
+an RXAS quoted metadata string without carrying an escaping sub-language.
 
-Required contents for phase 1:
+Scope id `0` is the imported procedure scope. Additional `q` records currently
+describe local child scopes only; the node flags mark the node that owns each
+scope so the normal clone path can duplicate scoped locals instead of flattening
+them into the procedure.
+
+The first reader/writer subset is intentionally narrow:
+
+- exposed, optimized procedures only; methods and factories stay signature-only
+  until their receiver and selector cases are handled explicitly
+- scalar types only; arrays and object class names fail closed for now
+- simple `IF` control flow is supported for scalar multi-return procedures,
+  including `IF ... THEN DO ... END` blocks with local scalar temporaries
+- no serialized associations yet, so `BLOCK_EXPR`, `LEAVE_WITH`, loop-control
+  associations, class/interface dispatch, and remaining nested calls are not
+  exported in this first slice
+- simple expression/assignment/return/say nodes and ordinary scalar symbols
+
+The reader reconstructs a detached compiler template. It does not attach the
+body or its body-local symbols to the imported declaration in the caller AST,
+so emission still produces a normal external declaration. The imported body is
+only used as the symbol's `ast_template` during the optimiser and is cloned
+into accepted call sites like local inline templates.
+
+Binary, RXAS, and source import paths all feed the same metadata reader. Binary
+and RXAS imports read the payload from `META_FUNC.inliner`; source imports run
+the same writer while scanning exposed dependency procedures and store the
+result in the import registry alongside the signature.
+
+Full register allocation state should not be transported:
+register assignment is a downstream compiler concern and must run after import
+as it does for local source.
+
+Full scope objects probably should not be serialized directly. Scope is mostly
+derived from the tree and can be rebuilt by the normal fixup/validation
+pipeline, provided the transport marks the nodes that introduce procedure,
+class, method, factory, block, and generated local scopes. If later import work
+finds a scope property that cannot be derived, add that property explicitly
+rather than snapshotting the whole in-memory `Scope` structure.
+
+Required contents as the cross-file subset grows:
 
 - callable kind, fully qualified name, return type, argument signature, and
   inlining format version
 - the callable body under its `INSTRUCTIONS` node
 - local symbol table entries, including argument/ref/const/varg flags,
   aggregate dimensions, object class names, and default-init requirements
-- scope boundaries and numeric context
+- scope-boundary markers sufficient for downstream walkers to rebuild
+  procedure, generated-block, nested-block, method, factory, and class context
 - associations needed by class/interface calls, `BLOCK_EXPR`, and generated
   `LEAVE_WITH` targets
 - source anchors where available, with a clear flag for synthetic or stripped
@@ -370,19 +462,29 @@ Import behaviour:
 
 1. `rxc` reads the existing function metadata as it does today.
 2. If the imported function has a compatible inline-body payload, the compiler
-   reconstructs an imported AST template and attaches it to the imported
-   symbol as `ast_template`.
-3. The normal `identify_inlinable_walker()` and call-site selection logic
+   reconstructs an imported AST template, rebuilds symbol/scope information
+   through the normal downstream walkers where possible, and attaches the
+   resulting read-only template to the imported symbol as `ast_template`.
+3. The reconstructed template must be good enough to re-enter the same
+   validation, optimisation, clone, bind, and emitter assumptions used by local
+   templates. Any missing data should fail closed at import time.
+4. The normal `identify_inlinable_walker()` and call-site selection logic
    should not need a special imported-callee path beyond ownership checks and
    compatibility gates.
-4. If the payload is missing, stripped, malformed, too new, or semantically
+5. If the payload is missing, stripped, malformed, too new, or semantically
    incomplete, the compiler fails closed and treats the import as signature
    only.
 
 Linker/strip behaviour:
 
-- `rxlink` should preserve inline-body metadata by default, because it is
-  optimisation metadata for downstream compilation.
+- Library-oriented artifacts should preserve inline-body metadata by default,
+  because they are intended to support downstream compilation and optimisation.
+- Final linked binaries should strip inline-body metadata by default. It has no
+  runtime purpose once linking is complete and it can consume significant
+  space.
+- The linker should expose explicit options for all three useful policies:
+  preserve inline metadata, strip inline metadata, and use the default for the
+  selected output kind.
 - `STRIP INLINE` should remove inline-body payloads while preserving callable
   signatures.
 - `STRIP SOURCE` may remove source/file metadata without removing inline-body
@@ -397,6 +499,10 @@ Compatibility gates:
 - AST schema/compiler ABI must match or be explicitly declared compatible
 - imported inline bodies must be treated as read-only templates and cloned
   into the caller, never mutated in place
+- the writer must have proved the body is locally structurally eligible before
+  exporting metadata
+- the reader must independently prove the imported template is usable and the
+  specific call site is supported before rewriting
 - exported body dependencies must either be inlined too or remain resolvable
   as imports in the caller output
 
@@ -533,6 +639,30 @@ The first implementation target should be chosen by semantic risk, not by how
 often a fail-closed debug line appears. In particular, a repeated
 `DEBUG_INLINE_FAILCLOSED` line can be caused by the fixed-point pass revisiting
 an intentionally excluded site.
+
+### Local follow-up: assembler alias register mapping
+
+The local inliner should eventually support a safe subset of assembler-aliasing
+helpers, but only after the register and lifetime model is explicit.
+
+The current unsafe class is instructions that make one register an alias of
+storage owned by another register or object, especially `link`, `linkattr*`,
+`linktoattr*`, and `unlink`. The issue is register mapping, not assembler text
+in general. The clone/remap core must be able to answer:
+
+- what storage the linked destination register refers to after callee symbols
+  have been remapped into the caller's inline scope
+- whether the target storage outlives the inlined block
+- whether an `unlink` must be preserved, moved, or paired with copyback
+- whether the alias can observe mutations from both the caller and callee in
+  the same order as a real call
+- whether the linked register can be represented as an ordinary symbol/locator
+  in the current inline machinery
+
+Getter/setter-style methods that do not use these aliasing instructions should
+remain inlineable. Cross-file inlining should inherit the same rule: do not
+export or consume inline-body metadata for aliasing assembler bodies until the
+local proof exists.
 
 ### Pruning fully inlined local callables
 
