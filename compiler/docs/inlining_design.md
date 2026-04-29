@@ -362,6 +362,20 @@ shape, subject to the same total node-count and safety gates. This is required
 so cross-file inlining can naturally support "inlining an already-inlined
 function" without inventing a second expansion model.
 
+The first implemented dependency slice follows that rule rather than
+serializing unresolved nested calls. A callable whose nested helper call has
+already been rewritten locally may export the resulting final AST. A callable
+that still contains a `FUNCTION`, method, or factory call in its payload remains
+fail-closed until the dependency-list format and reader-side resolution rules
+are designed.
+
+Compiler-added statement blocks produced by local inlining may still carry an
+association back to the local callee definition as inline provenance. That
+association is not a runtime control-flow edge and is intentionally omitted
+from the cross-file payload. Other associations, such as loop-control targets
+or `BLOCK_EXPR` / `LEAVE_WITH` links, remain fail-closed until their target
+serialization is explicit.
+
 Each callable still owns its own export decision and, if eligible, its own
 exported body. For example, if `b()` inlines `c()` locally and `a()` inlines
 `b()` locally, the writer may export the final body of `a()` and the final body
@@ -383,15 +397,21 @@ the target use.
 
 A compact text form is used for the first implementation slice. It is versioned
 and structured as a preorder tree walk with explicit scope and symbol records.
-It is not JSON and it is not raw source text. The active version is `I2` and is
+It is not JSON and it is not raw source text. The active version is `I3` and is
 stored in the existing `META_FUNC.inliner` string. The importer still accepts
-`I1` payloads for compatibility with the original scope-flattened prototype.
+`I1` and `I2` payloads for compatibility with the earlier body-only prototypes.
 
 ```text
-I2
+I3
 ;q,<scope-id>,<parent-scope-id|-1>,<ScopeType>
-;s,<id>,<scope-id>,<hex-name>,<ValueType>,<dims>,<flags>
-;>,<scope-id>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<flags>,<symbol-id|-1>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
+;s,<id>,<scope-id>,<hex-name>,<ValueType>,<dims>,<dim-base-list>,<dim-elements-list>,<hex-class>,<flags>,<register-type>,<register-number>
+;a
+;>,<scope-id>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<value-base-list>,<value-elements-list>,<target-base-list>,<target-elements-list>,<hex-value-class>,<hex-target-class>,<flags>,<symbol-id|-1>,<symbol-read>,<symbol-write>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
+;>
+...
+;<
+;b
+;>,<scope-id>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<value-base-list>,<value-elements-list>,<target-base-list>,<target-elements-list>,<hex-value-class>,<hex-target-class>,<flags>,<symbol-id|-1>,<symbol-read>,<symbol-write>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
 ;>
 ...
 ;<
@@ -401,8 +421,20 @@ I2
 The important point is the `>` / `<` stream: it lets the importer reconstruct
 the tree without depending on pointer addresses. Symbol records precede the
 tree records and give the importer enough `Symbol` data for the current clone
-and remap paths. Text fields are hex encoded so the payload remains safe inside
-an RXAS quoted metadata string without carrying an escaping sub-language.
+and remap paths. The final register fields are used for class attributes in
+imported member bodies, where the method body must still address the owning
+object's attribute slot after the template is reconstructed. Node records also
+carry the original symbol-node read/write usage; this is semantically important
+for nodes such as loop `BY`, where the node is not a `VAR_TARGET` but still
+writes the loop control variable. Text fields are hex encoded so the payload
+remains safe inside an RXAS quoted metadata string without carrying an escaping
+sub-language.
+
+The `a` section contains the callable `ARGS` tree. Carrying that tree is
+required for binary imports because ordinary function metadata captures arity
+and type signatures but not default-expression ASTs for optional formals. The
+`b` section contains the callable `INSTRUCTIONS` body. Dimension lists use
+colon-separated integers, and `-` means absent or zero-dimensional.
 
 Scope id `0` is the imported procedure scope. Additional `q` records currently
 describe local child scopes only; the node flags mark the node that owns each
@@ -411,14 +443,24 @@ them into the procedure.
 
 The first reader/writer subset is intentionally narrow:
 
-- exposed, optimized procedures only; methods and factories stay signature-only
-  until their receiver and selector cases are handled explicitly
-- scalar types only; arrays and object class names fail closed for now
-- simple `IF` control flow is supported for scalar multi-return procedures,
-  including `IF ... THEN DO ... END` blocks with local scalar temporaries
+- exposed, optimized procedures
+- source-imported scalar getter-style methods whose body can be reconstructed
+  from source contract metadata and whose receiver is a direct symbol at the
+  call site
+- local methods and factories, including simple scalar getters and setters
+- scalar, array-shaped, binary, and object-class shapes are transported for
+  plain procedures
+- optional/default formal argument trees are transported so omitted-actual
+  binding works for binary imports as well as source imports
+- simple `IF` and simple loop control flow is supported for multi-return
+  procedures, including `IF ... THEN DO ... END`, counted `DO`, and
+  `DO WHILE` / `DO UNTIL` blocks with local temporaries. `LEAVE` and
+  `ITERATE` remain excluded by the association gate until jump-target
+  serialization is designed.
 - no serialized associations yet, so `BLOCK_EXPR`, `LEAVE_WITH`, loop-control
-  associations, class/interface dispatch, and remaining nested calls are not
-  exported in this first slice
+  associations, class/interface dispatch, imported factory bodies, binary-imported
+  member bodies, and remaining nested calls are not exported or consumed in
+  this first slice
 - simple expression/assignment/return/say nodes and ordinary scalar symbols
 
 The reader reconstructs a detached compiler template. It does not attach the
@@ -427,10 +469,15 @@ so emission still produces a normal external declaration. The imported body is
 only used as the symbol's `ast_template` during the optimiser and is cloned
 into accepted call sites like local inline templates.
 
-Binary, RXAS, and source import paths all feed the same metadata reader. Binary
-and RXAS imports read the payload from `META_FUNC.inliner`; source imports run
-the same writer while scanning exposed dependency procedures and store the
-result in the import registry alongside the signature.
+Binary, RXAS, and source import paths all feed the same metadata reader for
+plain procedures. Binary and RXAS imports read the payload from
+`META_FUNC.inliner`; source imports run the same writer while scanning exposed
+dependency procedures and store the result in the import registry alongside the
+signature. Imported member-body templates are currently attached only for
+source contracts. Binary class contract metadata does not yet preserve enough
+class layout information to prove arbitrary runtime-library getters/setters
+safe, so binary-imported methods and factories deliberately remain normal calls
+until that metadata grows.
 
 Full register allocation state should not be transported:
 register assignment is a downstream compiler concern and must run after import

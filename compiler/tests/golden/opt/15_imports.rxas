@@ -16,7 +16,7 @@ main() .locals=2
    setnumstd 1
    .src 6:1="say myfunc(10)"
    .src 6:5="myfunc"
-   .src 4:6=""
+   .src 6:11=""
    load r0,100
    icopy r1,r0
    acopy r1,r0

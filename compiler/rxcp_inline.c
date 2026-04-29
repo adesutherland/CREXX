@@ -64,6 +64,7 @@ typedef struct {
     int return_count;
     int has_unsupported_varg_access;
     int has_unsupported_assembler_alias;
+    int has_unportable_class_attribute_shape;
     size_t max_required_varg_index;
     int ref_varg_mode;
 } InlinableCheck;
@@ -279,6 +280,14 @@ static int inline_symbol_has_callable_template(Symbol *symbol) {
            inline_node_is_callable_def(symbol->ast_template);
 }
 
+static int inline_symbol_uses_imported_template(Symbol *symbol) {
+    ASTNode *def_node;
+
+    if (!symbol || !symbol->ast_template) return 0;
+    def_node = sym_proc(symbol);
+    return def_node && symbol->ast_template != def_node;
+}
+
 static int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out) {
     Symbol *proc_sym;
 
@@ -444,6 +453,43 @@ static int inline_symbol_is_class_attribute(Symbol *symbol) {
            symbol->scope &&
            symbol->scope->defining_node &&
            symbol->scope->defining_node->node_type == CLASS_DEF;
+}
+
+static int inline_class_attribute_shape_is_portable(Symbol *symbol) {
+    if (!inline_symbol_is_class_attribute(symbol)) return 1;
+    if (symbol->value_dims > 0) return 0;
+
+    switch (symbol->type) {
+        case TP_INTEGER:
+        case TP_BOOLEAN:
+        case TP_FLOAT:
+        case TP_STRING:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int inline_class_attribute_register_num(Symbol *symbol) {
+    int i;
+
+    if (!inline_symbol_is_class_attribute(symbol)) return symbol ? symbol->register_num : UNSET_REGISTER;
+
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *node = sym_trnd(symbol, i)->node;
+        ASTNode *reg_node;
+        ASTNode *idx;
+
+        if (!node || !node->parent || node->parent->node_type != DEFINE) continue;
+        reg_node = ast_chld(node->parent, NODE_REGISTER, 0);
+        if (!reg_node) continue;
+
+        idx = ast_chld(reg_node, INTEGER, 0);
+        if (idx) return node_to_integer(idx);
+        if (reg_node->int_value) return (int)reg_node->int_value;
+    }
+
+    return symbol->register_num;
 }
 
 static int inline_is_direct_receiver_copyback_target(ASTNode *node) {
@@ -3042,6 +3088,13 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
         return 0;
     }
     method_needs_receiver_copyback = inline_method_writes_class_attribute(proc_def);
+    if (proc_def->node_type == METHOD &&
+        inline_symbol_uses_imported_template(proc_sym) &&
+        !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
+        inline_debug_fail_closed(context, call_node, proc_sym,
+                                 "imported method assignment inline requires a direct receiver");
+        return 0;
+    }
     if (method_needs_receiver_copyback &&
         proc_def->node_type == METHOD &&
         !inline_is_direct_receiver_copyback_target(inline_call_receiver(call_node))) {
@@ -3112,6 +3165,13 @@ static int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_n
     }
 
     method_needs_receiver_copyback = inline_method_writes_class_attribute(proc_def);
+    if (proc_def->node_type == METHOD &&
+        inline_symbol_uses_imported_template(proc_sym) &&
+        !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
+        inline_debug_fail_closed(context, call_node, proc_sym,
+                                 "imported method call inline requires a direct receiver");
+        return 0;
+    }
     if (method_needs_receiver_copyback &&
         proc_def->node_type == METHOD &&
         !inline_is_direct_receiver_copyback_target(inline_call_receiver(call_node))) {
@@ -3209,6 +3269,13 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
                                  "mutating method expression inline requires a direct receiver copyback target");
         return 0;
     }
+    if (proc_sym->ast_template->node_type == METHOD &&
+        inline_symbol_uses_imported_template(proc_sym) &&
+        !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
+        inline_debug_fail_closed(context, call_node, proc_sym,
+                                 "imported method expression inline requires a direct receiver");
+        return 0;
+    }
     if (!return_shape.final_is_return || return_shape.return_count == 0) {
         inline_debug_fail_closed(context, call_node, proc_sym, "expression inline requires a final value RETURN");
         return 0;
@@ -3285,6 +3352,12 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
             check->has_unsupported_assembler_alias = 1;
         }
 
+        if (node->symbolNode &&
+            node->symbolNode->symbol &&
+            !inline_class_attribute_shape_is_portable(node->symbolNode->symbol)) {
+            check->has_unportable_class_attribute_shape = 1;
+        }
+
         if (node->node_type == OP_ARG_VALUE) {
             size_t index;
 
@@ -3326,8 +3399,8 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         InlinableCheck check;
 
         sym = node->symbolNode ? node->symbolNode->symbol : NULL;
-        if (node->parent && node->parent->node_type == IMPORTED_FILE &&
-            sym && sym->is_inlinable && inline_symbol_has_callable_template(sym)) {
+        if (sym && sym->is_inlinable && inline_symbol_has_callable_template(sym) &&
+            inline_symbol_uses_imported_template(sym)) {
             return result_normal;
         }
 
@@ -3616,8 +3689,10 @@ typedef struct {
     size_t scope_count;
     ASTNode **stack;
     size_t stack_count;
+    ASTNode *args_root;
     ASTNode *root;
     Scope *scope;
+    int tree_section;
     int version;
     int ok;
 } InlineMetaImport;
@@ -3751,6 +3826,128 @@ static char *inline_meta_hex_decode(const char *encoded, size_t *length_out) {
     return decoded;
 }
 
+static char *inline_meta_int_list_encode(const int *values, size_t count, int default_value) {
+    char *encoded;
+    size_t capacity;
+    size_t length;
+    size_t i;
+
+    if (!count) return strdup("-");
+
+    capacity = (count * 16) + 1;
+    encoded = malloc(capacity);
+    if (!encoded) return NULL;
+
+    length = 0;
+    encoded[0] = 0;
+    for (i = 0; i < count; i++) {
+        int value = values ? values[i] : default_value;
+        int written;
+
+        written = snprintf(encoded + length, capacity - length, "%s%d", i ? ":" : "", value);
+        if (written < 0 || (size_t)written >= capacity - length) {
+            free(encoded);
+            return NULL;
+        }
+        length += (size_t)written;
+    }
+
+    return encoded;
+}
+
+static int *inline_meta_int_list_decode(const char *encoded, size_t count, int default_value) {
+    int *values;
+    const char *cursor;
+    char *end;
+    size_t i;
+
+    if (!count) return NULL;
+
+    values = malloc(sizeof(int) * count);
+    if (!values) return NULL;
+
+    if (!encoded || strcmp(encoded, "-") == 0) {
+        for (i = 0; i < count; i++) values[i] = default_value;
+        return values;
+    }
+
+    cursor = encoded;
+    for (i = 0; i < count; i++) {
+        long value;
+
+        value = strtol(cursor, &end, 10);
+        if (end == cursor || (i + 1 < count && *end != ':') || (i + 1 == count && *end != 0)) {
+            free(values);
+            return NULL;
+        }
+
+        values[i] = (int)value;
+        cursor = end + 1;
+    }
+
+    return values;
+}
+
+static char *inline_meta_decode_optional_hex(const char *encoded) {
+    char *decoded;
+    size_t length;
+
+    decoded = inline_meta_hex_decode(encoded, &length);
+    if (!decoded) return NULL;
+    if (!length) {
+        free(decoded);
+        return NULL;
+    }
+
+    return decoded;
+}
+
+static int inline_meta_set_symbol_shape(Symbol *symbol,
+                                        ValueType type,
+                                        size_t dims,
+                                        int *dim_base,
+                                        int *dim_elements,
+                                        const char *class_name) {
+    size_t i;
+
+    if (!symbol) return 0;
+
+    symbol->type = type;
+    symbol->value_dims = dims;
+
+    if (symbol->dim_base) free(symbol->dim_base);
+    if (symbol->dim_elements) free(symbol->dim_elements);
+    symbol->dim_base = NULL;
+    symbol->dim_elements = NULL;
+
+    if (dims > 0) {
+        symbol->dim_base = malloc(sizeof(int) * dims);
+        symbol->dim_elements = malloc(sizeof(int) * dims);
+        if (!symbol->dim_base || !symbol->dim_elements) {
+            if (symbol->dim_base) free(symbol->dim_base);
+            if (symbol->dim_elements) free(symbol->dim_elements);
+            symbol->dim_base = NULL;
+            symbol->dim_elements = NULL;
+            return 0;
+        }
+        for (i = 0; i < dims; i++) {
+            symbol->dim_base[i] = dim_base ? dim_base[i] : 1;
+            symbol->dim_elements[i] = dim_elements ? dim_elements[i] : 0;
+        }
+    }
+
+    if (symbol->value_class) {
+        free(symbol->value_class);
+        symbol->value_class = NULL;
+    }
+    if (class_name && *class_name) {
+        symbol->value_class = strdup(class_name);
+        if (!symbol->value_class) return 0;
+    }
+
+    return 1;
+}
+
 static unsigned int inline_meta_symbol_flags(Symbol *symbol) {
     unsigned int flags;
 
@@ -3820,31 +4017,40 @@ static void inline_meta_apply_node_flags(ASTNode *node, unsigned int flags) {
 
 static int inline_meta_symbol_is_exportable(Symbol *symbol) {
     if (!symbol) return 1;
-    if (symbol->value_dims || symbol->dim_base || symbol->dim_elements || symbol->value_class) return 0;
     return symbol->symbol_type == VARIABLE_SYMBOL || symbol->symbol_type == CONSTANT_SYMBOL;
 }
 
 static int inline_meta_node_is_exportable(ASTNode *node) {
     if (!node) return 1;
-    if (node->association) return 0;
-    if (node->value_dims || node->target_dims ||
-        node->value_dim_base || node->value_dim_elements ||
-        node->target_dim_base || node->target_dim_elements ||
-        node->value_class || node->target_class) {
+    if (node->association &&
+        !(node->node_type == INSTRUCTIONS &&
+          node->is_compiler_added &&
+          inline_node_is_callable_def(node->association))) {
         return 0;
     }
 
     switch (node->node_type) {
+        case ARGS:
+        case ARG:
         case INSTRUCTIONS:
         case IF:
         case RETURN:
         case SAY:
         case DEFINE:
         case ASSIGN:
+        case DO:
+        case REPEAT:
+        case TO:
+        case BY:
+        case FOR:
+        case WHILE:
+        case UNTIL:
         case CLASS:
         case VAR_TARGET:
         case VAR_SYMBOL:
         case VAR_REFERENCE:
+        case VARG:
+        case VARG_REFERENCE:
         case CONST_SYMBOL:
         case INTEGER:
         case FLOAT:
@@ -3852,6 +4058,7 @@ static int inline_meta_node_is_exportable(ASTNode *node) {
         case STRING:
         case BINARY:
         case CONSTANT:
+        case RANGE:
         case NOVAL:
         case VOID:
         case LITERAL:
@@ -3911,6 +4118,14 @@ static int inline_meta_scope_is_exportable(InlineMetaExport *meta, Scope *scope)
 
     if (!meta || !scope) return 0;
     if (scope == meta->root_scope) return 1;
+    if (meta->root_scope &&
+        meta->root_scope->defining_node &&
+        (meta->root_scope->defining_node->node_type == METHOD ||
+         meta->root_scope->defining_node->node_type == FACTORY) &&
+        scope == meta->root_scope->parent &&
+        scope->type == SCOPE_CLASS) {
+        return 1;
+    }
     if (scope->type != SCOPE_LOCAL) return 0;
 
     cursor = scope->parent;
@@ -3934,8 +4149,17 @@ static int inline_meta_collect_scope(InlineMetaExport *meta, Scope *scope) {
 
     parent_id = (size_t)-1;
     if (scope != meta->root_scope) {
-        if (!inline_meta_collect_scope(meta, scope->parent)) return 0;
-        if (!inline_meta_find_scope_id(meta, scope->parent, &parent_id)) return 0;
+        if (meta->root_scope &&
+            meta->root_scope->defining_node &&
+            (meta->root_scope->defining_node->node_type == METHOD ||
+             meta->root_scope->defining_node->node_type == FACTORY) &&
+            scope == meta->root_scope->parent &&
+            scope->type == SCOPE_CLASS) {
+            parent_id = (size_t)-1;
+        } else {
+            if (!inline_meta_collect_scope(meta, scope->parent)) return 0;
+            if (!inline_meta_find_scope_id(meta, scope->parent, &parent_id)) return 0;
+        }
     }
 
     new_scopes = realloc(meta->scopes, sizeof(InlineMetaScopeEntry) * (meta->scope_count + 1));
@@ -4026,24 +4250,48 @@ static int inline_meta_emit_symbols(InlineMetaText *text, InlineMetaExport *meta
         Symbol *symbol = meta->symbols[i].symbol;
         size_t scope_id;
         char *name_hex = inline_meta_hex_encode(symbol->name, strlen(symbol->name));
-        if (!name_hex) return 0;
+        char *base_text = inline_meta_int_list_encode(symbol->dim_base, symbol->value_dims, 1);
+        char *elements_text = inline_meta_int_list_encode(symbol->dim_elements, symbol->value_dims, 0);
+        char *class_hex = inline_meta_hex_encode(symbol->value_class,
+                                                 symbol->value_class ? strlen(symbol->value_class) : 0);
+        if (!name_hex || !base_text || !elements_text || !class_hex) {
+            if (name_hex) free(name_hex);
+            if (base_text) free(base_text);
+            if (elements_text) free(elements_text);
+            if (class_hex) free(class_hex);
+            return 0;
+        }
         if (!inline_meta_find_scope_id(meta, symbol->scope, &scope_id)) {
             free(name_hex);
+            free(base_text);
+            free(elements_text);
+            free(class_hex);
             return 0;
         }
 
         if (!inline_meta_text_appendf(text,
-                                      ";s,%zu,%zu,%s,%d,%zu,%u",
+                                      ";s,%zu,%zu,%s,%d,%zu,%s,%s,%s,%u,%c,%d",
                                       meta->symbols[i].id,
                                       scope_id,
                                       name_hex,
                                       (int)symbol->type,
                                       symbol->value_dims,
-                                      inline_meta_symbol_flags(symbol))) {
+                                      base_text,
+                                      elements_text,
+                                      class_hex,
+                                      inline_meta_symbol_flags(symbol),
+                                      symbol->register_type ? symbol->register_type : '-',
+                                      inline_class_attribute_register_num(symbol))) {
             free(name_hex);
+            free(base_text);
+            free(elements_text);
+            free(class_hex);
             return 0;
         }
         free(name_hex);
+        free(base_text);
+        free(elements_text);
+        free(class_hex);
     }
 
     return 1;
@@ -4053,15 +4301,27 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
     ASTNode *child;
     size_t symbol_id;
     size_t scope_id;
+    unsigned int symbol_read_usage;
+    unsigned int symbol_write_usage;
     char *node_hex;
     char *decimal_hex;
+    char *value_base_text;
+    char *value_elements_text;
+    char *target_base_text;
+    char *target_elements_text;
+    char *value_class_hex;
+    char *target_class_hex;
     char int_buffer[64];
 
     if (!node) return 1;
 
     symbol_id = (size_t)-1;
+    symbol_read_usage = 0;
+    symbol_write_usage = 0;
     if (node->symbolNode && node->symbolNode->symbol) {
         if (!inline_meta_find_symbol_id(meta, node->symbolNode->symbol, &symbol_id)) return 0;
+        symbol_read_usage = node->symbolNode->readUsage;
+        symbol_write_usage = node->symbolNode->writeUsage;
     }
     if (node->scope) {
         if (!inline_meta_find_scope_id(meta, node->scope, &scope_id)) return 0;
@@ -4071,9 +4331,22 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
 
     node_hex = inline_meta_hex_encode(node->node_string, node->node_string_length);
     decimal_hex = inline_meta_hex_encode(node->decimal_value, node->decimal_value ? strlen(node->decimal_value) : 0);
-    if (!node_hex || !decimal_hex) {
+    value_base_text = inline_meta_int_list_encode(node->value_dim_base, node->value_dims, 1);
+    value_elements_text = inline_meta_int_list_encode(node->value_dim_elements, node->value_dims, 0);
+    target_base_text = inline_meta_int_list_encode(node->target_dim_base, node->target_dims, 1);
+    target_elements_text = inline_meta_int_list_encode(node->target_dim_elements, node->target_dims, 0);
+    value_class_hex = inline_meta_hex_encode(node->value_class, node->value_class ? strlen(node->value_class) : 0);
+    target_class_hex = inline_meta_hex_encode(node->target_class, node->target_class ? strlen(node->target_class) : 0);
+    if (!node_hex || !decimal_hex || !value_base_text || !value_elements_text ||
+        !target_base_text || !target_elements_text || !value_class_hex || !target_class_hex) {
         if (node_hex) free(node_hex);
         if (decimal_hex) free(decimal_hex);
+        if (value_base_text) free(value_base_text);
+        if (value_elements_text) free(value_elements_text);
+        if (target_base_text) free(target_base_text);
+        if (target_elements_text) free(target_elements_text);
+        if (value_class_hex) free(value_class_hex);
+        if (target_class_hex) free(target_class_hex);
         return 0;
     }
 
@@ -4084,15 +4357,23 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
 #endif
 
     if (!inline_meta_text_appendf(text,
-                                  ";>,%zu,%d,%d,%d,%zu,%zu,%u,%ld,%s,%d,%.17g,%s,%s",
+                                  ";>,%zu,%d,%d,%d,%zu,%zu,%s,%s,%s,%s,%s,%s,%u,%ld,%u,%u,%s,%d,%.17g,%s,%s",
                                   scope_id,
                                   (int)node->node_type,
                                   (int)node->value_type,
                                   (int)node->target_type,
                                   node->value_dims,
                                   node->target_dims,
+                                  value_base_text,
+                                  value_elements_text,
+                                  target_base_text,
+                                  target_elements_text,
+                                  value_class_hex,
+                                  target_class_hex,
                                   inline_meta_node_flags(node),
                                   symbol_id == (size_t)-1 ? -1L : (long)symbol_id,
+                                  symbol_read_usage,
+                                  symbol_write_usage,
                                   int_buffer,
                                   node->bool_value,
                                   node->float_value,
@@ -4100,11 +4381,23 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
                                   decimal_hex)) {
         free(node_hex);
         free(decimal_hex);
+        free(value_base_text);
+        free(value_elements_text);
+        free(target_base_text);
+        free(target_elements_text);
+        free(value_class_hex);
+        free(target_class_hex);
         return 0;
     }
 
     free(node_hex);
     free(decimal_hex);
+    free(value_base_text);
+    free(value_elements_text);
+    free(target_base_text);
+    free(target_elements_text);
+    free(value_class_hex);
+    free(target_class_hex);
 
     child = node->child;
     while (child) {
@@ -4117,6 +4410,7 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
 
 char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
     Symbol *symbol;
+    ASTNode *args;
     ASTNode *instrs;
     InlineReturnShape return_shape;
     InlinableCheck check;
@@ -4125,7 +4419,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 
     (void)context;
 
-    if (!callable || callable->node_type != PROCEDURE) return strdup("");
+    if (!callable || !inline_node_is_callable_def(callable)) return strdup("");
     if (callable->is_inline_pruned) return strdup("");
     if (inline_proc_has_procedure_expose(callable)) return strdup("");
 
@@ -4133,8 +4427,9 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
     if (!symbol || !symbol->exposed) return strdup("");
     if (symbol->is_main || symbol->is_implicit_main) return strdup("");
 
+    args = ast_chld(callable, ARGS, 0);
     instrs = ast_chld(callable, INSTRUCTIONS, 0);
-    if (!instrs) return strdup("");
+    if (!args || !instrs) return strdup("");
 
     if (!inline_analyse_return_shape(callable, &return_shape)) return strdup("");
     if (!return_shape.final_is_return && symbol->type != TP_VOID) return strdup("");
@@ -4146,7 +4441,9 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
     if (check.node_count > INLINE_MAX_NODES ||
         check.return_count != return_shape.return_count ||
         check.has_unsupported_assembler_alias ||
-        check.has_unsupported_varg_access) {
+        check.has_unsupported_varg_access ||
+        ((callable->node_type == METHOD || callable->node_type == FACTORY) &&
+         check.has_unportable_class_attribute_shape)) {
         return strdup("");
     }
 
@@ -4156,7 +4453,8 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
         free(meta.scopes);
         return strdup("");
     }
-    if (!inline_meta_collect(instrs, &meta)) {
+    if (!inline_meta_collect(args, &meta) ||
+        !inline_meta_collect(instrs, &meta)) {
         free(meta.scopes);
         free(meta.symbols);
         return strdup("");
@@ -4164,9 +4462,12 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 
     inline_meta_text_init(&text);
     if (!text.ok ||
-        !inline_meta_text_append(&text, "I2") ||
+        !inline_meta_text_append(&text, "I3") ||
         !inline_meta_emit_scopes(&text, &meta) ||
         !inline_meta_emit_symbols(&text, &meta) ||
+        !inline_meta_text_append(&text, ";a") ||
+        !inline_meta_emit_node(&text, &meta, args) ||
+        !inline_meta_text_append(&text, ";b") ||
         !inline_meta_emit_node(&text, &meta, instrs)) {
         free(meta.scopes);
         free(meta.symbols);
@@ -4180,7 +4481,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 }
 
 int rxcp_inline_payload_is_supported(const char *payload) {
-    return payload && payload[0] == 'I' && (payload[1] == '1' || payload[1] == '2') &&
+    return payload && payload[0] == 'I' && (payload[1] == '1' || payload[1] == '2' || payload[1] == '3') &&
            (payload[2] == 0 || payload[2] == ';');
 }
 
@@ -4290,6 +4591,12 @@ static int inline_meta_import_scope(Context *context, InlineMetaImport *meta, ch
         return 1;
     }
 
+    if (type == SCOPE_CLASS && parent_id < 0) {
+        if (!meta->scope || !meta->scope->parent || meta->scope->parent->type != SCOPE_CLASS) return 0;
+        meta->scopes[id] = meta->scope->parent;
+        return 1;
+    }
+
     if (type != SCOPE_LOCAL || parent_id < 0) return 0;
     parent = inline_meta_scope_by_id(meta, (size_t)parent_id);
     if (!parent) return 0;
@@ -4308,11 +4615,14 @@ static Symbol *inline_meta_find_or_create_symbol(Context *context,
                                                  const char *name,
                                                  ValueType type,
                                                  size_t dims,
+                                                 int *dim_base,
+                                                 int *dim_elements,
+                                                 const char *class_name,
                                                  unsigned int flags) {
     ASTNode lookup_node;
     Symbol *symbol;
 
-    if (!context || !scope || !name || dims != 0) return NULL;
+    if (!context || !scope || !name) return NULL;
 
     memset(&lookup_node, 0, sizeof(lookup_node));
     lookup_node.node_string = (char *)name;
@@ -4322,8 +4632,7 @@ static Symbol *inline_meta_find_or_create_symbol(Context *context,
     if (!symbol) symbol = sym_fn(scope, name, strlen(name));
     if (!symbol) return NULL;
 
-    symbol->type = type;
-    symbol->value_dims = dims;
+    if (!inline_meta_set_symbol_shape(symbol, type, dims, dim_base, dim_elements, class_name)) return NULL;
     if (symbol->symbol_type == UNKNOWN_SYMBOL) symbol->symbol_type = VARIABLE_SYMBOL;
     if (symbol->status == SYM_STATUS_UNRESOLVED) symbol->status = SYM_STATUS_LOCAL_VAR;
     inline_meta_apply_symbol_flags(symbol, flags);
@@ -4338,10 +4647,19 @@ static int inline_meta_import_symbol(Context *context, InlineMetaImport *meta, c
     char *name_field;
     char *type_field;
     char *dims_field;
+    char *base_field;
+    char *elements_field;
+    char *class_field;
     char *flags_field;
+    char *register_type_field;
+    char *register_num_field;
     size_t id;
     size_t scope_id;
     size_t name_length;
+    size_t dims;
+    int *dim_base;
+    int *dim_elements;
+    char *class_name;
     char *name;
     Scope *scope;
     Symbol *symbol;
@@ -4353,8 +4671,23 @@ static int inline_meta_import_symbol(Context *context, InlineMetaImport *meta, c
     name_field = inline_meta_next_field(&cursor);
     type_field = inline_meta_next_field(&cursor);
     dims_field = inline_meta_next_field(&cursor);
+    base_field = NULL;
+    elements_field = NULL;
+    class_field = NULL;
+    register_type_field = NULL;
+    register_num_field = NULL;
+    if (meta->version >= 3) {
+        base_field = inline_meta_next_field(&cursor);
+        elements_field = inline_meta_next_field(&cursor);
+        class_field = inline_meta_next_field(&cursor);
+    }
     flags_field = inline_meta_next_field(&cursor);
+    if (meta->version >= 3) {
+        register_type_field = inline_meta_next_field(&cursor);
+        register_num_field = inline_meta_next_field(&cursor);
+    }
     if (!id_field || !name_field || !type_field || !dims_field || !flags_field) return 0;
+    if (meta->version >= 3 && (!base_field || !elements_field || !class_field)) return 0;
 
     id = (size_t)strtoul(id_field, NULL, 10);
     if (!inline_meta_ensure_symbol_slot(meta, id)) return 0;
@@ -4367,14 +4700,39 @@ static int inline_meta_import_symbol(Context *context, InlineMetaImport *meta, c
     name = inline_meta_hex_decode(name_field, &name_length);
     if (!name) return 0;
 
+    dims = (size_t)strtoul(dims_field, NULL, 10);
+    dim_base = meta->version >= 3 ? inline_meta_int_list_decode(base_field, dims, 1) : NULL;
+    dim_elements = meta->version >= 3 ? inline_meta_int_list_decode(elements_field, dims, 0) : NULL;
+    class_name = meta->version >= 3 ? inline_meta_decode_optional_hex(class_field) : NULL;
+    if (dims && (!dim_base || !dim_elements)) {
+        free(name);
+        if (dim_base) free(dim_base);
+        if (dim_elements) free(dim_elements);
+        if (class_name) free(class_name);
+        return 0;
+    }
+
     symbol = inline_meta_find_or_create_symbol(context,
                                                scope,
                                                name,
                                                (ValueType)atoi(type_field),
-                                               (size_t)strtoul(dims_field, NULL, 10),
+                                               dims,
+                                               dim_base,
+                                               dim_elements,
+                                               class_name,
                                                (unsigned int)strtoul(flags_field, NULL, 10));
     free(name);
+    if (dim_base) free(dim_base);
+    if (dim_elements) free(dim_elements);
+    if (class_name) free(class_name);
     if (!symbol) return 0;
+
+    if (inline_symbol_is_class_attribute(symbol) &&
+        register_type_field && register_type_field[0] &&
+        register_num_field && register_num_field[0]) {
+        symbol->register_type = register_type_field[0];
+        symbol->register_num = atoi(register_num_field);
+    }
 
     meta->symbols[id] = symbol;
     return 1;
@@ -4400,8 +4758,16 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     char *target_type_field;
     char *value_dims_field;
     char *target_dims_field;
+    char *value_base_field;
+    char *value_elements_field;
+    char *target_base_field;
+    char *target_elements_field;
+    char *value_class_field;
+    char *target_class_field;
     char *flags_field;
     char *symbol_field;
+    char *symbol_read_field;
+    char *symbol_write_field;
     char *int_field;
     char *bool_field;
     char *float_field;
@@ -4413,7 +4779,17 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     size_t node_string_length;
     size_t decimal_length;
     size_t scope_id;
+    size_t value_dims;
+    size_t target_dims;
+    int *value_dim_base;
+    int *value_dim_elements;
+    int *target_dim_base;
+    int *target_dim_elements;
+    char *value_class;
+    char *target_class;
     long symbol_id;
+    unsigned int symbol_read_usage;
+    unsigned int symbol_write_usage;
     unsigned int flags;
     Scope *node_scope;
 
@@ -4425,8 +4801,28 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     target_type_field = inline_meta_next_field(&cursor);
     value_dims_field = inline_meta_next_field(&cursor);
     target_dims_field = inline_meta_next_field(&cursor);
+    value_base_field = NULL;
+    value_elements_field = NULL;
+    target_base_field = NULL;
+    target_elements_field = NULL;
+    value_class_field = NULL;
+    target_class_field = NULL;
+    if (meta->version >= 3) {
+        value_base_field = inline_meta_next_field(&cursor);
+        value_elements_field = inline_meta_next_field(&cursor);
+        target_base_field = inline_meta_next_field(&cursor);
+        target_elements_field = inline_meta_next_field(&cursor);
+        value_class_field = inline_meta_next_field(&cursor);
+        target_class_field = inline_meta_next_field(&cursor);
+    }
     flags_field = inline_meta_next_field(&cursor);
     symbol_field = inline_meta_next_field(&cursor);
+    symbol_read_field = NULL;
+    symbol_write_field = NULL;
+    if (meta->version >= 3) {
+        symbol_read_field = inline_meta_next_field(&cursor);
+        symbol_write_field = inline_meta_next_field(&cursor);
+    }
     int_field = inline_meta_next_field(&cursor);
     bool_field = inline_meta_next_field(&cursor);
     float_field = inline_meta_next_field(&cursor);
@@ -4438,6 +4834,12 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
         !node_string_field || !decimal_field) {
         return 0;
     }
+    if (meta->version >= 3 &&
+        (!value_base_field || !value_elements_field || !target_base_field ||
+         !target_elements_field || !value_class_field || !target_class_field ||
+         !symbol_read_field || !symbol_write_field)) {
+        return 0;
+    }
 
     scope_id = 0;
     if (scope_field) scope_id = (size_t)strtoul(scope_field, NULL, 10);
@@ -4447,10 +4849,44 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     node = ast_ft(context, (NodeType)atoi(node_type_field));
     if (!node) return 0;
 
-    node->value_type = (ValueType)atoi(value_type_field);
-    node->target_type = (ValueType)atoi(target_type_field);
-    node->value_dims = (size_t)strtoul(value_dims_field, NULL, 10);
-    node->target_dims = (size_t)strtoul(target_dims_field, NULL, 10);
+    value_dims = (size_t)strtoul(value_dims_field, NULL, 10);
+    target_dims = (size_t)strtoul(target_dims_field, NULL, 10);
+    value_dim_base = meta->version >= 3 ? inline_meta_int_list_decode(value_base_field, value_dims, 1) : NULL;
+    value_dim_elements = meta->version >= 3 ? inline_meta_int_list_decode(value_elements_field, value_dims, 0) : NULL;
+    target_dim_base = meta->version >= 3 ? inline_meta_int_list_decode(target_base_field, target_dims, 1) : NULL;
+    target_dim_elements = meta->version >= 3 ? inline_meta_int_list_decode(target_elements_field, target_dims, 0) : NULL;
+    value_class = meta->version >= 3 ? inline_meta_decode_optional_hex(value_class_field) : NULL;
+    target_class = meta->version >= 3 ? inline_meta_decode_optional_hex(target_class_field) : NULL;
+    if ((value_dims && (!value_dim_base || !value_dim_elements)) ||
+        (target_dims && (!target_dim_base || !target_dim_elements))) {
+        if (value_dim_base) free(value_dim_base);
+        if (value_dim_elements) free(value_dim_elements);
+        if (target_dim_base) free(target_dim_base);
+        if (target_dim_elements) free(target_dim_elements);
+        if (value_class) free(value_class);
+        if (target_class) free(target_class);
+        return 0;
+    }
+    ast_set_value_type(0,
+                       node,
+                       (ValueType)atoi(value_type_field),
+                       value_dims,
+                       value_dim_base,
+                       value_dim_elements,
+                       value_class);
+    ast_set_target_type(0,
+                        node,
+                        (ValueType)atoi(target_type_field),
+                        target_dims,
+                        target_dim_base,
+                        target_dim_elements,
+                        target_class);
+    if (value_dim_base) free(value_dim_base);
+    if (value_dim_elements) free(value_dim_elements);
+    if (target_dim_base) free(target_dim_base);
+    if (target_dim_elements) free(target_dim_elements);
+    if (value_class) free(value_class);
+    if (target_class) free(target_class);
     node->int_value = (rxinteger)atoll(int_field);
     node->bool_value = atoi(bool_field);
     node->float_value = atof(float_field);
@@ -4478,12 +4914,27 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
         symbol = meta->symbols[symbol_id];
         if (!symbol) return 0;
 
-        if (node->node_type == VAR_TARGET) sym_adnd(symbol, node, 0, 1);
-        else sym_adnd(symbol, node, 1, 0);
+        if (meta->version >= 3) {
+            symbol_read_usage = (unsigned int)strtoul(symbol_read_field, NULL, 10);
+            symbol_write_usage = (unsigned int)strtoul(symbol_write_field, NULL, 10);
+        } else if (node->node_type == VAR_TARGET) {
+            symbol_read_usage = 0;
+            symbol_write_usage = 1;
+        } else {
+            symbol_read_usage = 1;
+            symbol_write_usage = 0;
+        }
+        sym_adnd(symbol, node, symbol_read_usage, symbol_write_usage);
     }
 
     if (meta->stack_count) add_ast(meta->stack[meta->stack_count - 1], node);
-    else meta->root = node;
+    else if (meta->version >= 3) {
+        if (meta->tree_section == 1) meta->args_root = node;
+        else if (meta->tree_section == 2) meta->root = node;
+        else return 0;
+    } else {
+        meta->root = node;
+    }
 
     return inline_meta_push_node(meta, node);
 }
@@ -4498,6 +4949,9 @@ static Symbol *inline_meta_clone_signature_symbol(Context *context, Scope *scope
                                                old_symbol->name,
                                                old_symbol->type,
                                                old_symbol->value_dims,
+                                               old_symbol->dim_base,
+                                               old_symbol->dim_elements,
+                                               old_symbol->value_class,
                                                inline_meta_symbol_flags(old_symbol));
     if (!symbol) return NULL;
 
@@ -4537,7 +4991,51 @@ static ASTNode *inline_meta_clone_signature_with_symbols(Context *context, ASTNo
     return clone;
 }
 
-static ASTNode *inline_meta_create_template_proc(Context *context, ASTNode *proc, Scope **scope_out) {
+static int inline_meta_clone_missing_scope_symbols(Scope *source, Scope *target) {
+    Symbol **symbols;
+    size_t i;
+
+    if (!source || !target) return 0;
+
+    symbols = scp_syms(source);
+    if (!symbols) return 1;
+
+    for (i = 0; symbols[i]; i++) {
+        ASTNode lookup_node;
+        Symbol *old_symbol;
+        Symbol *new_symbol;
+
+        old_symbol = symbols[i];
+        if (!old_symbol || old_symbol->symbol_type == FUNCTION_SYMBOL || !old_symbol->name) continue;
+
+        memset(&lookup_node, 0, sizeof(lookup_node));
+        lookup_node.node_string = old_symbol->name;
+        lookup_node.node_string_length = strlen(old_symbol->name);
+        if (sym_lrsv(target, &lookup_node)) continue;
+
+        new_symbol = sym_dup(target, old_symbol);
+        if (!new_symbol) {
+            free(symbols);
+            return 0;
+        }
+
+        new_symbol->register_num = UNSET_REGISTER;
+        new_symbol->register_type = 'r';
+        new_symbol->meta_emitted = 0;
+        new_symbol->init_emitted = 0;
+        new_symbol->defines_scope = NULL;
+        new_symbol->ast_template = NULL;
+        new_symbol->is_inlinable = 0;
+    }
+
+    free(symbols);
+    return 1;
+}
+
+static ASTNode *inline_meta_create_template_proc(Context *context,
+                                                 ASTNode *proc,
+                                                 Scope **scope_out,
+                                                 int skip_args) {
     ASTNode *template_proc;
     ASTNode *child;
     Scope *template_scope;
@@ -4548,12 +5046,18 @@ static ASTNode *inline_meta_create_template_proc(Context *context, ASTNode *proc
     template_proc = ast_dup(context, proc);
     if (!template_proc) return NULL;
 
-    template_scope = scp_f(context, NULL, template_proc, NULL, SCOPE_PROCEDURE);
+    template_scope = scp_f(context,
+                           (proc->node_type == METHOD || proc->node_type == FACTORY) ? proc->scope->parent : NULL,
+                           template_proc,
+                           NULL,
+                           SCOPE_PROCEDURE);
     if (!template_scope) return NULL;
+    if (proc->node_type == METHOD || proc->node_type == FACTORY) template_proc->parent = proc->parent;
     if (proc->scope->name) template_scope->name = strdup(proc->scope->name);
     inline_copy_numeric_context(template_scope, proc->scope);
 
     template_proc->scope = template_scope;
+    if (!inline_meta_clone_missing_scope_symbols(proc->scope, template_scope)) return NULL;
     sym_adnd(proc->symbolNode->symbol,
              template_proc,
              proc->symbolNode->readUsage,
@@ -4561,7 +5065,8 @@ static ASTNode *inline_meta_create_template_proc(Context *context, ASTNode *proc
 
     child = proc->child;
     while (child) {
-        if (child->node_type != INSTRUCTIONS && child->node_type != NOP) {
+        if (child->node_type != INSTRUCTIONS && child->node_type != NOP &&
+            (!skip_args || child->node_type != ARGS)) {
             ASTNode *child_clone = inline_meta_clone_signature_with_symbols(context, child, template_scope);
             if (!child_clone) return NULL;
             add_ast(template_proc, child_clone);
@@ -4573,9 +5078,13 @@ static ASTNode *inline_meta_create_template_proc(Context *context, ASTNode *proc
     return template_proc;
 }
 
-static int inline_meta_finish_template(ASTNode *proc, ASTNode *template_proc, ASTNode *body_root) {
+static int inline_meta_finish_template(ASTNode *proc,
+                                       ASTNode *template_proc,
+                                       ASTNode *args_root,
+                                       ASTNode *body_root) {
     if (!proc || !template_proc || !proc->symbolNode || !proc->symbolNode->symbol || !body_root) return 0;
 
+    if (args_root) add_ast(template_proc, args_root);
     add_ast(template_proc, body_root);
 
     proc->symbolNode->symbol->is_inlinable = 1;
@@ -4593,12 +5102,7 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     if (!context || !rxcp_inline_payload_is_supported(payload)) return 0;
     if (!proc || !proc->scope || !proc->symbolNode || !proc->symbolNode->symbol) return 0;
 
-    template_scope = NULL;
-    template_proc = inline_meta_create_template_proc(context, proc, &template_scope);
-    if (!template_proc || !template_scope) return 0;
-
     memset(&meta, 0, sizeof(meta));
-    meta.scope = template_scope;
     meta.ok = 1;
 
     copy = strdup(payload);
@@ -4611,10 +5115,21 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     }
     if (strcmp(record, "I1") == 0) meta.version = 1;
     else if (strcmp(record, "I2") == 0) meta.version = 2;
+    else if (strcmp(record, "I3") == 0) meta.version = 3;
     else {
         free(copy);
         return 0;
     }
+
+    template_scope = NULL;
+    template_proc = inline_meta_create_template_proc(context, proc, &template_scope, meta.version >= 3);
+    if (!template_proc || !template_scope) {
+        free(copy);
+        return 0;
+    }
+
+    meta.scope = template_scope;
+    meta.tree_section = meta.version >= 3 ? 0 : 2;
 
     if (!inline_meta_ensure_scope_slot(&meta, 0)) {
         free(copy);
@@ -4629,6 +5144,18 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
                 break;
             }
             meta.stack_count--;
+        } else if (strcmp(record, "a") == 0) {
+            if (meta.version < 3 || meta.stack_count || meta.args_root) {
+                meta.ok = 0;
+                break;
+            }
+            meta.tree_section = 1;
+        } else if (strcmp(record, "b") == 0) {
+            if (meta.version < 3 || meta.stack_count || meta.root) {
+                meta.ok = 0;
+                break;
+            }
+            meta.tree_section = 2;
         } else if (record[0] == 'q' && record[1] == ',') {
             if (meta.version < 2 || !inline_meta_import_scope(context, &meta, record)) {
                 meta.ok = 0;
@@ -4651,6 +5178,7 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     }
 
     if (meta.stack_count != 0 || !meta.root || meta.root->node_type != INSTRUCTIONS) meta.ok = 0;
+    if (meta.version >= 3 && (!meta.args_root || meta.args_root->node_type != ARGS)) meta.ok = 0;
 
     free(copy);
     free(meta.symbols);
@@ -4659,7 +5187,10 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
 
     if (!meta.ok) return 0;
 
-    return inline_meta_finish_template(proc, template_proc, meta.root);
+    return inline_meta_finish_template(proc,
+                                       template_proc,
+                                       meta.version >= 3 ? meta.args_root : NULL,
+                                       meta.root);
 }
 
 int rxcp_inline_attach_imported_body(Context *context, const char *payload) {

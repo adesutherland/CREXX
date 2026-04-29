@@ -1,8 +1,9 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : class_import_main.rexx
- * BUILT                  : 2026-03-18 11:58:58
+ * BUILT                  : 2026-04-29 19:31:10
  */
+
 .srcfile="class_import_main.rexx"
 .globals=0
 
@@ -15,22 +16,27 @@ main() .locals=5
    setnumstd 1
    .src 5:1="c = .Counter"
    .meta "class_import_main.main.c"="b" ".counter" r0
-   load r1,0
-   call r0,§class_import_lib.counter.§factory(),r1
+   load r2,0
+   call r0,§class_import_lib.counter.§factory(),r2
    .src 6:1="call c.inc"
-   load r1,1
+   load r2,1
    settp r0,1
-   swap r2,r0
-   call r3,§class_import_lib.counter.inc(),r1
-   swap r0,r2
+   swap r3,r0
+   call r4,§class_import_lib.counter.inc(),r2
+   swap r0,r3
    .src 7:1="say c.value"
-   load r1,1
-   settp r0,1
-   swap r2,r0
-   call r4,§class_import_lib.counter.value(),r1
-   swap r0,r2
-   itos r4
-   say r4
+   .src 7:5="c"
+   .src 7:5="c"
+   copy r1,r0
+   .src 7:6=""
+   linkattr1 r3,r1,1
+   icopy r2,r3
+   acopy r2,r3
+   unlink r3
+   br l58bexprend
+l58bexprend:
+   itos r2
+   say r2
    .src 8:1="return 0"
    ret 0
    .meta "class_import_main.main.c"
