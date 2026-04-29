@@ -1,0 +1,118 @@
+/* RXPP */
+/* ----------------------------------------------------------------------
+ * PRE Compiled on 28 Apr 2026  at 16:17:45
+ * ----------------------------------------------------------------------
+ */
+options levelb
+import rxfnsb
+namespace data_qfind expose matchResult fastFind qFind 
+/* ##cflags def nset niflink 1buf 2buf 3buf nvars nmaclist nincludes */
+a=2
+/**
+ * QFIND implements a POS/QPOS-like operation with an object-based result.
+ *
+ * Usage:
+ *   m = .matchResult(line, "=")
+ *
+ * The interface is called, CREXX selects the best implementation
+ * (fastFind or qFind) at runtime via match().
+ */
+/* --------------------------------------------------------------------
+ * Interface = public contract
+ * Defines WHAT the caller can do, not HOW it is done
+ * --------------------------------------------------------------------
+ */
+matchResult: interface
+  /* Factory declaration (no body here)
+     → CREXX will route this call to the best matching class */
+  *: factory
+  arg line = .string, delim = .string
+  /* Result access methods (read-only view of computed result) */
+  found:    method = .int
+  position: method = .int
+  before:   method = .string
+  match:    method = .string
+  after:    method = .string
+/* --------------------------------------------------------------------
+ * fastFind = simple POS-based implementation
+ * Used when no quoted text is present (fast path)
+ * --------------------------------------------------------------------
+ */
+fastFind: class implements .matchResult
+  /* Internal state (computed once in factory, reused by methods) */
+  _line  = .string
+  _delim = .string
+  _pos   = .int
+  /* match() = suitability scoring
+     → called by runtime BEFORE object creation */
+  *: match
+    arg line = .string, delim = .string
+    if pos('"', line) = 0 then return 100   /* best fit: no quotes */
+    if pos("'", line) > 0 then return 100   /* best fit: quotes present */
+  return 0                                  /* not suitable */
+  /* Factory = actual work happens here ONCE */
+  *: factory
+    arg line = .string, delim = .string
+    _line  = line
+    _delim = delim
+    _pos   = pos(delim, line)               /* fast POS() */
+  return
+  /* ---------------------------------------------------------
+   * This are re-usable Methods
+   * ---------------------------------------------------------
+   */
+  found: method = .int
+    if _pos > 0 then return 1
+  return 0
+  position: method = .int
+    return _pos
+  before: method = .string
+    if _pos = 0 then return _line
+  return substr(_line, 1, _pos - 1)
+  match: method = .string
+    if _pos = 0 then return ""
+  return _delim
+  after: method = .string
+    if _pos = 0 then return ""
+  return substr(_line, _pos + length(_delim))
+/* --------------------------------------------------------------------
+ * qFind = quote-aware QPOS-based implementation
+ * Used when quoted text is present (correctness path)
+ * --------------------------------------------------------------------
+ */
+qFind: class implements .matchResult
+  /* Same internal state structure */
+  _line  = .string
+  _delim = .string
+  _pos   = .int
+  /* match() prefers this implementation when quotes are present */
+  *: match
+    arg line = .string, delim = .string
+    if pos('"', line) > 0 then return 100   /* best fit: quotes present */
+    if pos("'", line) > 0 then return 100   /* best fit: quotes present */
+  return 10                                 /* fallback (lower priority) */
+  /* Factory uses QPOS (quote-aware parsing) */
+  *: factory
+    arg line = .string, delim = .string
+    _line  = line
+    _delim = delim
+    _pos   = qpos(delim, line)              /* correct but slower */
+  return
+  /* ---------------------------------------------------------
+   * This are re-usable Methods
+   * ---------------------------------------------------------
+   */
+  found: method = .int
+    if _pos > 0 then return 1
+  return 0
+  position: method = .int
+    return _pos
+  before: method = .string
+    if _pos = 0 then return _line
+  return substr(_line, 1, _pos - 1)
+  match: method = .string
+    if _pos = 0 then return ""
+  return _delim
+  after: method = .string
+    if _pos = 0 then return ""
+  return substr(_line, _pos + length(_delim))

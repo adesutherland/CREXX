@@ -17,6 +17,7 @@ set(REXXBINS
   testrexx
   testStack
   ts_TreeMap
+  testQfind
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)

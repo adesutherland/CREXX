@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count
+namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count beginblock beginName
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -73,7 +73,7 @@ internal_testing=0    ## activate only for rxpp internal tests
  * ------------------------------------------------------------------
  */
   call RXPPPassTwo                                  ## pass 2 to pre-expand certain elements (##ELSE)
-     if pos(' 2buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 2'
+    if pos(' 2buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 2'
   if verbose then say 'CRX0200I ['time('l')'] Pre-Compile pass two'
 /* ------------------------------------------------------------------
  *  Pass 3 keep/drop ##IF /##IFN blocks, build Final Output Buffer
@@ -88,7 +88,10 @@ internal_testing=0    ## activate only for rxpp internal tests
      say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
      if pos(' vars',cflags)>0 then call printvars
      if pos(' maclist',cflags)>0 then call printmacs
-     if pos(' includes',cflags)>0 then call list_array included_files,-1,-1,'Include Files'
+     if pos(' includes',cflags)>0 then do
+        call list_array included_files,-1,-1,'Include Files'
+        call list_blocks
+     end
      elapsedTime=(time('us')-elapsedtime)
      say 'CRX0101I ['time('l')'] Elapsed Time 'elapsedTime/1000000' seconds, 'elapsedTime/1000' milliseconds'
   end
@@ -165,6 +168,30 @@ RXPPPassOne: procedure = .int
   source.4='/* reserved for namespace definition */'
   rexxlines=rexxlines+3
   if verbose then say 'CRX0140I ['time('l')'] Rexx Source loaded: 'rexxLines' records'
+
+  /* now pickup ##BEGIN  */
+  i=1
+  which=0
+  do forever
+     beg=fsearch(source,i,"##BEGIN","","",which)   ## pickup BEGIN
+     if beg=0 then leave
+     stype[beg]='I'
+     bi=beginBlock[0]
+     beginName[beginName[0]+1]=upper(word(source[beg],2))
+     ii=.int
+     j=0
+     do ii=beg+1 to source[0]
+        stype[ii]='X'   /* drop it from source file */
+        ww1=upper(word(source[ii],1))
+        if ww1='##ENDBEGIN' then leave
+        j=j+1
+        beginBlock[bi+j]=source[ii]
+        if pos(' nset',cflags)>0 then source[ii]=''
+        else source[ii]='/* 'source[ii]' I*/'
+     end
+     beginName[beginName[0]]=beginName[beginName[0]]' 'bi+1' 'j
+     i=ii+1
+  end
 
 /* ---- 3. Pre-Compile source file,  */
   maclibm=macros_mname.0
@@ -332,6 +359,26 @@ early_flag_pick_up: procedure=.int
   end
 return 1
 /* ------------------------------------------------------------------
+ * Output Begin Blocks for information (not into code)
+ * ------------------------------------------------------------------
+ */
+ list_blocks: procedure
+  if beginName[0]>0 then say ' '
+  do i=1 to beginName[0]
+     say 'Begin Block: 'word(beginName[i],1)
+     say copies('-',48)
+     from=word(beginName[i],2)
+     if datatype(from) \= 'NUM' then leave
+     tto =word(beginName[i],3)
+     if datatype(tto) \= 'NUM' then leave
+     tto =from+tto-1
+     do j=from to tto
+        say right(j,4,'0') beginBlock[j]
+     end
+     say ' '
+  end
+ return
+/* ------------------------------------------------------------------
  * for ##IF / ##IFN find associated ##ENDIF, handling nesting.
  * ------------------------------------------------------------------
  */
@@ -403,6 +450,7 @@ GetPrecomp: procedure
       if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
+      else if ucmd = '##COPYBLOCK' then call cmd_copyBlock lineNo,line
       else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
  ##     else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
@@ -603,6 +651,37 @@ CMD_include: procedure
      source.insertat=include.j
   end
 return
+/* ------------------------------------------------------------------
+ * CMD_copyBlock
+ * ------------------------------------------------------------------
+ */
+CMD_copyBlock: procedure=.int
+  arg line_no=.int,name=.string
+  stype.line_no= 'I'
+  bname=upper(word(name,2))
+
+  i=.int
+  found=0
+  do i=1 to beginName[0]
+     if bname \= word(beginName[i],1) then iterate
+     found=1
+     leave
+  end
+  if found=0 then return 4
+  from=word(beginName[i],2)
+  if datatype(from) \= 'NUM' then return 4
+  newlines=word(beginName[i],3)
+  if datatype(newlines) \= 'NUM' then return 4
+  rc=.int
+  insertat=.int
+  rc= insert_source(line_no+1,newlines)
+  insertat=line_no
+
+  do i=0 to newlines-1
+     insertat=insertat+1
+     source.insertat=beginblock[from+i]
+   end
+return 0
 /* ------------------------------------------------------------------
  * CMD_array: Implements ##ARRAY: expands array declarations into initialization statements.
  * ------------------------------------------------------------------
@@ -1746,6 +1825,8 @@ rxppinit: procedure=.string
   alphaN='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
   source=.string[]
   stype.1='R'
+  beginBlock=.string[]
+  beginName=.string[]
   macros_mname=.string[]
   macros_mspace=.int[]
   macros_varname=.string[]
