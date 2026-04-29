@@ -63,6 +63,7 @@ typedef struct {
     int node_count;
     int return_count;
     int has_unsupported_varg_access;
+    int has_unsupported_assembler_alias;
     size_t max_required_varg_index;
     int ref_varg_mode;
 } InlinableCheck;
@@ -134,13 +135,17 @@ static int inline_call_arity_matches(ASTNode *call_node, Symbol *proc_sym, size_
 static int inline_analyse_varg_usage(ASTNode *proc_def, int *unsupported_out, size_t *max_required_index_out);
 static int inline_call_is_recursive(ASTNode *call_node, Symbol *proc_sym);
 static int inline_analyse_return_shape(ASTNode *proc_def, InlineReturnShape *shape_out);
+static int inline_method_writes_class_attribute(ASTNode *proc_def);
+static int inline_assembler_has_unsupported_aliasing(ASTNode *node);
+static int inline_proc_has_procedure_expose(ASTNode *node);
 static int inline_count_return_nodes(ASTNode *node);
 static int inline_rewrite_return_nodes(Context *context,
-                                       ASTNode *node,
+                                       ASTNode **node_ref,
                                        ASTNode *block_expr,
                                        Scope *inline_scope,
                                        int allow_dummy_return,
-                                       ValueType proc_type);
+                                       ValueType proc_type,
+                                       InlineCloneState *clone_state);
 
 static void inline_debug_log(Context *context,
                              ASTNode *site,
@@ -1379,7 +1384,8 @@ static int inline_bind_method_receiver(Context *context,
     add_ast(assign_node, assign_rhs);
     add_ast(instr_list, assign_node);
 
-    if (inline_is_direct_receiver_copyback_target(receiver) &&
+    if (inline_method_writes_class_attribute(proc_def) &&
+        inline_is_direct_receiver_copyback_target(receiver) &&
         receiver->symbolNode &&
         receiver->symbolNode->symbol) {
         clone_state->method_receiver_source_symbol = receiver->symbolNode->symbol;
@@ -2540,27 +2546,111 @@ static int inline_count_return_nodes(ASTNode *node) {
     return count;
 }
 
+static ASTNode *inline_create_receiver_copyback_leave_wrapper(Context *context,
+                                                              ASTNode *leave_node,
+                                                              ASTNode *block_expr,
+                                                              Scope *inline_scope,
+                                                              InlineCloneState *clone_state) {
+    ASTNode *wrapper;
+    ASTNode *leave_expr;
+    ASTNode *assign_node;
+    ASTNode *assign_lhs;
+    ASTNode *temp_ref;
+    Symbol *temp_symbol;
+
+    if (!context || !leave_node || !block_expr || !inline_scope || !clone_state) return NULL;
+    if (leave_node->node_type != LEAVE_WITH) return NULL;
+    if (!clone_state->method_receiver_needs_copyback) return NULL;
+
+    wrapper = ast_f(context, INSTRUCTIONS, leave_node->token);
+    if (!wrapper) return NULL;
+    ast_copy_source_anchor(wrapper, leave_node, AST_SOURCE_SYNTHETIC);
+    ast_mark_compiler_generated_block(wrapper);
+    wrapper->association = block_expr;
+    wrapper->scope = inline_scope;
+    wrapper->value_type = TP_VOID;
+    wrapper->target_type = TP_VOID;
+
+    leave_expr = leave_node->child;
+    if (!leave_expr) return NULL;
+
+    temp_symbol = inline_create_temp_symbol(context,
+                                            inline_scope,
+                                            leave_expr,
+                                            "__inline_leave",
+                                            (size_t)leave_node->node_number);
+    if (!temp_symbol) return NULL;
+
+    assign_node = ast_f(context, ASSIGN, leave_expr->token ? leave_expr->token : leave_node->token);
+    if (!assign_node) return NULL;
+    assign_node->scope = inline_scope;
+    assign_node->value_type = leave_expr->value_type;
+    assign_node->target_type = leave_expr->target_type;
+
+    assign_lhs = inline_create_symbol_node(context,
+                                           inline_scope,
+                                           leave_expr,
+                                           temp_symbol,
+                                           VAR_TARGET,
+                                           0,
+                                           1);
+    if (!assign_lhs) return NULL;
+
+    leave_node->child = NULL;
+    leave_expr->parent = NULL;
+    leave_expr->sibling = NULL;
+
+    add_ast(assign_node, assign_lhs);
+    add_ast(assign_node, leave_expr);
+    add_ast(wrapper, assign_node);
+
+    if (!inline_append_method_receiver_copyback(context,
+                                                wrapper,
+                                                inline_scope,
+                                                leave_node,
+                                                clone_state)) {
+        return NULL;
+    }
+
+    temp_ref = inline_create_symbol_node(context,
+                                         inline_scope,
+                                         leave_node,
+                                         temp_symbol,
+                                         VAR_SYMBOL,
+                                         1,
+                                         0);
+    if (!temp_ref) return NULL;
+
+    add_ast(leave_node, temp_ref);
+    return wrapper;
+}
+
 static int inline_rewrite_return_nodes(Context *context,
-                                       ASTNode *node,
+                                       ASTNode **node_ref,
                                        ASTNode *block_expr,
                                        Scope *inline_scope,
                                        int allow_dummy_return,
-                                       ValueType proc_type) {
+                                       ValueType proc_type,
+                                       InlineCloneState *clone_state) {
+    ASTNode *node;
     ASTNode *child;
     ASTNode *next_child;
     ASTNode *leave_expr;
 
-    if (!node) return 1;
+    if (!node_ref || !*node_ref) return 1;
+
+    node = *node_ref;
 
     child = node->child;
     while (child) {
         next_child = child->sibling;
         if (!inline_rewrite_return_nodes(context,
-                                         child,
+                                         &child,
                                          block_expr,
                                          inline_scope,
                                          allow_dummy_return,
-                                         proc_type)) {
+                                         proc_type,
+                                         clone_state)) {
             return 0;
         }
         child = next_child;
@@ -2584,6 +2674,21 @@ static int inline_rewrite_return_nodes(Context *context,
     node->association = block_expr;
     node->value_type = node->child ? node->child->value_type : TP_VOID;
     node->target_type = node->child ? node->child->target_type : TP_VOID;
+
+    if (clone_state && clone_state->method_receiver_needs_copyback) {
+        ASTNode *wrapper;
+
+        wrapper = inline_create_receiver_copyback_leave_wrapper(context,
+                                                                node,
+                                                                block_expr,
+                                                                inline_scope,
+                                                                clone_state);
+        if (!wrapper) return 0;
+
+        if (node->parent) ast_rpl(node, wrapper);
+        else *node_ref = wrapper;
+        add_ast(wrapper, node);
+    }
 
     return 1;
 }
@@ -2678,11 +2783,12 @@ static ASTNode *inline_build_block_expr(Context *context,
             return NULL;
         }
         if (!inline_rewrite_return_nodes(context,
-                                         cloned_instr,
+                                         &cloned_instr,
                                          block_expr,
                                          inline_scope,
                                          allow_dummy_return,
-                                         proc_sym->type)) {
+                                         proc_sym->type,
+                                         &clone_state)) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to rewrite return nodes for BLOCK_EXPR inline");
             inline_free_symbol_map(&clone_state);
             return NULL;
@@ -3096,9 +3202,11 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
         inline_debug_fail_closed(context, call_node, proc_sym, "failed to analyse callee return shape for expression inline");
         return 0;
     }
-    if (inline_method_writes_class_attribute(proc_sym->ast_template)) {
+    if (inline_method_writes_class_attribute(proc_sym->ast_template) &&
+        proc_sym->ast_template->node_type == METHOD &&
+        !inline_is_direct_receiver_copyback_target(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
-                                 "mutating method expression inline requires receiver copyback before LEAVE_WITH");
+                                 "mutating method expression inline requires a direct receiver copyback target");
         return 0;
     }
     if (!return_shape.final_is_return || return_shape.return_count == 0) {
@@ -3173,6 +3281,10 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
             check->return_count++;
         }
 
+        if (inline_assembler_has_unsupported_aliasing(node)) {
+            check->has_unsupported_assembler_alias = 1;
+        }
+
         if (node->node_type == OP_ARG_VALUE) {
             size_t index;
 
@@ -3219,6 +3331,13 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
             ((node->node_type == METHOD || node->node_type == FACTORY) &&
              (!node->parent || node->parent->node_type != CLASS_DEF))) {
             if (sym) sym->is_inlinable = 0;
+            return result_normal;
+        }
+
+        if (inline_proc_has_procedure_expose(node)) {
+            inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                             "reject: procedure-level EXPOSE is not inlineable");
+            sym->is_inlinable = 0;
             return result_normal;
         }
 
@@ -3278,12 +3397,14 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
 
         if (check.node_count > INLINE_MAX_NODES ||
             check.return_count != return_shape.return_count ||
+            check.has_unsupported_assembler_alias ||
             check.has_unsupported_varg_access) {
             inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: nodes=%d returns=%d final_return=%d unsupported_varg=%d cutoff=%d",
+                             "reject: nodes=%d returns=%d final_return=%d assembler_alias=%d unsupported_varg=%d cutoff=%d",
                              check.node_count,
                              check.return_count,
                              return_shape.final_is_return,
+                             check.has_unsupported_assembler_alias,
                              check.has_unsupported_varg_access,
                              INLINE_MAX_NODES);
             sym->is_inlinable = 0;
@@ -3319,7 +3440,140 @@ int rxcp_inline_pass(Context *context) {
     return payload.changed;
 }
 
+static int inline_proc_has_body(ASTNode *node) {
+    ASTNode *instrs;
+
+    if (!node) return 0;
+
+    instrs = ast_chld(node, INSTRUCTIONS, NOP);
+    return instrs && instrs->node_type != NOP;
+}
+
+static int inline_ascii_starts_with_ci(const char *text, size_t text_len, const char *prefix) {
+    size_t i;
+    size_t prefix_len;
+
+    if (!text || !prefix) return 0;
+    prefix_len = strlen(prefix);
+    if (text_len < prefix_len) return 0;
+
+    for (i = 0; i < prefix_len; i++) {
+        char a = text[i];
+        char b = prefix[i];
+
+        if (a >= 'A' && a <= 'Z') a = (char)(a - 'A' + 'a');
+        if (b >= 'A' && b <= 'Z') b = (char)(b - 'A' + 'a');
+        if (a != b) return 0;
+    }
+
+    return 1;
+}
+
+static int inline_assembler_has_unsupported_aliasing(ASTNode *node) {
+    if (!node || node->node_type != ASSEMBLER || !node->node_string) return 0;
+
+    return inline_ascii_starts_with_ci(node->node_string, node->node_string_length, "link") ||
+           inline_ascii_starts_with_ci(node->node_string, node->node_string_length, "unlink");
+}
+
+static int inline_proc_has_procedure_expose(ASTNode *node) {
+    return node && ast_chld(node, EXPOSED, 0) != NULL;
+}
+
+static int inline_prune_candidate(ASTNode *node) {
+    Symbol *symbol;
+
+    if (!node || node->node_type != PROCEDURE) return 0;
+    if (!inline_proc_has_body(node)) return 0;
+    if (inline_proc_has_procedure_expose(node)) return 0;
+
+    symbol = inline_symbol_from_proc_def(node);
+    if (!symbol) return 0;
+    if (!symbol->is_inlinable) return 0;
+    if (symbol->is_main || symbol->is_implicit_main || symbol->exposed) return 0;
+
+    return 1;
+}
+
+static int inline_collect_remaining_call_symbols(ASTNode *node,
+                                                 Symbol ***symbols,
+                                                 size_t *symbol_count) {
+    ASTNode *child;
+
+    if (!node) return 1;
+    if (node->is_inline_pruned && inline_node_is_callable_def(node)) return 1;
+
+    if ((node->node_type == FUNCTION ||
+         node->node_type == FUNC_SYMBOL ||
+         node->node_type == MEMBER_CALL ||
+         node->node_type == FACTORY_CALL) &&
+        node->symbolNode &&
+        node->symbolNode->symbol) {
+        if (!inline_append_symbol(symbols, symbol_count, node->symbolNode->symbol)) return 0;
+    }
+
+    child = node->child;
+    while (child) {
+        if (!inline_collect_remaining_call_symbols(child, symbols, symbol_count)) return 0;
+        child = child->sibling;
+    }
+
+    return 1;
+}
+
+static int inline_prune_unreferenced_candidates(Context *context,
+                                                ASTNode *node,
+                                                Symbol **live_symbols,
+                                                size_t live_count) {
+    ASTNode *child;
+    int changed;
+
+    if (!node) return 0;
+
+    changed = 0;
+
+    if (!node->is_inline_pruned && inline_prune_candidate(node)) {
+        Symbol *symbol;
+
+        symbol = inline_symbol_from_proc_def(node);
+        if (symbol && !inline_symbol_in_list(live_symbols, live_count, symbol)) {
+            node->is_inline_pruned = 1;
+            changed = 1;
+            inline_debug_log(context, node, symbol, "DEBUG_INLINE",
+                             "prune: private procedure has no remaining local call sites");
+        }
+    }
+
+    if (node->is_inline_pruned && inline_node_is_callable_def(node)) return changed;
+
+    child = node->child;
+    while (child) {
+        if (inline_prune_unreferenced_candidates(context, child, live_symbols, live_count)) {
+            changed = 1;
+        }
+        child = child->sibling;
+    }
+
+    return changed;
+}
+
 void rxcp_inline_prune(Context *context, ASTNode *tree) {
-    (void)context;
-    (void)tree;
+    int changed;
+
+    if (!context || !tree) return;
+
+    do {
+        Symbol **live_symbols;
+        size_t live_count;
+
+        live_symbols = NULL;
+        live_count = 0;
+
+        if (!inline_collect_remaining_call_symbols(tree, &live_symbols, &live_count)) {
+            free(live_symbols);
+            return;
+        }
+        changed = inline_prune_unreferenced_candidates(context, tree, live_symbols, live_count);
+        free(live_symbols);
+    } while (changed);
 }

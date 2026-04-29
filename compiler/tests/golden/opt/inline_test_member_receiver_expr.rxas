@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_member_receiver_expr.rexx
- * BUILT                  : 2026-04-29 10:12:23
+ * BUILT                  : 2026-04-29 14:16:42
  */
 
 .meta "inline_test_member_receiver_expr.box"="b" ".unknown" .class
@@ -73,35 +73,6 @@ l71bexprend:
    say "Member receiver inline test finished."
    .src 8:3="return 0"
    ret 0
-
-buildBox() .locals=5
-   .meta "inline_test_member_receiver_expr.buildbox"="b" ".box" buildBox() "initial=.string" ""
-   .src 10:1="buildBox: procedure = .Box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 11:7="initial = .string"
-   .meta "inline_test_member_receiver_expr.buildbox.initial"="b" ".string" a1
-   .src 12:3="value = .Box(initial)"
-   .src 18:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
-   setattrs r3,2
-   .src 18:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
-   setobjtype r3,"inline_test_member_receiver_expr.box"
-   .src 19:9="initial"
-   scopy r2,a1
-   .src 20:5="name = initial"
-   linkattr1 r4,r3,1
-   scopy r4,r2
-   unlink r4
-   .src 21:5="return"
-   copy r1,r3
-   .src 13:3="return value"
-   .meta "inline_test_member_receiver_expr.buildbox.value"="b" ".box" r1
-   ret r1
-   .meta "inline_test_member_receiver_expr.buildbox.initial"
-   .meta "inline_test_member_receiver_expr.buildbox.value"
 
 §inline_test_member_receiver_expr.box.§factory() .locals=3
    .meta "inline_test_member_receiver_expr.box.§factory"="b" ".box" §inline_test_member_receiver_expr.box.§factory() "initial=.string" ""

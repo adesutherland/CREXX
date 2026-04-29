@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_class_methods.rexx
- * BUILT                  : 2026-04-29 10:12:24
+ * BUILT                  : 2026-04-29 14:16:42
  */
 
 .meta "inline_test_class_methods.box"="b" ".unknown" .class
@@ -9,7 +9,7 @@
 .srcfile="inline_test_class_methods.rexx"
 .globals=0
 
-main() .locals=29
+main() .locals=31
    .meta "inline_test_class_methods.main"="b" ".int" main() "" ""
    .src 4:1="main: procedure = .int"
    setnumdgts 18
@@ -23,10 +23,10 @@ main() .locals=29
    .src 28:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
    setobjtype r2,"inline_test_class_methods.box"
    .src 30:5="name = initial"
-   load r16,"alpha"
-   linkattr1 r15,r2,1
-   scopy r15,r16
-   unlink r15
+   load r18,"alpha"
+   linkattr1 r17,r2,1
+   scopy r17,r18
+   unlink r17
    .src 31:5="return"
    copy r0,r2
    .src 6:3="say box.label"
@@ -35,21 +35,21 @@ main() .locals=29
    .src 6:7="box"
    copy r3,r0
    .src 34:5="return name"
-   linkattr1 r15,r3,1
-   scopy r17,r15
-   acopy r17,r15
-   unlink r15
+   linkattr1 r17,r3,1
+   scopy r19,r17
+   acopy r19,r17
+   unlink r17
    br l187bexprend
 l187bexprend:
-   say r17
+   say r19
    .src 7:3="call box.setLabel(\"beta\")"
    .src 7:8="box"
    copy r4,r0
    .src 38:5="name = next"
-   load r18,"beta"
-   linkattr1 r17,r4,1
-   scopy r17,r18
-   unlink r17
+   load r20,"beta"
+   linkattr1 r19,r4,1
+   scopy r19,r20
+   unlink r19
    .src 7:8="box.setLabel(\"beta\")"
    copy r0,r4
    .src 7:8="box.setLabel(\"beta\")"
@@ -59,36 +59,36 @@ l187bexprend:
    .src 8:7="box"
    copy r5,r0
    .src 34:5="return name"
-   linkattr1 r17,r5,1
-   scopy r19,r17
-   acopy r19,r17
-   unlink r17
+   linkattr1 r19,r5,1
+   scopy r21,r19
+   acopy r21,r19
+   unlink r19
    br l212bexprend
 l212bexprend:
-   say r19
+   say r21
    .src 9:3="say box.prefix(\"p\")"
    .src 9:7="box"
    .src 9:7="box"
    copy r6,r0
    .src 43:5="return tag || \":\" || label"
-   load r19,1
+   load r21,1
    settp r6,1
-   swap r20,r6
-   call r21,§inline_test_class_methods.box.label(),r19
-   swap r6,r20
-   concat r21,"p:",r21
+   swap r22,r6
+   call r23,§inline_test_class_methods.box.label(),r21
+   swap r6,r22
+   concat r23,"p:",r23
    br l219bexprend
 l219bexprend:
-   say r21
+   say r23
    .src 10:3="call update(box, \"gamma\")"
    .src 22:3="call item.setLabel(value)"
    .src 22:8="item"
    copy r8,r0
    .src 38:5="name = next"
-   load r20,"gamma"
-   linkattr1 r21,r8,1
-   scopy r21,r20
-   unlink r21
+   load r22,"gamma"
+   linkattr1 r23,r8,1
+   scopy r23,r22
+   unlink r23
    .src 22:8="item.setLabel(value)"
    copy r0,r8
    .src 22:8="item.setLabel(value)"
@@ -98,25 +98,25 @@ l219bexprend:
    .src 11:7="box"
    copy r9,r0
    .src 34:5="return name"
-   linkattr1 r21,r9,1
-   scopy r19,r21
-   acopy r19,r21
-   unlink r21
+   linkattr1 r23,r9,1
+   scopy r21,r23
+   acopy r21,r23
+   unlink r23
    br l254bexprend
 l254bexprend:
-   say r19
+   say r21
    .src 12:3="saved = box.setAndReport(\"delta\")"
    .src 12:11="box"
    copy r10,r0
    .src 47:5="name = next"
-   load r22,"delta"
-   linkattr1 r19,r10,1
-   scopy r19,r22
-   unlink r19
+   load r24,"delta"
+   linkattr1 r21,r10,1
+   scopy r21,r24
+   unlink r21
    .src 48:5="return"
-   linkattr1 r19,r10,1
-   copy r1,r19
-   unlink r19
+   linkattr1 r21,r10,1
+   copy r1,r21
+   unlink r21
    .src 12:11="box.setAndReport(\"delta\")"
    copy r0,r10
    .src 12:11="box.setAndReport(\"delta\")"
@@ -129,94 +129,78 @@ l254bexprend:
    .src 14:7="box"
    copy r11,r0
    .src 34:5="return name"
-   linkattr1 r19,r11,1
-   scopy r23,r19
-   acopy r23,r19
-   unlink r19
+   linkattr1 r21,r11,1
+   scopy r25,r21
+   acopy r25,r21
+   unlink r21
    br l282bexprend
 l282bexprend:
-   say r23
+   say r25
    .src 15:3="say box.setAndReport(\"epsilon\")"
-   load r23,2
-   load r25,"epsilon"
-   settp r0,1
-   swap r24,r0
-   settp r25,3
-   call r26,§inline_test_class_methods.box.setandreport(),r23
-   swap r0,r24
-   say r26
-   .src 16:3="say box.label"
-   .src 16:7="box"
-   .src 16:7="box"
-   copy r12,r0
-   .src 34:5="return name"
-   linkattr1 r26,r12,1
+   .src 15:7="box"
+   .src 15:7="box"
+   copy r13,r0
+   .src 47:5="name = next"
+   load r26,"epsilon"
+   linkattr1 r25,r13,1
    scopy r25,r26
-   acopy r25,r26
-   unlink r26
+   unlink r25
+   .src 48:12="name"
+   linkattr1 r25,r13,1
+   scopy r12,r25
+   unlink r25
+   .src 48:5="return name"
+   copy r0,r13
+   .src 48:5="return name"
+   acopy r0,r13
+   .src 48:5="return name"
+   scopy r25,r12
+   acopy r25,r12
    br l289bexprend
 l289bexprend:
    say r25
+   .src 16:3="say box.label"
+   .src 16:7="box"
+   .src 16:7="box"
+   copy r14,r0
+   .src 34:5="return name"
+   linkattr1 r25,r14,1
+   scopy r27,r25
+   acopy r27,r25
+   unlink r25
+   br l314bexprend
+l314bexprend:
+   say r27
    .src 17:3="say .Box(\"direct\").prefix(\"q\")"
    .src 17:7=".Box"
    .src 17:7=".Box(\"direct\").prefix(\"q\")"
    .src 28:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
-   setattrs r14,2
+   setattrs r16,2
    .src 28:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
-   setobjtype r14,"inline_test_class_methods.box"
+   setobjtype r16,"inline_test_class_methods.box"
    .src 30:5="name = initial"
-   load r24,"direct"
-   linkattr1 r25,r14,1
-   scopy r25,r24
-   unlink r25
-   .src 31:5="return"
-   copy r13,r14
-   .src 43:5="return tag || \":\" || label"
-   load r27,1
-   settp r13,1
-   swap r28,r13
-   call r25,§inline_test_class_methods.box.label(),r27
-   swap r13,r28
-   concat r28,"q:",r25
+   load r28,"direct"
+   linkattr1 r27,r16,1
    scopy r27,r28
-   acopy r27,r28
-   br l296bexprend
-l296bexprend:
-   say r27
+   unlink r27
+   .src 31:5="return"
+   copy r15,r16
+   .src 43:5="return tag || \":\" || label"
+   load r29,1
+   settp r15,1
+   swap r30,r15
+   call r27,§inline_test_class_methods.box.label(),r29
+   swap r15,r30
+   concat r30,"q:",r27
+   scopy r29,r30
+   acopy r29,r30
+   br l321bexprend
+l321bexprend:
+   say r29
    .src 18:3="return 0"
    ret 0
    .meta "inline_test_class_methods.main.box"
    .meta "inline_test_class_methods.main.saved"
-
-update() .locals=5
-   .meta "inline_test_class_methods.update"="b" ".void" update() "item=.box,value=.string" ""
-   .src 20:1="update: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 21:7="item = .Box"
-   .meta "inline_test_class_methods.update.item"="b" ".box" a1
-   .src 21:20="value = .string"
-   .meta "inline_test_class_methods.update.value"="b" ".string" a2
-   .src 22:3="call item.setLabel(value)"
-   .src 22:8="item"
-   copy r3,a1
-   .src 37:9="next"
-   scopy r2,a2
-   .src 38:5="name = next"
-   linkattr1 r4,r3,1
-   scopy r4,r2
-   unlink r4
-   .src 22:8="item.setLabel(value)"
-   copy a1,r3
-   .src 22:8="item.setLabel(value)"
-   acopy a1,r3
-   .src 23:3="return"
-   ret
-   .meta "inline_test_class_methods.update.item"
-   .meta "inline_test_class_methods.update.value"
 
 §inline_test_class_methods.box.§factory() .locals=3
    .meta "inline_test_class_methods.box.§factory"="b" ".box" §inline_test_class_methods.box.§factory() "initial=.string" ""

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_computed.rexx
- * BUILT                  : 2026-03-27 16:48:18
+ * BUILT                  : 2026-04-29 14:16:43
  */
 
 .srcfile="inline_test_ref_computed.rexx"
@@ -71,21 +71,3 @@ l65bexprend:
    .src 13:3="return 0"
    ret 0
    .meta "refcomputed.main.values"
-
-bump() .locals=1
-   .meta "refcomputed.bump"="b" ".int" bump() "expose slot=.int" ""
-   .src 15:1="bump: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 16:7="expose slot = .int"
-   .meta "refcomputed.bump.slot"="b" ".int" a1
-   .src 17:3="idx = idx + 1"
-   iadd g0,g0,1
-   .src 18:3="slot = slot + idx"
-   iadd a1,a1,g0
-   .src 19:3="return slot"
-   ret a1
-   .meta "refcomputed.bump.slot"

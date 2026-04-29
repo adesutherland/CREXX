@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_vararg.rexx
- * BUILT                  : 2026-04-29 10:17:01
+ * BUILT                  : 2026-04-29 14:16:44
  */
 
 .srcfile="inline_test_vararg.rexx"
@@ -145,24 +145,6 @@ l155bexprend:
    ret 0
    .meta "inline_test_vararg.main.total"
 
-tailCount() .locals=2
-   .meta "inline_test_vararg.tailcount"="b" ".int" tailCount() "base=.int,...=.int" ""
-   .src 15:1="tailCount: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 16:7="base = .int"
-   .meta "inline_test_vararg.tailcount.base"="b" ".int" a1
-   .src 16:20="... = .int"
-   .src 17:3="return base + arg"
-   icopy r1,a0
-   isub r1,r1,1
-   iadd r1,a1,r1
-   ret r1
-   .meta "inline_test_vararg.tailcount.base"
-
 secondOnly() .locals=3
    .meta "inline_test_vararg.secondonly"="b" ".int" secondOnly() "base=.int,...=.int" ""
    .src 19:1="secondOnly: procedure = .int"
@@ -183,42 +165,3 @@ secondOnly() .locals=3
    unlink r1
    ret r2
    .meta "inline_test_vararg.secondonly.base"
-
-hasThird() .locals=1
-   .meta "inline_test_vararg.hasthird"="b" ".int" hasThird() "...=.int" ""
-   .src 23:1="hasThird: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 24:7="... = .int"
-   .src 25:3="return arg(3"
-   icopy r0,a0
-   ilte r0,3,r0
-   btoi r0
-   ret r0
-
-logSecond() .locals=3
-   .meta "inline_test_vararg.logsecond"="b" ".int" logSecond() "base=.int,...=.int" ""
-   .src 27:1="logSecond: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 28:7="base = .int"
-   .meta "inline_test_vararg.logsecond.base"="b" ".int" a1
-   .src 28:20="... = .int"
-   .src 29:3="say base + arg[2"
-   icopy r1,a0
-   isub r1,r1,1
-   ichkrng 2,1,r1
-   linkarg r1,3
-   iadd r2,a1,r1
-   unlink r1
-   itos r2
-   say r2
-   .src 30:3="return base"
-   ret a1
-   .meta "inline_test_vararg.logsecond.base"

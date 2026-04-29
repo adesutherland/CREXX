@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_object.rexx
- * BUILT                  : 2026-04-29 10:17:00
+ * BUILT                  : 2026-04-29 14:21:08
  */
 
 .meta "arg_semantics_object.box"="b" ".unknown" .class
@@ -155,32 +155,6 @@ l58d:
 l185bexprend:
    ret r5
    .meta "arg_semantics_object.replacebox.value"
-
-replaceBoxRef() .locals=4
-   .meta "arg_semantics_object.replaceboxref"="b" ".void" replaceBoxRef() "expose value=.box" ""
-   .src 22:1="replaceBoxRef: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 23:7="expose value = .Box"
-   .meta "arg_semantics_object.replaceboxref.value"="b" ".box" a1
-   .src 24:3="value = .Box(\"ref\")"
-   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
-   setattrs r1,2
-   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
-   setobjtype r1,"arg_semantics_object.box"
-   .src 32:5="name = initial"
-   load r3,"ref"
-   linkattr1 r2,r1,1
-   scopy r2,r3
-   unlink r2
-   .src 33:5="return"
-   copy a1,r1
-   .src 25:3="return"
-   ret
-   .meta "arg_semantics_object.replaceboxref.value"
 
 §arg_semantics_object.box.§factory() .locals=3
    .meta "arg_semantics_object.box.§factory"="b" ".box" §arg_semantics_object.box.§factory() "initial=.string" ""

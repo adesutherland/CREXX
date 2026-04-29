@@ -15,6 +15,28 @@ Contexts outside those buckets stay uninlined until their rewrite strategy exist
 
 ## Current Strategy
 
+### April 2026 review stance
+
+The current implementation is not a completely generic AST rewrite engine, and
+that is intentional. The general part is the reusable inline expansion core:
+
+- bind actuals into an isolated inline scope
+- duplicate callee-local scopes and symbols into that inline scope
+- remap by-reference actuals, varargs, `§this`, and `§factory`
+- clone the callee instruction tree
+- rewrite returns according to the call-site bucket
+
+The call-site buckets are deliberately specific. They are the points where
+control-flow, expression value delivery, receiver copyback, and register
+liveness differ. Treating those as "just tree copying" is unsafe, because a
+syntactically valid copied tree can still change evaluation order, aliasing,
+register lifetime, or object receiver state.
+
+So the current direction is broadly correct: keep one reusable clone/bind core,
+but keep explicit rewrite strategies for each parent-expression or statement
+bucket. Future work should improve the clarity and test coverage of those
+buckets rather than attempting one fully generic splice operation.
+
 ### Supported scenarios
 
 The currently supported scenarios are:
@@ -54,6 +76,8 @@ More precisely:
 - The callee body must be available in the current compilation unit. Imported callees remain a later milestone.
 - Arguments and return values must stay within the currently implemented safe slice: scalars, object values, binary values, optional/default formals, and array-shaped formals/returns are now supported across local procedure and local class-call inlining.
 - The callee must satisfy the existing safety checks: small body, no recursion cycle, and no unsupported vararg indexing. Value-producing procedures still require a final `RETURN`; void statement-call sites may inline through bare-return and fallthrough shapes.
+- Procedure-level `expose` clauses are not inlineable yet. This is separate from `arg expose` / by-reference formals: a procedure-level expose changes global binding semantics and must stay as a real call until the clone/bind core models that environment explicitly.
+- Callable bodies containing raw assembler aliasing statements such as `link`, `linkattr*`, `linktoattr*`, or `unlink` are not inlineable yet. These statements encode VM aliasing semantics that are not visible in the ordinary AST contract, so they stay as real calls until the inliner has instruction-specific proofs.
 - Factory inlining creates and initializes the callee's internal `§factory` object in the inline scope, including `setattrs` and `setobjtype`, before cloning the factory body.
 - Method inlining binds the receiver once into the callee's internal `§this` object. Statement-position and simple whole-RHS assignment rewrites copy a direct, non-attribute receiver symbol back after a mutating method body. Mutating method calls in general expression position, receiver expressions, indexed receivers, and class-attribute receivers stay as normal calls until receiver copyback is modelled for those shapes.
 - Named interface factory selector metadata must be preserved during cloning so `.iface.named(...)` still emits `srcfproc "...iface..named"` after inlining.
@@ -263,12 +287,13 @@ Implemented behaviour:
 - `MEMBER_CALL` and `FACTORY_CALL` sites participate in call-site selection alongside `FUNCTION` sites.
 - Method bodies get an inline-scope `§this` binding and class attribute reads/writes resolve against that inlined receiver.
 - Direct-receiver mutating method calls in statement position and simple whole-RHS assignment position copy the receiver object back after the cloned method body.
+- Direct-receiver mutating method calls in supported single-consumer expression position copy the receiver object back before each generated `LEAVE_WITH`, so the returned value and receiver mutation are both preserved.
 - Factory bodies get an inline-scope `§factory` object initialized with the owning class's attribute count and concrete object type before the cloned factory body executes.
 - Cloned `BLOCK_EXPR` and compiler-generated block associations are preserved so nested inline scopes continue to resolve `§this`, `§factory`, and `LEAVE_WITH` targets correctly.
 
 Remaining guardrail:
 
-- Mutating methods in general expression position stay uninlined, because `LEAVE_WITH` branches out of a `BLOCK_EXPR`; supporting those sites requires inserting receiver copyback before every generated `LEAVE_WITH`.
+- Mutating methods still stay uninlined when the receiver is not a direct symbol copyback target, for example receiver-producing expressions, indexed receivers, and class-attribute receivers.
 
 ### Milestone 3: imported procedures and methods
 
@@ -289,6 +314,95 @@ Also note that imported sources are not all equivalent:
 - metadata-only imports such as `.rxbin` and plugin-driven imports may only provide signatures or stubs
 
 So milestone 3 should likely begin with the narrower target of source-imported procedures and methods whose bodies are definitely available.
+
+### Cross-file inline body transport working design
+
+The preferred cross-file direction is an explicit inline-body export format,
+stored as metadata in the imported module and reconstructed by `rxc` before the
+normal optimisation/inlining pass. The existing `META_FUNC.inliner` string is
+a natural first attachment point because it is already read during binary
+import and currently carries an empty string. If the payload grows beyond what
+is comfortable as a string, the same design can move to a dedicated
+`META_INLINE_BODY` record while leaving `META_FUNC.inliner` as a pointer or
+version marker.
+
+The inline body should be a compiler-owned transport language, not source text
+and not raw C struct memory. Source text is attractive for source imports, but
+it is not enough for `.rxbin` imports and it reopens parse/validation drift.
+Raw AST memory is not portable and cannot survive compiler version changes.
+
+A compact text form is acceptable for phase 1. It should be versioned and
+structured as a preorder tree walk with explicit scope and symbol records. The
+minimum shape is:
+
+```text
+inline-body-v1 compiler=<version> ast=<schema>
+proc kind=<procedure|method|factory> name=<fqname> type=<type> args=<signature>
+scope <id> parent=<id|none> kind=<procedure|local|class> numeric=<...>
+symbol <id> scope=<id> kind=<variable|function|class> type=<type> flags=<...>
+node <id> type=<NodeType> text=<encoded> scope=<id> symbol=<id|none> assoc=<id|none> types=<...> source=<...>
+down
+node ...
+up
+endproc
+```
+
+The important point is the `node` / `down` / `up` stream: it lets the importer
+reconstruct the tree without depending on pointer addresses. The explicit
+symbol and scope sections let the existing inline clone/bind core continue to
+operate on normal AST, `Scope`, and `Symbol` objects after import.
+
+Required contents for phase 1:
+
+- callable kind, fully qualified name, return type, argument signature, and
+  inlining format version
+- the callable body under its `INSTRUCTIONS` node
+- local symbol table entries, including argument/ref/const/varg flags,
+  aggregate dimensions, object class names, and default-init requirements
+- scope boundaries and numeric context
+- associations needed by class/interface calls, `BLOCK_EXPR`, and generated
+  `LEAVE_WITH` targets
+- source anchors where available, with a clear flag for synthetic or stripped
+  source
+- a dependency list for any nested calls that remain as calls after inlining
+
+Import behaviour:
+
+1. `rxc` reads the existing function metadata as it does today.
+2. If the imported function has a compatible inline-body payload, the compiler
+   reconstructs an imported AST template and attaches it to the imported
+   symbol as `ast_template`.
+3. The normal `identify_inlinable_walker()` and call-site selection logic
+   should not need a special imported-callee path beyond ownership checks and
+   compatibility gates.
+4. If the payload is missing, stripped, malformed, too new, or semantically
+   incomplete, the compiler fails closed and treats the import as signature
+   only.
+
+Linker/strip behaviour:
+
+- `rxlink` should preserve inline-body metadata by default, because it is
+  optimisation metadata for downstream compilation.
+- `STRIP INLINE` should remove inline-body payloads while preserving callable
+  signatures.
+- `STRIP SOURCE` may remove source/file metadata without removing inline-body
+  metadata, unless a stronger deployable-strip mode is requested.
+- When an inline body is stored through `META_FUNC.inliner`, stripping should
+  rewrite the field to the canonical empty-string constant rather than remove
+  the whole `META_FUNC` record.
+
+Compatibility gates:
+
+- inline-body format version must match a compiler-supported reader
+- AST schema/compiler ABI must match or be explicitly declared compatible
+- imported inline bodies must be treated as read-only templates and cloned
+  into the caller, never mutated in place
+- exported body dependencies must either be inlined too or remain resolvable
+  as imports in the caller output
+
+This design keeps cross-file inlining at the optimiser/inliner level: imports
+produce callable templates, then the existing local inliner machinery does the
+actual rewrite.
 
 ## Current Status
 
@@ -312,14 +426,22 @@ The implementation now covers:
 - binary-typed local plain procedures across the current statement and expression rewrite machinery
 - preserved default-init requirements for duplicated inline locals and inline-created aggregate temporaries
 - explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
-- receiver copyback for direct-receiver mutating method calls in statement and simple assignment rewrites
+- receiver copyback for direct-receiver mutating method calls in statement, simple assignment, and supported single-consumer expression rewrites
 - factory object initialization for inlined class factories
+- conservative emission-time pruning of private local plain procedures once no surviving local call node still targets them
 
 The implementation still excludes:
 
 - imported callees
+- procedures with procedure-level `expose` clauses
+- callables containing raw assembler aliasing statements
 - dynamic-index `.ref` / `expose` vararg access
-- mutating methods in general expression position, pending copyback-before-`LEAVE_WITH` support
+- mutating methods whose receiver is not a direct symbol copyback target
+- receiver-position and call-argument inlining, such as
+  `buildBox("seed").getName()`, pending a parent-expression liveness and
+  evaluation-order proof
+- composed expression parents, including ordinary operators and short-circuit
+  boolean parents
 
 ## Post-Hardening Status
 
@@ -335,7 +457,7 @@ The work that was previously fail-closed during broad-cutoff exploration is now 
 The current production stance is:
 
 - keep the 200-node body cutoff for local inlineable callables
-- treat imported callees, mutating method expression copyback, and dynamic-index `.ref` / `expose` vararg access as milestone-boundary exclusions, not temporary hardening gaps
+- treat imported callees, unsupported mutating-method receiver copyback shapes, and dynamic-index `.ref` / `expose` vararg access as milestone-boundary exclusions, not temporary hardening gaps
 - keep debug-visible inline rejection and rewrite diagnostics available for future tuning and milestone work
 
 Validation for the current cutoff and supported slice:
@@ -370,6 +492,77 @@ This split is the right shape for later milestones:
 - new parent-expression contexts should extend stage 2 without weakening structural safety checks
 
 That separation is what keeps the inliner opportunity-based instead of turning `is_inlinable` into an over-broad “inline everywhere” flag.
+
+### Known fail-closed local cases
+
+The currently known local fail-closed cases are not all the same kind of gap.
+They should be tracked separately so that future work fixes the right layer:
+
+- Composed expression parents: examples such as
+  `if identity(addOne(i)) | 0 then ...` and `if isTwo(i) | 0 then ...`
+  remain normal calls because the direct child of `OP_OR`, `OP_AND`,
+  concatenation, comparison, arithmetic, or call-like argument nodes is not yet
+  a proven-safe `BLOCK_EXPR` insertion point.
+- Short-circuit parents with by-reference side effects: examples such as
+  `if refBump(values[idx]) & 1 then ...` are especially sensitive because the
+  original language semantics include both evaluation order and aliasing.
+- Receiver-position expressions: examples such as
+  `buildBox("seed").getName()` and `.Box("direct").prefix("q")` require the
+  receiver-producing expression to be evaluated once, materialised, and then
+  used as the method receiver without clobbering siblings or losing copyback.
+- Mutating methods in unsupported expression shapes: direct single-consumer
+  sites such as `say box.setAndReport("epsilon")` are supported, but
+  mutating methods still stay uninlined when the receiver cannot be copied
+  back to a direct local symbol or when the call appears under an unsupported
+  parent expression.
+- Procedure-level `expose` clauses: these are deliberately distinct from
+  `arg expose` reference formals. The latter is call-argument aliasing; the
+  former changes the callee's global binding environment and remains a normal
+  call until inline scope cloning models it directly.
+- Raw assembler aliasing statements: callables using instructions such as
+  `link`, `linkattr`, `linktoattr`, or `unlink` remain normal calls because
+  those instructions can create aliases that are not represented as ordinary
+  variable or receiver writes in the AST. Non-aliasing assembler does not by
+  itself block inlining.
+- Nested method calls inside an inlined method body: for example `prefix()`
+  can inline its outer method body while leaving `label()` as a normal call
+  when `label()` appears under a concatenation expression. This is expected
+  until composed expression parents are supported.
+
+The first implementation target should be chosen by semantic risk, not by how
+often a fail-closed debug line appears. In particular, a repeated
+`DEBUG_INLINE_FAILCLOSED` line can be caused by the fixed-point pass revisiting
+an intentionally excluded site.
+
+### Pruning fully inlined local callables
+
+`rxcp_inline_prune()` now performs a conservative emission-time pruning pass
+for private local plain procedures.
+
+The safe pruning rule is deliberately conservative:
+
+- never prune `main`
+- never prune exposed procedures, methods, factories, class/interface contract members, imported stubs, or anything referenced by metadata needed at runtime
+- never prune procedures with procedure-level `expose` clauses
+- never prune a procedure while any remaining `FUNCTION`, assembler-operand `FUNC_SYMBOL`, `MEMBER_CALL`, `FACTORY_CALL`, or equivalent callable AST reference still targets it
+- prune only local, private plain-procedure definitions whose body is no longer reachable after the fixed-point inlining pass
+
+The important safety check is not whether the procedure was marked inlineable
+in principle. It is whether all local call sites that target that procedure
+have actually been rewritten. If even one surviving local call node still
+resolves to the procedure symbol, pruning must leave the procedure emitted.
+
+The implementation is a mark-and-sweep style loop:
+
+1. Collect callable symbols reached from remaining AST call nodes and assembler function-symbol operands, skipping already-pruned callable bodies.
+2. Mark private local plain procedures as pruned only when their symbol is absent from that live set.
+3. Repeat until pruning one private helper no longer makes another private helper dead.
+
+Physically removing AST definitions is more invasive because symbol tables,
+metadata emission, and source provenance must be kept coherent. A lower-risk
+first slice is therefore used: an emitter-visible prune flag tells procedure
+emission to skip pruned private callable definitions. Physical tree removal can
+come later if needed.
 
 Each later iteration in this area should continue to use a full build, the compiler regression suite, the top-level `ctest` matrix, and the focused `performance` label as its validation gate:
 
@@ -418,8 +611,19 @@ For validation purposes, any inline rewrite that changes whether a caller variab
 The next meaningful extensions are now milestone-driven rather than milestone-1 cleanup work:
 
 - imported callees
-- receiver copyback for mutating methods in general expression position
+- broader receiver copyback for mutating methods whose receiver is not a direct symbol
 - any later reconsideration of dynamic `.ref` / `expose` vararg indexing
+
+Recommended order from the April 2026 review:
+
+1. Harden the existing local model with better fail-closed diagnostics and
+   tests around the known excluded buckets. This keeps future inliner work
+   auditable.
+2. Implement one remaining local fail-closed capability gap, chosen by semantic
+   risk rather than diagnostic frequency.
+3. Design and prototype cross-file inline-body export/import as a separate
+   milestone. Do not start it by threading special cases through the current
+   local selector.
 
 Outside milestone 2 and 3, the remaining exclusions now split cleanly into:
 

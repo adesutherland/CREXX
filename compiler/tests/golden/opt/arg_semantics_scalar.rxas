@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_scalar.rexx
- * BUILT                  : 2026-04-29 10:17:00
+ * BUILT                  : 2026-04-29 14:21:08
  */
 
 .srcfile="arg_semantics_scalar.rexx"
@@ -105,22 +105,6 @@ addTen() .locals=1
    .src 26:3="return value"
    ret r0
    .meta "arg_semantics_scalar.addten.value"
-
-addOneRef() .locals=1
-   .meta "arg_semantics_scalar.addoneref"="b" ".void" addOneRef() "expose value=.int" ""
-   .src 28:1="addOneRef: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 29:7="expose value = .int"
-   .meta "arg_semantics_scalar.addoneref.value"="b" ".int" a1
-   .src 30:3="value = value + 1"
-   iadd a1,a1,1
-   .src 31:3="return"
-   ret
-   .meta "arg_semantics_scalar.addoneref.value"
 
 readText() .locals=2
    .meta "arg_semantics_scalar.readtext"="b" ".string" readText() "text=.string" ""

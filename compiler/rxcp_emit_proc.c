@@ -124,6 +124,10 @@ void emit_proc(ASTNode *node, void *pl) {
         case MATCH:
         case METHOD:
         case PROCEDURE:
+            if (node->is_inline_pruned) {
+                if (!node->output) node->output = output_f();
+                break;
+            }
             if (node->node_type == FACTORY &&
                 node->parent && node->parent->node_type == INTERFACE_DEF) {
                 if (!node->output) node->output = output_f();

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_multi_return_assign.rexx
- * BUILT                  : 2026-03-26 19:42:27
+ * BUILT                  : 2026-04-29 14:16:43
  */
 
 .srcfile="inline_test_multi_return_assign.rexx"
@@ -69,31 +69,3 @@ l8doend:
    say "Multi return assign inline test finished."
    .src 10:3="return 0"
    ret 0
-
-classify() .locals=2
-   .meta "inline_test_multi_return_assign.classify"="b" ".int" classify() "val=.int" ""
-   .src 12:1="classify: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 13:7="val = .int"
-   .meta "inline_test_multi_return_assign.classify.val"="b" ".int" a1
-   .src 14:2="if val < 0"
-   ilt r1,a1,0
-   brf l39iffalse,r1
-   .src 14:14="then"
-   .src 14:19="return -1"
-   ret -1
-l39iffalse:
-   .src 15:2="if val > 0"
-   igt r1,a1,0
-   brf l45iffalse,r1
-   .src 15:14="then"
-   .src 15:19="return 1"
-   ret 1
-l45iffalse:
-   .src 16:3="return 0"
-   ret 0
-   .meta "inline_test_multi_return_assign.classify.val"

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_vararg_dynamic.rexx
- * BUILT                  : 2026-03-28 12:29:21
+ * BUILT                  : 2026-04-29 14:16:44
  */
 
 .srcfile="inline_test_vararg_dynamic.rexx"
@@ -149,43 +149,3 @@ l169bexprend:
    say r21
    .src 8:3="return 0"
    ret 0
-
-pick() .locals=2
-   .meta "inline_test_vararg_dynamic.pick"="b" ".int" pick() "ix=.int,...=.int" ""
-   .src 10:1="pick: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 11:7="ix = .int"
-   .meta "inline_test_vararg_dynamic.pick.ix"="b" ".int" a1
-   .src 11:18="... = .int"
-   .src 12:3="return arg(ix)"
-   icopy r1,a0
-   isub r1,r1,1
-   ichkrng a1,1,r1
-   linkarg r1,a1,1
-   ret r1
-   .meta "inline_test_vararg_dynamic.pick.ix"
-
-hasArg() .locals=2
-   .meta "inline_test_vararg_dynamic.hasarg"="b" ".int" hasArg() "ix=.int,...=.int" ""
-   .src 14:1="hasArg: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 15:7="ix = .int"
-   .meta "inline_test_vararg_dynamic.hasarg.ix"="b" ".int" a1
-   .src 15:18="... = .int"
-   .src 16:3="return arg(ix"
-   ilt r1,a1,1
-   signalt "OUT_OF_RANGE",r1
-   icopy r1,a0
-   isub r1,r1,1
-   ilte r1,a1,r1
-   btoi r1
-   ret r1
-   .meta "inline_test_vararg_dynamic.hasarg.ix"

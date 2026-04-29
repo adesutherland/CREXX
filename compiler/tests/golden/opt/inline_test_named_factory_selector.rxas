@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_named_factory_selector.rexx
- * BUILT                  : 2026-04-29 10:17:00
+ * BUILT                  : 2026-04-29 14:16:43
  */
 
 .meta "inline_test_named_factory_selector.car"="b" ".unknown" .class
@@ -106,35 +106,6 @@ l47iffalse:
    ret r0
    .meta "inline_test_named_factory_selector.assignednamed.current"
    .meta "inline_test_named_factory_selector.assignednamed.name"
-
-describedNamed() .locals=5
-   .meta "inline_test_named_factory_selector.describednamed"="b" ".string" describedNamed() "name=.string" ""
-   .src 21:1="describedNamed: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 22:7="name = .string"
-   .meta "inline_test_named_factory_selector.describednamed.name"="b" ".string" a1
-   .src 23:3="current = .vehicle.from_name(name)"
-   .meta "inline_test_named_factory_selector.describednamed.current"="b" ".vehicle" r0
-   load r2,1
-   settp a1,1
-   swap r3,a1
-   srcfproc r0,"inline_test_named_factory_selector.vehicle..from_name",r2
-   dcall r0,r0,r2
-   swap a1,r3
-   .src 24:3="return current.describe"
-   load r2,1
-   settp r0,1
-   swap r3,r0
-   srcmethod r4,r3,"describe"
-   dcall r4,r4,r2
-   swap r0,r3
-   ret r4
-   .meta "inline_test_named_factory_selector.describednamed.current"
-   .meta "inline_test_named_factory_selector.describednamed.name"
 
 §inline_test_named_factory_selector.car.§factory() .locals=4
    .meta "inline_test_named_factory_selector.car.§factory"="b" ".car" §inline_test_named_factory_selector.car.§factory() "name=.string" ""

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_writable_arg.rexx
- * BUILT                  : 2026-04-29 10:17:01
+ * BUILT                  : 2026-04-29 14:16:43
  */
 
 .meta "inline_test_object_writable_arg.box"="b" ".unknown" .class
@@ -78,49 +78,6 @@ l130bexprend:
    .src 9:3="return 0"
    ret 0
    .meta "inline_test_object_writable_arg.main.box"
-
-replaceBox() .locals=6
-   .meta "inline_test_object_writable_arg.replacebox"="b" ".string" replaceBox() "value=.box" ""
-   .src 11:1="replaceBox: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 12:7="value = .Box"
-   .meta "inline_test_object_writable_arg.replacebox.value"="b" ".box" r0
-   brtpandt l26c,a1,2
-   copy r0,a1
-   acopy r0,a1
-   br l26d
-l26c:
-   swap r0,a1
-l26d:
-   .src 13:3="value = .Box(\"local\")"
-   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
-   setattrs r1,2
-   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
-   setobjtype r1,"inline_test_object_writable_arg.box"
-   .src 21:5="name = initial"
-   load r4,"local"
-   linkattr1 r3,r1,1
-   scopy r3,r4
-   unlink r3
-   .src 22:5="return"
-   copy r0,r1
-   .src 14:3="return value.getName"
-   .src 14:10="value"
-   .src 14:10="value"
-   copy r2,r0
-   .src 25:5="return name"
-   linkattr1 r3,r2,1
-   scopy r5,r3
-   acopy r5,r3
-   unlink r3
-   br l137bexprend
-l137bexprend:
-   ret r5
-   .meta "inline_test_object_writable_arg.replacebox.value"
 
 §inline_test_object_writable_arg.box.§factory() .locals=3
    .meta "inline_test_object_writable_arg.box.§factory"="b" ".box" §inline_test_object_writable_arg.box.§factory() "initial=.string" ""

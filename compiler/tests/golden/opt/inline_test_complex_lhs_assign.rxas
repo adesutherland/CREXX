@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_complex_lhs_assign.rexx
- * BUILT                  : 2026-03-27 16:48:20
+ * BUILT                  : 2026-04-29 14:16:42
  */
 
 .srcfile="inline_test_complex_lhs_assign.rexx"
@@ -40,18 +40,3 @@ l45bexprend:
    ret 0
    .meta "inline_test_complex_lhs_assign.main.ix"
    .meta "inline_test_complex_lhs_assign.main.values"
-
-addOne() .locals=2
-   .meta "inline_test_complex_lhs_assign.addone"="b" ".int" addOne() "value=.int" ""
-   .src 11:1="addOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 12:7="value = .int"
-   .meta "inline_test_complex_lhs_assign.addone.value"="b" ".int" a1
-   .src 13:3="return value + 1"
-   iadd r1,a1,1
-   ret r1
-   .meta "inline_test_complex_lhs_assign.addone.value"

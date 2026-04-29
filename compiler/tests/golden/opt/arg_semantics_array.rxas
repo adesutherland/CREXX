@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_array.rexx
- * BUILT                  : 2026-04-29 10:17:00
+ * BUILT                  : 2026-04-29 14:21:08
  */
 
 .srcfile="arg_semantics_array.rexx"
@@ -167,38 +167,6 @@ l82d:
    unlink r3
    ret r4
    .meta "arg_semantics_array.mutatearraylocal.value"
-
-mutateArrayRef() .locals=6
-   .meta "arg_semantics_array.mutatearrayref"="b" ".void" mutateArrayRef() "expose value=.string[*]" ""
-   .src 27:1="mutateArrayRef: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 28:7="expose value = .string"
-   .meta "arg_semantics_array.mutatearrayref.value"="b" ".string[*]" a1
-   .src 29:3="value[1] = \"ref\""
-   minattrs a1,1
-   linkattr1 r1,a1,1
-   load r2,"ref"
-   scopy r1,r2
-   unlink r1
-   .src 30:3="value[2] = upper(value[2"
-   minattrs a1,2
-   linkattr1 r2,a1,2
-   load r3,1
-   minattrs a1,2
-   linkattr1 r1,a1,2
-   swap r4,r1
-   call r5,rxfnsb.upper(),r3
-   swap r1,r4
-   unlink r1
-   scopy r2,r5
-   unlink r2
-   .src 31:3="return"
-   ret
-   .meta "arg_semantics_array.mutatearrayref.value"
 
 makeArray() .locals=3
    .meta "arg_semantics_array.makearray"="b" ".string[*]" makeArray() "" ""

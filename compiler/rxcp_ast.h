@@ -79,6 +79,7 @@ struct ASTNode {
     char suppress_shadow_warnings;
     char skip_exit_dispatch;
     char emit_primary_reporting_anchor;
+    char is_inline_pruned;
     ASTNode *free_list;
     SourceNode *source_node;
     char source_provenance;

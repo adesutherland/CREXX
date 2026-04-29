@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_nested_scope_if_do.rexx
- * BUILT                  : 2026-03-28 12:29:21
+ * BUILT                  : 2026-04-29 14:16:43
  */
 
 .srcfile="inline_test_nested_scope_if_do.rexx"
@@ -62,29 +62,3 @@ l8doend:
    say "Nested scope if-do inline test finished."
    .src 9:3="return 0"
    ret 0
-
-classify() .locals=3
-   .meta "inline_test_nested_scope_if_do.classify"="b" ".int" classify() "val=.int" ""
-   .src 11:1="classify: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 12:7="val = .int"
-   .meta "inline_test_nested_scope_if_do.classify.val"="b" ".int" a1
-   .src 13:2="if val > 0"
-   igt r2,a1,0
-   brf l43iffalse,r2
-   .src 13:14="then"
-   .meta "inline_test_nested_scope_if_do.classify.tmp"="b" ".int" r1
-   .src 14:5="tmp = .int"
-   null r1
-   .src 15:5="tmp = val * 10"
-   imult r1,a1,10
-   .src 16:5="return tmp"
-   ret r1
-l43iffalse:
-   .src 18:3="return val"
-   ret a1
-   .meta "inline_test_nested_scope_if_do.classify.val"

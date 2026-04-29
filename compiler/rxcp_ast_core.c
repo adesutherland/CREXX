@@ -301,6 +301,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->suppress_shadow_warnings = 0;
     node->skip_exit_dispatch = 0;
     node->emit_primary_reporting_anchor = 0;
+    node->is_inline_pruned = 0;
     node->free_list = context->free_list;
     node->source_node = 0;
     node->source_provenance = AST_SOURCE_NONE;
@@ -408,6 +409,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->inherit_parent_reg_scope = node->inherit_parent_reg_scope;
     new_node->suppress_shadow_warnings = node->suppress_shadow_warnings;
     new_node->skip_exit_dispatch = node->skip_exit_dispatch;
+    new_node->is_inline_pruned = node->is_inline_pruned;
     new_node->source_node = node->source_node;
     new_node->source_provenance = node->source_provenance;
     ast_copy_reporting_anchors(new_node, node);

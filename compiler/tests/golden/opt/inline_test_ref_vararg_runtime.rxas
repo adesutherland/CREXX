@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_vararg_runtime.rexx
- * BUILT                  : 2026-03-27 18:56:03
+ * BUILT                  : 2026-04-29 14:16:44
  */
 
 .srcfile="inline_test_ref_vararg_runtime.rexx"
@@ -96,20 +96,6 @@ l120bexprend:
    .meta "inline_test_ref_vararg_runtime.main.first"
    .meta "inline_test_ref_vararg_runtime.main.second"
    .meta "inline_test_ref_vararg_runtime.main.third"
-
-countTail() .locals=1
-   .meta "inline_test_ref_vararg_runtime.counttail"="b" ".int" countTail() "expose ...=.int" ""
-   .src 18:1="countTail: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 19:14="... = .int"
-   .src 20:3="return arg"
-   icopy r0,a0
-   isub r0,r0,0
-   ret r0
 
 readTail() .locals=2
    .meta "inline_test_ref_vararg_runtime.readtail"="b" ".int" readTail() "which=.int,expose ...=.int" ""

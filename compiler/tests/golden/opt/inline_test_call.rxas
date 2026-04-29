@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_call.rexx
- * BUILT                  : 2026-04-15 10:55:40
+ * BUILT                  : 2026-04-29 14:16:42
  */
 
 .srcfile="inline_test_call.rexx"
@@ -50,26 +50,3 @@ l8doend:
    say "Inline call test finished."
    .src 9:3="return 0"
    ret 0
-
-logDouble() .locals=3
-   .meta "inline_test_call.logdouble"="b" ".int" logDouble() "val=.int" ""
-   .src 11:1="logDouble: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 12:7="val = .int"
-   .meta "inline_test_call.logdouble.val"="b" ".int" a1
-   .src 13:3="say \"Double for\" val \"is\" val * 2"
-   itos a1
-   sconcat r1,"Double for",a1
-   sconcat r1,r1,"is"
-   imult r2,a1,2
-   itos r2
-   sconcat r2,r1,r2
-   say r2
-   .src 14:3="return val * 2"
-   imult r2,a1,2
-   ret r2
-   .meta "inline_test_call.logdouble.val"

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_stem.rexx
- * BUILT                  : 2026-04-15 10:55:40
+ * BUILT                  : 2026-04-29 14:16:44
  */
 
 .srcfile="inline_test_ref_stem.rexx"
@@ -51,21 +51,3 @@ main() .locals=4
    say "Stem ref inline test finished."
    .src 13:1="return 0"
    ret 0
-
-fillSlot() .locals=1
-   .meta "refstem.fillslot"="b" ".void" fillSlot() "expose slot=.string" ""
-   .src 15:1="fillSlot: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 16:7="expose slot = .string"
-   .meta "refstem.fillslot.slot"="b" ".string" a1
-   .src 17:3="lino = lino + 1"
-   iadd g0,g0,1
-   .src 18:3="slot = \"slot-one\""
-   load a1,"slot-one"
-   .src 19:3="return"
-   ret
-   .meta "refstem.fillslot.slot"
