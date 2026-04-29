@@ -268,6 +268,12 @@ static int inline_node_is_callable_def(ASTNode *node) {
             node->node_type == FACTORY);
 }
 
+static int inline_symbol_has_callable_template(Symbol *symbol) {
+    return symbol &&
+           symbol->ast_template &&
+           inline_node_is_callable_def(symbol->ast_template);
+}
+
 static int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out) {
     Symbol *proc_sym;
 
@@ -280,7 +286,7 @@ static int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out) 
     }
 
     proc_sym = node->symbolNode ? node->symbolNode->symbol : NULL;
-    if (!proc_sym || !proc_sym->is_inlinable || !proc_sym->ast_template) return 0;
+    if (!proc_sym || !proc_sym->is_inlinable || !inline_symbol_has_callable_template(proc_sym)) return 0;
 
     if (proc_sym_out) *proc_sym_out = proc_sym;
     return 1;
@@ -2289,8 +2295,8 @@ static int inline_symbol_reaches_targets(Symbol *start,
                                          size_t *visited_count) {
     ASTNode *instrs;
 
-    if (!start || !start->ast_template) return 0;
     if (inline_symbol_in_list(targets, target_count, start)) return 1;
+    if (!start || !inline_symbol_has_callable_template(start)) return 1;
     if (inline_symbol_in_list(*visited, *visited_count, start)) return 0;
     if (!inline_append_symbol(visited, visited_count, start)) return 0;
 
@@ -2315,7 +2321,7 @@ static int inline_subtree_reaches_targets(ASTNode *node,
         node->symbolNode &&
         node->symbolNode->symbol &&
         node->symbolNode->symbol->is_inlinable &&
-        node->symbolNode->symbol->ast_template) {
+        inline_symbol_has_callable_template(node->symbolNode->symbol)) {
         callee_symbol = node->symbolNode->symbol;
         if (inline_symbol_reaches_targets(callee_symbol, targets, target_count, visited, visited_count)) {
             return 1;
@@ -2427,7 +2433,8 @@ static int inline_callable_writes_class_attribute(Symbol *start,
                                                   size_t *visited_count) {
     ASTNode *instrs;
 
-    if (!start || !start->ast_template) return 0;
+    if (!start) return 0;
+    if (!inline_symbol_has_callable_template(start)) return 1;
     if (inline_symbol_in_list(*visited, *visited_count, start)) return 0;
     if (!inline_append_symbol(visited, visited_count, start)) return 1;
 

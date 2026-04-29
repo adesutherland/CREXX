@@ -520,6 +520,8 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->is_shadowing = 0;
     symbol->shadowed_symbol = 0;
     symbol->is_global_var = 0;
+    symbol->is_inlinable = 0;
+    symbol->ast_template = 0;
     symbol->creation_ordinal = -1;
     symbol->creation_node = 0;
 
