@@ -1,0 +1,6 @@
+factory-summary=seed|seed:1|seed:40|seed:child|seed:m8
+factory-check=ok
+ref-rebind=rebound|rebound:1|rebound:40|rebound:child|rebound:m8
+ref-mutate=mutated|mutated:1|mutated:40|mutated:child|mutated:m8
+local-replace=local|local:1|local:40|local:child|local:m8
+local-after=mutated|mutated:1|mutated:40|mutated:child|mutated:m8

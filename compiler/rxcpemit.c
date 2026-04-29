@@ -92,6 +92,124 @@ static int visible_fixed_arg_count(ASTNode *node) {
     return fixed_args;
 }
 
+static ASTNode *class_owner_for_attribute_symbol(Symbol *symbol) {
+    ASTNode *node;
+
+    if (!symbol) return 0;
+
+    if (symbol->scope && symbol->scope->defining_node &&
+        symbol->scope->defining_node->node_type == CLASS_DEF) {
+        return symbol->scope->defining_node;
+    }
+
+    node = symbol->creation_node;
+    while (node) {
+        if (node->node_type == CLASS_DEF) return node;
+        node = node->parent;
+    }
+
+    if (symbol->shadowed_symbol && symbol->shadowed_symbol != symbol) {
+        return class_owner_for_attribute_symbol(symbol->shadowed_symbol);
+    }
+
+    return 0;
+}
+
+static ASTNode *class_owner_for_callable(ASTNode *node) {
+    while (node) {
+        if (node->node_type == CLASS_DEF) return node;
+        node = node->parent;
+    }
+    return 0;
+}
+
+static int class_owners_match(ASTNode *left, ASTNode *right) {
+    if (!left || !right) return 0;
+    if (left == right) return 1;
+    if (left->scope && right->scope && left->scope->name && right->scope->name) {
+        return strcmp(left->scope->name, right->scope->name) == 0;
+    }
+    return 0;
+}
+
+static Symbol *inline_instance_symbol_for_attribute(ASTNode *scope_anchor,
+                                                    ASTNode *attribute_node) {
+    Scope *scope;
+    ASTNode *attribute_class;
+
+    if (!scope_anchor) return 0;
+
+    attribute_class = attribute_node && attribute_node->symbolNode ?
+                      class_owner_for_attribute_symbol(attribute_node->symbolNode->symbol) :
+                      0;
+
+    scope = scope_anchor->scope;
+    while (scope) {
+        ASTNode *defining_node;
+        ASTNode *association;
+
+        defining_node = scope->defining_node;
+        association = defining_node ? defining_node->association : 0;
+        if (association &&
+            (association->node_type == METHOD || association->node_type == FACTORY)) {
+            ASTNode lookup_node;
+            ASTNode *association_class;
+            const char *name;
+
+            association_class = class_owner_for_callable(association);
+            if (attribute_class && association_class &&
+                !class_owners_match(association_class, attribute_class)) {
+                scope = scope->parent;
+                continue;
+            }
+
+            name = association->node_type == FACTORY ? "\xc2\xa7" "factory" : "\xc2\xa7" "this";
+            memset(&lookup_node, 0, sizeof(lookup_node));
+            lookup_node.node_string = (char *)name;
+            lookup_node.node_string_length = strlen(name);
+            return sym_lrsv(scope, &lookup_node);
+        }
+
+        scope = scope->parent;
+    }
+
+    return 0;
+}
+
+static void attribute_owner_register(ASTNode *scope_anchor,
+                                     ASTNode *attribute_node,
+                                     char *reg_type,
+                                     int *reg_num) {
+    Symbol *inline_symbol;
+    ASTNode *proc;
+
+    if (reg_type) *reg_type = 'a';
+    if (reg_num) *reg_num = 1;
+    if (!scope_anchor || !reg_type || !reg_num) return;
+
+    inline_symbol = inline_instance_symbol_for_attribute(scope_anchor, attribute_node);
+    if (inline_symbol) {
+        *reg_type = inline_symbol->register_type;
+        *reg_num = inline_symbol->register_num;
+        return;
+    }
+
+    proc = ast_proc(scope_anchor);
+    if (proc && proc->node_type == FACTORY) {
+        ASTNode star_node;
+        Symbol *star_sym;
+
+        memset(&star_node, 0, sizeof(star_node));
+        star_node.node_string = "\xc2\xa7" "factory";
+        star_node.node_string_length = 9;
+        star_sym = sym_lrsv(proc->scope, &star_node);
+        if (star_sym) {
+            *reg_type = star_sym->register_type;
+            *reg_num = star_sym->register_num;
+        }
+    }
+}
+
 static walker_result emit_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *pl) {
@@ -624,15 +742,8 @@ static walker_result emit_walker(walker_direction direction,
                         }
                     }
 
-                    ASTNode *proc = ast_proc(node);
                     char this_type = 'a'; int this_num = 1; /* Default for METHOD */
-                    if (proc && proc->node_type == FACTORY) {
-                        ASTNode star_node;
-                        memset(&star_node, 0, sizeof(ASTNode));
-                        star_node.node_string = "\xc2\xa7" "factory"; star_node.node_string_length = 9;
-                        Symbol *star_sym = sym_lrsv(proc->scope, &star_node);
-                        if (star_sym) { this_type = star_sym->register_type; this_num = star_sym->register_num; }
-                    }
+                    attribute_owner_register(node, node, &this_type, &this_num);
                     temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n",
                                     node->register_type, node->register_num,
                                     this_type, this_num, index);
@@ -672,15 +783,8 @@ static walker_result emit_walker(walker_direction direction,
                             }
                         }
 
-                        ASTNode *proc = ast_proc(node);
                         char this_type = 'a'; int this_num = 1; /* Default for METHOD */
-                        if (proc && proc->node_type == FACTORY) {
-                            ASTNode star_node;
-                            memset(&star_node, 0, sizeof(ASTNode));
-                            star_node.node_string = "\xc2\xa7" "factory"; star_node.node_string_length = 9;
-                            Symbol *star_sym = sym_lrsv(proc->scope, &star_node);
-                            if (star_sym) { this_type = star_sym->register_type; this_num = star_sym->register_num; }
-                        }
+                        attribute_owner_register(node, node, &this_type, &this_num);
 
                         temp1 = mprintf("   linkattr1 r%d,%c%d,%d\n",
                                         node->additional_registers,
@@ -1006,15 +1110,8 @@ static walker_result emit_walker(walker_direction direction,
                         }
                     }
 
-                    ASTNode *proc = ast_proc(node);
                     char this_type = 'a'; int this_num = 1; /* Default for METHOD */
-                    if (proc && proc->node_type == FACTORY) {
-                        ASTNode star_node;
-                        memset(&star_node, 0, sizeof(ASTNode));
-                        star_node.node_string = "\xc2\xa7" "factory"; star_node.node_string_length = 9;
-                        Symbol *star_sym = sym_lrsv(proc->scope, &star_node);
-                        if (star_sym) { this_type = star_sym->register_type; this_num = star_sym->register_num; }
-                    }
+                    attribute_owner_register(node, child1, &this_type, &this_num);
                     temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
                                     "   %scopy %c%d,%c%d\n"
                                     "   unlink %c%d\n",

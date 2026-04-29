@@ -241,6 +241,16 @@ Scope [0]: Unnamed
       Scope [3]: setvalue
         new_val (Variable) -> .int
         §this (Variable) -> .myclass
+DEBUG_INLINE §factory @ 16_classes.rexx:10:4 - accept: nodes=12 returns=1 final_return=1 cutoff=200
+DEBUG_INLINE getvalue @ 16_classes.rexx:15:4 - accept: nodes=6 returns=1 final_return=1 cutoff=200
+DEBUG_INLINE setvalue @ 16_classes.rexx:18:4 - accept: nodes=11 returns=1 final_return=1 cutoff=200
+DEBUG_INLINE_FAILCLOSED §factory @ 16_classes.rexx:2:6 - expression context belongs to a dedicated statement rewrite
+DEBUG_INLINE §factory @ 16_classes.rexx:10:4 - accept: nodes=12 returns=1 final_return=1 cutoff=200
+DEBUG_INLINE getvalue @ 16_classes.rexx:15:4 - accept: nodes=6 returns=1 final_return=1 cutoff=200
+DEBUG_INLINE setvalue @ 16_classes.rexx:18:4 - accept: nodes=11 returns=1 final_return=1 cutoff=200
+DEBUG_INLINE §factory @ 16_classes.rexx:10:4 - accept: nodes=12 returns=1 final_return=1 cutoff=200
+DEBUG_INLINE getvalue @ 16_classes.rexx:15:4 - accept: nodes=6 returns=1 final_return=1 cutoff=200
+DEBUG_INLINE setvalue @ 16_classes.rexx:18:4 - accept: nodes=11 returns=1 final_return=1 cutoff=200
 
 --- STAGE_FINAL ---
 REXX_UNIVERSE : "" (0:1) [Type: .void]
@@ -251,13 +261,27 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
       VOID : "" (-1:-1) [Type: .void]
       ARGS : "" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .void]
-        ASSIGN : "=" (2:0) [Type: .object]
-          VAR_TARGET : "var" (2:0) [Type: .object]
-          FACTORY_CALL : "myclass" (2:6) [Type: .object]
-            CONSTANT : "10" (2:14) [Type: .int]
+        INSTRUCTIONS : ".myclass" (2:0) [Type: .void]
+          ASSEMBLER : "setattrs" (10:4) [Type: .unknown]
+            VAR_TARGET : "\xc2\xa7factory" (10:4) [Type: .object]
+            CONSTANT : "2" (10:4) [Type: .int]
+          ASSEMBLER : "setobjtype" (10:4) [Type: .unknown]
+            VAR_TARGET : "\xc2\xa7factory" (10:4) [Type: .object]
+            CONSTANT : "16_classes.myclass" (10:4) [Type: .string]
+          ASSIGN : "=" (12:8) [Type: .int]
+            VAR_TARGET : "val" (12:8) [Type: .int]
+            CONSTANT : "10" (12:14) [Type: .int]
+          ASSIGN : "return" (13:8) [Type: .unknown]
+            VAR_TARGET : "var" (2:0) [Type: .object]
+            VAR_SYMBOL : "\xc2\xa7factory" (13:14) [Type: .object]
         SAY : "say" (3:0) [Type: .void]
-          MEMBER_CALL : "getvalue" (3:4) [Type: .int]
-            VAR_SYMBOL : "var" (3:4) [Type: .object]
+          BLOCK_EXPR : "do" (3:4) [Type: .int]
+            INSTRUCTIONS : "getvalue" (3:8) [Type: .void]
+              ASSIGN : "var" (3:4) [Type: .object]
+                VAR_TARGET : "\xc2\xa7this" (3:4) [Type: .object]
+                VAR_SYMBOL : "var" (3:4) [Type: .object]
+              LEAVE_WITH : "leave" (16:8) [Type: .int]
+                VAR_SYMBOL : "val" (16:15) [Type: .int]
         RETURN : "return" (5:0) [Type: .void]
     CLASS_DEF : "myclass" (7:0) [Type: .void]
       DEFINE : "=" (8:4) [Type: .int]
@@ -301,6 +325,11 @@ Scope [0]: Unnamed
     myclass (Class) -> .unknown
     Scope [2]: main
       var (Variable) -> .myclass
+      Scope [3]: Unnamed
+        initial_value (Constant) -> .int
+        §factory (Variable) -> .myclass
+      Scope [3]: Unnamed
+        §this (Variable) -> .myclass
     Scope [2]: myclass
       getvalue (Function) -> .int
       setvalue (Function) -> .void

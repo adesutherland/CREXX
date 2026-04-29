@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_scalar.rexx
- * BUILT                  : 2026-04-15 11:20:43
+ * BUILT                  : 2026-04-29 10:17:00
  */
 
 .srcfile="arg_semantics_scalar.rexx"
 .globals=0
 
-main() .locals=12
+main() .locals=5
    .meta "arg_semantics_scalar.main"="b" ".int" main() "" ""
    .src 4:1="main: procedure = .int"
    setnumdgts 18
@@ -19,90 +19,56 @@ main() .locals=12
    .meta "arg_semantics_scalar.main.i"="b" ".int" r0
    load r0,7
    .src 6:3="say \"int-read=\" || inspectInt(i)"
-   .src 6:22="inspectInt"
-   .src 20:7="value"
-   icopy r1,r0
-   .src 21:3="return value + 1"
-   iadd r6,r1,1
-   icopy r7,r6
-   acopy r7,r6
-   br l136bexprend
-l136bexprend:
-   itos r7
-   concat r7,"int-read=",r7
-   say r7
+   load r2,1
+   swap r3,r0
+   call r4,inspectInt(),r2
+   swap r0,r3
+   itos r4
+   concat r4,"int-read=",r4
+   say r4
    .src 7:3="say \"int-mut=\" || addTen(i)"
-   .src 7:21="addTen"
-   .src 24:7="value"
-   icopy r2,r0
-   .src 25:3="value = value + 10"
-   iadd r2,r2,10
-   .src 26:3="return value"
-   icopy r7,r2
-   acopy r7,r2
-   br l145bexprend
-l145bexprend:
-   itos r7
-   concat r7,"int-mut=",r7
-   say r7
+   load r3,1
+   swap r4,r0
+   call r2,addTen(),r3
+   swap r0,r4
+   itos r2
+   concat r4,"int-mut=",r2
+   say r4
    .src 8:3="say \"int-after=\" || i"
    itos r0
-   concat r7,"int-after=",r0
-   say r7
+   concat r4,"int-after=",r0
+   say r4
    .src 9:3="call addOneRef(i)"
    .src 30:3="value = value + 1"
    iadd r0,r0,1
    .src 10:3="say \"int-ref=\" || i"
    itos r0
-   concat r7,"int-ref=",r0
-   say r7
+   concat r4,"int-ref=",r0
+   say r4
    .src 13:3="say \"str-read=\" || readText(text)"
    .meta "arg_semantics_scalar.main.text"="b" ".string" "mix"
-   .src 13:22="readText"
-   .src 35:3="return text || \":read\""
-   load r7,"mix:read"
-   scopy r8,r7
-   acopy r8,r7
-   br l163bexprend
-l163bexprend:
-   concat r8,"str-read=",r8
-   say r8
-   .src 14:3="say \"str-mut=\" || shoutText(text)"
-   .src 14:21="shoutText"
-   .src 38:7="text"
+   load r3,1
    load r4,"mix"
-   .src 39:3="text = upper(text)"
-   load r8,1
-   swap r9,r4
-   call r9,rxfnsb.upper(),r8
-   swap r4,r9
-   .src 40:3="return text || \":local\""
-   concat r9,r4,":local"
-   scopy r8,r9
-   acopy r8,r9
-   br l172bexprend
-l172bexprend:
-   concat r8,"str-mut=",r8
-   say r8
+   settp r4,1
+   call r2,readText(),r3
+   concat r4,"str-read=",r2
+   say r4
+   .src 14:3="say \"str-mut=\" || shoutText(text)"
+   load r3,1
+   load r4,"mix"
+   settp r4,1
+   call r2,shoutText(),r3
+   concat r4,"str-mut=",r2
+   say r4
    .src 15:3="say \"str-after=\" || text"
    say "str-after=mix"
    .src 16:3="say \"str-temp=\" || shoutText(\"temp\")"
-   .src 16:22="shoutText"
-   .src 38:7="text"
-   load r5,"temp"
-   .src 39:3="text = upper(text)"
-   load r10,1
-   swap r11,r5
-   call r11,rxfnsb.upper(),r10
-   swap r5,r11
-   .src 40:3="return text || \":local\""
-   concat r11,r5,":local"
-   scopy r10,r11
-   acopy r10,r11
-   br l185bexprend
-l185bexprend:
-   concat r10,"str-temp=",r10
-   say r10
+   load r3,1
+   load r4,"temp"
+   settp r4,3
+   call r2,shoutText(),r3
+   concat r4,"str-temp=",r2
+   say r4
    .src 17:3="return 0"
    ret 0
    .meta "arg_semantics_scalar.main.i"

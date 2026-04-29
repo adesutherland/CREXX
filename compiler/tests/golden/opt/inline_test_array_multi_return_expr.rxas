@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_multi_return_expr.rexx
- * BUILT                  : 2026-03-28 13:07:27
+ * BUILT                  : 2026-04-29 10:12:23
  */
 
 .srcfile="inline_test_array_multi_return_expr.rexx"
 .globals=0
 
-main() .locals=30
+main() .locals=18
    .meta "inline_test_array_multi_return_expr.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -19,243 +19,243 @@ main() .locals=30
    say "Starting array multi return expr inline test..."
    .src 5:3="say renderArray(selectArray(-1))"
    .src 5:7="renderArray"
-   .meta "inline_test_array_multi_return_expr.main.__inline_bind_113_0"="b" ".string[*]" r4
+   .meta "inline_test_array_multi_return_expr.main.__inline_bind_10_0"="b" ".string[*]" r0
    .src 5:19="selectArray"
-   null r4
+   null r0
    .src 5:19="selectArray"
    .src 5:19="selectArray"
-   .meta "inline_test_array_multi_return_expr.main.neg"="b" ".string[*]" r6
+   .meta "inline_test_array_multi_return_expr.main.neg"="b" ".string[*]" r2
    .src 13:3="neg = .string"
-   null r6
-   .meta "inline_test_array_multi_return_expr.main.pos"="b" ".string[*]" r7
+   null r2
+   .meta "inline_test_array_multi_return_expr.main.pos"="b" ".string[*]" r3
    .src 15:3="pos = .string"
-   null r7
-   .meta "inline_test_array_multi_return_expr.main.zero"="b" ".string[*]" r8
+   null r3
+   .meta "inline_test_array_multi_return_expr.main.zero"="b" ".string[*]" r4
    .src 14:3="zero = .string"
-   null r8
+   null r4
    .src 16:3="neg[1] = \"neg\""
-   minattrs r6,1
-   linkattr1 r27,r6,1
-   load r28,"neg"
-   scopy r27,r28
-   unlink r27
+   minattrs r2,1
+   linkattr1 r15,r2,1
+   load r16,"neg"
+   scopy r15,r16
+   unlink r15
    .src 17:3="neg[2] = \"path\""
-   minattrs r6,2
-   linkattr1 r28,r6,2
-   load r27,"path"
-   scopy r28,r27
-   unlink r28
+   minattrs r2,2
+   linkattr1 r16,r2,2
+   load r15,"path"
+   scopy r16,r15
+   unlink r16
    .src 18:3="zero[1] = \"zero\""
-   minattrs r8,1
-   linkattr1 r28,r8,1
-   load r27,"zero"
-   scopy r28,r27
-   unlink r28
+   minattrs r4,1
+   linkattr1 r16,r4,1
+   load r15,"zero"
+   scopy r16,r15
+   unlink r16
    .src 19:3="zero[2] = \"path\""
-   minattrs r8,2
-   linkattr1 r28,r8,2
-   load r27,"path"
-   scopy r28,r27
-   unlink r28
+   minattrs r4,2
+   linkattr1 r16,r4,2
+   load r15,"path"
+   scopy r16,r15
+   unlink r16
    .src 20:3="pos[1] = \"pos\""
-   minattrs r7,1
-   linkattr1 r28,r7,1
-   load r27,"pos"
-   scopy r28,r27
-   unlink r28
+   minattrs r3,1
+   linkattr1 r16,r3,1
+   load r15,"pos"
+   scopy r16,r15
+   unlink r16
    .src 21:3="pos[2] = \"path\""
-   minattrs r7,2
-   linkattr1 r28,r7,2
-   load r27,"path"
-   scopy r28,r27
-   unlink r28
+   minattrs r3,2
+   linkattr1 r16,r3,2
+   load r15,"path"
+   scopy r16,r15
+   unlink r16
    .src 22:20="return neg"
-   copy r28,r6
-   acopy r28,r6
-   br l181bexprend
+   copy r16,r2
+   acopy r16,r2
+   br l183bexprend
    .src 24:3="return zero"
-   copy r28,r8
-   acopy r28,r8
-   br l181bexprend
-l181bexprend:
-   copy r4,r28
-   acopy r4,r28
+   copy r16,r4
+   acopy r16,r4
+   br l183bexprend
+l183bexprend:
+   copy r0,r16
+   acopy r0,r16
    .src 27:7="value"
-   copy r5,r4
+   copy r1,r0
    .src 27:7="value"
-   acopy r5,r4
+   acopy r1,r0
    .src 28:3="return value[1] || \":\" || value[2"
-   minattrs r5,1
-   linkattr1 r28,r5,1
-   concat r27,r28,":"
-   unlink r28
-   minattrs r5,2
-   linkattr1 r29,r5,2
-   concat r27,r27,r29
-   unlink r29
-   scopy r29,r27
-   acopy r29,r27
-   br l175bexprend
-l175bexprend:
-   say r29
+   minattrs r1,1
+   linkattr1 r16,r1,1
+   concat r15,r16,":"
+   unlink r16
+   minattrs r1,2
+   linkattr1 r17,r1,2
+   concat r15,r15,r17
+   unlink r17
+   scopy r17,r15
+   acopy r17,r15
+   br l113bexprend
+l113bexprend:
+   say r17
    .src 6:3="say renderArray(selectArray(0))"
    .src 6:7="renderArray"
-   .meta "inline_test_array_multi_return_expr.main.__inline_bind_258_0"="b" ".string[*]" r13
+   .meta "inline_test_array_multi_return_expr.main.__inline_bind_14_0"="b" ".string[*]" r5
    .src 6:19="selectArray"
-   null r13
+   null r5
    .src 6:19="selectArray"
    .src 6:19="selectArray"
-   .meta "inline_test_array_multi_return_expr.main.neg"="b" ".string[*]" r15
+   .meta "inline_test_array_multi_return_expr.main.neg"="b" ".string[*]" r7
    .src 13:3="neg = .string"
-   null r15
-   .meta "inline_test_array_multi_return_expr.main.pos"="b" ".string[*]" r16
+   null r7
+   .meta "inline_test_array_multi_return_expr.main.pos"="b" ".string[*]" r8
    .src 15:3="pos = .string"
-   null r16
-   .meta "inline_test_array_multi_return_expr.main.zero"="b" ".string[*]" r17
+   null r8
+   .meta "inline_test_array_multi_return_expr.main.zero"="b" ".string[*]" r9
    .src 14:3="zero = .string"
-   null r17
+   null r9
    .src 16:3="neg[1] = \"neg\""
-   minattrs r15,1
-   linkattr1 r29,r15,1
-   load r28,"neg"
-   scopy r29,r28
-   unlink r29
+   minattrs r7,1
+   linkattr1 r17,r7,1
+   load r16,"neg"
+   scopy r17,r16
+   unlink r17
    .src 17:3="neg[2] = \"path\""
-   minattrs r15,2
-   linkattr1 r29,r15,2
-   load r28,"path"
-   scopy r29,r28
-   unlink r29
+   minattrs r7,2
+   linkattr1 r17,r7,2
+   load r16,"path"
+   scopy r17,r16
+   unlink r17
    .src 18:3="zero[1] = \"zero\""
-   minattrs r17,1
-   linkattr1 r29,r17,1
-   load r28,"zero"
-   scopy r29,r28
-   unlink r29
+   minattrs r9,1
+   linkattr1 r17,r9,1
+   load r16,"zero"
+   scopy r17,r16
+   unlink r17
    .src 19:3="zero[2] = \"path\""
-   minattrs r17,2
-   linkattr1 r29,r17,2
-   load r28,"path"
-   scopy r29,r28
-   unlink r29
+   minattrs r9,2
+   linkattr1 r17,r9,2
+   load r16,"path"
+   scopy r17,r16
+   unlink r17
    .src 20:3="pos[1] = \"pos\""
-   minattrs r16,1
-   linkattr1 r29,r16,1
-   load r28,"pos"
-   scopy r29,r28
-   unlink r29
+   minattrs r8,1
+   linkattr1 r17,r8,1
+   load r16,"pos"
+   scopy r17,r16
+   unlink r17
    .src 21:3="pos[2] = \"path\""
-   minattrs r16,2
-   linkattr1 r29,r16,2
-   load r28,"path"
-   scopy r29,r28
-   unlink r29
+   minattrs r8,2
+   linkattr1 r17,r8,2
+   load r16,"path"
+   scopy r17,r16
+   unlink r17
    .src 24:3="return zero"
-   copy r29,r17
-   acopy r29,r17
-   br l325bexprend
-l325bexprend:
-   copy r13,r29
-   acopy r13,r29
+   copy r17,r9
+   acopy r17,r9
+   br l245bexprend
+l245bexprend:
+   copy r5,r17
+   acopy r5,r17
    .src 27:7="value"
-   copy r14,r13
+   copy r6,r5
    .src 27:7="value"
-   acopy r14,r13
+   acopy r6,r5
    .src 28:3="return value[1] || \":\" || value[2"
-   minattrs r14,1
-   linkattr1 r29,r14,1
-   concat r28,r29,":"
-   unlink r29
-   minattrs r14,2
-   linkattr1 r27,r14,2
-   concat r28,r28,r27
-   unlink r27
-   scopy r29,r28
-   acopy r29,r28
-   br l319bexprend
-l319bexprend:
-   say r29
+   minattrs r6,1
+   linkattr1 r17,r6,1
+   concat r16,r17,":"
+   unlink r17
+   minattrs r6,2
+   linkattr1 r15,r6,2
+   concat r16,r16,r15
+   unlink r15
+   scopy r17,r16
+   acopy r17,r16
+   br l137bexprend
+l137bexprend:
+   say r17
    .src 7:3="say renderArray(selectArray(1))"
    .src 7:7="renderArray"
-   .meta "inline_test_array_multi_return_expr.main.__inline_bind_401_0"="b" ".string[*]" r22
+   .meta "inline_test_array_multi_return_expr.main.__inline_bind_18_0"="b" ".string[*]" r10
    .src 7:19="selectArray"
-   null r22
+   null r10
    .src 7:19="selectArray"
    .src 7:19="selectArray"
-   .meta "inline_test_array_multi_return_expr.main.neg"="b" ".string[*]" r24
+   .meta "inline_test_array_multi_return_expr.main.neg"="b" ".string[*]" r12
    .src 13:3="neg = .string"
-   null r24
-   .meta "inline_test_array_multi_return_expr.main.pos"="b" ".string[*]" r25
+   null r12
+   .meta "inline_test_array_multi_return_expr.main.pos"="b" ".string[*]" r13
    .src 15:3="pos = .string"
-   null r25
-   .meta "inline_test_array_multi_return_expr.main.zero"="b" ".string[*]" r26
+   null r13
+   .meta "inline_test_array_multi_return_expr.main.zero"="b" ".string[*]" r14
    .src 14:3="zero = .string"
-   null r26
+   null r14
    .src 16:3="neg[1] = \"neg\""
-   minattrs r24,1
-   linkattr1 r29,r24,1
-   load r28,"neg"
-   scopy r29,r28
-   unlink r29
+   minattrs r12,1
+   linkattr1 r17,r12,1
+   load r16,"neg"
+   scopy r17,r16
+   unlink r17
    .src 17:3="neg[2] = \"path\""
-   minattrs r24,2
-   linkattr1 r29,r24,2
-   load r28,"path"
-   scopy r29,r28
-   unlink r29
+   minattrs r12,2
+   linkattr1 r17,r12,2
+   load r16,"path"
+   scopy r17,r16
+   unlink r17
    .src 18:3="zero[1] = \"zero\""
-   minattrs r26,1
-   linkattr1 r29,r26,1
-   load r28,"zero"
-   scopy r29,r28
-   unlink r29
+   minattrs r14,1
+   linkattr1 r17,r14,1
+   load r16,"zero"
+   scopy r17,r16
+   unlink r17
    .src 19:3="zero[2] = \"path\""
-   minattrs r26,2
-   linkattr1 r29,r26,2
-   load r28,"path"
-   scopy r29,r28
-   unlink r29
+   minattrs r14,2
+   linkattr1 r17,r14,2
+   load r16,"path"
+   scopy r17,r16
+   unlink r17
    .src 20:3="pos[1] = \"pos\""
-   minattrs r25,1
-   linkattr1 r29,r25,1
-   load r28,"pos"
-   scopy r29,r28
-   unlink r29
+   minattrs r13,1
+   linkattr1 r17,r13,1
+   load r16,"pos"
+   scopy r17,r16
+   unlink r17
    .src 21:3="pos[2] = \"path\""
-   minattrs r25,2
-   linkattr1 r29,r25,2
-   load r28,"path"
-   scopy r29,r28
-   unlink r29
+   minattrs r13,2
+   linkattr1 r17,r13,2
+   load r16,"path"
+   scopy r17,r16
+   unlink r17
    .src 23:20="return pos"
-   copy r29,r25
-   acopy r29,r25
-   br l468bexprend
+   copy r17,r13
+   acopy r17,r13
+   br l306bexprend
    .src 24:3="return zero"
-   copy r29,r26
-   acopy r29,r26
-   br l468bexprend
-l468bexprend:
-   copy r22,r29
-   acopy r22,r29
+   copy r17,r14
+   acopy r17,r14
+   br l306bexprend
+l306bexprend:
+   copy r10,r17
+   acopy r10,r17
    .src 27:7="value"
-   copy r23,r22
+   copy r11,r10
    .src 27:7="value"
-   acopy r23,r22
+   acopy r11,r10
    .src 28:3="return value[1] || \":\" || value[2"
-   minattrs r23,1
-   linkattr1 r29,r23,1
-   concat r28,r29,":"
-   unlink r29
-   minattrs r23,2
-   linkattr1 r27,r23,2
-   concat r28,r28,r27
-   unlink r27
-   scopy r29,r28
-   acopy r29,r28
-   br l462bexprend
-l462bexprend:
-   say r29
+   minattrs r11,1
+   linkattr1 r17,r11,1
+   concat r16,r17,":"
+   unlink r17
+   minattrs r11,2
+   linkattr1 r15,r11,2
+   concat r16,r16,r15
+   unlink r15
+   scopy r17,r16
+   acopy r17,r16
+   br l160bexprend
+l160bexprend:
+   say r17
    .src 8:3="say \"Array multi return expr inline test finished.\""
    say "Array multi return expr inline test finished."
    .src 9:3="return 0"

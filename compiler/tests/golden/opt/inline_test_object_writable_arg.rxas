@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_writable_arg.rexx
- * BUILT                  : 2026-04-21 11:35:30
+ * BUILT                  : 2026-04-29 10:17:01
  */
 
 .meta "inline_test_object_writable_arg.box"="b" ".unknown" .class
@@ -9,7 +9,7 @@
 .srcfile="inline_test_object_writable_arg.rexx"
 .globals=0
 
-main() .locals=6
+main() .locals=10
    .meta "inline_test_object_writable_arg.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -20,47 +20,66 @@ main() .locals=6
    .src 4:3="say \"Starting object writable-arg inline test...\""
    say "Starting object writable-arg inline test..."
    .src 5:3="box = .Box(\"alpha\")"
-   .meta "inline_test_object_writable_arg.main.box"="b" ".box" r0
-   load r2,1
-   load r3,"alpha"
-   settp r3,3
-   call r0,§inline_test_object_writable_arg.box.§factory(),r2
+   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r1,2
+   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r1,"inline_test_object_writable_arg.box"
+   .src 21:5="name = initial"
+   load r6,"alpha"
+   linkattr1 r5,r1,1
+   scopy r5,r6
+   unlink r5
+   .src 22:5="return"
+   copy r0,r1
    .src 6:3="say replaceBox(box)"
+   .meta "inline_test_object_writable_arg.main.box"="b" ".box" r0
    .src 6:7="replaceBox"
    .src 12:7="value"
-   copy r1,r0
+   copy r2,r0
    .src 12:7="value"
-   acopy r1,r0
+   acopy r2,r0
    .src 13:3="value = .Box(\"local\")"
-   load r2,1
-   load r3,"local"
-   settp r3,3
-   call r1,§inline_test_object_writable_arg.box.§factory(),r2
+   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r3,2
+   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r3,"inline_test_object_writable_arg.box"
+   .src 21:5="name = initial"
+   load r7,"local"
+   linkattr1 r5,r3,1
+   scopy r5,r7
+   unlink r5
+   .src 22:5="return"
+   copy r2,r3
    .src 14:3="return value.getName"
-   load r2,1
-   settp r1,1
-   swap r3,r1
-   call r4,§inline_test_object_writable_arg.box.getname(),r2
-   swap r1,r3
-   scopy r3,r4
-   acopy r3,r4
-   br l68bexprend
-l68bexprend:
-   say r3
+   load r8,1
+   settp r2,1
+   swap r9,r2
+   call r5,§inline_test_object_writable_arg.box.getname(),r8
+   swap r2,r9
+   scopy r9,r5
+   acopy r9,r5
+   br l100bexprend
+l100bexprend:
+   say r9
    .src 7:3="say box.getName"
-   load r2,1
-   settp r0,1
-   swap r3,r0
-   call r5,§inline_test_object_writable_arg.box.getname(),r2
-   swap r0,r3
-   say r5
+   .src 7:7="box"
+   .src 7:7="box"
+   copy r4,r0
+   .src 25:5="return name"
+   linkattr1 r9,r4,1
+   scopy r8,r9
+   acopy r8,r9
+   unlink r9
+   br l130bexprend
+l130bexprend:
+   say r8
    .src 8:3="say \"Object writable-arg inline test finished.\""
    say "Object writable-arg inline test finished."
    .src 9:3="return 0"
    ret 0
    .meta "inline_test_object_writable_arg.main.box"
 
-replaceBox() .locals=4
+replaceBox() .locals=6
    .meta "inline_test_object_writable_arg.replacebox"="b" ".string" replaceBox() "value=.box" ""
    .src 11:1="replaceBox: procedure = .string"
    setnumdgts 18
@@ -78,17 +97,29 @@ l26c:
    swap r0,a1
 l26d:
    .src 13:3="value = .Box(\"local\")"
-   load r1,1
-   load r2,"local"
-   settp r2,3
-   call r0,§inline_test_object_writable_arg.box.§factory(),r1
+   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r1,2
+   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r1,"inline_test_object_writable_arg.box"
+   .src 21:5="name = initial"
+   load r4,"local"
+   linkattr1 r3,r1,1
+   scopy r3,r4
+   unlink r3
+   .src 22:5="return"
+   copy r0,r1
    .src 14:3="return value.getName"
-   load r1,1
-   settp r0,1
-   swap r2,r0
-   call r3,§inline_test_object_writable_arg.box.getname(),r1
-   swap r0,r2
-   ret r3
+   .src 14:10="value"
+   .src 14:10="value"
+   copy r2,r0
+   .src 25:5="return name"
+   linkattr1 r3,r2,1
+   scopy r5,r3
+   acopy r5,r3
+   unlink r3
+   br l137bexprend
+l137bexprend:
+   ret r5
    .meta "inline_test_object_writable_arg.replacebox.value"
 
 §inline_test_object_writable_arg.box.§factory() .locals=3

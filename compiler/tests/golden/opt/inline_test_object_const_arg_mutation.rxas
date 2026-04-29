@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_const_arg_mutation.rexx
- * BUILT                  : 2026-04-21 11:35:29
+ * BUILT                  : 2026-04-28 21:35:10
  */
 
 .meta "inline_test_object_const_arg_mutation.box"="b" ".unknown" .class
@@ -9,7 +9,7 @@
 .srcfile="inline_test_object_const_arg_mutation.rexx"
 .globals=0
 
-main() .locals=6
+main() .locals=9
    .meta "inline_test_object_const_arg_mutation.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -20,34 +20,50 @@ main() .locals=6
    .src 4:3="say \"Starting object const-arg mutation inline test...\""
    say "Starting object const-arg mutation inline test..."
    .src 5:3="box = .Box(\"seed\")"
-   .meta "inline_test_object_const_arg_mutation.main.box"="b" ".box" r0
-   load r2,1
-   load r3,"seed"
-   settp r3,3
-   call r0,§inline_test_object_const_arg_mutation.box.§factory(),r2
+   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r1,2
+   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r1,"inline_test_object_const_arg_mutation.box"
+   .src 21:5="name = initial"
+   load r6,"seed"
+   linkattr1 r5,r1,1
+   scopy r5,r6
+   unlink r5
+   .src 22:5="return"
+   copy r0,r1
    .src 6:3="call mutateBox(box)"
    .src 13:3="call value.setName(\"changed\")"
-   load r2,2
-   load r4,"changed"
-   settp r0,1
-   swap r3,r0
-   settp r4,3
-   call r5,§inline_test_object_const_arg_mutation.box.setname(),r2
-   swap r0,r3
+   .src 13:8="value"
+   copy r3,r0
+   .src 26:5="name = next"
+   load r7,"changed"
+   linkattr1 r5,r3,1
+   scopy r5,r7
+   unlink r5
+   .src 13:8="value.setName(\"changed\")"
+   copy r0,r3
+   .src 13:8="value.setName(\"changed\")"
+   acopy r0,r3
    .src 7:3="say box.getName"
-   load r3,1
-   settp r0,1
-   swap r4,r0
-   call r2,§inline_test_object_const_arg_mutation.box.getname(),r3
-   swap r0,r4
-   say r2
+   .meta "inline_test_object_const_arg_mutation.main.box"="b" ".box" r0
+   .src 7:7="box"
+   .src 7:7="box"
+   copy r4,r0
+   .src 30:5="return name"
+   linkattr1 r5,r4,1
+   scopy r8,r5
+   acopy r8,r5
+   unlink r5
+   br l127bexprend
+l127bexprend:
+   say r8
    .src 8:3="say \"Object const-arg mutation inline test finished.\""
    say "Object const-arg mutation inline test finished."
    .src 9:3="return 0"
    ret 0
    .meta "inline_test_object_const_arg_mutation.main.box"
 
-mutateBox() .locals=5
+mutateBox() .locals=4
    .meta "inline_test_object_const_arg_mutation.mutatebox"="b" ".void" mutateBox() "value=.box" ""
    .src 11:1="mutateBox: procedure = .void"
    setnumdgts 18
@@ -58,13 +74,17 @@ mutateBox() .locals=5
    .src 12:7="value = .Box"
    .meta "inline_test_object_const_arg_mutation.mutatebox.value"="b" ".box" a1
    .src 13:3="call value.setName(\"changed\")"
-   load r1,2
+   .src 13:8="value"
+   copy r1,a1
+   .src 26:5="name = next"
    load r3,"changed"
-   settp a1,1
-   swap r2,a1
-   settp r3,3
-   call r4,§inline_test_object_const_arg_mutation.box.setname(),r1
-   swap a1,r2
+   linkattr1 r2,r1,1
+   scopy r2,r3
+   unlink r2
+   .src 13:8="value.setName(\"changed\")"
+   copy a1,r1
+   .src 13:8="value.setName(\"changed\")"
+   acopy a1,r1
    .src 14:3="return"
    ret
    .meta "inline_test_object_const_arg_mutation.mutatebox.value"

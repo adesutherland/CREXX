@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_call_like_arg_expr.rexx
- * BUILT                  : 2026-04-21 11:35:27
+ * BUILT                  : 2026-04-29 10:12:23
  */
 
 .meta "inline_test_call_like_arg_expr.box"="b" ".unknown" .class
@@ -9,7 +9,7 @@
 .srcfile="inline_test_call_like_arg_expr.rexx"
 .globals=0
 
-main() .locals=13
+main() .locals=12
    .meta "inline_test_call_like_arg_expr.main"="b" ".int" main() "" ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -24,43 +24,47 @@ main() .locals=13
    .meta "inline_test_call_like_arg_expr.main.i"="b" ".int" r1
    load r1,1
    .src 5:12="to 3"
-   load r4,3
+   load r8,3
 l8dostart:
    .src 5:12="to 3"
-   igt r5,r1,r4
-   brt l8doend,r5
+   igt r9,r1,r8
+   brt l8doend,r9
    .src 6:5="box = .Box(addOne(i))"
-   .meta "inline_test_call_like_arg_expr.main.box"="b" ".box" r0
-   load r6,1
-   .src 6:16="addOne"
+   .src 19:3="*: factory\n    arg initialValue = .int\n    val = initialValue\n    return"
+   setattrs r3,2
+   .src 19:3="*: factory\n    arg initialValue = .int\n    val = initialValue\n    return"
+   setobjtype r3,"inline_test_call_like_arg_expr.box"
+   .src 6:5="box = .Box(addOne(i))"
    .src 13:7="val"
-   icopy r2,r1
-   .src 14:3="return val + 1"
-   iadd r8,r2,1
-   icopy r9,r8
-   br l76bexprend
-l76bexprend:
-   swap r7,r9
-   call r0,§inline_test_call_like_arg_expr.box.§factory(),r6
-   swap r9,r7
+   icopy r4,r1
+   .src 14:3="return"
+   iadd r2,r4,1
+   .src 21:5="val = initialValue"
+   linkattr1 r10,r3,1
+   icopy r10,r2
+   unlink r10
+   .src 22:5="return"
+   copy r0,r3
    .src 7:5="say box.bump(addOne(i))"
-   load r9,2
-   .src 7:18="addOne"
+   .meta "inline_test_call_like_arg_expr.main.box"="b" ".box" r0
+   .src 7:9="box"
+   .src 7:9="box"
+   copy r6,r0
+   .src 7:9="box.bump(addOne(i))"
    .src 13:7="val"
-   icopy r3,r1
-   .src 14:3="return val + 1"
-   iadd r7,r3,1
-   icopy r6,r7
-   br l85bexprend
-l85bexprend:
-   settp r0,1
-   swap r10,r0
-   swap r11,r6
-   call r12,§inline_test_call_like_arg_expr.box.bump(),r9
-   swap r0,r10
-   swap r6,r11
-   itos r12
-   say r12
+   icopy r7,r1
+   .src 14:3="return"
+   iadd r5,r7,1
+   .src 26:5="return val + amount"
+   linkattr1 r10,r6,1
+   iadd r11,r10,r5
+   unlink r10
+   icopy r10,r11
+   acopy r10,r11
+   br l102bexprend
+l102bexprend:
+   itos r10
+   say r10
 l8doinc:
    .src 5:6="i"
    inc r1

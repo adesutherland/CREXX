@@ -10,8 +10,6 @@ The selector is now best understood in terms of capability buckets rather than o
 
 - statement rewrites where the enclosing statement can be replaced directly
 - eager value consumers such as `SAY` and `RETURN`
-- eager call arguments to call-like parents
-- eager expression parents such as arithmetic, concatenation, and comparison operators
 
 Contexts outside those buckets stay uninlined until their rewrite strategy exists.
 
@@ -34,12 +32,6 @@ call func(a)
 and
 
 ```rexx
-say keepValue(func(a))
-```
-
-and
-
-```rexx
 say func(a)
 ```
 
@@ -49,42 +41,38 @@ and
 return func(a)
 ```
 
-and
-
 ```rexx
-if func(a) = 3 then ...
-```
-
-and
-
-```rexx
-x = 10 + func(a)
+if func(a) then ...
 ```
 
 More precisely:
 
-- The call must be a plain procedure `FUNCTION`, not a method or factory call.
-- For assignment inlining, the `FUNCTION` call must be the entire RHS of the enclosing `ASSIGN`.
+- The call may be a local plain-procedure `FUNCTION`, a local class `MEMBER_CALL`, or a local class `FACTORY_CALL`.
+- For assignment inlining, the call must be the entire RHS of the enclosing `ASSIGN`.
 - For standalone call inlining, the enclosing statement must be `CALL func(...)`.
-- For expression inlining, the `FUNCTION` call must sit in an expression parent that can consume a `BLOCK_EXPR` result directly. In practice this is now the default for local plain procedures; dedicated statement rewrites still own standalone `CALL` statements and whole-RHS `ASSIGN` sites.
-- The callee must be a normal procedure, not a method or factory.
-- Arguments and return values must stay within the currently implemented safe slice: scalars, object values, binary values, optional/default formals, and array-shaped formals/returns are now supported across the local plain-procedure slice.
-- The callee must satisfy the existing safety checks: plain local procedure only, small body, no recursion cycle, and no unsupported vararg indexing. Value-producing procedures still require a final `RETURN`; void statement-call sites may inline through bare-return and fallthrough shapes.
-- A plain procedure body may contain ordinary method or factory calls. Those calls are cloned and remain runtime dispatch sites; they are not themselves inlined as methods or factories. Named interface factory selector metadata must be preserved during cloning so `.iface.named(...)` still emits `srcfproc "...iface..named"` after inlining.
+- For expression inlining, the call must be the direct child of a single-value consumer such as `SAY`, `RETURN`, `IF`, `WHILE`, `UNTIL`, or a loop bound node. Dedicated statement rewrites still own standalone `CALL` statements and whole-RHS `ASSIGN` sites.
+- The callee body must be available in the current compilation unit. Imported callees remain a later milestone.
+- Arguments and return values must stay within the currently implemented safe slice: scalars, object values, binary values, optional/default formals, and array-shaped formals/returns are now supported across local procedure and local class-call inlining.
+- The callee must satisfy the existing safety checks: small body, no recursion cycle, and no unsupported vararg indexing. Value-producing procedures still require a final `RETURN`; void statement-call sites may inline through bare-return and fallthrough shapes.
+- Factory inlining creates and initializes the callee's internal `§factory` object in the inline scope, including `setattrs` and `setobjtype`, before cloning the factory body.
+- Method inlining binds the receiver once into the callee's internal `§this` object. Statement-position and simple whole-RHS assignment rewrites copy a direct, non-attribute receiver symbol back after a mutating method body. Mutating method calls in general expression position, receiver expressions, indexed receivers, and class-attribute receivers stay as normal calls until receiver copyback is modelled for those shapes.
+- Named interface factory selector metadata must be preserved during cloning so `.iface.named(...)` still emits `srcfproc "...iface..named"` after inlining.
 - `expose`/by-reference formals are supported when the actual argument is an aliasable variable-like target, including indexed and stem-style forms.
 - For nontrivial by-reference actuals, the inline rewrite captures the locator expressions once into inline-scope temps so the callee still sees call-time binding semantics.
 - Optional formals now inline through the same rewrite path as other supported local plain-procedure calls, with omitted-actual/default-formal semantics preserved during binding.
 
-At present, expression rewriting is open for local plain procedures in all value and condition parents that can consume a `BLOCK_EXPR` directly. The discriminator now explicitly keeps only the dedicated statement-rewrite sites out of the expression path:
+At present, expression rewriting is intentionally narrow. A `BLOCK_EXPR` inline is allowed only when the call is consumed directly by a single-value statement or control node. Composed expression parents remain fail-closed because the current register allocator does not yet prove that a `BLOCK_EXPR` body cannot reuse registers holding already-evaluated sibling expression results.
+
+The discriminator therefore keeps these sites out of the `BLOCK_EXPR` path:
 
 - whole-RHS `ASSIGN` sites, which are rewritten as assignment statements rather than expression children
 - standalone `CALL func(...)` statements, which use the statement-position rewrite
+- call arguments and receiver-position `MEMBER_CALL` expressions
+- arithmetic, concatenation, comparison, and short-circuit operator parents
 
-Short-circuit boolean parents (`|`, `&`, `\`), direct condition consumers (`IF`, `WHILE`, `UNTIL`), loop-bound expressions (`FOR`, `TO`, `BY`), call arguments, receiver-position `MEMBER_CALL` expressions, and ordinary value consumers/operators are all admitted.
+Composed inline sites should not be re-enabled until the emitter has a real liveness model for nested `BLOCK_EXPR` scopes or another proof that temporary register reuse cannot clobber sibling expression results.
 
-Composed inline sites are now supported when an outer call consumes an already-inlined `BLOCK_EXPR` actual, provided the outer context can itself consume a `BLOCK_EXPR`. This relies on scope-aware subtree cloning so nested `BLOCK_EXPR` locals and `LEAVE_WITH` associations remain isolated after the outer rewrite.
-
-The statement-position cases rewrite the enclosing statement. The expression-position case rewrites the `FUNCTION` node itself to `BLOCK_EXPR`.
+The statement-position cases rewrite the enclosing statement. The expression-position case rewrites the call node itself to `BLOCK_EXPR`.
 
 ### Why selection must stay narrow
 The inliner must not mark a procedure as globally "inline now" and then rewrite every call. That breaks the incremental rollout plan. Instead:
@@ -191,12 +179,12 @@ Important details:
 - A `RETURN expr` must not be dropped, because the expression may still have side effects.
 - The current implementation handles this by sinking the ignored return value inside the compiler-added block.
 
-### Phase 3 rewrite: direct operand expression inlining
+### Phase 3 rewrite: direct single-consumer expression inlining
 
 Given:
 
 ```rexx
-x = 10 + func(a)
+say func(a)
 ```
 
 rewrite the `FUNCTION` node into:
@@ -209,25 +197,24 @@ rewrite the `FUNCTION` node into:
 Important details:
 
 - The `BLOCK_EXPR` must preserve the original call node's value and target typing.
-- The current implementation now admits local plain-procedure calls in ordinary value consumers/operators, short-circuit boolean operators, direct condition consumers, loop-bound expressions, call arguments, and receiver-position member expressions.
+- The current implementation admits supported local calls only as the direct child of a single-value consumer. Ordinary operators, short-circuit boolean parents, call arguments, and receiver-position member expressions remain excluded until register liveness is proven for composed `BLOCK_EXPR` expressions.
 - Whole-RHS `ASSIGN` and standalone `CALL` sites still use dedicated statement-position rewrites instead of the expression path.
 
 ## Procedure Eligibility
 
-For the current local-plain-procedure slice, a procedure is structurally eligible only if all of the following hold:
+For the current local-call slice, a callable is structurally eligible only if all of the following hold:
 
-- standard procedure only
 - not `main`
-- not a method
-- not a factory
+- a normal local procedure, a local class method, or a local class factory
+- not a class-scope plain procedure
 - local body available in the current compilation unit
-- argument and return shapes stay within the implemented local-procedure slice, including aggregates, binary values, by-reference formals, by-value varargs, and the current constant-index `.ref` vararg support
+- argument and return shapes stay within the implemented local-call slice, including aggregates, binary values, by-reference formals, by-value varargs, and the current constant-index `.ref` vararg support
 - value-producing procedures still satisfy the current return-shape proof used by the inliner
 - body size is below the configured node threshold
 - no recursion cycle is introduced by the inline ancestry chain
 - no unsupported dynamic `.ref` vararg access is required
 
-Call-site selection remains separate from structural eligibility: an eligible procedure may still have uninlined call sites if the parent rewrite bucket belongs to milestone 2 or 3.
+Call-site selection remains separate from structural eligibility: an eligible callable may still have uninlined call sites if the parent rewrite bucket is not yet implemented or needs receiver copyback that the current expression rewrite cannot provide.
 
 ## Milestones
 
@@ -243,7 +230,7 @@ This milestone was delivered in two internal stages:
 Notes:
 
 - The current implementation now supports by-value varargs, nested-call local procedures, and nested callee scopes through a bounded fixed-point pass with explicit cycle blocking for self-recursive and mutually recursive expansions.
-- The current implementation still excludes methods/factories and class-scope procedures. Object by-value formals now follow the same split as normal calls: read-only formals alias the incoming binding, while writable formals materialise an isolated local copy. Array-shaped formals and returns are now handled by the same inline rewrite machinery as other supported local plain-procedure calls.
+- Milestone 1 deliberately excluded methods/factories and class-scope procedures. Object by-value formals now follow the same split as normal calls: read-only formals alias the incoming binding, while writable formals materialise an isolated local copy. Array-shaped formals and returns are now handled by the same inline rewrite machinery as other supported local plain-procedure calls.
 - Selection should remain opportunity-based throughout milestone 1: a structurally inlineable procedure may still have uninlined call sites if their rewrite bucket is not yet implemented.
 
 ### Milestone 1 review
@@ -252,10 +239,10 @@ Milestone 1 is now complete for local plain procedures.
 
 That does not mean every syntactic use of a local procedure is now inlined. It means the remaining non-inlined cases are no longer caused by missing local-procedure body semantics such as varargs, nested calls, nested scopes, multi-return shapes, or aggregate value binding. Those local-procedure capability gaps are now closed.
 
-The remaining discriminator behaviour is intentional and milestone-driven:
+The remaining discriminator behaviour at milestone-1 closure was intentional and milestone-driven:
 
-- inlining method and factory bodies is still out because it belongs to milestone 2; plain procedures that call methods or factories keep those operations as normal runtime calls
-- imported callees are still out because they belong to milestone 3
+- method and factory body inlining belonged to milestone 2
+- imported callees belonged to milestone 3
 
 So the milestone 1 closure is: local plain procedures are structurally and semantically covered; the remaining exclusions are later-milestone boundaries, not plain-procedure semantic gaps.
 
@@ -267,18 +254,21 @@ Decision taken at milestone-1 closure:
 - keep forwarded constant `.ref` vararg elements semantically correct by allowing them to flow into inner `expose` calls while leaving those inner calls as normal calls instead of inventing a locator-table model mid-milestone
 - defer dynamic `.ref` vararg indexing (`arg[ix]`, `arg(ix, "E")`) to a later design iteration; this is now treated as a post-milestone enhancement, not a milestone-1 blocker
 
-### Milestone 2: all local class method inlining works
+### Milestone 2: local class method and factory inlining
 
-This milestone should start with local methods before it attempts factories.
+The current implementation admits local class methods and local class factories into the same fixed-point rewrite loop as local plain procedures.
 
-Required work includes:
+Implemented behaviour:
 
-- selecting `MEMBER_CALL` callees, not just `FUNCTION` callees
-- binding `§this` correctly
-- preserving receiver evaluation-once semantics
-- preserving class-scope and attribute resolution rules inside the cloned body
+- `MEMBER_CALL` and `FACTORY_CALL` sites participate in call-site selection alongside `FUNCTION` sites.
+- Method bodies get an inline-scope `§this` binding and class attribute reads/writes resolve against that inlined receiver.
+- Direct-receiver mutating method calls in statement position and simple whole-RHS assignment position copy the receiver object back after the cloned method body.
+- Factory bodies get an inline-scope `§factory` object initialized with the owning class's attribute count and concrete object type before the cloned factory body executes.
+- Cloned `BLOCK_EXPR` and compiler-generated block associations are preserved so nested inline scopes continue to resolve `§this`, `§factory`, and `LEAVE_WITH` targets correctly.
 
-Factories may follow as part of milestone 2, but they should be tracked separately from ordinary methods because their call shape and object-construction semantics are different enough to justify an incremental rollout.
+Remaining guardrail:
+
+- Mutating methods in general expression position stay uninlined, because `LEAVE_WITH` branches out of a `BLOCK_EXPR`; supporting those sites requires inserting receiver copyback before every generated `LEAVE_WITH`.
 
 ### Milestone 3: imported procedures and methods
 
@@ -305,8 +295,9 @@ So milestone 3 should likely begin with the narrower target of source-imported p
 The implementation now covers:
 
 - local plain procedures in statement and expression buckets across the current scalar slice
+- local class methods and factories in the supported statement, assignment, and expression buckets
 - optional/default formals with omitted-actual binding preserved in the inline body
-- a production inline body cutoff of 200 AST nodes for local plain procedures
+- a production inline body cutoff of 200 AST nodes for local inlineable callables
 - by-value trailing varargs
 - dynamic vararg indexing and existence checks via inline-scope captured vararg arrays
 - nested-call local procedures via repeated identify-and-inline passes until a bounded fixed point is reached
@@ -321,12 +312,14 @@ The implementation now covers:
 - binary-typed local plain procedures across the current statement and expression rewrite machinery
 - preserved default-init requirements for duplicated inline locals and inline-created aggregate temporaries
 - explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
+- receiver copyback for direct-receiver mutating method calls in statement and simple assignment rewrites
+- factory object initialization for inlined class factories
 
 The implementation still excludes:
 
-- methods and factories
 - imported callees
 - dynamic-index `.ref` / `expose` vararg access
+- mutating methods in general expression position, pending copyback-before-`LEAVE_WITH` support
 
 ## Post-Hardening Status
 
@@ -341,8 +334,8 @@ The work that was previously fail-closed during broad-cutoff exploration is now 
 
 The current production stance is:
 
-- keep the 200-node body cutoff for local plain procedures
-- treat methods/factories, imported callees, and dynamic-index `.ref` / `expose` vararg access as milestone-boundary exclusions, not temporary hardening gaps
+- keep the 200-node body cutoff for local inlineable callables
+- treat imported callees, mutating method expression copyback, and dynamic-index `.ref` / `expose` vararg access as milestone-boundary exclusions, not temporary hardening gaps
 - keep debug-visible inline rejection and rewrite diagnostics available for future tuning and milestone work
 
 Validation for the current cutoff and supported slice:
@@ -361,7 +354,7 @@ The inline discriminator is now best understood as a two-stage filter.
 Stage 1: structural procedure eligibility
 
 - `identify_inlinable_walker()` answers whether a procedure body is inline-capable in principle
-- it rejects non-plain procedures (`main`, class-scope procedures, methods, factories), unsupported vararg shapes, invalid value-return shapes, oversized bodies, and malformed vararg access
+- it rejects `main`, class-scope plain procedures, unsupported vararg shapes, invalid value-return shapes, oversized bodies, and malformed vararg access
 - it does not decide that every call must inline; it only marks the callee as structurally available
 
 Stage 2: call-site capability selection
@@ -369,12 +362,12 @@ Stage 2: call-site capability selection
 - `inline_validate_call_site()` answers whether a particular call is safe for the current rewrite machinery
 - it applies recursion blocking, arity/varg checks, and the concrete binding rules for actual arguments
 - statement rewrites then decide whether the enclosing node shape is one of the implemented buckets
-- expression rewrites additionally pass through `inline_classify_expr_context()`, which now defaults local plain-procedure expression sites to the `BLOCK_EXPR` path and only diverts dedicated statement buckets such as whole-RHS `ASSIGN` and standalone `CALL`
+- expression rewrites additionally pass through `inline_classify_expr_context()`, which currently admits only direct single-value consumers to the `BLOCK_EXPR` path and fails closed for composed expressions such as operators, call arguments, and receiver expressions
 
 This split is the right shape for later milestones:
 
 - new procedure semantics should extend stage 1 only when the cloned body model grows
-- new parent-expression or method/factory contexts should extend stage 2 without weakening structural safety checks
+- new parent-expression contexts should extend stage 2 without weakening structural safety checks
 
 That separation is what keeps the inliner opportunity-based instead of turning `is_inlinable` into an over-broad “inline everywhere” flag.
 
@@ -424,8 +417,8 @@ For validation purposes, any inline rewrite that changes whether a caller variab
 ### Next Phase
 The next meaningful extensions are now milestone-driven rather than milestone-1 cleanup work:
 
-- methods and factories
 - imported callees
+- receiver copyback for mutating methods in general expression position
 - any later reconsideration of dynamic `.ref` / `expose` vararg indexing
 
 Outside milestone 2 and 3, the remaining exclusions now split cleanly into:
@@ -437,10 +430,10 @@ Outside milestone 2 and 3, the remaining exclusions now split cleanly into:
 
 ## Verification
 
-The local-plain-procedure design should be considered established when:
+The local inlining design should be considered established when:
 
-- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, `inline_test_nested_call_expr`, `inline_test_ref_opt`, `inline_test_ref_indexed`, and `inline_test_ref_stem` using the narrow supported strategies
-- excluded cases such as large procedures, methods, and imported callees remain uninlined under optimisation
+- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, `inline_test_nested_call_expr`, `inline_test_ref_opt`, `inline_test_ref_indexed`, `inline_test_ref_stem`, and `inline_test_class_methods` using the supported strategies
+- excluded cases such as large procedures, imported callees, and mutating method expression calls remain uninlined under optimisation
 - unsupported by-reference/short-circuit combinations such as those in `inline_test_ref_negative` remain uninlined under optimisation
 - the resulting AST is structurally valid under `-dp`
 - optimised codegen succeeds
@@ -448,8 +441,7 @@ The local-plain-procedure design should be considered established when:
 
 ## Non-Goals For The Current Design Boundary
 
-- methods
-- factories
-- methods/factories and imported callees in expression position
+- imported callees
+- mutating methods in expression position until receiver copyback can be emitted before `LEAVE_WITH`
 - aggressive pruning of fully inlined procedures
 - claiming fully generic scope/symbol cloning before it is proven
