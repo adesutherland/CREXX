@@ -4898,8 +4898,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 }
 
 int rxcp_inline_payload_is_supported(const char *payload) {
-    return payload && payload[0] == 'I' &&
-           (payload[1] == '1' || payload[1] == '2' || payload[1] == '3' || payload[1] == '4') &&
+    return payload && payload[0] == 'I' && payload[1] == '4' &&
            (payload[2] == 0 || payload[2] == ';');
 }
 

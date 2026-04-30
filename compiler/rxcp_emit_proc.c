@@ -158,7 +158,7 @@ void emit_proc(ASTNode *node, void *pl) {
                 }
                 char* buf;
                 buf = mprintf("\n%s() .expose=%s\n"
-                              "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\" \"\"\n",
+                              "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
                               proc_label,
                               proc_expose,
                               proc_fqn,
@@ -199,7 +199,8 @@ void emit_proc(ASTNode *node, void *pl) {
                 char* buf;
                 if (node->symbolNode->symbol->exposed) {
                     buf = mprintf("\n%s() .locals=%d .expose=%s\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\" \"%s\"\n",
+                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n"
+                                  "%s%s%s",
                                   proc_label,
                                   (int) node->scope->num_registers,
                                   proc_expose,
@@ -207,18 +208,28 @@ void emit_proc(ASTNode *node, void *pl) {
                                   type,
                                   proc_label,
                                   args,
-                                  inline_payload);
+                                  inline_payload && *inline_payload ? "   .meta \"" : "",
+                                  inline_payload && *inline_payload ? proc_fqn : "",
+                                  inline_payload && *inline_payload ? "\"=\".inline\" \"" : "");
                 }
                 else {
                     buf = mprintf("\n%s() .locals=%d\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\" \"%s\"\n",
+                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n"
+                                  "%s%s%s",
                                   proc_label,
                                   (int) node->scope->num_registers,
                                   proc_fqn,
                                   type,
                                   proc_label,
                                   args,
-                                  inline_payload);
+                                  inline_payload && *inline_payload ? "   .meta \"" : "",
+                                  inline_payload && *inline_payload ? proc_fqn : "",
+                                  inline_payload && *inline_payload ? "\"=\".inline\" \"" : "");
+                }
+                if (inline_payload && *inline_payload) {
+                    char *with_payload = mprintf("%s%s\"\n", buf, inline_payload);
+                    free(buf);
+                    buf = with_payload;
                 }
                 if (node->output) output_prepend_text(buf, node->output);
                 else node->output = output_fs(buf);

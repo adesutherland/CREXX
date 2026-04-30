@@ -10,7 +10,7 @@
 .globals=0
 
 main() .locals=6
-   .meta "inline_test_object_return_assign.main"="b" ".int" main() "" ""
+   .meta "inline_test_object_return_assign.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -65,7 +65,7 @@ main() .locals=6
    .meta "inline_test_object_return_assign.main.other"
 
 buildBox() .locals=4
-   .meta "inline_test_object_return_assign.buildbox"="b" ".box" buildBox() "initial=.string" ""
+   .meta "inline_test_object_return_assign.buildbox"="b" ".box" buildBox() "initial=.string"
    .src 14:1="buildBox: procedure = .Box"
    setnumdgts 18
    setnumfuz 0
@@ -87,7 +87,7 @@ buildBox() .locals=4
    .meta "inline_test_object_return_assign.buildbox.value"
 
 describeBox() .locals=4
-   .meta "inline_test_object_return_assign.describebox"="b" ".string" describeBox() "value=.box" ""
+   .meta "inline_test_object_return_assign.describebox"="b" ".string" describeBox() "value=.box"
    .src 19:1="describeBox: procedure = .string"
    setnumdgts 18
    setnumfuz 0
@@ -106,7 +106,7 @@ describeBox() .locals=4
    .meta "inline_test_object_return_assign.describebox.value"
 
 replaceBoxRef() .locals=3
-   .meta "inline_test_object_return_assign.replaceboxref"="b" ".void" replaceBoxRef() "expose value=.box" ""
+   .meta "inline_test_object_return_assign.replaceboxref"="b" ".void" replaceBoxRef() "expose value=.box"
    .src 23:1="replaceBoxRef: procedure = .void"
    setnumdgts 18
    setnumfuz 0
@@ -125,7 +125,7 @@ replaceBoxRef() .locals=3
    .meta "inline_test_object_return_assign.replaceboxref.value"
 
 §inline_test_object_return_assign.box.§factory() .locals=3
-   .meta "inline_test_object_return_assign.box.§factory"="b" ".box" §inline_test_object_return_assign.box.§factory() "initial=.string" ""
+   .meta "inline_test_object_return_assign.box.§factory"="b" ".box" §inline_test_object_return_assign.box.§factory() "initial=.string"
    .src 31:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_return_assign.box"
@@ -147,7 +147,7 @@ replaceBoxRef() .locals=3
    .meta "inline_test_object_return_assign.box.§factory.§factory"
 
 §inline_test_object_return_assign.box.getname() .locals=2
-   .meta "inline_test_object_return_assign.box.getname"="b" ".string" §inline_test_object_return_assign.box.getname() "" ""
+   .meta "inline_test_object_return_assign.box.getname"="b" ".string" §inline_test_object_return_assign.box.getname() ""
    .src 36:3="getName: method = .string"
    setnumdgts 18
    setnumfuz 0

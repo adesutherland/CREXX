@@ -197,6 +197,74 @@ static size_t get_const_string(bin_space *pgm, char* buffer, size_t buffer_len, 
     return out_len;
 }
 
+static char *get_const_raw_string_alloc(bin_space *pgm, size_t ix) {
+    string_constant *sentry;
+    char *out;
+
+    sentry = (string_constant *)(pgm->const_pool + ix);
+    out = malloc(sentry->string_len + 1);
+    if (!out) return NULL;
+    memcpy(out, sentry->string, sentry->string_len);
+    out[sentry->string_len] = 0;
+    return out;
+}
+
+static char *get_const_string_alloc(bin_space *pgm, size_t ix) {
+    string_constant *sentry;
+    char *out;
+    size_t encoded_len;
+
+    sentry = (string_constant *)(pgm->const_pool + ix);
+    encoded_len = encode_print(NULL, 0, sentry->string, sentry->string_len);
+    out = malloc(encoded_len + 3);
+    if (!out) return NULL;
+    out[0] = '"';
+    encode_print(out + 1, encoded_len + 1, sentry->string, sentry->string_len);
+    out[encoded_len + 1] = '"';
+    out[encoded_len + 2] = 0;
+    return out;
+}
+
+static void output_meta_inline_line(FILE *stream, bin_space *pgm, meta_inline_constant *mentry, const char *indent) {
+    char *symbol;
+    char *payload;
+
+    symbol = get_const_string_alloc(pgm, mentry->symbol);
+    payload = get_const_string_alloc(pgm, mentry->payload);
+    if (symbol && payload) {
+        fprintf(stream, "%s.meta %s=\".inline\" %s\n", indent ? indent : "", symbol, payload);
+    }
+    if (symbol) free(symbol);
+    if (payload) free(payload);
+}
+
+static void output_meta_inline_for_symbol(FILE *stream, module_file *module, bin_space *pgm, const char *symbol, const char *indent) {
+    int m;
+
+    if (!symbol) return;
+
+    m = module->header.meta_head;
+    while (m != -1) {
+        chameleon_constant *entry;
+        entry = (chameleon_constant *)(module->constant + m);
+        if (entry->type == META_INLINE) {
+            meta_inline_constant *inline_meta;
+            char *inline_symbol;
+            inline_meta = (meta_inline_constant *)(module->constant + m);
+            inline_symbol = get_const_raw_string_alloc(pgm, inline_meta->symbol);
+            if (inline_symbol) {
+                if (strcmp(inline_symbol, symbol) == 0) {
+                    output_meta_inline_line(stream, pgm, inline_meta, indent);
+                    free(inline_symbol);
+                    return;
+                }
+                free(inline_symbol);
+            }
+        }
+        m = ((meta_entry *)(module->constant + m))->next;
+    }
+}
+
 /* Get the function name string
  * Returns the number of characters that would have been written assuming the
  * buffer was big enough - like snprintf() */
@@ -391,11 +459,13 @@ static void output_imported_proc_meta(FILE *stream, module_file *module, bin_spa
         switch ( ((chameleon_constant*)(module->constant + m))->type ) {
 
             case META_FUNC: {
-                /* META function symbol - .meta "MAIN"="B" ".int" main() "" "" */
+                /* META function symbol - .meta "MAIN"="B" ".int" main() "" */
                 meta_func_constant *mentry = ((meta_func_constant *) (module->constant + m));
                 if (mentry->func == func) {
+                    char *raw_symbol;
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
                     fprintf(stream, ".meta %s=",line_buffer);
+                    raw_symbol = get_const_raw_string_alloc(pgm, mentry->symbol);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->option);
                     fprintf(stream, "%s",line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
@@ -403,9 +473,9 @@ static void output_imported_proc_meta(FILE *stream, module_file *module, bin_spa
                     get_func_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->func);
                     fprintf(stream, " %s",line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
-                    fprintf(stream, " %s",line_buffer);
-                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->inliner);
                     fprintf(stream, " %s\n",line_buffer);
+                    output_meta_inline_for_symbol(stream, module, pgm, raw_symbol, "");
+                    if (raw_symbol) free(raw_symbol);
                 }
                 m = mentry->base.next;
             }
@@ -554,7 +624,7 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
             break;
 
             case META_FUNC: {
-                /* META function symbol - .meta "MAIN"="B" ".int" main() "" "" */
+                /* META function symbol - .meta "MAIN"="B" ".int" main() "" */
 
                 meta_func_constant *mentry = ((meta_func_constant *) (module->constant + m));
                 /* Only print procedure that are not imported  - because these are handled in the header */
@@ -569,11 +639,15 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
                     get_func_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->func);
                     fprintf(stream, " %s", line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
-                    fprintf(stream, " %s",line_buffer);
-                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->inliner);
                     fprintf(stream, " %s\n",line_buffer);
 
                 }
+            }
+            break;
+
+            case META_INLINE: {
+                meta_inline_constant *mentry = ((meta_inline_constant *) (module->constant + m));
+                output_meta_inline_line(stream, pgm, mentry, "                ");
             }
             break;
 
@@ -669,7 +743,7 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
             break;
 
             case META_FUNC: {
-                /* META function symbol - .meta "MAIN"="B" ".int" main() "" "" */
+                /* META function symbol - .meta "MAIN"="B" ".int" main() "" */
 
                 meta_func_constant *mentry = ((meta_func_constant *) (module->constant + m));
                 if (((proc_constant *)(module->constant + mentry->func))->start != SIZE_MAX) {
@@ -683,11 +757,15 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
                     get_func_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->func);
                     fprintf(stream, " %s", line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
-                    fprintf(stream, " %s",line_buffer);
-                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->inliner);
                     fprintf(stream, " %s\n",line_buffer);
 
                 }
+            }
+            break;
+
+            case META_INLINE: {
+                meta_inline_constant *mentry = ((meta_inline_constant *) (module->constant + m));
+                output_meta_inline_line(stream, pgm, mentry, "                ");
             }
             break;
 
@@ -944,8 +1022,6 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     get_func_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->func);
                     fprintf(stream, " %s",line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
-                    fprintf(stream, " %s",line_buffer);
-                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->inliner);
                     fprintf(stream, " %s\n",line_buffer);
                 }
                     break;
@@ -1024,6 +1100,19 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     fprintf(stream, " %s", line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
                     fprintf(stream, " %s\n", line_buffer);
+                }
+                    break;
+
+                case META_INLINE:
+                {
+                    meta_inline_constant *mentry = (meta_inline_constant *)entry;
+                    char *symbol = get_const_string_alloc(pgm, mentry->symbol);
+                    char *payload = get_const_string_alloc(pgm, mentry->payload);
+                    fprintf(stream, "* 0x%.6lx META-INLINE @0x%.6lx", i, mentry->base.address);
+                    if (symbol && payload) fprintf(stream, " %s %s\n", symbol, payload);
+                    else fprintf(stream, "\n");
+                    if (symbol) free(symbol);
+                    if (payload) free(payload);
                 }
                     break;
 

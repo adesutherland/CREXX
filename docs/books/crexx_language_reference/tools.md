@@ -79,13 +79,15 @@ Options :
 
   \-o output\_file  Linked output file
 
-  \-c control\_file Control file with INPUT / ROOT / INCLUDE / OMIT / OUTPUT / MAP / STRIP
+  \-c control\_file Control file with INPUT / ROOT / INCLUDE / OMIT / OUTPUT / MAP / STRIP / PRESERVE
 
   \-r root\_member  Root module selector (may be repeated)
 
   \-m map\_file     Link map output
 
   \-s              Strip source/file metadata from the linked output
+
+  \-i              Preserve inline-body metadata in the linked output
 
   \-d              Debug / verbose mode
 

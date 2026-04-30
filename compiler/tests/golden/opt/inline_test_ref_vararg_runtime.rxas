@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=10
-   .meta "inline_test_ref_vararg_runtime.main"="b" ".int" main() "" ""
+   .meta "inline_test_ref_vararg_runtime.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -98,7 +98,7 @@ l120bexprend:
    .meta "inline_test_ref_vararg_runtime.main.third"
 
 readTail() .locals=2
-   .meta "inline_test_ref_vararg_runtime.readtail"="b" ".int" readTail() "which=.int,expose ...=.int" ""
+   .meta "inline_test_ref_vararg_runtime.readtail"="b" ".int" readTail() "which=.int,expose ...=.int"
    .src 22:1="readTail: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -117,7 +117,7 @@ readTail() .locals=2
    .meta "inline_test_ref_vararg_runtime.readtail.which"
 
 hasTail() .locals=2
-   .meta "inline_test_ref_vararg_runtime.hastail"="b" ".int" hasTail() "which=.int,expose ...=.int" ""
+   .meta "inline_test_ref_vararg_runtime.hastail"="b" ".int" hasTail() "which=.int,expose ...=.int"
    .src 26:1="hasTail: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -138,7 +138,7 @@ hasTail() .locals=2
    .meta "inline_test_ref_vararg_runtime.hastail.which"
 
 bumpOne() .locals=1
-   .meta "inline_test_ref_vararg_runtime.bumpone"="b" ".int" bumpOne() "expose value=.int" ""
+   .meta "inline_test_ref_vararg_runtime.bumpone"="b" ".int" bumpOne() "expose value=.int"
    .src 30:1="bumpOne: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -154,7 +154,7 @@ bumpOne() .locals=1
    .meta "inline_test_ref_vararg_runtime.bumpone.value"
 
 mutateTailIndirect() .locals=7
-   .meta "inline_test_ref_vararg_runtime.mutatetailindirect"="b" ".int" mutateTailIndirect() "which=.int,expose ...=.int" ""
+   .meta "inline_test_ref_vararg_runtime.mutatetailindirect"="b" ".int" mutateTailIndirect() "which=.int,expose ...=.int"
    .src 35:1="mutateTailIndirect: procedure = .int"
    setnumdgts 18
    setnumfuz 0

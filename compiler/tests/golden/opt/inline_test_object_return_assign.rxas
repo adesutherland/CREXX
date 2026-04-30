@@ -10,7 +10,7 @@
 .globals=0
 
 main() .locals=22
-   .meta "inline_test_object_return_assign.main"="b" ".int" main() "" ""
+   .meta "inline_test_object_return_assign.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -120,7 +120,7 @@ l225bexprend:
    .meta "inline_test_object_return_assign.main.other"
 
 §inline_test_object_return_assign.box.§factory() .locals=3
-   .meta "inline_test_object_return_assign.box.§factory"="b" ".box" §inline_test_object_return_assign.box.§factory() "initial=.string" ""
+   .meta "inline_test_object_return_assign.box.§factory"="b" ".box" §inline_test_object_return_assign.box.§factory() "initial=.string"
    .src 31:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_return_assign.box"
@@ -142,7 +142,7 @@ l225bexprend:
    .meta "inline_test_object_return_assign.box.§factory.§factory"
 
 §inline_test_object_return_assign.box.getname() .locals=2
-   .meta "inline_test_object_return_assign.box.getname"="b" ".string" §inline_test_object_return_assign.box.getname() "" ""
+   .meta "inline_test_object_return_assign.box.getname"="b" ".string" §inline_test_object_return_assign.box.getname() ""
    .src 36:3="getName: method = .string"
    setnumdgts 18
    setnumfuz 0

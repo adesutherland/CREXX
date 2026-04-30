@@ -1789,6 +1789,38 @@ static meta_reg_constant* get_variable_type(char* name, void* constant, int meta
     return 0;
 }
 
+static char *get_inline_payload_for_symbol(void *constant, int meta_head, const char *symbol) {
+    meta_entry *entry;
+    meta_inline_constant *mentry;
+    int i;
+    char *inline_symbol;
+    char *payload;
+
+    if (!constant || !symbol) return 0;
+
+    i = meta_head;
+    while (i != -1) {
+        entry = (meta_entry *) (constant + (size_t)i);
+
+        if (entry->base.type == META_INLINE) {
+            mentry = (meta_inline_constant *) entry;
+            inline_symbol = get_const_string(constant, mentry->symbol);
+            if (inline_symbol) {
+                if (strcmp(inline_symbol, symbol) == 0) {
+                    free(inline_symbol);
+                    payload = get_const_string(constant, mentry->payload);
+                    return payload;
+                }
+                free(inline_symbol);
+            }
+        }
+
+        i = entry->next;
+    }
+
+    return 0;
+}
+
 static void read_constant_pool_for_functions(Context *context, char *full_file_name, void* constant, size_t constant_size, int meta_head) {
     chameleon_constant *entry;
     int i;
@@ -1798,7 +1830,8 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
     char* option = 0;
     char* type = 0;
     char* args = 0;
-    char* inliner = 0;
+    char* inline_payload = 0;
+    char* meta_symbol = 0;
 
     /* Aggregator for class metadata to synthesize class stubs */
     class_meta_agg *class_aggs = 0;
@@ -1822,13 +1855,14 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                 /* Exported */
                 if (!exposed->imported) {
                     fqname = exposed->index;
+                    meta_symbol = get_const_string(constant, mentry->symbol);
                     option = get_const_string(constant, mentry->option);
                     type = get_const_string(constant, mentry->type);
                     args = get_const_string(constant, mentry->args);
-                    inliner = get_const_string(constant, mentry->inliner);
+                    inline_payload = get_inline_payload_for_symbol(constant, meta_head, meta_symbol ? meta_symbol : fqname);
 
                     /* Always register as importable function (methods too) */
-                    rximpf_f(context, full_file_name, fqname, option, type, args, inliner, 0);
+                    rximpf_f(context, full_file_name, fqname, option, type, args, inline_payload, 0);
 
                     /* If this looks like a class method (fqname contains namespace.class.method) then
                      * accumulate a signature line for later class stub synthesis */
@@ -1897,9 +1931,13 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                         free(args);
                         args = 0;
                     }
-                    if (inliner) {
-                        free(inliner);
-                        inliner = 0;
+                    if (inline_payload) {
+                        free(inline_payload);
+                        inline_payload = 0;
+                    }
+                    if (meta_symbol) {
+                        free(meta_symbol);
+                        meta_symbol = 0;
                     }
                 }
             }

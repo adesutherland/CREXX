@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=3
-   .meta "11_scope.main"="b" ".void" main() "" ""
+   .meta "11_scope.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -37,7 +37,7 @@ l17ifend:
    .meta "11_scope.main.a"
 
 Inner() .locals=2
-   .meta "11_scope.inner"="b" ".void" Inner() "" ""
+   .meta "11_scope.inner"="b" ".void" Inner() ""
    .src 9:1="Inner: procedure"
    setnumdgts 18
    setnumfuz 0

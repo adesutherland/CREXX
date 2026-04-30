@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=3
-   .meta "inline_test_array_expr_arg.main"="b" ".int" main() "" ""
+   .meta "inline_test_array_expr_arg.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -27,7 +27,7 @@ main() .locals=3
    ret 0
 
 bumpFirst() .locals=4
-   .meta "inline_test_array_expr_arg.bumpfirst"="b" ".int" bumpFirst() "pair=.int[2]" ""
+   .meta "inline_test_array_expr_arg.bumpfirst"="b" ".int" bumpFirst() "pair=.int[2]"
    .src 7:1="bumpFirst: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -59,7 +59,7 @@ l14d:
    .meta "inline_test_array_expr_arg.bumpfirst.pair"
 
 makePair() .locals=9
-   .meta "inline_test_array_expr_arg.makepair"="b" ".int[2]" makePair() "" ""
+   .meta "inline_test_array_expr_arg.makepair"="b" ".int[2]" makePair() ""
    .src 12:1="makePair: procedure = .int[2]"
    setnumdgts 18
    setnumfuz 0

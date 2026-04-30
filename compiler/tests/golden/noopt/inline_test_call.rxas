@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=6
-   .meta "inline_test_call.main"="b" ".int" main() "" ""
+   .meta "inline_test_call.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -44,7 +44,7 @@ l8doend:
    ret 0
 
 logDouble() .locals=3
-   .meta "inline_test_call.logdouble"="b" ".int" logDouble() "val=.int" ""
+   .meta "inline_test_call.logdouble"="b" ".int" logDouble() "val=.int"
    .src 11:1="logDouble: procedure = .int"
    setnumdgts 18
    setnumfuz 0

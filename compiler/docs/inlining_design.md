@@ -319,12 +319,10 @@ So milestone 3 should likely begin with the narrower target of source-imported p
 
 The preferred cross-file direction is an explicit inline-body export format,
 stored as metadata in the imported module and reconstructed by `rxc` before the
-normal optimisation/inlining pass. The existing `META_FUNC.inliner` string is
-a natural first attachment point because it is already read during binary
-import and currently carries an empty string. If the payload grows beyond what
-is comfortable as a string, the same design can move to a dedicated
-`META_INLINE_BODY` record while leaving `META_FUNC.inliner` as a pointer or
-version marker.
+normal optimisation/inlining pass. The `META_FUNC.inliner` string was used only
+for the `I4` proof of concept and is being retired before release. The durable
+carrier is a first-class `META_INLINE` metadata record; `META_FUNC` keeps the
+callable signature and procedure reference only.
 
 The inline body should be a compiler-owned transport language, not source text
 and not raw C struct memory. Source text is attractive for source imports, but
@@ -348,11 +346,18 @@ debugging or tooling use.
 The constant pool is the right long-term carrier for this data. `rxas` already
 turns `.srcfile`, `.src`, and `.meta` directives into linked metadata records,
 and `rxlink` already rewrites, preserves, and strips those records by kind.
-Inline metadata should extend that path rather than introduce a separate binary
-side channel. The current `META_FUNC.inliner` string is still a useful
-bootstrap attachment point, but once the payload grows beyond a compact string
-it can move to a first-class metadata record while `META_FUNC` keeps the
-callable signature and an inline-body reference.
+Inline metadata extends that path rather than introducing a separate binary
+side channel. The RXAS source spelling is:
+
+```rxas
+.meta "fully.qualified.callable"=".inline" "I4;..."
+```
+
+The payload is still the compact compiler-owned inline transport. `rxas` stores
+it as a `META_INLINE` record whose fields reference normal constant-pool string
+entries, so the existing rxbin constant-pool compression path is used first.
+Any later binary packing layer must be justified by measured size, validation,
+or round-trip needs rather than by assumption.
 
 Existing source metadata can be leveraged, but not by reverse-mapping old
 instruction addresses. `META_SRC` and `META_FILE` are address-stamped after
@@ -430,12 +435,11 @@ the target use.
 
 A compact text form is used for the first implementation slice. It is versioned
 and structured as a preorder tree walk with explicit scope and symbol records.
-It is not JSON and it is not raw source text. The active version is `I4` and is
-stored in the existing `META_FUNC.inliner` string for the proof implementation.
-Earlier `I1`, `I2`, and `I3` payloads were internal prototypes; none of the
-inline formats has been released, and the development team can rebuild all
-source artifacts. Backward compatibility with these prototype inline payloads
-is therefore not required.
+It is not JSON and it is not raw source text. The active version is `I4`. The
+`I1`, `I2`, `I3`, and `META_FUNC.inliner` variants were internal prototypes;
+none of the inline formats has been released, and the development team can
+rebuild all source artifacts. Backward compatibility with these prototype
+inline payloads is therefore not required.
 
 ```text
 I3
@@ -549,14 +553,14 @@ only used as the symbol's `ast_template` during the optimiser and is cloned
 into accepted call sites like local inline templates.
 
 Binary, RXAS, and source import paths all feed the same metadata reader for
-plain procedures. Binary and RXAS imports read the payload from
-`META_FUNC.inliner`; source imports run the same writer while scanning exposed
-dependency procedures and store the result in the import registry alongside the
-signature. Imported member-body templates are currently attached only for
-source contracts. Binary class contract metadata does not yet preserve enough
-class layout information to prove arbitrary runtime-library getters/setters
-safe, so binary-imported methods and factories deliberately remain normal calls
-until that metadata grows.
+plain procedures. Binary and RXAS imports read `META_INLINE`; source imports run
+the same writer while scanning exposed dependency procedures and store the
+result in the import registry alongside the signature. Imported member-body
+templates are currently attached only for source contracts. Binary class
+contract metadata does not yet preserve enough class layout information to
+prove arbitrary runtime-library getters/setters safe, so binary-imported
+methods and factories deliberately remain normal calls until that metadata
+grows.
 
 Full register allocation state should not be transported:
 register assignment is a downstream compiler concern and must run after import
@@ -586,9 +590,9 @@ Required contents as the cross-file subset grows:
 
 Initial proof implementation:
 
-1. Introduce an `I4` reader/writer while keeping the same
-   `META_FUNC.inliner` attachment point for the proof. Because no inline-body
-   format has been released, the implementation may remove old `I1`/`I2`/`I3`
+1. Introduce an `I4` reader/writer and attach the payload through a first-class
+   `META_INLINE` record. Because no inline-body format has been released, the
+   implementation may remove old `I1`/`I2`/`I3` and `META_FUNC.inliner`
    compatibility once the tests and generated fixtures have moved to `I4`.
 2. Add `f` and `u` source-anchor sections and a per-node `source-id` field.
    The proof should restore `file_name`, line, column, source provenance, and
@@ -608,13 +612,23 @@ Initial proof implementation:
    factory dependencies should remain a later step because they need richer
    class/interface proof metadata.
 
-Before replacing the proof attachment with first-class `META_INLINE`, assess
-the existing rxbin constant-pool compression path. `rxas` and binutils already
-compress the constant pool in the durable binary format, so an inline payload
-stored as a normal metadata-referenced pool entry may already get the right
-space behaviour without inventing a second binary packing layer. Any additional
-packing should be justified by measured size, validation, or round-trip needs,
-not by assumption.
+The initial `META_INLINE` implementation deliberately stores the payload as a
+normal string-pool entry referenced by metadata. This assesses the existing
+rxbin constant-pool compression path in production rather than adding a second
+packing scheme prematurely.
+
+Dedicated round-trip coverage is required so the metadata transport does not
+drift between source, RXAS, and binary paths. The harness should prove:
+
+- `rxc` emits `META_INLINE` for exportable callables and does not put inline
+  payloads in `META_FUNC`
+- `rxas` assembles the RXAS source spelling into `META_INLINE`
+- `rxdas` emits `META_INLINE` back into the same logical RXAS spelling
+- `rxc` can import the binary metadata and reconstruct the same inlining
+  template used by source imports
+- unsupported nodes may be transported by the codec only when explicitly
+  supported by the writer, and inlining still fails closed at reader/call-site
+  gates
 
 The expansion rule is intentionally stepwise: add one metadata table or one
 node-family capability, prove it locally and cross-file, update diagnostics and
@@ -652,9 +666,8 @@ Linker/strip behaviour:
   signatures.
 - `STRIP SOURCE` may remove source/file metadata without removing inline-body
   metadata, unless a stronger deployable-strip mode is requested.
-- When an inline body is stored through `META_FUNC.inliner`, stripping should
-  rewrite the field to the canonical empty-string constant rather than remove
-  the whole `META_FUNC` record.
+- Stripping inline metadata should remove `META_INLINE` records while leaving
+  `META_FUNC` callable signatures intact.
 
 Compatibility gates:
 

@@ -10,7 +10,7 @@
 .globals=0
 
 main() .locals=11
-   .meta "inline_test_member_receiver_expr.main"="b" ".int" main() "" ""
+   .meta "inline_test_member_receiver_expr.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -75,7 +75,7 @@ l71bexprend:
    ret 0
 
 §inline_test_member_receiver_expr.box.§factory() .locals=3
-   .meta "inline_test_member_receiver_expr.box.§factory"="b" ".box" §inline_test_member_receiver_expr.box.§factory() "initial=.string" ""
+   .meta "inline_test_member_receiver_expr.box.§factory"="b" ".box" §inline_test_member_receiver_expr.box.§factory() "initial=.string"
    .src 18:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_member_receiver_expr.box"
@@ -97,7 +97,7 @@ l71bexprend:
    .meta "inline_test_member_receiver_expr.box.§factory.§factory"
 
 §inline_test_member_receiver_expr.box.getname() .locals=2
-   .meta "inline_test_member_receiver_expr.box.getname"="b" ".string" §inline_test_member_receiver_expr.box.getname() "" ""
+   .meta "inline_test_member_receiver_expr.box.getname"="b" ".string" §inline_test_member_receiver_expr.box.getname() ""
    .src 23:3="getName: method = .string"
    setnumdgts 18
    setnumfuz 0

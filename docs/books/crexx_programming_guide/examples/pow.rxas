@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "pow.main"="b" ".void" main() "" ""
+   .meta "pow.main"="b" ".void" main() ""
    .src 4:1="number = 10"
    .meta "pow.main.number"="b" ".int" r1
    load r1,10

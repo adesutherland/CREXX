@@ -57,7 +57,7 @@ struct bin_space {
 enum const_pool_type {
     STRING_CONST, BINARY_CONST, DECIMAL_CONST, FLOAT_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
     META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR,
-    META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER
+    META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE
 };
 
 /* cREXX chameleon entry in the constant pool
@@ -145,7 +145,6 @@ typedef struct meta_func_constant {
     size_t type;
     size_t func;
     size_t args;
-    size_t inliner;
 } meta_func_constant;
 
 typedef struct meta_reg_constant {
@@ -205,6 +204,12 @@ typedef struct meta_member_constant {
     size_t type;
     size_t args;
 } meta_member_constant;
+
+typedef struct meta_inline_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t payload;
+} meta_inline_constant;
 
 enum rxbin_section_flags {
     RXBIN_SECTION_INST_PACKED = 1u << 0,

@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=3
-   .meta "inline_test_array_return_temp.main"="b" ".int" main() "" ""
+   .meta "inline_test_array_return_temp.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -39,7 +39,7 @@ main() .locals=3
    .meta "inline_test_array_return_temp.main.pair"
 
 forwardPair() .locals=4
-   .meta "inline_test_array_return_temp.forwardpair"="b" ".int[2]" forwardPair() "seed=.int" ""
+   .meta "inline_test_array_return_temp.forwardpair"="b" ".int[2]" forwardPair() "seed=.int"
    .src 10:1="forwardPair: procedure = .int[2]"
    setnumdgts 18
    setnumfuz 0
@@ -57,7 +57,7 @@ forwardPair() .locals=4
    .meta "inline_test_array_return_temp.forwardpair.seed"
 
 buildPair() .locals=4
-   .meta "inline_test_array_return_temp.buildpair"="b" ".int[2]" buildPair() "seed=.int" ""
+   .meta "inline_test_array_return_temp.buildpair"="b" ".int[2]" buildPair() "seed=.int"
    .src 14:1="buildPair: procedure = .int[2]"
    setnumdgts 18
    setnumfuz 0

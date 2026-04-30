@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=4
-   .meta "div_ops_common.main"="b" ".void" main() "" ""
+   .meta "div_ops_common.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

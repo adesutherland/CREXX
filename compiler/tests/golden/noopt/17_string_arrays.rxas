@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=4
-   .meta "17_string_arrays.main"="b" ".int" main() "" ""
+   .meta "17_string_arrays.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

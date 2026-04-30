@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=0
-   .meta "06_logic.main"="b" ".void" main() "" ""
+   .meta "06_logic.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

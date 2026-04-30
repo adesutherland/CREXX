@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "inline_test_loop_bound_expr.main"="b" ".int" main() "" ""
+   .meta "inline_test_loop_bound_expr.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -67,7 +67,7 @@ l16doend:
    ret 0
 
 repeatCount() .locals=1
-   .meta "inline_test_loop_bound_expr.repeatcount"="b" ".int" repeatCount() "value=.int" ""
+   .meta "inline_test_loop_bound_expr.repeatcount"="b" ".int" repeatCount() "value=.int"
    .src 17:1="repeatCount: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -81,7 +81,7 @@ repeatCount() .locals=1
    .meta "inline_test_loop_bound_expr.repeatcount.value"
 
 startAt() .locals=0
-   .meta "inline_test_loop_bound_expr.startat"="b" ".int" startAt() "" ""
+   .meta "inline_test_loop_bound_expr.startat"="b" ".int" startAt() ""
    .src 21:1="startAt: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -92,7 +92,7 @@ startAt() .locals=0
    ret 1
 
 stopAt() .locals=0
-   .meta "inline_test_loop_bound_expr.stopat"="b" ".int" stopAt() "" ""
+   .meta "inline_test_loop_bound_expr.stopat"="b" ".int" stopAt() ""
    .src 24:1="stopAt: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -103,7 +103,7 @@ stopAt() .locals=0
    ret 5
 
 stepSize() .locals=0
-   .meta "inline_test_loop_bound_expr.stepsize"="b" ".int" stepSize() "" ""
+   .meta "inline_test_loop_bound_expr.stepsize"="b" ".int" stepSize() ""
    .src 27:1="stepSize: procedure = .int"
    setnumdgts 18
    setnumfuz 0

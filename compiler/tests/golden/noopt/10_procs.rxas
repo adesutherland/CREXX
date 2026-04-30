@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=3
-   .meta "10_procs.main"="b" ".void" main() "" ""
+   .meta "10_procs.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -26,7 +26,7 @@ main() .locals=3
    ret
 
 MyProc() .locals=2
-   .meta "10_procs.myproc"="b" ".void" MyProc() "x=.int" ""
+   .meta "10_procs.myproc"="b" ".void" MyProc() "x=.int"
    .src 8:1="MyProc: procedure"
    setnumdgts 18
    setnumfuz 0

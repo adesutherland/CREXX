@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=4
-   .meta "repro_dotted_index.main"="b" ".int" main() "" ""
+   .meta "repro_dotted_index.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

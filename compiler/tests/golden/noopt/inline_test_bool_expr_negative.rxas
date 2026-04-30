@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=6
-   .meta "inline_test_bool_expr_negative.main"="b" ".int" main() "" ""
+   .meta "inline_test_bool_expr_negative.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -61,7 +61,7 @@ l8doend:
    ret 0
 
 isTwo() .locals=2
-   .meta "inline_test_bool_expr_negative.istwo"="b" ".int" isTwo() "val=.int" ""
+   .meta "inline_test_bool_expr_negative.istwo"="b" ".int" isTwo() "val=.int"
    .src 12:1="isTwo: procedure = .int"
    setnumdgts 18
    setnumfuz 0

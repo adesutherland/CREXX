@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "inline_test_short_circuit_expr.main"="b" ".int" main() "" ""
+   .meta "inline_test_short_circuit_expr.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -95,7 +95,7 @@ l67ifend:
    .meta "inline_test_short_circuit_expr.main.calls"
 
 probe() .locals=2
-   .meta "inline_test_short_circuit_expr.probe"="b" ".int" probe() "flag=.int,expose count=.int" ""
+   .meta "inline_test_short_circuit_expr.probe"="b" ".int" probe() "flag=.int,expose count=.int"
    .src 30:1="probe: procedure = .int"
    setnumdgts 18
    setnumfuz 0

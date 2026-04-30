@@ -10,7 +10,7 @@
 .globals=0
 
 main() .locals=31
-   .meta "inline_test_class_methods.main"="b" ".int" main() "" ""
+   .meta "inline_test_class_methods.main"="b" ".int" main() ""
    .src 4:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -203,7 +203,7 @@ l321bexprend:
    .meta "inline_test_class_methods.main.saved"
 
 §inline_test_class_methods.box.§factory() .locals=3
-   .meta "inline_test_class_methods.box.§factory"="b" ".box" §inline_test_class_methods.box.§factory() "initial=.string" ""
+   .meta "inline_test_class_methods.box.§factory"="b" ".box" §inline_test_class_methods.box.§factory() "initial=.string"
    .src 28:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_class_methods.box"
@@ -225,7 +225,7 @@ l321bexprend:
    .meta "inline_test_class_methods.box.§factory.§factory"
 
 §inline_test_class_methods.box.label() .locals=2
-   .meta "inline_test_class_methods.box.label"="b" ".string" §inline_test_class_methods.box.label() "" ""
+   .meta "inline_test_class_methods.box.label"="b" ".string" §inline_test_class_methods.box.label() ""
    .src 33:3="label: method = .string"
    setnumdgts 18
    setnumfuz 0
@@ -239,7 +239,7 @@ l321bexprend:
    .meta "inline_test_class_methods.box.label.§this"
 
 §inline_test_class_methods.box.setlabel() .locals=3
-   .meta "inline_test_class_methods.box.setlabel"="b" ".void" §inline_test_class_methods.box.setlabel() "next=.string" ""
+   .meta "inline_test_class_methods.box.setlabel"="b" ".void" §inline_test_class_methods.box.setlabel() "next=.string"
    .src 36:3="setLabel: method = .void"
    setnumdgts 18
    setnumfuz 0
@@ -259,7 +259,7 @@ l321bexprend:
    .meta "inline_test_class_methods.box.setlabel.§this"
 
 §inline_test_class_methods.box.prefix() .locals=6
-   .meta "inline_test_class_methods.box.prefix"="b" ".string" §inline_test_class_methods.box.prefix() "tag=.string" ""
+   .meta "inline_test_class_methods.box.prefix"="b" ".string" §inline_test_class_methods.box.prefix() "tag=.string"
    .src 41:3="prefix: method = .string"
    setnumdgts 18
    setnumfuz 0
@@ -282,7 +282,7 @@ l321bexprend:
    .meta "inline_test_class_methods.box.prefix.§this"
 
 §inline_test_class_methods.box.setandreport() .locals=3
-   .meta "inline_test_class_methods.box.setandreport"="b" ".string" §inline_test_class_methods.box.setandreport() "next=.string" ""
+   .meta "inline_test_class_methods.box.setandreport"="b" ".string" §inline_test_class_methods.box.setandreport() "next=.string"
    .src 45:3="setAndReport: method = .string"
    setnumdgts 18
    setnumfuz 0

@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=20
-   .meta "inline_test_vararg.main"="b" ".int" main() "" ""
+   .meta "inline_test_vararg.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -146,7 +146,7 @@ l155bexprend:
    .meta "inline_test_vararg.main.total"
 
 secondOnly() .locals=3
-   .meta "inline_test_vararg.secondonly"="b" ".int" secondOnly() "base=.int,...=.int" ""
+   .meta "inline_test_vararg.secondonly"="b" ".int" secondOnly() "base=.int,...=.int"
    .src 19:1="secondOnly: procedure = .int"
    setnumdgts 18
    setnumfuz 0

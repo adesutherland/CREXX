@@ -67,7 +67,7 @@ This program, when compiled by the 'rxc' compiler, produces the following assemb
 .globals=0
 
 main() .locals=4
-   .meta "sumloop1000.rexx.main"="b" ".void" main() "" ""
+   .meta "sumloop1000.rexx.main"="b" ".void" main() ""
    .src 4:1="sum = 0"
    .meta "sumloop1000.rexx.main.sum"="b" ".int" r1
    load r1,0
@@ -115,7 +115,7 @@ What follows is the disassembly from this 'rxbin' file.
 .srcfile="sumLoop1000.rexx"
 
 main()          .locals=4
-                .meta "sumloop1000.rexx.main"="b" ".void" main() "" ""
+                .meta "sumloop1000.rexx.main"="b" ".void" main() ""
                 .src 4:1="sum = 0"
                 .meta "sumloop1000.rexx.main.sum"="b" ".int" r1
                 load r1,0                                    * 0x000000:00c3 Load op1 with op2

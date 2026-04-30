@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=10
-   .meta "basic_strings.main"="b" ".void" main() "" ""
+   .meta "basic_strings.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -71,14 +71,14 @@ main() .locals=10
 /* Imported Declaration from file: length@library.rxbin */
 
 rxfnsb.length() .expose=rxfnsb.length
-   .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "expose string1=.string" ""
+   .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "expose string1=.string"
 
 /* Imported Declaration from file: substr@library.rxbin */
 
 rxfnsb.substr() .expose=rxfnsb.substr
-   .meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string1=.string,start=.int,?len=.int,?pad=.string" ""
+   .meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string1=.string,start=.int,?len=.int,?pad=.string"
 
 /* Imported Declaration from file: pos@library.rxbin */
 
 rxfnsb.pos() .expose=rxfnsb.pos
-   .meta "rxfnsb.pos"="b" ".int" rxfnsb.pos() "needle=.string,haystack=.string,?start=.int" ""
+   .meta "rxfnsb.pos"="b" ".int" rxfnsb.pos() "needle=.string,haystack=.string,?start=.int"

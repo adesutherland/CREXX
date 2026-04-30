@@ -10,7 +10,7 @@ g0 .expose=refidx.idx
 g1 .expose=refidx.values
 
 main() .locals=4
-   .meta "refidx.main"="b" ".int" main() "" ""
+   .meta "refidx.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -60,7 +60,7 @@ main() .locals=4
    ret 0
 
 refBump() .locals=1
-   .meta "refidx.refbump"="b" ".int" refBump() "expose value=.int" ""
+   .meta "refidx.refbump"="b" ".int" refBump() "expose value=.int"
    .src 16:1="refBump: procedure = .int"
    setnumdgts 18
    setnumfuz 0

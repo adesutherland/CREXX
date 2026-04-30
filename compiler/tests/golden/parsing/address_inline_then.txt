@@ -149,10 +149,8 @@ Scope [0]: Unnamed
       err (Variable) -> .binary
       in (Variable) -> .binary
       out (Variable) -> .binary
+DEBUG_INLINE _noredir @ _address@library.rxbin:2 - reject: procedure has no instruction list
 DEBUG_INLINE _address @ _address@library.rxbin:2 - reject: procedure has no instruction list
-DEBUG_INLINE_FAILCLOSED _noredir @ exit_fragment:1:31 - BLOCK_EXPR expression inline requires a direct single-value consumer
-DEBUG_INLINE_FAILCLOSED _noredir @ exit_fragment:1:42 - BLOCK_EXPR expression inline requires a direct single-value consumer
-DEBUG_INLINE_FAILCLOSED _noredir @ exit_fragment:1:53 - BLOCK_EXPR expression inline requires a direct single-value consumer
 
 --- STAGE_FINAL ---
 REXX_UNIVERSE : "" (0:1) [Type: .void]

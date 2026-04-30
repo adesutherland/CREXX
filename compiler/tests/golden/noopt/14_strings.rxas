@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=1
-   .meta "14_strings.main"="b" ".void" main() "" ""
+   .meta "14_strings.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

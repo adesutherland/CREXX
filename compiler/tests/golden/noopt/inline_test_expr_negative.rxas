@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=7
-   .meta "inline_test_expr_negative.main"="b" ".int" main() "" ""
+   .meta "inline_test_expr_negative.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -63,7 +63,7 @@ l8doend:
    ret 0
 
 identity() .locals=1
-   .meta "inline_test_expr_negative.identity"="b" ".int" identity() "val=.int" ""
+   .meta "inline_test_expr_negative.identity"="b" ".int" identity() "val=.int"
    .src 12:1="identity: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -77,7 +77,7 @@ identity() .locals=1
    .meta "inline_test_expr_negative.identity.val"
 
 addOne() .locals=2
-   .meta "inline_test_expr_negative.addone"="b" ".int" addOne() "val=.int" ""
+   .meta "inline_test_expr_negative.addone"="b" ".int" addOne() "val=.int"
    .src 16:1="addOne: procedure = .int"
    setnumdgts 18
    setnumfuz 0

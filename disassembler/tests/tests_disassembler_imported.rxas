@@ -6,9 +6,10 @@
 .globals=0
 
 word() .expose=rxfnsb.word
-   .meta "rxfnsb.word"="b" ".string" word() "string=.string,wordnum=.int" ""
+   .meta "rxfnsb.word"="b" ".string" word() "string=.string,wordnum=.int"
+   .meta "rxfnsb.word"=".inline" "I4;a;b"
 
 main() .locals=0
-   .meta "disassembler_imported.main"="b" ".void" main() "" ""
+   .meta "disassembler_imported.main"="b" ".void" main() ""
    sayx "PASS: Imported Roundtrip"
    ret

@@ -10,7 +10,7 @@
 .globals=0
 
 main() .locals=9
-   .meta "inline_test_object_const_arg_mutation.main"="b" ".int" main() "" ""
+   .meta "inline_test_object_const_arg_mutation.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -64,7 +64,7 @@ l127bexprend:
    .meta "inline_test_object_const_arg_mutation.main.box"
 
 §inline_test_object_const_arg_mutation.box.§factory() .locals=3
-   .meta "inline_test_object_const_arg_mutation.box.§factory"="b" ".box" §inline_test_object_const_arg_mutation.box.§factory() "initial=.string" ""
+   .meta "inline_test_object_const_arg_mutation.box.§factory"="b" ".box" §inline_test_object_const_arg_mutation.box.§factory() "initial=.string"
    .src 19:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_const_arg_mutation.box"
@@ -86,7 +86,7 @@ l127bexprend:
    .meta "inline_test_object_const_arg_mutation.box.§factory.§factory"
 
 §inline_test_object_const_arg_mutation.box.setname() .locals=3
-   .meta "inline_test_object_const_arg_mutation.box.setname"="b" ".void" §inline_test_object_const_arg_mutation.box.setname() "next=.string" ""
+   .meta "inline_test_object_const_arg_mutation.box.setname"="b" ".void" §inline_test_object_const_arg_mutation.box.setname() "next=.string"
    .src 24:3="setName: method = .void"
    setnumdgts 18
    setnumfuz 0
@@ -106,7 +106,7 @@ l127bexprend:
    .meta "inline_test_object_const_arg_mutation.box.setname.§this"
 
 §inline_test_object_const_arg_mutation.box.getname() .locals=2
-   .meta "inline_test_object_const_arg_mutation.box.getname"="b" ".string" §inline_test_object_const_arg_mutation.box.getname() "" ""
+   .meta "inline_test_object_const_arg_mutation.box.getname"="b" ".string" §inline_test_object_const_arg_mutation.box.getname() ""
    .src 29:3="getName: method = .string"
    setnumdgts 18
    setnumfuz 0

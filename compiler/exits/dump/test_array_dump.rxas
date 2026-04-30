@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=6
-   .meta "test_array_dump.main"="b" ".void" main() "" ""
+   .meta "test_array_dump.main"="b" ".void" main() ""
    .src 4:1="main: procedure"
    setnumdgts 18
    setnumfuz 0

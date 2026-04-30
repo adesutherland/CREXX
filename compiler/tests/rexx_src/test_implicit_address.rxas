@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=8
-   .meta "test_implicit_address.main"="b" ".void" main() "" ""
+   .meta "test_implicit_address.main"="b" ".void" main() ""
    .src 3:1="main: procedure"
    setnumdgts 18
    setnumfuz 0
@@ -57,9 +57,9 @@ main() .locals=8
 /* Imported Declaration from file: _address@library.rxbin */
 
 _noredir() .expose=_rxsysb._noredir
-   .meta "_rxsysb._noredir"="b" ".binary" _noredir() "" ""
+   .meta "_rxsysb._noredir"="b" ".binary" _noredir() ""
 
 /* Imported Declaration from file: _address@library.rxbin */
 
 _address() .expose=_rxsysb._address
-   .meta "_rxsysb._address"="b" ".int" _address() "?env=.string,?command=.string,in=.binary,out=.binary,err=.binary,expose ...=.string" ""
+   .meta "_rxsysb._address"="b" ".int" _address() "?env=.string,?command=.string,in=.binary,out=.binary,err=.binary,expose ...=.string"

@@ -32,7 +32,7 @@
 native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
 execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=1;decimal=1
 binfiles='';lastfile=0;sourceRoots='';binaryRoots='';importRxas=0
-linkStripSource=1;linkMap='';linkOptionsUsed=0;cleanupFiles=''
+linkStripSource=1;linkPreserveInline=0;linkMap='';linkOptionsUsed=0;cleanupFiles=''
  
  esc             = '1b'X
  ANSI_RESET      = '[0m'
@@ -119,6 +119,14 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
        end
        if fn.i = '-link-strip-source' then do
          linkStripSource = 1
+         linkOptionsUsed = 1
+       end
+       if fn.i = '-link-keep-inline' then do
+         linkPreserveInline = 1
+         linkOptionsUsed = 1
+       end
+       if fn.i = '-link-strip-inline' then do
+         linkPreserveInline = 0
          linkOptionsUsed = 1
        end
 
@@ -396,6 +404,7 @@ do i=1 to words(filenames)
 
     link_cmd = rxpath || 'bin' || dirsep || 'rxlink'
     if linkStripSource then link_cmd = link_cmd || ' -s'
+    if linkPreserveInline then link_cmd = link_cmd || ' -i'
     if linkMap <> '' then link_cmd = link_cmd || ' -m ' || linkMap
     link_cmd = link_cmd || ' -o ' || linkedOutput
     loop f=1 to words(linkInputs)
@@ -511,6 +520,7 @@ say '-i[path]         -- additional raw binary import root for the rxc phase'
 say '--import-rxas    -- allow the rxc phase to auto-import .rxas from binary roots'
 say '--linkmap path   -- write an rxlink map file when using -native'
 say '--link-keep-source -- keep source/file metadata in the linked native image'
+say '--link-keep-inline -- keep inline-body metadata in the linked native image'
 say
 say 'Headerless top-level scripts are compiled with --level levelb --import rxfnsb.'
 say 'Options -s, -i and --import-rxas affect compilation only; runtime/native loading still uses -l.'

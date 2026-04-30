@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=10
-   .meta "poc_plugin.main"="b" ".void" main() "" ""
+   .meta "poc_plugin.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

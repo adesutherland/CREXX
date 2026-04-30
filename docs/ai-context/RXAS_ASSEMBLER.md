@@ -48,7 +48,7 @@ context->binary.binary[context->binary.inst_size++].iconst = token->integer;
 
 ### Constant Pool
 Strings, pooled float literals, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
-Types include: `STRING_CONST`, `FLOAT_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_REG`, etc.
+Types include: `STRING_CONST`, `FLOAT_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_INLINE`, `META_REG`, etc.
 
 The serialized `expose_head` chain includes both `EXPOSE_REG_CONST` and
 `EXPOSE_PROC_CONST` records. Runtime linking and other module-local walkers now
@@ -60,6 +60,14 @@ and `META_ATTR`, the assembler now serializes:
 - `META_INTERFACE` for one interface header
 - `META_IMPLEMENTS` for one concrete-class-to-interface link
 - `META_MEMBER` for one interface method or factory declaration
+
+Cross-file compiler inlining also uses the metadata path. Callable signatures
+remain in `META_FUNC`; inline-body templates are carried separately in
+`META_INLINE`, emitted in RXAS as:
+
+```rxas
+.meta "fully.qualified.callable"=".inline" "I4;..."
+```
 
 Metadata-only modules are valid. For example, an interface contract file may
 compile to `.rxas` containing `.meta` records and no function bodies; `rxas`

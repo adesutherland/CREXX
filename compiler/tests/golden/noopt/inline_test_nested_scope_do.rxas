@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=6
-   .meta "inline_test_nested_scope_do.main"="b" ".int" main() "" ""
+   .meta "inline_test_nested_scope_do.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -46,7 +46,7 @@ l8doend:
    ret 0
 
 scopedAdd() .locals=2
-   .meta "inline_test_nested_scope_do.scopedadd"="b" ".int" scopedAdd() "val=.int" ""
+   .meta "inline_test_nested_scope_do.scopedadd"="b" ".int" scopedAdd() "val=.int"
    .src 11:1="scopedAdd: procedure = .int"
    setnumdgts 18
    setnumfuz 0

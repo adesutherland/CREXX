@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=6
-   .meta "arg_semantics_scalar.main"="b" ".int" main() "" ""
+   .meta "arg_semantics_scalar.main"="b" ".int" main() ""
    .src 4:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -82,7 +82,7 @@ main() .locals=6
    .meta "arg_semantics_scalar.main.text"
 
 inspectInt() .locals=2
-   .meta "arg_semantics_scalar.inspectint"="b" ".int" inspectInt() "value=.int" ""
+   .meta "arg_semantics_scalar.inspectint"="b" ".int" inspectInt() "value=.int"
    .src 19:1="inspectInt: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -97,7 +97,7 @@ inspectInt() .locals=2
    .meta "arg_semantics_scalar.inspectint.value"
 
 addTen() .locals=1
-   .meta "arg_semantics_scalar.addten"="b" ".int" addTen() "value=.int" ""
+   .meta "arg_semantics_scalar.addten"="b" ".int" addTen() "value=.int"
    .src 23:1="addTen: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -114,7 +114,7 @@ addTen() .locals=1
    .meta "arg_semantics_scalar.addten.value"
 
 addOneRef() .locals=1
-   .meta "arg_semantics_scalar.addoneref"="b" ".void" addOneRef() "expose value=.int" ""
+   .meta "arg_semantics_scalar.addoneref"="b" ".void" addOneRef() "expose value=.int"
    .src 28:1="addOneRef: procedure = .void"
    setnumdgts 18
    setnumfuz 0
@@ -130,7 +130,7 @@ addOneRef() .locals=1
    .meta "arg_semantics_scalar.addoneref.value"
 
 readText() .locals=2
-   .meta "arg_semantics_scalar.readtext"="b" ".string" readText() "text=.string" ""
+   .meta "arg_semantics_scalar.readtext"="b" ".string" readText() "text=.string"
    .src 33:1="readText: procedure = .string"
    setnumdgts 18
    setnumfuz 0
@@ -145,7 +145,7 @@ readText() .locals=2
    .meta "arg_semantics_scalar.readtext.text"
 
 shoutText() .locals=3
-   .meta "arg_semantics_scalar.shouttext"="b" ".string" shoutText() "text=.string" ""
+   .meta "arg_semantics_scalar.shouttext"="b" ".string" shoutText() "text=.string"
    .src 37:1="shoutText: procedure = .string"
    setnumdgts 18
    setnumfuz 0
@@ -174,4 +174,4 @@ l103d:
 /* Imported Declaration from file: upper@library.rxbin */
 
 rxfnsb.upper() .expose=rxfnsb.upper
-   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string" ""
+   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string"

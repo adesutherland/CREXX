@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=7
-   .meta "inline_test_complex_lhs_assign.main"="b" ".int" main() "" ""
+   .meta "inline_test_complex_lhs_assign.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -44,7 +44,7 @@ main() .locals=7
    .meta "inline_test_complex_lhs_assign.main.values"
 
 addOne() .locals=2
-   .meta "inline_test_complex_lhs_assign.addone"="b" ".int" addOne() "value=.int" ""
+   .meta "inline_test_complex_lhs_assign.addone"="b" ".int" addOne() "value=.int"
    .src 11:1="addOne: procedure = .int"
    setnumdgts 18
    setnumfuz 0

@@ -10,7 +10,7 @@ g0 .expose=refneg.idx
 g1 .expose=refneg.values
 
 main() .locals=3
-   .meta "refneg.main"="b" ".int" main() "" ""
+   .meta "refneg.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -66,7 +66,7 @@ l35iffalse:
    ret 0
 
 refBump() .locals=1
-   .meta "refneg.refbump"="b" ".int" refBump() "expose value=.int" ""
+   .meta "refneg.refbump"="b" ".int" refBump() "expose value=.int"
    .src 16:1="refBump: procedure = .int"
    setnumdgts 18
    setnumfuz 0

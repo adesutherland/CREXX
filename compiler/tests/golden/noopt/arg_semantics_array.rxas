@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "arg_semantics_array.main"="b" ".int" main() "" ""
+   .meta "arg_semantics_array.main"="b" ".int" main() ""
    .src 4:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -86,7 +86,7 @@ main() .locals=5
    .meta "arg_semantics_array.main.arr"
 
 readArray() .locals=4
-   .meta "arg_semantics_array.readarray"="b" ".string" readArray() "value=.string[*]" ""
+   .meta "arg_semantics_array.readarray"="b" ".string" readArray() "value=.string[*]"
    .src 17:1="readArray: procedure = .string"
    setnumdgts 18
    setnumfuz 0
@@ -108,7 +108,7 @@ readArray() .locals=4
    .meta "arg_semantics_array.readarray.value"
 
 mutateArrayLocal() .locals=6
-   .meta "arg_semantics_array.mutatearraylocal"="b" ".string" mutateArrayLocal() "value=.string[*]" ""
+   .meta "arg_semantics_array.mutatearraylocal"="b" ".string" mutateArrayLocal() "value=.string[*]"
    .src 21:1="mutateArrayLocal: procedure = .string"
    setnumdgts 18
    setnumfuz 0
@@ -155,7 +155,7 @@ l82d:
    .meta "arg_semantics_array.mutatearraylocal.value"
 
 mutateArrayRef() .locals=6
-   .meta "arg_semantics_array.mutatearrayref"="b" ".void" mutateArrayRef() "expose value=.string[*]" ""
+   .meta "arg_semantics_array.mutatearrayref"="b" ".void" mutateArrayRef() "expose value=.string[*]"
    .src 27:1="mutateArrayRef: procedure = .void"
    setnumdgts 18
    setnumfuz 0
@@ -187,7 +187,7 @@ mutateArrayRef() .locals=6
    .meta "arg_semantics_array.mutatearrayref.value"
 
 makeArray() .locals=3
-   .meta "arg_semantics_array.makearray"="b" ".string[*]" makeArray() "" ""
+   .meta "arg_semantics_array.makearray"="b" ".string[*]" makeArray() ""
    .src 33:1="makeArray: procedure = .string[]"
    setnumdgts 18
    setnumfuz 0
@@ -216,4 +216,4 @@ makeArray() .locals=3
 /* Imported Declaration from file: upper@library.rxbin */
 
 rxfnsb.upper() .expose=rxfnsb.upper
-   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string" ""
+   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string"

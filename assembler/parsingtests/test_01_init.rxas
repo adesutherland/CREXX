@@ -1,7 +1,7 @@
 /* Valid rxas test code */
           .globals=0
 words()   .locals=8 .expose=rxfnsb.words
-   .meta "rxfnsb.words"="b" ".int" words() "string1 = .string" ""
+   .meta "rxfnsb.words"="b" ".int" words() "string1 = .string"
     /* string    = arg1    */
    copy  r1,a1
    load  r3,0   /* offset in string */

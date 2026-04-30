@@ -165,6 +165,15 @@ any, remain unresolved inside the current link set.
 
 ## Stripping Source Metadata
 
+`rxlink` strips inline-body metadata from linked output by default. Inline
+metadata is intended for library artifacts consumed by `rxc`; it is not needed
+after a final linked image has been built. Use `rxlink -i` to preserve it for
+diagnostic or tooling builds. The equivalent control-file form is:
+
+```text
+PRESERVE INLINE
+```
+
 `rxlink -s` strips source/file metadata from the linked output. The equivalent control-file form is:
 
 ```text

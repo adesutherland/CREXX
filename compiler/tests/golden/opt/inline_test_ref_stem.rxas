@@ -10,7 +10,7 @@ g0 .expose=refstem.lino
 g1 .expose=refstem.outbuf
 
 main() .locals=4
-   .meta "refstem.main"="b" ".int" main() "" ""
+   .meta "refstem.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

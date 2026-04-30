@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "class_import_main.main"="b" ".int" main() "" ""
+   .meta "class_import_main.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -46,10 +46,10 @@ l58bexprend:
 /* Imported Declaration from file: class_import_lib.rexx */
 
 §class_import_lib.counter.§factory() .expose=class_import_lib.counter.§factory
-   .meta "class_import_lib.counter.§factory"="b" ".counter" §class_import_lib.counter.§factory() "" ""
+   .meta "class_import_lib.counter.§factory"="b" ".counter" §class_import_lib.counter.§factory() ""
 
 §class_import_lib.counter.inc() .expose=class_import_lib.counter.inc
-   .meta "class_import_lib.counter.inc"="b" ".void" §class_import_lib.counter.inc() "" ""
+   .meta "class_import_lib.counter.inc"="b" ".void" §class_import_lib.counter.inc() ""
 
 §class_import_lib.counter.value() .expose=class_import_lib.counter.value
-   .meta "class_import_lib.counter.value"="b" ".int" §class_import_lib.counter.value() "" ""
+   .meta "class_import_lib.counter.value"="b" ".int" §class_import_lib.counter.value() ""

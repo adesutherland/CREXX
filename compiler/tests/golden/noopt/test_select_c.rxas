@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=13
-   .meta "test_select_c.main"="b" ".void" main() "" ""
+   .meta "test_select_c.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

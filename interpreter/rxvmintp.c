@@ -2894,7 +2894,7 @@ START_OF_INSTRUCTIONS
                             break;
                         case META_FUNC:
                             set_null_string(op1R->attributes[j], ".meta_func");
-                            set_num_attributes(op1R->attributes[j], 6);
+                            set_num_attributes(op1R->attributes[j], 5);
                             x = (rxinteger) ((meta_func_constant *) (pool + i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
                             x = (rxinteger) ((meta_func_constant *) (pool + i))->option;
@@ -2905,8 +2905,6 @@ START_OF_INSTRUCTIONS
                             set_const_string(op1R->attributes[j]->attributes[3], (string_constant *) (pool + x));
                             op1R->attributes[j]->attributes[4]->int_value = (rxinteger) ((meta_func_constant *) (pool +
                                                                                                                  i))->func;
-                            x = (rxinteger) ((meta_func_constant *) (pool + i))->inliner;
-                            set_const_string(op1R->attributes[j]->attributes[5], (string_constant *) (pool + x));
                             break;
                         case META_REG:
                             set_null_string(op1R->attributes[j], ".meta_reg");
@@ -2975,6 +2973,14 @@ START_OF_INSTRUCTIONS
                             set_const_string(op1R->attributes[j]->attributes[3], (string_constant *) (pool + x));
                             x = (rxinteger) ((meta_member_constant *) (pool + i))->args;
                             set_const_string(op1R->attributes[j]->attributes[4], (string_constant *) (pool + x));
+                            break;
+                        case META_INLINE:
+                            set_null_string(op1R->attributes[j], ".meta_inline");
+                            set_num_attributes(op1R->attributes[j], 2);
+                            x = (rxinteger) ((meta_inline_constant *) (pool + i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_inline_constant *) (pool + i))->payload;
+                            set_const_string(op1R->attributes[j]->attributes[1], (string_constant *) (pool + x));
                             break;
                         case STRING_CONST:
                         case FLOAT_CONST:

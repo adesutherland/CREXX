@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=7
-   .meta "inline_test_void_fallthrough_call.main"="b" ".int" main() "" ""
+   .meta "inline_test_void_fallthrough_call.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -36,7 +36,7 @@ main() .locals=7
    ret 0
 
 maybeLog() .locals=2
-   .meta "inline_test_void_fallthrough_call.maybelog"="b" ".void" maybeLog() "val=.int" ""
+   .meta "inline_test_void_fallthrough_call.maybelog"="b" ".void" maybeLog() "val=.int"
    .src 11:1="maybeLog: procedure = .void"
    setnumdgts 18
    setnumfuz 0
@@ -61,7 +61,7 @@ l32iffalse:
    .meta "inline_test_void_fallthrough_call.maybelog.val"
 
 tracePair() .locals=3
-   .meta "inline_test_void_fallthrough_call.tracepair"="b" ".void" tracePair() "left=.int,right=.int" ""
+   .meta "inline_test_void_fallthrough_call.tracepair"="b" ".void" tracePair() "left=.int,right=.int"
    .src 16:1="tracePair: procedure = .void"
    setnumdgts 18
    setnumfuz 0

@@ -10,7 +10,7 @@
 .globals=0
 
 main() .locals=10
-   .meta "inline_test_object_writable_arg.main"="b" ".int" main() "" ""
+   .meta "inline_test_object_writable_arg.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -80,7 +80,7 @@ l130bexprend:
    .meta "inline_test_object_writable_arg.main.box"
 
 §inline_test_object_writable_arg.box.§factory() .locals=3
-   .meta "inline_test_object_writable_arg.box.§factory"="b" ".box" §inline_test_object_writable_arg.box.§factory() "initial=.string" ""
+   .meta "inline_test_object_writable_arg.box.§factory"="b" ".box" §inline_test_object_writable_arg.box.§factory() "initial=.string"
    .src 19:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_writable_arg.box"
@@ -102,7 +102,7 @@ l130bexprend:
    .meta "inline_test_object_writable_arg.box.§factory.§factory"
 
 §inline_test_object_writable_arg.box.getname() .locals=2
-   .meta "inline_test_object_writable_arg.box.getname"="b" ".string" §inline_test_object_writable_arg.box.getname() "" ""
+   .meta "inline_test_object_writable_arg.box.getname"="b" ".string" §inline_test_object_writable_arg.box.getname() ""
    .src 24:3="getName: method = .string"
    setnumdgts 18
    setnumfuz 0

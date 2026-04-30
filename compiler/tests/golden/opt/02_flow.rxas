@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=3
-   .meta "02_flow.main"="b" ".void" main() "" ""
+   .meta "02_flow.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

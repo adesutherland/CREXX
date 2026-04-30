@@ -100,6 +100,9 @@ This keeps the direct interpreter path fast while still producing compact native
 `--link-keep-source`
 : When using `-native`, keep source/file metadata in the linked intermediate instead of using the default stripped output.
 
+`--link-keep-inline`
+: When using `-native`, keep inline-body metadata in the linked intermediate. The native link strips this metadata by default because it is only needed by later compiler imports and debugging/tooling checks.
+
 `-s`, `-i`, and `--import-rxas` are compile-time controls only. They do not automatically add runtime modules to `rxvme` or to native links. For runtime/native library loading, continue to use `-l`.
 
 Headerless top-level scripts are still compiled with `--level levelb --import rxfnsb`.

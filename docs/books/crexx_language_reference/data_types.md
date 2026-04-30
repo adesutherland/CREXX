@@ -222,9 +222,14 @@ An array of objects for all the metadata returned by the instruction, meaning fo
 * Attribute 1. String_value = function symbol
 * Attribute 2. String_value = option (e.g. “b”)
 * Attribute 3. String_value = function return type
-* Attribute 4. String_value = argos
+* Attribute 4. String_value = args
 * Attribute 5. Int_value = function pointer
-* Attribute 6. String_value = inline string
+
+*META_INLINE:*
+
+* String_value = ".meta_inline"
+* Attribute 1. String_value = function symbol
+* Attribute 2. String_value = inline metadata payload
 
 *META_REG:*
 

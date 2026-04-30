@@ -191,11 +191,11 @@ function(add_crexx_native_test NAME SOURCE_FILE)
         string(APPEND SCRIPT_CONTENT "if(NOT das_res EQUAL 0)\n  message(FATAL_ERROR \"rxdas failed for ${NAME}.\\nstdout:\\n\${das_out}\\nstderr:\\n\${das_err}\")\nendif()\n")
         foreach(_needle IN LISTS CREXXN_EXPECT_DAS_CONTAINS)
             string(APPEND SCRIPT_CONTENT "string(FIND \"\${das_out}\" [=[${_needle}]=] pos)\n")
-            string(APPEND SCRIPT_CONTENT "if(pos EQUAL -1)\n  message(FATAL_ERROR \"Missing expected rxdas text [=[${_needle}]=] for ${NAME}.\\nOutput:\\n\${das_out}\")\nendif()\n")
+            string(APPEND SCRIPT_CONTENT "if(pos EQUAL -1)\n  message(FATAL_ERROR \"Missing expected rxdas text for ${NAME}.\\nOutput:\\n\${das_out}\")\nendif()\n")
         endforeach()
         foreach(_needle IN LISTS CREXXN_EXPECT_DAS_ABSENT)
             string(APPEND SCRIPT_CONTENT "string(FIND \"\${das_out}\" [=[${_needle}]=] pos)\n")
-            string(APPEND SCRIPT_CONTENT "if(NOT pos EQUAL -1)\n  message(FATAL_ERROR \"Unexpected rxdas text [=[${_needle}]=] for ${NAME}.\\nOutput:\\n\${das_out}\")\nendif()\n")
+            string(APPEND SCRIPT_CONTENT "if(NOT pos EQUAL -1)\n  message(FATAL_ERROR \"Unexpected rxdas text for ${NAME}.\\nOutput:\\n\${das_out}\")\nendif()\n")
         endforeach()
     endif()
 
@@ -236,6 +236,13 @@ add_crexx_native_test(
         CREXX_ARGS "--linkmap" "explicit_header.map" "--link-keep-source"
         MAP_FILE "explicit_header.map"
         EXPECT_DAS_CONTAINS ".srcfile="
+)
+add_crexx_native_test(
+        crexx_native_link_keep_inline
+        rexx_src/native_inline_helper.rexx
+        CREXX_ARGS "--link-keep-inline"
+        EXPECT_OUTPUT "7\n"
+        EXPECT_DAS_CONTAINS ".meta \"native_inline_helper.helper\"=\".inline\""
 )
 add_crexx_native_test(
         crexx_native_nokeep_cleanup

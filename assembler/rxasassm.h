@@ -22,7 +22,7 @@ void rxasqmfl(Assembler_Context *context, Assembler_Token *file);
 /* Source Line */
 void rxasqmsr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source);
 /* Function Metadata */
-void rxasqmfu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args, Assembler_Token *inliner);
+void rxasqmfu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args);
 /* Register Metadata */
 void rxasqmre(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
 /* Constant Metadata */
@@ -37,6 +37,8 @@ void rxasqmintf(Assembler_Context *context, Assembler_Token *symbol, Assembler_T
 void rxasqmimpl(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *interface_symbol);
 /* Interface Member Metadata */
 void rxasqmmemb(Assembler_Context *context, Assembler_Token *owner, Assembler_Token *kind, Assembler_Token *member, Assembler_Token *type, Assembler_Token *args);
+/* Inline Metadata */
+void rxasqmil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *payload);
 /* Clear Metadata */
 void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol);
 
@@ -65,7 +67,7 @@ void rxasmefl(Assembler_Context *context, Assembler_Token *file);
 /* Source Line */
 void rxasmesr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source);
 /* Function Metadata */
-void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args, Assembler_Token *inliner);
+void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args);
 /* Register Metadata */
 void rxasmere(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
 /* Constant Metadata */
@@ -80,6 +82,8 @@ void rxasmeintf(Assembler_Context *context, Assembler_Token *symbol, Assembler_T
 void rxasmeimpl(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *interface_symbol);
 /* Interface Member Metadata */
 void rxasmememb(Assembler_Context *context, Assembler_Token *owner, Assembler_Token *kind, Assembler_Token *member, Assembler_Token *type, Assembler_Token *args);
+/* Inline Metadata */
+void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *payload);
 /* Clear Metadata */
 void rxasmecl(Assembler_Context *context, Assembler_Token *symbol);
 

@@ -15,7 +15,7 @@
 g0 .expose=disassembler_roundtrip.shared
 
 main() .locals=6
-   .meta "disassembler_roundtrip.main"="b" ".void" main() "" ""
+   .meta "disassembler_roundtrip.main"="b" ".void" main() ""
    .src 1:1="local = \"hello\""
    .meta "disassembler_roundtrip.main.local"="b" ".string" r1
    .meta "disassembler_roundtrip.main.answer"="b" ".string" "forty-two"
@@ -32,5 +32,6 @@ main() .locals=6
    .meta "disassembler_roundtrip.main.local"
 
 helper() .locals=0 .expose=disassembler_roundtrip.helper
-   .meta "disassembler_roundtrip.helper"="b" ".void" helper() "" ""
+   .meta "disassembler_roundtrip.helper"="b" ".void" helper() ""
+   .meta "disassembler_roundtrip.helper"=".inline" "I4;a;b"
    ret

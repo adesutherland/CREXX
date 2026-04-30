@@ -122,6 +122,22 @@ add_subdirectory(lib)
 add_subdirectory(tests)
 add_subdirectory(bin crexx_driver)
 
+if(TARGET linked_opt_runtime_artifacts)
+    add_test(
+            NAME linked_opt_runtime_artifacts_build
+            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target linked_opt_runtime_artifacts
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    # This test invokes a nested build; keep it out of the parallel test pool so
+    # generated artifacts cannot race with tests that use the same build tree.
+    set_tests_properties(linked_opt_runtime_artifacts_build PROPERTIES
+            FIXTURES_SETUP linked_opt_runtime_artifacts
+            RUN_SERIAL TRUE)
+    if(TARGET linked_opt_sweep)
+        add_dependencies(linked_opt_sweep linked_opt_runtime_artifacts)
+    endif()
+endif()
+
 set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 

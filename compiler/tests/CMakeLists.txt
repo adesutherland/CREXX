@@ -71,7 +71,6 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
 # Based on rxcpmain.c: -n is for No Optimising, and it's on by default.
 set(COMPILER_NOOPT_FLAG "-n")
 set(COMPILER_OPT_FLAG "") # Default is optimized
-set(CREXX_TEST_DRIVER_RESOURCE_LOCK "crexx_test_driver_workspace")
 
 # Macro to add a compiler test
 # NAME: Name of the test
@@ -83,7 +82,6 @@ macro(add_crexx_compiler_test NAME SOURCE_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/noopt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt.rxas
              $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${COMPILER_NOOPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
-    set_tests_properties(${NAME}_noopt PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
     # Test 2 (Opt)
     add_test(NAME ${NAME}_opt
@@ -91,7 +89,6 @@ macro(add_crexx_compiler_test NAME SOURCE_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/opt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt.rxas
              $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${COMPILER_OPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
-    set_tests_properties(${NAME}_opt PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 endmacro()
 
 # Macro to add a compiler warning test
@@ -101,7 +98,6 @@ macro(add_crexx_compiler_warning_test NAME SOURCE_FILE GOLDEN_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/warnings/${GOLDEN_FILE}
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_warn.txt
              $<TARGET_FILE:rxc> ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
-    set_tests_properties(${NAME}_warn PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 endmacro()
 
 # Macro to add a compiler failure test
@@ -111,7 +107,6 @@ macro(add_crexx_compiler_fail_test NAME SOURCE_FILE GOLDEN_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/${GOLDEN_FILE}
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_fail.txt
              $<TARGET_FILE:rxc> ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
-    set_tests_properties(${NAME}_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 endmacro()
 
 # Macro to add a compiler test with one dependency
@@ -125,7 +120,6 @@ macro(add_crexx_compiler_dep_test NAME SOURCE_FILE DEP_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/noopt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt.rxas
              $<TARGET_FILE:rxc> ${COMPILER_NOOPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_noopt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
-    set_tests_properties(${NAME}_noopt PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
     # Test 2 (Opt)
     add_test(NAME ${NAME}_opt
@@ -133,7 +127,6 @@ macro(add_crexx_compiler_dep_test NAME SOURCE_FILE DEP_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/opt/${NAME}.rxas
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt.rxas
              $<TARGET_FILE:rxc> ${COMPILER_OPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
-    set_tests_properties(${NAME}_opt PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 endmacro()
 
 # Macro to add a parsing test
@@ -143,7 +136,6 @@ macro(add_crexx_parsing_test NAME SOURCE_FILE)
              ${CMAKE_CURRENT_SOURCE_DIR}/golden/parsing/${NAME}.txt
              ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_ast.txt
              $<TARGET_FILE:rxc> -dp ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
-    set_tests_properties(${NAME}_parse PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 endmacro()
 
 set(RXAS_DIAG_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxas_invalid_diagnostic.cmake")
@@ -173,7 +165,6 @@ file(GENERATE OUTPUT "${RXAS_DIAG_SCRIPT}" CONTENT "${RXAS_DIAG_CONTENT}")
 add_test(NAME rxas_invalid_diagnostic
          COMMAND ${CMAKE_COMMAND} -P "${RXAS_DIAG_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(rxas_invalid_diagnostic PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
 # Robustness tests
 macro(add_crexx_robustness_test NAME MAIN_FILE)
@@ -301,28 +292,24 @@ add_test(NAME err_address_exit_disabled_fail
          ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_address_exit_disabled.txt
          ${CMAKE_CURRENT_BINARY_DIR}/err_address_exit_disabled_fail.txt
          $<TARGET_FILE:rxc> -x ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_address_exit_disabled.rexx)
-set_tests_properties(err_address_exit_disabled_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
 add_test(NAME err_parse_exit_disabled_fail
          COMMAND crexx_test_driver --expect-fail
          ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_parse_exit_disabled.txt
          ${CMAKE_CURRENT_BINARY_DIR}/err_parse_exit_disabled_fail.txt
          $<TARGET_FILE:rxc> -x ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_parse_exit_disabled.rexx)
-set_tests_properties(err_parse_exit_disabled_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
 add_test(NAME err_parse_inline_then_exit_disabled_fail
          COMMAND crexx_test_driver --expect-fail
          ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_parse_inline_then_exit_disabled.txt
          ${CMAKE_CURRENT_BINARY_DIR}/err_parse_inline_then_exit_disabled_fail.txt
          $<TARGET_FILE:rxc> -x ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_parse_inline_then_exit_disabled.rexx)
-set_tests_properties(err_parse_inline_then_exit_disabled_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
 add_test(NAME err_trace_exit_disabled_fail
          COMMAND crexx_test_driver --expect-fail
          ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_trace_exit_disabled.txt
          ${CMAKE_CURRENT_BINARY_DIR}/err_trace_exit_disabled_fail.txt
          $<TARGET_FILE:rxc> -x ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_trace_exit_disabled.rexx)
-set_tests_properties(err_trace_exit_disabled_fail PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
 
 add_crexx_compiler_fail_test(err_parse_missing_arguments rexx_src/err_parse_missing_arguments.rexx err_parse_missing_arguments.txt)
 
@@ -568,9 +555,7 @@ function(add_crexx_interface_import_run_test NAME MAIN_FILE DEP_FILE MODE)
                  COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
         if(TEST_MODE STREQUAL "opt")
-            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK} LABELS "linked_opt")
-        else()
-            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES LABELS "linked_opt")
         endif()
     endforeach()
 endfunction()
@@ -688,9 +673,7 @@ function(add_crexx_dual_import_run_test NAME MAIN_FILE DEP_FILE_A DEP_FILE_B MOD
                  COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
         if(TEST_MODE STREQUAL "opt")
-            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK} LABELS "linked_opt")
-        else()
-            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES LABELS "linked_opt")
         endif()
     endforeach()
 endfunction()
@@ -752,9 +735,7 @@ function(add_crexx_isolated_run_test NAME SOURCE_FILE)
                  COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
         if(TEST_MODE STREQUAL "opt")
-            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK} LABELS "linked_opt")
-        else()
-            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES LABELS "linked_opt")
         endif()
     endforeach()
 endfunction()
@@ -816,9 +797,7 @@ function(add_crexx_isolated_run_fail_test NAME SOURCE_FILE)
                  COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
         if(TEST_MODE STREQUAL "opt")
-            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK} LABELS "linked_opt")
-        else()
-            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK})
+            set_tests_properties(${NAME}${TEST_SUFFIX} PROPERTIES LABELS "linked_opt")
         endif()
     endforeach()
 endfunction()
@@ -966,7 +945,7 @@ string(APPEND INLINE_CROSS_FILE_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on inline dependency: \${out}\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "file(READ \"\${work}/inline_cross_file_dep.rxas\" dep_rxas)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.inc\\\"\" dep_meta_pos)\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \"\\\"I4;\" dep_inline_pos)\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \"=\\\".inline\\\" \\\"I4;\" dep_inline_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.classify\\\"\" dep_if_meta_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.scoped\\\"\" dep_scoped_meta_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.nested\\\"\" dep_nested_meta_pos)\n")
@@ -980,9 +959,9 @@ string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.safelength\\\"\" dep_safe_asm_meta_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.aliasblocked\\\"\" dep_alias_meta_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_meta_pos EQUAL -1 OR dep_if_meta_pos EQUAL -1 OR dep_scoped_meta_pos EQUAL -1 OR dep_nested_meta_pos EQUAL -1 OR dep_sum_meta_pos EQUAL -1 OR dep_count_meta_pos EQUAL -1 OR dep_array_meta_pos EQUAL -1 OR dep_render_meta_pos EQUAL -1 OR dep_object_meta_pos EQUAL -1 OR dep_ref_meta_pos EQUAL -1 OR dep_opt_meta_pos EQUAL -1 OR dep_safe_asm_meta_pos EQUAL -1 OR dep_alias_meta_pos EQUAL -1 OR dep_inline_pos EQUAL -1)\n  message(FATAL_ERROR \"Dependency did not export expected inline metadata records\")\nendif()\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.safelength\\\"=\\\"b\\\" \\\".int\\\" safeLength() \\\"value=.string\\\" \\\"I4\" dep_safe_asm_inline_pos)\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.safelength\\\"=\\\".inline\\\" \\\"I4\" dep_safe_asm_inline_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_safe_asm_inline_pos EQUAL -1)\n  message(FATAL_ERROR \"Safe assembler helper did not export inline metadata\")\nendif()\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.aliasblocked\\\"=\\\"b\\\" \\\".int\\\" aliasBlocked() \\\"\\\" \\\"I4\" dep_alias_inline_pos)\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.aliasblocked\\\"=\\\".inline\\\" \\\"I4\" dep_alias_inline_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(NOT dep_alias_inline_pos EQUAL -1)\n  message(FATAL_ERROR \"Aliasing assembler helper unexpectedly exported inline metadata\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_cross_file_dep.rxbin\" \"inline_cross_file_dep\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(APPEND full_out \"\${out}\")\n")
@@ -1021,7 +1000,7 @@ file(GENERATE OUTPUT "${INLINE_CROSS_FILE_SCRIPT}" CONTENT "${INLINE_CROSS_FILE_
 add_test(NAME inline_cross_file_binary_opt
          COMMAND ${CMAKE_COMMAND} -P "${INLINE_CROSS_FILE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(inline_cross_file_binary_opt PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK} LABELS "linked_opt")
+set_tests_properties(inline_cross_file_binary_opt PROPERTIES LABELS "linked_opt")
 
 set(INLINE_CROSS_FILE_SOURCE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_cross_file_source_opt.cmake")
 set(INLINE_CROSS_FILE_SOURCE_CONTENT "set(full_out \"\")\n")
@@ -1072,7 +1051,7 @@ file(GENERATE OUTPUT "${INLINE_CROSS_FILE_SOURCE_SCRIPT}" CONTENT "${INLINE_CROS
 add_test(NAME inline_cross_file_source_opt
          COMMAND ${CMAKE_COMMAND} -P "${INLINE_CROSS_FILE_SOURCE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(inline_cross_file_source_opt PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK} LABELS "linked_opt")
+set_tests_properties(inline_cross_file_source_opt PROPERTIES LABELS "linked_opt")
 
 set(INLINE_LOCAL_MEMBER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_local_member_scalar_opt.cmake")
 set(INLINE_LOCAL_MEMBER_CONTENT "set(full_out \"\")\n")
@@ -1101,7 +1080,7 @@ file(GENERATE OUTPUT "${INLINE_LOCAL_MEMBER_SCRIPT}" CONTENT "${INLINE_LOCAL_MEM
 add_test(NAME inline_local_member_scalar_opt
          COMMAND ${CMAKE_COMMAND} -P "${INLINE_LOCAL_MEMBER_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(inline_local_member_scalar_opt PROPERTIES RESOURCE_LOCK ${CREXX_TEST_DRIVER_RESOURCE_LOCK} LABELS "linked_opt")
+set_tests_properties(inline_local_member_scalar_opt PROPERTIES LABELS "linked_opt")
 
 add_crexx_run_args_test(test_parse_arg_filename rexx_src/test_parse_arg_filename.rexx demo.rexx)
 add_crexx_run_args_test(implicit_main_arg_compat rexx_src/implicit_main_arg_compat.rexx alpha beta)

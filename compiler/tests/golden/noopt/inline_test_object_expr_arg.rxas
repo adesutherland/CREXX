@@ -10,7 +10,7 @@
 .globals=0
 
 main() .locals=3
-   .meta "inline_test_object_expr_arg.main"="b" ".int" main() "" ""
+   .meta "inline_test_object_expr_arg.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -28,7 +28,7 @@ main() .locals=3
    ret 0
 
 renameBox() .locals=5
-   .meta "inline_test_object_expr_arg.renamebox"="b" ".string" renameBox() "box=.box" ""
+   .meta "inline_test_object_expr_arg.renamebox"="b" ".string" renameBox() "box=.box"
    .src 7:1="renameBox: procedure = .string"
    setnumdgts 18
    setnumfuz 0
@@ -55,7 +55,7 @@ renameBox() .locals=5
    .meta "inline_test_object_expr_arg.renamebox.box"
 
 makeBox() .locals=3
-   .meta "inline_test_object_expr_arg.makebox"="b" ".box" makeBox() "" ""
+   .meta "inline_test_object_expr_arg.makebox"="b" ".box" makeBox() ""
    .src 12:1="makeBox: procedure = .Box"
    setnumdgts 18
    setnumfuz 0
@@ -73,7 +73,7 @@ makeBox() .locals=3
    .meta "inline_test_object_expr_arg.makebox.box"
 
 §inline_test_object_expr_arg.box.§factory() .locals=3
-   .meta "inline_test_object_expr_arg.box.§factory"="b" ".box" §inline_test_object_expr_arg.box.§factory() "initial=.string" ""
+   .meta "inline_test_object_expr_arg.box.§factory"="b" ".box" §inline_test_object_expr_arg.box.§factory() "initial=.string"
    .src 19:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_expr_arg.box"
@@ -95,7 +95,7 @@ makeBox() .locals=3
    .meta "inline_test_object_expr_arg.box.§factory.§factory"
 
 §inline_test_object_expr_arg.box.setname() .locals=3
-   .meta "inline_test_object_expr_arg.box.setname"="b" ".void" §inline_test_object_expr_arg.box.setname() "value=.string" ""
+   .meta "inline_test_object_expr_arg.box.setname"="b" ".void" §inline_test_object_expr_arg.box.setname() "value=.string"
    .src 24:3="setName: method"
    setnumdgts 18
    setnumfuz 0
@@ -115,7 +115,7 @@ makeBox() .locals=3
    .meta "inline_test_object_expr_arg.box.setname.§this"
 
 §inline_test_object_expr_arg.box.getname() .locals=2
-   .meta "inline_test_object_expr_arg.box.getname"="b" ".string" §inline_test_object_expr_arg.box.getname() "" ""
+   .meta "inline_test_object_expr_arg.box.getname"="b" ".string" §inline_test_object_expr_arg.box.getname() ""
    .src 29:3="getName: method = .string"
    setnumdgts 18
    setnumfuz 0

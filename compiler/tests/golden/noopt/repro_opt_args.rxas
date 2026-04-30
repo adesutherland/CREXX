@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=7
-   .meta "repro_opt_args.main"="b" ".int" main() "" ""
+   .meta "repro_opt_args.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -42,7 +42,7 @@ main() .locals=7
    ret 0
 
 test_opt() .locals=4
-   .meta "repro_opt_args.test_opt"="b" ".void" test_opt() "?a=.int,?b=.int,?c=.int" ""
+   .meta "repro_opt_args.test_opt"="b" ".void" test_opt() "?a=.int,?b=.int,?c=.int"
    .src 8:1="test_opt: procedure"
    setnumdgts 18
    setnumfuz 0

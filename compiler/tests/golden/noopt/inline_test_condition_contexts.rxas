@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "inline_test_condition_contexts.main"="b" ".int" main() "" ""
+   .meta "inline_test_condition_contexts.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -95,7 +95,7 @@ l43doend:
    .meta "inline_test_condition_contexts.main.j"
 
 isOne() .locals=2
-   .meta "inline_test_condition_contexts.isone"="b" ".int" isOne() "value=.int" ""
+   .meta "inline_test_condition_contexts.isone"="b" ".int" isOne() "value=.int"
    .src 27:1="isOne: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -111,7 +111,7 @@ isOne() .locals=2
    .meta "inline_test_condition_contexts.isone.value"
 
 belowTwo() .locals=2
-   .meta "inline_test_condition_contexts.belowtwo"="b" ".int" belowTwo() "value=.int" ""
+   .meta "inline_test_condition_contexts.belowtwo"="b" ".int" belowTwo() "value=.int"
    .src 31:1="belowTwo: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -127,7 +127,7 @@ belowTwo() .locals=2
    .meta "inline_test_condition_contexts.belowtwo.value"
 
 atLeastTwo() .locals=2
-   .meta "inline_test_condition_contexts.atleasttwo"="b" ".int" atLeastTwo() "value=.int" ""
+   .meta "inline_test_condition_contexts.atleasttwo"="b" ".int" atLeastTwo() "value=.int"
    .src 35:1="atLeastTwo: procedure = .int"
    setnumdgts 18
    setnumfuz 0

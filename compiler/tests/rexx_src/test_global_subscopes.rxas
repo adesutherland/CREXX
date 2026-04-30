@@ -12,7 +12,7 @@ g2 .expose=test_global_subscopes.y
 g3 .expose=test_global_subscopes.z
 
 main() .locals=9
-   .meta "test_global_subscopes.main"="b" ".void" main() "" ""
+   .meta "test_global_subscopes.main"="b" ".void" main() ""
    .src 4:1="main: procedure"
    setnumdgts 18
    setnumfuz 0
@@ -155,7 +155,7 @@ l128ifend:
    ret
 
 test_simple_no_subscope() .locals=0
-   .meta "test_global_subscopes.test_simple_no_subscope"="b" ".void" test_simple_no_subscope() "" ""
+   .meta "test_global_subscopes.test_simple_no_subscope"="b" ".void" test_simple_no_subscope() ""
    .src 43:1="test_simple_no_subscope: procedure"
    setnumdgts 18
    setnumfuz 0
@@ -168,7 +168,7 @@ test_simple_no_subscope() .locals=0
    ret
 
 test_simple() .locals=0
-   .meta "test_global_subscopes.test_simple"="b" ".void" test_simple() "" ""
+   .meta "test_global_subscopes.test_simple"="b" ".void" test_simple() ""
    .src 48:1="test_simple: procedure"
    setnumdgts 18
    setnumfuz 0
@@ -181,7 +181,7 @@ test_simple() .locals=0
    ret
 
 test_array() .locals=2
-   .meta "test_global_subscopes.test_array"="b" ".void" test_array() "" ""
+   .meta "test_global_subscopes.test_array"="b" ".void" test_array() ""
    .src 55:1="test_array: procedure"
    setnumdgts 18
    setnumfuz 0
@@ -198,7 +198,7 @@ test_array() .locals=2
    ret
 
 test_nested() .locals=0
-   .meta "test_global_subscopes.test_nested"="b" ".void" test_nested() "" ""
+   .meta "test_global_subscopes.test_nested"="b" ".void" test_nested() ""
    .src 61:1="test_nested: procedure"
    setnumdgts 18
    setnumfuz 0
@@ -211,7 +211,7 @@ test_nested() .locals=0
    ret
 
 test_shadowing() .locals=2
-   .meta "test_global_subscopes.test_shadowing"="b" ".void" test_shadowing() "" ""
+   .meta "test_global_subscopes.test_shadowing"="b" ".void" test_shadowing() ""
    .src 70:1="test_shadowing: procedure"
    setnumdgts 18
    setnumfuz 0
@@ -229,7 +229,7 @@ test_shadowing() .locals=2
    ret
 
 test_top_level_typed() .locals=0
-   .meta "test_global_subscopes.test_top_level_typed"="b" ".void" test_top_level_typed() "" ""
+   .meta "test_global_subscopes.test_top_level_typed"="b" ".void" test_top_level_typed() ""
    .src 79:1="test_top_level_typed: procedure"
    setnumdgts 18
    setnumfuz 0

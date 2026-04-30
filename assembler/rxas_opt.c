@@ -1358,7 +1358,7 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
         case FUNC_META:
             /* Queue Function Metadata */
             rxasmefu(context, item->instrToken, item->operand1Token, item->operand2Token,
-                     item->operand3Token, item->operand4Token, item->operand5Token);
+                     item->operand3Token, item->operand4Token);
             break;
         case CONST_META:
             /* Queue Constant Metadata */
@@ -1390,6 +1390,9 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
             break;
         case MEMBER_META:
             rxasmememb(context, item->instrToken, item->operand1Token, item->operand2Token, item->operand3Token, item->operand4Token);
+            break;
+        case INLINE_META:
+            rxasmeil(context, item->instrToken, item->operand1Token, item->operand2Token);
             break;
         case SRC_LINE:
             /* Queue Source Line */
@@ -1501,11 +1504,11 @@ void rxasqmsr(Assembler_Context *context, Assembler_Token *line, Assembler_Token
 }
 
 /* Queue Function Metadata */
-void rxasqmfu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args, Assembler_Token *inliner) {
+void rxasqmfu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args) {
     if (context->optimise) {
-        queue_instruction(context, FUNC_META, symbol, option, type, func, args, inliner);
+        queue_instruction(context, FUNC_META, symbol, option, type, func, args, 0);
     }
-    else rxasmefu(context, symbol, option, type, func, args, inliner);
+    else rxasmefu(context, symbol, option, type, func, args);
 }
 
 /* Queue Register Metadata */
@@ -1559,6 +1562,14 @@ void rxasqmmemb(Assembler_Context *context, Assembler_Token *owner, Assembler_To
         queue_instruction(context, MEMBER_META, owner, kind, member, type, args, 0);
     }
     else rxasmememb(context, owner, kind, member, type, args);
+}
+
+/* Queue Inline Metadata */
+void rxasqmil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *payload) {
+    if (context->optimise) {
+        queue_instruction(context, INLINE_META, symbol, option, payload, 0, 0, 0);
+    }
+    else rxasmeil(context, symbol, option, payload);
 }
 
 /* Queue Clear Metadata */

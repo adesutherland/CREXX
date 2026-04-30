@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=7
-   .meta "inline_test_call_arg_expr.main"="b" ".int" main() "" ""
+   .meta "inline_test_call_arg_expr.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -48,7 +48,7 @@ l8doend:
    ret 0
 
 keepValue() .locals=2
-   .meta "inline_test_call_arg_expr.keepvalue"="b" ".int" keepValue() "val=.int" ""
+   .meta "inline_test_call_arg_expr.keepvalue"="b" ".int" keepValue() "val=.int"
    .src 11:1="keepValue: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -69,7 +69,7 @@ l35iffalse:
    .meta "inline_test_call_arg_expr.keepvalue.val"
 
 addOne() .locals=2
-   .meta "inline_test_call_arg_expr.addone"="b" ".int" addOne() "val=.int" ""
+   .meta "inline_test_call_arg_expr.addone"="b" ".int" addOne() "val=.int"
    .src 16:1="addOne: procedure = .int"
    setnumdgts 18
    setnumfuz 0

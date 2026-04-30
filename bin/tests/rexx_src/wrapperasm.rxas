@@ -5,5 +5,5 @@
 .globals=0
 
 pulse() .locals=0 .expose=wrapperasm.pulse
-   .meta "wrapperasm.pulse"="b" ".int" pulse() "" ""
+   .meta "wrapperasm.pulse"="b" ".int" pulse() ""
    ret 7

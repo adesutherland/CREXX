@@ -9,7 +9,7 @@
 .globals=0
 
 main() .locals=8
-   .meta "inline_test2.main"="b" ".int" main() "" ""
+   .meta "inline_test2.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -62,7 +62,7 @@ main() .locals=8
    .meta "inline_test2.main.o"
 
 largeProc() .locals=6
-   .meta "inline_test2.largeproc"="b" ".int" largeProc() "a=.int,b=.int,c=.int,d=.int,e=.int" ""
+   .meta "inline_test2.largeproc"="b" ".int" largeProc() "a=.int,b=.int,c=.int,d=.int,e=.int"
    .src 22:1="largeProc: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -110,7 +110,7 @@ largeProc() .locals=6
    .meta "inline_test2.largeproc.x"
 
 nestedCallProc() .locals=4
-   .meta "inline_test2.nestedcallproc"="b" ".int" nestedCallProc() "val=.int" ""
+   .meta "inline_test2.nestedcallproc"="b" ".int" nestedCallProc() "val=.int"
    .src 37:1="nestedCallProc: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -128,7 +128,7 @@ nestedCallProc() .locals=4
    .meta "inline_test2.nestedcallproc.val"
 
 helper() .locals=2
-   .meta "inline_test2.helper"="b" ".int" helper() "v=.int" ""
+   .meta "inline_test2.helper"="b" ".int" helper() "v=.int"
    .src 41:1="helper: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -143,7 +143,7 @@ helper() .locals=2
    .meta "inline_test2.helper.v"
 
 §inline_test2.myclass.§factory() .locals=1
-   .meta "inline_test2.myclass.§factory"="b" ".myclass" §inline_test2.myclass.§factory() "" ""
+   .meta "inline_test2.myclass.§factory"="b" ".myclass" §inline_test2.myclass.§factory() ""
    .src 47:3="*: factory"
    setattrs r0,0
    setobjtype r0,"inline_test2.myclass"
@@ -158,7 +158,7 @@ helper() .locals=2
    .meta "inline_test2.myclass.§factory.§factory"
 
 §inline_test2.myclass.mymethod() .locals=3
-   .meta "inline_test2.myclass.mymethod"="b" ".int" §inline_test2.myclass.mymethod() "v=.int" ""
+   .meta "inline_test2.myclass.mymethod"="b" ".int" §inline_test2.myclass.mymethod() "v=.int"
    .src 50:3="myMethod: method = .int"
    setnumdgts 18
    setnumfuz 0
@@ -175,7 +175,7 @@ helper() .locals=2
    .meta "inline_test2.myclass.mymethod.§this"
 
 multiReturn() .locals=2
-   .meta "inline_test2.multireturn"="b" ".int" multiReturn() "v=.int" ""
+   .meta "inline_test2.multireturn"="b" ".int" multiReturn() "v=.int"
    .src 55:1="multiReturn: procedure = .int"
    setnumdgts 18
    setnumfuz 0

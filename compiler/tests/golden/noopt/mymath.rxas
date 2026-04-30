@@ -8,7 +8,7 @@
 .globals=0
 
 myfunc() .locals=2 .expose=mymath.myfunc
-   .meta "mymath.myfunc"="b" ".int" myfunc() "x=.int" ""
+   .meta "mymath.myfunc"="b" ".int" myfunc() "x=.int"
    .src 5:1="myfunc: procedure = .int"
    setnumdgts 18
    setnumfuz 0

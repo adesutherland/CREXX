@@ -1,6 +1,13 @@
 include(CMakeParseArguments)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
 
+function(_crexx_register_linked_opt_artifact TARGET_NAME)
+    if(NOT TARGET linked_opt_runtime_artifacts)
+        add_custom_target(linked_opt_runtime_artifacts)
+    endif()
+    add_dependencies(linked_opt_runtime_artifacts ${TARGET_NAME})
+endfunction()
+
 function(_crexx_register_runtime_test)
     set(options)
     set(oneValueArgs NAME RUNNER PROGRAM WORKING_DIRECTORY)
@@ -40,6 +47,9 @@ function(_crexx_register_runtime_test)
 
     if(_crexx_labels)
         set_tests_properties(${CREXX_NAME} PROPERTIES LABELS "${_crexx_labels}")
+    endif()
+    if(CREXX_NAME MATCHES "_opt$")
+        set_tests_properties(${CREXX_NAME} PROPERTIES FIXTURES_REQUIRED linked_opt_runtime_artifacts)
     endif()
 endfunction()
 
@@ -106,9 +116,13 @@ function(crexx_add_rexx_opt_matrix)
                 WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
         )
 
-        add_custom_target(${_crexx_output_base}_artifact DEPENDS ${_crexx_artifact})
+        set(_crexx_artifact_target ${_crexx_output_base}_artifact)
+        add_custom_target(${_crexx_artifact_target} DEPENDS ${_crexx_artifact})
         if(CREXX_TARGET_GROUP)
-            add_dependencies(${CREXX_TARGET_GROUP} ${_crexx_output_base}_artifact)
+            add_dependencies(${CREXX_TARGET_GROUP} ${_crexx_artifact_target})
+        endif()
+        if(_crexx_mode STREQUAL "opt")
+            _crexx_register_linked_opt_artifact(${_crexx_artifact_target})
         endif()
 
         _crexx_register_runtime_test(
@@ -160,9 +174,13 @@ function(crexx_add_rxas_opt_matrix)
                 WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
         )
 
-        add_custom_target(${_crexx_output_base}_artifact DEPENDS ${_crexx_artifact})
+        set(_crexx_artifact_target ${_crexx_output_base}_artifact)
+        add_custom_target(${_crexx_artifact_target} DEPENDS ${_crexx_artifact})
         if(CREXX_TARGET_GROUP)
-            add_dependencies(${CREXX_TARGET_GROUP} ${_crexx_output_base}_artifact)
+            add_dependencies(${CREXX_TARGET_GROUP} ${_crexx_artifact_target})
+        endif()
+        if(_crexx_mode STREQUAL "opt")
+            _crexx_register_linked_opt_artifact(${_crexx_artifact_target})
         endif()
 
         _crexx_register_runtime_test(

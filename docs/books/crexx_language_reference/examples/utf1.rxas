@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=3
-   .meta "utf1.main"="b" ".void" main() "" ""
+   .meta "utf1.main"="b" ".void" main() ""
    .src 5:1="SAY 多变的"
    .meta "utf1.main.多变的"="b" ".string" "\xe5\xa4\x9a\xe5\x8f\x98\xe7\x9a\x84 is \'variable\' in Chinese (according to Google!)"
    say "\xe5\xa4\x9a\xe5\x8f\x98\xe7\x9a\x84 is \'variable\' in Chinese (according to Google!)"

@@ -74,15 +74,23 @@ Structured constants are rewritten into the shared pool with all referenced offs
 
 ## Strip Support
 
-Current conservative strip support is source-only:
+Current conservative strip support has two independent axes:
 
 - CLI: `-s`
 - control file: `STRIP SOURCE`
+- CLI: `-i`
+- control file: `PRESERVE INLINE` / `STRIP INLINE`
 
-This removes:
+`STRIP SOURCE` removes:
 
 - `META_SRC`
 - `META_FILE`
+
+Inline-body metadata is different from runtime contract metadata. It is useful
+to libraries consumed by `rxc`, but it is not needed once a final linked image
+has been built. `rxlink` therefore strips `META_INLINE` by default. Use `-i` or
+`PRESERVE INLINE` only for diagnostic/tooling builds that need to inspect the
+inline transport after linking.
 
 It intentionally does not remove runtime contract metadata such as:
 
@@ -105,6 +113,8 @@ Supported directives are:
 - `OUTPUT path`
 - `MAP path`
 - `STRIP SOURCE`
+- `STRIP INLINE`
+- `PRESERVE INLINE`
 
 ## Testing Guidance
 

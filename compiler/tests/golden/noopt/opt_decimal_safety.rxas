@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "opt_decimal_safety.main"="b" ".void" main() "" ""
+   .meta "opt_decimal_safety.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -30,7 +30,7 @@ main() .locals=5
    ret
 
 Case1() .locals=2
-   .meta "opt_decimal_safety.case1"="b" ".void" Case1() "" ""
+   .meta "opt_decimal_safety.case1"="b" ".void" Case1() ""
    .src 10:1="Case1: procedure"
    setnumdgts 5
    setnumfuz 0
@@ -47,7 +47,7 @@ Case1() .locals=2
    ret
 
 Case2() .locals=2
-   .meta "opt_decimal_safety.case2"="b" ".void" Case2() "" ""
+   .meta "opt_decimal_safety.case2"="b" ".void" Case2() ""
    .src 15:1="Case2: procedure"
    setnumdgts 9
    setnumfuz 0
@@ -64,7 +64,7 @@ Case2() .locals=2
    ret
 
 Case3() .locals=3
-   .meta "opt_decimal_safety.case3"="b" ".void" Case3() "" ""
+   .meta "opt_decimal_safety.case3"="b" ".void" Case3() ""
    .src 20:1="Case3: procedure"
    setnumdgts 9
    setnumfuz 1
@@ -88,7 +88,7 @@ l48ifend:
    ret
 
 TestInherited() .locals=1
-   .meta "opt_decimal_safety.testinherited"="b" ".void" TestInherited() "" ""
+   .meta "opt_decimal_safety.testinherited"="b" ".void" TestInherited() ""
    .src 27:1="TestInherited: procedure"
    setnumdgts 18
    setnumfuz 0

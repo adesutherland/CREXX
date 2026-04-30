@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=10
-   .meta "block_expr_basic.main"="b" ".void" main() "" ""
+   .meta "block_expr_basic.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

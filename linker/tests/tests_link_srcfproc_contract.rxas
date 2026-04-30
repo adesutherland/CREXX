@@ -11,13 +11,13 @@
 .globals=0
 
 §link_iface.box.§factory.from_name() .locals=2
-   .meta "link_iface.box.§factory.from_name"="b" ".shape" §link_iface.box.§factory.from_name() "name=.string" ""
+   .meta "link_iface.box.§factory.from_name"="b" ".shape" §link_iface.box.§factory.from_name() "name=.string"
    setattrs r1,1
    setobjtype r1,"link_iface.box"
    ret r1
 
 §link_iface.box.describe() .locals=2
-   .meta "link_iface.box.describe"="b" ".string" §link_iface.box.describe() "" ""
+   .meta "link_iface.box.describe"="b" ".string" §link_iface.box.describe() ""
    .meta "link_iface.box.describe.§this"="b" ".box" a1
    load r1,"linked-named-box"
    ret r1

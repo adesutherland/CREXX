@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "inline_test_ref_negative.main"="b" ".int" main() "" ""
+   .meta "inline_test_ref_negative.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -49,7 +49,7 @@ main() .locals=5
    .meta "inline_test_ref_negative.main.values"
 
 refBump() .locals=1
-   .meta "inline_test_ref_negative.refbump"="b" ".int" refBump() "expose value=.int" ""
+   .meta "inline_test_ref_negative.refbump"="b" ".int" refBump() "expose value=.int"
    .src 12:1="refBump: procedure = .int"
    setnumdgts 18
    setnumfuz 0

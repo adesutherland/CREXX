@@ -10,7 +10,7 @@ g0 .expose=refstem.lino
 g1 .expose=refstem.outbuf
 
 main() .locals=4
-   .meta "refstem.main"="b" ".int" main() "" ""
+   .meta "refstem.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -50,7 +50,7 @@ main() .locals=4
    ret 0
 
 fillSlot() .locals=1
-   .meta "refstem.fillslot"="b" ".void" fillSlot() "expose slot=.string" ""
+   .meta "refstem.fillslot"="b" ".void" fillSlot() "expose slot=.string"
    .src 15:1="fillSlot: procedure = .void"
    setnumdgts 18
    setnumfuz 0

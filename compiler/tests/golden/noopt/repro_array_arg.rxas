@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=6
-   .meta "repro_array_arg.main"="b" ".int" main() "" ""
+   .meta "repro_array_arg.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -77,4 +77,4 @@ l46ifend:
 /* Imported Declaration from file: upper@library.rxbin */
 
 rxfnsb.upper() .expose=rxfnsb.upper
-   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string" ""
+   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string"

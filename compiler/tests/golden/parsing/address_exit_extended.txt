@@ -354,10 +354,10 @@ Scope [0]: Unnamed
       err (Variable) -> .binary
       in (Variable) -> .binary
       out (Variable) -> .binary
+DEBUG_INLINE _array2redir @ _address@library.rxbin:2 - reject: procedure has no instruction list
+DEBUG_INLINE _redir2array @ _address@library.rxbin:2 - reject: procedure has no instruction list
+DEBUG_INLINE _redir2string @ _address@library.rxbin:2 - reject: procedure has no instruction list
 DEBUG_INLINE _address @ _address@library.rxbin:2 - reject: procedure has no instruction list
-DEBUG_INLINE_FAILCLOSED _array2redir @ exit_fragment:1:28 - BLOCK_EXPR expression inline requires a direct single-value consumer
-DEBUG_INLINE_FAILCLOSED _redir2array @ exit_fragment:1:54 - BLOCK_EXPR expression inline requires a direct single-value consumer
-DEBUG_INLINE_FAILCLOSED _redir2string @ exit_fragment:1:81 - BLOCK_EXPR expression inline requires a direct single-value consumer
 
 --- STAGE_FINAL ---
 REXX_UNIVERSE : "" (0:1) [Type: .void]

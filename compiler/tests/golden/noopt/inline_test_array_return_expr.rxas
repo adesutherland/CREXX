@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "inline_test_array_return_expr.main"="b" ".int" main() "" ""
+   .meta "inline_test_array_return_expr.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -45,7 +45,7 @@ main() .locals=5
    ret 0
 
 buildArray() .locals=4
-   .meta "inline_test_array_return_expr.buildarray"="b" ".string[*]" buildArray() "left=.string,right=.string" ""
+   .meta "inline_test_array_return_expr.buildarray"="b" ".string[*]" buildArray() "left=.string,right=.string"
    .src 10:1="buildArray: procedure = .string[]"
    setnumdgts 18
    setnumfuz 0
@@ -76,7 +76,7 @@ buildArray() .locals=4
    .meta "inline_test_array_return_expr.buildarray.temp"
 
 renderArray() .locals=4
-   .meta "inline_test_array_return_expr.renderarray"="b" ".string" renderArray() "value=.string[*]" ""
+   .meta "inline_test_array_return_expr.renderarray"="b" ".string" renderArray() "value=.string[*]"
    .src 17:1="renderArray: procedure = .string"
    setnumdgts 18
    setnumfuz 0

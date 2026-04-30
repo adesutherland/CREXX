@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=10
-   .meta "inline_test_vararg_negative.main"="b" ".int" main() "" ""
+   .meta "inline_test_vararg_negative.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -63,7 +63,7 @@ main() .locals=10
    .meta "inline_test_vararg_negative.main.idx"
 
 dynamicPick() .locals=2
-   .meta "inline_test_vararg_negative.dynamicpick"="b" ".int" dynamicPick() "which=.int,...=.int" ""
+   .meta "inline_test_vararg_negative.dynamicpick"="b" ".int" dynamicPick() "which=.int,...=.int"
    .src 14:1="dynamicPick: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -82,7 +82,7 @@ dynamicPick() .locals=2
    .meta "inline_test_vararg_negative.dynamicpick.which"
 
 refTailCount() .locals=1
-   .meta "inline_test_vararg_negative.reftailcount"="b" ".int" refTailCount() "expose ...=.int" ""
+   .meta "inline_test_vararg_negative.reftailcount"="b" ".int" refTailCount() "expose ...=.int"
    .src 18:1="refTailCount: procedure = .int"
    setnumdgts 18
    setnumfuz 0

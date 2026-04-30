@@ -15,7 +15,7 @@
 .globals=0
 
 main() .locals=13
-   .meta "inline_test_block_expr_live_sibling.main"="b" ".int" main() "" ""
+   .meta "inline_test_block_expr_live_sibling.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -91,7 +91,7 @@ l183bexprend:
    .meta "inline_test_block_expr_live_sibling.main.holder"
 
 §inline_test_block_expr_live_sibling.holder.§factory() .locals=6
-   .meta "inline_test_block_expr_live_sibling.holder.§factory"="b" ".holder" §inline_test_block_expr_live_sibling.holder.§factory() "label=.string" ""
+   .meta "inline_test_block_expr_live_sibling.holder.§factory"="b" ".holder" §inline_test_block_expr_live_sibling.holder.§factory() "label=.string"
    .src 14:3="*: factory"
    setattrs r1,5
    setobjtype r1,"inline_test_block_expr_live_sibling.holder"
@@ -138,7 +138,7 @@ l183bexprend:
    .meta "inline_test_block_expr_live_sibling.holder.§factory.§factory"
 
 §inline_test_block_expr_live_sibling.holder.summary() .locals=8
-   .meta "inline_test_block_expr_live_sibling.holder.summary"="b" ".string" §inline_test_block_expr_live_sibling.holder.summary() "" ""
+   .meta "inline_test_block_expr_live_sibling.holder.summary"="b" ".string" §inline_test_block_expr_live_sibling.holder.summary() ""
    .src 22:3="summary: method = .string"
    setnumdgts 18
    setnumfuz 0
@@ -170,7 +170,7 @@ l183bexprend:
    .meta "inline_test_block_expr_live_sibling.holder.summary.§this"
 
 §inline_test_block_expr_live_sibling.child.§factory() .locals=3
-   .meta "inline_test_block_expr_live_sibling.child.§factory"="b" ".child" §inline_test_block_expr_live_sibling.child.§factory() "label=.string" ""
+   .meta "inline_test_block_expr_live_sibling.child.§factory"="b" ".child" §inline_test_block_expr_live_sibling.child.§factory() "label=.string"
    .src 28:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_block_expr_live_sibling.child"
@@ -192,7 +192,7 @@ l183bexprend:
    .meta "inline_test_block_expr_live_sibling.child.§factory.§factory"
 
 §inline_test_block_expr_live_sibling.child.getname() .locals=2
-   .meta "inline_test_block_expr_live_sibling.child.getname"="b" ".string" §inline_test_block_expr_live_sibling.child.getname() "" ""
+   .meta "inline_test_block_expr_live_sibling.child.getname"="b" ".string" §inline_test_block_expr_live_sibling.child.getname() ""
    .src 33:3="getName: method = .string"
    setnumdgts 18
    setnumfuz 0

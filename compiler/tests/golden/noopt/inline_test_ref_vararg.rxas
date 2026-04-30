@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=8
-   .meta "inline_test_ref_vararg.main"="b" ".int" main() "" ""
+   .meta "inline_test_ref_vararg.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -95,7 +95,7 @@ main() .locals=8
    .meta "inline_test_ref_vararg.main.third"
 
 countTail() .locals=1
-   .meta "inline_test_ref_vararg.counttail"="b" ".int" countTail() "expose ...=.int" ""
+   .meta "inline_test_ref_vararg.counttail"="b" ".int" countTail() "expose ...=.int"
    .src 18:1="countTail: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -109,7 +109,7 @@ countTail() .locals=1
    ret r0
 
 pickSecond() .locals=1
-   .meta "inline_test_ref_vararg.picksecond"="b" ".int" pickSecond() "expose ...=.int" ""
+   .meta "inline_test_ref_vararg.picksecond"="b" ".int" pickSecond() "expose ...=.int"
    .src 22:1="pickSecond: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -125,7 +125,7 @@ pickSecond() .locals=1
    ret r0
 
 hasSecond() .locals=1
-   .meta "inline_test_ref_vararg.hassecond"="b" ".int" hasSecond() "expose ...=.int" ""
+   .meta "inline_test_ref_vararg.hassecond"="b" ".int" hasSecond() "expose ...=.int"
    .src 26:1="hasSecond: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -140,7 +140,7 @@ hasSecond() .locals=1
    ret r0
 
 hasFifth() .locals=1
-   .meta "inline_test_ref_vararg.hasfifth"="b" ".int" hasFifth() "expose ...=.int" ""
+   .meta "inline_test_ref_vararg.hasfifth"="b" ".int" hasFifth() "expose ...=.int"
    .src 30:1="hasFifth: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -155,7 +155,7 @@ hasFifth() .locals=1
    ret r0
 
 bumpOne() .locals=1
-   .meta "inline_test_ref_vararg.bumpone"="b" ".int" bumpOne() "expose value=.int" ""
+   .meta "inline_test_ref_vararg.bumpone"="b" ".int" bumpOne() "expose value=.int"
    .src 34:1="bumpOne: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -171,7 +171,7 @@ bumpOne() .locals=1
    .meta "inline_test_ref_vararg.bumpone.value"
 
 mutateSecond() .locals=4
-   .meta "inline_test_ref_vararg.mutatesecond"="b" ".int" mutateSecond() "expose ...=.int" ""
+   .meta "inline_test_ref_vararg.mutatesecond"="b" ".int" mutateSecond() "expose ...=.int"
    .src 39:1="mutateSecond: procedure = .int"
    setnumdgts 18
    setnumfuz 0

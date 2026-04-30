@@ -45,6 +45,7 @@ typedef struct link_config {
     char *map_path;
     char *location;
     int strip_source_metadata;
+    int strip_inline_metadata;
     int debug_mode;
 } link_config;
 
@@ -78,6 +79,7 @@ typedef struct rxlink_build_context {
     size_t leaf_count;
     size_t leaf_capacity;
     int strip_source_metadata;
+    int strip_inline_metadata;
 } rxlink_build_context;
 
 static void string_list_init(string_list *list) {
@@ -207,6 +209,7 @@ static void build_context_init(rxlink_build_context *context) {
     context->leaf_count = 0;
     context->leaf_capacity = 0;
     context->strip_source_metadata = 0;
+    context->strip_inline_metadata = 1;
 }
 
 static void build_context_free(rxlink_build_context *context) {
@@ -261,6 +264,7 @@ static void init_link_config(link_config *config) {
     config->map_path = 0;
     config->location = 0;
     config->strip_source_metadata = 0;
+    config->strip_inline_metadata = 1;
     config->debug_mode = 0;
 }
 
@@ -331,8 +335,19 @@ static int parse_control_file(link_config *config, const char *path) {
         } else if (keyword_equals(keyword, "STRIP")) {
             if (keyword_equals(value, "SOURCE")) {
                 config->strip_source_metadata = 1;
+            } else if (keyword_equals(value, "INLINE")) {
+                config->strip_inline_metadata = 1;
             } else {
                 fprintf(stderr, "ERROR: unknown STRIP mode %s on line %lu\n",
+                        value, (unsigned long)line_number);
+                fclose(fp);
+                return 0;
+            }
+        } else if (keyword_equals(keyword, "PRESERVE")) {
+            if (keyword_equals(value, "INLINE")) {
+                config->strip_inline_metadata = 0;
+            } else {
+                fprintf(stderr, "ERROR: unknown PRESERVE mode %s on line %lu\n",
                         value, (unsigned long)line_number);
                 fclose(fp);
                 return 0;
@@ -880,6 +895,7 @@ static int is_meta_constant_type(enum const_pool_type type) {
         case META_INTERFACE:
         case META_IMPLEMENTS:
         case META_MEMBER:
+        case META_INLINE:
             return 1;
         default:
             return 0;
@@ -887,7 +903,9 @@ static int is_meta_constant_type(enum const_pool_type type) {
 }
 
 static int should_strip_meta_constant(const rxlink_build_context *context, enum const_pool_type type) {
-    return context->strip_source_metadata && (type == META_SRC || type == META_FILE);
+    if (context->strip_source_metadata && (type == META_SRC || type == META_FILE)) return 1;
+    if (context->strip_inline_metadata && type == META_INLINE) return 1;
+    return 0;
 }
 
 static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_module *output_module,
@@ -919,7 +937,6 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
             size_t type = link_constant_offset(context, output_module, input_module, source->type, ok);
             size_t func = link_constant_offset(context, output_module, input_module, source->func, ok);
             size_t args = link_constant_offset(context, output_module, input_module, source->args, ok);
-            size_t inliner = link_constant_offset(context, output_module, input_module, source->inliner, ok);
             meta_func_constant *meta = (meta_func_constant *)(context->shared_pool.data + new_offset);
             meta->base.prev = prev_offset;
             meta->base.next = next_offset;
@@ -928,7 +945,6 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
             meta->type = type;
             meta->func = func;
             meta->args = args;
-            meta->inliner = inliner;
             return *ok;
         }
         case META_REG: {
@@ -1034,6 +1050,17 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
             meta->member = member;
             meta->type = type;
             meta->args = args;
+            return *ok;
+        }
+        case META_INLINE: {
+            meta_inline_constant *source = (meta_inline_constant *)entry;
+            size_t symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+            size_t payload = link_constant_offset(context, output_module, input_module, source->payload, ok);
+            meta_inline_constant *meta = (meta_inline_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->payload = payload;
             return *ok;
         }
         default:
@@ -1188,7 +1215,8 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
         case META_ATTR:
         case META_INTERFACE:
         case META_IMPLEMENTS:
-        case META_MEMBER: {
+        case META_MEMBER:
+        case META_INLINE: {
             meta_entry *meta = (meta_entry *)entry;
             int prev = link_constant_offset_int(context, output_module, input_module, meta->prev, ok);
             int next = link_constant_offset_int(context, output_module, input_module, meta->next, ok);
@@ -1383,6 +1411,7 @@ static void print_help(void) {
     printf("  -m map_file     Write a simple link map\n");
     printf("  -l location     Working location for input/output resolution\n");
     printf("  -s              Strip source/file metadata from linked output\n");
+    printf("  -i              Preserve inline-body metadata in linked output\n");
     printf("  -d              Debug mode\n");
     printf("  -h              Help\n");
 }
@@ -1422,6 +1451,9 @@ int main(int argc, char *argv[]) {
             case 'S':
                 config.strip_source_metadata = 1;
                 break;
+            case 'I':
+                config.strip_inline_metadata = 0;
+                break;
             case 'L':
                 if (++argi >= argc) goto fail;
                 config.location = argv[argi];
@@ -1443,6 +1475,7 @@ int main(int argc, char *argv[]) {
 
     if (control_path && !parse_control_file(&config, control_path)) goto fail;
     build_context.strip_source_metadata = config.strip_source_metadata;
+    build_context.strip_inline_metadata = config.strip_inline_metadata;
 
     while (argi < argc) {
         if (!string_list_append(&config.inputs, argv[argi++])) goto fail;

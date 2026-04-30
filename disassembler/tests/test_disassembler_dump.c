@@ -88,7 +88,7 @@ static size_t add_meta_src_entry(unsigned char *pool, size_t *used, size_t addre
     return offset;
 }
 
-static size_t add_meta_func_entry(unsigned char *pool, size_t *used, size_t address, size_t symbol, size_t option, size_t type, size_t func, size_t args, size_t inliner) {
+static size_t add_meta_func_entry(unsigned char *pool, size_t *used, size_t address, size_t symbol, size_t option, size_t type, size_t func, size_t args) {
     size_t offset = reserve_entry(pool, used, sizeof(meta_func_constant), META_FUNC);
     meta_func_constant *entry = (meta_func_constant *)(pool + offset);
     entry->base.next = -1;
@@ -98,7 +98,16 @@ static size_t add_meta_func_entry(unsigned char *pool, size_t *used, size_t addr
     entry->type = type;
     entry->func = func;
     entry->args = args;
-    entry->inliner = inliner;
+    return offset;
+}
+
+static size_t add_meta_inline_entry(unsigned char *pool, size_t *used, size_t address, size_t symbol, size_t payload) {
+    size_t offset = reserve_entry(pool, used, sizeof(meta_inline_constant), META_INLINE);
+    meta_inline_constant *entry = (meta_inline_constant *)(pool + offset);
+    entry->base.next = -1;
+    entry->base.address = address;
+    entry->symbol = symbol;
+    entry->payload = payload;
     return offset;
 }
 
@@ -257,6 +266,7 @@ int main(void) {
     size_t s_shape_symbol;
     size_t s_method_kind;
     size_t s_member_name;
+    size_t s_inline_payload;
     size_t binary_const;
     size_t float_const;
     size_t proc_main;
@@ -272,6 +282,7 @@ int main(void) {
     size_t meta_implements;
     size_t meta_member;
     size_t meta_word_func;
+    size_t meta_word_inline;
     size_t meta_main_func;
     size_t meta_main_src;
     size_t meta_main_reg;
@@ -316,6 +327,7 @@ int main(void) {
     s_shape_symbol = add_string_entry(pool, &used, STRING_CONST, "synthetic.shape", 15u);
     s_method_kind = add_string_entry(pool, &used, STRING_CONST, "method", 6u);
     s_member_name = add_string_entry(pool, &used, STRING_CONST, "describe", 8u);
+    s_inline_payload = add_string_entry(pool, &used, STRING_CONST, "I4;a;b", 6u);
     binary_const = add_string_entry(pool, &used, BINARY_CONST, binary_value, 3u);
     float_const = add_float_entry(pool, &used, 1.5);
 
@@ -340,12 +352,13 @@ int main(void) {
     meta_interface = add_meta_interface_entry(pool, &used, 0u, s_shape_symbol, s_b, s_unknown);
     meta_implements = add_meta_implements_entry(pool, &used, 0u, s_box_symbol, s_shape_symbol);
     meta_member = add_meta_member_entry(pool, &used, 0u, s_shape_symbol, s_method_kind, s_member_name, s_string_type, s_empty);
-    meta_word_func = add_meta_func_entry(pool, &used, 0u, s_word_symbol, s_b, s_string_type, proc_word, s_word_args, s_empty);
-    meta_main_func = add_meta_func_entry(pool, &used, 0u, s_main_symbol, s_b, s_void, proc_main, s_empty, s_empty);
+    meta_word_func = add_meta_func_entry(pool, &used, 0u, s_word_symbol, s_b, s_string_type, proc_word, s_word_args);
+    meta_word_inline = add_meta_inline_entry(pool, &used, 0u, s_word_symbol, s_inline_payload);
+    meta_main_func = add_meta_func_entry(pool, &used, 0u, s_main_symbol, s_b, s_void, proc_main, s_empty);
     meta_main_src = add_meta_src_entry(pool, &used, 0u, 1, 1, s_source);
     meta_main_reg = add_meta_reg_entry(pool, &used, 0u, s_local_symbol, s_b, s_string_type, 0u);
     meta_main_const = add_meta_const_entry(pool, &used, 0u, s_answer_symbol, s_b, s_string_type, s_answer_value);
-    meta_helper_func = add_meta_func_entry(pool, &used, 1u, s_helper_symbol, s_b, s_void, proc_helper, s_empty, s_empty);
+    meta_helper_func = add_meta_func_entry(pool, &used, 1u, s_helper_symbol, s_b, s_void, proc_helper, s_empty);
     meta_clear = add_meta_clear_entry(pool, &used, 2u, s_local_symbol);
 
     ((meta_entry *)(pool + meta_file))->next = (int)meta_class;
@@ -354,7 +367,8 @@ int main(void) {
     ((meta_entry *)(pool + meta_interface))->next = (int)meta_implements;
     ((meta_entry *)(pool + meta_implements))->next = (int)meta_member;
     ((meta_entry *)(pool + meta_member))->next = (int)meta_word_func;
-    ((meta_entry *)(pool + meta_word_func))->next = (int)meta_main_func;
+    ((meta_entry *)(pool + meta_word_func))->next = (int)meta_word_inline;
+    ((meta_entry *)(pool + meta_word_inline))->next = (int)meta_main_func;
     ((meta_entry *)(pool + meta_main_func))->next = (int)meta_main_src;
     ((meta_entry *)(pool + meta_main_src))->next = (int)meta_main_reg;
     ((meta_entry *)(pool + meta_main_reg))->next = (int)meta_main_const;
@@ -416,10 +430,12 @@ int main(void) {
     rc |= require_contains(output, ".meta \"synthetic.shape\"=\"b\" \".unknown\" .interface");
     rc |= require_contains(output, ".meta \"synthetic.box\"=\"synthetic.shape\" .implements");
     rc |= require_contains(output, ".meta \"synthetic.shape\"=\"method\" \"describe\" \".string\" \"\" .member");
-    rc |= require_contains(output, ".meta \"synthetic.main\"=\"b\" \".void\" main() \"\" \"\"");
+    rc |= require_contains(output, ".meta \"rxfnsb.word\"=\".inline\" \"I4;a;b\"");
+    rc |= require_contains(output, "META-INLINE");
+    rc |= require_contains(output, ".meta \"synthetic.main\"=\"b\" \".void\" main() \"\"");
     rc |= require_contains(output, ".meta \"synthetic.main.local\"=\"b\" \".string\" r0");
     rc |= require_contains(output, ".meta \"synthetic.main.answer\"=\"b\" \".string\" \"answer\"");
-    rc |= require_contains(output, ".meta \"synthetic.helper\"=\"b\" \".void\" helper() \"\" \"\"");
+    rc |= require_contains(output, ".meta \"synthetic.helper\"=\"b\" \".void\" helper() \"\"");
     rc |= require_contains(output, ".meta \"synthetic.main.local\"\n");
     rc |= require_not_contains(output, "UNKNOWN");
 

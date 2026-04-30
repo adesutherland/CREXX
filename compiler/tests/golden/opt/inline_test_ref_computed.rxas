@@ -9,7 +9,7 @@
 g0 .expose=refcomputed.idx
 
 main() .locals=6
-   .meta "refcomputed.main"="b" ".int" main() "" ""
+   .meta "refcomputed.main"="b" ".int" main() ""
    .src 4:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0

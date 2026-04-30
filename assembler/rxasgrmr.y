@@ -69,8 +69,8 @@ global_reg ::= GREG KW_EXPOSE(T) error NEWLINE. {rxaseaft(context, T, "Expecting
 
 // Global metadata
 global_meta ::= KW_META STRING EQUAL STRING STRING reg(E) NEWLINE. {rxaserat(context, E, "Cannot set register metadata here");}
-global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) STRING(I) NEWLINE. {rxasqmfu(context,V,OP,T,F,A,I);}
-global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A,0);}
+global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
+global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_CLASS NEWLINE. {rxasqmclss(context,V,OP,T);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_ATTR INT(R) NEWLINE. {rxasqmattr(context,V,OP,T,R);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_INTERFACE NEWLINE. {rxasqmintf(context,V,OP,T);}
@@ -112,8 +112,8 @@ instruction ::= instr NEWLINE.
 instruction ::= LABEL(L). {rxasqlbl(context,L);}
 instruction ::= KW_SRC INT(L) COLON INT(C) EQUAL STRING(S) NEWLINE. {rxasqmsr(context, L, C, S);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) reg(R) NEWLINE. {rxasqmre(context,V,OP,T,R);}
-instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) STRING(I) NEWLINE. {rxasqmfu(context,V,OP,T,F,A,I);}
-instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A,0);}
+instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
+instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) STRING(C) NEWLINE. {rxasqmct(context,V,OP,T,C);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_CLASS NEWLINE. {rxasqmclss(context,V,OP,T);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_ATTR INT(R) NEWLINE. {rxasqmattr(context,V,OP,T,R);}
@@ -134,8 +134,8 @@ instruction ::= KW_SRC(T) error NEWLINE. {rxaserat(context, T, "Expecting .src {
 decl_instructions ::= decl_instruction.
 decl_instructions ::= decl_instructions decl_instruction.
 decl_instruction ::= KW_SRCFILE EQUAL STRING(F) NEWLINE. {rxasqmfl(context,F);}
-decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) STRING(I) NEWLINE. {rxasqmfu(context,V,OP,T,F,A,I);}
-decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A,0);}
+decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
+decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
 decl_instruction ::= NEWLINE.
 
 // Declaration instruction error messages

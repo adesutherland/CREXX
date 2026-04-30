@@ -7,7 +7,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "18_array_class_main.main"="b" ".int" main() "" ""
+   .meta "18_array_class_main.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -54,7 +54,7 @@ main() .locals=5
    .meta "18_array_class_main.main.it1"
 
 process() .locals=11
-   .meta "18_array_class_main.process"="b" ".string" process() "items=.item[*]" ""
+   .meta "18_array_class_main.process"="b" ".string" process() "items=.item[*]"
    .src 17:1="process: procedure = .string"
    setnumdgts 18
    setnumfuz 0
@@ -129,7 +129,7 @@ l70doend:
 /* Imported Declaration from file: array_class_lib.rexx */
 
 §array_class_lib.item.§factory() .expose=array_class_lib.item.§factory
-   .meta "array_class_lib.item.§factory"="b" ".item" §array_class_lib.item.§factory() "v=.string" ""
+   .meta "array_class_lib.item.§factory"="b" ".item" §array_class_lib.item.§factory() "v=.string"
 
 §array_class_lib.item.get_val() .expose=array_class_lib.item.get_val
-   .meta "array_class_lib.item.get_val"="b" ".string" §array_class_lib.item.get_val() "" ""
+   .meta "array_class_lib.item.get_val"="b" ".string" §array_class_lib.item.get_val() ""

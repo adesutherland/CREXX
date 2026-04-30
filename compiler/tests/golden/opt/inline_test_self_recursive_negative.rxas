@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=3
-   .meta "inline_test_self_recursive_negative.main"="b" ".int" main() "" ""
+   .meta "inline_test_self_recursive_negative.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -35,7 +35,7 @@ l31bexprend:
    ret 0
 
 recurse() .locals=4
-   .meta "inline_test_self_recursive_negative.recurse"="b" ".int" recurse() "val=.int" ""
+   .meta "inline_test_self_recursive_negative.recurse"="b" ".int" recurse() "val=.int"
    .src 9:1="recurse: procedure = .int"
    setnumdgts 18
    setnumfuz 0

@@ -1327,7 +1327,7 @@ void rxasmesr(Assembler_Context *context, Assembler_Token *line, Assembler_Token
 }
 
 /* Function Metadata */
-void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args, Assembler_Token *inliner) {
+void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args) {
     size_t entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);
     size_t sentry;
 
@@ -1342,14 +1342,6 @@ void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     ((meta_func_constant*)(context->binary.const_pool + entry))->func = sentry;
     sentry = add_string_to_pool(context, (char*)args->token_value.string);
     ((meta_func_constant*)(context->binary.const_pool + entry))->args = sentry;
-    if (inliner) {
-        sentry = add_string_to_pool(context, (char*)inliner->token_value.string);
-        ((meta_func_constant*)(context->binary.const_pool + entry))->inliner = sentry;
-    }
-    else {
-        sentry = add_string_to_pool(context, "");
-        ((meta_func_constant *) (context->binary.const_pool + entry))->inliner = sentry;
-    }
 }
 
 /* Register Metadata */
@@ -1470,4 +1462,25 @@ void rxasmememb(Assembler_Context *context, Assembler_Token *owner, Assembler_To
     mentry->member = s_member;
     mentry->type = s_type;
     mentry->args = s_args;
+}
+
+/* Inline Metadata */
+void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *payload) {
+    size_t entry;
+    size_t s_sym;
+    size_t s_payload;
+    meta_inline_constant *mentry;
+
+    if (strcmp((char*)option->token_value.string, ".inline") != 0) {
+        rxaserat(context, option, "Expecting .inline metadata option");
+        return;
+    }
+
+    entry = add_meta_entry(context, sizeof(meta_inline_constant), META_INLINE);
+    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
+    s_payload = add_string_to_pool(context, (char*)payload->token_value.string);
+
+    mentry = (meta_inline_constant*)(context->binary.const_pool + entry);
+    mentry->symbol = s_sym;
+    mentry->payload = s_payload;
 }

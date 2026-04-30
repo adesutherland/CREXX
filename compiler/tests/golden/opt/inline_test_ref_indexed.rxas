@@ -10,7 +10,7 @@ g0 .expose=refidx.idx
 g1 .expose=refidx.values
 
 main() .locals=5
-   .meta "refidx.main"="b" ".int" main() "" ""
+   .meta "refidx.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

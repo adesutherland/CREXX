@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "opt_numeric_safety.main"="b" ".void" main() "" ""
+   .meta "opt_numeric_safety.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -30,7 +30,7 @@ main() .locals=5
    ret
 
 ScenarioA() .locals=2
-   .meta "opt_numeric_safety.scenarioa"="b" ".void" ScenarioA() "" ""
+   .meta "opt_numeric_safety.scenarioa"="b" ".void" ScenarioA() ""
    .src 10:1="ScenarioA: procedure"
    setnumdgts 5
    setnumfuz 0
@@ -47,7 +47,7 @@ ScenarioA() .locals=2
    ret
 
 ScenarioB() .locals=1
-   .meta "opt_numeric_safety.scenariob"="b" ".void" ScenarioB() "" ""
+   .meta "opt_numeric_safety.scenariob"="b" ".void" ScenarioB() ""
    .src 19:1="ScenarioB: procedure"
    setnumfuz 0
    setnumfrm 1
@@ -63,7 +63,7 @@ ScenarioB() .locals=1
    ret
 
 ScenarioC() .locals=2
-   .meta "opt_numeric_safety.scenarioc"="b" ".void" ScenarioC() "" ""
+   .meta "opt_numeric_safety.scenarioc"="b" ".void" ScenarioC() ""
    .src 25:1="ScenarioC: procedure"
    setnumdgts 9
    setnumfuz 0
@@ -78,7 +78,7 @@ ScenarioC() .locals=2
    ret
 
 ScenarioD() .locals=2
-   .meta "opt_numeric_safety.scenariod"="b" ".void" ScenarioD() "" ""
+   .meta "opt_numeric_safety.scenariod"="b" ".void" ScenarioD() ""
    .src 33:1="ScenarioD: procedure"
    setnumdgts 9
    setnumfrm 1

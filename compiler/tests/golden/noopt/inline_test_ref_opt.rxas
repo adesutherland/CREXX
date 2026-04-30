@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=5
-   .meta "inline_test_ref_opt.main"="b" ".int" main() "" ""
+   .meta "inline_test_ref_opt.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -52,7 +52,7 @@ main() .locals=5
    .meta "inline_test_ref_opt.main.x"
 
 refBump() .locals=1
-   .meta "inline_test_ref_opt.refbump"="b" ".int" refBump() "expose value=.int" ""
+   .meta "inline_test_ref_opt.refbump"="b" ".int" refBump() "expose value=.int"
    .src 13:1="refBump: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -68,7 +68,7 @@ refBump() .locals=1
    .meta "inline_test_ref_opt.refbump.value"
 
 optAdd() .locals=3
-   .meta "inline_test_ref_opt.optadd"="b" ".int" optAdd() "?a=.int,?b=.int" ""
+   .meta "inline_test_ref_opt.optadd"="b" ".int" optAdd() "?a=.int,?b=.int"
    .src 18:1="optAdd: procedure = .int"
    setnumdgts 18
    setnumfuz 0

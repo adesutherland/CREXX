@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=0
-   .meta "strict_compare_codegen.main"="b" ".int" main() "" ""
+   .meta "strict_compare_codegen.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0

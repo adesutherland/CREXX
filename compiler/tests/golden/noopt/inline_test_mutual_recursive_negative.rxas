@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=3
-   .meta "inline_test_mutual_recursive_negative.main"="b" ".int" main() "" ""
+   .meta "inline_test_mutual_recursive_negative.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -29,7 +29,7 @@ main() .locals=3
    ret 0
 
 left() .locals=4
-   .meta "inline_test_mutual_recursive_negative.left"="b" ".int" left() "val=.int" ""
+   .meta "inline_test_mutual_recursive_negative.left"="b" ".int" left() "val=.int"
    .src 9:1="left: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -46,7 +46,7 @@ left() .locals=4
    .meta "inline_test_mutual_recursive_negative.left.val"
 
 right() .locals=4
-   .meta "inline_test_mutual_recursive_negative.right"="b" ".int" right() "val=.int" ""
+   .meta "inline_test_mutual_recursive_negative.right"="b" ".int" right() "val=.int"
    .src 13:1="right: procedure = .int"
    setnumdgts 18
    setnumfuz 0

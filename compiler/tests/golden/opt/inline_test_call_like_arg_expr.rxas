@@ -10,7 +10,7 @@
 .globals=0
 
 main() .locals=12
-   .meta "inline_test_call_like_arg_expr.main"="b" ".int" main() "" ""
+   .meta "inline_test_call_like_arg_expr.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -77,7 +77,7 @@ l8doend:
    ret 0
 
 §inline_test_call_like_arg_expr.box.§factory() .locals=3
-   .meta "inline_test_call_like_arg_expr.box.§factory"="b" ".box" §inline_test_call_like_arg_expr.box.§factory() "initialvalue=.int" ""
+   .meta "inline_test_call_like_arg_expr.box.§factory"="b" ".box" §inline_test_call_like_arg_expr.box.§factory() "initialvalue=.int"
    .src 19:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_call_like_arg_expr.box"
@@ -99,7 +99,7 @@ l8doend:
    .meta "inline_test_call_like_arg_expr.box.§factory.§factory"
 
 §inline_test_call_like_arg_expr.box.bump() .locals=4
-   .meta "inline_test_call_like_arg_expr.box.bump"="b" ".int" §inline_test_call_like_arg_expr.box.bump() "amount=.int" ""
+   .meta "inline_test_call_like_arg_expr.box.bump"="b" ".int" §inline_test_call_like_arg_expr.box.bump() "amount=.int"
    .src 24:3="bump: method = .int"
    setnumdgts 18
    setnumfuz 0

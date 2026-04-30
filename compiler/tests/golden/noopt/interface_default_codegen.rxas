@@ -15,7 +15,7 @@
 .globals=0
 
 main() .locals=3
-   .meta "interface_default_codegen.main"="b" ".void" main() "" ""
+   .meta "interface_default_codegen.main"="b" ".void" main() ""
    .src 4:1="main: procedure"
    setnumdgts 18
    setnumfuz 0
@@ -34,7 +34,7 @@ main() .locals=3
    ret
 
 §interface_default_codegen.shape.describe() .locals=5
-   .meta "interface_default_codegen.shape.describe"="b" ".string" §interface_default_codegen.shape.describe() "" ""
+   .meta "interface_default_codegen.shape.describe"="b" ".string" §interface_default_codegen.shape.describe() ""
    .src 10:3="describe: method = .string"
    setnumdgts 18
    setnumfuz 0
@@ -61,7 +61,7 @@ main() .locals=3
    .meta "interface_default_codegen.shape.describe.§this"
 
 §interface_default_codegen.shape.prefix() .locals=1
-   .meta "interface_default_codegen.shape.prefix"="b" ".string" §interface_default_codegen.shape.prefix() "" ""
+   .meta "interface_default_codegen.shape.prefix"="b" ".string" §interface_default_codegen.shape.prefix() ""
    .src 12:3="prefix: method = .string"
    setnumdgts 18
    setnumfuz 0
@@ -74,7 +74,7 @@ main() .locals=3
    .meta "interface_default_codegen.shape.prefix.§this"
 
 §interface_default_codegen.box.§factory() .locals=1
-   .meta "interface_default_codegen.box.§factory"="b" ".box" §interface_default_codegen.box.§factory() "" ""
+   .meta "interface_default_codegen.box.§factory"="b" ".box" §interface_default_codegen.box.§factory() ""
    .src 17:3="*: factory"
    setattrs r0,0
    setobjtype r0,"interface_default_codegen.box"
@@ -89,7 +89,7 @@ main() .locals=3
    .meta "interface_default_codegen.box.§factory.§factory"
 
 §interface_default_codegen.box.§match() .locals=0
-   .meta "interface_default_codegen.box.§match"="b" ".int" §interface_default_codegen.box.§match() "" ""
+   .meta "interface_default_codegen.box.§match"="b" ".int" §interface_default_codegen.box.§match() ""
    .src 20:3="*: match"
    setnumdgts 18
    setnumfuz 0
@@ -100,7 +100,7 @@ main() .locals=3
    ret 10
 
 §interface_default_codegen.box.summary() .locals=1
-   .meta "interface_default_codegen.box.summary"="b" ".string" §interface_default_codegen.box.summary() "" ""
+   .meta "interface_default_codegen.box.summary"="b" ".string" §interface_default_codegen.box.summary() ""
    .src 23:3="summary: method = .string"
    setnumdgts 18
    setnumfuz 0

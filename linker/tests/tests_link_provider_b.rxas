@@ -5,6 +5,6 @@
 .globals=0
 
 helper() .locals=0 .expose=linktest.helper
-   .meta "linktest.helper"="b" ".int" helper() "" ""
+   .meta "linktest.helper"="b" ".int" helper() ""
    say "PASS: Provider B"
    ret 20

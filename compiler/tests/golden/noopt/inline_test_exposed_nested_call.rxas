@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=6
-   .meta "inline_test_exposed_nested_call.main"="b" ".int" main() "" ""
+   .meta "inline_test_exposed_nested_call.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -49,7 +49,7 @@ l8doend:
    ret 0
 
 compute() .locals=4
-   .meta "inline_test_exposed_nested_call.compute"="b" ".int" compute() "val=.int" ""
+   .meta "inline_test_exposed_nested_call.compute"="b" ".int" compute() "val=.int"
    .src 12:1="compute: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -68,7 +68,7 @@ compute() .locals=4
    .meta "inline_test_exposed_nested_call.compute.val"
 
 addOne() .locals=2
-   .meta "inline_test_exposed_nested_call.addone"="b" ".int" addOne() "val=.int" ""
+   .meta "inline_test_exposed_nested_call.addone"="b" ".int" addOne() "val=.int"
    .src 16:1="addOne: procedure = .int"
    setnumdgts 18
    setnumfuz 0

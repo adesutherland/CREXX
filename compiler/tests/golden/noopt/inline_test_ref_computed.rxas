@@ -9,7 +9,7 @@
 g0 .expose=refcomputed.idx
 
 main() .locals=6
-   .meta "refcomputed.main"="b" ".int" main() "" ""
+   .meta "refcomputed.main"="b" ".int" main() ""
    .src 4:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -59,7 +59,7 @@ main() .locals=6
    .meta "refcomputed.main.values"
 
 bump() .locals=1
-   .meta "refcomputed.bump"="b" ".int" bump() "expose slot=.int" ""
+   .meta "refcomputed.bump"="b" ".int" bump() "expose slot=.int"
    .src 15:1="bump: procedure = .int"
    setnumdgts 18
    setnumfuz 0

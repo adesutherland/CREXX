@@ -75,6 +75,15 @@ add_custom_command(
 add_custom_target(tests_linked_success_artifact ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_success.rxbin)
 
 add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_inline.rxbin
+        COMMAND $<TARGET_FILE:rxlink> -i -o tests_linked_inline tests_link_root.rxbin tests_link_provider_a.rxbin
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_link_root.rxbin ${CMAKE_CURRENT_BINARY_DIR}/tests_link_provider_a.rxbin rxlink
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "cREXX RXLINK inline-metadata fixture ..."
+)
+add_custom_target(tests_linked_inline_artifact ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_inline.rxbin)
+
+add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_stripped.rxbin
         COMMAND $<TARGET_FILE:rxlink> -s -o tests_linked_stripped tests_link_root.rxbin tests_link_provider_a.rxbin
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_link_root.rxbin ${CMAKE_CURRENT_BINARY_DIR}/tests_link_provider_a.rxbin rxlink
@@ -168,7 +177,7 @@ set_target_properties(test_linked_format PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_custom_command(TARGET test_linked_format POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_BINARY_DIR}/bin/test_linked_format)
-add_dependencies(test_linked_format tests_linked_success_artifact tests_linked_stripped_artifact tests_record_stream_combo_artifact)
+add_dependencies(test_linked_format tests_linked_success_artifact tests_linked_inline_artifact tests_linked_stripped_artifact tests_record_stream_combo_artifact)
 add_test(NAME rxlink_format_check COMMAND test_linked_format WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_test(
@@ -218,6 +227,20 @@ add_test(
         -DOUTPUT_RXAS=${CMAKE_CURRENT_BINARY_DIR}/tests_linked_success.rxas
         -DEXPECT_TEXT_1=tests_link_provider_a.rxas
         -DEXPECT_TEXT_2=main() .locals
+        "-DEXPECT_ABSENT_1=.meta \"linktest.helper\"=\".inline\""
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxdas_contains.cmake
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_test(
+        NAME rxlink_rxdas_inline_preserve_smoke
+        COMMAND ${CMAKE_COMMAND}
+        -DRXDAS=$<TARGET_FILE:rxdas>
+        -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
+        -DINPUT_RXBIN=${CMAKE_CURRENT_BINARY_DIR}/tests_linked_inline.rxbin
+        -DOUTPUT_RXAS=${CMAKE_CURRENT_BINARY_DIR}/tests_linked_inline.rxas
+        -DEXPECT_TEXT_1=tests_link_provider_a.rxas
+        "-DEXPECT_TEXT_2=.meta \"linktest.helper\"=\".inline\" \"I4;a;b\""
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxdas_contains.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

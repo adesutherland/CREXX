@@ -22,7 +22,7 @@
 .globals=0
 
 main() .locals=7
-   .meta "object_reference_regression.main"="b" ".int" main() "" ""
+   .meta "object_reference_regression.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -107,7 +107,7 @@ main() .locals=7
    .meta "object_reference_regression.main.payload"
 
 replacePayloadRef() .locals=4
-   .meta "object_reference_regression.replacepayloadref"="b" ".void" replacePayloadRef() "expose item=.largepayload,label=.string" ""
+   .meta "object_reference_regression.replacepayloadref"="b" ".void" replacePayloadRef() "expose item=.largepayload,label=.string"
    .src 21:1="replacePayloadRef: procedure = .void"
    setnumdgts 18
    setnumfuz 0
@@ -130,7 +130,7 @@ replacePayloadRef() .locals=4
    .meta "object_reference_regression.replacepayloadref.label"
 
 mutatePayloadRef() .locals=6
-   .meta "object_reference_regression.mutatepayloadref"="b" ".void" mutatePayloadRef() "expose item=.largepayload,label=.string" ""
+   .meta "object_reference_regression.mutatepayloadref"="b" ".void" mutatePayloadRef() "expose item=.largepayload,label=.string"
    .src 26:1="mutatePayloadRef: procedure = .void"
    setnumdgts 18
    setnumfuz 0
@@ -156,7 +156,7 @@ mutatePayloadRef() .locals=6
    .meta "object_reference_regression.mutatepayloadref.label"
 
 replacePayloadLocal() .locals=5
-   .meta "object_reference_regression.replacepayloadlocal"="b" ".string" replacePayloadLocal() "item=.largepayload,label=.string" ""
+   .meta "object_reference_regression.replacepayloadlocal"="b" ".string" replacePayloadLocal() "item=.largepayload,label=.string"
    .src 31:1="replacePayloadLocal: procedure = .string"
    setnumdgts 18
    setnumfuz 0
@@ -191,7 +191,7 @@ l95d:
    .meta "object_reference_regression.replacepayloadlocal.label"
 
 §object_reference_regression.smallpayload.§factory() .locals=3
-   .meta "object_reference_regression.smallpayload.§factory"="b" ".smallpayload" §object_reference_regression.smallpayload.§factory() "label=.string" ""
+   .meta "object_reference_regression.smallpayload.§factory"="b" ".smallpayload" §object_reference_regression.smallpayload.§factory() "label=.string"
    .src 39:3="*: factory"
    setattrs r1,2
    setobjtype r1,"object_reference_regression.smallpayload"
@@ -213,7 +213,7 @@ l95d:
    .meta "object_reference_regression.smallpayload.§factory.§factory"
 
 §object_reference_regression.smallpayload.getname() .locals=2
-   .meta "object_reference_regression.smallpayload.getname"="b" ".string" §object_reference_regression.smallpayload.getname() "" ""
+   .meta "object_reference_regression.smallpayload.getname"="b" ".string" §object_reference_regression.smallpayload.getname() ""
    .src 44:3="getName: method = .string"
    setnumdgts 18
    setnumfuz 0
@@ -227,7 +227,7 @@ l95d:
    .meta "object_reference_regression.smallpayload.getname.§this"
 
 §object_reference_regression.smallpayload.setname() .locals=3
-   .meta "object_reference_regression.smallpayload.setname"="b" ".void" §object_reference_regression.smallpayload.setname() "label=.string" ""
+   .meta "object_reference_regression.smallpayload.setname"="b" ".void" §object_reference_regression.smallpayload.setname() "label=.string"
    .src 47:3="setName: method = .void"
    setnumdgts 18
    setnumfuz 0
@@ -247,7 +247,7 @@ l95d:
    .meta "object_reference_regression.smallpayload.setname.§this"
 
 §object_reference_regression.largepayload.§factory() .locals=8
-   .meta "object_reference_regression.largepayload.§factory"="b" ".largepayload" §object_reference_regression.largepayload.§factory() "label=.string" ""
+   .meta "object_reference_regression.largepayload.§factory"="b" ".largepayload" §object_reference_regression.largepayload.§factory() "label=.string"
    .src 65:3="*: factory"
    setattrs r2,12
    setobjtype r2,"object_reference_regression.largepayload"
@@ -349,7 +349,7 @@ l191doend:
    .meta "object_reference_regression.largepayload.§factory.§factory"
 
 §object_reference_regression.largepayload.rename() .locals=8
-   .meta "object_reference_regression.largepayload.rename"="b" ".void" §object_reference_regression.largepayload.rename() "label=.string" ""
+   .meta "object_reference_regression.largepayload.rename"="b" ".void" §object_reference_regression.largepayload.rename() "label=.string"
    .src 84:3="rename: method = .void"
    setnumdgts 18
    setnumfuz 0
@@ -409,7 +409,7 @@ l191doend:
    .meta "object_reference_regression.largepayload.rename.§this"
 
 §object_reference_regression.largepayload.summary() .locals=8
-   .meta "object_reference_regression.largepayload.summary"="b" ".string" §object_reference_regression.largepayload.summary() "" ""
+   .meta "object_reference_regression.largepayload.summary"="b" ".string" §object_reference_regression.largepayload.summary() ""
    .src 95:3="summary: method = .string"
    setnumdgts 18
    setnumfuz 0
@@ -452,7 +452,7 @@ l191doend:
    .meta "object_reference_regression.largepayload.summary.§this"
 
 §object_reference_regression.largepayload.check() .locals=4
-   .meta "object_reference_regression.largepayload.check"="b" ".string" §object_reference_regression.largepayload.check() "" ""
+   .meta "object_reference_regression.largepayload.check"="b" ".string" §object_reference_regression.largepayload.check() ""
    .src 99:3="check: method = .string"
    setnumdgts 18
    setnumfuz 0

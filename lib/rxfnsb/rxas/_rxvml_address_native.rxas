@@ -6,10 +6,10 @@
  * nativeaddressenvironment provider without packaging a Rexx fallback body.
  */
 _native_address_match() .locals=0 .expose=_rxsysb._native_address_match
-  .meta "_rxsysb._native_address_match"="b" ".int" _native_address_match() "env_name = .string" ""
+  .meta "_rxsysb._native_address_match"="b" ".int" _native_address_match() "env_name = .string"
 
 _native_address_handle() .locals=0 .expose=_rxsysb._native_address_handle
-  .meta "_rxsysb._native_address_handle"="b" ".int" _native_address_handle() "env_name = .string" ""
+  .meta "_rxsysb._native_address_handle"="b" ".int" _native_address_handle() "env_name = .string"
 
 _native_address_execute() .locals=0 .expose=_rxsysb._native_address_execute
-  .meta "_rxsysb._native_address_execute"="b" ".int" _native_address_execute() "handle = .int, request = .addressrequest, response = .addressresponse" ""
+  .meta "_rxsysb._native_address_execute"="b" ".int" _native_address_execute() "handle = .int, request = .addressrequest, response = .addressresponse"

@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=6
-   .meta "inline_test_vararg.main"="b" ".int" main() "" ""
+   .meta "inline_test_vararg.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -70,7 +70,7 @@ main() .locals=6
    .meta "inline_test_vararg.main.total"
 
 tailCount() .locals=2
-   .meta "inline_test_vararg.tailcount"="b" ".int" tailCount() "base=.int,...=.int" ""
+   .meta "inline_test_vararg.tailcount"="b" ".int" tailCount() "base=.int,...=.int"
    .src 15:1="tailCount: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -88,7 +88,7 @@ tailCount() .locals=2
    .meta "inline_test_vararg.tailcount.base"
 
 secondOnly() .locals=3
-   .meta "inline_test_vararg.secondonly"="b" ".int" secondOnly() "base=.int,...=.int" ""
+   .meta "inline_test_vararg.secondonly"="b" ".int" secondOnly() "base=.int,...=.int"
    .src 19:1="secondOnly: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -109,7 +109,7 @@ secondOnly() .locals=3
    .meta "inline_test_vararg.secondonly.base"
 
 hasThird() .locals=1
-   .meta "inline_test_vararg.hasthird"="b" ".int" hasThird() "...=.int" ""
+   .meta "inline_test_vararg.hasthird"="b" ".int" hasThird() "...=.int"
    .src 23:1="hasThird: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -124,7 +124,7 @@ hasThird() .locals=1
    ret r0
 
 logSecond() .locals=3
-   .meta "inline_test_vararg.logsecond"="b" ".int" logSecond() "base=.int,...=.int" ""
+   .meta "inline_test_vararg.logsecond"="b" ".int" logSecond() "base=.int,...=.int"
    .src 27:1="logSecond: procedure = .int"
    setnumdgts 18
    setnumfuz 0

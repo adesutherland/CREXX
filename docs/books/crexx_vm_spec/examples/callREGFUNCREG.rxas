@@ -2,7 +2,7 @@
 .globals=0
 
 main() .locals=4
-   .meta "words.main"="b" ".void" main() "" ""
+   .meta "words.main"="b" ".void" main() ""
    .src 5:1="say words('The quick brown fox jumps over the lazy dog')"
    load r1,1
    load r2,"The quick brown fox jumps over the lazy dog"

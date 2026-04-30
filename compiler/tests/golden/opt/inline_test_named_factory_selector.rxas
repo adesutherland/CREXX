@@ -15,7 +15,7 @@
 .globals=0
 
 main() .locals=6
-   .meta "inline_test_named_factory_selector.main"="b" ".int" main() "" ""
+   .meta "inline_test_named_factory_selector.main"="b" ".int" main() ""
    .src 4:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -64,7 +64,7 @@ l137bexprend:
    ret 0
 
 directNamed() .locals=3
-   .meta "inline_test_named_factory_selector.directnamed"="b" ".vehicle" directNamed() "" ""
+   .meta "inline_test_named_factory_selector.directnamed"="b" ".vehicle" directNamed() ""
    .src 10:1="directNamed: procedure = .vehicle"
    setnumdgts 18
    setnumfuz 0
@@ -80,7 +80,7 @@ directNamed() .locals=3
    ret r2
 
 assignedNamed() .locals=4
-   .meta "inline_test_named_factory_selector.assignednamed"="b" ".vehicle" assignedNamed() "name=.string" ""
+   .meta "inline_test_named_factory_selector.assignednamed"="b" ".vehicle" assignedNamed() "name=.string"
    .src 13:1="assignedNamed: procedure = .vehicle"
    setnumdgts 18
    setnumfuz 0
@@ -108,7 +108,7 @@ l47iffalse:
    .meta "inline_test_named_factory_selector.assignednamed.name"
 
 §inline_test_named_factory_selector.car.§factory() .locals=4
-   .meta "inline_test_named_factory_selector.car.§factory"="b" ".car" §inline_test_named_factory_selector.car.§factory() "name=.string" ""
+   .meta "inline_test_named_factory_selector.car.§factory"="b" ".car" §inline_test_named_factory_selector.car.§factory() "name=.string"
    .src 36:3="*: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_named_factory_selector.car"
@@ -131,7 +131,7 @@ l47iffalse:
    .meta "inline_test_named_factory_selector.car.§factory.§factory"
 
 §inline_test_named_factory_selector.car.§factory.from_name() .locals=4
-   .meta "inline_test_named_factory_selector.car.§factory.from_name"="b" ".car" §inline_test_named_factory_selector.car.§factory.from_name() "name=.string" ""
+   .meta "inline_test_named_factory_selector.car.§factory.from_name"="b" ".car" §inline_test_named_factory_selector.car.§factory.from_name() "name=.string"
    .src 41:3="from_name: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_named_factory_selector.car"
@@ -154,7 +154,7 @@ l47iffalse:
    .meta "inline_test_named_factory_selector.car.§factory.from_name.§factory"
 
 §inline_test_named_factory_selector.car.describe() .locals=2
-   .meta "inline_test_named_factory_selector.car.describe"="b" ".string" §inline_test_named_factory_selector.car.describe() "" ""
+   .meta "inline_test_named_factory_selector.car.describe"="b" ".string" §inline_test_named_factory_selector.car.describe() ""
    .src 46:3="describe: method = .string"
    setnumdgts 18
    setnumfuz 0

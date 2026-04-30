@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=7
-   .meta "inline_test_multi_return_assign.main"="b" ".int" main() "" ""
+   .meta "inline_test_multi_return_assign.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -49,7 +49,7 @@ l8doend:
    ret 0
 
 classify() .locals=4
-   .meta "inline_test_multi_return_assign.classify"="b" ".int" classify() "val=.int" ""
+   .meta "inline_test_multi_return_assign.classify"="b" ".int" classify() "val=.int"
    .src 12:1="classify: procedure = .int"
    setnumdgts 18
    setnumfuz 0

@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=4
-   .meta "inline_test_binary_arg_return.main"="b" ".int" main() "" ""
+   .meta "inline_test_binary_arg_return.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
@@ -31,7 +31,7 @@ main() .locals=4
    .meta "inline_test_binary_arg_return.main.data"
 
 relayBinary() .locals=1
-   .meta "inline_test_binary_arg_return.relaybinary"="b" ".binary" relayBinary() "data=.binary" ""
+   .meta "inline_test_binary_arg_return.relaybinary"="b" ".binary" relayBinary() "data=.binary"
    .src 9:1="relayBinary: procedure = .binary"
    setnumdgts 18
    setnumfuz 0
@@ -45,7 +45,7 @@ relayBinary() .locals=1
    .meta "inline_test_binary_arg_return.relaybinary.data"
 
 makeBinary() .locals=1
-   .meta "inline_test_binary_arg_return.makebinary"="b" ".binary" makeBinary() "" ""
+   .meta "inline_test_binary_arg_return.makebinary"="b" ".binary" makeBinary() ""
    .src 13:1="makeBinary: procedure = .binary"
    setnumdgts 18
    setnumfuz 0

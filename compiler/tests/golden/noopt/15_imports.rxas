@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=3
-   .meta "15_imports.main"="b" ".void" main() "" ""
+   .meta "15_imports.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -26,4 +26,4 @@ main() .locals=3
 /* Imported Declaration from file: mymath.rexx */
 
 mymath.myfunc() .expose=mymath.myfunc
-   .meta "mymath.myfunc"="b" ".int" mymath.myfunc() "x=.int" ""
+   .meta "mymath.myfunc"="b" ".int" mymath.myfunc() "x=.int"
