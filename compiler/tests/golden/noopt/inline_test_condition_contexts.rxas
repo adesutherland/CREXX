@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_condition_contexts.rexx
- * BUILT                  : 2026-03-27 15:46:25
+ * BUILT                  : 2026-04-30 20:04:11
  */
 
 .srcfile="inline_test_condition_contexts.rexx"
@@ -18,8 +18,8 @@ main() .locals=5
    .src 4:3="say \"Starting condition context inline test...\""
    say "Starting condition context inline test..."
    .src 6:2="if isOne(1)"
-   load r2,1
    load r3,1
+   load r2,1
    call r4,isOne(),r2
    brf l14iffalse,r4
    .src 6:15="then"
@@ -32,8 +32,8 @@ l14iffalse:
    say "bad-if-yes"
 l14ifend:
    .src 9:2="if isOne(2)"
-   load r3,1
    load r4,2
+   load r3,1
    call r2,isOne(),r3
    brf l21iffalse,r2
    .src 9:15="then"

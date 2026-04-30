@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_writable_arg.rexx
- * BUILT                  : 2026-04-21 11:35:29
+ * BUILT                  : 2026-04-30 20:04:11
  */
 
 .meta "inline_test_object_writable_arg.box"="b" ".unknown" .class
@@ -21,8 +21,8 @@ main() .locals=4
    say "Starting object writable-arg inline test..."
    .src 5:3="box = .Box(\"alpha\")"
    .meta "inline_test_object_writable_arg.main.box"="b" ".box" r0
-   load r1,1
    load r2,"alpha"
+   load r1,1
    settp r2,3
    call r0,§inline_test_object_writable_arg.box.§factory(),r1
    .src 6:3="say replaceBox(box)"
@@ -63,8 +63,8 @@ l26c:
    swap r0,a1
 l26d:
    .src 13:3="value = .Box(\"local\")"
-   load r1,1
    load r2,"local"
+   load r1,1
    settp r2,3
    call r0,§inline_test_object_writable_arg.box.§factory(),r1
    .src 14:3="return value.getName"

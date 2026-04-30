@@ -178,13 +178,6 @@ void emit_expression(ASTNode *node, void *payload) {
             /* Add Variable Metadata */
             add_variable_metadata(node);
 
-            /* Number of arguments */
-            temp1 = mprintf("   load r%d,%d\n",
-                            node->additional_registers,
-                            node->num_additional_registers - 1);
-            output_append_text(node->output, temp1);
-            free(temp1);
-
             /* First Step through the arguments evaluating any expressions
              * This must be done BEFORE argument marshalling using swaps   */
             n = child1;
@@ -192,6 +185,15 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (n->output) output_concat(node->output, n->output);
                 n = n->sibling;
             }
+
+            /* Number of arguments. Keep this after argument expression
+             * evaluation: inlined argument blocks may use temporary
+             * registers from the call frame before marshalling starts. */
+            temp1 = mprintf("   load r%d,%d\n",
+                            node->additional_registers,
+                            node->num_additional_registers - 1);
+            output_append_text(node->output, temp1);
+            free(temp1);
 
             /* Now step through the arguments - marshalling them in order and
              * setting argument flags as required */

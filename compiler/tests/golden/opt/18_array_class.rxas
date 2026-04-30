@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 18_array_class_main.rexx
- * BUILT                  : 2026-04-29 19:31:10
+ * BUILT                  : 2026-04-30 20:04:10
  */
 
 .srcfile="18_array_class_main.rexx"
@@ -23,8 +23,8 @@ main() .locals=15
    say "Main"
    .src 6:1="it1 = .Item(\"Hello\")"
    .meta "18_array_class_main.main.it1"="b" ".item" r1
-   load r10,1
    load r11,"Hello"
+   load r10,1
    settp r11,3
    call r1,§array_class_lib.item.§factory(),r10
    .src 7:1="say \"Created it1\""

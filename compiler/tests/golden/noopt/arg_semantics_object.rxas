@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_object.rexx
- * BUILT                  : 2026-04-21 11:35:26
+ * BUILT                  : 2026-04-30 20:04:10
  */
 
 .meta "arg_semantics_object.box"="b" ".unknown" .class
@@ -19,8 +19,8 @@ main() .locals=6
    setnumstd 1
    .src 4:3="box = .Box(\"alpha\")"
    .meta "arg_semantics_object.main.box"="b" ".box" r0
-   load r1,1
    load r2,"alpha"
+   load r1,1
    settp r2,3
    call r0,§arg_semantics_object.box.§factory(),r1
    .src 5:3="say \"object-read=\" || readBox(box)"
@@ -48,11 +48,11 @@ main() .locals=6
    concat r3,"object-after=",r1
    say r3
    .src 8:3="say \"object-temp=\" || replaceBox(.Box(\"temp\"))"
-   load r2,1
-   load r4,1
    load r5,"temp"
+   load r4,1
    settp r5,3
    call r3,§arg_semantics_object.box.§factory(),r4
+   load r2,1
    settp r3,1
    call r5,replaceBox(),r2
    concat r5,"object-temp=",r5
@@ -111,8 +111,8 @@ l58c:
    swap r0,a1
 l58d:
    .src 19:3="value = .Box(\"local\")"
-   load r1,1
    load r2,"local"
+   load r1,1
    settp r2,3
    call r0,§arg_semantics_object.box.§factory(),r1
    .src 20:3="return value.getName"
@@ -135,8 +135,8 @@ replaceBoxRef() .locals=3
    .src 23:7="expose value = .Box"
    .meta "arg_semantics_object.replaceboxref.value"="b" ".box" a1
    .src 24:3="value = .Box(\"ref\")"
-   load r1,1
    load r2,"ref"
+   load r1,1
    settp r2,3
    call a1,§arg_semantics_object.box.§factory(),r1
    .src 25:3="return"

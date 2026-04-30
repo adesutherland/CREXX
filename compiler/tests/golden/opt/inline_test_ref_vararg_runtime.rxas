@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_vararg_runtime.rexx
- * BUILT                  : 2026-04-29 14:16:44
+ * BUILT                  : 2026-04-30 20:04:09
  */
 
 .srcfile="inline_test_ref_vararg_runtime.rexx"
@@ -35,8 +35,8 @@ l120bexprend:
    itos r4
    say r4
    .src 9:3="say readTail(2, first, second, third)"
-   load r4,4
    load r5,2
+   load r4,4
    swap r6,r0
    swap r7,r1
    swap r8,r2
@@ -47,8 +47,8 @@ l120bexprend:
    itos r9
    say r9
    .src 10:3="say hasTail(2, first, second, third)"
-   load r5,4
    load r6,2
+   load r5,4
    swap r7,r0
    swap r8,r1
    swap r9,r2
@@ -59,8 +59,8 @@ l120bexprend:
    itos r4
    say r4
    .src 11:3="say hasTail(5, first, second, third)"
-   load r5,4
    load r6,5
+   load r5,4
    swap r7,r0
    swap r8,r1
    swap r9,r2
@@ -71,8 +71,8 @@ l120bexprend:
    itos r4
    say r4
    .src 12:3="say mutateTailIndirect(2, first, second, third)"
-   load r5,4
    load r6,2
+   load r5,4
    swap r7,r0
    swap r8,r1
    swap r9,r2
@@ -165,11 +165,11 @@ mutateTailIndirect() .locals=7
    .meta "inline_test_ref_vararg_runtime.mutatetailindirect.which"="b" ".int" a1
    .src 36:28="... = .int"
    .src 37:3="return bumpOne(arg[which"
-   load r3,1
    icopy r5,a0
    isub r5,r5,1
    ichkrng a1,1,r5
    linkarg r5,a1,1
+   load r3,1
    swap r4,r5
    call r6,bumpOne(),r3
    swap r5,r4

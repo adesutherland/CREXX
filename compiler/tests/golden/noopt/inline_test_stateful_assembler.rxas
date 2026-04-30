@@ -1,0 +1,130 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_stateful_assembler.rexx
+ * BUILT                  : 2026-04-30 20:03:02
+ */
+
+.srcfile="inline_test_stateful_assembler.rexx"
+.globals=0
+
+main() .locals=8
+   .meta "inline_test_stateful_assembler.main"="b" ".void" main() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="s = \"abc123\""
+   .meta "inline_test_stateful_assembler.main.s"="b" ".string" r0
+   load r0,"abc123"
+   .src 4:1="x = char_at(s, 4)"
+   .meta "inline_test_stateful_assembler.main.x"="b" ".string" r2
+   load r7,4
+   load r5,2
+   settp r0,1
+   swap r6,r0
+   call r2,char_at(),r5
+   swap r0,r6
+   .src 5:1="y = char_at(s, 1)"
+   .meta "inline_test_stateful_assembler.main.y"="b" ".string" r3
+   load r7,1
+   load r5,2
+   settp r0,1
+   swap r6,r0
+   call r3,char_at(),r5
+   swap r0,r6
+   .src 6:1="say x':'y':'s"
+   concat r7,r2,":"
+   concat r7,r7,r3
+   concat r7,r7,":"
+   concat r7,r7,r0
+   say r7
+   .src 8:1="s2 = \"abcdef\""
+   .meta "inline_test_stateful_assembler.main.s2"="b" ".string" r1
+   load r1,"abcdef"
+   .src 9:1="z = left_copy(s2, 3)"
+   .meta "inline_test_stateful_assembler.main.z"="b" ".string" r4
+   load r7,3
+   load r5,2
+   settp r1,1
+   swap r6,r1
+   call r4,left_copy(),r5
+   swap r1,r6
+   .src 10:1="say z':'s2"
+   concat r7,r4,":"
+   concat r7,r7,r1
+   say r7
+   .src 10:11=""
+   ret
+   .meta "inline_test_stateful_assembler.main.s"
+   .meta "inline_test_stateful_assembler.main.s2"
+   .meta "inline_test_stateful_assembler.main.x"
+   .meta "inline_test_stateful_assembler.main.y"
+   .meta "inline_test_stateful_assembler.main.z"
+
+char_at() .locals=5
+   .meta "inline_test_stateful_assembler.char_at"="b" ".string" char_at() "text=.string,posn=.int"
+   .src 12:1="char_at: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 13:7="text = .string"
+   .meta "inline_test_stateful_assembler.char_at.text"="b" ".string" r4
+   brtpandt l43c,a1,2
+   scopy r4,a1
+   acopy r4,a1
+   br l43d
+l43c:
+   swap r4,a1
+l43d:
+   .src 13:23="posn = .int"
+   .meta "inline_test_stateful_assembler.char_at.posn"="b" ".int" a2
+   .meta "inline_test_stateful_assembler.char_at.out"="b" ".string" r2
+   .src 16:3="out = .string"
+   null r2
+   .src 14:3="offset = posn - 1"
+   .meta "inline_test_stateful_assembler.char_at.offset"="b" ".int" r0
+   isub r0,a2,1
+   .src 15:3="one = 1"
+   .meta "inline_test_stateful_assembler.char_at.one"="b" ".int" r1
+   load r1,1
+   .src 17:13="setstrpos text, offset"
+   setstrpos r4,r0
+   .src 18:13="substring out, text, one"
+   substring r2,r4,r1
+   .src 19:3="return out"
+   ret r2
+   .meta "inline_test_stateful_assembler.char_at.offset"
+   .meta "inline_test_stateful_assembler.char_at.one"
+   .meta "inline_test_stateful_assembler.char_at.out"
+   .meta "inline_test_stateful_assembler.char_at.posn"
+   .meta "inline_test_stateful_assembler.char_at.text"
+
+left_copy() .locals=2
+   .meta "inline_test_stateful_assembler.left_copy"="b" ".string" left_copy() "text=.string,len=.int"
+   .src 21:1="left_copy: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 22:7="text = .string"
+   .meta "inline_test_stateful_assembler.left_copy.text"="b" ".string" r1
+   brtpandt l72c,a1,2
+   scopy r1,a1
+   acopy r1,a1
+   br l72d
+l72c:
+   swap r1,a1
+l72d:
+   .src 22:23="len = .int"
+   .meta "inline_test_stateful_assembler.left_copy.len"="b" ".int" r0
+   icopy r0,a2
+   .src 23:13="substcut text, len"
+   substcut r1,r0
+   .src 24:3="return text"
+   ret r1
+   .meta "inline_test_stateful_assembler.left_copy.len"
+   .meta "inline_test_stateful_assembler.left_copy.text"

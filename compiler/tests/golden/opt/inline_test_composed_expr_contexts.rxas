@@ -1,0 +1,225 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_composed_expr_contexts.rexx
+ * BUILT                  : 2026-04-30 16:45:19
+ */
+
+.srcfile="inline_test_composed_expr_contexts.rexx"
+.globals=0
+
+main() .locals=35
+   .meta "inline_test_composed_expr_contexts.main"="b" ".int" main() ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting composed inline contexts test...\""
+   say "Starting composed inline contexts test..."
+   .src 6:3="say leftValue(3) + rightValue(4)"
+   .src 6:7="leftValue"
+   .src 28:3="return value * 10"
+   load r10,30
+   icopy r11,r10
+   br l174bexprend
+l174bexprend:
+   .src 6:22="rightValue"
+   .src 32:3="return value + 7"
+   load r12,11
+   icopy r13,r12
+   br l264bexprend
+l264bexprend:
+   iadd r13,r11,r13
+   itos r13
+   say r13
+   .src 7:3="say \"prefix:\" || labelFor(leftValue(2)) || \":\" || rightText(5)"
+   .src 7:20="labelFor"
+   .src 39:7="value"
+   .src 7:29="leftValue"
+   .src 28:3="return value * 10"
+   load r13,20
+   icopy r11,r13
+   br l196bexprend
+l196bexprend:
+   icopy r2,r11
+   .src 40:3="return \"[\" || value || \"]\""
+   itos r2
+   concat r11,"[",r2
+   concat r11,r11,"]"
+   scopy r14,r11
+   acopy r14,r11
+   br l192bexprend
+l192bexprend:
+   concat r14,"prefix:",r14
+   concat r14,r14,":"
+   .src 7:53="rightText"
+   .src 36:3="return value"
+   load r15,"5"
+   scopy r16,r15
+   acopy r16,r15
+   br l211bexprend
+l211bexprend:
+   concat r16,r14,r16
+   say r16
+   .src 8:3="say combine(leftValue(1), rightValue(2))"
+   .src 8:7="combine"
+   .src 43:7="left"
+   .src 8:15="leftValue"
+   .src 28:3="return value * 10"
+   load r16,10
+   icopy r14,r16
+   br l231bexprend
+l231bexprend:
+   icopy r4,r14
+   .src 8:7="combine(leftValue(1), rightValue(2))"
+   .src 32:3="return"
+   load r5,9
+   .src 44:3="return left + right"
+   iadd r14,r4,r5
+   icopy r17,r14
+   acopy r17,r14
+   br l227bexprend
+l227bexprend:
+   itos r17
+   say r17
+   .src 10:3="calls = 0"
+   .meta "inline_test_composed_expr_contexts.main.calls"="b" ".int" r0
+   load r0,0
+   .src 11:2="if zero() & bump(calls)"
+   .src 11:6="zero"
+   .src 47:3="return 0"
+   load r17,0
+   icopy r18,r17
+   br l248bexprend
+l248bexprend:
+   brf l38andfalse,r18
+   .src 11:15="bump"
+   .src 54:3="count = count + 1"
+   iadd r0,r0,1
+   .src 55:3="return 1"
+   load r19,1
+   icopy r20,r19
+   br l282bexprend
+l282bexprend:
+   icopy r21,r20
+   br l38andend
+l38andfalse:
+   load r21,0
+l38andend:
+   brf l45iffalse,r21
+   .src 11:27="then"
+   .src 11:32="say \"bad-and-skip\""
+   say "bad-and-skip"
+   br l45ifend
+   .src 12:3="else"
+l45iffalse:
+   .src 12:8="say \"and-skip\" calls"
+   itos r0
+   sconcat r22,"and-skip",r0
+   say r22
+l45ifend:
+   .src 14:2="if one() | bump(calls)"
+   .src 14:6="one"
+   .src 50:3="return 1"
+   load r22,1
+   icopy r21,r22
+   br l252bexprend
+l252bexprend:
+   brt l50ortrue,r21
+   .src 14:14="bump"
+   .src 54:3="count = count + 1"
+   iadd r0,r0,1
+   .src 55:3="return 1"
+   load r23,1
+   icopy r24,r23
+   br l291bexprend
+l291bexprend:
+   icopy r25,r24
+   br l50orend
+l50ortrue:
+   load r25,1
+l50orend:
+   brf l57iffalse,r25
+   .src 14:26="then"
+   .src 14:31="say \"or-skip\" calls"
+   itos r0
+   sconcat r26,"or-skip",r0
+   say r26
+   br l57ifend
+   .src 15:3="else"
+l57iffalse:
+   .src 15:8="say \"bad-or-skip\""
+   say "bad-or-skip"
+l57ifend:
+   .src 17:2="if one() & bump(calls)"
+   .src 17:6="one"
+   .src 50:3="return 1"
+   load r26,1
+   icopy r25,r26
+   br l256bexprend
+l256bexprend:
+   brf l62andfalse,r25
+   .src 17:14="bump"
+   .src 54:3="count = count + 1"
+   iadd r0,r0,1
+   .src 55:3="return 1"
+   load r27,1
+   icopy r28,r27
+   br l300bexprend
+l300bexprend:
+   icopy r29,r28
+   br l62andend
+l62andfalse:
+   load r29,0
+l62andend:
+   brf l69iffalse,r29
+   .src 17:26="then"
+   .src 17:31="say \"and-hit\" calls"
+   itos r0
+   sconcat r30,"and-hit",r0
+   say r30
+   br l69ifend
+   .src 18:3="else"
+l69iffalse:
+   .src 18:8="say \"bad-and-hit\""
+   say "bad-and-hit"
+l69ifend:
+   .src 20:2="if zero() | bump(calls)"
+   .src 20:6="zero"
+   .src 47:3="return 0"
+   load r30,0
+   icopy r29,r30
+   br l260bexprend
+l260bexprend:
+   brt l74ortrue,r29
+   .src 20:15="bump"
+   .src 54:3="count = count + 1"
+   iadd r0,r0,1
+   .src 55:3="return 1"
+   load r31,1
+   icopy r32,r31
+   br l309bexprend
+l309bexprend:
+   icopy r33,r32
+   br l74orend
+l74ortrue:
+   load r33,1
+l74orend:
+   brf l81iffalse,r33
+   .src 20:27="then"
+   .src 20:32="say \"or-hit\" calls"
+   itos r0
+   sconcat r34,"or-hit",r0
+   say r34
+   br l81ifend
+   .src 21:3="else"
+l81iffalse:
+   .src 21:8="say \"bad-or-hit\""
+   say "bad-or-hit"
+l81ifend:
+   .src 23:3="say \"Composed inline contexts test finished.\""
+   say "Composed inline contexts test finished."
+   .src 24:3="return 0"
+   ret 0
+   .meta "inline_test_composed_expr_contexts.main.calls"

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_expr_negative.rexx
- * BUILT                  : 2026-03-26 08:59:13
+ * BUILT                  : 2026-04-30 20:04:09
  */
 
 .srcfile="inline_test_expr_negative.rexx"
@@ -28,11 +28,11 @@ l8dostart:
    igt r2,r0,r1
    brt l8doend,r2
    .src 6:4="if identity(addOne(i)) | 0"
-   load r3,1
    load r5,1
    swap r6,r0
    call r4,addOne(),r5
    swap r0,r6
+   load r3,1
    call r6,identity(),r3
    brt l19orend,r6
    load r6,0

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_return_expr.rexx
- * BUILT                  : 2026-04-29 10:12:23
+ * BUILT                  : 2026-04-30 20:04:09
  */
 
 .meta "inline_test_object_return_expr.box"="b" ".unknown" .class
@@ -9,7 +9,7 @@
 .srcfile="inline_test_object_return_expr.rexx"
 .globals=0
 
-main() .locals=8
+main() .locals=16
    .meta "inline_test_object_return_expr.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -20,56 +20,59 @@ main() .locals=8
    .src 4:3="say \"Starting object return expr inline test...\""
    say "Starting object return expr inline test..."
    .src 5:3="say describeBox(buildBox(\"seed\"))"
-   load r4,1
-   load r6,1
-   load r7,"seed"
-   settp r7,3
-   call r5,buildBox(),r6
-   settp r5,1
-   call r7,describeBox(),r4
-   say r7
+   .src 5:19="buildBox"
+   .src 12:3="value = .Box(initial)"
+   .src 22:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r1,2
+   .src 22:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r1,"inline_test_object_return_expr.box"
+   .src 24:5="name = initial"
+   load r13,"seed"
+   linkattr1 r12,r1,1
+   scopy r12,r13
+   unlink r12
+   .src 25:5="return"
+   copy r0,r1
+   .src 13:3="return value"
+   copy r12,r0
+   acopy r12,r0
+   br l73bexprend
+l73bexprend:
+   load r10,1
+   settp r12,3
+   swap r11,r12
+   call r14,describeBox(),r10
+   swap r12,r11
+   say r14
    .src 6:3="say describeBox(buildBox(\"temp\"))"
-   load r6,1
-   load r4,1
-   load r5,"temp"
-   settp r5,3
-   call r7,buildBox(),r4
-   settp r7,1
-   call r5,describeBox(),r6
-   say r5
+   .src 6:19="buildBox"
+   .src 12:3="value = .Box(initial)"
+   .src 22:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r4,2
+   .src 22:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r4,"inline_test_object_return_expr.box"
+   .src 24:5="name = initial"
+   load r11,"temp"
+   linkattr1 r12,r4,1
+   scopy r12,r11
+   unlink r12
+   .src 25:5="return"
+   copy r3,r4
+   .src 13:3="return value"
+   copy r12,r3
+   acopy r12,r3
+   br l86bexprend
+l86bexprend:
+   load r14,1
+   settp r12,3
+   swap r15,r12
+   call r10,describeBox(),r14
+   swap r12,r15
+   say r10
    .src 7:3="say \"Object return expr inline test finished.\""
    say "Object return expr inline test finished."
    .src 8:3="return 0"
    ret 0
-
-buildBox() .locals=5
-   .meta "inline_test_object_return_expr.buildbox"="b" ".box" buildBox() "initial=.string"
-   .src 10:1="buildBox: procedure = .Box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 11:7="initial = .string"
-   .meta "inline_test_object_return_expr.buildbox.initial"="b" ".string" a1
-   .src 12:3="value = .Box(initial)"
-   .src 22:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
-   setattrs r3,2
-   .src 22:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
-   setobjtype r3,"inline_test_object_return_expr.box"
-   .src 23:9="initial"
-   scopy r2,a1
-   .src 24:5="name = initial"
-   linkattr1 r4,r3,1
-   scopy r4,r2
-   unlink r4
-   .src 25:5="return"
-   copy r1,r3
-   .src 13:3="return value"
-   .meta "inline_test_object_return_expr.buildbox.value"="b" ".box" r1
-   ret r1
-   .meta "inline_test_object_return_expr.buildbox.initial"
-   .meta "inline_test_object_return_expr.buildbox.value"
 
 describeBox() .locals=4
    .meta "inline_test_object_return_expr.describebox"="b" ".string" describeBox() "value=.box"
@@ -90,8 +93,8 @@ describeBox() .locals=4
    scopy r3,r2
    acopy r3,r2
    unlink r2
-   br l93bexprend
-l93bexprend:
+   br l115bexprend
+l115bexprend:
    ret r3
    .meta "inline_test_object_return_expr.describebox.value"
 

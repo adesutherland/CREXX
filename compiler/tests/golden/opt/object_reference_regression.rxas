@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : object_reference_regression.rexx
- * BUILT                  : 2026-04-29 14:21:08
+ * BUILT                  : 2026-04-30 20:04:00
  */
 
 .meta "object_reference_regression.largepayload"="b" ".unknown" .class
@@ -21,7 +21,7 @@
 .srcfile="object_reference_regression.rexx"
 .globals=0
 
-main() .locals=36
+main() .locals=57
    .meta "object_reference_regression.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -38,26 +38,26 @@ main() .locals=36
    .src 65:3="*: factory\n    arg label = .string\n    t_values = .string[64]\n    name = label\n    do i = 1 to 40\n      t_values[i] = label || \":\" || i\n    end\n    values = t_values\n    child = .SmallPayload(label || \":child\")\n    marker1 = label || \":m1\"\n    marker2 = label || \":m2\"\n    marker3 = label || \":m3\"\n    marker4 = label || \":m4\"\n    marker5 = label || \":m5\"\n    marker6 = label || \":m6\"\n    marker7 = label || \":m7\"\n    marker8 = label || \":m8\"\n    return"
    setobjtype r3,"object_reference_regression.largepayload"
    .src 68:5="name = label"
-   load r23,"seed"
-   linkattr1 r22,r3,10
-   scopy r22,r23
-   unlink r22
+   load r36,"seed"
+   linkattr1 r35,r3,10
+   scopy r35,r36
+   unlink r35
    .src 69:5="do"
    .src 69:8="i = 1"
    load r4,1
    .src 69:14="to 40"
-   load r22,40
+   load r35,40
 l417dostart:
    .src 69:14="to 40"
-   igt r24,r4,r22
-   brt l417doend,r24
+   igt r37,r4,r35
+   brt l417doend,r37
    .src 70:7="t_values[i] = label || \":\" || i"
    setattrs r2,64
-   linkattr1 r25,r2,r4
+   linkattr1 r38,r2,r4
    itos r4
-   concat r26,"seed:",r4
-   scopy r25,r26
-   unlink r25
+   concat r39,"seed:",r4
+   scopy r38,r39
+   unlink r38
 l417doinc:
    .src 69:8="i"
    inc r4
@@ -65,395 +65,576 @@ l417doinc:
    br l417dostart
 l417doend:
    .src 72:5="values = t_values"
-   linkattr1 r26,r3,11
-   copy r26,r2
-   unlink r26
+   linkattr1 r39,r3,11
+   copy r39,r2
+   unlink r39
    .src 73:5="child = .SmallPayload(label || \":child\")"
    .src 39:3="*: factory\n    arg label = .string\n    name = label\n    return"
    setattrs r5,2
    .src 39:3="*: factory\n    arg label = .string\n    name = label\n    return"
    setobjtype r5,"object_reference_regression.smallpayload"
    .src 41:5="name = label"
-   load r25,"seed:child"
-   linkattr1 r26,r5,1
-   scopy r26,r25
-   unlink r26
+   load r38,"seed:child"
+   linkattr1 r39,r5,1
+   scopy r39,r38
+   unlink r39
    .src 42:5="return"
-   linkattr1 r26,r3,1
-   copy r26,r5
-   unlink r26
+   linkattr1 r39,r3,1
+   copy r39,r5
+   unlink r39
    .src 74:5="marker1 = label || \":m1\""
-   load r24,"seed:m1"
-   linkattr1 r26,r3,2
-   scopy r26,r24
-   unlink r26
+   load r37,"seed:m1"
+   linkattr1 r39,r3,2
+   scopy r39,r37
+   unlink r39
    .src 75:5="marker2 = label || \":m2\""
-   load r24,"seed:m2"
-   linkattr1 r26,r3,3
-   scopy r26,r24
-   unlink r26
+   load r37,"seed:m2"
+   linkattr1 r39,r3,3
+   scopy r39,r37
+   unlink r39
    .src 76:5="marker3 = label || \":m3\""
-   load r24,"seed:m3"
-   linkattr1 r26,r3,4
-   scopy r26,r24
-   unlink r26
+   load r37,"seed:m3"
+   linkattr1 r39,r3,4
+   scopy r39,r37
+   unlink r39
    .src 77:5="marker4 = label || \":m4\""
-   load r24,"seed:m4"
-   linkattr1 r26,r3,5
-   scopy r26,r24
-   unlink r26
+   load r37,"seed:m4"
+   linkattr1 r39,r3,5
+   scopy r39,r37
+   unlink r39
    .src 78:5="marker5 = label || \":m5\""
-   load r24,"seed:m5"
-   linkattr1 r26,r3,6
-   scopy r26,r24
-   unlink r26
+   load r37,"seed:m5"
+   linkattr1 r39,r3,6
+   scopy r39,r37
+   unlink r39
    .src 79:5="marker6 = label || \":m6\""
-   load r24,"seed:m6"
-   linkattr1 r26,r3,7
-   scopy r26,r24
-   unlink r26
+   load r37,"seed:m6"
+   linkattr1 r39,r3,7
+   scopy r39,r37
+   unlink r39
    .src 80:5="marker7 = label || \":m7\""
-   load r24,"seed:m7"
-   linkattr1 r26,r3,8
-   scopy r26,r24
-   unlink r26
+   load r37,"seed:m7"
+   linkattr1 r39,r3,8
+   scopy r39,r37
+   unlink r39
    .src 81:5="marker8 = label || \":m8\""
-   load r24,"seed:m8"
-   linkattr1 r26,r3,9
-   scopy r26,r24
-   unlink r26
+   load r37,"seed:m8"
+   linkattr1 r39,r3,9
+   scopy r39,r37
+   unlink r39
    .src 82:5="return"
    copy r1,r3
    .src 6:3="say \"factory-summary=\" || payload.summary"
    .meta "object_reference_regression.main.payload"="b" ".largepayload" r1
-   load r26,1
-   settp r1,1
-   swap r27,r1
-   call r24,§object_reference_regression.largepayload.summary(),r26
-   swap r1,r27
-   concat r27,"factory-summary=",r24
-   say r27
+   .src 6:29="payload"
+   .src 6:29="payload"
+   copy r7,r1
+   .src 96:5="child_name = child.getName"
+   .src 96:18="child"
+   linkattr1 r39,r7,1
+   copy r8,r39
+   unlink r39
+   .src 45:5="return"
+   linkattr1 r39,r8,1
+   copy r6,r39
+   unlink r39
+   .src 97:5="return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
+   linkattr1 r39,r7,10
+   concat r37,r39,"|"
+   unlink r39
+   linkattr1 r40,r7,11
+   minattrs r40,1
+   linkattr1 r35,r40,1
+   concat r40,r37,r35
+   unlink r35
+   concat r40,r40,"|"
+   linkattr1 r41,r7,11
+   minattrs r41,40
+   linkattr1 r37,r41,40
+   concat r41,r40,r37
+   unlink r37
+   concat r41,r41,"|"
+   concat r41,r41,r6
+   concat r41,r41,"|"
+   linkattr1 r40,r7,9
+   concat r41,r41,r40
+   unlink r40
+   scopy r40,r41
+   acopy r40,r41
+   br l752bexprend
+l752bexprend:
+   concat r40,"factory-summary=",r40
+   say r40
    .src 7:3="say \"factory-check=\" || payload.check"
-   load r26,1
-   settp r1,1
-   swap r27,r1
-   call r24,§object_reference_regression.largepayload.check(),r26
-   swap r1,r27
-   concat r27,"factory-check=",r24
-   say r27
+   .src 7:27="payload"
+   .src 7:27="payload"
+   copy r9,r1
+   .src 100:4="if values[17] \= name || \":17\""
+   linkattr1 r39,r9,11
+   minattrs r39,17
+   linkattr1 r40,r39,17
+   linkattr1 r39,r9,10
+   concat r37,r39,":17"
+   unlink r39
+   sne r37,r40,r37
+   unlink r40
+   brf l789iffalse,r37
+   .src 100:36="then"
+   .src 100:41="return \"bad-17\""
+   load r35,"bad-17"
+   scopy r39,r35
+   acopy r39,r35
+   br l784bexprend
+l789iffalse:
+   .src 101:4="if marker1 \= name || \":m1\""
+   linkattr1 r40,r9,2
+   linkattr1 r39,r9,10
+   concat r37,r39,":m1"
+   unlink r39
+   sne r37,r40,r37
+   unlink r40
+   brf l798iffalse,r37
+   .src 101:33="then"
+   .src 101:38="return \"bad-m1\""
+   load r42,"bad-m1"
+   scopy r39,r42
+   acopy r39,r42
+   br l784bexprend
+l798iffalse:
+   .src 102:4="if marker8 \= name || \":m8\""
+   linkattr1 r40,r9,9
+   linkattr1 r39,r9,10
+   concat r37,r39,":m8"
+   unlink r39
+   sne r37,r40,r37
+   unlink r40
+   brf l806iffalse,r37
+   .src 102:33="then"
+   .src 102:38="return \"bad-m8\""
+   load r43,"bad-m8"
+   scopy r39,r43
+   acopy r39,r43
+   br l784bexprend
+l806iffalse:
+   .src 103:5="return \"ok\""
+   load r40,"ok"
+   scopy r39,r40
+   acopy r39,r40
+   br l784bexprend
+l784bexprend:
+   concat r39,"factory-check=",r39
+   say r39
    .src 9:3="call replacePayloadRef(payload, \"rebound\")"
    .src 23:3="item = .LargePayload(label)"
-   .meta "object_reference_regression.main.t_values"="b" ".string[64]" r7
+   .meta "object_reference_regression.main.t_values"="b" ".string[64]" r11
    .src 67:5="t_values = .string[64"
-   null r7
+   null r11
    .src 65:3="*: factory\n    arg label = .string\n    t_values = .string[64]\n    name = label\n    do i = 1 to 40\n      t_values[i] = label || \":\" || i\n    end\n    values = t_values\n    child = .SmallPayload(label || \":child\")\n    marker1 = label || \":m1\"\n    marker2 = label || \":m2\"\n    marker3 = label || \":m3\"\n    marker4 = label || \":m4\"\n    marker5 = label || \":m5\"\n    marker6 = label || \":m6\"\n    marker7 = label || \":m7\"\n    marker8 = label || \":m8\"\n    return"
-   setattrs r8,12
+   setattrs r12,12
    .src 65:3="*: factory\n    arg label = .string\n    t_values = .string[64]\n    name = label\n    do i = 1 to 40\n      t_values[i] = label || \":\" || i\n    end\n    values = t_values\n    child = .SmallPayload(label || \":child\")\n    marker1 = label || \":m1\"\n    marker2 = label || \":m2\"\n    marker3 = label || \":m3\"\n    marker4 = label || \":m4\"\n    marker5 = label || \":m5\"\n    marker6 = label || \":m6\"\n    marker7 = label || \":m7\"\n    marker8 = label || \":m8\"\n    return"
-   setobjtype r8,"object_reference_regression.largepayload"
+   setobjtype r12,"object_reference_regression.largepayload"
    .src 68:5="name = label"
-   load r26,"rebound"
-   linkattr1 r27,r8,10
-   scopy r27,r26
-   unlink r27
+   load r37,"rebound"
+   linkattr1 r39,r12,10
+   scopy r39,r37
+   unlink r39
    .src 69:5="do"
    .src 69:8="i = 1"
-   load r9,1
+   load r13,1
    .src 69:14="to 40"
-   load r27,40
-l775dostart:
+   load r39,40
+l839dostart:
    .src 69:14="to 40"
-   igt r24,r9,r27
-   brt l775doend,r24
+   igt r44,r13,r39
+   brt l839doend,r44
    .src 70:7="t_values[i] = label || \":\" || i"
-   setattrs r7,64
-   linkattr1 r22,r7,r9
-   itos r9
-   concat r28,"rebound:",r9
-   scopy r22,r28
-   unlink r22
-l775doinc:
+   setattrs r11,64
+   linkattr1 r45,r11,r13
+   itos r13
+   concat r46,"rebound:",r13
+   scopy r45,r46
+   unlink r45
+l839doinc:
    .src 69:8="i"
-   inc r9
+   inc r13
    .src 71:5="end"
-   br l775dostart
-l775doend:
+   br l839dostart
+l839doend:
    .src 72:5="values = t_values"
-   linkattr1 r28,r8,11
-   copy r28,r7
-   unlink r28
+   linkattr1 r46,r12,11
+   copy r46,r11
+   unlink r46
    .src 73:5="child = .SmallPayload(label || \":child\")"
    .src 39:3="*: factory\n    arg label = .string\n    name = label\n    return"
-   setattrs r10,2
+   setattrs r14,2
    .src 39:3="*: factory\n    arg label = .string\n    name = label\n    return"
-   setobjtype r10,"object_reference_regression.smallpayload"
+   setobjtype r14,"object_reference_regression.smallpayload"
    .src 41:5="name = label"
-   load r27,"rebound:child"
-   linkattr1 r28,r10,1
-   scopy r28,r27
-   unlink r28
+   load r45,"rebound:child"
+   linkattr1 r46,r14,1
+   scopy r46,r45
+   unlink r46
    .src 42:5="return"
-   linkattr1 r28,r8,1
-   copy r28,r10
-   unlink r28
+   linkattr1 r46,r12,1
+   copy r46,r14
+   unlink r46
    .src 74:5="marker1 = label || \":m1\""
-   load r24,"rebound:m1"
-   linkattr1 r28,r8,2
-   scopy r28,r24
-   unlink r28
+   load r44,"rebound:m1"
+   linkattr1 r46,r12,2
+   scopy r46,r44
+   unlink r46
    .src 75:5="marker2 = label || \":m2\""
-   load r24,"rebound:m2"
-   linkattr1 r28,r8,3
-   scopy r28,r24
-   unlink r28
+   load r44,"rebound:m2"
+   linkattr1 r46,r12,3
+   scopy r46,r44
+   unlink r46
    .src 76:5="marker3 = label || \":m3\""
-   load r24,"rebound:m3"
-   linkattr1 r28,r8,4
-   scopy r28,r24
-   unlink r28
+   load r44,"rebound:m3"
+   linkattr1 r46,r12,4
+   scopy r46,r44
+   unlink r46
    .src 77:5="marker4 = label || \":m4\""
-   load r24,"rebound:m4"
-   linkattr1 r28,r8,5
-   scopy r28,r24
-   unlink r28
+   load r44,"rebound:m4"
+   linkattr1 r46,r12,5
+   scopy r46,r44
+   unlink r46
    .src 78:5="marker5 = label || \":m5\""
-   load r24,"rebound:m5"
-   linkattr1 r28,r8,6
-   scopy r28,r24
-   unlink r28
+   load r44,"rebound:m5"
+   linkattr1 r46,r12,6
+   scopy r46,r44
+   unlink r46
    .src 79:5="marker6 = label || \":m6\""
-   load r24,"rebound:m6"
-   linkattr1 r28,r8,7
-   scopy r28,r24
-   unlink r28
+   load r44,"rebound:m6"
+   linkattr1 r46,r12,7
+   scopy r46,r44
+   unlink r46
    .src 80:5="marker7 = label || \":m7\""
-   load r24,"rebound:m7"
-   linkattr1 r28,r8,8
-   scopy r28,r24
-   unlink r28
+   load r44,"rebound:m7"
+   linkattr1 r46,r12,8
+   scopy r46,r44
+   unlink r46
    .src 81:5="marker8 = label || \":m8\""
-   load r24,"rebound:m8"
-   linkattr1 r28,r8,9
-   scopy r28,r24
-   unlink r28
+   load r44,"rebound:m8"
+   linkattr1 r46,r12,9
+   scopy r46,r44
+   unlink r46
    .src 82:5="return"
-   copy r1,r8
+   copy r1,r12
    .src 10:3="say \"ref-rebind=\" || payload.summary"
-   load r28,1
-   settp r1,1
-   swap r29,r1
-   call r24,§object_reference_regression.largepayload.summary(),r28
-   swap r1,r29
-   concat r29,"ref-rebind=",r24
-   say r29
+   .src 10:24="payload"
+   .src 10:24="payload"
+   copy r16,r1
+   .src 96:5="child_name = child.getName"
+   .src 96:18="child"
+   linkattr1 r46,r16,1
+   copy r17,r46
+   unlink r46
+   .src 45:5="return"
+   linkattr1 r46,r17,1
+   copy r15,r46
+   unlink r46
+   .src 97:5="return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
+   linkattr1 r46,r16,10
+   concat r44,r46,"|"
+   unlink r46
+   linkattr1 r47,r16,11
+   minattrs r47,1
+   linkattr1 r39,r47,1
+   concat r47,r44,r39
+   unlink r39
+   concat r47,r47,"|"
+   linkattr1 r48,r16,11
+   minattrs r48,40
+   linkattr1 r44,r48,40
+   concat r48,r47,r44
+   unlink r44
+   concat r48,r48,"|"
+   concat r48,r48,r15
+   concat r48,r48,"|"
+   linkattr1 r47,r16,9
+   concat r48,r48,r47
+   unlink r47
+   scopy r47,r48
+   acopy r47,r48
+   br l994bexprend
+l994bexprend:
+   concat r47,"ref-rebind=",r47
+   say r47
    .src 12:3="call mutatePayloadRef(payload, \"mutated\")"
    .src 28:3="call item.rename(label)"
-   .meta "object_reference_regression.main.t_values"="b" ".string[*]" r12
+   .meta "object_reference_regression.main.t_values"="b" ".string[*]" r19
    .src 86:5="t_values = values"
-   null r12
+   null r19
    .src 28:8="item"
-   copy r13,r1
+   copy r20,r1
    .src 86:5="t_values = values"
-   linkattr1 r29,r13,11
-   copy r12,r29
-   acopy r12,r29
-   unlink r29
+   linkattr1 r47,r20,11
+   copy r19,r47
+   acopy r19,r47
+   unlink r47
    .src 87:5="name = label"
-   load r28,"mutated"
-   linkattr1 r29,r13,10
-   scopy r29,r28
-   unlink r29
+   load r46,"mutated"
+   linkattr1 r47,r20,10
+   scopy r47,r46
+   unlink r47
    .src 88:5="t_values[1] = label || \":1\""
-   minattrs r12,1
-   linkattr1 r29,r12,1
-   load r24,"mutated:1"
-   scopy r29,r24
-   unlink r29
+   minattrs r19,1
+   linkattr1 r47,r19,1
+   load r44,"mutated:1"
+   scopy r47,r44
+   unlink r47
    .src 89:5="t_values[40] = label || \":40\""
-   minattrs r12,40
-   linkattr1 r29,r12,40
-   load r24,"mutated:40"
-   scopy r29,r24
-   unlink r29
+   minattrs r19,40
+   linkattr1 r47,r19,40
+   load r44,"mutated:40"
+   scopy r47,r44
+   unlink r47
    .src 90:5="values = t_values"
-   linkattr1 r29,r13,11
-   copy r29,r12
-   unlink r29
+   linkattr1 r47,r20,11
+   copy r47,r19
+   unlink r47
    .src 91:5="call child.setName(label || \":child\")"
-   load r29,2
-   linkattr1 r24,r13,1
-   load r31,"mutated:child"
-   settp r24,1
-   swap r30,r24
-   settp r31,3
-   call r22,§object_reference_regression.smallpayload.setname(),r29
-   swap r24,r30
-   unlink r24
+   linkattr1 r47,r20,1
+   load r51,"mutated:child"
+   load r49,2
+   settp r47,1
+   swap r50,r47
+   settp r51,3
+   call r44,§object_reference_regression.smallpayload.setname(),r49
+   swap r47,r50
+   unlink r47
    .src 92:5="marker8 = label || \":m8\""
-   load r30,"mutated:m8"
-   linkattr1 r31,r13,9
-   scopy r31,r30
-   unlink r31
+   load r50,"mutated:m8"
+   linkattr1 r51,r20,9
+   scopy r51,r50
+   unlink r51
    .src 28:8="item.rename(label)"
-   copy r1,r13
+   copy r1,r20
    .src 28:8="item.rename(label)"
-   acopy r1,r13
+   acopy r1,r20
    .src 13:3="say \"ref-mutate=\" || payload.summary"
-   load r30,1
-   settp r1,1
-   swap r31,r1
-   call r29,§object_reference_regression.largepayload.summary(),r30
-   swap r1,r31
-   concat r31,"ref-mutate=",r29
-   say r31
+   .src 13:24="payload"
+   .src 13:24="payload"
+   copy r22,r1
+   .src 96:5="child_name = child.getName"
+   .src 96:18="child"
+   linkattr1 r51,r22,1
+   copy r23,r51
+   unlink r51
+   .src 45:5="return"
+   linkattr1 r51,r23,1
+   copy r21,r51
+   unlink r51
+   .src 97:5="return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
+   linkattr1 r51,r22,10
+   concat r50,r51,"|"
+   unlink r51
+   linkattr1 r39,r22,11
+   minattrs r39,1
+   linkattr1 r49,r39,1
+   concat r50,r50,r49
+   unlink r49
+   concat r50,r50,"|"
+   linkattr1 r52,r22,11
+   minattrs r52,40
+   linkattr1 r39,r52,40
+   concat r52,r50,r39
+   unlink r39
+   concat r52,r52,"|"
+   concat r52,r52,r21
+   concat r52,r52,"|"
+   linkattr1 r50,r22,9
+   concat r52,r52,r50
+   unlink r50
+   scopy r51,r52
+   acopy r51,r52
+   br l1075bexprend
+l1075bexprend:
+   concat r51,"ref-mutate=",r51
+   say r51
    .src 15:3="local_summary = replacePayloadLocal(payload, \"local\")"
    .src 32:7="item"
-   copy r14,r1
+   copy r24,r1
    .src 32:7="item"
-   acopy r14,r1
+   acopy r24,r1
    .src 33:3="item = .LargePayload(label)"
-   .meta "object_reference_regression.main.t_values"="b" ".string[64]" r15
+   .meta "object_reference_regression.main.t_values"="b" ".string[64]" r25
    .src 67:5="t_values = .string[64"
-   null r15
+   null r25
    .src 65:3="*: factory\n    arg label = .string\n    t_values = .string[64]\n    name = label\n    do i = 1 to 40\n      t_values[i] = label || \":\" || i\n    end\n    values = t_values\n    child = .SmallPayload(label || \":child\")\n    marker1 = label || \":m1\"\n    marker2 = label || \":m2\"\n    marker3 = label || \":m3\"\n    marker4 = label || \":m4\"\n    marker5 = label || \":m5\"\n    marker6 = label || \":m6\"\n    marker7 = label || \":m7\"\n    marker8 = label || \":m8\"\n    return"
-   setattrs r16,12
+   setattrs r26,12
    .src 65:3="*: factory\n    arg label = .string\n    t_values = .string[64]\n    name = label\n    do i = 1 to 40\n      t_values[i] = label || \":\" || i\n    end\n    values = t_values\n    child = .SmallPayload(label || \":child\")\n    marker1 = label || \":m1\"\n    marker2 = label || \":m2\"\n    marker3 = label || \":m3\"\n    marker4 = label || \":m4\"\n    marker5 = label || \":m5\"\n    marker6 = label || \":m6\"\n    marker7 = label || \":m7\"\n    marker8 = label || \":m8\"\n    return"
-   setobjtype r16,"object_reference_regression.largepayload"
+   setobjtype r26,"object_reference_regression.largepayload"
    .src 68:5="name = label"
-   load r30,"local"
-   linkattr1 r31,r16,10
-   scopy r31,r30
-   unlink r31
+   load r50,"local"
+   linkattr1 r51,r26,10
+   scopy r51,r50
+   unlink r51
    .src 69:5="do"
    .src 69:8="i = 1"
-   load r17,1
+   load r27,1
    .src 69:14="to 40"
-   load r31,40
-l1011dostart:
+   load r51,40
+l1139dostart:
    .src 69:14="to 40"
-   igt r29,r17,r31
-   brt l1011doend,r29
+   igt r49,r27,r51
+   brt l1139doend,r49
    .src 70:7="t_values[i] = label || \":\" || i"
-   setattrs r15,64
-   linkattr1 r32,r15,r17
-   itos r17
-   concat r33,"local:",r17
-   scopy r32,r33
-   unlink r32
-l1011doinc:
+   setattrs r25,64
+   linkattr1 r39,r25,r27
+   itos r27
+   concat r53,"local:",r27
+   scopy r39,r53
+   unlink r39
+l1139doinc:
    .src 69:8="i"
-   inc r17
+   inc r27
    .src 71:5="end"
-   br l1011dostart
-l1011doend:
+   br l1139dostart
+l1139doend:
    .src 72:5="values = t_values"
-   linkattr1 r33,r16,11
-   copy r33,r15
-   unlink r33
+   linkattr1 r53,r26,11
+   copy r53,r25
+   unlink r53
    .src 73:5="child = .SmallPayload(label || \":child\")"
    .src 39:3="*: factory\n    arg label = .string\n    name = label\n    return"
-   setattrs r18,2
+   setattrs r28,2
    .src 39:3="*: factory\n    arg label = .string\n    name = label\n    return"
-   setobjtype r18,"object_reference_regression.smallpayload"
+   setobjtype r28,"object_reference_regression.smallpayload"
    .src 41:5="name = label"
-   load r32,"local:child"
-   linkattr1 r33,r18,1
-   scopy r33,r32
-   unlink r33
+   load r51,"local:child"
+   linkattr1 r53,r28,1
+   scopy r53,r51
+   unlink r53
    .src 42:5="return"
-   linkattr1 r33,r16,1
-   copy r33,r18
-   unlink r33
+   linkattr1 r53,r26,1
+   copy r53,r28
+   unlink r53
    .src 74:5="marker1 = label || \":m1\""
-   load r31,"local:m1"
-   linkattr1 r33,r16,2
-   scopy r33,r31
-   unlink r33
+   load r49,"local:m1"
+   linkattr1 r53,r26,2
+   scopy r53,r49
+   unlink r53
    .src 75:5="marker2 = label || \":m2\""
-   load r31,"local:m2"
-   linkattr1 r33,r16,3
-   scopy r33,r31
-   unlink r33
+   load r49,"local:m2"
+   linkattr1 r53,r26,3
+   scopy r53,r49
+   unlink r53
    .src 76:5="marker3 = label || \":m3\""
-   load r31,"local:m3"
-   linkattr1 r33,r16,4
-   scopy r33,r31
-   unlink r33
+   load r49,"local:m3"
+   linkattr1 r53,r26,4
+   scopy r53,r49
+   unlink r53
    .src 77:5="marker4 = label || \":m4\""
-   load r31,"local:m4"
-   linkattr1 r33,r16,5
-   scopy r33,r31
-   unlink r33
+   load r49,"local:m4"
+   linkattr1 r53,r26,5
+   scopy r53,r49
+   unlink r53
    .src 78:5="marker5 = label || \":m5\""
-   load r31,"local:m5"
-   linkattr1 r33,r16,6
-   scopy r33,r31
-   unlink r33
+   load r49,"local:m5"
+   linkattr1 r53,r26,6
+   scopy r53,r49
+   unlink r53
    .src 79:5="marker6 = label || \":m6\""
-   load r31,"local:m6"
-   linkattr1 r33,r16,7
-   scopy r33,r31
-   unlink r33
+   load r49,"local:m6"
+   linkattr1 r53,r26,7
+   scopy r53,r49
+   unlink r53
    .src 80:5="marker7 = label || \":m7\""
-   load r31,"local:m7"
-   linkattr1 r33,r16,8
-   scopy r33,r31
-   unlink r33
+   load r49,"local:m7"
+   linkattr1 r53,r26,8
+   scopy r53,r49
+   unlink r53
    .src 81:5="marker8 = label || \":m8\""
-   load r31,"local:m8"
-   linkattr1 r33,r16,9
-   scopy r33,r31
-   unlink r33
+   load r49,"local:m8"
+   linkattr1 r53,r26,9
+   scopy r53,r49
+   unlink r53
    .src 82:5="return"
-   copy r14,r16
+   copy r24,r26
    .src 34:3="return"
    .src 34:10="item"
    .src 34:10="item"
-   copy r20,r14
+   copy r30,r24
    .src 96:5="child_name = child.getName"
    .src 96:18="child"
-   linkattr1 r33,r20,1
-   copy r21,r33
-   unlink r33
+   linkattr1 r53,r30,1
+   copy r31,r53
+   unlink r53
    .src 45:5="return"
-   linkattr1 r33,r21,1
-   copy r19,r33
-   unlink r33
+   linkattr1 r53,r31,1
+   copy r29,r53
+   unlink r53
    .src 97:5="return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
-   linkattr1 r33,r20,10
-   concat r31,r33,"|"
-   unlink r33
-   linkattr1 r34,r20,11
-   minattrs r34,1
-   linkattr1 r29,r34,1
-   concat r34,r31,r29
-   unlink r29
-   concat r34,r34,"|"
-   linkattr1 r35,r20,11
-   minattrs r35,40
-   linkattr1 r31,r35,40
-   concat r35,r34,r31
-   unlink r31
-   concat r35,r35,"|"
-   concat r35,r35,r19
-   concat r35,r35,"|"
-   linkattr1 r34,r20,9
-   concat r35,r35,r34
-   unlink r34
-   br l1094bexprend
-l1094bexprend:
-   copy r0,r35
+   linkattr1 r53,r30,10
+   concat r49,r53,"|"
+   unlink r53
+   linkattr1 r54,r30,11
+   minattrs r54,1
+   linkattr1 r39,r54,1
+   concat r54,r49,r39
+   unlink r39
+   concat r54,r54,"|"
+   linkattr1 r55,r30,11
+   minattrs r55,40
+   linkattr1 r49,r55,40
+   concat r55,r54,r49
+   unlink r49
+   concat r55,r55,"|"
+   concat r55,r55,r29
+   concat r55,r55,"|"
+   linkattr1 r54,r30,9
+   concat r55,r55,r54
+   unlink r54
+   scopy r54,r55
+   acopy r54,r55
+   br l1222bexprend
+l1222bexprend:
+   copy r0,r54
    .src 16:3="say \"local-replace=\" || local_summary"
    .meta "object_reference_regression.main.local_summary"="b" ".string" r0
-   concat r35,"local-replace=",r0
-   say r35
+   concat r54,"local-replace=",r0
+   say r54
    .src 17:3="say \"local-after=\" || payload.summary"
-   load r34,1
-   settp r1,1
-   swap r35,r1
-   call r33,§object_reference_regression.largepayload.summary(),r34
-   swap r1,r35
-   concat r35,"local-after=",r33
-   say r35
+   .src 17:25="payload"
+   .src 17:25="payload"
+   copy r33,r1
+   .src 96:5="child_name = child.getName"
+   .src 96:18="child"
+   linkattr1 r54,r33,1
+   copy r34,r54
+   unlink r54
+   .src 45:5="return"
+   linkattr1 r54,r34,1
+   copy r32,r54
+   unlink r54
+   .src 97:5="return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
+   linkattr1 r54,r33,10
+   concat r53,r54,"|"
+   unlink r54
+   linkattr1 r39,r33,11
+   minattrs r39,1
+   linkattr1 r49,r39,1
+   concat r53,r53,r49
+   unlink r49
+   concat r53,r53,"|"
+   linkattr1 r56,r33,11
+   minattrs r56,40
+   linkattr1 r39,r56,40
+   concat r56,r53,r39
+   unlink r39
+   concat r56,r56,"|"
+   concat r56,r56,r32
+   concat r56,r56,"|"
+   linkattr1 r53,r33,9
+   concat r56,r56,r53
+   unlink r53
+   scopy r54,r56
+   acopy r54,r56
+   br l1254bexprend
+l1254bexprend:
+   concat r54,"local-after=",r54
+   say r54
    .src 19:3="return 0"
    ret 0
    .meta "object_reference_regression.main.local_summary"
@@ -664,9 +845,9 @@ l191doend:
    copy r4,r1
    unlink r4
    .src 91:5="call child.setName(label || \":child\")"
-   load r3,2
    linkattr1 r6,a1,1
    concat r5,a2,":child"
+   load r3,2
    settp r6,1
    swap r4,r6
    settp r5,3

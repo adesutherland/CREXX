@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_member_receiver_expr.rexx
- * BUILT                  : 2026-04-21 11:35:27
+ * BUILT                  : 2026-04-30 20:04:10
  */
 
 .meta "inline_test_member_receiver_expr.box"="b" ".unknown" .class
@@ -20,20 +20,20 @@ main() .locals=4
    .src 4:3="say \"Starting member receiver inline test...\""
    say "Starting member receiver inline test..."
    .src 5:3="say buildBox(\"seed\").getName"
-   load r0,1
-   load r2,1
    load r3,"seed"
+   load r2,1
    settp r3,3
    call r1,buildBox(),r2
+   load r0,1
    settp r1,1
    call r3,§inline_test_member_receiver_expr.box.getname(),r0
    say r3
    .src 6:3="say buildBox(\"temp\").getName"
-   load r2,1
-   load r0,1
    load r1,"temp"
+   load r0,1
    settp r1,3
    call r3,buildBox(),r0
+   load r2,1
    settp r3,1
    call r1,§inline_test_member_receiver_expr.box.getname(),r2
    say r1

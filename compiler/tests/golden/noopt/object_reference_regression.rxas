@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : object_reference_regression.rexx
- * BUILT                  : 2026-04-29 10:12:22
+ * BUILT                  : 2026-04-30 20:04:00
  */
 
 .meta "object_reference_regression.largepayload"="b" ".unknown" .class
@@ -31,8 +31,8 @@ main() .locals=7
    setnumstd 1
    .src 4:3="payload = .LargePayload(\"seed\")"
    .meta "object_reference_regression.main.payload"="b" ".largepayload" r1
-   load r2,1
    load r3,"seed"
+   load r2,1
    settp r3,3
    call r1,§object_reference_regression.largepayload.§factory(),r2
    .src 6:3="say \"factory-summary=\" || payload.summary"
@@ -52,8 +52,8 @@ main() .locals=7
    concat r4,"factory-check=",r2
    say r4
    .src 9:3="call replacePayloadRef(payload, \"rebound\")"
-   load r2,2
    load r4,"rebound"
+   load r2,2
    swap r3,r1
    settp r4,3
    call r5,replacePayloadRef(),r2
@@ -67,8 +67,8 @@ main() .locals=7
    concat r4,"ref-rebind=",r2
    say r4
    .src 12:3="call mutatePayloadRef(payload, \"mutated\")"
-   load r2,2
    load r4,"mutated"
+   load r2,2
    swap r3,r1
    settp r4,3
    call r6,mutatePayloadRef(),r2
@@ -83,8 +83,8 @@ main() .locals=7
    say r4
    .src 15:3="local_summary = replacePayloadLocal(payload, \"local\")"
    .meta "object_reference_regression.main.local_summary"="b" ".string" r0
-   load r2,2
    load r4,"local"
+   load r2,2
    settp r1,1
    swap r3,r1
    settp r4,3
@@ -295,8 +295,8 @@ l191doend:
    copy r7,r1
    unlink r7
    .src 73:5="child = .SmallPayload(label || \":child\")"
-   load r5,1
    concat r6,a1,":child"
+   load r5,1
    settp r6,3
    call r4,§object_reference_regression.smallpayload.§factory(),r5
    linkattr1 r7,r2,1
@@ -388,9 +388,9 @@ l191doend:
    copy r4,r1
    unlink r4
    .src 91:5="call child.setName(label || \":child\")"
-   load r3,2
    linkattr1 r6,a1,1
    concat r5,a2,":child"
+   load r3,2
    settp r6,1
    swap r4,r6
    settp r5,3
@@ -419,8 +419,8 @@ l191doend:
    .src 96:5="child_name = child.getName"
    .meta "object_reference_regression.largepayload.summary.child_name"="b" ".string" r0
    .meta "object_reference_regression.largepayload.summary.§this"="b" ".largepayload" a1
-   load r2,1
    linkattr1 r4,a1,1
+   load r2,1
    settp r4,1
    swap r3,r4
    call r0,§object_reference_regression.smallpayload.getname(),r2

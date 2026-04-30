@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_block_expr_live_sibling.rexx
- * BUILT                  : 2026-04-29 10:12:23
+ * BUILT                  : 2026-04-30 16:45:20
  */
 
 .meta "inline_test_block_expr_live_sibling.child"="b" ".unknown" .class
@@ -14,7 +14,7 @@
 .srcfile="inline_test_block_expr_live_sibling.rexx"
 .globals=0
 
-main() .locals=13
+main() .locals=11
    .meta "inline_test_block_expr_live_sibling.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -28,34 +28,34 @@ main() .locals=13
    .src 14:3="*: factory\n    arg label = .string\n    name = label\n    left = label || \":left\"\n    right = label || \":right\"\n    child = .Child(label || \":child\")\n    return"
    setobjtype r1,"inline_test_block_expr_live_sibling.holder"
    .src 16:5="name = label"
-   load r5,"seed"
-   linkattr1 r4,r1,3
-   scopy r4,r5
-   unlink r4
+   load r6,"seed"
+   linkattr1 r5,r1,3
+   scopy r5,r6
+   unlink r5
    .src 17:5="left = label || \":left\""
-   load r6,"seed:left"
-   linkattr1 r4,r1,2
-   scopy r4,r6
-   unlink r4
+   load r7,"seed:left"
+   linkattr1 r5,r1,2
+   scopy r5,r7
+   unlink r5
    .src 18:5="right = label || \":right\""
-   load r4,"seed:right"
-   linkattr1 r6,r1,4
-   scopy r6,r4
-   unlink r6
+   load r5,"seed:right"
+   linkattr1 r7,r1,4
+   scopy r7,r5
+   unlink r7
    .src 19:5="child = .Child(label || \":child\")"
    .src 28:3="*: factory\n    arg label = .string\n    name = label\n    return"
    setattrs r2,2
    .src 28:3="*: factory\n    arg label = .string\n    name = label\n    return"
    setobjtype r2,"inline_test_block_expr_live_sibling.child"
    .src 30:5="name = label"
-   load r4,"seed:child"
-   linkattr1 r6,r2,1
-   scopy r6,r4
-   unlink r6
+   load r5,"seed:child"
+   linkattr1 r7,r2,1
+   scopy r7,r5
+   unlink r7
    .src 31:5="return"
-   linkattr1 r6,r1,1
-   copy r6,r2
-   unlink r6
+   linkattr1 r7,r1,1
+   copy r7,r2
+   unlink r7
    .src 20:5="return"
    copy r0,r1
    .src 5:3="say holder.summary"
@@ -64,28 +64,35 @@ main() .locals=13
    .src 5:7="holder"
    copy r3,r0
    .src 23:5="return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
-   linkattr1 r6,r3,3
-   concat r7,r6,"|"
-   unlink r6
-   linkattr1 r8,r3,2
-   concat r7,r7,r8
-   unlink r8
-   concat r7,r7,"|"
-   load r9,1
-   linkattr1 r11,r3,1
-   settp r11,1
-   swap r10,r11
-   call r12,§inline_test_block_expr_live_sibling.child.getname(),r9
-   swap r11,r10
-   unlink r11
-   concat r12,r7,r12
-   concat r12,r12,"|"
-   linkattr1 r10,r3,4
-   concat r12,r12,r10
+   linkattr1 r7,r3,3
+   concat r8,r7,"|"
+   unlink r7
+   linkattr1 r9,r3,2
+   concat r8,r8,r9
+   unlink r9
+   concat r8,r8,"|"
+   .src 23:42="child"
+   .src 23:42="child"
+   linkattr1 r10,r3,1
+   copy r4,r10
    unlink r10
-   br l183bexprend
-l183bexprend:
-   say r12
+   .src 34:5="return name"
+   linkattr1 r10,r4,1
+   scopy r9,r10
+   acopy r9,r10
+   unlink r10
+   br l206bexprend
+l206bexprend:
+   concat r9,r8,r9
+   concat r9,r9,"|"
+   linkattr1 r8,r3,4
+   concat r9,r9,r8
+   unlink r8
+   scopy r8,r9
+   acopy r8,r9
+   br l190bexprend
+l190bexprend:
+   say r8
    .src 6:3="return 0"
    ret 0
    .meta "inline_test_block_expr_live_sibling.main.holder"
@@ -137,7 +144,7 @@ l183bexprend:
    .meta "inline_test_block_expr_live_sibling.holder.§factory.label"
    .meta "inline_test_block_expr_live_sibling.holder.§factory.§factory"
 
-§inline_test_block_expr_live_sibling.holder.summary() .locals=8
+§inline_test_block_expr_live_sibling.holder.summary() .locals=6
    .meta "inline_test_block_expr_live_sibling.holder.summary"="b" ".string" §inline_test_block_expr_live_sibling.holder.summary() ""
    .src 22:3="summary: method = .string"
    setnumdgts 18
@@ -146,27 +153,32 @@ l183bexprend:
    setnumcas 1
    setnumstd 1
    .src 23:5="return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
-   linkattr1 r1,a1,3
-   concat r2,r1,"|"
-   unlink r1
-   linkattr1 r3,a1,2
-   concat r2,r2,r3
-   unlink r3
-   concat r2,r2,"|"
    .meta "inline_test_block_expr_live_sibling.holder.summary.§this"="b" ".holder" a1
-   load r4,1
-   linkattr1 r6,a1,1
-   settp r6,1
-   swap r5,r6
-   call r7,§inline_test_block_expr_live_sibling.child.getname(),r4
-   swap r6,r5
-   unlink r6
-   concat r7,r2,r7
-   concat r7,r7,"|"
-   linkattr1 r5,a1,4
-   concat r7,r7,r5
+   linkattr1 r2,a1,3
+   concat r3,r2,"|"
+   unlink r2
+   linkattr1 r4,a1,2
+   concat r3,r3,r4
+   unlink r4
+   concat r3,r3,"|"
+   .src 23:42="child"
+   .src 23:42="child"
+   linkattr1 r5,a1,1
+   copy r1,r5
    unlink r5
-   ret r7
+   .src 34:5="return name"
+   linkattr1 r5,r1,1
+   scopy r4,r5
+   acopy r4,r5
+   unlink r5
+   br l165bexprend
+l165bexprend:
+   concat r4,r3,r4
+   concat r4,r4,"|"
+   linkattr1 r3,a1,4
+   concat r4,r4,r3
+   unlink r3
+   ret r4
    .meta "inline_test_block_expr_live_sibling.holder.summary.§this"
 
 §inline_test_block_expr_live_sibling.child.§factory() .locals=3

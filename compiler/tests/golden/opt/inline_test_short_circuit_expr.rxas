@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_short_circuit_expr.rexx
- * BUILT                  : 2026-04-29 10:12:23
+ * BUILT                  : 2026-04-30 16:45:19
  */
 
 .srcfile="inline_test_short_circuit_expr.rexx"
 .globals=0
 
-main() .locals=5
+main() .locals=10
    .meta "inline_test_short_circuit_expr.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -31,13 +31,16 @@ main() .locals=5
    itos r0
    say r0
    .src 15:2="if \probe(0, calls)"
-   load r1,2
-   load r2,0
-   swap r3,r0
-   call r4,probe(),r1
-   swap r0,r3
-   not r3,r4
-   brf l43iffalse,r3
+   .src 15:7="probe"
+   .src 32:3="count = count + 1"
+   iadd r0,r0,1
+   .src 33:3="return flag"
+   load r6,0
+   icopy r7,r6
+   br l119bexprend
+l119bexprend:
+   not r8,r7
+   brf l43iffalse,r8
    .src 15:23="then"
    .src 15:28="say \"not-ok\""
    say "not-ok"
@@ -51,12 +54,15 @@ l43ifend:
    itos r0
    say r0
    .src 19:2="if 1 & probe(1, calls)"
-   load r2,2
-   load r3,1
-   swap r4,r0
-   call r1,probe(),r2
-   swap r0,r4
-   brf l55iffalse,r1
+   .src 19:10="probe"
+   .src 32:3="count = count + 1"
+   iadd r0,r0,1
+   .src 33:3="return flag"
+   load r8,1
+   icopy r7,r8
+   br l131bexprend
+l131bexprend:
+   brf l55iffalse,r7
    .src 19:26="then"
    .src 19:31="say \"and-right-ok\""
    say "and-right-ok"
@@ -70,12 +76,15 @@ l55ifend:
    itos r0
    say r0
    .src 23:2="if 0 | probe(1, calls)"
-   load r2,2
-   load r3,1
-   swap r4,r0
-   call r1,probe(),r2
-   swap r0,r4
-   brf l67iffalse,r1
+   .src 23:10="probe"
+   .src 32:3="count = count + 1"
+   iadd r0,r0,1
+   .src 33:3="return flag"
+   load r7,1
+   icopy r9,r7
+   br l143bexprend
+l143bexprend:
+   brf l67iffalse,r9
    .src 23:26="then"
    .src 23:31="say \"or-right-ok\""
    say "or-right-ok"
@@ -93,22 +102,3 @@ l67ifend:
    .src 28:3="return 0"
    ret 0
    .meta "inline_test_short_circuit_expr.main.calls"
-
-probe() .locals=2
-   .meta "inline_test_short_circuit_expr.probe"="b" ".int" probe() "flag=.int,expose count=.int"
-   .src 30:1="probe: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 31:7="flag = .int"
-   .meta "inline_test_short_circuit_expr.probe.flag"="b" ".int" a1
-   .src 31:20="expose count = .int"
-   .meta "inline_test_short_circuit_expr.probe.count"="b" ".int" a2
-   .src 32:3="count = count + 1"
-   iadd a2,a2,1
-   .src 33:3="return flag"
-   ret a1
-   .meta "inline_test_short_circuit_expr.probe.count"
-   .meta "inline_test_short_circuit_expr.probe.flag"

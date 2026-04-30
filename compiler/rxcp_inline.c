@@ -66,6 +66,7 @@ typedef struct {
     int return_count;
     int has_unsupported_varg_access;
     int has_unsupported_assembler_alias;
+    int has_unsupported_assembler_effect;
     int has_unportable_class_attribute_shape;
     size_t max_required_varg_index;
     int ref_varg_mode;
@@ -140,6 +141,7 @@ static int inline_call_is_recursive(ASTNode *call_node, Symbol *proc_sym);
 static int inline_analyse_return_shape(ASTNode *proc_def, InlineReturnShape *shape_out);
 static int inline_method_writes_class_attribute(ASTNode *proc_def);
 static int inline_assembler_has_unsupported_aliasing(ASTNode *node);
+static int inline_assembler_has_unsupported_effect(ASTNode *node);
 static int inline_proc_has_procedure_expose(ASTNode *node);
 static int inline_count_return_nodes(ASTNode *node);
 static int inline_rewrite_return_nodes(Context *context,
@@ -549,6 +551,66 @@ static int inline_is_direct_single_value_consumer(ASTNode *node) {
     }
 }
 
+static int inline_parent_is_eager_operator(ASTNode *parent) {
+    if (!parent) return 0;
+
+    switch (parent->node_type) {
+        case OP_ADD:
+        case OP_MINUS:
+        case OP_MULT:
+        case OP_DIV:
+        case OP_IDIV:
+        case OP_MOD:
+        case OP_POWER:
+        case OP_CONCAT:
+        case OP_SCONCAT:
+        case OP_COMPARE_EQUAL:
+        case OP_COMPARE_NEQ:
+        case OP_COMPARE_GT:
+        case OP_COMPARE_LT:
+        case OP_COMPARE_GTE:
+        case OP_COMPARE_LTE:
+        case OP_COMPARE_S_EQ:
+        case OP_COMPARE_S_NEQ:
+        case OP_COMPARE_S_GT:
+        case OP_COMPARE_S_LT:
+        case OP_COMPARE_S_GTE:
+        case OP_COMPARE_S_LTE:
+        case OP_NEG:
+        case OP_PLUS:
+        case OP_NOT:
+            return 1;
+
+        default:
+            return 0;
+    }
+}
+
+static int inline_parent_is_short_circuit_operator(ASTNode *parent) {
+    return parent &&
+           (parent->node_type == OP_AND ||
+            parent->node_type == OP_OR);
+}
+
+static int inline_node_is_call_argument(ASTNode *node) {
+    ASTNode *parent;
+
+    if (!node || !node->parent) return 0;
+
+    parent = node->parent;
+    switch (parent->node_type) {
+        case FUNCTION:
+        case FACTORY_CALL:
+            return 1;
+
+        case MEMBER_CALL:
+            return parent->child != node;
+
+        default:
+            return 0;
+    }
+}
+
 static int inline_node_needs_attr_copy(ASTNode *node) {
     if (!node) return 0;
 
@@ -759,13 +821,13 @@ static walker_result inline_varg_usage_walker(walker_direction direction, ASTNod
 
         if (inline_varg_index_from_node(node->child, &index)) {
             if (index > check->max_required_varg_index) check->max_required_varg_index = index;
-        } else if (check->ref_varg_mode) {
+        } else {
             check->has_unsupported_varg_access = 1;
         }
     } else if (node->node_type == OP_ARG_IX_EXISTS) {
         if (!node->child) {
             check->has_unsupported_varg_access = 1;
-        } else if (check->ref_varg_mode && !inline_varg_index_from_node(node->child, &index)) {
+        } else if (!inline_varg_index_from_node(node->child, &index)) {
             check->has_unsupported_varg_access = 1;
         }
     }
@@ -2306,7 +2368,9 @@ static InlineExprContext inline_classify_expr_context(ASTNode *node) {
         case FUNCTION:
         case FACTORY_CALL:
         case MEMBER_CALL:
-            return INLINE_EXPR_CONTEXT_NONE;
+            return inline_node_is_call_argument(node) ?
+                   INLINE_EXPR_CONTEXT_EAGER_CALL_ARGUMENT :
+                   INLINE_EXPR_CONTEXT_NONE;
 
         case IF:
         case WHILE:
@@ -2320,10 +2384,14 @@ static InlineExprContext inline_classify_expr_context(ASTNode *node) {
 
         case OP_AND:
         case OP_OR:
-        case OP_NOT:
-            return INLINE_EXPR_CONTEXT_NONE;
+            return inline_parent_is_short_circuit_operator(parent) ?
+                   INLINE_EXPR_CONTEXT_SHORT_CIRCUIT_OPERATOR :
+                   INLINE_EXPR_CONTEXT_NONE;
 
         default:
+            if (inline_parent_is_eager_operator(parent)) {
+                return INLINE_EXPR_CONTEXT_EAGER_OPERATOR;
+            }
             return inline_is_direct_single_value_consumer(node) ?
                    INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER :
                    INLINE_EXPR_CONTEXT_NONE;
@@ -3379,6 +3447,9 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
         if (inline_assembler_has_unsupported_aliasing(node)) {
             check->has_unsupported_assembler_alias = 1;
         }
+        if (inline_assembler_has_unsupported_effect(node)) {
+            check->has_unsupported_assembler_effect = 1;
+        }
 
         if (node->symbolNode &&
             node->symbolNode->symbol &&
@@ -3391,16 +3462,15 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
 
             if (!node->child) {
                 check->has_unsupported_varg_access = 1;
-            } else if (inline_varg_index_from_node(node->child, &index) &&
-                       index > check->max_required_varg_index) {
-                check->max_required_varg_index = index;
-            } else if (check->ref_varg_mode) {
+            } else if (inline_varg_index_from_node(node->child, &index)) {
+                if (index > check->max_required_varg_index) check->max_required_varg_index = index;
+            } else {
                 check->has_unsupported_varg_access = 1;
             }
         } else if (node->node_type == OP_ARG_IX_EXISTS) {
             if (!node->child) {
                 check->has_unsupported_varg_access = 1;
-            } else if (check->ref_varg_mode && !inline_varg_index_from_node(node->child, NULL)) {
+            } else if (!inline_varg_index_from_node(node->child, NULL)) {
                 check->has_unsupported_varg_access = 1;
             }
         }
@@ -3504,13 +3574,15 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         if (check.node_count > INLINE_MAX_NODES ||
             check.return_count != return_shape.return_count ||
             check.has_unsupported_assembler_alias ||
+            check.has_unsupported_assembler_effect ||
             check.has_unsupported_varg_access) {
             inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: nodes=%d returns=%d final_return=%d assembler_alias=%d unsupported_varg=%d cutoff=%d",
+                             "reject: nodes=%d returns=%d final_return=%d assembler_alias=%d assembler_effect=%d unsupported_varg=%d cutoff=%d",
                              check.node_count,
                              check.return_count,
                              return_shape.final_is_return,
                              check.has_unsupported_assembler_alias,
+                             check.has_unsupported_assembler_effect,
                              check.has_unsupported_varg_access,
                              INLINE_MAX_NODES);
             sym->is_inlinable = 0;
@@ -3580,6 +3652,20 @@ static int inline_assembler_has_unsupported_aliasing(ASTNode *node) {
 
     return inline_ascii_starts_with_ci(node->node_string, node->node_string_length, "link") ||
            inline_ascii_starts_with_ci(node->node_string, node->node_string_length, "unlink");
+}
+
+static int inline_assembler_has_unsupported_effect(ASTNode *node) {
+    /*
+     * Reserved for non-aliasing assembler effects that are not represented by
+     * ordinary AST read/write links. Stateful string helpers are intentionally
+     * not rejected here: assembler operands are marked read/write by symbol
+     * validation, so writable by-value formals are materialised through the same
+     * copy semantics as normal calls. SCOPY resets copied string cursor state,
+     * which preserves the call prologue boundary for setstrpos/substcut/dropchar
+     * style helpers.
+     */
+    (void)node;
+    return 0;
 }
 
 static int inline_proc_has_procedure_expose(ASTNode *node) {
@@ -4161,7 +4247,8 @@ static int inline_meta_node_is_exportable(ASTNode *node) {
         case OP_ARG_IX_EXISTS:
             return 1;
         case ASSEMBLER:
-            return !inline_assembler_has_unsupported_aliasing(node);
+            return !inline_assembler_has_unsupported_aliasing(node) &&
+                   !inline_assembler_has_unsupported_effect(node);
         default:
             return 0;
     }
@@ -4476,6 +4563,12 @@ static int inline_meta_find_collect_failure(ASTNode *node,
         inline_assembler_has_unsupported_aliasing(node)) {
         failure->node = node;
         failure->reason = "assembler aliasing instruction";
+        return 1;
+    }
+    if (node->node_type == ASSEMBLER &&
+        inline_assembler_has_unsupported_effect(node)) {
+        failure->node = node;
+        failure->reason = "assembler stateful instruction";
         return 1;
     }
     if (!inline_meta_node_is_exportable(node)) {
@@ -4846,6 +4939,10 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
     }
     if (check.has_unsupported_assembler_alias) {
         inline_export_debug_reject(context, callable, symbol, "assembler aliasing instruction");
+        return strdup("");
+    }
+    if (check.has_unsupported_assembler_effect) {
+        inline_export_debug_reject(context, callable, symbol, "assembler stateful instruction");
         return strdup("");
     }
     if (check.has_unsupported_varg_access) {

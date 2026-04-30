@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test2.rexx
- * BUILT                  : 2026-04-21 11:35:26
+ * BUILT                  : 2026-04-30 20:04:11
  */
 
 .meta "inline_test2.myclass"="b" ".unknown" .class
@@ -19,19 +19,19 @@ main() .locals=8
    .src 4:3="say \"Testing ineligible inlining scenarios...\""
    say "Testing ineligible inlining scenarios..."
    .src 7:3="say \"LargeProc result:\" largeProc(1, 2, 3, 4, 5)"
-   load r1,5
    load r2,1
    load r3,2
    load r4,3
    load r5,4
    load r6,5
+   load r1,5
    call r7,largeProc(),r1
    itos r7
    sconcat r7,"LargeProc result:",r7
    say r7
    .src 10:3="say \"NestedCallProc result:\" nestedCallProc(10)"
-   load r6,1
    load r7,10
+   load r6,1
    call r5,nestedCallProc(),r6
    itos r5
    sconcat r7,"NestedCallProc result:",r5
@@ -41,8 +41,8 @@ main() .locals=8
    load r7,0
    call r0,§inline_test2.myclass.§factory(),r7
    .src 14:3="say \"Method result:\" o.myMethod(20)"
-   load r5,2
    load r7,20
+   load r5,2
    settp r0,1
    swap r6,r0
    call r4,§inline_test2.myclass.mymethod(),r5
@@ -51,8 +51,8 @@ main() .locals=8
    sconcat r7,"Method result:",r4
    say r7
    .src 17:3="say \"MultiReturn result:\" multiReturn(1)"
-   load r6,1
    load r7,1
+   load r6,1
    call r5,multiReturn(),r6
    itos r5
    sconcat r7,"MultiReturn result:",r5

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_mutual_recursive_negative.rexx
- * BUILT                  : 2026-04-28 21:35:10
+ * BUILT                  : 2026-04-30 20:04:10
  */
 
 .srcfile="inline_test_mutual_recursive_negative.rexx"
@@ -20,8 +20,8 @@ main() .locals=3
    .src 5:3="say left(3)"
    .src 5:7="left"
    .src 11:3="return right(val - 1)"
-   load r0,1
    load r1,2
+   load r0,1
    call r2,right(),r0
    icopy r1,r2
    acopy r1,r2
@@ -45,8 +45,8 @@ left() .locals=4
    .src 10:7="val = .int"
    .meta "inline_test_mutual_recursive_negative.left.val"="b" ".int" a1
    .src 11:3="return right(val - 1)"
-   load r1,1
    isub r2,a1,1
+   load r1,1
    call r3,right(),r1
    ret r3
    .meta "inline_test_mutual_recursive_negative.left.val"
@@ -62,8 +62,8 @@ right() .locals=4
    .src 14:7="val = .int"
    .meta "inline_test_mutual_recursive_negative.right.val"="b" ".int" a1
    .src 15:3="return left(val - 1)"
-   load r1,1
    isub r2,a1,1
+   load r1,1
    call r3,left(),r1
    ret r3
    .meta "inline_test_mutual_recursive_negative.right.val"

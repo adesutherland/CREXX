@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_const_arg_mutation.rexx
- * BUILT                  : 2026-04-21 11:35:29
+ * BUILT                  : 2026-04-30 20:04:11
  */
 
 .meta "inline_test_object_const_arg_mutation.box"="b" ".unknown" .class
@@ -21,8 +21,8 @@ main() .locals=5
    say "Starting object const-arg mutation inline test..."
    .src 5:3="box = .Box(\"seed\")"
    .meta "inline_test_object_const_arg_mutation.main.box"="b" ".box" r0
-   load r1,1
    load r2,"seed"
+   load r1,1
    settp r2,3
    call r0,§inline_test_object_const_arg_mutation.box.§factory(),r1
    .src 6:3="call mutateBox(box)"
@@ -55,8 +55,8 @@ mutateBox() .locals=5
    .src 12:7="value = .Box"
    .meta "inline_test_object_const_arg_mutation.mutatebox.value"="b" ".box" a1
    .src 13:3="call value.setName(\"changed\")"
-   load r1,2
    load r3,"changed"
+   load r1,2
    settp a1,1
    swap r2,a1
    settp r3,3

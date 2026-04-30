@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_named_factory_selector.rexx
- * BUILT                  : 2026-04-29 14:16:43
+ * BUILT                  : 2026-04-30 20:04:01
  */
 
 .meta "inline_test_named_factory_selector.car"="b" ".unknown" .class
@@ -23,19 +23,19 @@ main() .locals=6
    setnumcas 1
    setnumstd 1
    .src 5:3="say directNamed().describe"
-   load r1,1
    load r3,0
    call r2,directNamed(),r3
+   load r1,1
    settp r2,1
    srcmethod r3,r2,"describe"
    dcall r3,r3,r1
    say r3
    .src 6:3="say assignedNamed(\"beta\").describe"
-   load r2,1
-   load r4,1
    load r5,"beta"
+   load r4,1
    settp r5,3
    call r3,assignedNamed(),r4
+   load r2,1
    settp r3,1
    srcmethod r5,r3,"describe"
    dcall r5,r5,r2
@@ -43,8 +43,8 @@ main() .locals=6
    .src 7:3="say describedNamed(\"gamma\")"
    .src 7:7="describedNamed"
    .src 23:3="current = .vehicle.from_name(name)"
-   load r4,1
    load r5,"gamma"
+   load r4,1
    settp r5,1
    srcfproc r0,"inline_test_named_factory_selector.vehicle..from_name",r4
    dcall r0,r0,r4
@@ -72,8 +72,8 @@ directNamed() .locals=3
    setnumcas 1
    setnumstd 1
    .src 11:3="return .vehicle.from_name(\"alpha\")"
-   load r0,1
    load r1,"alpha"
+   load r0,1
    settp r1,3
    srcfproc r2,"inline_test_named_factory_selector.vehicle..from_name",r0
    dcall r2,r2,r0

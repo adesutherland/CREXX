@@ -1,0 +1,79 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_stateful_assembler.rexx
+ * BUILT                  : 2026-04-30 19:50:56
+ */
+
+.srcfile="inline_test_stateful_assembler.rexx"
+.globals=0
+
+main() .locals=14
+   .meta "inline_test_stateful_assembler.main"="b" ".void" main() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:1="x = char_at(s, 4)"
+   .meta "inline_test_stateful_assembler.main.out"="b" ".string" r5
+   .src 16:3="out = .string"
+   null r5
+   .src 13:7="text"
+   load r6,"abc123"
+   .src 14:3="offset = posn - 1"
+   load r3,3
+   .src 15:3="one = 1"
+   load r4,1
+   .src 17:13="setstrpos text, offset"
+   setstrpos r6,r3
+   .src 18:13="substring out, text, one"
+   substring r5,r6,r4
+   .src 19:3="return"
+   copy r0,r5
+   .src 5:1="y = char_at(s, 1)"
+   .meta "inline_test_stateful_assembler.main.out"="b" ".string" r9
+   .src 16:3="out = .string"
+   null r9
+   .src 13:7="text"
+   load r10,"abc123"
+   .src 14:3="offset = posn - 1"
+   load r7,0
+   .src 15:3="one = 1"
+   load r8,1
+   .src 17:13="setstrpos text, offset"
+   setstrpos r10,r7
+   .src 18:13="substring out, text, one"
+   substring r9,r10,r8
+   .src 19:3="return"
+   copy r1,r9
+   .src 6:1="say x':'y':'s"
+   .meta "inline_test_stateful_assembler.main.s"="b" ".string" "abc123"
+   .meta "inline_test_stateful_assembler.main.x"="b" ".string" r0
+   .meta "inline_test_stateful_assembler.main.y"="b" ".string" r1
+   concat r13,r0,":"
+   concat r13,r13,r1
+   concat r13,r13,":"
+   concat r13,r13,"abc123"
+   say r13
+   .src 9:1="z = left_copy(s2, 3)"
+   .src 22:7="text"
+   load r12,"abcdef"
+   .src 22:23="len"
+   load r11,3
+   .src 23:13="substcut text, len"
+   substcut r12,r11
+   .src 24:3="return"
+   copy r2,r12
+   .src 10:1="say z':'s2"
+   .meta "inline_test_stateful_assembler.main.s2"="b" ".string" "abcdef"
+   .meta "inline_test_stateful_assembler.main.z"="b" ".string" r2
+   concat r13,r2,":"
+   concat r13,r13,"abcdef"
+   say r13
+   .src 10:11=""
+   ret
+   .meta "inline_test_stateful_assembler.main.s"
+   .meta "inline_test_stateful_assembler.main.s2"
+   .meta "inline_test_stateful_assembler.main.x"
+   .meta "inline_test_stateful_assembler.main.y"
+   .meta "inline_test_stateful_assembler.main.z"

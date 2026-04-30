@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : address_expose.rexx
- * BUILT                  : 2026-04-17 13:58:21
+ * BUILT                  : 2026-04-30 20:04:08
  */
 
 .srcfile="address_expose.rexx"
@@ -21,8 +21,8 @@ main() .locals=11
    .src 4:3="userid = \"ALICE\""
    .meta "address_expose.main.userid"="b" ".string" r1
    load r1,"ALICE"
+   .srcfile="exit_fragment"
    .src 2:1="rc=_address('system',\"echo EXPOSE_OK\",_noredir(),_noredir(),_noredir(), 'userid', userid)"
-   load r2,7
    load r3,"system"
    load r4,"echo EXPOSE_OK"
    load r10,0
@@ -32,6 +32,7 @@ main() .locals=11
    load r10,0
    call r7,_rxsysb._noredir(),r10
    load r8,"userid"
+   load r2,7
    settp r3,3
    settp r4,3
    settp r5,1
@@ -40,6 +41,7 @@ main() .locals=11
    swap r9,r1
    call r0,_rxsysb._address(),r2
    swap r1,r9
+   .srcfile="address_expose.rexx"
    .src 6:3="return"
    ret
    .meta "address_expose.main.rc"

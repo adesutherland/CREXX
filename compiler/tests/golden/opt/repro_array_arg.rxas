@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : repro_array_arg.rexx
- * BUILT                  : 2026-04-30 10:26:32
+ * BUILT                  : 2026-04-30 20:04:10
  */
 
 .srcfile="repro_array_arg.rexx"
@@ -33,9 +33,9 @@ main() .locals=5
    say r2
    .src 8:1="c = upper(s.i)"
    .meta "repro_array_arg.main.c"="b" ".string" r0
-   load r2,1
    minattrs r1,1
    linkattr1 r4,r1,1
+   load r2,1
    swap r3,r4
    call r0,rxfnsb.upper(),r2
    swap r4,r3

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_return_expr.rexx
- * BUILT                  : 2026-03-27 15:10:43
+ * BUILT                  : 2026-04-30 20:04:09
  */
 
 .srcfile="inline_test_array_return_expr.rexx"
@@ -18,24 +18,24 @@ main() .locals=5
    .src 4:3="say \"Starting array return expr inline test...\""
    say "Starting array return expr inline test..."
    .src 5:3="say renderArray(buildArray(\"red\", \"blue\"))"
-   load r0,1
-   load r2,2
    load r3,"red"
    load r4,"blue"
+   load r2,2
    settp r3,3
    settp r4,3
    call r1,buildArray(),r2
+   load r0,1
    settp r1,1
    call r4,renderArray(),r0
    say r4
    .src 6:3="say renderArray(buildArray(\"green\", \"gold\"))"
-   load r3,1
-   load r0,2
    load r1,"green"
    load r2,"gold"
+   load r0,2
    settp r1,3
    settp r2,3
    call r4,buildArray(),r0
+   load r3,1
    settp r4,1
    call r2,renderArray(),r3
    say r2

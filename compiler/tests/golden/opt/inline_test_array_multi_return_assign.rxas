@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_multi_return_assign.rexx
- * BUILT                  : 2026-04-29 14:16:41
+ * BUILT                  : 2026-04-30 16:47:30
  */
 
 .srcfile="inline_test_array_multi_return_assign.rexx"
 .globals=0
 
-main() .locals=18
+main() .locals=20
    .meta "inline_test_array_multi_return_assign.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -170,14 +170,14 @@ l203bexprend:
    concat r16,r17,":"
    unlink r17
    minattrs r10,2
-   linkattr1 r15,r10,2
-   concat r16,r16,r15
-   unlink r15
-   scopy r17,r16
-   acopy r17,r16
+   linkattr1 r18,r10,2
+   concat r16,r16,r18
+   unlink r18
+   scopy r18,r16
+   acopy r18,r16
    br l264bexprend
 l264bexprend:
-   say r17
+   say r18
    .src 9:3="right = selectArray(1)"
    .src 9:11="selectArray"
    .meta "inline_test_array_multi_return_assign.main.neg"="b" ".string[*]" r11
@@ -191,51 +191,51 @@ l264bexprend:
    null r13
    .src 19:3="neg[1] = \"neg\""
    minattrs r11,1
-   linkattr1 r17,r11,1
-   load r16,"neg"
-   scopy r17,r16
-   unlink r17
+   linkattr1 r18,r11,1
+   load r17,"neg"
+   scopy r18,r17
+   unlink r18
    .src 20:3="neg[2] = \"path\""
    minattrs r11,2
-   linkattr1 r17,r11,2
-   load r16,"path"
-   scopy r17,r16
-   unlink r17
+   linkattr1 r18,r11,2
+   load r17,"path"
+   scopy r18,r17
+   unlink r18
    .src 21:3="zero[1] = \"zero\""
    minattrs r13,1
-   linkattr1 r17,r13,1
-   load r16,"zero"
-   scopy r17,r16
-   unlink r17
+   linkattr1 r18,r13,1
+   load r17,"zero"
+   scopy r18,r17
+   unlink r18
    .src 22:3="zero[2] = \"path\""
    minattrs r13,2
-   linkattr1 r17,r13,2
-   load r16,"path"
-   scopy r17,r16
-   unlink r17
+   linkattr1 r18,r13,2
+   load r17,"path"
+   scopy r18,r17
+   unlink r18
    .src 23:3="pos[1] = \"pos\""
    minattrs r12,1
-   linkattr1 r17,r12,1
-   load r16,"pos"
-   scopy r17,r16
-   unlink r17
+   linkattr1 r18,r12,1
+   load r17,"pos"
+   scopy r18,r17
+   unlink r18
    .src 24:3="pos[2] = \"path\""
    minattrs r12,2
-   linkattr1 r17,r12,2
-   load r16,"path"
-   scopy r17,r16
-   unlink r17
+   linkattr1 r18,r12,2
+   load r17,"path"
+   scopy r18,r17
+   unlink r18
    .src 26:20="return pos"
-   copy r17,r12
-   acopy r17,r12
+   copy r18,r12
+   acopy r18,r12
    br l283bexprend
    .src 27:3="return zero"
-   copy r17,r13
-   acopy r17,r13
+   copy r18,r13
+   acopy r18,r13
    br l283bexprend
 l283bexprend:
-   copy r2,r17
-   acopy r2,r17
+   copy r2,r18
+   acopy r2,r18
    .src 10:3="say renderArray(right)"
    .src 10:7="renderArray"
    .src 30:7="value"
@@ -244,18 +244,18 @@ l283bexprend:
    acopy r14,r2
    .src 31:3="return value[1] || \":\" || value[2"
    minattrs r14,1
-   linkattr1 r17,r14,1
-   concat r16,r17,":"
-   unlink r17
+   linkattr1 r18,r14,1
+   concat r17,r18,":"
+   unlink r18
    minattrs r14,2
-   linkattr1 r15,r14,2
-   concat r16,r16,r15
-   unlink r15
-   scopy r17,r16
-   acopy r17,r16
+   linkattr1 r19,r14,2
+   concat r17,r17,r19
+   unlink r19
+   scopy r19,r17
+   acopy r19,r17
    br l344bexprend
 l344bexprend:
-   say r17
+   say r19
    .src 11:3="say \"Array multi return assign inline test finished.\""
    say "Array multi return assign inline test finished."
    .src 12:3="return 0"

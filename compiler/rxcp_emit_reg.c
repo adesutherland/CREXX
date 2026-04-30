@@ -82,6 +82,15 @@ static void return_child_reg(ASTNode* child) {
     ret_reg_later(child->scope, child->register_num);
 }
 
+static void return_child_reg_after_parent(ASTNode* parent, ASTNode* child) {
+    if (!parent || !child) return;
+    if (parent->register_num == child->register_num &&
+        parent->register_type == child->register_type) {
+        return;
+    }
+    return_child_reg(child);
+}
+
 /* Returns a child's register ONLY if it is not deferred */
 static void return_child_reg_now(ASTNode* child) {
     if (!child || child->register_num == DONT_ASSIGN_REGISTER || child->register_num == UNSET_REGISTER) return;
@@ -490,8 +499,8 @@ walker_result register_walker(walker_direction direction,
                         node->register_num = get_reg(node->scope);
 
                 /* If it is a temporary mark the register for reuse - if the register CANNOT be resued by this node */
-                return_child_reg(child1);
-                return_child_reg(child2);
+                return_child_reg_after_parent(node, child1);
+                return_child_reg_after_parent(node, child2);
 
                 break;
 
@@ -529,7 +538,7 @@ walker_result register_walker(walker_direction direction,
                     node->register_num = get_reg(node->scope);
 
                 /* If it is a temporary mark the register for reuse */
-                return_child_reg(child1);
+                return_child_reg_after_parent(node, child1);
                 break;
 
             case OP_ARG_EXISTS:
@@ -653,13 +662,13 @@ walker_result register_walker(walker_direction direction,
             case OP_TYPEOF:
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     node->register_num = get_reg(node->scope);
-                return_child_reg(child1);
+                return_child_reg_after_parent(node, child1);
                 break;
 
             case OP_TYPE_CAST:
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     node->register_num = get_reg(node->scope);
-                return_child_reg(child1);
+                return_child_reg_after_parent(node, child1);
                 break;
 
             case NOVAL:

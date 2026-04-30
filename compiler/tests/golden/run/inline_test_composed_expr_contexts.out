@@ -1,0 +1,9 @@
+Starting composed inline contexts test...
+41
+prefix:[20]:5
+19
+and-skip 0
+or-skip 0
+and-hit 1
+or-hit 2
+Composed inline contexts test finished.

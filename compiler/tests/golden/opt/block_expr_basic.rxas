@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : block_expr_basic.rexx
- * BUILT                  : 2026-03-24 17:43:22
+ * BUILT                  : 2026-04-30 16:47:31
  */
 
 .srcfile="block_expr_basic.rexx"
 .globals=0
 
-main() .locals=8
+main() .locals=9
    .meta "block_expr_basic.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
@@ -47,9 +47,10 @@ l19bexprend:
    br l39bexprend
 l39bexprend:
    iadd r6,r6,100
+   icopy r7,r6
    br l43bexprend
 l43bexprend:
-   icopy r0,r6
+   icopy r0,r7
    .src 17:1="say nested"
    itos r0
    say r0
@@ -57,13 +58,13 @@ l43bexprend:
    .src 19:9="do"
    .src 21:3="leave with y"
    .meta "block_expr_basic.main.y"="b" ".int" "1"
-   load r6,1
-   icopy r7,r6
+   load r7,1
+   icopy r8,r7
    br l54bexprend
 l54bexprend:
-   iadd r7,r7,1
-   itos r7
-   say r7
+   iadd r8,r8,1
+   itos r8
+   say r8
    .src 19:34=""
    ret
    .meta "block_expr_basic.main.nested"

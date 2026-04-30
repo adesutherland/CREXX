@@ -88,12 +88,26 @@ strlen_end:
     brt substr_pass, r0
     say "FAIL: SUBSTR"
     br substr_end
-substr_pass:
-    say "PASS: SUBSTR"
-substr_end:
+	substr_pass:
+	    say "PASS: SUBSTR"
+	substr_end:
 
-    /* UTF8 SUBSTR regression: one codepoint substring must keep correct char count. */
-    load r1, "🔥fire"
+	    /* SCOPY must copy logical string contents with a reset cursor. */
+	    load r1, "Hello World"
+	    load r2, 6
+	    setstrpos r1, r2
+	    scopy r4, r1
+	    getstrpos r5, r4
+	    ieq r0, r5, 0
+	    brt scopy_cursor_pass, r0
+	    say "FAIL: SCOPY cursor reset"
+	    br scopy_cursor_end
+	scopy_cursor_pass:
+	    say "PASS: SCOPY cursor reset"
+	scopy_cursor_end:
+
+	    /* UTF8 SUBSTR regression: one codepoint substring must keep correct char count. */
+	    load r1, "🔥fire"
     load r2, 0
     setstrpos r1, r2
     load r3, 1

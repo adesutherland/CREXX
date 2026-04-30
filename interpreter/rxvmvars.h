@@ -632,10 +632,10 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
     if (source->string_length) {
         /* Copy String Data */
         prep_string_buffer(dest, source->string_length);
-        dest->string_pos = source->string_pos;
+        dest->string_pos = 0;
 #ifndef NUTF8
         dest->string_chars = source->string_chars;
-        dest->string_char_pos = source->string_char_pos;
+        dest->string_char_pos = 0;
 #endif
         memcpy(dest->string_value, source->string_value, source->string_length);
     }

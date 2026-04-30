@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_void_fallthrough_call.rexx
- * BUILT                  : 2026-03-26 19:42:30
+ * BUILT                  : 2026-04-30 20:04:09
  */
 
 .srcfile="inline_test_void_fallthrough_call.rexx"
@@ -18,17 +18,17 @@ main() .locals=7
    .src 4:3="say \"Starting void fallthrough inline test...\""
    say "Starting void fallthrough inline test..."
    .src 5:3="call maybeLog(0)"
-   load r0,1
    load r1,0
+   load r0,1
    call r2,maybeLog(),r0
    .src 6:3="call maybeLog(2)"
-   load r0,1
    load r1,2
+   load r0,1
    call r3,maybeLog(),r0
    .src 7:3="call tracePair(1, 3)"
-   load r4,2
    load r5,1
    load r6,3
+   load r4,2
    call r1,tracePair(),r4
    .src 8:3="say \"Void fallthrough inline test finished.\""
    say "Void fallthrough inline test finished."

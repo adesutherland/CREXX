@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_multi_return_expr.rexx
- * BUILT                  : 2026-03-27 15:10:43
+ * BUILT                  : 2026-04-30 20:04:09
  */
 
 .srcfile="inline_test_array_multi_return_expr.rexx"
@@ -18,27 +18,27 @@ main() .locals=5
    .src 4:3="say \"Starting array multi return expr inline test...\""
    say "Starting array multi return expr inline test..."
    .src 5:3="say renderArray(selectArray(-1))"
-   load r0,1
-   load r2,1
    load r4,1
    isub r3,0,r4
+   load r2,1
    call r1,selectArray(),r2
+   load r0,1
    settp r1,1
    call r3,renderArray(),r0
    say r3
    .src 6:3="say renderArray(selectArray(0))"
-   load r3,1
-   load r1,1
    load r2,0
+   load r1,1
    call r4,selectArray(),r1
+   load r3,1
    settp r4,1
    call r2,renderArray(),r3
    say r2
    .src 7:3="say renderArray(selectArray(1))"
-   load r3,1
-   load r1,1
    load r2,1
+   load r1,1
    call r4,selectArray(),r1
+   load r3,1
    settp r4,1
    call r2,renderArray(),r3
    say r2

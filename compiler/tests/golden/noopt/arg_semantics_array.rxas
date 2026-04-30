@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_array.rexx
- * BUILT                  : 2026-03-26 12:23:46
+ * BUILT                  : 2026-04-30 20:04:10
  */
 
 .srcfile="arg_semantics_array.rexx"
@@ -58,9 +58,9 @@ main() .locals=5
    unlink r1
    say r2
    .src 12:3="say \"array-temp=\" || mutateArrayLocal(makeArray"
-   load r2,1
    load r1,0
    call r3,makeArray(),r1
+   load r2,1
    settp r3,1
    call r1,mutateArrayLocal(),r2
    concat r3,"array-temp=",r1
@@ -127,9 +127,9 @@ l82d:
    .src 23:3="value[1] = upper(value[1"
    minattrs r0,1
    linkattr1 r1,r0,1
-   load r2,1
    minattrs r0,1
    linkattr1 r4,r0,1
+   load r2,1
    swap r3,r4
    call r5,rxfnsb.upper(),r2
    swap r4,r3
@@ -173,9 +173,9 @@ mutateArrayRef() .locals=6
    .src 30:3="value[2] = upper(value[2"
    minattrs a1,2
    linkattr1 r2,a1,2
-   load r3,1
    minattrs a1,2
    linkattr1 r1,a1,2
+   load r3,1
    swap r4,r1
    call r5,rxfnsb.upper(),r3
    swap r1,r4

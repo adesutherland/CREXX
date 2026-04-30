@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_short_circuit_expr.rexx
- * BUILT                  : 2026-03-27 15:46:25
+ * BUILT                  : 2026-04-30 20:04:09
  */
 
 .srcfile="inline_test_short_circuit_expr.rexx"
@@ -23,8 +23,8 @@ main() .locals=5
    .src 7:2="if 0 & probe(1, calls)"
    load r3,0
    brf l15andend,r3
-   load r1,2
    load r2,1
+   load r1,2
    swap r3,r0
    call r0,probe(),r1
    swap r0,r3
@@ -45,8 +45,8 @@ l20ifend:
    .src 11:2="if 1 | probe(0, calls)"
    load r3,1
    brt l27orend,r3
-   load r1,2
    load r2,0
+   load r1,2
    swap r3,r0
    call r0,probe(),r1
    swap r0,r3
@@ -65,8 +65,8 @@ l32ifend:
    itos r0
    say r0
    .src 15:2="if \probe(0, calls)"
-   load r1,2
    load r2,0
+   load r1,2
    swap r3,r0
    call r4,probe(),r1
    swap r0,r3
@@ -87,8 +87,8 @@ l43ifend:
    .src 19:2="if 1 & probe(1, calls)"
    load r4,1
    brf l50andend,r4
-   load r2,2
    load r3,1
+   load r2,2
    swap r4,r0
    call r0,probe(),r2
    swap r0,r4
@@ -109,8 +109,8 @@ l55ifend:
    .src 23:2="if 0 | probe(1, calls)"
    load r4,0
    brt l62orend,r4
-   load r2,2
    load r3,1
+   load r2,2
    swap r4,r0
    call r0,probe(),r2
    swap r0,r4

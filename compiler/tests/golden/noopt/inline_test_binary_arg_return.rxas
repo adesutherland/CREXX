@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_binary_arg_return.rexx
- * BUILT                  : 2026-03-27 16:48:54
+ * BUILT                  : 2026-04-30 20:04:09
  */
 
 .srcfile="inline_test_binary_arg_return.rexx"
@@ -19,9 +19,9 @@ main() .locals=4
    .src 4:3="data = .binary"
    null r0
    .src 5:3="data = relayBinary(makeBinary"
-   load r1,1
    load r3,0
    call r2,makeBinary(),r3
+   load r1,1
    settp r2,1
    call r0,relayBinary(),r1
    .src 6:3="say \"ok\""

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_multi_return_assign.rexx
- * BUILT                  : 2026-03-27 15:10:43
+ * BUILT                  : 2026-04-30 20:04:10
  */
 
 .srcfile="inline_test_array_multi_return_assign.rexx"
@@ -27,9 +27,9 @@ main() .locals=6
    .src 4:3="say \"Starting array multi return assign inline test...\""
    say "Starting array multi return assign inline test..."
    .src 5:3="left = selectArray(-1)"
-   load r3,1
    load r5,1
    isub r4,0,r5
+   load r3,1
    call r0,selectArray(),r3
    .src 6:3="say renderArray(left)"
    load r4,1
@@ -39,8 +39,8 @@ main() .locals=6
    swap r0,r5
    say r3
    .src 7:3="mid = selectArray(0)"
-   load r4,1
    load r5,0
+   load r4,1
    call r1,selectArray(),r4
    .src 8:3="say renderArray(mid)"
    load r4,1
@@ -50,8 +50,8 @@ main() .locals=6
    swap r1,r5
    say r3
    .src 9:3="right = selectArray(1)"
-   load r4,1
    load r5,1
+   load r4,1
    call r2,selectArray(),r4
    .src 10:3="say renderArray(right)"
    load r4,1

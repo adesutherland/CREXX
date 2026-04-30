@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_computed.rexx
- * BUILT                  : 2026-03-27 16:48:17
+ * BUILT                  : 2026-04-30 20:04:09
  */
 
 .srcfile="inline_test_ref_computed.rexx"
@@ -34,11 +34,11 @@ main() .locals=6
    icopy r2,r1
    unlink r2
    .src 10:3="say bump(values[idx + 0 + 1"
-   load r1,1
    iadd r3,g0,0
    iadd r3,r3,1
    setattrs r0,3
    linkattr1 r4,r0,r3
+   load r1,1
    swap r2,r4
    call r5,bump(),r1
    swap r4,r2

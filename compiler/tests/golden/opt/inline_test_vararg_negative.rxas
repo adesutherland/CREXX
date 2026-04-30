@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_vararg_negative.rexx
- * BUILT                  : 2026-04-29 14:16:44
+ * BUILT                  : 2026-04-30 20:04:09
  */
 
 .srcfile="inline_test_vararg_negative.rexx"
 .globals=0
 
-main() .locals=8
+main() .locals=6
    .meta "inline_test_vararg_negative.main"="b" ".int" main() ""
    .src 3:1="main: procedure = .int"
    setnumdgts 18
@@ -22,53 +22,24 @@ main() .locals=8
    .meta "inline_test_vararg_negative.main.b"="b" ".int" "20"
    .meta "inline_test_vararg_negative.main.c"="b" ".int" "30"
    .meta "inline_test_vararg_negative.main.idx"="b" ".int" "2"
-   .src 9:7="dynamicPick"
-   .meta "inline_test_vararg_negative.main.__inline_varg_array_41"="b" ".int[3]" r0
-   .src 15:27=".int"
-   null r0
-   .src 15:27=".int"
-   setattrs r0,3
-   linkattr1 r1,r0,1
+   load r1,2
    load r2,10
-   icopy r1,r2
-   unlink r1
-   .src 15:27=".int"
-   setattrs r0,3
-   linkattr1 r1,r0,2
    load r3,20
-   icopy r1,r3
-   unlink r1
-   .src 15:27=".int"
-   setattrs r0,3
-   linkattr1 r1,r0,3
    load r4,30
-   icopy r1,r4
-   unlink r1
-   .src 16:3="return arg[which"
-   .src 16:10="arg"
-   .src 16:10="arg"
-   setattrs r0,3
-   linkattr1 r1,r0,2
-   icopy r5,r1
-   unlink r1
-   br l89bexprend
-l89bexprend:
-   icopy r6,r5
-   acopy r6,r5
-   br l62bexprend
-l62bexprend:
-   itos r6
-   say r6
+   load r0,4
+   call r5,dynamicPick(),r0
+   itos r5
+   say r5
    .src 10:3="say refTailCount(a, b, c)"
    .src 10:7="refTailCount"
    .src 20:3="return arg"
-   load r6,3
-   icopy r7,r6
-   acopy r7,r6
-   br l97bexprend
-l97bexprend:
-   itos r7
-   say r7
+   load r5,3
+   icopy r4,r5
+   acopy r4,r5
+   br l62bexprend
+l62bexprend:
+   itos r4
+   say r4
    .src 11:3="say \"Vararg inline negative test finished.\""
    say "Vararg inline negative test finished."
    .src 12:3="return 0"
@@ -77,3 +48,22 @@ l97bexprend:
    .meta "inline_test_vararg_negative.main.b"
    .meta "inline_test_vararg_negative.main.c"
    .meta "inline_test_vararg_negative.main.idx"
+
+dynamicPick() .locals=2
+   .meta "inline_test_vararg_negative.dynamicpick"="b" ".int" dynamicPick() "which=.int,...=.int"
+   .src 14:1="dynamicPick: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 15:7="which = .int"
+   .meta "inline_test_vararg_negative.dynamicpick.which"="b" ".int" a1
+   .src 15:21="... = .int"
+   .src 16:3="return arg[which"
+   icopy r1,a0
+   isub r1,r1,1
+   ichkrng a1,1,r1
+   linkarg r1,a1,1
+   ret r1
+   .meta "inline_test_vararg_negative.dynamicpick.which"

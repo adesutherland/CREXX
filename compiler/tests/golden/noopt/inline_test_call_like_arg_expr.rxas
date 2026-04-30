@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_call_like_arg_expr.rexx
- * BUILT                  : 2026-04-21 11:35:27
+ * BUILT                  : 2026-04-30 20:04:10
  */
 
 .meta "inline_test_call_like_arg_expr.box"="b" ".unknown" .class
@@ -30,19 +30,19 @@ l8dostart:
    igt r3,r1,r2
    brt l8doend,r3
    .src 6:5="box = .Box(addOne(i))"
-   load r4,1
    .meta "inline_test_call_like_arg_expr.main.box"="b" ".box" r0
    load r6,1
    swap r7,r1
    call r5,addOne(),r6
    swap r1,r7
+   load r4,1
    call r0,§inline_test_call_like_arg_expr.box.§factory(),r4
    .src 7:5="say box.bump(addOne(i))"
-   load r5,2
    load r8,1
    swap r9,r1
    call r7,addOne(),r8
    swap r1,r9
+   load r5,2
    settp r0,1
    swap r6,r0
    call r9,§inline_test_call_like_arg_expr.box.bump(),r5
