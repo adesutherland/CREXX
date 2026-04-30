@@ -13,8 +13,10 @@
 #include "rxcpbgmr.h"
 #include "rxcpdary.h"
 #include "rxcp_sym.h"
+#include "rxcp_source_tree.h"
 
 #define INLINE_MAX_NODES 200
+#define INLINE_META_MAX_SOURCE_SPAN 512
 
 typedef struct {
     Symbol *old_symbol;
@@ -194,6 +196,32 @@ static void inline_debug_fail_closed(Context *context,
         if (site->column > 0) fprintf(stderr, ":%d", site->column);
     }
     fprintf(stderr, " - ");
+
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputc('\n', stderr);
+}
+
+static void inline_export_debug_reject(Context *context,
+                                       ASTNode *site,
+                                       Symbol *proc_sym,
+                                       const char *format,
+                                       ...) {
+    Context *root;
+    va_list args;
+
+    root = context && context->master_context ? context->master_context : context;
+    if (!root || root->debug_mode < 2 || !format) return;
+
+    fprintf(stderr, "DEBUG_INLINE_EXPORT");
+    if (proc_sym && proc_sym->name) fprintf(stderr, " %s", proc_sym->name);
+    if (site && site->file_name) {
+        fprintf(stderr, " @ %s", site->file_name);
+        if (site->line > 0) fprintf(stderr, ":%d", site->line);
+        if (site->column > 0) fprintf(stderr, ":%d", site->column);
+    }
+    fprintf(stderr, " - reject: ");
 
     va_start(args, format);
     vfprintf(stderr, format, args);
@@ -3675,18 +3703,54 @@ typedef struct {
 } InlineMetaScopeEntry;
 
 typedef struct {
+    const char *file_name;
+    size_t id;
+} InlineMetaFileEntry;
+
+typedef struct {
+    const char *file_name;
+    int line;
+    int column;
+    char provenance;
+    const char *source_start;
+    size_t source_length;
+    size_t file_id;
+    size_t id;
+} InlineMetaSourceEntry;
+
+typedef struct {
     Scope *root_scope;
     InlineMetaScopeEntry *scopes;
     size_t scope_count;
     InlineMetaSymbolEntry *symbols;
     size_t symbol_count;
+    InlineMetaFileEntry *files;
+    size_t file_count;
+    InlineMetaSourceEntry *sources;
+    size_t source_count;
 } InlineMetaExport;
+
+typedef struct {
+    ASTNode *node;
+    Symbol *symbol;
+    Scope *scope;
+    const char *reason;
+} InlineMetaCollectFailure;
+
+typedef struct {
+    SourceNode *source_node;
+    char provenance;
+} InlineMetaImportedSource;
 
 typedef struct {
     Symbol **symbols;
     size_t symbol_count;
     Scope **scopes;
     size_t scope_count;
+    char **files;
+    size_t file_count;
+    InlineMetaImportedSource *sources;
+    size_t source_count;
     ASTNode **stack;
     size_t stack_count;
     ASTNode *args_root;
@@ -4092,6 +4156,8 @@ static int inline_meta_node_is_exportable(ASTNode *node) {
         case OP_TYPE_CAST:
         case OP_TYPEOF:
             return 1;
+        case ASSEMBLER:
+            return !inline_assembler_has_unsupported_aliasing(node);
         default:
             return 0;
     }
@@ -4111,6 +4177,168 @@ static int inline_meta_find_scope_id(InlineMetaExport *meta, Scope *scope, size_
     }
 
     return 0;
+}
+
+static int inline_meta_find_file_id(InlineMetaExport *meta, const char *file_name, size_t *id_out) {
+    size_t i;
+
+    if (id_out) *id_out = (size_t)-1;
+    if (!meta || !file_name) return 0;
+
+    for (i = 0; i < meta->file_count; i++) {
+        if (meta->files[i].file_name && strcmp(meta->files[i].file_name, file_name) == 0) {
+            if (id_out) *id_out = meta->files[i].id;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int inline_meta_collect_file(InlineMetaExport *meta, const char *file_name, size_t *id_out) {
+    InlineMetaFileEntry *new_files;
+
+    if (id_out) *id_out = (size_t)-1;
+    if (!file_name || !*file_name) return 1;
+    if (inline_meta_find_file_id(meta, file_name, id_out)) return 1;
+
+    new_files = realloc(meta->files, sizeof(InlineMetaFileEntry) * (meta->file_count + 1));
+    if (!new_files) return 0;
+
+    meta->files = new_files;
+    meta->files[meta->file_count].file_name = file_name;
+    meta->files[meta->file_count].id = meta->file_count;
+    if (id_out) *id_out = meta->file_count;
+    meta->file_count++;
+    return 1;
+}
+
+static int inline_meta_node_source_data(ASTNode *node,
+                                        const char **file_name_out,
+                                        int *line_out,
+                                        int *column_out,
+                                        char *provenance_out,
+                                        const char **source_start_out,
+                                        size_t *source_length_out) {
+    const char *source_start;
+    const char *source_end;
+    const char *file_name;
+    int line;
+    int column;
+    char provenance;
+
+    if (file_name_out) *file_name_out = NULL;
+    if (line_out) *line_out = -1;
+    if (column_out) *column_out = -1;
+    if (provenance_out) *provenance_out = AST_SOURCE_NONE;
+    if (source_start_out) *source_start_out = NULL;
+    if (source_length_out) *source_length_out = 0;
+    if (!node) return 0;
+
+    file_name = node->file_name;
+    line = node->line;
+    column = node->column;
+    provenance = node->source_provenance;
+    source_start = node->source_start;
+    source_end = node->source_end;
+
+    if (node->source_node) {
+        if (!file_name) file_name = node->source_node->file_name;
+        if (line < 0) line = node->source_node->line;
+        if (column < 0) column = node->source_node->column;
+        if (!source_start) source_start = node->source_node->source_start;
+        if (!source_end) source_end = node->source_node->source_end;
+    }
+
+    if (!source_start || !source_end || source_end < source_start) return 0;
+    if ((size_t)(source_end - source_start) + 1 > INLINE_META_MAX_SOURCE_SPAN) return 0;
+    if (memchr(source_start, 0, (size_t)(source_end - source_start) + 1)) return 0;
+
+    if (file_name_out) *file_name_out = file_name;
+    if (line_out) *line_out = line;
+    if (column_out) *column_out = column;
+    if (provenance_out) *provenance_out = provenance;
+    if (source_start_out) *source_start_out = source_start;
+    if (source_length_out) *source_length_out = (size_t)(source_end - source_start) + 1;
+    return 1;
+}
+
+static int inline_meta_find_source_id(InlineMetaExport *meta, ASTNode *node, size_t *id_out) {
+    const char *file_name;
+    const char *source_start;
+    size_t source_length;
+    int line;
+    int column;
+    char provenance;
+    size_t i;
+
+    if (id_out) *id_out = (size_t)-1;
+    if (!inline_meta_node_source_data(node,
+                                      &file_name,
+                                      &line,
+                                      &column,
+                                      &provenance,
+                                      &source_start,
+                                      &source_length)) {
+        return 0;
+    }
+
+    for (i = 0; i < meta->source_count; i++) {
+        InlineMetaSourceEntry *source = &meta->sources[i];
+        if (source->line == line &&
+            source->column == column &&
+            source->provenance == provenance &&
+            source->source_length == source_length &&
+            ((source->file_name == file_name) ||
+             (source->file_name && file_name && strcmp(source->file_name, file_name) == 0)) &&
+            memcmp(source->source_start, source_start, source_length) == 0) {
+            if (id_out) *id_out = source->id;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int inline_meta_collect_source(InlineMetaExport *meta, ASTNode *node) {
+    InlineMetaSourceEntry *new_sources;
+    const char *file_name;
+    const char *source_start;
+    size_t source_length;
+    size_t file_id;
+    int line;
+    int column;
+    char provenance;
+
+    if (!meta || !node) return 0;
+    if (inline_meta_find_source_id(meta, node, NULL)) return 1;
+    if (!inline_meta_node_source_data(node,
+                                      &file_name,
+                                      &line,
+                                      &column,
+                                      &provenance,
+                                      &source_start,
+                                      &source_length)) {
+        return 1;
+    }
+
+    file_id = (size_t)-1;
+    if (file_name && *file_name && !inline_meta_collect_file(meta, file_name, &file_id)) return 0;
+
+    new_sources = realloc(meta->sources, sizeof(InlineMetaSourceEntry) * (meta->source_count + 1));
+    if (!new_sources) return 0;
+
+    meta->sources = new_sources;
+    meta->sources[meta->source_count].file_name = file_name;
+    meta->sources[meta->source_count].line = line;
+    meta->sources[meta->source_count].column = column;
+    meta->sources[meta->source_count].provenance = provenance;
+    meta->sources[meta->source_count].source_start = source_start;
+    meta->sources[meta->source_count].source_length = source_length;
+    meta->sources[meta->source_count].file_id = file_id;
+    meta->sources[meta->source_count].id = meta->source_count;
+    meta->source_count++;
+    return 1;
 }
 
 static int inline_meta_scope_is_exportable(InlineMetaExport *meta, Scope *scope) {
@@ -4214,6 +4442,7 @@ static int inline_meta_collect(ASTNode *node, InlineMetaExport *meta) {
     if (!inline_meta_node_is_exportable(node)) return 0;
     if (!inline_meta_collect_scope(meta, node->scope)) return 0;
     if (node->symbolNode && !inline_meta_collect_symbol(meta, node->symbolNode->symbol)) return 0;
+    if (!inline_meta_collect_source(meta, node)) return 0;
 
     child = node->child;
     while (child) {
@@ -4222,6 +4451,96 @@ static int inline_meta_collect(ASTNode *node, InlineMetaExport *meta) {
     }
 
     return 1;
+}
+
+static int inline_meta_find_collect_failure(ASTNode *node,
+                                            InlineMetaExport *meta,
+                                            InlineMetaCollectFailure *failure) {
+    ASTNode *child;
+
+    if (!node || !meta || !failure) return 0;
+
+    if (node->association &&
+        !(node->node_type == INSTRUCTIONS &&
+          node->is_compiler_added &&
+          inline_node_is_callable_def(node->association))) {
+        failure->node = node;
+        failure->reason = "unsupported association in inline metadata";
+        return 1;
+    }
+    if (node->node_type == ASSEMBLER &&
+        inline_assembler_has_unsupported_aliasing(node)) {
+        failure->node = node;
+        failure->reason = "assembler aliasing instruction";
+        return 1;
+    }
+    if (!inline_meta_node_is_exportable(node)) {
+        failure->node = node;
+        failure->reason = "unsupported AST node in inline metadata";
+        return 1;
+    }
+    if (node->scope && !inline_meta_scope_is_exportable(meta, node->scope)) {
+        failure->node = node;
+        failure->scope = node->scope;
+        failure->reason = "unsupported scope in inline metadata";
+        return 1;
+    }
+    if (node->symbolNode &&
+        node->symbolNode->symbol &&
+        !inline_meta_symbol_is_exportable(node->symbolNode->symbol)) {
+        failure->node = node;
+        failure->symbol = node->symbolNode->symbol;
+        failure->reason = "unsupported symbol in inline metadata";
+        return 1;
+    }
+
+    child = node->child;
+    while (child) {
+        if (inline_meta_find_collect_failure(child, meta, failure)) return 1;
+        child = child->sibling;
+    }
+
+    return 0;
+}
+
+static void inline_meta_debug_collect_failure(Context *context,
+                                              ASTNode *callable,
+                                              Symbol *symbol,
+                                              InlineMetaExport *meta,
+                                              ASTNode *args,
+                                              ASTNode *instrs) {
+    InlineMetaCollectFailure failure;
+    ASTNode *node;
+    const char *node_type;
+
+    memset(&failure, 0, sizeof(failure));
+    if (inline_meta_find_collect_failure(args, meta, &failure) ||
+        inline_meta_find_collect_failure(instrs, meta, &failure)) {
+        node = failure.node ? failure.node : callable;
+        node_type = node ? ast_ndtp(node->node_type) : "UNKNOWN";
+        if (failure.symbol && failure.symbol->name) {
+            inline_export_debug_reject(context,
+                                       node,
+                                       symbol,
+                                       "%s: %s symbol=%s",
+                                       failure.reason,
+                                       node_type,
+                                       failure.symbol->name);
+        } else {
+            inline_export_debug_reject(context,
+                                       node,
+                                       symbol,
+                                       "%s: %s",
+                                       failure.reason,
+                                       node_type);
+        }
+        return;
+    }
+
+    inline_export_debug_reject(context,
+                               callable,
+                               symbol,
+                               "inline metadata collection failed");
 }
 
 static int inline_meta_emit_scopes(InlineMetaText *text, InlineMetaExport *meta) {
@@ -4238,6 +4557,48 @@ static int inline_meta_emit_scopes(InlineMetaText *text, InlineMetaExport *meta)
                                       scope ? (int)scope->type : (int)SCOPE_LOCAL)) {
             return 0;
         }
+    }
+
+    return 1;
+}
+
+static int inline_meta_emit_files(InlineMetaText *text, InlineMetaExport *meta) {
+    size_t i;
+
+    for (i = 0; i < meta->file_count; i++) {
+        char *file_hex = inline_meta_hex_encode(meta->files[i].file_name,
+                                                meta->files[i].file_name ? strlen(meta->files[i].file_name) : 0);
+        if (!file_hex) return 0;
+        if (!inline_meta_text_appendf(text, ";f,%zu,%s", meta->files[i].id, file_hex)) {
+            free(file_hex);
+            return 0;
+        }
+        free(file_hex);
+    }
+
+    return 1;
+}
+
+static int inline_meta_emit_sources(InlineMetaText *text, InlineMetaExport *meta) {
+    size_t i;
+
+    for (i = 0; i < meta->source_count; i++) {
+        InlineMetaSourceEntry *source = &meta->sources[i];
+        long file_id = source->file_id == (size_t)-1 ? -1L : (long)source->file_id;
+        char *source_hex = inline_meta_hex_encode(source->source_start, source->source_length);
+        if (!source_hex) return 0;
+        if (!inline_meta_text_appendf(text,
+                                      ";u,%zu,%ld,%d,%d,%d,%s",
+                                      source->id,
+                                      file_id,
+                                      source->line,
+                                      source->column,
+                                      (int)source->provenance,
+                                      source_hex)) {
+            free(source_hex);
+            return 0;
+        }
+        free(source_hex);
     }
 
     return 1;
@@ -4270,10 +4631,11 @@ static int inline_meta_emit_symbols(InlineMetaText *text, InlineMetaExport *meta
         }
 
         if (!inline_meta_text_appendf(text,
-                                      ";s,%zu,%zu,%s,%d,%zu,%s,%s,%s,%u,%c,%d",
+                                      ";s,%zu,%zu,%s,%d,%d,%zu,%s,%s,%s,%u,%c,%d",
                                       meta->symbols[i].id,
                                       scope_id,
                                       name_hex,
+                                      (int)symbol->symbol_type,
                                       (int)symbol->type,
                                       symbol->value_dims,
                                       base_text,
@@ -4301,6 +4663,7 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
     ASTNode *child;
     size_t symbol_id;
     size_t scope_id;
+    size_t source_id;
     unsigned int symbol_read_usage;
     unsigned int symbol_write_usage;
     char *node_hex;
@@ -4328,6 +4691,7 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
     } else {
         scope_id = 0;
     }
+    if (!inline_meta_find_source_id(meta, node, &source_id)) source_id = (size_t)-1;
 
     node_hex = inline_meta_hex_encode(node->node_string, node->node_string_length);
     decimal_hex = inline_meta_hex_encode(node->decimal_value, node->decimal_value ? strlen(node->decimal_value) : 0);
@@ -4357,8 +4721,9 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
 #endif
 
     if (!inline_meta_text_appendf(text,
-                                  ";>,%zu,%d,%d,%d,%zu,%zu,%s,%s,%s,%s,%s,%s,%u,%ld,%u,%u,%s,%d,%.17g,%s,%s",
+                                  ";>,%zu,%ld,%d,%d,%d,%zu,%zu,%s,%s,%s,%s,%s,%s,%u,%ld,-1,%u,%u,%s,%d,%.17g,%s,%s",
                                   scope_id,
+                                  source_id == (size_t)-1 ? -1L : (long)source_id,
                                   (int)node->node_type,
                                   (int)node->value_type,
                                   (int)node->target_type,
@@ -4417,71 +4782,124 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
     InlineMetaExport meta;
     InlineMetaText text;
 
-    (void)context;
-
     if (!callable || !inline_node_is_callable_def(callable)) return strdup("");
-    if (callable->is_inline_pruned) return strdup("");
-    if (inline_proc_has_procedure_expose(callable)) return strdup("");
+    if (callable->is_inline_pruned) {
+        inline_export_debug_reject(context, callable, NULL, "callable already pruned");
+        return strdup("");
+    }
 
     symbol = inline_symbol_from_proc_def(callable);
-    if (!symbol || !symbol->exposed) return strdup("");
-    if (symbol->is_main || symbol->is_implicit_main) return strdup("");
+    if (inline_proc_has_procedure_expose(callable)) {
+        inline_export_debug_reject(context, callable, symbol, "procedure-level expose");
+        return strdup("");
+    }
+
+    if (!symbol || !symbol->exposed) {
+        inline_export_debug_reject(context, callable, symbol, "callable is not namespace-exposed");
+        return strdup("");
+    }
+    if (symbol->is_main || symbol->is_implicit_main) {
+        inline_export_debug_reject(context, callable, symbol, "main is not inline-exportable");
+        return strdup("");
+    }
 
     args = ast_chld(callable, ARGS, 0);
     instrs = ast_chld(callable, INSTRUCTIONS, 0);
-    if (!args || !instrs) return strdup("");
+    if (!args || !instrs) {
+        inline_export_debug_reject(context, callable, symbol, "missing args or instruction list");
+        return strdup("");
+    }
 
-    if (!inline_analyse_return_shape(callable, &return_shape)) return strdup("");
-    if (!return_shape.final_is_return && symbol->type != TP_VOID) return strdup("");
-    if (symbol->type != TP_VOID && return_shape.return_count == 0) return strdup("");
+    if (!inline_analyse_return_shape(callable, &return_shape)) {
+        inline_export_debug_reject(context, callable, symbol, "failed to analyse return shape");
+        return strdup("");
+    }
+    if (!return_shape.final_is_return && symbol->type != TP_VOID) {
+        inline_export_debug_reject(context, callable, symbol, "value procedure lacks final RETURN");
+        return strdup("");
+    }
+    if (symbol->type != TP_VOID && return_shape.return_count == 0) {
+        inline_export_debug_reject(context, callable, symbol, "value procedure has no RETURN");
+        return strdup("");
+    }
 
     memset(&check, 0, sizeof(check));
     check.root_proc = callable;
     ast_wlkr(callable, inlinable_check_walker, &check);
-    if (check.node_count > INLINE_MAX_NODES ||
-        check.return_count != return_shape.return_count ||
-        check.has_unsupported_assembler_alias ||
-        check.has_unsupported_varg_access ||
-        ((callable->node_type == METHOD || callable->node_type == FACTORY) &&
-         check.has_unportable_class_attribute_shape)) {
+    if (check.node_count > INLINE_MAX_NODES) {
+        inline_export_debug_reject(context,
+                                   callable,
+                                   symbol,
+                                   "node count %d exceeds cutoff %d",
+                                   check.node_count,
+                                   INLINE_MAX_NODES);
+        return strdup("");
+    }
+    if (check.return_count != return_shape.return_count) {
+        inline_export_debug_reject(context, callable, symbol, "return-shape mismatch");
+        return strdup("");
+    }
+    if (check.has_unsupported_assembler_alias) {
+        inline_export_debug_reject(context, callable, symbol, "assembler aliasing instruction");
+        return strdup("");
+    }
+    if (check.has_unsupported_varg_access) {
+        inline_export_debug_reject(context, callable, symbol, "unsupported vararg access");
+        return strdup("");
+    }
+    if ((callable->node_type == METHOD || callable->node_type == FACTORY) &&
+        check.has_unportable_class_attribute_shape) {
+        inline_export_debug_reject(context, callable, symbol, "unportable class attribute shape");
         return strdup("");
     }
 
     memset(&meta, 0, sizeof(meta));
     meta.root_scope = callable->scope;
     if (!inline_meta_collect_scope(&meta, callable->scope)) {
+        inline_export_debug_reject(context, callable, symbol, "failed to collect callable scope");
         free(meta.scopes);
         return strdup("");
     }
     if (!inline_meta_collect(args, &meta) ||
         !inline_meta_collect(instrs, &meta)) {
+        inline_meta_debug_collect_failure(context, callable, symbol, &meta, args, instrs);
         free(meta.scopes);
         free(meta.symbols);
+        free(meta.files);
+        free(meta.sources);
         return strdup("");
     }
 
     inline_meta_text_init(&text);
     if (!text.ok ||
-        !inline_meta_text_append(&text, "I3") ||
+        !inline_meta_text_append(&text, "I4") ||
+        !inline_meta_emit_files(&text, &meta) ||
+        !inline_meta_emit_sources(&text, &meta) ||
         !inline_meta_emit_scopes(&text, &meta) ||
         !inline_meta_emit_symbols(&text, &meta) ||
         !inline_meta_text_append(&text, ";a") ||
         !inline_meta_emit_node(&text, &meta, args) ||
         !inline_meta_text_append(&text, ";b") ||
         !inline_meta_emit_node(&text, &meta, instrs)) {
+        inline_export_debug_reject(context, callable, symbol, "failed to emit inline metadata");
         free(meta.scopes);
         free(meta.symbols);
+        free(meta.files);
+        free(meta.sources);
         if (text.text) free(text.text);
         return strdup("");
     }
 
     free(meta.scopes);
     free(meta.symbols);
+    free(meta.files);
+    free(meta.sources);
     return text.text;
 }
 
 int rxcp_inline_payload_is_supported(const char *payload) {
-    return payload && payload[0] == 'I' && (payload[1] == '1' || payload[1] == '2' || payload[1] == '3') &&
+    return payload && payload[0] == 'I' &&
+           (payload[1] == '1' || payload[1] == '2' || payload[1] == '3' || payload[1] == '4') &&
            (payload[2] == 0 || payload[2] == ';');
 }
 
@@ -4554,10 +4972,140 @@ static int inline_meta_ensure_scope_slot(InlineMetaImport *meta, size_t id) {
     return 1;
 }
 
+static int inline_meta_ensure_file_slot(InlineMetaImport *meta, size_t id) {
+    char **new_files;
+    size_t old_count;
+    size_t i;
+
+    if (!meta) return 0;
+    if (id < meta->file_count) return 1;
+
+    old_count = meta->file_count;
+    new_files = realloc(meta->files, sizeof(char *) * (id + 1));
+    if (!new_files) return 0;
+
+    meta->files = new_files;
+    meta->file_count = id + 1;
+    for (i = old_count; i < meta->file_count; i++) meta->files[i] = NULL;
+    return 1;
+}
+
+static int inline_meta_ensure_source_slot(InlineMetaImport *meta, size_t id) {
+    InlineMetaImportedSource *new_sources;
+    size_t old_count;
+    size_t i;
+
+    if (!meta) return 0;
+    if (id < meta->source_count) return 1;
+
+    old_count = meta->source_count;
+    new_sources = realloc(meta->sources, sizeof(InlineMetaImportedSource) * (id + 1));
+    if (!new_sources) return 0;
+
+    meta->sources = new_sources;
+    meta->source_count = id + 1;
+    for (i = old_count; i < meta->source_count; i++) {
+        meta->sources[i].source_node = NULL;
+        meta->sources[i].provenance = AST_SOURCE_NONE;
+    }
+    return 1;
+}
+
 static Scope *inline_meta_scope_by_id(InlineMetaImport *meta, size_t id) {
     if (!meta) return NULL;
     if (id >= meta->scope_count) return NULL;
     return meta->scopes[id];
+}
+
+static int inline_meta_import_file(Context *context, InlineMetaImport *meta, char *record) {
+    char *cursor;
+    char *id_field;
+    char *name_field;
+    char *name;
+    size_t id;
+    size_t name_length;
+
+    (void)context;
+    if (!meta || !record) return 0;
+
+    cursor = record + 2;
+    id_field = inline_meta_next_field(&cursor);
+    name_field = inline_meta_next_field(&cursor);
+    if (!id_field || !name_field) return 0;
+
+    id = (size_t)strtoul(id_field, NULL, 10);
+    if (!inline_meta_ensure_file_slot(meta, id)) return 0;
+
+    name = inline_meta_hex_decode(name_field, &name_length);
+    if (!name) return 0;
+
+    if (meta->files[id]) free(meta->files[id]);
+    meta->files[id] = name;
+    return 1;
+}
+
+static int inline_meta_import_source(Context *context, InlineMetaImport *meta, char *record) {
+    char *cursor;
+    char *id_field;
+    char *file_field;
+    char *line_field;
+    char *column_field;
+    char *provenance_field;
+    char *source_field;
+    char *source_text;
+    char *file_name;
+    size_t id;
+    size_t source_length;
+    long file_id;
+    SourceNode *source_node;
+
+    if (!context || !meta || !record) return 0;
+
+    cursor = record + 2;
+    id_field = inline_meta_next_field(&cursor);
+    file_field = inline_meta_next_field(&cursor);
+    line_field = inline_meta_next_field(&cursor);
+    column_field = inline_meta_next_field(&cursor);
+    provenance_field = inline_meta_next_field(&cursor);
+    source_field = inline_meta_next_field(&cursor);
+    if (!id_field || !file_field || !line_field || !column_field || !provenance_field || !source_field) return 0;
+
+    id = (size_t)strtoul(id_field, NULL, 10);
+    if (!inline_meta_ensure_source_slot(meta, id)) return 0;
+
+    file_name = NULL;
+    file_id = strtol(file_field, NULL, 10);
+    if (file_id >= 0) {
+        if ((size_t)file_id >= meta->file_count || !meta->files[file_id]) return 0;
+        file_name = meta->files[file_id];
+    }
+
+    source_text = inline_meta_hex_decode(source_field, &source_length);
+    if (!source_text) return 0;
+
+    source_node = calloc(1, sizeof(SourceNode));
+    if (!source_node) {
+        free(source_text);
+        return 0;
+    }
+
+    source_node->context = context;
+    source_node->node_type = NOP;
+    source_node->owned_file_name = file_name ? strdup(file_name) : NULL;
+    source_node->file_name = source_node->owned_file_name;
+    source_node->owned_source_text = source_text;
+    source_node->source_start = source_text;
+    source_node->source_end = source_length ? source_text + source_length - 1 : source_text;
+    source_node->line = atoi(line_field);
+    source_node->column = atoi(column_field);
+    source_node->free_list = context->source_free_list;
+    if (source_node->free_list) source_node->node_number = source_node->free_list->node_number + 1;
+    else source_node->node_number = 1;
+    context->source_free_list = source_node;
+
+    meta->sources[id].source_node = source_node;
+    meta->sources[id].provenance = (char)atoi(provenance_field);
+    return 1;
 }
 
 static int inline_meta_import_scope(Context *context, InlineMetaImport *meta, char *record) {
@@ -4645,6 +5193,7 @@ static int inline_meta_import_symbol(Context *context, InlineMetaImport *meta, c
     char *id_field;
     char *scope_field;
     char *name_field;
+    char *symbol_kind_field;
     char *type_field;
     char *dims_field;
     char *base_field;
@@ -4669,6 +5218,8 @@ static int inline_meta_import_symbol(Context *context, InlineMetaImport *meta, c
     scope_field = NULL;
     if (meta->version >= 2) scope_field = inline_meta_next_field(&cursor);
     name_field = inline_meta_next_field(&cursor);
+    symbol_kind_field = NULL;
+    if (meta->version >= 4) symbol_kind_field = inline_meta_next_field(&cursor);
     type_field = inline_meta_next_field(&cursor);
     dims_field = inline_meta_next_field(&cursor);
     base_field = NULL;
@@ -4726,6 +5277,7 @@ static int inline_meta_import_symbol(Context *context, InlineMetaImport *meta, c
     if (dim_elements) free(dim_elements);
     if (class_name) free(class_name);
     if (!symbol) return 0;
+    if (symbol_kind_field) symbol->symbol_type = (SymbolType)atoi(symbol_kind_field);
 
     if (inline_symbol_is_class_attribute(symbol) &&
         register_type_field && register_type_field[0] &&
@@ -4753,6 +5305,7 @@ static int inline_meta_push_node(InlineMetaImport *meta, ASTNode *node) {
 static int inline_meta_import_node(Context *context, InlineMetaImport *meta, char *record) {
     char *cursor;
     char *scope_field;
+    char *source_field;
     char *node_type_field;
     char *value_type_field;
     char *target_type_field;
@@ -4766,6 +5319,7 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     char *target_class_field;
     char *flags_field;
     char *symbol_field;
+    char *dependency_field;
     char *symbol_read_field;
     char *symbol_write_field;
     char *int_field;
@@ -4788,6 +5342,7 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     char *value_class;
     char *target_class;
     long symbol_id;
+    long source_id;
     unsigned int symbol_read_usage;
     unsigned int symbol_write_usage;
     unsigned int flags;
@@ -4796,6 +5351,8 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     cursor = record + 2;
     scope_field = NULL;
     if (meta->version >= 2) scope_field = inline_meta_next_field(&cursor);
+    source_field = NULL;
+    if (meta->version >= 4) source_field = inline_meta_next_field(&cursor);
     node_type_field = inline_meta_next_field(&cursor);
     value_type_field = inline_meta_next_field(&cursor);
     target_type_field = inline_meta_next_field(&cursor);
@@ -4817,6 +5374,8 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     }
     flags_field = inline_meta_next_field(&cursor);
     symbol_field = inline_meta_next_field(&cursor);
+    dependency_field = NULL;
+    if (meta->version >= 4) dependency_field = inline_meta_next_field(&cursor);
     symbol_read_field = NULL;
     symbol_write_field = NULL;
     if (meta->version >= 3) {
@@ -4834,6 +5393,7 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
         !node_string_field || !decimal_field) {
         return 0;
     }
+    if (meta->version >= 4 && !dependency_field) return 0;
     if (meta->version >= 3 &&
         (!value_base_field || !value_elements_field || !target_base_field ||
          !target_elements_field || !value_class_field || !target_class_field ||
@@ -4894,6 +5454,22 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     flags = (unsigned int)strtoul(flags_field, NULL, 10);
     inline_meta_apply_node_flags(node, flags);
     if ((flags & INLINE_META_NODE_SCOPE_DEF) && node_scope != meta->scope) node_scope->defining_node = node;
+
+    source_id = source_field ? strtol(source_field, NULL, 10) : -1;
+    if (source_id >= 0) {
+        SourceNode *source_node;
+        if ((size_t)source_id >= meta->source_count) return 0;
+        source_node = meta->sources[source_id].source_node;
+        if (!source_node) return 0;
+        node->file_name = source_node->file_name;
+        node->line = source_node->line;
+        node->column = source_node->column;
+        node->source_start = source_node->source_start;
+        node->source_end = source_node->source_end;
+        ast_set_primary_source_node(node,
+                                    source_node,
+                                    (ASTSourceProvenance)meta->sources[source_id].provenance);
+    }
 
     node_string = inline_meta_hex_decode(node_string_field, &node_string_length);
     decimal_string = inline_meta_hex_decode(decimal_field, &decimal_length);
@@ -5116,6 +5692,7 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     if (strcmp(record, "I1") == 0) meta.version = 1;
     else if (strcmp(record, "I2") == 0) meta.version = 2;
     else if (strcmp(record, "I3") == 0) meta.version = 3;
+    else if (strcmp(record, "I4") == 0) meta.version = 4;
     else {
         free(copy);
         return 0;
@@ -5161,6 +5738,16 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
                 meta.ok = 0;
                 break;
             }
+        } else if (record[0] == 'f' && record[1] == ',') {
+            if (meta.version < 4 || !inline_meta_import_file(context, &meta, record)) {
+                meta.ok = 0;
+                break;
+            }
+        } else if (record[0] == 'u' && record[1] == ',') {
+            if (meta.version < 4 || !inline_meta_import_source(context, &meta, record)) {
+                meta.ok = 0;
+                break;
+            }
         } else if (record[0] == 's' && record[1] == ',') {
             if (!inline_meta_import_symbol(context, &meta, record)) {
                 meta.ok = 0;
@@ -5181,6 +5768,14 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     if (meta.version >= 3 && (!meta.args_root || meta.args_root->node_type != ARGS)) meta.ok = 0;
 
     free(copy);
+    if (meta.files) {
+        size_t i;
+        for (i = 0; i < meta.file_count; i++) {
+            if (meta.files[i]) free(meta.files[i]);
+        }
+    }
+    free(meta.files);
+    free(meta.sources);
     free(meta.symbols);
     free(meta.scopes);
     free(meta.stack);

@@ -101,6 +101,8 @@ struct SourceNode {
     size_t node_string_length;
     char *source_start;
     char *source_end;
+    char *owned_file_name;
+    char *owned_source_text;
     int line;
     int column;
     SourceNode *parent;

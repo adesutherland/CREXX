@@ -696,6 +696,8 @@ void source_tree_free(Context *context) {
     node = context->source_free_list;
     while (node) {
         next = node->free_list;
+        if (node->owned_file_name) free(node->owned_file_name);
+        if (node->owned_source_text) free(node->owned_source_text);
         free(node);
         node = next;
     }

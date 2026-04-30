@@ -48,6 +48,34 @@ const char* emit_promotion[9][9] = {
 /* TP_OBJECT  */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
 };
 
+static const char *active_source_file = NULL;
+
+void reset_metaline_source_file(const char *file_name) {
+    active_source_file = file_name;
+}
+
+static char *prefix_source_file_if_needed(char *line, const char *file_name) {
+    char *result;
+
+    if (!line || !line[0] || !file_name) return line;
+    if (active_source_file && strcmp(active_source_file, file_name) == 0) return line;
+
+    result = mprintf("   .srcfile=\"%s\"\n%s", file_name, line);
+    free(line);
+    active_source_file = file_name;
+    return result;
+}
+
+static int source_span_is_emit_safe(const char *start, const char *end) {
+    size_t length;
+
+    if (!start || !end) return 0;
+    if (end < start) return end + 1 == start;
+    length = (size_t)(end - start) + 1;
+    if (length > 2048) return 0;
+    return memchr(start, 0, length) == NULL;
+}
+
 /* Output Marshalling Functions */
 OutputFragment *output_f(){
     OutputFragment *output = malloc(sizeof(OutputFragment));
@@ -166,7 +194,7 @@ static char *get_source_node_metaline(SourceNode *node) {
         if (!source_end) source_end = node->token->token_string + node->token->length - 1;
     }
 
-    if (!source_start) {
+    if (!source_span_is_emit_safe(source_start, source_end)) {
         result = malloc(1);
         result[0] = 0;
         return result;
@@ -176,7 +204,7 @@ static char *get_source_node_metaline(SourceNode *node) {
                                     (int)(source_end - source_start) + 1);
     result = mprintf("   .src %d:%d=\"%s\"\n", line + 1, column + 1, src);
     free(src);
-    return result;
+    return prefix_source_file_if_needed(result, node->file_name);
 }
 
 static void append_metaline_buffer(char **buffer, size_t *buffer_len, char *line) {
@@ -247,7 +275,7 @@ char* get_metaline(ASTNode *node) {
         if (!source_end) source_end = node->token->token_string + node->token->length - 1;
     }
 
-    if (!source_start) {
+    if (!source_span_is_emit_safe(source_start, source_end)) {
         result = malloc(1);
         result[0] = 0;
     }
@@ -257,7 +285,7 @@ char* get_metaline(ASTNode *node) {
         result = mprintf("   .src %d:%d=\"%s\"\n", line + 1, column + 1, src);
         free(src);
     }
-    return result;
+    return prefix_source_file_if_needed(result, node->file_name);
 }
 
 /* Returns the meta .src line in a malloced buffer */
@@ -291,7 +319,7 @@ char* get_metaline_range(ASTNode *from, ASTNode *to) {
         if (!to_source_end) to_source_end = to->token_end->token_string + to->token_end->length - 1;
     }
 
-    if (!from_source_start || !to_source_end) {
+    if (!source_span_is_emit_safe(from_source_start, to_source_end)) {
         result = malloc(1);
         result[0] = 0;
     }
@@ -330,7 +358,8 @@ char* get_metaline_between(ASTNode *from, ASTNode *to) {
         }
     }
 
-    if (!start || !end) {
+    if (!start || !end ||
+        !source_span_is_emit_safe(start->token_string, end->token_string + end->length - 1)) {
         result = malloc(1);
         result[0] = 0;
     }
@@ -356,7 +385,7 @@ char* get_metaline_token_after(ASTNode *node) {
         start = start->token_next;
     }
 
-    if (!start) {
+    if (!start || !source_span_is_emit_safe(start->token_string, start->token_string + start->length - 1)) {
         result = malloc(1);
         result[0] = 0;
     }
@@ -377,7 +406,7 @@ char* get_metaline_clause(ASTNode *node) {
 
     if (node->token_start) start = node->token_start;
 
-    if (!start) {
+    if (!start || !source_span_is_emit_safe(start->token_string, start->token_string + start->length - 1)) {
         result = malloc(1);
         result[0] = 0;
     }
@@ -386,10 +415,15 @@ char* get_metaline_clause(ASTNode *node) {
         while (end->token_next->token_type != TK_EOC && end->token_next->token_type != TK_EOS)
             end = end->token_next;
 
-        src = encode_line_source_malloc(start->token_string,
-                                        (int) (end->token_string - start->token_string) + end->length);
-        result = mprintf("   .src %d:%d=\"%s\"\n", start->line + 1, start->column + 1, src);
-        free(src);
+        if (!source_span_is_emit_safe(start->token_string, end->token_string + end->length - 1)) {
+            result = malloc(1);
+            result[0] = 0;
+        } else {
+            src = encode_line_source_malloc(start->token_string,
+                                            (int) (end->token_string - start->token_string) + end->length);
+            result = mprintf("   .src %d:%d=\"%s\"\n", start->line + 1, start->column + 1, src);
+            free(src);
+        }
     }
     return result;
 }

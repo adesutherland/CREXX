@@ -73,6 +73,7 @@ void print_output(FILE* file, OutputFragment* existing);
 
 char* get_metaline(ASTNode *node);
 char* get_reporting_metalines(ASTNode *node);
+void reset_metaline_source_file(const char *file_name);
 char* get_metaline_range(ASTNode *from, ASTNode *to);
 char* get_metaline_between(ASTNode *from, ASTNode *to);
 char* get_metaline_token_after(ASTNode *node);

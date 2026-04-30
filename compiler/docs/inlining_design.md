@@ -338,6 +338,39 @@ validated AST. Source language, source file, and original text can remain as
 debug/provenance fields, but they must not be required to reconstruct or prove
 an inline body.
 
+The next format should be understood as "AST plus semantic metadata", not just
+"more AST node types". The AST records describe what tree to clone. The
+metadata records describe what that cloned tree means after it is imported into
+another compile context. This distinction matters for source locations,
+residual function calls, member/factory calls, class contracts, and any later
+debugging or tooling use.
+
+The constant pool is the right long-term carrier for this data. `rxas` already
+turns `.srcfile`, `.src`, and `.meta` directives into linked metadata records,
+and `rxlink` already rewrites, preserves, and strips those records by kind.
+Inline metadata should extend that path rather than introduce a separate binary
+side channel. The current `META_FUNC.inliner` string is still a useful
+bootstrap attachment point, but once the payload grows beyond a compact string
+it can move to a first-class metadata record while `META_FUNC` keeps the
+callable signature and an inline-body reference.
+
+Existing source metadata can be leveraged, but not by reverse-mapping old
+instruction addresses. `META_SRC` and `META_FILE` are address-stamped after
+assembly; an imported inline body is re-emitted at new addresses in a different
+caller. The portable unit is therefore the AST source anchor:
+
+- source file identity
+- line and column
+- source text/span used for the `.src` payload
+- source provenance, such as exact, inherited, synthetic, composite, or stripped
+
+When an inline body is imported, the reader should restore those source anchors
+onto the reconstructed AST. Normal code emission can then emit fresh `.srcfile`
+and `.src` directives at the new instruction addresses, and `rxas` can continue
+to populate the constant pool through its existing metadata machinery. This
+keeps panic reports, tracing, and debugging tied to the original inlined source
+without treating old instruction addresses as stable.
+
 Cross-file inlining must remain subset-based. The exported subset may grow over
 time, but the first rule is that a scenario which cannot be proved safe locally
 must not become eligible merely because the callee came from another file. The
@@ -397,9 +430,12 @@ the target use.
 
 A compact text form is used for the first implementation slice. It is versioned
 and structured as a preorder tree walk with explicit scope and symbol records.
-It is not JSON and it is not raw source text. The active version is `I3` and is
-stored in the existing `META_FUNC.inliner` string. The importer still accepts
-`I1` and `I2` payloads for compatibility with the earlier body-only prototypes.
+It is not JSON and it is not raw source text. The active version is `I4` and is
+stored in the existing `META_FUNC.inliner` string for the proof implementation.
+Earlier `I1`, `I2`, and `I3` payloads were internal prototypes; none of the
+inline formats has been released, and the development team can rebuild all
+source artifacts. Backward compatibility with these prototype inline payloads
+is therefore not required.
 
 ```text
 I3
@@ -436,6 +472,46 @@ and type signatures but not default-expression ASTs for optional formals. The
 `b` section contains the callable `INSTRUCTIONS` body. Dimension lists use
 colon-separated integers, and `-` means absent or zero-dimensional.
 
+The `I4` proof format keeps the same compact stream style but promotes the
+side tables into first-class semantic sections:
+
+```text
+I4
+;f,<file-id>,<hex-source-file-name>
+;u,<source-id>,<file-id|-1>,<line>,<column>,<SourceProvenance>,<hex-source-text>
+;q,<scope-id>,<parent-scope-id|-1>,<ScopeType>
+;s,<symbol-id>,<scope-id>,<hex-name>,<SymbolKind>,<ValueType>,<dims>,<dim-base-list>,<dim-elements-list>,<hex-class>,<flags>,<register-type>,<register-number>
+;d,<dep-id>,<kind>,<hex-qualified-name>,<hex-return-type>,<hex-args>,<flags>
+;a
+;>,<scope-id>,<source-id|-1>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<value-base-list>,<value-elements-list>,<target-base-list>,<target-elements-list>,<hex-value-class>,<hex-target-class>,<flags>,<symbol-id|-1>,<dep-id|-1>,<symbol-read>,<symbol-write>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
+;<
+;b
+;>,<scope-id>,<source-id|-1>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<value-base-list>,<value-elements-list>,<target-base-list>,<target-elements-list>,<hex-value-class>,<hex-target-class>,<flags>,<symbol-id|-1>,<dep-id|-1>,<symbol-read>,<symbol-write>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
+;<
+```
+
+The source table is deliberately separate from node records so repeated source
+anchors and file names deduplicate naturally. The dependency table is the
+starting point for residual direct calls: a `FUNCTION` node can refer to a
+resolved callable dependency instead of relying on the caller's lexical lookup.
+The reader must resolve that dependency back to the same fully-qualified
+callable/signature or fail closed.
+
+The source-anchor proof deliberately serializes only safe source spans: short
+text spans with a valid start/end order and no embedded NUL bytes. Unsafe or
+oversized spans are omitted from the inline payload and the reader treats the
+affected node as having no portable source anchor. The emitter also refuses to
+write invalid or pathological source spans as `.src` directives. This keeps the
+proof robust while still preserving the useful debugger/tracing case: ordinary
+callee source lines from imported inline bodies are re-emitted at the caller's
+new instruction addresses with the original `.srcfile`.
+
+Member and factory dependencies should use the same table idea later, but their
+dependency records need richer proof data: owner class or interface identity,
+member kind, selector or `match` contract, receiver requirements, and any class
+layout facts needed to prove attribute access. They should not be unlocked just
+because direct function dependencies have become safe.
+
 Scope id `0` is the imported procedure scope. Additional `q` records currently
 describe local child scopes only; the node flags mark the node that owns each
 scope so the normal clone path can duplicate scoped locals instead of flattening
@@ -452,6 +528,9 @@ The first reader/writer subset is intentionally narrow:
   plain procedures
 - optional/default formal argument trees are transported so omitted-actual
   binding works for binary imports as well as source imports
+- non-aliasing raw `ASSEMBLER` nodes are transported as ordinary AST nodes.
+  The writer and reader still reject aliasing assembler such as `link`,
+  `linkattr*`, `linktoattr*`, and `unlink`.
 - simple `IF` and simple loop control flow is supported for multi-return
   procedures, including `IF ... THEN DO ... END`, counted `DO`, and
   `DO WHILE` / `DO UNTIL` blocks with local temporaries. `LEAVE` and
@@ -504,6 +583,43 @@ Required contents as the cross-file subset grows:
 - source anchors where available, with a clear flag for synthetic or stripped
   source
 - a dependency list for any nested calls that remain as calls after inlining
+
+Initial proof implementation:
+
+1. Introduce an `I4` reader/writer while keeping the same
+   `META_FUNC.inliner` attachment point for the proof. Because no inline-body
+   format has been released, the implementation may remove old `I1`/`I2`/`I3`
+   compatibility once the tests and generated fixtures have moved to `I4`.
+2. Add `f` and `u` source-anchor sections and a per-node `source-id` field.
+   The proof should restore `file_name`, line, column, source provenance, and
+   source text/span for imported inline templates.
+3. Teach emission to handle source-file changes inside inlined code by emitting
+   the appropriate `.srcfile` before `.src` when an inlined node's source file
+   differs from the currently active emitted source file.
+4. Validate with one small exported BIF that already inlines today, such as a
+   non-aliasing assembler helper or `length`, and assert that optimized caller
+   RXAS contains meaningful callee `.src` text rather than empty source
+   markers.
+5. Run focused cross-file binary/source inline tests, then the full compiler
+   test suite. If source anchors are correct and no existing panic/debug
+   metadata regresses, treat the source-anchor proof as accepted.
+6. Only after that proof should the format grow the next table. The likely next
+   table is `d` for residual direct `FUNCTION`/`CALL` dependencies. Member and
+   factory dependencies should remain a later step because they need richer
+   class/interface proof metadata.
+
+Before replacing the proof attachment with first-class `META_INLINE`, assess
+the existing rxbin constant-pool compression path. `rxas` and binutils already
+compress the constant pool in the durable binary format, so an inline payload
+stored as a normal metadata-referenced pool entry may already get the right
+space behaviour without inventing a second binary packing layer. Any additional
+packing should be justified by measured size, validation, or round-trip needs,
+not by assumption.
+
+The expansion rule is intentionally stepwise: add one metadata table or one
+node-family capability, prove it locally and cross-file, update diagnostics and
+goldens, then move to the next gate. A payload that is richer than the reader
+can fully prove should still fail closed.
 
 Import behaviour:
 
@@ -582,10 +698,16 @@ The implementation now covers:
 - receiver copyback for direct-receiver mutating method calls in statement, simple assignment, and supported single-consumer expression rewrites
 - factory object initialization for inlined class factories
 - conservative emission-time pruning of private local plain procedures once no surviving local call node still targets them
+- source, RXAS, and binary imported plain procedures when the imported module
+  carries compatible `I4` inline metadata
+- cross-file transport of non-aliasing raw `ASSEMBLER` statements, so helpers
+  built on instructions such as `strlen` can export and inline
 
 The implementation still excludes:
 
-- imported callees
+- imported callees that have no compatible inline-body payload
+- binary-imported member bodies until class-layout contract metadata is rich
+  enough to prove arbitrary runtime-library getters/setters
 - procedures with procedure-level `expose` clauses
 - callables containing raw assembler aliasing statements
 - dynamic-index `.ref` / `expose` vararg access
@@ -610,8 +732,14 @@ The work that was previously fail-closed during broad-cutoff exploration is now 
 The current production stance is:
 
 - keep the 200-node body cutoff for local inlineable callables
-- treat imported callees, unsupported mutating-method receiver copyback shapes, and dynamic-index `.ref` / `expose` vararg access as milestone-boundary exclusions, not temporary hardening gaps
-- keep debug-visible inline rejection and rewrite diagnostics available for future tuning and milestone work
+- treat imported callees without compatible payloads, unsupported
+  mutating-method receiver copyback shapes, and dynamic-index `.ref` /
+  `expose` vararg access as milestone-boundary exclusions, not temporary
+  hardening gaps
+- keep debug-visible inline rejection and rewrite diagnostics available for
+  future tuning and milestone work. `-d2` and higher also emit
+  `DEBUG_INLINE_EXPORT` reasons when a callable does not receive exported
+  inline metadata.
 
 Validation for the current cutoff and supported slice:
 
@@ -787,7 +915,7 @@ For validation purposes, any inline rewrite that changes whether a caller variab
 ### Next Phase
 The next meaningful extensions are now milestone-driven rather than milestone-1 cleanup work:
 
-- imported callees
+- broader cross-file coverage for remaining local-safe bodies
 - broader receiver copyback for mutating methods whose receiver is not a direct symbol
 - any later reconsideration of dynamic `.ref` / `expose` vararg indexing
 
@@ -798,9 +926,9 @@ Recommended order from the April 2026 review:
    auditable.
 2. Implement one remaining local fail-closed capability gap, chosen by semantic
    risk rather than diagnostic frequency.
-3. Design and prototype cross-file inline-body export/import as a separate
-   milestone. Do not start it by threading special cases through the current
-   local selector.
+3. Extend cross-file inline-body export/import only for cases already proved
+   locally. Do not thread special imported-only cases through the current
+   selector.
 
 Outside milestone 2 and 3, the remaining exclusions now split cleanly into:
 
@@ -814,7 +942,9 @@ Outside milestone 2 and 3, the remaining exclusions now split cleanly into:
 The local inlining design should be considered established when:
 
 - the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, `inline_test_nested_call_expr`, `inline_test_ref_opt`, `inline_test_ref_indexed`, `inline_test_ref_stem`, and `inline_test_class_methods` using the supported strategies
-- excluded cases such as large procedures, imported callees, and mutating method expression calls remain uninlined under optimisation
+- excluded cases such as large procedures, imported callees without compatible
+  payloads, and unsupported mutating method expression calls remain uninlined
+  under optimisation
 - unsupported by-reference/short-circuit combinations such as those in `inline_test_ref_negative` remain uninlined under optimisation
 - the resulting AST is structurally valid under `-dp`
 - optimised codegen succeeds
@@ -822,7 +952,8 @@ The local inlining design should be considered established when:
 
 ## Non-Goals For The Current Design Boundary
 
-- imported callees
+- arbitrary imported callees without compatible inline-body metadata
+- imported member bodies from binary-only class metadata
 - mutating methods in expression position until receiver copyback can be emitted before `LEAVE_WITH`
 - aggressive pruning of fully inlined procedures
 - claiming fully generic scope/symbol cloning before it is proven

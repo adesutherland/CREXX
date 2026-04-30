@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : arg_semantics_scalar.rexx
- * BUILT                  : 2026-04-29 14:21:08
+ * BUILT                  : 2026-04-29 21:59:27
  */
 
 .srcfile="arg_semantics_scalar.rexx"
@@ -121,7 +121,7 @@ readText() .locals=2
    ret r1
    .meta "arg_semantics_scalar.readtext.text"
 
-shoutText() .locals=3
+shoutText() .locals=4
    .meta "arg_semantics_scalar.shouttext"="b" ".string" shoutText() "text=.string" ""
    .src 37:1="shoutText: procedure = .string"
    setnumdgts 18
@@ -139,13 +139,17 @@ l103c:
    swap r0,a1
 l103d:
    .src 39:3="text = upper(text)"
-   load r1,1
-   swap r2,r0
-   call r2,rxfnsb.upper(),r1
-   swap r0,r2
+   .srcfile="upper.rexx"
+   .src 9:3="newstr=\"\""
+   load r1,""
+   .src 10:13="strupper newstr,string"
+   strupper r1,r0
+   .srcfile="arg_semantics_scalar.rexx"
+   .src 10:35=""
+   copy r0,r1
    .src 40:3="return text || \":local\""
-   concat r2,r0,":local"
-   ret r2
+   concat r3,r0,":local"
+   ret r3
    .meta "arg_semantics_scalar.shouttext.text"
 
 /* Imported Declaration from file: upper@library.rxbin */

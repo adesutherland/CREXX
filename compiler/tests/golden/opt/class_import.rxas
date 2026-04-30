@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : class_import_main.rexx
- * BUILT                  : 2026-04-29 19:31:10
+ * BUILT                  : 2026-04-29 21:59:27
  */
 
 .srcfile="class_import_main.rexx"
@@ -24,11 +24,13 @@ main() .locals=5
    swap r3,r0
    call r4,§class_import_lib.counter.inc(),r2
    swap r0,r3
+   .srcfile="class_import_main.rexx"
    .src 7:1="say c.value"
    .src 7:5="c"
    .src 7:5="c"
    copy r1,r0
-   .src 7:6=""
+   .srcfile="class_import_lib.rexx"
+   .src 17:5="return val"
    linkattr1 r3,r1,1
    icopy r2,r3
    acopy r2,r3

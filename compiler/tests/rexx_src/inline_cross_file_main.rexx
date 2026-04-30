@@ -23,4 +23,5 @@ main: procedure
   say x
   say optAdd()
   say optAdd(3)
+  say safeLength("abcdef")
   return

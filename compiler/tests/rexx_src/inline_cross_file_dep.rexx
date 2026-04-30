@@ -1,5 +1,5 @@
 options levelb
-namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd box
+namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength aliasBlocked box
 
 inc: procedure = .int
   arg value = .int
@@ -64,6 +64,18 @@ refBump: procedure = .int
 optAdd: procedure = .int
   arg ?a = 10, ?b = 5
   return a + b
+
+safeLength: procedure = .int
+  arg value = .string
+  result = .int
+  assembler strlen result,value
+  return result
+
+aliasBlocked: procedure = .int
+  value = .int
+  value = 7
+  assembler unlink value
+  return value
 
 box: class
   name = .string

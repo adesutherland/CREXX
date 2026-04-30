@@ -1251,5 +1251,6 @@ void emit(Context *context, FILE *output) {
 
     ast_wlkr(context->ast, register_walker, (void *) &payload);
 
+    reset_metaline_source_file(context->file_name);
     ast_wlkr(context->ast, emit_walker, (void *) &payload);
 }
