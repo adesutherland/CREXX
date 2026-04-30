@@ -24,4 +24,6 @@ main: procedure
   say optAdd()
   say optAdd(3)
   say safeLength("abcdef")
+  say vargTotal(4, 5, 6)
+  say vargPick(2, 7, 9, 11)
   return

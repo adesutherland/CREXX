@@ -433,28 +433,30 @@ must not be marked as an inline-consumable body unless the writer-side gates say
 it is structurally inlineable and the reader-side call-site gates also accept
 the target use.
 
-A compact text form is used for the first implementation slice. It is versioned
-and structured as a preorder tree walk with explicit scope and symbol records.
-It is not JSON and it is not raw source text. The active version is `I4`. The
-`I1`, `I2`, `I3`, and `META_FUNC.inliner` variants were internal prototypes;
-none of the inline formats has been released, and the development team can
-rebuild all source artifacts. Backward compatibility with these prototype
-inline payloads is therefore not required.
+A compact text form is used for the implementation slice. It is versioned and
+structured as a preorder tree walk with explicit file, source, scope, symbol,
+argument, and body records. It is not JSON and it is not raw source text. The
+active version is `I4`. The `I1`, `I2`, `I3`, and `META_FUNC.inliner` variants
+were internal prototypes; none of the inline formats has been released, and the
+development team can rebuild all source artifacts. Backward compatibility with
+these prototype inline payloads is therefore not required.
+
+`I4` uses semicolon-separated records. Text fields are hex encoded so the
+payload remains safe inside an RXAS quoted metadata string without carrying an
+escaping sub-language. Dimension lists use colon-separated integers, and `-`
+means absent or zero-dimensional.
 
 ```text
-I3
+I4
+;f,<file-id>,<hex-source-file-name>
+;u,<source-id>,<file-id|-1>,<line>,<column>,<SourceProvenance>,<hex-source-text>
 ;q,<scope-id>,<parent-scope-id|-1>,<ScopeType>
-;s,<id>,<scope-id>,<hex-name>,<ValueType>,<dims>,<dim-base-list>,<dim-elements-list>,<hex-class>,<flags>,<register-type>,<register-number>
+;s,<symbol-id>,<scope-id>,<hex-name>,<SymbolKind>,<ValueType>,<dims>,<dim-base-list>,<dim-elements-list>,<hex-class>,<flags>,<register-type>,<register-number>
 ;a
-;>,<scope-id>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<value-base-list>,<value-elements-list>,<target-base-list>,<target-elements-list>,<hex-value-class>,<hex-target-class>,<flags>,<symbol-id|-1>,<symbol-read>,<symbol-write>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
-;>
-...
+;>,<scope-id>,<source-id|-1>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<value-base-list>,<value-elements-list>,<target-base-list>,<target-elements-list>,<hex-value-class>,<hex-target-class>,<flags>,<symbol-id|-1>,<reserved-dependency-id|-1>,<symbol-read>,<symbol-write>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
 ;<
 ;b
-;>,<scope-id>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<value-base-list>,<value-elements-list>,<target-base-list>,<target-elements-list>,<hex-value-class>,<hex-target-class>,<flags>,<symbol-id|-1>,<symbol-read>,<symbol-write>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
-;>
-...
-;<
+;>,<scope-id>,<source-id|-1>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<value-base-list>,<value-elements-list>,<target-base-list>,<target-elements-list>,<hex-value-class>,<hex-target-class>,<flags>,<symbol-id|-1>,<reserved-dependency-id|-1>,<symbol-read>,<symbol-write>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
 ;<
 ```
 
@@ -466,40 +468,24 @@ imported member bodies, where the method body must still address the owning
 object's attribute slot after the template is reconstructed. Node records also
 carry the original symbol-node read/write usage; this is semantically important
 for nodes such as loop `BY`, where the node is not a `VAR_TARGET` but still
-writes the loop control variable. Text fields are hex encoded so the payload
-remains safe inside an RXAS quoted metadata string without carrying an escaping
-sub-language.
+writes the loop control variable.
 
 The `a` section contains the callable `ARGS` tree. Carrying that tree is
 required for binary imports because ordinary function metadata captures arity
 and type signatures but not default-expression ASTs for optional formals. The
-`b` section contains the callable `INSTRUCTIONS` body. Dimension lists use
-colon-separated integers, and `-` means absent or zero-dimensional.
-
-The `I4` proof format keeps the same compact stream style but promotes the
-side tables into first-class semantic sections:
-
-```text
-I4
-;f,<file-id>,<hex-source-file-name>
-;u,<source-id>,<file-id|-1>,<line>,<column>,<SourceProvenance>,<hex-source-text>
-;q,<scope-id>,<parent-scope-id|-1>,<ScopeType>
-;s,<symbol-id>,<scope-id>,<hex-name>,<SymbolKind>,<ValueType>,<dims>,<dim-base-list>,<dim-elements-list>,<hex-class>,<flags>,<register-type>,<register-number>
-;d,<dep-id>,<kind>,<hex-qualified-name>,<hex-return-type>,<hex-args>,<flags>
-;a
-;>,<scope-id>,<source-id|-1>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<value-base-list>,<value-elements-list>,<target-base-list>,<target-elements-list>,<hex-value-class>,<hex-target-class>,<flags>,<symbol-id|-1>,<dep-id|-1>,<symbol-read>,<symbol-write>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
-;<
-;b
-;>,<scope-id>,<source-id|-1>,<NodeType>,<value-type>,<target-type>,<value-dims>,<target-dims>,<value-base-list>,<value-elements-list>,<target-base-list>,<target-elements-list>,<hex-value-class>,<hex-target-class>,<flags>,<symbol-id|-1>,<dep-id|-1>,<symbol-read>,<symbol-write>,<int>,<bool>,<float>,<hex-node-string>,<hex-decimal>
-;<
-```
+`b` section contains the callable `INSTRUCTIONS` body.
 
 The source table is deliberately separate from node records so repeated source
-anchors and file names deduplicate naturally. The dependency table is the
-starting point for residual direct calls: a `FUNCTION` node can refer to a
-resolved callable dependency instead of relying on the caller's lexical lookup.
-The reader must resolve that dependency back to the same fully-qualified
-callable/signature or fail closed.
+anchors and file names deduplicate naturally. Callable namespace identity is
+not stored as a scope table entry; it is carried by the metadata key
+(`.meta "fully.qualified.callable"=".inline" ...`) and the ordinary callable
+signature metadata.
+
+The node dependency field is reserved for a later residual-call table. The
+current writer always emits `-1`, and the current reader rejects any other
+value. That fail-closed rule prevents accidental acceptance of dependency
+payloads before the dependency-list format and reader-side resolution rules are
+implemented.
 
 The source-anchor proof deliberately serializes only safe source spans: short
 text spans with a valid start/end order and no embedded NUL bytes. Unsafe or
@@ -510,8 +496,11 @@ proof robust while still preserving the useful debugger/tracing case: ordinary
 callee source lines from imported inline bodies are re-emitted at the caller's
 new instruction addresses with the original `.srcfile`.
 
-Member and factory dependencies should use the same table idea later, but their
-dependency records need richer proof data: owner class or interface identity,
+Residual direct-call dependencies should use a dependency table later: a
+`FUNCTION` node could then refer to a resolved callable dependency instead of
+relying on the caller's lexical lookup. The reader must resolve that dependency
+back to the same fully-qualified callable/signature or fail closed. Member and
+factory dependencies need richer proof data: owner class or interface identity,
 member kind, selector or `match` contract, receiver requirements, and any class
 layout facts needed to prove attribute access. They should not be unlocked just
 because direct function dependencies have become safe.
@@ -528,10 +517,15 @@ The first reader/writer subset is intentionally narrow:
   from source contract metadata and whose receiver is a direct symbol at the
   call site
 - local methods and factories, including simple scalar getters and setters
+- RXAS/RXDAS transport of eligible class method metadata for round-trip
+  coverage, even though binary-imported member bodies are not consumed yet
 - scalar, array-shaped, binary, and object-class shapes are transported for
   plain procedures
 - optional/default formal argument trees are transported so omitted-actual
   binding works for binary imports as well as source imports
+- by-value trailing varargs are transported, including `arg[]`, constant and
+  dynamic `arg(n)`, and existence/value nodes that are already proven safe by
+  the local inliner
 - non-aliasing raw `ASSEMBLER` nodes are transported as ordinary AST nodes.
   The writer and reader still reject aliasing assembler such as `link`,
   `linkattr*`, `linktoattr*`, and `unlink`.
@@ -544,7 +538,8 @@ The first reader/writer subset is intentionally narrow:
   associations, class/interface dispatch, imported factory bodies, binary-imported
   member bodies, and remaining nested calls are not exported or consumed in
   this first slice
-- simple expression/assignment/return/say nodes and ordinary scalar symbols
+- simple expression/assignment/return/say nodes and ordinary scalar, array,
+  binary, and object symbols
 
 The reader reconstructs a detached compiler template. It does not attach the
 body or its body-local symbols to the imported declaration in the caller AST,
@@ -555,12 +550,14 @@ into accepted call sites like local inline templates.
 Binary, RXAS, and source import paths all feed the same metadata reader for
 plain procedures. Binary and RXAS imports read `META_INLINE`; source imports run
 the same writer while scanning exposed dependency procedures and store the
-result in the import registry alongside the signature. Imported member-body
-templates are currently attached only for source contracts. Binary class
-contract metadata does not yet preserve enough class layout information to
-prove arbitrary runtime-library getters/setters safe, so binary-imported
-methods and factories deliberately remain normal calls until that metadata
-grows.
+result in the import registry alongside the signature. `rxas` and `rxdas`
+round-trip the same `.meta ... ".inline" "I4;..."` spelling, and the binary
+cross-file test deliberately reassembles the RXDAS output before importing it
+so source/RXAS/binary drift is caught. Imported member-body templates are
+currently attached only for source contracts. Binary class contract metadata
+does not yet preserve enough class layout information to prove arbitrary
+runtime-library getters/setters safe, so binary-imported methods and factories
+deliberately remain normal calls until that metadata grows.
 
 Full register allocation state should not be transported:
 register assignment is a downstream compiler concern and must run after import
@@ -588,37 +585,37 @@ Required contents as the cross-file subset grows:
   source
 - a dependency list for any nested calls that remain as calls after inlining
 
-Initial proof implementation:
+Initial implementation status:
 
-1. Introduce an `I4` reader/writer and attach the payload through a first-class
-   `META_INLINE` record. Because no inline-body format has been released, the
-   implementation may remove old `I1`/`I2`/`I3` and `META_FUNC.inliner`
-   compatibility once the tests and generated fixtures have moved to `I4`.
-2. Add `f` and `u` source-anchor sections and a per-node `source-id` field.
-   The proof should restore `file_name`, line, column, source provenance, and
-   source text/span for imported inline templates.
-3. Teach emission to handle source-file changes inside inlined code by emitting
-   the appropriate `.srcfile` before `.src` when an inlined node's source file
+1. `rxc` writes `I4` payloads through first-class `META_INLINE` records.
+   `META_FUNC` remains the callable signature and procedure-reference record.
+2. The writer emits `f` and `u` source-anchor sections plus a per-node
+   `source-id` field. The reader restores `file_name`, line, column, source
+   provenance, and source text/span for imported inline templates.
+3. Emission handles source-file changes inside inlined code by emitting the
+   appropriate `.srcfile` before `.src` when an inlined node's source file
    differs from the currently active emitted source file.
-4. Validate with one small exported BIF that already inlines today, such as a
-   non-aliasing assembler helper or `length`, and assert that optimized caller
-   RXAS contains meaningful callee `.src` text rather than empty source
-   markers.
-5. Run focused cross-file binary/source inline tests, then the full compiler
-   test suite. If source anchors are correct and no existing panic/debug
-   metadata regresses, treat the source-anchor proof as accepted.
-6. Only after that proof should the format grow the next table. The likely next
-   table is `d` for residual direct `FUNCTION`/`CALL` dependencies. Member and
-   factory dependencies should remain a later step because they need richer
-   class/interface proof metadata.
+4. The focused cross-file fixture validates a non-aliasing assembler helper and
+   asserts that optimized caller RXAS contains meaningful callee `.src` text
+   rather than empty source markers.
+5. The same fixture validates source import, RXAS assembly, RXDAS disassembly,
+   reassembly, binary-only import, and runtime output. It covers plain
+   procedures, nested local scopes, early returns, counted and conditional
+   loops, scalar/array/object/binary shapes, optional defaults, by-reference
+   formals, by-value varargs, class method transport, and fail-closed callable
+   signatures for unsupported bodies.
+6. Only after this proof should the format grow the next table. The likely next
+   table is a dependency table for residual direct `FUNCTION`/`CALL`
+   dependencies. Member and factory dependencies should remain a later step
+   because they need richer class/interface proof metadata.
 
 The initial `META_INLINE` implementation deliberately stores the payload as a
 normal string-pool entry referenced by metadata. This assesses the existing
 rxbin constant-pool compression path in production rather than adding a second
 packing scheme prematurely.
 
-Dedicated round-trip coverage is required so the metadata transport does not
-drift between source, RXAS, and binary paths. The harness should prove:
+Dedicated round-trip coverage keeps the metadata transport from drifting
+between source, RXAS, and binary paths. The harness proves:
 
 - `rxc` emits `META_INLINE` for exportable callables and does not put inline
   payloads in `META_FUNC`
@@ -626,6 +623,8 @@ drift between source, RXAS, and binary paths. The harness should prove:
 - `rxdas` emits `META_INLINE` back into the same logical RXAS spelling
 - `rxc` can import the binary metadata and reconstruct the same inlining
   template used by source imports
+- source anchors survive import and are re-emitted as new `.srcfile` / `.src`
+  directives at the caller's instruction addresses
 - unsupported nodes may be transported by the codec only when explicitly
   supported by the writer, and inlining still fails closed at reader/call-site
   gates
@@ -679,8 +678,9 @@ Compatibility gates:
   exporting metadata
 - the reader must independently prove the imported template is usable and the
   specific call site is supported before rewriting
-- exported body dependencies must either be inlined too or remain resolvable
-  as imports in the caller output
+- exported body dependencies must either be inlined before export or, after the
+  future dependency table exists, remain resolvable as imports in the caller
+  output. The current writer fails closed on residual calls.
 
 This design keeps cross-file inlining at the optimiser/inliner level: imports
 produce callable templates, then the existing local inliner machinery does the
@@ -715,6 +715,12 @@ The implementation now covers:
   carries compatible `I4` inline metadata
 - cross-file transport of non-aliasing raw `ASSEMBLER` statements, so helpers
   built on instructions such as `strlen` can export and inline
+- cross-file transport and inlining of by-value vararg plain procedures,
+  including dynamic `arg(n)` reads where the local inliner has already proved
+  the shape safe
+- RXAS/RXDAS round-trip preservation of class method inline metadata, with
+  source-imported getter bodies consumable by the inliner and binary-imported
+  member bodies still deliberately fail-closed
 
 The implementation still excludes:
 

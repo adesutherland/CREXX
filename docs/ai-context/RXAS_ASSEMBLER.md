@@ -69,6 +69,13 @@ remain in `META_FUNC`; inline-body templates are carried separately in
 .meta "fully.qualified.callable"=".inline" "I4;..."
 ```
 
+The `I4` payload is the compiler-owned inline transport described in
+`compiler/docs/inlining_design.md`. `rxas` stores it as `META_INLINE`, and
+`rxdas` must emit it back to the same logical `.meta ... ".inline" "I4;..."`
+spelling so source, RXAS, and binary import paths do not drift. Linked final
+images normally strip `META_INLINE`; library artifacts preserve it for
+downstream `rxc` optimisation.
+
 Metadata-only modules are valid. For example, an interface contract file may
 compile to `.rxas` containing `.meta` records and no function bodies; `rxas`
 must still emit a `.rxbin` so import and runtime factory resolution can load

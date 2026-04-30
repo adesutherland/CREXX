@@ -247,16 +247,18 @@ REGEXREPLACE: PROCEDURE=.string
    ok = REGEXFIND(s, pat, pos)
    do while ok
      call regexfinalizeLen s               /* ensure rxlite_len is valid */
+     match_start = rxlite_start
+     match_len = rxlite_len
 
      rep = __expandRepl(repl, s)           /* <<< expand $0 / $& / $$ */
 
      /* prefix (up to match) + expanded replacement */
-     out = out || substr(s, prev, rxlite_start - prev) || rep
+     out = out || substr(s, prev, match_start - prev) || rep
 
      /* advance */
-     step = max(1, rxlite_len)
-     pos  = rxlite_start + step
-     prev = rxlite_start + rxlite_len
+     step = max(1, match_len)
+     pos  = match_start + step
+     prev = match_start + match_len
 
      ok = REGEXFIND(s, pat, pos)
    end
@@ -281,14 +283,16 @@ REGEXREPLACE_LIMIT: PROCEDURE=.string
   ok = REGEXFIND(s, pat, pos)
   do while ok & (limit = 0 | n < limit)
     call regexfinalizeLen s
+    match_start = rxlite_start
+    match_len = rxlite_len
 
     rep = __expandRepl(repl, s)           /* <<< expand here too */
 
-    out = out || substr(s, prev, rxlite_start - prev) || rep
+    out = out || substr(s, prev, match_start - prev) || rep
 
-    step = max(1, rxlite_len)
-    pos  = rxlite_start + step
-    prev = rxlite_start + rxlite_len
+    step = max(1, match_len)
+    pos  = match_start + step
+    prev = match_start + match_len
 
     n  = n + 1
     ok = REGEXFIND(s, pat, pos)
@@ -388,9 +392,6 @@ __expandRepl: PROCEDURE=.string
   i = 0
   c = ""
   d = ""
-
-  /* finalize length first; rxlite_len may not be set yet */
-  call regexfinalizeLen ''
 
   /* Compute a safe match string m */
   m = ''

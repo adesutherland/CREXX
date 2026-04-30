@@ -4155,6 +4155,10 @@ static int inline_meta_node_is_exportable(ASTNode *node) {
         case OP_TYPE_IS:
         case OP_TYPE_CAST:
         case OP_TYPEOF:
+        case OP_ARGS:
+        case OP_ARG_VALUE:
+        case OP_ARG_EXISTS:
+        case OP_ARG_IX_EXISTS:
             return 1;
         case ASSEMBLER:
             return !inline_assembler_has_unsupported_aliasing(node);
@@ -4825,6 +4829,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 
     memset(&check, 0, sizeof(check));
     check.root_proc = callable;
+    check.ref_varg_mode = args && inline_find_varg_arg(callable) && inline_find_varg_arg(callable)->is_ref_arg;
     ast_wlkr(callable, inlinable_check_walker, &check);
     if (check.node_count > INLINE_MAX_NODES) {
         inline_export_debug_reject(context,
@@ -5342,6 +5347,7 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     char *target_class;
     long symbol_id;
     long source_id;
+    long dependency_id;
     unsigned int symbol_read_usage;
     unsigned int symbol_write_usage;
     unsigned int flags;
@@ -5398,6 +5404,11 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
          !target_elements_field || !value_class_field || !target_class_field ||
          !symbol_read_field || !symbol_write_field)) {
         return 0;
+    }
+    dependency_id = -1;
+    if (meta->version >= 4) {
+        dependency_id = strtol(dependency_field, NULL, 10);
+        if (dependency_id != -1) return 0;
     }
 
     scope_id = 0;

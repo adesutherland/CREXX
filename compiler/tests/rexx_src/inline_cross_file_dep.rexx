@@ -1,5 +1,5 @@
 options levelb
-namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength aliasBlocked box
+namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength vargTotal vargPick refVargDynamicBlocked residualCallBlocked memberCallBlocked aliasBlocked box
 
 inc: procedure = .int
   arg value = .int
@@ -76,6 +76,26 @@ aliasBlocked: procedure = .int
   value = 7
   assembler unlink value
   return value
+
+vargTotal: procedure = .int
+  arg base = .int, ... = .int
+  return base + arg[] + arg[2]
+
+vargPick: procedure = .int
+  arg which = .int, ... = .int
+  return arg(which)
+
+refVargDynamicBlocked: procedure = .int
+  arg which = .int, expose ... = .int
+  return arg[which]
+
+residualCallBlocked: procedure = .int
+  arg value = .int
+  return inc(value) + 1
+
+memberCallBlocked: procedure = .string
+  arg value = .inline_cross_file_dep..box
+  return "box:" || value.getName()
 
 box: class
   name = .string
