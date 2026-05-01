@@ -827,6 +827,141 @@ test56end:
     say r4
 test57end:
 
+    /* Test decimal literal operand aliases do not clobber source registers */
+    say ""
+    sayx "Test 58 (decimal literal source/result alias)"
+    inc r2
+    setnumdgts 20
+
+    load r3,100d
+    dadd r3,r3,1d
+    dtos r3
+    seq r0,r3,"101"
+    brt test58sub_rrd,r0
+    inc r1
+    sayx " - failed dadd r,r,d "
+    say r3
+test58sub_rrd:
+    load r3,100d
+    dsub r3,r3,1d
+    dtos r3
+    seq r0,r3,"99"
+    brt test58sub_drr,r0
+    inc r1
+    sayx " - failed dsub r,r,d "
+    say r3
+test58sub_drr:
+    load r3,1d
+    dsub r3,100d,r3
+    dtos r3
+    seq r0,r3,"99"
+    brt test58mult_rrd,r0
+    inc r1
+    sayx " - failed dsub r,d,r "
+    say r3
+test58mult_rrd:
+    load r3,100d
+    dmult r3,r3,2d
+    dtos r3
+    seq r0,r3,"200"
+    brt test58div_rrd,r0
+    inc r1
+    sayx " - failed dmult r,r,d "
+    say r3
+test58div_rrd:
+    load r3,100d
+    ddiv r3,r3,4d
+    dtos r3
+    seq r0,r3,"25"
+    brt test58div_drr,r0
+    inc r1
+    sayx " - failed ddiv r,r,d "
+    say r3
+test58div_drr:
+    load r3,4d
+    ddiv r3,100d,r3
+    dtos r3
+    seq r0,r3,"25"
+    brt test58idiv_rrd,r0
+    inc r1
+    sayx " - failed ddiv r,d,r "
+    say r3
+test58idiv_rrd:
+    load r3,100d
+    didiv r3,r3,4d
+    dtos r3
+    seq r0,r3,"25"
+    brt test58idiv_drr,r0
+    inc r1
+    sayx " - failed didiv r,r,d "
+    say r3
+test58idiv_drr:
+    load r3,4d
+    didiv r3,100d,r3
+    dtos r3
+    seq r0,r3,"25"
+    brt test58mod_rrd,r0
+    inc r1
+    sayx " - failed didiv r,d,r "
+    say r3
+test58mod_rrd:
+    load r3,101d
+    dmod r3,r3,4d
+    dtos r3
+    seq r0,r3,"1"
+    brt test58mod_drr,r0
+    inc r1
+    sayx " - failed dmod r,r,d "
+    say r3
+test58mod_drr:
+    load r3,4d
+    dmod r3,101d,r3
+    dtos r3
+    seq r0,r3,"1"
+    brt test58mod_rrr_left,r0
+    inc r1
+    sayx " - failed dmod r,d,r "
+    say r3
+test58mod_rrr_left:
+    load r3,101d
+    load r4,4d
+    dmod r3,r3,r4
+    dtos r3
+    seq r0,r3,"1"
+    brt test58mod_rrr_right,r0
+    inc r1
+    sayx " - failed dmod r,r,r left alias "
+    say r3
+test58mod_rrr_right:
+    load r3,101d
+    load r4,4d
+    dmod r4,r3,r4
+    dtos r4
+    seq r0,r4,"1"
+    brt test58pow_rrd,r0
+    inc r1
+    sayx " - failed dmod r,r,r right alias "
+    say r4
+test58pow_rrd:
+    load r3,2d
+    dpow r3,r3,3d
+    dtos r3
+    seq r0,r3,"8"
+    brt test58pow_drr,r0
+    inc r1
+    sayx " - failed dpow r,r,d "
+    say r3
+test58pow_drr:
+    load r3,3d
+    dpow r3,2d,r3
+    dtos r3
+    seq r0,r3,"8"
+    brt test58end,r0
+    inc r1
+    sayx " - failed dpow r,d,r "
+    say r3
+test58end:
+
    /* Print and return results */
    say ""
    sayx "Tests Run: "

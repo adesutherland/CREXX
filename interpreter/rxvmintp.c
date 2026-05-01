@@ -77,6 +77,17 @@ int rxvm_link(rxvm_context *ctx);
 /* Misc. Utilities here */
 static string_constant *get_runtime_string_constant(module *mod, size_t offset);
 
+static value *decimal_literal_value(decplugin *decimal, const char *literal) {
+    value *literal_value = value_f();
+    decimal->decimalFromString(decimal, literal_value, literal);
+    return literal_value;
+}
+
+static void free_decimal_literal_value(value *literal_value) {
+    clear_value(literal_value);
+    free(literal_value);
+}
+
 static char *build_runtime_member_name(const char *class_name, size_t class_name_length,
                                        const char *member_name, size_t member_name_length) {
     char *proc_name;
@@ -3565,9 +3576,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     START_INSTRUCTION(DADD_REG_REG_DECIMAL)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DADD R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
-    // Convert the string to a decimal
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
-    current_frame->decimal->decimalAdd(current_frame->decimal, op1R, op2R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalAdd(current_frame->decimal, op1R, op2R, op);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3587,8 +3600,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     START_INSTRUCTION(DSUB_REG_REG_DECIMAL)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DSUB R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
-    current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, op);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3598,8 +3614,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     START_INSTRUCTION(DSUB_REG_DECIMAL_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DSUB R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
-    current_frame->decimal->decimalSub(current_frame->decimal, op1R, op1R, op3R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op, op3R);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 
@@ -3620,8 +3639,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     START_INSTRUCTION(DMULT_REG_REG_DECIMAL)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DMULT R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
-    current_frame->decimal->decimalMul(current_frame->decimal, op1R, op2R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalMul(current_frame->decimal, op1R, op2R, op);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3641,8 +3663,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     START_INSTRUCTION(DDIV_REG_DECIMAL_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DDIV R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
-    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op1R, op3R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
+        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op, op3R);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3652,8 +3677,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     START_INSTRUCTION(DDIV_REG_REG_DECIMAL)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DDIV R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
-    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3675,10 +3703,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     START_INSTRUCTION(DIDIV_REG_DECIMAL_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIDIV R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
-    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op1R, op3R);
-    // Note: This is integer division, so the result is truncated
-    current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
+        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op, op3R);
+        // Note: This is integer division, so the result is truncated
+        current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3688,10 +3719,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     START_INSTRUCTION(DIDIV_REG_REG_DECIMAL)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIDIV R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
-    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op1R);
-    // Note: This is integer division, so the result is truncated
-    current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op);
+        // Note: This is integer division, so the result is truncated
+        current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3953,8 +3987,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     START_INSTRUCTION(DPOW_REG_REG_DECIMAL)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DPOW R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
-    current_frame->decimal->decimalPow(current_frame->decimal, op1R, op2R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalPow(current_frame->decimal, op1R, op2R, op);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3964,8 +4001,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     START_INSTRUCTION(DPOW_REG_DECIMAL_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DPOW R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
-    current_frame->decimal->decimalPow(current_frame->decimal, op1R, op1R, op3R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
+        current_frame->decimal->decimalPow(current_frame->decimal, op1R, op, op3R);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -5705,17 +5745,18 @@ START_INSTRUCTION(FMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(DMOD_REG_REG_DECIMAL) CALC_DISPATCH(3)
     DEBUG("TRACE - DMOD R%d,R%d,%s\n", (int)REG_IDX(1), (int)REG_IDX(2), op3S->string);
     {
-        value* op = value_f();
-        current_frame->decimal->decimalFromString(current_frame->decimal, op, op3S->string);
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        value *work = value_f();
         // First, Calculate the decimal division (truncated)
-        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op);
-        current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+        current_frame->decimal->decimalDiv(current_frame->decimal, work, op2R, op);
+        current_frame->decimal->decimalTruncate(current_frame->decimal, work, work);
         // Now calculate the remainder
-        current_frame->decimal->decimalMul(current_frame->decimal, op1R, op1R, op);
-        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, op1R);
+        current_frame->decimal->decimalMul(current_frame->decimal, work, work, op);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, work);
         // Clear the temporary value
-        clear_value(op);
-        free(op);
+        clear_value(work);
+        free(work);
+        free_decimal_literal_value(op);
     }
     // Check for errors
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
@@ -5727,17 +5768,18 @@ START_INSTRUCTION(FMOD_REG_REG_REG) CALC_DISPATCH(3)
 START_INSTRUCTION(DMOD_REG_DECIMAL_REG) CALC_DISPATCH(3)
     DEBUG("TRACE - FMOD R%d,%s,R%d\n", (int)REG_IDX(1), op2S->string, (int)REG_IDX(3));
     {
-        value* op = value_f();
-        current_frame->decimal->decimalFromString(current_frame->decimal, op, op2S->string);
+        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
+        value *work = value_f();
         // First, Calculate the decimal division (truncated)
-        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op, op3R);
-        current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+        current_frame->decimal->decimalDiv(current_frame->decimal, work, op, op3R);
+        current_frame->decimal->decimalTruncate(current_frame->decimal, work, work);
         // Now calculate the remainder
-        current_frame->decimal->decimalMul(current_frame->decimal, op1R, op1R, op3R);
-        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op, op1R);
+        current_frame->decimal->decimalMul(current_frame->decimal, work, work, op3R);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op, work);
         // Clear the temporary value
-        clear_value(op);
-        free(op);
+        clear_value(work);
+        free(work);
+        free_decimal_literal_value(op);
     }
     // Check for errors
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
@@ -5748,12 +5790,18 @@ START_INSTRUCTION(DMOD_REG_DECIMAL_REG) CALC_DISPATCH(3)
 */
 START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     DEBUG("TRACE - DMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-    // First, Calculate the decimal division (truncated)
-    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op3R);
-    current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
-    // Now calculate the remainder
-    current_frame->decimal->decimalMul(current_frame->decimal, op1R, op1R, op3R);
-    current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, op1R);
+    {
+        value *work = value_f();
+        // First, Calculate the decimal division (truncated)
+        current_frame->decimal->decimalDiv(current_frame->decimal, work, op2R, op3R);
+        current_frame->decimal->decimalTruncate(current_frame->decimal, work, work);
+        // Now calculate the remainder
+        current_frame->decimal->decimalMul(current_frame->decimal, work, work, op3R);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, work);
+        // Clear the temporary value
+        clear_value(work);
+        free(work);
+    }
     // Check for errors
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
