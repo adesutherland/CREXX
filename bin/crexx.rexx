@@ -435,6 +435,8 @@ do i=1 to words(filenames)
     cc_command = 'gcc -O3 -DNDEBUG'
     socketLibs = ''
     if isWindowsPlatform(platformUpper) then socketLibs = ' -lws2_32'
+    nativeRuntimeLibs = readNativeRuntimeLinkLibs(rxpath, dirsep)
+    if nativeRuntimeLibs <> '' then socketLibs = socketLibs || ' ' || nativeRuntimeLibs
     if isMacPlatform(platformUpper) then
       cc_command = cc_command ' -Wl,-search_paths_first -Wl,-headerpad_max_install_names'
     cc_command = cc_command ' -o 'outputStem
@@ -685,6 +687,14 @@ arg platformName = .string
 platformUpper = translate(platformName)
 if platformUpper = 'WINDOWS' | platformUpper = 'WIN32' | platformUpper = 'WIN64' then return 1
 return 0
+
+readNativeRuntimeLinkLibs: procedure = .string
+arg rxpath = .string, dirsep = .string
+configFile = rxpath || 'bin' || dirsep || 'crexx_native_libs'
+if \fileExists(configFile) then return ''
+line = linein(configFile)
+call lineout configFile
+return strip(line)
 
 fileExists: procedure = .int
 arg filePath = .string

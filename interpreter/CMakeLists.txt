@@ -9,6 +9,7 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is ab
 
 set(CREXX_SOCKET_TARGET_LIBS)
 set(CREXX_SOCKET_MANUAL_LINK_LIBS)
+set(CREXX_NATIVE_RUNTIME_LINK_FLAGS)
 if(WIN32)
     set(CREXX_SOCKET_TARGET_LIBS ws2_32)
     set(CREXX_SOCKET_MANUAL_LINK_LIBS -lws2_32)
@@ -35,6 +36,7 @@ if(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "OPENSSL")
     find_package(OpenSSL REQUIRED)
     list(APPEND CREXX_SOCKET_TARGET_LIBS OpenSSL::SSL OpenSSL::Crypto)
     list(APPEND CREXX_SOCKET_MANUAL_LINK_LIBS ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY})
+    list(APPEND CREXX_NATIVE_RUNTIME_LINK_FLAGS -lssl -lcrypto)
 elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "NETWORK")
     if(NOT APPLE)
         message(FATAL_ERROR "CREXX_ENABLE_TLS=NETWORK is only supported on Apple platforms.")
@@ -50,9 +52,16 @@ elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "NETWORK")
             -framework Network
             -framework Security
             -framework CoreFoundation)
+    list(APPEND CREXX_NATIVE_RUNTIME_LINK_FLAGS
+            -framework Network
+            -framework Security
+            -framework CoreFoundation)
 elseif(NOT CREXX_ENABLE_TLS_NORMALIZED STREQUAL "OFF")
     message(FATAL_ERROR "Unsupported CREXX_ENABLE_TLS value '${CREXX_ENABLE_TLS}'. Use OFF, OPENSSL, or NETWORK.")
 endif()
+string(JOIN " " CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT ${CREXX_NATIVE_RUNTIME_LINK_FLAGS})
+set(CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT "${CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT}"
+        CACHE INTERNAL "Native executable link flags required by the configured VM runtime" FORCE)
 message(STATUS "cREXX VM core socket TLS backend: ${CREXX_ENABLE_TLS_NORMALIZED}")
 
 ##########################################

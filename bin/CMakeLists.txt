@@ -4,6 +4,9 @@ project(driver C)
 
 set(CMAKE_C_STANDARD 90)
 
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+file(WRITE ${CMAKE_BINARY_DIR}/bin/crexx_native_libs "${CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT}\n")
+
 add_custom_command(
         BYPRODUCTS
                 ${CMAKE_CURRENT_BINARY_DIR}/crexx.rxbin
