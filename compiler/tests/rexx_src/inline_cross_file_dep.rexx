@@ -1,5 +1,5 @@
 options levelb
-namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength vargTotal vargPick refVargDynamicBlocked residualCallBlocked memberCallBlocked aliasBlocked box
+namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength vargTotal vargPick residualFunctionDependency residualCallDependency residualCallTarget refVargDynamicBlocked residualCallBlocked memberCallBlocked aliasBlocked box
 
 inc: procedure = .int
   arg value = .int
@@ -85,6 +85,23 @@ vargPick: procedure = .int
   arg which = .int, ... = .int
   return arg(which)
 
+residualFunctionDependency: procedure = .int
+  arg which = .int
+  return vargPick(which, 7, 9, 11) + 1
+
+residualCallDependency: procedure = .void
+  arg value = .int
+  call residualCallTarget(value)
+  return
+
+residualCallTarget: procedure = .void
+  arg value = .int
+  scratch = .int
+  scratch = value
+  assembler unlink scratch
+  say "call:" || scratch
+  return
+
 refVargDynamicBlocked: procedure = .int
   arg which = .int, expose ... = .int
   return arg[which]
@@ -107,3 +124,8 @@ box: class
 
   getName: method = .string
     return name
+
+  setName: method = .void
+    arg next = .string
+    name = next
+    return

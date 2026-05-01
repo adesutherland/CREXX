@@ -752,12 +752,12 @@ static struct imported_class *rximpcl_f(Context* context, char* file_name, char 
     return cls;
 }
 
-static void attach_imported_member_inline_payloads(Context *context, ASTNode *node) {
+static void attach_imported_member_inline_payloads(Context *context, ASTNode *node, int include_factories) {
     ASTNode *child;
 
     if (!context || !node) return;
 
-    if ((node->node_type == METHOD || node->node_type == FACTORY) &&
+    if ((node->node_type == METHOD || (include_factories && node->node_type == FACTORY)) &&
         node->symbolNode &&
         node->symbolNode->symbol) {
         char *fqname = sym_frnm(node->symbolNode->symbol);
@@ -774,7 +774,7 @@ static void attach_imported_member_inline_payloads(Context *context, ASTNode *no
 
     child = node->child;
     while (child) {
-        attach_imported_member_inline_payloads(context, child);
+        attach_imported_member_inline_payloads(context, child, include_factories);
         child = child->sibling;
     }
 }
@@ -816,9 +816,7 @@ static Symbol *load_imported_contract(Context *context, struct imported_class *f
         found_symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
     }
 
-    if (imported_class_has_source_contract(found_cls)) {
-        attach_imported_member_inline_payloads(context, new_stub);
-    }
+    attach_imported_member_inline_payloads(context, new_stub, imported_class_has_source_contract(found_cls));
 
     return found_symbol;
 }
@@ -1954,6 +1952,7 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
         else if (entry->type == META_ATTR) {
             meta_attr_constant *mentry = (meta_attr_constant *) entry;
             char *attr_sym = get_const_string(constant, mentry->symbol);
+            char *type_str = get_const_string(constant, mentry->type);
 
             if (attr_sym) {
                 const char *last_dot = strrchr(attr_sym, '.');
@@ -1963,11 +1962,22 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
 
                     memcpy(owner, attr_sym, owner_len);
                     owner[owner_len] = 0;
-                    agg_find_or_add(&class_aggs, owner, CLASS_DEF);
+                    {
+                        class_meta_agg *agg = agg_find_or_add(&class_aggs, owner, CLASS_DEF);
+                        const char *attr_name = last_dot + 1;
+                        char *ln = mprintf("  %s = %s with register.%d.%s\n",
+                                           attr_name,
+                                           type_str ? type_str : ".object",
+                                           (int)mentry->reg,
+                                           register_view_for_type(type_str));
+                        agg_append_attribute_line(agg, ln);
+                        free(ln);
+                    }
                     free(owner);
                 }
                 free(attr_sym);
             }
+            if (type_str) free(type_str);
             (void)mentry;
         }
         else if (entry->type == META_INTERFACE) {

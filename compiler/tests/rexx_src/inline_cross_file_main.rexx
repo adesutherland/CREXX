@@ -18,6 +18,8 @@ main: procedure
   box = .inline_cross_file_dep..box("seed")
   same = identityBox(box)
   say same.getName()
+  call same.setName("after")
+  say same.getName()
   x = 10
   say refBump(x)
   say x
@@ -26,4 +28,6 @@ main: procedure
   say safeLength("abcdef")
   say vargTotal(4, 5, 6)
   say vargPick(2, 7, 9, 11)
+  say residualFunctionDependency(2)
+  call residualCallDependency(12)
   return

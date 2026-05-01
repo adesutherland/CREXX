@@ -34,6 +34,23 @@ The pipeline of transforming REXX source code into executable bytecode is struct
 4. **Emitter (IR -> Assembly)**
    - AST walkers (e.g., `rxcp_ast_walk.c`, `rxcp_emit_*.c`) traverse the tree.
    - Outputs intermediate string fragments representing the `rxas` Assembly instructions.
+   - The optimiser performs opportunity-based AST inlining before emission. A
+     callable may be structurally available for inlining, but each call site is
+     still validated against the supported rewrite shapes. The release slice
+     uses a 300 AST-node body cutoff as a profitability and metadata-size
+     policy, not as a semantic safety boundary. Unsupported semantic gates
+     still fail closed, including procedure-level `expose`, assembler aliasing,
+     dynamic-index varargs, receiver/copyback shapes without proof, and
+     interface/member dispatch that cannot be proved monomorphic.
+   - Inlining is implemented as AST tree surgery, not textual substitution.
+     The cloned body must preserve callee-local scopes, remap symbols, bind
+     arguments exactly as a real call would, preserve source/debug metadata,
+     and leave the downstream emitter with an ordinary validated tree. This is
+     why new inline cases are opened by specific parent/operand shape instead
+     of by globally deciding that a callable is "always inlineable".
+   - Cross-file inlining uses compiler-owned `META_INLINE` payloads alongside
+     normal callable metadata. Libraries preserve this metadata for downstream
+     `rxc` optimisation; final linked images strip it by default.
 
 5. **Assembler (`rxas`)**
    - Parses the generated `rxas` Assembly instructions.

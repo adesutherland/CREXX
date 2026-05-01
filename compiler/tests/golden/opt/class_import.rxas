@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : class_import_main.rexx
- * BUILT                  : 2026-04-29 21:59:27
+ * BUILT                  : 2026-04-30 20:38:13
  */
 
 .srcfile="class_import_main.rexx"
 .globals=0
 
-main() .locals=5
+main() .locals=7
    .meta "class_import_main.main"="b" ".int" main() ""
    setnumdgts 18
    setnumfuz 0
@@ -15,30 +15,51 @@ main() .locals=5
    setnumcas 1
    setnumstd 1
    .src 5:1="c = .Counter"
-   .meta "class_import_main.main.c"="b" ".counter" r0
-   load r2,0
-   call r0,§class_import_lib.counter.§factory(),r2
+   .srcfile="class_import_lib.rexx"
+   .src 5:3="*:"
+   setattrs r1,2
+   .src 5:3="*:"
+   setobjtype r1,"class_import_lib.counter"
+   .src 9:5="val = 0"
+   load r5,0
+   linkattr1 r4,r1,1
+   icopy r4,r5
+   unlink r4
+   .srcfile="class_import_main.rexx"
+   .src 9:12=""
+   copy r0,r1
    .src 6:1="call c.inc"
-   load r2,1
-   settp r0,1
-   swap r3,r0
-   call r4,§class_import_lib.counter.inc(),r2
-   swap r0,r3
+   .src 6:6="c"
+   copy r2,r0
+   .srcfile="class_import_lib.rexx"
+   .src 13:5="val = val + 1"
+   linkattr1 r4,r2,1
+   iadd r6,r4,1
+   unlink r4
+   linkattr1 r5,r2,1
+   icopy r5,r6
+   unlink r5
+   .srcfile="class_import_main.rexx"
+   .src 6:6="c.inc"
+   copy r0,r2
+   .src 6:6="c.inc"
+   acopy r0,r2
    .srcfile="class_import_main.rexx"
    .src 7:1="say c.value"
+   .meta "class_import_main.main.c"="b" ".counter" r0
    .src 7:5="c"
    .src 7:5="c"
-   copy r1,r0
+   copy r3,r0
    .srcfile="class_import_lib.rexx"
    .src 17:5="return val"
-   linkattr1 r3,r1,1
-   icopy r2,r3
-   acopy r2,r3
-   unlink r3
-   br l58bexprend
-l58bexprend:
-   itos r2
-   say r2
+   linkattr1 r6,r3,1
+   icopy r5,r6
+   acopy r5,r6
+   unlink r6
+   br l107bexprend
+l107bexprend:
+   itos r5
+   say r5
    .src 8:1="return 0"
    ret 0
    .meta "class_import_main.main.c"

@@ -15,7 +15,12 @@
 #include "rxcp_sym.h"
 #include "rxcp_source_tree.h"
 
-#define INLINE_MAX_NODES 200
+/*
+ * Production inlining size policy.  This is a profitability/metadata-size
+ * cutoff, not a semantic safety boundary; semantic gates below still decide
+ * whether a body is safe to inline.
+ */
+#define INLINE_MAX_NODES 300
 #define INLINE_META_MAX_SOURCE_SPAN 512
 
 typedef struct {
@@ -480,6 +485,7 @@ static int inline_is_direct_symbol_actual(ASTNode *node) {
 
 static int inline_symbol_is_class_attribute(Symbol *symbol) {
     return symbol &&
+           symbol->symbol_type == VARIABLE_SYMBOL &&
            symbol->scope &&
            symbol->scope->defining_node &&
            symbol->scope->defining_node->node_type == CLASS_DEF;
@@ -487,6 +493,7 @@ static int inline_symbol_is_class_attribute(Symbol *symbol) {
 
 static int inline_class_attribute_shape_is_portable(Symbol *symbol) {
     if (!inline_symbol_is_class_attribute(symbol)) return 1;
+    if (symbol->is_this || symbol->is_factory) return 1;
     if (symbol->value_dims > 0) return 0;
 
     switch (symbol->type) {
@@ -3805,6 +3812,11 @@ typedef struct {
 } InlineMetaSourceEntry;
 
 typedef struct {
+    Symbol *symbol;
+    size_t id;
+} InlineMetaDependencyEntry;
+
+typedef struct {
     Scope *root_scope;
     InlineMetaScopeEntry *scopes;
     size_t scope_count;
@@ -3814,6 +3826,8 @@ typedef struct {
     size_t file_count;
     InlineMetaSourceEntry *sources;
     size_t source_count;
+    InlineMetaDependencyEntry *dependencies;
+    size_t dependency_count;
 } InlineMetaExport;
 
 typedef struct {
@@ -3829,6 +3843,13 @@ typedef struct {
 } InlineMetaImportedSource;
 
 typedef struct {
+    char *fqname;
+    char *type;
+    char *args;
+    Symbol *symbol;
+} InlineMetaImportedDependency;
+
+typedef struct {
     Symbol **symbols;
     size_t symbol_count;
     Scope **scopes;
@@ -3837,6 +3858,8 @@ typedef struct {
     size_t file_count;
     InlineMetaImportedSource *sources;
     size_t source_count;
+    InlineMetaImportedDependency *dependencies;
+    size_t dependency_count;
     ASTNode **stack;
     size_t stack_count;
     ASTNode *args_root;
@@ -4170,6 +4193,23 @@ static int inline_meta_symbol_is_exportable(Symbol *symbol) {
     return symbol->symbol_type == VARIABLE_SYMBOL || symbol->symbol_type == CONSTANT_SYMBOL;
 }
 
+static ASTNode *inline_meta_direct_dependency_proc(Symbol *symbol) {
+    SymbolNode *defsn;
+
+    if (!symbol || symbol->symbol_type != FUNCTION_SYMBOL || !symbol->exposed) return NULL;
+    if (sym_nond(symbol) <= 0) return NULL;
+
+    defsn = sym_trnd(symbol, 0);
+    if (!defsn || !defsn->node || defsn->node->node_type != PROCEDURE) return NULL;
+
+    return defsn->node;
+}
+
+static int inline_meta_function_uses_direct_dependency(ASTNode *node) {
+    if (!node || node->node_type != FUNCTION || !node->symbolNode || !node->symbolNode->symbol) return 0;
+    return inline_meta_direct_dependency_proc(node->symbolNode->symbol) != NULL;
+}
+
 static int inline_meta_node_is_exportable(ASTNode *node) {
     if (!node) return 1;
     if (node->association &&
@@ -4245,7 +4285,10 @@ static int inline_meta_node_is_exportable(ASTNode *node) {
         case OP_ARG_VALUE:
         case OP_ARG_EXISTS:
         case OP_ARG_IX_EXISTS:
+        case CALL:
             return 1;
+        case FUNCTION:
+            return inline_meta_function_uses_direct_dependency(node);
         case ASSEMBLER:
             return !inline_assembler_has_unsupported_aliasing(node) &&
                    !inline_assembler_has_unsupported_effect(node);
@@ -4508,6 +4551,22 @@ static int inline_meta_find_symbol_id(InlineMetaExport *meta, Symbol *symbol, si
     return 0;
 }
 
+static int inline_meta_find_dependency_id(InlineMetaExport *meta, Symbol *symbol, size_t *id_out) {
+    size_t i;
+
+    if (id_out) *id_out = (size_t)-1;
+    if (!meta || !symbol) return 0;
+
+    for (i = 0; i < meta->dependency_count; i++) {
+        if (meta->dependencies[i].symbol == symbol) {
+            if (id_out) *id_out = meta->dependencies[i].id;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 static int inline_meta_collect_symbol(InlineMetaExport *meta, Symbol *symbol) {
     InlineMetaSymbolEntry *new_symbols;
 
@@ -4526,13 +4585,41 @@ static int inline_meta_collect_symbol(InlineMetaExport *meta, Symbol *symbol) {
     return 1;
 }
 
+static int inline_meta_collect_dependency(InlineMetaExport *meta, ASTNode *node) {
+    InlineMetaDependencyEntry *new_dependencies;
+    Symbol *symbol;
+    ASTNode *dependency_proc;
+
+    if (!meta || !node || node->node_type != FUNCTION || !node->symbolNode) return 0;
+
+    symbol = node->symbolNode->symbol;
+    dependency_proc = inline_meta_direct_dependency_proc(symbol);
+    if (!dependency_proc) return 0;
+    if (meta->root_scope && dependency_proc == meta->root_scope->defining_node) return 0;
+    if (inline_meta_find_dependency_id(meta, symbol, NULL)) return 1;
+
+    new_dependencies = realloc(meta->dependencies,
+                               sizeof(InlineMetaDependencyEntry) * (meta->dependency_count + 1));
+    if (!new_dependencies) return 0;
+
+    meta->dependencies = new_dependencies;
+    meta->dependencies[meta->dependency_count].symbol = symbol;
+    meta->dependencies[meta->dependency_count].id = meta->dependency_count;
+    meta->dependency_count++;
+    return 1;
+}
+
 static int inline_meta_collect(ASTNode *node, InlineMetaExport *meta) {
     ASTNode *child;
 
     if (!node) return 1;
     if (!inline_meta_node_is_exportable(node)) return 0;
     if (!inline_meta_collect_scope(meta, node->scope)) return 0;
-    if (node->symbolNode && !inline_meta_collect_symbol(meta, node->symbolNode->symbol)) return 0;
+    if (inline_meta_function_uses_direct_dependency(node)) {
+        if (!inline_meta_collect_dependency(meta, node)) return 0;
+    } else if (node->symbolNode && !inline_meta_collect_symbol(meta, node->symbolNode->symbol)) {
+        return 0;
+    }
     if (!inline_meta_collect_source(meta, node)) return 0;
 
     child = node->child;
@@ -4571,6 +4658,15 @@ static int inline_meta_find_collect_failure(ASTNode *node,
         failure->reason = "assembler stateful instruction";
         return 1;
     }
+    if (node->node_type == FUNCTION &&
+        node->symbolNode &&
+        node->symbolNode->symbol &&
+        !inline_meta_function_uses_direct_dependency(node)) {
+        failure->node = node;
+        failure->symbol = node->symbolNode->symbol;
+        failure->reason = "unsupported residual callable dependency in inline metadata";
+        return 1;
+    }
     if (!inline_meta_node_is_exportable(node)) {
         failure->node = node;
         failure->reason = "unsupported AST node in inline metadata";
@@ -4584,6 +4680,7 @@ static int inline_meta_find_collect_failure(ASTNode *node,
     }
     if (node->symbolNode &&
         node->symbolNode->symbol &&
+        !inline_meta_function_uses_direct_dependency(node) &&
         !inline_meta_symbol_is_exportable(node->symbolNode->symbol)) {
         failure->node = node;
         failure->symbol = node->symbolNode->symbol;
@@ -4756,9 +4853,64 @@ static int inline_meta_emit_symbols(InlineMetaText *text, InlineMetaExport *meta
     return 1;
 }
 
+static int inline_meta_emit_dependencies(InlineMetaText *text, InlineMetaExport *meta) {
+    size_t i;
+
+    for (i = 0; i < meta->dependency_count; i++) {
+        Symbol *symbol = meta->dependencies[i].symbol;
+        ASTNode *proc = inline_meta_direct_dependency_proc(symbol);
+        ASTNode *args = proc ? ast_chld(proc, ARGS, 0) : NULL;
+        char *fqname = symbol ? sym_frnm(symbol) : NULL;
+        char *type = proc ? callable_effective_return_type(proc) : NULL;
+        char *arg_text = meta_narg(args);
+        char *fqname_hex;
+        char *type_hex;
+        char *args_hex;
+
+        if (!fqname || !type || !arg_text) {
+            if (fqname) free(fqname);
+            if (type) free(type);
+            if (arg_text) free(arg_text);
+            return 0;
+        }
+
+        fqname_hex = inline_meta_hex_encode(fqname, strlen(fqname));
+        type_hex = inline_meta_hex_encode(type, strlen(type));
+        args_hex = inline_meta_hex_encode(arg_text, strlen(arg_text));
+        free(fqname);
+        free(type);
+        free(arg_text);
+        if (!fqname_hex || !type_hex || !args_hex) {
+            if (fqname_hex) free(fqname_hex);
+            if (type_hex) free(type_hex);
+            if (args_hex) free(args_hex);
+            return 0;
+        }
+
+        if (!inline_meta_text_appendf(text,
+                                      ";d,%zu,%s,%s,%s",
+                                      meta->dependencies[i].id,
+                                      fqname_hex,
+                                      type_hex,
+                                      args_hex)) {
+            free(fqname_hex);
+            free(type_hex);
+            free(args_hex);
+            return 0;
+        }
+
+        free(fqname_hex);
+        free(type_hex);
+        free(args_hex);
+    }
+
+    return 1;
+}
+
 static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, ASTNode *node) {
     ASTNode *child;
     size_t symbol_id;
+    size_t dependency_id;
     size_t scope_id;
     size_t source_id;
     unsigned int symbol_read_usage;
@@ -4776,9 +4928,12 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
     if (!node) return 1;
 
     symbol_id = (size_t)-1;
+    dependency_id = (size_t)-1;
     symbol_read_usage = 0;
     symbol_write_usage = 0;
-    if (node->symbolNode && node->symbolNode->symbol) {
+    if (inline_meta_function_uses_direct_dependency(node)) {
+        if (!inline_meta_find_dependency_id(meta, node->symbolNode->symbol, &dependency_id)) return 0;
+    } else if (node->symbolNode && node->symbolNode->symbol) {
         if (!inline_meta_find_symbol_id(meta, node->symbolNode->symbol, &symbol_id)) return 0;
         symbol_read_usage = node->symbolNode->readUsage;
         symbol_write_usage = node->symbolNode->writeUsage;
@@ -4818,7 +4973,7 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
 #endif
 
     if (!inline_meta_text_appendf(text,
-                                  ";>,%zu,%ld,%d,%d,%d,%zu,%zu,%s,%s,%s,%s,%s,%s,%u,%ld,-1,%u,%u,%s,%d,%.17g,%s,%s",
+                                  ";>,%zu,%ld,%d,%d,%d,%zu,%zu,%s,%s,%s,%s,%s,%s,%u,%ld,%ld,%u,%u,%s,%d,%.17g,%s,%s",
                                   scope_id,
                                   source_id == (size_t)-1 ? -1L : (long)source_id,
                                   (int)node->node_type,
@@ -4834,6 +4989,7 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
                                   target_class_hex,
                                   inline_meta_node_flags(node),
                                   symbol_id == (size_t)-1 ? -1L : (long)symbol_id,
+                                  dependency_id == (size_t)-1 ? -1L : (long)dependency_id,
                                   symbol_read_usage,
                                   symbol_write_usage,
                                   int_buffer,
@@ -4969,6 +5125,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
         free(meta.symbols);
         free(meta.files);
         free(meta.sources);
+        free(meta.dependencies);
         return strdup("");
     }
 
@@ -4979,6 +5136,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
         !inline_meta_emit_sources(&text, &meta) ||
         !inline_meta_emit_scopes(&text, &meta) ||
         !inline_meta_emit_symbols(&text, &meta) ||
+        !inline_meta_emit_dependencies(&text, &meta) ||
         !inline_meta_text_append(&text, ";a") ||
         !inline_meta_emit_node(&text, &meta, args) ||
         !inline_meta_text_append(&text, ";b") ||
@@ -4988,6 +5146,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
         free(meta.symbols);
         free(meta.files);
         free(meta.sources);
+        free(meta.dependencies);
         if (text.text) free(text.text);
         return strdup("");
     }
@@ -4996,6 +5155,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
     free(meta.symbols);
     free(meta.files);
     free(meta.sources);
+    free(meta.dependencies);
     return text.text;
 }
 
@@ -5108,6 +5268,29 @@ static int inline_meta_ensure_source_slot(InlineMetaImport *meta, size_t id) {
     for (i = old_count; i < meta->source_count; i++) {
         meta->sources[i].source_node = NULL;
         meta->sources[i].provenance = AST_SOURCE_NONE;
+    }
+    return 1;
+}
+
+static int inline_meta_ensure_dependency_slot(InlineMetaImport *meta, size_t id) {
+    InlineMetaImportedDependency *new_dependencies;
+    size_t old_count;
+    size_t i;
+
+    if (!meta) return 0;
+    if (id < meta->dependency_count) return 1;
+
+    old_count = meta->dependency_count;
+    new_dependencies = realloc(meta->dependencies, sizeof(InlineMetaImportedDependency) * (id + 1));
+    if (!new_dependencies) return 0;
+
+    meta->dependencies = new_dependencies;
+    meta->dependency_count = id + 1;
+    for (i = old_count; i < meta->dependency_count; i++) {
+        meta->dependencies[i].fqname = NULL;
+        meta->dependencies[i].type = NULL;
+        meta->dependencies[i].args = NULL;
+        meta->dependencies[i].symbol = NULL;
     }
     return 1;
 }
@@ -5391,6 +5574,122 @@ static int inline_meta_import_symbol(Context *context, InlineMetaImport *meta, c
     return 1;
 }
 
+static Symbol *inline_meta_resolve_dependency_symbol(Context *context,
+                                                     InlineMetaImport *meta,
+                                                     const char *fqname) {
+    Symbol *symbol;
+    ASTNode *lookup;
+    char *lookup_name;
+
+    if (!context || !context->ast || !fqname || !*fqname) return NULL;
+
+    symbol = sym_rfqn(context->ast, fqname);
+    if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
+
+    symbol = sym_rfqv(context->ast, fqname);
+    if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
+
+    lookup_name = strdup(fqname);
+    if (!lookup_name) return NULL;
+
+    lookup = ast_ftt(context, FUNCTION, lookup_name);
+    if (!lookup) {
+        free(lookup_name);
+        return NULL;
+    }
+    lookup->free_node_string = 1;
+    lookup->scope = meta ? meta->scope : NULL;
+
+    symbol = sym_imfn(context, lookup);
+    if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
+
+    symbol = sym_rfqn(context->ast, fqname);
+    if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
+
+    return NULL;
+}
+
+static int inline_meta_nullable_strings_equal(const char *left, const char *right) {
+    if (!left || !right) return left == right || (!left && right && !*right) || (!right && left && !*left);
+    return strcmp(left, right) == 0;
+}
+
+static int inline_meta_dependency_signature_matches(Context *context,
+                                                    const char *fqname,
+                                                    const char *type,
+                                                    const char *args) {
+    imported_func *func;
+    char *lookup_name;
+    int found;
+
+    if (!context || !fqname) return 0;
+
+    lookup_name = strdup(fqname);
+    if (!lookup_name) return 0;
+    func = NULL;
+    found = src_fqfu(context, 0, lookup_name, &func);
+    free(lookup_name);
+
+    if (!found || !func) return 1;
+    if (func->is_variable) return 0;
+    if (!inline_meta_nullable_strings_equal(func->type, type)) return 0;
+    if (!inline_meta_nullable_strings_equal(func->args, args)) return 0;
+    return 1;
+}
+
+static int inline_meta_import_dependency(Context *context, InlineMetaImport *meta, char *record) {
+    char *cursor;
+    char *id_field;
+    char *fqname_field;
+    char *type_field;
+    char *args_field;
+    size_t id;
+    size_t length;
+    char *fqname;
+    char *type;
+    char *args;
+    Symbol *symbol;
+
+    if (!context || !meta || !record) return 0;
+
+    cursor = record + 2;
+    id_field = inline_meta_next_field(&cursor);
+    fqname_field = inline_meta_next_field(&cursor);
+    type_field = inline_meta_next_field(&cursor);
+    args_field = inline_meta_next_field(&cursor);
+    if (!id_field || !fqname_field || !type_field || !args_field) return 0;
+
+    id = (size_t)strtoul(id_field, NULL, 10);
+    if (!inline_meta_ensure_dependency_slot(meta, id)) return 0;
+
+    fqname = inline_meta_hex_decode(fqname_field, &length);
+    type = inline_meta_hex_decode(type_field, &length);
+    args = inline_meta_hex_decode(args_field, &length);
+    if (!fqname || !type || !args) {
+        if (fqname) free(fqname);
+        if (type) free(type);
+        if (args) free(args);
+        return 0;
+    }
+
+    symbol = inline_meta_resolve_dependency_symbol(context, meta, fqname);
+    if (!symbol || !inline_meta_dependency_signature_matches(context, fqname, type, args)) {
+        free(fqname);
+        free(type);
+        free(args);
+        return 0;
+    }
+
+    if (meta->dependencies[id].fqname) free(meta->dependencies[id].fqname);
+    if (meta->dependencies[id].type) free(meta->dependencies[id].type);
+    if (meta->dependencies[id].args) free(meta->dependencies[id].args);
+    meta->dependencies[id].fqname = fqname;
+    meta->dependencies[id].type = type;
+    meta->dependencies[id].args = args;
+    meta->dependencies[id].symbol = symbol;
+    return 1;
+}
+
 static int inline_meta_push_node(InlineMetaImport *meta, ASTNode *node) {
     ASTNode **new_stack;
 
@@ -5505,7 +5804,7 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     dependency_id = -1;
     if (meta->version >= 4) {
         dependency_id = strtol(dependency_field, NULL, 10);
-        if (dependency_id != -1) return 0;
+        if (dependency_id < -1) return 0;
     }
 
     scope_id = 0;
@@ -5591,6 +5890,15 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     else free(decimal_string);
 
     symbol_id = strtol(symbol_field, NULL, 10);
+    if (dependency_id >= 0) {
+        Symbol *symbol;
+
+        if (symbol_id >= 0 || node->node_type != FUNCTION) return 0;
+        if ((size_t)dependency_id >= meta->dependency_count) return 0;
+        symbol = meta->dependencies[dependency_id].symbol;
+        if (!symbol || symbol->symbol_type != FUNCTION_SYMBOL) return 0;
+        sym_adnd(symbol, node, 1, 0);
+    }
     if (symbol_id >= 0) {
         Symbol *symbol;
         if ((size_t)symbol_id >= meta->symbol_count) return 0;
@@ -5860,6 +6168,11 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
                 meta.ok = 0;
                 break;
             }
+        } else if (record[0] == 'd' && record[1] == ',') {
+            if (meta.version < 4 || !inline_meta_import_dependency(context, &meta, record)) {
+                meta.ok = 0;
+                break;
+            }
         } else if (record[0] == '>' && record[1] == ',') {
             if (!inline_meta_import_node(context, &meta, record)) {
                 meta.ok = 0;
@@ -5883,6 +6196,15 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     }
     free(meta.files);
     free(meta.sources);
+    if (meta.dependencies) {
+        size_t i;
+        for (i = 0; i < meta.dependency_count; i++) {
+            if (meta.dependencies[i].fqname) free(meta.dependencies[i].fqname);
+            if (meta.dependencies[i].type) free(meta.dependencies[i].type);
+            if (meta.dependencies[i].args) free(meta.dependencies[i].args);
+        }
+    }
+    free(meta.dependencies);
     free(meta.symbols);
     free(meta.scopes);
     free(meta.stack);

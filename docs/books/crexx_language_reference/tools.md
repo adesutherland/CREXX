@@ -41,6 +41,13 @@ but the left side of `namespace..symbol` must still name an imported
 namespace. `namespace::symbol` remains a compatibility alias. It is not a
 filesystem shortcut.
 
+Compiler optimisation includes conservative AST inlining. The compiler only
+inlines call sites whose tree rewrite has been proved to preserve normal call
+semantics; otherwise it leaves the call untouched. Use `-n` when you need to
+compare unoptimised assembly or isolate optimiser behaviour. See
+[Performance](performance.md#compiler-inlining) for the human-readable
+overview.
+
 ## **Assembler**
 
 Usage   : rxas \[options\] source\_file
