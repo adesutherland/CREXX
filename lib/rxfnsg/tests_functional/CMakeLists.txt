@@ -8,6 +8,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 
 set(REXXBINS
   ts_llm_ollama
+  ts_llm_providers
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
@@ -37,3 +38,5 @@ endforeach()
 
 set_tests_properties(ts_llm_ollama_noopt ts_llm_ollama_opt
   PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxfnsg llm ollama helpers")
+set_tests_properties(ts_llm_providers_noopt ts_llm_providers_opt
+  PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxfnsg llm provider helpers")

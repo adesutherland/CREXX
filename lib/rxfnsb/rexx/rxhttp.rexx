@@ -11,11 +11,20 @@ httpclient: interface
   send: method = .string
     arg verb = .string, path = .string, body = "", contentType = ""
 
+  sendWithHeaders: method = .string
+    arg verb = .string, path = .string, body = "", contentType = "", headers = .string[]
+
   post: method = .string
     arg path = .string, body = .string, contentType = "application/octet-stream"
 
+  postWithHeaders: method = .string
+    arg path = .string, body = .string, contentType = "application/octet-stream", headers = .string[]
+
   buildRequest: method = .string
     arg verb = .string, path = .string, body = "", contentType = ""
+
+  buildRequestWithHeaders: method = .string
+    arg verb = .string, path = .string, body = "", contentType = "", headers = .string[]
 
   extractBody: method = .string
     arg response = .string
@@ -61,28 +70,48 @@ http: class implements .httpclient
 
   send: method = .string
     arg verb = .string, path = .string, body = "", contentType = ""
+    headers = .string[]
+    return sendWithHeaders(verb, path, body, contentType, headers)
+
+  sendWithHeaders: method = .string
+    arg verb = .string, path = .string, body = "", contentType = "", headers = .string[]
     _last_body = ""
     _last_header = ""
-    _last_http = _send(buildRequest(verb, path, body, contentType))
+    _last_http = _send(buildRequestWithHeaders(verb, path, body, contentType, headers))
     if _status <> 0 then return ""
     _last_body = extractBody(_last_http)
     return _last_body
 
   post: method = .string
     arg path = .string, body = .string, contentType = "application/octet-stream"
-    return send("POST", path, body, contentType)
+    headers = .string[]
+    return postWithHeaders(path, body, contentType, headers)
+
+  postWithHeaders: method = .string
+    arg path = .string, body = .string, contentType = "application/octet-stream", headers = .string[]
+    return sendWithHeaders("POST", path, body, contentType, headers)
 
   buildRequest: method = .string
     arg verb = .string, path = .string, body = "", contentType = ""
+    headers = .string[]
+    return buildRequestWithHeaders(verb, path, body, contentType, headers)
+
+  buildRequestWithHeaders: method = .string
+    arg verb = .string, path = .string, body = "", contentType = "", headers = .string[]
     crlf = "0d0a"x
     if path = "" then path = "/"
+    portText = _port
+    assembler itos portText
 
     requestText = verb || " " || path || " HTTP/1.1" || crlf || ,
-                  "Host: " || _host || ":" || _port || crlf || ,
+                  "Host: " || _host || ":" || portText || crlf || ,
                   "User-Agent: cREXX-rxhttp/0" || crlf || ,
                   "Accept: */*" || crlf || ,
                   "Accept-Encoding: identity" || crlf || ,
                   "Connection: close" || crlf
+    do i = 1 to headers.0
+      if headers[i] <> "" then requestText = requestText || headers[i] || crlf
+    end
 
     if contentType <> "" then requestText = requestText || "Content-Type: " || contentType || crlf
     requestText = requestText || "Content-Length: " || _byte_length(body) || crlf || crlf || body

@@ -5,7 +5,7 @@ import rxfnsg
 
 arg args = .string[]
 
-prompt = "Reply with exactly: cREXX socket LLM demo OK."
+prompt = "Reply with exactly: cREXX socket Ollama LLM demo OK."
 model = "gemma4:latest"
 
 if args.0 >= 1 then prompt = args[1]

@@ -9,11 +9,19 @@ client = .httpclient("127.0.0.1", 11434, 1000, 0)
 body = "Hello"
 request = client.buildRequest("POST", "/api/test", body, "text/plain")
 failures = failures + check_int("request method", left(request, 19) = "POST /api/test HTTP", 1)
-failures = failures + check_int("request host", pos("Host: 127.0.0.1:", request) > 0, 1)
+failures = failures + check_int("request host", pos("Host: 127.0.0.1:11434", request) > 0, 1)
 failures = failures + check_int("request content type", pos("Content-Type: text/plain", request) > 0, 1)
 failures = failures + check_int("request content length", pos("Content-Length: 5", request) > 0, 1)
 failures = failures + check_int("request identity encoding", pos("Accept-Encoding: identity", request) > 0, 1)
 failures = failures + check_int("request close", pos("Connection: close", request) > 0, 1)
+
+headers = .string[]
+headers[1] = "Authorization: Bearer fake-key"
+headers[2] = "X-Test-Provider: cREXX"
+headerRequest = client.buildRequestWithHeaders("POST", "/api/test", body, "text/plain", headers)
+failures = failures + check_int("request authorization header", pos(headers[1], headerRequest) > 0, 1)
+failures = failures + check_int("request custom header", pos(headers[2], headerRequest) > 0, 1)
+failures = failures + check_int("request header before body", pos(headers[1], headerRequest) < pos(crlf || crlf || body, headerRequest), 1)
 
 unicodeBody = "Hello " || d2c(128512)
 unicodeRequest = client.buildRequest("POST", "/api/test", unicodeBody, "text/plain")

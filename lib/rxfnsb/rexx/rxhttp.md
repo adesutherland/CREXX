@@ -31,9 +31,16 @@ Primary methods:
 
 - `send(verb, path, body, contentType) = .string`: sends a request and
   returns the decoded response body
+- `sendWithHeaders(verb, path, body, contentType, headers[]) = .string`: sends
+  a request with additional complete header lines
 - `post(path, body, contentType) = .string`: convenience wrapper for POST
+- `postWithHeaders(path, body, contentType, headers[]) = .string`: convenience
+  wrapper for POST with additional complete header lines
 - `buildRequest(method, path, body, contentType) = .string`: builds the raw
   HTTP request text
+- `buildRequestWithHeaders(method, path, body, contentType, headers[]) =
+  .string`: builds the raw HTTP request text with additional complete header
+  lines
 - `extractBody(response) = .string`: decodes a raw HTTP response
 - `header(name) = .string`: reads a header from the last response
 - `status() = .int`: `0` on success, HTTP status for non-2xx responses, and
@@ -56,6 +63,11 @@ characters. The response parser supports:
 
 The client sends `Connection: close` and `Accept-Encoding: identity` so callers
 do not need to handle persistent connections or compressed bodies yet.
+
+Custom headers are passed as complete header lines such as
+`Authorization: Bearer ...` or `x-api-key: ...`. `rxhttp` appends those lines
+after its default connection headers and before `Content-Type` and
+`Content-Length`. Empty custom header entries are ignored.
 
 When `tls` is non-zero, `rxhttp` calls `socketconnecttls(sock, host, port)` and
 then sends and receives through the secure socket. TLS availability depends on

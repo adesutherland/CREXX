@@ -130,5 +130,7 @@ drop_rc = socketclose(server)
 ```
 
 The functional coverage lives in `lib/rxfnsb/tests_functional/ts_rxsocket.rexx`.
-The lower-level RXAS instruction coverage lives in
+`lib/rxfnsb/tests_functional/ts_socket_tls_live.rexx` is a default-skipped live
+TLS handshake smoke test; set `CREXX_TLS_LIVE_SMOKE=1` to enable it on a runner
+with network access. The lower-level RXAS instruction coverage lives in
 `interpreter/tests/tests_socket.rxas`.

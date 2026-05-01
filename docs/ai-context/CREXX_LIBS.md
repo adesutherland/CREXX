@@ -72,14 +72,17 @@ builds by default. Developers who still need it can configure with
 `CREXX_BUILD_LEGACY_SOCKET_PLUGIN=ON`; otherwise source builds avoid that
 plugin's OpenSSL discovery and distribution burden.
 
-`lib/rxfnsb/rexx/rxhttp.rexx` provides a reusable Level B plain-HTTP client on
-top of `rxsocket`. It builds request text with UTF-8 byte-counted
-`Content-Length`, reads raw socket responses, decodes `Content-Length` and
-HTTP/1.1 chunked bodies, preserves non-2xx response bodies for diagnostics, and
-exposes the last raw response/body through the `httpclient` interface. It sends
+`lib/rxfnsb/rexx/rxhttp.rexx` provides a reusable Level B HTTP client on top of
+`rxsocket`. It builds request text with UTF-8 byte-counted `Content-Length`,
+reads raw socket responses, decodes `Content-Length` and HTTP/1.1 chunked
+bodies, preserves non-2xx response bodies for diagnostics, and exposes the last
+raw response/body through the `httpclient` interface. It sends
 `Accept-Encoding: identity` and `Connection: close`; compressed content remains
 out of scope. A non-zero fourth factory argument enables TLS through
-`socketconnecttls`. See `lib/rxfnsb/rexx/rxhttp.md`.
+`socketconnecttls`. Callers can pass complete additional header lines through
+`sendWithHeaders`, `postWithHeaders`, or `buildRequestWithHeaders`, which is
+how hosted provider authentication is layered without duplicating HTTP framing.
+See `lib/rxfnsb/rexx/rxhttp.md`.
 
 `lib/rxfnsb/rexx/trace.rexx` provides the Level B trace/debugger internals used
 by `rxdb` and by the `TRACE` certified compiler exit:
@@ -107,16 +110,19 @@ builds into `rxfnsg.rxbin`, and imports the Level B `rxfnsb`, `rxjson`, and
 `rxhttp` modules rather than duplicating their work. It exposes a
 class-shaped interface in the `rxfnsg` namespace:
 
-- `llm`: provider-selecting interface
+- `llm`: provider-selecting interface for the local Ollama default
 - `ollama`: concrete local Ollama implementation over plain HTTP
+- `openai`: concrete OpenAI Responses API implementation over HTTPS
+- `anthropic`: concrete Anthropic Messages API implementation over HTTPS
+- `gemini`: concrete Gemini `generateContent` implementation over HTTPS
 
 The first provider posts JSON to a local Ollama `/api/generate` endpoint with
 `stream:false`, using `rxhttp` for HTTP transport and `rxjson` for
 request/response JSON. It keeps the last raw HTTP response plus decoded JSON
-body available for diagnostics. Remote authenticated providers still need
-provider-specific work, but the core client TLS substrate now exists below
-`rxhttp`. See `lib/rxfnsg/rexx/llm.md` and
-`demos/llm/ollama_generate.rexx`.
+body available for diagnostics. Hosted providers are also Rexx implementations:
+they use environment-variable API keys by default, build provider-specific JSON
+request bodies and authentication headers, and send through `rxhttp` with TLS
+enabled. See `lib/rxfnsg/rexx/llm.md` and `demos/llm/`.
 
 ## 1. BIFs Implemented in cREXX (`lib/rxfnsb/rexx/`)
 
