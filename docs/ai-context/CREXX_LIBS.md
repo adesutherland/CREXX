@@ -36,6 +36,7 @@ socket API for loopback clients, servers, and future web-service work:
 
 - `socketcreate()`, `socketclose(sock)`
 - `socketconnect(sock, host, port)`
+- `socketconnecttls(sock, host, port)`
 - `socketbind(sock, host, port)`, `socketlisten(sock, backlog)`,
   `socketaccept(sock)`
 - `socketsend(sock, text)`, `socketrecv(sock, maxbytes)`
@@ -46,19 +47,38 @@ socket API for loopback clients, servers, and future web-service work:
 - `socketpeer(sock)`, `socketlocal(sock)`, `socketstatus(sock)`,
   `socketerror(sock)`
 
-The library is intentionally raw TCP and does not attempt TLS or HTTP parsing.
-Its core value is deployment stability: VM opcodes use platform socket APIs
-directly, avoiding dynamic `.rxplugin` discovery and third-party dylib/DLL
-dependencies. For API details, status codes, and examples, see
+The default library path is raw TCP and does not attempt HTTP parsing. Its core
+value is deployment stability: VM opcodes use platform socket APIs directly,
+avoiding dynamic `.rxplugin` discovery. Optional client TLS is exposed through
+the same VM-managed handle model as `socketconnecttls(sock, host, port)`, which
+connects and starts TLS before application bytes are exchanged. The instruction
+exists in all builds; without a TLS backend it returns a negative socket status
+rather than signalling. True STARTTLS remains a lower-level RXAS/VM instruction
+for future protocol-specific libraries and is not exposed by the public Level B
+`rxsocket` wrapper. Fresh CMake configurations select a TLS backend by platform:
+`NETWORK` on Apple platforms, `OPENSSL` on non-Windows Unix-like platforms, and
+`OFF` on Windows until the native TLS backend is added. `NETWORK` uses macOS
+Network.framework, Security.framework, CoreFoundation.framework, and the system
+trust store, while `OPENSSL` uses OpenSSL with default verification paths and
+hostname checks. `CREXX_ENABLE_TLS=OFF` can be used for dependency-minimal
+builds. `CREXX_TLS_STATIC_OPENSSL=ON` asks CMake to prefer static OpenSSL
+libraries when the OpenSSL backend is selected. For API details, status codes,
+and examples, see
 `lib/rxfnsb/rexx/rxsocket.md`.
+
+The older OpenSSL-backed dynamic socket plugin is deprecated and no longer
+builds by default. Developers who still need it can configure with
+`CREXX_BUILD_LEGACY_SOCKET_PLUGIN=ON`; otherwise source builds avoid that
+plugin's OpenSSL discovery and distribution burden.
 
 `lib/rxfnsb/rexx/rxhttp.rexx` provides a reusable Level B plain-HTTP client on
 top of `rxsocket`. It builds request text with UTF-8 byte-counted
 `Content-Length`, reads raw socket responses, decodes `Content-Length` and
 HTTP/1.1 chunked bodies, preserves non-2xx response bodies for diagnostics, and
 exposes the last raw response/body through the `httpclient` interface. It sends
-`Accept-Encoding: identity` and `Connection: close`; TLS and compressed content
-remain out of scope. See `lib/rxfnsb/rexx/rxhttp.md`.
+`Accept-Encoding: identity` and `Connection: close`; compressed content remains
+out of scope. A non-zero fourth factory argument enables TLS through
+`socketconnecttls`. See `lib/rxfnsb/rexx/rxhttp.md`.
 
 `lib/rxfnsb/rexx/trace.rexx` provides the Level B trace/debugger internals used
 by `rxdb` and by the `TRACE` certified compiler exit:
@@ -92,9 +112,9 @@ class-shaped interface in the `rxfnsg` namespace:
 The first provider posts JSON to a local Ollama `/api/generate` endpoint with
 `stream:false`, using `rxhttp` for HTTP transport and `rxjson` for
 request/response JSON. It keeps the last raw HTTP response plus decoded JSON
-body available for diagnostics. TLS and remote authenticated providers remain
-out of scope until the core SSL/TLS layer exists. See `lib/rxfnsg/rexx/llm.md`
-and
+body available for diagnostics. Remote authenticated providers still need
+provider-specific work, but the core client TLS substrate now exists below
+`rxhttp`. See `lib/rxfnsg/rexx/llm.md` and
 `demos/llm/ollama_generate.rexx`.
 
 ## 1. BIFs Implemented in cREXX (`lib/rxfnsb/rexx/`)

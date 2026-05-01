@@ -2,11 +2,13 @@
 
 `rxsocket.rexx` is the Level B wrapper around the VM's core socket
 instructions. It is built into `library.rxbin`, so scripts can `import
-rxsocket` without loading the older dynamic socket plugin.
+rxsocket` without loading the older dynamic socket plugin. That deprecated
+OpenSSL-backed plugin is now build-time opt-in via
+`CREXX_BUILD_LEGACY_SOCKET_PLUGIN=ON`.
 
-The implementation is raw TCP. It deliberately avoids TLS, HTTP parsing, and
-third-party libraries so a clean install can use the operating system socket
-API directly: POSIX sockets on Unix-like systems and Winsock2 on Windows.
+The implementation uses the operating system socket API directly: POSIX sockets
+on Unix-like systems and Winsock2 on Windows. Client TLS is provided by the VM
+socket TLS backend when one is selected.
 
 ## Handles and Status
 
@@ -22,7 +24,7 @@ Status codes are:
 - `2`: timeout
 - `3`: operation would block
 - negative values: invalid handle, allocation failure, OS error, DNS failure,
-  bad argument, or socket-not-open
+  bad argument, socket-not-open, or TLS setup/availability failure
 
 Use `socketstatus(sock)` after operations that do not directly return a status,
 and `socketerror(sock)` for a short diagnostic string.
@@ -32,6 +34,7 @@ and `socketerror(sock)` for a short diagnostic string.
 - `socketcreate() = .int`
 - `socketclose(sock) = .int`
 - `socketconnect(sock, host, port) = .int`
+- `socketconnecttls(sock, host, port) = .int`
 - `socketbind(sock, host, port) = .int`
 - `socketlisten(sock, backlog) = .int`
 - `socketaccept(sock) = .int`
@@ -52,6 +55,42 @@ and `socketerror(sock)` for a short diagnostic string.
 
 `socketshutdown()` uses the portable mode values used by the VM instruction:
 `0` for receive, `1` for send, and `2` for both.
+
+`socketconnecttls()` connects to `host:port` and starts client TLS before any
+application bytes are exchanged, using `host` for SNI and certificate hostname
+verification. After a successful secure connect, the existing `socketsend()`
+and `socketrecv()` calls operate over the encrypted stream. In builds without a
+TLS backend, the instruction still exists and fails with a negative status so
+programs can probe capability with `socketstatus()` / `socketerror()`.
+
+The public Level B wrapper does not expose true STARTTLS. A lower-level RXAS
+instruction exists for future protocol-specific libraries that need to exchange
+clear-text bytes before TLS, but backends may return unsupported if they cannot
+upgrade an existing connection in place.
+
+TLS is selected at CMake configure time. Fresh build directories default to
+`NETWORK` on Apple platforms, `OPENSSL` on non-Windows Unix-like platforms, and
+`OFF` on Windows until the native backend is added:
+
+```sh
+cmake -S . -B cmake-build-tls -DCREXX_ENABLE_TLS=OPENSSL
+cmake -S . -B cmake-build-tls-network -DCREXX_ENABLE_TLS=NETWORK
+cmake -S . -B cmake-build-notls -DCREXX_ENABLE_TLS=OFF
+```
+
+`NETWORK` is the macOS backend. It links against Apple's Network.framework,
+Security.framework, and CoreFoundation.framework, and uses the operating system
+trust store, so the VM binaries do not acquire an OpenSSL runtime dependency.
+It implements `socketconnecttls()` as a native secure connection from byte zero.
+The lower-level true STARTTLS instruction reports unsupported on this backend.
+
+`OPENSSL` is the portable backend for platforms where system TLS is not wired in
+yet, such as Linux. It uses OpenSSL's default verification paths and performs
+hostname verification.
+
+Use `-DCREXX_TLS_STATIC_OPENSSL=ON` when the OpenSSL package and platform
+toolchain support static linking. This option only applies to
+`CREXX_ENABLE_TLS=OPENSSL`.
 
 `socketlocal()` and `socketpeer()` return numeric endpoint text in
 `host:port` form. IPv6 addresses are currently emitted in the same simple form,

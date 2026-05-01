@@ -56,6 +56,12 @@ if sockettimeout(client, 5000) <> 0 then do
   exit 1
 end
 
+tls_rc = socketconnecttls(client, host, 0)
+if tls_rc >= 0 then do
+  say "socketconnecttls unexpectedly succeeded with invalid port"
+  exit 1
+end
+
 if socketconnect(client, host, port) <> 0 then do
   say "socketconnect failed:" socketerror(client)
   exit 1

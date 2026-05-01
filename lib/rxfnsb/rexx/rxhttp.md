@@ -1,11 +1,10 @@
 # cREXX Level B HTTP Library
 
-`rxhttp.rexx` provides a reusable plain-HTTP client built on the core
-`rxsocket` library. It handles HTTP framing so higher layers do not need to
-parse socket responses directly.
-
-The library is deliberately HTTP-only. TLS/SSL remains out of scope until the
-core TLS layer exists.
+`rxhttp.rexx` provides a reusable HTTP/1.1 client built on the core `rxsocket`
+library. It handles HTTP framing so higher layers do not need to parse socket
+responses directly. By default it uses plain TCP; when the optional `tls`
+factory argument is non-zero, it uses the VM core TLS layer to connect securely
+before sending the request.
 
 ## Import
 
@@ -26,6 +25,7 @@ Factory arguments:
 - `host = "127.0.0.1"`
 - `port = 80`
 - `timeout = 30000`
+- `tls = 0`
 
 Primary methods:
 
@@ -56,3 +56,11 @@ characters. The response parser supports:
 
 The client sends `Connection: close` and `Accept-Encoding: identity` so callers
 do not need to handle persistent connections or compressed bodies yet.
+
+When `tls` is non-zero, `rxhttp` calls `socketconnecttls(sock, host, port)` and
+then sends and receives through the secure socket. TLS availability depends on
+the VM core socket TLS backend selected at build time. Fresh macOS builds
+default to `CREXX_ENABLE_TLS=NETWORK`, using Apple's system TLS and trust store
+through Network.framework, Security.framework, and CoreFoundation.framework.
+Fresh non-Windows Unix-like builds default to `CREXX_ENABLE_TLS=OPENSSL`.
+Windows defaults to TLS off until the native backend is added.

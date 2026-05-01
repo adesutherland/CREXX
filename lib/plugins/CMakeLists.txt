@@ -19,8 +19,16 @@ add_subdirectory(id)
 add_subdirectory(recv390)
 add_subdirectory(map)
 add_subdirectory(rxtcp)
-add_subdirectory(socket)
 add_subdirectory(system)
+
+option(CREXX_BUILD_LEGACY_SOCKET_PLUGIN
+       "Build the deprecated OpenSSL-backed dynamic socket plugin"
+       OFF)
+if(CREXX_BUILD_LEGACY_SOCKET_PLUGIN)
+    add_subdirectory(socket)
+else()
+    message(STATUS "Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.")
+endif()
 
 #
 # These are the plugins that are additionally built for Linux

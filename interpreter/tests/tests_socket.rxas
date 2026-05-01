@@ -76,6 +76,16 @@ client_new_pass:
 timeout_client_pass:
     say "PASS: SOCKTIMEOUT client"
 
+    load r14, 0
+    sockconnecttls r5, r2, r14
+    sockstatus r6, r5
+    ilt r0, r6, 0
+    brt connecttls_invalid_pass, r0
+    say "FAIL: SOCKCONNECTTLS invalid port"
+    ret 1
+connecttls_invalid_pass:
+    say "PASS: SOCKCONNECTTLS invalid port"
+
     sockconnect r5, r2, r3
     sockstatus r6, r5
     ieq r0, r6, 0

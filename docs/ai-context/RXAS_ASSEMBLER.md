@@ -235,15 +235,18 @@ socket after the VM context is freed. All socket instructions are
 `FLG_OPT_BARRIER` because they perform external I/O or mutate context-owned
 handle state.
 
-The current instruction surface is intentionally raw TCP:
+The current instruction surface is intentionally raw TCP with optional client
+TLS connect support:
 
 - `socknew rSock`
 - `sockclose rRc,rSock`
 - `sockconnect rSock,rHost,rPort`
+- `sockconnecttls rSock,rHost,rPort`
 - `sockbind rSock,rHost,rPort`
 - `socklisten rRc,rSock,rBacklog`
 - `sockaccept rClient,rServer`
 - `sockshutdown rRc,rSock,rHow`
+- `sockstarttls rRc,rSock,rHost`
 - `socksend rBytes,rSock,rText`
 - `socksendb rBytes,rSock,rBin`
 - `sockrecv rText,rSock,rMax`
@@ -258,8 +261,25 @@ The current instruction surface is intentionally raw TCP:
 - `sockstatus rStatus,rSock`
 - `sockerror rText,rSock`
 
-`sockconnect` and `sockbind` keep the socket handle in their first operand and
-record the result in the handle's status slot; use `sockstatus` or
-`sockerror` immediately after those operations. The higher-level
+`sockconnect`, `sockconnecttls`, and `sockbind` keep the socket handle in their
+first operand and record the result in the handle's status slot; use
+`sockstatus` or `sockerror` immediately after those operations. The higher-level
 `rxsocket.rexx` wrapper turns these into function return codes for ordinary
 Level B code.
+
+`sockconnecttls` is the portable client TLS connect primitive. It connects to
+`rHost:rPort`, starts TLS before any application bytes are exchanged, and uses
+`rHost` for SNI and certificate name verification. `sockstarttls` remains the
+lower-level true STARTTLS primitive for protocols that exchange clear-text bytes
+before TLS; backends that cannot upgrade an existing connection in place return
+a negative unsupported status instead of reconnecting behind the caller.
+
+Both TLS instructions are present in all builds. When no TLS backend is
+compiled in, they record a negative socket status; `sockstarttls` also returns
+that code in `rRc`. Backends are selected at CMake configure time. Fresh builds
+default to `CREXX_ENABLE_TLS=NETWORK` on Apple platforms,
+`CREXX_ENABLE_TLS=OPENSSL` on non-Windows Unix-like platforms, and
+`CREXX_ENABLE_TLS=OFF` on Windows. The Network backend uses Network.framework,
+Security.framework, CoreFoundation.framework, and the system trust store for
+`sockconnecttls`. The OpenSSL backend supports both direct TLS connect and true
+STARTTLS.

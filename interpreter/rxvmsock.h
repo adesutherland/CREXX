@@ -10,10 +10,12 @@ void rxvm_socket_free_registry(struct rxvm_context *context);
 rxinteger rxvm_socket_new(struct rxvm_context *context);
 rxinteger rxvm_socket_close(struct rxvm_context *context, rxinteger handle);
 rxinteger rxvm_socket_connect(struct rxvm_context *context, rxinteger handle, value *host, rxinteger port);
+rxinteger rxvm_socket_connect_tls(struct rxvm_context *context, rxinteger handle, value *host, rxinteger port);
 rxinteger rxvm_socket_bind(struct rxvm_context *context, rxinteger handle, value *host, rxinteger port);
 rxinteger rxvm_socket_listen(struct rxvm_context *context, rxinteger handle, rxinteger backlog);
 rxinteger rxvm_socket_accept(struct rxvm_context *context, rxinteger server_handle);
 rxinteger rxvm_socket_shutdown(struct rxvm_context *context, rxinteger handle, rxinteger how);
+rxinteger rxvm_socket_starttls(struct rxvm_context *context, rxinteger handle, value *host);
 
 rxinteger rxvm_socket_send_string(struct rxvm_context *context, rxinteger handle, value *data);
 rxinteger rxvm_socket_send_binary(struct rxvm_context *context, rxinteger handle, value *data);

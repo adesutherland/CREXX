@@ -6,7 +6,7 @@ import rxsocket
 
 httpclient: interface
   *: factory
-    arg host = "127.0.0.1", port = 80, timeout = 30000
+    arg host = "127.0.0.1", port = 80, timeout = 30000, tls = 0
 
   send: method = .string
     arg verb = .string, path = .string, body = "", contentType = ""
@@ -37,6 +37,7 @@ http: class implements .httpclient
   _host = .string
   _port = .int
   _timeout = .int
+  _tls = .int
   _status = .int
   _http_status = .int
   _error = .string
@@ -45,10 +46,11 @@ http: class implements .httpclient
   _last_body = .string
 
   *: factory
-    arg host = "127.0.0.1", port = 80, timeout = 30000
+    arg host = "127.0.0.1", port = 80, timeout = 30000, tls = 0
     _host = host
     _port = port
     _timeout = timeout
+    _tls = tls
     _status = 0
     _http_status = 0
     _error = ""
@@ -170,10 +172,19 @@ http: class implements .httpclient
       return ""
     end
 
-    if socketconnect(sock, _host, _port) <> 0 then do
-      call _set_error -3, "socketconnect failed: " || socketerror(sock)
-      drop_rc = socketclose(sock)
-      return ""
+    if _tls <> 0 then do
+      if socketconnecttls(sock, _host, _port) <> 0 then do
+        call _set_error -8, "socketconnecttls failed: " || socketerror(sock)
+        drop_rc = socketclose(sock)
+        return ""
+      end
+    end
+    else do
+      if socketconnect(sock, _host, _port) <> 0 then do
+        call _set_error -3, "socketconnect failed: " || socketerror(sock)
+        drop_rc = socketclose(sock)
+        return ""
+      end
     end
 
     sent = socketsend(sock, request)

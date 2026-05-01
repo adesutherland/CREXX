@@ -14,6 +14,47 @@ if(WIN32)
     set(CREXX_SOCKET_MANUAL_LINK_LIBS -lws2_32)
 endif()
 
+if(WIN32)
+    set(CREXX_DEFAULT_TLS_BACKEND OFF)
+elseif(APPLE)
+    set(CREXX_DEFAULT_TLS_BACKEND NETWORK)
+else()
+    set(CREXX_DEFAULT_TLS_BACKEND OPENSSL)
+endif()
+
+set(CREXX_ENABLE_TLS "${CREXX_DEFAULT_TLS_BACKEND}" CACHE STRING "TLS backend for VM core sockets: OFF, OPENSSL, or NETWORK")
+set_property(CACHE CREXX_ENABLE_TLS PROPERTY STRINGS OFF OPENSSL NETWORK)
+option(CREXX_TLS_STATIC_OPENSSL "Prefer static OpenSSL libraries for the VM core socket TLS backend" OFF)
+string(TOUPPER "${CREXX_ENABLE_TLS}" CREXX_ENABLE_TLS_NORMALIZED)
+if(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "ON")
+    set(CREXX_ENABLE_TLS_NORMALIZED "OPENSSL")
+endif()
+
+if(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "OPENSSL")
+    set(OPENSSL_USE_STATIC_LIBS ${CREXX_TLS_STATIC_OPENSSL})
+    find_package(OpenSSL REQUIRED)
+    list(APPEND CREXX_SOCKET_TARGET_LIBS OpenSSL::SSL OpenSSL::Crypto)
+    list(APPEND CREXX_SOCKET_MANUAL_LINK_LIBS ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY})
+elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "NETWORK")
+    if(NOT APPLE)
+        message(FATAL_ERROR "CREXX_ENABLE_TLS=NETWORK is only supported on Apple platforms.")
+    endif()
+    find_library(CREXX_NETWORK_FRAMEWORK Network REQUIRED)
+    find_library(CREXX_SECURITY_FRAMEWORK Security REQUIRED)
+    find_library(CREXX_COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)
+    list(APPEND CREXX_SOCKET_TARGET_LIBS
+            ${CREXX_NETWORK_FRAMEWORK}
+            ${CREXX_SECURITY_FRAMEWORK}
+            ${CREXX_COREFOUNDATION_FRAMEWORK})
+    list(APPEND CREXX_SOCKET_MANUAL_LINK_LIBS
+            -framework Network
+            -framework Security
+            -framework CoreFoundation)
+elseif(NOT CREXX_ENABLE_TLS_NORMALIZED STREQUAL "OFF")
+    message(FATAL_ERROR "Unsupported CREXX_ENABLE_TLS value '${CREXX_ENABLE_TLS}'. Use OFF, OPENSSL, or NETWORK.")
+endif()
+message(STATUS "cREXX VM core socket TLS backend: ${CREXX_ENABLE_TLS_NORMALIZED}")
+
 ##########################################
 # Bare Interpreter
 # Threaded Version
@@ -93,6 +134,12 @@ target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 
 function(crexx_enable_core_sockets target_name)
     target_sources(${target_name} PRIVATE rxvmsock.c rxvmsock.h)
+    if(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "OPENSSL")
+        target_compile_definitions(${target_name} PRIVATE CREXX_TLS_OPENSSL=1)
+    elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "NETWORK")
+        target_compile_definitions(${target_name} PRIVATE CREXX_TLS_NETWORK=1)
+        target_compile_options(${target_name} PRIVATE -fblocks)
+    endif()
     if(CREXX_SOCKET_TARGET_LIBS)
         target_link_libraries(${target_name} ${CREXX_SOCKET_TARGET_LIBS})
     endif()

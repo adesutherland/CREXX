@@ -1,6 +1,6 @@
 # cREXX LLM/HTTP Baseline Status
 
-Status date: 2026-04-27
+Status date: 2026-05-01
 
 This note captures the first plain-HTTP LLM integration baseline after bringing
 core socket communication into the VM and adding a reusable HTTP layer above
@@ -49,7 +49,13 @@ Ollama or external network access:
 
 ## Known Limits
 
-- HTTP is plain-text only. TLS/SSL remains the next transport layer milestone.
+- The original baseline was plain-text only. Client TLS now exists below the
+  VM-managed socket API as `socketconnecttls(sock, host, port)`. Fresh macOS
+  builds default to `CREXX_ENABLE_TLS=NETWORK` to use Network.framework,
+  Security.framework, CoreFoundation.framework, and the system trust store.
+  Fresh Linux/Unix builds default to `CREXX_ENABLE_TLS=OPENSSL`; Windows remains
+  `OFF` until a native backend is added. Provider work still needs to opt into
+  HTTPS.
 - `rxhttp` intentionally sends `Accept-Encoding: identity`; compressed response
   bodies are not supported yet.
 - Redirects, cookies, proxies, persistent connections, and chunk trailers are
@@ -62,7 +68,7 @@ Ollama or external network access:
 ## Next Work
 
 - Validate this baseline on GitHub runners for Windows, Linux, and macOS.
-- Add SSL/TLS support below `rxhttp` without changing the Level G LLM API.
+- Add provider-specific HTTPS clients without changing the Level G LLM API.
 - Add a richer Ollama demo/library surface after the CI socket/HTTP baseline is
   stable.
 - Expand `rxjson` only where real provider responses expose gaps.

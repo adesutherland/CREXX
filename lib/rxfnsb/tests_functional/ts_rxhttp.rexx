@@ -4,7 +4,7 @@ import rxhttp
 
 failures = 0
 crlf = "0d0a"x
-client = .httpclient("127.0.0.1", 11434, 1000)
+client = .httpclient("127.0.0.1", 11434, 1000, 0)
 
 body = "Hello"
 request = client.buildRequest("POST", "/api/test", body, "text/plain")

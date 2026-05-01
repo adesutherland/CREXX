@@ -7993,8 +7993,16 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             rxvm_socket_error(context, op1R, op2R->int_value);
             DISPATCH
 
-        RESERVED_IMPL(RESERVED_082)
-        RESERVED_IMPL(RESERVED_083)
+        START_INSTRUCTION(SOCKSTARTTLS_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKSTARTTLS R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_starttls(context, op2R->int_value, op3R));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKCONNECTTLS_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKCONNECTTLS R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            rxvm_socket_connect_tls(context, op1R->int_value, op2R, op3R->int_value);
+            DISPATCH
+
         RESERVED_IMPL(RESERVED_084)
         RESERVED_IMPL(RESERVED_085)
         RESERVED_IMPL(RESERVED_086)

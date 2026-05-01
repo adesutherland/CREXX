@@ -263,9 +263,10 @@ buffer after the finalizer returns.
 
 Core sockets deliberately follow the context-owned registry pattern described
 above. `interpreter/rxvmsock.c` implements a small TCP wrapper over POSIX
-sockets on Unix-like platforms and Winsock2 on Windows. It does not depend on
-OpenSSL, Homebrew libraries, or deploy-time plugin lookup; the only platform
-library needed on Windows is `ws2_32`.
+sockets on Unix-like platforms and Winsock2 on Windows. The default TLS backend
+is platform-selected: Network.framework on Apple platforms, OpenSSL on
+non-Windows Unix-like platforms, and OFF on Windows until the native backend is
+implemented. The only platform socket library needed on Windows is `ws2_32`.
 
 The VM supports IPv4/IPv6 name resolution through `getaddrinfo()` and creates
 TCP streams on demand during `sockconnect` or `sockbind`. Timeouts, blocking
@@ -285,8 +286,31 @@ Every socket entry carries a last-status slot and last-error string:
 `sockstatus` reads the numeric slot and `sockerror` reads a short diagnostic
 string. Operations that return data or byte counts still update the status
 slot, so callers can distinguish an empty receive from timeout/EOF by checking
-status afterwards. TLS is intentionally outside this first core layer; higher
-libraries can add HTTPS/TLS once the raw TCP substrate is stable.
+status afterwards.
+
+Client TLS is layered under the same registry entries. `sockconnecttls` is the
+portable client path: it connects to the host and port, starts TLS before any
+application bytes are exchanged, and uses the host operand for SNI and
+certificate name verification. After a successful TLS connect, `socksend`,
+`socksendb`, `sockrecv`, `sockrecvb`, and `sockpending` use the active TLS
+session. The instruction is available in all builds and records a negative
+status when no TLS backend is compiled in.
+
+`sockstarttls` remains a lower-level true STARTTLS instruction for protocols
+that must exchange clear-text bytes before TLS. Backends that cannot upgrade an
+existing connection in place return a negative unsupported status rather than
+silently reconnecting.
+
+TLS backends are selected with `CREXX_ENABLE_TLS`. Fresh CMake configurations
+default to `NETWORK` on Apple platforms, `OPENSSL` on non-Windows Unix-like
+platforms, and `OFF` on Windows. `OPENSSL` uses OpenSSL with default
+verification paths and hostname checks, and supports both direct TLS connect
+and true STARTTLS. `NETWORK` is macOS-only and uses Network.framework,
+Security.framework, and CoreFoundation.framework so certificate validation goes
+through the operating system trust store and VM binaries have no OpenSSL
+runtime dependency. The Network.framework backend supports `sockconnecttls` and
+reports true `sockstarttls` as unsupported because the public framework API does
+not upgrade an existing BSD socket in place.
 
 ### Nested rxvml Calls
 

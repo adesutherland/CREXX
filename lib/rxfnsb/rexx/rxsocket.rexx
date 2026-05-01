@@ -1,5 +1,5 @@
 options levelb
-namespace rxsocket expose socketcreate socketclose socketconnect socketbind socketlisten socketaccept socketshutdown socketsend socketsendb socketrecv socketrecvb socketpending sockettimeout socketblocking socketnodelay socketkeepalive socketpeer socketlocal socketstatus socketerror
+namespace rxsocket expose socketcreate socketclose socketconnect socketconnecttls socketbind socketlisten socketaccept socketshutdown socketsend socketsendb socketrecv socketrecvb socketpending sockettimeout socketblocking socketnodelay socketkeepalive socketpeer socketlocal socketstatus socketerror
 
 socketcreate: procedure = .int
   sock = .int
@@ -16,6 +16,13 @@ socketconnect: procedure = .int
   arg sock = .int, host = .string, port = .int
   rc = .int
   assembler sockconnect sock,host,port
+  assembler sockstatus rc,sock
+  return rc
+
+socketconnecttls: procedure = .int
+  arg sock = .int, host = .string, port = .int
+  rc = .int
+  assembler sockconnecttls sock,host,port
   assembler sockstatus rc,sock
   return rc
 
