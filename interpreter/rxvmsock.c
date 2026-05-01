@@ -1299,7 +1299,7 @@ static rxinteger rxvm_socket_schannel_verify_server(rxvm_socket_entry *entry,
     }
 
     memset(&https_policy, 0, sizeof(https_policy));
-    https_policy.DUMMYUNIONNAME.cbSize = sizeof(https_policy);
+    https_policy.cbSize = sizeof(https_policy);
     https_policy.dwAuthType = AUTHTYPE_SERVER;
     https_policy.fdwChecks = 0;
     https_policy.pwszServerName = wide_host;
