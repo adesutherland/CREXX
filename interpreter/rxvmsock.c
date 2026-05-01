@@ -9,6 +9,7 @@
 #endif
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <windows.h>
 typedef SOCKET rxvm_socket_fd;
 #define RXVM_SOCKET_INVALID INVALID_SOCKET
 #else
@@ -53,6 +54,28 @@ typedef int rxvm_socket_fd;
 #include <Security/SecProtocolOptions.h>
 #endif
 
+#ifdef CREXX_TLS_SCHANNEL
+#ifndef SECURITY_WIN32
+#define SECURITY_WIN32
+#endif
+#include <security.h>
+#include <schannel.h>
+#include <wincrypt.h>
+
+#ifndef UNISP_NAME_W
+#define UNISP_NAME_W L"Microsoft Unified Security Protocol Provider"
+#endif
+#ifndef SCH_CRED_MANUAL_CRED_VALIDATION
+#define SCH_CRED_MANUAL_CRED_VALIDATION 0x00000008
+#endif
+#ifndef SCH_CRED_NO_DEFAULT_CREDS
+#define SCH_CRED_NO_DEFAULT_CREDS 0x00000010
+#endif
+#ifndef SCH_USE_STRONG_CRYPTO
+#define SCH_USE_STRONG_CRYPTO 0x00400000
+#endif
+#endif
+
 #define RXSOCK_OK 0
 #define RXSOCK_EOF 1
 #define RXSOCK_TIMEOUT 2
@@ -87,6 +110,18 @@ typedef struct rxvm_socket_entry {
 #ifdef CREXX_TLS_NETWORK
     nw_connection_t nw_conn;
     dispatch_queue_t nw_queue;
+#endif
+#ifdef CREXX_TLS_SCHANNEL
+    CredHandle schannel_cred;
+    CtxtHandle schannel_ctx;
+    SecPkgContext_StreamSizes schannel_sizes;
+    int schannel_have_cred;
+    int schannel_have_ctx;
+    char *schannel_encrypted;
+    size_t schannel_encrypted_len;
+    char *schannel_decrypted;
+    size_t schannel_decrypted_len;
+    size_t schannel_decrypted_pos;
 #endif
     int tls_active;
 } rxvm_socket_entry;
@@ -328,6 +363,90 @@ static void rxvm_socket_network_clear(rxvm_socket_entry *entry) {
 }
 #endif
 
+#ifdef CREXX_TLS_SCHANNEL
+static void rxvm_socket_entry_schannel_error(rxvm_socket_entry *entry,
+                                             rxinteger status,
+                                             SECURITY_STATUS schannel_status,
+                                             const char *prefix) {
+    char buffer[176];
+
+    snprintf(buffer, sizeof(buffer), "%s: SChannel error 0x%08lx",
+             prefix ? prefix : "TLS error", (unsigned long)schannel_status);
+    rxvm_socket_entry_status(entry, status, (int)schannel_status, buffer);
+}
+
+static void rxvm_socket_entry_schannel_verify_error(rxvm_socket_entry *entry,
+                                                    DWORD error_code,
+                                                    const char *prefix) {
+    char buffer[176];
+
+    snprintf(buffer, sizeof(buffer), "%s: Windows trust error 0x%08lx",
+             prefix ? prefix : "TLS certificate verification failed",
+             (unsigned long)error_code);
+    rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_VERIFY, (int)error_code, buffer);
+}
+
+static wchar_t *rxvm_socket_wide_from_utf8(const char *text) {
+    int length;
+    wchar_t *wide;
+
+    if (!text) return 0;
+    length = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text, -1, 0, 0);
+    if (length <= 0) {
+        length = MultiByteToWideChar(CP_ACP, 0, text, -1, 0, 0);
+    }
+    if (length <= 0) return 0;
+
+    wide = malloc((size_t)length * sizeof(wchar_t));
+    if (!wide) return 0;
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text, -1, wide, length) <= 0 &&
+        MultiByteToWideChar(CP_ACP, 0, text, -1, wide, length) <= 0) {
+        free(wide);
+        return 0;
+    }
+    return wide;
+}
+
+static int rxvm_socket_schannel_append_buffer(char **buffer,
+                                              size_t *buffer_len,
+                                              const char *data,
+                                              size_t data_len) {
+    char *new_buffer;
+
+    if (!data_len) return 0;
+    if (!buffer || !buffer_len || !data) return -1;
+    if (data_len > ((size_t)-1) - *buffer_len) return -1;
+    new_buffer = realloc(*buffer, *buffer_len + data_len);
+    if (!new_buffer) return -1;
+    memcpy(new_buffer + *buffer_len, data, data_len);
+    *buffer = new_buffer;
+    *buffer_len += data_len;
+    return 0;
+}
+
+static void rxvm_socket_schannel_clear(rxvm_socket_entry *entry) {
+    if (!entry) return;
+    if (entry->schannel_have_ctx) {
+        DeleteSecurityContext(&entry->schannel_ctx);
+        memset(&entry->schannel_ctx, 0, sizeof(entry->schannel_ctx));
+        entry->schannel_have_ctx = 0;
+    }
+    if (entry->schannel_have_cred) {
+        FreeCredentialsHandle(&entry->schannel_cred);
+        memset(&entry->schannel_cred, 0, sizeof(entry->schannel_cred));
+        entry->schannel_have_cred = 0;
+    }
+    memset(&entry->schannel_sizes, 0, sizeof(entry->schannel_sizes));
+    free(entry->schannel_encrypted);
+    entry->schannel_encrypted = 0;
+    entry->schannel_encrypted_len = 0;
+    free(entry->schannel_decrypted);
+    entry->schannel_decrypted = 0;
+    entry->schannel_decrypted_len = 0;
+    entry->schannel_decrypted_pos = 0;
+}
+#endif
+
 static void rxvm_socket_tls_clear(rxvm_socket_entry *entry) {
     if (!entry) return;
 #ifdef CREXX_TLS_OPENSSL
@@ -343,6 +462,9 @@ static void rxvm_socket_tls_clear(rxvm_socket_entry *entry) {
 #endif
 #ifdef CREXX_TLS_NETWORK
     rxvm_socket_network_clear(entry);
+#endif
+#ifdef CREXX_TLS_SCHANNEL
+    rxvm_socket_schannel_clear(entry);
 #endif
     entry->tls_active = 0;
 }
@@ -382,6 +504,94 @@ static int rxvm_socket_error_is_timeout_or_wouldblock(rxvm_socket_entry *entry,
     (void)entry;
     return 0;
 }
+
+#ifdef CREXX_TLS_SCHANNEL
+static int rxvm_socket_schannel_send_all_fd(rxvm_socket_entry *entry,
+                                            const char *data,
+                                            size_t length,
+                                            const char *prefix) {
+    size_t total = 0;
+
+    if (!entry || rxvm_socket_is_invalid(entry->fd)) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_NOT_OPEN, 0, "socket is not open");
+        return -1;
+    }
+    while (total < length) {
+        size_t chunk = length - total;
+        int sent;
+
+        if (chunk > INT_MAX) chunk = INT_MAX;
+        sent = send(entry->fd, data + total, (int)chunk, 0);
+        if (sent == SOCKET_ERROR) {
+            rxinteger status;
+            const char *message;
+            int err = rxvm_socket_last_errno();
+
+            if (rxvm_socket_error_is_timeout_or_wouldblock(entry, err, &status, &message)) {
+                rxvm_socket_entry_status(entry, status, err, message);
+                return -1;
+            }
+            rxvm_socket_entry_os_error(entry, RXSOCK_ERR_OS, prefix ? prefix : "send failed");
+            return -1;
+        }
+        if (sent == 0) {
+            rxvm_socket_entry_status(entry, RXSOCK_EOF, 0,
+                                     prefix ? prefix : "connection closed");
+            return -1;
+        }
+        total += (size_t)sent;
+    }
+    return 0;
+}
+
+static int rxvm_socket_schannel_recv_fd(rxvm_socket_entry *entry,
+                                        char *buffer,
+                                        size_t max_bytes,
+                                        const char *prefix) {
+    int received;
+
+    if (!entry || rxvm_socket_is_invalid(entry->fd)) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_NOT_OPEN, 0, "socket is not open");
+        return -1;
+    }
+    if (max_bytes > INT_MAX) max_bytes = INT_MAX;
+    received = recv(entry->fd, buffer, (int)max_bytes, 0);
+    if (received == SOCKET_ERROR) {
+        rxinteger status;
+        const char *message;
+        int err = rxvm_socket_last_errno();
+
+        if (rxvm_socket_error_is_timeout_or_wouldblock(entry, err, &status, &message)) {
+            rxvm_socket_entry_status(entry, status, err, message);
+            return -1;
+        }
+        rxvm_socket_entry_os_error(entry, RXSOCK_ERR_OS, prefix ? prefix : "recv failed");
+        return -1;
+    }
+    if (received == 0) {
+        rxvm_socket_entry_status(entry, RXSOCK_EOF, 0,
+                                 prefix ? prefix : "connection closed");
+        return 0;
+    }
+    return received;
+}
+
+static int rxvm_socket_schannel_read_encrypted(rxvm_socket_entry *entry,
+                                               char **buffer,
+                                               size_t *buffer_len,
+                                               const char *prefix) {
+    char temp[8192];
+    int received;
+
+    received = rxvm_socket_schannel_recv_fd(entry, temp, sizeof(temp), prefix);
+    if (received <= 0) return received;
+    if (rxvm_socket_schannel_append_buffer(buffer, buffer_len, temp, (size_t)received) != 0) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0, "out of memory");
+        return -1;
+    }
+    return received;
+}
+#endif
 
 static int rxvm_socket_platform_init(rxvm_socket_registry *registry) {
 #ifdef _WIN32
@@ -1029,6 +1239,276 @@ static rxinteger rxvm_socket_connect_tls_network(rxvm_socket_entry *entry,
 }
 #endif
 
+#ifdef CREXX_TLS_SCHANNEL
+static SecBuffer *rxvm_socket_schannel_find_buffer(SecBuffer *buffers,
+                                                   unsigned long count,
+                                                   unsigned long buffer_type) {
+    unsigned long i;
+
+    for (i = 0; i < count; i++) {
+        if (buffers[i].BufferType == buffer_type && buffers[i].cbBuffer > 0 &&
+            buffers[i].pvBuffer) {
+            return &buffers[i];
+        }
+    }
+    return 0;
+}
+
+static rxinteger rxvm_socket_schannel_handshake_read(rxvm_socket_entry *entry,
+                                                     char **input,
+                                                     size_t *input_len) {
+    int rc = rxvm_socket_schannel_read_encrypted(entry, input, input_len,
+                                                 "TLS handshake receive failed");
+
+    if (rc > 0) return RXSOCK_OK;
+    if (entry->last_status == RXSOCK_EOF) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_HANDSHAKE, 0,
+                                 "TLS handshake closed by peer");
+        return RXSOCK_ERR_TLS_HANDSHAKE;
+    }
+    return entry->last_status ? entry->last_status : RXSOCK_ERR_TLS_HANDSHAKE;
+}
+
+static rxinteger rxvm_socket_schannel_verify_server(rxvm_socket_entry *entry,
+                                                    wchar_t *wide_host) {
+    SECURITY_STATUS status;
+    PCCERT_CONTEXT cert = 0;
+    PCCERT_CHAIN_CONTEXT chain = 0;
+    CERT_CHAIN_PARA chain_para;
+    SSL_EXTRA_CERT_CHAIN_POLICY_PARA https_policy;
+    CERT_CHAIN_POLICY_PARA policy_para;
+    CERT_CHAIN_POLICY_STATUS policy_status;
+    rxinteger result = RXSOCK_OK;
+
+    status = QueryContextAttributes(&entry->schannel_ctx,
+                                    SECPKG_ATTR_REMOTE_CERT_CONTEXT,
+                                    (void *)&cert);
+    if (status != SEC_E_OK || !cert) {
+        rxvm_socket_entry_schannel_error(entry, RXSOCK_ERR_TLS_VERIFY, status,
+                                         "TLS peer certificate lookup failed");
+        return RXSOCK_ERR_TLS_VERIFY;
+    }
+
+    memset(&chain_para, 0, sizeof(chain_para));
+    chain_para.cbSize = sizeof(chain_para);
+    if (!CertGetCertificateChain(0, cert, 0, cert->hCertStore, &chain_para, 0, 0, &chain)) {
+        rxvm_socket_entry_schannel_verify_error(entry, GetLastError(),
+                                                "TLS certificate chain validation failed");
+        CertFreeCertificateContext(cert);
+        return RXSOCK_ERR_TLS_VERIFY;
+    }
+
+    memset(&https_policy, 0, sizeof(https_policy));
+    https_policy.DUMMYUNIONNAME.cbSize = sizeof(https_policy);
+    https_policy.dwAuthType = AUTHTYPE_SERVER;
+    https_policy.fdwChecks = 0;
+    https_policy.pwszServerName = wide_host;
+
+    memset(&policy_para, 0, sizeof(policy_para));
+    policy_para.cbSize = sizeof(policy_para);
+    policy_para.pvExtraPolicyPara = &https_policy;
+
+    memset(&policy_status, 0, sizeof(policy_status));
+    policy_status.cbSize = sizeof(policy_status);
+    if (!CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_SSL, chain,
+                                          &policy_para, &policy_status)) {
+        rxvm_socket_entry_schannel_verify_error(entry, GetLastError(),
+                                                "TLS certificate policy validation failed");
+        result = RXSOCK_ERR_TLS_VERIFY;
+    } else if (policy_status.dwError != 0) {
+        rxvm_socket_entry_schannel_verify_error(entry, policy_status.dwError,
+                                                "TLS certificate verification failed");
+        result = RXSOCK_ERR_TLS_VERIFY;
+    }
+
+    CertFreeCertificateChain(chain);
+    CertFreeCertificateContext(cert);
+    return result;
+}
+
+static rxinteger rxvm_socket_starttls_schannel(rxvm_socket_entry *entry,
+                                               const char *host) {
+    SCHANNEL_CRED cred;
+    TimeStamp expiry;
+    wchar_t *wide_host = 0;
+    char *input = 0;
+    size_t input_len = 0;
+    SECURITY_STATUS status;
+    DWORD attrs = 0;
+    rxinteger result = RXSOCK_OK;
+    const DWORD request_flags = ISC_REQ_SEQUENCE_DETECT |
+                                ISC_REQ_REPLAY_DETECT |
+                                ISC_REQ_CONFIDENTIALITY |
+                                ISC_REQ_EXTENDED_ERROR |
+                                ISC_REQ_ALLOCATE_MEMORY |
+                                ISC_REQ_STREAM;
+
+    if (!host || !host[0]) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_ARGUMENT, 0,
+                                 "invalid TLS hostname");
+        return RXSOCK_ERR_ARGUMENT;
+    }
+    if (entry->is_server) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_STATE, 0,
+                                 "client TLS is not available on listening sockets");
+        return RXSOCK_ERR_TLS_STATE;
+    }
+    if (!entry->blocking) {
+        rxvm_socket_entry_status(entry, RXSOCK_WOULDBLOCK, 0,
+                                 "SChannel TLS requires blocking socket mode");
+        return RXSOCK_WOULDBLOCK;
+    }
+
+    wide_host = rxvm_socket_wide_from_utf8(host);
+    if (!wide_host) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0,
+                                 "TLS hostname conversion failed");
+        return RXSOCK_ERR_NO_MEMORY;
+    }
+
+    memset(&cred, 0, sizeof(cred));
+    cred.dwVersion = SCHANNEL_CRED_VERSION;
+    cred.dwFlags = SCH_CRED_MANUAL_CRED_VALIDATION |
+                   SCH_CRED_NO_DEFAULT_CREDS |
+                   SCH_USE_STRONG_CRYPTO;
+
+    status = AcquireCredentialsHandleW(0, UNISP_NAME_W, SECPKG_CRED_OUTBOUND,
+                                       0, &cred, 0, 0,
+                                       &entry->schannel_cred, &expiry);
+    if (status != SEC_E_OK) {
+        rxvm_socket_entry_schannel_error(entry, RXSOCK_ERR_TLS_STATE, status,
+                                         "TLS credential setup failed");
+        free(wide_host);
+        return RXSOCK_ERR_TLS_STATE;
+    }
+    entry->schannel_have_cred = 1;
+
+    for (;;) {
+        SecBuffer out_buffers[1];
+        SecBufferDesc out_desc;
+        SecBuffer in_buffers[2];
+        SecBufferDesc in_desc;
+        SecBufferDesc *input_desc = 0;
+        int had_input = input_len > 0;
+
+        memset(out_buffers, 0, sizeof(out_buffers));
+        out_buffers[0].BufferType = SECBUFFER_TOKEN;
+        out_desc.ulVersion = SECBUFFER_VERSION;
+        out_desc.cBuffers = 1;
+        out_desc.pBuffers = out_buffers;
+
+        if (had_input) {
+            memset(in_buffers, 0, sizeof(in_buffers));
+            in_buffers[0].BufferType = SECBUFFER_TOKEN;
+            in_buffers[0].pvBuffer = input;
+            in_buffers[0].cbBuffer = (unsigned long)input_len;
+            in_buffers[1].BufferType = SECBUFFER_EMPTY;
+            in_desc.ulVersion = SECBUFFER_VERSION;
+            in_desc.cBuffers = 2;
+            in_desc.pBuffers = in_buffers;
+            input_desc = &in_desc;
+        }
+
+        status = InitializeSecurityContextW(&entry->schannel_cred,
+                                            entry->schannel_have_ctx ? &entry->schannel_ctx : 0,
+                                            wide_host,
+                                            request_flags,
+                                            0,
+                                            SECURITY_NATIVE_DREP,
+                                            input_desc,
+                                            0,
+                                            &entry->schannel_ctx,
+                                            &out_desc,
+                                            &attrs,
+                                            &expiry);
+
+        if (out_buffers[0].pvBuffer && out_buffers[0].cbBuffer > 0) {
+            if (rxvm_socket_schannel_send_all_fd(entry,
+                                                 (const char *)out_buffers[0].pvBuffer,
+                                                 out_buffers[0].cbBuffer,
+                                                 "TLS handshake send failed") != 0) {
+                result = entry->last_status ? entry->last_status : RXSOCK_ERR_TLS_HANDSHAKE;
+                FreeContextBuffer(out_buffers[0].pvBuffer);
+                break;
+            }
+        }
+        if (out_buffers[0].pvBuffer) FreeContextBuffer(out_buffers[0].pvBuffer);
+
+        if (status == SEC_E_INCOMPLETE_MESSAGE) {
+            result = rxvm_socket_schannel_handshake_read(entry, &input, &input_len);
+            if (result != RXSOCK_OK) break;
+            continue;
+        }
+        if (status != SEC_E_OK && status != SEC_I_CONTINUE_NEEDED) {
+            rxvm_socket_entry_schannel_error(entry, RXSOCK_ERR_TLS_HANDSHAKE, status,
+                                             "TLS handshake failed");
+            result = RXSOCK_ERR_TLS_HANDSHAKE;
+            break;
+        }
+
+        entry->schannel_have_ctx = 1;
+        if (status == SEC_E_OK) {
+            if (had_input) {
+                SecBuffer *extra = rxvm_socket_schannel_find_buffer(in_buffers, 2,
+                                                                    SECBUFFER_EXTRA);
+                if (extra && rxvm_socket_schannel_append_buffer(&entry->schannel_encrypted,
+                                                                &entry->schannel_encrypted_len,
+                                                                (const char *)extra->pvBuffer,
+                                                                extra->cbBuffer) != 0) {
+                    rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0,
+                                             "out of memory");
+                    result = RXSOCK_ERR_NO_MEMORY;
+                    break;
+                }
+            }
+            result = RXSOCK_OK;
+            break;
+        }
+
+        if (had_input) {
+            SecBuffer *extra = rxvm_socket_schannel_find_buffer(in_buffers, 2,
+                                                                SECBUFFER_EXTRA);
+            if (extra) {
+                memmove(input, extra->pvBuffer, extra->cbBuffer);
+                input_len = extra->cbBuffer;
+            } else {
+                input_len = 0;
+            }
+        }
+
+        if (input_len == 0) {
+            result = rxvm_socket_schannel_handshake_read(entry, &input, &input_len);
+            if (result != RXSOCK_OK) break;
+        }
+    }
+
+    free(input);
+    if (result == RXSOCK_OK) {
+        result = rxvm_socket_schannel_verify_server(entry, wide_host);
+    }
+    if (result == RXSOCK_OK) {
+        status = QueryContextAttributes(&entry->schannel_ctx,
+                                        SECPKG_ATTR_STREAM_SIZES,
+                                        &entry->schannel_sizes);
+        if (status != SEC_E_OK) {
+            rxvm_socket_entry_schannel_error(entry, RXSOCK_ERR_TLS_STATE, status,
+                                             "TLS stream setup failed");
+            result = RXSOCK_ERR_TLS_STATE;
+        }
+    }
+    free(wide_host);
+
+    if (result != RXSOCK_OK) {
+        rxvm_socket_schannel_clear(entry);
+        return result;
+    }
+
+    entry->tls_active = 1;
+    rxvm_socket_entry_ok(entry);
+    return RXSOCK_OK;
+}
+#endif
+
 rxinteger rxvm_socket_connect_tls(struct rxvm_context *context,
                                   rxinteger handle,
                                   value *host_value,
@@ -1053,6 +1533,19 @@ rxinteger rxvm_socket_connect_tls(struct rxvm_context *context,
 #ifdef CREXX_TLS_NETWORK
     rc = rxvm_socket_connect_tls_network(entry, host, port, host);
     free(host);
+    return rc;
+#elif defined(CREXX_TLS_SCHANNEL)
+    rc = rxvm_socket_connect(context, handle, host_value, port);
+    if (rc != RXSOCK_OK) {
+        free(host);
+        return rc;
+    }
+    rc = rxvm_socket_starttls_schannel(entry, host);
+    free(host);
+    if (rc != RXSOCK_OK) {
+        rxvm_socket_close_entry_fd(entry);
+        rxvm_socket_clear_connect_target(entry);
+    }
     return rc;
 #elif defined(CREXX_TLS_OPENSSL)
     free(host);
@@ -1165,6 +1658,12 @@ rxinteger rxvm_socket_starttls(struct rxvm_context *context, rxinteger handle, v
     rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_UNAVAILABLE, 0,
                              "true STARTTLS is not supported by the Network.framework backend; use socketconnecttls");
     return RXSOCK_ERR_TLS_UNAVAILABLE;
+#elif defined(CREXX_TLS_SCHANNEL)
+    {
+        rxinteger rc = rxvm_socket_starttls_schannel(entry, host);
+        free(host);
+        return rc;
+    }
 #else
     free(host);
     rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_UNAVAILABLE, 0,
@@ -1325,6 +1824,242 @@ static rxinteger rxvm_socket_network_recv(rxvm_socket_entry *entry,
 }
 #endif
 
+#ifdef CREXX_TLS_SCHANNEL
+static size_t rxvm_socket_schannel_copy_decrypted(rxvm_socket_entry *entry,
+                                                  char *buffer,
+                                                  size_t max_bytes) {
+    size_t available;
+    size_t copy_size;
+
+    if (!entry->schannel_decrypted ||
+        entry->schannel_decrypted_pos >= entry->schannel_decrypted_len) {
+        return 0;
+    }
+
+    available = entry->schannel_decrypted_len - entry->schannel_decrypted_pos;
+    copy_size = available < max_bytes ? available : max_bytes;
+    memcpy(buffer, entry->schannel_decrypted + entry->schannel_decrypted_pos, copy_size);
+    entry->schannel_decrypted_pos += copy_size;
+    if (entry->schannel_decrypted_pos >= entry->schannel_decrypted_len) {
+        free(entry->schannel_decrypted);
+        entry->schannel_decrypted = 0;
+        entry->schannel_decrypted_len = 0;
+        entry->schannel_decrypted_pos = 0;
+    }
+    return copy_size;
+}
+
+static int rxvm_socket_schannel_store_decrypted(rxvm_socket_entry *entry,
+                                                const char *data,
+                                                size_t data_len) {
+    char *copy;
+
+    if (!data_len) return 0;
+    copy = malloc(data_len);
+    if (!copy) return -1;
+    memcpy(copy, data, data_len);
+    free(entry->schannel_decrypted);
+    entry->schannel_decrypted = copy;
+    entry->schannel_decrypted_len = data_len;
+    entry->schannel_decrypted_pos = 0;
+    return 0;
+}
+
+static void rxvm_socket_schannel_preserve_encrypted_extra(rxvm_socket_entry *entry,
+                                                          SecBuffer *extra) {
+    if (extra && extra->pvBuffer && extra->cbBuffer > 0) {
+        memmove(entry->schannel_encrypted, extra->pvBuffer, extra->cbBuffer);
+        entry->schannel_encrypted_len = extra->cbBuffer;
+        return;
+    }
+
+    free(entry->schannel_encrypted);
+    entry->schannel_encrypted = 0;
+    entry->schannel_encrypted_len = 0;
+}
+
+static int rxvm_socket_schannel_send(rxvm_socket_entry *entry,
+                                     const char *data,
+                                     size_t length,
+                                     size_t *sent_out) {
+    SecBuffer buffers[4];
+    SecBufferDesc desc;
+    SECURITY_STATUS status;
+    DWORD max_message;
+    size_t chunk;
+    size_t wire_len;
+    size_t encrypted_len;
+    char *wire;
+
+    if (!entry->schannel_have_ctx) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_STATE, 0,
+                                 "SChannel TLS connection is not active");
+        return -1;
+    }
+    if (!entry->blocking) {
+        rxvm_socket_entry_status(entry, RXSOCK_WOULDBLOCK, 0,
+                                 "SChannel TLS requires blocking socket mode");
+        return -1;
+    }
+
+    max_message = entry->schannel_sizes.cbMaximumMessage ?
+                  entry->schannel_sizes.cbMaximumMessage : 16384;
+    chunk = length;
+    if (chunk > max_message) chunk = max_message;
+    if (chunk > INT_MAX) chunk = INT_MAX;
+
+    if ((size_t)entry->schannel_sizes.cbHeader > ((size_t)-1) - chunk ||
+        (size_t)entry->schannel_sizes.cbTrailer >
+            ((size_t)-1) - (size_t)entry->schannel_sizes.cbHeader - chunk) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0, "TLS record too large");
+        return -1;
+    }
+
+    wire_len = (size_t)entry->schannel_sizes.cbHeader + chunk +
+               (size_t)entry->schannel_sizes.cbTrailer;
+    wire = malloc(wire_len);
+    if (!wire) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0, "out of memory");
+        return -1;
+    }
+    memcpy(wire + entry->schannel_sizes.cbHeader, data, chunk);
+
+    memset(buffers, 0, sizeof(buffers));
+    buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
+    buffers[0].pvBuffer = wire;
+    buffers[0].cbBuffer = entry->schannel_sizes.cbHeader;
+    buffers[1].BufferType = SECBUFFER_DATA;
+    buffers[1].pvBuffer = wire + entry->schannel_sizes.cbHeader;
+    buffers[1].cbBuffer = (unsigned long)chunk;
+    buffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
+    buffers[2].pvBuffer = wire + entry->schannel_sizes.cbHeader + chunk;
+    buffers[2].cbBuffer = entry->schannel_sizes.cbTrailer;
+    buffers[3].BufferType = SECBUFFER_EMPTY;
+    desc.ulVersion = SECBUFFER_VERSION;
+    desc.cBuffers = 4;
+    desc.pBuffers = buffers;
+
+    status = EncryptMessage(&entry->schannel_ctx, 0, &desc, 0);
+    if (status != SEC_E_OK) {
+        free(wire);
+        rxvm_socket_entry_schannel_error(entry, RXSOCK_ERR_OS, status,
+                                         "TLS send failed");
+        return -1;
+    }
+
+    encrypted_len = (size_t)buffers[0].cbBuffer +
+                    (size_t)buffers[1].cbBuffer +
+                    (size_t)buffers[2].cbBuffer;
+    if (rxvm_socket_schannel_send_all_fd(entry, wire, encrypted_len,
+                                         "TLS send failed") != 0) {
+        free(wire);
+        return -1;
+    }
+
+    free(wire);
+    if (sent_out) *sent_out = chunk;
+    rxvm_socket_entry_ok(entry);
+    return 0;
+}
+
+static rxinteger rxvm_socket_schannel_recv(rxvm_socket_entry *entry,
+                                           char *buffer,
+                                           size_t max_bytes) {
+    size_t copied;
+
+    if (!entry->schannel_have_ctx) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_STATE, 0,
+                                 "SChannel TLS connection is not active");
+        return RXSOCK_ERR_TLS_STATE;
+    }
+    if (!entry->blocking) {
+        rxvm_socket_entry_status(entry, RXSOCK_WOULDBLOCK, 0,
+                                 "SChannel TLS requires blocking socket mode");
+        return RXSOCK_WOULDBLOCK;
+    }
+
+    copied = rxvm_socket_schannel_copy_decrypted(entry, buffer, max_bytes);
+    if (copied > 0) {
+        rxvm_socket_entry_ok(entry);
+        return (rxinteger)copied;
+    }
+
+    for (;;) {
+        SecBuffer buffers[4];
+        SecBufferDesc desc;
+        SecBuffer *data_buffer;
+        SecBuffer *extra_buffer;
+        SECURITY_STATUS status;
+
+        if (entry->schannel_encrypted_len == 0) {
+            int received = rxvm_socket_schannel_read_encrypted(entry,
+                                                               &entry->schannel_encrypted,
+                                                               &entry->schannel_encrypted_len,
+                                                               "TLS receive failed");
+            if (received <= 0) {
+                return received == 0 ? 0 : entry->last_status;
+            }
+        }
+
+        memset(buffers, 0, sizeof(buffers));
+        buffers[0].BufferType = SECBUFFER_DATA;
+        buffers[0].pvBuffer = entry->schannel_encrypted;
+        buffers[0].cbBuffer = (unsigned long)entry->schannel_encrypted_len;
+        buffers[1].BufferType = SECBUFFER_EMPTY;
+        buffers[2].BufferType = SECBUFFER_EMPTY;
+        buffers[3].BufferType = SECBUFFER_EMPTY;
+        desc.ulVersion = SECBUFFER_VERSION;
+        desc.cBuffers = 4;
+        desc.pBuffers = buffers;
+
+        status = DecryptMessage(&entry->schannel_ctx, &desc, 0, 0);
+        if (status == SEC_E_INCOMPLETE_MESSAGE) {
+            int received = rxvm_socket_schannel_read_encrypted(entry,
+                                                               &entry->schannel_encrypted,
+                                                               &entry->schannel_encrypted_len,
+                                                               "TLS receive failed");
+            if (received <= 0) return received == 0 ? 0 : entry->last_status;
+            continue;
+        }
+        if (status == SEC_I_CONTEXT_EXPIRED) {
+            rxvm_socket_schannel_preserve_encrypted_extra(entry, 0);
+            rxvm_socket_entry_status(entry, RXSOCK_EOF, 0, "TLS connection closed");
+            return 0;
+        }
+        if (status == SEC_I_RENEGOTIATE) {
+            rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_STATE, 0,
+                                     "TLS renegotiation is not supported");
+            return RXSOCK_ERR_TLS_STATE;
+        }
+        if (status != SEC_E_OK) {
+            rxvm_socket_entry_schannel_error(entry, RXSOCK_ERR_OS, status,
+                                             "TLS receive failed");
+            return RXSOCK_ERR_OS;
+        }
+
+        data_buffer = rxvm_socket_schannel_find_buffer(buffers, 4, SECBUFFER_DATA);
+        extra_buffer = rxvm_socket_schannel_find_buffer(buffers, 4, SECBUFFER_EXTRA);
+        if (!data_buffer) {
+            rxvm_socket_schannel_preserve_encrypted_extra(entry, extra_buffer);
+            continue;
+        }
+
+        copied = data_buffer->cbBuffer < max_bytes ? data_buffer->cbBuffer : max_bytes;
+        if (data_buffer->cbBuffer > copied &&
+            rxvm_socket_schannel_store_decrypted(entry,
+                                                 (const char *)data_buffer->pvBuffer + copied,
+                                                 data_buffer->cbBuffer - copied) != 0) {
+            rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0, "out of memory");
+            return RXSOCK_ERR_NO_MEMORY;
+        }
+        memcpy(buffer, data_buffer->pvBuffer, copied);
+        rxvm_socket_schannel_preserve_encrypted_extra(entry, extra_buffer);
+        rxvm_socket_entry_ok(entry);
+        return (rxinteger)copied;
+    }
+}
+#endif
+
 static rxinteger rxvm_socket_send_bytes(rxvm_socket_entry *entry, const char *data, size_t length) {
     size_t total = 0;
 
@@ -1359,6 +2094,16 @@ static rxinteger rxvm_socket_send_bytes(rxvm_socket_entry *entry, const char *da
                     return total ? (rxinteger)total : entry->last_status;
                 }
                 sent = (int)network_sent;
+            }
+#elif defined(CREXX_TLS_SCHANNEL)
+            {
+                size_t chunk = length - total;
+                size_t schannel_sent = 0;
+                if (chunk > INT_MAX) chunk = INT_MAX;
+                if (rxvm_socket_schannel_send(entry, data + total, chunk, &schannel_sent) != 0) {
+                    return total ? (rxinteger)total : entry->last_status;
+                }
+                sent = (int)schannel_sent;
             }
 #else
             rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_UNAVAILABLE, 0,
@@ -1456,6 +2201,8 @@ static rxinteger rxvm_socket_recv_bytes(rxvm_socket_entry *entry, char *buffer, 
         return received;
 #elif defined(CREXX_TLS_NETWORK)
         return rxvm_socket_network_recv(entry, buffer, max_bytes);
+#elif defined(CREXX_TLS_SCHANNEL)
+        return rxvm_socket_schannel_recv(entry, buffer, max_bytes);
 #else
         rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_UNAVAILABLE, 0,
                                  "TLS support is not enabled in this cREXX build");
@@ -1591,6 +2338,14 @@ rxinteger rxvm_socket_pending(struct rxvm_context *context, rxinteger handle) {
 #elif defined(CREXX_TLS_NETWORK)
         rxvm_socket_entry_ok(entry);
         return 0;
+#elif defined(CREXX_TLS_SCHANNEL)
+        if (entry->schannel_decrypted &&
+            entry->schannel_decrypted_len > entry->schannel_decrypted_pos) {
+            count = (unsigned long)(entry->schannel_decrypted_len -
+                                    entry->schannel_decrypted_pos);
+        }
+        rxvm_socket_entry_ok(entry);
+        return (rxinteger)count;
 #else
         rxvm_socket_entry_status(entry, RXSOCK_ERR_TLS_UNAVAILABLE, 0,
                                  "TLS support is not enabled in this cREXX build");

@@ -16,7 +16,7 @@ if extension<>'' then say 'filename extension ignored.'
 linkedName = execName || '_linked'
 socketLib = ''
 crexx_home_upper = translate(crexx_home)
-if pos('\', crexx_home) > 0 | substr(crexx_home,2,1) = ':' | pos('/MINGW', crexx_home_upper) > 0 | pos('/MSYS', crexx_home_upper) > 0 then socketLib = ' -lws2_32'
+if pos('\', crexx_home) > 0 | substr(crexx_home,2,1) = ':' | pos('/MINGW', crexx_home_upper) > 0 | pos('/MSYS', crexx_home_upper) > 0 then socketLib = ' -lws2_32 -lsecur32 -lcrypt32'
 
 address system '"' || crexx_home || '/rxc" -i "' || crexx_home || '" ' || execName
 if rc<>0 then exit rc

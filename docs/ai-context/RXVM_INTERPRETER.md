@@ -265,8 +265,9 @@ Core sockets deliberately follow the context-owned registry pattern described
 above. `interpreter/rxvmsock.c` implements a small TCP wrapper over POSIX
 sockets on Unix-like platforms and Winsock2 on Windows. The default TLS backend
 is platform-selected: Network.framework on Apple platforms, OpenSSL on
-non-Windows Unix-like platforms, and OFF on Windows until the native backend is
-implemented. The only platform socket library needed on Windows is `ws2_32`.
+non-Windows Unix-like platforms, and SChannel on Windows. Windows builds link
+the platform `ws2_32`, `secur32`, and `crypt32` libraries for socket and TLS
+support.
 
 The VM supports IPv4/IPv6 name resolution through `getaddrinfo()` and creates
 TCP streams on demand during `sockconnect` or `sockbind`. Timeouts, blocking
@@ -303,14 +304,16 @@ silently reconnecting.
 
 TLS backends are selected with `CREXX_ENABLE_TLS`. Fresh CMake configurations
 default to `NETWORK` on Apple platforms, `OPENSSL` on non-Windows Unix-like
-platforms, and `OFF` on Windows. `OPENSSL` uses OpenSSL with default
+platforms, and `SCHANNEL` on Windows. `OPENSSL` uses OpenSSL with default
 verification paths and hostname checks, and supports both direct TLS connect
-and true STARTTLS. `NETWORK` is macOS-only and uses Network.framework,
-Security.framework, and CoreFoundation.framework so certificate validation goes
-through the operating system trust store and VM binaries have no OpenSSL
-runtime dependency. The Network.framework backend supports `sockconnecttls` and
-reports true `sockstarttls` as unsupported because the public framework API does
-not upgrade an existing BSD socket in place.
+and true STARTTLS. `SCHANNEL` uses Windows SChannel/SSPI and the Windows trust
+store, performs hostname verification, and supports both direct TLS connect and
+true STARTTLS over an existing Winsock stream. `NETWORK` is macOS-only and uses
+Network.framework, Security.framework, and CoreFoundation.framework so
+certificate validation goes through the operating system trust store and VM
+binaries have no OpenSSL runtime dependency. The Network.framework backend
+supports `sockconnecttls` and reports true `sockstarttls` as unsupported because
+the public framework API does not upgrade an existing BSD socket in place.
 
 ### Nested rxvml Calls
 

@@ -70,11 +70,12 @@ upgrade an existing connection in place.
 
 TLS is selected at CMake configure time. Fresh build directories default to
 `NETWORK` on Apple platforms, `OPENSSL` on non-Windows Unix-like platforms, and
-`OFF` on Windows until the native backend is added:
+`SCHANNEL` on Windows:
 
 ```sh
 cmake -S . -B cmake-build-tls -DCREXX_ENABLE_TLS=OPENSSL
 cmake -S . -B cmake-build-tls-network -DCREXX_ENABLE_TLS=NETWORK
+cmake -S . -B cmake-build-tls-windows -DCREXX_ENABLE_TLS=SCHANNEL
 cmake -S . -B cmake-build-notls -DCREXX_ENABLE_TLS=OFF
 ```
 
@@ -87,6 +88,10 @@ The lower-level true STARTTLS instruction reports unsupported on this backend.
 `OPENSSL` is the portable backend for platforms where system TLS is not wired in
 yet, such as Linux. It uses OpenSSL's default verification paths and performs
 hostname verification.
+
+`SCHANNEL` is the Windows backend. It uses SChannel/SSPI with the Windows trust
+store and hostname verification, so Windows VM binaries do not need OpenSSL for
+core socket TLS.
 
 Use `-DCREXX_TLS_STATIC_OPENSSL=ON` when the OpenSSL package and platform
 toolchain support static linking. This option only applies to

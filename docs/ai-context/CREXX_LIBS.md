@@ -57,13 +57,14 @@ rather than signalling. True STARTTLS remains a lower-level RXAS/VM instruction
 for future protocol-specific libraries and is not exposed by the public Level B
 `rxsocket` wrapper. Fresh CMake configurations select a TLS backend by platform:
 `NETWORK` on Apple platforms, `OPENSSL` on non-Windows Unix-like platforms, and
-`OFF` on Windows until the native TLS backend is added. `NETWORK` uses macOS
-Network.framework, Security.framework, CoreFoundation.framework, and the system
-trust store, while `OPENSSL` uses OpenSSL with default verification paths and
-hostname checks. `CREXX_ENABLE_TLS=OFF` can be used for dependency-minimal
-builds. `CREXX_TLS_STATIC_OPENSSL=ON` asks CMake to prefer static OpenSSL
-libraries when the OpenSSL backend is selected. For API details, status codes,
-and examples, see
+`SCHANNEL` on Windows. `NETWORK` uses macOS Network.framework,
+Security.framework, CoreFoundation.framework, and the system trust store,
+`SCHANNEL` uses Windows SChannel/SSPI and the Windows trust store, and
+`OPENSSL` uses OpenSSL with default verification paths and hostname checks.
+`CREXX_ENABLE_TLS=OFF` can be used for dependency-minimal builds.
+`CREXX_TLS_STATIC_OPENSSL=ON` asks CMake to prefer static OpenSSL libraries when
+the OpenSSL backend is selected. For API details, status codes, and examples,
+see
 `lib/rxfnsb/rexx/rxsocket.md`.
 
 The older OpenSSL-backed dynamic socket plugin is deprecated and no longer

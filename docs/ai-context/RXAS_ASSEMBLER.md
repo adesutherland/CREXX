@@ -279,7 +279,8 @@ compiled in, they record a negative socket status; `sockstarttls` also returns
 that code in `rRc`. Backends are selected at CMake configure time. Fresh builds
 default to `CREXX_ENABLE_TLS=NETWORK` on Apple platforms,
 `CREXX_ENABLE_TLS=OPENSSL` on non-Windows Unix-like platforms, and
-`CREXX_ENABLE_TLS=OFF` on Windows. The Network backend uses Network.framework,
-Security.framework, CoreFoundation.framework, and the system trust store for
-`sockconnecttls`. The OpenSSL backend supports both direct TLS connect and true
-STARTTLS.
+`CREXX_ENABLE_TLS=SCHANNEL` on Windows. The Network backend uses
+Network.framework, Security.framework, CoreFoundation.framework, and the system
+trust store for `sockconnecttls`. The OpenSSL backend supports both direct TLS
+connect and true STARTTLS. The SChannel backend uses Windows SChannel/SSPI and
+the Windows trust store, and supports both direct TLS connect and true STARTTLS.

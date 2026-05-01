@@ -63,4 +63,5 @@ the VM core socket TLS backend selected at build time. Fresh macOS builds
 default to `CREXX_ENABLE_TLS=NETWORK`, using Apple's system TLS and trust store
 through Network.framework, Security.framework, and CoreFoundation.framework.
 Fresh non-Windows Unix-like builds default to `CREXX_ENABLE_TLS=OPENSSL`.
-Windows defaults to TLS off until the native backend is added.
+Windows builds default to `CREXX_ENABLE_TLS=SCHANNEL`, using SChannel/SSPI and
+the Windows trust store.

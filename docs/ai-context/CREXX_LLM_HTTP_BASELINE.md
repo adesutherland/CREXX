@@ -53,9 +53,9 @@ Ollama or external network access:
   VM-managed socket API as `socketconnecttls(sock, host, port)`. Fresh macOS
   builds default to `CREXX_ENABLE_TLS=NETWORK` to use Network.framework,
   Security.framework, CoreFoundation.framework, and the system trust store.
-  Fresh Linux/Unix builds default to `CREXX_ENABLE_TLS=OPENSSL`; Windows remains
-  `OFF` until a native backend is added. Provider work still needs to opt into
-  HTTPS.
+  Fresh Linux/Unix builds default to `CREXX_ENABLE_TLS=OPENSSL`; Windows builds
+  default to `CREXX_ENABLE_TLS=SCHANNEL` to use SChannel/SSPI and the Windows
+  trust store. Provider work still needs to opt into HTTPS.
 - `rxhttp` intentionally sends `Accept-Encoding: identity`; compressed response
   bodies are not supported yet.
 - Redirects, cookies, proxies, persistent connections, and chunk trailers are
