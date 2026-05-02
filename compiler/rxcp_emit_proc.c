@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2025 Adrian Sutherland, Peter Jacob, René Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal

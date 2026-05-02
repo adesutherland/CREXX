@@ -1,3 +1,27 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 /* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
 namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressdriverregistry addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment systemaddressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
