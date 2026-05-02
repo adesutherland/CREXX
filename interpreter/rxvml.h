@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include "rxvalue.h"
 
-#define RXVML_ABI_VERSION 5
+#define RXVML_ABI_VERSION 7
 #define RXVML_ADDRESS_ENVIRONMENT_INTERFACE "_rxsysb.addressenvironment"
 #define RXVML_ADDRESS_ENVIRONMENT_FACTORY_PROC "_rxsysb._new_address_environment"
 
@@ -23,6 +23,9 @@ typedef struct rxvml_address_binding {
 typedef struct rxvml_address_request {
     const char* environment_name;
     const char* command;
+    rxvml_value* stdin_endpoint;
+    rxvml_value* stdout_endpoint;
+    rxvml_value* stderr_endpoint;
     size_t binding_count;
     const rxvml_address_binding* bindings;
     rxvml_value* sandbox;
@@ -40,6 +43,28 @@ typedef int (*rxvml_address_callback)(
     rxvml_context* ctx,
     const rxvml_address_request* request,
     rxvml_address_response* response,
+    void* userdata);
+
+typedef struct rxvml_address_function_request {
+    const char* environment_name;
+    const char* function_name;
+    size_t argc;
+    const char** args;
+    rxvml_value* sandbox;
+    const char* flags;
+} rxvml_address_function_request;
+
+typedef struct rxvml_address_function_response {
+    int rc;
+    const char* result;
+    const char* condition_name;
+    const char* diagnostic;
+} rxvml_address_function_response;
+
+typedef int (*rxvml_address_function_callback)(
+    rxvml_context* ctx,
+    const rxvml_address_function_request* request,
+    rxvml_address_function_response* response,
     void* userdata);
 
 /* Context lifecycle */
@@ -104,7 +129,9 @@ int rxvml_address_register_environment(
 int rxvml_address_register_callback_environment(
     rxvml_context* ctx,
     const char* env_name,
+    const char* instance_id,
     rxvml_address_callback callback,
+    rxvml_address_function_callback function_callback,
     void* userdata);
 
 int rxvml_address_create_environment(
@@ -129,6 +156,26 @@ int rxvml_address_sandbox_set(
     const rxvml_address_request* request,
     const char* name,
     const char* value);
+
+/* Emit text to the ADDRESS command's output or error redirect. If no redirect
+ * was supplied, stdout/stderr is used. The helper finalizes the endpoint so
+ * array/string redirects are readable when the native callback returns. */
+int rxvml_address_emit_output(
+    rxvml_context* ctx,
+    const rxvml_address_request* request,
+    const char* text);
+
+int rxvml_address_emit_error(
+    rxvml_context* ctx,
+    const rxvml_address_request* request,
+    const char* text);
+
+/* Look up a scalar ADDRESS binding by internal name or external alias. */
+int rxvml_address_binding_get(
+    const rxvml_address_request* request,
+    const char* name,
+    char* out_value,
+    size_t out_value_len);
 
 /* ADDRESS stem helpers for exposed .string[] / addressstem bindings. */
 int rxvml_address_stem_get(

@@ -104,6 +104,13 @@ images that strip source metadata may still provide ASM/module data while
 source-line lookup returns empty. Debugger UI text and menu rendering belong to
 `debugger/rxdb_gui.rexx`, not the library trace internals.
 
+`lib/rxfnsb/rexx/_address.rexx` owns the Rexx-side ADDRESS protocol. In
+addition to command dispatch, redirects, sandboxes, and function calls,
+`addressrequest.get_binding_value(name)` gives Rexx providers a simple way to
+read scalar bindings auto-exposed from ADDRESS host-variable anchors such as
+`:name` and `${name}`. Anchor interpretation remains provider-specific; the VM
+only carries binding values and write-back updates.
+
 `lib/rxfnsg/rexx/llm.rexx` contains the first Level G LLM integration surface.
 Level G is layered on the Level B foundation: the module is `options levelg`,
 builds into `rxfnsg.rxbin`, and imports the Level B `rxfnsb`, `rxjson`, and
@@ -152,6 +159,15 @@ abs: procedure = .string
 1. **Namespaces:** Functions must declare `namespace rxfnsb expose <function_name>` so they correctly bind into the Standard Library space that user scripts import.
 2. **Inline Assembly (`assembler`)**: When low-level access is required (such as fetching the current system time in `date.rexx`), cREXX BIFs can drop down into inline bytecode using the `assembler` keyword.
 3. **Compilation:** These `.rexx` files are compiled into `.rxbin` bytecodes during the build process and are packaged or shipped exactly like user-compiled binaries.
+4. **Explicit Late Load:** `loadmodule(path) -> .int` wraps the VM's
+   `METALOADMODULE` instruction. Use it when Rexx code deliberately loads a
+   `.rxbin` or `.rxplugin` provider before calling imports supplied by that
+   file. The VM relinks immediately after a successful load.
+5. **ADDRESS Function Convenience:** `_address_call(env, name, ...) -> .string`
+   and `_address_call_response(env, name, ...) -> .addressfunctionresponse`
+   wrap the lower-level `_address_function(env, name, args[])` request object
+   path. They are provider-neutral and work for both Rexx and native ADDRESS
+   environments.
 
 ## 2. RXPA (cREXX Plugin Architecture)
 

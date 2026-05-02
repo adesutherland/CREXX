@@ -11,5 +11,11 @@ _native_address_match() .locals=0 .expose=_rxsysb._native_address_match
 _native_address_handle() .locals=0 .expose=_rxsysb._native_address_handle
   .meta "_rxsysb._native_address_handle"="b" ".int" _native_address_handle() "env_name = .string"
 
+_native_address_id() .locals=0 .expose=_rxsysb._native_address_id
+  .meta "_rxsysb._native_address_id"="b" ".string" _native_address_id() "env_name = .string"
+
 _native_address_execute() .locals=0 .expose=_rxsysb._native_address_execute
   .meta "_rxsysb._native_address_execute"="b" ".int" _native_address_execute() "handle = .int, request = .addressrequest, response = .addressresponse"
+
+_native_address_invoke() .locals=0 .expose=_rxsysb._native_address_invoke
+  .meta "_rxsysb._native_address_invoke"="b" ".int" _native_address_invoke() "handle = .int, request = .addressfunctionrequest, response = .addressfunctionresponse"

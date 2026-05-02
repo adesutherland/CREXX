@@ -787,6 +787,55 @@ void WriteToStdin(REDIRECT* data, char *line, size_t nBytes)
     }
 }
 
+int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
+{
+    REDIRECT* redirect;
+
+    if (!redirect_reg || !redirect_reg->binary_value ||
+        redirect_reg->binary_length < sizeof(REDIRECT)) return 1;
+
+    redirect = (REDIRECT*)redirect_reg->binary_value;
+    if (!data) data = "";
+
+    WriteToStdin(redirect, (char*)data, nBytes);
+    if (redirect->errorCode != 0) return -1;
+
+#ifdef _WIN32
+    if (redirect->hWrite != INVALID_HANDLE_VALUE) {
+        CloseHandle(redirect->hWrite);
+        redirect->hWrite = INVALID_HANDLE_VALUE;
+    }
+    if (redirect->has_thread) {
+        WaitForSingleObject(redirect->thread, INFINITE);
+        CloseHandle(redirect->thread);
+        redirect->thread = NULL;
+        redirect->has_thread = 0;
+    }
+    if (redirect->hRead != INVALID_HANDLE_VALUE) {
+        CloseHandle(redirect->hRead);
+        redirect->hRead = INVALID_HANDLE_VALUE;
+    }
+#else
+    if (redirect->hWrite != -1) {
+        close(redirect->hWrite);
+        redirect->hWrite = -1;
+    }
+    if (redirect->has_thread) {
+        if (pthread_join(redirect->thread, NULL)) {
+            redirect->errorCode = 1;
+            return -1;
+        }
+        redirect->has_thread = 0;
+    }
+    if (redirect->hRead != -1) {
+        close(redirect->hRead);
+        redirect->hRead = -1;
+    }
+#endif
+
+    return redirect->errorCode == 0 ? 0 : -1;
+}
+
 void CleanUp(SHELLDATA* data)
 {
     if (data->buffer) {

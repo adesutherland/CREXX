@@ -35,6 +35,7 @@ set(BIFS
 		insert
 		length
 		linesize
+		loadmodule
 		lower
 		max
 		min

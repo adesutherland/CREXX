@@ -1429,13 +1429,16 @@ target_compile_definitions(test_address_bridge PRIVATE
         CREXX_TEST_CMS_ADDRESS_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_cms_provider.rxbin"
         CREXX_TEST_CMS_ADDRESS_HOST_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_cms_host.rxbin")
 
+set(CREXX_CMS_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/cms")
+set(CREXX_NATIVE_KV_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/native/kv")
+
 add_custom_command(
         OUTPUT address_cms_provider.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_provider.rexx
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_provider ${CREXX_CMS_DEMO_DIR}/cms_address_environment.rexx
         COMMAND $<TARGET_FILE:rxas> address_cms_provider
-        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_provider.rexx
+        DEPENDS rxc rxas library compiler_exit_bin ${CREXX_CMS_DEMO_DIR}/cms_address_environment.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Compiling address_cms_provider.rexx ..."
+        COMMENT "Compiling cms_address_environment.rexx ..."
 )
 
 add_custom_command(
@@ -1447,8 +1450,37 @@ add_custom_command(
         COMMENT "Compiling address_cms_host.rexx ..."
 )
 
-add_custom_target(address_cms_fixture_bin DEPENDS address_cms_provider.rxbin address_cms_host.rxbin)
+add_custom_command(
+        OUTPUT address_cms_demo.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_demo ${CREXX_CMS_DEMO_DIR}/cms_address_demo.rexx
+        COMMAND $<TARGET_FILE:rxas> address_cms_demo
+        DEPENDS rxc rxas library compiler_exit_bin ${CREXX_CMS_DEMO_DIR}/cms_address_demo.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling cms_address_demo.rexx ..."
+)
+
+add_custom_target(address_cms_fixture_bin DEPENDS address_cms_provider.rxbin address_cms_host.rxbin address_cms_demo.rxbin)
+add_custom_target(address_cms_demo_bin DEPENDS address_cms_provider.rxbin address_cms_demo.rxbin)
 add_dependencies(test_address_bridge address_cms_fixture_bin library)
+
+add_custom_command(
+        OUTPUT native_kv_address_demo.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o native_kv_address_demo ${CREXX_NATIVE_KV_DEMO_DIR}/kv_address_demo.rexx
+        COMMAND $<TARGET_FILE:rxas> native_kv_address_demo
+        DEPENDS rxc rxas library compiler_exit_bin ${CREXX_NATIVE_KV_DEMO_DIR}/kv_address_demo.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling kv_address_demo.rexx ..."
+)
+
+add_custom_target(native_kv_address_demo_bin DEPENDS native_kv_address_demo.rxbin)
+
+add_executable(native_kv_address_demo ${CREXX_NATIVE_KV_DEMO_DIR}/kv_address_demo.c)
+target_link_libraries(native_kv_address_demo PRIVATE rxvml rxpashim)
+target_include_directories(native_kv_address_demo PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_compile_definitions(native_kv_address_demo PRIVATE
+        CREXX_NATIVE_KV_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
+        CREXX_NATIVE_KV_DEMO_MODULE="${CMAKE_CURRENT_BINARY_DIR}/native_kv_address_demo.rxbin")
+add_dependencies(native_kv_address_demo native_kv_address_demo_bin library)
 
 add_custom_command(
         OUTPUT address_callback_host.rxbin
@@ -1468,6 +1500,35 @@ target_compile_definitions(test_address_callback_host PRIVATE
         CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_TEST_ADDRESS_CALLBACK_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_callback_host.rxbin")
 add_dependencies(test_address_callback_host address_callback_host_bin library)
+
+add_custom_command(
+        OUTPUT dynamic_load_provider.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o dynamic_load_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_provider.rexx
+        COMMAND $<TARGET_FILE:rxas> dynamic_load_provider
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_provider.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling dynamic_load_provider.rexx ..."
+)
+
+add_custom_command(
+        OUTPUT dynamic_load_host.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_BINARY_DIR}/bin -o dynamic_load_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_host.rexx
+        COMMAND $<TARGET_FILE:rxas> dynamic_load_host
+        DEPENDS rxc rxas library compiler_exit_bin dynamic_load_provider.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_host.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling dynamic_load_host.rexx ..."
+)
+
+add_custom_target(dynamic_load_fixture_bin DEPENDS dynamic_load_provider.rxbin dynamic_load_host.rxbin)
+
+add_executable(test_dynamic_load src/test_dynamic_load.c)
+target_link_libraries(test_dynamic_load PRIVATE rxvml rxpashim)
+target_include_directories(test_dynamic_load PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_compile_definitions(test_dynamic_load PRIVATE
+        CREXX_TEST_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
+        CREXX_TEST_DYNAMIC_LOAD_HOST_MODULE="${CMAKE_CURRENT_BINARY_DIR}/dynamic_load_host.rxbin"
+        CREXX_TEST_DYNAMIC_LOAD_PROVIDER_MODULE="${CMAKE_CURRENT_BINARY_DIR}/dynamic_load_provider.rxbin")
+add_dependencies(test_dynamic_load dynamic_load_fixture_bin library)
 
 add_custom_command(
         OUTPUT crexxsaa_variables_host.rxbin
@@ -1565,8 +1626,18 @@ add_test(NAME address_cms_provider COMMAND
         ${CMAKE_CURRENT_BINARY_DIR}/address_cms_provider.rxbin
         ${CMAKE_CURRENT_BINARY_DIR}/address_cms_host.rxbin)
 set_tests_properties(address_cms_provider PROPERTIES LABELS "compiler;stage3")
+add_test(NAME address_cms_demo COMMAND
+        $<TARGET_FILE:rxvm>
+        ${CMAKE_BINARY_DIR}/bin/library.rxbin
+        ${CMAKE_CURRENT_BINARY_DIR}/address_cms_provider.rxbin
+        ${CMAKE_CURRENT_BINARY_DIR}/address_cms_demo.rxbin)
+set_tests_properties(address_cms_demo PROPERTIES LABELS "compiler;stage3")
+add_test(NAME address_native_kv_demo COMMAND native_kv_address_demo)
+set_tests_properties(address_native_kv_demo PROPERTIES LABELS "compiler;stage3")
 add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
+add_test(NAME dynamic_load COMMAND test_dynamic_load)
+set_tests_properties(dynamic_load PROPERTIES LABELS "compiler;stage3")
 add_test(NAME crexxsaa_variables COMMAND test_crexxsaa_variables)
 set_tests_properties(crexxsaa_variables PROPERTIES
         LABELS "compiler;stage3"

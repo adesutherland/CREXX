@@ -11,6 +11,14 @@ The execution of a program within `rxvm` is handled in discrete phases (as defin
 4. **Preparation**: `rxvm_prepare()` optionally populates per-module dispatch side tables for maximum speed without mutating serialized bytecode.
 5. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure (typically `main`) and launch the main interpreter loop.
 
+Runtime code can explicitly late-load another `.rxbin` or `.rxplugin` through
+the debugger-style `METALOADMODULE` instruction. The public rxfnsb wrapper is
+`loadmodule(path) -> .int`; it returns the last loaded module number, or a
+non-positive value on failure. A successful `METALOADMODULE` immediately calls
+`rxvm_link()` so existing unresolved imports can bind to procedures/classes in
+the newly loaded file. There is intentionally no automatic directory sweep:
+callers are responsible for loading the provider artifact they want.
+
 ## 2. Core Internal Structs
 
 ### `rxvm_context`
@@ -335,6 +343,59 @@ dispatch reserved as the fallback for non-standard interface implementations.
 This keeps repeated native callback writes stable while still allowing future
 custom Rexx objects to implement the same ADDRESS interfaces.
 
+### ADDRESS Environment Objects and Functions
+
+`ADDRESS` environments are normal Rexx objects implementing
+`_rxsysb.addressenvironment`. The runtime registry caches those objects by
+normalised environment name, and `_rxsysb._address_environment(name)` returns
+the cached object for direct Rexx use.
+
+Two optional sibling interfaces carry the prototype environment-context
+extension:
+
+- `_rxsysb.addressinstance` lets a provider expose/bind its normalised
+  environment name and host-supplied instance id.
+- `_rxsysb.addressfunctionenvironment` lets a provider handle generic
+  environment-scoped function calls through an `addressfunctionrequest` /
+  `addressfunctionresponse` pair.
+
+Native `rxvml` hosts register command and/or function callbacks with
+`rxvml_address_register_callback_environment(ctx, name, id, command_cb,
+function_cb, userdata)`. The pre-release command-only
+`rxvml_address_register_callback_environment(ctx, name, command_cb, userdata)`
+signature was retired; pass `NULL` for `id` or `function_cb` when those features
+are not needed. The native provider object stores the callback handle and
+instance id, so both `ADDRESS env "command"` and explicit
+`(_address_environment(env) as .addressfunctionenvironment).invoke(...)` reach
+the same host environment instance.
+
+As of `RXVML_ABI_VERSION` 7, native `rxvml_address_request` also carries
+`stdin_endpoint`, `stdout_endpoint`, and `stderr_endpoint` VM values. Native
+providers should use `rxvml_address_emit_output(ctx, request, text)` and
+`rxvml_address_emit_error(ctx, request, text)` rather than reaching into those
+opaque redirect values. These helpers write to `ADDRESS ... output/error`
+redirects and finalize them so Rexx array/string captures are readable when
+the callback returns; without a redirect they write to the normal VM
+stdout/stderr path.
+
+ADDRESS command text may contain host-variable anchors whose meaning belongs to
+the selected environment handler. The compiler auto-exposes visible Rexx scalar
+variables named by `:name` inside string-literal command text, and by `${name}`
+inside command text that reaches the ADDRESS exit. The command string itself is
+not interpolated by the VM. Rexx providers read the exposed values from
+`addressrequest.get_binding_value(name)`; native providers can use
+`rxvml_address_binding_get(request, name, out, out_len)`. Handlers that write a
+host variable return a normal `var` updated binding, so the existing ADDRESS
+write-back path handles both explicit `EXPOSE` variables and auto-exposed
+anchors.
+
+For Rexx callers, `_address_call(env, name, ...) -> .string` is the simple
+string-returning convenience surface over `_address_function(...)`. Use
+`_address_call_response(env, name, ...) -> .addressfunctionresponse` when the
+caller needs the function rc, condition, or diagnostics. This helper layer is
+provider-neutral: Rexx and native ADDRESS environments see the same
+`addressfunctionrequest` protocol underneath.
+
 ## 3. The Execution Loop
 
 The core execution engine lives in `run()` within `interpreter/rxvmintp.c`. 
@@ -446,7 +507,6 @@ The current implementation is now:
 - if no provider exists, the VM raises `FUNCTION_NOT_FOUND`
 
 Runtime module loading matters here as well. `METALOADMODULE` marks the
-VM link state dirty, and the next `srcfproc` resolution forces
-`rxvm_link()` before consulting the interface-factory registry. That
-preserves correctness without paying the full relink cost on every
-bridge call or factory lookup.
+VM link state dirty and immediately calls `rxvm_link()` after a successful
+load, so later `srcfproc`, `srcmethod`, and direct imported calls can see
+the new provider without an automatic filesystem sweep.

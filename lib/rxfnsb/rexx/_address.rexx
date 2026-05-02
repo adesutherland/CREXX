@@ -1,6 +1,6 @@
 /* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
-namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressrequest addressresponse addressenvironment systemaddressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
+namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment systemaddressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
 import rxfnsb
 
 addressstem: interface
@@ -312,7 +312,6 @@ addressrequest: class
     i = _binding_count + 1
     _binding_count = i
     _bindings[i] = binding
-    assembler linktoattr1 i, _bindings, binding
 
   get_binding_count: method = .int
     return _binding_count
@@ -320,6 +319,23 @@ addressrequest: class
   get_binding: method = .addressbinding
     arg index = .int
     return _bindings[index]
+
+  get_binding_value: method = .string
+    arg name = .string
+    binding = .addressbinding
+    target = .string
+
+    target = normalize_environment_name(name)
+    if target = "" then return ""
+
+    do i = 1 to _binding_count
+      binding = _bindings[i]
+      if normalize_environment_name(binding.get_kind()) \= "VAR" then iterate
+      if normalize_environment_name(binding.get_internal_name()) = target then return binding.get_value()
+      if normalize_environment_name(binding.get_external_alias()) = target then return binding.get_value()
+    end
+
+    return ""
 
   get_binding_stem_value: method = .string
     arg index = .int, name = .string
@@ -396,6 +412,104 @@ addressresponse: class
     arg index = .int
     return _updated_bindings[index]
 
+addressinstance: interface
+  bind_environment: method = .void
+    arg env_name = .string, instance_id = .string
+
+  environment_name: method = .string
+
+  environment_id: method = .string
+
+addressfunctionrequest: class
+  _arguments = .string[]
+  _environment_name = .string
+  _flags = .string
+  _function_name = .string
+  _sandbox = .addresssandbox
+
+  *: factory
+    arg environment_name = .string, function_name = .string, arguments = .string[], sandbox = .addresssandbox, flags = ""
+    _environment_name = environment_name
+    _function_name = function_name
+    _arguments = arguments
+    _sandbox = sandbox
+    _flags = flags
+    return
+
+  get_environment_name: method = .string
+    return _environment_name
+
+  get_function_name: method = .string
+    return _function_name
+
+  get_argument_count: method = .int
+    return _arguments.0
+
+  get_argument: method = .string
+    arg index = .int
+    if index < 1 | index > _arguments.0 then return ""
+    return _arguments[index]
+
+  get_sandbox: method = .addresssandbox
+    return _sandbox
+
+  get_flags: method = .string
+    return _flags
+
+addressfunctionresponse: class
+  _condition_name = .string
+  _diagnostic_count = .int
+  _diagnostics = .string[]
+  _rc = .int
+  _result = .string
+
+  *: factory
+    arg rc = 0, result = "", condition_name = ""
+    _rc = rc
+    _result = result
+    _condition_name = condition_name
+    _diagnostic_count = 0
+    return
+
+  get_rc: method = .int
+    return _rc
+
+  set_rc: method = .void
+    arg rc = .int
+    _rc = rc
+
+  get_result: method = .string
+    return _result
+
+  set_result: method = .void
+    arg result = .string
+    _result = result
+
+  get_condition_name: method = .string
+    return _condition_name
+
+  set_condition_name: method = .void
+    arg condition_name = .string
+    _condition_name = condition_name
+
+  add_diagnostic: method = .void
+    arg text = .string
+    i = .int
+    i = _diagnostic_count + 1
+    _diagnostic_count = i
+    _diagnostics[i] = text
+
+  get_diagnostic_count: method = .int
+    return _diagnostic_count
+
+  get_diagnostic: method = .string
+    arg index = .int
+    return _diagnostics[index]
+
+addressfunctionenvironment: interface
+  invoke: method = .addressfunctionresponse
+    arg request = .addressfunctionrequest
+
 addressenvironment: interface
   *: factory
     arg env_name = .string
@@ -403,7 +517,10 @@ addressenvironment: interface
   execute: method = .addressresponse
     arg request = .addressrequest
 
-systemaddressenvironment: class implements .addressenvironment
+systemaddressenvironment: class implements .addressenvironment .addressinstance .addressfunctionenvironment
+  _environment_id = .string
+  _environment_name = .string
+
   *: match
     arg env_name = .string
     name = .string
@@ -413,13 +530,35 @@ systemaddressenvironment: class implements .addressenvironment
 
   *: factory
     arg env_name = .string
+    _environment_name = normalize_environment_name(env_name)
+    _environment_id = _environment_name
     return
+
+  bind_environment: method = .void
+    arg env_name = .string, instance_id = .string
+    _environment_name = normalize_environment_name(env_name)
+    _environment_id = instance_id
+    if _environment_id = "" then _environment_id = _environment_name
+    return
+
+  environment_name: method = .string
+    return _environment_name
+
+  environment_id: method = .string
+    return _environment_id
 
   execute: method = .addressresponse
     arg request = .addressrequest
     return spawn_request(request)
 
-pathaddressenvironment: class implements .addressenvironment
+  invoke: method = .addressfunctionresponse
+    arg request = .addressfunctionrequest
+    return unsupported_function_response(_environment_name, request.get_function_name())
+
+pathaddressenvironment: class implements .addressenvironment .addressinstance .addressfunctionenvironment
+  _environment_id = .string
+  _environment_name = .string
+
   *: match
     arg env_name = .string
     if normalize_environment_name(env_name) = "PATH" then return 100
@@ -427,13 +566,33 @@ pathaddressenvironment: class implements .addressenvironment
 
   *: factory
     arg env_name = .string
+    _environment_name = normalize_environment_name(env_name)
+    _environment_id = _environment_name
     return
+
+  bind_environment: method = .void
+    arg env_name = .string, instance_id = .string
+    _environment_name = normalize_environment_name(env_name)
+    _environment_id = instance_id
+    if _environment_id = "" then _environment_id = _environment_name
+    return
+
+  environment_name: method = .string
+    return _environment_name
+
+  environment_id: method = .string
+    return _environment_id
 
   execute: method = .addressresponse
     arg request = .addressrequest
     return spawn_request(request)
 
-unknownaddressenvironment: class implements .addressenvironment
+  invoke: method = .addressfunctionresponse
+    arg request = .addressfunctionrequest
+    return unsupported_function_response(_environment_name, request.get_function_name())
+
+unknownaddressenvironment: class implements .addressenvironment .addressinstance .addressfunctionenvironment
+  _environment_id = .string
   _environment_name = .string
 
   *: match
@@ -443,7 +602,21 @@ unknownaddressenvironment: class implements .addressenvironment
   *: factory
     arg env_name = .string
     _environment_name = normalize_environment_name(env_name)
+    _environment_id = _environment_name
     return
+
+  bind_environment: method = .void
+    arg env_name = .string, instance_id = .string
+    _environment_name = normalize_environment_name(env_name)
+    _environment_id = instance_id
+    if _environment_id = "" then _environment_id = _environment_name
+    return
+
+  environment_name: method = .string
+    return _environment_name
+
+  environment_id: method = .string
+    return _environment_id
 
   execute: method = .addressresponse
     arg request = .addressrequest
@@ -452,7 +625,13 @@ unknownaddressenvironment: class implements .addressenvironment
     if env_name = "" then env_name = request.get_environment_name()
     return unknown_environment_response(env_name)
 
-nativeaddressenvironment: class implements .addressenvironment
+  invoke: method = .addressfunctionresponse
+    arg request = .addressfunctionrequest
+    return unsupported_function_response(_environment_name, request.get_function_name())
+
+nativeaddressenvironment: class implements .addressenvironment .addressinstance .addressfunctionenvironment
+  _environment_id = .string
+  _environment_name = .string
   _native_handle = .int
 
   *: match
@@ -462,8 +641,25 @@ nativeaddressenvironment: class implements .addressenvironment
 
   *: factory
     arg env_name = .string
+    _environment_name = normalize_environment_name(env_name)
     _native_handle = _native_address_handle(env_name)
+    _environment_id = _native_address_id(env_name)
+    if _environment_id = "" then _environment_id = _environment_name
     return
+
+  bind_environment: method = .void
+    arg env_name = .string, instance_id = .string
+    _environment_name = normalize_environment_name(env_name)
+    _environment_id = instance_id
+    if _environment_id = "" then _environment_id = _native_address_id(_environment_name)
+    if _environment_id = "" then _environment_id = _environment_name
+    return
+
+  environment_name: method = .string
+    return _environment_name
+
+  environment_id: method = .string
+    return _environment_id
 
   execute: method = .addressresponse
     arg request = .addressrequest
@@ -471,6 +667,15 @@ nativeaddressenvironment: class implements .addressenvironment
     response = .addressresponse
     response = .addressresponse(0)
     rc = _native_address_execute(_native_handle, request, response)
+    call response.set_rc(rc)
+    return response
+
+  invoke: method = .addressfunctionresponse
+    arg request = .addressfunctionrequest
+    rc = .int
+    response = .addressfunctionresponse
+    response = .addressfunctionresponse(0, "")
+    rc = _native_address_invoke(_native_handle, request, response)
     call response.set_rc(rc)
     return response
 
@@ -770,9 +975,86 @@ _address_apply_response_request_stem: procedure = .void
   end
   return
 
+_address_environment: procedure = .addressenvironment expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
+  arg env_name = ""
+
+  name = .string
+  idx = .int
+  ensure_rc = .int
+
+  call ensure_address_runtime
+
+  name = normalize_environment_name(env_name)
+  if name = "" then name = _current_address_environment()
+
+  ensure_rc = _ensure_address_environment(name)
+  if ensure_rc \= 0 then return .unknownaddressenvironment(name)
+
+  idx = find_address_environment_index(_address_environment_names, name)
+  if idx = 0 then return .unknownaddressenvironment(name)
+  return _address_environment_objects[idx] as .addressenvironment
+
+_address_function: procedure = .addressfunctionresponse
+  arg env_name = "", function_name = "", arguments = .string[]
+
+  env_obj = .addressenvironment
+  fn_env = .addressfunctionenvironment
+  request = .addressfunctionrequest
+  request_env = .string
+  sandbox = .addresssandbox
+
+  request_env = normalize_environment_name(env_name)
+  if request_env = "" then request_env = _current_address_environment()
+  env_obj = _address_environment(env_name)
+  if env_obj is .addressfunctionenvironment then do
+    fn_env = env_obj as .addressfunctionenvironment
+    sandbox = .standardaddresssandbox()
+    request = .addressfunctionrequest(request_env, function_name, arguments, sandbox, "")
+    return fn_env.invoke(request)
+  end
+
+  return unsupported_function_response(request_env, function_name)
+
+_address_call_response: procedure = .addressfunctionresponse
+  arg env_name = "", function_name = "", ... = .string
+
+  arguments = .string[]
+  do i = 1 to arg.0
+    arguments[i] = arg.i
+  end
+
+  return _address_function(env_name, function_name, arguments)
+
+_address_call: procedure = .string
+  arg env_name = "", function_name = "", ... = .string
+
+  arguments = .string[]
+  response = .addressfunctionresponse
+
+  do i = 1 to arg.0
+    arguments[i] = arg.i
+  end
+
+  response = _address_function(env_name, function_name, arguments)
+  return response.get_result()
+
 _new_address_environment: procedure = .addressenvironment
   arg env_name = .string
   return .addressenvironment(normalize_environment_name(env_name))
+
+bind_address_environment_object: procedure = .void
+  arg env_name = .string, env_obj = .addressenvironment, instance_id = ""
+
+  instance = .addressinstance
+  bound_id = .string
+
+  if env_obj is .addressinstance then do
+    instance = env_obj as .addressinstance
+    bound_id = instance_id
+    if bound_id = "" then bound_id = instance.environment_id()
+    call instance.bind_environment(env_name, bound_id)
+  end
+  return
 
 _ensure_address_environment: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
   arg env_name = .string
@@ -790,6 +1072,7 @@ _ensure_address_environment: procedure = .int expose _address_runtime_ready _add
   if idx \= 0 then return 0
 
   env_obj = .addressenvironment(name)
+  call bind_address_environment_object(name, env_obj, "")
   idx = _address_environment_names.0 + 1
   _address_environment_names.idx = name
   _address_environment_objects.idx = env_obj
@@ -809,6 +1092,7 @@ _register_address_environment: procedure = .int expose _address_runtime_ready _a
   idx = find_address_environment_index(_address_environment_names, name)
   if idx = 0 then idx = _address_environment_names.0 + 1
 
+  call bind_address_environment_object(name, env_obj, "")
   _address_environment_names.idx = name
   _address_environment_objects.idx = env_obj
   return 0
@@ -1077,6 +1361,14 @@ unknown_command_response: procedure = .addressresponse
   call response.set_rc(-3)
   call response.set_condition_name("FAILURE")
   call response.add_diagnostic("Unknown command for " || env_name || ": " || command)
+  return response
+
+unsupported_function_response: procedure = .addressfunctionresponse
+  arg env_name = .string, function_name = .string
+
+  response = .addressfunctionresponse(-3, "")
+  call response.set_condition_name("FAILURE")
+  call response.add_diagnostic("Unknown address function for " || env_name || ": " || function_name)
   return response
 
 normalize_environment_name: procedure = .string

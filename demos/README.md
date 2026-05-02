@@ -7,5 +7,9 @@ pure regression coverage over time.
 
 ## Current Demos
 
+- `cms/`: a Rexx-implemented CMS ADDRESS environment that demonstrates
+  ADDRESS instructions, environment instance objects, and ADDRESS functions.
+- `native/kv/`: a native C ADDRESS environment with a small key/value store,
+  matching the same command/function protocol as the Rexx CMS demo.
 - `llm/ollama_generate.rexx`: calls a local Ollama model through the Level G
   `rxfnsg` LLM interface and the VM core socket instructions.

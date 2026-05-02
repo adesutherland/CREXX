@@ -358,6 +358,9 @@ void arr2redr(value* redirect_reg, value* string_reg);
 /* In general, he redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
 void nullredr(value* redirect_reg);
 
+/* Write to and finalize a redirect endpoint without launching a process. */
+int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes);
+
 /* EXIT Function Support */
 void rxvm_setsayexit(say_exit_func sayExitFunc);
 void rxvm_resetsayexit();

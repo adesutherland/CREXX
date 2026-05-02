@@ -1189,7 +1189,9 @@ int crexxsaa_register_address_environment(
     if (rxvml_address_register_callback_environment(
             ctx->rxvml,
             env_name,
+            NULL,
             crexxsaa_address_trampoline,
+            NULL,
             registration) != 0) {
         ctx->registration_count--;
         free(registration);

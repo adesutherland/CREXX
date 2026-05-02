@@ -2651,6 +2651,7 @@ START_OF_INSTRUCTIONS
                         }
                     }
 #endif
+                    rxvm_link(context);
                 }
             }
             DISPATCH

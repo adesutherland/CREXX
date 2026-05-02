@@ -21,6 +21,10 @@ typedef struct host_state {
     char sandbox_value[64];
     char stem_value[64];
     char sandbox_updated_value[96];
+    int function_calls;
+    char function_names[3][32];
+    char function_first_args[3][64];
+    char function_result[128];
     rxvml_address_binding updates[1];
 } host_state;
 
@@ -145,6 +149,48 @@ static int editor_callback(
     return 0;
 }
 
+static int editor_function_callback(
+    rxvml_context* ctx,
+    const rxvml_address_function_request* request,
+    rxvml_address_function_response* response,
+    void* userdata) {
+
+    host_state* state = (host_state*)userdata;
+    int slot;
+
+    (void)ctx;
+
+    if (!state || !request || !response) return -99;
+    if (state->function_calls >= 3) return -98;
+
+    slot = state->function_calls;
+    copy_text(state->function_names[slot], sizeof(state->function_names[slot]), request->function_name);
+    if (request->argc > 0) {
+        copy_text(state->function_first_args[slot], sizeof(state->function_first_args[slot]), request->args[0]);
+    }
+    state->function_calls++;
+
+    if (strcmp(request->function_name, "describe") == 0) {
+        snprintf(state->function_result, sizeof(state->function_result), "native:client-7:%s",
+                 request->argc > 0 ? request->args[0] : "");
+        response->rc = 0;
+        response->result = state->function_result;
+        return 0;
+    }
+
+    if (strcmp(request->function_name, "id") == 0) {
+        copy_text(state->function_result, sizeof(state->function_result), "client-7");
+        response->rc = 0;
+        response->result = state->function_result;
+        return 0;
+    }
+
+    response->rc = -3;
+    response->condition_name = "FAILURE";
+    response->diagnostic = "unknown native function";
+    return 0;
+}
+
 static int check_equal(const char* label, const char* actual, const char* expected) {
     if (strcmp(actual, expected) == 0) return 0;
     fprintf(stderr, "%s: expected '%s', got '%s'\n", label, expected, actual);
@@ -186,7 +232,8 @@ int main(void) {
         goto cleanup;
     }
 
-    if (rxvml_address_register_callback_environment(ctx, "EDITOR", editor_callback, &state) != 0) {
+    if (rxvml_address_register_callback_environment(
+            ctx, "EDITOR", "client-7", editor_callback, editor_function_callback, &state) != 0) {
         print_last_error(ctx, "Failed to register native callback address environment");
         goto cleanup;
     }
@@ -244,6 +291,14 @@ int main(void) {
         goto cleanup;
     }
     if (check_equal("stem value", state.stem_value, "native-one")) goto cleanup;
+    if (state.function_calls != 3) {
+        fprintf(stderr, "Expected 3 function callback calls, got %d\n", state.function_calls);
+        goto cleanup;
+    }
+    if (check_equal("function 1 name", state.function_names[0], "describe")) goto cleanup;
+    if (check_equal("function 1 first arg", state.function_first_args[0], "alpha")) goto cleanup;
+    if (check_equal("function 2 name", state.function_names[1], "id")) goto cleanup;
+    if (check_equal("function 3 name", state.function_names[2], "id")) goto cleanup;
 
     status = 0;
 

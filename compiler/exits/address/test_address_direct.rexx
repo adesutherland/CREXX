@@ -17,6 +17,8 @@ main: procedure
   failures = failures + test_implicit_join_before()
   failures = failures + test_implicit_string_no_warning()
   failures = failures + test_expose_array_stem()
+  failures = failures + test_host_variable_anchors()
+  failures = failures + test_host_variable_anchors_generated_request()
 
   call report_result failures
   return
@@ -264,5 +266,59 @@ test_expose_array_stem: procedure = .int
   if check_contains("address expose array binding", replacement, ".addressbinding('stem','items','items','','')") = 0 then failures = failures + 1
   if check_contains("address expose array request update", replacement, "_address_apply_response_request_stem") = 0 then failures = failures + 1
   if check_contains("address expose array writeback", replacement, "get_binding_stem_value") = 0 then failures = failures + 1
+
+  return failures
+
+test_host_variable_anchors: procedure = .int
+  failures = .int
+  addr = .addressexit(1010)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "kv"
+  call pushstring tokens, '"PUT :key ${value}"'
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address host anchors pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address host anchors process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address host anchors command", replacement, '"PUT :key ${value}"') = 0 then failures = failures + 1
+  if check_contains("address host anchors key", replacement, ".addressbinding('var','key','key',key,'')") = 0 then failures = failures + 1
+  if check_contains("address host anchors value", replacement, ".addressbinding('var','value','value',value,'')") = 0 then failures = failures + 1
+
+  return failures
+
+test_host_variable_anchors_generated_request: procedure = .int
+  failures = .int
+  addr = .addressexit(1011)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "cms"
+  call pushstring tokens, '"GET :key INTO ${target}"'
+  call pushidentifier tokens, "EXPOSE"
+  call pushidentifier tokens, "items", ".string[]", 1
+  call pushbracket tokens, "["
+  call pushbracket tokens, "]"
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address generated host anchors pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address generated host anchors process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address generated host anchors key", replacement, ".addressbinding('var','key','key',key,'')") = 0 then failures = failures + 1
+  if check_contains("address generated host anchors target", replacement, ".addressbinding('var','target','target',target,'')") = 0 then failures = failures + 1
+  if check_contains("address generated host anchors writeback", replacement, "call _address_apply_response_var(__rxaddr_response,'target',target)") = 0 then failures = failures + 1
 
   return failures

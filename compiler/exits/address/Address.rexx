@@ -43,6 +43,7 @@ addressexit: class
         expose_end = .int
         sandbox_start = .int
         sandbox_end = .int
+        auto_expose = .string[]
         section = .string
         depth = .int
 
@@ -151,6 +152,8 @@ addressexit: class
         if redirectNeedsResolution(tokens, output_start, output_end) then return pending_result()
         if redirectNeedsResolution(tokens, error_start, error_end) then return pending_result()
 
+        auto_expose = collectHostVariableAnchors(tokens, command_start, command_end, expose_start, expose_end)
+
         i = expose_start
         do while i <= expose_end
             if i = 0 then leave
@@ -167,8 +170,8 @@ addressexit: class
             i = nextExposeIndex(tokens, i, expose_end)
         end
 
-        if exposeNeedsGeneratedRequest(tokens, expose_start, expose_end) then do
-            return emitGeneratedRequestResult(result, tokens, env_expr, command_start, command_end, input_start, input_end, output_start, output_end, error_start, error_end, expose_start, expose_end, sandbox_start, sandbox_end)
+        if exposeNeedsGeneratedRequest(tokens, expose_start, expose_end) | auto_expose.0 > 0 then do
+            return emitGeneratedRequestResult(result, tokens, env_expr, command_start, command_end, input_start, input_end, output_start, output_end, error_start, error_end, expose_start, expose_end, sandbox_start, sandbox_end, auto_expose)
         end
 
         if sandbox_start > 0 then replacement = "rc=_address_with_sandbox(" || env_expr
@@ -179,6 +182,7 @@ addressexit: class
         replacement = replacement || "," || buildRedirect(tokens, error_start, error_end, "OUT")
         if sandbox_start > 0 then replacement = replacement || "," || emitTokenRange(tokens, sandbox_start, sandbox_end)
         replacement = replacement || buildExposeArgs(tokens, expose_start, expose_end)
+        replacement = replacement || buildAutoExposeArgs(auto_expose)
         replacement = replacement || ")"
 
         call result.set_status("REPLACE")
@@ -345,7 +349,7 @@ exposeNeedsGeneratedRequest: procedure = .int
     return 0
 
 emitGeneratedRequestResult: procedure = .exitresult
-    arg result = .exitresult, tokens = .token[], env_expr = .string, command_start = .int, command_end = .int, input_start = .int, input_end = .int, output_start = .int, output_end = .int, error_start = .int, error_end = .int, expose_start = .int, expose_end = .int, sandbox_start = .int, sandbox_end = .int
+    arg result = .exitresult, tokens = .token[], env_expr = .string, command_start = .int, command_end = .int, input_start = .int, input_end = .int, output_start = .int, output_end = .int, error_start = .int, error_end = .int, expose_start = .int, expose_end = .int, sandbox_start = .int, sandbox_end = .int, auto_expose = .string[]
 
     request_var = "__rxaddr_request"
     response_var = "__rxaddr_response"
@@ -399,9 +403,19 @@ emitGeneratedRequestResult: procedure = .exitresult
             call result.add_replacement_line("call " || request_var || ".add_binding_plan(" || binding_var || ")")
         end
         else do
-            call result.add_replacement_line("call " || request_var || ".add_binding('var','" || name || "','" || name || "'," || name || ")")
+            binding_var = "__rxaddr_binding_" || binding_index
+            call result.add_replacement_line(binding_var || "=.addressbinding('var','" || name || "','" || name || "'," || name || ",'')")
+            call result.add_replacement_line("call " || request_var || ".add_binding_plan(" || binding_var || ")")
         end
         i = nextExposeIndex(tokens, i, expose_end)
+    end
+
+    do auto_index = 1 to auto_expose.0
+        name = auto_expose[auto_index]
+        binding_index = binding_index + 1
+        binding_var = "__rxaddr_binding_" || binding_index
+        call result.add_replacement_line(binding_var || "=.addressbinding('var','" || name || "','" || name || "'," || name || ",'')")
+        call result.add_replacement_line("call " || request_var || ".add_binding_plan(" || binding_var || ")")
     end
 
     call result.add_replacement_line(response_var || "=_address_dispatch_request(" || request_var || ")")
@@ -442,6 +456,11 @@ emitGeneratedRequestResult: procedure = .exitresult
         i = nextExposeIndex(tokens, i, expose_end)
     end
 
+    do auto_index = 1 to auto_expose.0
+        name = auto_expose[auto_index]
+        call result.add_replacement_line("call _address_apply_response_var(" || response_var || ",'" || name || "'," || name || ")")
+    end
+
     call result.add_replacement_line("rc=" || response_var || ".get_rc()")
     return result
 
@@ -459,3 +478,131 @@ buildExposeArgs: procedure = .string
         expose_args = expose_args || ", '" || name || "', " || name
     end
     return expose_args
+
+buildAutoExposeArgs: procedure = .string
+    arg auto_expose = .string[]
+    expose_args = .string
+    expose_args = ""
+
+    do i = 1 to auto_expose.0
+        name = auto_expose[i]
+        expose_args = expose_args || ", '" || name || "', " || name
+    end
+    return expose_args
+
+collectHostVariableAnchors: procedure = .string[]
+    arg tokens = .token[], start_index = .int, end_index = .int, expose_start = .int, expose_end = .int
+    anchors = .string[]
+    if start_index = 0 | end_index < start_index then return anchors
+
+    do i = start_index to end_index
+        ti = tokens[i]
+        type = strip(ti.get_type())
+        text = strip(ti.get_text())
+        if type = "string_literal" then call scanHostAnchorsInText anchors, text, tokens, expose_start, expose_end, 1
+        else call scanHostAnchorsInText anchors, text, tokens, expose_start, expose_end, 0
+    end
+
+    return anchors
+
+scanHostAnchorsInText: procedure = .void
+    arg expose anchors = .string[], text = .string, tokens = .token[], expose_start = .int, expose_end = .int, allow_colon = .int
+    text_len = .int
+    ch = .string
+    next_ch = .string
+    name = .string
+    close_pos = .int
+    j = .int
+
+    text_len = length(text)
+    i = 1
+    do while i <= text_len
+        ch = substr(text, i, 1)
+
+        if ch = "$" & i < text_len & substr(text, i + 1, 1) = "{" then do
+            close_pos = pos("}", text, i + 2)
+            if close_pos > i + 2 then do
+                name = substr(text, i + 2, close_pos - i - 2)
+                if isHostAnchorName(name) = 1 then call addHostAnchor anchors, name, tokens, expose_start, expose_end
+                i = close_pos + 1
+                iterate
+            end
+        end
+
+        if allow_colon = 1 & ch = ":" then do
+            if i > 1 & substr(text, i - 1, 1) = ":" then do
+                i = i + 1
+                iterate
+            end
+            if i < text_len then next_ch = substr(text, i + 1, 1)
+            else next_ch = ""
+            if isHostAnchorStart(next_ch) = 1 then do
+                j = i + 1
+                do while j <= text_len & isHostAnchorPart(substr(text, j, 1)) = 1
+                    j = j + 1
+                end
+                name = substr(text, i + 1, j - i - 1)
+                call addHostAnchor anchors, name, tokens, expose_start, expose_end
+                i = j
+                iterate
+            end
+        end
+
+        i = i + 1
+    end
+    return
+
+addHostAnchor: procedure = .void
+    arg expose anchors = .string[], name = .string, tokens = .token[], expose_start = .int, expose_end = .int
+    normalized = .string
+
+    if isHostAnchorName(name) \= 1 then return
+    if explicitExposeContains(tokens, expose_start, expose_end, name) = 1 then return
+
+    normalized = upper(name)
+    do i = 1 to anchors.0
+        if upper(anchors[i]) = normalized then return
+    end
+
+    anchors[anchors.0 + 1] = name
+    return
+
+explicitExposeContains: procedure = .int
+    arg tokens = .token[], start_index = .int, end_index = .int, name = .string
+    normalized = .string
+
+    if start_index = 0 | end_index < start_index then return 0
+    normalized = upper(name)
+    i = start_index
+    do while i <= end_index
+        ti = tokens[i]
+        type = strip(ti.get_type())
+        if type = "comma" then do
+            i = i + 1
+            iterate
+        end
+        if type = "identifier" & upper(strip(ti.get_text())) = normalized then return 1
+        i = nextExposeIndex(tokens, i, end_index)
+    end
+    return 0
+
+isHostAnchorName: procedure = .int
+    arg name = .string
+    if length(name) < 1 then return 0
+    if isHostAnchorStart(substr(name, 1, 1)) \= 1 then return 0
+    do i = 2 to length(name)
+        if isHostAnchorPart(substr(name, i, 1)) \= 1 then return 0
+    end
+    return 1
+
+isHostAnchorStart: procedure = .int
+    arg ch = .string
+    if ch = "_" then return 1
+    if pos(upper(ch), "ABCDEFGHIJKLMNOPQRSTUVWXYZ") > 0 then return 1
+    return 0
+
+isHostAnchorPart: procedure = .int
+    arg ch = .string
+    if isHostAnchorStart(ch) = 1 then return 1
+    if pos(ch, "0123456789") > 0 then return 1
+    return 0
