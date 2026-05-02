@@ -16,7 +16,6 @@ jobs:
           install: >-
             base-devel
             git
-            make
           pacboy: >-
             toolchain:p
             cmake:p

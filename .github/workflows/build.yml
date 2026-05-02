@@ -57,7 +57,6 @@ jobs:
           install: >-
             base-devel
             git
-            make
           pacboy: >-
             toolchain:p
             cmake:p
@@ -69,7 +68,7 @@ jobs:
         if: matrix.platform != 'windows'
         shell: bash
         run: |
-          cmake -S . -B "${{ runner.temp }}/build" \
+          cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
             -DCMAKE_BUILD_TYPE=MinSizeRel \
             ${{ matrix.cmake_args }}
 

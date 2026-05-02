@@ -21,6 +21,6 @@ crexx_add_compiler_exit_runtime_test(
 crexx_add_compiler_exit_runtime_test(
         test_address_direct
         test_address_direct.rexx
-        EXTRA_DEPENDS ${CMAKE_BINARY_DIR}/bin/exittestsupport.rxbin
+        EXTRA_DEPENDS exit_test_support_bin
         RUN_SUFFIX ${CMAKE_BINARY_DIR}/bin/exittestsupport.rxbin ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${LIBRPATH}
 )
