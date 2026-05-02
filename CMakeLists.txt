@@ -1,5 +1,18 @@
 cmake_minimum_required(VERSION 3.24)
-project(CREXX)
+
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" CREXX_VERSION_RAW)
+string(STRIP "${CREXX_VERSION_RAW}" CREXX_VERSION)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
+if(NOT CREXX_VERSION MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)([-+][0-9A-Za-z.-]+)?$")
+    message(FATAL_ERROR "VERSION must be a semantic version such as 1.0.0 or 1.0.0-beta.1")
+endif()
+set(CREXX_VERSION_MAJOR "${CMAKE_MATCH_1}")
+set(CREXX_VERSION_MINOR "${CMAKE_MATCH_2}")
+set(CREXX_VERSION_PATCH "${CMAKE_MATCH_3}")
+set(CREXX_VERSION_CORE "${CREXX_VERSION_MAJOR}.${CREXX_VERSION_MINOR}.${CREXX_VERSION_PATCH}")
+set(CREXX_VERSION_DISPLAY "crexx-${CREXX_VERSION}")
+
+project(CREXX VERSION ${CREXX_VERSION_CORE})
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   # Fallback to local user bin to avoid sudo permission errors during testing
@@ -12,6 +25,7 @@ endif()
 
 # Print the CMake version
 message(STATUS "CMake Version: ${CMAKE_VERSION}")
+message(STATUS "CREXX Version: ${CREXX_VERSION_DISPLAY}")
 
 # Print the CMake gererator
 message(STATUS "CMake Generator: ${CMAKE_GENERATOR}")
@@ -111,6 +125,13 @@ endforeach()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/crexx_version.h.in
+        ${CMAKE_BINARY_DIR}/generated/crexx_version.h
+        @ONLY)
+include_directories(${CMAKE_BINARY_DIR}/generated)
+install(FILES ${CMAKE_BINARY_DIR}/generated/crexx_version.h DESTINATION include)
 
 add_subdirectory(platform)
 add_subdirectory(avl_tree)

@@ -537,13 +537,14 @@ arg nocolor = .string
 rversion = ''
 /* note that for brevity we use an assembler directive to get to the version */
 assembler rxvers rversion
-rvers = word(rversion,1) word(rversion,2) word(rversion,4)
+rvers = word(rversion,3)
+rbuild = word(rversion,1) word(rversion,2) word(rversion,4)
 esc = '1b'x
 if nocolor then do
-  say 'CREXX compiler driver' rvers
+  say 'CREXX compiler driver' rvers '('rbuild')'
 end
 else do
-  say esc'[33mCREXX compiler driver' esc'[34m'rvers esc'[0m'
+  say esc'[33mCREXX compiler driver' esc'[34m'rvers esc'[0m ('rbuild')'
 end
 say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserved.'
 say 'Copyright (c) RexxLA 2021,'left(date('j'),4)'. All rights reserved.'

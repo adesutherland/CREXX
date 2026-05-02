@@ -6,8 +6,7 @@
 #include "rxpa.h"
 #include "rxvalue.h"
 #include "rxsignal.h"
-
-#define rxversion "crexx-dev-260110"
+#include "crexx_version.h"
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
 

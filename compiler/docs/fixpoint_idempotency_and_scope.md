@@ -1,6 +1,6 @@
 # Compiler Internals: Fixpoint Idempotency, Scope Hierarchy, and Symbol Resolution
 
-This document summarizes an important change to the cREXX compiler (crexx-dev-260110): the fixpoint validation loop has been hardened for idempotency, and the scope/symbol system has been clarified and validated. It also documents new debug/validation modes and the specialized symbol resolution APIs.
+This document summarizes an important change to the cREXX compiler: the fixpoint validation loop has been hardened for idempotency, and the scope/symbol system has been clarified and validated. It also documents new debug/validation modes and the specialized symbol resolution APIs.
 
 ## What changed and why it matters
 - Every walker that runs inside the fixpoint loop is now idempotent. Re-running the loop or an individual walker produces a stable AST and Symbol table with no duplication or drift.

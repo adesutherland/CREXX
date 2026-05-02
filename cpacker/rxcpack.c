@@ -11,9 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "crexx_version.h"
 #include "platform.h"
-
-#define rxversion "crexx-dev-260110"
 
 #define NAME_BUFFER_SIZE 256
 #define GLOBAL_SYMBOL "rx__pg"

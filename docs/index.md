@@ -1,6 +1,6 @@
 # CREXX
 
-_Release Documentation - crexx-dev-260110 - Jan 2026_
+_Release Documentation - crexx-1.0.0-beta.1 - May 2026_
 
 ## REXX Language Implementation Architecture
 
@@ -40,7 +40,7 @@ The documentation is stored in the code repository/branch under the [/doc](https
 
 # Current Component User Documentation
 
-crexx-dev-260110
+crexx-1.0.0-beta.1
 
 ## Running a REXX program
 
@@ -65,7 +65,7 @@ Type
 
 for command format / options
 
-### Recent Compiler Changes (crexx-dev-260110)
+### Recent Compiler Changes
 
 - Fixpoint validation loop hardened for idempotency. All walkers inside the loop are validated to be idempotent; under `-d3` the compiler stress‑tests by multi‑invoking walkers and forcing extra iterations.
 - Built‑in AST/Symbol validator integrated under debug flags:

@@ -4,8 +4,7 @@
 #ifndef CREXX_PA_H_
 #define CREXX_PA_H_
 
-#define rxpa_version "crexx-dev-260110"
-
+#include "crexx_version.h"
 #include <stddef.h>
 
 // plugin debug set to 1 if needed, else 0  added by pej 28. OCT 2024

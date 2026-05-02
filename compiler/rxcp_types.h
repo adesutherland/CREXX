@@ -29,9 +29,8 @@
 #ifndef CREXX_RXCP_TYPES_H
 #define CREXX_RXCP_TYPES_H
 
-#define rxversion "crexx-dev-260110"
-
 #include <stdio.h>
+#include "crexx_version.h"
 #include "platform.h"
 #include "rxvalue.h"
 
