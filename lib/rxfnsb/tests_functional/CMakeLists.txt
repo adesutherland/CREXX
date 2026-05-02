@@ -44,6 +44,7 @@ set(REXXBINS
         ts_trunc.rxbin
         ts_upper.rxbin
         ts_upper_lower.rxbin
+        ts_version.rxbin
         ts_value.rxbin
         ts_verify.rxbin
         ts_wordlength.rxbin
@@ -125,3 +126,5 @@ set_tests_properties(ts_rxhttp_noopt ts_rxhttp_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxhttp helpers")
 set_tests_properties(ts_trace_noopt ts_trace_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: trace helpers")
+set_tests_properties(ts_version_noopt ts_version_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: version helper")

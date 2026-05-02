@@ -34,3 +34,10 @@ add_executable(rxdb rxdb.c)
 target_link_libraries(rxdb rxvml rxpashim)
 
 add_dependencies(rxdb rxc rxas rxlink rxcpack library)
+
+if(BUILD_TESTING)
+    add_test(NAME rxdb_usage_smoke
+             COMMAND $<TARGET_FILE:rxdb> --help)
+    set_tests_properties(rxdb_usage_smoke
+            PROPERTIES PASS_REGULAR_EXPRESSION "Usage: rxdb \\[text\\|plain\\|llm\\]")
+endif()

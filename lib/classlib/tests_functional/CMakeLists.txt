@@ -33,7 +33,7 @@ foreach(_binfile ${REXXBINS})
 
 
     add_custom_target(${_basename})
-    add_dependencies(testbifs ${_basename} classlib)
+    add_dependencies(testclasses ${_basename} classlib)
     set(_rxc_flags -x)
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
@@ -41,10 +41,9 @@ foreach(_binfile ${REXXBINS})
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             RXC_FLAGS ${_rxc_flags}
-            DEPENDS library ${_rexx_dep} ${_prev_target}
+            DEPENDS library classlib ${_rexx_dep} ${_prev_target}
             RUNTIME_ARGS ${LIBRPATH}
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
-
 

@@ -65,6 +65,10 @@ small prototype surface for debugging the trace runtime without escape
 sequences. `llm` mode batches Enter-driven stepping in groups of 50 trace
 events and prints that policy in the banner and running prompt.
 
+RXDB is experimental for the Release 1 beta line. Keep automated coverage to a
+small launch/usage smoke test until the debugger command model and UI contract
+are promoted into release scope.
+
 Keep watch-value reads in the interrupt handler unless the VM exposes a
 frame-safe abstraction: `metalinkpreg` must inspect the interrupted child frame,
 and moving that logic behind an ordinary method call changes the frame being

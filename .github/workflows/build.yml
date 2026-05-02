@@ -48,6 +48,11 @@ jobs:
           cmakeBuildType: MinSizeRel # optional, default is Debug
           buildDirectory: "${{ runner.temp }}/release"
 
+      - name: CTest Release
+        shell: bash
+        run: |
+          ctest --test-dir "${{ runner.temp }}/release" --output-on-failure --no-tests=error --parallel 1
+
       - name: Get Executables
         run: |
           mkdir -p "${{ runner.temp }}/exe/bin"
@@ -178,6 +183,11 @@ jobs:
         cmake -G Ninja -B "${{ runner.temp }}/release" -DCMAKE_BUILD_TYPE=MinSizeRel -DCREXX_FORCE_SYSTEM_OPENSSL=ON
         cmake --build "${{ runner.temp }}/release"
 
+    - name: CTest Release
+      shell: msys2 {0}
+      run: |
+        ctest --test-dir "${{ runner.temp }}/release" --output-on-failure --no-tests=error --parallel 1
+
     - name: Get Executables
       shell: msys2 {0}
       run: |
@@ -240,6 +250,11 @@ jobs:
           # Select the build configuration, typically Debug or Release.
           cmakeBuildType: MinSizeRel # optional, default is Debug
           buildDirectory: "${{ runner.temp }}/release"
+
+      - name: CTest Release
+        shell: bash
+        run: |
+          ctest --test-dir "${{ runner.temp }}/release" --output-on-failure --no-tests=error --parallel 1
 
       - name: Get Executables
         run: |

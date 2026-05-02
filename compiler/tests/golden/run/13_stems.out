@@ -1,1 +1,1 @@
-SKIP: Stems not implemented
+PASS: stem object access
