@@ -38,6 +38,10 @@ endif()
 
 option(ENABLE_ODBC "Enable ODBC support" OFF)
 option(ENABLE_GTK  "Enable GTK support"  OFF)
+option(CREXX_BUILD_SQLITE_ADDRESS_DEMO "Build the native SQLite ADDRESS demo; downloads the pinned SQLite amalgamation" ON)
+set(CREXX_SQLITE_AMALGAMATION_YEAR "2026" CACHE STRING "SQLite amalgamation download year")
+set(CREXX_SQLITE_AMALGAMATION_VERSION "3530000" CACHE STRING "SQLite amalgamation version code")
+set(CREXX_SQLITE_AMALGAMATION_SHA3_256 "c2325c53b3b41761469f91cfb078e96882ac5d85bac10c11b0bd8f253b031e5b" CACHE STRING "SQLite amalgamation SHA3-256")
 option(ENABLE_PARSER_MODE "Enable Parser Mode (requires DSL-Syntax-Highlighter)" ON)
 set(DSLSH_LOCAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../DSL-Syntax-Highlighter"
         CACHE PATH "Path to a local DSL-Syntax-Highlighter checkout")

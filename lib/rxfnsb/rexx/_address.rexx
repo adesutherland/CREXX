@@ -1,6 +1,6 @@
 /* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
-namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment systemaddressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
+namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment systemaddressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
 import rxfnsb
 
 addressstem: interface
@@ -514,6 +514,10 @@ addressenvironment: interface
   *: factory
     arg env_name = .string
 
+  environment_name: method = .string
+
+  environment_id: method = .string
+
   execute: method = .addressresponse
     arg request = .addressrequest
 
@@ -1026,6 +1030,23 @@ _address_call_response: procedure = .addressfunctionresponse
   return _address_function(env_name, function_name, arguments)
 
 _address_call: procedure = .string
+  arg env_name = "", function_name = "", ... = .string
+
+  arguments = .string[]
+  response = .addressfunctionresponse
+
+  do i = 1 to arg.0
+    arguments[i] = arg.i
+  end
+
+  response = _address_function(env_name, function_name, arguments)
+  return response.get_result()
+
+addressenv: procedure = .addressenvironment
+  arg env_name = ""
+  return _address_environment(env_name)
+
+addresscall: procedure = .string
   arg env_name = "", function_name = "", ... = .string
 
   arguments = .string[]

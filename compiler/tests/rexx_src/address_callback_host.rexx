@@ -4,7 +4,9 @@ import rxfnsb
 
 address_callback_host: procedure = .int
   buffer = "example-value"
-  env_instance = .addressinstance
+  env_instance = .addressenvironment
+  system_env = .addressenvironment
+  path_env = .addressenvironment
   env_functions = .addressfunctionenvironment
   fn_args = .string[]
   fn_response = .addressfunctionresponse
@@ -25,11 +27,19 @@ address_callback_host: procedure = .int
   address "RETURN 42"
   if rc \= 42 then return 3
 
-  env_instance = _address_environment("editor") as .addressinstance
+  env_instance = addressenv("editor")
   if env_instance.environment_name() \= "EDITOR" then return 15
   if env_instance.environment_id() \= "client-7" then return 16
 
-  env_functions = _address_environment("editor") as .addressfunctionenvironment
+  system_env = addressenv("system")
+  if system_env.environment_name() \= "SYSTEM" then return 21
+  if system_env.environment_id() \= "SYSTEM" then return 22
+
+  path_env = addressenv("path")
+  if path_env.environment_name() \= "PATH" then return 23
+  if path_env.environment_id() \= "PATH" then return 24
+
+  env_functions = addressenv("editor") as .addressfunctionenvironment
   fn_args = .string[]
   fn_args[1] = "alpha"
   fn_response = env_functions.invoke(.addressfunctionrequest("editor", "describe", fn_args, .standardaddresssandbox(), ""))
@@ -39,7 +49,7 @@ address_callback_host: procedure = .int
   fn_args = .string[]
   fn_response = _address_function("editor", "id", fn_args)
   if fn_response.get_result() \= "client-7" then return 19
-  if _address_call("editor", "id") \= "client-7" then return 20
+  if addresscall("editor", "id") \= "client-7" then return 20
 
   pool = .standardaddresssandbox()
   call pool.set("value.3", "native-input")

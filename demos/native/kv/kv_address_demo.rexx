@@ -7,7 +7,7 @@ main: procedure = .int
   dump_out = .string[]
   mode_out = .string[]
   user_out = .string[]
-  env_instance = .addressinstance
+  env_instance = .addressenvironment
   fetched = .string
   key = .string
   value = .string
@@ -30,12 +30,12 @@ main: procedure = .int
   "GET user" output user_out
   call show_lines("GET user", user_out)
 
-  say "ID() => " || _address_call("kv", "id")
-  say "GET(user) => " || _address_call("kv", "get", "user")
-  say "EXISTS(project) => " || _address_call("kv", "exists", "project")
-  say "COUNT() => " || _address_call("kv", "count")
+  say "ID() => " || addresscall("kv", "id")
+  say "GET(user) => " || addresscall("kv", "get", "user")
+  say "EXISTS(project) => " || addresscall("kv", "exists", "project")
+  say "COUNT() => " || addresscall("kv", "count")
 
-  say "PUT(mode, function-call) => " || _address_call("kv", "put", "mode", "function-call")
+  say "PUT(mode, function-call) => " || addresscall("kv", "put", "mode", "function-call")
   "GET mode" output mode_out
   call show_lines("GET mode", mode_out)
 
@@ -45,7 +45,7 @@ main: procedure = .int
   "DUMP" output dump_out
   call show_lines("DUMP", dump_out)
 
-  env_instance = _address_environment("kv") as .addressinstance
+  env_instance = addressenv("kv")
   say ""
   say "ADDRESS instance => name=" || env_instance.environment_name() || " id=" || env_instance.environment_id()
 

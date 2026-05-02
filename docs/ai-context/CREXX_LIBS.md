@@ -163,11 +163,13 @@ abs: procedure = .string
    `METALOADMODULE` instruction. Use it when Rexx code deliberately loads a
    `.rxbin` or `.rxplugin` provider before calling imports supplied by that
    file. The VM relinks immediately after a successful load.
-5. **ADDRESS Function Convenience:** `_address_call(env, name, ...) -> .string`
-   and `_address_call_response(env, name, ...) -> .addressfunctionresponse`
-   wrap the lower-level `_address_function(env, name, args[])` request object
-   path. They are provider-neutral and work for both Rexx and native ADDRESS
-   environments.
+5. **ADDRESS Public Helpers:** `addressenv(name) -> .addressenvironment`
+   returns the cached environment object, including `environment_name()` and
+   `environment_id()` for the traditional `SYSTEM`/`PATH` environments and for
+   Rexx/native providers. `addresscall(env, name, ...) -> .string` wraps the
+   lower-level `_address_function(env, name, args[])` request object path.
+   `_address_call(...)` and `_address_call_response(...)` remain internal
+   compatibility spellings for code that needs the raw response object.
 
 ## 2. RXPA (cREXX Plugin Architecture)
 

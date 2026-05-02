@@ -10,7 +10,7 @@ main: procedure = .int
   type_out = .string[]
   userid_out = .string[]
   args = .string[]
-  env_instance = .addressinstance
+  env_instance = .addressenvironment
   env_functions = .addressfunctionenvironment
   response = .addressfunctionresponse
   note = .string
@@ -26,13 +26,13 @@ main: procedure = .int
   call show_lines("QUERY MSG", msg_out)
 
   "SET MSG OFF"
-  call show_value("MSG_MODE()", _address_call("cms", "msg_mode"))
+  call show_value("MSG_MODE()", addresscall("cms", "msg_mode"))
 
   "LISTFILE * * A" output list_out
   call show_lines("LISTFILE * * A", list_out)
 
   args = .string[]
-  call show_value("FILES()", _address_call("cms", "files"))
+  call show_value("FILES()", addresscall("cms", "files"))
 
   "STATE PROFILE EXEC A" output state_out
   call show_lines("STATE PROFILE EXEC A", state_out)
@@ -45,26 +45,26 @@ main: procedure = .int
 
   note = "Rexx CMS host variable anchor"
   "NOTE :note"
-  call show_value("LAST_NOTE()", _address_call("cms", "last_note"))
+  call show_value("LAST_NOTE()", addresscall("cms", "last_note"))
 
-  env_instance = _address_environment("cms") as .addressinstance
+  env_instance = addressenv("cms")
   say ""
   say "ADDRESS instance => name=" || env_instance.environment_name() || " id=" || env_instance.environment_id()
 
   args = .string[]
   args[1] = "profile exec a"
-  call show_value("FILEINFO(profile exec a)", _address_call("cms", "fileinfo", "profile exec a"))
+  call show_value("FILEINFO(profile exec a)", addresscall("cms", "fileinfo", "profile exec a"))
 
   args = .string[]
   args[1] = "hello cms friends"
   args[2] = "upper"
-  env_functions = _address_environment("cms") as .addressfunctionenvironment
+  env_functions = addressenv("cms") as .addressfunctionenvironment
   response = env_functions.invoke(.addressfunctionrequest("cms", "pipe", args, .standardaddresssandbox(), ""))
   call show_function("PIPE(text, upper) via object", response)
 
   args = .string[]
   args[1] = "a small virtual reader queue"
-  call show_value("WORDS(text)", _address_call("cms", "words", "a small virtual reader queue"))
+  call show_value("WORDS(text)", addresscall("cms", "words", "a small virtual reader queue"))
 
   return 0
 

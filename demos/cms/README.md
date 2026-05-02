@@ -6,13 +6,13 @@ fixtures and into a place where it can be run by hand.
 The provider is implemented in Rexx:
 
 - `cms_address_environment.rexx` publishes a `CMS` ADDRESS environment.
-- It implements `.addressenvironment` for instructions.
-- It implements `.addressinstance` so callers can inspect the bound
-  environment name and instance id.
+- It implements `.addressenvironment` for instructions and normal
+  `environment_name()` / `environment_id()` identity.
 - It implements `.addressfunctionenvironment` so Rexx code can call CMS-style
   functions on the same provider object.
-- Callers can use `_address_call("cms", name, ...)` for the simple
-  string-returning path, or `_address_call_response(...)` /
+- Callers can use `addressenv("cms")` for the environment object and
+  `addresscall("cms", name, ...)` for the simple string-returning function
+  path, or `_address_call_response(...)` /
   `_address_function(...)` when they need rc and diagnostics.
 
 The environment is deliberately small, but it behaves like a useful virtual CMS:

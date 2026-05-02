@@ -347,14 +347,18 @@ custom Rexx objects to implement the same ADDRESS interfaces.
 
 `ADDRESS` environments are normal Rexx objects implementing
 `_rxsysb.addressenvironment`. The runtime registry caches those objects by
-normalised environment name, and `_rxsysb._address_environment(name)` returns
-the cached object for direct Rexx use.
+normalised environment name. Rexx callers should use `addressenv(name)` to get
+the cached object for direct use. The older `_address_environment(name)` helper
+remains as the internal/runtime entry point.
 
 Two optional sibling interfaces carry the prototype environment-context
 extension:
 
-- `_rxsysb.addressinstance` lets a provider expose/bind its normalised
-  environment name and host-supplied instance id.
+- `_rxsysb.addressenvironment` includes the public `environment_name()` and
+  `environment_id()` identity methods for system, path, Rexx, and native
+  environments.
+- `_rxsysb.addressinstance` is retained as the internal bind hook for providers
+  that let the runtime attach a host-supplied instance id.
 - `_rxsysb.addressfunctionenvironment` lets a provider handle generic
   environment-scoped function calls through an `addressfunctionrequest` /
   `addressfunctionresponse` pair.
@@ -366,7 +370,7 @@ function_cb, userdata)`. The pre-release command-only
 signature was retired; pass `NULL` for `id` or `function_cb` when those features
 are not needed. The native provider object stores the callback handle and
 instance id, so both `ADDRESS env "command"` and explicit
-`(_address_environment(env) as .addressfunctionenvironment).invoke(...)` reach
+`(addressenv(env) as .addressfunctionenvironment).invoke(...)` reach
 the same host environment instance.
 
 As of `RXVML_ABI_VERSION` 7, native `rxvml_address_request` also carries
@@ -389,8 +393,15 @@ host variable return a normal `var` updated binding, so the existing ADDRESS
 write-back path handles both explicit `EXPOSE` variables and auto-exposed
 anchors.
 
-For Rexx callers, `_address_call(env, name, ...) -> .string` is the simple
-string-returning convenience surface over `_address_function(...)`. Use
+`demos/native/sqlite/` shows the database-oriented form of the native provider
+model. The provider routes by the ADDRESS environment name carried in the
+request (`SQLITE` initially), looks up a driver table, and then treats SQL
+named parameters such as `:name` as handler-specific uses of ADDRESS
+host-variable bindings. This is the intended shape for later database drivers.
+
+For Rexx callers, `addresscall(env, name, ...) -> .string` is the simple
+string-returning convenience surface over `_address_function(...)`. `_address_call`
+remains as the internal/runtime spelling for existing code. Use
 `_address_call_response(env, name, ...) -> .addressfunctionresponse` when the
 caller needs the function rc, condition, or diagnostics. This helper layer is
 provider-neutral: Rexx and native ADDRESS environments see the same

@@ -7,9 +7,9 @@ provider deliberately small: a C-backed in-memory key/value store registered as
 It demonstrates the same protocol surface as the Rexx provider:
 
 - ADDRESS instructions dispatch to a native C callback.
-- `_address_environment("kv")` returns an object implementing
-  `.addressinstance`.
-- `_address_call("kv", name, ...)` calls native ADDRESS functions and returns a
+- `addressenv("kv")` returns the ADDRESS environment object, including
+  `environment_name()` and `environment_id()`.
+- `addresscall("kv", name, ...)` calls native ADDRESS functions and returns a
   string.
 - Native commands can now emit to `ADDRESS ... output out`, matching Rexx
   providers.

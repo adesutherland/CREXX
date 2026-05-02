@@ -10,7 +10,9 @@ address_cms_host: procedure = .int
   list_out = .string[]
   type_out = .string[]
   buffer = .string
-  env_instance = .addressinstance
+  env_instance = .addressenvironment
+  system_env = .addressenvironment
+  path_env = .addressenvironment
   env_functions = .addressfunctionenvironment
   fn_args = .string[]
   fn_response = .addressfunctionresponse
@@ -37,11 +39,19 @@ address_cms_host: procedure = .int
   address cms "CP SET MSG ON"
   if rc <> 0 then errors = errors + 1
 
-  env_instance = _address_environment("cms") as .addressinstance
+  env_instance = addressenv("cms")
   if env_instance.environment_name() <> "CMS" then errors = errors + 1
   if env_instance.environment_id() <> "rexx:CMS" then errors = errors + 1
 
-  env_functions = _address_environment("cms") as .addressfunctionenvironment
+  system_env = addressenv("system")
+  if system_env.environment_name() <> "SYSTEM" then errors = errors + 1
+  if system_env.environment_id() <> "SYSTEM" then errors = errors + 1
+
+  path_env = addressenv("path")
+  if path_env.environment_name() <> "PATH" then errors = errors + 1
+  if path_env.environment_id() <> "PATH" then errors = errors + 1
+
+  env_functions = addressenv("cms") as .addressfunctionenvironment
   fn_args = .string[]
   fn_args[1] = "payload"
   fn_response = env_functions.invoke(.addressfunctionrequest("cms", "echo", fn_args, .standardaddresssandbox(), ""))
@@ -50,7 +60,7 @@ address_cms_host: procedure = .int
 
   fn_response = _address_function("cms", "msg_mode", fn_args)
   if fn_response.get_result() <> "ON" then errors = errors + 1
-  if _address_call("cms", "msg_mode") <> "ON" then errors = errors + 1
+  if addresscall("cms", "msg_mode") <> "ON" then errors = errors + 1
 
   "CP QUERY USERID"
   if rc <> 0 then errors = errors + 1

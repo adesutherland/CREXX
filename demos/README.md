@@ -11,5 +11,7 @@ pure regression coverage over time.
   ADDRESS instructions, environment instance objects, and ADDRESS functions.
 - `native/kv/`: a native C ADDRESS environment with a small key/value store,
   matching the same command/function protocol as the Rexx CMS demo.
+- `native/sqlite/`: a native C ADDRESS environment backed by SQLite, using a
+  small driver table so later database providers can share the same shape.
 - `llm/ollama_generate.rexx`: calls a local Ollama model through the Level G
   `rxfnsg` LLM interface and the VM core socket instructions.
