@@ -123,6 +123,7 @@ add_subdirectory(debugger)
 add_subdirectory(interpreter)
 add_subdirectory(rxpa)
 add_subdirectory(lib)
+add_subdirectory(demos)
 add_subdirectory(tests)
 add_subdirectory(bin crexx_driver)
 

@@ -13,5 +13,5 @@ pure regression coverage over time.
   matching the same command/function protocol as the Rexx CMS demo.
 - `native/sqlite/`: a native C ADDRESS environment backed by SQLite, using a
   small driver table so later database providers can share the same shape.
-- `llm/ollama_generate.rexx`: calls a local Ollama model through the Level G
-  `rxfnsg` LLM interface and the VM core socket instructions.
+- `llm/`: a Rexx-implemented LLM ADDRESS environment and live demo that route
+  model-shaped ADDRESS names to the Level G LLM providers.

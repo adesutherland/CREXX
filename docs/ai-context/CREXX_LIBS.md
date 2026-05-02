@@ -129,7 +129,12 @@ request/response JSON. It keeps the last raw HTTP response plus decoded JSON
 body available for diagnostics. Hosted providers are also Rexx implementations:
 they use environment-variable API keys by default, build provider-specific JSON
 request bodies and authentication headers, and send through `rxhttp` with TLS
-enabled. See `lib/rxfnsg/rexx/llm.md` and `demos/llm/`.
+enabled. `demos/llm/llm_address_environment.rexx` layers a Rexx ADDRESS
+provider over these clients so scripts can use model-shaped environments such
+as `ADDRESS LLM_GPT_4_1`, `ADDRESS CLAUDE_SONNET_4_5`, and
+`ADDRESS GEMMA4_LATEST`; the provider caches by environment instance and routes
+through a small driver registry of exact aliases and prefixes. See
+`lib/rxfnsg/rexx/llm.md` and `demos/llm/`.
 
 ## 1. BIFs Implemented in cREXX (`lib/rxfnsb/rexx/`)
 

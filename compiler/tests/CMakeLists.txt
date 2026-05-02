@@ -1430,6 +1430,7 @@ target_compile_definitions(test_address_bridge PRIVATE
         CREXX_TEST_CMS_ADDRESS_HOST_MODULE="${CMAKE_CURRENT_BINARY_DIR}/address_cms_host.rxbin")
 
 set(CREXX_CMS_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/cms")
+set(CREXX_LLM_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/llm")
 set(CREXX_NATIVE_KV_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/native/kv")
 set(CREXX_NATIVE_SQLITE_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/native/sqlite")
 
@@ -1463,6 +1464,26 @@ add_custom_command(
 add_custom_target(address_cms_fixture_bin DEPENDS address_cms_provider.rxbin address_cms_host.rxbin address_cms_demo.rxbin)
 add_custom_target(address_cms_demo_bin DEPENDS address_cms_provider.rxbin address_cms_demo.rxbin)
 add_dependencies(test_address_bridge address_cms_fixture_bin library)
+
+add_custom_command(
+        OUTPUT address_llm_provider.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_llm_provider ${CREXX_LLM_DEMO_DIR}/llm_address_environment.rexx
+        COMMAND $<TARGET_FILE:rxas> address_llm_provider
+        DEPENDS rxc rxas library rxfnsg compiler_exit_bin ${CREXX_LLM_DEMO_DIR}/llm_address_environment.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling llm_address_environment.rexx ..."
+)
+
+add_custom_command(
+        OUTPUT address_llm_host.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_llm_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_llm_host.rexx
+        COMMAND $<TARGET_FILE:rxas> address_llm_host
+        DEPENDS rxc rxas library rxfnsg compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_llm_host.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling address_llm_host.rexx ..."
+)
+
+add_custom_target(address_llm_fixture_bin ALL DEPENDS address_llm_provider.rxbin address_llm_host.rxbin)
 
 add_custom_command(
         OUTPUT native_kv_address_demo.rxbin
@@ -1678,6 +1699,16 @@ add_test(NAME address_cms_demo COMMAND
         ${CMAKE_CURRENT_BINARY_DIR}/address_cms_provider.rxbin
         ${CMAKE_CURRENT_BINARY_DIR}/address_cms_demo.rxbin)
 set_tests_properties(address_cms_demo PROPERTIES LABELS "compiler;stage3")
+add_test(NAME address_llm_provider COMMAND
+        $<TARGET_FILE:rxvm>
+        ${CMAKE_BINARY_DIR}/bin/library.rxbin
+        ${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin
+        ${CMAKE_CURRENT_BINARY_DIR}/address_llm_provider.rxbin
+        ${CMAKE_CURRENT_BINARY_DIR}/address_llm_host.rxbin)
+set_tests_properties(address_llm_provider PROPERTIES LABELS "compiler;stage3")
+set_tests_properties(address_llm_provider PROPERTIES
+        PASS_REGULAR_EXPRESSION "PASS: address llm host"
+        FAIL_REGULAR_EXPRESSION "address llm host failures")
 add_test(NAME address_native_kv_demo COMMAND native_kv_address_demo)
 set_tests_properties(address_native_kv_demo PROPERTIES LABELS "compiler;stage3")
 if(CREXX_BUILD_SQLITE_ADDRESS_DEMO)

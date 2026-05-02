@@ -399,6 +399,15 @@ request (`SQLITE` initially), looks up a driver table, and then treats SQL
 named parameters such as `:name` as handler-specific uses of ADDRESS
 host-variable bindings. This is the intended shape for later database drivers.
 
+`demos/llm/llm_address_environment.rexx` shows the same idea for Rexx-hosted
+providers. One Rexx environment class claims a family of model-shaped
+environment names (`LLM_GPT_4_1`, `CLAUDE_SONNET_4_5`, `GEMINI_2_5_FLASH`,
+`GEMMA4_LATEST`) and routes internally to the `rxfnsg` LLM drivers. This keeps
+model dispatch cheap: `_address.rexx` caches the constructed environment object
+by normalised name after the first lookup, and the provider performs a small
+registry lookup over driver-contributed exact aliases and prefixes rather than
+probing every driver on every command.
+
 For Rexx callers, `addresscall(env, name, ...) -> .string` is the simple
 string-returning convenience surface over `_address_function(...)`. `_address_call`
 remains as the internal/runtime spelling for existing code. Use

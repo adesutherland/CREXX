@@ -1,7 +1,62 @@
 /* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
-namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment systemaddressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
+namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressdriverregistry addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment systemaddressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
 import rxfnsb
+
+addressdriverregistry: class
+  _driver_count = .int
+  _drivers = .string[]
+  _aliases = .string[]
+  _prefixes = .string[]
+
+  *: factory
+    _driver_count = 0
+    return
+
+  add: method = .void
+    arg driver = .string, aliases = .string, prefixes = .string
+    idx = .int
+    idx = _driver_count + 1
+    _driver_count = idx
+    _drivers[idx] = normalize_environment_name(driver)
+    _aliases[idx] = normalize_address_lookup_words(aliases)
+    _prefixes[idx] = normalize_address_lookup_words(prefixes)
+    return
+
+  lookup: method = .string
+    arg name = .string
+    aliases = .string
+    normalized = .string
+    prefix = .string
+    prefixes = .string
+
+    normalized = normalize_environment_name(name)
+    if normalized = "" then return ""
+
+    do i = 1 to _driver_count
+      aliases = _aliases[i]
+      prefixes = _prefixes[i]
+
+      if wordpos(normalized, aliases) > 0 then return _drivers[i]
+
+      do prefix_index = 1 to words(prefixes)
+        prefix = word(prefixes, prefix_index)
+        if prefix \= "" & first_chars(normalized, length(prefix)) = prefix then return _drivers[i]
+      end
+    end
+
+    return ""
+
+  drivers: method = .string
+    result = .string
+    result = ""
+
+    do i = 1 to _driver_count
+      if result = "" then result = _drivers[i]
+      else result = result || " " || _drivers[i]
+    end
+
+    return result
 
 addressstem: interface
   get: method = .string
@@ -998,23 +1053,33 @@ _address_environment: procedure = .addressenvironment expose _address_runtime_re
   if idx = 0 then return .unknownaddressenvironment(name)
   return _address_environment_objects[idx] as .addressenvironment
 
-_address_function: procedure = .addressfunctionresponse
+_address_function: procedure = .addressfunctionresponse expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
   arg env_name = "", function_name = "", arguments = .string[]
 
   env_obj = .addressenvironment
   fn_env = .addressfunctionenvironment
+  idx = .int
   request = .addressfunctionrequest
   request_env = .string
+  response = .addressfunctionresponse
   sandbox = .addresssandbox
 
+  call ensure_address_runtime
   request_env = normalize_environment_name(env_name)
   if request_env = "" then request_env = _current_address_environment()
-  env_obj = _address_environment(env_name)
+  if _ensure_address_environment(request_env) \= 0 then return unsupported_function_response(request_env, function_name)
+
+  idx = find_address_environment_index(_address_environment_names, request_env)
+  if idx = 0 then return unsupported_function_response(request_env, function_name)
+
+  env_obj = _address_environment_objects[idx] as .addressenvironment
   if env_obj is .addressfunctionenvironment then do
     fn_env = env_obj as .addressfunctionenvironment
     sandbox = .standardaddresssandbox()
     request = .addressfunctionrequest(request_env, function_name, arguments, sandbox, "")
-    return fn_env.invoke(request)
+    response = fn_env.invoke(request)
+    _address_environment_objects[idx] = fn_env as .addressenvironment
+    return response
   end
 
   return unsupported_function_response(request_env, function_name)
@@ -1250,6 +1315,7 @@ dispatch_address_request: procedure = .addressresponse expose _address_runtime_r
   env_name = .string
   idx = .int
   env_obj = .addressenvironment
+  response = .addressresponse
 
   call ensure_address_runtime
 
@@ -1264,7 +1330,9 @@ dispatch_address_request: procedure = .addressresponse expose _address_runtime_r
   if idx = 0 then return unknown_environment_response(env_name)
 
   env_obj = _address_environment_objects[idx] as .addressenvironment
-  return env_obj.execute(request)
+  response = env_obj.execute(request)
+  _address_environment_objects[idx] = env_obj
+  return response
 
 execute_system_command: procedure = .addressresponse expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
   arg source_request = .addressrequest, command = .string
@@ -1397,6 +1465,14 @@ normalize_environment_name: procedure = .string
   normalized = .string
   normalized = strip(env_name)
   normalized = upper(normalized)
+  return normalized
+
+normalize_address_lookup_words: procedure = .string
+  arg words_text = .string
+  normalized = .string
+  normalized = strip(words_text)
+  normalized = upper(normalized)
+  normalized = space(normalized)
   return normalized
 
 normalize_command: procedure = .string

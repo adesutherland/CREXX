@@ -67,6 +67,14 @@ Helper methods, public for tests and diagnostics:
 - `extractBody(response) = .string`
 - `extractText(responseJson) = .string`
 
+`demos/llm/llm_address_environment.rexx` wraps these helpers in a Rexx
+ADDRESS provider. It lets scripts write `ADDRESS LLM_GPT_4_1`, `ADDRESS
+CLAUDE_SONNET_4_5`, `ADDRESS GEMINI_2_5_FLASH`, or `ADDRESS GEMMA4_LATEST`
+and use `BODY`, `REQUEST`, `EXTRACT`, and live `GENERATE` commands against the
+selected driver. Driver selection uses `_rxsysb.addressdriverregistry`, so each
+provider contributes exact aliases and prefixes while keeping the lookup policy
+in the ADDRESS/Rexx layer.
+
 ## Example
 
 ```rexx
