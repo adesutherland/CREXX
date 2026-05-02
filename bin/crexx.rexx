@@ -546,8 +546,9 @@ end
 else do
   say esc'[33mCREXX compiler driver' esc'[34m'rvers esc'[0m ('rbuild')'
 end
-say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserved.'
-say 'Copyright (c) RexxLA 2021,'left(date('j'),4)'. All rights reserved.'
+say 'cREXX License (MIT)'
+say 'Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen'
+say 'See https://github.com/adesutherland/CREXX for project details'
 return
 
 /*----------------------------------------------------------------------*/

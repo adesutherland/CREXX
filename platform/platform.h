@@ -7,6 +7,7 @@
 #define MAXFILEPATH 4096
 
 #include <stdio.h>
+#include "crexx_license.h"
 
 #if defined(__clang__) || defined(__GNUC__)
 # ifdef NDEBUG  // RELEASE

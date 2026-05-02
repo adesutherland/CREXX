@@ -50,10 +50,38 @@ file(GENERATE OUTPUT "${CREXX_CRXC_NOARGS_SMOKE_SCRIPT}" CONTENT "${CREXX_CRXC_N
 add_test(NAME crexx_crxc_noargs_smoke
          COMMAND ${CMAKE_COMMAND} -P "${CREXX_CRXC_NOARGS_SMOKE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(CREXX_LICENSE_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_license_summary_smoke.cmake")
+set(CREXX_LICENSE_SMOKE_CONTENT "set(expected_license \"cREXX License (MIT)\")\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "set(expected_copyright \"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen\")\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "set(expected_project \"See https://github.com/adesutherland/CREXX for project details\")\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "function(check_license label)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "  execute_process(COMMAND \${ARGN} OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "  if(NOT res EQUAL 0)\n    message(FATAL_ERROR \"\${label} failed with rc \${res}:\\n\${out}\")\n  endif()\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "  foreach(expected IN ITEMS \"\${expected_license}\" \"\${expected_copyright}\" \"\${expected_project}\")\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "    string(FIND \"\${out}\" \"\${expected}\" pos)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "    if(pos EQUAL -1)\n      message(FATAL_ERROR \"\${label} did not print expected license summary line: \${expected}\\nOutput:\\n\${out}\")\n    endif()\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "  endforeach()\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "endfunction()\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxc -c\" \"$<TARGET_FILE:rxc>\" -c)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxas -c\" \"$<TARGET_FILE:rxas>\" -c)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxcpack -c\" \"$<TARGET_FILE:rxcpack>\" -c)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxdas -c\" \"$<TARGET_FILE:rxdas>\" -c)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxvm -c\" \"$<TARGET_FILE:rxvm>\" -c)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxbvm -c\" \"$<TARGET_FILE:rxbvm>\" -c)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxvme -c\" \"$<TARGET_FILE:rxvme>\" -c)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"rxbvme -c\" \"$<TARGET_FILE:rxbvme>\" -c)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "check_license(\"crexx -version\" \"$<TARGET_FILE:crexx>\" -version)\n")
+file(GENERATE OUTPUT "${CREXX_LICENSE_SMOKE_SCRIPT}" CONTENT "${CREXX_LICENSE_SMOKE_CONTENT}")
+
+add_test(NAME crexx_license_summary_smoke
+         COMMAND ${CMAKE_COMMAND} -P "${CREXX_LICENSE_SMOKE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_explicit_header_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_crxc_noargs_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
+set_tests_properties(crexx_license_summary_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 
 function(add_crexx_compile_only_import_test NAME MAIN_FILE DEP_FILE MODE)
     get_filename_component(MAIN_BASENAME "${MAIN_FILE}" NAME)
