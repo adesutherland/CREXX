@@ -1,34 +1,74 @@
 # Variables {#variables}
 
+Level B variables are typed. The compiler can infer many local variable types,
+but once a variable has a type, later assignments must be compatible with that
+type.
+
 ## Keywords
 
-Unlike in classic \rexx{}, keywords (instructions and operators) cannot be used for variables or constant names.
+Keywords, instruction names, and operators cannot be used as variable names.
 
-## Typed Variables
+## Declaration by Assignment
 
-The approach to typing variables is designed to be simple and as classic \rexx{}-like as possible but introduce type safety which allows more bugs to be highlighted before runtime. <!-- This is achieved by allowing -->
+A variable is often declared by its first assignment:
 
-## Declaration
+```rexx
+count = 0
+price = 1.25
+name = "Ada"
+ready = .boolean(1)
+```
 
-Variables will be implicitly declared and initialised to be of a certain type on their first assignment. E.g
+The inferred types are based on the assigned expression. Use constructors when
+the intended type needs to be explicit:
 
-* Integer: Variable \= 0;
-* Float: Variable \= 0.0;
-* String: Variable \= ""
+```rexx
+count = .int(0)
+name = .string("Ada")
+ratio = .float(1.25)
+money = .decimal("1.25")
+payload = .binary()
+```
 
-Variables can also be declared and initialized using a constructor-style syntax for both built-in fundamental types and user-defined classes:
+The canonical integer type name is `.int`.
 
-* `Variable = .int(value)` : Declares an integer and initializes it to `value`.
-* `Variable = .string("text")` : Declares a string and initializes it to `"text"`.
-* `Variable = .float(1.23)` : Declares a float and initializes it to `1.23`.
-* `Variable = .boolean(1)` : Declares a boolean and initializes it to `1`.
-* `Variable = .decimal(1.23d)` : Declares a decimal and initializes it to `1.23d`.
+## Arrays
 
-Other initialization forms include:
+Array variables are declared from a typed array value:
 
-* Integer Variable \= .INT where INT is the integer built in type (value 0).
-* Class Instance \= .ACLASS Class with via the default factory
-* Class Instance \= .ACLASS() Class with via the default factory
-* Class Instance \= .ACLASS(ARG1,ARG2) via a factory function with 2 arguments
+```rexx
+args = .string[]
+scores = .int[10]
+grid = .int[10, 10]
+```
 
-Once a variable has been assigned a type, then that type cannot be changed.
+Array arguments use the same notation in procedure signatures:
+
+```rexx
+main: procedure = .int
+  arg args = .string[]
+```
+
+## Object Variables
+
+Class and interface values are object-shaped. Factories use dotted class or
+interface names:
+
+```rexx
+asset = .asset("log.txt")
+box = .box()
+```
+
+When a class implements an interface, a class instance can be assigned to that
+interface contract. Use `expr is .type`, `expr as .type`, and `typeof(expr)`
+when code needs runtime type checks or concrete type information.
+
+## Globals and Expose
+
+Top-level values in a namespace are global to that module. Exposed globals can
+be imported by other modules. Procedures have their own local scope unless
+state is deliberately exposed through the current Level B expose mechanisms.
+
+Prefer explicit arguments and return values for ordinary application code. Use
+global exposed state for library constants, runtime integration points, and
+cases where shared module state is genuinely the simplest contract.

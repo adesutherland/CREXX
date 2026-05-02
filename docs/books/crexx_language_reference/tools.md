@@ -1,227 +1,136 @@
 # Tools {#tools}
 
-## **Compiler**
+The public \crexx{} toolchain is intentionally split into small tools. The
+programming guide contains workflow examples; this page is a compact reference.
+
+## Compiler: `rxc`
+
+```bash
+rxc [options] source_file
+```
+
+Common options:
+
+- `-h`: help
+- `-c`: copyright and licence details
+- `-v`: version
+- `-d[level]`: debug/verbose compiler diagnostics
+- `-l location`: working location
+- `-s source`: source import root; repeatable
+- `-i import`: binary import root; repeatable
+- `--level level`: default source level when the source omits one
+- `--import ns`: inject a file-level import; repeatable
+- `--import-rxas`: allow `.rxas` import scanning in binary roots
+- `-o output_file`: RXAS output file
+- `-n`: disable optimisation
+- `-x`: disable compiler exits
+- `--parser`: parser-mode service
+- `--port port`: parser-mode port
 
-Usage   : rxc \[options\] source\_file
+Source imports and binary imports are searched separately. Source roots contain
+`.rexx`; binary roots contain `.rxbin`, optional `.rxas`, and `.rxplugin`.
+
+## Assembler: `rxas`
 
-Options :
+```bash
+rxas [options] source_file
+```
+
+Common options:
+
+- `-h`: help
+- `-c`: copyright and licence details
+- `-v`: version
+- `-a`: architecture details
+- `-i`: print instruction information
+- `-d`: debug/verbose mode
+- `-l location`: working location
+- `-o output_file`: RXBIN output file
+- `-n`: disable optimisation
+
+The assembler reads RXAS text and writes RXBIN bytecode.
+
+## Linker: `rxlink`
+
+```bash
+rxlink [options] input_file [input_file ...]
+```
+
+Common options:
+
+- `-h`: help
+- `-o output_file`: linked RXBIN output
+- `-c control_file`: linker control file
+- `-r root_member`: root module selector; repeatable
+- `-m map_file`: write a link map
+- `-l location`: working location
+- `-s`: strip source/file metadata
+- `-i`: preserve inline-body metadata
+- `-d`: debug/verbose mode
+
+`rxlink` combines modules into a linked image with one shared constant pool.
+Use it for deployable bytecode and native packaging.
+
+## Virtual Machines
+
+```bash
+rxvm [options] binary_file [binary_file_2 ...] -a args ...
+```
+
+Common options:
+
+- `-h`: help
+- `-p plugin`: load a plugin
+- `-c`: copyright and licence details
+- `-d`: debug mode
+- `-l location`: working location
+- `-v`: version
+
+The VM executables include:
+
+- `rxvm`: threaded interpreter
+- `rxbvm`: bytecode-dispatch interpreter
+- `rxvme`: threaded interpreter with the standard library image
+- `rxbvme`: bytecode-dispatch interpreter with the standard library image
+
+## Disassembler: `rxdas`
+
+```bash
+rxdas [options] binary_file
+```
+
+Common options:
+
+- `-h`: help
+- `-c`: copyright and licence details
+- `-v`: version
+- `-p`: print all constant-pool details
+- `-l location`: working location
+- `-o output_file`: output file; stdout by default
 
-  \-h              Prints help message
+## Packager: `rxcpack`
 
-  \-c              Prints Copyright & License Details
+```bash
+rxcpack [options] input_file_1 [input_file_2 ...]
+```
 
-  \-v              Prints Version
+Common options:
 
-  \-l location     Working Location (directory)
+- `-h`: help
+- `-c`: copyright and licence details
+- `-v`: version
+- `-o output_file`: generated C output
 
-  \-s source       Source import locations \- ";" delimited list
+`rxcpack` serializes RXBIN images as C data for native executable builds.
+Release-style native builds should link first, then package.
 
-  \-i import       Binary import locations \- ";" delimited list
+## Driver: `crexx`
 
-  \--level level   Default source level when the source omits one
+```bash
+crexx in_file_specification... [--option]...
+```
 
-  \--import ns     Inject a file-level IMPORT namespace (repeatable)
-
-  \--import-rxas   Enable auto-import scanning of .rxas in binary roots
-
-  \-o output\_file  REXX Assembler Output File
-
-  \-n              No Optimising
-
-Source imports and binary imports are now searched separately. `.rexx`
-files are discovered only in source roots: the source file directory
-(or `-l` working directory when no directory is present in the source
-path) plus any extra `-s` directories. `.rxbin`, optional `.rxas`, and
-`.rxplugin` files are discovered in binary roots: the `-i` list and the
-compiler executable directory. `-i` and `-s` may both be repeated and
-their values are accumulated in order.
-
-This means qualification remains an import-time disambiguation feature,
-but the left side of `namespace..symbol` must still name an imported
-namespace. `namespace::symbol` remains a compatibility alias. It is not a
-filesystem shortcut.
-
-Compiler optimisation includes conservative AST inlining. The compiler only
-inlines call sites whose tree rewrite has been proved to preserve normal call
-semantics; otherwise it leaves the call untouched. Use `-n` when you need to
-compare unoptimised assembly or isolate optimiser behaviour. See
-[Performance](performance.md#compiler-inlining) for the human-readable
-overview.
-
-## **Assembler**
-
-Usage   : rxas \[options\] source\_file
-
-Options :
-
-  \-h              Help Message
-
-  \-c              Copyright & License Details
-
-  \-v              Version
-
-  \-a              Architecture Details
-
-  \-i              Print Instructions
-
-  \-d              Debug/Verbose Mode
-
-  \-l location     Working Location (directory)
-
-  \-o output\_file  Binary Output File
-
-  \-n              No Optimising
-
-Note that the rxbin files can be simply concatenated together to form a library archive. 
-
-## **Linker**
-
-Usage   : rxlink \[options\] input\_file \[input\_file ...]
-
-Options :
-
-  \-h              Help message
-
-  \-l location     Working Location (directory)
-
-  \-o output\_file  Linked output file
-
-  \-c control\_file Control file with INPUT / ROOT / INCLUDE / OMIT / OUTPUT / MAP / STRIP / PRESERVE
-
-  \-r root\_member  Root module selector (may be repeated)
-
-  \-m map\_file     Link map output
-
-  \-s              Strip source/file metadata from the linked output
-
-  \-i              Preserve inline-body metadata in the linked output
-
-  \-d              Debug / verbose mode
-
-`rxlink` combines one or more `.rxbin` modules into a linked image with one shared constant pool. This is the preferred way to build a compact deployable binary image while preserving module boundaries for the VM.
-
-## **Disassembler**
-
-Usage   : rxdas \[options\] binary\_file
-
-Options :
-
-  \-h              Help message
-
-  \-c              Copyright & licence details
-
-  \-v              Version
-
-  \-p              all constant Pool
-
-  \-l location     working Location (directory)
-
-  \-o output\_file  Output file (default is stdout)
-
-## **Debugger**
-
-Usage   : rxvm \[options\] binary\_file \[binary\_file\_2 ...\] \-a args ... 
-
-Options :
-
-  \-h              Prints help message
-
-  \-c              Prints Copyright & License Details
-
-  \-l location     Working Location (directory)
-
-  \-v              Prints Version
-
-*CURRENT STATUS: This is a PoC version \- may not function correctly*
-
-## **Packager**
-
-This takes .rxbin crexx binary files and converts them to a c data array. These can then be linked (using the native c toolchain) to rxvml vm library (see below) to form a standalone executable file.
-
-*CURRENT STATUS: The generated exe's are quite big (not too bad) however the use of the upx exe compressor mitigates this*
-
-Usage   : rxcpack \[options\] input\_file\_1 input\_file\_2 ... input\_file\_n
-
-                           (.rxbin is appended to input file names)
-
-Options :
-
-  \-h              Help Message
-
-  \-c              Copyright & License Details
-
-  \-v              Version
-
-  \-o output\_file  Binary Output File (.c is appended \- default is input\_file\_1.c)
-
-**Virtual Machine**
-
-The base vm is rxvm
-
-Usage   : rxvm \[options\] binary\_file \[binary\_file\_2 ...\] \-a args ... 
-
-Options :
-
-  \-h              Prints help message
-
-  \-c              Prints Copyright & License Details
-
-  \-l location     Working Location (directory)
-
-  \-v              Prints Version
-
-This is the default interpreter that uses “threaded” instruction dispatching (this should not be confused with multi-threaded). 
-
-Typically when running a rexx program with rxvm you should include library.rxbin which is the consolidated standard library of built in functions.
-
-Other interpreters are:
-
-* rxbvm \- equivalent to rxvm but using classic bytecode instruction dispatching  
-* rxvme / rxvbme \- (b means bytecode version) interpreter linked with the cREXX stdlib (so that library.rxbin is not needed)  
-* rxvml / rxbvml \- (b means bytecode version) interpreter library used to support standalone native exe generated from cREXX source. This linked (using the native c toolchain) to a program converted to C using the packager above, creates a standalone executable.
-
-## **Helper Scripts**
-
-In addition to these there are scripts to automate the build flow (details tbc).
-
-# General Syntax
-
-A REXX program consists of a series of statements, each of which is terminated by a semicolon (;) or line-end. The REXX source program is coded in utf-8. 
-
-**Line continuation**
-
-A comma located at the conclusion of a line (external to a string) results in the continuation of that line. This allows long statements to be broken across multiple lines for readability. 
-
-**Labels**
-
-Labels can be used to identify specific statements in a REXX program. Labels are followed by a colon (:) and must be placed in the first column of a line. For example:
-
-**Comments**
-
-Comments are used to provide additional information about a REXX program. Comments are ignored by the REXX interpreter and can be placed anywhere in a program.
-
-# Language Level and Options
-
-All crexx programs can start with an “options’ instruction, which can include the language level (e.g. ‘levelb). If a crexx program does not start with an ‘options’ instruction or if the options do not include a language level then Level C (classic REXX) is assumed.
-
-The compiler command can also provide a default level with `--level`. This is a default only: if the source already has an `options` instruction with an explicit level, the source level wins.
-
-The compiler command can also add synthetic file-level imports with `--import namespace`. These are treated like normal top-level `import` instructions during compilation, but the source file itself is not rewritten.
-
-The `crexx` driver uses this for headerless top-level simple scripts by compiling them with `--level levelb --import rxfnsb`. Files that already start with `options`, `import`, or `namespace` are compiled without those extra defaults.
-
-*CURRENT STATUS: Level C is not implemented. Also it may be that the default language level will be changed to Level G.*
-
-The supported comment format can also be specified on the options.
-
-*         Dash '--' line comments. Options: comments_dash  or comments_nodash (default)  
-*         Slash '//' line comments. Options: comments_slash  or comments_noslash (default)  
-*         Hash '\#' line comments. Options: comments_hash (default) or comments_nohash
-
-The \# comment allows you to add the Posix first line shebang, e.g. 
-
-\#\!/usr/local/crexx/rexx.sh
-
-*EXAMPLE:*
-
-options levelb comments_slash
+The driver wraps the usual compile, assemble, execute, link, and native package
+steps. Headerless top-level scripts are compiled with `--level levelb --import
+rxfnsb`; explicit modules should still declare their own `options` and
+imports.

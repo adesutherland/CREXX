@@ -1,25 +1,73 @@
-# Overview of the toolchain
+# Overview of the Toolchain
 
-In the binary distribution of \crexx{} for your platform, the main
-toolchain and a number of utilities are included; all programs are statically linked into
-their own executable, and no shared object libraries or dll's are needed.\newline
+\crexx{} is built as a small set of separate tools with visible boundaries.
+That is deliberate: users can inspect the generated assembly, assemble it
+directly, link modules, disassemble bytecode, or package a program for native
+deployment.
+
 \begin{wrapfigure}{l}{0.4\textwidth}
 \includegraphics[scale=0.3]{charts/buildflow.pdf}
 \end{wrapfigure}
 \fussy
-Source can be edited with any text editor\footnote{Vi, Emacs, Xedit,
-  VS Code, CLion, Eclipse, etc.} of your liking. The sourcefile needs to have an
-file extension of \code{.rexx} and contains (Unicode, UTF-8) text. The \code{rxc} \crexx{} compiler
-produces a text file which will have a file extension of
-\code{.rxas}. The next file in this sequence is produced by the
-\code{rxas} assembler and is a binary \code{.rxbin} file. This file can be
-executed directly by the \crexx{} \code{rxvme} virtual machine, or one or more
-\code{.rxbin} files can first be combined by the \code{rxlink} linker into a
-single linked image with a shared constant pool.\newline\newline
-\fussy
-If you choose to compile a series of \code{*.rxbin} files, or an already linked
-\code{.rxbin} image, to a native
-executable, the \code{rxcpack} program produces a \code{.c} file,
-which can be compiled by any C compiler toolchain.\newline\newline
-\fussy
-In the following chapters the detailed workflow for the supported platforms is documented.\newline
+
+The common flow is:
+
+1. `rxc` compiles `.rexx` source to `.rxas` assembly.
+2. `rxas` assembles `.rxas` assembly to `.rxbin` bytecode.
+3. `rxvm`, `rxvme`, `rxbvm`, or `rxbvme` executes one or more `.rxbin` files.
+4. `rxlink` optionally combines modules into a linked image with a shared
+   constant pool.
+5. `rxcpack` can package a linked image as C data for native executable builds.
+
+The `crexx` driver wraps the usual compile, assemble, run, link, and package
+steps for day-to-day use.
+
+## Source, Assembly, and Bytecode
+
+Source files are UTF-8 text and normally use the `.rexx` extension. The
+compiler output is RXAS assembly:
+
+```bash
+rxc hello.rexx
+```
+
+The assembler output is RXBIN bytecode:
+
+```bash
+rxas hello.rxas
+```
+
+RXBIN is the module format consumed by the VM, linker, disassembler, and
+packager.
+
+## Module Discovery
+
+The compiler separates source discovery from binary discovery:
+
+- source roots contain `.rexx` files
+- binary roots contain `.rxbin`, optional `.rxas`, and `.rxplugin` files
+
+Use `rxc -s path` to add a source import root and `rxc -i path` to add a binary
+import root. The `crexx` driver exposes the same distinction for compilation.
+
+The runtime library path is separate. Use `crexx -l...` or the VM's own library
+loading rules when a compiled program must load bytecode or plugins at runtime.
+
+## Linking
+
+`rxlink` combines one or more `.rxbin` modules into a linked image with one
+shared constant pool. This reduces duplicate constants and resolves module and
+interface-provider relationships up front while preserving the module records
+needed by the VM loader.
+
+Use `rxlink` for release-style deployable images and for native packaging.
+
+## Native Packaging
+
+Native packaging uses `rxlink` before `rxcpack`. The linked image is serialized
+to C data and linked with the VM runtime library by the platform C toolchain.
+The generated executable contains the program image and the runtime pieces
+selected by the build.
+
+Static and dynamic plugin choices depend on how the project was built. Do not
+assume every distribution contains every optional native plugin.

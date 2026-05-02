@@ -1,66 +1,84 @@
 # CREXX
 
-_README File - 15 May 2021_
+CREXX is a modern implementation of the REXX language built as a
+compiler-to-bytecode toolchain. Source programs are compiled to cREXX assembler,
+assembled into `rxbin` bytecode, optionally linked into a deployable image, and
+run by the CREXX virtual machine.
 
-cREXX Version: cREXX-Phase-0 v0.1.4
+Current baseline: `crexx-1.0.0-beta.1`.
 
-## REXX Language Implementation Architecture
+## What Is Included
 
-Project to develop a modern ground up implementation of a REXX
-interpreter and compiler, and experiments with language improvements.
-To implement REXX using the best language tools available
-today, including the LLVM Compiler Infrastructure. These tools will
-allow a REXX compiler to be produced supporting multiple backends
-(including 64 bit architectures).
+The core toolchain is:
 
-One aspect of the project is to revisit the REXX language - what can be
-improved? And most importantly how can it be improved while keeping the
-essence of REXX:
+- `rxc`: compiles `.rexx` source to `.rxas` assembler
+- `rxas`: assembles `.rxas` to `.rxbin` bytecode
+- `rxlink`: combines one or more `.rxbin` modules into a linked image
+- `rxvm` / `rxvme`: executes `rxbin` bytecode
+- `crexx`: driver for common compile, assemble, link, and run workflows
+- `rxcpack`: packages bytecode images as C source for native executable builds
 
-> to make programming easier than before
+The Release 1 beta line focuses on the implemented Level B language surface,
+the bytecode toolchain, core standard libraries, host integration, and packaging
+on the supported desktop platforms. `rxdb` exists as an experimental debugger
+prototype and is not yet part of the stable release surface.
 
-CREXX will be targeted to run on VM/370 (a nod to REXX's heritage)
-and it will also run on Linux, Windows, OSX, and z/Architecture.
-
-Please see our [project aims](../../wiki/Project-Aims).
-
-## Wiki Based Documentation
-
-This represents the latest thoughts, aims, architecture, designs and details; some of this may have been built, some things may have been built to older designs and some may just be a future wish. This is the place where we are developing the cREXX Architecture.
-
-Key Links:
-
-- [Wiki Home](https://github.com/adesutherland/CREXX/wiki "CREXX Wiki Home")
-- [Issues](https://github.com/adesutherland/CREXX/issues "CREXX Issues")
-- [Discussions](https://github.com/adesutherland/CREXX/discussions "CREXX Discussions")
-- [Project Kanban](https://github.com/adesutherland/CREXX/projects/1 "CREXX Kanban")
-- And of course the [Github Home](https://github.com/adesutherland/CREXX "CREXX Github Home")
-
-## Release Based Documentation
-
-This is the "As Built" documentation, specific to its release; the current [develop branch](https://adesutherland.github.io/CREXX/) version is available as a website.
-
-The documentation is stored in the code repository/branch under the [/doc](https://github.com/adesutherland/CREXX/tree/develop/docs) directory as markdown files.
-
-## DSL Syntax Highlighter Dependency
-
-Parser mode uses the DSLSH middleware libraries from
-`DSL-Syntax-Highlighter/codebuffer` and the `parser_tester` middleware tool. It
-does not build DSLSH parser adapters.
-
-If `../DSL-Syntax-Highlighter` exists, CMake uses that local checkout. If not,
-CMake fetches DSLSH from `DSLSH_GIT_REPOSITORY` at `DSLSH_GIT_TAG`.
+## Build
 
 ```bash
-# Follow the configured branch, currently develop.
 cmake -S . -B cmake-build-debug
+cmake --build cmake-build-debug
+ctest --test-dir cmake-build-debug --output-on-failure
+```
 
-# Pin to a stable tag or exact WIP commit.
+The build creates the toolchain under `cmake-build-debug/bin`.
+
+Parser-mode and syntax-highlighting support use DSL Syntax Highlighter (DSLSH).
+If a sibling checkout exists at `../DSL-Syntax-Highlighter`, CMake uses it.
+Otherwise CMake fetches the configured DSLSH repository and tag.
+
+Useful DSLSH options:
+
+```bash
 cmake -S . -B cmake-build-debug -DDSLSH_GIT_TAG=<tag-or-commit-sha>
-
-# Ignore a sibling checkout and fetch the configured ref.
 cmake -S . -B cmake-build-debug -DDSLSH_PREFER_LOCAL=OFF
 ```
 
-Use a branch name for easy "latest DSLSH" development. Use a tag or commit SHA
-when CREXX needs a reproducible DSLSH version.
+## Run A Program
+
+For the usual workflow, use the `crexx` driver:
+
+```bash
+cmake-build-debug/bin/crexx path/to/program.rexx
+```
+
+The individual stages are also available:
+
+```bash
+cmake-build-debug/bin/rxc path/to/program.rexx
+cmake-build-debug/bin/rxas path/to/program.rxas
+cmake-build-debug/bin/rxvm path/to/program.rxbin
+```
+
+## Documentation
+
+- [Release documentation](docs/index.md) is the main entry point for current
+  as-built user and technical documentation.
+- [Documentation map](docs/DOCS_MAP.md) explains which documentation area to
+  use and how much authority each area has.
+- [Language reference](docs/books/crexx_language_reference/about.md) covers the
+  implemented language surface.
+- [Programming guide](docs/books/crexx_programming_guide/about.md) covers tools,
+  running programs, host integration, plugins, and practical workflows.
+- [Agent and maintainer notes](docs/ai-context/CREXX_ARCHITECTURE.md) capture
+  implementation facts used by contributors and coding agents.
+- [Compiler internals](compiler/docs/compiler_architecture_and_debt.md) contain
+  technical notes for compiler maintainers.
+- [Project wiki](https://github.com/adesutherland/CREXX/wiki) is for vision,
+  direction, and history. It is not the current technical reference.
+
+## Contributing
+
+For repository-specific working rules, start with [AGENTS.md](AGENTS.md). It
+lists the current implementation references to trust before changing compiler
+logic, syntax, runtime behaviour, or Level B source.

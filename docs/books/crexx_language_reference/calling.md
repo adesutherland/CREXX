@@ -1,94 +1,107 @@
-# Programs and libraries
+# Programs and Libraries
 
-## Calling a function
+Level B code is organized as modules that publish procedures, functions,
+classes, interfaces, methods, factories, and global values. Call resolution is
+checked by the compiler using the declarations available in the current source
+file and its imports.
 
-Whenever we are not executing the program in a linear way, we are calling functions and optionally returning data. The simplest form calls a label which is contained in the program source text itself. A label is indicated by placing a semicolon after a word, and using the ```call``` statement to jump to it and the built-in ```RESULT``` variable to fetch the answer the function deposited into it. Of course, the called function can also directly ```say``` things to output. A variant is the label with a ```procedure``` after it, which shields the global variables from the procedure, except the ones that are explicitly ```expose```d - the called function has access to those, and can update them, which normal procedures cannot.
+## Procedures and Functions
 
-Here is an example of calling something defined by a label:
+A callable procedure is declared with a label and `procedure`:
 
-
-
-
-And here a procedure with protected variables:
-
-## Function Shadowing and Literal Calls
-
-In cREXX Level B, if you define a local procedure (e.g., `Translate:`) that shares the same name as a function in an imported library (e.g., `translate()` from `rxfnsb`), the local procedure **shadows** the imported function. Any standard call to `translate()` within that file will invoke your local procedure instead of the library's function. 
-
-When this happens, the compiler will emit a diagnostic warning to alert you:
-`Warning in ... - #SHADOWING, original definition "rxfnsb.translate" @ ...`
-
-If you intentionally shadow a global function but still need to invoke the original external function, cREXX Level B retains a Classic REXX compatibility feature: the **Literal Function Call**. 
-
-By enclosing the function name in quotes (e.g., `'TRANSLATE'()`), you instruct the compiler to bypass the local, unexposed procedure and directly resolve the call against the global/imported namespaces. 
-
-Because relying on literal string calls to bypass scope is a legacy idiom, the compiler will emit a secondary warning to acknowledge this bypass:
-`Warning in ... - #EXTERNAL_SHADOW_BYPASS, external procedure "rxfnsb.translate" shadowing local procedure "translate"`
-
-## Calling a built-in function
-
-The \rexx{} language arrives with a number of built-in string functions which are the epitome of \rexx{}-ness; these are the common value in variants of the language. Now, in \crexx{} level B, we need to import a library with these functions.[^2] The reason for this, is that there are no automatic imports (for example, \rexx{} on TSO imports a library called \code{rxfns} automatically, and the other implementations also do that. Other function packages have specialized function libraries, which have system dependent calling conventions. The intention of the b level of the \crexx{} language is that the libraries are easy to add, can be written in \rexx{}, and all have the same way of being called; which library exactly is being used is specified in the ```import``` statement.
-
-[^2]: \crexx{} level C, for compatibility with Classic \rexx{}, still grants these functions a special status.
-
-
-```rexx <!--hellodate.rexx-->
-/* rexx */
-options levelb
-import rxfnsb
-say 'hello cRexx world!'
-say 'today it''s' date('w')
+```rexx
+twice: procedure = .int
+  arg value = .int
+  return value * 2
 ```
 
-<!--splice--hellodate.rexx-->
+Call it by name:
 
-Importing the standard (\code{rxfnsb} 'bif') library gives us access to the Date() function, which has the advantage that we do not have to guess that the host platform has a ```date``` command and gives us all kinds of options, and date arithmetic. The ```rxfnsb``` library contains all the standard \rexx{} built-in functions, for the b-level implementation, which means that they use native types for their arguments. If we, for example, want to use a database in our application, we only need to import the ```odbc``` library.
-
-```rexx <!--odbc.rexx-->
-/* ODBC Sample */
-options levelb
-import odbc
-import rxfnsb
-database='CompanyDB'
-table   =database'.Employees'
-/* -----------------------------------------------------------------
- * Connect to Database
- * -----------------------------------------------------------------
- */
-say "Connect to Database..."
-  rc = odbc_connect("myCustomDB", "root", "pjjp")
-  if rc < 0 then call Error_exit "Connection failed: "odbc_error_message(), "Full diagnostics: "odbc_get_diagnostics()
-  dbinfo = odbc_get_info()
-  say "Connected to database system:" dbinfo
-/* -----------------------------------------------------------------
- * Explicitly set the database
- * -----------------------------------------------------------------
- */
-  say "set/change Database..."
-  newdb = odbc_database('customer')
-  if newdb = "Error changing database" then call error_exit "Failed to set database: "odbc_error_message(),""
-  say "Database set to: '"newdb"'"
-  /* Explicitly set the database */
-  newdb = odbc_database(database)
-  if newdb = "Error changing database" then call error_exit "Failed to set database: "odbc_error_message(),""
-  say "Database set to: '"newdb"'"
-/* -----------------------------------------------------------------
- * Execute SELECT * FROM table
- * -----------------------------------------------------------------
- */
-say  "SELECT * FROM "table"..."
-  rc = odbc_execute("SELECT * FROM "table)
-  if rc < 0 then call error_exit "Query failed: "odbc_error_message(),""
-  /* Get row count */
-  say "get row count..."
-  row_count = odbc_row_count()
-  say "Total rows:" row_count
+```rexx
+say twice(21)
 ```
 
-Note that we have the choice of using the ODBC[^3] api for our database, which makes already for a robust architecture for an application, or we can *script* the access to the data by ```address```ing the database's shell program - it is up to you to make this choice; what is shown here, is that with one import a whole set of odbc functions is added to our arsenal, as easy as the standard \rexx{} functions. These will work with any database system that has an ODBC driver, even spreadsheets.
+The return type after `=` is part of the callable contract. Use `.void` when no
+value is returned.
 
-From the way of specifying the import, we cannot see if these function packages are made in \rexx{}, C or another programming languages. You can write your own libraries in \rexx{} or another language, and they can be distributed as binaries and linked into \crexx{} programs by specifying them on an ```import``` statement.[^4]
+Arguments are declared with `arg` lines. Optional arguments, varargs, and
+caller-owned state are described in the argument and system-symbol chapters.
 
-[^4]: The specifics of this are in the reference chapter, while the mechanics are shown in the Programming Guide and the inner workings in the VM Specification.
+## Imports
 
-[^3]: Open DataBase Connectivity
+Level B does not assume Classic REXX built-in functions are always visible.
+Import the library that defines the function:
+
+```rexx
+options levelb
+import rxfnsb
+
+say date("w")
+```
+
+This explicit import model lets the compiler check signatures and lets programs
+choose which library namespace they use.
+
+## Local Shadowing and Literal Calls
+
+A local procedure shadows an imported function with the same call name. The
+compiler warns when this happens:
+
+```rexx
+options levelb
+import rxfnsb
+
+translate: procedure = .string
+  arg text = .string
+  return "[" || text || "]"
+```
+
+Calls to `translate()` in that file resolve to the local procedure.
+
+If code intentionally needs the imported external function while a local symbol
+shadows it, a literal function call can bypass the local unexposed procedure:
+
+```rexx
+say "TRANSLATE"("abc", "ABC", "abc")
+```
+
+The compiler emits a warning for this compatibility path. Prefer a clearer
+namespace or local procedure name in new code when possible.
+
+## Methods and Factories
+
+Methods are called through object values:
+
+```rexx
+shape = .box()
+say shape.summary()
+```
+
+Factories are declared on classes and interfaces. The default factory uses `*`;
+named factories use their declared member name. Interface factory calls select
+an implementing class through the current factory-provider rules.
+
+```rexx
+asset = .asset("log.txt")
+asset2 = .asset.from_size(8)
+```
+
+See [Classes and Interfaces](classes_and_interfaces.md#classes-and-interfaces)
+for factory selection, `match`, casts, type tests, and default methods.
+
+## External Libraries and Plugins
+
+An imported callable may be implemented in \crexx{}, in RXAS, or in native code
+through the plugin architecture. The source-level call form is the same:
+
+```rexx
+import rxfnsb
+import rxsocket
+
+sock = socketcreate()
+```
+
+Runtime loading depends on how the program is run or linked. During
+compilation, `rxc -s` controls source import roots and `rxc -i` controls binary
+import roots. At runtime, provide the needed RXBIN modules, linked image, or
+plugins through the VM or `crexx` driver library path.

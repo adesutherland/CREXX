@@ -1,8 +1,13 @@
-# The crexx tool
+# The crexx Tool
 
-*note that this is in flux*  
+The `crexx` tool is the convenience driver for common \crexx{} workflows. It
+can compile, assemble, execute, link, and package programs without requiring
+the user to call each toolchain binary by hand.
 
-The purpose of the `crexx` tool is to support simple execution of \crexx{} programs, and (maybe in conjuction with other build tools) enable the user to build more complex applications out of many parts. Among those would be native applications which would run without having the \crexx{} toolchain installed on the target system.
+It is also useful in larger builds because it keeps the release defaults in one
+place: headerless scripts compile as Level B with `rxfnsb` imported, native
+packaging runs through `rxlink` before `rxcpack`, and source/binary import
+paths are passed to the compiler phase consistently.
 
 ## Use cases
 
@@ -16,7 +21,7 @@ The purpose of the `crexx` tool is to support simple execution of \crexx{} progr
 
 - Developing Class libraries[^functions] together with their consumers
 
-- See which code is produced for the \crexx{} virtual machine and tools usign verbosity levels
+- See which code is produced for the \crexx{} virtual machine and tools using verbosity levels
 
 
 [^functions]: or function libraries
@@ -73,10 +78,10 @@ The following options are available (single and double dashes work for all optio
 : Delete compile/link intermediates after the run.
 
 `-decimal`
-: Option decimal (default) links to the decimal arithmetic vm plugin from the mc library. The alternative --nodecimal links in the alternative, high performance db decimal library.
+: Use decimal arithmetic where the driver has to choose arithmetic mode.
 
 `-l[library path]`
-: Use a packaged binary/runtime library relative to `CREXX_HOME/bin`. This affects both compilation and execution/native linking. For example, using `rx_treemap` requires `-lrx_treemap`.
+: Use a packaged binary/runtime library relative to `CREXX_HOME/bin`. Runtime/native library loading is separate from the compiler's `-s` and `-i` import-discovery paths.
 
 For native packaging, `crexx` now separates `-l` inputs into two groups:
 

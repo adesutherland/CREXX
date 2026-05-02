@@ -1,90 +1,86 @@
 # The `OPTIONS` Instruction
 
-The `OPTIONS` instruction configures fundamental parsing rules and default behaviours for an entire cREXX
-source file. It must be the very first instruction in a file, preceding all other statements.
-This allows the compiler to establish the correct environment before tokenising and parsing the rest of the code.
+`OPTIONS` configures file-level parsing rules and language defaults. When it is
+present, it must be the first instruction in the source file.
 
-## Syntax
-
-All settings are specified on a single `OPTIONS` line, with options separated by spaces.
-
-`OPTIONS option1 [option2] [option3] ...`
-
-**Example:**
-
-```rexx <!--options.rexx-->
-options levelb numeric_common comments_slash floats_decimal
+```rexx
+options levelb numeric_common comments_slash
 ```
-
-This example configures the file for Level B, sets the arithmetic rules to align with common standards across 
-languages, enables `//` style line comments, and specifies that floating-point variables should be treated as 
-decimal types.
 
 ## Language Level
 
-This option determines the core feature set, syntax rules, and default behaviours for the program.
+Release 1 beta 1 documents Level B as the supported language level:
 
-* `levelb`: The foundational system language for cREXX. It is statically typed, emphasises safety and
-  efficiency, and provides direct access to low-level VM capabilities. Its default arithmetic standard 
-  is `numeric_common`.
-* `levelc`: Embodies "Classic" REXX, aiming for strict adherence to the ANSI X3.274-1996 standard. Its 
-  default arithmetic standard is `numeric_classic`.
-* `leveld`: Extends Level C with new features, such as the `USE` statement.
-* `levelg`: A modern, general-purpose REXX that builds upon Level B syntax.
-* `levell`: A specialised version for language engineering, providing extended `PARSE` capabilities to 
-  handle PEG grammars and native support for structures like Abstract Syntax Trees (ASTs). 
+```rexx
+options levelb
+```
 
-**Default Behaviour**: If the `OPTIONS` instruction is omitted or does not specify a language level, 
-the compiler assumes `levelc` (Classic REXX). *Note: Level C is not yet implemented, and the default may 
-change to Level G in the future.*
+Other level names may appear in project discussions or experimental code, but
+they should not be treated as release languages unless the page describing them
+explicitly says so.
+
+The compiler can also receive a default with `rxc --level levelb`. A source
+file's explicit `options` line overrides that command-line default.
+
+The `crexx` driver compiles headerless top-level scripts as Level B and imports
+`rxfnsb` for convenience. Reusable modules should still write the option and
+imports explicitly.
 
 ## Arithmetic Standard
 
-This option modifies the parser's behaviour for arithmetic expressions throughout the entire file.
+The file-level arithmetic option changes parser behaviour for arithmetic
+expressions and sets the default `NUMERIC STANDARD` for procedures that do not
+override it.
 
-It has two primary effects:
+### `numeric_common`
 
-1. Global Parser Configuration: This instruction directly influences how the CREXX parser processes
-   arithmetic expressions. This means operators, operator precedence, and associativity rules (see below).
-3. Default NUMERIC STANDARD: It implicitly sets the default NUMERIC STANDARD for any procedure within that file that
-   does not explicitly specify a NUMERIC STANDARD itself.
+`numeric_common` is the Level B default. It follows common C-like precedence
+and associativity choices:
 
-The options are:
+- prefix minus has lower priority than power, so `-3**2` is parsed as
+  `-(3**2)`
+- power is right-associative, so `2**2**3` is parsed as `2**(2**3)`
+- `%` is the common integer/remainder-style operator spelling in Level B
 
-* `numeric_classic`: (Default for `levelc`) Adheres to the classic ANSI REXX rules.
+### `numeric_classic`
 
-    * **Precedence**: The prefix minus (`-`) has a *higher* priority than the power operator (`**`). 
-      `SAY -3**2` evaluates as `(-3)**2`, resulting in `9`.
-    * **Associativity**: The power operator is *left-associative*. `SAY 2**2**3` evaluates as `(2**2)**3`, 
-      resulting in `64`.
-    * **Remainder Operator**: The remainder operator is ('//').
-    * **Integer Division**: The integer division operator is (`%`).
-   
+`numeric_classic` follows Classic REXX arithmetic parsing choices where that
+mode is used:
 
-* `numeric_common`: (Default for `levelb`) Adheres to rules common in C-like languages.
+- prefix minus has higher priority than power, so `-3**2` is parsed as
+  `(-3)**2`
+- power is left-associative, so `2**2**3` is parsed as `(2**2)**3`
+- `//` is the Classic remainder spelling
 
-    * **Precedence**: The prefix minus (`-`) has a *lower* priority than the power operator (`**`). 
-      `SAY -3**2` evaluates as `-(3**2)`, resulting in `-9`.
-    * **Associativity**: The power operator is *right-associative*. `SAY 2**2**3` evaluates as 
-      `2**(2**3)`, resulting in `256`.
-    * **Remainder Operator**: The remainder operator is ('%').
-    * **Integer Division**: The division operator is ('/'), and integer division is performed if the operands are integers.
-
-*Note: The arithmetic standard is an experimental feature and may be subject to change.*
+`NUMERIC STANDARD` inside a procedure controls numeric semantics, but it does
+not reparse expressions. Parser-level choices belong to file-level `OPTIONS`.
 
 ## Comment Style
 
-These options enable or disable specific single-line comment formats.
+The single-line comment controls are:
 
-* `comments_hash` / `comments_nohash`: Controls `#` style comments. This is the **default enabled** format 
-   and allows for the use of a POSIX `#!` shebang on the first line.
-* `comments_slash` / `comments_noslash`: Controls `//` style comments. The **default is disabled**.
-* `comments_dash` / `comments_nodash`: Controls `--` style comments. The **default is disabled**.
+- `comments_hash` / `comments_nohash`
+- `comments_slash` / `comments_noslash`
+- `comments_dash` / `comments_nodash`
 
-## Floating-Point Type (Level B)
+Hash comments are enabled by default so a POSIX shebang can be used:
 
-This option defines how `.float` variables are treated internally in Level B programs.
+```rexx
+#!/usr/bin/env crexx
+options levelb
+```
 
-* `floats_binary`: (Default) Treats floats as binary floating-point types (e.g., C `double`).
-* `floats_decimal`: Treats floats as decimal floating-point types, using a decimal-native representation 
-   for higher precision and to avoid binary conversion artefacts.
+Use `comments_slash` to enable `//` comments and `comments_dash` to enable
+`--` comments.
+
+Block comments use the normal REXX `/* ... */` form.
+
+## Floating-Point Type
+
+Level B can select how `.float` source values are treated:
+
+- `floats_binary`: binary floating point, the default
+- `floats_decimal`: decimal floating point treatment where supported
+
+Use `.decimal` explicitly when decimal behaviour is part of a published
+signature or value contract.

@@ -1,286 +1,126 @@
 # Data Types
 
-Types in the language are named using a period (`.`) followed by the type name (e.g., `.string`). This naming convention 
-helps to distinguish types from other elements in the language, such as variables and procedures.
+Level B is statically typed. Every expression has a type known to the compiler,
+and assignments, arguments, returns, method calls, and factory calls are
+checked against those types.
 
 ## Built-In Types
 
-The language includes a number of built-in types, which are provided by the language itself.
+The built-in Level B value types are:
 
-| Type       | Description                                                               |
-|:-----------|:--------------------------------------------------------------------------|
-| `.void`    | Represents the absence of a value.                                        |
-| `.boolean` | Represents a boolean value (`1` or `0`).                                  |
-| `.integer` | Represents an integer.                                                    |
-| `.float`   | Represents a floating-point number.                                       |
-| `.decimal` | Represents an arbitrary-precision decimal number.                         |
-| `.string`  | Represents a string of characters – Unicode codepoints, encoded as UTF-8. |
-| `.binary`  | Represents an opaque, VM-owned binary value.                              |
-| `.object`  | Represents the base class for all objects in the language.                |
+| Type | Purpose |
+| --- | --- |
+| `.void` | No usable value. Used for procedures that do not return a value. |
+| `.boolean` | Boolean truth value. |
+| `.int` | Integer value. |
+| `.float` | Binary floating-point value unless the source uses decimal float options. |
+| `.decimal` | Decimal numeric value. |
+| `.string` | Character string value. |
+| `.binary` | Binary byte sequence. |
+| `.object` | Object value. Interfaces and classes are object-shaped contracts. |
 
-## Statically Typed
+The canonical integer spelling in source is `.int`.
 
-The language's type system is **statically typed**, which means that the types of variables and expressions are 
-known at compile time. This helps to ensure that the language is type-safe, preventing many runtime errors. 
-When operations involve different types, \crexx{} Level B automatically promotes them according to a fixed set of rules.
+## Constructors and Type Literals
 
-## Type Promotion
+Type names can be used as constructors:
 
-When an operator is used with operands of different data types, \crexx{} automatically converts one or both operands to a 
-common, compatible type before performing the operation. This process is called **type promotion** and occurs 
-at compile time.
-
-#### Summary of Promotion Rules
-
-The promotion logic follows a clear hierarchy. When combining two different types, the result is promoted to the type that is higher in the following list:
-
-1.  **`.object`**: Any operation involving an `.object` results in an `.object`. The operation is delegated to the object itself.
-2.  **`.decimal`**: The highest-precision numeric type. Any operation involving a `.decimal` and any other numeric or string type results in a `.decimal`.
-3.  **`.float`**: Any operation involving a `.float` and an `.integer` or `.boolean` results in a `.float`.
-4.  **`.integer`**: Any operation involving an `.integer` and a `.boolean` results in an `.integer`.
-5.  **`.boolean`**: The lowest-level numeric-like type.
-
-Special cases:
-
-* **`.string`**: When a `.string` is used in a numeric context, it is converted to a number, and the rules above apply (typically resulting in a `.float` or `.decimal`).
-* **`.binary`**: This type is generally isolated and will cause a compile-time error if mixed with numeric or string types.
-  Binary buffers are copied by value unless native payload metadata says how
-  to retain or duplicate an embedded native resource.
-* **`.object`**: Objects are Rexx values, not exposed C pointers. The VM stores
-  object attributes and runtime class identity in the value, and method or
-  interface dispatch is based on that class identity. Native implementations
-  may use a hidden binary payload internally, but that payload is not the Rexx
-  object model visible to source code.
-
-#### Detailed Promotion Matrix
-
-For a complete and exhaustive reference, the full promotion logic is defined by the matrix used internally by the compiler.
-
-*(Invalid/disallowed promotions are marked with '—')*
-
-| **Operand 1**   | **.void**  | **.boolean** | **.integer** | **.float** | **.decimal** | **.string** | **.binary** | **.object** |
-|:----------------|:-----------|:-------------|:-------------|:-----------|:-------------|:------------|:------------|:------------|
-| **.void**       | `.void`    | `.boolean`   | `.integer`   | `.float`   | `.decimal`   | `.float`    | `.binary`   | `.object`   |
-| **.boolean**    | `.boolean` | `.boolean`   | `.integer`   | `.float`   | `.decimal`   | `.float`    | —           | `.object`   |
-| **.integer**    | `.integer` | `.integer`   | `.integer`   | `.float`   | `.decimal`   | `.float`    | —           | `.object`   |
-| **.float**      | `.float`   | `.float`     | `.float`     | `.float`   | `.decimal`   | `.float`    | —           | `.object`   |
-| **.decimal**    | `.decimal` | `.decimal`   | `.decimal`   | `.decimal` | `.decimal`   | `.decimal`  | —           | `.object`   |
-| **.string**     | `.float`   | `.float`     | `.float`     | `.float`   | `.decimal`   | `.float`    | —           | `.object`   |
-| **.binary**     | `.binary`  | —            | —            | —          | —            | —           | `.binary`   | `.object`   |
-| **.object**     | `.object`  | `.object`    | `.object`    | `.object`  | `.object`    | `.object`   | `.object`   | `.object`   |
-
-## Taken Constants
-
-Taken [as a] Constants are symbols that are unassigned REXX variables, these are read-only and have a value equal to their name.
-
-If a symbol is used as a constant it cannot be subsequently used as a variable:
-
-*EXAMPLE:*
-
-```rexx <!--constants.rexx-->
-SAY CONSTANT_SYM; /* Prints "CONSTANT_SYM" */
-CONSTANT_SYM = 1; /* "CONSTANT_SYM is a constant" error */
+```rexx
+count = .int(0)
+name = .string("Ada")
+ok = .boolean(1)
+payload = .binary()
 ```
+
+Class and interface names also use the dotted form. A factory call creates an
+object through the selected class or interface provider:
+
+```rexx
+item = .cacheentry("abc")
+asset = .asset("log.txt")
+```
+
+Namespace-qualified contracts use a double dot:
+
+```rexx
+client = .net..httpclient("example.com", 443, 1)
+```
+
+The left side of `namespace..symbol` must name an imported namespace.
+`namespace::symbol` remains accepted as a compatibility alias.
 
 ## Arrays
 
-These look like STEMS but actually are (at their simplistic default) 1 based dynamic arrays, with `.0` giving the array size.
+Arrays are declared from a base type:
 
-Designed to be simple and fast and cover many basic use cases.
-
-*EXAMPLE:*
-
-```rexx <!--arraysexample1.rexx-->
-array.1 = "Value"
-array.2 = "Last Value"
+```rexx
+words = .string[]
+numbers = .int[10]
+grid = .int[10, 10]
+window = .int[0 to 10]
+grow = .int[-2 to *]
 ```
 
-In this case `array.0` has value 2.
+An array value carries its element type and dimensions. Procedure signatures can
+accept arrays in the same way:
 
-This usage implicitly declares the array as 1-dimensional, 1-base array, which dynamically grows, and has type string.
-
-A 2-dimensional array of type float could be implicitly declared with:
-
-```rexx  <!--arraysexample2.rexx-->
-array.1.1 = 0.0
+```rexx
+main: procedure = .int
+  arg args = .string[]
 ```
 
-### Alternative Square Bracket Syntax
+## Numeric Values
 
-Square brackets can be used e.g. `array[2]` or `array.2` are equivalent.
+Level B supports integer, float, and decimal arithmetic. The file-level
+`options` instruction selects the parser's arithmetic standard, and a
+procedure-level `numeric` instruction can set numeric context such as digits,
+form, fuzz, case, and standard.
 
-### Explicit Declaration
+The compiler performs type validation before bytecode emission. Numeric
+conversions are explicit where precision or representation could otherwise be
+surprising:
 
-Arrays can be explicitly declared:
-
-```rexx <!--arraysexample3.rexx-->
-array = .integer[10]            /* 1 Dimensional, 1 base, 10 elements */
-array = .integer[10,10]         /* 2 Dimensional, 1 base, 10x10 elements */
-array = .integer[0 to 10]       /* 1 Dimensional, 0 base, 11 elements */
-array = .integer[-2 to *]       /* 1 Dimensional, -2 base, dynamic growth (-2, -1, 0, 1, ...) */
-array = .string[0 to 5, 4 to 10]
+```rexx
+i = .int(42)
+f = .float(i)
+d = .decimal("42.50")
 ```
 
-Arrays are Objects (see next and the Classes and Interfaces section) and can be passed to and from functions.
+## Strings and Binary Values
 
-## Objects
+`.string` values are character data. `.binary` values are byte data. Keep the
+two distinct when working with sockets, files, encodings, or native payloads:
+string operations are text operations, while binary operations preserve bytes.
 
-\crexx{} Registers contain objects with certain physical attributes, defined below. In fact all variables, even simple values are stored as objects.
+## Object Values
 
-Classes and Interfaces are templates that define the properties and methods of an object. These templates provide the capability for REXX programs to use objects. See the Classes and Interfaces section for details.
+Classes and interfaces are object contracts. A concrete class instance can be
+assigned to an interface it implements:
 
-For \crexx{} Level B the object design is required to ensure that the low level REXX VM capabilities are available to programmers from Level B programs.
+```rexx
+shape = .box()
+```
 
-## Object Physical Attributes
+Level B supports:
 
-Each Object has the following physical attributes. REXX and RXAS programs can use these physical attributes to create a logical view of an object’s “userland” attributes and methods.
+- `expr is .type` for boolean type tests
+- `expr as .type` for checked casts
+- `typeof(expr)` for concrete type introspection
 
-Note that all these values can be used concurrently. However \crexx{} protocols need to be understood, for example the object’s string\_value is used for string conversions from the object’s numeric values by the compiler.
+Objects can also carry native payloads when exposed through the plugin API, but
+ordinary Level B code should interact with objects through factories, methods,
+and interfaces.
 
-* **Status** - 64 bit field to store value status flags. These attributes will be defined here and need to be consistent across the compiler, assembler, virtual machine
-* **Int_value** - 64 bit integer
-* **Float_value** - double float
-* **Decimal_value** - arbitrary precision maths value (TODO)
-* **Decimal_value_precision** - precision information on the above (TODO)
-* **String_value** - text in UTF8. It can be null terminated, and RXAS instructions exist to ensure the text is null terminated where required
-* **String_length** - text length in bytes
-* **String_pos** - current text position in bytes from the text start
-* **String_chars** - text length in UTF codepoints
-* **String_char_pos** - current text position in UTF codepoints from the text start
-* **Binary_value** - Binary data
-* **Binary_length** - Binary data length in bytes
-* **Attributes** - An array of child objects (which can be nested to any level). Attributes are the capability used by the compiler to store REXX class logical attributes. They are also used to store members of an array
-* **Num_attributes** - The number of child objects
+## Type Inference
 
-## \crexx{} VM Objects
+The compiler infers a variable type from the first binding in many common
+cases:
 
-The following are objects created and used by the Rexx VM.
+```rexx
+total = 0        /* .int */
+label = "ready" /* .string */
+```
 
-### Caller Address
-
-Both passed to an interrupt handler and also returned by the *metaloadcalleraddr* assembler instruction.
-
-* Attribute 1. int_value = return module number
-* Attribute 2. int_value = return instruction address (in module binary space)
-
-### Loaded Modules
-
-Returned by *metaloadedmodules* assembler instruction.
-
-* Array of module names
-
-### Loaded Procedures
-
-Returned by the *metaloadedprocs* assembler instruction
-
-An array of objects, each object has
-
-* Attribute 1. string\_value = name of the procedure
-* Attribute 2. int\_value = pointer to the private \crexx{} procedure block
-
-### Decoded Opcode 
-
-Returned by the *metadecodeinst* assembler instruction
-
-* Attribute 1. Int_value = opcode
-* Attribute 2. String_value = instruction
-* Attribute 3. String_value = description
-* Attribute 4. Int_value = number of operands
-* Attribute 5. Int_value - operated 1 type
-* Attribute 6. Int_value - operated 2 type
-* Attribute 7. Int_value - operated 3 type
-
-### Procedure Details
-
-Returned by the *metaloadoperand* assembler instruction (TODO review name).
-
-* Int_value = function name
-
-TODO needs to do more that get the function name - a function object is needed
-
-### Metadata
-
-Returned by the *metaloaddata* assembler instruction.
-
-An array of objects for all the metadata returned by the instruction, meaning for a code address. The array has the following types of objects
-
-*META_SRC:*
-
-* String_value = ".meta_src"
-* Attribute 1. Int_value = source line
-* Attribute 2. Int_value = source column
-* Attribute 3. String_value = source code
-
-*META_FILE:*
-
-* String_value = ".meta_file"
-* Attribute 1. String_value = source file name
-
-*META_FUNC:*
-
-* String_value = ".meta_func"
-* Attribute 1. String_value = function symbol
-* Attribute 2. String_value = option (e.g. “b”)
-* Attribute 3. String_value = function return type
-* Attribute 4. String_value = args
-* Attribute 5. Int_value = function pointer
-
-*META_INLINE:*
-
-* String_value = ".meta_inline"
-* Attribute 1. String_value = function symbol
-* Attribute 2. String_value = inline metadata payload
-
-*META_REG:*
-
-* String_value = ".meta_reg"
-* Attribute 1. String_value = variable symbol
-* Attribute 2. String_value = option (e.g. “b”)
-* Attribute 3. String_value = variable type
-* Attribute 4. Int_value = register number
-
-*META_CONST:*
-
-* String_value = ".meta_const"
-* Attribute 1. String_value = variable (constant) symbol
-* Attribute 2. String_value = option (e.g. “b”)
-* Attribute 3. String_value = type
-* Attribute 4. String_value = constant value
-
-*META_CLEAR:*
-
-* String_value = ".meta_clear"
-* Attribute 1. String_value = variable symbol (moving out of scope)
-
-### Redirect(s)
-
-Used by spawn assembler instructions for IO redirects. Each object is a pointer to an opaque REDIRECT binary structure 
-(e.g. generated by assembler instruction *redrtoarr*)
-
-The array structure holds three redirects: input, output, error
-
-Opaque native payloads require an explicit ownership contract. Plain `.binary`
-values are byte-copied and freed by the VM. If a binary payload owns native
-resources, the native provider must either keep the payload bit-copy safe
-(for example by storing a shared handle) or attach native payload operations
-that provide a finalizer and, where needed, a copy/duplicate hook.
-
-### Signal
-
-Raised signal object.
-
-Level B exposes signals through the `rxfnsb.signal` interface. User code should
-work with the interface rather than the raw VM interrupt transport. The current
-methods include:
-
-* `name()` - canonical signal name
-* `code()` - VM signal code
-* `module()` and `address()` - VM source address for runtime-raised signals
-* `message()` and `payload()` - associated message or object payload
-* `file()`, `line()`, `column()`, and `source()` - source metadata when present
-
-The VM still passes handlers a raw object-like value containing the signal
-code, module number, address, signal name, and payload/message object. The
-`rxfnsb.runtime_signal_raw` class maps those slots with `with register.N`
-attributes, and `rxfnsb.runtime_signal` wraps that raw shape so procedure and
-block handlers receive a normal `.signal` value.
+Use explicit constructors or declarations when the intended type is not obvious
+from the initializer, when a signature is being published, or when a value must
+be an object or array contract.

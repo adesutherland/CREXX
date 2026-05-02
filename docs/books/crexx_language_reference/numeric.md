@@ -80,7 +80,7 @@ Sets the case sensitivity for special numeric literals.
 
 Selects a predefined set of arithmetic semantic rules. This is a new option.
 
-* **CLASSIC**: Adheres to classic ANSI \rexx{} X3.274-1996 rules. This is the default for \crexx{} Level C.
+* **CLASSIC**: Adheres to classic ANSI \rexx{} X3.274-1996 arithmetic rules where classic-compatible mode is selected.
     * **Remainder (`//` or '%')**: The division is calculated at full (digits) division and truncated, then the remainder 
       is computed, ('a - (TRUNC(a / b) * b)'). 
     * **Integer Magnitude-Precision Constraint**: The integer quotient for `%` and `//` must fit within 

@@ -2,9 +2,34 @@
 
 ## ADDRESS
 
-ADDRESS … 
+`ADDRESS` sends commands or function requests to a named external environment.
+It is implemented through the current compiler-exit and VM environment protocol.
 
-The ADDRESS instruction is a directive that enables the transmission of commands to an external environment.
+Basic command form:
+
+```rexx
+address system "echo hello"
+```
+
+Command output and error streams can be captured:
+
+```rexx
+address command "echo #42" output out error err
+say out
+```
+
+ADDRESS host-variable anchors such as `:name` and `${name}` are compiler
+auto-expose syntax. Their command meaning belongs to the selected environment
+handler; the VM carries binding values and write-back updates.
+
+The current native registration API is environment based:
+
+```c
+rxvml_address_register_callback_environment(ctx, name, id,
+    command_cb, function_cb, userdata);
+```
+
+The old command-only callback registration form is retired.
 
 ## ARG
 
