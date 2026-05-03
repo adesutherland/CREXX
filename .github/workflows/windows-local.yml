@@ -40,7 +40,7 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1 
 
@@ -73,7 +73,7 @@ jobs:
 
       - name: Upload Executable
         if: env.RELEASE_ID
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: CREXX-Windows
           path: |

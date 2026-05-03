@@ -25,7 +25,7 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
@@ -57,7 +57,7 @@ jobs:
           cp LICENSE README.md SECURITY.md INSTALL-RUN.md "${{ runner.temp }}/exe/"
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: CREXX-Linux-local
           path: |
