@@ -139,13 +139,183 @@ jobs:
           Copy-Item -Path "tests/demo/*" -Destination (Join-Path $stage "examples") -Recurse
           Copy-Item -Path "LICENSE", "README.md", "SECURITY.md", "INSTALL-RUN.md", "VERSION" -Destination $stage
 
-      - name: Upload release payload
+      - name: Configure Apple signing keychain
+        if: github.event_name == 'create' && matrix.platform == 'macos'
+        shell: bash
+        env:
+          APPLE_DEVELOPER_ID_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_BASE64 }}
+          APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${APPLE_DEVELOPER_ID_CERTIFICATE_BASE64:-}" ]; then
+            echo "APPLE_DEVELOPER_ID_CERTIFICATE_BASE64 is not set" >&2
+            exit 1
+          fi
+          if [ -z "${APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD:-}" ]; then
+            echo "APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD is not set" >&2
+            exit 1
+          fi
+
+          certificate_path="${RUNNER_TEMP}/developer-id-application.p12"
+          keychain_path="${RUNNER_TEMP}/crexx-signing.keychain-db"
+          keychain_password="$(uuidgen)"
+
+          printf '%s' "$APPLE_DEVELOPER_ID_CERTIFICATE_BASE64" | base64 -D > "$certificate_path"
+
+          security create-keychain -p "$keychain_password" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$keychain_password" "$keychain_path"
+          security import "$certificate_path" \
+            -k "$keychain_path" \
+            -P "$APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign
+          security list-keychains -d user -s "$keychain_path"
+          security default-keychain -s "$keychain_path"
+          security set-key-partition-list -S apple-tool:,apple: -s \
+            -k "$keychain_password" "$keychain_path"
+
+          echo "APPLE_SIGNING_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
+
+      - name: Sign macOS release payload
+        if: github.event_name == 'create' && matrix.platform == 'macos'
+        shell: bash
+        env:
+          APPLE_DEVELOPER_ID_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_IDENTITY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${APPLE_DEVELOPER_ID_IDENTITY:-}" ]; then
+            echo "APPLE_DEVELOPER_ID_IDENTITY is not set" >&2
+            exit 1
+          fi
+
+          stage="${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}"
+          entitlements="${GITHUB_WORKSPACE}/.github/signing/macos-plugin-host.entitlements"
+          signed_count=0
+
+          while IFS= read -r -d '' file_path; do
+            if ! file "$file_path" | grep -q 'Mach-O'; then
+              continue
+            fi
+
+            file_name="$(basename "$file_path")"
+            sign_args=(--force --timestamp --options runtime --sign "$APPLE_DEVELOPER_ID_IDENTITY")
+
+            case "$file_name" in
+              crexx|rxc|rxvm|rxvme|rxbvm|rxbvme|rxpp|rxdb)
+                sign_args+=(--entitlements "$entitlements")
+                ;;
+            esac
+
+            echo "Signing $file_path"
+            codesign "${sign_args[@]}" "$file_path"
+            signed_count=$((signed_count + 1))
+          done < <(find "$stage" -type f -print0)
+
+          if [ "$signed_count" -eq 0 ]; then
+            echo "No Mach-O files were found to sign" >&2
+            exit 1
+          fi
+
+          echo "Signed $signed_count Mach-O files"
+
+      - name: Verify macOS signatures
+        if: github.event_name == 'create' && matrix.platform == 'macos'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          stage="${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}"
+
+          while IFS= read -r -d '' file_path; do
+            if file "$file_path" | grep -q 'Mach-O'; then
+              codesign --verify --strict --verbose=2 "$file_path"
+            fi
+          done < <(find "$stage" -type f -print0)
+
+      - name: Package release asset
+        if: github.event_name == 'create' && matrix.platform != 'windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          payload_root="${{ runner.temp }}/release-payload"
+          payload="${{ matrix.artifact_name }}"
+          suffix="${payload#CREXX-}"
+          asset_dir="${{ runner.temp }}/release-assets"
+          asset="CREXX-${tag}-${suffix}.zip"
+
+          mkdir -p "$asset_dir"
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            (cd "$payload_root" && ditto -c -k --norsrc --keepParent "$payload" "$asset_dir/$asset")
+          else
+            (cd "$payload_root" && zip -qr "$asset_dir/$asset" "$payload")
+          fi
+          echo "CREXX_RELEASE_ASSET=$asset_dir/$asset" >> "$GITHUB_ENV"
+
+      - name: Package release asset
+        if: github.event_name == 'create' && matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $payloadRoot = Join-Path "${{ runner.temp }}" "release-payload"
+          $payload = "${{ matrix.artifact_name }}"
+          $suffix = $payload -replace "^CREXX-", ""
+          $assetDir = Join-Path "${{ runner.temp }}" "release-assets"
+          $asset = "CREXX-$tag-$suffix.zip"
+          $assetPath = Join-Path $assetDir $asset
+
+          New-Item -ItemType Directory -Force -Path $assetDir | Out-Null
+          Compress-Archive -Path (Join-Path $payloadRoot $payload) -DestinationPath $assetPath -Force
+          "CREXX_RELEASE_ASSET=$assetPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Notarize macOS release asset
+        if: github.event_name == 'create' && matrix.platform == 'macos'
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${APPLE_ID:-}" ]; then
+            echo "APPLE_ID is not set" >&2
+            exit 1
+          fi
+          if [ -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]; then
+            echo "APPLE_APP_SPECIFIC_PASSWORD is not set" >&2
+            exit 1
+          fi
+          if [ -z "${APPLE_TEAM_ID:-}" ]; then
+            echo "APPLE_TEAM_ID is not set" >&2
+            exit 1
+          fi
+
+          xcrun notarytool submit "$CREXX_RELEASE_ASSET" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+      - name: Upload release asset
         if: github.event_name == 'create'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: ${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}
+          name: ${{ matrix.artifact_name }}-release-asset
+          path: ${{ runner.temp }}/release-assets/CREXX-*.zip
           if-no-files-found: error
+
+      - name: Cleanup Apple signing keychain
+        if: always() && github.event_name == 'create' && matrix.platform == 'macos'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${APPLE_SIGNING_KEYCHAIN:-}" ]; then
+            security delete-keychain "$APPLE_SIGNING_KEYCHAIN" || true
+          fi
 
   release:
     name: Create GitHub Release
@@ -157,28 +327,21 @@ jobs:
       contents: write
 
     steps:
-      - name: Download release payloads
+      - name: Download release assets
         uses: actions/download-artifact@v4
         with:
-          path: ${{ runner.temp }}/release-payloads
+          path: ${{ runner.temp }}/downloaded-release-assets
 
-      - name: Package release assets
+      - name: Collect release assets
         shell: bash
         run: |
           set -euo pipefail
 
-          tag="${GITHUB_REF_NAME}"
-          payload_dir="${{ runner.temp }}/release-payloads"
+          download_dir="${{ runner.temp }}/downloaded-release-assets"
           asset_dir="${{ runner.temp }}/release-assets"
           mkdir -p "$asset_dir"
 
-          for dir in "$payload_dir"/CREXX-*; do
-            [ -d "$dir" ] || continue
-            payload="$(basename "$dir")"
-            suffix="${payload#CREXX-}"
-            asset="CREXX-${tag}-${suffix}.zip"
-            (cd "$payload_dir" && zip -qr "$asset_dir/$asset" "$payload")
-          done
+          find "$download_dir" -name 'CREXX-*.zip' -type f -exec cp {} "$asset_dir/" \;
 
           asset_count="$(find "$asset_dir" -name 'CREXX-*.zip' -type f | wc -l | tr -d ' ')"
           if [ "$asset_count" != "4" ]; then
