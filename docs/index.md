@@ -9,6 +9,7 @@ designs.
 ## Start Here
 
 - [README](https://github.com/adesutherland/CREXX/blob/develop/README.md): short project overview, build commands, and first run
+- [Release notes](releases/v1.0.0-beta.1.md): what is included in CREXX 1.0.0 beta 1
 - [Documentation map](DOCS_MAP.md): where each kind of information belongs
 - [Building CREXX](books/crexx_programming_guide/Building_cRexx.md)
 - [Running CREXX](books/crexx_programming_guide/running.md)

@@ -62,6 +62,8 @@ cmake-build-debug/bin/rxvm path/to/program.rxbin
 
 ## Documentation
 
+- [Release notes](docs/releases/v1.0.0-beta.1.md) summarize the beta 1 scope,
+  signing status, and known limitations.
 - [Release documentation](docs/index.md) is the main entry point for current
   as-built user and technical documentation.
 - [Documentation map](docs/DOCS_MAP.md) explains which documentation area to

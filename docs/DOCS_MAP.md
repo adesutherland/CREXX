@@ -23,6 +23,7 @@ code before editing user-facing docs.
 | --- | --- | --- | --- | --- |
 | `README.md` | GitHub front door | New visitors, contributors | What CREXX is, current baseline, build/run, links | Short and welcoming |
 | `docs/index.md` | GitHub Pages landing page | Users and contributors | Release documentation index | Clear and navigable |
+| `docs/releases` | Release notes | Users, packagers, contributors | Milestone summaries, release scope, signing status, known beta limitations | Concise and release-focused |
 | `docs/books/crexx_language_reference` | Language reference | CREXX programmers | Syntax, types, statements, classes, libraries | Formal, as-implemented |
 | `docs/books/crexx_programming_guide` | Practical guide | Users and integrators | Build, run, tools, host integration, plugins | Practical and task-oriented |
 | `docs/books/crexx_vm_spec` | VM and bytecode reference | Implementers | VM model, instruction set, platform notes | Precise and technical |
@@ -36,6 +37,8 @@ code before editing user-facing docs.
 
 - User-facing facts belong in `docs/books` and are linked from
   `docs/index.md`.
+- Release milestone summaries belong in `docs/releases` and may be copied into
+  GitHub Releases.
 - Implementation facts needed by agents belong in `docs/ai-context`.
 - Deep compiler mechanisms belong in `compiler/docs`; promote summaries into
   public docs only when they help users or integrators.

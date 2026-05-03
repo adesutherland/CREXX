@@ -124,7 +124,7 @@ jobs:
           mkdir -p "$stage/bin" "$stage/examples"
 
           cp "${{ runner.temp }}/build/bin/"* "$stage/bin/"
-          cp tests/demo/* "$stage/examples/"
+          cp examples/* "$stage/examples/"
           cp LICENSE README.md SECURITY.md INSTALL-RUN.md VERSION "$stage/"
 
       - name: Stage release payload
@@ -136,7 +136,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path (Join-Path $stage "examples") | Out-Null
 
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/bin/*") -Destination (Join-Path $stage "bin") -Recurse
-          Copy-Item -Path "tests/demo/*" -Destination (Join-Path $stage "examples") -Recurse
+          Copy-Item -Path "examples/*" -Destination (Join-Path $stage "examples") -Recurse
           Copy-Item -Path "LICENSE", "README.md", "SECURITY.md", "INSTALL-RUN.md", "VERSION" -Destination $stage
 
       - name: Configure Apple signing keychain
@@ -327,6 +327,11 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout release notes
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
       - name: Download release assets
         uses: actions/download-artifact@v5
         with:
@@ -368,6 +373,29 @@ jobs:
               ;;
           esac
 
+      - name: Prepare release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          notes_file="docs/releases/${tag}.md"
+          release_notes="${RUNNER_TEMP}/release-notes.md"
+
+          if [ -f "$notes_file" ]; then
+            cp "$notes_file" "$release_notes"
+          else
+            {
+              echo "# CREXX ${tag#v}"
+              echo
+              echo "Automated release for ${tag}."
+              echo
+              echo "No curated release notes file was found at \`${notes_file}\`."
+            } > "$release_notes"
+          fi
+
+          echo "RELEASE_NOTES_PATH=$release_notes" >> "$GITHUB_ENV"
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3
         env:
@@ -376,6 +404,6 @@ jobs:
           name: ${{ env.RELEASE_NAME }}
           tag_name: ${{ github.ref_name }}
           prerelease: ${{ env.PRERELEASE }}
-          generate_release_notes: true
+          body_path: ${{ env.RELEASE_NOTES_PATH }}
           fail_on_unmatched_files: true
           files: ${{ runner.temp }}/release-assets/*.zip
