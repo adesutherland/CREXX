@@ -1,0 +1,48 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : strict_compare_codegen.rexx
+ * BUILT                  : 2026-04-21 17:35:06
+ */
+
+.srcfile="strict_compare_codegen.rexx"
+.globals=0
+
+main() .locals=3
+   .meta "strict_compare_codegen.main"="b" ".int" main() ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "strict_compare_codegen.main.left"="b" ".int" r0
+   .src 4:3="left = .int"
+   null r0
+   .meta "strict_compare_codegen.main.right"="b" ".int" r1
+   .src 5:3="right = .int"
+   null r1
+   .src 7:3="left = 2"
+   load r0,2
+   .src 8:3="right = 10"
+   load r1,10
+   .src 10:2="if left == \"2\""
+   itos r0
+   seq r2,r0,"2"
+   brf l23iffalse,r2
+   .src 10:18="then"
+   .src 10:23="return 1"
+   ret 1
+l23iffalse:
+   .src 12:2="if left >> right"
+   itos r0
+   itos r1
+   sgt r2,r0,r1
+   brf l29iffalse,r2
+   .src 12:20="then"
+   .src 12:25="return 2"
+   ret 2
+l29iffalse:
+   .src 14:3="return 0"
+   ret 0
+   .meta "strict_compare_codegen.main.left"
+   .meta "strict_compare_codegen.main.right"

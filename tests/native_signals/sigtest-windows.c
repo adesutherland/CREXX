@@ -151,64 +151,100 @@ static void relay(HANDLE hRd)
         fwrite(buf, 1, n, stdout);
 }
 
+static int env_int_or_default(const char *name, int default_value)
+{
+    const char *value = getenv(name);
+    int parsed;
+
+    if (!value || !*value)
+        return default_value;
+    parsed = atoi(value);
+    return parsed > 0 ? parsed : default_value;
+}
+
 // This is the main function for the test harness - it just launches layer 2 which launches the test client
 static int layer1_main(int argc, char* argv[])
 {
-    // make a pipe for harness output ──────────────────────────────
-    SECURITY_ATTRIBUTES sa = { sizeof(sa), NULL, TRUE };
-    HANDLE hRd = NULL, hWr = NULL;
-    if (!CreatePipe(&hRd, &hWr, &sa, 0))
+    int attempts = env_int_or_default("CREXX_SIGNAL_TEST_ATTEMPTS", 3);
+    int retry_delay_ms = env_int_or_default("CREXX_SIGNAL_TEST_RETRY_DELAY_MS", 500);
+    DWORD rc = 1;
+
+    for (int attempt = 1; attempt <= attempts; attempt++)
     {
-        fprintf(stderr,"*** INTERNAL ERROR *** Layer 1 CreatePipe failed\n");
-        exit(1);
-    }
-    SetHandleInformation(hRd, HANDLE_FLAG_INHERIT, 0);   /* parent side = non-inherit */
+        // make a pipe for harness output ──────────────────────────────
+        SECURITY_ATTRIBUTES sa = { sizeof(sa), NULL, TRUE };
+        HANDLE hRd = NULL, hWr = NULL;
+        STARTUPINFO si = { sizeof(si) };
+        PROCESS_INFORMATION pi;
+        char *cmdLine;
+        DWORD createFlags = CREATE_NEW_CONSOLE | CREATE_NEW_PROCESS_GROUP;
 
-    // launch test_harness.exe ─────────────────────────────────────
-    STARTUPINFO         si = { sizeof(si) };
-    PROCESS_INFORMATION pi;
-    si.dwFlags    = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-    si.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);   /* pass through keyboard (unused) */
-    si.hStdOutput = hWr;                              /* redirect to our pipe */
-    si.hStdError  = hWr;
-    si.wShowWindow = SW_HIDE;                         /* hide the extra window */
+        ZeroMemory(&pi, sizeof(pi));
 
-    // Create command line = my_program_name (i.e. argv[0)) ++layer2++ {the arguments passed to me}
-    const char *cmdLine = build_windows_command_line(argc, argv, 1, argv[0], "++layer2++");
+        if (attempts > 1)
+            printf(" - Signal test attempt %d/%d\n", attempt, attempts);
 
-    // Print the command line for debugging
-    if (!cmdLine) {
-        fprintf(stderr,"*** INTERNAL ERROR *** Failed to build command line for layer 2\n");
+        if (!CreatePipe(&hRd, &hWr, &sa, 0))
+        {
+            fprintf(stderr,"*** INTERNAL ERROR *** Layer 1 CreatePipe failed\n");
+            return 1;
+        }
+        SetHandleInformation(hRd, HANDLE_FLAG_INHERIT, 0);   /* parent side = non-inherit */
+
+        // launch test_harness.exe ─────────────────────────────────────
+        si.dwFlags    = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+        si.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);   /* pass through keyboard (unused) */
+        si.hStdOutput = hWr;                              /* redirect to our pipe */
+        si.hStdError  = hWr;
+        si.wShowWindow = SW_HIDE;                         /* hide the extra window */
+
+        // Create command line = my_program_name (i.e. argv[0)) ++layer2++ {the arguments passed to me}
+        cmdLine = build_windows_command_line(argc, argv, 1, argv[0], "++layer2++");
+
+        // Print the command line for debugging
+        if (!cmdLine) {
+            fprintf(stderr,"*** INTERNAL ERROR *** Failed to build command line for layer 2\n");
+            CloseHandle(hRd);
+            CloseHandle(hWr);
+            return 1; // Command line build error
+        }
+
+        // Launch the test harness layer 2
+        if (!CreateProcess(NULL, (LPSTR)cmdLine,
+                           NULL, NULL, TRUE,
+                           createFlags,
+                           NULL, NULL, &si, &pi))
+        {
+            fprintf(stderr, "*** INTERNAL ERROR *** CreateProcess failed launching layer 2(%lu)\n", GetLastError());
+            CloseHandle(hRd);
+            CloseHandle(hWr);
+            free(cmdLine);
+            return 1;
+        }
+        CloseHandle(hWr);          // wrapper keeps only the read end
+
+        // forward harness output ──────────────────────────────────────
+        relay(hRd);
         CloseHandle(hRd);
-        CloseHandle(hWr);
-        exit(1); // Command line build error
+
+        // wait & propagate exit code ──────────────────────────────────
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        GetExitCodeProcess(pi.hProcess, &rc);
+
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        free(cmdLine);
+
+        if (rc == 0)
+            return 0;
+
+        if (attempt < attempts)
+        {
+            printf(" - Signal test attempt %d failed with rc=%lu; retrying in %dms\n",
+                   attempt, rc, retry_delay_ms);
+            sleep_ms(retry_delay_ms);
+        }
     }
-
-    // Launch the test harness layer 2
-    DWORD createFlags = CREATE_NEW_CONSOLE | CREATE_NEW_PROCESS_GROUP;
-
-    if (!CreateProcess(NULL, (LPSTR)cmdLine,
-                       NULL, NULL, TRUE,
-                       createFlags,
-                       NULL, NULL, &si, &pi))
-    {
-        fprintf(stderr, "*** INTERNAL ERROR *** CreateProcess failed launching layer 2(%lu)\n", GetLastError());
-        return 1;
-    }
-    CloseHandle(hWr);          // wrapper keeps only the read end
-
-    // forward harness output ──────────────────────────────────────
-    relay(hRd);
-    CloseHandle(hRd);
-
-    // wait & propagate exit code ──────────────────────────────────
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    DWORD rc = 0;
-    GetExitCodeProcess(pi.hProcess, &rc);
-
-    CloseHandle(pi.hThread);
-    CloseHandle(pi.hProcess);
-    free((void*)cmdLine);
 
     return (int)rc;            // CTest sees harness’s return value
 }

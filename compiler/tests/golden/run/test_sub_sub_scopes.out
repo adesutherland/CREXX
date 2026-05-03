@@ -1,0 +1,20 @@
+Warning in test_sub_sub_scopes.rexx @ 10:5 - #SHADOWING, original definition "test_sub_sub_scopes.x" @ 2:38, "x"
+Warning in test_sub_sub_scopes.rexx @ 11:5 - #SHADOWING, original definition "test_sub_sub_scopes.x" @ 2:38, "x"
+Warning in test_sub_sub_scopes.rexx @ 12:40 - #SHADOWING, original definition "test_sub_sub_scopes.x" @ 2:38, "x"
+Warning in test_sub_sub_scopes.rexx @ 15:7 - #SHADOWING, original definition "test_sub_sub_scopes.main.x" @ 10:5, "x"
+Warning in test_sub_sub_scopes.rexx @ 16:7 - #SHADOWING, original definition "test_sub_sub_scopes.main.x" @ 10:5, "x"
+Warning in test_sub_sub_scopes.rexx @ 17:48 - #SHADOWING, original definition "test_sub_sub_scopes.main.x" @ 10:5, "x"
+Warning in test_sub_sub_scopes.rexx @ 20:9 - #SHADOWING, original definition "test_sub_sub_scopes.main.x" @ 15:7, "x"
+Warning in test_sub_sub_scopes.rexx @ 21:9 - #SHADOWING, original definition "test_sub_sub_scopes.main.x" @ 15:7, "x"
+Warning in test_sub_sub_scopes.rexx @ 22:55 - #SHADOWING, original definition "test_sub_sub_scopes.main.x" @ 15:7, "x"
+Warning in test_sub_sub_scopes.rexx @ 25:56 - #SHADOWING, original definition "test_sub_sub_scopes.main.x" @ 10:5, "x"
+Warning in test_sub_sub_scopes.rexx @ 28:48 - #SHADOWING, original definition "test_sub_sub_scopes.x" @ 2:38, "x"
+11 warning(s) in source file
+Initial global x (should be 1): 1
+Subscope 1 x (should be 10): 10
+Sub-sub-scope 2 x (should be 100): 100
+Sub-sub-sub-scope 3 x (should be 1000): 1000
+Back in sub-sub-scope 2 x (should be 100): 100
+Back in subscope 1 x (should be 10): 10
+Final global x (should be 1): 1
+SUCCESS: Scoping works correctly

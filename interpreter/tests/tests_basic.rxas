@@ -1,0 +1,95 @@
+/*
+ * interpreter/tests/tests_basic.rxas
+ */
+
+.globals=0
+
+main() .locals=10
+    say "Test Suite: Basic Data Movement"
+
+    /* LOAD_REG_INT */
+    load r1, 42
+    ieq r0, r1, 42
+    brt load_int_pass, r0
+    say "FAIL: LOAD_REG_INT"
+    br load_int_end
+load_int_pass:
+    say "PASS: LOAD_REG_INT"
+load_int_end:
+
+    /* LOAD_REG_STRING */
+    load r1, "Hello"
+    seq r0, r1, "Hello"
+    brt load_str_pass, r0
+    say "FAIL: LOAD_REG_STRING"
+    br load_str_end
+load_str_pass:
+    say "PASS: LOAD_REG_STRING"
+load_str_end:
+
+    /* LOAD_REG_REG */
+    load r1, 123
+    load r2, r1
+    ieq r0, r2, 123
+    brt load_reg_pass, r0
+    say "FAIL: LOAD_REG_REG"
+    br load_reg_end
+load_reg_pass:
+    say "PASS: LOAD_REG_REG"
+load_reg_end:
+
+    /* NULL_REG */
+    load r1, "Not Null"
+    null r1
+    seq r0, r1, ""
+    brt null_reg_pass, r0
+    say "FAIL: NULL_REG"
+    br null_reg_end
+null_reg_pass:
+    say "PASS: NULL_REG"
+null_reg_end:
+
+    /* COPY_REG_REG */
+    load r1, 100
+    copy r2, r1
+    ieq r0, r2, 100
+    brt copy_reg_pass, r0
+    say "FAIL: COPY_REG_REG"
+    br copy_reg_end
+copy_reg_pass:
+    say "PASS: COPY_REG_REG"
+copy_reg_end:
+
+    /* SCOPY_REG_REG (String Copy) */
+    load r1, "String"
+    scopy r2, r1
+    seq r0, r2, "String"
+    brt scopy_reg_pass, r0
+    say "FAIL: SCOPY_REG_REG"
+    br scopy_reg_end
+scopy_reg_pass:
+    say "PASS: SCOPY_REG_REG"
+scopy_reg_end:
+
+    /* ICOPY_REG_REG (Int Copy) */
+    load r1, 200
+    icopy r2, r1
+    ieq r0, r2, 200
+    brt icopy_reg_pass, r0
+    say "FAIL: ICOPY_REG_REG"
+    br icopy_reg_end
+icopy_reg_pass:
+    say "PASS: ICOPY_REG_REG"
+icopy_reg_end:
+
+    /* SAY_REG_STRING */
+    load r1, "PASS: SAY_REG_STRING"
+    say r1
+
+    /* SAY_REG_INT */
+    say "PASS: SAY_REG_INT (next line should be 999)"
+    load r1, 999
+    itos r1
+    say r1
+
+    ret 0

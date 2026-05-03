@@ -1,0 +1,57 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_exposed_nested_call.rexx
+ * BUILT                  : 2026-04-30 16:45:20
+ */
+
+.srcfile="inline_test_exposed_nested_call.rexx"
+.globals=0
+
+main() .locals=8
+   .meta "inline_test_exposed_nested_call.main"="b" ".int" main() ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting exposed nested call inline test...\""
+   say "Starting exposed nested call inline test..."
+   .src 5:3="do"
+   .src 5:6="i = 1"
+   .meta "inline_test_exposed_nested_call.main.i"="b" ".int" r0
+   load r0,1
+   .src 5:12="to 4"
+   load r4,4
+l8dostart:
+   .src 5:12="to 4"
+   igt r5,r0,r4
+   brt l8doend,r5
+   .src 6:5="result = compute(i)"
+   .src 13:7="val"
+   icopy r2,r0
+   .src 14:3="return"
+   .src 14:15="addOne"
+   .src 17:7="val"
+   icopy r3,r2
+   .src 18:3="return val + 1"
+   iadd r6,r3,1
+   icopy r7,r6
+   br l75bexprend
+l75bexprend:
+   iadd r1,r7,10
+   .src 7:5="say \"Computed\" result"
+   .meta "inline_test_exposed_nested_call.main.result"="b" ".int" r1
+   itos r1
+   sconcat r7,"Computed",r1
+   say r7
+l8doinc:
+   .src 5:6="i"
+   inc r0
+   .src 8:3="end"
+   br l8dostart
+l8doend:
+   .src 9:3="say \"Exposed nested call inline test finished.\""
+   say "Exposed nested call inline test finished."
+   .src 10:3="return 0"
+   ret 0

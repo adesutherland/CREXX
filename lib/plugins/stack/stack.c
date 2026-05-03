@@ -1,19 +1,19 @@
 //
-// System Information Plugin for crexx/pa - Plugin Architecture
+// Stack Plugin for crexx/pa - Plugin Architecture
 //
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>   // For POSIX systems (Linux/macOS)
+#include <unistd.h>      // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <math.h>
+#include <string.h>
 
-/* ----------------------------------------------------------------------
- * STACK primitve Linked List
- * * --------------------------------------------------------------------------------------------
+/*
+ * STACK primitive Linked List
  */
 
 PROCEDURE(additem) {
-    int hi;
+    rxinteger hi;
     hi = GETARRAYHI(ARG0)+1;
     SETARRAYHI(ARG0, hi);
     SETSARRAY(ARG0, hi-1, GETSTRING(ARG1));
@@ -21,6 +21,7 @@ PROCEDURE(additem) {
     PROCRETURN
 ENDPROC
 }
+
 PROCEDURE(queue) {
     INSERTATTR(ARG0, 0);
     SETSARRAY(ARG0, 0, GETSTRING(ARG1));
@@ -28,8 +29,9 @@ PROCEDURE(queue) {
     PROCRETURN
     ENDPROC
 }
+
 PROCEDURE(insertitem) {
-    int hi, indx;
+    rxinteger hi, indx;
     hi = GETARRAYHI(ARG0);
     indx = GETINT(ARG1)+1;
     if (indx > hi) indx = hi + 1;
@@ -45,8 +47,9 @@ PROCEDURE(insertitem) {
     PROCRETURN
     ENDPROC
 }
+
 PROCEDURE(delitem) {
-    int hi, indx;
+    rxinteger hi, indx;
     hi = GETARRAYHI(ARG0);
     indx = GETINT(ARG1);
     if (indx > hi || indx <=0) {
@@ -58,22 +61,25 @@ PROCEDURE(delitem) {
     PROCRETURN
 ENDPROC
 }
+
 PROCEDURE(pull) {
-    int hi;
+    rxinteger hi;
     hi = GETARRAYHI(ARG0);
     RETURNSTR(GETSARRAY(ARG0, hi - 1));     // set to next item after deleted one
     REMOVEATTR(ARG0, hi - 1);           // remove entry
     PROCRETURN
 ENDPROC
 }
+
 PROCEDURE(pullq) {
     RETURNSTR(GETSARRAY(ARG0,0));     // set to next item after deleted one
     REMOVEATTR(ARG0, 0);              // remove entry
     PROCRETURN
 ENDPROC
 }
+
 PROCEDURE(moveitem) {
-    int hi, from,to;
+    rxinteger hi, from,to;
     char * val;
     hi   = GETARRAYHI(ARG0);
     from = GETINT(ARG1);
@@ -94,18 +100,19 @@ ENDPROC
 }
 
 PROCEDURE(list) {
-        int i,hi;
+        rxinteger i,hi;
         hi  = GETARRAYHI(ARG0);
-        printf("      Entries of Stack \n");
-        printf("Entry     Data   \n");
-        printf("-------------------------------------------------------\n");
+        /* printf("      Entries of Stack \n"); */
+        /* printf("Entry     Data   \n"); */
+        /* printf("-------------------------------------------------------\n"); */
         for (i=0;i<hi;i++) {
-            printf("%0.7d   %s\n",i+1, GETSARRAY(ARG0,i));
+            printf("%.7lld   %s\n",(long long)(i+1), GETSARRAY(ARG0,i));
         }
-        printf("%d Entries\n",hi);
+        /* printf("%lld Entries\n",(long long)hi); */
 }
+
 PROCEDURE(finditem) {
-    int i, from, to;
+    rxinteger i, from, to;
 
     to  = GETARRAYHI(ARG0);
     from=GETINT(ARG2)-1;
@@ -117,10 +124,11 @@ PROCEDURE(finditem) {
         }
     }
     RETURNINT(0);
-ENDPROC}
+ENDPROC
+}
 
 PROCEDURE(swapitem) {
-    int hi,ix1,ix2;
+    rxinteger hi,ix1,ix2;
 
     hi  = GETARRAYHI(ARG0);
     ix1=GETINT(ARG1);
@@ -132,14 +140,15 @@ PROCEDURE(swapitem) {
     }
     SWAPARRAY(ARG0, ix1-1, ix2-1);
     RETURNINT(0);
-ENDPROC}
+ENDPROC
+}
 
 PROCEDURE(create) {
-    int hi, i;
+    rxinteger hi, i;
     hi = GETARRAYHI(ARG0);
     for (i = 0; i < hi; ++i) {
         REMOVEATTR(ARG0, 0);   // remove entry
-        printf("CREATE %d %d \n",i,GETARRAYHI(ARG0));
+        // printf("CREATE %lld %lld \n",(long long)i,(long long)GETARRAYHI(ARG0));
     }
     PROCRETURN
 ENDPROC

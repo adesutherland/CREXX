@@ -1,0 +1,72 @@
+/* rexx */
+options levelb
+import rxfnsb
+
+errors = 0
+
+controller = .tracecontroller()
+call controller.set_mode("ASM")
+if controller.mode() \= "ASM" then do
+  errors = errors + 1
+  say "TRACE failed mode set"
+end
+
+if controller.toggle_mode() \= "REXX" then do
+  errors = errors + 1
+  say "TRACE failed mode toggle"
+end
+
+module = 0
+addr = -1
+module_count = controller.loaded_module_count()
+if module_count <= 0 then do
+  errors = errors + 1
+  say "TRACE failed loaded module count"
+end
+do mod_candidate = module_count to 1 by -1
+  do candidate = 0 to 10000
+    if controller.exact_source_line(mod_candidate, candidate) <> "" then do
+      module = mod_candidate
+      addr = candidate
+      leave mod_candidate
+    end
+  end
+end
+
+if module > 0 & addr >= 0 then do
+  context = controller.context(module, addr, "ASM")
+  if context.module() \= module then do
+    errors = errors + 1
+    say "TRACE failed context module"
+  end
+  if context.address() \= addr then do
+    errors = errors + 1
+    say "TRACE failed context address"
+  end
+  if context.asm_line() = "" then do
+    errors = errors + 1
+    say "TRACE failed asm line"
+  end
+  if controller.closest_source_line(module, addr) = "" then do
+    errors = errors + 1
+    say "TRACE failed closest source"
+  end
+  if context.line() <= 0 then do
+    errors = errors + 1
+    say "TRACE failed source line number"
+  end
+  if context.source() = "" then do
+    errors = errors + 1
+    say "TRACE failed source text"
+  end
+  if pos("(:) ''", context.source_line()) > 0 then do
+    errors = errors + 1
+    say "TRACE failed source formatting"
+  end
+end
+else do
+  say "TRACE skipped source metadata checks"
+end
+
+if errors = 0 then say "PASS: trace helpers"
+return errors <> 0

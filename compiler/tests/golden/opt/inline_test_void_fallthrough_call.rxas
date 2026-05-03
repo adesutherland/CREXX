@@ -1,0 +1,60 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_void_fallthrough_call.rexx
+ * BUILT                  : 2026-04-29 14:16:44
+ */
+
+.srcfile="inline_test_void_fallthrough_call.rexx"
+.globals=0
+
+main() .locals=8
+   .meta "inline_test_void_fallthrough_call.main"="b" ".int" main() ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting void fallthrough inline test...\""
+   say "Starting void fallthrough inline test..."
+   .src 5:3="call maybeLog(0)"
+   .src 5:8="maybeLog"
+   .src 5:8="maybeLog"
+   .src 13:19="return"
+   load r3,0
+   icopy r5,r3
+   br l66bexprend
+   .src 14:3="say \"value\" val"
+   say "value 0"
+   .src 14:18=""
+   load r4,0
+   icopy r5,r4
+   br l66bexprend
+l66bexprend:
+   icopy r0,r5
+   .src 6:3="call maybeLog(2)"
+   .src 6:8="maybeLog"
+   .src 6:8="maybeLog"
+   .src 14:3="say \"value\" val"
+   say "value 2"
+   .src 14:18=""
+   load r5,0
+   icopy r6,r5
+   br l86bexprend
+l86bexprend:
+   icopy r1,r6
+   .src 7:3="call tracePair(1, 3)"
+   .src 7:8="tracePair"
+   .src 7:8="tracePair"
+   .src 19:3="say \"pair\" left + right"
+   say "pair 4"
+   .src 19:26=""
+   load r6,0
+   icopy r7,r6
+   br l106bexprend
+l106bexprend:
+   icopy r2,r7
+   .src 8:3="say \"Void fallthrough inline test finished.\""
+   say "Void fallthrough inline test finished."
+   .src 9:3="return 0"
+   ret 0

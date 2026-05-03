@@ -1,0 +1,85 @@
+options levelg
+namespace address_llm_host expose address_llm_host
+import rxfnsb
+import rxfnsg
+import rxjson
+
+exit address_llm_host()
+
+address_llm_host: procedure = .int
+  body = .string
+  env_instance = .addressenvironment
+  errors = .int
+  prompt = .string
+  request_text = .string
+  text = .string
+
+  errors = 0
+  prompt = "Say hi"
+
+  address llm_gpt_4_1
+  "BODY :prompt INTO ${body}"
+  if jsonget(body, "model") <> "gpt-4.1" then errors = errors + 1
+  if jsonget(body, "input") <> prompt then errors = errors + 1
+  "STATUS INTO ${text}"
+  if text <> "0" then errors = errors + 1
+  "BODY literal into text INTO ${body}"
+  if jsonget(body, "input") <> "literal into text" then errors = errors + 1
+  if addresscall("llm_gpt_4_1", "driver") <> "OPENAI" then errors = errors + 1
+  if addresscall("llm_gpt_4_1", "model") <> "gpt-4.1" then errors = errors + 1
+  if addresscall("llm_gpt_4o", "driver") <> "OPENAI" then errors = errors + 1
+  if addresscall("llm_gpt_4o", "model") <> "gpt-4o" then errors = errors + 1
+  if addresscall("o3_mini", "driver") <> "OPENAI" then errors = errors + 1
+  if addresscall("o3_mini", "model") <> "o3-mini" then errors = errors + 1
+  text = addresscall("llm_gpt_4_1", "extract", '{"output_text":"OpenAI ok"}')
+  if text <> "OpenAI ok" then errors = errors + 1
+  if addresscall("llm_gpt_4_1", "status") <> "0" then errors = errors + 1
+  text = addresscall("llm_gpt_4_1", "extract", "not json")
+  if text <> "" then errors = errors + 1
+  if addresscall("llm_gpt_4_1", "status") <> "-42" then errors = errors + 1
+  if pos("not valid JSON", addresscall("llm_gpt_4_1", "error")) = 0 then errors = errors + 1
+  request_text = addresscall("llm_gpt_4_1", "request", prompt)
+  if pos("Authorization: Bearer <redacted>", request_text) = 0 then errors = errors + 1
+
+  env_instance = addressenv("llm_gpt_4_1")
+  if env_instance.environment_name() <> "LLM_GPT_4_1" then errors = errors + 1
+  if pos("OPENAI", env_instance.environment_id()) = 0 then errors = errors + 1
+
+  address claude_sonnet_4_5
+  "BODY :prompt INTO ${body}"
+  if jsonget(body, "model") <> "claude-sonnet-4-5" then errors = errors + 1
+  if jsonget(body, "messages.1.content") <> prompt then errors = errors + 1
+  if addresscall("claude_sonnet_4_5", "driver") <> "ANTHROPIC" then errors = errors + 1
+  if addresscall("llm_claude_haiku_3_5", "driver") <> "ANTHROPIC" then errors = errors + 1
+  if addresscall("llm_claude_haiku_3_5", "model") <> "claude-haiku-3-5" then errors = errors + 1
+  text = addresscall("claude_sonnet_4_5", "extract", '{"content":[{"type":"text","text":"Claude ok"}]}')
+  if text <> "Claude ok" then errors = errors + 1
+
+  address gemini_2_5_flash
+  "BODY :prompt INTO ${body}"
+  if jsonget(body, "contents.1.parts.1.text") <> prompt then errors = errors + 1
+  if addresscall("gemini_2_5_flash", "driver") <> "GEMINI" then errors = errors + 1
+  if addresscall("gemini_1_5_flash", "driver") <> "GEMINI" then errors = errors + 1
+  if addresscall("gemini_1_5_flash", "model") <> "gemini-1-5-flash" then errors = errors + 1
+  text = addresscall("gemini_2_5_flash", "extract", '{"candidates":[{"content":{"parts":[{"text":"Gemini ok"}]}}]}')
+  if text <> "Gemini ok" then errors = errors + 1
+
+  address gemma4_latest
+  "BODY :prompt INTO ${body}"
+  if jsonget(body, "model") <> "gemma4:latest" then errors = errors + 1
+  if jsonget(body, "prompt") <> prompt then errors = errors + 1
+  if addresscall("gemma4_latest", "driver") <> "OLLAMA" then errors = errors + 1
+  if addresscall("llm_mistral_latest", "driver") <> "OLLAMA" then errors = errors + 1
+  if addresscall("llm_mistral_latest", "model") <> "mistral:latest" then errors = errors + 1
+  text = addresscall("gemma4_latest", "extract", '{"model":"gemma4:latest","response":"Ollama ok","done":true}')
+  if text <> "Ollama ok" then errors = errors + 1
+
+  if addresscall("llm", "drivers") <> "OLLAMA OPENAI ANTHROPIC GEMINI" then errors = errors + 1
+
+  if errors <> 0 then do
+    say "address llm host failures:" errors
+    return 1
+  end
+
+  say "PASS: address llm host"
+  return 0

@@ -236,7 +236,7 @@ functions are called. You can look into the generated rexx assembler
 .globals=0
 
 main() .locals=1 .expose=hello.main
-   .meta "hello.main"="b" ".int" main() "" ""
+   .meta "hello.main"="b" ".int" main() ""
    .src 3:1="say 'hello cRexx world!'"
    say "hello cRexx world!"
    .src 4:1="return 0"
@@ -318,33 +318,41 @@ For this, we need the next set of commands, expressed as a Rexx exec:
 \begin{verbatim}
 /* rexx compile a rexx exec to a native executable */
 /* Classic Rexx and NetRexx compatible             */
-crexx_home='~/crexx-build'
-if arg='' then do
-  say 'exec name expected.'
+parse arg crexx_home execSpec
+if crexx_home='' | execSpec='' then do
+  say 'usage: crxc.rexx crexx_home execName[.ext]'
   exit 99
 end
-parse arg execName'.'extension
+parse var execSpec execName'.'extension
 if extension<>'' then say 'filename extension ignored.'
-'rxc  -i' crexx_home'/lib/rxfns' execName
-'rxas' execName
-'rxcpack' execName crexx_home'/lib/rxfns/library'
-'gcc -o' execName,
-'-lrxvml -lmachine -lavl_tree -lplatform -lm -L',
-crexx_home'/interpreter -L'crexx_home'/machine -L',
-crexx_home'/avl_tree -L'crexx_home'/platform'  execName'.c'
+linkedName = execName || '_linked'
+address system '"' || crexx_home || '/rxc" -i "' || crexx_home || '" ' || execName
+if rc<>0 then exit rc
+address system '"' || crexx_home || '/rxas" ' || execName
+if rc<>0 then exit rc
+address system '"' || crexx_home || '/rxlink" -s -o "' || linkedName || '" "' || execName || '" "' || crexx_home || '/library"'
+if rc<>0 then exit rc
+address system '"' || crexx_home || '/rxcpack" -o "' || execName || '" "' || linkedName || '"'
+if rc<>0 then exit rc
+socketLib = ''
+crexx_home_upper = translate(crexx_home)
+if pos('\', crexx_home) > 0 | substr(crexx_home,2,1) = ':' | pos('/MINGW', crexx_home_upper) > 0 | pos('/MSYS', crexx_home_upper) > 0 then socketLib = ' -lws2_32'
+address system 'gcc -O3 -DNDEBUG -o ' || execName || ' -L "' || crexx_home || '" -lrxvml -lrxpashim -lrxvmplugin -lplatform -ldecnumber -lavl_tree -lrxpa -lm' || socketLib || ' "' || crexx_home || '/rxvm_mc_decimal_manual.a" ' || execName || '.c'
+if rc<>0 then exit rc
 \end{verbatim}
 
 This exec is delivered in the source tree, bin directory. At the moment
 it can be run by classic rexx interpreters and NetRexx, it will soon be
 runnable by cRexx itself. The exec works by compiling the Rexx program
 specified (again without the .rexx file extension) to an .rxbin Rexx
-bytecode file, which is then serialized to a C source file, containing
-the cRexx Virtual Machine and the library rxbin files, by the rxcpack
-command. It is a rather peculiar looking C source, but nevertheless it
-will compile to a working executable, which is done by the last step in
-the exec, here using the gcc compiler. And you will be able to run it
-without the overhead of checking, compiling, tokenizing to bytecode and
-linking, so it will be quite fast:
+bytecode file, which is then linked with the runtime library into a
+smaller deployable image before the rxcpack command serializes that
+linked image to a C source file containing the cRexx Virtual Machine
+and the linked program image. It is a rather peculiar looking C source,
+but nevertheless it will compile to a working executable, which is done
+by the last step in the exec, here using the gcc compiler. And you will
+be able to run it without the overhead of checking, compiling,
+tokenizing to bytecode and runtime linking, so it will be quite fast:
 
 \begin{verbatim}
 ➜  crexx git:(master) ✗ time ./hello

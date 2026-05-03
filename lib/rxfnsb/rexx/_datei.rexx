@@ -1,5 +1,29 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 /* rexx */
-options levelb
+options levelb numeric_classic
 
 namespace _rxsysb expose _datei
 import rxfnsb
@@ -10,6 +34,12 @@ _datei: Procedure = .int
  *  Converts given Date in Julian Day Number
  * ----------------------------------------------------------
  */
+  /* Remove NOT_IN_SAME_SCOPE warnings */
+  YY = .string
+  mm = .string
+  dd = .string
+  mlist='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
+
   if format='' then format='NORMAL'
   if fabbreV('DAYS',format,1) then do
       call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(D) DAYS"
@@ -48,7 +78,6 @@ _datei: Procedure = .int
      return _jdn(dd,mm,YY)
   end
   if fabbreV('QUALIFIED',format,2) then do  /* format Thursday, December 17, 2020 */
-     mlist='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
      idate=split(idate,isep)
      YY=word(idate,4)
      yy=testyear(yy)
@@ -58,7 +87,6 @@ _datei: Procedure = .int
      return _jdn(dd,mm,YY)
   end
   if fabbreV('NORMAL',format,1) then do  /* format 24 December 2021 */
-     mlist='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
      idate=split(idate,isep)
      YY=word(idate,3)
      yy=testyear(yy)

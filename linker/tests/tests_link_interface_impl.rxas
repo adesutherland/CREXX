@@ -1,0 +1,21 @@
+/*
+ * linker/tests/tests_link_interface_impl.rxas
+ */
+
+.meta "link_iface.box"="b" ".unknown" .class
+.meta "link_iface.box"="link_iface.shape" .implements
+
+.globals=0
+
+§link_iface.box.§factory() .locals=2
+   .meta "link_iface.box.§factory"="b" ".shape" §link_iface.box.§factory() ""
+   setattrs r1,1
+   setobjtype r1,"link_iface.box"
+   ret r1
+
+§link_iface.box.describe() .locals=2
+   .meta "link_iface.box.describe"="b" ".string" §link_iface.box.describe() ""
+   .meta "link_iface.box.describe.§this"="b" ".box" a1
+   load r1,"linked-box"
+   ret r1
+   .meta "link_iface.box.describe.§this"

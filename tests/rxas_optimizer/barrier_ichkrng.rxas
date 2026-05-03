@@ -1,0 +1,7 @@
+* ichkrng can signal, so it is an optimiser barrier.
+
+main() .locals=3
+    swap r1,r2
+    ichkrng r0,0,10
+    swap r1,r2
+    ret

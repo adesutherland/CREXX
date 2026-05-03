@@ -1,0 +1,26 @@
+/*
+ * CREXX Interpreter test for sigbrv branch handlers with bound signal objects.
+ */
+
+.globals=0
+
+main() .locals=4
+    sigpush "OTHER"
+    sigbrv block_handler,r0,"OTHER"
+    signal "OTHER","value payload"
+    signal "FAILURE","sigbrv did not branch"
+
+block_handler:
+    sigpop "OTHER"
+    linkattr1 r1,r0,1
+    itos r1
+    sayx "brv-has-raw: "
+    say r1
+    linkattr1 r2,r0,5
+    linkattr1 r3,r2,4
+    sayx "brv-name: "
+    say r3
+    linkattr1 r3,r2,5
+    sayx "brv-payload: "
+    say r3
+    ret 0

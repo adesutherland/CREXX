@@ -18,11 +18,11 @@ pluginhome=home"\lib\plugins\"
 /* Initialize the GUI */
   call init_window "Process CREXX File", 600, 430
 /* Add a label for the input field */
-  label_index = add_text("Select a CREXX File ", 10, 10)
+  label_index = add_text("Select_ a CREXX File ", 10, 10)
 /* Add an entry field for input */
   input_field_index = add_edit(10, 30,515)
 /* Add a small button next to the input field */
-  select = add_button("Dir", 530, 30)
+  select_ = add_button("Dir", 530, 30)
   update = add_button("Edit  ", 530,70)
 /* Add checkboxes */
   checkbox1_index = add_checkbox("Compile", 10, 70)
@@ -43,11 +43,11 @@ pluginhome=home"\lib\plugins\"
 do forever
     event_token = process_events(500)  /* Wait for events with a timeout of 500ms */
     if event_token < 0 then leave      /* Exit loop on timeout */
-    else if event_token = select then do
-       input_rexx = file_pick('Select REXX File', pluginhome,0,"*.rexx")
+    else if event_token = select_ then do
+       input_rexx = file_pick('Select_ REXX File', pluginhome,0,"*.rexx")
        if input_rexx <> "" then do     /* Check if the input text is not empty */
           call set_edit input_field_index, input_rexx
-          call set_status status_bar, "Selected: "input_rexx
+          call set_status status_bar, "Select_ed: "input_rexx
           ## call show_widget(submit)
           call set_sensitive submit,1
           call set_sensitive update,1

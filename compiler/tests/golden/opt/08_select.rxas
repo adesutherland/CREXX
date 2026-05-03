@@ -1,0 +1,93 @@
+/*
+ * cREXX COMPILER VERSION : crexx-1.0.0-beta.1
+ * SOURCE                 : 08_select.rexx
+ * BUILT                  : 2026-05-02 16:17:39
+ */
+
+.srcfile="08_select.rexx"
+.globals=0
+
+main() .locals=5
+   .meta "08_select.main"="b" ".int" main() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="errors = 0"
+   .meta "08_select.main.errors"="b" ".int" r2
+   load r2,0
+   .src 5:1="classic_seen = 0"
+   .meta "08_select.main.choice"="b" ".int" "2"
+   .meta "08_select.main.classic_seen"="b" ".int" r0
+   load r0,0
+   .src 6:1="cstyle_seen = 0"
+   .meta "08_select.main.cstyle_seen"="b" ".int" r1
+   load r1,0
+   .src 7:1="nested_seen = 0"
+   .meta "08_select.main.nested_seen"="b" ".int" r3
+   load r3,0
+   .src 11:24="classic_seen = 1"
+   load r0,1
+   .src 17:15="cstyle_seen = 1"
+   .meta "08_select.main.select_tmp"="b" ".int" "2"
+   load r1,1
+   .src 21:0="select\n  when classic_seen = 1 & cstyle_seen = 1"
+   ieq r4,r0,1
+   brf l72andend,r4
+   ieq r4,r1,1
+l72andend:
+   brf l174iffalse,r4
+   .src 22:43="then"
+   .src 24:19="nested_seen = 1"
+   .meta "08_select.main.select_tmp"="b" ".int" "2"
+   load r3,1
+   br l174ifend
+   .src 26:5="end"
+l174iffalse:
+   .src 28:13="errors = errors + 1"
+   iadd r2,r2,1
+l174ifend:
+   .src 31:0="if classic_seen \= 1"
+   ine r4,r0,1
+   brf l110iffalse,r4
+   .src 31:22="then"
+   .src 32:3="errors = errors + 1"
+   iadd r2,r2,1
+   .src 33:3="say \"Classic SELECT branch did not run\""
+   say "Classic SELECT branch did not run"
+l110iffalse:
+   .src 36:0="if cstyle_seen \= 1"
+   ine r4,r1,1
+   brf l122iffalse,r4
+   .src 36:21="then"
+   .src 37:3="errors = errors + 1"
+   iadd r2,r2,1
+   .src 38:3="say \"C-style SELECT branch did not run\""
+   say "C-style SELECT branch did not run"
+l122iffalse:
+   .src 41:0="if nested_seen \= 1"
+   ine r4,r3,1
+   brf l134iffalse,r4
+   .src 41:21="then"
+   .src 42:3="errors = errors + 1"
+   iadd r2,r2,1
+   .src 43:3="say \"Nested SELECT branch did not run\""
+   say "Nested SELECT branch did not run"
+l134iffalse:
+   .src 46:0="if errors = 0"
+   ieq r4,r2,0
+   brf l140iffalse,r4
+   .src 46:15="then"
+   .src 46:20="say \"PASS: select\""
+   say "PASS: select"
+l140iffalse:
+   .src 47:1="return errors <> 0"
+   ine r4,r2,0
+   btoi r4
+   ret r4
+   .meta "08_select.main.choice"
+   .meta "08_select.main.classic_seen"
+   .meta "08_select.main.cstyle_seen"
+   .meta "08_select.main.errors"
+   .meta "08_select.main.nested_seen"

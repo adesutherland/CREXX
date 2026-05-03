@@ -1,0 +1,263 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_composed_expr_contexts.rexx
+ * BUILT                  : 2026-04-30 20:03:02
+ */
+
+.srcfile="inline_test_composed_expr_contexts.rexx"
+.globals=0
+
+main() .locals=7
+   .meta "inline_test_composed_expr_contexts.main"="b" ".int" main() ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting composed inline contexts test...\""
+   say "Starting composed inline contexts test..."
+   .src 6:3="say leftValue(3) + rightValue(4)"
+   load r2,3
+   load r1,1
+   call r3,leftValue(),r1
+   load r2,4
+   load r1,1
+   call r4,rightValue(),r1
+   iadd r4,r3,r4
+   itos r4
+   say r4
+   .src 7:3="say \"prefix:\" || labelFor(leftValue(2)) || \":\" || rightText(5)"
+   load r2,2
+   load r1,1
+   call r4,leftValue(),r1
+   load r3,1
+   call r2,labelFor(),r3
+   concat r4,"prefix:",r2
+   concat r4,r4,":"
+   load r3,5
+   load r2,1
+   call r1,rightText(),r2
+   concat r4,r4,r1
+   say r4
+   .src 8:3="say combine(leftValue(1), rightValue(2))"
+   load r6,1
+   load r5,1
+   call r3,leftValue(),r5
+   load r6,2
+   load r5,1
+   call r4,rightValue(),r5
+   load r2,2
+   call r6,combine(),r2
+   itos r6
+   say r6
+   .src 10:3="calls = 0"
+   .meta "inline_test_composed_expr_contexts.main.calls"="b" ".int" r0
+   load r0,0
+   .src 11:2="if zero() & bump(calls)"
+   load r6,0
+   call r6,zero(),r6
+   brf l38andend,r6
+   load r5,1
+   swap r6,r0
+   call r0,bump(),r5
+   swap r0,r6
+l38andend:
+   brf l45iffalse,r6
+   .src 11:27="then"
+   .src 11:32="say \"bad-and-skip\""
+   say "bad-and-skip"
+   br l45ifend
+   .src 12:3="else"
+l45iffalse:
+   .src 12:8="say \"and-skip\" calls"
+   itos r0
+   sconcat r5,"and-skip",r0
+   say r5
+l45ifend:
+   .src 14:2="if one() | bump(calls)"
+   load r6,0
+   call r6,one(),r6
+   brt l50orend,r6
+   load r5,1
+   swap r6,r0
+   call r0,bump(),r5
+   swap r0,r6
+l50orend:
+   brf l57iffalse,r6
+   .src 14:26="then"
+   .src 14:31="say \"or-skip\" calls"
+   itos r0
+   sconcat r5,"or-skip",r0
+   say r5
+   br l57ifend
+   .src 15:3="else"
+l57iffalse:
+   .src 15:8="say \"bad-or-skip\""
+   say "bad-or-skip"
+l57ifend:
+   .src 17:2="if one() & bump(calls)"
+   load r6,0
+   call r6,one(),r6
+   brf l62andend,r6
+   load r5,1
+   swap r6,r0
+   call r0,bump(),r5
+   swap r0,r6
+l62andend:
+   brf l69iffalse,r6
+   .src 17:26="then"
+   .src 17:31="say \"and-hit\" calls"
+   itos r0
+   sconcat r5,"and-hit",r0
+   say r5
+   br l69ifend
+   .src 18:3="else"
+l69iffalse:
+   .src 18:8="say \"bad-and-hit\""
+   say "bad-and-hit"
+l69ifend:
+   .src 20:2="if zero() | bump(calls)"
+   load r6,0
+   call r6,zero(),r6
+   brt l74orend,r6
+   load r5,1
+   swap r6,r0
+   call r0,bump(),r5
+   swap r0,r6
+l74orend:
+   brf l81iffalse,r6
+   .src 20:27="then"
+   .src 20:32="say \"or-hit\" calls"
+   itos r0
+   sconcat r5,"or-hit",r0
+   say r5
+   br l81ifend
+   .src 21:3="else"
+l81iffalse:
+   .src 21:8="say \"bad-or-hit\""
+   say "bad-or-hit"
+l81ifend:
+   .src 23:3="say \"Composed inline contexts test finished.\""
+   say "Composed inline contexts test finished."
+   .src 24:3="return 0"
+   ret 0
+   .meta "inline_test_composed_expr_contexts.main.calls"
+
+leftValue() .locals=2
+   .meta "inline_test_composed_expr_contexts.leftvalue"="b" ".int" leftValue() "value=.int"
+   .src 26:1="leftValue: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 27:7="value = .int"
+   .meta "inline_test_composed_expr_contexts.leftvalue.value"="b" ".int" a1
+   .src 28:3="return value * 10"
+   imult r1,a1,10
+   ret r1
+   .meta "inline_test_composed_expr_contexts.leftvalue.value"
+
+rightValue() .locals=2
+   .meta "inline_test_composed_expr_contexts.rightvalue"="b" ".int" rightValue() "value=.int"
+   .src 30:1="rightValue: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 31:7="value = .int"
+   .meta "inline_test_composed_expr_contexts.rightvalue.value"="b" ".int" a1
+   .src 32:3="return value + 7"
+   iadd r1,a1,7
+   ret r1
+   .meta "inline_test_composed_expr_contexts.rightvalue.value"
+
+rightText() .locals=1
+   .meta "inline_test_composed_expr_contexts.righttext"="b" ".string" rightText() "value=.int"
+   .src 34:1="rightText: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 35:7="value = .int"
+   .meta "inline_test_composed_expr_contexts.righttext.value"="b" ".int" a1
+   .src 36:3="return value"
+   itos a1
+   ret a1
+   .meta "inline_test_composed_expr_contexts.righttext.value"
+
+labelFor() .locals=2
+   .meta "inline_test_composed_expr_contexts.labelfor"="b" ".string" labelFor() "value=.int"
+   .src 38:1="labelFor: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 39:7="value = .int"
+   .meta "inline_test_composed_expr_contexts.labelfor.value"="b" ".int" a1
+   .src 40:3="return \"[\" || value || \"]\""
+   itos a1
+   concat r1,"[",a1
+   concat r1,r1,"]"
+   ret r1
+   .meta "inline_test_composed_expr_contexts.labelfor.value"
+
+combine() .locals=3
+   .meta "inline_test_composed_expr_contexts.combine"="b" ".int" combine() "left=.int,right=.int"
+   .src 42:1="combine: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 43:7="left = .int"
+   .meta "inline_test_composed_expr_contexts.combine.left"="b" ".int" a1
+   .src 43:20="right = .int"
+   .meta "inline_test_composed_expr_contexts.combine.right"="b" ".int" a2
+   .src 44:3="return left + right"
+   iadd r2,a1,a2
+   ret r2
+   .meta "inline_test_composed_expr_contexts.combine.left"
+   .meta "inline_test_composed_expr_contexts.combine.right"
+
+zero() .locals=0
+   .meta "inline_test_composed_expr_contexts.zero"="b" ".int" zero() ""
+   .src 46:1="zero: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 47:3="return 0"
+   ret 0
+
+one() .locals=0
+   .meta "inline_test_composed_expr_contexts.one"="b" ".int" one() ""
+   .src 49:1="one: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 50:3="return 1"
+   ret 1
+
+bump() .locals=1
+   .meta "inline_test_composed_expr_contexts.bump"="b" ".int" bump() "expose count=.int"
+   .src 52:1="bump: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 53:7="expose count = .int"
+   .meta "inline_test_composed_expr_contexts.bump.count"="b" ".int" a1
+   .src 54:3="count = count + 1"
+   iadd a1,a1,1
+   .src 55:3="return 1"
+   ret 1
+   .meta "inline_test_composed_expr_contexts.bump.count"

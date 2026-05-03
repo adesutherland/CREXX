@@ -1,3 +1,27 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 //
 // Std C - Utility Functions
 //
@@ -28,8 +52,6 @@
 
 #include "platform.h"
 
-#define MAXFILEPATH 4096
-
 /*
  * Read a file into a returned buffer
  *
@@ -38,88 +60,238 @@
  */
 char* file2buf(FILE *file, size_t *bytes) {
     char *buff;
+    size_t n;
+    long pos;
 
     /* Get file size */
-    fseek(file, 0, SEEK_END);
-    *bytes = ftell(file);
+    if (fseek(file, 0, SEEK_END) != 0) {
+        return 0;
+    }
+    pos = ftell(file);
+    if (pos < 0) {
+        return 0;
+    }
+    *bytes = (size_t)pos;
     rewind(file);
 
     /* Allocate buffer and read */
     buff = (char*) malloc((*bytes + 2) * sizeof(char) );
-    *bytes = fread(buff, 1, *bytes, file);
-    if (!*bytes) {
+    if (!buff) return 0;
+    n = fread(buff, 1, *bytes, file);
+    if (n == 0 && *bytes > 0) {
+        free(buff);
         return 0;
     }
+    *bytes = n;
     buff[*bytes] = 0;
     buff[*bytes+1] = 0; /* Add an extra byte for the token peak */
     return buff;
 }
 
+#include <ctype.h>
+
+/*
+ * Function checks if a file name has a specific extension
+ */
+static int has_extension(const char *name, const char *type) {
+    size_t name_len, type_len;
+    if (!type || !type[0]) return 1;
+    name_len = strlen(name);
+    type_len = strlen(type);
+    if (name_len >= type_len + 1 && name[name_len - type_len - 1] == '.' &&
+        strcmp(name + name_len - type_len, type) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
+/* Checks if a file has any extension */
+int has_any_extension(const char *name) {
+    const char *last_slash = strrchr(name, '/');
+#ifdef _WIN32
+    const char *last_bsl = strrchr(name, '\\');
+    if (!last_slash || (last_bsl && last_bsl > last_slash)) last_slash = last_bsl;
+#endif
+    const char *fname = last_slash ? last_slash + 1 : name;
+    return strchr(fname, '.') != NULL;
+}
+
+/* Strips the rightmost extension from a filename if it matches the provided extension */
+char *strip_rightmost_extension_if(const char *name, const char *ext) {
+    if (has_extension(name, ext)) {
+        size_t name_len = strlen(name);
+        size_t ext_len = strlen(ext);
+        char *new_name = malloc(name_len - ext_len); /* -ext_len - 1 (for dot) + 1 (for null) = -ext_len */
+        strncpy(new_name, name, name_len - ext_len - 1);
+        new_name[name_len - ext_len - 1] = 0;
+        return new_name;
+    }
+    return strdup(name);
+}
+
+#if !defined(_WIN32) && !defined(__CMS__)
+#include <termios.h>
+#include <unistd.h>
+#include <signal.h>
+
+static struct termios orig_termios;
+static int termios_saved = 0;
+
+void platform_term_save() {
+    if (!termios_saved) {
+        if (isatty(STDIN_FILENO)) {
+            if (tcgetattr(STDIN_FILENO, &orig_termios) == 0) {
+                termios_saved = 1;
+            }
+        }
+    }
+}
+
+void platform_term_restore() {
+    if (termios_saved) {
+        tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
+    }
+}
+
+static void signal_handler(int sig) {
+    platform_term_restore();
+    /* Re-raise the signal or exit */
+    signal(sig, SIG_DFL);
+    raise(sig);
+}
+
+void platform_install_signal_handlers() {
+    platform_term_save();
+    if (termios_saved) {
+        atexit(platform_term_restore);
+        signal(SIGSEGV, signal_handler);
+        signal(SIGILL, signal_handler);
+        signal(SIGFPE, signal_handler);
+        signal(SIGBUS, signal_handler);
+        signal(SIGABRT, signal_handler);
+        signal(SIGINT, signal_handler);
+        signal(SIGTERM, signal_handler);
+    }
+}
+#else
+/* Stub for Windows or other platforms if not needed */
+void platform_term_save() {}
+void platform_term_restore() {}
+void platform_install_signal_handlers() {}
+#endif
+
 /*
  * Function checks if a file exists
- * dir can be null
+ * dir can be null, and can contain multiple directories separated by ;
  * returns 1 if the file exists
  */
 int fileexists(char *name, char *type, char *dir) {
     size_t len;
     char *file_name;
-    int result;
+    int result = 0;
+    char *dir_copy;
+    char *token;
+    char *next_token;
 
-    /* Create the full file name */
-    if (dir) len = strlen(name) + strlen(type) + strlen(dir) + 3;
-    else len = strlen(name) + strlen(type) + 2;
-
-    file_name = malloc(len);
-    if (type[0] == 0) {
-        if (dir) snprintf(file_name, len, "%s/%s", dir, name);
-        else snprintf(file_name, len, "%s", name);
+    /* If name already contains a directory separator, ignore dir */
+    if (name && (strchr(name, '/') || strchr(name, '\\'))) {
+        dir = 0;
     }
-    else {
-        if (dir) snprintf(file_name, len, "%s/%s.%s", dir, name, type);
+
+    if (!dir || !*dir) {
+        /* Single attempt with current directory */
+        len = strlen(name) + strlen(type) + 2;
+        file_name = malloc(len);
+        if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s", name);
         else snprintf(file_name, len, "%s.%s", name, type);
+#if defined(__linux__) || defined(__APPLE__)
+        result = access(file_name, F_OK) != -1;
+#elif defined(_WIN32)
+        DWORD dwAttrib = GetFileAttributes(file_name);
+        result = (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+#endif
+        free(file_name);
+        return result;
     }
 
-    /* Check if the file exists */
-#if defined(__linux__) || defined(__APPLE__)
-    result = access(file_name, F_OK) != -1;
-#elif defined(_WIN32)
-    DWORD dwAttrib = GetFileAttributes(file_name);
-    result =  (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
-    #else
-    result =0; // Unsupported platform
-#endif
+    /* Multiple directories support */
+    dir_copy = strdup(dir);
+    token = dir_copy;
+    while (token) {
+        next_token = strchr(token, ';');
+        if (next_token) *next_token = 0;
 
-    free(file_name);
+        if (*token) {
+            len = strlen(name) + strlen(type) + strlen(token) + 3;
+            file_name = malloc(len);
+            if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s/%s", token, name);
+            else snprintf(file_name, len, "%s/%s.%s", token, name, type);
+#if defined(__linux__) || defined(__APPLE__)
+            result = access(file_name, F_OK) != -1;
+#elif defined(_WIN32)
+            DWORD dwAttrib = GetFileAttributes(file_name);
+            result = (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+#endif
+            free(file_name);
+            if (result) break;
+        }
+
+        token = next_token ? next_token + 1 : 0;
+    }
+    free(dir_copy);
 
     return result;
 }
 
 /*
  * Function opens and returns a file handle
- * dir can be null
+ * dir can be null, and can contain multiple directories separated by ;
  * mode - is the fopen() file mode
  */
 FILE *openfile(char *name, char *type, char *dir, char *mode) {
     size_t len;
     char *file_name;
-    FILE *stream;
+    FILE *stream = NULL;
+    char *dir_copy;
+    char *token;
+    char *next_token;
 
-    if (dir) len = strlen(name) + strlen(type) + strlen(dir) + 3;
-    else len = strlen(name) + strlen(type) + 2;
-
-    file_name = malloc(len);
-    if (type[0] == 0) {
-        if (dir) snprintf(file_name, len, "%s/%s", dir, name);
-        else snprintf(file_name, len, "%s", name);
+    /* If name already contains a directory separator, ignore dir */
+    if (name && (strchr(name, '/') || strchr(name, '\\'))) {
+        dir = 0;
     }
-    else {
-        if (dir) snprintf(file_name, len, "%s/%s.%s", dir, name, type);
+
+    if (!dir || !*dir) {
+        /* Single attempt with current directory */
+        len = strlen(name) + strlen(type) + 2;
+        file_name = malloc(len);
+        if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s", name);
         else snprintf(file_name, len, "%s.%s", name, type);
+        stream = fopen(file_name, mode);
+        free(file_name);
+        return stream;
     }
 
-    stream = fopen(file_name, mode);
+    /* Multiple directories support */
+    dir_copy = strdup(dir);
+    token = dir_copy;
+    while (token) {
+        next_token = strchr(token, ';');
+        if (next_token) *next_token = 0;
 
-    free(file_name);
+        if (*token) {
+            len = strlen(name) + strlen(type) + strlen(token) + 3;
+            file_name = malloc(len);
+            if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s/%s", token, name);
+            else snprintf(file_name, len, "%s/%s.%s", token, name, type);
+            stream = fopen(file_name, mode);
+            free(file_name);
+            if (stream) break;
+        }
+
+        token = next_token ? next_token + 1 : 0;
+    }
+    free(dir_copy);
 
     return stream;
 }
@@ -159,7 +331,11 @@ char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
     if (dir && strlen(dir)) ptr->d = opendir(dir);
     else ptr->d = opendir(".");
 
-    if (!ptr->d) return 0;
+    if (!ptr->d) {
+        free(ptr);
+        *dir_ptr = 0;
+        return 0;
+    }
 
     return dirnxtfl(dir_ptr);
 
@@ -273,11 +449,15 @@ char* exepath()
 
     if (!len) return name;
 
-    for (i = len - 1; i; i--)
+    for (i = len; i > 0; i--)
     {
-        if ( name[i] == '\\' || name[i] == '/' )
+        if ( name[i-1] == '\\' || name[i-1] == '/' )
         {
-            name[i] = 0;
+            if (i == 1) {
+                name[1] = 0; /* Keep the root separator */
+            } else {
+                name[i-1] = 0;
+            }
             break;
         }
     }
@@ -325,7 +505,7 @@ char* exefqname()
 
 #else
 
-    exePath[0] = '\0'
+    exePath[0] = '\0';
 
 #endif
 
@@ -333,9 +513,10 @@ char* exefqname()
 }
 
 /* Gets the file extention of a path */
-const char *filenext(const char *filename) {
-    const char *dot = strrchr(filename, '.');
-    if(!dot || dot == filename) return "";
+const char *filenext(const char *filename_in) {
+    const char *fname = filename(filename_in);
+    const char *dot = strrchr(fname, '.');
+    if(!dot || dot == fname) return "";
     return dot + 1;
 }
 
@@ -346,12 +527,11 @@ const char *filename(const char *path)
     size_t i;
     if (!len) return "";
 
-    for (i = len - 1; i; i--)
+    for (i = len; i > 0; i--)
     {
-        if ( path[i] == '\\' || path[i] == '/' )
+        if ( path[i-1] == '\\' || path[i-1] == '/' )
         {
-            path = path + i + 1;
-            break;
+            return path + i;
         }
     }
     return path;
@@ -362,16 +542,23 @@ const char *filename(const char *path)
 char *file_dir(const char *path)
 {
     size_t len = strlen(path);
+    size_t i;
     if (!len) return 0;
     char* result;
 
-    for (len--; len; len--)
+    for (i = len; i > 0; i--)
     {
-        if ( path[len] == '\\' || path[len] == '/' )
+        if ( path[i-1] == '\\' || path[i-1] == '/' )
         {
-            result = malloc(len + 1);
-            result[len] = 0;
-            memcpy(result, path, len);
+            if (i == 1) {
+                result = malloc(2);
+                result[0] = path[0];
+                result[1] = 0;
+                return result;
+            }
+            result = malloc(i);
+            result[i-1] = 0;
+            memcpy(result, path, i-1);
             return result;
         }
     }

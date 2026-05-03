@@ -1,0 +1,5 @@
+file:log.txt:8
+log.txt
+file:sized-file:8
+8
+cache:memo:1

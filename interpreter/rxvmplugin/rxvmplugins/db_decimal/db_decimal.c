@@ -1,4 +1,28 @@
 /*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*
  * Description: This file contains the implementation of the rxvmplugin plugin using
  *              platform-specific long double precision floating point numbers.
 */
@@ -42,6 +66,21 @@ typedef struct dbcontext {
 #else
     #define CLEAR_ERRNO
 #endif
+
+/* Update the plugin internals with the Numeric Context */
+ static void syncNumericContext(decplugin *plugin) {
+    numeric_context default_context = {DEFAULT_NUMERIC_DIGITS, DEFAULT_NUMERIC_FUZZ, DEFAULT_NUMERIC_FORM, DEFAULT_NUMERIC_CASE, NUMERIC_STANDARD_COMMON};
+
+    numeric_context *num_context = plugin->num_context;
+    if (!num_context) {
+        num_context = &default_context;
+    }
+
+    if (num_context->digits > ((dbcontext*)(plugin->base.private_context))->max_digits)
+        ((dbcontext*)(plugin->base.private_context))->digits = ((dbcontext*)(plugin->base.private_context))->max_digits; /* Max for this double implementation */
+    else
+        ((dbcontext*)(plugin->base.private_context))->digits = num_context->digits;
+}
 
 // Note that signal_string is set to a static buffer in the check_signal function (or NULL)
 static void check_signal(decplugin *plugin, long double value) {
@@ -227,16 +266,9 @@ static size_t getDigits(decplugin *plugin) {
     return ((dbcontext*)(plugin->base.private_context))->digits;
 }
 
-/* Set the number of digits in the rxvmplugin context */
-static void setDigits(decplugin *plugin, size_t digits) {
-    if (digits > ((dbcontext*)(plugin->base.private_context))->max_digits)
-        digits = ((dbcontext*)(plugin->base.private_context))->max_digits; /* Max for this double implementation */
-    ((dbcontext*)(plugin->base.private_context))->digits = digits;
-}
-
 /* Get the required string size for the rxvmplugin context */
 static size_t getRequiredStringSize(decplugin *plugin) {
-    return ((dbcontext*)(plugin->base.private_context))->digits + 14;
+    return plugin->num_context->digits + 14;
 }
 
 /* Convert a string to a rxvmplugin number */
@@ -275,6 +307,9 @@ static void decimalFromString(decplugin *plugin, value *result, const char *stri
  * getRequiredStringSize() bytes */
 static void decimalToString(decplugin *plugin, const value *number, char *string) {
     long double value = *(long double*)number->decimal_value;
+#if defined(__APPLE__) && (defined(__aarch64__) || defined(__arm64__)) 
+    int digits = (int)((dbcontext*)(plugin->base.private_context))->digits;
+#endif    
     // Handle special cases
     if (isnan(value)) {
         strcpy(string, "nan");
@@ -298,7 +333,12 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
         }
         return;
     }
-    sprintf(string, "%.*LG", (int)((dbcontext*)(plugin->base.private_context))->digits, value);
+#if defined(__APPLE__) && (defined(__aarch64__) || defined(__arm64__))
+    sprintf(string, "%.*LG", digits, value);
+#else
+    sprintf(string, "%.*LG", plugin->num_context->digits, value);
+#endif    
+
 }
 
 /* Convert an int to a rxvmplugin number */
@@ -382,7 +422,7 @@ void decimalToInt(decplugin *plugin, const value *number, rxinteger *int_value) 
     if (exponent >= (sig_digits - 1)) {
         // The value is an integer
         exponent -= ((rxinteger)sig_digits -1);
-        // Note we are using unsigned ints here because of a edge case where INT64_MAX is exceeded because of rounding
+        // Note we are using unsigned ints here because of an edge case where INT64_MAX is exceeded because of rounding
         uvalue *= int_powers_of_10[exponent];
         if (is_neg) {
             if (-uvalue < INT64_MIN) {
@@ -689,9 +729,62 @@ static void decimalExtract(decplugin *plugin, char *coefficient, rxinteger *expo
     // Format the coefficient string with precision upto digits fractional digits
     sprintf(coefficient, is_negative ? "-%.*Lf" : "%.*Lf", (int)((dbcontext*)(plugin->base.private_context))->digits - 1, coeff);
 
+
+    // Logic to [re-]check for edge case where rounding the coefficient could change the exponent - we look at the string
+    char* abs_start = is_negative ? coefficient + 1 : coefficient;
+
+    // If the coefficient starts with "10." it means rounding has caused it to become >= 10.0 so we need to adjust
+    if (strncmp(abs_start, "10.", 3) == 0) {
+        // Adjust coefficient and exponent but moving the decimal point left
+        abs_start[2] = abs_start[1]; // Move the '0' to replace the '.'
+        abs_start[1] = '.';          // Put the decimal point after the '1'
+        (*exponent)++;               // Increment the exponent
+    }
+    else if (strncmp(abs_start, "0.", 2) == 0) {
+        // If the coefficient starts with "0." it means rounding has caused it to become < 1.0 so we need to adjust
+        if (abs_start[2] != '\0') { // Just in case of malformed string
+            // Adjust coefficient and exponent by moving the decimal point right
+            abs_start[0] = abs_start[2]; // Move the first digit after the '.' to the front
+            // Shift the rest of the string left
+            memmove(abs_start + 2, abs_start + 3, strlen(abs_start + 3) + 1);
+            (*exponent)--;                 // Decrement the exponent
+        }
+    }
+
     /* Trim trailing zeros */
     trim_numeric_trailing_zeros(coefficient);
 }
+
+/* Is zero? */
+static int decimalIsZero(decplugin *plugin, const value *number) {
+    long double value = *(long double*)number->decimal_value;
+    return (value == 0.0L || value == -0.0L);
+}
+
+/* Truncate the decimal value to an integer */
+static void decimalTruncate(decplugin *plugin, value *result, const value *op1) {
+    CLEAR_ERRNO;
+    EnsureCapacity(result);
+    long double number = *(long double*)op1->decimal_value;
+    // Truncate the decimal part
+    number = truncl(number);
+    number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+    check_signal(plugin, number);
+    *((long double*)result->decimal_value) = number;
+}
+
+/* Round the decimal value to the nearest integer */
+static void decimalRound(decplugin *plugin, value *result, const value *op1) {
+    CLEAR_ERRNO;
+    EnsureCapacity(result);
+    long double number = *(long double*)op1->decimal_value;
+    // Round to the nearest integer
+    number = roundl(number);
+    number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+    check_signal(plugin, number);
+    *((long double*)result->decimal_value) = number;
+}
+
 
 /* Function to destroy a rxvmplugin plugin */
 static void destroy_decplugin(rxvm_plugin *plugin) {
@@ -704,8 +797,8 @@ static rxvm_plugin *new_decplugin() {
     /* Allocate memory for the context */
     dbcontext* context = malloc(sizeof(dbcontext)); // NOLINT
 
-    context->digits = LDBL_DIG; // set precision
     context->max_digits = LDBL_DIG; // set max precision
+    context->digits = context->max_digits; // set precision
 
     /* Allocate memory for the plugin */
     decplugin *plugin = malloc(sizeof(decplugin));
@@ -715,8 +808,8 @@ static rxvm_plugin *new_decplugin() {
     plugin->base.version = "0.1";
     plugin->base.description = "Decimal Plugin based on long double";
     plugin->base.free = destroy_decplugin;
+    plugin->syncNumericContext = syncNumericContext;
     plugin->getDigits = getDigits;
-    plugin->setDigits = setDigits;
     plugin->getRequiredStringSize = getRequiredStringSize;
     plugin->decimalFromString = decimalFromString;
     plugin->decimalToString = decimalToString;
@@ -733,9 +826,23 @@ static rxvm_plugin *new_decplugin() {
     plugin->decimalCompare = decimalCompare;
     plugin->decimalCompareString = decimalCompareString;
     plugin->decimalExtract = decimalExtract;
+    plugin->decimalIsZero = decimalIsZero;
+    plugin->decimalTruncate = decimalTruncate;
+    plugin->decimalRound = decimalRound;
 
     return (rxvm_plugin*)plugin;
 }
 
 // Register the rxvmplugin plugin factory
 REGISTER_PLUGIN(new_decplugin)
+
+#ifdef MANUAL_PLUGIN_LINK
+/*
+ * rxvml/rxvm currently hardcode the mandatory decimal manual initializer as
+ * decnumber_register_rxvm_plugin(). Export a compatibility alias here so the
+ * db_decimal manual archive can satisfy the same archive-link contract.
+ */
+void decnumber_register_rxvm_plugin(void) {
+    dbnumber_register_rxvm_plugin();
+}
+#endif

@@ -1,4 +1,4 @@
-/* GETPI Plugin Test */
+/* Cipher Plugin Test */
 options levelb
 import arrays
 import cipher

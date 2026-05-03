@@ -5,23 +5,39 @@ project(Debugger C)
 set(CMAKE_C_STANDARD 90)
 
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i ${CMAKE_BINARY_DIR}/lib/rxfnsb -o rxdb ${CMAKE_CURRENT_SOURCE_DIR}/rxdb
-        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas rxdb
-        COMMAND ${CMAKE_BINARY_DIR}/cpacker/rxcpack rxdb ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
-        DEPENDS rxas rxc rxdb.rexx library rxcpack
+        BYPRODUCTS
+                ${CMAKE_CURRENT_BINARY_DIR}/rxdb_gui.rxas
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o rxdb_gui ${CMAKE_CURRENT_SOURCE_DIR}/rxdb_gui
+        COMMAND $<TARGET_FILE:rxas> rxdb_gui
+        DEPENDS rxas rxc rxdb_gui.rexx library compiler_exit_bin
+        OUTPUT rxdb_gui.rxbin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "cREXX compile and assemble rxdb_gui ..."
+)
+
+add_custom_command(
+        BYPRODUCTS
+                ${CMAKE_CURRENT_BINARY_DIR}/rxdb.rxbin
+                ${CMAKE_CURRENT_BINARY_DIR}/rxdb_linked.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -i ${CMAKE_CURRENT_BINARY_DIR} -o rxdb ${CMAKE_CURRENT_SOURCE_DIR}/rxdb
+        COMMAND $<TARGET_FILE:rxas> rxdb
+        COMMAND $<TARGET_FILE:rxlink> -s -o rxdb_linked rxdb rxdb_gui ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND $<TARGET_FILE:rxcpack> -o rxdb rxdb_linked
+        DEPENDS rxas rxc rxlink rxdb.rexx rxdb_gui.rxbin library compiler_exit_bin rxcpack
         OUTPUT rxdb.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "cREXX compile, assemble and package rxdb ..."
+        COMMENT "cREXX compile, assemble, link and package rxdb ..."
 )
 
 add_executable(rxdb rxdb.c)
 
-target_link_libraries(rxdb rxvml machine avl_tree rxpa platform m)
+target_link_libraries(rxdb rxvml rxpashim)
 
-add_dependencies(rxdb rxc rxas rxcpack library)
+add_dependencies(rxdb rxc rxas rxlink rxcpack library)
 
-add_custom_target(rxdbcopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxdb)
-
-add_custom_command(TARGET rxdbcopy POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/debugger/rxdb${EXE_SUFFIX} ${CMAKE_BINARY_DIR}/bin/
-)
+if(BUILD_TESTING)
+    add_test(NAME rxdb_usage_smoke
+             COMMAND $<TARGET_FILE:rxdb> --help)
+    set_tests_properties(rxdb_usage_smoke
+            PROPERTIES PASS_REGULAR_EXPRESSION "Usage: rxdb \\[text\\|plain\\|llm\\]")
+endif()

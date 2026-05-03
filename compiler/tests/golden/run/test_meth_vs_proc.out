@@ -1,0 +1,9 @@
+Warning in test_meth_vs_proc.rexx @ 56:9 - #SHADOWING, original definition "test_meth_vs_proc.myobj.val" @ 29:3, "val"
+Warning in test_meth_vs_proc.rexx @ 58:12 - #SHADOWING, original definition "test_meth_vs_proc.myobj.val" @ 29:3, "val"
+2 warning(s) in source file
+Testing Methods vs Procedures...
+Initial: initial
+After testProc: changed_in_proc
+passThrough: hello_world_5
+shadowing: shadow_arg
+After shadowing val: changed_in_proc

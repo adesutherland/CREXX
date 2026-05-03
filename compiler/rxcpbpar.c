@@ -1,11 +1,96 @@
-/* cREXX Phase 0 (PoC) Compiler */
-/* (c) Adrian Sutherland 2021   */
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Compiler Parser Wrapper
+ */
 
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
 #include "rxcpbgmr.h"
 #include "rxcpmain.h"
+#include "rxcp_util.h"
+#include "rxcp_exit.h"
+
+static int rxcp_is_instruction_lead_token(int last_token_type) {
+    return last_token_type == TK_EOC ||
+           last_token_type == TK_THEN ||
+           last_token_type == TK_ELSE ||
+           last_token_type == TK_OTHERWISE;
+}
+
+static const char *rxcp_cli_level_name(Context *context) {
+    switch (context->cli_default_level) {
+        case LEVELA: return "levela";
+        case LEVELB: return "levelb";
+        case LEVELC: return "levelc";
+        case LEVELD: return "leveld";
+        case LEVELG: return "levelg";
+        case LEVELL: return "levell";
+        default: return 0;
+    }
+}
+
+static Token *rxcp_synthetic_token(Context *context, int type, const char *text) {
+    Token *token;
+
+    token = token_f(context, type);
+    if (text) {
+        token->token_string = (char*)text;
+        token->length = (int)strlen(text);
+        token->line = 0;
+        token->column = 1;
+    }
+
+    return token;
+}
+
+static Token *rxcp_next_parser_token(Context *context, int *cli_option_stage) {
+    const char *level_name;
+
+    if (cli_option_stage && *cli_option_stage) {
+        level_name = rxcp_cli_level_name(context);
+        switch (*cli_option_stage) {
+            case 1:
+                *cli_option_stage = 2;
+                return rxcp_synthetic_token(context, TK_OPTIONS, "options");
+            case 2:
+                *cli_option_stage = 3;
+                return rxcp_synthetic_token(context, TK_VAR_SYMBOL, level_name);
+            case 3:
+                *cli_option_stage = 0;
+                return rxcp_synthetic_token(context, TK_EOC, 0);
+            default:
+                *cli_option_stage = 0;
+                break;
+        }
+    }
+
+    return token_f(context, rexbscan(context));
+}
 
 int rexbpars(Context *context) {
 
@@ -14,19 +99,54 @@ int rexbpars(Context *context) {
     int token_type, last_token_type;
     Token *token, *t, *peek_token;
     void *parser;
+    int cli_option_stage;
 
     /* Create parser and set up tracing */
     parser = RexxBAlloc(malloc);
 #ifndef NDEBUG
-    RexxBTrace(context->traceFile, "Parser(B) >> ");
+    if (context->debug_mode >= 2) RexxBTrace(stderr, "[PARSER] ");
+    else RexxBTrace(context->traceFile, "Parser(B) >> ");
 #endif
 
-    peek_token = token_f(context, rexbscan(context));
+    cli_option_stage = 0;
+    if (context->cli_default_level != UNKNOWN && !context->source_has_options) {
+        cli_option_stage = 1;
+    }
+
+    peek_token = rxcp_next_parser_token(context, &cli_option_stage);
     last_token_type = TK_EOC;
+    int in_exit_instruction = 0;
     while (1) {
+        const char *disabled_certified_primary;
+
         token = peek_token;
         if (token->token_type == TK_EOL) token->token_type = TK_EOC;
         token_type = token->token_type;
+
+        if (token_type == TK_EOC) {
+            in_exit_instruction = 0;
+        }
+
+        // Promotion
+        disabled_certified_primary = NULL;
+        if (context->disable_exits && token->token_string) {
+            disabled_certified_primary = rxcp_match_certified_exit_primary(token->token_string, token->length);
+        }
+        if (rxcp_is_instruction_lead_token(last_token_type) &&
+            token_type != TK_EOC &&
+            token_type != TK_EOS &&
+            token->token_string &&
+            (rxcp_is_exit_primary(context, token->token_string, token->length) ||
+             disabled_certified_primary)) {
+            token_type = TK_EXIT_PRIMARY;
+            token->token_type = TK_EXIT_PRIMARY;
+            in_exit_instruction = 1;
+        } else if (token_type == TK_VAR_SYMBOL) {
+            if (in_exit_instruction && rxcp_is_exit_additional(context, token->token_string, token->length)) {
+                token_type = TK_EXIT_TOKEN;
+                token->token_type = TK_EXIT_TOKEN;
+            }
+        }
 
         // EOS Special Processing
         if (token_type == TK_EOS || token_type == TK_BADCOMMENT) {
@@ -51,13 +171,13 @@ int rexbpars(Context *context) {
             break;
         }
 
-        peek_token = token_f(context, rexbscan(context));
+        peek_token = rxcp_next_parser_token(context, &cli_option_stage);
 
         // Line Continuation
         if (token_type == TK_COMMA && peek_token->token_type == TK_EOL) {
             token_r(context);  /* Discard tokens , and EOC tokens */
             token_r(context);
-            peek_token = token_f(context, rexbscan(context));
+            peek_token = rxcp_next_parser_token(context, &cli_option_stage);
             continue;
         }
 
@@ -68,7 +188,7 @@ int rexbpars(Context *context) {
         /* Special Processing */
         if (token_type == TK_MINUSMINUS) {
             /* TODO Check for Check for C operator mode - when/if implemented!    */
-            /* The TK_MINUSMINUS token is generated by -- in nodashcomments mode, */
+            /* The TK_MINUSMINUS token is generated by -- in comments_nodash mode, */
             /* it needs to be converted to two TK_MINUS tokens                    */
             t = tok_splt(context, token, 1);
             token = t->token_next; /* In case tok_splt() changes token pointer - it doesn't currently */
@@ -78,6 +198,12 @@ int rexbpars(Context *context) {
             RexxB(parser, token_type, t, context);
         }
 
+        if (token_type != TK_EOC && last_token_type == TK_EOC) {
+            context->current_clause_token = token;
+        }
+        context->current_parser_token = token;
+        context->next_parser_token = peek_token;
+        if (context->debug_mode >= 2) fprintf(stderr, "[GLUE] Line %d: Passing Token %d (%s) to Parser\n", context->line, token_type, token_to_string(token_type));
         RexxB(parser, token_type, token, context);
         last_token_type = token_type;
     }

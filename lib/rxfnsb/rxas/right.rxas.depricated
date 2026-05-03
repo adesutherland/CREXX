@@ -11,7 +11,7 @@ length()  .expose=rxfnsb.length
 substr()  .expose=rxfnsb.substr
 
 right()   .locals=15 .expose=rxfnsb.right
-   .meta "rxfnsb.right"="b" ".string" right() "string = .string, length1 = .int, pad = \' \'" ""
+   .meta "rxfnsb.right"="b" ".string" right() "string = .string, length1 = .int, pad = \' \'"
     ieq  r7,a2,0            /* return empty when length = 0 */
     brt  return_empty,r7
     copy r9,a1          

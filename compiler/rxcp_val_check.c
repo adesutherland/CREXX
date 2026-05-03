@@ -1,0 +1,1376 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Validation Pass: Semantic Checks
+ */
+
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include "rxcp_val.h"
+
+/* Get the assembler operandtype from the astnode type for the ASSEMBLER instruction */
+static OperandType nodetype_to_operandtype(NodeType ntype) {
+    switch (ntype) {
+        case INTEGER: return OP_INT;
+        case FLOAT: return OP_FLOAT;
+        case DECIMAL:  return OP_DECIMAL;
+        case STRING: return OP_STRING;
+        case FUNC_SYMBOL: return OP_FUNC;
+        default: return OP_REG;
+    }
+}
+
+static int has_no_concat_gap(ASTNode *left, ASTNode *right) {
+    char *left_end = 0;
+    char *right_start = 0;
+    char *p;
+    int result = 1;
+
+    if (!left || !right) return 0;
+
+    left_end = left->source_end;
+    right_start = right->source_start;
+
+    if (!left_end || !right_start) return 0;
+    if (right_start <= left_end) return 0;
+
+    for (p = left_end + 1; p < right_start; p++) {
+        if (isspace((unsigned char)*p)) {
+            result = 0;
+            break;
+        }
+        if (*p != '"' && *p != '\'' && *p != ')' && *p != ']') {
+            result = 0;
+            break;
+        }
+    }
+
+    return result;
+}
+
+static char *validation_signal_canonical_name(ASTNode *node) {
+    char *name;
+    size_t i;
+
+    if (!node || !node->node_string || node->node_string_length == 0) return 0;
+    name = malloc(node->node_string_length + 1);
+    if (!name) return 0;
+    for (i = 0; i < node->node_string_length; i++) {
+        name[i] = (char)toupper((unsigned char)node->node_string[i]);
+    }
+    name[node->node_string_length] = 0;
+    if (strcmp(name, "SYNTAX") == 0) {
+        free(name);
+        return strdup("ERROR");
+    }
+    return name;
+}
+
+static int validation_signal_known(const char *name) {
+    static const char *known[] = {
+            "KILL", "FAILURE", "ERROR", "OVERFLOW_UNDERFLOW", "DIVISION_BY_ZERO",
+            "CONVERSION_ERROR", "INVALID_ARGUMENTS", "OUT_OF_RANGE", "UNICODE_ERROR",
+            "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND", "NOT_IMPLEMENTED",
+            "INVALID_SIGNAL_CODE", "NOTREADY", "QUIT", "TERM", "POSIX_INT",
+            "POSIX_HUP", "POSIX_USR1", "POSIX_USR2", "POSIX_CHLD", "OTHER",
+            "BREAKPOINT", 0
+    };
+    const char **candidate;
+
+    if (!name) return 0;
+    for (candidate = known; *candidate; candidate++) {
+        if (strcmp(name, *candidate) == 0) return 1;
+    }
+    return 0;
+}
+
+static int validation_signal_maskable(const char *name) {
+    if (!name) return 0;
+    return strcmp(name, "KILL") != 0 && strcmp(name, "BREAKPOINT") != 0;
+}
+
+/* Step 1
+ * - Fixes up procedure / class tree structures.
+ *   Note: This stage is critical for Level B Rexx as the single-lookahead Lemon parser
+ *   initially produces a flat AST for routines and their bodies. This walker restructures
+ *   the AST into a hierarchical form where ARGS and INSTRUCTIONS are children of the
+ *   PROCEDURE node. It essentially fixes parsing weaknesses of the single lookahead parser.
+ * - Sets the token and source start / finish position for each node
+ * - Fixes SCONCAT to CONCAT
+ * - Removes excess NOPs
+ * - Process OPTIONS
+ * - Validate REPEAT BY/FOR/DO
+ * - Validate ASSEMBLER instructions
+ */
+
+
+/*
+ * ast_structure_fixup_walker
+ * - Fixes up procedure / class tree structures.
+ */
+static int interface_member_body_allowed(ASTNode *node) {
+    return node && node->node_type == METHOD;
+}
+
+static void update_interface_member_body_flag(ASTNode *node) {
+    ASTNode *instructions;
+
+    if (!node) return;
+    if (!node->parent || node->parent->node_type != INTERFACE_DEF) {
+        node->is_interface_default_method = 0;
+        return;
+    }
+
+    instructions = ast_chld(node, INSTRUCTIONS, 0);
+    node->is_interface_default_method = (char) (
+            node->node_type == METHOD &&
+            instructions &&
+            instructions->child != 0
+    );
+}
+
+walker_result ast_structure_fixup_walker(walker_direction direction,
+                                         ASTNode* node, __attribute__((unused)) void *payload) {
+    ASTNode *child, *new_child, *next, *last, *n;
+    Context *context = (Context*)payload;
+
+    if (direction == in) {
+
+        if (node->node_type == PROGRAM_FILE) {
+
+            /* Fix up the top of the tree */
+
+            /* Remove the top INSTRUCTIONS node (2nd child) and promote its children */
+            if (node->child->sibling) {
+                child = node->child->sibling->child; /* first child of INSTRUCTIONS */
+                node->child->sibling = child; /* So REXX_OPTIONS sibling is the first instruction */
+                while (child) {
+                    /* Fix the parent reference */
+                    child->parent = node;
+                    child = child->sibling;
+                }
+            }
+            else return result_normal; /* No instructions at all! */
+
+            if (node->child->sibling && node->child->sibling->node_type != PROCEDURE && node->child->sibling->node_type != CLASS_DEF) {
+                /* If the first instruction is not a PROCEDURE or CLASS, then we need to
+                * add an implicit "main" PROCEDURE */
+                child = ast_ftt(context, PROCEDURE, "main:");
+                child->is_implicit_main = 1;
+                child->parent = node;
+                child->sibling = node->child->sibling;
+                node->child->sibling = child;
+
+                /* Add a function return type */
+                /* To work out the return type we walk the tree from here until we find the first return, a procedure or a class */
+                n = child->sibling;
+                while (1) {
+                    if (!n) {
+                        /* No return statement so must be returning null */
+                        add_ast(child,ast_ft(context, VOID));
+                        break;
+                    }
+                    if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF) {
+                        /* No return statement so must be returning null */
+                        add_ast(child,ast_ft(context, VOID));
+                        break;
+                    }
+                    if (n->node_type == RETURN) {
+                        if (n->child) add_ast(child,ast_ftt(context, CLASS, ".int")); /* Must return an int */
+                        else add_ast(child,ast_ft(context, VOID)); /* No return value - returning void */
+                        break;
+                    }
+
+                    /* Find the next node to look at */
+                    if (n->child) n = n->child;
+                    else if (n->sibling) n = n->sibling;
+                    else {
+                        n = n->parent;
+                        while (n) {
+                            if (n == child->sibling->parent) n = 0; /* end of sub-tree */
+                            else if (n->sibling) {
+                                n = n->sibling;
+                                break;
+                            }
+                            else n = n->parent;
+                        }
+                    }
+                }
+            }
+        }
+        else if (node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF) {
+            if (node->parent->node_type != PROGRAM_FILE) {
+                mknd_err(node, node->node_type == CLASS_DEF ? "CANT_DEFINE_CLASS_HERE" : "CANT_DEFINE_INTERFACE_HERE");
+            }
+            else {
+                /* Hoist siblings until the next top-level callable/contract boundary */
+                while ( ((next = node->sibling)) && next->node_type != PROCEDURE &&
+                        next->node_type != CLASS_DEF && next->node_type != INTERFACE_DEF) {
+                    /* Disconnect/remove next node from the AST tree */
+                    node->sibling = next->sibling;
+                    next->sibling = 0;
+                    next->parent = 0;
+                    /* add next under CLASS_DEF / INTERFACE_DEF child */
+                    add_ast(node,next);
+                }
+            }
+        }
+        else if (node->node_type == NODE_REGISTER) {
+            ASTNode *index = node->child;
+            /* Handle INSTRUCTIONS wrapper if present */
+            while (index && index->node_type == INSTRUCTIONS) index = index->child;
+            if (index && index->node_type == INTEGER) {
+                /* Validate index >= 0 */
+                int idx = node_to_integer(index);
+                node->int_value = idx;
+                if (idx < 0) {
+                    mknd_err(index, "REGISTER_INDEX_OUT_OF_RANGE");
+                }
+            }
+            ASTNode *attr = index ? index->sibling : NULL;
+            if (attr && attr->node_type == VAR_SYMBOL) {
+                if (!nodeis(attr, "int") &&
+                    !nodeis(attr, "string") &&
+                    !nodeis(attr, "object") &&
+                    !nodeis(attr, "float")) {
+                    mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
+                }
+            }
+        }
+        else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
+            if (node->node_type == PROCEDURE && node->parent->node_type != PROGRAM_FILE) {
+                mknd_err(node, "CANT_DEFINE_PROC_HERE");
+            }
+            else if (node->node_type == MATCH &&
+                     node->parent->node_type != CLASS_DEF) {
+                mknd_err(node, "CANT_DEFINE_METHOD_HERE");
+            }
+            else if ((node->node_type == METHOD || node->node_type == FACTORY) &&
+                     node->parent->node_type != CLASS_DEF &&
+                     node->parent->node_type != INTERFACE_DEF) {
+                mknd_err(node, "CANT_DEFINE_METHOD_HERE");
+            }
+            else {
+                /* Move node siblings (aka next instructions) until the next procedure to be node
+                 * grand-children under a new INSTRUCTIONS node child */
+
+                /* Process ARG, DIGITS, FUZZ and FORM */
+                /* Process each sibling until the next block */
+                char done_digits = 0;
+                char done_fuzz = 0;
+                char done_form = 0;
+                char done_case = 0;
+                char done_standard = 0;
+                ASTNode *args_node = 0;
+                char first_instruction = 1;
+                next = node->sibling;
+                ASTNode *prev = node;
+                while (next && next->node_type != PROCEDURE && next->node_type != CLASS_DEF &&
+                       next->node_type != INTERFACE_DEF &&
+                       next->node_type != METHOD && next->node_type != FACTORY &&
+                       next->node_type != MATCH) {
+                    switch (next->node_type) {
+                        case ARGS:
+                            if (args_node) {
+                                /* Error - you can only have one arg statement */
+                                mknd_err(next, "REPEATED_ARG");
+                            } else if (!first_instruction) {
+                                /* Error - arg must be the first statement */
+                                mknd_err(next, "ARG_NOT_FIRST_INST");
+                            }
+                            first_instruction = 0;
+                            args_node = next;
+                            next = next->sibling;
+                            /* Note that prev is unchanged as args_node is removed */
+
+                            /* Disconnect/remove the args_node from the AST tree */
+                            prev->sibling = args_node->sibling;
+                            args_node->sibling = 0;
+                            args_node->parent = 0;
+                            /* And add it under the procedure node */
+                            add_ast(node, args_node);
+                            break;
+
+                        case DEC_DIGITS:
+                            if (done_digits) {
+                                mknd_err(next, "REPEATED_NUMERIC_DIGITS");
+                            } else if (!first_instruction) {
+                                mknd_err(next, "NUMERIC_DIGITS_NOT_FIRST_INST");
+                            }
+                            done_digits = 1;
+                            prev = next;
+                            next = next->sibling;
+                            break;
+
+                        case DEC_FUZZ:
+                            if (done_fuzz) {
+                                mknd_err(next, "REPEATED_NUMERIC_FUZZ");
+                            } else if (!first_instruction) {
+                                mknd_err(next, "NUMERIC_FUZZ_NOT_FIRST_INST");
+                            }
+                            done_fuzz = 1;
+                            prev = next;
+                            next = next->sibling;
+                            break;
+
+                        case DEC_FORM:
+                            if (done_form) {
+                                mknd_err(next, "REPEATED_NUMERIC_FORM");
+                            } else if (!first_instruction) {
+                                mknd_err(next, "NUMERIC_FORM_NOT_FIRST_INST");
+                            }
+                            done_form = 1;
+                            prev = next;
+                            next = next->sibling;
+                            break;
+
+                        case DEC_CASE:
+                            if (done_case) {
+                                mknd_err(next, "REPEATED_NUMERIC_CASE");
+                            } else if (!first_instruction) {
+                                mknd_err(next, "NUMERIC_CASE_NOT_FIRST_INST");
+                            }
+                            done_case = 1;
+                            prev = next;
+                            next = next->sibling;
+                            break;
+
+                        case DEC_STANDARD:
+                            if (done_standard) {
+                                mknd_err(next, "REPEATED_NUMERIC_STANDARD");
+                            } else if (!first_instruction) {
+                                mknd_err(next, "NUMERIC_STANDARD_NOT_FIRST_INST");
+                            }
+                            done_standard = 1;
+                            prev = next;
+                            next = next->sibling;
+                            break;
+
+                        default:
+                            first_instruction = 0;
+                            prev = next;
+                            next = next->sibling;
+                    }
+
+                }
+                /* Add an empty ARGS node if no arguments have been specified */
+                if (!args_node) {
+                    new_child = ast_ft(context,ARGS);
+                    add_ast(node,new_child);
+                }
+
+                /* Make the new INSTRUCTIONS child */
+                new_child = ast_ft(context,INSTRUCTIONS);
+                add_ast(node,new_child);
+
+                last = NULL;
+
+                /* For each sibling until the next block */
+                while ( ((next = node->sibling)) && next->node_type != PROCEDURE &&
+                        next->node_type != CLASS_DEF && next->node_type != INTERFACE_DEF &&
+                        next->node_type != METHOD && next->node_type != FACTORY) {
+                    last = next; /* To check that there is a return */
+                    /* 2. Disconnect/remove next node from the AST tree */
+                    node->sibling = next->sibling;
+                    next->sibling = 0;
+                    next->parent = 0;
+                    /* 3. add next under INSTRUCTIONS child */
+                    add_ast(new_child,next);
+                }
+
+                if (last) { /* If there are no instructions at all it is a declaration */
+                    if (node->parent->node_type == INTERFACE_DEF &&
+                        !interface_member_body_allowed(node)) {
+                        mknd_err(node, "INTERFACE_MEMBER_BODY_NOT_ALLOWED");
+                    }
+                    else if (last->node_type != RETURN && !context->in_exit_bridge) {
+                        /* We need to add a return */
+                        new_child = ast_ft(context,RETURN);
+                        add_ast(last->parent,new_child); /* Adds as the last sibling */
+                    }
+                }
+
+                update_interface_member_body_flag(node);
+            }
+        }
+
+        }
+
+    return result_normal;
+}
+
+static int is_callable_boundary(ASTNode *node) {
+    if (!node) return 0;
+    return node->node_type == PROCEDURE || node->node_type == CLASS_DEF ||
+           node->node_type == INTERFACE_DEF || node->node_type == METHOD ||
+           node->node_type == FACTORY || node->node_type == MATCH;
+}
+
+static int is_class_member_boundary(ASTNode *node) {
+    if (!node) return 0;
+    return node->node_type == PROCEDURE || node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF;
+}
+
+static void promote_program_file_children(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node || !node->child || !node->child->sibling) return;
+    if (node->child->sibling->node_type != INSTRUCTIONS) return;
+
+    child = node->child->sibling->child;
+    node->child->sibling = child;
+    while (child) {
+        child->parent = node;
+        child = child->sibling;
+    }
+}
+
+static ASTNode *find_child_of_type(ASTNode *parent, NodeType type) {
+    ASTNode *child;
+
+    if (!parent) return 0;
+    child = parent->child;
+    while (child) {
+        if (child->node_type == type) return child;
+        child = child->sibling;
+    }
+    return 0;
+}
+
+static void lower_signal_handler_binding(Context *context, ASTNode *handler) {
+    ASTNode *binding;
+    ASTNode *define;
+
+    binding = ast_chdn(handler, 1);
+    if (!binding || binding->node_type != VAR_TARGET) return;
+
+    define = ast_f(context, DEFINE, binding->token ? binding->token : handler->token);
+    ast_rpl(binding, define);
+    add_ast(define, binding);
+    add_ast(define, ast_ftt(context, CLASS, ".signal"));
+}
+
+static ASTNode *infer_main_return_type(Context *context, ASTNode *first_node) {
+    ASTNode *n;
+
+    n = first_node;
+    while (1) {
+        if (!n) return ast_ft(context, VOID);
+        if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF || n->node_type == INTERFACE_DEF) return ast_ft(context, VOID);
+        if (n->node_type == RETURN) {
+            if (n->child) return ast_ftt(context, CLASS, ".int");
+            return ast_ft(context, VOID);
+        }
+
+        if (n->child) n = n->child;
+        else if (n->sibling) n = n->sibling;
+        else {
+            n = n->parent;
+            while (n) {
+                if (n == first_node->parent) return ast_ft(context, VOID);
+                if (n->sibling) {
+                    n = n->sibling;
+                    break;
+                }
+                n = n->parent;
+            }
+        }
+    }
+}
+
+static ASTNode *ensure_instructions_child(Context *context, ASTNode *node) {
+    ASTNode *instructions;
+
+    instructions = find_child_of_type(node, INSTRUCTIONS);
+    if (!instructions) {
+        instructions = ast_ft(context, INSTRUCTIONS);
+        add_ast(node, instructions);
+    }
+
+    return instructions;
+}
+
+static ASTNode *ensure_args_child(Context *context,
+                                  ASTNode *node,
+                                  int create_if_missing) {
+    ASTNode *args_node;
+    ASTNode *instructions;
+    ASTNode *child;
+    ASTNode *prev;
+    ASTNode *args_prev;
+
+    args_node = find_child_of_type(node, ARGS);
+    instructions = find_child_of_type(node, INSTRUCTIONS);
+
+    if (!args_node) {
+        if (!create_if_missing) return 0;
+        args_node = ast_ft(context, ARGS);
+        args_node->parent = node;
+        args_node->source_node = node->source_node;
+
+        if (!instructions) {
+            add_ast(node, args_node);
+            return args_node;
+        }
+
+        prev = 0;
+        child = node->child;
+        while (child && child != instructions) {
+            prev = child;
+            child = child->sibling;
+        }
+
+        args_node->sibling = instructions;
+        if (prev) prev->sibling = args_node;
+        else node->child = args_node;
+        return args_node;
+    }
+
+    if (!instructions || args_node == instructions) return args_node;
+
+    prev = 0;
+    args_prev = 0;
+    child = node->child;
+    while (child && child != instructions && child != args_node) {
+        prev = child;
+        child = child->sibling;
+    }
+
+    if (child == args_node) return args_node;
+
+    child = node->child;
+    while (child && child != args_node) {
+        args_prev = child;
+        child = child->sibling;
+    }
+    if (!child) return args_node;
+
+    if (args_prev) args_prev->sibling = args_node->sibling;
+    else node->child = args_node->sibling;
+
+    args_node->sibling = instructions;
+    if (prev) prev->sibling = args_node;
+    else node->child = args_node;
+
+    return args_node;
+}
+
+static void structure_callable_body(Context *context,
+                                    ASTNode *node,
+                                    int add_empty_args,
+                                    int add_implicit_return) {
+    ASTNode *next;
+    ASTNode *prev;
+    ASTNode *args_node;
+    ASTNode *instructions;
+    ASTNode *last;
+    ASTNode *existing_last;
+    char done_digits;
+    char done_fuzz;
+    char done_form;
+    char done_case;
+    char done_standard;
+    char first_instruction;
+
+    if (!node) return;
+
+    if (node->node_type == PROCEDURE && node->parent->node_type != PROGRAM_FILE) {
+        mknd_err(node, "CANT_DEFINE_PROC_HERE");
+        return;
+    }
+    if (node->node_type == MATCH &&
+        node->parent->node_type != CLASS_DEF) {
+        mknd_err(node, "CANT_DEFINE_METHOD_HERE");
+        return;
+    }
+    if ((node->node_type == METHOD || node->node_type == FACTORY) &&
+        node->parent->node_type != CLASS_DEF &&
+        node->parent->node_type != INTERFACE_DEF) {
+        mknd_err(node, "CANT_DEFINE_METHOD_HERE");
+        return;
+    }
+
+    done_digits = 0;
+    done_fuzz = 0;
+    done_form = 0;
+    done_case = 0;
+    done_standard = 0;
+    args_node = ensure_args_child(context, node, 0);
+    first_instruction = 1;
+    next = node->sibling;
+    prev = node;
+
+    while (next && !is_callable_boundary(next)) {
+        switch (next->node_type) {
+            case ARGS:
+                if (args_node) {
+                    mknd_err(next, "REPEATED_ARG");
+                } else if (!first_instruction) {
+                    mknd_err(next, "ARG_NOT_FIRST_INST");
+                }
+                first_instruction = 0;
+                args_node = next;
+                next = next->sibling;
+                prev->sibling = args_node->sibling;
+                args_node->sibling = 0;
+                args_node->parent = 0;
+                add_ast(node, args_node);
+                break;
+
+            case DEC_DIGITS:
+                if (done_digits) mknd_err(next, "REPEATED_NUMERIC_DIGITS");
+                else if (!first_instruction) mknd_err(next, "NUMERIC_DIGITS_NOT_FIRST_INST");
+                done_digits = 1;
+                prev = next;
+                next = next->sibling;
+                break;
+
+            case DEC_FUZZ:
+                if (done_fuzz) mknd_err(next, "REPEATED_NUMERIC_FUZZ");
+                else if (!first_instruction) mknd_err(next, "NUMERIC_FUZZ_NOT_FIRST_INST");
+                done_fuzz = 1;
+                prev = next;
+                next = next->sibling;
+                break;
+
+            case DEC_FORM:
+                if (done_form) mknd_err(next, "REPEATED_NUMERIC_FORM");
+                else if (!first_instruction) mknd_err(next, "NUMERIC_FORM_NOT_FIRST_INST");
+                done_form = 1;
+                prev = next;
+                next = next->sibling;
+                break;
+
+            case DEC_CASE:
+                if (done_case) mknd_err(next, "REPEATED_NUMERIC_CASE");
+                else if (!first_instruction) mknd_err(next, "NUMERIC_CASE_NOT_FIRST_INST");
+                done_case = 1;
+                prev = next;
+                next = next->sibling;
+                break;
+
+            case DEC_STANDARD:
+                if (done_standard) mknd_err(next, "REPEATED_NUMERIC_STANDARD");
+                else if (!first_instruction) mknd_err(next, "NUMERIC_STANDARD_NOT_FIRST_INST");
+                done_standard = 1;
+                prev = next;
+                next = next->sibling;
+                break;
+
+            default:
+                first_instruction = 0;
+                prev = next;
+                next = next->sibling;
+        }
+    }
+
+    args_node = ensure_args_child(context, node, add_empty_args);
+
+    instructions = ensure_instructions_child(context, node);
+    last = 0;
+    existing_last = instructions->child;
+    while (existing_last && existing_last->sibling) existing_last = existing_last->sibling;
+
+    while ((next = node->sibling) && !is_callable_boundary(next)) {
+        last = next;
+        node->sibling = next->sibling;
+        next->sibling = 0;
+        next->parent = 0;
+        add_ast(instructions, next);
+    }
+
+    if (!last) last = existing_last;
+
+    if (last && add_implicit_return && last->node_type != RETURN && !context->in_exit_bridge) {
+        add_ast(last->parent, ast_ft(context, RETURN));
+    }
+}
+
+static int is_program_header_node(ASTNode *node) {
+    return node &&
+           (node->node_type == REXX_OPTIONS ||
+            node->node_type == NAMESPACE ||
+            node->node_type == IMPORT);
+}
+
+static int is_top_level_callable_boundary(ASTNode *node) {
+    return node &&
+           (node->node_type == PROCEDURE ||
+            node->node_type == CLASS_DEF ||
+            node->node_type == INTERFACE_DEF);
+}
+
+static void wrap_program_file_main(Context *context, ASTNode *node) {
+    ASTNode *anchor;
+    ASTNode *child;
+    ASTNode *instructions;
+    ASTNode *next;
+    ASTNode *body;
+
+    if (!node || !node->child) return;
+    anchor = 0;
+    child = node->child;
+    while (is_program_header_node(child)) {
+        anchor = child;
+        child = child->sibling;
+    }
+    if (!child) return;
+    if (is_top_level_callable_boundary(child)) return;
+
+    instructions = ast_ftt(context, PROCEDURE, "main:");
+    instructions->is_implicit_main = 1;
+    instructions->parent = node;
+    instructions->sibling = child;
+    if (anchor) {
+        anchor->sibling = instructions;
+    } else {
+        node->child = instructions;
+    }
+
+    add_ast(instructions, infer_main_return_type(context, child));
+    add_ast(instructions, ast_ft(context, ARGS));
+    body = ast_ft(context, INSTRUCTIONS);
+    add_ast(instructions, body);
+
+    while ((next = instructions->sibling) && !is_top_level_callable_boundary(next)) {
+        instructions->sibling = next->sibling;
+        next->sibling = 0;
+        next->parent = 0;
+        add_ast(body, next);
+    }
+}
+
+walker_result ast_source_structure_walker(walker_direction direction,
+                                          ASTNode* node,
+                                          void *payload) {
+    Context *context;
+    ASTNode *next;
+    ASTNode *child;
+
+    context = (Context *)payload;
+
+    if (direction != in) return result_normal;
+
+    if (node->node_type == PROGRAM_FILE) {
+        promote_program_file_children(node);
+    }
+    else if (node->node_type == CLASS_DEF || node->node_type == INTERFACE_DEF) {
+        if (node->parent->node_type != PROGRAM_FILE) {
+            mknd_err(node, node->node_type == CLASS_DEF ? "CANT_DEFINE_CLASS_HERE" : "CANT_DEFINE_INTERFACE_HERE");
+        }
+        else {
+            while (((next = node->sibling)) && !is_class_member_boundary(next)) {
+                node->sibling = next->sibling;
+                next->sibling = 0;
+                next->parent = 0;
+                add_ast(node, next);
+            }
+        }
+    }
+    else if (node->node_type == NODE_REGISTER) {
+        ASTNode *index;
+        ASTNode *attr;
+
+        index = node->child;
+        while (index && index->node_type == INSTRUCTIONS) index = index->child;
+        if (index && index->node_type == INTEGER) {
+            int idx = node_to_integer(index);
+            node->int_value = idx;
+            if (idx < 0) mknd_err(index, "REGISTER_INDEX_OUT_OF_RANGE");
+        }
+        attr = index ? index->sibling : 0;
+        if (attr && attr->node_type == VAR_SYMBOL) {
+            if (!nodeis(attr, "int") &&
+                !nodeis(attr, "string") &&
+                !nodeis(attr, "object") &&
+                !nodeis(attr, "float")) {
+                mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
+            }
+        }
+    }
+    else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
+        structure_callable_body(context, node, 0, 0);
+        child = find_child_of_type(node, INSTRUCTIONS);
+        if (child && !child->child) {
+            ast_del(child);
+        }
+        else if (child && child->child && node->parent && node->parent->node_type == INTERFACE_DEF &&
+                 !interface_member_body_allowed(node)) {
+            mknd_err(node, "INTERFACE_MEMBER_BODY_NOT_ALLOWED");
+        }
+
+        update_interface_member_body_flag(node);
+    }
+
+    return result_normal;
+}
+
+walker_result ast_work_structure_walker(walker_direction direction,
+                                        ASTNode* node,
+                                        void *payload) {
+    Context *context;
+
+    context = (Context *)payload;
+
+    if (direction != in) return result_normal;
+
+    if (node->node_type == PROGRAM_FILE) {
+        wrap_program_file_main(context, node);
+    }
+    else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
+        if (node->parent && node->parent->node_type == INTERFACE_DEF) {
+            structure_callable_body(context, node, 0, 0);
+        }
+        else {
+            structure_callable_body(context, node, 1, 1);
+        }
+    }
+    else if (node->node_type == SIGNAL_HANDLER) {
+        lower_signal_handler_binding(context, node);
+    }
+
+    return result_normal;
+}
+
+/*
+ * source_location_walker
+ * - Sets the token and source start / finish position for each node
+ */
+walker_result source_location_walker(walker_direction direction,
+                                     ASTNode* node, __attribute__((unused)) void *payload) {
+    ASTNode *child, *n;
+    Token *left, *right;
+    
+    if (direction == out) {
+        /* Bottom up - source code positions, concat, etc */
+        if (node->token) {
+            node->token_start = node->token;
+            node->token_end = node->token;
+        } else {
+            node->token_start = 0;
+            node->token_end = 0;
+        }
+
+        child = node->child;
+        while (child) {
+            /* A non-terminal node  - so look at children */
+            /* The children's token_start etc. will have been set already */
+            if (child->token_start) {
+                if (node->token_start) {
+                    if (child->token_start->token_number < node->token_start->token_number)
+                        node->token_start = child->token_start;
+                    if (child->token_end->token_number > node->token_end->token_number)
+                        node->token_end = child->token_end;
+                } else {
+                    node->token_start = child->token_start;
+                    node->token_end = child->token_end;
+                }
+            }
+            child = child->sibling;
+        }
+
+        /* To pretty generated comments, and for code re-writing, and proper
+         * source code analysis, we need to expand the source code to include
+         * any '('s to the left and ')'s to the right as these are removed from
+         * the AST. What we are doing is expanding the selection to include
+         * *matching* ('s and )'s. Where they don't match, ignore, they will be
+         * handled by a parent or grandparent node
+         *
+         * And we do the same thing for functions checking the ( after the function name
+         *
+         * And for exposed arguments (to include the expose)
+         */
+        if (node->token_start) {
+            if (node->node_type == VAR_REFERENCE) {
+                node->token_start = node->token_start->token_prev;
+            }
+            else if ((node->node_type == VAR_SYMBOL ||
+                      node->node_type == VAR_TARGET ||
+                      node->node_type == VAR_REFERENCE) && node->child) {
+                /* Array indexes are tokenized after the variable name, so include the trailing ] */
+                left = node->token_start->token_next;
+                right = node->token_end->token_next;
+                if (left && right && left->token_type == TK_OPEN_BRACKET &&
+                    right->token_type == TK_CLOSE_BRACKET) {
+                    node->token_end = right;
+                }
+            }
+            else if (node->node_type == FUNCTION || node->node_type == FUNC_SYMBOL) {
+                /* Function brackets */
+                left = node->token_start->token_next; /* I.e. after the function name */
+                right = node->token_end->token_next;
+                if (left && right && left->token_type == TK_OPEN_BRACKET &&
+                       right->token_type == TK_CLOSE_BRACKET) {
+                    node->token_end = right;
+                }
+            }
+            else {
+                /* Other brackets */
+                left = node->token_start->token_prev;
+                right = node->token_end->token_next;
+                while (left && right && left->token_type == TK_OPEN_BRACKET &&
+                       right->token_type == TK_CLOSE_BRACKET) {
+                    node->token_start = left;
+                    node->token_end = right;
+                    left = left->token_prev;
+                    right = right->token_next;
+                }
+            }
+        }
+
+        /* Set code start and end position */
+        if (node->token_start) {
+            node->source_start = node->token_start->token_string;
+            node->source_end = node->token_end->token_string +
+                               node->token_end->length - 1;
+            node->line = node->token_start->line;
+            node->column = node->token_start->column;
+        } else {
+            /* This is a leaf without a token - so need to estimate a position */
+            ASTNode *older = 0;
+
+            if (node->node_type == ERROR || node->node_type == WARNING) {
+                node->line = node->parent->line;
+                node->column = node->parent->column;
+                node->source_start = node->parent->source_start;
+                node->source_end = node->parent->source_end;
+                node->token_start = node->parent->token_start;
+                node->token_end = node->parent->token_end;
+            }
+            else {
+                /* In case we fail to estimate */
+                node->source_start = 0;
+                node->source_end = 0;
+                node->line = -1;
+                node->column = -1;
+
+                /* Older Sibling ? */
+                n = node->parent->child;
+                while (n != node) {
+                    if (!n) {
+                        /* Internal Error - bail */
+                        fprintf(stderr, "Internal Error: Node is not one of its parent's children\n");
+                        exit(1);
+                    }
+                    older = n;
+                    n = n->sibling;
+                }
+                if (older && older->line != -1) { /* Check if the older has valid line number (it should!) */
+                    node->source_start = older->source_end + 1;
+                    node->source_end = node->source_start ? (node->source_start - 1) : 0;
+                    node->line = older->line;
+                    node->column = older->column + (int)(older->source_end - older->source_start) + 1;
+                }
+                else {
+                    /* No older sibling - use the parent, grandparent, until we find a token */
+                    n = node->parent;
+                    while (n) {
+                        if (n->token) {
+                            node->source_start = n->token->token_string + n->token->length;
+                            node->source_end = node->source_start ? (node->source_start - 1) : 0;
+                            node->line = n->token->line;
+                            node->column = n->token->column + n->token->length;
+                            break;
+                        }
+                        n = n->parent;
+                    }
+                }
+            }
+        }
+    }
+    return result_normal;
+}
+
+/*
+ * syntax_validation_walker
+ * - Fixes SCONCAT to CONCAT, removes NOPs, options, etc.
+ */
+walker_result syntax_validation_walker(walker_direction direction,
+                                       ASTNode* node, __attribute__((unused)) void *payload) {
+    ASTNode *child, *next_child;
+    int has_to = 0, has_for = 0, has_by = 0, has_assign = 0;
+    char *buffer, *c;
+    Context *context = (Context*)payload;
+
+    if (direction == out) {
+        if (node->node_type == PROGRAM_FILE) {
+            /* Set namespace if not already set */
+            if (!context->namespace) {
+                size_t i;
+                node->node_string = node->file_name;
+                node->node_string_length = strlen(node->file_name);
+                for (i = 0; i < node->node_string_length; i++) {
+                    if (node->node_string[i] == '.' || node->node_string[i] == ' ') {
+                        node->node_string_length = i;
+                        break;
+                    }
+                }
+            }
+            else {
+                node->node_string = context->namespace->node_string;
+                node->node_string_length = context->namespace->node_string_length;
+            }
+        }
+        else if (node->node_type == REXX_OPTIONS) {
+            /* Process any REXX options specific for levelb */
+            /* Loop through the children */
+            child = node->child;
+            while (child) {
+                if (child->node_type == LITERAL) {
+                    /* Check the options */
+                    // FLOATS
+                    if (is_node_string(child, "floats_decimal")) {
+                        if (context->floats_binary) {
+                            /* Error - can't have both decimal and binary floats */
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        else {
+                            context->floats_decimal = 1;
+                            context->floats_binary = 0;
+                        }
+                    }
+                    else if (is_node_string(child, "floats_binary")) {
+                        if (context->floats_decimal) {
+                         /* Error - can't have bothdecimal and binary floats */
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        else {
+                            context->floats_decimal = 0;
+                            context->floats_binary = 1;
+                        }
+                    }
+                    // NUMERIC
+                    else if (is_node_string(child, "numeric_classic")) {
+                        if (context->numeric_common) {
+                            /* Error - can't have both common and classic numeric */
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        else {
+                            context->numeric_classic = 1;
+                            context->numeric_common = 0;
+                        }
+                    }
+                    else if (is_node_string(child, "numeric_common")) {
+                        if (context->numeric_classic) {
+                            /* Error - can't have both common and classic numeric */
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        else {
+                            context->numeric_classic = 0;
+                            context->numeric_common = 1;
+                        }
+                    }
+                    // COMMENTS
+                    else if (is_node_string(child, "comments_hash)")) {
+                        if (context->comments_hash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_hash_specified = 1;
+                    }
+                    else if (is_node_string(child, "comments_nohash)")) {
+                        if (context->comments_hash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_hash_specified = 1;
+                    }
+                    else if (is_node_string(child, "comments_dash)")) {
+                        if (context->comments_dash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_dash_specified = 1;
+                    }
+                    else if (is_node_string(child, "comments_nodash)")) {
+                        if (context->comments_dash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_dash_specified = 1;
+                    }
+                    else if (is_node_string(child, "comments_slash)")) {
+                        if (context->comments_slash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_slash_specified = 1;
+                    }
+                    else if (is_node_string(child, "comments_noslash)")) {
+                        if (context->comments_slash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_slash_specified = 1;
+                    }
+                }
+                child = child->sibling;
+            }
+        }
+        else if (node->node_type == NAMESPACE) {
+            if (!context->namespace) {
+                context->namespace = node->child;
+            }
+            else {
+                mknd_err(node, "MULTIPLE_NAMESPACE");
+            }
+        }
+        else if (node->node_type == ASSIGN) {
+            if (node->parent && node->parent->node_type == CLASS_DEF) {
+                mknd_err(node, "CANT_ASSIGN_IN_CLASS_DEF");
+            }
+            else if (node->parent && node->parent->node_type == INTERFACE_DEF) {
+                mknd_err(node, "CANT_ASSIGN_IN_INTERFACE_DEF");
+            }
+        }
+        else if (node->node_type == REPEAT) {
+            /* Validate Sub-commands - Error 27.1 */
+            has_to = 0;
+            has_for = 0;
+            has_by = 0;
+            has_assign = 0;
+            child = node->child;
+            while (child) {
+                if (child->node_type == ASSIGN) {
+                    has_assign = 1;
+                }
+                else if (child->node_type == BY) {
+                    if (has_by) mknd_err(child, "INVALID_DO");
+                    else has_by = 1;
+                }
+                else if (child->node_type == FOR) {
+                    if (has_for) mknd_err(child, "INVALID_DO");
+                    else has_for = 1;
+                }
+                else if (child->node_type == TO) {
+                        if (has_to) mknd_err(child, "INVALID_DO");
+                        else has_to = 1;
+                }
+                child = child->sibling;
+            }
+            if (has_assign && !has_by) {
+                /* Need to add implicit "BY" node - to avoid an infinite loop! */
+                add_ast(node, ast_ft(context, BY));
+            }
+        }
+
+        else if (node->node_type == SIGNAL_BLOCK) {
+            if (context->level != LEVELB) {
+                mknd_err(node, "SIGNAL_BLOCK_ONLY_LEVELB");
+            }
+        }
+
+        else if (node->node_type == SIGNAL_NAME) {
+            char *name = validation_signal_canonical_name(node);
+            if (!validation_signal_known(name)) {
+                mknd_err(node, "UNKNOWN_SIGNAL_NAME");
+            } else if (!validation_signal_maskable(name)) {
+                mknd_err(node, "SIGNAL_CANNOT_BE_MASKED");
+            }
+            if (name) free(name);
+        }
+
+        else if (node->node_type == OP_SCONCAT) {
+            /* We need to decide if there is white space between the tokens */
+            if (has_no_concat_gap(node->child, node->child->sibling))
+                node->node_type = OP_CONCAT; /* No gap */
+        }
+
+        else if (node->node_type == INSTRUCTIONS) {
+            /* Remove Excess NOPs */
+            child = node->child;
+            while (child) {
+                next_child = child->sibling;
+                if (child->node_type == NOP)
+                    ast_del(child);
+                child = next_child;
+            }
+            if (!node->child)
+                node->node_type = NOP; /* Convert empty STATEMENTS to NOP */
+        }
+
+        else if (node->node_type == ASSEMBLER) {
+            /* ASSEMBLER operand types */
+            OperandType type1, type2, type3;
+
+            if (context->level != LEVELB) {
+                /* ASSEMBLER is only valid in level b */
+                mknd_err(node, "ASSEMBLER_ONLY_LEVELB");
+            }
+
+            else {
+
+                child = node->child;
+                if (child) {
+                    type1 = nodetype_to_operandtype(child->node_type);
+                    child = child->sibling;
+                    if (child) {
+                        type2 = nodetype_to_operandtype(child->node_type);
+                        child = child->sibling;
+                        if (child) type3 = nodetype_to_operandtype(child->node_type);
+                        else type3 = OP_NONE;
+                    }
+                    else {
+                        type2 = OP_NONE;
+                        type3 = OP_NONE;
+                    }
+                }
+                else {
+                    type1 = OP_NONE;
+                    type2 = OP_NONE;
+                    type3 = OP_NONE;
+                }
+
+                /* Lookup Instruction */
+
+                /* We need to copy it to a null terminated buffer and lowercase it! */
+                buffer = malloc(node->node_string_length + 1);
+                memcpy(buffer, node->node_string, node->node_string_length);
+                buffer[node->node_string_length] = 0;
+                for (c = buffer; *c; ++c) *c = (char) tolower(*c);
+
+                /* Lookup */
+                if (!src_inst(buffer, type1, type2, type3)) {
+                    /* Invalid Instruction */
+                    mknd_err(node, "INVALID_ASSEMBLER");
+                }
+                free(buffer);
+            }
+        }
+
+        /* OP_ARG_VALUE to OP_ARGS Rewrites */
+        else if (node->node_type == OP_ARG_VALUE) {
+            if (node->child && ( (node->child->node_type == NOVAL) ||
+                                 (node->child->node_type == INTEGER && node_to_integer(node->child) == 0)) ) {
+                ast_del(node->child);
+                node->node_type = OP_ARGS;
+            }
+        }
+    }
+    return result_normal;
+}
+
+walker_result decimal_parameters_walker(walker_direction direction,
+                                               ASTNode* node,
+                                               void *payload) {
+
+    Context *context = (Context*)payload;
+    ASTNode *child;
+    int val;
+
+    if (direction == in) {
+        /* IN - TOP DOWN */
+        context->current_scope = node->scope;
+    }
+    else {
+        /* OUT - BOTTOM UP */
+        child = node->child;
+        switch (node->node_type) {
+            case DEC_DIGITS:
+                if (child) {
+                    /* Get the value */
+                    val = node_to_integer(child);
+                    if (val < DIGITS_MINIMUM) {
+                        mknd_err(child, "DECIMAL_DIGITS_RANGE"); // Note that the parser captures a negative error beforehand
+                        val = 1;
+                    }
+                    else if (val <= node->scope->num_context.fuzz) {
+                        mknd_err(child, "DECIMAL_DIGITS_RANGE");
+                        val = node->scope->num_context.fuzz + 1;
+                    }
+                }
+                else {
+                    val = -1; // Inherited
+                }
+                node->scope->num_context.digits = val;
+                break;
+
+            case DEC_FUZZ:
+                if (child) {
+                    /* Get the value */
+                    val = node_to_integer(child);
+                    if (val < 0) {
+                        mknd_err(child, "DECIMAL_FUZZ_RANGE");  // Note that the parser captures this error beforehand
+                        val = 0;
+                    }
+                    else if (val >= node->scope->num_context.digits) {
+                        mknd_err(child, "DECIMAL_FUZZ_RANGE");
+                        val = node->scope->num_context.digits - 1;
+                    }
+                }
+                else {
+                    val = -1; // Inherited
+                }
+                node->scope->num_context.fuzz = val;
+                break;
+
+            case DEC_FORM:
+                if (child) {
+                    if (nodeis(child, "scientific")) node->scope->num_context.form = NUMERIC_FORM_SCIENTIFIC;
+                    else if (nodeis(child, "engineering")) node->scope->num_context.form = NUMERIC_FORM_ENGINEERING;
+                    else if (nodeis(child, "inherited")) node->scope->num_context.form = NUMERIC_FORM_INHERIT;
+                    else {
+                        mknd_err(child, "DECIMAL_FORM_VALUE");
+                        node->scope->num_context.form = NUMERIC_FORM_INHERIT;
+                    }
+                }
+                else {
+                    node->scope->num_context.form = NUMERIC_FORM_INHERIT; // Inherited
+                }
+                break;
+
+           case DEC_CASE:
+                if (child) {
+                    if (nodeis(child, "lower")) node->scope->num_context.casetype = CASE_LOWER;
+                    else if (nodeis(child, "upper")) node->scope->num_context.casetype = CASE_UPPER;
+                    else if (nodeis(child, "inherited")) node->scope->num_context.casetype = CASE_INHERIT;
+                    else {
+                        mknd_err(child, "DECIMAL_CASE_VALUE");
+                        node->scope->num_context.casetype = CASE_INHERIT;
+                    }
+                }
+                else {
+                    node->scope->num_context.casetype = CASE_INHERIT; // Inherited
+                }
+                break;
+
+           case DEC_STANDARD:
+                if (child) {
+                    if (nodeis(child, "common")) node->scope->num_context.standard = NUMERIC_STANDARD_COMMON;
+                    else if (nodeis(child, "classic")) node->scope->num_context.standard = NUMERIC_STANDARD_CLASSIC;
+                    else if (nodeis(child, "inherited")) node->scope->num_context.standard = NUMERIC_STANDARD_INHERIT;
+                    else {
+                        mknd_err(child, "DECIMAL_STANDARD_VALUE");
+                        node->scope->num_context.standard = NUMERIC_STANDARD_INHERIT;
+                    }
+                }
+                else {
+                    node->scope->num_context.standard = NUMERIC_STANDARD_INHERIT; // Inherited
+                }
+                break;
+
+            default:;
+        }
+
+        context->current_scope = node->scope;
+    }
+
+    return result_normal;
+}

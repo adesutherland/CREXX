@@ -1,3 +1,27 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 //
 // Created by Adrian Sutherland on 03/05/2023.
 //
@@ -202,8 +226,10 @@ int shellspawn (const char *command,
 
 #ifdef _WIN32
 /* Windows does the actual parsing and validating as part of CreateProcess() */
-    data.file_path = malloc(strlen(command) + 1);
-    strcpy(data.file_path, command);
+    /* Prepend "cmd /c " to support built-in commands like echo, dir, etc. */
+    data.file_path = malloc(strlen(command) + 8);
+    strcpy(data.file_path, "cmd /c ");
+    strcat(data.file_path, command);
 #else
     // Parse the command
     char *base_name;
@@ -783,6 +809,55 @@ void WriteToStdin(REDIRECT* data, char *line, size_t nBytes)
 
         nTotalWrote += nBytesWrote;
     }
+}
+
+int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
+{
+    REDIRECT* redirect;
+
+    if (!redirect_reg || !redirect_reg->binary_value ||
+        redirect_reg->binary_length < sizeof(REDIRECT)) return 1;
+
+    redirect = (REDIRECT*)redirect_reg->binary_value;
+    if (!data) data = "";
+
+    WriteToStdin(redirect, (char*)data, nBytes);
+    if (redirect->errorCode != 0) return -1;
+
+#ifdef _WIN32
+    if (redirect->hWrite != INVALID_HANDLE_VALUE) {
+        CloseHandle(redirect->hWrite);
+        redirect->hWrite = INVALID_HANDLE_VALUE;
+    }
+    if (redirect->has_thread) {
+        WaitForSingleObject(redirect->thread, INFINITE);
+        CloseHandle(redirect->thread);
+        redirect->thread = NULL;
+        redirect->has_thread = 0;
+    }
+    if (redirect->hRead != INVALID_HANDLE_VALUE) {
+        CloseHandle(redirect->hRead);
+        redirect->hRead = INVALID_HANDLE_VALUE;
+    }
+#else
+    if (redirect->hWrite != -1) {
+        close(redirect->hWrite);
+        redirect->hWrite = -1;
+    }
+    if (redirect->has_thread) {
+        if (pthread_join(redirect->thread, NULL)) {
+            redirect->errorCode = 1;
+            return -1;
+        }
+        redirect->has_thread = 0;
+    }
+    if (redirect->hRead != -1) {
+        close(redirect->hRead);
+        redirect->hRead = -1;
+    }
+#endif
+
+    return redirect->errorCode == 0 ? 0 : -1;
 }
 
 void CleanUp(SHELLDATA* data)

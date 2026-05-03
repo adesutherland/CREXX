@@ -1,11 +1,34 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 /* REXX ASSEMBLER               */
 /* The Assembler itself         */
 
 #ifndef CREXX_RXASASSM_H
 #define CREXX_RXASASSM_H
 
-#define rxversion "crexx-DEV2507"
-
+#include "crexx_version.h"
 #include "rxas.h"
 #include "rxasgrmr.h"
 
@@ -22,11 +45,23 @@ void rxasqmfl(Assembler_Context *context, Assembler_Token *file);
 /* Source Line */
 void rxasqmsr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source);
 /* Function Metadata */
-void rxasqmfu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args, Assembler_Token *inliner);
+void rxasqmfu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args);
 /* Register Metadata */
 void rxasqmre(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
 /* Constant Metadata */
 void rxasqmct(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *constant);
+/* Class Metadata */
+void rxasqmclss(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type);
+/* Attribute Metadata */
+void rxasqmattr(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
+/* Interface Metadata */
+void rxasqmintf(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type);
+/* Implements Metadata */
+void rxasqmimpl(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *interface_symbol);
+/* Interface Member Metadata */
+void rxasqmmemb(Assembler_Context *context, Assembler_Token *owner, Assembler_Token *kind, Assembler_Token *member, Assembler_Token *type, Assembler_Token *args);
+/* Inline Metadata */
+void rxasqmil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *payload);
 /* Clear Metadata */
 void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol);
 
@@ -55,11 +90,23 @@ void rxasmefl(Assembler_Context *context, Assembler_Token *file);
 /* Source Line */
 void rxasmesr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source);
 /* Function Metadata */
-void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args, Assembler_Token *inliner);
+void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args);
 /* Register Metadata */
 void rxasmere(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
 /* Constant Metadata */
 void rxasmect(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *constant);
+/* Class Metadata */
+void rxasmeclss(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type);
+/* Attribute Metadata */
+void rxasmeattr(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg);
+/* Interface Metadata */
+void rxasmeintf(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type);
+/* Implements Metadata */
+void rxasmeimpl(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *interface_symbol);
+/* Interface Member Metadata */
+void rxasmememb(Assembler_Context *context, Assembler_Token *owner, Assembler_Token *kind, Assembler_Token *member, Assembler_Token *type, Assembler_Token *args);
+/* Inline Metadata */
+void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *payload);
 /* Clear Metadata */
 void rxasmecl(Assembler_Context *context, Assembler_Token *symbol);
 

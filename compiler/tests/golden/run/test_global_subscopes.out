@@ -1,0 +1,11 @@
+Warning in test_global_subscopes.rexx @ 73:5 - #SHADOWING, original definition "test_global_subscopes.x" @ 2:40, "x"
+Warning in test_global_subscopes.rexx @ 74:5 - #SHADOWING, original definition "test_global_subscopes.x" @ 2:40, "x"
+Warning in test_global_subscopes.rexx @ 75:9 - #SHADOWING, original definition "test_global_subscopes.x" @ 2:40, "x"
+3 warning(s) in source file
+test_simple_no_subscope OK
+test_simple OK
+test_array OK
+test_nested OK
+test_shadowing OK
+test_shadowing (array index) OK
+test_top_level_typed OK

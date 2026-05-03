@@ -1,0 +1,8 @@
+int-read=8
+int-mut=17
+int-after=7
+int-ref=8
+str-read=mix:read
+str-mut=MIX:local
+str-after=mix
+str-temp=TEMP:local

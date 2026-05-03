@@ -1,0 +1,21 @@
+/*
+ * Compile-time declaration for the rxvml-hosted native ADDRESS trampoline.
+ *
+ * The implementation is provided by interpreter/rxvml.c when a host creates an
+ * rxvml_context. This declaration lets the Rexx ADDRESS library type-check the
+ * nativeaddressenvironment provider without packaging a Rexx fallback body.
+ */
+_native_address_match() .locals=0 .expose=_rxsysb._native_address_match
+  .meta "_rxsysb._native_address_match"="b" ".int" _native_address_match() "env_name = .string"
+
+_native_address_handle() .locals=0 .expose=_rxsysb._native_address_handle
+  .meta "_rxsysb._native_address_handle"="b" ".int" _native_address_handle() "env_name = .string"
+
+_native_address_id() .locals=0 .expose=_rxsysb._native_address_id
+  .meta "_rxsysb._native_address_id"="b" ".string" _native_address_id() "env_name = .string"
+
+_native_address_execute() .locals=0 .expose=_rxsysb._native_address_execute
+  .meta "_rxsysb._native_address_execute"="b" ".int" _native_address_execute() "handle = .int, request = .addressrequest, response = .addressresponse"
+
+_native_address_invoke() .locals=0 .expose=_rxsysb._native_address_invoke
+  .meta "_rxsysb._native_address_invoke"="b" ".int" _native_address_invoke() "handle = .int, request = .addressfunctionrequest, response = .addressfunctionresponse"

@@ -1,32 +1,39 @@
 # Virtual Machine Instruction Set
 
-This chapter contains detailed description of the machine instructions, grouped by functional characteristics. For each instruction, its variants, opcodes and usage examples are listed. It is intended to be used for reference; therefore it is recommended to read [Assembler Programming Guide](#assembler-programming-guide) (starting on page \pageref{assembler-programming-guide}) in its entirety before first usage.
+This chapter describes RXVM instructions by functional characteristic. It is a
+reference for RXAS authors and for readers inspecting compiler output.
 
-## Characteristics of `rxvm` instructions
+Read the assembler guide before writing non-trivial RXAS by hand; many details
+that look obvious at the instruction level are normally handled by the compiler
+and linker.
 
-Most \crexx{} Virtual Machine instructions share the following
-characteristics:
+## Characteristics of RXVM Instructions
 
-- Logical data flow is from right to left
-  
-- There is no separate CC (Condition Code) or status register; a
-    register specified in the instruction is used for these results;
-    for example all comparisons leave their result in a register, which is specified in the instruction and then subsequently can be used for a conditional branch
-    
-- The assembler does not have any data definition directives; data is entered directly into registers, which then are used by the instructions. In ```.rxbin``` modules this data is represented in the Constant Pool. 
+Most RXVM instructions share these properties:
+
+- logical data flow is written from right to left
+- comparisons write their boolean result into an explicit register
+- there is no separate condition-code register
+- constants and symbols are represented through the RXBIN constant pool
+- modules carry metadata records for source mapping, imports, classes,
+  interfaces, factories, methods, and linker/runtime support
+- typed conversion instructions make representation changes explicit
 
 ## Instruction Argument Types
 
-|Type | Description |
-|------|------------------------------------|
-|REG| a register|
-|STRING| a sequence of Unicode characters|
-|FUNC| a global or local function|
-|ID| a label|
-|INT| an integer type (a whole number)|
-|FLOAT| a floating point number|
-|DECIMAL| a decimal number|
+Instruction definitions use compact argument-type names. Common ones include:
 
-These argument types are listed in the instructions. Related instructions share the mnemonic but differ in opcode and argument types.
+| Type | Description |
+| --- | --- |
+| `REG` | VM register |
+| `ID` | label or symbolic identifier |
+| `FUNC` | global or local callable reference |
+| `INT` | integer literal or constant-pool integer |
+| `FLOAT` | floating-point literal or constant-pool float |
+| `DECIMAL` | decimal literal or constant-pool decimal |
+| `STRING` | string literal or constant-pool string |
+| `BINARY` | binary literal or constant-pool binary payload where supported |
 
-
+Related instructions often share a mnemonic and differ by opcode and operand
+types. The generated instruction tables later in this book are the detailed
+source for individual opcode forms.

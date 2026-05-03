@@ -1,318 +1,469 @@
 # Classes and Interfaces {#classes-and-interfaces}
 
-*CURRENT STATUS: Classes are not implemented*
+Level B now implements the core class/interface model:
 
-See also **Objects** subsection under **Data Types**.
+- interfaces and classes
+- classes implementing one or more interfaces
+- abstract interface methods
+- final/default interface methods
+- interface-centred default and named factories
+- factory provider selection through class-side `match`
+- checked casts with `expr as .type`
+- boolean type tests with `expr is .type`
+- concrete type introspection with `typeof(expr)`
+- namespace-qualified contract references such as `.pkg..thing()`
 
-## **Design Motivation** {#design-motivation}
+Level B does **not** currently implement interface inheritance, interface
+attributes/state, interface factory bodies, overloads, singleton declarations,
+or destructor/finalizer syntax.
 
-### *Classes and Interfaces* {#classes-and-interfaces-1}
+## Core Model
 
-Classes and Interfaces in CREXX serve as templates defining the properties and methods of an object. These templates enable REXX programs to utilise objects effectively. The introduction of a structured object-oriented paradigm allows for better program organisation, encapsulation, and reusability.
+Interfaces define callable contracts. Classes implement those contracts.
+Factory declarations do not carry an explicit return type. The return contract
+is implied by the owner: an interface factory returns that interface contract,
+and a class factory returns that concrete class. In a class factory, bare
+`return` returns the constructed object; there is no source-level `this` value
+to return explicitly.
 
-### *Level B Considerations* {#level-b-considerations}
+```rexx
+vehicle: interface
+  *: factory
+  arg name = .string
+  describe: method = .string
 
-For CREXX Level B, the class design must facilitate explicit management of low-level REXX VM objects. This requirement necessitates the ability to access all of an object's physical attributes, a feature that will not be present in Level G. In contrast, Level G will offer additional capabilities such as dynamically defined classes and operator overriding. Despite these differences, the core class philosophy will be consistent across both levels.
+car: class implements .vehicle
+  _name = .string
 
-### *Design Philosophy* {#design-philosophy}
+  *: factory
+    arg name = .string
+    _name = name
+    return
 
-The CREXX class system aims to provide a powerful yet simple framework that aligns with the language's overarching objective of simplicity. Object orientation, while powerful, often introduces complexity, especially in designing class hierarchies and balancing cohesion with loose coupling. CREXX addresses these challenges by adopting a simplified approach, providing mandated solutions for class definition, object creation, interfaces, and singletons. 
+  describe: method = .string
+    return "car:" || _name
+```
 
-This approach ensures a common and predictable structure for CREXX programs, reducing the need for extensive refactoring.
+Instances are normally created through the interface:
+
+```rexx
+current = .vehicle("mini")
+say current.describe()
+```
+
+Each class also has an intrinsic interface of its own name, so `.car()` remains
+valid when you want to work directly with the concrete class contract.
+
+## Defining Interfaces
 
-### *Design Principles* {#design-principles}
+An interface may declare:
+
+- abstract methods
+- final/default methods with bodies
+- the default `*` factory
+- named factories
 
-1. **Leveraging Classic REXX Syntax Elements.** CREXX utilises familiar REXX syntax elements, such as stem syntax and label syntax, for defining methods. This design choice helps REXX developers transition smoothly into using object-oriented constructs without a steep learning curve.
+An interface method with a body is final in Level B. A class may rely on that
+body, but it may not override it.
 
-2. **Interfaces as Key Building Blocks.** Interfaces define the methods (procedures) that any implementing class must provide. They are central to CREXX's design, promoting loose coupling by separating the definition of functionality from its implementation. This separation facilitates easier maintenance and extension of code.
+```rexx
+shape: interface
+  *: factory
+
+  describe: method = .string
+    return prefix() || ":" || summary()
 
-3. **Default Method Implementations in Interfaces.** Interfaces can include default implementations of methods, effectively serving as abstract classes. This feature helps avoid code duplication by allowing shared functionality to be defined once in an interface rather than repeatedly in multiple classes.
+  prefix: method = .string
+    return "iface"
 
-4. **Singleton Interfaces.** Optionally, an interface can be declared as a singleton, ensuring that only one instance of a class implementing the interface exists at runtime. CREXX uses singletons instead of static members. Static members can cause issues as they do not promote loose coupling. In contrast, singletons provide a controlled and consistent approach to managing shared resources or global states, ensuring reliable and unified access to a single instance across the program.
+  summary: method = .string
+```
+
+In this example `describe` and `prefix` are final/default methods, while
+`summary` remains abstract.
+
+## Defining Classes
 
-5. **Class and Interface Implementation.** Classes in CREXX must implement one or more interfaces, with each class having at least an implicit interface matching the class name. This requirement ensures that all classes have a defined contract they adhere to, promoting consistency and reliability.
+Classes implement one or more interfaces:
+
+```rexx
+box: class implements .shape
+  *: factory
+    return
 
-6. **Encapsulation of Attributes.** Classes can only expose methods; attributes are private and cannot be accessed directly. This encapsulation principle safeguards the integrity of the object's state and prevents unintended interference from external code.
-
-7. **Unique Method and Attribute Names in Multi-Interface Classes.** For any class implementing multiple interfaces, each method and attribute must have a unique name. Given that CREXX Level B does not support polymorphism for procedures, this principle prevents naming conflicts and ambiguities. It simplifies class design and reduces the risk of errors, making the code easier to understand and maintain, and enhancing the system's overall reliability and robustness.
-
-8. **Single File Class Definition.** To maintain simplicity and cohesion, each class or interface must be defined in a single file. Additionally, a file defining a class or interface cannot contain non-class procedures. This constraint helps prevent class bloat, ensuring that class designs remain focused and manageable, and that files are clearly organised and purpose-specific.
-
-9. **Factory Functions for Object Creation.** Each class defines factory functions for the interfaces it implements. Objects are created using a syntax that revolves around the interface rather than the class itself. This practice promotes a loosely coupled design, making it easier to change the underlying implementation without affecting the rest of the program.
-
-10. **Common Object Interface.** Every class in CREXX will implement a standard Object interface, which provides common capabilities across all classes. This interface includes a set of default method implementations, ensuring consistent behaviour and a uniform baseline of functionality for all objects. By standardising these core capabilities, the Object interface simplifies the development process and promotes code consistency and interoperability within the CREXX ecosystem.
-
-11. **Consistent Error Handling with a Signal Interface**. The CREXX class system will utilise a Signal Interface to implement consistent and structured error handling across all classes. This interface provides a standard mechanism for managing exceptions and signals, ensuring that errors are captured, logged, and handled uniformly. By standardising the process of signalling exceptional conditions, this approach enhances the reliability and robustness of CREXX applications.
-
-12. **Compatibility with Classic REXX Structures.** The design of Level B classes in CREXX must be sufficiently powerful to implement classic REXX structures, such as stems and variables, in Level C. This capability ensures that the object-oriented features introduced in Level B can seamlessly support traditional REXX data structures, maintaining consistency and usability across different levels of the language.
-
-13. **Backward Compatibility in Class Syntax.** In anticipation of Level D, which aims to provide an updated yet backward-compatible version of classic REXX, the class syntax in CREXX should be designed with compatibility in mind. This includes ensuring that class definitions and operations can be expressed in a manner that aligns with the established syntax of classic REXX stems, facilitating an easier transition for existing REXX users and preserving the language's legacy features.
-
-## **Interface Definition Syntax** {#interface-definition-syntax}
-
-A single file / module can only define one interface or class and cannot define any other non-object language elements, meaning that procedures (including the implicit main procedure) and globals cannot be defined in an interface file.
-
-### *Interface Syntax* {#interface-syntax}
-
-Interfaces are defined using a \<**label\>** / \<**interface\>** instruction to scope the interface and \<**label\>** / \<**method\>** instructions to define methods. These follow a similar syntax to the \<**procedure\>** instruction.
-
-The  methods define the return type (after the \=) and are followed by an \<**arg**\> instruction to define the arguments (using the same syntax as for procedures). The \<expose\> instruction cannot be used because interfaces and classes cannot access global variables (these could be encapsulated by a procedure called by a method but this is not a recommended construct for an object oriented program).
-
-Note that method names must be unique across a class which may be implementing multiple interfaces.
-
-an\_interface: interface 
-
-    a\_method\_1: method \= 0.0 /\* returns a float \*/  
-        arg …
-
-    a\_method\_2: method \= .int /\* returns an int\*/  
-        arg ...
-### *Default Method Definitions* {#default-method-definitions}
-
-A method can include the implementation (which is used as the default unless overridden by a class), in this case attributes can also be defined. Note that method and attribute names must be unique across a class which may be implementing multiple interfaces. 
-
-Within a method definition, you can reference the current instance of the class implementing the interface by using the interface name itself. See Self-Reference in Methods under Class Definition Syntax.
-
-an\_interface: interface   
-an\_attribute \= .string
-
-    	a\_method: method \= .string  
-        	Return an\_attribute
-
-### *Stem Access* {#stem-access}
-
-Special method names \<\*\> are used to process object stem syntax calls. These can either have a return result to support “get”. In this case the arguments are the index values a, b and c.
-
-result \= object.a.b.c  or  result \= object\[a,b,c\]
-
-Or they can return nothing / .void to support ”set”. In this case the first argument is the new\_value, and the next arguments are index a, b and c.
-
-object.a.b.c \= new\_value  or  object\[a,b,c\] \= new\_value
-
-Note that as Level B does not support method overloading, different argument or return types are not supported. However the ellipse (...) format for a variable number of arguments is supported. It is envisaged that arguments will be of type .string but this is not mandated.
-
-an\_interface: interface   
-     
-/\* Setter for an\_interface.a \= new\_value \*/    	  
-\*: method   
-		Arg new\_val \= .string, index \= .string
-
-	/\* Getter for value \= an\_interface.index \*/  
-    	\*: method \= .string   
-Arg index \= .string
-
-### *Singletons* {#singletons}
-
-Interfaces can be defined as singletons in which case only one instance of a class implementing the interface can exist at runtime. The \<label\> / \<singleton\> instruction is used. This can be optionally followed by \<interface\> which is only provided for human readability. In addition it must be followed by “= .a\_class” which defines the default class that should be instantiated if the singleton is accessed before it has been given a value. 
-
-a\_singleton: singleton interface \= .default\_class 
-
-    a\_method: method \= 0.0 /\* returns a float \*/  
-        arg …
-
-Singletons are initialised by calling a relevant class provided factory (see factory methods)
-
-a\_singleton() /\* Default Factory \*/
-
-a\_singleton.factory\_with\_params(“initfile.txt”) /\* Maybe \*/
-
-Multiple assignments replace the singleton instance. If a singleton is used before it is assigned the default factory will be used (or a signal raises), in this case the class is instantiated on first use.
-
-## **Class Definition Syntax** {#class-definition-syntax}
-
-Each file or module can define only one interface or class. It cannot contain non-object elements such as procedures (including the implicit main procedure) or global variables. This rule ensures clear separation of object-oriented components from other program elements.
-
-Each class must implement one or more interfaces. There are two notable interfaces:
-
-* Object Interface. Implemented by all classes, this interface provides default implementations for all its methods. The specific methods of the Object Interface are yet to be determined. This interface is implicitly included and cannot be explicitly listed in the class definition.  
-* Intrinsic Interface. This interface shares the same name as the class and is automatically defined. Like the Object Interface, the Intrinsic Interface is implicit and cannot be explicitly listed in the class’s definition, or any other class’ definition.
-
-Method and attribute names must be unique within a class, especially when implementing multiple interfaces, to prevent conflicts and ensure clarity.
-
-## **Attribute Definition and Initialization** {#attribute-definition-and-initialization}
-
-Attributes can be simple data types, arrays or classes and are declared / initialised within a class structure.
-
-a\_class: class \= .interface  
-  attr\_1 \= .string /\* string type \*/  
-  attr\_2 \= 1 /\* Integer type and initialised to 1 \*/  
-  …
-
-In cREXX, class attributes are private and can only be accessed or modified through methods that encapsulate them. This ensures data integrity and prevents unintended external interference.
-
-## **Physical Attribute Access** {#physical-attribute-access}
-
-Level B requires access to specific physical attributes to allow access to physical objects (see Objects Section) defined by the CREXX VM. 
-
-In this example the two attributes are mapped to the first two child attributes in the object. The reserve keyword specifies the attribute number being reserved / mapped to the attribute.
-
-procedure\_object: class    /\* Using an Intrinsic Interface \*/  
-  reserve.1 name \= .string    /\* string type \*/  
-  reserve.2 proc\_block \= .int /\* Procedure pointer can be used in dcall \*/  
-  …
-
-Using the keyword reserve without an index means reserve the base register of the object. In the following example this register holds both the integer and string value and ASSEMBLER instructions are needed to correctly access and update the object. The syntax is designed to reserve the register so the compiler does not attempt to use it.
-
-signal\_object: class    /\* Using an Intrinsic Interface \*/  
-  reserve signal       /\* No type \- but the register is reserved \*/  
-  /\* In this example ASSEMBLER instructions would be needed for access \*/    …
-
-## **Method Definition**  {#method-definition}
-
-### *Private Methods* {#private-methods}
-
-A class may declare methods not included in any of the interfaces it implements (except the Intrinsic Interface). Such methods are private to the class. To maintain a loosely coupled architecture, interfaces should be explicitly defined, with the Intrinsic Interface serving as a fallback mechanism only usable in very simple cases.
-
-### *Self-Reference in Methods* {#self-reference-in-methods}
-
-In CREXX, within a method definition, you can reference the current instance of the class by using the class name itself. This allows for explicitness in the code when accessing attributes or calling other methods on the same object, and allows the object to be returned from methods (e.g. Factory methods).
-
-### *Factory Methods* {#factory-methods}
-
-Factory Methods are the primary mechanism for constructing new objects in CREXX. These methods are defined using the \<label\> / \<factory\> syntax. This approach allows for creating object instances using a syntax that focuses on the interface rather than the class itself.
-
-* Default Factory. The \<label\> can be "\*", indicating the default factory method for the interface. Each interface can have only one default factory method, ensuring a clear and unambiguous way to instantiate objects.  
-* Unique Method Names. Factory method names must be unique across all classes implementing a particular interface. This restriction also ensures that only one class can define a default factory for an interface. Additionally, when a class implements multiple interfaces, the factory method names must be unique across all the interfaces. This ensures that object initialization can rely solely on the interface name and the factory method name.
-
-By adhering to these conventions, CREXX maintains a structured and consistent approach to object creation, simplifying the process for developers and avoiding conflicts that could arise from ambiguous method naming.
-
-For example the following class definition part
-
-a\_class: class \= interface1
-
-	\*: factory /\* Default Factory \*/
-
-		Return a\_class
-
-	from\_string: factory
-
-		arg name \= .string
-
-		… /\* create the object \*/
-
-		return a\_class
-
-An instance can be created with the following statements
-
-instance1 \= .interface1
-
-Instance2 \= .interface1.from\_string(“something”)
-
-Instance3 \= .interface1.something\_else() /\* From a different class \*/
-
-## **Syntax to use Interfaces and Classes** {#syntax-to-use-interfaces-and-classes}
-
-### *Calling a method* {#calling-a-method}
-
-an\_object \= an\_interface /\* Default Factory \*/
-
-an\_object.a\_method() /\* Calls Method \*/
-
-### *Getter / Setter* {#getter-/-setter}
-
-An\_object \= “value”; say an\_object
-
-### *Getter / Setter with Stem. format* {#getter-/-setter-with-stem.-format}
-
-an\_object.index \= value; say an\_object.index
-
-### *Initialising a Singleton* {#initialising-a-singleton}
-
-config.fileinit(“initfile.txt”) /\* Maybe \*/
-
-### *Accessing a Singleton* {#accessing-a-singleton}
-
-Currency \= config.default\_currency /\* Example \*/
-
-## **Class / Interface Example** {#class-/-interface-example}
-
-### *Interface* {#interface}
-
-/\* Define an interface named \`Vehicle\` \*/  
-vehicle: interface  
-/\* Start and stop the vehicle \*/  
-start: method  
-stop: method
-
-/\* Set the vehicle name \*/  
-\*: method   
-Arg new\_val \= .string
-
-/\* Get vehicle name \*/  
-\*: method \= .string 		
-
-### *Car Class* {#car-class}
-
-/\* Define a class \`Car\` implementing the \`Vehicle\` interface \*/  
-car: class \= .vehicle  
-  car\_name \= .string   
-  range \= .float	  
-     
-  /\* Default vehicle is a car :-( \*/  
-  \*: factory  
-    /\* Create and return an instance of Car \*/  
-    range \= 350 /\* miles \*/  
-    car\_name \= “anonymous”  
-    return car
-
-  /\* Named factory method \*/  
-  new\_car: factory  
-    arg name \= .string  
-    range \= 350 /\* miles \*/  
-    car\_name \= name  
-    return car
-
-  /\* Start and stop the vehicle \*/  
-  start: method  
-	range \= range \- 100;
-
-  stop: method  
-	/\* Do something \*/
-
-  /\* Set the vehicle name \*/  
-  \*: method   
-Arg new\_val \= .string  
-Car\_name \= new\_val
-
-  /\* Get vehicle name \*/   
-  \*: method \= .string   
-	return car\_name
-
-### *Bike Class* {#bike-class}
-
-/\* Define a class \`bike\` implementing the \`Vehicle\` interface \*/  
-bike: class \= .vehicle
-
-  /\* Named factory method \*/  
-  new\_bike: factory  
-    return bike
-
-  /\* Start and stop the vehicle \*/  
-  start: method  
-	/\* Do something \*/
-
-  stop: method  
-	/\* Do something \*/
-
-  /\* Set the vehicle name \*/  
-  \*: method   
-Arg new\_val \= .string  
-/\* Do nothing as bikes don’t have names in this world \*/  
-/\* Could raise a signal \*/
-
-  /\* Get vehicle name \*/   
-  \*: method \= .string   
-	return “Just a Bike” 
-
-### *Usage* {#usage}
-
-car\_instance \= .vehicle /\* Uses the default factory method in \`Car\` \*/
-
-car\_instance\_named \= .vehicle.new\_car("Sedan")
-
-say car\_instance\_named /\* Returns “Sedan” \*/ 
-
-bike\_instance \= .vehicle.new\_bike  /\* A bike \*/
-
-say bike\_instance /\* Returns “Just a Bike” \*/ 
-
+  summary: method = .string
+    return "box"
+```
+
+The class must implement every abstract member from its effective interface
+set. If an interface already provides a final/default method body, the class may
+omit that member.
+
+Factories are the exception to the ordinary `name: callable = .type` spelling:
+write `*: factory` or `name: factory`, then declare arguments with `arg` as
+usual. A factory return type written after `=` is not part of the Level B source
+syntax.
+
+Assignment compatibility in the current Level B implementation flows from a
+concrete class value to an implemented interface. In practice that means a
+statement such as `iface = .widget(...)` is supported, while interface-to-interface
+assignment should not be relied on.
+
+## Class State
+
+Class attributes are declared in the class block:
+
+```rexx
+box: class implements .shape
+  _label = .string
+  _count = .int
+```
+
+For ordinary classes, let the compiler allocate storage automatically and keep
+external callers on factories and methods.
+
+Explicit physical layout should be reserved for genuine low-level interop. When
+that is needed, append `with register.N` to the attribute definition, where `N`
+is the one-based VM object-attribute slot:
+
+```rexx
+raw_event: class
+  _code = .int with register.1.int
+  _module = .int with register.2.int
+  _address = .int with register.3.int
+  _name = .string with register.4.string
+```
+
+The optional suffix after the index is the VM register value view to use for the
+slot. Valid views are `.int`, `.float`, `.string`, and `.object`:
+
+```rexx
+  _message = .string with register.5.string
+  _payload = .object with register.5.object
+```
+
+The compiler emits the attribute linking code for methods that read or write
+these attributes. Source code should still access them through methods, not
+through hand-written assembler. It is valid for VM-integration classes to define
+more than one typed view over the same physical slot, as shown for a signal
+payload/message slot above. Ordinary application classes should not use explicit
+register mappings unless they are matching a fixed VM or native object layout.
+
+## Factory Selection with `match`
+
+Factory members are declared on the interface and implemented by the class using
+the same name.
+
+- `*` is the default factory member
+- `name: factory` is a named factory member
+- `name: match` is the optional class-side selector for that same factory
+
+`match` is class-side only. Its signature must match the paired factory and it
+must return `.int`.
+
+Selection rules:
+
+1. Every candidate provider is scored through its effective `match`, even when
+   there is only one candidate.
+2. If `match` is omitted, the candidate behaves as if it returned `1`.
+3. Scores `<= 0` reject that candidate.
+4. The highest positive score wins.
+5. Ties are broken alphabetically by concrete class name.
+
+### Example
+
+```rexx
+asset: interface
+  *: factory
+  arg spec = .string
+  from_size: factory
+  arg size = .int
+
+  describe: method = .string
+    return kind() || ":" || name() || ":" || size()
+
+  kind: method = .string
+  name: method = .string
+  size: method = .int
+
+fileasset: class implements .asset
+  _name = .string
+  _size = .int
+
+  *: match
+    arg spec = .string
+    if spec = "log.txt" then return 100
+    return 0
+
+  *: factory
+    arg spec = .string
+    _name = spec
+    _size = 8
+    return
+
+  from_size: match
+    arg size = .int
+    if size = 8 then return 50
+    return 0
+
+  from_size: factory
+    arg size = .int
+    _name = "sized-file"
+    _size = size
+    return
+
+  kind: method = .string
+    return "file"
+
+  name: method = .string
+    return _name
+
+  size: method = .int
+    return _size
+
+cacheasset: class implements .asset
+  _name = .string
+  _size = .int
+
+  *: factory
+    arg spec = .string
+    _name = spec
+    _size = 1
+    return
+
+  from_size: factory
+    arg size = .int
+    _name = "cache-" || size
+    _size = size
+    return
+
+  kind: method = .string
+    return "cache"
+
+  name: method = .string
+    return _name
+
+  size: method = .int
+    return _size
+```
+
+```rexx
+selected = .asset("log.txt")
+fallback = .asset("memo")
+say selected.describe()   /* file:log.txt:8 */
+say fallback.describe()   /* cache:memo:1 */
+```
+
+This complete example is mirrored by the test
+`compiler/tests/rexx_src/interface_showcase_same_module.rexx`.
+
+## Multiple Interfaces
+
+A class may implement more than one interface as long as the public member
+surface remains coherent.
+
+```rexx
+named: interface
+  *: factory
+  arg label = .string, length = .int
+  name: method = .string
+
+measured: interface
+  size: method = .int
+
+widget: class implements .named .measured
+  _label = .string
+  _length = .int
+
+  *: factory
+    _label = label
+    _length = length
+    return
+
+  name: method = .string
+    return _label
+
+  size: method = .int
+    return _length
+```
+
+```rexx
+item = .widget("gear", 4)
+by_name = item
+by_size = item
+say by_name.name()
+say by_size.size()
+```
+
+This example is mirrored by the test
+`compiler/tests/rexx_src/interface_multi_interface_same_module.rexx`.
+
+## Namespace Qualification
+
+If two imported namespaces expose contracts with the same name, qualify the
+reference with `namespace..`.
+
+```rexx
+import qifa
+import qifb
+
+left = .qifa..vehicle("one")
+right = .qifb..vehicle.from_name("two")
+```
+
+The token to the left of `..` must be a namespace name that has already been
+imported. Qualification does not bypass `import`. `namespace::symbol` remains
+accepted as a compatibility alias, but `namespace..symbol` is the canonical
+form.
+
+## Same-File Contract and Provider Pattern
+
+An interface and one or more implementation classes may live in the same source
+file and namespace. This is often the clearest shape when the contract and
+providers are developed together.
+
+```rexx
+options levelb
+namespace automotive expose vehicle mycar
+
+vehicle: interface
+  *: factory
+  arg name = .string
+  describe: method = .string
+
+mycar: class implements .vehicle
+  _name = .string
+
+  *: factory
+  arg name = .string
+  _name = name
+  return
+
+  describe: method = .string
+  return "dep:" || _name
+```
+
+The interface owns the public factory contract. The class supplies the
+implementation with the same factory name and argument signature; its concrete
+class return is accepted because the class implements the interface.
+
+This same-file shape is mirrored by
+`compiler/tests/rexx_src/interface_dep_contract.rexx`.
+
+## Split-File Contract and Provider Pattern
+
+When an interface and its provider class live in different source files, each
+file is still compiled as a separate module. Multiple files may contribute
+symbols to the same namespace, just as the Level B standard library contributes
+many `rxfnsb` functions from separate files, but the provider compile must still
+be able to find the interface contract through the import path.
+
+The provider may use the same namespace as the contract:
+
+```rexx
+/* vehicle.rexx */
+options levelb
+namespace automotive expose vehicle
+
+vehicle: interface
+  *: factory
+  arg name = .string
+  describe: method = .string
+```
+
+```rexx
+/* mycar.rexx */
+options levelb
+namespace automotive expose mycar
+
+mycar: class implements .vehicle
+  _name = .string
+
+  *: factory
+  arg name = .string
+  _name = name
+  return
+
+  describe: method = .string
+  return "dep:" || _name
+```
+
+It is also valid to put provider classes in a separate provider namespace when
+that better matches packaging or ownership:
+
+```rexx
+options levelb
+namespace automotive_provider expose mycar
+import automotive
+
+mycar: class implements .vehicle
+  /* implementation as above */
+```
+
+Pure contract modules are valid: a source file that contains only interface or
+class/interface metadata can compile and assemble into a metadata-only `.rxbin`.
+
+The class factory must have the same argument signature as the interface
+factory. The return contract is implicit on both sides: the interface factory
+returns the interface, and the class factory returns the concrete class. The
+compiler checks that the concrete class value is assignable to the interface
+return type.
+
+If a provider reports `#INTERFACE_MEMBER_SIGNATURE_MISMATCH` for member `*`,
+check these first:
+
+- the provider compile can find the source or binary module that exposes the
+  interface
+- the class factory argument list exactly matches the interface factory argument
+  list
+- stale `.rxas` or `.rxbin` artifacts for the interface are not being found
+  before the updated source
+- the provider module is loaded or linked into any program that calls the
+  interface factory
+
+This example is mirrored by:
+
+- `compiler/tests/rexx_src/qualified_interface_main.rexx`
+- `compiler/tests/rexx_src/qualified_interface_dep_a.rexx`
+- `compiler/tests/rexx_src/qualified_interface_dep_b.rexx`
+
+## Casts and Type Tests
+
+Level B now supports explicit object casts and runtime type inspection:
+
+```rexx
+vehicle = .car("roadster") as .vehicle
+current = vehicle as .car
+
+say typeof(current)
+say current is .vehicle
+say current is .car
+say current is .truck
+```
+
+Rules:
+
+- `expr as .interface` succeeds when the concrete class implements that
+  interface
+- `expr as .class` succeeds only for that exact concrete class
+- failed object casts raise `CONVERSION_ERROR`
+- `expr is .interface` checks interface implementation
+- `expr is .class` checks the exact concrete class
+- `typeof(expr)` returns the concrete runtime class for objects and the
+  canonical built-in type name for scalars
+
+These operations are mirrored by:
+
+- `compiler/tests/rexx_src/type_ops_showcase.rexx`
+- `compiler/tests/rexx_src/type_ops_fail.rexx`
+
+## Notes and Current Boundaries
+
+- Interface default methods are final in Level B.
+- Factory providers are selected at runtime from the linked modules.
+- Interface method dispatch works for both interface-typed and concrete-class
+  receivers.
+- Namespace qualification is a disambiguation mechanism, not a second global
+  symbol path.
+- Singleton declarations, external-object adoption syntax, and destructor
+  hooks are intentionally deferred to higher levels.

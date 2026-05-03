@@ -1,3 +1,27 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 /* REXX Assembler Header */
 #ifndef CREXX_RXSA_H
 #define CREXX_RXSA_H
@@ -17,7 +41,11 @@ struct avl_tree_node;
 /* We add 40 slots for any instruction growth caused by rules */
 #define OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE 40
 
-enum queue_item_type {EMPTY, ASM_LABEL, OP_CODE, SRC_FILE, SRC_LINE, FUNC_META, REG_META, CONST_META, CLEAR_META};
+enum queue_item_type {
+    EMPTY, ASM_LABEL, OP_CODE, SRC_FILE, SRC_LINE,
+    FUNC_META, REG_META, CONST_META, CLEAR_META,
+    CLASS_META, ATTR_META, INTERFACE_META, IMPLEMENTS_META, MEMBER_META, INLINE_META
+};
 
 /* Keyhole Queue Item  */
 typedef struct instruction_queue {
@@ -57,6 +85,7 @@ typedef struct Assembler_Context {
     int meta_tail;
     struct avl_tree_node *string_constants_tree;
     struct avl_tree_node *decimal_constants_tree;
+    struct avl_tree_node *float_constants_tree;
     struct avl_tree_node *binary_constants_tree;
     struct avl_tree_node *proc_constants_tree;
     struct avl_tree_node *label_constants_tree;
@@ -67,6 +96,7 @@ typedef struct Assembler_Context {
     int optimiser_counter;
     FILE *traceFile;
     int debug_mode;
+    int quiet;
 } Assembler_Context;
 
 /* Assembler_Token Functions */
@@ -109,9 +139,9 @@ Assembler_Token* rxas_tid(Assembler_Context* context, Assembler_Token *from_toke
 int rx_scan(Assembler_Context* s, char *buff_end);
 
 /* Interface the Lemon parser */
-void *RxasmAlloc();
-void Rxasm();
-void RxasmFree();
+void *RxasmAlloc(void *(*mallocProc)(size_t));
+void Rxasm(void *parser, int token, Assembler_Token *minor, Assembler_Context *context);
+void RxasmFree(void *parser, void (*freeProc)(void*));
 void RxasmTrace(FILE *stream, char *zPrefix);
 
 /* Error Functions */

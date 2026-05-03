@@ -1,0 +1,45 @@
+name: Cleanup Snapshot Releases
+
+on:
+  schedule:
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+    inputs:
+      age_limit_days:
+        description: Delete snapshot releases older than this many days
+        required: false
+        default: "30"
+        type: string
+      release_name:
+        description: Release name to clean up
+        required: false
+        default: "Development Snapshot"
+        type: string
+      dry_run:
+        description: Show matching releases without deleting them
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup-snapshots:
+    name: Cleanup Snapshot Releases
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Delete releases older than the configured age
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          AGE_LIMIT_DAYS: ${{ inputs.age_limit_days || '30' }}
+          RELEASE_NAME_TO_CLEAN: ${{ inputs.release_name || 'Development Snapshot' }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+        run: |
+          ./.github/scripts/cleanup-snapshot-releases.sh

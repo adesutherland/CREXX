@@ -4,7 +4,7 @@ main() .locals=6
 	/* Check r3 - should be "1.23456789" */
 	seq r0,r3,"1.23456789"
 	brt check,r0
-	say "failed coeficient"
+	say "failed coefficient"
 	say r3
 check:
 	/* Check r4 - should be 3 */

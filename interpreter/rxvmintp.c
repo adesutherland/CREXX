@@ -1,6 +1,61 @@
-//
-// Created by adrian on 29/03/2021.
-//
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*
+ * Created by adrian on 29/03/2021.
+ */
+
+/*
+ * ===================================================================
+ * LEVEL C COMPATIBILITY & DESIGN NOTES (StrictAnsiArithmetic Flag)
+ * ===================================================================
+ * This section documents the arithmetic behaviour that must change when
+ * the `StrictAnsiArithmetic` flag is enabled for Level C compatibility.
+ *
+ * -------------------------------------------------------------------
+ * 1. Decimal Arithmetic (% and // operators on `.decimal` type)
+ * -------------------------------------------------------------------
+ * For Level C, the ANSI "Integer Magnitude-Precision Constraint"
+ * must be enforced.
+ *
+ * CHECK: After calculating the intermediate division result, but
+ * before finalizing it, the following check is required:
+ *
+ * IF LENGTH(TRUNC(intermediate_result)) > DIGITS() THEN
+ * RAISE SYNTAX Error 26.11
+ *
+ * -------------------------------------------------------------------
+ * 2. Float Arithmetic (% and // operators on `.float` and `.decimal` types)
+ * -------------------------------------------------------------------
+ * The current design implements a "Float-First" model:
+ *
+ * 1. Perform the division using native floating-point arithmetic.
+ * 2. Truncate the final result to its integer part.
+ *
+ * This was chosen over an "Integer-First" model where operands
+ * would be truncated to integers *before* the division.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,15 +76,18 @@
 #include <signal.h>
 #include "platform.h"
 #include "rxas.h"
-#include "rxvminst.h"
+#include "../binutils/include/rxdefs.h"
 #include "rxastree.h"
 #include "rxvmintp.h"
-// #include <complex.h>
+/* #include <complex.h> */
 #include <signal.h>
 
 
 #include "rxvmvars.h"
 #include "rxvmplugin_framework.h"
+#include "rxvmsock.h"
+
+int rxvm_link(rxvm_context *ctx);
 
 /* This defines the expected max number of args - if a call has more args than
  * this then an oversized block will be malloced
@@ -37,38 +95,1131 @@
 #define NOMINAL_NUM_ARGS 20
 
 /* Define this to use a safe stack frame recycling mechanism - zeros registers in the stack frame */
-//#define SAFE_RECYCLED_STACKFRAMES
+/*#define SAFE_RECYCLED_STACKFRAMES*/
 #undef SAFE_RECYCLED_STACKFRAMES
 
 /* Misc. Utilities here */
+static string_constant *get_runtime_string_constant(module *mod, size_t offset);
+
+static value *decimal_literal_value(decplugin *decimal, const char *literal) {
+    value *literal_value = value_f();
+    decimal->decimalFromString(decimal, literal_value, literal);
+    return literal_value;
+}
+
+static void free_decimal_literal_value(value *literal_value) {
+    clear_value(literal_value);
+    free(literal_value);
+}
+
+static char *build_runtime_member_name(const char *class_name, size_t class_name_length,
+                                       const char *member_name, size_t member_name_length) {
+    char *proc_name;
+
+    proc_name = malloc(class_name_length + member_name_length + 2);
+    if (!proc_name) return 0;
+
+    memcpy(proc_name, class_name, class_name_length);
+    proc_name[class_name_length] = '.';
+    memcpy(proc_name + class_name_length + 1, member_name, member_name_length);
+    proc_name[class_name_length + member_name_length + 1] = 0;
+
+    return proc_name;
+}
+
+static proc_runtime *resolve_runtime_procedure(rxvm_context *context, const char *proc_name, size_t proc_name_length) {
+    size_t mod_index;
+
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        module *mod = context->modules[mod_index];
+        int meta_ix = mod->meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+
+            if (meta->base.type == META_FUNC) {
+                meta_func_constant *meta_func = (meta_func_constant *) meta;
+                string_constant *symbol_name =
+                        (string_constant *) (mod->segment.const_pool + meta_func->symbol);
+
+                if (symbol_name->base.type == STRING_CONST &&
+                    symbol_name->string_len == proc_name_length &&
+                    memcmp(symbol_name->string, proc_name, proc_name_length) == 0) {
+                    return mod->proc_runtime_lookup[meta_func->func >> 3];
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
+    return 0;
+}
+
+static int compare_runtime_name(const char *left, size_t left_length,
+                                const char *right, size_t right_length) {
+    size_t min_length;
+    int cmp;
+
+    if (!left && !right) return 0;
+    if (!left) return -1;
+    if (!right) return 1;
+
+    min_length = left_length < right_length ? left_length : right_length;
+    cmp = memcmp(left, right, min_length);
+    if (cmp) return cmp;
+    if (left_length < right_length) return -1;
+    if (left_length > right_length) return 1;
+    return 0;
+}
+
+static char *dup_runtime_name(const char *name, size_t name_length) {
+    char *copy;
+
+    copy = malloc(name_length + 1);
+    if (!copy) return 0;
+
+    memcpy(copy, name, name_length);
+    copy[name_length] = 0;
+    return copy;
+}
+
+static char *build_interface_factory_error(const char *prefix,
+                                           const char *interface_name,
+                                           size_t interface_name_length) {
+    size_t prefix_length;
+    char *buffer;
+
+    prefix_length = strlen(prefix);
+    buffer = malloc(prefix_length + interface_name_length + 1);
+    if (!buffer) return 0;
+
+    memcpy(buffer, prefix, prefix_length);
+    memcpy(buffer + prefix_length, interface_name, interface_name_length);
+    buffer[prefix_length + interface_name_length] = 0;
+    return buffer;
+}
+
+static int runtime_type_name_is_builtin(const char *type_name, size_t type_name_length) {
+    static const char *builtins[] = {
+            ".boolean", ".int", ".float", ".decimal", ".string",
+            ".binary", ".object", ".void", ".unknown", 0
+    };
+    size_t i;
+
+    if (!type_name) return 0;
+
+    for (i = 0; builtins[i]; i++) {
+        if (strlen(builtins[i]) == type_name_length &&
+            memcmp(builtins[i], type_name, type_name_length) == 0) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static char *runtime_normalize_type_name(const char *type_name, size_t type_name_length) {
+    size_t i;
+    size_t out_length;
+    char *normalized;
+    size_t out_index;
+    size_t start;
+
+    if (!type_name) return 0;
+    if (runtime_type_name_is_builtin(type_name, type_name_length)) {
+        return dup_runtime_name(type_name, type_name_length);
+    }
+
+    start = (type_name_length > 0 && type_name[0] == '.') ? 1 : 0;
+    normalized = malloc(type_name_length + 1);
+    if (!normalized) return 0;
+
+    out_index = 0;
+    for (i = start; i < type_name_length; i++) {
+        if (i + 1 < type_name_length &&
+            ((type_name[i] == ':' && type_name[i + 1] == ':') ||
+             (type_name[i] == '.' && type_name[i + 1] == '.'))) {
+            normalized[out_index++] = '.';
+            i++;
+        } else {
+            normalized[out_index++] = type_name[i];
+        }
+    }
+
+    out_length = out_index;
+    normalized[out_length] = 0;
+    return normalized;
+}
+
+static char *runtime_internal_type_to_source_name(const char *type_name, size_t type_name_length) {
+    size_t dots = 0;
+    size_t i;
+    char *source_name;
+    size_t out_index;
+
+    if (!type_name) return 0;
+    if (runtime_type_name_is_builtin(type_name, type_name_length)) {
+        return dup_runtime_name(type_name, type_name_length);
+    }
+
+    for (i = 0; i < type_name_length; i++) {
+        if (type_name[i] == '.') dots++;
+    }
+
+    source_name = malloc(type_name_length + dots + 2);
+    if (!source_name) return 0;
+
+    out_index = 0;
+    source_name[out_index++] = '.';
+    for (i = 0; i < type_name_length; i++) {
+        if (type_name[i] == '.') {
+            source_name[out_index++] = '.';
+            source_name[out_index++] = '.';
+        } else {
+            source_name[out_index++] = type_name[i];
+        }
+    }
+    source_name[out_index] = 0;
+
+    return source_name;
+}
+
+typedef enum runtime_contract_kind {
+    RUNTIME_CONTRACT_UNKNOWN = 0,
+    RUNTIME_CONTRACT_CLASS,
+    RUNTIME_CONTRACT_INTERFACE
+} runtime_contract_kind;
+
+static runtime_contract_kind runtime_lookup_contract_kind(rxvm_context *context,
+                                                          const char *type_name,
+                                                          size_t type_name_length) {
+    size_t mod_index;
+
+    if (!context || !type_name || !type_name_length) return RUNTIME_CONTRACT_UNKNOWN;
+
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        module *mod = context->modules[mod_index];
+        int meta_ix = mod->meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+
+            if (meta->base.type == META_CLASS || meta->base.type == META_INTERFACE) {
+                size_t symbol_index = 0;
+                string_constant *symbol_name;
+
+                if (meta->base.type == META_CLASS) {
+                    symbol_index = ((meta_class_constant *) meta)->symbol;
+                } else {
+                    symbol_index = ((meta_interface_constant *) meta)->symbol;
+                }
+
+                symbol_name = get_runtime_string_constant(mod, symbol_index);
+                if (symbol_name &&
+                    symbol_name->string_len == type_name_length &&
+                    memcmp(symbol_name->string, type_name, type_name_length) == 0) {
+                    return meta->base.type == META_CLASS ? RUNTIME_CONTRACT_CLASS : RUNTIME_CONTRACT_INTERFACE;
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
+    return RUNTIME_CONTRACT_UNKNOWN;
+}
+
+static int runtime_class_implements_interface(rxvm_context *context,
+                                              const char *class_name,
+                                              size_t class_name_length,
+                                              const char *interface_name,
+                                              size_t interface_name_length) {
+    size_t mod_index;
+
+    if (!context || !class_name || !interface_name) return 0;
+
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        module *mod = context->modules[mod_index];
+        int meta_ix = mod->meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+
+            if (meta->base.type == META_IMPLEMENTS) {
+                meta_implements_constant *impl_meta = (meta_implements_constant *) meta;
+                string_constant *class_symbol = get_runtime_string_constant(mod, impl_meta->symbol);
+                string_constant *interface_symbol = get_runtime_string_constant(mod, impl_meta->interface_symbol);
+
+                if (class_symbol && interface_symbol &&
+                    class_symbol->string_len == class_name_length &&
+                    interface_symbol->string_len == interface_name_length &&
+                    memcmp(class_symbol->string, class_name, class_name_length) == 0 &&
+                    memcmp(interface_symbol->string, interface_name, interface_name_length) == 0) {
+                    return 1;
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
+    return 0;
+}
+
+static int runtime_value_matches_object_type(rxvm_context *context,
+                                             value *object_value,
+                                             const char *type_name,
+                                             size_t type_name_length) {
+    char *normalized_type_name;
+    runtime_contract_kind kind;
+    int matches;
+
+    if (!object_value || !type_name || !type_name_length) return 0;
+    if (context->link_dirty || context->interface_method_registry_dirty || context->interface_factory_registry_dirty) {
+        rxvm_link(context);
+    }
+
+    normalized_type_name = runtime_normalize_type_name(type_name, type_name_length);
+    if (!normalized_type_name) return 0;
+
+    if (strcmp(normalized_type_name, ".object") == 0) {
+        free(normalized_type_name);
+        return object_value->object_type_name && object_value->object_type_name_length > 0;
+    }
+
+    if (runtime_type_name_is_builtin(normalized_type_name, strlen(normalized_type_name))) {
+        free(normalized_type_name);
+        return 0;
+    }
+
+    matches = 0;
+    if (object_value->object_type_name && object_value->object_type_name_length > 0) {
+        kind = runtime_lookup_contract_kind(context, normalized_type_name, strlen(normalized_type_name));
+        if (kind == RUNTIME_CONTRACT_INTERFACE) {
+            matches = runtime_class_implements_interface(context,
+                                                         object_value->object_type_name,
+                                                         object_value->object_type_name_length,
+                                                         normalized_type_name,
+                                                         strlen(normalized_type_name));
+        } else {
+            matches = (object_value->object_type_name_length == strlen(normalized_type_name) &&
+                       memcmp(object_value->object_type_name, normalized_type_name,
+                              object_value->object_type_name_length) == 0);
+        }
+    }
+
+    free(normalized_type_name);
+    return matches;
+}
+
+static char *build_runtime_cast_error(value *object_value,
+                                      const char *target_type_name,
+                                      size_t target_type_name_length) {
+    char *target_source_name;
+    char *source_type_name;
+    char *buffer;
+    size_t buffer_length;
+
+    target_source_name = runtime_internal_type_to_source_name(target_type_name, target_type_name_length);
+    if (!target_source_name) return 0;
+
+    if (object_value && object_value->object_type_name && object_value->object_type_name_length > 0) {
+        source_type_name = runtime_internal_type_to_source_name(object_value->object_type_name,
+                                                                object_value->object_type_name_length);
+    } else {
+        source_type_name = strdup(".object");
+    }
+
+    if (!source_type_name) {
+        free(target_source_name);
+        return 0;
+    }
+
+    buffer_length = strlen("Cannot cast ") + strlen(source_type_name) + strlen(" to ") + strlen(target_source_name) + 1;
+    buffer = malloc(buffer_length);
+    if (buffer) {
+        snprintf(buffer, buffer_length, "Cannot cast %s to %s", source_type_name, target_source_name);
+    }
+    free(source_type_name);
+    free(target_source_name);
+    return buffer;
+}
+
+static void clear_runtime_interface_factories(rxvm_context *context) {
+    size_t i;
+
+    if (!context || !context->interface_factories) {
+        if (context) {
+            context->num_interface_factories = 0;
+            context->interface_factory_capacity = 0;
+        }
+        return;
+    }
+
+    for (i = 0; i < context->num_interface_factories; i++) {
+        free(context->interface_factories[i].interface_name);
+        free(context->interface_factories[i].factory_name);
+        free(context->interface_factories[i].class_name);
+    }
+
+    free(context->interface_factories);
+    context->interface_factories = 0;
+    context->num_interface_factories = 0;
+    context->interface_factory_capacity = 0;
+}
+
+static void clear_runtime_interface_methods(rxvm_context *context) {
+    size_t i;
+
+    if (!context || !context->interface_methods) {
+        if (context) {
+            context->num_interface_methods = 0;
+            context->interface_method_capacity = 0;
+        }
+        return;
+    }
+
+    for (i = 0; i < context->num_interface_methods; i++) {
+        free(context->interface_methods[i].class_name);
+        free(context->interface_methods[i].member_name);
+    }
+
+    free(context->interface_methods);
+    context->interface_methods = 0;
+    context->num_interface_methods = 0;
+    context->interface_method_capacity = 0;
+}
+
+static int runtime_member_kind_is_method(const string_constant *kind_symbol) {
+    if (!kind_symbol || kind_symbol->string_len < 6) return 0;
+    return memcmp(kind_symbol->string, "method", 6) == 0;
+}
+
+static int runtime_member_kind_is_final(const string_constant *kind_symbol) {
+    static const char final_flag[] = "final";
+    size_t i;
+
+    if (!runtime_member_kind_is_method(kind_symbol)) return 0;
+    if (kind_symbol->string_len < sizeof(final_flag) - 1) return 0;
+
+    for (i = 0; i + (sizeof(final_flag) - 1) <= kind_symbol->string_len; i++) {
+        if (memcmp(kind_symbol->string + i, final_flag, sizeof(final_flag) - 1) == 0) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static string_constant *get_runtime_string_constant(module *mod, size_t offset) {
+    string_constant *entry;
+
+    if (!mod || offset >= mod->segment.const_size) return 0;
+    entry = (string_constant *) (mod->segment.const_pool + offset);
+    if (entry->base.type != STRING_CONST) return 0;
+    return entry;
+}
+
+typedef struct rxvm_source_context {
+    string_constant *file;
+    string_constant *source;
+    size_t line;
+    size_t column;
+} rxvm_source_context;
+
+static void resolve_runtime_source_context(module *mod, size_t address, rxvm_source_context *source_context) {
+    int meta_ix;
+
+    source_context->file = 0;
+    source_context->source = 0;
+    source_context->line = 0;
+    source_context->column = 0;
+
+    if (!mod) return;
+
+    meta_ix = mod->meta_head;
+    while (meta_ix != -1) {
+        meta_entry *meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+        if (meta->address > address) break;
+
+        if (meta->base.type == META_FILE) {
+            meta_file_constant *file_meta = (meta_file_constant *) meta;
+            source_context->file = get_runtime_string_constant(mod, file_meta->file);
+        } else if (meta->base.type == META_SRC) {
+            meta_src_constant *src_meta = (meta_src_constant *) meta;
+            source_context->line = src_meta->line;
+            source_context->column = src_meta->column;
+            source_context->source = get_runtime_string_constant(mod, src_meta->source);
+        }
+
+        meta_ix = meta->next;
+    }
+}
+
+static void print_runtime_panic_location(rxvm_context *context, rxinteger module_number, rxinteger address) {
+    module *mod;
+    rxvm_source_context source_context;
+    size_t module_index;
+    size_t instruction_address;
+
+    if (!context || module_number <= 0 || address < 0) return;
+
+    module_index = (size_t) module_number - 1;
+    if (module_index >= context->num_modules) return;
+
+    mod = context->modules[module_index];
+    instruction_address = (size_t) address;
+
+    fprintf(stderr, "  at module %zu", (size_t) module_number);
+    if (mod && mod->name) fprintf(stderr, " (%s)", mod->name);
+    fprintf(stderr, " address %zu (0x%zx)\n", instruction_address, instruction_address);
+
+    resolve_runtime_source_context(mod, instruction_address, &source_context);
+    if (source_context.source) {
+        fprintf(stderr, "  source: ");
+        if (source_context.file) {
+            fprintf(stderr, "%.*s:", (int) source_context.file->string_len, source_context.file->string);
+        }
+        fprintf(stderr, "%zu:%zu: %.*s\n",
+                source_context.line,
+                source_context.column,
+                (int) source_context.source->string_len,
+                source_context.source->string);
+    }
+}
+
+static char *build_runtime_factory_proc_name(const char *class_name,
+                                             size_t class_name_length,
+                                             const char *factory_name,
+                                             size_t factory_name_length) {
+    static const char default_factory_name[] = "\xc2\xa7" "factory";
+    static const char factory_prefix[] = "\xc2\xa7" "factory.";
+    size_t prefix_length;
+    char *proc_name;
+
+    if (!class_name || !class_name_length || !factory_name || !factory_name_length) return 0;
+
+    if (factory_name_length == 1 && factory_name[0] == '*') {
+        return build_runtime_member_name(class_name, class_name_length,
+                                         default_factory_name, sizeof(default_factory_name) - 1);
+    }
+
+    prefix_length = sizeof(factory_prefix) - 1;
+    proc_name = malloc(class_name_length + 1 + prefix_length + factory_name_length + 1);
+    if (!proc_name) return 0;
+
+    memcpy(proc_name, class_name, class_name_length);
+    proc_name[class_name_length] = '.';
+    memcpy(proc_name + class_name_length + 1, factory_prefix, prefix_length);
+    memcpy(proc_name + class_name_length + 1 + prefix_length, factory_name, factory_name_length);
+    proc_name[class_name_length + 1 + prefix_length + factory_name_length] = 0;
+
+    return proc_name;
+}
+
+static char *build_runtime_match_proc_name(const char *class_name,
+                                           size_t class_name_length,
+                                           const char *factory_name,
+                                           size_t factory_name_length) {
+    static const char default_match_name[] = "\xc2\xa7" "match";
+    static const char match_prefix[] = "\xc2\xa7" "match.";
+    size_t prefix_length;
+    char *proc_name;
+
+    if (!class_name || !class_name_length || !factory_name || !factory_name_length) return 0;
+
+    if (factory_name_length == 1 && factory_name[0] == '*') {
+        return build_runtime_member_name(class_name, class_name_length,
+                                         default_match_name, sizeof(default_match_name) - 1);
+    }
+
+    prefix_length = sizeof(match_prefix) - 1;
+    proc_name = malloc(class_name_length + 1 + prefix_length + factory_name_length + 1);
+    if (!proc_name) return 0;
+
+    memcpy(proc_name, class_name, class_name_length);
+    proc_name[class_name_length] = '.';
+    memcpy(proc_name + class_name_length + 1, match_prefix, prefix_length);
+    memcpy(proc_name + class_name_length + 1 + prefix_length, factory_name, factory_name_length);
+    proc_name[class_name_length + 1 + prefix_length + factory_name_length] = 0;
+
+    return proc_name;
+}
+
+static int invoke_runtime_factory_match(rxvm_context *context,
+                                        proc_runtime *match_proc,
+                                        rxinteger argc,
+                                        value **args,
+                                        rxinteger *score_out) {
+    proc_runtime *saved_ext_proc;
+    int saved_ext_argc;
+    value **saved_ext_args;
+    value *saved_ext_ret;
+    value *match_ret;
+    char *dummy_argv[] = {"rxvm_factory_match"};
+
+    if (score_out) *score_out = 1;
+    if (!context || !match_proc) return 1;
+
+    saved_ext_proc = context->ext_proc;
+    saved_ext_argc = context->ext_argc;
+    saved_ext_args = context->ext_args;
+    saved_ext_ret = context->ext_ret;
+
+    context->ext_proc = match_proc;
+    context->ext_argc = (int) argc;
+    context->ext_args = args;
+    context->ext_ret = value_f();
+    match_ret = context->ext_ret;
+    if (!match_ret) {
+        context->ext_proc = saved_ext_proc;
+        context->ext_argc = saved_ext_argc;
+        context->ext_args = saved_ext_args;
+        context->ext_ret = saved_ext_ret;
+        return 0;
+    }
+
+    run(context, 0, dummy_argv);
+    if (score_out) *score_out = match_ret->int_value;
+
+    clear_value(match_ret);
+    free(match_ret);
+
+    context->ext_proc = saved_ext_proc;
+    context->ext_argc = saved_ext_argc;
+    context->ext_args = saved_ext_args;
+    context->ext_ret = saved_ext_ret;
+
+    return 1;
+}
+
+static int add_runtime_interface_factory_entry(rxvm_context *context,
+                                               const char *interface_name,
+                                               size_t interface_name_length,
+                                               const char *factory_name,
+                                               size_t factory_name_length,
+                                               const char *class_name,
+                                               size_t class_name_length,
+                                               proc_runtime *match_proc,
+                                               proc_runtime *factory_proc) {
+    rxvm_interface_factory_entry *entry;
+
+    if (!context || !interface_name || !factory_name || !class_name || !factory_proc) return 0;
+
+    if (context->num_interface_factories >= context->interface_factory_capacity) {
+        size_t new_capacity;
+        rxvm_interface_factory_entry *new_entries;
+
+        new_capacity = context->interface_factory_capacity ? context->interface_factory_capacity * 2 : 16;
+        new_entries = realloc(context->interface_factories,
+                              sizeof(rxvm_interface_factory_entry) * new_capacity);
+        if (!new_entries) return 0;
+
+        context->interface_factories = new_entries;
+        context->interface_factory_capacity = new_capacity;
+    }
+
+    entry = &context->interface_factories[context->num_interface_factories];
+    memset(entry, 0, sizeof(*entry));
+
+    entry->interface_name = dup_runtime_name(interface_name, interface_name_length);
+    entry->factory_name = dup_runtime_name(factory_name, factory_name_length);
+    entry->class_name = dup_runtime_name(class_name, class_name_length);
+    if (!entry->interface_name || !entry->factory_name || !entry->class_name) {
+        free(entry->interface_name);
+        free(entry->factory_name);
+        free(entry->class_name);
+        memset(entry, 0, sizeof(*entry));
+        return 0;
+    }
+
+    entry->interface_name_length = interface_name_length;
+    entry->factory_name_length = factory_name_length;
+    entry->class_name_length = class_name_length;
+    entry->match_proc = match_proc;
+    entry->factory_proc = factory_proc;
+    context->num_interface_factories++;
+
+    return 1;
+}
+
+static int add_runtime_interface_method_entry(rxvm_context *context,
+                                              const char *class_name,
+                                              size_t class_name_length,
+                                              const char *member_name,
+                                              size_t member_name_length,
+                                              proc_runtime *method_proc) {
+    rxvm_interface_method_entry *entry;
+    size_t i;
+
+    if (!context || !class_name || !member_name || !method_proc) return 0;
+
+    for (i = 0; i < context->num_interface_methods; i++) {
+        entry = &context->interface_methods[i];
+        if (entry->class_name_length == class_name_length &&
+            entry->member_name_length == member_name_length &&
+            memcmp(entry->class_name, class_name, class_name_length) == 0 &&
+            memcmp(entry->member_name, member_name, member_name_length) == 0) {
+            entry->method_proc = method_proc;
+            return 1;
+        }
+    }
+
+    if (context->num_interface_methods >= context->interface_method_capacity) {
+        size_t new_capacity;
+        rxvm_interface_method_entry *new_entries;
+
+        new_capacity = context->interface_method_capacity ? context->interface_method_capacity * 2 : 32;
+        new_entries = realloc(context->interface_methods,
+                              sizeof(rxvm_interface_method_entry) * new_capacity);
+        if (!new_entries) return 0;
+
+        context->interface_methods = new_entries;
+        context->interface_method_capacity = new_capacity;
+    }
+
+    entry = &context->interface_methods[context->num_interface_methods];
+    memset(entry, 0, sizeof(*entry));
+
+    entry->class_name = dup_runtime_name(class_name, class_name_length);
+    entry->member_name = dup_runtime_name(member_name, member_name_length);
+    if (!entry->class_name || !entry->member_name) {
+        free(entry->class_name);
+        free(entry->member_name);
+        memset(entry, 0, sizeof(*entry));
+        return 0;
+    }
+
+    entry->class_name_length = class_name_length;
+    entry->member_name_length = member_name_length;
+    entry->method_proc = method_proc;
+    context->num_interface_methods++;
+
+    return 1;
+}
+
+void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
+    size_t mod_index;
+
+    if (!context) return;
+
+    clear_runtime_interface_methods(context);
+
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        module *mod;
+        int meta_ix;
+
+        mod = context->modules[mod_index];
+        meta_ix = mod->meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *meta;
+
+            meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+            if (meta->base.type == META_IMPLEMENTS) {
+                meta_implements_constant *impl_meta;
+                string_constant *class_symbol;
+                string_constant *interface_symbol;
+                size_t iface_mod_index;
+
+                impl_meta = (meta_implements_constant *) meta;
+                class_symbol = get_runtime_string_constant(mod, impl_meta->symbol);
+                interface_symbol = get_runtime_string_constant(mod, impl_meta->interface_symbol);
+
+                if (!class_symbol || !interface_symbol) {
+                    meta_ix = meta->next;
+                    continue;
+                }
+
+                for (iface_mod_index = 0; iface_mod_index < context->num_modules; iface_mod_index++) {
+                    module *iface_mod;
+                    int iface_meta_ix;
+
+                    iface_mod = context->modules[iface_mod_index];
+                    iface_meta_ix = iface_mod->meta_head;
+
+                    while (iface_meta_ix != -1) {
+                        meta_entry *iface_meta;
+
+                        iface_meta = (meta_entry *) (iface_mod->segment.const_pool + iface_meta_ix);
+                        if (iface_meta->base.type == META_MEMBER) {
+                            meta_member_constant *member_meta;
+                            string_constant *owner_symbol;
+                            string_constant *kind_symbol;
+                            string_constant *member_symbol;
+
+                            member_meta = (meta_member_constant *) iface_meta;
+                            owner_symbol = get_runtime_string_constant(iface_mod, member_meta->owner);
+                            kind_symbol = get_runtime_string_constant(iface_mod, member_meta->kind);
+                            member_symbol = get_runtime_string_constant(iface_mod, member_meta->member);
+
+                            if (owner_symbol && kind_symbol && member_symbol &&
+                                runtime_member_kind_is_method(kind_symbol) &&
+                                owner_symbol->string_len == interface_symbol->string_len &&
+                                memcmp(owner_symbol->string, interface_symbol->string, interface_symbol->string_len) == 0) {
+                                char *class_proc_name;
+                                char *interface_proc_name;
+                                proc_runtime *class_proc;
+                                proc_runtime *interface_proc;
+                                proc_runtime *effective_proc;
+
+                                class_proc_name = build_runtime_member_name(class_symbol->string,
+                                                                            class_symbol->string_len,
+                                                                            member_symbol->string,
+                                                                            member_symbol->string_len);
+                                interface_proc_name = build_runtime_member_name(interface_symbol->string,
+                                                                                interface_symbol->string_len,
+                                                                                member_symbol->string,
+                                                                                member_symbol->string_len);
+                                if (!class_proc_name || !interface_proc_name) {
+                                    if (class_proc_name) free(class_proc_name);
+                                    if (interface_proc_name) free(interface_proc_name);
+                                    iface_meta_ix = iface_meta->next;
+                                    continue;
+                                }
+
+                                class_proc = resolve_runtime_procedure(context, class_proc_name, strlen(class_proc_name));
+                                interface_proc = resolve_runtime_procedure(context, interface_proc_name, strlen(interface_proc_name));
+                                free(class_proc_name);
+                                free(interface_proc_name);
+
+                                effective_proc = class_proc;
+                                if (!effective_proc && runtime_member_kind_is_final(kind_symbol)) {
+                                    effective_proc = interface_proc;
+                                }
+
+                                if (effective_proc) {
+                                    add_runtime_interface_method_entry(context,
+                                                                       class_symbol->string,
+                                                                       class_symbol->string_len,
+                                                                       member_symbol->string,
+                                                                       member_symbol->string_len,
+                                                                       effective_proc);
+                                }
+                            }
+                        }
+
+                        iface_meta_ix = iface_meta->next;
+                    }
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+}
+
+static proc_runtime *resolve_runtime_method(rxvm_context *context,
+                                            const char *class_name,
+                                            size_t class_name_length,
+                                            const char *member_name,
+                                            size_t member_name_length) {
+    size_t entry_index;
+    char *proc_name;
+    proc_runtime *called_function;
+
+    if (!context || !class_name || !class_name_length || !member_name || !member_name_length) return 0;
+
+    if (context->link_dirty || context->interface_method_registry_dirty || context->interface_factory_registry_dirty) {
+        rxvm_link(context);
+    }
+
+    for (entry_index = 0; entry_index < context->num_interface_methods; entry_index++) {
+        rxvm_interface_method_entry *entry;
+
+        entry = &context->interface_methods[entry_index];
+        if (entry->class_name_length == class_name_length &&
+            entry->member_name_length == member_name_length &&
+            memcmp(entry->class_name, class_name, class_name_length) == 0 &&
+            memcmp(entry->member_name, member_name, member_name_length) == 0) {
+            return entry->method_proc;
+        }
+    }
+
+    proc_name = build_runtime_member_name(class_name, class_name_length, member_name, member_name_length);
+    if (!proc_name) return 0;
+    called_function = resolve_runtime_procedure(context, proc_name, strlen(proc_name));
+    free(proc_name);
+    return called_function;
+}
+
+void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
+    size_t mod_index;
+
+    if (!context) return;
+
+    clear_runtime_interface_factories(context);
+
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        module *mod;
+        int meta_ix;
+
+        mod = context->modules[mod_index];
+        meta_ix = mod->meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *meta;
+
+            meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+            if (meta->base.type == META_IMPLEMENTS) {
+                meta_implements_constant *impl_meta;
+                string_constant *class_symbol;
+                string_constant *interface_symbol;
+                size_t iface_mod_index;
+
+                impl_meta = (meta_implements_constant *) meta;
+                class_symbol = get_runtime_string_constant(mod, impl_meta->symbol);
+                interface_symbol = get_runtime_string_constant(mod, impl_meta->interface_symbol);
+
+                if (!class_symbol || !interface_symbol) {
+                    meta_ix = meta->next;
+                    continue;
+                }
+
+                for (iface_mod_index = 0; iface_mod_index < context->num_modules; iface_mod_index++) {
+                    module *iface_mod;
+                    int iface_meta_ix;
+
+                    iface_mod = context->modules[iface_mod_index];
+                    iface_meta_ix = iface_mod->meta_head;
+
+                    while (iface_meta_ix != -1) {
+                        meta_entry *iface_meta;
+
+                        iface_meta = (meta_entry *) (iface_mod->segment.const_pool + iface_meta_ix);
+                        if (iface_meta->base.type == META_MEMBER) {
+                            meta_member_constant *member_meta;
+                            string_constant *owner_symbol;
+                            string_constant *kind_symbol;
+                            string_constant *member_symbol;
+
+                            member_meta = (meta_member_constant *) iface_meta;
+                            owner_symbol = get_runtime_string_constant(iface_mod, member_meta->owner);
+                            kind_symbol = get_runtime_string_constant(iface_mod, member_meta->kind);
+                            member_symbol = get_runtime_string_constant(iface_mod, member_meta->member);
+
+                            if (owner_symbol && kind_symbol && member_symbol &&
+                                kind_symbol->string_len == 7 &&
+                                memcmp(kind_symbol->string, "factory", 7) == 0 &&
+                                owner_symbol->string_len == interface_symbol->string_len &&
+                                memcmp(owner_symbol->string, interface_symbol->string, interface_symbol->string_len) == 0) {
+                                char *factory_proc_name;
+                                char *match_proc_name;
+                                proc_runtime *factory_proc;
+                                proc_runtime *match_proc;
+
+                                factory_proc_name = build_runtime_factory_proc_name(class_symbol->string,
+                                                                                    class_symbol->string_len,
+                                                                                    member_symbol->string,
+                                                                                    member_symbol->string_len);
+                                match_proc_name = build_runtime_match_proc_name(class_symbol->string,
+                                                                               class_symbol->string_len,
+                                                                               member_symbol->string,
+                                                                               member_symbol->string_len);
+                                if (!factory_proc_name) {
+                                    if (match_proc_name) free(match_proc_name);
+                                    iface_meta_ix = iface_meta->next;
+                                    continue;
+                                }
+
+                                factory_proc = resolve_runtime_procedure(context, factory_proc_name, strlen(factory_proc_name));
+                                match_proc = match_proc_name ?
+                                             resolve_runtime_procedure(context, match_proc_name, strlen(match_proc_name)) :
+                                             0;
+                                free(factory_proc_name);
+                                if (match_proc_name) free(match_proc_name);
+
+                                if (factory_proc) {
+                                    add_runtime_interface_factory_entry(context,
+                                                                        interface_symbol->string,
+                                                                        interface_symbol->string_len,
+                                                                        member_symbol->string,
+                                                                        member_symbol->string_len,
+                                                                        class_symbol->string,
+                                                                        class_symbol->string_len,
+                                                                        match_proc,
+                                                                        factory_proc);
+                                }
+                            }
+                        }
+
+                        iface_meta_ix = iface_meta->next;
+                    }
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+}
+
+static void parse_runtime_factory_selector(const char *selector,
+                                           size_t selector_length,
+                                           const char **interface_name,
+                                           size_t *interface_name_length,
+                                           const char **factory_name,
+                                           size_t *factory_name_length) {
+    const char *selector_start;
+    const char *selector_end;
+    const char *sep;
+
+    if (interface_name) *interface_name = selector;
+    if (interface_name_length) *interface_name_length = selector_length;
+    if (factory_name) *factory_name = "*";
+    if (factory_name_length) *factory_name_length = 1;
+
+    if (!selector || !selector_length) return;
+
+    selector_start = selector;
+    selector_end = selector_start + selector_length;
+    sep = 0;
+    while (!sep && selector + 1 < selector_end) {
+        if ((selector[0] == ':' && selector[1] == ':') ||
+            (selector[0] == '.' && selector[1] == '.')) {
+            sep = selector;
+            break;
+        }
+        selector++;
+    }
+    if (!sep) return;
+
+    if (interface_name) *interface_name = selector_start;
+    if (interface_name_length) *interface_name_length = (size_t) (sep - selector_start);
+    if (factory_name) *factory_name = sep + 2;
+    if (factory_name_length) *factory_name_length = selector_length - ((size_t) (sep - selector_start) + 2);
+}
+
+static int resolve_runtime_factory(rxvm_context *context,
+                                   const char *selector,
+                                   size_t selector_length,
+                                   rxinteger argc,
+                                   value **args,
+                                   proc_runtime **factory_out,
+                                   char **error_out) {
+    const char *interface_name;
+    size_t interface_name_length;
+    const char *factory_name;
+    size_t factory_name_length;
+    size_t entry_index;
+    proc_runtime *best_factory;
+    rxinteger best_score;
+    char *best_class_name;
+    size_t best_class_name_length;
+    int saw_candidate;
+    int saw_positive_score;
+
+    if (factory_out) *factory_out = 0;
+    if (error_out) *error_out = 0;
+    if (!context || !selector || !selector_length || !factory_out) return 0;
+
+    if (context->link_dirty || context->interface_factory_registry_dirty) {
+        rxvm_link(context);
+    }
+
+    parse_runtime_factory_selector(selector, selector_length,
+                                   &interface_name, &interface_name_length,
+                                   &factory_name, &factory_name_length);
+    if (!interface_name_length || !factory_name_length) {
+        if (error_out) *error_out = build_interface_factory_error("No interface factory providers for ", selector, selector_length);
+        return 0;
+    }
+
+    best_factory = 0;
+    best_score = 0;
+    best_class_name = 0;
+    best_class_name_length = 0;
+    saw_candidate = 0;
+    saw_positive_score = 0;
+
+    for (entry_index = 0; entry_index < context->num_interface_factories; entry_index++) {
+        rxvm_interface_factory_entry *entry;
+        rxinteger score;
+
+        entry = &context->interface_factories[entry_index];
+        if (entry->interface_name_length != interface_name_length ||
+            memcmp(entry->interface_name, interface_name, interface_name_length) != 0 ||
+            entry->factory_name_length != factory_name_length ||
+            memcmp(entry->factory_name, factory_name, factory_name_length) != 0) {
+            continue;
+        }
+
+        saw_candidate = 1;
+        score = 1;
+        if (entry->match_proc &&
+            !invoke_runtime_factory_match(context, entry->match_proc, argc, args, &score)) {
+            if (error_out) *error_out = build_interface_factory_error("Failed to evaluate interface factory match for ", selector, selector_length);
+            if (best_class_name) free(best_class_name);
+            return 0;
+        }
+        if (score > 0) {
+            saw_positive_score = 1;
+            if (!best_factory ||
+                score > best_score ||
+                (score == best_score &&
+                 compare_runtime_name(entry->class_name, entry->class_name_length,
+                                      best_class_name, best_class_name_length) < 0)) {
+                char *new_best_name;
+
+                new_best_name = dup_runtime_name(entry->class_name, entry->class_name_length);
+                if (!new_best_name) {
+                    if (error_out) *error_out = build_interface_factory_error("Failed to resolve factory provider for ", selector, selector_length);
+                    if (best_class_name) free(best_class_name);
+                    return 0;
+                }
+
+                if (best_class_name) free(best_class_name);
+                best_class_name = new_best_name;
+                best_class_name_length = entry->class_name_length;
+                best_score = score;
+                best_factory = entry->factory_proc;
+            }
+        }
+    }
+
+    if (best_class_name) free(best_class_name);
+
+    if (!saw_candidate) {
+        if (error_out) *error_out = build_interface_factory_error("No interface factory providers for ", selector, selector_length);
+        return 0;
+    }
+
+    if (!saw_positive_score || !best_factory) {
+        if (error_out) *error_out = build_interface_factory_error("No matching interface factory provider for ", selector, selector_length);
+        return 0;
+    }
+
+    *factory_out = best_factory;
+    return 1;
+}
 
 /* Constant to get create the compile time data in ta "iso" like format */
 /* __DATE__ format "Mmm dd yyyy" -> Convert to yyyymmdd */
 const char compile_date[8+1] =
         {
-                // yyyy year
+                /* yyyy year */
                 __DATE__[7], __DATE__[8],
                 __DATE__[9], __DATE__[10],
 
-                // First month letter, Oct Nov Dec = '1' otherwise '0'
+                /* First month letter, Oct Nov Dec = '1' otherwise '0' */
                 (__DATE__[0] == 'O' || __DATE__[0] == 'N' || __DATE__[0] == 'D') ? '1' : '0',
 
-                // Second month letter
-                (__DATE__[0] == 'J') ? ( (__DATE__[1] == 'a') ? '1' :       // Jan, Jun or Jul
+                /* Second month letter */
+                (__DATE__[0] == 'J') ? ( (__DATE__[1] == 'a') ? '1' :       /* Jan, Jun or Jul */
                                          ((__DATE__[2] == 'n') ? '6' : '7') ) :
-                (__DATE__[0] == 'F') ? '2' :                                // Feb
-                (__DATE__[0] == 'M') ? (__DATE__[2] == 'r') ? '3' : '5' :   // Mar or May
-                (__DATE__[0] == 'A') ? (__DATE__[1] == 'p') ? '4' : '8' :   // Apr or Aug
-                (__DATE__[0] == 'S') ? '9' :                                // Sep
-                (__DATE__[0] == 'O') ? '0' :                                // Oct
-                (__DATE__[0] == 'N') ? '1' :                                // Nov
-                (__DATE__[0] == 'D') ? '2' :                                // Dec
+                (__DATE__[0] == 'F') ? '2' :                                /* Feb */
+                (__DATE__[0] == 'M') ? (__DATE__[2] == 'r') ? '3' : '5' :   /* Mar or May */
+                (__DATE__[0] == 'A') ? (__DATE__[1] == 'p') ? '4' : '8' :   /* Apr or Aug */
+                (__DATE__[0] == 'S') ? '9' :                                /* Sep */
+                (__DATE__[0] == 'O') ? '0' :                                /* Oct */
+                (__DATE__[0] == 'N') ? '1' :                                /* Nov */
+                (__DATE__[0] == 'D') ? '2' :                                /* Dec */
                 0,
 
-                // First day letter, replace space with digit
+                /* First day letter, replace space with digit */
                 __DATE__[4]==' ' ? '0' : __DATE__[4],
 
-                // Second day letter
+                /* Second day letter */
                 __DATE__[5],
 
                 '\0'
@@ -251,9 +1402,91 @@ unsigned char string_to_interrupt(const char *interrupt) {
     return RXSIGNAL_MAX; // Invalid Signal Code
 }
 
+typedef enum rxsignal_handler_action {
+    RXSIGNAL_HANDLER_ACTION_NONE = 0,
+    RXSIGNAL_HANDLER_ACTION_SKIP,
+    RXSIGNAL_HANDLER_ACTION_FAIL,
+    RXSIGNAL_HANDLER_ACTION_RETRY
+} rxsignal_handler_action;
+
+static rxsignal_handler_action rxsignal_read_handler_action(value *action) {
+    if (!action || action->string_length <= 0) return RXSIGNAL_HANDLER_ACTION_NONE;
+
+    null_terminate_string_buffer(action);
+    if (strcmp(action->string_value, "__rxsignal_skip") == 0) return RXSIGNAL_HANDLER_ACTION_SKIP;
+    if (strcmp(action->string_value, "__rxsignal_fail") == 0) return RXSIGNAL_HANDLER_ACTION_FAIL;
+    if (strcmp(action->string_value, "__rxsignal_retry") == 0) return RXSIGNAL_HANDLER_ACTION_RETRY;
+    return RXSIGNAL_HANDLER_ACTION_NONE;
+}
+
+static value *rxsignal_handler_payload(stack_frame *handler_frame) {
+    size_t arg_index;
+    value *arg;
+
+    if (!handler_frame || !handler_frame->procedure || !handler_frame->procedure->binarySpace) return NULL;
+    arg_index = handler_frame->procedure->binarySpace->globals + handler_frame->procedure->locals + 1;
+    if (arg_index >= handler_frame->number_locals) return NULL;
+    arg = handler_frame->baselocals[arg_index];
+    if (!arg || arg->num_attributes < 5 || !arg->attributes) return NULL;
+    return arg->attributes[4];
+}
+
+static void rxsignal_apply_native_interrupt_mode(unsigned char sig, interrupt_entry *entry) {
+    if (!entry || sig == 0 || sig >= RXSIGNAL_MAX) return;
+    if (entry->response == RXSIGNAL_RESPONSE_IGNORE) {
+        if (sig != RXSIGNAL_KILL) ignore_interrupt((int)sig);
+    } else {
+        enable_interrupt((int)sig);
+    }
+}
+
+static void rxsignal_push_handler(stack_frame *frame, unsigned char sig) {
+    interrupt_saved_entry *saved;
+
+    if (!frame || sig == 0 || sig >= RXSIGNAL_MAX) return;
+
+    saved = malloc(sizeof(interrupt_saved_entry));
+    if (!saved) return;
+    saved->signal = sig;
+    saved->entry = frame->interrupt_table[sig - 1];
+    saved->next = frame->interrupt_stack;
+    frame->interrupt_stack = saved;
+}
+
+static int rxsignal_pop_handler(stack_frame *frame, unsigned char sig) {
+    interrupt_saved_entry *saved;
+    interrupt_saved_entry *previous;
+
+    if (!frame || sig == 0 || sig >= RXSIGNAL_MAX) return 0;
+
+    previous = 0;
+    saved = frame->interrupt_stack;
+    while (saved) {
+        if (saved->signal == sig) {
+            frame->interrupt_table[sig - 1] = saved->entry;
+            rxsignal_apply_native_interrupt_mode(sig, &frame->interrupt_table[sig - 1]);
+            if (previous) previous->next = saved->next;
+            else frame->interrupt_stack = saved->next;
+            free(saved);
+            return 1;
+        }
+        previous = saved;
+        saved = saved->next;
+    }
+
+    return 0;
+}
+
+static void rxsignal_clear_handler_stack(stack_frame *frame) {
+    if (!frame) return;
+    while (frame->interrupt_stack) {
+        rxsignal_pop_handler(frame, frame->interrupt_stack->signal);
+    }
+}
+
 /* Stack Frame Factory */
 RX_INLINE stack_frame *frame_f(
-                    proc_constant *procedure,
+                    proc_runtime *procedure,
                     int no_args,
                     stack_frame *parent,
                     bin_code *return_pc,
@@ -265,8 +1498,13 @@ RX_INLINE stack_frame *frame_f(
     size_t frame_size;
     value *value_buffer;
 
-    num_locals = procedure->locals + procedure->binarySpace->globals + no_args + 1;
-    nominal_num_locals = procedure->locals + procedure->binarySpace->globals + NOMINAL_NUM_ARGS + 1;
+    if (procedure->binarySpace == 0) {
+        num_locals = procedure->locals + no_args + 1;
+        nominal_num_locals = procedure->locals + NOMINAL_NUM_ARGS + 1;
+    } else {
+        num_locals = procedure->locals + procedure->binarySpace->globals + no_args + 1;
+        nominal_num_locals = procedure->locals + procedure->binarySpace->globals + NOMINAL_NUM_ARGS + 1;
+    }
 
     /* Do we need an oversized block */
     if (num_locals > nominal_num_locals) nominal_num_locals = num_locals;
@@ -287,8 +1525,10 @@ RX_INLINE stack_frame *frame_f(
 #endif
         }
         /* Make sure global registers are linked correctly */
-        for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
-            this->locals[i] = this->baselocals[i];
+        if (procedure->binarySpace) {
+            for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
+                this->locals[i] = this->baselocals[i];
+            }
         }
         /* Reset register a0 - number of arguments */
         this->locals[i] = this->baselocals[i];
@@ -316,9 +1556,11 @@ RX_INLINE stack_frame *frame_f(
         }
 
         /* Link Globals */
-        for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
-            this->baselocals[i] =  procedure->binarySpace->module->globals[j];
-            this->locals[i] = procedure->binarySpace->module->globals[j];
+        if (procedure->binarySpace) {
+            for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
+                this->baselocals[i] =  procedure->binarySpace->module->globals[j];
+                this->locals[i] = procedure->binarySpace->module->globals[j];
+            }
         }
 
         /* Link a0 */
@@ -338,8 +1580,24 @@ RX_INLINE stack_frame *frame_f(
         /* VM Plugins */
         this->unicode = parent->unicode;
         this->decimal = parent->decimal;
+
+        /* Copy the numeric context */
+        this->num_context = parent->num_context;
+
+        // Set the numeric context of the decimal plugin
+        if (this->decimal) {
+            this->decimal->num_context = &this->num_context;
+            this->decimal->syncNumericContext(this->decimal);
+        }
     }
     else {
+        for (i = 0; i < RXSIGNAL_MAX; i++) {
+            this->interrupt_table[i].function = 0;
+            this->interrupt_table[i].jump = 0;
+            this->interrupt_table[i].frame = 0;
+            this->interrupt_table[i].value_register = 0;
+        }
+
         /* Set up the default interrupt mask */
         this->interrupt_table[RXSIGNAL_KILL-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_ERROR-1].response = RXSIGNAL_RESPONSE_HALT;
@@ -368,7 +1626,15 @@ RX_INLINE stack_frame *frame_f(
         /* VM Plugins */
         this->unicode = 0;
         this->decimal = 0;
+
+        /* Default numeric context */
+        this->num_context.digits = DIGITS_STRIKE_POINT;
+        this->num_context.fuzz = 0;
+        this->num_context.form = NUMERIC_FORM_SCIENTIFIC;
+        this->num_context.casetype = CASE_LOWER;
+        this->num_context.standard = NUMERIC_STANDARD_COMMON;
     }
+    this->interrupt_stack = 0;
     this->decimal_loaded_here = 0;
     this->unicode_loaded_here = 0;
     this->return_pc = return_pc;
@@ -376,24 +1642,22 @@ RX_INLINE stack_frame *frame_f(
     this->number_args = no_args;
     this->return_reg = return_reg;
     this->procedure = procedure;
+    this->is_interrupt_action = 0;
 
     return this;
 }
 
-/* Free Stack Frame */
-RX_INLINE void free_frame(stack_frame *frame) {
-    /* Add to free list */
-    frame->prev_free = *(frame->procedure->frame_free_list);
-    *(frame->procedure->frame_free_list) = frame;
-}
-
 /* Clear Stack Frame - deallocating register contents and plugins */
 RX_INLINE void clear_frame(stack_frame *frame) {
-    int i;
-    /* Reset Local Registers */
+    int i, offset;
+    rxsignal_clear_handler_stack(frame);
+    /* Reset Local Registers and a0 */
     for (i = 0; i < frame->procedure->locals; i++) {
         clear_value(frame->baselocals[i]);
     }
+    offset = frame->procedure->locals;
+    if (frame->procedure->binarySpace) offset += frame->procedure->binarySpace->globals;
+    clear_value(frame->baselocals[offset]);
     if (frame->decimal_loaded_here) {
         frame->decimal->base.free((rxvm_plugin*)frame->decimal);
         frame->decimal_loaded_here = 0;
@@ -402,6 +1666,58 @@ RX_INLINE void clear_frame(stack_frame *frame) {
         frame->unicode->base.free((rxvm_plugin*)frame->unicode);
         frame->unicode_loaded_here = 0;
     }
+}
+
+/* Free Stack Frame */
+RX_INLINE void free_frame(stack_frame *frame) {
+    rxsignal_clear_handler_stack(frame);
+    /* Add to free list */
+    frame->prev_free = *(frame->procedure->frame_free_list);
+    *(frame->procedure->frame_free_list) = frame;
+}
+
+static stack_frame *rxsignal_unwind_to_frame(stack_frame *current, stack_frame *target) {
+    stack_frame *discard;
+
+    if (!target) return current;
+
+    while (current && current != target) {
+        discard = current;
+        current = current->parent;
+        free_frame(discard);
+    }
+
+    return current ? current : target;
+}
+
+static void rxsignal_populate_raw_interrupt(value *raw,
+                                            unsigned char interrupt,
+                                            rxinteger module,
+                                            rxinteger address,
+                                            value *payload) {
+    value_zero(raw);
+    set_num_attributes(raw, 5);
+    raw->attributes[0]->int_value = (rxinteger)interrupt;
+    raw->attributes[1]->int_value = module;
+    raw->attributes[2]->int_value = address;
+    set_null_string(raw->attributes[3], interrupt_to_string(interrupt));
+    move_value(raw->attributes[4], payload);
+}
+
+static void rxsignal_populate_runtime_signal(value *dest, value *raw) {
+    static char runtime_signal_type[] = "rxfnsb.runtime_signal";
+
+    value_zero(dest);
+    set_num_attributes(dest, 6);
+    dest->object_type_name = runtime_signal_type;
+    dest->object_type_name_length = strlen(runtime_signal_type);
+    dest->attributes[0]->int_value = 1;
+    copy_value(dest->attributes[4], raw);
+}
+
+void completely_free_frame(stack_frame *frame) {
+    clear_frame(frame);
+    free(frame);
 }
 
 // Bit field of raised VM interrupts (checked by the interpreter)
@@ -420,6 +1736,7 @@ void clear_signal(unsigned char signal) {
 // Macro to detect and throw a signal if a RXVM plugin-raised error is present
 #define RXSIGNAL_IF_RXVM_PLUGIN_ERROR(signal) \
 if ((signal)->base.signal_number  && (signal)->base.signal_number < RXSIGNAL_MAX) { \
+if (!current_frame->is_interrupt) interrupted_pc = pc; \
 interrupts |= 1 << ((signal)->base.signal_number - 1); \
 value_zero(interrupt_object[(signal)->base.signal_number]); \
 set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.signal_string); \
@@ -427,22 +1744,40 @@ set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.s
 
 // Macro to throw a signal
 #define SET_SIGNAL(signal) \
-{interrupts |= 1 << ((signal) - 1); \
+{if (!current_frame->is_interrupt) interrupted_pc = pc; \
+interrupts |= 1 << ((signal) - 1); \
 value_zero(interrupt_object[(signal)]);}
 
 // Macro to throw a signal with a message
 #define SET_SIGNAL_MSG(signal, message) \
-{interrupts |= 1 << ((signal) - 1); \
+{if (!current_frame->is_interrupt) interrupted_pc = pc; \
+interrupts |= 1 << ((signal) - 1); \
 value_zero(interrupt_object[(signal)]); \
 set_null_string(interrupt_object[(signal)], (message));}
 
 // Macro to throw a signal with a payload
 #define SET_SIGNAL_PAYLOAD(signal, payload) \
-{interrupts |= 1 << ((signal) - 1); \
+{if (!current_frame->is_interrupt) interrupted_pc = pc; \
+interrupts |= 1 << ((signal) - 1); \
 copy_value(interrupt_object[(signal)], (payload));}
 
+#define SET_SIGNAL_FROM_NAME(name) \
+{ unsigned char signal__ = string_to_interrupt((name)); \
+if (signal__ == RXSIGNAL_MAX) { SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE); } \
+else { SET_SIGNAL(signal__); } }
+
+#define SET_SIGNAL_MSG_FROM_NAME(name, message) \
+{ unsigned char signal__ = string_to_interrupt((name)); \
+if (signal__ == RXSIGNAL_MAX) { SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE); } \
+else { SET_SIGNAL_MSG(signal__, (message)); } }
+
+#define SET_SIGNAL_PAYLOAD_FROM_NAME(name, payload) \
+{ unsigned char signal__ = string_to_interrupt((name)); \
+if (signal__ == RXSIGNAL_MAX) { SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE); } \
+else { SET_SIGNAL_PAYLOAD(signal__, (payload)); } }
+
 // Macro and function to detect and throw a signal if a RXPA plugin-raised error is present
-#define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) interrupt_from_rxpa_signal(signal,interrupt_object);
+#define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) { if (!current_frame->is_interrupt) interrupted_pc = pc; interrupt_from_rxpa_signal(signal,interrupt_object); }
 
 void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_MAX]) {
     size_t int_num;
@@ -467,6 +1802,29 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
     interrupts |= 1 << (int_num - 1);
 }
 
+#define HANDLE_INTERRUPT_ACTION_RETURN() \
+if (is_interrupt && temp_frame->is_interrupt_action) { \
+    rxsignal_handler_action action__ = rxsignal_read_handler_action(interrupt_action_value); \
+    if (action__ == RXSIGNAL_HANDLER_ACTION_RETRY) { \
+        if (current_frame && current_frame->procedure && current_frame->procedure->binarySpace) { \
+            next_pc = current_frame->procedure->binarySpace->binary + last_interrupted_address[is_interrupt]; \
+        } \
+    } else if (action__ != RXSIGNAL_HANDLER_ACTION_SKIP) { \
+        value *payload__ = rxsignal_handler_payload(temp_frame); \
+        if (payload__ && payload__->string_length) { \
+            fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(payload__->string_length), payload__->string_value, interrupt_to_string(is_interrupt)); \
+        } else { \
+            fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(is_interrupt)); \
+        } \
+        print_runtime_panic_location(context, last_interrupted_module[is_interrupt], last_interrupted_address[is_interrupt]); \
+        value_zero(interrupt_action_value); \
+        rc = (int)is_interrupt; \
+        free_frame(temp_frame); \
+        goto interprt_finished; \
+    } \
+    value_zero(interrupt_action_value); \
+}
+
 #define IS_UNICODE_WHITESPACE(cp) ( \
     (cp) == 0x0009 || /* Tab */       \
     (cp) == 0x000A || /* Line Feed */ \
@@ -485,18 +1843,67 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
     (cp) == 0x205F || \
     (cp) == 0x3000 )
 
+/* -------------------------------------------------------------------------
+ * Inline helper: forward ASCII non-blank scan.
+ * Returns index (0-based) of first non-blank, or -len if none found.
+ * -------------------------------------------------------------------------
+ */
+#define ASCII_FAST_PATH 1    // 1. activate ASCII fast path, 0: run normal mode
+#if  ASCII_FAST_PATH
+RX_INLINE rxinteger ascii_fwd_nonblank(const unsigned char *s, rxinteger start, rxinteger len) {
+    rxinteger i;
+    int ch;
+    for (i = start; i < len; i++) {
+        ch = (unsigned char)s[i];
+       if (!IS_UNICODE_WHITESPACE(ch)) return i;
+    }
+    return -1;  /* Not found in forward scan */
+}
+RX_INLINE rxinteger ascii_back_nonblank( unsigned char *s, rxinteger start, rxinteger len) {
+    rxinteger i;
+    int ch;
+    if (len <= 0) return -1;
+    for (i = start; i >= 0; --i) {
+        ch = (unsigned char)s[i];
+        if (!IS_UNICODE_WHITESPACE(ch)) return i;
+    }
+    return -1;  /* Not found in reverse scan */
+}
+
+RX_INLINE rxinteger ascii_fwd_blank(const unsigned char *s, rxinteger start, rxinteger len) {
+    rxinteger i;
+    int ch;
+    for (i = start; i < len; i++) {
+        ch = (unsigned char)s[i];
+        if (IS_UNICODE_WHITESPACE(ch)) return i;
+    }
+    return -1;  /* Not found in forward scan */
+}
+RX_INLINE rxinteger ascii_back_blank( unsigned char *s, rxinteger start, rxinteger len) {
+    rxinteger i;
+    int ch;
+    if (len <= 0) return -1;
+    for (i = start; i >= 0; --i) {
+        ch = (unsigned char)s[i];
+        if (IS_UNICODE_WHITESPACE(ch)) return i;
+    }
+    return -1;  /* Not found in reverse scan */
+}
+#endif
 
 /* Interpreter */
 RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
-    proc_constant *procedure;
-    proc_constant *step_handler = 0;
+    proc_runtime *procedure;
+    proc_runtime *step_handler = 0;
     int rc = 0;
-    unsigned int initSeed = 0;   // keep last seed for Random function within REXX run
-    char hasSeed = 0; // no seed set
+    unsigned int initSeed = 0;   /* keep last seed for Random function within REXX run */
+    char hasSeed = 0; /* no seed set */
     bin_code *pc, *next_pc;
+    bin_code *interrupted_pc = 0;
     int mod_index;
     value *interrupt_arg;
     value *signal_value = value_f();
+    value *interrupt_action_value = value_f();
     unsigned char signal_code = 0;
     value *arguments_array = 0;                /* note that the needs mallocing / freeing */
     unsigned char last_interrupt = 0; /* Interrupt being handled */
@@ -507,6 +1914,16 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     /* Array of modules that were last interrupted by interrupt number */
     rxinteger last_interrupted_module[RXSIGNAL_MAX] = {0};
     stack_frame *current_frame = 0, *temp_frame;
+    /* 3 Work Registers */
+    value *work1 = value_f();
+    value *work2 = value_f();
+    value *work3 = value_f();
+#ifdef NTHREADED
+    void *next_inst = 0;
+#else
+    module *current_module = 0;
+    void *next_inst = &&IUNKNOWN;
+#endif
 
     /* Set up the interrupt object array */
     {
@@ -515,55 +1932,138 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             interrupt_object[i] = value_f();
         }
     }
-    // Initialize the native signal handler system
+    /* Initialize the native signal handler system */
     initialize_vm_signals();
-
-#ifdef NTHREADED
-    void *next_inst = 0;
-#else
-    void *next_inst = &&IUNKNOWN;
-#endif
 
     /*
      * Instruction database - loaded from a generated header file
      */
-#include "instrset.h"  /* Set up void *address_map[], etc. */
+#define FMT_EMPTY_MAP 0, OP_NONE, OP_NONE, OP_NONE
+#define FMT_C_MAP 1, OP_CHAR, OP_NONE, OP_NONE
+#define FMT_F_MAP 1, OP_FLOAT, OP_NONE, OP_NONE
+#define FMT_I_MAP 1, OP_INT, OP_NONE, OP_NONE
+#define FMT_I_I_MAP 2, OP_INT, OP_INT, OP_NONE
+#define FMT_I_I_I_MAP 3, OP_INT, OP_INT, OP_INT
+#define FMT_I_I_R_MAP 3, OP_INT, OP_INT, OP_REG
+#define FMT_I_R_MAP 2, OP_INT, OP_REG, OP_NONE
+#define FMT_I_R_R_MAP 3, OP_INT, OP_REG, OP_REG
+#define FMT_L_MAP 1, OP_ID, OP_NONE, OP_NONE
+#define FMT_L_L_R_MAP 3, OP_ID, OP_ID, OP_REG
+#define FMT_L_P_S_MAP 3, OP_ID, OP_FUNC, OP_STRING
+#define FMT_L_R_MAP 2, OP_ID, OP_REG, OP_NONE
+#define FMT_L_R_I_MAP 3, OP_ID, OP_REG, OP_INT
+#define FMT_L_R_R_MAP 3, OP_ID, OP_REG, OP_REG
+#define FMT_L_R_S_MAP 3, OP_ID, OP_REG, OP_STRING
+#define FMT_L_S_MAP 2, OP_ID, OP_STRING, OP_NONE
+#define FMT_P_MAP 1, OP_FUNC, OP_NONE, OP_NONE
+#define FMT_P_S_MAP 2, OP_FUNC, OP_STRING, OP_NONE
+#define FMT_R_MAP 1, OP_REG, OP_NONE, OP_NONE
+#define FMT_R_C_MAP 2, OP_REG, OP_CHAR, OP_NONE
+#define FMT_R_D_MAP 2, OP_REG, OP_DECIMAL, OP_NONE
+#define FMT_R_D_R_MAP 3, OP_REG, OP_DECIMAL, OP_REG
+#define FMT_R_F_MAP 2, OP_REG, OP_FLOAT, OP_NONE
+#define FMT_R_F_I_MAP 3, OP_REG, OP_FLOAT, OP_INT
+#define FMT_R_F_R_MAP 3, OP_REG, OP_FLOAT, OP_REG
+#define FMT_R_I_MAP 2, OP_REG, OP_INT, OP_NONE
+#define FMT_R_I_I_MAP 3, OP_REG, OP_INT, OP_INT
+#define FMT_R_I_R_MAP 3, OP_REG, OP_INT, OP_REG
+#define FMT_R_P_MAP 2, OP_REG, OP_FUNC, OP_NONE
+#define FMT_R_P_R_MAP 3, OP_REG, OP_FUNC, OP_REG
+#define FMT_R_R_MAP 2, OP_REG, OP_REG, OP_NONE
+#define FMT_R_R_D_MAP 3, OP_REG, OP_REG, OP_DECIMAL
+#define FMT_R_R_F_MAP 3, OP_REG, OP_REG, OP_FLOAT
+#define FMT_R_R_I_MAP 3, OP_REG, OP_REG, OP_INT
+#define FMT_R_R_R_MAP 3, OP_REG, OP_REG, OP_REG
+#define FMT_R_R_S_MAP 3, OP_REG, OP_REG, OP_STRING
+#define FMT_R_S_MAP 2, OP_REG, OP_STRING, OP_NONE
+#define FMT_R_S_I_MAP 3, OP_REG, OP_STRING, OP_INT
+#define FMT_R_S_R_MAP 3, OP_REG, OP_STRING, OP_REG
+#define FMT_R_S_S_MAP 3, OP_REG, OP_STRING, OP_STRING
+#define FMT_S_MAP 1, OP_STRING, OP_NONE, OP_NONE
+#define FMT_S_R_MAP 2, OP_STRING, OP_REG, OP_NONE
+#define FMT_S_S_MAP 2, OP_STRING, OP_STRING, OP_NONE
+#define FMT_S_S_R_MAP 3, OP_STRING, OP_STRING, OP_REG
+
+const Instruction meta_map[OP_MAX_INSTRUCTIONS] = {
+#define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
+    { OPCODE, #NAME, DESC, FMT##_MAP },
+#include "../binutils/include/rxops.h"
+#undef X
+};
+
+typedef Opcode instructions;
+
+#ifdef NTHREADED
+/* already typedefed */
+#else
+const void *address_map[OP_MAX_INSTRUCTIONS] = {
+#define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
+    &&NAME,
+#include "../binutils/include/rxops.h"
+#undef X
+};
+#endif
 
     /* Allocate Interrupt Arg */
     interrupt_arg = value_f();
 
     /* Thread code - we need to do it here because address_map is only valid
      * in this run() function */
-#ifndef NTHREADED
-    DEBUG("Threading\n");
+    DEBUG("Threading/Preparing\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        size_t i = 0, j;
+        /* Idempotent check */
+        if (context->modules[mod_index]->state >= RXVM_MOD_THREADED) continue;
 
-        while (i < context->modules[mod_index]->segment.inst_size) {
-            j = i;
-            i += context->modules[mod_index]->segment.binary[i].instruction.no_ops + 1;
-            context->modules[mod_index]->segment.binary[j].impl_address =
-                    (void *)address_map[context->modules[mod_index]->segment
-                            .binary[j].instruction.opcode];
+#ifndef NTHREADED
+        {
+            module *mod = context->modules[mod_index];
+            size_t i = 0, j;
+            if (!mod->prepared_dispatch && mod->segment.inst_size) {
+                mod->prepared_dispatch = malloc(sizeof(void *) * mod->segment.inst_size);
+                if (!mod->prepared_dispatch) {
+                    fprintf(stderr, "PANIC: Out of memory\n");
+                    exit(-1);
+                }
+            }
+            while (i < context->modules[mod_index]->segment.inst_size) {
+                j = i;
+                i += context->modules[mod_index]->segment.binary[i].instruction.no_ops + 1;
+                mod->prepared_dispatch[j] =
+                        (void *)address_map[context->modules[mod_index]->segment
+                                .binary[j].instruction.opcode];
+            }
         }
-    }
 #endif
+        context->modules[mod_index]->state = RXVM_MOD_THREADED;
+    }
+
+    if (context->prepare_only) {
+        /* We are only here to thread, return success */
+        rc = 0;
+        goto interprt_finished;
+    }
 
     /* Find the program's entry point */
     DEBUG("Find program entry point\n");
-    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i = context->modules[mod_index]->proc_head;
-        while (i != -1) {
-            procedure =
-                    (proc_constant *) (context->modules[mod_index]->segment.const_pool +
-                                       i);
-            if (procedure->base.type == PROC_CONST &&
-                strcmp(procedure->name, "main") == 0)
-                break;
-            i = procedure->next;
-            procedure = 0;
+    if (context->ext_proc) {
+        procedure = context->ext_proc;
+    } else {
+        for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+            int i = context->modules[mod_index]->proc_head;
+            while (i != -1) {
+                proc_constant *definition =
+                        (proc_constant *) (context->modules[mod_index]->segment.const_pool +
+                                           i);
+                if (definition->base.type == PROC_CONST &&
+                    strcmp(definition->name, "main") == 0) {
+                    procedure = context->modules[mod_index]->proc_runtime_lookup[i >> 3];
+                    break;
+                }
+                i = definition->next;
+                procedure = 0;
+            }
+            if (procedure) break;
         }
-        if (procedure) break;
     }
 
     if (!procedure) {
@@ -572,20 +2072,34 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     }
 
     DEBUG("Create first Stack Frame\n");
-    current_frame = frame_f(procedure, 1, 0, 0, 0);
-    /* Arguments (passed in an array) */
-    /* a0 is already set by frame_f() */
-    /* a1 is the array  */
-    {
-        int i;
-        int a1 = procedure->binarySpace->globals + procedure->locals + 1;
-        arguments_array = value_f();
-        current_frame->baselocals[a1] = arguments_array;
-        current_frame->locals[a1] = current_frame->baselocals[a1];
-        set_num_attributes(current_frame->baselocals[a1], argc);
+    if (context->ext_proc) {
+        current_frame = frame_f(procedure, context->ext_argc, 0, 0, context->ext_ret);
+        /* Arguments (passed as individual objects) */
+        {
+            int i;
+            int a1 = procedure->binarySpace->globals + procedure->locals + 1;
+            for (i = 0; i < context->ext_argc; i++) {
+                current_frame->baselocals[a1 + i] = value_f();
+                current_frame->locals[a1 + i] = current_frame->baselocals[a1 + i];
+                copy_value(current_frame->baselocals[a1 + i], context->ext_args[i]);
+            }
+        }
+    } else {
+        current_frame = frame_f(procedure, 1, 0, 0, 0);
+        /* Arguments (passed in an array) */
+        /* a0 is already set by frame_f() */
+        /* a1 is the array  */
+        {
+            int i;
+            int a1 = procedure->binarySpace->globals + procedure->locals + 1;
+            arguments_array = value_f();
+            current_frame->baselocals[a1] = arguments_array;
+            current_frame->locals[a1] = current_frame->baselocals[a1];
+            set_num_attributes(current_frame->baselocals[a1], argc);
 
-        for (i = 0; i < argc; i++) {
-            set_null_string(current_frame->baselocals[a1]->attributes[i], argv[i]);
+            for (i = 0; i < argc; i++) {
+                set_null_string(current_frame->baselocals[a1]->attributes[i], argv[i]);
+            }
         }
     }
 
@@ -596,13 +2110,17 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         printf("PANIC - No default decimal plugin\n");
         exit(255); // Documented 255 is for missing decimal plugin
     }
-    current_frame->decimal_loaded_here = 1;
+    current_frame->decimal_loaded_here = 0;
 
-    // Set the number of digits in the rxvmplugin context
-    current_frame->decimal->setDigits(current_frame->decimal, 18); // 18 is the max significant digits for the default plugin
+    // Set the numeric context of the decimal plugin
+    current_frame->decimal->num_context = &current_frame->num_context;
+    current_frame->decimal->syncNumericContext(current_frame->decimal);
 
     /* Start */
     DEBUG("Starting inst# %s-0x%x\n", procedure->binarySpace->module->name, (int) procedure->start);
+#ifndef NTHREADED
+    current_module = current_frame->procedure->binarySpace->module;
+#endif
     next_pc = &(current_frame->procedure->binarySpace->binary[procedure->start]);
 
     CALC_DISPATCH_MANUAL
@@ -636,6 +2154,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
      * ----------------------------------------------------------------------------
      */
 
+#define RESERVED_IMPL(name) START_INSTRUCTION(name) SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH;
+
     /* Signal Interrupt Support - this is only used/called when interrupts are pending */
     START_INTERRUPT;
     DEBUG("TRACE - SIGNAL FIRED - CHECK HANDLER\n");
@@ -645,8 +2165,9 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     last_interrupt = 0;
     for (signal_code = 0; signal_code < RXSIGNAL_MAX; signal_code++) {
         if (interrupts & (1 << signal_code)) {
+            bin_code *signal_pc = (interrupted_pc && signal_code + 1 != RXSIGNAL_BREAKPOINT) ? interrupted_pc : pc;
             last_interrupted_module[signal_code + 1] = (rxinteger) current_frame->procedure->binarySpace->module->module_number;
-            last_interrupted_address[signal_code + 1] = (rxinteger) (pc - current_frame->procedure->binarySpace->binary);
+            last_interrupted_address[signal_code + 1] = (rxinteger) (signal_pc - current_frame->procedure->binarySpace->binary);
             if (current_frame->interrupt_table[signal_code].response == RXSIGNAL_RESPONSE_IGNORE) {
                 DEBUG("TRACE - INTR IGNORE %s\n", interrupt_to_string(signal_code + 1));
                 interrupts &= ~(1 << signal_code);
@@ -656,6 +2177,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             }
         }
     }
+    interrupted_pc = 0;
 
     if (!last_interrupt || last_interrupt >= RXSIGNAL_MAX) {
         /* No un-ignored interrupts pending */
@@ -669,7 +2191,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     }
 
     // Handle the interrupt
-    switch (current_frame->interrupt_table[last_interrupt - 1].response) {
+    interrupt_entry signal_handler = current_frame->interrupt_table[last_interrupt - 1];
+    switch (signal_handler.response) {
 
         case RXSIGNAL_RESPONSE_HALT:
             /* Halt */
@@ -679,6 +2202,9 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(interrupt_object[last_interrupt]->string_length), interrupt_object[last_interrupt]->string_value, interrupt_to_string(last_interrupt));
             } else {
                 fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(last_interrupt));
+                print_runtime_panic_location(context,
+                                             last_interrupted_module[last_interrupt],
+                                             last_interrupted_address[last_interrupt]);
             }
             rc = (int)last_interrupt;
             goto interprt_finished;
@@ -691,13 +2217,19 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 
         case RXSIGNAL_RESPONSE_CALL_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> SET BRANCH FOR CALL RETURN ");
-            next_pc = current_frame->procedure->binarySpace->binary + current_frame->interrupt_table[last_interrupt -1 ].jump;
+            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
+#ifndef NTHREADED
+            current_module = current_frame->procedure->binarySpace->module;
+#endif
+            next_pc = current_frame->procedure->binarySpace->binary + signal_handler.jump;
             pc = next_pc;
             // Fall through to CALL
 
+        case RXSIGNAL_RESPONSE_CALL_ACTION:
         case RXSIGNAL_RESPONSE_CALL: {
             /* Call */
-            proc_constant *intr_function = current_frame->interrupt_table[last_interrupt-1].function;
+            proc_runtime *intr_function = signal_handler.function;
+            char action_aware = signal_handler.response == RXSIGNAL_RESPONSE_CALL_ACTION;
             DEBUG("TRACE - INTR HANDLER -> CALL %s->%s()\n", interrupt_to_string(last_interrupt), intr_function->name);
 
             if (intr_function->start == SIZE_MAX) {
@@ -706,19 +2238,15 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             }
 
             /* Populate the interrupt argument object */
-            value_zero(interrupt_arg);
-            set_num_attributes(interrupt_arg, 5);
-            interrupt_arg->attributes[0]->int_value = (rxinteger)last_interrupt;
-            interrupt_arg->attributes[1]->int_value = last_interrupted_module[last_interrupt];
-            interrupt_arg->attributes[2]->int_value = last_interrupted_address[last_interrupt];
-            // Copy the signal name to the 4th attribute
-            set_null_string(interrupt_arg->attributes[3], interrupt_to_string(last_interrupt));
-            // Move the object to the 5th attribute
-            move_value(interrupt_arg->attributes[4], interrupt_object[last_interrupt]);
+            rxsignal_populate_raw_interrupt(interrupt_arg,
+                                            last_interrupt,
+                                            last_interrupted_module[last_interrupt],
+                                            last_interrupted_address[last_interrupt],
+                                            interrupt_object[last_interrupt]);
 
             if (intr_function->binarySpace == 0) {
                 /* This is a native plugin function */
-                rxpa_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
+                rxvm_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
                 if (signal_value->int_value && signal_value->int_value < RXSIGNAL_MAX) {
                     if (signal_value->string_length) {
                         SET_SIGNAL_MSG(signal_value->int_value, signal_value->string_value)
@@ -729,14 +2257,19 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 DISPATCH
             } else {
                 /* A CREXX Procedure */
-                current_frame = frame_f(intr_function, 1, current_frame, pc, 0);
+                if (action_aware) value_zero(interrupt_action_value);
+                current_frame = frame_f(intr_function, 1, current_frame, pc, action_aware ? interrupt_action_value : 0);
 
                 /* Prepare dispatch to procedure as early as possible */
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 next_pc = &(current_frame->procedure->binarySpace->binary[intr_function->start]);
                 CALC_DISPATCH_MANUAL
 
                 /* Interrupt being handled */
                 current_frame->is_interrupt = last_interrupt;
+                current_frame->is_interrupt_action = action_aware;
 
                 /* Argument */
                 size_t arg_index = intr_function->binarySpace->globals + intr_function->locals + 1;
@@ -749,7 +2282,27 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 
         case RXSIGNAL_RESPONSE_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> BRANCH %s\n", interrupt_to_string(last_interrupt));
-            next_pc = current_frame->procedure->binarySpace->binary + current_frame->interrupt_table[last_interrupt -1].jump;
+            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
+#ifndef NTHREADED
+            current_module = current_frame->procedure->binarySpace->module;
+#endif
+            next_pc = current_frame->procedure->binarySpace->binary + signal_handler.jump;
+            CALC_DISPATCH_MANUAL
+            DISPATCH
+
+        case RXSIGNAL_RESPONSE_BRANCH_VALUE:
+            DEBUG("TRACE - INTR HANDLER -> BRANCH VALUE %s\n", interrupt_to_string(last_interrupt));
+            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
+#ifndef NTHREADED
+            current_module = current_frame->procedure->binarySpace->module;
+#endif
+            rxsignal_populate_raw_interrupt(interrupt_arg,
+                                            last_interrupt,
+                                            last_interrupted_module[last_interrupt],
+                                            last_interrupted_address[last_interrupt],
+                                            interrupt_object[last_interrupt]);
+            rxsignal_populate_runtime_signal(current_frame->locals[signal_handler.value_register], interrupt_arg);
+            next_pc = current_frame->procedure->binarySpace->binary + signal_handler.jump;
             CALC_DISPATCH_MANUAL
             DISPATCH
 
@@ -758,7 +2311,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             {
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
-                CALC_DISPATCH_MANUAL
                 // Note that current_frame->is_interrupt cannot be set as a signal triggers us
                 /* back to the parent's stack frame */
                 temp_frame = current_frame;
@@ -782,6 +2334,10 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                     goto interprt_finished;
                 }
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
+                CALC_DISPATCH_MANUAL
                 DISPATCH
             }
 
@@ -807,7 +2363,7 @@ START_OF_INSTRUCTIONS
         /* Enable Breakpoints with op1 handler */
         START_INSTRUCTION(BPON_FUNC) CALC_DISPATCH(1)
             {
-                proc_constant *signal_function = PROC_OP(1);
+                proc_runtime *signal_function = PROC_OP(1);
                 DEBUG("TRACE - BPON %s()\n", signal_function->name);
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_CALL;
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].function = signal_function;
@@ -831,6 +2387,10 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_IGNORE;
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     ignore_interrupt((int)sig); // Set the corresponding native interrupt to ignore
                 }
             }
@@ -846,6 +2406,10 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_HALT;
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -861,6 +2425,10 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_SILENT_HALT;
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -877,6 +2445,28 @@ START_OF_INSTRUCTIONS
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_BRANCH;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].frame = current_frame;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
+                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
+                }
+            }
+            DISPATCH
+
+        /* Set Signal op3 Handle to Branch to op1 and bind a .signal object to op2 */
+        START_INSTRUCTION(SIGBRV_ID_REG_STRING) CALC_DISPATCH(3)
+            DEBUG("TRACE - SIGBRV 0x%x,R%d,\"%.*s\"\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)op3S->string_len, op3S->string);
+            {
+                size_t sig = string_to_interrupt(op3S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                }
+                else {
+                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_BRANCH_VALUE;
+                    current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].frame = current_frame;
+                    current_frame->interrupt_table[sig-1].value_register = REG_IDX(2);
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -885,7 +2475,7 @@ START_OF_INSTRUCTIONS
         /* Set Signal op2 Handle to Call op1 */
         START_INSTRUCTION(SIGCALL_FUNC_STRING) CALC_DISPATCH(2)
             {
-                proc_constant *signal_function = PROC_OP(1);
+                proc_runtime *signal_function = PROC_OP(1);
                 DEBUG("TRACE - SIGCALL %s(),\"%.*s\"\n", signal_function->name, (int)op2S->string_len, op2S->string);
 
                 size_t sig = string_to_interrupt(op2S->string);
@@ -895,6 +2485,30 @@ START_OF_INSTRUCTIONS
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL;
                     current_frame->interrupt_table[sig-1].function = signal_function;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
+                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
+                }
+            }
+            DISPATCH
+
+        /* Set Signal op2 Handle to action-aware Call op1 */
+        START_INSTRUCTION(SIGCALLA_FUNC_STRING) CALC_DISPATCH(2)
+            {
+                proc_runtime *signal_function = PROC_OP(1);
+                DEBUG("TRACE - SIGCALLA %s(),\"%.*s\"\n", signal_function->name, (int)op2S->string_len, op2S->string);
+
+                size_t sig = string_to_interrupt(op2S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                }
+                else {
+                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL_ACTION;
+                    current_frame->interrupt_table[sig-1].function = signal_function;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -904,7 +2518,7 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(SIGCALLBR_ID_FUNC_STRING) CALC_DISPATCH(3)
             DEBUG("TRACE - SIGCALLBR 0x%x,%s(),\"%.*s\"\n", (unsigned int)REG_IDX(1), PROC_OP(2)->name, (int)op3S->string_len, op3S->string);
             {
-                proc_constant *signal_function = PROC_OP(2);
+                proc_runtime *signal_function = PROC_OP(2);
                 size_t sig = string_to_interrupt(op3S->string);
                 if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
@@ -913,6 +2527,8 @@ START_OF_INSTRUCTIONS
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL_BRANCH;
                     current_frame->interrupt_table[sig-1].function = signal_function;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
+                    current_frame->interrupt_table[sig-1].frame = current_frame;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -928,7 +2544,35 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_RETURN;
+                    current_frame->interrupt_table[sig-1].function = 0;
+                    current_frame->interrupt_table[sig-1].jump = 0;
+                    current_frame->interrupt_table[sig-1].frame = 0;
+                    current_frame->interrupt_table[sig-1].value_register = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
+                }
+            }
+            DISPATCH
+
+        /* Push current Signal op1 handler on the current frame handler stack */
+        START_INSTRUCTION(SIGPUSH_STRING) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGPUSH \"%.*s\"\n", (int)op1S->string_len, op1S->string);
+            {
+                size_t sig = string_to_interrupt(op1S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) {
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                } else {
+                    rxsignal_push_handler(current_frame, (unsigned char)sig);
+                }
+            }
+            DISPATCH
+
+        /* Pop and restore current Signal op1 handler from the current frame handler stack */
+        START_INSTRUCTION(SIGPOP_STRING) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGPOP \"%.*s\"\n", (int)op1S->string_len, op1S->string);
+            {
+                size_t sig = string_to_interrupt(op1S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL || !rxsignal_pop_handler(current_frame, (unsigned char)sig)) {
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
             }
             DISPATCH
@@ -936,14 +2580,21 @@ START_OF_INSTRUCTIONS
         /* RXSIGNAL_STRING Signal type op1 */
         START_INSTRUCTION(SIGNAL_STRING) CALC_DISPATCH(1)
             DEBUG("TRACE - SIGNAL \"%.*s\"\n", (int)op1S->string_len, op1S->string);
-            SET_SIGNAL(string_to_interrupt(op1S->string));
+            SET_SIGNAL_FROM_NAME(op1S->string);
+            DISPATCH
+
+        /* SIGNAL_REG Signal type op1 */
+        START_INSTRUCTION(SIGNAL_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGNAL R%d\n", (int)REG_IDX(1));
+            null_terminate_string_buffer(op1R);
+            SET_SIGNAL_FROM_NAME(op1R->string_value);
             DISPATCH
 
         /* SIGNALT_STRING_REG Signal type op1 if op2 true */
         START_INSTRUCTION(SIGNALT_STRING_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SIGNALT \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
             if (op2RI) {
-                SET_SIGNAL(string_to_interrupt(op1S->string));
+                SET_SIGNAL_FROM_NAME(op1S->string);
             }
             DISPATCH
 
@@ -951,27 +2602,34 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(SIGNALF_STRING_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SIGNALF \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
             if (!op2RI) {
-                SET_SIGNAL(string_to_interrupt(op1S->string));
+                SET_SIGNAL_FROM_NAME(op1S->string);
             }
             DISPATCH
 
         /* SIGNAL_STRING_STRING Signal type op1 (message op2) */
         START_INSTRUCTION(SIGNAL_STRING_STRING) CALC_DISPATCH(2)
             DEBUG("TRACE - SIGNAL \"%.*s\",\"%.*s\"\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string);
-            SET_SIGNAL_MSG(string_to_interrupt(op1S->string), op2S->string);
+            SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
             DISPATCH
 
         /* SIGNAL_STRING_REG Signal type op1 (payload op2) */
         START_INSTRUCTION(SIGNAL_STRING_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SIGNAL \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
-            SET_SIGNAL_PAYLOAD(string_to_interrupt(op1S->string), op2R);
+            SET_SIGNAL_PAYLOAD_FROM_NAME(op1S->string, op2R);
+            DISPATCH
+
+        /* SIGNAL_REG_REG Signal type op1 (payload op2) */
+        START_INSTRUCTION(SIGNAL_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SIGNAL R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            null_terminate_string_buffer(op1R);
+            SET_SIGNAL_PAYLOAD_FROM_NAME(op1R->string_value, op2R);
             DISPATCH
 
         /* SIGNALT_STRING_STRING_REG Signal type op1 (message op2) if op3 true */
         START_INSTRUCTION(SIGNALT_STRING_STRING_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SIGNALT \"%.*s\",\"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string, (int)REG_IDX(2));
             if (op3RI) {
-                SET_SIGNAL_MSG(string_to_interrupt(op1S->string), op2S->string);
+                SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
             }
             DISPATCH
 
@@ -979,7 +2637,7 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(SIGNALF_STRING_STRING_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SIGNALF \"%.*s\",\"%.*s\"\",R%d\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string, (int)REG_IDX(2));
             if (!op3RI) {
-                SET_SIGNAL_MSG(string_to_interrupt(op1S->string), op2S->string);
+                SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
             }
             DISPATCH
 
@@ -989,25 +2647,35 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(METALOADMODULE_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - METALOADMODULE R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2));
             {
+                int num_modules_before;
                 null_terminate_string_buffer(op2R);
                 /* Load the module */
-                int num_modules_before = (int) context->num_modules;
+                num_modules_before = (int) context->num_modules;
                 op1R->int_value = rxldmod(context, op2R->string_value);
                 if (op1R->int_value > 0) {
                     /* If successfully loaded, thread the binary - must be done in run() */
 #ifndef NTHREADED
-                    DEBUG("Threading\n");
                     int mod;
+                    DEBUG("Threading\n");
                     for (mod = num_modules_before; mod < op1R->int_value; mod++) {
+                        module *loaded_module = context->modules[mod];
                         size_t i = 0, j;
+                        if (!loaded_module->prepared_dispatch && loaded_module->segment.inst_size) {
+                            loaded_module->prepared_dispatch = malloc(sizeof(void *) * loaded_module->segment.inst_size);
+                            if (!loaded_module->prepared_dispatch) {
+                                fprintf(stderr, "PANIC: Out of memory\n");
+                                exit(-1);
+                            }
+                        }
                         while (i < context->modules[mod]->segment.inst_size) {
                             j = i;
                             i += context->modules[mod]->segment.binary[i].instruction.no_ops + 1;
-                            context->modules[mod]->segment.binary[j].impl_address =
+                            loaded_module->prepared_dispatch[j] =
                                 (void *) address_map[context->modules[mod]->segment.binary[j].instruction.opcode];
                         }
                     }
 #endif
+                    rxvm_link(context);
                 }
             }
             DISPATCH
@@ -1017,24 +2685,7 @@ START_OF_INSTRUCTIONS
             DEBUG("TRACE - METALOADINST R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
                 bin_code inst = context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value];
-#ifdef NTHREADED
-                /* Bytecode Version */
                 op1R->int_value = inst.instruction.opcode;
-#else
-                /* Threaded Version - basically we are unthreading, finding the
-                 * instruction with the corresponding implementation address
-                 * (quite slow ... but not an instruction used in normal code */
-                op1R->int_value = 0;
-                void *impl = inst.impl_address;
-                size_t a;
-                size_t num_instructions = sizeof(address_map) / sizeof(address_map[0]);
-                for (a = 0; a < num_instructions; a++) {
-                    if (address_map[a] == impl) {
-                        op1R->int_value = (rxinteger)a;
-                        break;
-                    }
-                }
-#endif
             }
             DISPATCH
 
@@ -1098,7 +2749,8 @@ START_OF_INSTRUCTIONS
                             entry = op1R->attributes[entries];
                             set_num_attributes(entry, 2);
                             set_null_string(entry->attributes[0], e_entry->index);
-                            entry->attributes[1]->int_value = (rxinteger) p_entry;
+                            entry->attributes[1]->int_value =
+                                    (rxinteger) context->modules[mod]->proc_runtime_lookup[e_entry->procedure >> 3];
 
                             entries++;
                         }
@@ -1150,7 +2802,8 @@ START_OF_INSTRUCTIONS
                         entry = op1R->attributes[entries];
                         set_num_attributes(entry, 2);
                         set_null_string(entry->attributes[0], p_entry->name);
-                        entry->attributes[1]->int_value = (rxinteger) p_entry;
+                        entry->attributes[1]->int_value =
+                                (rxinteger) context->modules[mod]->proc_runtime_lookup[i >> 3];
                         entries++;
                     }
                     i = p_entry->next;
@@ -1185,7 +2838,9 @@ START_OF_INSTRUCTIONS
             /* Load Float Operand (op1 = (float)op2[op3]) */
         START_INSTRUCTION(METALOADFOPERAND_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - METALOADFOPERAND R%d,R%dR%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
-            op1R->float_value = context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value].fconst;
+            op1R->float_value =
+                    FLOAT_CONST_VALUE(context->modules[op2R->int_value - 1]->segment.const_pool,
+                                      context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value].index);
             DISPATCH
 
             /* Load String Operand (op1 = (string)op2[op3]) */
@@ -1275,7 +2930,7 @@ START_OF_INSTRUCTIONS
                             break;
                         case META_FUNC:
                             set_null_string(op1R->attributes[j], ".meta_func");
-                            set_num_attributes(op1R->attributes[j], 6);
+                            set_num_attributes(op1R->attributes[j], 5);
                             x = (rxinteger) ((meta_func_constant *) (pool + i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
                             x = (rxinteger) ((meta_func_constant *) (pool + i))->option;
@@ -1286,8 +2941,6 @@ START_OF_INSTRUCTIONS
                             set_const_string(op1R->attributes[j]->attributes[3], (string_constant *) (pool + x));
                             op1R->attributes[j]->attributes[4]->int_value = (rxinteger) ((meta_func_constant *) (pool +
                                                                                                                  i))->func;
-                            x = (rxinteger) ((meta_func_constant *) (pool + i))->inliner;
-                            set_const_string(op1R->attributes[j]->attributes[5], (string_constant *) (pool + x));
                             break;
                         case META_REG:
                             set_null_string(op1R->attributes[j], ".meta_reg");
@@ -1319,7 +2972,54 @@ START_OF_INSTRUCTIONS
                             x = (rxinteger) ((meta_clear_constant *) (pool + i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
                             break;
+                        case META_CLASS:
+                            /* TODO: Implement META_CLASS */
+                            break;
+                        case META_ATTR:
+                            /* TODO: Implement META_ATTR */
+                            break;
+                        case META_INTERFACE:
+                            set_null_string(op1R->attributes[j], ".meta_interface");
+                            set_num_attributes(op1R->attributes[j], 3);
+                            x = (rxinteger) ((meta_interface_constant *) (pool + i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_interface_constant *) (pool + i))->option;
+                            set_const_string(op1R->attributes[j]->attributes[1], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_interface_constant *) (pool + i))->type;
+                            set_const_string(op1R->attributes[j]->attributes[2], (string_constant *) (pool + x));
+                            break;
+                        case META_IMPLEMENTS:
+                            set_null_string(op1R->attributes[j], ".meta_implements");
+                            set_num_attributes(op1R->attributes[j], 2);
+                            x = (rxinteger) ((meta_implements_constant *) (pool + i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_implements_constant *) (pool + i))->interface_symbol;
+                            set_const_string(op1R->attributes[j]->attributes[1], (string_constant *) (pool + x));
+                            break;
+                        case META_MEMBER:
+                            set_null_string(op1R->attributes[j], ".meta_member");
+                            set_num_attributes(op1R->attributes[j], 5);
+                            x = (rxinteger) ((meta_member_constant *) (pool + i))->owner;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_member_constant *) (pool + i))->kind;
+                            set_const_string(op1R->attributes[j]->attributes[1], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_member_constant *) (pool + i))->member;
+                            set_const_string(op1R->attributes[j]->attributes[2], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_member_constant *) (pool + i))->type;
+                            set_const_string(op1R->attributes[j]->attributes[3], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_member_constant *) (pool + i))->args;
+                            set_const_string(op1R->attributes[j]->attributes[4], (string_constant *) (pool + x));
+                            break;
+                        case META_INLINE:
+                            set_null_string(op1R->attributes[j], ".meta_inline");
+                            set_num_attributes(op1R->attributes[j], 2);
+                            x = (rxinteger) ((meta_inline_constant *) (pool + i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_inline_constant *) (pool + i))->payload;
+                            set_const_string(op1R->attributes[j]->attributes[1], (string_constant *) (pool + x));
+                            break;
                         case STRING_CONST:
+                        case FLOAT_CONST:
                         case PROC_CONST:
                         case BINARY_CONST:
                         case DECIMAL_CONST:
@@ -1353,8 +3053,15 @@ START_OF_INSTRUCTIONS
             }
             DISPATCH
 
-            /* Regular Instructions */
-            /* LOAD */
+        /* Regular Instructions */
+
+        /* NULL (Clear the register) */
+        START_INSTRUCTION(NULL_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - NULL R%lu\n", REG_IDX(1));
+            value_zero(op1R);
+            DISPATCH
+
+        /* LOAD */
         START_INSTRUCTION(LOAD_REG_INT) CALC_DISPATCH(2)
             DEBUG("TRACE - LOAD R%d,%d\n", (int) REG_IDX(1), (int) op2I);
             set_int(op1R, op2I);
@@ -1407,24 +3114,24 @@ START_OF_INSTRUCTIONS
 	      
         START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));
-            mprintf("%.*s\n", (int) op1R->string_length, op1R->string_value);
+            rxvm_mprintf("%.*s\n", (int) op1R->string_length, op1R->string_value);
             DISPATCH
 
         START_INSTRUCTION(SAY_STRING) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
-            mprintf("%.*s\n", (int) op1S->string_len, op1S->string);
+            rxvm_mprintf("%.*s\n", (int) op1S->string_len, op1S->string);
             DISPATCH
 	      
         START_INSTRUCTION(SAYX_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - SAYX R%lu\n", REG_IDX(1));
-            mprintf("%.*s", (int) op1R->string_length, op1R->string_value);
+            rxvm_mprintf("%.*s", (int) op1R->string_length, op1R->string_value);
             DISPATCH
 	      
 	START_INSTRUCTION(SAYX_STRING) CALC_DISPATCH(1)
             DEBUG("TRACE - SAYX \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
-            mprintf("%.*s", (int) op1S->string_len, op1S->string);
+            rxvm_mprintf("%.*s", (int) op1S->string_len, op1S->string);
             DISPATCH
 
         START_INSTRUCTION(SCONCAT_REG_REG_REG) CALC_DISPATCH(3)
@@ -1505,9 +3212,267 @@ START_OF_INSTRUCTIONS
             DISPATCH
 
 /* ====================================================================================
+ * Numeric Mode instructions
+ * ==================================================================================== */
+
+/* ------------------------------------------------------------------------------------
+ *  SETNUMDGTS_REG Set Numeric Digits digits=op1 (>4)
+ *  ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMDGTS_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMDGTS R%lu\n", REG_IDX(1));
+    if (op1R->int_value < 1) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 0");
+        DISPATCH
+    }
+    current_frame->num_context.digits = op1R->int_value;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  SETNUMDGTS_INT Set Numeric Digits digits=op1 (>4)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMDGTS_INT) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMDGTS %d\n", (int)op1I);
+    if (op1I < 1) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 0");
+        DISPATCH
+    }
+    current_frame->num_context.digits = op1I;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  GETNUMDGTS_REG Get Numeric Digits op1=digits
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(GETNUMDGTS_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - GETNUMDGTS R%lu\n", REG_IDX(1));
+    op1R->int_value = (rxinteger)current_frame->num_context.digits;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMFUZ_REG Set Numeric Fuzz digits=op1 (>=0)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMFUZ_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMFUZ R%lu\n", REG_IDX(1));
+    if (op1R->int_value < 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Fuzz must be zero or greater");
+        DISPATCH
+    }
+    current_frame->num_context.fuzz = op1R->int_value;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMFUZ_INT Set Numeric Fuzz digits=op1 (>=0)
+ * ----------------------------------------------------------------------------------- */
+START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMFUZ %d\n", (int)op1I);
+    if (op1I < 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Fuzz must be zero or greater");
+    }
+    current_frame->num_context.fuzz = op1I;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * GETNUMFUZ_REG Get Numeric Fuzz op1=digits
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(GETNUMFUZ_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - GETNUMFUZ R%lu\n", REG_IDX(1));
+    op1R->int_value = (rxinteger)current_frame->num_context.fuzz;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMFRM_REG Set Numeric Form=op1 (1=sci,2=eng)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMFRM_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMFRM R%lu\n", REG_IDX(1));
+    if (op1R->int_value < 1 || op1R->int_value > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Form must be 1 (scientific) or 2 (engineering)");
+        DISPATCH
+    }
+    current_frame->num_context.form = (int)op1R->int_value;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMFRM_INT Set Numeric Form=op1 (1=sci,2=eng)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMFRM_INT) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMFRM %d\n", (int)op1I);
+    if (op1I < 1 || op1I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Form must be 1 (scientific) or 2 (engineering)");
+        DISPATCH
+    }
+    current_frame->num_context.form = (int)op1I;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * GETNUMFRM_REG Get Numeric Form=op1 (1=sci,2=eng)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(GETNUMFRM_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - GETNUMFRM R%lu\n", REG_IDX(1));
+    op1R->int_value = (rxinteger)current_frame->num_context.form;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMCAS_REG Set Numeric Case=op1 (1=lower,2=upper)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMCAS_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMCAS R%lu\n", REG_IDX(1));
+    if (op1R->int_value < 1 || op1R->int_value > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
+        DISPATCH
+    }
+    current_frame->num_context.casetype = (int)op1R->int_value;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMCAS_INT Set Numeric Case=op1 (1=lower,2=upper)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMCAS_INT) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMCAS %d\n", (int)op1I);
+    if (op1I < 1 || op1I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
+        DISPATCH
+    }
+    current_frame->num_context.casetype = (int)op1I;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * GETNUMCAS_REG Get Numeric Case=op1 (1=lower,2=upper)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(GETNUMCAS_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - GETNUMCAS R%lu\n", REG_IDX(1));
+    op1R->int_value = (rxinteger)current_frame->num_context.casetype;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMSTD_REG Set Numeric Standard=op1 (1=common,2=classic)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMSTD_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMSTD R%lu\n", REG_IDX(1));
+    if (op1R->int_value < 1 || op1R->int_value > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
+        DISPATCH
+    }
+    current_frame->num_context.standard = (int)op1R->int_value;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMSTD_INT Set Numeric Standard=op1 (1=common,2=classic)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMSTD_INT) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMSTD %d\n", (int)op1I);
+    if (op1I < 1 || op1I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
+        DISPATCH
+    }
+    current_frame->num_context.standard = (int)op1I;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * GETNUMSTD_REG Get Numeric Standard=op1 (1=common,2=classic)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(GETNUMSTD_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - GETNUMSTD R%lu\n", REG_IDX(1));
+    op1R->int_value = (rxinteger)current_frame->num_context.standard;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * NUMSCI_INT_INT_INT Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(NUMSCI_INT_INT_INT) CALC_DISPATCH(3)
+    DEBUG("TRACE - NUMSCI %d,%d,%d\n", (int)op1I, (int)op2I, (int)op3I);
+    if (op1I < 5) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 4");
+        DISPATCH
+    }
+    if (op2I < 1 || op2I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
+        DISPATCH
+    }
+    if (op3I < 1 || op3I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
+        DISPATCH
+    }
+    current_frame->num_context.digits = op1I;
+    current_frame->num_context.fuzz = 0;
+    current_frame->num_context.form = 1; // scientific
+    current_frame->num_context.casetype = (int)op2I;
+    current_frame->num_context.standard = (int)op3I;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * NUMENG_INT_INT_INT Setup Engineering Numeric digits=op1, case=op2, std=op3, fuzz=0, form=eng
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(NUMENG_INT_INT_INT) CALC_DISPATCH(3)
+    DEBUG("TRACE - NUMENG %d,%d,%d\n", (int)op1I, (int)op2I, (int)op3I);
+    if (op1I < 5) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 4");
+        DISPATCH
+    }
+    if (op2I < 1 || op2I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
+        DISPATCH
+    }
+    if (op3I < 1 || op3I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
+        DISPATCH
+    }
+    current_frame->num_context.digits = op1I;
+    current_frame->num_context.fuzz = 0;
+    current_frame->num_context.form = 2; // engineering
+    current_frame->num_context.casetype = (int)op2I;
+    current_frame->num_context.standard = (int)op3I;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
+    DISPATCH
+
+/* ====================================================================================
  * Decimal Plugin instructions
- * ====================================================================================
- */
+ * ==================================================================================== */
 
 /* ------------------------------------------------------------------------------------
  * DECPLNM_REG_REG_REG Get Decimal Plugin Name op1=name op2=description op3=version
@@ -1518,30 +3483,6 @@ START_OF_INSTRUCTIONS
     set_null_string(op1R, current_frame->decimal->base.name);
     set_null_string(op2R, current_frame->decimal->base.description);
     set_null_string(op3R, current_frame->decimal->base.version);
-    DISPATCH
-/* ------------------------------------------------------------------------------------
- *  SETDGTS_REG Set Decimal Digits digits=op1
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(SETDGTS_REG) CALC_DISPATCH(1)
-    DEBUG("TRACE - SETDGTS R%lu\n", REG_IDX(1));
-    current_frame->decimal->setDigits(current_frame->decimal, op1R->int_value);
-    DISPATCH
-/* ------------------------------------------------------------------------------------
- *  SETDGTS_INT Set Decimal Digits digits=op1"
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(SETDGTS_INT) CALC_DISPATCH(1)
-    DEBUG("TRACE - SETDGTS %d\n", (int)op1I);
-    current_frame->decimal->setDigits(current_frame->decimal, op1I);
-    DISPATCH
-/* ------------------------------------------------------------------------------------
- *  GETDGTS_REG Get Decimal Digits op1=digits
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(GETDGTS_REG) CALC_DISPATCH(1)
-    DEBUG("TRACE - GETDGTS R%lu\n", REG_IDX(1));
-    op1R->int_value = (rxinteger)current_frame->decimal->getDigits(current_frame->decimal);
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  LOAD_REG_DECIMAL Load op1 with op2
@@ -1630,7 +3571,7 @@ START_OF_INSTRUCTIONS
     START_INSTRUCTION(DTOB_REG)
     CALC_DISPATCH(1)
     DEBUG("TRACE - DTOB R%lu\n", REG_IDX(1));
-    op1R->int_value = current_frame->decimal->decimalCompareString(current_frame->decimal, op1R, "0") ? 1 : 0; // Convert to boolean
+    op1R->int_value = current_frame->decimal->decimalIsZero(current_frame->decimal, op1R) ? 0 : 1; // Convert to boolean
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -1660,9 +3601,11 @@ START_OF_INSTRUCTIONS
     START_INSTRUCTION(DADD_REG_REG_DECIMAL)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DADD R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
-    // Convert the string to a decimal
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
-    current_frame->decimal->decimalAdd(current_frame->decimal, op1R, op2R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalAdd(current_frame->decimal, op1R, op2R, op);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -1682,8 +3625,11 @@ START_OF_INSTRUCTIONS
     START_INSTRUCTION(DSUB_REG_REG_DECIMAL)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DSUB R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
-    current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, op);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -1693,8 +3639,11 @@ START_OF_INSTRUCTIONS
     START_INSTRUCTION(DSUB_REG_DECIMAL_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DSUB R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
-    current_frame->decimal->decimalSub(current_frame->decimal, op1R, op1R, op3R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op, op3R);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 
@@ -1715,8 +3664,11 @@ START_OF_INSTRUCTIONS
     START_INSTRUCTION(DMULT_REG_REG_DECIMAL)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DMULT R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
-    current_frame->decimal->decimalMul(current_frame->decimal, op1R, op2R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalMul(current_frame->decimal, op1R, op2R, op);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -1736,8 +3688,11 @@ START_OF_INSTRUCTIONS
     START_INSTRUCTION(DDIV_REG_DECIMAL_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DDIV R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
-    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op1R, op3R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
+        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op, op3R);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -1747,8 +3702,55 @@ START_OF_INSTRUCTIONS
     START_INSTRUCTION(DDIV_REG_REG_DECIMAL)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DDIV R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
-    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op);
+        free_decimal_literal_value(op);
+    }
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ * DIDIV_REG_REG_REG Decimal integer division
+ * ------------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DIDIV_REG_REG_REG)
+    CALC_DISPATCH(3)
+    DEBUG("TRACE - DIDIV R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op3R);
+    // Note: This is integer division, so the result is truncated
+    current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  DIDIV_REG_DECIMAL_REG  Decimal Integer Divide  (op1=op2/op3)
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DIDIV_REG_DECIMAL_REG)
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - DIDIV R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
+        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op, op3R);
+        // Note: This is integer division, so the result is truncated
+        current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+        free_decimal_literal_value(op);
+    }
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  DIDIV_REG_REG_DECIMAL  Decimal Integer Divide (op1=op2/op3)
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DIDIV_REG_REG_DECIMAL)
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - DIDIV R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op);
+        // Note: This is integer division, so the result is truncated
+        current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -2010,8 +4012,11 @@ START_OF_INSTRUCTIONS
     START_INSTRUCTION(DPOW_REG_REG_DECIMAL)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DPOW R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
-    current_frame->decimal->decimalPow(current_frame->decimal, op1R, op2R, op1R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        current_frame->decimal->decimalPow(current_frame->decimal, op1R, op2R, op);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -2021,8 +4026,11 @@ START_OF_INSTRUCTIONS
     START_INSTRUCTION(DPOW_REG_DECIMAL_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DPOW R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
-    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
-    current_frame->decimal->decimalPow(current_frame->decimal, op1R, op1R, op3R);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
+        current_frame->decimal->decimalPow(current_frame->decimal, op1R, op, op3R);
+        free_decimal_literal_value(op);
+    }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -2048,7 +4056,7 @@ START_OF_INSTRUCTIONS
        START_INSTRUCTION(CALL_FUNC) CALC_DISPATCH(1)
             /* New stackframe - grabbing procedure object from the caller frame */
             {
-                proc_constant *called_function = PROC_OP(1);
+                proc_runtime *called_function = PROC_OP(1);
                 DEBUG("TRACE - CALL %s()\n", called_function->name);
                 if (called_function->start == SIZE_MAX) {
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name)
@@ -2056,12 +4064,15 @@ START_OF_INSTRUCTIONS
                 }
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), 0, NULL, NULL, signal_value);
+                    rxvm_callfunc((void *) (called_function->start), 0, NULL, NULL, signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
                     current_frame = frame_f(called_function, 0, current_frame, next_pc, 0);
                     /* Prepare dispatch to procedure as early as possible */
+#ifndef NTHREADED
+                    current_module = current_frame->procedure->binarySpace->module;
+#endif
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                     CALC_DISPATCH_MANUAL
                     /* No Arguments - so nothing to do */
@@ -2074,7 +4085,7 @@ START_OF_INSTRUCTIONS
                 /* Clear target return value register */
                 value_zero(op1R);
 
-                proc_constant *called_function = PROC_OP(2);
+                proc_runtime *called_function = PROC_OP(2);
                 DEBUG("TRACE - CALL R%lu,%s()\n", REG_IDX(1), called_function->name);
 
                 if (called_function->start == SIZE_MAX) {
@@ -2084,7 +4095,7 @@ START_OF_INSTRUCTIONS
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), 0, NULL, op1R, signal_value);
+                    rxvm_callfunc((void *) (called_function->start), 0, NULL, op1R, signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
@@ -2092,6 +4103,9 @@ START_OF_INSTRUCTIONS
                     current_frame = frame_f(called_function, 0, current_frame, next_pc, op1R);
 
                     /* Prepare dispatch to procedure as early as possible */
+#ifndef NTHREADED
+                    current_module = current_frame->procedure->binarySpace->module;
+#endif
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                     CALC_DISPATCH_MANUAL
                     /* No Arguments - so nothing to do */
@@ -2101,7 +4115,7 @@ START_OF_INSTRUCTIONS
 
         START_INSTRUCTION(CALL_REG_FUNC_REG) CALC_DISPATCH(3)
             {
-                proc_constant *called_function = PROC_OP(2);
+                proc_runtime *called_function = PROC_OP(2);
                 DEBUG("TRACE - CALL R%lu,%s,R%lu\n", REG_IDX(1), called_function->name, REG_IDX(3));
                 if (called_function->start == SIZE_MAX) {
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
@@ -2110,7 +4124,7 @@ START_OF_INSTRUCTIONS
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
+                    rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
@@ -2118,6 +4132,9 @@ START_OF_INSTRUCTIONS
                     /* New stackframe - grabbing a procedure object from the caller frame */
                     current_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
                     /* Prepare dispatch to procedure as early as possible */
+#ifndef NTHREADED
+                    current_module = current_frame->procedure->binarySpace->module;
+#endif
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                     CALC_DISPATCH_MANUAL
 
@@ -2139,7 +4156,7 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(DCALL_REG_REG_REG) CALC_DISPATCH(3)
             {
                 /* Function pointer is in register 2 */
-                proc_constant *called_function = (proc_constant *) op2R->int_value;
+                proc_runtime *called_function = (proc_runtime *) op2R->int_value;
                 DEBUG("TRACE - DCALL R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
                 if (called_function->start == SIZE_MAX) {
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
@@ -2148,7 +4165,7 @@ START_OF_INSTRUCTIONS
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
+                    rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
@@ -2156,6 +4173,9 @@ START_OF_INSTRUCTIONS
                     current_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
 
                     /* Prepare dispatch to procedure as early as possible */
+#ifndef NTHREADED
+                    current_module = current_frame->procedure->binarySpace->module;
+#endif
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                     CALC_DISPATCH_MANUAL
 
@@ -2185,6 +4205,17 @@ START_OF_INSTRUCTIONS
                 current_frame = current_frame->parent;
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
+                    /* Copy back arguments for external calls */
+                    if (context->ext_proc && context->ext_args) {
+                        int k, m;
+                        int nargs = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                                temp_frame->procedure->locals]->int_value;
+                        for (k = 0, m = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                             k < nargs && k < context->ext_argc;
+                             k++, m++) {
+                            copy_value(context->ext_args[k], temp_frame->locals[m]);
+                        }
+                    }
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -2201,7 +4232,11 @@ START_OF_INSTRUCTIONS
                     arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
                 }
+                HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 CALC_DISPATCH_MANUAL
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
@@ -2216,24 +4251,37 @@ START_OF_INSTRUCTIONS
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
                 unsigned char is_interrupt = current_frame->is_interrupt;
+                int return_rc = (int)op1R->int_value;
                 /* Set the result register */
                 if (current_frame->return_reg) {
-                    if (REG_IDX(1) >= current_frame->procedure->locals)
+                    if (REG_IDX(1) >= current_frame->procedure->locals || /* Not a local */
+                        current_frame->locals[REG_IDX(1)] != current_frame->baselocals[REG_IDX(1)]) /* swapped/linked so might not be a local really */
                         copy_value(current_frame->return_reg,
-                                   op1R); /* Must do a copy from an argument or global because ... */
+                                   op1R); /* Must do a copy if it could be an argument, object attribute or global because ... */
                     else
                         move_value(current_frame->return_reg,
-                                   op1R); /* ... the faster move deletes the source which is ok for locals */
+                                   op1R); /* ... the faster move deletes the source which is ok for locals going out of scope */
                 }
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
-                if (!current_frame) rc =
-                                            (int) (temp_frame->locals[(pc + 1)
-                                                    ->index])
-                                                    ->int_value; /* Exiting - grab the int rc */
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
+                    /* Exiting - grab the int rc */
+                    if (temp_frame->return_reg) rc = (int) (temp_frame->return_reg->int_value);
+                    else rc = return_rc;
+
+                    /* Copy back arguments for external calls */
+                    if (context->ext_proc && context->ext_args) {
+                        int k, m;
+                        int nargs = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                                temp_frame->procedure->locals]->int_value;
+                        for (k = 0, m = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                             k < nargs && k < context->ext_argc;
+                             k++, m++) {
+                            copy_value(context->ext_args[k], temp_frame->locals[m]);
+                        }
+                    }
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -2252,7 +4300,16 @@ START_OF_INSTRUCTIONS
                     arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
                 }
+                // Set the numeric context of the decimal plugin
+                if (current_frame->decimal) {
+                    current_frame->decimal->num_context = &current_frame->num_context;
+                    current_frame->decimal->syncNumericContext(current_frame->decimal);
+                }
+                HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 CALC_DISPATCH_MANUAL
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
@@ -2275,6 +4332,17 @@ START_OF_INSTRUCTIONS
                 current_frame = current_frame->parent;
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
+                    /* Copy back arguments for external calls */
+                    if (context->ext_proc && context->ext_args) {
+                        int k, m;
+                        int nargs = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                                temp_frame->procedure->locals]->int_value;
+                        for (k = 0, m = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                             k < nargs && k < context->ext_argc;
+                             k++, m++) {
+                            copy_value(context->ext_args[k], temp_frame->locals[m]);
+                        }
+                    }
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -2294,7 +4362,16 @@ START_OF_INSTRUCTIONS
                     arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
                 }
+                // Set the numeric context of the decimal plugin
+                if (current_frame->decimal) {
+                    current_frame->decimal->num_context = &current_frame->num_context;
+                    current_frame->decimal->syncNumericContext(current_frame->decimal);
+                }
+                HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 CALC_DISPATCH_MANUAL
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
@@ -2320,6 +4397,17 @@ START_OF_INSTRUCTIONS
                 current_frame = current_frame->parent;
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
+                    /* Copy back arguments for external calls */
+                    if (context->ext_proc && context->ext_args) {
+                        int k, m;
+                        int nargs = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                                temp_frame->procedure->locals]->int_value;
+                        for (k = 0, m = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                             k < nargs && k < context->ext_argc;
+                             k++, m++) {
+                            copy_value(context->ext_args[k], temp_frame->locals[m]);
+                        }
+                    }
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -2337,7 +4425,16 @@ START_OF_INSTRUCTIONS
                     arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
                 }
+                // Set the numeric context of the decimal plugin
+                if (current_frame->decimal) {
+                    current_frame->decimal->num_context = &current_frame->num_context;
+                    current_frame->decimal->syncNumericContext(current_frame->decimal);
+                }
+                HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 CALC_DISPATCH_MANUAL
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
@@ -2364,6 +4461,17 @@ START_OF_INSTRUCTIONS
                 current_frame = current_frame->parent;
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
+                    /* Copy back arguments for external calls */
+                    if (context->ext_proc && context->ext_args) {
+                        int k, m;
+                        int nargs = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                                temp_frame->procedure->locals]->int_value;
+                        for (k = 0, m = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                             k < nargs && k < context->ext_argc;
+                             k++, m++) {
+                            copy_value(context->ext_args[k], temp_frame->locals[m]);
+                        }
+                    }
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -2380,7 +4488,16 @@ START_OF_INSTRUCTIONS
                     free_frame(temp_frame);
                     goto interprt_finished;
                 }
+                // Set the numeric context of the decimal plugin
+                if (current_frame->decimal) {
+                    current_frame->decimal->num_context = &current_frame->num_context;
+                    current_frame->decimal->syncNumericContext(current_frame->decimal);
+                }
+                HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
+#ifndef NTHREADED
+                current_module = current_frame->procedure->binarySpace->module;
+#endif
                 CALC_DISPATCH_MANUAL
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
@@ -2644,13 +4761,6 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(MINATTRS_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - MINATTRS R%lu,R%lu\n", REG_IDX(1),REG_IDX(2));
             if (op2RI > op1R->num_attributes) {
-                /* We need to add attributes */
-                if (op2RI > op1R->max_num_attributes) {
-                    /* We need to increase the size of the buffer */
-                    /* Make the buffer double sized by setting the number of attributes */
-                    set_num_attributes(op1R, op2RI * 2);
-                }
-                /* Set the number of attributes to the requested number */
                 set_num_attributes(op1R, op2RI);
             }
             DISPATCH
@@ -2661,13 +4771,6 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(MINATTRS_REG_INT) CALC_DISPATCH(2)
             DEBUG("TRACE - MINATTRS R%lu,%d\n", REG_IDX(1),(int)op2I);
             if (op2I > op1R->num_attributes) {
-                /* We need to add attributes */
-                if (op2I > op1R->max_num_attributes) {
-                    /* We need to increase the size of the buffer */
-                    /* Make the buffer double sized by setting the number of attributes */
-                    set_num_attributes(op1R, op2I * 2);
-                }
-                /* Set the number of attributes to the requested number */
                 set_num_attributes(op1R, op2I);
             }
             DISPATCH
@@ -2678,12 +4781,6 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(MINATTRS_REG_REG_INT) CALC_DISPATCH(3)
         DEBUG("TRACE - MINATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
         if (op2RI + op3I > op1R->num_attributes) {
-            /* We need to add attributes */
-            if (op2RI + op3I > op1R->max_num_attributes) {
-                /* We need to increase the size of the buffer */
-                /* Make the buffer double sized by setting the number of attributes */
-                set_num_attributes(op1R, (op2RI + op3I) * 2);
-            }
             /* Set the number of attributes to the requested number */
             set_num_attributes(op1R, op2RI + op3I);
         }
@@ -2695,12 +4792,6 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(MINATTRS_REG_INT_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - MINATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
             if (op2I + op3I > op1R->num_attributes) {
-                /* We need to add attributes */
-                if (op2I + op3I > op1R->max_num_attributes) {
-                    /* We need to increase the size of the buffer */
-                    /* Make the buffer double sized by setting the number of attributes */
-                    set_num_attributes(op1R, (op2I + op3I) * 2);
-                }
                 /* Set the number of attributes to the requested number */
                 set_num_attributes(op1R, op2I + op3I);
             }
@@ -2860,10 +4951,10 @@ START_OF_INSTRUCTIONS
             {
                 int i = op1R->string_length - 1;
                 while (i >= 0 && op1R->string_value[i] == ' ') {
-                    op1R->string_value[i] = '\0';
                     i--;
                 }
                 op1R->string_length = i + 1;
+                null_terminate_string_buffer(op1R);
             }
             DISPATCH
 
@@ -2881,12 +4972,12 @@ START_OF_INSTRUCTIONS
 
                 if (i >= j) {
                     op1R->string_length = 0;
-                    op1R->string_value[0] = '\0';
+                    null_terminate_string_buffer(op1R);
                 } else {
                     op1R->string_length = op1R->string_length - i;
                     memcpy(op1R->string_value, op1R->string_value + i,
                            op1R->string_length);
-                    op1R->string_value[op1R->string_length] = '\0';
+                    null_terminate_string_buffer(op1R);
                 }
             }
             DISPATCH
@@ -3645,7 +5736,101 @@ START_OF_INSTRUCTIONS
             DEBUG("TRACE - IMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI % op3RI)
             DISPATCH
- /* ------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------
+ *  FMOD_REG_REG_FLOAT Float Modulo (op1=op2 & op3)
+ *  -----------------------------------------------------------------------------------
+*/
+    START_INSTRUCTION(FMOD_REG_REG_FLOAT) CALC_DISPATCH(3)
+    DEBUG("TRACE - FMOD R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+    REG_RETURN_FLOAT(fmod(op2RF, op3F))
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+*  FMOD_REG_FLOAT_REG  Float Modulo (op1=op2 % op3)
+*  -----------------------------------------------------------------------------------
+*/
+START_INSTRUCTION(FMOD_REG_FLOAT_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - FMOD R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+    REG_RETURN_FLOAT(fmod(op2F, op3RF))
+    DISPATCH
+/* -----------------------------------------------------------------------------------
+*  FMOD_REG_REG_REG  Float Modulo (op1=op2 % op3)
+*  -----------------------------------------------------------------------------------
+*/
+START_INSTRUCTION(FMOD_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - FMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    REG_RETURN_FLOAT(fmod(op2RF, op3RF))
+    DISPATCH
+
+
+
+/* ------------------------------------------------------------------------------------
+ *  DMOD_REG_REG_DECIMAL Decimal Modulo (op1=op2 & op3)
+ *  -----------------------------------------------------------------------------------
+*/
+    START_INSTRUCTION(DMOD_REG_REG_DECIMAL) CALC_DISPATCH(3)
+    DEBUG("TRACE - DMOD R%d,R%d,%s\n", (int)REG_IDX(1), (int)REG_IDX(2), op3S->string);
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op3S->string);
+        value *work = value_f();
+        // First, Calculate the decimal division (truncated)
+        current_frame->decimal->decimalDiv(current_frame->decimal, work, op2R, op);
+        current_frame->decimal->decimalTruncate(current_frame->decimal, work, work);
+        // Now calculate the remainder
+        current_frame->decimal->decimalMul(current_frame->decimal, work, work, op);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, work);
+        // Clear the temporary value
+        clear_value(work);
+        free(work);
+        free_decimal_literal_value(op);
+    }
+    // Check for errors
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+*  FMOD_REG_DECIMAL_REG  Decimal Modulo (op1=op2 % op3)
+*  -----------------------------------------------------------------------------------
+*/
+START_INSTRUCTION(DMOD_REG_DECIMAL_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - FMOD R%d,%s,R%d\n", (int)REG_IDX(1), op2S->string, (int)REG_IDX(3));
+    {
+        value *op = decimal_literal_value(current_frame->decimal, op2S->string);
+        value *work = value_f();
+        // First, Calculate the decimal division (truncated)
+        current_frame->decimal->decimalDiv(current_frame->decimal, work, op, op3R);
+        current_frame->decimal->decimalTruncate(current_frame->decimal, work, work);
+        // Now calculate the remainder
+        current_frame->decimal->decimalMul(current_frame->decimal, work, work, op3R);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op, work);
+        // Clear the temporary value
+        clear_value(work);
+        free(work);
+        free_decimal_literal_value(op);
+    }
+    // Check for errors
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* -----------------------------------------------------------------------------------
+*  FMOD_REG_REG_REG Decimal Modulo (op1=op2 % op3)
+*  -----------------------------------------------------------------------------------
+*/
+START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - DMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        value *work = value_f();
+        // First, Calculate the decimal division (truncated)
+        current_frame->decimal->decimalDiv(current_frame->decimal, work, op2R, op3R);
+        current_frame->decimal->decimalTruncate(current_frame->decimal, work, work);
+        // Now calculate the remainder
+        current_frame->decimal->decimalMul(current_frame->decimal, work, work, op3R);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, work);
+        // Clear the temporary value
+        clear_value(work);
+        free(work);
+    }
+    // Check for errors
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
   *  IOR_REG_REG_REG bitwise OR (op1=op2|op3)                           pej 17 Oct 2021
   *  -----------------------------------------------------------------------------------
   */
@@ -3756,9 +5941,9 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(SAY_INT) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY %d\n", (int)op1I);
 #ifdef __32BIT__
-            mprintf("%ld\n", op1I);
+            rxvm_mprintf("%ld\n", op1I);
 #else
-            mprintf("%lld\n", op1I);
+            rxvm_mprintf("%lld\n", op1I);
 #endif
             DISPATCH
 
@@ -3768,7 +5953,7 @@ START_OF_INSTRUCTIONS
  */
         START_INSTRUCTION(SAY_CHAR) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY \'%c\'\n", (pc + (1))->cconst);
-            mprintf("%c\n", (pc + (1))->cconst);
+            rxvm_mprintf("%c\n", (pc + (1))->cconst);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -3777,7 +5962,7 @@ START_OF_INSTRUCTIONS
  */
         START_INSTRUCTION(SAY_FLOAT) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY %.15g\n", op1F);
-            mprintf("%.15g\n", op1F);
+            rxvm_mprintf("%.15g\n", op1F);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -3818,6 +6003,15 @@ START_OF_INSTRUCTIONS
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
+ *  FIDIV_REG_REG_REG  Integer Div for Float (op1=op2/op3)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FIDIV_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - FIDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_FLOAT(trunc(op2RF / op3RF))
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
  *  FMULT_REG_REG_REG  Float Mult (op1=op2/op3)                         pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
@@ -3854,6 +6048,15 @@ START_OF_INSTRUCTIONS
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
+ *  FIDIV_REG_REG_FLOAT  Integer Div for Float(op1=op2/op3)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FIDIV_REG_REG_FLOAT) CALC_DISPATCH(3)
+            DEBUG("TRACE - FIDIV R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            REG_RETURN_FLOAT(trunc(op2RF / op3F))
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
  *  FMULT_REG_REG_FLOAT  Float Mult (op1=op2/op3)                       pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
@@ -3879,18 +6082,38 @@ START_OF_INSTRUCTIONS
         DEBUG("TRACE - FDIV R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2F / op3RF)
             DISPATCH
+
 /* ------------------------------------------------------------------------------------
- *  FPOW_REG_REG_FLOAT  op1=op2**op2w Float operationn                   pej 3 March 2022
+ *  FIDIV_REG_FLOAT_REG  Integer Div for Float (op1=op2/op3)                           pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FIDIV_REG_FLOAT_REG) CALC_DISPATCH(3)
+        DEBUG("TRACE - FIDIV R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+        REG_RETURN_FLOAT(trunc(op2F / op3RF))
+        DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  FPOW_REG_REG_FLOAT  op1=op2**op3 Float operationn                   pej 3 March 2022
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(FPOW_REG_REG_FLOAT) CALC_DISPATCH(3)
-    DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    DEBUG("TRACE - DIVF R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
     {
         REG_RETURN_FLOAT(pow(op2RF,op3F))
     }
     DISPATCH
 /* ------------------------------------------------------------------------------------
- *  FPOW_REG_REG_REG  op1=op2**op2 Float operation                     pej 3 March 2021
+ *  FPOW_REG_FLOAT_REG  op1=op2**op3 Float operation
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FPOW_REG_FLOAT_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - DIVF R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+    {
+        REG_RETURN_FLOAT(pow(op2F,op3RF))
+    }
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  FPOW_REG_REG_REG  op1=op2**op3 Float operation                     pej 3 March 2021
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(FPOW_REG_REG_REG) CALC_DISPATCH(3)
@@ -3961,7 +6184,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(ITOS_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - ITOS R%lu\n", REG_IDX(1));
-            string_from_int(op1R);
+            int_to_string(&(current_frame->num_context), work1, op1R);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -3969,7 +6192,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(FTOS_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - FTOS R%lu\n", REG_IDX(1));
-            string_from_float(op1R);
+            float_to_string(&(current_frame->num_context), work1, op1R);
             DISPATCH
 /* ------------------------------------------------------------------------------------
  *  ITOF_REG  Set register float value from its int value
@@ -4080,7 +6303,7 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(FFORMAT_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - FFORMAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             prep_string_buffer(op1R,SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
-            op3R->string_value[op3R->string_length]='\0';    // terminate format string explicitly, rexx vars aren't!
+            null_terminate_string_buffer(op3R);    // terminate format string explicitly, rexx vars aren't!
             op1R->string_length = snprintf(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value);
             op1R->string_pos = 0;
   #ifndef NUTF8
@@ -4099,7 +6322,7 @@ START_OF_INSTRUCTIONS
  */
         START_INSTRUCTION(FEXTR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - FEXTR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            extract_double_decimal(op1R,op2R,op3R->float_value);
+            extract_double_decimal(&(current_frame->num_context), op1R, op2R, op3R->float_value);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -4175,11 +6398,11 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(HEXCHAR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - HEXCHAR R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
-                static const char hexconst[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
-                                                'e', 'f', 'A', 'B', 'C', 'D', 'E', 'f'};
+                static const char hexconst[] = "0123456789ABCDEF";
                 int ch, i, bytelen, mode;
                 unsigned char bytebuf[4] = {0, 0, 0, 0};
 
+                null_terminate_string_buffer(op1R);
                 if (strstr(op1R->string_value, "UTFV1") > 0) goto hexm2;
                 if (strstr(op1R->string_value, "UTFV2") > 0) goto hexm3;
 
@@ -4189,6 +6412,7 @@ START_OF_INSTRUCTIONS
 #else
                 ch=op2R->string_value[op3R->int_value];
 #endif
+                prep_string_buffer(op1R, 3);
                 split2hex(ch, 0)                    // split the character into their 2 byte hex presentation
                 PUTSTRLEN(op1R, 2)                  // hex length is 2
                 goto hexdispatch;
@@ -4202,6 +6426,7 @@ START_OF_INSTRUCTIONS
 #else
                 ch=op2R->string_value[op3R->int_value];
 #endif
+                prep_string_buffer(op1R, 9);
                 for (i = 0; i < 4; ++i) {
                     unsigned char b = bytebuf[i];
                     split2hex(b, i*2)                     // split the character into their 2 byte hex presentation
@@ -4215,6 +6440,7 @@ START_OF_INSTRUCTIONS
 #else
                 ch=op2R->string_value[op3R->int_value];
 #endif
+                prep_string_buffer(op1R, bytelen * 2 + 1);
                 for (i = 0; i < bytelen; ++i) {
                     unsigned char b = start[i];
                     split2hex(b, i * 2)                     // split the character into their 2 byte hex presentation
@@ -4487,6 +6713,20 @@ START_OF_INSTRUCTIONS
                 int ch;
 #ifndef NUTF8
                 len = (rxinteger) op2R->string_chars;
+#if ASCII_FAST_PATH
+                if (len==op2R->string_length) {  /* it is plain ASCII */
+                    if (op3R->int_value>=0) {
+                        result = ascii_fwd_blank((const unsigned char *)op2R->string_value, op3R->int_value, len);
+                        goto blankfound;
+                    } else {
+                        result = -op3R->int_value;   /* Convert to positive index */
+                        if (result >= len) result = len - 1;  /* Clamp to valid range */
+                        result = ascii_back_blank((unsigned char *)op2R->string_value, result, len);
+                        goto blankfound;
+                    }
+                }
+#endif
+
 #else
                 len = (rxinteger) op2R->string_length;
 #endif
@@ -4501,6 +6741,7 @@ START_OF_INSTRUCTIONS
                 }
                 result = -len;
             blankfound:
+             // printf("FBlank %d %d\n",fresult,result);
                 REG_RETURN_INT(result)
             }
             DISPATCH
@@ -4512,33 +6753,64 @@ START_OF_INSTRUCTIONS
  *  a negative return value means nothing found: to distinguish from offset 0
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(FNDNBLNK_REG_REG_REG) CALC_DISPATCH(3)
-           DEBUG("TRACE - FNDNBLNK R%lu R%lu\n", REG_IDX(1),
-              REG_IDX(2));
-    {
-        rxinteger result;
-        rxinteger len;
-        int ch;
-#ifndef NUTF8
-        len = (rxinteger)op2R->string_chars;
-#else
-        len = (rxinteger)op2R->string_length;
-#endif
-        for (result = op3R->int_value; result < len; result++) {
-#ifndef NUTF8
-            string_set_byte_pos(op2R, result);
-            utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
-#else
-            ch = op2R->string_value[result];
-#endif
-            if (!IS_UNICODE_WHITESPACE(ch)) goto nonblankfound;
-        }
-        result = -len;
+    START_INSTRUCTION(FNDNBLNK_REG_REG_REG)  CALC_DISPATCH(3)
+            DEBUG("TRACE - FNDNBLNK R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                rxinteger result;
+                rxinteger len;
+                int ch;
 
-    nonblankfound:
-        REG_RETURN_INT(result)
-    }
-    DISPATCH
+#ifndef NUTF8
+             len = (rxinteger)op2R->string_chars;
+#if ASCII_FAST_PATH
+             if (len==op2R->string_length) {  /* it is plain ASCII */
+                   if (op3R->int_value>=0) {
+                        result = ascii_fwd_nonblank((const unsigned char *)op2R->string_value, op3R->int_value, len);
+                        goto nonblankfound;
+                    } else {
+                        result = -op3R->int_value;   /* Convert to positive index */
+                        if (result >= len) result = len - 1;  /* Clamp to valid range */
+                        result = ascii_back_nonblank((unsigned char *)op2R->string_value, result, len);
+                        goto nonblankfound;
+                    }
+             }
+#endif
+#else
+                len = (rxinteger)op2R->string_length;
+#endif
+                result = op3R->int_value;
+
+                if (result >= 0) {  // FORWARD SEARCH
+                    for (; result < len; result++) {
+#ifndef NUTF8
+                        string_set_byte_pos(op2R, result);
+                        utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+#else
+                        ch = op2R->string_value[result];
+#endif
+                        if (!IS_UNICODE_WHITESPACE(ch)) goto nonblankfound;
+                    }
+                    result = -len;  // Not found in forward scan
+                } else { // REVERSE SEARCH
+                    result = -result;  // Convert to positive index
+                    if (result >= len) result = len - 1;  // Clamp to valid range
+                    for (; result >= 0; result--) {
+#ifndef NUTF8
+                        string_set_byte_pos(op2R, result);
+                        utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+#else
+                        ch = op2R->string_value[result];
+#endif
+                        if (!IS_UNICODE_WHITESPACE(ch)) goto nonblankfound;
+                    }
+                    result = -1;  // Not found in reverse scan
+                }
+                nonblankfound:
+         //       printf("FnBLANK %d %d\n",fresult,result);
+                REG_RETURN_INT(result)
+            }
+            DISPATCH
+
  /* ------------------------------------------------------------------------------------
   *  GETBYTE_REG_REG_REG  Int op1 = op2[op3]                             pej 19 Oct 2021
   *  -----------------------------------------------------------------------------------
@@ -4549,7 +6821,6 @@ START_OF_INSTRUCTIONS
     /* TODO */
     REG_RETURN_INT(0)
     DISPATCH
-
 /* ------------------------------------------------------------------------------------
  *  CONCCHAR_REG_REG_REG  op1=op2[op3]                                pej 27 August 2021
  *  -----------------------------------------------------------------------------------
@@ -4629,25 +6900,20 @@ START_OF_INSTRUCTIONS
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  SUBSTRING_REG_REG_REG op1=substr(op2,op3) substring from  offset op3  pej 12 November 2021
- *
- *  !!! the position parameter is offset +1, this is an exception from normally     !!!
- *  !!! using the offset. Reason: this instruction will be used directly from rexx  !!!
- *  !!  so we save one instruction                                                  !!
- *  -----------------------------------------------------------------------------------
- */
+ *  SUBSTR_REG_REG_REG op1 = substr(op2, length)
+ *  Extracts 'length' codepoints from op2, starting at the cursor previously set by
+ *  SETSTRPOS. The source cursor is stored as byte + codepoint positions on the value.
+ * ----------------------------------------------------------------------------------- */
+
+        START_INSTRUCTION(SUBSTR_REG_REG_REG)
         START_INSTRUCTION(SUBSTRING_REG_REG_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - SUBSTRING R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+            DEBUG("TRACE - SUBSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             {
-                rxinteger offset = op3R->int_value - 1;   /* make position to offset  */
-                rxinteger len, i;
-                int ch;
-                PUTSTRLEN(op1R, 0)      /* reset length of target  */
-                GETSTRLEN(len, op2R)
-                for (i = offset; i < len; i++) {
-                    GETSTRCHAR(ch, op2R, i)
-                    op2R->int_value = ch;
-                    string_concat_char(op1R, op2R);
+                rxinteger length = op3R->int_value;
+                if (length <= 0) {
+                    PUTSTRLEN(op1R, 0);
+                } else {
+                    string_slice_from_cursor(op1R, op2R, (size_t) length);
                 }
             }
             DISPATCH
@@ -4659,26 +6925,23 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(SUBSTCUT_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SUBSTCUT R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
 
-            PUTSTRLEN(op1R,op2R->int_value)
-
-        DISPATCH
+        /* input parm op2 defines how many leading codepoints remain in the string */
+           string_truncate_chars(op1R, (size_t) op2R->int_value);
+           DISPATCH
 
 /* ------------------------------------------------------------------------------------
  *  PADSTR_REG_REG_REG op1=op2(repeated op3 times)                 pej 13 November 2021
+ *  requires in op2R the codepoint of the character
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(PADSTR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - PADSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
-                int pad;
                 int i;
-                PUTSTRLEN(op1R, 0)       /* reset length of target  */
-                GETSTRCHAR(pad, op2R, 0)      /* fetch pad character   */
-                op2R->int_value = pad;
                 for (i = 0; i < op3R->int_value; i++) {
                     string_concat_char(op1R, op2R);
                 }
-            }
+             }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -4690,25 +6953,61 @@ START_OF_INSTRUCTIONS
         DISPATCH
 /* ------------------------------------------------------------------------------------
  *  find substring in string                                           pej 27 June 2025
- *  returned is the offset 1-based
- *  0 mean nothing found
+ *  the initial offset is in R1: it is 1-based
+ *  returned is the offset 1-based both for better performance in calling REXX scripts
+ *  In UTF builds, both the input and output positions are codepoint-based.
+ *  0 means nothing found
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(STRPOS_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - STRPOS R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 char *charpos;
-                rxinteger offset=op1RI;
-                offset--;    // make position an offset
-                if (offset < 0 || offset >= op3R->string_length) {
-                    REG_RETURN_INT(0);  // Or -1, depending on your logic
+                rxinteger start_pos = op1RI;
+
+                if (start_pos <= 0) {
+                    REG_RETURN_INT(0);
                 } else {
-                    op2R->string_value[op2R->string_length]=0;
-                    op3R->string_value[op3R->string_length]=0;
-                    charpos = strstr(op3R->string_value + offset, op2R->string_value);
-                    if (charpos > 0) offset = charpos - op3R->string_value;
-                    else offset = -1;
-                    REG_RETURN_INT(offset + 1)       // make offset a position
+                    null_terminate_string_buffer(op2R);
+                    null_terminate_string_buffer(op3R);
+#ifndef NUTF8
+                    {
+                        size_t start_offset;
+                        size_t saved_string_pos = op3R->string_pos;
+                        size_t saved_string_char_pos = op3R->string_char_pos;
+                        char *search_start;
+
+                        start_offset = (size_t)(start_pos - 1);
+                        if (start_offset >= op3R->string_chars) {
+                            REG_RETURN_INT(0);
+                        } else {
+                            string_set_byte_pos(op3R, start_offset);
+                            search_start = op3R->string_value + op3R->string_pos;
+                            charpos = (char *)utf8str(search_start, op2R->string_value);
+                            op3R->string_pos = saved_string_pos;
+                            op3R->string_char_pos = saved_string_char_pos;
+
+                            if (charpos) {
+                                size_t byte_offset = (size_t)(charpos - op3R->string_value);
+                                REG_RETURN_INT((rxinteger)(utf8nlen(op3R->string_value, byte_offset) + 1));
+                            } else {
+                                REG_RETURN_INT(0);
+                            }
+                        }
+                    }
+#else
+                    {
+                        rxinteger offset = start_pos - 1;    // make position an offset
+                        if (offset >= op3R->string_length) {
+                            REG_RETURN_INT(0);
+                        } else {
+                            charpos = strstr(op3R->string_value + offset, op2R->string_value);
+                            if (charpos) offset = (rxinteger)(charpos - op3R->string_value);
+                            else offset = -1;
+                            REG_RETURN_INT(offset + 1);      // make offset a position
+                        }
+                    }
+#endif
                 }
             }
             DISPATCH
@@ -4947,7 +7246,7 @@ START_OF_INSTRUCTIONS
 #elif defined(_WIN32)
         strcpy(vers, "windows ");
 #elif defined(__APPLE__)
-        strcpy(vers, "macosx ");
+        strcpy(vers, "macOS ");
 #elif defined(__CMS__)
         strcpy(vers, "cms ");
 #else
@@ -4969,7 +7268,7 @@ START_OF_INSTRUCTIONS
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  rxhash  returns hash of a string                                  pej 24. June 2023
+ *  rxhash  returns hash of a string it runs in reverse order         pej 24. June 2023
  *  op1=hash(op2,op3)
  *      op2=string
  *      op3=length(string)
@@ -4980,33 +7279,26 @@ START_OF_INSTRUCTIONS
 
     {
 #ifdef __32BIT__
-        uint32_t hash, FNVOffset, FNV_PRIME;
-        FNV_PRIME=16777619;
-        FNVOffset=2166136261U;
+        uint32_t hash=0;
 #else
-        uint64_t hash, FNVOffset, FNV_PRIME;
-        FNV_PRIME = 1099511628211;
-        FNVOffset = 14695981039346656037U;
+        uint64_t hash=0;
 #endif
-        int i1, ch, len;
-        char str[128];
-
-        hash = FNVOffset;
-        GETSTRLEN(len, op2R)
-        for (i1 = 0; i1 < len; i1++) {
-            GETSTRCHAR(ch, op2R, i1)
-            hash = hash ^ (ch);          // xor next byte into the bottom of the hash
-            hash = hash * FNV_PRIME;     // Multiply by prime number found to work well
+        int i1,len;
+        GETSTRLEN(len, op2R);
+        if(len<=0) len=op2R->string_length;
+        else if(op2R->string_length<len) len=op2R->string_length;
+        for (i1 = len - 1; i1 >= 0; i1--) {
+            hash = (unsigned char)op2R->string_value[i1] + (hash << 6) + (hash << 16) - hash;
         }
+        hash ^= (hash >> 16);
 #ifdef __32BIT__
-        sprintf(str, "%lu", hash);
+        hash = hash & 0x7FFFFFFF
 #else
-        sprintf(str, "%llu", hash);
+        hash = hash & 0x7FFFFFFFFFFFFFFF;
 #endif
-        set_null_string(op1R, str);
+        op1R->int_value = hash;
      }
-
-            DISPATCH
+     DISPATCH
 /* ------------------------------------------------------------------------------------------
  *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
  *  -----------------------------------------------------------------------------------------
@@ -5024,8 +7316,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
      HRESULT hrReturnVal;
      rxinteger i1=-16;
     // rxfuncadd(rexxname,module,sysname)
-    op2R->string_value[op2R->string_length]=0;
-    op3R->string_value[op3R->string_length]=0;
+    null_terminate_string_buffer(op2R);
+    null_terminate_string_buffer(op3R);
     printf("Module %s\n",op3R->string_value);
 
     hDLL = LoadLibrary(op2R->string_value);
@@ -5047,8 +7339,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     char *error;
     rxinteger i1=-16;
     // rxfuncadd(rexxname,module,sysname)
-    op2R->string_value[op2R->string_length]=0;
-    op3R->string_value[op3R->string_length]=0;
+    null_terminate_string_buffer(op2R);
+    null_terminate_string_buffer(op3R);
     printf("Module %s\n",op3R->string_value);
     
     /* Open the shared object */
@@ -5062,7 +7354,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     error = dlerror();
     if (error != NULL) {
       printf( "!!! %s\n", error );
-      return (int)i1;
+      rc = (int)i1;
+      goto interprt_finished;
     }
     /* Close the object */
     dlclose( dl_handle );
@@ -5244,17 +7537,14 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - FREADB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
         {
             if (op3R->int_value == 0) {
-                if (op1R->binary_value) free(op1R->binary_value);
-                op1R->binary_value = 0;
-                op1R->binary_length = 0;
-                op1R->binary_buffer_length = 0;
+                clear_binary_payload(op1R);
             }
 
             else {
                 /* If the binary size is the same (and this is likely to be the case if we are in a loop) we can just
                  * reuse the buffer - otherwise free/malloc */
-                if (op1R->binary_length != op3R->int_value) {
-                    if (op1R->binary_value) free(op1R->binary_value);
+                if (op1R->native_payload_ops || op1R->binary_length != op3R->int_value) {
+                    clear_binary_payload(op1R);
                     op1R->binary_value = malloc(op3R->int_value);
                     op1R->binary_length = op3R->int_value;
                     op1R->binary_buffer_length = op1R->binary_length;
@@ -5462,12 +7752,64 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         }
         DISPATCH
 
-/* ---------------------------------------------------------------------------
- * load instructions not yet implemented generated from the instruction table
- *      and scan of this module                              pej 8. April 2021
- * ---------------------------------------------------------------------------
+
+    /* ------------------------------------------------------------------------------------
+ *  TRIMR_REG_REG_REG  Trim right with char                          pej updated Jan 2026
+ *  -----------------------------------------------------------------------------------
  */
-#include "instrmiss.h"
+        START_INSTRUCTION(TRIMR_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - TRIMR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            {
+                rxinteger i;
+                if (op1R != op2R) set_value_string(op1R, op2R);
+                i = op1R->string_length - 1;
+                while (i >= 0 && op1R->string_value[i] == op3R->string_value[0]) {
+                    i--;
+                }
+                op1R->string_length = i + 1;
+                null_terminate_string_buffer(op1R);
+            }
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  TRIML_REG_REG_REG  Trim left with char                           pej updated Jan 2026
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(TRIML_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - TRIML R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            {
+                rxinteger i = 0;
+                rxinteger j;
+                if (op1R != op2R) set_value_string(op1R, op2R);
+                j = op1R->string_length - 1;
+                while (i <= j && op1R->string_value[i] == op3R->string_value[0]) i++;
+
+                if (i > j) {
+                    op1R->string_length = 0;
+                } else {
+                    op1R->string_length = op1R->string_length - i;
+                    if (i > 0) memmove(op1R->string_value, op1R->string_value + i, op1R->string_length);
+                }
+                null_terminate_string_buffer(op1R);
+            }
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  TRUNC_REG_REG_REG  Truncate string                              pej updated Jan 2026
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(TRUNC_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - TRUNC R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            {
+                rxinteger len = op3R->int_value;
+                if (op1R != op2R) set_value_string(op1R, op2R);
+                if (len < 0) len = 0;
+                if (len < op1R->string_length) {
+                    op1R->string_length = len;
+                    null_terminate_string_buffer(op1R);
+                }
+            }
+            DISPATCH
 
         START_INSTRUCTION(IUNKNOWN)
         START_INSTRUCTION(INULL)
@@ -5489,6 +7831,371 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             rc = op1RI;
             goto interprt_finished;
 
+        START_INSTRUCTION(SETOBJTYPE_REG_STRING) CALC_DISPATCH(2)
+            DEBUG("TRACE - SETOBJTYPE R%lu,\"%.*s\"\n", REG_IDX(1), (int) op2S->string_len, op2S->string);
+            op1R->object_type_name = op2S->string;
+            op1R->object_type_name_length = op2S->string_len;
+            DISPATCH
+
+        START_INSTRUCTION(SRCMETHOD_REG_REG_STRING) CALC_DISPATCH(3)
+            {
+                proc_runtime *called_function;
+                const char *class_name;
+                size_t class_name_length;
+
+                DEBUG("TRACE - SRCMETHOD R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
+                      (int) op3S->string_len, op3S->string);
+
+                class_name = op2R->object_type_name;
+                class_name_length = op2R->object_type_name_length;
+                called_function = 0;
+
+                if (!class_name || !class_name_length) {
+                    char *proc_name;
+                    proc_name = build_runtime_member_name("<untyped>", 9, op3S->string, op3S->string_len);
+                    if (proc_name) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, proc_name);
+                        free(proc_name);
+                    }
+                    else {
+                        SET_SIGNAL(RXSIGNAL_FAILURE);
+                    }
+                    DISPATCH
+                }
+
+                called_function = resolve_runtime_method(context,
+                                                         class_name,
+                                                         class_name_length,
+                                                         op3S->string,
+                                                         op3S->string_len);
+                if (!called_function) {
+                    char *proc_name;
+                    proc_name = build_runtime_member_name(class_name, class_name_length, op3S->string, op3S->string_len);
+                    if (!proc_name) {
+                        SET_SIGNAL(RXSIGNAL_FAILURE);
+                        DISPATCH
+                    }
+                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, proc_name);
+                    free(proc_name);
+                    DISPATCH
+                }
+
+                value_zero(op1R);
+                op1R->int_value = (rxinteger) called_function;
+            }
+            DISPATCH
+
+        START_INSTRUCTION(SRCFPROC_REG_STRING_REG) CALC_DISPATCH(3)
+            {
+                proc_runtime *called_function;
+                char *error_message;
+
+                DEBUG("TRACE - SRCFPROC R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
+                      (int) op2S->string_len, op2S->string, REG_IDX(3));
+
+                called_function = 0;
+                error_message = 0;
+
+                if (!resolve_runtime_factory(context,
+                                             op2S->string,
+                                             op2S->string_len,
+                                             (rxinteger) op3R->int_value,
+                                             (&(op3R)) + 1,
+                                             &called_function,
+                                             &error_message)) {
+                    if (error_message) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, error_message);
+                        free(error_message);
+                    } else {
+                        SET_SIGNAL(RXSIGNAL_FAILURE);
+                    }
+                    DISPATCH
+                }
+
+                value_zero(op1R);
+                op1R->int_value = (rxinteger) called_function;
+            }
+            DISPATCH
+
+        START_INSTRUCTION(TYPEOF_REG_REG) CALC_DISPATCH(2)
+            {
+                char *type_name;
+
+                DEBUG("TRACE - TYPEOF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+
+                if (op2R->object_type_name && op2R->object_type_name_length > 0) {
+                    type_name = runtime_internal_type_to_source_name(op2R->object_type_name,
+                                                                     op2R->object_type_name_length);
+                } else {
+                    type_name = strdup(".object");
+                }
+
+                if (!type_name) {
+                    SET_SIGNAL(RXSIGNAL_FAILURE);
+                    DISPATCH
+                }
+
+                value_zero(op1R);
+                set_null_string(op1R, type_name);
+                free(type_name);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(ISTYPE_REG_REG_STRING) CALC_DISPATCH(3)
+            DEBUG("TRACE - ISTYPE R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
+                  (int) op3S->string_len, op3S->string);
+            value_zero(op1R);
+            set_int(op1R, runtime_value_matches_object_type(context,
+                                                            op2R,
+                                                            op3S->string,
+                                                            op3S->string_len));
+            DISPATCH
+
+        START_INSTRUCTION(ASSERTTYPE_REG_STRING) CALC_DISPATCH(2)
+            DEBUG("TRACE - ASSERTTYPE R%lu,\"%.*s\"\n", REG_IDX(1),
+                  (int) op2S->string_len, op2S->string);
+            if (!runtime_value_matches_object_type(context, op1R, op2S->string, op2S->string_len)) {
+                char *error_message = build_runtime_cast_error(op1R, op2S->string, op2S->string_len);
+                if (error_message) {
+                    SET_SIGNAL_MSG(RXSIGNAL_CONVERSION_ERROR, error_message);
+                    free(error_message);
+                } else {
+                    SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
+                }
+                DISPATCH
+            }
+            DISPATCH
+
+        START_INSTRUCTION(SOCKNEW_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - SOCKNEW R%lu\n", REG_IDX(1));
+            set_int(op1R, rxvm_socket_new(context));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKCLOSE_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKCLOSE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            set_int(op1R, rxvm_socket_close(context, op2R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKCONNECT_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKCONNECT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            rxvm_socket_connect(context, op1R->int_value, op2R, op3R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKBIND_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKBIND R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            rxvm_socket_bind(context, op1R->int_value, op2R, op3R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKLISTEN_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKLISTEN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_listen(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKACCEPT_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKACCEPT R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            set_int(op1R, rxvm_socket_accept(context, op2R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKSHUTDOWN_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKSHUTDOWN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_shutdown(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKSEND_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKSEND R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_send_string(context, op2R->int_value, op3R));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKSENDB_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKSENDB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_send_binary(context, op2R->int_value, op3R));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKRECV_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKRECV R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            rxvm_socket_recv_string(context, op1R, op2R->int_value, op3R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKRECVB_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKRECVB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            rxvm_socket_recv_binary(context, op1R, op2R->int_value, op3R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKPENDING_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKPENDING R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            set_int(op1R, rxvm_socket_pending(context, op2R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKTIMEOUT_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKTIMEOUT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_timeout(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKBLOCKING_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKBLOCKING R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_blocking(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKNODELAY_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKNODELAY R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_nodelay(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKKEEPALIVE_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKKEEPALIVE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_keepalive(context, op2R->int_value, op3R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKPEER_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKPEER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            rxvm_socket_peer(context, op1R, op2R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKLOCAL_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKLOCAL R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            rxvm_socket_local(context, op1R, op2R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKSTATUS_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKSTATUS R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            set_int(op1R, rxvm_socket_status(context, op2R->int_value));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKERROR_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SOCKERROR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            rxvm_socket_error(context, op1R, op2R->int_value);
+            DISPATCH
+
+        START_INSTRUCTION(SOCKSTARTTLS_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKSTARTTLS R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            set_int(op1R, rxvm_socket_starttls(context, op2R->int_value, op3R));
+            DISPATCH
+
+        START_INSTRUCTION(SOCKCONNECTTLS_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SOCKCONNECTTLS R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            rxvm_socket_connect_tls(context, op1R->int_value, op2R, op3R->int_value);
+            DISPATCH
+
+        RESERVED_IMPL(RESERVED_084)
+        RESERVED_IMPL(RESERVED_085)
+        RESERVED_IMPL(RESERVED_086)
+        RESERVED_IMPL(RESERVED_087)
+        RESERVED_IMPL(RESERVED_088)
+        RESERVED_IMPL(RESERVED_089)
+        RESERVED_IMPL(RESERVED_090)
+        RESERVED_IMPL(RESERVED_091)
+        RESERVED_IMPL(RESERVED_092)
+        RESERVED_IMPL(RESERVED_093)
+        RESERVED_IMPL(RESERVED_094)
+        RESERVED_IMPL(RESERVED_095)
+        RESERVED_IMPL(RESERVED_096)
+        RESERVED_IMPL(RESERVED_097)
+        RESERVED_IMPL(RESERVED_098)
+        RESERVED_IMPL(RESERVED_099)
+        RESERVED_IMPL(RESERVED_183)
+        RESERVED_IMPL(RESERVED_184)
+        RESERVED_IMPL(RESERVED_185)
+        RESERVED_IMPL(RESERVED_186)
+        RESERVED_IMPL(RESERVED_187)
+        RESERVED_IMPL(RESERVED_188)
+        RESERVED_IMPL(RESERVED_189)
+        RESERVED_IMPL(RESERVED_190)
+        RESERVED_IMPL(RESERVED_191)
+        RESERVED_IMPL(RESERVED_192)
+        RESERVED_IMPL(RESERVED_193)
+        RESERVED_IMPL(RESERVED_194)
+        RESERVED_IMPL(RESERVED_195)
+        RESERVED_IMPL(RESERVED_196)
+        RESERVED_IMPL(RESERVED_197)
+        RESERVED_IMPL(RESERVED_198)
+        RESERVED_IMPL(RESERVED_199)
+        RESERVED_IMPL(RESERVED_263)
+        RESERVED_IMPL(RESERVED_264)
+        RESERVED_IMPL(RESERVED_265)
+        RESERVED_IMPL(RESERVED_266)
+        RESERVED_IMPL(RESERVED_267)
+        RESERVED_IMPL(RESERVED_268)
+        RESERVED_IMPL(RESERVED_269)
+        RESERVED_IMPL(RESERVED_270)
+        RESERVED_IMPL(RESERVED_271)
+        RESERVED_IMPL(RESERVED_272)
+        RESERVED_IMPL(RESERVED_273)
+        RESERVED_IMPL(RESERVED_274)
+        RESERVED_IMPL(RESERVED_275)
+        RESERVED_IMPL(RESERVED_276)
+        RESERVED_IMPL(RESERVED_277)
+        RESERVED_IMPL(RESERVED_278)
+        RESERVED_IMPL(RESERVED_279)
+        RESERVED_IMPL(RESERVED_280)
+        RESERVED_IMPL(RESERVED_281)
+        RESERVED_IMPL(RESERVED_282)
+        RESERVED_IMPL(RESERVED_283)
+        RESERVED_IMPL(RESERVED_284)
+        RESERVED_IMPL(RESERVED_285)
+        RESERVED_IMPL(RESERVED_286)
+        RESERVED_IMPL(RESERVED_287)
+        RESERVED_IMPL(RESERVED_288)
+        RESERVED_IMPL(RESERVED_289)
+        RESERVED_IMPL(RESERVED_290)
+        RESERVED_IMPL(RESERVED_291)
+        RESERVED_IMPL(RESERVED_292)
+        RESERVED_IMPL(RESERVED_293)
+        RESERVED_IMPL(RESERVED_294)
+        RESERVED_IMPL(RESERVED_295)
+        RESERVED_IMPL(RESERVED_296)
+        RESERVED_IMPL(RESERVED_297)
+        RESERVED_IMPL(RESERVED_298)
+        RESERVED_IMPL(RESERVED_299)
+        RESERVED_IMPL(RESERVED_401)
+        RESERVED_IMPL(RESERVED_402)
+        RESERVED_IMPL(RESERVED_403)
+        RESERVED_IMPL(RESERVED_404)
+        RESERVED_IMPL(RESERVED_405)
+        RESERVED_IMPL(RESERVED_406)
+        RESERVED_IMPL(RESERVED_407)
+        RESERVED_IMPL(RESERVED_408)
+        RESERVED_IMPL(RESERVED_409)
+        RESERVED_IMPL(RESERVED_410)
+        RESERVED_IMPL(RESERVED_411)
+        RESERVED_IMPL(RESERVED_412)
+        RESERVED_IMPL(RESERVED_413)
+        RESERVED_IMPL(RESERVED_414)
+        RESERVED_IMPL(RESERVED_415)
+        RESERVED_IMPL(RESERVED_416)
+        RESERVED_IMPL(RESERVED_417)
+        RESERVED_IMPL(RESERVED_418)
+        RESERVED_IMPL(RESERVED_419)
+        RESERVED_IMPL(RESERVED_420)
+        RESERVED_IMPL(RESERVED_421)
+        RESERVED_IMPL(RESERVED_422)
+        RESERVED_IMPL(RESERVED_423)
+        RESERVED_IMPL(RESERVED_424)
+        RESERVED_IMPL(RESERVED_425)
+        RESERVED_IMPL(RESERVED_426)
+        RESERVED_IMPL(RESERVED_427)
+        RESERVED_IMPL(RESERVED_428)
+        RESERVED_IMPL(RESERVED_429)
+        RESERVED_IMPL(RESERVED_430)
+        RESERVED_IMPL(RESERVED_431)
+        RESERVED_IMPL(RESERVED_432)
+        RESERVED_IMPL(RESERVED_433)
+        RESERVED_IMPL(RESERVED_434)
+        RESERVED_IMPL(RESERVED_435)
+        RESERVED_IMPL(RESERVED_436)
+        RESERVED_IMPL(RESERVED_437)
+        RESERVED_IMPL(RESERVED_438)
+        RESERVED_IMPL(RESERVED_439)
+        RESERVED_IMPL(RESERVED_440)
+        RESERVED_IMPL(RESERVED_441)
+        RESERVED_IMPL(RESERVED_442)
+        RESERVED_IMPL(RESERVED_443)
+        RESERVED_IMPL(RESERVED_444)
+        RESERVED_IMPL(RESERVED_445)
+        RESERVED_IMPL(RESERVED_446)
+        RESERVED_IMPL(RESERVED_447)
+        RESERVED_IMPL(RESERVED_448)
+        RESERVED_IMPL(RESERVED_449)
+
     END_OF_INSTRUCTIONS
 
     interprt_finished:
@@ -5507,29 +8214,17 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     /* We need to loop through each procedure in each module */
     DEBUG("Deallocating Frames and Registers\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i = context->modules[mod_index]->proc_head;
-        while (i != -1) {
-            proc_constant *c_entry = (proc_constant*) (context->modules[mod_index]->segment.const_pool + i);
-            if ((c_entry)->start != SIZE_MAX) {
+        size_t i;
+        for (i = 0; i < context->modules[mod_index]->procedure_count; i++) {
+            proc_runtime *runtime_proc = &context->modules[mod_index]->procedures[i];
+            if (runtime_proc->frame_free_list == &runtime_proc->frame_free_list_head) {
                 /* Free frames in the procedures free list */
-                while (*(c_entry->frame_free_list)) {
-                    temp_frame = *(c_entry->frame_free_list);
-                    *(c_entry->frame_free_list) = temp_frame->prev_free;
+                while (*(runtime_proc->frame_free_list)) {
+                    temp_frame = *(runtime_proc->frame_free_list);
+                    *(runtime_proc->frame_free_list) = temp_frame->prev_free;
                     clear_frame(temp_frame);
                     free(temp_frame);
                 }
-            }
-            i = c_entry->next;
-        }
-    }
-
-    /* Deallocate Globals */
-    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i;
-        for (i = 0; i < context->modules[mod_index]->segment.globals; i++) {
-            if (!context->modules[mod_index]->globals_dont_free[i]) {
-                clear_value(context->modules[mod_index]->globals[i]);
-                free(context->modules[mod_index]->globals[i]);
             }
         }
     }
@@ -5537,6 +8232,18 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     /* Free signal value */
     clear_value(signal_value);
     free(signal_value);
+
+    /* Free interrupt action value */
+    clear_value(interrupt_action_value);
+    free(interrupt_action_value);
+
+    /* Free work registers */
+    clear_value(work1);
+    free(work1);
+    clear_value(work2);
+    free(work2);
+    clear_value(work3);
+    free(work3);
 
     /* Free interrupt argument */
     clear_value(interrupt_arg);
@@ -5558,7 +8265,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     }
 
 #ifndef NDEBUG
-    if (context->debug_mode) mprintf("Interpreter Finished\n");
+    if (context->debug_mode) rxvm_mprintf("Interpreter Finished with rc=%d\n", rc);
 #endif
 
     return rc;

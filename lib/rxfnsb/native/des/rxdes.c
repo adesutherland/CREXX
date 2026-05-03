@@ -6,7 +6,7 @@
 /*                                                                  */
 /* Function: crexx external functions RxDesEncrypt and RxDesDecrypt */
 /*                                                                  */
-/* dependencies/calls: desbase.c CREXX/rxpa                     */
+/* dependencies/calls: desbase.c CREXX/rxpa                         */
 /*                                                                  */
 /* Ported to CREXX by Adrian Sutherland 2024                        */
 /*------------------------------------------------------------------*/

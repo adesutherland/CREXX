@@ -1,0 +1,17 @@
+/* Treemap Plugin Test */
+import id
+
+##cflags def nset iflink 1buf 2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+
+do i= 1 to 10
+   say 'Loop 'i
+   say copies('-',50)
+   say "UUIDV7    "_uuidv7()
+   say "UUID      "_uuid()   ##
+   say "UUIDT     "_uuidt()  ## time based UUID
+   say "ULID      "_ulid()   ##
+   say "NANOID    "_nanoid()
+   say "SNOWFLAKE "_snowflake()
+   say "BASE58    "_base58()
+   say " "
+end

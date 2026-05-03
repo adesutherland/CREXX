@@ -1,10 +1,33 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 #include "platform.h"
 #include "rxdadism.h"
-#include "rxvminst.h"
 #include "rxbin.h"
 //#include <locale.h>
 #ifdef _WIN32
@@ -36,44 +59,26 @@ static void error_and_exit(int rc, char* message) {
 }
 
 static void license() {
-    char *message =
-            "cREXX License (MIT)\n"
-            "Copyright (c) 2020-2024 Adrian Sutherland\n\n"
-
-            "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
-            "of this software and associated documentation files (the \"Software\"), to deal\n"
-            "in the Software without restriction, including without limitation the rights\n"
-            "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
-            "copies of the Software, and to permit persons to whom the Software is\n"
-            "furnished to do so, subject to the following conditions:\n\n"
-
-            "The above copyright notice and this permission notice shall be included in all\n"
-            "copies or substantial portions of the Software.\n\n"
-
-            "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
-            "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
-            "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
-            "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
-            "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
-            "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
-            "SOFTWARE.\n\n"
-            "See https://github.com/adesutherland/CREXX for project details\n";
+    char *message = CREXX_LICENSE_TEXT;
 
     printf("%s",message);
 }
 
 int main(int argc, char *argv[]) {
-
     FILE *fp;
     bin_space pgm;
     char *file_name;
     char *location = 0;
+    char *combined_location = 0;
+    char *exe_path = 0;
     char *output_file_name = 0;
     FILE *output = stdout;
     int i;
     int print_all_constant_pool = 0;
     module_file *module;
     size_t modules_processed = 0;
+
+    platform_install_signal_handlers();
 
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
@@ -130,13 +135,27 @@ int main(int argc, char *argv[]) {
         error_and_exit(2, "Missing input file");
     }
 
+    /* Add current and executable path to location */
+    exe_path = exepath();
+    if (location) {
+        combined_location = malloc(strlen(location) + strlen(exe_path) + 5);
+        sprintf(combined_location, ".;%s;%s", location, exe_path);
+        location = combined_location;
+    } else {
+        combined_location = malloc(strlen(exe_path) + 5);
+        sprintf(combined_location, ".;%s", exe_path);
+        location = combined_location;
+    }
+    free(exe_path);
+
     file_name = argv[i++];
 
     if (i < argc) {
         error_and_exit(2, "Unexpected Arguments");
     }
 
-    fp = openfile(file_name, "rxbin", location, "rb");
+    const char *type_bin = has_any_extension(file_name) ? "" : "rxbin";
+    fp = openfile(file_name, (char*)type_bin, location, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR: opening file %s\n", file_name);
         exit (-1);
@@ -150,7 +169,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    init_ops();
+    /* init_ops(); - NO LONGER NEEDED */
 
     i = 0;
     while (i == 0) {
@@ -189,7 +208,9 @@ int main(int argc, char *argv[]) {
         fclose(output);
     }
 
-    free_ops();
+    if (combined_location) free(combined_location);
+
+    /* free_ops(); - NO LONGER NEEDED */
 
     return 0;
 }

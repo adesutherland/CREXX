@@ -1,0 +1,156 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_object_return_assign.rexx
+ * BUILT                  : 2026-04-29 14:16:43
+ */
+
+.meta "inline_test_object_return_assign.box"="b" ".unknown" .class
+.meta "inline_test_object_return_assign.box.name"="b" ".string" .attr 1
+.srcfile="inline_test_object_return_assign.rexx"
+.globals=0
+
+main() .locals=22
+   .meta "inline_test_object_return_assign.main"="b" ".int" main() ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting object return assign inline test...\""
+   say "Starting object return assign inline test..."
+   .src 5:3="box = buildBox(\"seed\")"
+   .src 16:3="value = .Box(initial)"
+   .src 31:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r3,2
+   .src 31:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r3,"inline_test_object_return_assign.box"
+   .src 33:5="name = initial"
+   load r14,"seed"
+   linkattr1 r13,r3,1
+   scopy r13,r14
+   unlink r13
+   .src 34:5="return"
+   copy r2,r3
+   .src 17:3="return"
+   copy r0,r2
+   .src 6:3="say describeBox(box)"
+   .meta "inline_test_object_return_assign.main.box"="b" ".box" r0
+   .src 6:7="describeBox"
+   .src 21:3="return value.getName"
+   .src 21:10="value"
+   .src 21:10="value"
+   copy r5,r0
+   .src 37:5="return name"
+   linkattr1 r13,r5,1
+   scopy r15,r13
+   acopy r15,r13
+   unlink r13
+   br l168bexprend
+l168bexprend:
+   scopy r16,r15
+   acopy r16,r15
+   br l165bexprend
+l165bexprend:
+   say r16
+   .src 7:3="other = buildBox(\"temp\")"
+   .src 16:3="value = .Box(initial)"
+   .src 31:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r7,2
+   .src 31:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r7,"inline_test_object_return_assign.box"
+   .src 33:5="name = initial"
+   load r17,"temp"
+   linkattr1 r16,r7,1
+   scopy r16,r17
+   unlink r16
+   .src 34:5="return"
+   copy r6,r7
+   .src 17:3="return"
+   copy r1,r6
+   .src 8:3="say describeBox(other)"
+   .meta "inline_test_object_return_assign.main.other"="b" ".box" r1
+   .src 8:7="describeBox"
+   .src 21:3="return value.getName"
+   .src 21:10="value"
+   .src 21:10="value"
+   copy r9,r1
+   .src 37:5="return name"
+   linkattr1 r16,r9,1
+   scopy r18,r16
+   acopy r18,r16
+   unlink r16
+   br l201bexprend
+l201bexprend:
+   scopy r19,r18
+   acopy r19,r18
+   br l198bexprend
+l198bexprend:
+   say r19
+   .src 9:3="call replaceBoxRef(box)"
+   .src 25:3="value = .Box(\"ref\")"
+   .src 31:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r11,2
+   .src 31:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r11,"inline_test_object_return_assign.box"
+   .src 33:5="name = initial"
+   load r20,"ref"
+   linkattr1 r19,r11,1
+   scopy r19,r20
+   unlink r19
+   .src 34:5="return"
+   copy r0,r11
+   .src 10:3="say box.getName"
+   .src 10:7="box"
+   .src 10:7="box"
+   copy r12,r0
+   .src 37:5="return name"
+   linkattr1 r19,r12,1
+   scopy r21,r19
+   acopy r21,r19
+   unlink r19
+   br l225bexprend
+l225bexprend:
+   say r21
+   .src 11:3="say \"Object return assign inline test finished.\""
+   say "Object return assign inline test finished."
+   .src 12:3="return 0"
+   ret 0
+   .meta "inline_test_object_return_assign.main.box"
+   .meta "inline_test_object_return_assign.main.other"
+
+§inline_test_object_return_assign.box.§factory() .locals=3
+   .meta "inline_test_object_return_assign.box.§factory"="b" ".box" §inline_test_object_return_assign.box.§factory() "initial=.string"
+   .src 31:3="*: factory"
+   setattrs r1,2
+   setobjtype r1,"inline_test_object_return_assign.box"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 32:9="initial = .string"
+   .meta "inline_test_object_return_assign.box.§factory.initial"="b" ".string" a1
+   .meta "inline_test_object_return_assign.box.§factory.§factory"="b" ".box" r1
+   .src 33:5="name = initial"
+   linkattr1 r2,r1,1
+   scopy r2,a1
+   unlink r2
+   .src 34:5="return"
+   ret r1
+   .meta "inline_test_object_return_assign.box.§factory.initial"
+   .meta "inline_test_object_return_assign.box.§factory.§factory"
+
+§inline_test_object_return_assign.box.getname() .locals=2
+   .meta "inline_test_object_return_assign.box.getname"="b" ".string" §inline_test_object_return_assign.box.getname() ""
+   .src 36:3="getName: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 37:5="return name"
+   .meta "inline_test_object_return_assign.box.getname.§this"="b" ".box" a1
+   linkattr1 r1,a1,1
+   ret r1
+   .meta "inline_test_object_return_assign.box.getname.§this"

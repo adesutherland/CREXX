@@ -1,0 +1,2 @@
+Error in err_block_expr_missing_end.rexx @ 2:10 - #MISSING_END, "do"
+1 error(s) in source file

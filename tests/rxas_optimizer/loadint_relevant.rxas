@@ -1,0 +1,7 @@
+* load 0,1 implicitly writes local r0 and reads local r1.
+
+main() .locals=2
+    swap r0,r1
+    load 0,1
+    swap r0,r1
+    ret

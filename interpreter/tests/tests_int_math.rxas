@@ -1,0 +1,185 @@
+/*
+ * interpreter/tests/tests_int_math.rxas
+ */
+
+.globals=0
+
+main() .locals=10
+    say "Test Suite: Integer Arithmetic"
+
+    /* IADD */
+    load r1, 10
+    iadd r1, r1, 20
+    ieq r0, r1, 30
+    brt iadd_pass, r0
+    say "FAIL: IADD"
+    br iadd_end
+iadd_pass:
+    say "PASS: IADD"
+iadd_end:
+
+    /* ISUB */
+    load r1, 50
+    isub r1, r1, 20
+    ieq r0, r1, 30
+    brt isub_pass, r0
+    say "FAIL: ISUB"
+    br isub_end
+isub_pass:
+    say "PASS: ISUB"
+isub_end:
+
+    /* IMULT */
+    load r1, 5
+    imult r1, r1, 6
+    ieq r0, r1, 30
+    brt imult_pass, r0
+    say "FAIL: IMULT"
+    br imult_end
+imult_pass:
+    say "PASS: IMULT"
+imult_end:
+
+    /* IDIV */
+    load r1, 100
+    idiv r1, r1, 3
+    ieq r0, r1, 33
+    brt idiv_pass, r0
+    say "FAIL: IDIV"
+    br idiv_end
+idiv_pass:
+    say "PASS: IDIV"
+idiv_end:
+
+    /* IMOD */
+    load r1, 100
+    imod r1, r1, 3
+    ieq r0, r1, 1
+    brt imod_pass, r0
+    say "FAIL: IMOD"
+    br imod_end
+imod_pass:
+    say "PASS: IMOD"
+imod_end:
+
+    /* INC */
+    load r1, 10
+    inc r1
+    ieq r0, r1, 11
+    brt inc_pass, r0
+    say "FAIL: INC"
+    br inc_end
+inc_pass:
+    say "PASS: INC"
+inc_end:
+
+    /* DEC */
+    load r1, 10
+    dec r1
+    ieq r0, r1, 9
+    brt dec_pass, r0
+    say "FAIL: DEC"
+    br dec_end
+dec_pass:
+    say "PASS: DEC"
+dec_end:
+
+    /* ISEX (Sign Extend/Negate) */
+    load r1, 10
+    isex r1
+    ieq r0, r1, -10
+    brt isex_pass, r0
+    say "FAIL: ISEX"
+    br isex_end
+isex_pass:
+    say "PASS: ISEX"
+isex_end:
+
+    /* IAND */
+    load r1, 12
+    iand r1, r1, 10
+    ieq r0, r1, 8
+    brt iand_pass, r0
+    say "FAIL: IAND"
+    br iand_end
+iand_pass:
+    say "PASS: IAND"
+iand_end:
+
+    /* IOR */
+    load r1, 12
+    ior r1, r1, 10
+    ieq r0, r1, 14
+    brt ior_pass, r0
+    say "FAIL: IOR"
+    br ior_end
+ior_pass:
+    say "PASS: IOR"
+ior_end:
+
+    /* IXOR */
+    load r1, 12
+    ixor r1, r1, 10
+    ieq r0, r1, 6
+    brt ixor_pass, r0
+    say "FAIL: IXOR"
+    br ixor_end
+ixor_pass:
+    say "PASS: IXOR"
+ixor_end:
+
+    /* ISHL */
+    load r1, 1
+    ishl r1, r1, 4
+    ieq r0, r1, 16
+    brt ishl_pass, r0
+    say "FAIL: ISHL"
+    br ishl_end
+ishl_pass:
+    say "PASS: ISHL"
+ishl_end:
+
+    /* ISHR */
+    load r1, 16
+    ishr r1, r1, 2
+    ieq r0, r1, 4
+    brt ishr_pass, r0
+    say "FAIL: ISHR"
+    br ishr_end
+ishr_pass:
+    say "PASS: ISHR"
+ishr_end:
+
+    /* INOT */
+    inot r1, 0
+    ieq r0, r1, -1
+    brt inot_pass, r0
+    say "FAIL: INOT"
+    br inot_end
+inot_pass:
+    say "PASS: INOT"
+inot_end:
+
+    /* Edge Case: Negative Numbers */
+    load r1, -10
+    iadd r1, r1, -20
+    ieq r0, r1, -30
+    brt neg_pass, r0
+    say "FAIL: Negative Add"
+    br neg_end
+neg_pass:
+    say "PASS: Negative Add"
+neg_end:
+
+    /* Edge Case: Zero */
+    load r1, 100
+    imult r1, r1, 0
+    ieq r0, r1, 0
+    brt zero_pass, r0
+    say "FAIL: Zero Multiply"
+    br zero_end
+zero_pass:
+    say "PASS: Zero Multiply"
+zero_end:
+
+    ret 0

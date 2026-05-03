@@ -1,36 +1,35 @@
 # About This Book
-The \crexx{} language is a further development, and variant of the
-\textsc{Rexx} language\footnote{Cowlishaw, 1979}.
 
-This language reference provides a comprehensive and detailed
-description of the syntax, semantics, and features of the \crexx{}
-programming language. It usually includes a complete listing of all
-the language constructs, such as statements, expressions, functions,
-classes, and modules, along with their syntax, parameters, and usage.
+This language reference documents the implemented \crexx{} language surface for
+Release 1 beta 1.
+
+The main release language is Level B: a typed REXX-family systems language
+compiled by `rxc`, assembled by `rxas`, and executed by the RXVM runtime.
+Level B is not a complete Classic REXX compatibility mode, and this reference
+does not describe planned future levels as current behaviour.
 
 ## Audience
 
-The \crexx{} language reference is aimed at experienced programmers who
-are familiar with the \textsc{Rexx} language. It is an
-essential resource for developers who need to write code in the
-language, debug programs, or create tools, while the \emph{\crexx{} User's Guide} serves as an introduction to
-the language and is intended for new users.
+This reference is for programmers who need precise syntax and behaviour:
 
-## History
+- application and library authors writing Level B source
+- contributors changing compiler, library, or VM behaviour
+- users inspecting generated RXAS or bytecode
+- maintainers checking whether documentation matches the implementation
 
-- This is the first version. It documents \crexx{} level B, which is a typed subset of Classic Rexx.
-
+New users should start with the README, the documentation map, and the
+programming guide. This book is the detailed reference.
 
 ## Document Structure
 
 This document is in three parts:
 
 Objectives
-: The objectives of the \crexx{} language and the concepts underlying its design, and acknowledgements.
+: Current design goals and the release scope.
 
 Overview
-: An overview and introduction to the \crexx{} language.
+: The language model, modules, calls, options, and program structure.
 
 Reference
-: The definition of the language.
-
+: Syntax and behaviour for types, literals, variables, operators, classes,
+  namespaces, numeric settings, statements, and libraries.

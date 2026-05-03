@@ -7,20 +7,34 @@ set(CMAKE_C_STANDARD 99)
 # -------------------------------------------------------------------------------------------
 set(plugin_name "system")       # add plugin name
 set(test_rexx "system_test")    # add rexx to test plugin
-set(use_precomp TRUE)           # TRUE pre compile needed, FALSE if not
+set(use_precomp FALSE)           # TRUE pre compile needed, FALSE if not
 
 # ===========================================================================================
 # The following sequence is generic and does not require modification.
 #   plugin_template(${plugin_name} ${test_rexx} PRECOMP)
 # ===========================================================================================
-  include(${CMAKE_SOURCE_DIR}/rxpa/CMakePluginTemplate.txt)
+include(${CMAKE_SOURCE_DIR}/rxpa/CMakePluginTemplate.txt)
 
-  plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
+plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 
-# Enable testing and define the test case
 enable_testing()
-# execute test
-add_test(NAME ${test_rexx}
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm ${test_rexx} rx_${plugin_name} ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+
+# Create the static link module
+add_static_plugin_target(_system system.c)
+
+#Add include directories - static version
+target_include_directories(_system_static PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/include
+    ${CMAKE_SOURCE_DIR}/rxpa
+    )
+
+set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
+add_test(
+        NAME test_system
+        COMMAND $<TARGET_FILE:rxvm> system_test_noopt.rxbin ${LIBRPATH}
+)
+
+set_tests_properties(test_system PROPERTIES
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )
+)

@@ -263,7 +263,7 @@ PROCEDURE (list_array)  {
     printf("Entry     Data   Range %d-%d\n",from,to);
     printf("-------------------------------------------------------\n");
     for (i=from-1;i<to;i++) {
-        printf("%0.7d   %s\n",i+1, GETSARRAY(ARG0,i));
+        printf("%.7d   %s\n",i+1, GETSARRAY(ARG0,i));
     }
     printf("%d Entries\n",to);
 }

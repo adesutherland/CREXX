@@ -1,0 +1,206 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : arg_semantics_object.rexx
+ * BUILT                  : 2026-04-30 16:47:30
+ */
+
+.meta "arg_semantics_object.box"="b" ".unknown" .class
+.meta "arg_semantics_object.box.name"="b" ".string" .attr 1
+.srcfile="arg_semantics_object.rexx"
+.globals=0
+
+main() .locals=28
+   .meta "arg_semantics_object.main"="b" ".int" main() ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="box = .Box(\"alpha\")"
+   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r1,2
+   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r1,"arg_semantics_object.box"
+   .src 32:5="name = initial"
+   load r17,"alpha"
+   linkattr1 r16,r1,1
+   scopy r16,r17
+   unlink r16
+   .src 33:5="return"
+   copy r0,r1
+   .src 5:3="say \"object-read=\" || readBox(box)"
+   .meta "arg_semantics_object.main.box"="b" ".box" r0
+   .src 5:25="readBox"
+   .src 15:3="return value.getName"
+   .src 15:10="value"
+   .src 15:10="value"
+   copy r3,r0
+   .src 36:5="return name"
+   linkattr1 r16,r3,1
+   scopy r18,r16
+   acopy r18,r16
+   unlink r16
+   br l171bexprend
+l171bexprend:
+   scopy r19,r18
+   acopy r19,r18
+   br l168bexprend
+l168bexprend:
+   concat r19,"object-read=",r19
+   say r19
+   .src 6:3="say \"object-mut=\" || replaceBox(box)"
+   .src 6:24="replaceBox"
+   .src 18:7="value"
+   copy r4,r0
+   .src 18:7="value"
+   acopy r4,r0
+   .src 19:3="value = .Box(\"local\")"
+   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r5,2
+   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r5,"arg_semantics_object.box"
+   .src 32:5="name = initial"
+   load r20,"local"
+   linkattr1 r19,r5,1
+   scopy r19,r20
+   unlink r19
+   .src 33:5="return"
+   copy r4,r5
+   .src 20:3="return value.getName"
+   load r21,1
+   settp r4,1
+   swap r22,r4
+   call r19,§arg_semantics_object.box.getname(),r21
+   swap r4,r22
+   scopy r22,r19
+   acopy r22,r19
+   br l178bexprend
+l178bexprend:
+   concat r22,"object-mut=",r22
+   say r22
+   .src 7:3="say \"object-after=\" || box.getName"
+   .src 7:26="box"
+   .src 7:26="box"
+   copy r6,r0
+   .src 36:5="return name"
+   linkattr1 r22,r6,1
+   scopy r21,r22
+   acopy r21,r22
+   unlink r22
+   br l208bexprend
+l208bexprend:
+   concat r21,"object-after=",r21
+   say r21
+   .src 8:3="say \"object-temp=\" || replaceBox(.Box(\"temp\"))"
+   .src 8:25="replaceBox"
+   .src 8:36=".Box"
+   .src 8:35="("
+   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r11,2
+   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r11,"arg_semantics_object.box"
+   .src 32:5="name = initial"
+   load r23,"temp"
+   linkattr1 r21,r11,1
+   scopy r21,r23
+   unlink r21
+   .src 33:5="return"
+   copy r21,r11
+   acopy r21,r11
+   br l237bexprend
+l237bexprend:
+   copy r9,r21
+   .src 18:7="value"
+   copy r10,r9
+   .src 18:7="value"
+   acopy r10,r9
+   .src 19:3="value = .Box(\"local\")"
+   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r12,2
+   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r12,"arg_semantics_object.box"
+   .src 32:5="name = initial"
+   load r24,"local"
+   linkattr1 r21,r12,1
+   scopy r21,r24
+   unlink r21
+   .src 33:5="return"
+   copy r10,r12
+   .src 20:3="return value.getName"
+   load r25,1
+   settp r10,1
+   swap r26,r10
+   call r21,§arg_semantics_object.box.getname(),r25
+   swap r10,r26
+   scopy r26,r21
+   acopy r26,r21
+   br l231bexprend
+l231bexprend:
+   concat r26,"object-temp=",r26
+   say r26
+   .src 9:3="call replaceBoxRef(box)"
+   .src 24:3="value = .Box(\"ref\")"
+   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r14,2
+   .src 30:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r14,"arg_semantics_object.box"
+   .src 32:5="name = initial"
+   load r25,"ref"
+   linkattr1 r26,r14,1
+   scopy r26,r25
+   unlink r26
+   .src 33:5="return"
+   copy r0,r14
+   .src 10:3="say \"object-ref=\" || box.getName"
+   .src 10:24="box"
+   .src 10:24="box"
+   copy r15,r0
+   .src 36:5="return name"
+   linkattr1 r26,r15,1
+   scopy r27,r26
+   acopy r27,r26
+   unlink r26
+   br l303bexprend
+l303bexprend:
+   concat r27,"object-ref=",r27
+   say r27
+   .src 11:3="return 0"
+   ret 0
+   .meta "arg_semantics_object.main.box"
+
+§arg_semantics_object.box.§factory() .locals=3
+   .meta "arg_semantics_object.box.§factory"="b" ".box" §arg_semantics_object.box.§factory() "initial=.string"
+   .src 30:3="*: factory"
+   setattrs r1,2
+   setobjtype r1,"arg_semantics_object.box"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 31:9="initial = .string"
+   .meta "arg_semantics_object.box.§factory.initial"="b" ".string" a1
+   .meta "arg_semantics_object.box.§factory.§factory"="b" ".box" r1
+   .src 32:5="name = initial"
+   linkattr1 r2,r1,1
+   scopy r2,a1
+   unlink r2
+   .src 33:5="return"
+   ret r1
+   .meta "arg_semantics_object.box.§factory.initial"
+   .meta "arg_semantics_object.box.§factory.§factory"
+
+§arg_semantics_object.box.getname() .locals=2
+   .meta "arg_semantics_object.box.getname"="b" ".string" §arg_semantics_object.box.getname() ""
+   .src 35:3="getName: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 36:5="return name"
+   .meta "arg_semantics_object.box.getname.§this"="b" ".box" a1
+   linkattr1 r1,a1,1
+   ret r1
+   .meta "arg_semantics_object.box.getname.§this"

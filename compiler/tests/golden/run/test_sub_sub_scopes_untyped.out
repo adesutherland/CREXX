@@ -1,0 +1,7 @@
+Warning in test_sub_sub_scopes_untyped.rexx @ 15:45 - ##NOT_IN_SAME_SCOPE, original definition @ 6:6, "y"
+Warning in test_sub_sub_scopes_untyped.rexx @ 15:53 - ##NOT_IN_SAME_SCOPE, original definition @ 13:57, "z"
+2 warning(s) in source file
+Inside 2 (expect 4 5 6): x = 4 y = 5 z = 6
+Inside 1 (expect 4 5 z): x = 4 y = 5 z = z
+Outside (expect 4 y z): x = 4 y = y z = z
+SUCCESS: Untyped subscoping works correctly

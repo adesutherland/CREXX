@@ -1,3 +1,27 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 //
 // CREXX Plugin Architecture Library
 //
@@ -73,8 +97,18 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
 // OSX Version
 #elif __APPLE__
     // Load the dylib
+    // A special case for OSX - if it is not an absolute path, load it as a relative path by
+    // prepending "./" to the file name
+    if (full_file_name[0] != '/' && full_file_name[0] != '.') {
+        char* relative_path = malloc(strlen("./") + strlen(full_file_name) + 1);
+        sprintf(relative_path, "./%s", full_file_name);
+        if (free_full_file_name) free(full_file_name);
+        full_file_name = relative_path;
+        free_full_file_name = 1;
+    }
     void* hDll = dlopen(full_file_name, RTLD_LAZY);
     if (!hDll) {
+        fprintf(stderr, "Failed to load dylib %s: %s\n", full_file_name, dlerror());
         if (free_full_file_name) free(full_file_name);
         return -1;
     }
@@ -82,6 +116,7 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
     // Get the plugin initializer address and call it
     initfuncs_type init = (initfuncs_type)dlsym(hDll, "_initfuncs");
     if (!init) {
+        dlclose(hDll);
         if (free_full_file_name) free(full_file_name);
         return -2;
     }
@@ -93,7 +128,7 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
     // A special case for linux - if it is not an absolute path, load it as a relative path by
     // prepending "./" to the file name
     if (full_file_name[0] != '/' && full_file_name[0] != '.') {
-        char* relative_path = malloc(strlen("./") + strlen(file_name) + 1);
+        char* relative_path = malloc(strlen("./") + strlen(full_file_name) + 1);
         sprintf(relative_path, "./%s", full_file_name);
         if (free_full_file_name) free(full_file_name);
         full_file_name = relative_path;
@@ -101,6 +136,7 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
     }
     void* hDll = dlopen(full_file_name, RTLD_LAZY);
     if (!hDll) {
+        fprintf(stderr, "Failed to load so %s: %s\n", full_file_name, dlerror());
         if (free_full_file_name) free(full_file_name);
         return -1;
     }

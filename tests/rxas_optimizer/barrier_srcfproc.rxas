@@ -1,0 +1,7 @@
+* srcfproc consumes an opaque factory argument register block.
+
+main() .locals=4
+    swap r1,r2
+    srcfproc r0,"example.iface",r3
+    swap r1,r2
+    ret

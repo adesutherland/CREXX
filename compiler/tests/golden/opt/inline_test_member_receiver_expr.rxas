@@ -1,0 +1,111 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_member_receiver_expr.rexx
+ * BUILT                  : 2026-04-29 14:16:42
+ */
+
+.meta "inline_test_member_receiver_expr.box"="b" ".unknown" .class
+.meta "inline_test_member_receiver_expr.box.name"="b" ".string" .attr 1
+.srcfile="inline_test_member_receiver_expr.rexx"
+.globals=0
+
+main() .locals=11
+   .meta "inline_test_member_receiver_expr.main"="b" ".int" main() ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting member receiver inline test...\""
+   say "Starting member receiver inline test..."
+   .src 5:3="say buildBox(\"seed\").getName"
+   .src 5:7="buildBox"
+   .src 5:7="buildBox(\"seed\").getName"
+   .src 12:3="value = .Box(initial)"
+   .src 18:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r2,2
+   .src 18:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r2,"inline_test_member_receiver_expr.box"
+   .src 20:5="name = initial"
+   load r7,"seed"
+   linkattr1 r6,r2,1
+   scopy r6,r7
+   unlink r6
+   .src 21:5="return"
+   copy r1,r2
+   .src 13:3="return"
+   copy r0,r1
+   .src 24:5="return name"
+   linkattr1 r6,r0,1
+   scopy r8,r6
+   acopy r8,r6
+   unlink r6
+   br l63bexprend
+l63bexprend:
+   say r8
+   .src 6:3="say buildBox(\"temp\").getName"
+   .src 6:7="buildBox"
+   .src 6:7="buildBox(\"temp\").getName"
+   .src 12:3="value = .Box(initial)"
+   .src 18:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r5,2
+   .src 18:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r5,"inline_test_member_receiver_expr.box"
+   .src 20:5="name = initial"
+   load r9,"temp"
+   linkattr1 r8,r5,1
+   scopy r8,r9
+   unlink r8
+   .src 21:5="return"
+   copy r4,r5
+   .src 13:3="return"
+   copy r3,r4
+   .src 24:5="return name"
+   linkattr1 r8,r3,1
+   scopy r10,r8
+   acopy r10,r8
+   unlink r8
+   br l71bexprend
+l71bexprend:
+   say r10
+   .src 7:3="say \"Member receiver inline test finished.\""
+   say "Member receiver inline test finished."
+   .src 8:3="return 0"
+   ret 0
+
+§inline_test_member_receiver_expr.box.§factory() .locals=3
+   .meta "inline_test_member_receiver_expr.box.§factory"="b" ".box" §inline_test_member_receiver_expr.box.§factory() "initial=.string"
+   .src 18:3="*: factory"
+   setattrs r1,2
+   setobjtype r1,"inline_test_member_receiver_expr.box"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 19:9="initial = .string"
+   .meta "inline_test_member_receiver_expr.box.§factory.initial"="b" ".string" a1
+   .meta "inline_test_member_receiver_expr.box.§factory.§factory"="b" ".box" r1
+   .src 20:5="name = initial"
+   linkattr1 r2,r1,1
+   scopy r2,a1
+   unlink r2
+   .src 21:5="return"
+   ret r1
+   .meta "inline_test_member_receiver_expr.box.§factory.initial"
+   .meta "inline_test_member_receiver_expr.box.§factory.§factory"
+
+§inline_test_member_receiver_expr.box.getname() .locals=2
+   .meta "inline_test_member_receiver_expr.box.getname"="b" ".string" §inline_test_member_receiver_expr.box.getname() ""
+   .src 23:3="getName: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 24:5="return name"
+   .meta "inline_test_member_receiver_expr.box.getname.§this"="b" ".box" a1
+   linkattr1 r1,a1,1
+   ret r1
+   .meta "inline_test_member_receiver_expr.box.getname.§this"

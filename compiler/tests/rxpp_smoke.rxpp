@@ -1,0 +1,3 @@
+## Simple RXPP smoke test using maclib
+say "Hello"
+say SQUARE(3)

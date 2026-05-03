@@ -1,0 +1,90 @@
+/*
+ * interpreter/tests/tests_system_io.rxas
+ */
+
+.globals=0
+
+main() .locals=10
+    say "Test Suite: System and I/O"
+
+    /* --- Meta Information --- */
+    /* TIME */
+    time r1
+    /* Just verify it's not 0 */
+    igt r0, r1, 0
+    brt time_pass, r0
+    say "FAIL: TIME (returned 0 or less)"
+    br time_end
+time_pass:
+    say "PASS: TIME"
+time_end:
+
+    /* RXVERS */
+    rxvers r1
+    /* Just verify it's not null */
+    sne r0, r1, ""
+    brt rxvers_pass, r0
+    say "FAIL: RXVERS (returned empty string)"
+    br rxvers_end
+rxvers_pass:
+    say "PASS: RXVERS"
+rxvers_end:
+
+    /* --- File I/O Cycle --- */
+    /* FOPEN for WRITE */
+    load r1, "test_io.tmp"
+    load r2, "w"
+    fopen r3, r1, r2
+    /* Check if r3 is 0 (null) - handles potential IO failures */
+    ine r0, r3, 0
+    brt write_open_pass, r0
+    say "FAIL: FOPEN (WRITE)"
+    ret 1
+write_open_pass:
+    say "PASS: FOPEN (WRITE)"
+
+    /* FWRITE */
+    load r4, "HelloCREXX"
+    fwrite r3, r4
+    say "PASS: FWRITE"
+
+    /* FCLOSE */
+    fclose r0, r3
+    ieq r0, r0, 0
+    brt write_close_pass, r0
+    say "FAIL: FCLOSE (WRITE)"
+write_close_pass:
+    say "PASS: FCLOSE (WRITE)"
+
+    /* FOPEN for READ */
+    load r2, "r"
+    fopen r3, r1, r2
+    ine r0, r3, 0
+    brt read_open_pass, r0
+    say "FAIL: FOPEN (READ)"
+    ret 1
+read_open_pass:
+    say "PASS: FOPEN (READ)"
+
+    /* FREADLINE (or FREAD) */
+    freadline r5, r3
+    /* Compare data */
+    seq r0, r5, "HelloCREXX"
+    brt read_pass, r0
+    say "FAIL: FREAD data mismatch"
+    sayx "Expected: HelloCREXX, Got: "
+    say r5
+    br read_end
+read_pass:
+    say "PASS: FREAD (Data Correct)"
+read_end:
+
+    /* FCLOSE */
+    fclose r0, r3
+    ieq r0, r0, 0
+    brt read_close_pass, r0
+    say "FAIL: FCLOSE (READ)"
+read_close_pass:
+    say "PASS: FCLOSE (READ)"
+
+    ret 0

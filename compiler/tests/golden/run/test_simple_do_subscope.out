@@ -1,0 +1,5 @@
+Warning in test_simple_do_subscope.rexx @ 5:5 - #SHADOWING, original definition "test_simple_do_subscope.main.x" @ 3:3, "x"
+Warning in test_simple_do_subscope.rexx @ 6:5 - #SHADOWING, original definition "test_simple_do_subscope.main.x" @ 3:3, "x"
+2 warning(s) in source file
+Outside simple do: x = 1
+SUCCESS: Simple DO is a subscope

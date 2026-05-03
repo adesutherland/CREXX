@@ -1,8 +1,11 @@
 # Key-Value Database Documentation
 
 ## Overview
+
 This document describes the implementation of a basic key-value database system, including operations for database management, transaction handling, and maintenance. The system is self-contained and operates independently without requiring additional software, which imposes certain limitations.
+
 ## Table of Contents
+
 - [Features](#features)
 - [File Structure](#file-structure)
 - [Available Functions](#available-functions)
@@ -10,6 +13,7 @@ This document describes the implementation of a basic key-value database system,
 - [Usage Examples](#usage-examples)
 
 ## Features
+
 - Key-value storage with CRUD operations
 - Transaction support (begin, commit, rollback)
 - LRU cache for improved read performance
@@ -18,6 +22,7 @@ This document describes the implementation of a basic key-value database system,
 - Error logging and statistics
 
 ## File Structure
+
 - **Data file**: Stores actual key-value data
 - **Index file**: Maintains key locations and metadata
 - **Log file**: Records operations and errors
@@ -27,14 +32,18 @@ This document describes the implementation of a basic key-value database system,
 ### Database Operations
 
 #### openkey
+
 Opens or creates a key-value database file
+
 - **Parameters:**
   - filename (string): Path to the database file
   - mode (string): File access mode ("r" for read, "w" for write, "w+" for read/write)
 - **Returns:** Integer handle for the opened database
 - **Example:**
-rexx
+
+```rexx
 handle = openkey("mydb.dat", "w+")
+```
 
 #### closekey
 Closes an open database
@@ -42,6 +51,7 @@ Closes an open database
   - handle (int): Database handle from openkey
 - **Returns:** Integer status code
 - **Example:**
+
 ```rexx
 rc = closekey(handle)
 ```
@@ -54,6 +64,7 @@ Writes a key-value pair to the database
   - value (string): Value to store
 - **Returns:** Integer status code
 - **Example:**
+
 ```rexx
 rc = writekey(handle, "user.name", "John Doe")
 ```
@@ -65,6 +76,7 @@ Reads a value by key from the database
   - key (string): Key to read
 - **Returns:** String value or error message
 - **Example:**
+
 ```rexx
 value = readkey(handle, "user.name")
 ```
@@ -76,16 +88,20 @@ Deletes a key-value pair from the database
   - key (string): Key to delete
 - **Returns:** Integer status code
 - **Example:**
+
 ```rexx
 rc = deletekey(handle, "user.name")
 ```
 
 #### listkey
+
 Lists the number of keys in the database
+
 - **Parameters:**
   - handle (int): Database handle
 - **Returns:** Integer count of keys
 - **Example:**
+
 ```rexx
 count = listkey(handle)
 ```
@@ -93,31 +109,38 @@ count = listkey(handle)
 ### Transaction Management
 
 #### txbegin
+
 Begins a new transaction
+
 - **Parameters:**
-  - handle (int): Database handle
+- handle (int): Database handle
 - **Returns:** Integer status code
 - **Example:**
+
 ```rexx
 rc = txbegin(handle)
 ```
 
 #### txcommit
+
 Commits the current transaction
 - **Parameters:**
   - handle (int): Database handle
 - **Returns:** Integer status code
 - **Example:**
+
 ```rexx
 rc = txcommit(handle)
 ```
 
 #### txrollback
+
 Rolls back the current transaction
 - **Parameters:**
   - handle (int): Database handle
 - **Returns:** Integer status code
 - **Example:**
+
 ```rexx
 rc = txrollback(handle)
 ```
@@ -125,28 +148,38 @@ rc = txrollback(handle)
 ### Database Maintenance
 
 #### stats
+
 Retrieves database statistics
+
 - **Parameters:**
   - handle (int): Database handle
 - **Returns:** String containing statistics
 - **Example:**
+
 ```rexx
 stats = stats(handle)
 ```
 
 #### backup
+
 Creates a backup of the database
-- **Parameters:**
-  - handle (int): Database handle
-  - path (string): Backup file path
+
+**Parameters:**
+
+- handle (int): Database handle
+- path (string): Backup file path
 - **Returns:** Integer status code
-- **Example:**
+
+**Example:**
+
 ```rexx
 rc = backup(handle, "backup.dat")
 ```
 
 #### validate
+
 Validates database integrity
+
 - **Parameters:**
   - handle (int): Database handle
 - **Returns:** Integer status code (number of errors found)
@@ -181,6 +214,7 @@ rc = compact(handle)
 ## Usage Examples
 
 ### Basic Key-Value Operations
+
 ```rexx
 /* Open database */
 handle = openkey("users.dat", "w+")
@@ -197,6 +231,7 @@ call closekey handle
 ```
 
 ### Transaction Example
+
 ```rexx
 /* Open database */
 handle = openkey("users.dat", "w+")
@@ -220,6 +255,7 @@ call closekey handle
 ```
 
 ### Database Maintenance Example
+
 ```rexx
 /* Open database */
 handle = openkey("users.dat", "w+")

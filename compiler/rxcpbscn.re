@@ -1,6 +1,30 @@
-/* cREXX Phase 0 (PoC) Compiler */
-/* (c) Adrian Sutherland 2021   */
-/* Scanner / Lexer              */
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Compiler Scanner (re2c)
+ */
 
 #include <stdio.h>
 #include <ctype.h>
@@ -8,6 +32,7 @@
 #include <string.h>
 #include "rxcpbgmr.h"
 #include "rxcpmain.h"
+#include "rxcp_util.h"
 
 #define   YYCTYPE     unsigned char
 #define   YYCURSOR    s->cursor
@@ -20,6 +45,15 @@ int rexbscan(Context* s) {
   char *comment_top;
   int comment_line;
   char* comment_linestart;
+
+#define RET(id) do { \
+    int tid = (id); \
+    if (s->debug_mode >= 2) { \
+        fprintf(stderr, "[LEX] Line %d: Token %d (%s) Value: '%.*s'\n", \
+            s->line, tid, token_to_string(tid), (int)(s->cursor - s->top), s->top); \
+    } \
+    return tid; \
+} while(0)
 
 /*!re2c
   re2c:yyfill:enable = 0;
@@ -51,30 +85,33 @@ int rexbscan(Context* s) {
   fsig = digit* "." digit+ | digit+ ".";
   fexp = [eE] [+-]? digit+;
   float = (fsig fexp? | digit+ fexp);
-  decimal = float [d];
   integer = digit+;
+  decimal = float [d] | integer [d];
   simple = fsymchr symchr*;
-  class = [.] simple;
+  qual_sep = "::" | "..";
+  qualified = simple qual_sep simple;
+  class = [.] (qualified|simple);
+  namedfactory = class "." simple;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
   str = sqstr|dqstr;
   ob = [ \t]*;
-  not = [\\] | not_char;
+  not = not_char;
 */
 
 /*!re2c
     // Line Comments
     [#] {
-       if (s->hashcomments) goto skip_line_comment;
-       else return(TK_UNKNOWN);
+       if (s->comments_hash) goto skip_line_comment;
+       else RET(TK_UNKNOWN);
     }
     "//" {
-       if (s->slashcomments) goto skip_line_comment;
-       else return(TK_MOD);
+       if (s->comments_slash) goto skip_line_comment;
+       else RET(s->numeric_standard ? TK_MOD : TK_UNKNOWN); // numeric_standard: 1 = Classic Standard, 0 = Common Standard
     }
     "--" {
-       if (s->dashcomments) goto skip_line_comment;
-       else return(TK_MINUSMINUS);
+       if (s->comments_dash) goto skip_line_comment;
+       else RET(TK_MINUSMINUS);
     }
 
     // Block Comments
@@ -86,127 +123,143 @@ int rexbscan(Context* s) {
       goto comment;
     }
 
-    "|" ob "|" { return(TK_CONCAT); }
-    "+" { return(TK_PLUS); }
-    "-" { return(TK_MINUS); }
-    "*" { return(TK_MULT); }
-    "/" { return(TK_DIV); }
-    "%" { return(TK_IDIV); }
-    "?" { return(TK_OPTIONAL); }
-    "/" ob "/" { return(TK_MOD); }
-    "*" ob "*" { return(TK_POWER); }
+    "|" ob "|" { RET(TK_CONCAT); }
+    "+" { RET(TK_PLUS); }
+    "-" { RET(s->numeric_standard ? TK_HIGH_PRIORITY_MINUS : TK_MINUS); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
+    "*" { RET(TK_MULT); }
+    "/" { RET(TK_DIV); }
+    "%" { RET(s->numeric_standard ? TK_IDIV : TK_MOD); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
+    "?" { RET(TK_OPTIONAL); }
+    "/" ob "/" { RET(s->numeric_standard ? TK_MOD : TK_UNKNOWN); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
+    "*" ob "*" { RET(s->numeric_standard ? TK_POWER_L : TK_POWER_R); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
 
-    "=" { return(TK_EQUAL); }
-    not ob "=" | "<" ob ">" | ">" ob "<" { return(TK_NEQ); }
-    ">" { return(TK_GT); }
-    "<" { return(TK_LT); }
-    ">" ob "=" | not ob "<" { return(TK_GTE); }
-    "<" ob "=" | not ob ">" { return(TK_LTE); }
-    "=" ob "=" { return(TK_S_EQ); }
-    not ob "=" ob "=" { return(TK_S_NEQ); }
-    ">" ob ">" { return(TK_S_GT); }
-    "<" ob "<" { return(TK_S_LT); }
-    ">" ob ">" ob "=" | not ob "<" ob "<" { return(TK_S_GTE); }
-    "<" ob "<" ob "=" | not ob ">" ob ">" { return(TK_S_LTE); }
+    "=" { RET(TK_EQUAL); }
+    not ob "=" | "<" ob ">" | ">" ob "<" { RET(TK_NEQ); }
+    ">" { RET(TK_GT); }
+    "<" { RET(TK_LT); }
+    ">" ob "=" | not ob "<" { RET(TK_GTE); }
+    "<" ob "=" | not ob ">" { RET(TK_LTE); }
+    "=" ob "=" { RET(TK_S_EQ); }
+    not ob "=" ob "=" { RET(TK_S_NEQ); }
+    ">" ob ">" { RET(TK_S_GT); }
+    "<" ob "<" { RET(TK_S_LT); }
+    ">" ob ">" ob "=" | not ob "<" ob "<" { RET(TK_S_GTE); }
+    "<" ob "<" ob "=" | not ob ">" ob ">" { RET(TK_S_LTE); }
 
-    "&" { return(TK_AND); }
-    "|" { return(TK_OR); }
-  //  "&" ob "&" { return(TK_OR); } // TODO Check
-    not { return(TK_NOT); }
-    "," { return(TK_COMMA); }
-    "..." { return(TK_ELLIPSIS); }
-    "(" { return(TK_OPEN_BRACKET); }
-    ")" { return(TK_CLOSE_BRACKET); }
-    "[" { return(TK_OPEN_SBRACKET); }
-    "]" { return(TK_CLOSE_SBRACKET); }
-    ";" { return(TK_EOC); }
+    "&" { RET(TK_AND); }
+    "|" { RET(TK_OR); }
+  //  "&" ob "&" { RET(TK_OR); } // TODO Check
+    not { RET(TK_NOT); }         // Note that '/' will be treated as divide as it is listed first
+    "," { RET(TK_COMMA); }
+    "..." { RET(TK_ELLIPSIS); }
+    "(" { RET(TK_OPEN_BRACKET); }
+    ")" { RET(TK_CLOSE_BRACKET); }
+    "[" { RET(TK_OPEN_SBRACKET); }
+    "]" { RET(TK_CLOSE_SBRACKET); }
+    ";" { RET(TK_EOC); }
 
-    'ADDRESS' { return(TK_ADDRESS); }
-    'ASSEMBLER' { return(TK_ASSEMBLER); }
-    'ARG' { return(TK_ARG); }
-    'CALL' { return(TK_CALL); }
-    'DO' { return(TK_DO); }
-    'LOOP' { return(TK_LOOP); }
-  //  'DROP' { return(TK_DROP); }
-    'ELSE' { return(TK_ELSE); }
-    'ERROR' { return(TK_ERROR); }
-    'END' { return(TK_END); }
-  //  'EXTERNAL' { return(TK_EXTERNAL); }
-    'EXIT' { return(TK_EXIT); }
-    'IF' { return(TK_IF); }
-    'IMPORT' { return(TK_IMPORT); }
-    'INPUT' { return(TK_INPUT); }
-  //  'INTERPRET' { return(TK_INTERPRET); }
-    'ITERATE' { return(TK_ITERATE); }
-    'LEAVE' { return(TK_LEAVE); }
-    'NAMESPACE' { return(TK_NAMESPACE); }
-    'NOP' { return(TK_NOP); }
-  //  'NUMERIC' { return(TK_NUMERIC); }
-  'OPTIONS' { return(TK_OPTIONS); }
-  //  'OTHERWISE' { return(TK_OTHERWISE); }
-  'OUTPUT' { return(TK_OUTPUT); }
-  //  'PARSE' { return(TK_PARSE); }
-    'PROCEDURE' { return(TK_PROCEDURE); }
-  //  'PULL' { return(TK_PULL); }
-  //  'PUSH' { return(TK_PUSH); }
-  //  'QUEUE' { return(TK_QUEUE); }
-    'RETURN' { return(TK_RETURN); }
-    'SAY' { return(TK_SAY); }
-  //  'SELECT' { return(TK_SELECT); }
-  //  'SIGNAL' { return(TK_SIGNAL); }
-    'THEN' { return(TK_THEN); }
-  //  'TRACE' { return(TK_TRACE); }
-  //  'WHEN' { return(TK_WHEN); }
-  //  'OFF' { return(TK_OFF); }
-  //  'ON' { return(TK_ON); }
-    'BY' { return(TK_BY); }
-  //  'DIGITS' { return(TK_DIGITS); }
-  //  'ENGINEERING' { return(TK_ENGINEERING); }
-  //  'ERROR' { return(TK_ERROR); }
-    'EXPOSE' { return(TK_EXPOSE); }
-  //  'FAILURE' { return(TK_FAILURE); }
-    'FOR' { return(TK_FOR); }
-    'FOREVER' { return(TK_FOREVER); }
-  //  'FORM' { return(TK_FORM); }
-  //  'FUZZ' { return(TK_FUZZ); }
-  //  'HALT' { return(TK_HALT); }
-  //  'LINEIN' { return(TK_LINEIN); }
-  //  'NAME' { return(TK_NAME); }
-  //  'NOVALUE' { return(TK_NOVALUE); }
-  //  'SCIENTIFIC' { return(TK_SCIENTIFIC); }
-  //  'SOURCE' { return(TK_SOURCE); }
-  //  'SYNTAX' { return(TK_SYNTAX); }
-    'TO' { return(TK_TO); }
-    'UNTIL' { return(TK_UNTIL); }
-  //  'UPPER' { return(TK_UPPER); }
-  //  'VALUE' { return(TK_VALUE); }
-  //  'VAR' { return(TK_VAR); }
-  //  'VERSION' { return(TK_VERSION); }
-    'VOID' { return(TK_VOID); }
-    'WHILE' { return(TK_WHILE); }
-  //  'WITH' { return(TK_WITH); }
-    class { return(TK_CLASS); }
-    float { return(TK_FLOAT); }
-    decimal { return(TK_DECIMAL); }
-    integer { return(TK_INTEGER); }
+  //  'ADDRESS' { RET(TK_ADDRESS); }
+    'ARG' ob ":" { RET(TK_RESERVED_LABEL); }
+    'AS' ob ":" { RET(TK_RESERVED_LABEL); }
+    'IS' ob ":" { RET(TK_RESERVED_LABEL); }
+    'TYPEOF' ob ":" { RET(TK_RESERVED_LABEL); }
+    'ASSEMBLER' { RET(TK_ASSEMBLER); }
+    'ARG' { RET(TK_ARG); }
+    'AS' { RET(TK_AS); }
+    'CALL' { RET(TK_CALL); }
+    'CLASS' { RET(TK_CLASS); }
+    'DO' { RET(TK_DO); }
+    'LOOP' { RET(TK_LOOP); }
+    'IMPLEMENTS' { RET(TK_IMPLEMENTS); }
+    'INTERFACE' { RET(TK_INTERFACE); }
+    'MATCH' { RET(TK_MATCH); }
+    'METHOD' { RET(TK_METHOD); }
+  //  'DROP' { RET(TK_DROP); }
+    'ELSE' { RET(TK_ELSE); }
+  //  'ERROR' { RET(TK_ERROR); }
+    'END' { RET(TK_END); }
+  //  'EXTERNAL' { RET(TK_EXTERNAL); }
+    'EXIT' { RET(TK_EXIT); }
+    'FACTORY' { RET(TK_FACTORY); }
+    'IF' { RET(TK_IF); }
+    'IMPORT' { RET(TK_IMPORT); }
+    'IS' { RET(TK_IS); }
+  //  'INPUT' { RET(TK_INPUT); }
+  //  'INTERPRET' { RET(TK_INTERPRET); }
+    'ITERATE' { RET(TK_ITERATE); }
+    'LEAVE' { RET(TK_LEAVE); }
+    'NAMESPACE' { RET(TK_NAMESPACE); }
+    'OF' { RET(TK_OF); }
+    'NOP' { RET(TK_NOP); }
+    'NUMERIC' { RET(TK_NUMERIC); }
+  'OPTIONS' { RET(TK_OPTIONS); }
+    'OTHERWISE' { RET(TK_OTHERWISE); }
+  //  'OUTPUT' { RET(TK_OUTPUT); }
+  //  'PARSE' { RET(TK_PARSE); }
+    'PROCEDURE' { RET(TK_PROCEDURE); }
+    'REGISTER' / [.] {
+      s->lexer_stem_mode = 1;
+      RET(TK_REGISTER);
+    }
+    'REGISTER' { RET(TK_REGISTER); }
+  //  'PULL' { RET(TK_PULL); }
+  //  'PUSH' { RET(TK_PUSH); }
+  //  'QUEUE' { RET(TK_QUEUE); }
+    'RETURN' { RET(TK_RETURN); }
+    'SAY' { RET(TK_SAY); }
+    'SELECT' { RET(TK_SELECT); }
+    'SIGNAL' { RET(TK_SIGNAL); }
+    'THEN' { RET(TK_THEN); }
+  //  'TRACE' { RET(TK_TRACE); }
+    'WHEN' { RET(TK_WHEN); }
+  //  'OFF' { RET(TK_OFF); }
+    'ON' { RET(TK_ON); }
+    'BY' { RET(TK_BY); }
+  //  'ERROR' { RET(TK_ERROR); }
+    'EXPOSE' { RET(TK_EXPOSE); }
+  //  'FAILURE' { RET(TK_FAILURE); }
+    'FOR' { RET(TK_FOR); }
+    'FOREVER' { RET(TK_FOREVER); }
+  //  'HALT' { RET(TK_HALT); }
+  //  'LINEIN' { RET(TK_LINEIN); }
+  //  'NAME' { RET(TK_NAME); }
+  //  'NOVALUE' { RET(TK_NOVALUE); }
+  //  'SOURCE' { RET(TK_SOURCE); }
+  //  'SYNTAX' { RET(TK_SYNTAX); }
+    'TO' { RET(TK_TO); }
+    'TYPEOF' { RET(TK_TYPEOF); }
+    'UNTIL' { RET(TK_UNTIL); }
+  //  'UPPER' { RET(TK_UPPER); }
+  //  'VAR' { RET(TK_VAR); }
+  //  'VERSION' { RET(TK_VERSION); }
+    'VOID' { RET(TK_VOID); }
+    'WHILE' { RET(TK_WHILE); }
+    'WITH' { RET(TK_WITH); }
+    namedfactory / "(" { RET(TK_CLASS_FACTORY); }
+    class { RET(TK_CLASS_TYPE); }
+    float { RET(TK_FLOAT); }
+    decimal { RET(TK_DECIMAL); }
+    integer { RET(TK_INTEGER); }
+    qualified { RET(TK_QUALIFIED_SYMBOL); }
     'ARG' / [.] {
       s->lexer_stem_mode = 1;
-      return(TK_ARG_STEM);
+      RET(TK_ARG_STEM);
     }
     simple / [.] {
       s->lexer_stem_mode = 1;
-      return(TK_STEM);
+      RET(TK_STEM);
     }
     class / [.] {
       s->lexer_stem_mode = 1;
-      return(TK_CLASS_STEM);
+      RET(TK_CLASS_STEM);
     }
-    simple { return(TK_VAR_SYMBOL); }
-    simple ob ":" { return(TK_LABEL); }
-    str { return(TK_STRING); }
-    str [bBxX] / (any\(symchr | [.])) { return(TK_STRING); }
-    eof { return(TK_EOS); }
-    $ { return(TK_EOS); }
+    simple { RET(TK_VAR_SYMBOL); }
+    simple ob ":" { RET(TK_LABEL); }
+    "*" ob ":" { RET(TK_MULT_LABEL); }
+    str { RET(TK_STRING); }
+    str [bBxX] / (any\(symchr | [.])) { RET(TK_STRING); }
+    eof { RET(TK_EOS); }
+    $ { RET(TK_EOS); }
     whitespace {
       s->top = s->cursor;
       goto regular;
@@ -215,16 +268,17 @@ int rexbscan(Context* s) {
        s->line++;
        s->prev_linestart = s->linestart;
        s->linestart = s->cursor+2;
-       return(TK_EOL);
+       RET(TK_EOL);
     }
     eol1 {
        s->line++;
        s->prev_linestart = s->linestart;
        s->linestart = s->cursor+1;
-       return(TK_EOL);
+       RET(TK_EOL);
     }
+    "." { RET(TK_DOT); }
     any {
-      return(TK_UNKNOWN);
+      RET(TK_UNKNOWN);
     }
   */
 
@@ -240,37 +294,37 @@ int rexbscan(Context* s) {
 
     [.] stemsimple / [.] {
        s->lexer_stem_mode = 1;
-       return(TK_STEMVAR);
+       RET(TK_STEMVAR);
     }
     [.] stemsimple {
        s->lexer_stem_mode = 0;
-       return(TK_STEMVAR);
+       RET(TK_STEMVAR);
     }
     [.] steminteger / [.] {
        s->lexer_stem_mode = 1;
-       return(TK_STEMINT);
+       RET(TK_STEMINT);
     }
     [.] steminteger {
        s->lexer_stem_mode = 0;
-       return(TK_STEMINT);
+       RET(TK_STEMINT);
     }
     [.] stemstring / [.] {
        s->lexer_stem_mode = 1;
-       return(TK_STEMSTRING);
+       RET(TK_STEMSTRING);
     }
     [.] stemstring {
        s->lexer_stem_mode = 0;
-       return(TK_STEMSTRING);
+       RET(TK_STEMSTRING);
     }
     [.] / [.] {
        s->lexer_stem_mode = 1;
-       return(TK_STEMNOVAL);
+       RET(TK_STEMNOVAL);
     }
     [.] {
        s->lexer_stem_mode = 0;
-       return(TK_STEMNOVAL);
+       RET(TK_STEMNOVAL);
     }
-    $ { return(TK_EOS); }
+    $ { RET(TK_EOS); }
 */
     comment:
 /*!re2c
@@ -303,7 +357,7 @@ int rexbscan(Context* s) {
       s->linestart = comment_linestart;
       s->top = comment_top;
       s->cursor = s->top + 2; /* To get the '/ *' */
-      return(TK_BADCOMMENT);
+      RET(TK_BADCOMMENT);
   }
   $ {
       s->line = comment_line;
@@ -311,7 +365,7 @@ int rexbscan(Context* s) {
       s->linestart = comment_linestart;
       s->top = comment_top;
       s->cursor = s->top + 2; /* To get the '/ *' */
-      return(TK_BADCOMMENT);
+      RET(TK_BADCOMMENT);
   }
   any { goto comment; }
 */
@@ -323,17 +377,17 @@ skip_line_comment:
     s->prev_linestart = s->linestart;
     s->linestart = s->cursor+1;
     s->top = s->cursor - 1;
-    return(TK_EOL);
+    RET(TK_EOL);
   }
   eol2 {
     s->line++;
     s->prev_linestart = s->linestart;
     s->linestart = s->cursor+2;
     s->top = s->cursor - 1;
-    return(TK_EOL);
+    RET(TK_EOL);
   }
-  eof { return(TK_EOS); }
-  $ { return(TK_EOS); }
+  eof { RET(TK_EOS); }
+  $ { RET(TK_EOS); }
   any {
     goto skip_line_comment;
   }

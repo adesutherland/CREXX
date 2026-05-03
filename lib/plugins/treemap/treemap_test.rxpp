@@ -1,0 +1,8 @@
+##cflags def nset iflink 1buf 2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+
+##define stemhash(key)            {1+(5381+fnv(key))}
+/* --------------- Hash algorithm obsolete, separate MAPP plugin now */
+return 0
+
+
+

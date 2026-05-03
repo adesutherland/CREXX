@@ -1,6 +1,31 @@
-/* cREXX Phase 0 (PoC) Compiler   */
-/* (c) Adrian Sutherland 2021     */
-/* Scanner / Lexer for OPTIONS    */
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Options Scanner (re2c)
+ */
+
 #include "rxcpopgr.h"
 #include "rxcpmain.h"
 
@@ -48,12 +73,14 @@ int opt_scan(Context* s) {
     'LEVELD' { return(TK_LEVELD); }
     'LEVELG' { return(TK_LEVELG); }
     'LEVELL' { return(TK_LEVELL); }
-    'HASHCOMMENTS' { return(TK_HASHCOMMENTS); }
-    'DASHCOMMENTS' { return(TK_DASHCOMMENTS); }
-    'SLASHCOMMENTS' { return(TK_SLASHCOMMENTS); }
-    'NOHASHCOMMENTS' { return(TK_NOHASHCOMMENTS); }
-    'NODASHCOMMENTS' { return(TK_NODASHCOMMENTS); }
-    'NOSLASHCOMMENTS' { return(TK_NOSLASHCOMMENTS); }
+    'COMMENTS_HASH' { return(TK_COMMENTS_HASH); }
+    'COMMENTS_DASH' { return(TK_COMMENTS_DASH); }
+    'COMMENTS_SLASH' { return(TK_COMMENTS_SLASH); }
+    'COMMENTS_NOHASH' { return(TK_COMMENTS_NOHASH); }
+    'COMMENTS_NODASH' { return(TK_COMMENTS_NODASH); }
+    'COMMENTS_NOSLASH' { return(TK_COMMENTS_NOSLASH); }
+    'NUMERIC_COMMON' { return(TK_NUMERIC_COMMON); }
+    'NUMERIC_CLASSIC' { return(TK_NUMERIC_CLASSIC); }
     symbol { return(TK_SYMBOL); }
     eof { return(TK_EOS); }
     $ { return(TK_EOS); }

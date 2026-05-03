@@ -1,3 +1,27 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #ifndef CREXX_RXVMINTP_H
 #define CREXX_RXVMINTP_H
 
@@ -6,11 +30,23 @@
 #include "rxpa.h"
 #include "rxvalue.h"
 #include "rxsignal.h"
+#include "crexx_version.h"
 
-#define rxversion "crexx-DEV2507"
+typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
+
+typedef struct module module;
+typedef struct proc_runtime {
+    proc_constant *definition;
+    int locals;
+    bin_space *binarySpace;
+    stack_frame **frame_free_list;
+    stack_frame *frame_free_list_head;
+    size_t start;
+    char *name;
+} proc_runtime;
 
 /* Module Structure */
-typedef struct module {
+struct module {
     bin_space segment;         /* Binary and Constant Pool */
     char *name;                /* Module Name */
     char *description;         /* Module Description */
@@ -24,15 +60,23 @@ typedef struct module {
     size_t unresolved_symbols; /* Number of symbols not yet resolved by linking */
     size_t duplicated_symbols; /* Number of duplicated symbols ignored in module */
     module_file *file;         /* File section the module was loaded from */
-} module;
+    rxvm_mod_state state;      /* Module lifecycle state */
+    proc_runtime *procedures;  /* Runtime procedure state */
+    size_t procedure_count;    /* Number of runtime procedures */
+    proc_runtime **proc_runtime_lookup; /* Constant pool offset -> runtime procedure */
+    size_t proc_runtime_lookup_size;
+    void **prepared_dispatch;  /* Prepared opcode dispatch table */
+};
 
 /* Interrupt Response Codes */
 typedef enum interrupt_response {
     RXSIGNAL_RESPONSE_IGNORE = 0,   /* Ignore the interrupt */
     RXSIGNAL_RESPONSE_RETURN,       /* Return to the stack frame - the stack is unwound to the frame */
     RXSIGNAL_RESPONSE_BRANCH,       /* Branch to an address in a stack frame - the stack is unwound to the frame */
+    RXSIGNAL_RESPONSE_BRANCH_VALUE, /* Branch to an address and bind a .signal object in the handler frame */
     RXSIGNAL_RESPONSE_CALL,         /* Call a function - will return to the current instruction */
     RXSIGNAL_RESPONSE_CALL_BRANCH,  /* Call a function - will return to the BRANCH address (the stack is unwound to the frame) */
+    RXSIGNAL_RESPONSE_CALL_ACTION,  /* Call a function and interpret its returned signal action */
     RXSIGNAL_RESPONSE_HALT,         /* Unmasked Interrupt, halt the interpreter with an error message and return interrupt code */
     RXSIGNAL_RESPONSE_SILENT_HALT   /* Halt the interpreter without any message - return 0 */
 } interrupt_response;
@@ -40,21 +84,51 @@ typedef enum interrupt_response {
 /* Interrupt Table Entry */
 typedef struct interrupt_entry {
     interrupt_response response;    /* Response to the interrupt */
-    proc_constant *function;        /* Address of the function to call */
+    proc_runtime *function;         /* Address of the function to call */
     size_t jump;                    /* Address to jump to */
+    stack_frame *frame;             /* Frame that owns branch/jump handlers */
+    size_t value_register;          /* Destination register for branch handlers with a signal object */
 } interrupt_entry;
+
+typedef struct interrupt_saved_entry {
+    unsigned char signal;
+    interrupt_entry entry;
+    struct interrupt_saved_entry *next;
+} interrupt_saved_entry;
+
+typedef struct rxvm_interface_factory_entry {
+    char *interface_name;
+    size_t interface_name_length;
+    char *factory_name;
+    size_t factory_name_length;
+    char *class_name;
+    size_t class_name_length;
+    proc_runtime *match_proc;
+    proc_runtime *factory_proc;
+} rxvm_interface_factory_entry;
+
+typedef struct rxvm_interface_method_entry {
+    char *class_name;
+    size_t class_name_length;
+    char *member_name;
+    size_t member_name_length;
+    proc_runtime *method_proc;
+} rxvm_interface_method_entry;
 
 struct stack_frame {
     stack_frame *prev_free;
     stack_frame *parent;
-    proc_constant *procedure;
+    proc_runtime *procedure;
     bin_code *return_pc;
     value *return_reg;
     size_t number_locals;
     size_t nominal_number_locals;
     size_t number_args;
     unsigned char is_interrupt;  /* Set to the interrupt number that the frame is handling (or zero) */
+    unsigned char is_interrupt_action; /* Set when an interrupt handler return value is action-aware */
     interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Interrupt Table */
+    interrupt_saved_entry *interrupt_stack; /* Block-scoped saved interrupt handlers */
+    numeric_context num_context; /* Numeric context for the procedure */
     struct decplugin *decimal;
     char decimal_loaded_here;
     struct uniplugin *unicode;
@@ -76,14 +150,14 @@ struct stack_frame {
 
 #ifdef NTHREADED
 
-#define START_OF_INSTRUCTIONS CASE_START:; switch ((enum instructions)(pc->instruction.opcode)) {
+#define START_OF_INSTRUCTIONS CASE_START:; switch ((instructions)(pc->instruction.opcode)) {
 #define END_OF_INSTRUCTIONS default: SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH }
-#define START_INSTRUCTION(inst) case INST_ ## inst:
+#define START_INSTRUCTION(inst) case OP_ ## inst:
 #define START_INTERRUPT INTERRUPT:
 #define END_INTERRUPT goto CASE_START;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; }
 #define CALC_DISPATCH_MANUAL
-#define DISPATCH                   { pc = next_pc; goto *(interrupts && !current_frame->is_interrupt)?&&INTERRUPT:&&CASE_START; }
+#define DISPATCH                   { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; goto CASE_START; }
 
 #else
 
@@ -92,9 +166,9 @@ struct stack_frame {
 #define START_INSTRUCTION(inst) inst:
 #define START_INTERRUPT INTERRUPT:
 #define END_INTERRUPT goto *next_inst;
-#define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }
-#define CALC_DISPATCH_MANUAL       { next_inst = (next_pc)->impl_address; }
-#define DISPATCH                   { pc = next_pc; goto *(interrupts && !current_frame->is_interrupt)?&&INTERRUPT:next_inst; }
+#define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = current_module->prepared_dispatch[(size_t)(next_pc - current_module->segment.binary)]; }
+#define CALC_DISPATCH_MANUAL       { next_inst = current_module->prepared_dispatch[(size_t)(next_pc - current_module->segment.binary)]; }
+#define DISPATCH                   { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; goto *next_inst; }
 
 #endif
 
@@ -102,10 +176,10 @@ struct stack_frame {
 #define REG_VAL(n)                   current_frame->locals[n]
 #define REG_IDX(n)                   (pc+(n))->index
 #define INT_OP(n)                    (pc+(n))->iconst
-#define FLOAT_OP(n)                  (pc+(n))->fconst
+#define FLOAT_OP(n)                  FLOAT_CONST_VALUE(current_frame->procedure->binarySpace->const_pool, (pc+(n))->index)
 
 #define CONSTSTRING_OP(n)            ((string_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))
-#define PROC_OP(n)                   ((proc_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))
+#define PROC_OP(n)                   (current_frame->procedure->binarySpace->module->proc_runtime_lookup[((pc+(n))->index) >> 3])
 #define INT_VAL(vx)                  vx->int_value
 #define FLOAT_VAL(vx)                vx->float_value
 
@@ -132,12 +206,9 @@ struct stack_frame {
                                     (t) = strtod((s)->string_value, &converr);                          \
                                     if (converr[0] != '\0') goto converror; }
 
-#define CONV2INT(i,v)             { if ((v)->status.type_float)                                      \
-                                    (i) = (rxinteger) (v)->float_value;                                 \
-                                    else if ((v)->status.type_string) S2INT(i,v); }
+#define CONV2INT(i,v)             { S2INT(i,v); }
 
-#define CONV2FLOAT(i,v) if ((v)->status.type_int) (i) = (double) (v)->int_value;                      \
-        else if ((v)->status.type_string) S2FLOAT(i,v);                                               \
+#define CONV2FLOAT(i,v)           { S2FLOAT(i,v); }                                               \
                                                                                                       \
 // Get Character
 #ifndef NUTF8
@@ -152,11 +223,7 @@ struct stack_frame {
   #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_length; }
 #endif
 
-#ifndef NUTF8
-  #define PUTSTRLEN(v,i)   { v->string_length=i; v->string_chars=i;}
-#else
-  #define PUTSTRLEN(v,i)   { v->string_length=i; }
-#endif
+#define PUTSTRLEN(v,i)      { string_set_ascii_length((v), (size_t)(i)); }
 
 
 
@@ -196,13 +263,31 @@ typedef struct rxvm_context {
     struct avl_tree_node *exposed_proc_tree;
     struct avl_tree_node *exposed_reg_tree;
     char debug_mode;
+
+    /* Extra fields for direct procedure call */
+    proc_runtime *ext_proc;
+    int ext_argc;
+    value **ext_args;
+    value *ext_ret;
+    int prepare_only;
+
+    rxvm_interface_factory_entry *interface_factories;
+    size_t num_interface_factories;
+    size_t interface_factory_capacity;
+    rxvm_interface_method_entry *interface_methods;
+    size_t num_interface_methods;
+    size_t interface_method_capacity;
+    struct rxvm_socket_registry *socket_registry;
+    char link_dirty;
+    char interface_method_registry_dirty;
+    char interface_factory_registry_dirty;
 } rxvm_context;
 
 /* Function to get signal text from a signal code  */
-char* rxpa_getsignaltext(rxsignal signal);
+char* rxvm_getsignaltext(rxsignal signal);
 
 /* Function to get a signal code from a signal text */
-rxsignal rxpa_getsignalcode(char* signalText);
+rxsignal rxvm_getsignalcode(char* signalText);
 
 int initialz();
 int finalize();
@@ -213,6 +298,12 @@ void rxinimod(rxvm_context *context);
 
 /* Free Module Context */
 void rxfremod(rxvm_context *context);
+void completely_free_frame(stack_frame *frame);
+
+/* Link a loaded module */
+void rxvm_link_module(rxvm_context *context, size_t module_number_to_link);
+void rxvm_rebuild_interface_factory_registry(rxvm_context *context);
+void rxvm_rebuild_interface_method_registry(rxvm_context *context);
 
 /* Loads a new module
  * returns 0  - Error
@@ -230,7 +321,7 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length);
 int rxldmodp(rxvm_context *context);
 
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
-void rxpa_callfunc(void* function, int args, value** argv, value* ret, value* signal);
+void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal);
 
 /* Private structure for output to string thread */
 typedef struct redirect REDIRECT;
@@ -290,8 +381,13 @@ void arr2redr(value* redirect_reg, value* string_reg);
 /* In general, he redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
 void nullredr(value* redirect_reg);
 
+/* Write to and finalize a redirect endpoint without launching a process. */
+int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes);
+
 /* EXIT Function Support */
-void mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
+void rxvm_setsayexit(say_exit_func sayExitFunc);
+void rxvm_resetsayexit();
+void rxvm_mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
 
 /**
  * @brief Enables handling for a specific VM interrupt code.

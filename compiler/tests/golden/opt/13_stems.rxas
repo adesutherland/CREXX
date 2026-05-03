@@ -1,0 +1,206 @@
+/*
+ * cREXX COMPILER VERSION : crexx-1.0.0-beta.1
+ * SOURCE                 : 13_stems.rexx
+ * BUILT                  : 2026-05-02 16:14:31
+ */
+
+.srcfile="13_stems.rexx"
+.globals=0
+
+main() .locals=15
+   .meta "13_stems.main"="b" ".int" main() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:1="errors = 0"
+   .meta "13_stems.main.errors"="b" ".int" r0
+   load r0,0
+   .src 5:1="s = .stem"
+   .meta "13_stems.main.s"="b" ".stem" r1
+   load r2,0
+   call r1,§rxfnsb.stem.§factory(),r2
+   .src 7:0="if s.missing \= \"\""
+   .meta "13_stems.main.missing"="b" ".string" "missing"
+   load r4,"missing"
+   load r2,2
+   settp r1,1
+   swap r3,r1
+   settp r4,3
+   call r5,§rxfnsb.stem.get(),r2
+   swap r1,r3
+   sne r5,r5,""
+   brf l28iffalse,r5
+   .src 7:20="then"
+   .src 8:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 9:3="say \"Stem default mismatch:\" s.missing"
+   load r4,"missing"
+   load r2,2
+   settp r1,1
+   swap r3,r1
+   settp r4,3
+   call r6,§rxfnsb.stem.get(),r2
+   swap r1,r3
+   sconcat r6,"Stem default mismatch:",r6
+   say r6
+l28iffalse:
+   .src 12:1="s.alpha = \"one\""
+   .meta "13_stems.main.alpha"="b" ".string" "alpha"
+   load r5,"alpha"
+   load r6,"one"
+   load r3,3
+   settp r1,1
+   swap r4,r1
+   settp r5,3
+   settp r6,3
+   call r2,§rxfnsb.stem.set(),r3
+   swap r1,r4
+   .src 13:1="s[\"beta\"] = \"two\""
+   .meta "13_stems.main.gamma"="b" ".string" "gamma"
+   load r5,"beta"
+   load r6,"two"
+   load r3,3
+   settp r1,1
+   swap r4,r1
+   settp r5,3
+   settp r6,3
+   call r7,§rxfnsb.stem.set(),r3
+   swap r1,r4
+   .src 14:1="s.gamma = \"three\""
+   load r5,"gamma"
+   load r6,"three"
+   load r3,3
+   settp r1,1
+   swap r4,r1
+   settp r5,3
+   settp r6,3
+   call r8,§rxfnsb.stem.set(),r3
+   swap r1,r4
+   .src 16:0="if s.alpha \= \"one\""
+   load r6,"alpha"
+   load r4,2
+   settp r1,1
+   swap r5,r1
+   settp r6,3
+   call r3,§rxfnsb.stem.get(),r4
+   swap r1,r5
+   sne r6,r3,"one"
+   brf l56iffalse,r6
+   .src 16:21="then"
+   .src 17:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 18:3="say \"Stem dotted lookup mismatch:\" s.alpha"
+   load r5,"alpha"
+   load r3,2
+   settp r1,1
+   swap r4,r1
+   settp r5,3
+   call r9,§rxfnsb.stem.get(),r3
+   swap r1,r4
+   sconcat r9,"Stem dotted lookup mismatch:",r9
+   say r9
+l56iffalse:
+   .src 21:0="if s[\"beta\"] \= \"two\""
+   load r11,"beta"
+   load r9,2
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   call r6,§rxfnsb.stem.get(),r9
+   swap r1,r10
+   sne r11,r6,"two"
+   brf l72iffalse,r11
+   .src 21:23="then"
+   .src 22:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 23:3="say \"Stem bracket lookup mismatch:\" s[\"beta\""
+   load r14,"beta"
+   load r12,2
+   settp r1,1
+   swap r13,r1
+   settp r14,3
+   call r10,§rxfnsb.stem.get(),r12
+   swap r1,r13
+   sconcat r14,"Stem bracket lookup mismatch:",r10
+   say r14
+l72iffalse:
+   .src 26:1="s.alpha = \"updated\""
+   load r13,"alpha"
+   load r14,"updated"
+   load r11,3
+   settp r1,1
+   swap r12,r1
+   settp r13,3
+   settp r14,3
+   call r10,§rxfnsb.stem.set(),r11
+   swap r1,r12
+   .src 27:0="if s.alpha \= \"updated\""
+   load r14,"alpha"
+   load r12,2
+   settp r1,1
+   swap r13,r1
+   settp r14,3
+   call r11,§rxfnsb.stem.get(),r12
+   swap r1,r13
+   sne r14,r11,"updated"
+   brf l92iffalse,r14
+   .src 27:25="then"
+   .src 28:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 29:3="say \"Stem update mismatch:\" s.alpha"
+   load r13,"alpha"
+   load r11,2
+   settp r1,1
+   swap r12,r1
+   settp r13,3
+   call r9,§rxfnsb.stem.get(),r11
+   swap r1,r12
+   sconcat r13,"Stem update mismatch:",r9
+   say r13
+l92iffalse:
+   .src 32:0="if errors = 0"
+   ieq r14,r0,0
+   brf l98iffalse,r14
+   .src 32:15="then"
+   .src 32:20="say \"PASS: stem object access\""
+   say "PASS: stem object access"
+l98iffalse:
+   .src 33:1="return errors <> 0"
+   ine r14,r0,0
+   btoi r14
+   ret r14
+   .meta "13_stems.main.alpha"
+   .meta "13_stems.main.errors"
+   .meta "13_stems.main.gamma"
+   .meta "13_stems.main.missing"
+   .meta "13_stems.main.s"
+
+/* Imported Declaration from file: stem@library.rxbin */
+
+§rxfnsb.stem.§factory() .expose=rxfnsb.stem.§factory
+   .meta "rxfnsb.stem.§factory"="b" ".stem" §rxfnsb.stem.§factory() ""
+
+§rxfnsb.stem.hash() .expose=rxfnsb.stem.hash
+   .meta "rxfnsb.stem.hash"="b" ".int" §rxfnsb.stem.hash() "key=.string"
+
+§rxfnsb.stem.get() .expose=rxfnsb.stem.get
+   .meta "rxfnsb.stem.get"="b" ".string" §rxfnsb.stem.get() "key=.string"
+
+§rxfnsb.stem.set() .expose=rxfnsb.stem.set
+   .meta "rxfnsb.stem.set"="b" ".void" §rxfnsb.stem.set() "key=.string,value=.string"
+
+§rxfnsb.stem.size() .expose=rxfnsb.stem.size
+   .meta "rxfnsb.stem.size"="b" ".int" §rxfnsb.stem.size() ""
+
+§rxfnsb.stem.key() .expose=rxfnsb.stem.key
+   .meta "rxfnsb.stem.key"="b" ".string" §rxfnsb.stem.key() "ix=.int"
+
+§rxfnsb.stem.value() .expose=rxfnsb.stem.value
+   .meta "rxfnsb.stem.value"="b" ".string" §rxfnsb.stem.value() "kv=.string"
+
+/* Imported Declaration from file: value@library.rxbin */
+
+rxfnsb.value() .expose=rxfnsb.value
+   .meta "rxfnsb.value"="b" ".string" rxfnsb.value() "inputstring=.string"

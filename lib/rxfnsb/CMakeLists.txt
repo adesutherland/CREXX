@@ -6,22 +6,33 @@ add_subdirectory(rxas)
 add_subdirectory(tests_functional)
 add_subdirectory(tests_performance)
 
-# Consolidate Rexx Library
-set(SUBLIBS
-        rexx/library-rexx
-        rxas/library-rxas
-)
+# Consolidate Rexx Library through the linker so the shared constant pool is
+# converged before downstream consumers package it.
+set(_library_control_file ${CMAKE_CURRENT_BINARY_DIR}/library_link_$<CONFIG>.ctl)
+string(CONCAT _library_control_text
+        "* Auto-generated control file for the consolidated cREXX library\n"
+        "INPUT rexx/library-rexx.rxbin\n"
+        "INPUT rxas/library-rxas.rxbin\n")
 
-foreach (LIB ${SUBLIBS})
-    set(LIB_FILES ${LIB_FILES} ${LIB}.rxbin)
-endforeach ()
+foreach(_selector ${RXXFNSB_REXX_SELECTORS})
+    string(APPEND _library_control_text "INCLUDE ${_selector}\n")
+endforeach()
+foreach(_selector ${RXXFNSB_RXAS_SELECTORS})
+    string(APPEND _library_control_text "INCLUDE ${_selector}\n")
+endforeach()
+
+string(APPEND _library_control_text
+        "$<$<NOT:$<CONFIG:Debug>>:STRIP SOURCE\n>"
+        "OUTPUT ${CMAKE_BINARY_DIR}/bin/library\n")
+
+file(GENERATE OUTPUT ${_library_control_file} CONTENT "${_library_control_text}")
 
 add_custom_command(
-        OUTPUT library.rxbin
-        COMMAND ${CMAKE_COMMAND} -E cat ${LIB_FILES} > library.rxbin
+        OUTPUT ${CMAKE_BINARY_DIR}/bin/library.rxbin
+        COMMAND $<TARGET_FILE:rxlink> -c ${_library_control_file}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS library-rexx library-rxas rexx/library-rexx.rxbin rxas/library-rxas.rxbin
-        COMMENT "cREXX Combined Library Archive ..."
+        DEPENDS rxlink library-rexx library-rxas rexx/library-rexx.rxbin rxas/library-rxas.rxbin ${_library_control_file}
+        COMMENT "cREXX Linked Library Image ..."
 )
 
-add_custom_target(library ALL DEPENDS library.rxbin)
+add_custom_target(library ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/library.rxbin)

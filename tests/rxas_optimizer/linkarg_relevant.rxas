@@ -1,0 +1,7 @@
+* linkarg r0,0 implicitly reads argument register a0.
+
+main() .locals=1
+    swap a0,a1
+    linkarg r0,0
+    swap a0,a1
+    ret

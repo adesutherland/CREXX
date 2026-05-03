@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=8
-   .meta "hellodate.rexx.main"="b" ".int" main() "" ""
+   .meta "hellodate.rexx.main"="b" ".int" main() ""
    .src 4:1="say 'hello cRexx world!'"
    say "hello cRexx world!"
    .src 5:1="say 'today is a' date('w')"

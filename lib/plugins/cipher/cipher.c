@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <stdint.h>
+#include <string.h>
 
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
 

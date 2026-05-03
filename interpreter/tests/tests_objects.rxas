@@ -1,0 +1,53 @@
+/*
+ * interpreter/tests/tests_objects.rxas
+ */
+
+.globals=0
+
+main() .locals=10
+    say "Test Suite: Objects and Attributes"
+
+    /* Test 1: Basic Linking & Aliasing */
+    load r1, "Parent"
+    setattrs r1, 2
+    
+    linkattr r2, r1, 0
+    load r2, "AttributeValue"
+    
+    linkattr r3, r1, 0
+    seq r0, r3, "AttributeValue"
+    brt test1_pass, r0
+    say "FAIL: Basic Linking & Aliasing"
+    br test2_start
+test1_pass:
+    say "PASS: Basic Linking & Aliasing"
+
+test2_start:
+    /* Test 2: Multiple Attributes */
+    linkattr r4, r1, 1
+    load r4, "SecondValue"
+    
+    /* Verify r2 and r4 are distinct */
+    sne r0, r2, r4
+    brt test2_pass, r0
+    say "FAIL: Multiple Attributes (Aliasing error)"
+    br test3_start
+test2_pass:
+    say "PASS: Multiple Attributes"
+
+test3_start:
+    /* Test 3: Out-of-Bounds Safety (Negative Test) */
+    sigbr catch_oob, "OUT_OF_RANGE"
+    
+    /* Attempt linkattr r5, r1, 9999 - Should signal */
+    linkattr r5, r1, 9999
+    
+    /* If we get here, it didn't signal */
+    say "FAIL: Out-of-Bounds Safety (No signal raised)"
+    br end
+
+catch_oob:
+    say "PASS: Out-of-Bounds Safety (Signal caught)"
+
+end:
+    ret 0

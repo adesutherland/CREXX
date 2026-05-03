@@ -1,0 +1,5 @@
+Testing Implicit Rewrites...
+CONCAT test (a = "Hello" || "World"): HelloWorld
+SCONCAT test (b = "Hello" "World"): Hello World
+SCONCAT (diff quotes) test (c = "Hello"'World'): HelloWorld
+Implicit Rewrites Test PASSED

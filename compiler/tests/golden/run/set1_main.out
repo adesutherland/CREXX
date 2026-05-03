@@ -1,0 +1,7 @@
+Set 1 Main
+glob_int is 0
+glob_string is 
+is_true returns 1
+is_false returns 0
+get_val returns 101
+glob_int is now 101

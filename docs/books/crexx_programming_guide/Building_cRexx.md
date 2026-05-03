@@ -6,12 +6,12 @@ when a binary distribution is unavailable, it will be beneficial to be
 able to build the \crexx{} system using a standard C toolchain.
 
 This chapter aims to show all you need to know about how to build
-cRexx from scratch, and then run it. It will show what you need, what to
+\crexx{} from scratch, and then run it. It will show what you need, what to
 do and when it is build, how to make working programs with it.
 
 ## Requirements
 
-Currently cRexx builds on Windows, macOS and
+Currently \crexx{} builds on Windows, macOS and
 Linux[^linux].
 
 [^linux]: There is a separate instruction for VM/370 (and later)
@@ -50,7 +50,7 @@ Here it is assumed that all tools are installed and working, and
 available on your PATH environment variable.
 
 Choose or make a suitably named directory on your system to contain the
-source code. Note that the cRexx source is kept in a different directory
+source code. Note that the \crexx{} source is kept in a different directory
 on you system than where it is built in, or will run from. Now run this
 command:
 
@@ -59,7 +59,7 @@ git clone https://github.com/adesutherland/CREXX.git
 \end{verbatim}
 
 This will give you a CREXX subdirectory in the current directory,
-containing the source of cRexx and its dependencies. This is the
+containing the source of \crexx{} and its dependencies. This is the
 `develop' branch, which is the one you would normally want to use. All
 of these are written in the C99 version of the C programming language,
 which should be widely supported by C compilers on most platforms.
@@ -75,75 +75,76 @@ and cd into that directory. Now issue the following command (we assume
 that you installed ninja, otherwise substitute `make' for the two
 <!-- instances of `ninja'): -->
 
-<!-- \begin{verbatim} -->
-<!-- cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../CREXX && ninja && ctest -->
-<!-- \end{verbatim} -->
+```bash <!--buildcommand.sh-->
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../CREXX && ninja && ctest
+```
 
-<!-- This will do a lot of things. In fact, if all goes well, you will have a -->
-<!-- built and tested cRexx system. -->
+This will do a lot of things. In fact, if all goes well, you will have a
+built and tested \crexx{} system.
 
-<!-- ## Explaining the build process -->
+## Explaining the build process
 
-<!-- Let's zoom in a little on what we did. The first step is to tell CMake -->
-<!-- to validate your system environment and generate a build script (and a -->
-<!-- test script) for the chosen build tool. Cmake will read the file -->
-<!-- CmakeLists.txt and validate that your system can do what it asks it to -->
-<!-- do. This can yield error messages, for example if the C compiler lacks -->
-<!-- certain functions or header files. (When that happens, open an -->
-<!-- \href{https://github.com/adesutherland/CREXX/issues}{issue} and someone -->
-<!-- will have a look at it - or peruse -->
-<!-- \href{https://stackoverflow.com}{stack overflow} which is what we -->
-<!-- probably also will do). -->
+Let's zoom in a little on what we did. The first step is to tell CMake
+to validate your system environment and generate a build script (and a
+test script) for the chosen build tool. Cmake will read the file
+CmakeLists.txt and validate that your system can do what it asks it to
+do. This can yield error messages, for example if the C compiler lacks
+certain functions or header files. (When that happens, open an
+\href{https://github.com/adesutherland/CREXX/issues}{issue} and someone
+will have a look at it - or peruse
+\href{https://stackoverflow.com}{stack overflow} which is what we
+probably also will do).
 
-<!-- After CMake has successfully validated the build environment, it will -->
-<!-- generate a build script (a Makefile in the case of Make and a -->
-<!-- build.ninja file in the case of Ninja). This is specified after the -G -->
-<!-- flag. The -DCMAKE\_BUILD\_TYPE=Release flag makes sure we do an -->
-<!-- optimized build, which means we specify an -O3 flag to the C compiler, -->
-<!-- which then will spend some time optimizing the executable modules, which -->
-<!-- makes them run faster (they do!). The alternative is a `debug' build -->
-<!-- which will yield slower executables, but with more debugging information -->
-<!-- in them. -->
+After CMake has successfully validated the build environment, it will
+generate a build script (a Makefile in the case of Make and a
+build.ninja file in the case of Ninja). This is specified after the -G
+flag. The -DCMAKE\_BUILD\_TYPE=Release flag makes sure we do an
+optimized build, which means we specify an -O3 flag to the C compiler,
+which then will spend some time optimizing the executable modules, which
+makes them run faster (they do!). The alternative is a `debug' build
+which will yield slower executables, but with more debugging information
+in them.
 
-<!-- The two ampersands (\&\&) mean we do the next part only if the previous -->
-<!-- step was successful. This is a `ninja' statement, which will build -->
-<!-- everything in the build.ninja specification file. These are a lot of -->
-<!-- parts, and the good news is, when they are built once, only the changed -->
-<!-- source will be built, which will be fast. -->
+The two ampersands (\&\&) mean we do the next part only if the previous
+step was successful. This is a `ninja' statement, which will build
+everything in the build.ninja specification file. These are a lot of
+parts, and the good news is, when they are built once, only the changed
+source will be built, which will be fast.
 
 After this, the generated test suite is run with the `ctest' command.
-This knows what to do, and will show you successes and failures. If what
-you checked out if git is not a released version, there is a small
+This knows what to do, as the tests were defined in the Cmake recipes, and will show you successes and failures. If what
+you checked out if git is not a released version, there is a 
 change that some test cases fail, but generally these should indicate
 success.
 
 ## Use of \crexx{} to build \crexx{}
 
-\crexx{} is used to build the library of built-in functions that written in Rexx (and Rexx
-Assembler) and need to be compiled (carefully observing the
+\crexx{} is used to build the library of built-in functions that are written in Rexx (and,
+for a very small part in Rexx Assembler) and need to be compiled (carefully observing the
 dependencies on other Rexx built-in functions) before they are added to the
-library and the cRexx executables in their binary form.
+library and the \crexx{} executables in their binary form.
 
 
-## What do we have after a successful build process
+## What do we have after a successful build
 
 ### Native executables
 
 When all went well, we have a set of native executables for the platform
-we built cRexx on. These are
+we built \crexx{} on. These are
 
 | Name    | Function                                        |
 |---------|-------------------------------------------------|
-| crexx   | cRexx compiler driver                           |
-| rxc     | cRexx compiler                                  |
-| rxas    | cRexx assembler                                 |
-| rxdas   | cRexx disassembler                              |
-| rxvm    | cRexx VM, threaded interpreter                  |
-| rxpp    | cRexx macro preprocessor                        |
-| rxbvm   | cRexx VM, non-threaded conventional interpreter |
-| rxvme   | cRexx VM, with linked-in Rexx library           |
-| rxdb    | cRexx debugger                                  |
-| rxcpack | cRexx C-generator for native executables        |
+| \crexx{}   | \crexx{} compiler driver                           |
+| rxc     | \crexx{} compiler                                  |
+| rxas    | \crexx{} assembler                                 |
+| rxlink  | \crexx{} linker                                    |
+| rxdas   | \crexx{} disassembler                              |
+| rxvm    | \crexx{} VM, threaded interpreter                  |
+| rxpp    | \crexx{} macro preprocessor                        |
+| rxbvm   | \crexx{} VM, non-threaded conventional interpreter |
+| rxvme   | \crexx{} VM, with linked-in Rexx library           |
+| rxdb    | \crexx{} debugger                                  |
+| rxcpack | \crexx{} C-generator for native executables        |
 
 Table: Delivered products. {#tbl:id}
 
@@ -156,14 +157,14 @@ executable file.
 
 The executables in the above table need to be on the `PATH` environment
 variable. These are to be found in the compiler, assembler,
-disassembler, debugger and cpacker directories of the crexx-build
+disassembler, debugger and cpacker directories of the \crexx{}-build
 directory we created earlier. It is up to you to add all these
 separately to the `PATH` environment, or to just collect them all into one
 directory that is already on the `PATH`.
 
 ### Production and debug builds
 
-Production builds are optimized, while debug builds are slower in exection time but deliver support for the analysis and debugging of problems in the code. The standard distribution is an optimized production build, while a debug build can be produced with the Debug CMake build option.
+Production builds are optimized, while debug builds are slower in execution time but deliver support for the analysis and debugging of problems in the code. The standard distribution is an optimized production build, while a debug build can be produced with the Debug CMake build option.
 
 | Name    | Function                                        |
 |---------|-------------------------------------------------|
@@ -173,6 +174,9 @@ Production builds are optimized, while debug builds are slower in exection time 
 Table: Debug vs Release options. {#tbl:id}
 
 ### Libraries
+
+We also have a set of libraries. Some are written in \crexx{} and others can be written in C and other programming languages.
+All executables and libraries are delivered in the `bin` directory of the distribution package.
 
 ### Optional libraries - build options
 
@@ -185,5 +189,4 @@ Table: Debug vs Release options. {#tbl:id}
 Table: Optional plugin build  options. {#tbl:id}
 
 Some libraries, with dependencies on installed software products, are only produced when they are opted-in with CMake build options. The defaults for these options are \code{OFF}.
-
 

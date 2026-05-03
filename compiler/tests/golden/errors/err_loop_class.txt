@@ -1,0 +1,2 @@
+Error in err_loop_class.rexx @ 4:8 - #LOOP_CLASSES_NOT_SUPPORTED, ".foo(5)"
+1 error(s) in source file

@@ -6,6 +6,7 @@ import rxfnsb
 imax=100000
 ## Step 1 Sort Array descending order, sort criteria is column 6
 j=imax
+array = .string[]
 do i=1 to imax
    array.i = 'Record 'right(i,8,'0')
    j=j-1

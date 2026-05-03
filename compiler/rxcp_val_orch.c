@@ -1,0 +1,1401 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Validation Pipeline Orchestrator
+ */
+
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include "rxcp_val.h"
+#include "rxcpdary.h"
+#include "rxcp_source_tree.h"
+
+/* Suppress errors and warnings unless it is the final pass */
+#undef mknd_err
+#undef mknd_err_unique
+#undef mknd_war
+#define mknd_err(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err)((n), __VA_ARGS__) : (n))
+#define mknd_err_unique(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique)((n), __VA_ARGS__) : (n))
+#define mknd_war(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war)((n), __VA_ARGS__) : (n))
+
+/* Common Helpers */
+
+/* Helper function to compare node string value with a string
+ * Used for builtin class names (int, float etc) - so don't need to worry
+ * about utf
+ * NOTE value MUST be in lower case! */
+int is_node_string(ASTNode* node, const char* value) {
+    int i;
+    size_t len = node->node_string_length;
+
+    /* Ignore trailing dot on node_string for stem variable matching */
+    if (len > 0 && node->node_string[len - 1] == '.') {
+        len--;
+    }
+
+    /* If it is a different length it can't be the same! */
+    if (strlen(value) != len) return 0;
+
+    for (i=0; i < (int)len; i++) {
+        if (tolower(node->node_string[i]) != value[i]) return 0;
+    }
+    return 1;
+}
+
+static int rxcp_program_has_import(ASTNode *program_file, const char *namespace_name) {
+    ASTNode *child;
+
+    if (!program_file || !namespace_name) return 0;
+
+    child = program_file->child;
+    while (child) {
+        if (child->node_type == IMPORT &&
+            child->child &&
+            is_node_string(child->child, namespace_name)) {
+            return 1;
+        }
+        child = child->sibling;
+    }
+
+    return 0;
+}
+
+static void rxcp_insert_program_import(Context *context, ASTNode *program_file, const char *namespace_name) {
+    ASTNode *import_node;
+    ASTNode *literal_node;
+    ASTNode *child;
+    ASTNode *insert_after;
+
+    if (!context || !program_file || !namespace_name || !namespace_name[0]) return;
+
+    import_node = ast_ft(context, IMPORT);
+    literal_node = ast_ft(context, LITERAL);
+    ast_copy_str(literal_node, (char*)namespace_name);
+    add_ast(import_node, literal_node);
+
+    insert_after = 0;
+    child = program_file->child;
+    while (child &&
+           (child->node_type == REXX_OPTIONS ||
+            child->node_type == IMPORT ||
+            child->node_type == NAMESPACE)) {
+        insert_after = child;
+        child = child->sibling;
+    }
+
+    if (insert_after) {
+        import_node->sibling = insert_after->sibling;
+        insert_after->sibling = import_node;
+    } else {
+        import_node->sibling = program_file->child;
+        program_file->child = import_node;
+    }
+    import_node->parent = program_file;
+}
+
+static void rxcp_inject_cli_imports(Context *context) {
+    ASTNode *program_file;
+    size_t i;
+
+    if (!context || !context->ast || !context->cli_import_names || context->cli_import_count == 0) return;
+
+    program_file = context->ast->child;
+    while (program_file) {
+        if (program_file->node_type == PROGRAM_FILE) {
+            for (i = 0; i < context->cli_import_count; i++) {
+                if (!rxcp_program_has_import(program_file, context->cli_import_names[i])) {
+                    rxcp_insert_program_import(context, program_file, context->cli_import_names[i]);
+                }
+            }
+            return;
+        }
+        program_file = program_file->sibling;
+    }
+}
+
+static int rxcp_subtree_has_signal_block(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    if (node->node_type == SIGNAL_BLOCK) return 1;
+    child = node->child;
+    while (child) {
+        if (rxcp_subtree_has_signal_block(child)) return 1;
+        child = child->sibling;
+    }
+    return 0;
+}
+
+static void rxcp_inject_signal_imports(Context *context) {
+    ASTNode *program_file;
+
+    if (!context || !context->ast) return;
+
+    program_file = context->ast->child;
+    while (program_file) {
+        if (program_file->node_type == PROGRAM_FILE &&
+            rxcp_subtree_has_signal_block(program_file) &&
+            !rxcp_program_has_import(program_file, "rxfnsb")) {
+            rxcp_insert_program_import(context, program_file, "rxfnsb");
+            context->changed_flags |= FLAG_ORCH;
+        }
+        program_file = program_file->sibling;
+    }
+}
+
+/* Convert a node (i.e. type INTEGER) to an integer - no error correction as the lexer will have done that */
+int node_to_integer(ASTNode* node) {
+    int result;
+    if (!node) return 0;
+
+    /* If int_value is set, use it */
+    if (node->int_value) return (int)node->int_value;
+
+    char *s = node->node_string;
+    size_t l = node->node_string_length;
+
+    if (!s || !l) return 0;
+
+    /* Skip leading dot or spaces */
+    while (l && (*s == '.' || *s == ' ')) {
+        s++;
+        l--;
+    }
+
+    if (!l) return 0;
+
+    char *buffer = malloc(l + 1);
+    memcpy(buffer, s, l);
+    buffer[l] = 0;
+
+    result = atoi(buffer);
+
+    free(buffer);
+
+    return result;
+}
+
+/*
+ * Helper function to set dimensions based on a node
+ * Sets dims to the number of dimensions (or 0 if not an array)
+ *      dim_base and dim_elements are malloced and set as appropriately
+ */
+void node_to_dims(Context *context, ASTNode* node, size_t *dims, int** dim_base, int** dim_elements) {
+    size_t local_dims = 0;
+    int *local_dim_base = 0;
+    int *local_dim_elements = 0;
+    int i;
+    ASTNode* n;
+    ASTNode* min;
+    ASTNode* max;
+
+    if (!node) {
+        if (*dim_base) free(*dim_base); *dim_base = 0;
+        if (*dim_elements) free(*dim_elements); *dim_elements = 0;
+        *dims = 0;
+        return;
+    }
+
+    local_dims = ast_nchd(node);
+    if (local_dims > 0 && node->node_type == VAR_TARGET) {
+        /* printf("DEBUG: node_to_dims called on VAR_TARGET '%s', setting local_dims=%lu\n", node->node_string, (unsigned long)local_dims); */
+    }
+    if (local_dims) {
+        local_dim_base = malloc(sizeof(int) * (local_dims));
+        local_dim_elements = malloc(sizeof(int) * (local_dims));
+
+        /* We are an array - determine the array bounds */
+        if (node->node_type == CLASS) {
+            /* Type definition - can have specific bounds */
+            n = ast_chdn(node,0); /* n is a RANGE for that dimension */
+            for (i = 0; i < (int)local_dims; i++) {
+                /* Child 1 - n->child - is the base */
+                min = ast_chdn(n,0);
+                if (min->node_type == NOVAL) local_dim_base[i] = 1;
+                else if (min->node_type == OP_NEG) local_dim_base[i] = -node_to_integer(ast_chdn(min, 0));
+                else local_dim_base[i] = node_to_integer(min);
+
+                /* Child 2 - n->child->sibling - is the max index value (which we convert to number of elements) */
+                max = ast_chdn(n,1);
+                if (max->node_type == NOVAL) local_dim_elements[i] = 0; /* Infinity */
+
+                else if (local_dim_base[i] == 1 && max->node_type == INTEGER && node_to_integer(max) == 0)
+                    local_dim_elements[i] = 0; /* Syntax candy to make 0 Infinity for base 1 */
+
+                else {
+                    if (max->node_type == OP_NEG)
+                        local_dim_elements[i] =
+                                -node_to_integer(ast_chdn(max, 0)) - local_dim_base[i] + 1;
+                    else local_dim_elements[i] = node_to_integer(max) - local_dim_base[i] + 1;
+
+                    if (local_dim_elements[i] < 1) {
+                        if (max->node_type == OP_NEG) {
+                            /* One child expected for the INTEGER otherwise an error MUST have been added already */
+                            if (ast_nchd(max) == 1) mknd_err(max, "LESS_THAN_BASE");
+                        } else {
+                            /* No child expected otherwise an error MUST have been added already */
+                            if (ast_nchd(max) == 0) mknd_err(max, "LESS_THAN_BASE");
+                        }
+                    }
+                }
+
+                n = ast_nsib(n);
+            }
+        } else {
+            /* Implicit definition - default bounds */
+            for (i = 0; i < (int)local_dims; i++) {
+                local_dim_base[i] = 1;
+                local_dim_elements[i] = 0; /* Infinity */
+            }
+        }
+    }
+
+    if (*dim_base) free(*dim_base);
+    *dim_base = local_dim_base;
+
+    if (*dim_elements) free(*dim_elements);
+    *dim_elements = local_dim_elements;
+
+    *dims = local_dims;
+}
+
+/* Specificity level for ValueType lattice: UNKNOWN < VOID < STRING < Concrete */
+static int type_specificity(ValueType type) {
+    switch (type) {
+        case TP_UNKNOWN: return 0;
+        case TP_VOID:    return 1;
+        case TP_STRING:  return 2;
+        default:         return 3; /* Concrete: BOOLEAN, INTEGER, FLOAT, DECIMAL, BINARY, OBJECT */
+    }
+}
+
+/* Monotonic Gatekeepers */
+
+void sym_promote_type(Context *context, Symbol *sym, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
+    int current_spec = type_specificity(sym->type);
+    int new_spec = type_specificity(type);
+    int promote = 0;
+    size_t i;
+
+    if (new_spec > current_spec) promote = 1;
+    else if (new_spec == current_spec && type == sym->type) {
+        if (dims > sym->value_dims) promote = 1;
+        else if (dims == sym->value_dims) {
+            if (class_name && !sym->value_class) promote = 1;
+        }
+    }
+
+    if (promote) {
+        sym->type = type;
+        sym->value_dims = dims;
+        if (sym->dim_base) free(sym->dim_base);
+        if (sym->dim_elements) free(sym->dim_elements);
+        sym->dim_base = 0;
+        sym->dim_elements = 0;
+        if (dims > 0) {
+            sym->dim_base = malloc(sizeof(int) * dims);
+            sym->dim_elements = malloc(sizeof(int) * dims);
+            if (dim_base) memcpy(sym->dim_base, dim_base, sizeof(int) * dims);
+            else for (i=0; i<dims; i++) sym->dim_base[i] = 1;
+            if (dim_elements) memcpy(sym->dim_elements, dim_elements, sizeof(int) * dims);
+            else for (i=0; i<dims; i++) sym->dim_elements[i] = 0;
+        }
+        if (class_name) {
+            if (sym->value_class) free(sym->value_class);
+            sym->value_class = strdup(class_name);
+        }
+        context->changed_flags |= FLAG_VAL_TYPE;
+    }
+}
+
+void sym_promote_status(Context *context, Symbol *sym, SymbolStatus status) {
+    if (sym->status == status) return;
+
+    if (sym->status == SYM_STATUS_UNRESOLVED && status != SYM_STATUS_UNRESOLVED) {
+        sym->status = status;
+        context->changed_flags |= FLAG_VAL_SYM;
+    }
+    /* Explicit definition trumps inference */
+    else if (sym->status == SYM_STATUS_LOCAL_VAR && status == SYM_STATUS_LOCAL_DEF) {
+        sym->status = status;
+        context->changed_flags |= FLAG_VAL_SYM;
+    }
+    else {
+        fprintf(stderr, "INTERNAL ERROR: Illegal symbol status regression for %s: %d -> %d\n", sym->name, sym->status, status);
+        exit(255);
+    }
+}
+
+void sym_promote_symtype(Context *context, Symbol *sym, SymbolType symbol_type) {
+    if (sym->symbol_type == symbol_type) return;
+
+    if (sym->symbol_type == UNKNOWN_SYMBOL && symbol_type != UNKNOWN_SYMBOL) {
+        sym->symbol_type = symbol_type;
+        context->changed_flags |= FLAG_VAL_SYM;
+    }
+    else if (sym->symbol_type == VARIABLE_SYMBOL && symbol_type == CONSTANT_SYMBOL) {
+        /* Allow promotion from Variable to Constant (Taken Constant) */
+        sym->symbol_type = symbol_type;
+        context->changed_flags |= FLAG_VAL_SYM;
+    }
+    else {
+        fprintf(stderr, "INTERNAL ERROR: Illegal symbol type regression for %s: %d -> %d\n", sym->name, sym->symbol_type, symbol_type);
+        exit(255);
+    }
+}
+
+void ast_promote_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
+    int current_spec = type_specificity(node->value_type);
+    int new_spec = type_specificity(type);
+    int promote = 0;
+    size_t i;
+
+    if (new_spec > current_spec) promote = 1;
+    else if (new_spec == current_spec && type == node->value_type) {
+        if (dims > node->value_dims) promote = 1;
+        else if (dims == node->value_dims) {
+            if (class_name && !node->value_class) promote = 1;
+        }
+    }
+
+    if (promote) {
+        node->value_type = type;
+        node->value_dims = dims;
+        if (node->value_dim_base) free(node->value_dim_base);
+        if (node->value_dim_elements) free(node->value_dim_elements);
+        node->value_dim_base = 0;
+        node->value_dim_elements = 0;
+        if (dims > 0) {
+            node->value_dim_base = malloc(sizeof(int) * dims);
+            node->value_dim_elements = malloc(sizeof(int) * dims);
+            if (dim_base) memcpy(node->value_dim_base, dim_base, sizeof(int) * dims);
+            else for (i=0; i<dims; i++) node->value_dim_base[i] = 1;
+            if (dim_elements) memcpy(node->value_dim_elements, dim_elements, sizeof(int) * dims);
+            else for (i=0; i<dims; i++) node->value_dim_elements[i] = 0;
+        }
+        if (class_name) {
+            if (node->value_class) free(node->value_class);
+            node->value_class = strdup(class_name);
+        }
+        context->changed_flags |= FLAG_VAL_TYPE;
+    }
+}
+
+
+/* Non-Monotonic Utility Setters for Type Safety */
+void ast_set_value_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
+    size_t i;
+
+    /* Optional change detection to help the orchestrator converge */
+    if (context) {
+        if (node->value_type != type || node->value_dims != dims) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        } else if (dims > 0 && (node->value_dim_base == 0 || node->value_dim_elements == 0)) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        } else if (class_name && (!node->value_class || strcmp(node->value_class, class_name) != 0)) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        }
+    }
+
+    node->value_type = type;
+    node->value_dims = dims;
+    
+    if (node->value_dim_base) free(node->value_dim_base);
+    if (node->value_dim_elements) free(node->value_dim_elements);
+    node->value_dim_base = 0;
+    node->value_dim_elements = 0;
+    
+    if (dims > 0) {
+        node->value_dim_base = malloc(sizeof(int) * dims);
+        node->value_dim_elements = malloc(sizeof(int) * dims);
+        if (dim_base) memcpy(node->value_dim_base, dim_base, sizeof(int) * dims);
+        else for (i=0; i<dims; i++) node->value_dim_base[i] = 1;
+        if (dim_elements) memcpy(node->value_dim_elements, dim_elements, sizeof(int) * dims);
+        else for (i=0; i<dims; i++) node->value_dim_elements[i] = 0;
+    }
+    
+    if (node->value_class) {
+        free(node->value_class);
+        node->value_class = 0;
+    }
+    if (class_name) {
+        node->value_class = strdup(class_name);
+    }
+}
+
+void ast_set_target_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
+    size_t i;
+
+    /* Optional change detection to help the orchestrator converge */
+    if (context) {
+        if (node->target_type != type || node->target_dims != dims) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        } else if (dims > 0 && (node->target_dim_base == 0 || node->target_dim_elements == 0)) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        } else if (class_name && (!node->target_class || strcmp(node->target_class, class_name) != 0)) {
+            context->changed_flags |= FLAG_VAL_TYPE;
+        }
+    }
+
+    node->target_type = type;
+    node->target_dims = dims;
+    
+    if (node->target_dim_base) free(node->target_dim_base);
+    if (node->target_dim_elements) free(node->target_dim_elements);
+    node->target_dim_base = 0;
+    node->target_dim_elements = 0;
+    
+    if (dims > 0) {
+        node->target_dim_base = malloc(sizeof(int) * dims);
+        node->target_dim_elements = malloc(sizeof(int) * dims);
+        if (dim_base) memcpy(node->target_dim_base, dim_base, sizeof(int) * dims);
+        else for (i=0; i<dims; i++) node->target_dim_base[i] = 1;
+        if (dim_elements) memcpy(node->target_dim_elements, dim_elements, sizeof(int) * dims);
+        else for (i=0; i<dims; i++) node->target_dim_elements[i] = 0;
+    }
+    
+    if (node->target_class) {
+        free(node->target_class);
+        node->target_class = 0;
+    }
+    if (class_name) {
+        node->target_class = strdup(class_name);
+    }
+}
+
+void ast_promote_target_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
+    int current_spec = type_specificity(node->target_type);
+    int new_spec = type_specificity(type);
+    int promote = 0;
+    size_t i;
+
+    if (new_spec > current_spec) promote = 1;
+    else if (new_spec == current_spec && type == node->target_type) {
+        if (dims > node->target_dims) promote = 1;
+        else if (dims == node->target_dims) {
+            if (class_name && !node->target_class) promote = 1;
+        }
+    }
+
+    if (promote) {
+        node->target_type = type;
+        node->target_dims = dims;
+        if (node->target_dim_base) free(node->target_dim_base);
+        if (node->target_dim_elements) free(node->target_dim_elements);
+        node->target_dim_base = 0;
+        node->target_dim_elements = 0;
+        if (dims > 0) {
+            node->target_dim_base = malloc(sizeof(int) * dims);
+            node->target_dim_elements = malloc(sizeof(int) * dims);
+            if (dim_base) memcpy(node->target_dim_base, dim_base, sizeof(int) * dims);
+            else for (i=0; i<dims; i++) node->target_dim_base[i] = 1;
+            if (dim_elements) memcpy(node->target_dim_elements, dim_elements, sizeof(int) * dims);
+            else for (i=0; i<dims; i++) node->target_dim_elements[i] = 0;
+        }
+        if (class_name) {
+            if (node->target_class) free(node->target_class);
+            node->target_class = strdup(class_name);
+        }
+        context->changed_flags |= FLAG_VAL_TYPE;
+    }
+}
+
+/*
+ * Helper function to set the arrays
+ * Sets dims to the number of dimensions (or 0 if not an array)
+ *      class_name is set to either zero of to a class name (if not an in built class)
+ *                 So if it is not zero it needs to be free()d
+ *      dim_base and dim_elements are malloced and set as appropriately
+ */
+ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_base, int **dim_elements, char **class_name) {
+    int i;
+    ASTNode *n;
+    ASTNode* min;
+    ASTNode* max;
+    size_t local_dims = 0;
+    int *local_dim_base = 0;
+    int *local_dim_elements = 0;
+    char *local_class_name = 0;
+    ValueType result;
+
+    if (!node) {
+        if (*class_name) free(*class_name); *class_name = 0;
+        if (*dim_base) free(*dim_base); *dim_base = 0;
+        if (*dim_elements) free(*dim_elements); *dim_elements = 0;
+        *dims = 0;
+        return TP_VOID;
+    }
+
+    if (node->value_type != TP_UNKNOWN) {
+        /* The Node Type has already been determined */
+        local_dims = node->value_dims;
+
+        if (local_dims) {
+            local_dim_base = malloc(sizeof(int) * (local_dims));
+            memcpy(local_dim_base, node->value_dim_base, sizeof(int) * (local_dims));
+
+            local_dim_elements = malloc(sizeof(int) * (local_dims));
+            memcpy(local_dim_elements, node->value_dim_elements, sizeof(int) * (local_dims));
+        }
+
+        if (node->value_class) {
+            local_class_name = malloc(strlen(node->value_class) + 1);
+            strcpy(local_class_name, node->value_class);
+        }
+        result = node->value_type;
+        goto exit;
+    }
+
+    /* If we don't know the node type, let's see if we can determine it from the symbol */
+    if (node->node_type == FUNCTION) {
+        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->type != TP_UNKNOWN) {
+            Symbol *s = node->symbolNode->symbol;
+            local_dims = s->value_dims;
+            if (local_dims) {
+                local_dim_base = malloc(sizeof(int) * (local_dims));
+                memcpy(local_dim_base, s->dim_base, sizeof(int) * (local_dims));
+                local_dim_elements = malloc(sizeof(int) * (local_dims));
+                memcpy(local_dim_elements, s->dim_elements, sizeof(int) * (local_dims));
+            }
+            if (s->value_class) {
+                local_class_name = malloc(strlen(s->value_class) + 1);
+                strcpy(local_class_name, s->value_class);
+            }
+            result = s->type;
+            goto exit;
+        }
+    }
+
+    /* If we don't let's see if we can determine it now */
+    if (node->node_type == CLASS) {
+        /* Class and Class Arrays */
+        local_dims = ast_nchd(node);
+        if (local_dims) {
+            local_dim_base = malloc(sizeof(int) * (local_dims));
+            local_dim_elements = malloc(sizeof(int) * (local_dims));
+
+            /* We are an array - determine the array bounds */
+            /* Type definition - can have specific bounds */
+            /* n is a RANGE for that dimension */
+            n = ast_chdn(node, 0);
+            for (i = 0; i < (int)local_dims; i++) {
+
+                /* Child 1 - n->child - is the base */
+                min = ast_chdn(n, 0);
+                if (min->node_type == NOVAL) local_dim_base[i] = 1;
+                else if (min->node_type == OP_NEG) local_dim_base[i] = -node_to_integer(ast_chdn(min, 0));
+                else local_dim_base[i] = node_to_integer(min);
+
+                /* Child 2 - n->child->sibling - is the max index value (which we convert to number of elements) */
+                max = ast_chdn(n, 1);
+                if (max->node_type == NOVAL) local_dim_elements[i] = 0; /* Infinity */
+
+                else if (local_dim_base[i] == 1 && max->node_type == INTEGER && node_to_integer(max) == 0)
+                    local_dim_elements[i] = 0; /* Syntax candy to make 0 Infinity for base 1 */
+
+                else {
+                    if (max->node_type == OP_NEG)
+                        local_dim_elements[i] =
+                                -node_to_integer(ast_chdn(max, 0)) - local_dim_base[i] + 1;
+                    else local_dim_elements[i] = node_to_integer(max) - local_dim_base[i] + 1;
+
+                    if (local_dim_elements[i] < 1) {
+                        if (max->node_type == OP_NEG) {
+                            /* One child expected for the INTEGER otherwise an error MUST have been added already */
+                            if (ast_nchd(max) == 1) mknd_err(max, "LESS_THAN_BASE");
+                        } else {
+                            /* No child expected otherwise an error MUST have been added already */
+                            if (ast_nchd(max) == 0) mknd_err(max, "LESS_THAN_BASE");
+                        }
+                    }
+                }
+
+                n = ast_nsib(n);
+            }
+        }
+
+        if (is_node_string(node, ".int")) {
+            result = TP_INTEGER;
+            goto exit;
+        }
+        if (is_node_string(node, ".float")) {
+            result = TP_FLOAT;
+            goto exit;
+        }
+        if (is_node_string(node, ".decimal")) {
+            result = TP_DECIMAL;
+            goto exit;
+        }
+        if (is_node_string(node, ".string")) {
+            result = TP_STRING;
+            goto exit;
+        }
+        if (is_node_string(node, ".boolean")) {
+            result = TP_BOOLEAN;
+            goto exit;
+        }
+        if (is_node_string(node, ".binary")) {
+            result = TP_BINARY;
+            goto exit;
+        }
+        if (is_node_string(node, ".void")) {
+            result = TP_VOID;
+            goto exit;
+        }
+        if (is_node_string(node, ".unknown")) {
+            result = TP_UNKNOWN;
+            goto exit;
+        }
+
+        /* Contract/class support */
+        local_class_name = rxcp_normalize_source_symbol_name(node->node_string, node->node_string_length, 1, 0);
+        if (!local_class_name) {
+            result = TP_UNKNOWN;
+            goto exit;
+        }
+
+        /* Try and import the class on-demand if it's not already known. */
+        if (context->ast &&
+            !((strchr(local_class_name, '.') ? sym_rfqv(context->ast, local_class_name)
+                                             : sym_rvfn(context->ast, local_class_name)))) {
+            ensure_class_imported(context, node->node_string, node->node_string_length);
+        }
+
+        result = TP_OBJECT;
+        goto exit;
+    }
+
+    local_dims = 0;
+    switch (node->node_type) {
+        case INTEGER:
+        case OP_ARGS:
+            result = TP_INTEGER;
+            break;
+        case FLOAT:
+            result = TP_FLOAT;
+            break;
+        case DECIMAL:
+            result = TP_DECIMAL;
+            break;
+        case STRING:
+            result = TP_STRING;
+            break;
+        case BINARY:
+            result = TP_BINARY;
+            break;
+        case VOID:
+            result = TP_VOID;
+            break;
+        default:
+            result = TP_UNKNOWN;
+            break;
+    }
+
+exit:
+    if (*class_name) free(*class_name);
+    *class_name = local_class_name;
+
+    if (*dim_base) free(*dim_base);
+    *dim_base = local_dim_base;
+
+    if (*dim_elements) free(*dim_elements);
+    *dim_elements = local_dim_elements;
+
+    *dims = local_dims;
+    return result;
+}
+
+/* Promotes a symbol from its node's target type if it's currently unknown */
+void promote_symbol_from_target(Context *context, ASTNode *node) {
+    if (node->value_type == TP_UNKNOWN && node->target_type != TP_UNKNOWN) {
+        if ((node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET) &&
+            node->symbolNode && node->symbolNode->symbol) {
+            Symbol *s = node->symbolNode->symbol;
+            if (s->type == TP_UNKNOWN) {
+                s->type = node->target_type;
+                s->value_dims = node->target_dims;
+                if (s->value_dims > 0) {
+                    if (s->dim_base) free(s->dim_base);
+                    if (s->dim_elements) free(s->dim_elements);
+                    s->dim_base = malloc(sizeof(int) * s->value_dims);
+                    s->dim_elements = malloc(sizeof(int) * s->value_dims);
+                    memcpy(s->dim_base, node->target_dim_base, sizeof(int) * s->value_dims);
+                    memcpy(s->dim_elements, node->target_dim_elements, sizeof(int) * s->value_dims);
+                }
+                if (node->target_type == TP_OBJECT) {
+                    if (s->value_class) free(s->value_class);
+                    s->value_class = node->target_class ? strdup(node->target_class) : 0;
+                }
+                if (context) {
+                    context->changed_flags |= FLAG_VAL_TYPE;
+                }
+                /* Also update the node's value_type so it matches target_type immediately */
+                ast_svtp(node, s);
+            }
+        }
+    }
+}
+
+/* Validates a node promotion is correct adding error nodes if not */
+void validate_node_promotion(Context *context, ASTNode* node) {
+    size_t i;
+    if (node->target_type == TP_UNKNOWN) return; /* Can't validate yet - will be done later after the target is set */
+    if (node->value_type == TP_UNKNOWN) return; /* Can't validate yet - will be done later after the value is set */
+
+    /* Ignore error nodes */
+    if (node->node_type == ERROR) return;
+    if (node->node_type == WARNING) return;
+
+    if (node->value_dims != node->target_dims) {
+        /* SAFE DIMENSION ADOPTION: If target is an EXPOSED variable and currently has 0 dimensions, adopt value dims */
+        int adopted = 0;
+        if (node->parent && (node->parent->node_type == ASSIGN || node->parent->node_type == DEFINE) &&
+            node->parent->child->symbolNode && node->parent->child->symbolNode->symbol &&
+            node->parent->child->symbolNode->symbol->exposed &&
+            node->target_dims == 0 && node->value_dims > 0) {
+
+            Symbol *s = node->parent->child->symbolNode->symbol;
+            s->value_dims = node->value_dims;
+            if (s->dim_base) free(s->dim_base);
+            if (s->dim_elements) free(s->dim_elements);
+            s->dim_base = malloc(sizeof(int) * s->value_dims);
+            s->dim_elements = malloc(sizeof(int) * s->value_dims);
+            memcpy(s->dim_base, node->value_dim_base, sizeof(int) * s->value_dims);
+            memcpy(s->dim_elements, node->value_dim_elements, sizeof(int) * s->value_dims);
+
+            node->target_dims = node->value_dims;
+            if (node->target_dim_base) free(node->target_dim_base);
+            if (node->target_dim_elements) free(node->target_dim_elements);
+            node->target_dim_base = malloc(sizeof(int) * node->target_dims);
+            node->target_dim_elements = malloc(sizeof(int) * node->target_dims);
+            memcpy(node->target_dim_base, node->value_dim_base, sizeof(int) * node->target_dims);
+            memcpy(node->target_dim_elements, node->value_dim_elements, sizeof(int) * node->target_dims);
+            adopted = 1;
+        }
+
+        if (!adopted) {
+            if (!node->value_dims) mknd_err(node, "EXPECTING_ARRAY");
+            else if (!node->target_dims)
+                mknd_err(node, "UNEXPECTED_ARRAY");
+            else mknd_err(node, "ARRAY_DIMS_MISMATCH");
+        }
+    }
+    else if (node->value_dims) {
+        /* Check Dimension base/values */
+        for (i = 0; i<node->value_dims; i++) {
+            if (node->value_dim_base[i] != node->target_dim_base[i])
+                mknd_err(node, "INCOMPATIBLE_DIM_BASE dim=%d from=%d to=%d",
+                         (int)i + 1, node->value_dim_base[i], node->target_dim_base[i]);
+            else if (node->value_dim_elements[i] != node->target_dim_elements[i] && node->target_dim_elements[i])
+                mknd_err(node, "INCOMPATIBLE_DIM_SIZE dim=%d from=%d to=%d",
+                         (int)i + 1, node->value_dim_elements[i], node->target_dim_elements[i]);
+        }
+    }
+
+    if (node->value_dims && node->value_type != node->target_type) mknd_err(node, "ARRAY_ELEMENT_TYPE_MISMATCH");
+
+    if (node->value_type == TP_VOID && node->target_type != TP_VOID) mknd_err(node, "MISSING_VALUE");
+
+    /* Binary cant to cast */
+    if (node->value_type != node->target_type &&
+        node->value_type == TP_BINARY &&
+        node->target_type != TP_BINARY) mknd_err(node, "CANNOT_CAST_BINARY");
+
+    if (node->value_type != TP_VOID && node->target_type == TP_VOID) mknd_err(node, "UNEXPECTED_VALUE");
+
+    /* Taken constant check: If target is numeric (TP_INTEGER, TP_FLOAT, TP_DECIMAL)
+     * and source is a TAKEN CONSTANT (CONSTANT_SYMBOL), it's a compile-time failure.
+     * Note: String variables (TP_STRING) are allowed as they might contain numeric strings at runtime.
+     *       But a taken constant literal (the variable name) is known to be non-numeric at compile time. */
+    if ((node->target_type == TP_INTEGER || node->target_type == TP_FLOAT || node->target_type == TP_DECIMAL) &&
+        (node->node_type == STRING || node->node_type == VAR_SYMBOL) &&
+        node->symbolNode && node->symbolNode->symbol->symbol_type == CONSTANT_SYMBOL) {
+        mknd_err(node, "BAD_CONVERSION");
+    }
+
+    /* Class / Object Support */
+    if (node->value_type == TP_OBJECT && node->target_type == TP_STRING) {
+        mknd_err(node, "BAD_CONVERSION");
+    }
+    else if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) {
+        if (node->value_type != node->target_type) {
+            char debug_str[100] = {0};
+            if (node->node_string && node->node_string_length < 99) {
+                strncpy(debug_str, node->node_string, node->node_string_length);
+            }
+            /* printf("DEBUG: TYPE_MISMATCH on '%s': value_type=%d, target_type=%d\n", debug_str, node->value_type, node->target_type); */
+            mknd_err(node, "TYPE_MISMATCH");
+        }
+        else if (node->value_class && node->target_class) {
+            if (!symbol_name_assignable_to(context, node->value_class, node->target_class)) {
+                mknd_err(node, "TYPE_MISMATCH");
+            }
+        }
+        else if (node->value_class || node->target_class) {
+            mknd_err(node, "TYPE_MISMATCH");
+        }
+    }
+}
+
+/*
+ * Sets the ordinal value of each node in the tree
+ */
+walker_result set_node_ordinals_walker(walker_direction direction,
+                                              ASTNode* node,
+                                              void *payload) {
+    int* ordinal_counter = (int*)payload;
+
+    if (direction == out) {
+        /* BOTTOM-UP */
+        node->high_ordinal = (*ordinal_counter)++;
+
+        /* Sync creation_ordinal if this is the creation_node of a symbol */
+        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->creation_node == node) {
+            node->symbolNode->symbol->creation_ordinal = node->high_ordinal;
+        }
+
+        if (node->child) node->low_ordinal = node->child->low_ordinal;
+        else node->low_ordinal = node->high_ordinal;
+    }
+    return result_normal;
+}
+
+/* Validate AST */
+/* Shadowing warning walker */
+static walker_result shadowing_warning_walker(walker_direction direction,
+                                              ASTNode* node,
+                                              void *payload) {
+    Context *context = (Context *)payload;
+    if (direction == in) {
+        if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->is_shadowing) {
+            /* Only warn on primary identifier nodes */
+            if (node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET ||
+                node->node_type == VAR_REFERENCE || node->node_type == FUNC_SYMBOL ||
+                node->node_type == FUNCTION || node->node_type == CLASS_DEF) {
+
+                /* Skip shadowing warnings for compiler added blocks */
+                ASTNode *p = node;
+                int in_compiler_added = 0;
+                while (p) {
+                    if (p->suppress_shadow_warnings) {
+                        in_compiler_added = 1;
+                        break;
+                    }
+                    p = p->parent;
+                }
+                if (in_compiler_added) return result_normal;
+
+                Symbol *symbol = node->symbolNode->symbol;
+                Symbol *shadowed = symbol->shadowed_symbol;
+                if (shadowed) {
+                    char *fqn = sym_frnm(shadowed);
+                    if (sym_nond(shadowed) > 0) {
+                        ASTNode *def = sym_trnd(shadowed, 0)->node;
+                        if (def && def->line != -1) {
+                            mknd_war(node, "SHADOWING, original definition \"%s\" @ %d:%d", fqn, def->line + 1, def->column + 1);
+                        } else {
+                            mknd_war(node, "SHADOWING, original definition \"%s\" is global", fqn);
+                        }
+                    } else {
+                        mknd_war(node, "SHADOWING, shadows \"%s\"", fqn);
+                    }
+                    free(fqn);
+                } else {
+                    mknd_war(node, "SHADOWING");
+                }
+
+                /* mknd_war returns the parent node, so we find the newly created WARNING child */
+                ASTNode *warn = node->child;
+                while (warn && warn->sibling) warn = warn->sibling; /* The warning is added at the end */
+                if (warn && warn->node_type == WARNING && node->source_start) {
+                    warn->source_start = node->source_start;
+                    /* Lock the bounds to exactly the node's identifier, avoiding array index expansion */
+                    size_t len = node->node_string_length;
+                    if (len > 0 && node->node_string[len - 1] == '.') len--; /* Ignore trailing dot */
+                    warn->source_end = node->source_start + len - 1;
+                }
+            }
+        }
+    }
+    return result_normal;
+}
+
+/* Disjoint Scope warning walker */
+static walker_result disjoint_scope_warning_walker(walker_direction direction,
+                                                   ASTNode* node,
+                                                   void *payload) {
+    Context *context = (Context *)payload;
+    if (direction == in) {
+        if (node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET ||
+            node->node_type == VAR_REFERENCE || node->node_type == STRING) {
+
+            Symbol *symbol = node->symbolNode ? node->symbolNode->symbol : NULL;
+            if (symbol && symbol->creation_node == node) {
+                /* This is the first mention of this symbol in this scope */
+                /* Look for same named symbol in disjoint branches of the same procedure */
+                /* Skip if parent is ASSIGN or DEFINE as requested */
+                if (node->parent && (node->parent->node_type == ASSIGN || node->parent->node_type == DEFINE)) {
+                    /* No warning needed for explicit assignments/definitions */
+                } else {
+                    ASTNode *proc = ast_proc(node);
+                    if (proc && proc->scope) {
+                        size_t i;
+                        for (i = 0; i < scp_noch(proc->scope); i++) {
+                            Symbol *disjoint = sym_drsv(scp_chd(proc->scope, i), node);
+                            if (disjoint && disjoint != symbol) {
+                                /* Check if the disjoint symbol appears EARLIER in source */
+                                if (disjoint->creation_ordinal != -1 && node->high_ordinal != -1 &&
+                                    disjoint->creation_ordinal < node->high_ordinal) {
+                                    ASTNode *dnode = disjoint->creation_node;
+                                    if (dnode) {
+                                        mknd_war(node, "#NOT_IN_SAME_SCOPE, original definition @ %d:%d", dnode->line + 1, dnode->column + 1);
+                                    } else {
+                                        mknd_war(node, "#NOT_IN_SAME_SCOPE");
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return result_normal;
+}
+
+struct seen_warning {
+    char *msg;
+    int line;
+    int col;
+};
+
+static walker_result deduplicate_warnings_walker(walker_direction direction,
+                                                   ASTNode* node,
+                                                   void *payload) {
+    dpa *seen = (dpa*)payload;
+    if (direction == in && node->node_type == WARNING) {
+        size_t i;
+        for (i=0; i < seen->size; i++) {
+            struct seen_warning *s = (struct seen_warning *)seen->pointers[i];
+            if (s->line == node->line && s->col == node->column &&
+                strcmp(s->msg, node->node_string) == 0) {
+                node->is_duplicate_warning = 1;
+                return result_normal;
+            }
+        }
+        {
+            struct seen_warning *new_s = malloc(sizeof(struct seen_warning));
+            new_s->msg = node->node_string;
+            new_s->line = node->line;
+            new_s->col = node->column;
+            dpa_add(seen, new_s);
+        }
+    }
+    return result_normal;
+}
+
+void validate_ast(Context *context) {
+    int ordinal_counter;
+
+    rxcp_prepare_source_ast(context);
+    rxcp_prepare_work_ast(context);
+
+    context->ast = context->work_ast;
+    rxcp_inject_cli_imports(context);
+    rxcp_inject_signal_imports(context);
+    context->current_scope = 0;
+    context->in_factory = 0;
+    ast_wlkr(context->ast, ast_work_structure_walker, (void *) context);
+    ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context);
+    ast_wlkr(context->ast, source_location_walker, (void *) context);
+    ast_wlkr(context->ast, rxcp_fixup_walker, (void *) context);
+
+    // Initial checks walker will have set the options
+    if (context->floats_decimal)  {
+        /* decimal option set - this walker converts flaat node types to decimal */
+        ast_wlkr(context->ast, float2decimal_walker, (void *) context);
+    } else if (context->floats_binary) {
+        /* binary option set - this walker converts decimal node types to binary */
+        ast_wlkr(context->ast, decimal2float_walker, (void *) context);
+    }
+
+    /* Adds rxsysb library (e.g. for ADDRESS and EXIT) */
+    context->current_scope = 0;
+    context->need_rxsysb = 0;
+    ast_wlkr(context->ast, needs_rxsysb_walker, (void *) context);
+    if (context->need_rxsysb) {
+        context->current_scope = 0;
+        context->has_rxsysb = 0;
+        ast_wlkr(context->ast, add_rxsysb_walker, (void *) context);
+    }
+
+    if (context->debug_mode && context == context->master_context) {
+        rxcp_debug_header("STAGE_FIXUP", -1);
+        rxcp_print_ast_recursive(context->ast, 0);
+    }
+
+    /* Pre-Loop Initialization: Prime the structure symbols, imports, and variables */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
+    rxcp_scan_imports(context);
+    rxcp_init_exits(context);
+
+    /* After imports, we might have new files or compiler exits.
+     * We need to harvest their structure (Pass 1) before building variables (Pass 3) */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
+
+    /* Exit planning is the only structural phase exits are allowed to perform.
+     * Run it before the initial symbol harvest so hoisted bindings/imports/helpers
+     * are visible on the first build_symbols pass. */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, exit_plan_walker, (void *) context);
+    if (rxcp_scan_imports(context)) {
+        rxcp_init_exits(context);
+    }
+    context->current_scope = 0;
+    ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
+
+    context->current_scope = 0;
+    ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+
+    /* fixed point validation - Converge all exits */
+    context->iterations = 0;
+    context->after_rewrite = 0;
+    context->is_final_pass = 0;
+    do {
+        context->changed_flags = 0;
+
+        /* Reset node types for a clean slate */
+        ast_wlkr(context->ast, clear_node_types_walker, (void *) context);
+
+        if (context->debug_mode && context == context->master_context) {
+            rxcp_debug_header("STAGE_SYMBOLS", context->iterations);
+            rxcp_print_ast_recursive(context->ast, 0);
+            rxcp_print_symbol_table(context->ast->scope, 0);
+        }
+
+        /* Exit pre_process() is structural and must run before symbol harvesting.
+         * It is idempotent and may request another pass while types/imports settle. */
+        context->current_scope = 0;
+        if (ast_wlkr(context->ast, exit_plan_walker, (void *) context) == result_error) break;
+
+        /* Exit Dispatch
+         * Progress: exit_dispatch_walker is idempotent. Verified by stress testing with 3x calls per iteration.
+         * Debug validation is intentionally deferred until after structure/build_symbols:
+         * structured exit fragments may temporarily contain nested INSTRUCTIONS/DO blocks
+         * whose SCOPE_LOCAL is attached in the later symbol passes.
+         */
+        context->current_scope = 0;
+        if (ast_wlkr(context->ast, exit_dispatch_walker, (void *) context) == result_error) break;
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
+            ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
+        }
+
+        /* Re-write Constructors
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context);
+
+        /* Re-write EXIT Instructions
+         * Progress: rewrite_exit_walker is idempotent. Mutates EXIT to CALL.
+         * Debug validation remains deferred until after build_symbols because
+         * the tree may still contain exit-added nested blocks awaiting SCOPE_LOCAL.
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
+        }
+
+        /* Re-write IMPLICIT_CMD Instructions
+         * Progress: rewrite_implicit_cmd_walker is idempotent. Verified by stress testing with 3x calls per iteration.
+         * Debug validation remains deferred until after build_symbols because
+         * the tree may still contain exit-added nested blocks awaiting SCOPE_LOCAL.
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
+            ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
+        }
+
+        /* Syntactic Sugar Moved */
+
+        /* Control Flow Rewrite (e.g. SELECT) */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, control_flow_rewrite_walker, (void *) context);
+
+        /* Set Ordinals
+         * Progress: set_node_ordinals_walker is idempotent. Recalculates from reset counter. Verified by stress testing.
+         * Debug validation remains deferred until after build_symbols because
+         * the tree may still contain exit-added nested blocks awaiting SCOPE_LOCAL.
+         */
+        ordinal_counter = 0;
+        ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            ordinal_counter = 0;
+            ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
+            ordinal_counter = 0;
+            ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
+        }
+
+        /* Builds the Symbol Table
+         * Progress: build_symbols_walker is idempotent. Scope creation is guarded; symbol associations use sym_adnd (idempotent).
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
+        if (rxcp_scan_imports(context)) {
+            rxcp_init_exits(context);
+            context->changed_flags |= FLAG_ORCH;
+        }
+        context->current_scope = 0;
+        ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
+
+        /* Mainly resolve symbols - functions
+         * Progress: resolve_functions_walker is idempotent. Symbol association is guarded by !node->symbolNode.
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
+
+        /* Resolve exposed symbols
+         * Progress: exposed_symbols_walker is reviewed for idempotency.
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
+
+        /* Validate Symbols
+         * Progress: validate_symbols is idempotent. Symbols with types already resolved are skipped.
+         */
+        validate_symbols(context, context->ast->scope);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            validate_symbols(context, context->ast->scope);
+            rxcp_validate_ast_and_symbols(context->ast);
+            validate_symbols(context, context->ast->scope);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
+
+        /* Set Node Types
+         * Progress: set_node_types_walker is idempotent. Type setting is guarded by TP_UNKNOWN check.
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
+
+        /* Syntactic Sugar
+         * Progress: syntax_sugar_walker is idempotent. Verified by stress testing.
+         * MOVED here so that types are known!
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+        if (context->debug_mode >= 3) {
+            /* Stress test idempotency */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+            context->current_scope = 0;
+            ast_wlkr(context->ast, syntax_sugar_walker, (void *) context);
+            rxcp_validate_ast_and_symbols(context->ast);
+        }
+
+        if (!(context->changed_flags & FLAG_VAL_TRANS)) {
+            /* Type Safety checks */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, type_safety_walker, (void *)context);
+
+            /* Type Safety for function arguments */
+            context->current_scope = 0;
+            ast_wlkr(context->ast, func_type_safety_walker, (void *)context);
+        }
+
+        /* Rewrite object to string conversions to tostring() calls */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, tostring_rewrite_walker, (void *)context);
+
+        context->iterations++;
+        if (context->debug_mode >= 2) fprintf(stderr, "DEBUG: Iteration %d finished, changed_flags=0x%04X\n", context->iterations, context->changed_flags);
+        /* Incremental update of symbols - So walkers can avoid duplicate processing */
+        if (context->iterations == 1) context->after_rewrite = 1;
+
+    } while ((context->changed_flags || (context->debug_mode >= 3 && context->iterations < 3)) && context->iterations < 16);
+
+    if (context->changed_flags && context->iterations >= 16) {
+        fprintf(stderr, "INTERNAL_CONVERGENCE_ERROR: Loop failed to converge. Active flags: 0x%04X\n", context->changed_flags);
+        exit(255);
+    }
+
+    /* Final pass to mutate remaining taken constants to STRING nodes */
+    context->after_rewrite = 2;
+    validate_symbols(context, context->ast->scope);
+
+    /* Set Ordinals again after normalisation - not needed if normalisation is once at start */
+    ordinal_counter = 0;
+    ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
+
+    /* Type Safety checks */
+    ast_wlkr(context->ast, clear_node_types_walker, (void *) context);
+    context->is_final_pass = 1;
+    context->current_scope = 0;
+    ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, type_safety_walker, (void *)context);
+
+    /* Type Safety for function arguments */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, func_type_safety_walker, (void *)context);
+
+    /* Set Scope Decimal parameters */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, decimal_parameters_walker, (void *)context);
+
+    if (context->ast->node_type == REXX_UNIVERSE) {
+        context->ast->value_type = TP_VOID;
+    }
+
+    /* Add shadowing warnings to all nodes referencing shadowed symbols */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, shadowing_warning_walker, (void *)context);
+
+    /* Add disjoint scope warnings */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, disjoint_scope_warning_walker, (void *)context);
+
+    /* Deduplicate warnings */
+    {
+        dpa *seen = dpa_f();
+        size_t i;
+        ast_wlkr(context->ast, deduplicate_warnings_walker, (void *)seen);
+        for (i=0; i < seen->size; i++) free(seen->pointers[i]);
+        free_dpa(seen);
+    }
+}
+
+void rxcp_val(Context *context) {
+    validate_ast(context);
+}
+
+void rxcp_prepare_source_ast(Context *context) {
+    if (!context) return;
+    if (context->source_tree) {
+        return;
+    }
+    if (!context->ast) return;
+
+    context->current_scope = 0;
+    context->in_factory = 0;
+    ast_wlkr(context->ast, ast_source_structure_walker, (void *) context);
+    ast_wlkr(context->ast, source_location_walker, (void *) context);
+    ast_wlkr(context->ast, syntax_validation_walker, (void *) context);
+    source_tree_build(context, context->ast);
+}
+
+void rxcp_prepare_work_ast(Context *context) {
+    if (!context) return;
+    if (context->work_ast) {
+        context->ast = context->work_ast;
+        return;
+    }
+    context->work_ast = context->ast;
+}
+
+/* Basic validation for an AST (typically the AST will be attached to a main AST as part of
+ * function import) */
+void rxcp_bvl(Context *context) {
+    int ordinal_counter = 0;
+
+    ast_wlkr(context->ast, ast_structure_fixup_walker, (void *) context);
+    ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context);
+    ast_wlkr(context->ast, source_location_walker, (void *) context);
+    ast_wlkr(context->ast, syntax_validation_walker, (void *) context);
+    ast_wlkr(context->ast, rxcp_fixup_walker, (void *) context);
+
+    /* 1b - set node ordinal values */
+    ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
+
+    /* Step 2
+     * - Builds the Symbol Table
+     */
+    /* Mainly build symbols - procedures, members */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, structure_symbols_walker, (void *) context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
+}

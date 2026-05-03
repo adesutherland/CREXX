@@ -1,0 +1,177 @@
+/*
+ * interpreter/tests/tests_logic_flow.rxas
+ */
+
+.globals=0
+
+main() .locals=10
+    say "Test Suite: Logic and Flow Control"
+
+    /* --- Integer Comparisons --- */
+    /* IEQ */
+    load r1, 10
+    load r2, 10
+    ieq r0, r1, r2
+    brt ieq_pass, r0
+    say "FAIL: IEQ"
+    br ieq_end
+ieq_pass:
+    say "PASS: IEQ"
+ieq_end:
+
+    /* INE */
+    load r1, 10
+    load r2, 20
+    ine r0, r1, r2
+    brt ine_pass, r0
+    say "FAIL: INE"
+    br ine_end
+ine_pass:
+    say "PASS: INE"
+ine_end:
+
+    /* IGT */
+    load r1, 20
+    load r2, 10
+    igt r0, r1, r2
+    brt igt_pass, r0
+    say "FAIL: IGT"
+    br igt_end
+igt_pass:
+    say "PASS: IGT"
+igt_end:
+
+    /* ILT */
+    load r1, 10
+    load r2, 20
+    ilt r0, r1, r2
+    brt ilt_pass, r0
+    say "FAIL: ILT"
+    br ilt_end
+ilt_pass:
+    say "PASS: ILT"
+ilt_end:
+
+    /* --- String Comparisons --- */
+    /* SEQ */
+    load r1, "abc"
+    load r2, "abc"
+    seq r0, r1, r2
+    brt seq_pass, r0
+    say "FAIL: SEQ"
+    br seq_end
+seq_pass:
+    say "PASS: SEQ"
+seq_end:
+
+    /* SGT */
+    load r1, "def"
+    load r2, "abc"
+    sgt r0, r1, r2
+    brt sgt_pass, r0
+    say "FAIL: SGT"
+    br sgt_end
+sgt_pass:
+    say "PASS: SGT"
+sgt_end:
+
+    /* --- Float Comparisons --- */
+    /* FEQ */
+    load r1, 3.14
+    load r2, 3.14
+    feq r0, r1, r2
+    brt feq_pass, r0
+    say "FAIL: FEQ"
+    br feq_end
+feq_pass:
+    say "PASS: FEQ"
+feq_end:
+
+    /* --- Unconditional Branch --- */
+    br branch_test
+    say "FAIL: BR (should have jumped)"
+branch_test:
+    say "PASS: BR"
+
+    /* --- True/False Branch --- */
+    load r1, 1
+    brt brt_pass, r1
+    say "FAIL: BRT"
+brt_pass:
+    say "PASS: BRT"
+
+    load r1, 0
+    brf brf_pass, r1
+    say "FAIL: BRF"
+brf_pass:
+    say "PASS: BRF"
+
+    /* --- Fused Integer Branching --- */
+    /* BEQ */
+    load r1, 5
+    load r2, 5
+    beq beq_pass, r1, r2
+    say "FAIL: BEQ"
+beq_pass:
+    say "PASS: BEQ"
+
+    /* BNE */
+    load r1, 5
+    load r2, 6
+    bne bne_pass, r1, r2
+    say "FAIL: BNE"
+bne_pass:
+    say "PASS: BNE"
+
+    /* BGT */
+    load r1, 10
+    load r2, 5
+    bgt bgt_pass, r1, r2
+    say "FAIL: BGT"
+bgt_pass:
+    say "PASS: BGT"
+
+    /* BLT */
+    load r1, 5
+    load r2, 10
+    blt blt_pass, r1, r2
+    say "FAIL: BLT"
+blt_pass:
+    say "PASS: BLT"
+
+    /* --- Fused Float Branching --- */
+    /* FGTBR */
+    load r1, 2.5
+    load r2, 1.5
+    fgtbr fgtbr_pass, r1, r2
+    say "FAIL: FGTBR"
+fgtbr_pass:
+    say "PASS: FGTBR"
+
+    /* FLTBR */
+    load r1, 1.5
+    load r2, 2.5
+    fltbr fltbr_pass, r1, r2
+    say "FAIL: FLTBR"
+fltbr_pass:
+    say "PASS: FLTBR"
+
+    /* --- Loops --- */
+    /* BCT (Branch on Count) */
+    load r1, 5  /* counter */
+    load r2, 0  /* iterations */
+loop_start:
+    inc r2
+    bct loop_start, r1
+    /* After loop, r1 should be 0, r2 should be 5 */
+    ieq r0, r2, 5
+    brf bct_fail, r0
+    ieq r0, r1, 0
+    brf bct_fail, r0
+    say "PASS: BCT"
+    br bct_end
+bct_fail:
+    say "FAIL: BCT"
+bct_end:
+
+    ret 0

@@ -12,7 +12,7 @@ if(WIN32)
     endif()
     set(ODBC_LIBS ${ODBC32_LIBRARY} ${ODBCCP32_LIBRARY})
 else()
-    find_package(ODBC REQUIRED)
+    # Search for ODBC headers and libraries in common locations
     find_path(ODBC_INCLUDE_DIR sql.h PATHS /usr/include /usr/local/include /opt/homebrew/include)
     find_library(ODBC_LIBRARY odbc PATHS /usr/lib /usr/local/lib /opt/homebrew/lib)
     if(NOT ODBC_INCLUDE_DIR OR NOT ODBC_LIBRARY)
@@ -23,6 +23,9 @@ endif()
 
 # Including RXPA Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
+
+# Create the static link module
+add_static_plugin_target(_odbc odbc.c)
 
 # Create dynamic plugin module
 add_dynamic_plugin_target(_odbc odbc.c)
@@ -36,8 +39,20 @@ target_include_directories(_odbc PRIVATE
     ${ODBC_INCLUDE_DIR}  # Ensure ODBC headers are included
 )
 
+# Add include directories - static version
+target_include_directories(_odbc_static PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/include
+    ${CMAKE_SOURCE_DIR}/rxpa
+    ${CMAKE_SOURCE_DIR}
+    ${ODBC_INCLUDE_DIR}  # Ensure ODBC headers are included
+)
+
 # Link libraries
 target_link_libraries(_odbc PRIVATE ${ODBC_LIBS})
+
+# Link libraries static
+target_link_libraries(_odbc_static PRIVATE ${ODBC_LIBS})
 
 # Set output name
 set_target_properties(_odbc PROPERTIES
@@ -47,12 +62,12 @@ set_target_properties(_odbc PROPERTIES
 
 # Build Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
+        COMMAND $<TARGET_FILE:rxc>
+        -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o odbc_test \"${CMAKE_CURRENT_SOURCE_DIR}/odbc_test\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas odbc_test
+        $<TARGET_FILE:rxas> odbc_test
 
-        DEPENDS rxas rxc library _odbc ${CMAKE_CURRENT_SOURCE_DIR}/odbc_test.rexx
+        DEPENDS rxas rxc library compiler_exit_bin _odbc ${CMAKE_CURRENT_SOURCE_DIR}/odbc_test.rexx
         OUTPUT odbc_test.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -65,7 +80,6 @@ enable_testing()
 
 # Basic test to run odbc_test.rxbin with the odbc plugin
 add_test(NAME odbc_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm odbc_test rx_odbc ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> odbc_test rx_odbc ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
-

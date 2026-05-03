@@ -1,0 +1,120 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_object_const_arg_mutation.rexx
+ * BUILT                  : 2026-04-29 14:16:43
+ */
+
+.meta "inline_test_object_const_arg_mutation.box"="b" ".unknown" .class
+.meta "inline_test_object_const_arg_mutation.box.name"="b" ".string" .attr 1
+.srcfile="inline_test_object_const_arg_mutation.rexx"
+.globals=0
+
+main() .locals=9
+   .meta "inline_test_object_const_arg_mutation.main"="b" ".int" main() ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:3="say \"Starting object const-arg mutation inline test...\""
+   say "Starting object const-arg mutation inline test..."
+   .src 5:3="box = .Box(\"seed\")"
+   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r1,2
+   .src 19:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r1,"inline_test_object_const_arg_mutation.box"
+   .src 21:5="name = initial"
+   load r6,"seed"
+   linkattr1 r5,r1,1
+   scopy r5,r6
+   unlink r5
+   .src 22:5="return"
+   copy r0,r1
+   .src 6:3="call mutateBox(box)"
+   .src 13:3="call value.setName(\"changed\")"
+   .src 13:8="value"
+   copy r3,r0
+   .src 26:5="name = next"
+   load r7,"changed"
+   linkattr1 r5,r3,1
+   scopy r5,r7
+   unlink r5
+   .src 13:8="value.setName(\"changed\")"
+   copy r0,r3
+   .src 13:8="value.setName(\"changed\")"
+   acopy r0,r3
+   .src 7:3="say box.getName"
+   .meta "inline_test_object_const_arg_mutation.main.box"="b" ".box" r0
+   .src 7:7="box"
+   .src 7:7="box"
+   copy r4,r0
+   .src 30:5="return name"
+   linkattr1 r5,r4,1
+   scopy r8,r5
+   acopy r8,r5
+   unlink r5
+   br l127bexprend
+l127bexprend:
+   say r8
+   .src 8:3="say \"Object const-arg mutation inline test finished.\""
+   say "Object const-arg mutation inline test finished."
+   .src 9:3="return 0"
+   ret 0
+   .meta "inline_test_object_const_arg_mutation.main.box"
+
+§inline_test_object_const_arg_mutation.box.§factory() .locals=3
+   .meta "inline_test_object_const_arg_mutation.box.§factory"="b" ".box" §inline_test_object_const_arg_mutation.box.§factory() "initial=.string"
+   .src 19:3="*: factory"
+   setattrs r1,2
+   setobjtype r1,"inline_test_object_const_arg_mutation.box"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 20:9="initial = .string"
+   .meta "inline_test_object_const_arg_mutation.box.§factory.initial"="b" ".string" a1
+   .meta "inline_test_object_const_arg_mutation.box.§factory.§factory"="b" ".box" r1
+   .src 21:5="name = initial"
+   linkattr1 r2,r1,1
+   scopy r2,a1
+   unlink r2
+   .src 22:5="return"
+   ret r1
+   .meta "inline_test_object_const_arg_mutation.box.§factory.initial"
+   .meta "inline_test_object_const_arg_mutation.box.§factory.§factory"
+
+§inline_test_object_const_arg_mutation.box.setname() .locals=3
+   .meta "inline_test_object_const_arg_mutation.box.setname"="b" ".void" §inline_test_object_const_arg_mutation.box.setname() "next=.string"
+   .src 24:3="setName: method = .void"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 25:9="next = .string"
+   .meta "inline_test_object_const_arg_mutation.box.setname.next"="b" ".string" a2
+   .meta "inline_test_object_const_arg_mutation.box.setname.§this"="b" ".box" a1
+   .src 26:5="name = next"
+   linkattr1 r2,a1,1
+   scopy r2,a2
+   unlink r2
+   .src 27:5="return"
+   ret
+   .meta "inline_test_object_const_arg_mutation.box.setname.next"
+   .meta "inline_test_object_const_arg_mutation.box.setname.§this"
+
+§inline_test_object_const_arg_mutation.box.getname() .locals=2
+   .meta "inline_test_object_const_arg_mutation.box.getname"="b" ".string" §inline_test_object_const_arg_mutation.box.getname() ""
+   .src 29:3="getName: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 30:5="return name"
+   .meta "inline_test_object_const_arg_mutation.box.getname.§this"="b" ".box" a1
+   linkattr1 r1,a1,1
+   ret r1
+   .meta "inline_test_object_const_arg_mutation.box.getname.§this"

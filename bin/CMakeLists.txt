@@ -4,18 +4,29 @@ project(driver C)
 
 set(CMAKE_C_STANDARD 90)
 
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+file(WRITE ${CMAKE_BINARY_DIR}/bin/crexx_native_libs "${CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT}\n")
+
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i ${CMAKE_BINARY_DIR}/lib/rxfnsb -o crexx ${CMAKE_CURRENT_SOURCE_DIR}/crexx
-        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas crexx
-        COMMAND ${CMAKE_BINARY_DIR}/cpacker/rxcpack crexx ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
-        DEPENDS rxas rxc crexx.rexx library rxcpack rxpa
-        OUTPUT crexx.c
+        BYPRODUCTS
+                ${CMAKE_CURRENT_BINARY_DIR}/crexx.rxbin
+                ${CMAKE_CURRENT_BINARY_DIR}/crexx_linked.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_BINARY_DIR}/lib/plugins/system\"" -o crexx ${CMAKE_CURRENT_SOURCE_DIR}/crexx
+        COMMAND $<TARGET_FILE:rxas> crexx
+        COMMAND $<TARGET_FILE:rxlink> -s -o crexx_linked crexx ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND $<TARGET_FILE:rxcpack> -o crexx crexx_linked
+        DEPENDS rxas rxc rxlink crexx.rexx library rxcpack rxpa _system _system_static compiler_exit_bin
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/crexx.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "cREXX compile, assemble and package crexx ..."
+        COMMENT "cREXX compile, assemble, link and package crexx ..."
 )
 
-add_executable(crexx crexx.c)
+add_executable(crexx ${CMAKE_CURRENT_BINARY_DIR}/crexx.c)
 
-target_link_libraries(crexx rxvml rxpa machine avl_tree platform m)
+configure_linker_for_static_lib_rel(crexx system _system)
 
-add_dependencies(crexx rxvml machine rxpa avl_tree platform)
+target_link_libraries(crexx rxvml rxpashim)
+
+add_dependencies(crexx rxvml rxpa avl_tree platform _system _system_static)
+
+add_subdirectory(tests)

@@ -1,0 +1,131 @@
+options levelb
+namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength vargTotal vargPick residualFunctionDependency residualCallDependency residualCallTarget refVargDynamicBlocked residualCallBlocked memberCallBlocked aliasBlocked box
+
+inc: procedure = .int
+  arg value = .int
+  return value + 1
+
+classify: procedure = .int
+  arg value = .int
+  if value < 0 then return -1
+  if value > 0 then return 1
+  return 0
+
+scoped: procedure = .int
+  arg value = .int
+  if value > 0 then do
+    tmp = .int
+    tmp = value * 10
+    return tmp
+  end
+  return value
+
+nested: procedure = .int
+  arg value = .int
+  staged = inc(value)
+  return staged * 2
+
+sumTo: procedure = .int
+  arg limit = .int
+  total = 0
+  do i = 1 to limit
+    total = total + i
+  end
+  return total
+
+countUntil: procedure = .int
+  arg limit = .int
+  total = 0
+  do while total < limit
+    total = total + 1
+  end
+  return total
+
+buildArray: procedure = .string[]
+  arg left = .string, right = .string
+  temp = .string[]
+  temp[1] = left
+  temp[2] = right
+  return temp
+
+renderArray: procedure = .string
+  arg value = .string[]
+  return value[1] || ":" || value[2]
+
+identityBox: procedure = .inline_cross_file_dep..box
+  arg value = .inline_cross_file_dep..box
+  return value
+
+refBump: procedure = .int
+  arg expose value = .int
+  value = value + 1
+  return value
+
+optAdd: procedure = .int
+  arg ?a = 10, ?b = 5
+  return a + b
+
+safeLength: procedure = .int
+  arg value = .string
+  result = .int
+  assembler strlen result,value
+  return result
+
+aliasBlocked: procedure = .int
+  value = .int
+  value = 7
+  assembler unlink value
+  return value
+
+vargTotal: procedure = .int
+  arg base = .int, ... = .int
+  return base + arg[] + arg[2]
+
+vargPick: procedure = .int
+  arg which = .int, ... = .int
+  return arg(which)
+
+residualFunctionDependency: procedure = .int
+  arg which = .int
+  return vargPick(which, 7, 9, 11) + 1
+
+residualCallDependency: procedure = .void
+  arg value = .int
+  call residualCallTarget(value)
+  return
+
+residualCallTarget: procedure = .void
+  arg value = .int
+  scratch = .int
+  scratch = value
+  assembler unlink scratch
+  say "call:" || scratch
+  return
+
+refVargDynamicBlocked: procedure = .int
+  arg which = .int, expose ... = .int
+  return arg[which]
+
+residualCallBlocked: procedure = .int
+  arg value = .int
+  return inc(value) + 1
+
+memberCallBlocked: procedure = .string
+  arg value = .inline_cross_file_dep..box
+  return "box:" || value.getName()
+
+box: class
+  name = .string
+
+  *: factory
+    arg initial = .string
+    name = initial
+    return
+
+  getName: method = .string
+    return name
+
+  setName: method = .void
+    arg next = .string
+    name = next
+    return

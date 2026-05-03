@@ -1,5 +1,10 @@
 # Graphical User Interfaces and Graphics
 
+Release status: this page describes the optional GTK plugin area. It is useful
+as implementation reference material, but it is not part of the Release 1 beta
+baseline language contract. Verify the plugin build option and tests before
+depending on these APIs in a packaged release.
+
 ## The GTK Plugin
 
 The (multiplatform) GTK Plugin enables a straightforward way to implement portable Rexx programs with agraphical user interface.
@@ -1306,5 +1311,4 @@ This section provides a list of commonly used X11 colours that you can use in yo
 - **`dimgray`**: A dimmer shade of gray.
 - **`slategray`**: A bluish-gray color.
 - **`light slate gray` **: A light bluish-gray color.
-
 

@@ -1,0 +1,102 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_ref_vararg.rexx
+ * BUILT                  : 2026-04-29 14:16:44
+ */
+
+.srcfile="inline_test_ref_vararg.rexx"
+.globals=0
+
+main() .locals=7
+   .meta "inline_test_ref_vararg.main"="b" ".int" main() ""
+   .src 3:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 5:3="second = 20"
+   .meta "inline_test_ref_vararg.main.first"="b" ".int" "10"
+   .meta "inline_test_ref_vararg.main.second"="b" ".int" r0
+   load r0,20
+   .src 8:3="say countTail(first, second, third)"
+   .meta "inline_test_ref_vararg.main.third"="b" ".int" "30"
+   .src 8:7="countTail"
+   .src 20:3="return arg"
+   load r1,3
+   icopy r2,r1
+   acopy r2,r1
+   br l117bexprend
+l117bexprend:
+   itos r2
+   say r2
+   .src 9:3="say pickSecond(first, second, third)"
+   .src 9:7="pickSecond"
+   .src 24:3="return arg[2"
+   icopy r2,r0
+   acopy r2,r0
+   br l121bexprend
+l121bexprend:
+   itos r2
+   say r2
+   .src 10:3="say hasSecond(first, second, third)"
+   .src 10:7="hasSecond"
+   .src 28:3="return arg(2"
+   load r2,1
+   icopy r3,r2
+   acopy r3,r2
+   br l125bexprend
+l125bexprend:
+   itos r3
+   say r3
+   .src 11:3="say hasFifth(first, second, third)"
+   .src 11:7="hasFifth"
+   .src 32:3="return arg(5"
+   load r3,0
+   icopy r4,r3
+   acopy r4,r3
+   br l129bexprend
+l129bexprend:
+   itos r4
+   say r4
+   .src 12:3="say mutateSecond(first, second, third)"
+   .src 12:7="mutateSecond"
+   .src 41:3="return bumpOne(arg[2"
+   load r4,1
+   swap r5,r0
+   call r6,bumpOne(),r4
+   swap r0,r5
+   icopy r5,r6
+   acopy r5,r6
+   br l133bexprend
+l133bexprend:
+   itos r5
+   say r5
+   .src 13:3="say first"
+   say "10"
+   .src 14:3="say second"
+   itos r0
+   say r0
+   .src 15:3="say third"
+   say "30"
+   .src 16:3="return 0"
+   ret 0
+   .meta "inline_test_ref_vararg.main.first"
+   .meta "inline_test_ref_vararg.main.second"
+   .meta "inline_test_ref_vararg.main.third"
+
+bumpOne() .locals=1
+   .meta "inline_test_ref_vararg.bumpone"="b" ".int" bumpOne() "expose value=.int"
+   .src 34:1="bumpOne: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 35:7="expose value = .int"
+   .meta "inline_test_ref_vararg.bumpone.value"="b" ".int" a1
+   .src 36:3="value = value + 7"
+   iadd a1,a1,7
+   .src 37:3="return value"
+   ret a1
+   .meta "inline_test_ref_vararg.bumpone.value"

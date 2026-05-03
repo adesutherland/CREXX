@@ -3,11 +3,20 @@
 #ifdef _WIN32
 #include <direct.h>     // For Windows
 #include <windows.h>
-#define wait(ms) Sleep(ms);
+/* #define wait(ms) Sleep(ms); */
+static void rx_sleep_ms(unsigned ms) { Sleep(ms); }
 #elif defined(__APPLE__)
+#include <ctype.h>
+#include <stdlib.h>
+/* #include <sys/wait.h>   // wait(), waitpid() */
+#include <unistd.h>     // sleep()
+static void rx_sleep_ms(unsigned ms) { usleep(ms * 1000u); }  // microseconds
+/* #define wait(ms) Sleep(ms); */
 #else
 // #include <arpa/inet.h>    // Linux
-   #define wait(ms) usleep(ms*1000)
+   /* #define wait(ms) usleep(ms*1000) */
+
+
 #endif
 #ifdef _WIN32  // Windows-specific
 #include <conio.h>
@@ -406,7 +415,7 @@ ENDPROC
 
 PROCEDURE(WAIT) {
     int sleep = GETINT(ARG0);
-    wait(sleep);
+    rx_sleep_ms(sleep);
     RETURNINT(0);
 }
 

@@ -1,0 +1,82 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/* rexx */
+options levelb
+
+namespace rxfnsb expose arraycopy
+/* ------------------------------------------------------------------
+ *  arraycopy
+ *
+ *  Copy a slice of a Rexx array (1-based, size in a[0]).
+ *
+ *  Semantics:
+ *    - from  : start position (1-based)
+ *              from < 0 counts from the end (-1 = last element)
+ *    - count : number of elements to copy
+ *              count <= 0 means "copy to end"
+ *
+ *  Notes:
+ *    - Negative FROM only affects the start position.
+ *    - COPY direction is always forward (toward higher indices).
+ *    - "copy to end" always means up to a[n], never wrap-around.
+ *
+ *  Behavior:
+ *    - Indices are clamped to array bounds
+ *    - Out-of-range start results in an empty array
+ *    - No errors are raised for invalid ranges
+ *
+ *  Examples:
+ *    arraycopy(a)            -> full array
+ *    arraycopy(a, 3)         -> elements 3 .. end
+ *    arraycopy(a, 3, 2)      -> elements 3 .. 4
+ *    arraycopy(a, -1)        -> last element
+ *    arraycopy(a, -3)        -> last 3 elements
+ *    arraycopy(a, -3, 2)     -> elements n-2 .. n-1
+ *
+ * ------------------------------------------------------------------ */
+arraycopy: procedure=.string[]
+  arg a=.string[], from=1, count=0
+
+  n = a[0]
+  b = .string[]
+/* map negative from to 1-based index */
+  if from < 0 then from = n + from + 1
+
+  /* out-of-range start -> empty */
+  if from < 1 | from > n then return b
+
+  /* count <= 0 => copy to end */
+  if count <= 0 then count = n - from + 1
+
+  /* clamp count to available elements */
+  if count > (n - from + 1) then count = n - from + 1
+
+  last = from + count - 1
+  j = 0
+  do i = from to last
+     j = j + 1
+     b[j] = a[i]
+  end
+return b

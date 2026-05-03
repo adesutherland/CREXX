@@ -41,9 +41,10 @@ int aTestFromToInt(char* expected, int64_t int_input) {
         errors++;
     }
     else printf("OK - ");
-    printf("expected %lld got %lld for to int\n", int_input, int_output);
+    printf("expected %lld got %lld for to int\n", (long long)int_input, (long long)int_output);
 
     free(output);
+    if (a.decimal_value) free(a.decimal_value);
 
     return errors;
 }
@@ -65,6 +66,7 @@ int aTestBeyondLimits(char* input) {
     }
     else printf("OK - ");
     printf("expected signal and got - %d \"%s\"\n", plugin->base.signal_number, plugin->base.signal_string);
+    if (a.decimal_value) free(a.decimal_value);
 
     return errors;
 }
@@ -169,9 +171,9 @@ static int test_int_tofrom_conversions() {
         int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
         int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
 
-        sprintf(input, "%lld", int_input);
+        sprintf(input, "%lld", (long long)int_input);
         errors += aTestFromToInt(input, int_input);
-        sprintf(input, "%lld", -int_input);
+        sprintf(input, "%lld", (long long)(-int_input));
         errors += aTestFromToInt(input, -int_input);
     }
     free(input);
@@ -201,6 +203,7 @@ int test_decimalFromDouble() {
         else printf("OK - ");
         printf("Input: %s, decNumber: %s\n", descriptions[i], buffer);
     }
+        if (result.decimal_value) free(result.decimal_value);
     return errors;
 }
 
@@ -280,6 +283,7 @@ int test_decimalToDouble() {
     else printf("OK - ");
     printf("decNumber: 1.23456789, Result: %s\n", buffer);
 
+        if (input.decimal_value) free(input.decimal_value);
     return errors;
 }
 
@@ -382,16 +386,17 @@ int test_decimalToString_decimalFromString() {
     else printf("OK - ");
     printf("decNumber: 123e-3 -> 0.123, Result: %s\n", buffer);
 
-    // Test 123456789000000000000000000000 -> 1.23456789E+29
+    // Test 123456789000000000000000000000 -> 1.23456789e+29
     plugin->decimalFromString(plugin, &input, "123456789000000000000000000000");
     plugin->decimalToString(plugin, &input, buffer);
-    if (strcmp("1.23456789E+29", buffer) != 0) {
+    if (strcmp("1.23456789e+29", buffer) != 0) {
         printf("Error - ");
         errors++;
     }
     else printf("OK - ");
-    printf("decNumber: 123456789000000000000000000000 -> 1.23456789E+29, Result: %s\n", buffer);
+    printf("decNumber: 123456789000000000000000000000 -> 1.23456789e+29, Result: %s\n", buffer);
 
+        if (input.decimal_value) free(input.decimal_value);
     return errors;
 }
 
@@ -412,7 +417,7 @@ int test_moreDecimalToInteger() {
         errors++;
     }
     else printf("OK - signal - ");
-    printf("decNumber: nan, Result: %lld\n", result);
+    printf("decNumber: nan, Result: %lld\n", (long long)result);
 
     // Test Infinity
     plugin->decimalFromString(plugin, &input, "inf");
@@ -422,7 +427,7 @@ int test_moreDecimalToInteger() {
         errors++;
     }
     else printf("OK - signal - ");
-    printf("decNumber: inf, Result: %lld\n", result);
+    printf("decNumber: inf, Result: %lld\n", (long long)result);
 
     // Test -Infinity
     plugin->decimalFromString(plugin, &input, "-inf");
@@ -432,7 +437,7 @@ int test_moreDecimalToInteger() {
         errors++;
     }
     else printf("OK - signal - ");
-    printf("decNumber: -inf, Result: %lld\n", result);
+    printf("decNumber: -inf, Result: %lld\n", (long long)result);
 
     // Test 0.0
     plugin->decimalFromString(plugin, &input, "0");
@@ -442,7 +447,7 @@ int test_moreDecimalToInteger() {
         errors++;
     }
     else printf("OK - ");
-    printf("decNumber: 0.0, Result: %lld\n", result);
+    printf("decNumber: 0.0, Result: %lld\n", (long long)result);
 
     // Test -0.0
     plugin->decimalFromString(plugin, &input, "-0");
@@ -452,16 +457,16 @@ int test_moreDecimalToInteger() {
         errors++;
     }
     else printf("OK - ");
-    printf("decNumber: -0.0, Result: %lld\n", result);
+    printf("decNumber: -0.0, Result: %lld\n", (long long)result);
 
     // Test 1.23456789
     plugin->decimalFromString(plugin, &input, "1.23456789");
     plugin->decimalToInt(plugin, &input, &result);
     if (!plugin->base.signal_number) { // (result != 1) {
-        printf("Error - no signal: 1.23456789, Result: %lld\n", result);
+        printf("Error - no signal: 1.23456789, Result: %lld\n", (long long)result);
         errors++;
     }
-    else printf("OK - signal: decNumber: 1.23456789, Result: %lld\n", result);
+    else printf("OK - signal: decNumber: 1.23456789, Result: %lld\n", (long long)result);
 
     // Test 1234567890123456789
     plugin->decimalFromString(plugin, &input, "1234567890123456789");
@@ -471,8 +476,9 @@ int test_moreDecimalToInteger() {
         errors++;
     }
     else printf("OK - ");
-    printf("decNumber: 1234567890123456789, Result: %lld\n", result);
+    printf("decNumber: 1234567890123456789, Result: %lld\n", (long long)result);
 
+        if (input.decimal_value) free(input.decimal_value);
     return errors;
 }
 
@@ -535,6 +541,9 @@ int test_basic_decimal_functions() {
     else printf("OK - ");
     printf("4 / 2 = %s\n", buffer);
 
+        if (a.decimal_value) free(a.decimal_value);
+    if (b.decimal_value) free(b.decimal_value);
+    if (result.decimal_value) free(result.decimal_value);
     return errors;
 }
 
@@ -610,6 +619,8 @@ int test_decimalCompare() {
     else printf("OK - ");
     printf("inf > 1\n");
 
+        if (a.decimal_value) free(a.decimal_value);
+    if (b.decimal_value) free(b.decimal_value);
     return errors;
 }
 
@@ -667,6 +678,8 @@ int test_decimalNeg() {
     else printf("OK - ");
     printf("1 -> %s (inplace)\n", buffer);
 
+        if (a.decimal_value) free(a.decimal_value);
+    if (result.decimal_value) free(result.decimal_value);
     return errors;
 }
 
@@ -729,6 +742,9 @@ int test_decimalPow() {
     else printf("OK - ");
     printf("2^-1 = %s\n", buffer);
 
+        if (a.decimal_value) free(a.decimal_value);
+    if (b.decimal_value) free(b.decimal_value);
+    if (result.decimal_value) free(result.decimal_value);
     return errors;
 }
 
@@ -798,6 +814,7 @@ int test_decimalCompareString() {
     else printf("OK - ");
     printf("inf > 1\n");
 
+        if (a.decimal_value) free(a.decimal_value);
     return errors;
 }
 
@@ -822,7 +839,7 @@ int testDecimalExtract(char* input, char* expected_coefficient, int64_t expected
         errors++;
     }
     else printf("OK - ");
-    if (exponent) printf("%s -> %se%lld\n", input, coefficient, exponent);
+    if (exponent) printf("%s -> %se%lld\n", input, coefficient, (long long)exponent);
     else printf("%s -> %s\n", input, coefficient);
 
     free(a.decimal_value);
@@ -859,7 +876,8 @@ int test_decimalExtract() {
     // Test removal of trailing zeros
     errors += testDecimalExtract("123456789000000000000000000000", "1.23456789", 29);
     // Test Large numbers
-    plugin->setDigits(plugin, 50);
+    plugin->num_context->digits = 50;
+    plugin->syncNumericContext(plugin);
     errors += testDecimalExtract("123456789012345678901234567890", "1.2345678901234567890123456789", 29);
     errors += testDecimalExtract("-123456789012345678901234567890", "-1.2345678901234567890123456789", 29);
     // Test Large numbers with exponent
@@ -878,7 +896,8 @@ int test_decimalExtract() {
     errors += testDecimalExtract("123456789012345678901234567890e-30", "1.2345678901234567890123456789", -1);
     errors += testDecimalExtract("-123456789012345678901234567890e-30", "-1.2345678901234567890123456789", -1);
     /* Test Large numbers with smaller digits setting */
-    plugin->setDigits(plugin, 20);
+    plugin->num_context->digits = 20;
+    plugin->syncNumericContext(plugin);
     errors += testDecimalExtract("123456789012345678901234567890", "1.234567890123456789", 29);
     errors += testDecimalExtract("-123456789012345678901234567890", "-1.234567890123456789", 29);
     // Test Large numbers with exponent
@@ -907,12 +926,194 @@ int test_decimalExtract() {
     // Test all 9s
     errors += testDecimalExtract("999999999999999999", "9.99999999999999999", 17);
     errors += testDecimalExtract("-999999999999999999", "-9.99999999999999999", 17);
-    // Finally, Test Floating point numbers (positive and negative) with over 100 digits
-    plugin->setDigits(plugin, 200);
+    // Finally, Test Floating point numbers (positive and negative) with over 100 digit
+    plugin->num_context->digits = 200;
+    plugin->syncNumericContext(plugin);
     errors += testDecimalExtract("1234567890123456789012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890e-300",
         "1.23456789012345678901234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789",
         -150);
 
+    return errors;
+}
+
+// Test is zero
+int test_isZero() {
+    value input;
+    int result;
+    int errors = 0;
+    input.decimal_value = NULL;
+
+    printf("\nTesting isZero()\n");
+
+    // Test 0
+    plugin->decimalFromString(plugin, &input, "0");
+    result = plugin->decimalIsZero(plugin, &input);
+    if (result != 1) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("decNumber: 0 -> isZero: %d\n", result);
+
+    // Test -0
+    plugin->decimalFromString(plugin, &input, "-0");
+    result = plugin->decimalIsZero(plugin, &input);
+    if (result != 1) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("decNumber: -0 -> isZero: %d\n", result);
+
+    // Test 1
+    plugin->decimalFromString(plugin, &input, "1");
+    result = plugin->decimalIsZero(plugin, &input);
+    if (result != 0) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("decNumber: 1 -> isZero: %d\n", result);
+
+    // Test -1
+    plugin->decimalFromString(plugin, &input, "-1");
+    result = plugin->decimalIsZero(plugin, &input);
+    if (result != 0) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("decNumber: -1 -> isZero: %d\n", result);
+
+    // Test with an exponent
+    plugin->decimalFromString(plugin, &input, "1e-10");
+    result = plugin->decimalIsZero(plugin, &input);
+    if (result != 0) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("decNumber: 1e-10 -> isZero: %d\n", result);
+
+        if (input.decimal_value) free(input.decimal_value);
+    return errors;
+}
+
+// Test decimalTruncate - which truncates (round down - towards zero) to an integer
+int test_decimalTruncate() {
+    value input, result;
+    int errors = 0;
+    char buffer[32];
+    input.decimal_value = NULL;
+    result.decimal_value = NULL;
+
+    printf("\nTesting decimalTruncate()\n");
+
+    // Test 1.23456789 -> 1
+    plugin->decimalFromString(plugin, &input, "1.23456789");
+    plugin->decimalTruncate(plugin, &result, &input);
+    plugin->decimalToString(plugin, &result, buffer);
+    if (strcmp("1", buffer) != 0) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("1.23456789 -> %s\n", buffer);
+
+    // Test -1.23456789 -> -1
+    plugin->decimalFromString(plugin, &input, "-1.23456789");
+    plugin->decimalTruncate(plugin, &result, &input);
+    plugin->decimalToString(plugin, &result, buffer);
+    if (strcmp("-1", buffer) != 0) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("-1.23456789 -> %s\n", buffer);
+
+    // Test 1234567890123456789.987654321 -> 1234567890123456789
+    plugin->decimalFromString(plugin, &input, "1234567890123456789.987654321");
+    plugin->decimalTruncate(plugin, &result, &input);
+    plugin->decimalToString(plugin, &result, buffer);
+    if (strcmp("1234567890123456789", buffer) != 0) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("1234567890123456789.987654321 -> %s\n", buffer);
+
+    // Test with an exponent
+    plugin->decimalFromString(plugin, &input, "1234567890123456789.987654321e2");
+    plugin->decimalTruncate(plugin, &result, &input);
+    plugin->decimalToString(plugin, &result, buffer);
+    if (strcmp("123456789012345678998", buffer) != 0) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("1234567890123456789.987654321e2 -> %s\n", buffer);
+
+        if (input.decimal_value) free(input.decimal_value);
+    if (result.decimal_value) free(result.decimal_value);
+    return errors;
+}
+
+// Test decimalRound - which rounds (round half up even) to an integer
+int test_decimalRound() {
+    value input, result;
+    int errors = 0;
+    char buffer[32];
+    input.decimal_value = NULL;
+    result.decimal_value = NULL;
+
+    printf("\nTesting decimalRound()\n");
+
+    // Test 1.23456789 -> 1
+    plugin->decimalFromString(plugin, &input, "1.23456789");
+    plugin->decimalRound(plugin, &result, &input);
+    plugin->decimalToString(plugin, &result, buffer);
+    if (strcmp("1", buffer) != 0) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("1.23456789 -> %s\n", buffer);
+
+    // Test -1.23456789 -> -1
+    plugin->decimalFromString(plugin, &input, "-1.23456789");
+    plugin->decimalRound(plugin, &result, &input);
+    plugin->decimalToString(plugin, &result, buffer);
+    if (strcmp("-1", buffer) != 0) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("-1.23456789 -> %s\n", buffer);
+
+    // Test 1234567890123456789.987654321 -> 1234567890123456790
+    plugin->decimalFromString(plugin, &input, "1234567890123456789.987654321");
+    plugin->decimalRound(plugin, &result, &input);
+    plugin->decimalToString(plugin, &result, buffer);
+    if (strcmp("1234567890123456790", buffer) != 0) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("1234567890123456789.987654321 -> %s\n", buffer);
+
+    // Test with an exponent
+    plugin->decimalFromString(plugin, &input, "1234567890123456789.987654321e2");
+    plugin->decimalRound(plugin, &result, &input);
+    plugin->decimalToString(plugin, &result, buffer);
+    if (strcmp("123456789012345678999", buffer) != 0) {
+        printf("Error - ");
+        errors++;
+    }
+    else printf("OK - ");
+    printf("1234567890123456789.987654321e2 -> %s\n", buffer);
+
+        if (input.decimal_value) free(input.decimal_value);
+    if (result.decimal_value) free(result.decimal_value);
     return errors;
 }
 
@@ -933,8 +1134,15 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Set the number of digits in the rxvmplugin context
-    plugin->setDigits(plugin, 20); // Big enough for 64-bit int
+    // Create the numeric context and set the digits
+    numeric_context num_context;
+    num_context.digits = 20; // Big enough for 64-bit int
+    num_context.fuzz = 0;
+    num_context.form = NUMERIC_FORM_SCIENTIFIC;
+    num_context.casetype = CASE_LOWER;
+    num_context.standard = NUMERIC_STANDARD_COMMON;
+    plugin->num_context = &num_context;
+    plugin->syncNumericContext(plugin);
 
     errors += test_int_tofrom_conversions();
     errors += test_moreDecimalToInteger();
@@ -947,6 +1155,9 @@ int main(int argc, char *argv[]) {
     errors += test_decimalNeg();
     errors += test_decimalPow();
     errors += test_decimalExtract();
+    errors += test_isZero();
+    errors += test_decimalTruncate();
+    errors += test_decimalRound();
 
     plugin->base.free((rxvm_plugin*)plugin);
 

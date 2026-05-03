@@ -1,0 +1,25 @@
+/*
+ * CREXX Interpreter test for block-scoped signal handler push/pop.
+ */
+
+.globals=0
+
+main() .locals=0
+    sigignore "OTHER"
+    sigpush "OTHER"
+    sigbr block_handler,"OTHER"
+    sigpop "OTHER"
+    signal "OTHER"
+    say "pushpop-restored-ignore"
+
+    sigpush "OTHER"
+    sigbr block_handler,"OTHER"
+    signal "OTHER","branch payload"
+    signal "FAILURE","sigbr did not branch"
+
+block_handler:
+    sigpop "OTHER"
+    say "pushpop-branch-hit"
+    signal "OTHER"
+    say "pushpop-after-restored-ignore"
+    ret 0

@@ -1,0 +1,7 @@
+* asserttype can signal, so it is an optimiser barrier.
+
+main() .locals=3
+    swap r1,r2
+    asserttype r0,".object"
+    swap r1,r2
+    ret

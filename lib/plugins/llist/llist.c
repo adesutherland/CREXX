@@ -11,8 +11,12 @@
     #include <windows.h>
 #else
     #include <unistd.h>   // For POSIX systems (Linux/macOS)
+    #include <ctype.h>
 #endif
 
+#ifdef __linux__
+    #include <stdint.h>
+#endif
 
 #define HIGHVALUE ((char *)-1)
 
@@ -211,7 +215,7 @@ void toUpperCase(char *str) {
     }
 }
 
-void trim(char *str) {
+void lltrim(char *str) {
     char *start = str;  // Pointer auf den Anfang des Strings
     char *end;
     while (isspace((unsigned char)*start)) {   // skip leading blanks
@@ -450,8 +454,8 @@ ENDPROC
 
 // Function to display a linked list
 PROCEDURE(listnode) {
-    int nodeindx=GETINT(ARG0);
-    printf("Linked List %d:\n",GETINT(ARG0));
+    rxinteger nodeindx=GETINT(ARG0);
+    printf("Linked List %lld:\n",(long long)GETINT(ARG0));
     if (llEntryStub[nodeindx].sStackFirst== NULL) {
         printf("Empty list\n");
         RETURNINTX(0);
@@ -468,7 +472,7 @@ ENDPROC
 
 // Function to free memory of a linked list
 PROCEDURE(freellist) {
-    int nodeIndex = GETINT(ARG0);
+    rxinteger nodeIndex = GETINT(ARG0);
 
     // Check if the list is already empty
     if (llEntryStub[nodeIndex].sStackFirst == NULL) {
@@ -494,13 +498,12 @@ PROCEDURE(freellist) {
     llEntryStub[nodeIndex].sStackLastValid = NULL;
     llEntryStub[nodeIndex].sStackEntries = 0;
 
-    printf("List successfully freed.\n");
     RETURNINT(0);
 }
 
 
 PROCEDURE(nextnode) {
-    int qname = GETINT(ARG0);
+    rxinteger qname = GETINT(ARG0);
 
     // Retrieve the current node
     struct NodeEntry *currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackCurrent;
@@ -511,8 +514,8 @@ PROCEDURE(nextnode) {
     // Check if we've reached the end of the list
     if (currentEntry == NULL) {
         char endOfListMessage[32];
-        sprintf(endOfListMessage, "$END-OF-LLIST-%d$", qname);
-        RETURNSTR(endOfListMessage);
+        sprintf(endOfListMessage, "$END-OF-LLIST-%d$", (int)qname);
+        RETURNSTRX(endOfListMessage);
     }
 
     // Return the string stored in the current node
@@ -525,11 +528,12 @@ PROCEDURE(nextnode) {
     if (currentEntry->sNext == NULL) {
         llEntryStub[qname].sStackLastValid = (uintptr_t *)currentEntry;
     }
+    ENDPROC
 }
 
 
 PROCEDURE(currentnode) {
-    int qname = GETINT(ARG0);
+    rxinteger qname = GETINT(ARG0);
 
     // Retrieve the current node; default to the first node if current is NULL
     struct NodeEntry *currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackCurrent;
@@ -540,13 +544,14 @@ PROCEDURE(currentnode) {
     // Check if the list is empty
     if (currentEntry == NULL) {
         char emptyListMsg[32];
-        sprintf(emptyListMsg, "$EMPTY-LLIST-%d$", qname);
-        RETURNSTR(emptyListMsg);  // Return empty list marker
+        sprintf(emptyListMsg, "$EMPTY-LLIST-%d$", (int)qname);
+        RETURNSTRX(emptyListMsg);  // Return empty list marker
     }
 
     // Update the last valid node pointer and return the node's string
     llEntryStub[qname].sStackLastValid = (uintptr_t *)currentEntry;
     RETURNSTR(currentEntry->String);
+    ENDPROC
 }
 
 PROCEDURE(currentnodeaddr) {
@@ -560,12 +565,13 @@ PROCEDURE(currentnodeaddr) {
 
     // Return 0 if the list is empty
     if (currentEntry == NULL) {
-        RETURNINT(0);
+        RETURNINTX(0);
     }
 
     // Update the last valid node pointer and return the address
     llEntryStub[qname].sStackLastValid = (uintptr_t *)currentEntry;
-    RETURNINT((uintptr_t)currentEntry->sSaddr);
+    RETURNINT( (uintptr_t)currentEntry->sSaddr);
+    ENDPROC
 }
 
 
@@ -574,15 +580,15 @@ PROCEDURE(prevnode) {
 
     struct NodeEntry *currentEntry = (struct NodeEntry *) llEntryStub[qname].sStackCurrent;
     if (currentEntry == NULL) {
-        char EOLL[16];
-        sprintf(EOLL, "$%s%d$", "TOP-OF-LLIST-",qname);
+        char EOLL[32];
+        snprintf(EOLL, sizeof(EOLL), "$TOP-OF-LLIST-%d$", (int)qname);
         RETURNSTR(EOLL);
     }
     
     currentEntry = (struct NodeEntry *) currentEntry->sPrev;
     if (currentEntry == NULL) {
-        char EOLL[16];
-        sprintf(EOLL, "$%s%d$", "TOP-OF-LLIST-",qname);
+        char EOLL[32];
+        snprintf(EOLL, sizeof(EOLL), "$TOP-OF-LLIST-%d$", (int)qname);
         RETURNSTR(EOLL);
     } else {
         RETURNSTR(currentEntry->String);
@@ -756,6 +762,6 @@ ADDPROC(setnodeaddr, "llist.setnodeaddr", "b",  ".int", "queue=.int,position=.in
 ADDPROC(listnode,     "llist.listnode",   "b",  ".int", "qname=.int" );
 ADDPROC(listllist,    "llist.listllist",  "b",  ".int", "qname=.int" );
 ADDPROC(freellist,    "llist.freellist",  "b",  ".int", "qname=.int" );
-ADDPROC(debug_llist,   "llist.debug",    "b",  ".int",    "qname=.int" );
+ADDPROC(debug_llist,   "llist._debug",    "b",  ".int",    "qname=.int" );
 ADDPROC(cleanup,       "llist.cleanup",  "b",  ".int",    "" );
 ENDLOADFUNCS

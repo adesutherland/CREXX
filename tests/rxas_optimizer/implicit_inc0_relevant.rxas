@@ -1,0 +1,7 @@
+* inc0 implicitly uses r0, so it must block r0/r1 swap cancellation.
+
+main() .locals=2
+    swap r0,r1
+    inc0
+    swap r0,r1
+    ret

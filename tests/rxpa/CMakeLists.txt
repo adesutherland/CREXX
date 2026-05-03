@@ -4,12 +4,39 @@ add_subdirectory(multplugins)
 
 set(CMAKE_C_STANDARD 90)
 
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+
 # Including RXPlugin Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
+function(localize_test_plugin_output target)
+    # Keep test-only plugins out of the shared release bin directory.
+    set_target_properties(${target} PROPERTIES
+            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    )
+endfunction()
+
+function(enable_test_vm_core_sockets target)
+    target_sources(${target} PRIVATE
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvmsock.c
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvmsock.h)
+    if(WIN32)
+        target_link_libraries(${target} ws2_32)
+    endif()
+endfunction()
+
 # Create dynamic plugin module
 add_dynamic_plugin_target(_rxpa_dynlink rxpa_dynlink.c)
+localize_test_plugin_output(_rxpa_dynlink)
 add_dependencies(_rxpa_dynlink rxpa library rxvm rxc) # The test (not plugin) depends on rxpa, library, rxvm, and rxc
+
+# Native declaration plugin used to prove RXPA class/interface metadata is
+# visible to the compiler without a Rexx-side contract shim.
+add_dynamic_plugin_target(_rxpa_classdecl rxpa_classdecl.c)
+localize_test_plugin_output(_rxpa_classdecl)
+add_dependencies(_rxpa_classdecl rxpa library rxvm rxc)
 
 # Create a version of rxc that statically links the _rxpa_static library
 # Create static link module for rxc
@@ -17,11 +44,19 @@ add_dependencies(_rxpa_dynlink rxpa library rxvm rxc) # The test (not plugin) de
 add_decl_plugin_target(_rxpalink rxpa_staticlink.c)
 # The static link test - a version of rxc that statically links the _rxpa_decl library
 add_executable(rxc_staticlink "${CMAKE_SOURCE_DIR}/compiler/rxc_main.c")
+target_include_directories(rxc_staticlink PRIVATE ${CMAKE_SOURCE_DIR}/platform)
 # Ensure the linker includes the plugin
 configure_linker_for_decl_lib(rxc_staticlink _rxpalink)
 # Add the dependencies and link libraries
 add_dependencies(rxc_staticlink rxclib _rxpalink_decl rxpa library rxvm)
-target_link_libraries(rxc_staticlink rxclib machine avl_tree platform mc_decimal_manual rxvmplugin rxaslib rxpa _rxpalink_decl m)
+target_link_libraries(rxc_staticlink rxclib _rxpalink_decl)
+
+add_decl_plugin_target(_rxpa_classdecl_static rxpa_classdecl.c)
+add_executable(rxc_classdecl_static "${CMAKE_SOURCE_DIR}/compiler/rxc_main.c")
+target_include_directories(rxc_classdecl_static PRIVATE ${CMAKE_SOURCE_DIR}/platform)
+configure_linker_for_decl_lib(rxc_classdecl_static _rxpa_classdecl_static)
+add_dependencies(rxc_classdecl_static rxclib _rxpa_classdecl_static_decl rxpa library rxvm)
+target_link_libraries(rxc_classdecl_static rxclib _rxpa_classdecl_static_decl)
 
 # Create static link module for rxvm
 # The static definition library
@@ -37,78 +72,92 @@ add_executable(testvm
         ${CMAKE_SOURCE_DIR}/interpreter/interrupt.c
         ${CMAKE_SOURCE_DIR}/avl_tree/rxastree.h
         ${CMAKE_SOURCE_DIR}/utf8/utf.h
-        ${CMAKE_SOURCE_DIR}/machine/rxbin.h
+        ${CMAKE_SOURCE_DIR}/binutils/include/rxbin.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c)
+        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c)
 # Set the performance properties
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 # Ensure the linker includes the plugin
 configure_linker_for_static_lib(testvm _rxpalink)
+enable_test_vm_core_sockets(testvm)
 # Add the dependencies and link libraries
-add_dependencies(testvm machine avl_tree rxpa platform _rxpalink_static)
-target_link_libraries(testvm rxvmplugin machine avl_tree rxpa mc_decimal_manual platform _rxpalink_static m)
+add_dependencies(testvm avl_tree rxpa platform _rxpalink_static)
+target_link_libraries(testvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim _rxpalink_static)
 target_include_directories(testvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
-        ${CMAKE_SOURCE_DIR}/machine
+        ${CMAKE_SOURCE_DIR}/binutils/include
         ${CMAKE_SOURCE_DIR}/assembler
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/avl_tree
-        ${CMAKE_SOURCE_DIR}/utf8)
+        ${CMAKE_SOURCE_DIR}/utf8
+        ${CMAKE_SOURCE_DIR}/inc)
 
-# Build Dynamic Test Rexx
-add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_dynlink_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink\" && ${CMAKE_BINARY_DIR}/assembler/rxas rxpa_dynlink_test
-        DEPENDS rxas rxc library _rxpa_dynlink ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink.rexx
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxpa_dynlink_test.rxbin ${CMAKE_CURRENT_BINARY_DIR}/rxpa_dynlink_test.rxas
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-add_custom_target(rxpa_dynlink_test ALL
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/rxpa_dynlink_test.rxbin
+add_custom_target(rxpa_dynlink_run ALL)
+crexx_add_rexx_opt_matrix(
+        NAME rxpa_dynlink_run
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink.rexx
+        TARGET_GROUP rxpa_dynlink_run
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library _rxpa_dynlink
+        RUNTIME_ARGS rx_rxpa_dynlink ${CMAKE_BINARY_DIR}/bin/library
 )
 
-# Build Static Test Rexx
-add_custom_command(
-        COMMAND rxc_staticlink -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_staticlink_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink\" && ${CMAKE_BINARY_DIR}/assembler/rxas rxpa_staticlink_test
-        DEPENDS rxas rxc_staticlink library ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink.rexx
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxpa_staticlink_test.rxbin
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-add_custom_target(rxpa_staticlink_test ALL
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/rxpa_staticlink_test.rxbin
+add_custom_target(rxpa_staticlink_run ALL)
+crexx_add_rexx_opt_matrix(
+        NAME rxpa_staticlink_run
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink.rexx
+        TARGET_GROUP rxpa_staticlink_run
+        COMPILER_TARGET rxc_staticlink
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNNER testvm
+        RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
 )
 
 # Enable testing functionality
 enable_testing()
 
-# Basic linking tests
-# Dynamic link test
-add_test(NAME rxpa_dynlink_test COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i "${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}" -o rxpa_dynlink ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+foreach(_mode IN ITEMS noopt opt)
+    set(_mode_flag)
+    if(_mode STREQUAL "noopt")
+        set(_mode_flag -n)
+    endif()
 
-# Static link test
-add_test(NAME rxpa_staticlink_test COMMAND rxc_staticlink
-        -i "${CMAKE_BINARY_DIR}/lib/rxfnsb" -o rxpa_staticlink ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    add_test(
+            NAME rxpa_dynlink_compile_${_mode}
+            COMMAND $<TARGET_FILE:rxc> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_dynlink_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
 
-# Dynamic Execution Test
-add_test(NAME rxpa_dynlink_run_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm rxpa_dynlink_test rx_rxpa_dynlink ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    add_test(
+            NAME rxpa_staticlink_compile_${_mode}
+            COMMAND rxc_staticlink -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_staticlink_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
 
-# Static Execution Test
-add_test(NAME rxpa_staticlink_run_test
-        COMMAND testvm rxpa_staticlink_test ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    add_test(
+            NAME rxpa_classdecl_dynamic_compile_${_mode}
+            COMMAND $<TARGET_FILE:rxc> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_dynamic_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.rexx
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    add_test(
+            NAME rxpa_classdecl_static_compile_${_mode}
+            COMMAND $<TARGET_FILE:rxc_classdecl_static> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_static_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.rexx
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+endforeach()
 
 # Function Tests
 # Create dynamic plugin module
 add_dynamic_plugin_target(_testfuncs_dynamic rxpa_functests.c)
+localize_test_plugin_output(_testfuncs_dynamic)
 add_dependencies(_testfuncs_dynamic rxpa library rxvm rxc) # The test (not plugin) depends on rxpa, library, rxvm, and rxc
 
 # Create static plugin module for rxvm
@@ -124,10 +173,11 @@ add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/interpreter/interrupt.c
         ${CMAKE_SOURCE_DIR}/avl_tree/rxastree.h
         ${CMAKE_SOURCE_DIR}/utf8/utf.h
-        ${CMAKE_SOURCE_DIR}/machine/rxbin.h
+        ${CMAKE_SOURCE_DIR}/binutils/include/rxbin.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c
 )
 # Set the performance properties
 # set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
@@ -135,18 +185,20 @@ add_executable(funcvm
 # set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 # Ensure the linker includes the plugin
 configure_linker_for_static_lib(funcvm _testfuncs)
+enable_test_vm_core_sockets(funcvm)
 # Add the dependencies and link libraries
-add_dependencies(funcvm machine avl_tree rxpa platform _testfuncs_static)
-target_link_libraries(funcvm machine avl_tree rxpa mc_decimal_manual platform rxvmplugin _testfuncs_static m)
+add_dependencies(funcvm avl_tree rxpa platform _testfuncs_static)
+target_link_libraries(funcvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim _testfuncs_static)
 target_include_directories(funcvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
-        ${CMAKE_SOURCE_DIR}/machine
+        ${CMAKE_SOURCE_DIR}/binutils/include
         ${CMAKE_SOURCE_DIR}/assembler
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/avl_tree
-        ${CMAKE_SOURCE_DIR}/utf8)
+        ${CMAKE_SOURCE_DIR}/utf8
+        ${CMAKE_SOURCE_DIR}/inc)
 
 # Additional functional tests (of callback functions)
 set(FUNC_TESTS
@@ -154,9 +206,13 @@ set(FUNC_TESTS
         string_funcs
         int_funcs
         float_funcs
+        array_push_funcs
+        native_payload_funcs
 )
 set(OUTPUTS
         Signal
+        OK
+        OK
         OK
         OK
         OK
@@ -164,36 +220,39 @@ set(OUTPUTS
 
 list(LENGTH FUNC_TESTS num_tests)
 math(EXPR num_tests "${num_tests} - 1") # Correct upper bound for RANGE
-unset(_prev_rexxtest)
 foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
     list(GET FUNC_TESTS ${idx} _rexxtest)
     list(GET OUTPUTS ${idx} _expected_output)
-    set(_rexxtest_target ${_rexxtest}_test)
     set(_rexxtest_source ${_rexxtest}.rexx)
-    set(_rexxtest_asm ${CMAKE_CURRENT_BINARY_DIR}/${_rexxtest_target}.rxas) # Intermediate .rxas file
-    set(_rexxtest_bin ${CMAKE_CURRENT_BINARY_DIR}/${_rexxtest_target}.rxbin)
-
-    add_custom_command(
-            COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\" -o ${_rexxtest_target} ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest} && ${CMAKE_BINARY_DIR}/assembler/rxas ${_rexxtest_target}
-            DEPENDS rxas rxc library funcvm _testfuncs_dynamic ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest_source} # ${_prev_rexxtest}
-            OUTPUT ${_rexxtest_bin} ${_rexxtest_asm}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    add_custom_target(rxpa_${_rexxtest}_dynamic ALL)
+    crexx_add_rexx_opt_matrix(
+            NAME rxpa_${_rexxtest}_dynamic
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest_source}
+            TARGET_GROUP rxpa_${_rexxtest}_dynamic
+            IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+            DEPENDS library funcvm _testfuncs_dynamic
+            RUNTIME_ARGS rx_testfuncs_dynamic ${CMAKE_BINARY_DIR}/bin/library
+    )
+    set_tests_properties(
+            rxpa_${_rexxtest}_dynamic_noopt
+            rxpa_${_rexxtest}_dynamic_opt
+            PROPERTIES PASS_REGULAR_EXPRESSION ".*${_expected_output}.*"
     )
 
-    add_custom_target(${_rexxtest_target} ALL
-            DEPENDS ${_rexxtest_bin}
+    add_custom_target(rxpa_${_rexxtest}_static ALL)
+    crexx_add_rexx_opt_matrix(
+            NAME rxpa_${_rexxtest}_static
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest_source}
+            TARGET_GROUP rxpa_${_rexxtest}_static
+            IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+            DEPENDS library funcvm _testfuncs_dynamic
+            RUNNER funcvm
+            RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
     )
-
-    set(_prev_rexxtest ${_rexxtest}_test)
-
-    add_test(NAME rxpa_${_rexxtest}_dynamic_test
-            COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm ${_rexxtest_target} rx_testfuncs_dynamic ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    set_tests_properties(rxpa_${_rexxtest}_dynamic_test PROPERTIES PASS_REGULAR_EXPRESSION ".*${_expected_output}.*")
-
-    add_test(NAME rxpa_${_rexxtest}_static_test
-            COMMAND funcvm ${_rexxtest_target} ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    set_tests_properties(rxpa_${_rexxtest}_static_test PROPERTIES PASS_REGULAR_EXPRESSION ".*${_expected_output}.*")
+    set_tests_properties(
+            rxpa_${_rexxtest}_static_noopt
+            rxpa_${_rexxtest}_static_opt
+            PROPERTIES PASS_REGULAR_EXPRESSION ".*${_expected_output}.*"
+    )
 
 endforeach()

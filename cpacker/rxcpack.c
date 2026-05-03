@@ -1,4 +1,28 @@
 /*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*
  * rxcpack tool to convert rxbin files (or any binary file) into a c file
  * that can be linked to a C exe.
  *
@@ -11,8 +35,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
-#define rxversion "crexx-DEV2507"
+#include "crexx_version.h"
+#include "platform.h"
 
 #define NAME_BUFFER_SIZE 256
 #define GLOBAL_SYMBOL "rx__pg"
@@ -35,27 +59,7 @@ static void help() {
 
 static void license() {
     char *message =
-            "cREXX License (MIT)\n"
-            "Copyright (c) 2020-2024 Adrian Sutherland\n\n"
-
-            "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
-            "of this software and associated documentation files (the \"Software\"), to deal\n"
-            "in the Software without restriction, including without limitation the rights\n"
-            "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
-            "copies of the Software, and to permit persons to whom the Software is\n"
-            "furnished to do so, subject to the following conditions:\n\n"
-
-            "The above copyright notice and this permission notice shall be included in all\n"
-            "copies or substantial portions of the Software.\n\n"
-
-            "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
-            "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
-            "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
-            "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
-            "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
-            "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
-            "SOFTWARE.\n\n"
-            "See https://github.com/adesutherland/CREXX for project details\n\n"
+            CREXX_LICENSE_TEXT "\n"
             "NOTE - This tool is based on the public domain bin2c by Serge Fukanchik.\n"
             "       See https://github.com/gwilymk/bin2c\n"
             "       Thank you Serge :-)\n";
@@ -76,6 +80,8 @@ int main(int argc, char *argv[])
     char n_input[NAME_BUFFER_SIZE], n_output[NAME_BUFFER_SIZE];
     FILE *f_input, *f_output;
     char *output_file_name = 0;
+
+    platform_install_signal_handlers();
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {

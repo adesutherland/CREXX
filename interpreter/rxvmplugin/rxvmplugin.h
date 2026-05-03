@@ -1,3 +1,27 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 
 /*
  * rxvmplugin.h
@@ -41,15 +65,17 @@ struct rxvm_plugin {
 typedef struct decplugin decplugin;
 struct decplugin {
     rxvm_plugin base; // Base plugin information
+    numeric_context *num_context; // Numeric context for the plugin - this is set by the client, and readonly by the plugin
 
     // Functions provided by the framework
     // Function number_to_simple_format as defined in rxvmplugin_framework.h
     void (*number_to_simple_format)(const char *input, char *output);
+    // Function to create formated output from coefficient and exponent values
+    void (*format_number_components)(numeric_context* num_context, value *coefficient_value, value *exponent_value, value *formatted_output_value);
 
     // Functions provided by the plugin
-    size_t (*getDigits)(decplugin *plugin); // Get the number of digits in the rxvmplugin context
-    void (*setDigits)(decplugin *plugin, size_t digits); // Set the number of digits in the rxvmplugin context
-
+    void (*syncNumericContext)(decplugin *plugin); // Sync a numeric context into the plugin (should be called by the client after changing the context)
+    size_t (*getDigits)(decplugin *plugin); // Get the number of digits in the rxvmplugin context (maybe smaller than num_context->digits)
     size_t (*getRequiredStringSize)(decplugin *plugin); // Get the required string size for the rxvmplugin context
     void (*decimalFromString)(decplugin *plugin, value *result, const char *input); // Convert a string to a rxvmplugin number
     void (*decimalToString)(decplugin *plugin, const value *input, char *result); // Convert a rxvmplugin number to a string
@@ -67,6 +93,9 @@ struct decplugin {
     void (*decimalNeg)(decplugin *plugin, value *result, const value *op1); // Negate a rxvmplugin number
     int (*decimalCompare)(decplugin *plugin, const value *op1, const value *op2); // Compare two rxvmplugin numbers
     int (*decimalCompareString)(decplugin *plugin, const value *op1, const char *op2); // Compare an rxvmplugin number to a string representation of a number
+    int (*decimalIsZero)(decplugin *plugin, const value *op1); // Check if a rxvmplugin number is zero
+    void (*decimalTruncate)(decplugin *plugin, value *result, const value *op1); // Truncate a rxvmplugin number to an integer value
+    void (*decimalRound)(decplugin *plugin, value *result, const value *op1); // Round a rxvmplugin number to the nearest integer
 };
 
 /* Information block for unicode plugins */

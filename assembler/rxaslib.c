@@ -1,3 +1,27 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 //
 // Created by Adrian Sutherland on 09/08/2022.
 //
@@ -7,9 +31,9 @@
 #include <string.h>
 #include "rxasgrmr.h"
 #include "rxas.h"
-#include "rxvminst.h"
 #include "rxasassm.h"
 #include "rxbin.h"
+#include "rxdefs.h"
 
 /* Main Assembler Function
  * Returns: 0 on success, -1 on an error
@@ -30,7 +54,7 @@ int rxasmble(Assembler_Context *scanner) {
 
     /* Opening and Assemble file */
     if (scanner->debug_mode) printf("Assembling %s\n", scanner->file_name);
-    if (rxasinfl(scanner,0)) return -1;
+    if (rxasinfl(scanner, has_any_extension(scanner->file_name))) return -1;
 
     /* Parse & Process */
     rxaspars(scanner);
@@ -93,6 +117,7 @@ int rxasinbf(Assembler_Context *scanner) {
 
     scanner->string_constants_tree = 0;
     scanner->decimal_constants_tree = 0;
+    scanner->float_constants_tree = 0;
     scanner->binary_constants_tree = 0;
     scanner->proc_constants_tree = 0;
     scanner->label_constants_tree = 0;
@@ -134,16 +159,16 @@ int rxasinfl(Assembler_Context *scanner, int file_name_includes_type_extension) 
     if (file_name_includes_type_extension) fp = openfile(scanner->file_name, "", scanner->location, "r");
     else fp = openfile(scanner->file_name, "rxas", scanner->location, "r");
     if (fp == NULL) {
-        fprintf(stderr, "Can't open input file %s\n", scanner->file_name);
+        if (!scanner->quiet) fprintf(stderr, "Can't open input file %s\n", scanner->file_name);
         return -1;
     }
 
     scanner->buff = file2buf(fp, &bytes);
+    fclose(fp);
     if (scanner->buff == NULL) {
-        fprintf(stderr, "Can't read input file %s\n", scanner->file_name);
+        if (!scanner->quiet) fprintf(stderr, "Can't read input file %s\n", scanner->file_name);
         return -1;
     }
-    fclose(fp);
     /* Pointer to the end of the buffer */
     scanner->buff_end = (char*) (((char*)scanner->buff) + bytes);
 
@@ -161,7 +186,15 @@ int rxaspars(Assembler_Context *scanner) {
     /* Parse & Process */
     while((token_type = rx_scan(scanner, scanner->buff_end))) {
         // Skip Scanner Errors
-        if (token_type < 0) continue;
+        if (token_type < 0) {
+            rxaserrf(scanner, scanner->line, 0, 1, "Scanner Error");
+            continue;
+        }
+        if (token_type == ERROR) {
+            rxaserrf(scanner, scanner->line, 0, 1, "Illegal Character");
+            continue;
+        }
+        if (scanner->debug_mode) printf("DEBUG: Token %d (%s) at line %zu\n", token_type, rxas_tpn(token_type), (size_t)scanner->line);
         // EOS Special Processing
         if(token_type == EOS) {
             // Send a NEWLINE
@@ -201,13 +234,19 @@ int rxasoutf(Assembler_Context *scanner) {
 
     if (scanner->severity == 0) {
         /* Output File */
-        if (scanner->output_file_name == 0) scanner->output_file_name = scanner->file_name;
+        char *effective_output_file_name = scanner->output_file_name;
+        char *allocated_output_file_name = 0;
+        if (effective_output_file_name == 0) {
+            allocated_output_file_name = strip_rightmost_extension_if(scanner->file_name, "rxas");
+            effective_output_file_name = allocated_output_file_name;
+        }
 
-        if (scanner->debug_mode) printf("Writing to %s\n", scanner->output_file_name);
+        if (scanner->debug_mode) printf("Writing to %s\n", effective_output_file_name);
 
-        outFile = openfile(scanner->output_file_name, "rxbin", scanner->location, "wb");
+        outFile = openfile(effective_output_file_name, "rxbin", scanner->location, "wb");
         if (outFile == NULL) {
-            fprintf(stderr, "Can't open output file: %s\n", scanner->output_file_name);
+            fprintf(stderr, "Can't open output file: %s\n", effective_output_file_name);
+            if (allocated_output_file_name) free(allocated_output_file_name);
             return -1;
         }
 
@@ -227,6 +266,7 @@ int rxasoutf(Assembler_Context *scanner) {
         module.constant = pgm->const_pool;
         write_module(&module,outFile);
         fclose(outFile);
+        if (allocated_output_file_name) free(allocated_output_file_name);
     }
     else {
         fprintf(stderr, "Errors in assembler can't generate output file: %s\n", scanner->output_file_name);

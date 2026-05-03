@@ -1,0 +1,42 @@
+/* --- System Macro Library for RXPP, change only if supervised --- */
+##define log(msg)           {say time('l') msg}
+
+##define argv(stem)    {arg stem=.string[]; argc=stem.0}
+##define strlen(len,strg)     {len=.int; assembler strlen len,strg}
+##define fastpos(into, srch,string) {into = 1; __srch=srch; assembler strpos into,__srch,string; }
+
+##define cmd execio(num DISKX file keyword stem) {if mode='DISKR' | mode='READ' then stem.1='';rc=_ExecIO('num','diskx',file,stem)}
+
+/* Numerical Functions */
+##define isEven(n)          {n % 2 = 0}
+##define isOdd(n)           {n % 2 \= 0}
+##define isPositive(n)      {n > 0}
+##define isNegative(n)      {n < 0}
+##define isZero(n)          {n = 0}
+
+/* --- Mathematical Macros --- */
+##define sign(n)            {n > 0 & 1 | n < 0 & -1 | 0}
+##define pi()               {3.141592653589793}
+##define euler()            {2.718281828459045}
+
+/* --- Logical an Comparisons --- */
+##define ifNull(val,fallback) {val\='' & val | fallback}
+##define xor(a,b)           {(a | b) & \(a & b)}
+
+##define info(msg)          {say 'INFO:    ' msg}
+##define error(msg)         {say 'ERROR:   ' msg}
+##define warn(msg)          {say 'WARNING: ' msg}
+
+##define isDigit(string)      {verify(string, '0123456789') = 0}
+##define isAlpha(string)      {verify(string, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') = 0}
+##define isBlank(str)         {verify(str, ' ') = 0}
+##define isUpper(str)         {verify(str, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') = 0}
+##define isLower(str)         {verify(str, 'abcdefghijklmnopqrstuvwxyz') = 0}
+##define isAlnum(str)         {verify(str, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') = 0}
+##define isSpace(str)         {verify(str, ' ') = 0}
+##define isEmpty(str)         {str = ''}
+
+##define quote(string2quote)  {'string2quote'}
+##define Dquote(string2quote) {"string2quote"}
+
+##define cmd clear(array)     {assembler SETATTRS array,0}   ## calling syntax must be reset array-name (no function call type)

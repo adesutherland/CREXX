@@ -1,0 +1,19 @@
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      NOP : "nop" (-1:-1) [Type: .unknown]
+      TOKEN : "else" (-1:-1) [Type: .unknown]
+        ERROR : "UNEXPECTED_ELSE" (-1:-1) [Type: .unknown]
+      TOKEN : "say" (-1:-1) [Type: .unknown]
+        ERROR : "EXTRANEOUS" (-1:-1) [Type: .unknown]
+Error in err_struct_03.rexx @ 2:6 - #UNEXPECTED_ELSE, "else"
+Error in err_struct_03.rexx @ 2:11 - #EXTRANEOUS, "say"
+2 error(s) in source file
+Error in err_struct_03.rexx @ 2:6 - #UNEXPECTED_ELSE, "else"
+Error in err_struct_03.rexx @ 2:11 - #EXTRANEOUS, "say"
+2 error(s) in source file
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

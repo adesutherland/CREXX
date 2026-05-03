@@ -336,15 +336,16 @@ change occurrences of \emph{needle} to some other string.
 \index{Coded character,conversion to decimal}
 
 Coded character to decimal.
-Converts the encoding of the character in \emph{string} (which must be
-exactly one character) to its decimal representation.
+Converts the Unicode code point of the character in \emph{string} (which must
+be exactly one character) to its decimal representation.
 The returned string will be a non-negative number that represents
-the encoding of the character and will not include any sign, blanks,
+the code point of the character and will not include any sign, blanks,
 insignificant leading zeros, or decimal part.
  
 \textbf{Examples:}
 \begin{lstlisting}
 'M'.c2d  == '77'  -- ASCII or Unicode
+'🔥'.c2d == '128293'
 '7'.c2d  == '247' -- EBCDIC
 '\textbackslash{}r'.c2d == '13'  -- ASCII or Unicode
 '\textbackslash{}0'.c2d == '0'
@@ -556,20 +557,25 @@ whole number.
 \index{Character,from decimal}
 \index{Character,from a number}
 \index{Numbers,conversion to character}
-\item[d2c()]\label{refd2c}
+\item[d2c([length])]\label{refd2c}
 Decimal to coded character.
 Converts the \emph{string} (a \crexx{} \emph{number}) to a
-single character, where the number is used as the encoding of the
+single character, where the number is used as the Unicode code point of the
 character.
  
-\emph{string} must be a non-negative whole number.
-An error results if the encoding described does not produce a valid
-character for the implementation (for example, if it has more
-significant bits than the implementation's encoding for characters).
+\emph{string} must be a non-negative whole number naming a valid Unicode code
+point. An error results if the code point is invalid for Unicode (for example,
+if it is outside the Unicode range or in the surrogate range).
+If \emph{length} is specified under Unicode semantics, it may be \textbf{0} or
+\textbf{1}. A length of \textbf{0} returns the null string; a length of
+\textbf{1} is equivalent to omitting it.
  
 \textbf{Examples:}
 \begin{lstlisting}
 '77'.d2c  == 'M' -- ASCII or Unicode
+'77'.d2c(1) == 'M'
+'12'.d2c(0) == ''
+'128293'.d2c == '🔥'
 '+77'.d2c == 'M' -- ASCII or Unicode
 '247'.d2c == '7' -- EBCDIC
 '0'.d2c   == '\textbackslash 0'
@@ -1509,4 +1515,3 @@ had been executed.)
  The  \textbf{c2d} function (see page \pageref{refc2d})  can be used to convert
 a character to a decimal representation of its encoding.
 \end{description}
-

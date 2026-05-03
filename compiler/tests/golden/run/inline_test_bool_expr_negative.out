@@ -1,0 +1,5 @@
+Starting bool inline negative test...
+falsey 1
+truthy 2
+falsey 3
+Bool inline negative test finished.

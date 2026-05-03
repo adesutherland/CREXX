@@ -1,6 +1,60 @@
 /*
- * rxcp_opt.c
- * cREXX Optimisations
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Compiler Optimization Pass
+ */
+
+/*
+ * ===================================================================
+ * LEVEL C COMPATIBILITY & DESIGN NOTES (StrictAnsiArithmetic Flag)
+ * ===================================================================
+ * This section documents the arithmetic behaviour that must change when
+ * the `StrictAnsiArithmetic` flag is enabled for Level C compatibility.
+ *
+ * -------------------------------------------------------------------
+ * 1. Decimal Arithmetic (% and // operators on `.decimal` type)
+ * -------------------------------------------------------------------
+ * For Level C, the ANSI "Integer Magnitude-Precision Constraint"
+ * must be enforced.
+ *
+ * CHECK: After calculating the intermediate division result, but
+ * before finalizing it, the following check is required:
+ *
+ * IF LENGTH(TRUNC(intermediate_result)) > DIGITS() THEN
+ * RAISE SYNTAX Error 26.11
+ *
+ * -------------------------------------------------------------------
+ * 2. Float Arithmetic (% and // operators on `.float` and `.decimal` types)
+ * -------------------------------------------------------------------
+ * The current design implements a "Float-First" model:
+ *
+ * 1. Perform the division using native floating-point arithmetic.
+ * 2. Truncate the final result to its integer part.
+ *
+ * This was chosen over an "Integer-First" model where operands
+ * would be truncated to integers *before* the division.
  */
 
 #include <string.h>
@@ -13,7 +67,11 @@
 #include "rxcpbgmr.h"
 #include "rxvmplugin_framework.h"
 #include "rxbin.h" /* Needed for rxvmvars.h */
+#include "rxcp_val.h"
 #include "rxvmvars.h"
+#include "rxvalue.h"
+
+#define INLINE_MAX_PASSES 8
 
 /* Optimiser payload */
 typedef struct Payload {
@@ -27,14 +85,102 @@ static void rewrite_to_float_constant(ASTNode* node, Payload* payload, double va
 static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* value);
 static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteger value);
 static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int value);
+static int strict_string_compare_operand(ASTNode *node);
+
+/*
+ * Create a number_context of a node
+ * The returned context is a static parameter - do not free it or expect it to be thread safe, etc.
+ */
+static numeric_context* node_to_num_context(ASTNode* node) {
+    static numeric_context num_context;
+    if (!node->scope) {
+        printf("INTERNAL WARNING: node_to_num_context() called with node with no scope. Please report this warning\n");
+        /* Not a numeric context - so use defaults */
+        num_context.digits = DEFAULT_NUMERIC_DIGITS;
+        num_context.fuzz = DEFAULT_NUMERIC_FUZZ;
+        num_context.form = DEFAULT_NUMERIC_FORM;
+        num_context.casetype = DEFAULT_NUMERIC_CASE;
+        if (node->context->numeric_standard)
+            num_context.standard = NUMERIC_STANDARD_CLASSIC;
+        else
+            num_context.standard = NUMERIC_STANDARD_COMMON;
+        return &num_context;
+    }
+    return &(node->scope->num_context);
+}
+
+/*
+ * Create a value from a node
+ * The returned value is a static parameter - do not free it or expect it to be thread safe, etc.
+ * However, it is essential that clear_value() is called on the returned value when it is no longer necessary
+ * to avoid memory leaks
+ */
+static value* node_to_value(ASTNode* node) {
+    static value v;
+    static int initialised = 0;
+
+    if (!initialised) {
+        value_init(&v);
+        initialised = 1;
+    }
+    else {
+        clear_value(&v);
+    }
+
+    switch (node->value_type) {
+        case TP_INTEGER:
+            // v.status.type_int = 1; TODO This will be correct but only when the status values are defined and used correctly
+            v.int_value = node->int_value;
+            break;
+        case TP_FLOAT:
+            // v.status.type_float = 1;
+            v.float_value = node->float_value;
+            break;
+        case TP_DECIMAL:
+            // v.status.type_decimal = 1;
+            if (node->decimal_value) {
+                v.decimal_value = malloc(strlen(node->decimal_value)+1);
+                strcpy(v.decimal_value, node->decimal_value);
+                v.decimal_value_length = strlen(node->decimal_value);
+                v.decimal_buffer_length = v.decimal_value_length;
+            }
+            break;
+        case TP_STRING:
+            // v.status.type_string = 1;
+            if (node->node_string && node->node_string_length) {
+                v.string_value = malloc(node->node_string_length+1);
+                memcpy(v.string_value, node->node_string, node->node_string_length);
+                v.string_value[node->node_string_length] = 0; /* Null terminate */
+                v.string_length = node->node_string_length;
+                v.string_buffer_length = v.string_length;
+                v.string_pos = 0;
+#ifdef NUTF8
+                v.string_chars = utf8nlen(v.string_value, v.string_length); /* SLOW! */
+                v.string_char_pos = 0;
+#endif
+            }
+            break;
+        case TP_BOOLEAN:
+            // v.status.type_boolean = 1;
+            v.int_value = node->int_value;
+            break;
+        default:
+            /* Leave it as a zeroed value */
+            break;
+    }
+    return &v;
+}
 
 /* Update the string representation if a CONSTANT node */
 static void update_string(ASTNode* node) {
     char* buffer;
     size_t length;
-    if (ast_hase(node)) return; /* Don't over write error codes */
+    value work_value;
+    value *node_value;
+
+    if (ast_hase(node)) return; /* Don't overwrite error codes */
     switch (node->value_type) {
-        case TP_INTEGER:
+
         case TP_BOOLEAN:
             buffer = malloc(32); /* Large enough for any int */
 #ifdef __32BIT__
@@ -46,15 +192,34 @@ static void update_string(ASTNode* node) {
             ast_sstr(node, buffer, length);
             return;
 
-        case TP_FLOAT:
-            buffer = malloc(32); /* Large enough for any float */
-#ifdef __CMS__
-            length = snprintf(buffer,32,"%.14g",node->float_value);
-#else
-            length = snprintf(buffer,32,"%.15g",node->float_value);
-#endif
+        case TP_INTEGER:
+            /* init the work value */
+            value_init(&work_value);
+            /* Create the node value */
+            node_value = node_to_value(node);
+            /* Convert the float to a string using the numeric context */
+            int_to_string(node_to_num_context(node), &work_value, node_value);
             /* Update the node's string - this also takes ownership of the memory */
-            ast_sstr(node, buffer, length);
+            ast_copy_str(node, node_value->string_value);
+            /* Clear the node value */
+            clear_value(node_value);
+            /* Clear the work value */
+            clear_value(&work_value);
+            return;
+
+        case TP_FLOAT:
+            /* init the work value */
+            value_init(&work_value);
+            /* Create the node value */
+            node_value = node_to_value(node);
+            /* Convert the float to a string using the numeric context */
+            float_to_string(node_to_num_context(node), &work_value, node_value);
+            /* Update the node's string - this also takes ownership of the memory */
+            ast_copy_str(node, node_value->string_value);
+            /* Clear the node value */
+            clear_value(node_value);
+            /* Clear the work value */
+            clear_value(&work_value);
             return;
 
         case TP_DECIMAL:
@@ -69,8 +234,9 @@ static void update_string(ASTNode* node) {
                 }
                 Context* context = node->context;
                 decplugin* decplugin = context->decimal_plugin;
+                decplugin->num_context = &(node->scope->num_context);
+                decplugin->syncNumericContext(decplugin);
                 value* value = value_f();
-
                 decplugin->decimalFromString(decplugin, value, node->decimal_value);
                 char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
                 decplugin->decimalToString(decplugin, value, result_string);
@@ -209,9 +375,10 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
 
 /* Compares two nodes returns -1, 0, 1 as appropriate */
 #define MIN(a,b) (((a)<(b))?(a):(b))
-static int compare_nodes(ASTNode* node1, ASTNode* node2) {
+static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
     double fdiff;
     rxinteger idiff;
+    int cmp;
 
     if (node1->value_type == TP_INTEGER) {
         idiff = node1->int_value - node2->int_value;
@@ -231,6 +398,8 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2) {
     if (node1->value_type == TP_DECIMAL) {
         Context* context = node1->context;
         decplugin* decplugin = context->decimal_plugin;
+        decplugin->num_context = &(scope->num_context);
+        decplugin->syncNumericContext(decplugin);
         value* val1 = value_f();
         value* val2 = value_f();
         decplugin->decimalFromString(decplugin, val1, node1->decimal_value);
@@ -244,14 +413,239 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2) {
     }
 
     /* Use STRING */
-    if ((idiff = memcmp(node1->node_string, node2->node_string,
-                        MIN(node1->node_string_length,
-                            node2->node_string_length)) != 0))
-        return (int)idiff;
+    cmp = memcmp(node1->node_string, node2->node_string,
+                 MIN(node1->node_string_length,
+                     node2->node_string_length));
+    if (cmp != 0)
+        return cmp > 0 ? 1 : -1;
     else {
         idiff = (rxinteger)node1->node_string_length - (rxinteger)node2->node_string_length;
         return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
     }
+}
+
+static char *constant_node_to_effective_string(ASTNode *node, size_t *length) {
+    char *buffer;
+    value work_value;
+    value *node_value;
+
+    if (!node) return 0;
+
+    switch (node->value_type) {
+        case TP_STRING:
+            if (!node->node_string) {
+                buffer = malloc(1);
+                if (!buffer) return 0;
+                buffer[0] = 0;
+                if (length) *length = 0;
+                return buffer;
+            }
+            buffer = malloc(node->node_string_length + 1);
+            if (!buffer) return 0;
+            memcpy(buffer, node->node_string, node->node_string_length);
+            buffer[node->node_string_length] = 0;
+            if (length) *length = node->node_string_length;
+            return buffer;
+
+        case TP_BOOLEAN:
+            buffer = malloc(32);
+            if (!buffer) return 0;
+            if (length) *length = (size_t) snprintf(buffer, 32, "%d", node->int_value ? 1 : 0);
+            else snprintf(buffer, 32, "%d", node->int_value ? 1 : 0);
+            return buffer;
+
+        case TP_INTEGER:
+            value_init(&work_value);
+            node_value = node_to_value(node);
+            int_to_string(node_to_num_context(node), &work_value, node_value);
+            buffer = malloc(node_value->string_length + 1);
+            if (buffer) {
+                memcpy(buffer, node_value->string_value, node_value->string_length);
+                buffer[node_value->string_length] = 0;
+                if (length) *length = node_value->string_length;
+            }
+            clear_value(node_value);
+            clear_value(&work_value);
+            return buffer;
+
+        case TP_FLOAT:
+            value_init(&work_value);
+            node_value = node_to_value(node);
+            float_to_string(node_to_num_context(node), &work_value, node_value);
+            buffer = malloc(node_value->string_length + 1);
+            if (buffer) {
+                memcpy(buffer, node_value->string_value, node_value->string_length);
+                buffer[node_value->string_length] = 0;
+                if (length) *length = node_value->string_length;
+            }
+            clear_value(node_value);
+            clear_value(&work_value);
+            return buffer;
+
+        case TP_DECIMAL:
+            if (node->decimal_value == 0) {
+                buffer = malloc(1);
+                if (!buffer) return 0;
+                buffer[0] = 0;
+                if (length) *length = 0;
+                return buffer;
+            } else {
+                Context *context = node->context;
+                decplugin *plugin = context->decimal_plugin;
+                value *value = value_f();
+                char *result_string;
+
+                plugin->num_context = &(node->scope->num_context);
+                plugin->syncNumericContext(plugin);
+                plugin->decimalFromString(plugin, value, node->decimal_value);
+                result_string = malloc(plugin->getRequiredStringSize(plugin));
+                if (result_string) {
+                    plugin->decimalToString(plugin, value, result_string);
+                    if (length) *length = strlen(result_string);
+                }
+                clear_value(value);
+                free(value);
+                return result_string;
+            }
+
+        default:
+            if (node->node_string) {
+                buffer = malloc(node->node_string_length + 1);
+                if (!buffer) return 0;
+                memcpy(buffer, node->node_string, node->node_string_length);
+                buffer[node->node_string_length] = 0;
+                if (length) *length = node->node_string_length;
+                return buffer;
+            }
+            buffer = malloc(1);
+            if (!buffer) return 0;
+            buffer[0] = 0;
+            if (length) *length = 0;
+            return buffer;
+    }
+}
+
+static int compare_effective_strings(ASTNode *node1, ASTNode *node2) {
+    char *left;
+    char *right;
+    size_t left_length;
+    size_t right_length;
+    int cmp;
+
+    left = constant_node_to_effective_string(node1, &left_length);
+    right = constant_node_to_effective_string(node2, &right_length);
+    if (!left || !right) {
+        if (left) free(left);
+        if (right) free(right);
+        return 0;
+    }
+
+    cmp = memcmp(left, right, MIN(left_length, right_length));
+    free(left);
+    free(right);
+
+    if (cmp != 0) return cmp > 0 ? 1 : -1;
+    if (left_length > right_length) return 1;
+    if (left_length < right_length) return -1;
+    return 0;
+}
+
+static int strict_string_compare_operand(ASTNode *node) {
+    if (!node || !node->parent) return 0;
+
+    switch (node->parent->node_type) {
+        case OP_COMPARE_S_EQ:
+        case OP_COMPARE_S_NEQ:
+        case OP_COMPARE_S_GT:
+        case OP_COMPARE_S_LT:
+        case OP_COMPARE_S_GTE:
+        case OP_COMPARE_S_LTE:
+            return 1;
+
+        default:
+            return 0;
+    }
+}
+
+/* Return true if the operator is comparison */
+static int is_comparison_operator(NodeType type) {
+    switch (type) {
+        case OP_COMPARE_EQUAL:
+        case OP_COMPARE_NEQ:
+        case OP_COMPARE_GT:
+        case OP_COMPARE_LT:
+        case OP_COMPARE_GTE:
+        case OP_COMPARE_LTE:
+        case OP_COMPARE_S_EQ:
+        case OP_COMPARE_S_NEQ:
+        case OP_COMPARE_S_GT:
+        case OP_COMPARE_S_LT:
+        case OP_COMPARE_S_GTE:
+        case OP_COMPARE_S_LTE:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int can_code_fold(ASTNode* node, int children) {
+    ASTNode *child1 = 0, *child2 = 0, *child3 = 0;
+
+    if (node->node_type == CONSTANT) return 1; /* A constant IS folded */
+
+    child1 = node->child;
+    if (child1) child2 = child1->sibling;
+    if (child2) child3 = child2->sibling;
+
+    /* Arity Check: Are any of the required children missing or NOT CONSTANT? */
+    if (children >= 1) {
+        if (!child1 || child1->node_type != CONSTANT) return 0;
+    }
+    if (children >= 2) {
+        if (!child2 || child2->node_type != CONSTANT) return 0;
+    }
+    if (children >= 3) {
+        if (!child3 || child3->node_type != CONSTANT) return 0;
+    }
+
+    /* Strict Numeric Safety Check */
+    /* If the operation is arithmetic (returns number) or comparison,
+       we must respect the numeric context (digits, form, fuzz, etc).
+       If any context setting is INHERITED, we cannot fold because
+       runtime values might differ from build-time defaults. */
+    int check_context = 0;
+    if (node->value_type == TP_DECIMAL ||
+        node->value_type == TP_FLOAT ||
+        node->value_type == TP_INTEGER) {
+        check_context = 1;
+    }
+    if (is_comparison_operator(node->node_type)) {
+        check_context = 1;
+    }
+
+    if (check_context) {
+        if (!node->scope) return 0; /* No scope means context unknown -> unsafe */
+        numeric_context *ctx = &(node->scope->num_context);
+
+        /* DIGITS: If digits == -1 (Inherited) -> NO FOLD */
+        if (ctx->digits == -1) return 0;
+
+        /* STANDARD: If standard is Inherited/Unknown -> NO FOLD */
+        if (ctx->standard == NUMERIC_STANDARD_INHERIT) return 0;
+
+        /* FORM: If form is Inherited -> NO FOLD */
+        if (ctx->form == NUMERIC_FORM_INHERIT) return 0;
+
+        /* CASE: If casetype is Inherited -> NO FOLD */
+        if (ctx->casetype == CASE_INHERIT) return 0;
+
+        /* FUZZ: If fuzz == -1 and it is a comparison -> NO FOLD */
+        if (is_comparison_operator(node->node_type)) {
+            if (ctx->fuzz == -1) return 0;
+        }
+    }
+
+    return 1;
 }
 
 /* Step 1
@@ -265,7 +659,7 @@ static walker_result opt1_walker(walker_direction direction,
     ASTNode *child1, *child2, *child3, *keep_node;
     char* buffer;
     size_t buffer_length;
-    int can_do_code_folding;
+    int can_do_code_folding = 1;
     int compare;
     int index;
 
@@ -369,83 +763,81 @@ static walker_result opt1_walker(walker_direction direction,
         else {
             /* 'Normal' Cases */
 
-            /* If any children aren't constant then there is no constant folding to
-             * be done */
-            can_do_code_folding = 1;
-            if (child1 && child1->node_type != CONSTANT)
-                can_do_code_folding =
-                        0;
-            if (child2 && child2->node_type != CONSTANT)
-                can_do_code_folding =
-                        0;
+            /* Determine arity */
+            int arity = 0;
+            if (child1) arity++;
+            if (child2) arity++;
+            if (child3) arity++;
+
+            can_do_code_folding = can_code_fold(node, arity);
 
             if (can_do_code_folding)
                 switch (node->node_type) {
 
                     case OP_COMPARE_EQUAL:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare == 0);
                         break;
 
                     case OP_COMPARE_NEQ:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare != 0);
                         break;
 
                     case OP_COMPARE_GT:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload, compare > 0);
                         break;
 
                     case OP_COMPARE_LT:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload, compare < 0);
                         break;
 
                     case OP_COMPARE_GTE:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare >= 0);
                         break;
 
                     case OP_COMPARE_LTE:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare <= 0);
                         break;
 
                     case OP_COMPARE_S_EQ:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare == 0);
                         break;
 
                     case OP_COMPARE_S_NEQ:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare != 0);
                         break;
 
                     case OP_COMPARE_S_GT:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload, compare > 0);
                         break;
 
                     case OP_COMPARE_S_LT:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload, compare < 0);
                         break;
 
                     case OP_COMPARE_S_GTE:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare >= 0);
                         break;
 
                     case OP_COMPARE_S_LTE:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_effective_strings(child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare <= 0);
                         break;
@@ -490,6 +882,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalAdd(decplugin, result, val1, val2);
@@ -525,6 +919,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalSub(decplugin, result, val1, val2);
@@ -559,6 +955,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalMul(decplugin, result, val1, val2);
@@ -593,6 +991,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalPow(decplugin, result, val1, val2);
@@ -629,6 +1029,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalDiv(decplugin, result, val1, val2);
@@ -652,34 +1054,38 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_IDIV:
-                        /* Children are the same and define the processing */
-                        if (node->child->value_type == TP_FLOAT) {
-                            int result = floor(child1->float_value / child2->float_value);
-                            rewrite_to_integer_constant(node, payload, result);
+                        if (node->value_type == TP_FLOAT) {
+                            // The result in truncated to an integer
+                            rewrite_to_float_constant(node, payload, trunc(child1->float_value / child2->float_value));
                         }
-                        else if (node->child->value_type == TP_DECIMAL) {
+                        else if (node->value_type == TP_DECIMAL) {
                             /* Decimal integer division */
                             value* val1 = value_f();
                             value* val2 = value_f();
                             value* result = value_f();
+                            double dresult;
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalDiv(decplugin, result, val1, val2);
-                            // TODO We need to implement rounding to the nearest integer in the plugin and rxvm
+                            // Truncate the result to an integer
+                            decplugin->decimalTruncate(decplugin, result, result);
+                            // Convert to String
                             char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
-                            free(result_string);
                             clear_value(val1);
                             free(val1);
                             clear_value(val2);
                             free(val2);
                             clear_value(result);
                             free(result);
+                            free(result_string);
                         }
-                        else {
+                        else { /* Must be integer */
                             rewrite_to_integer_constant(node, payload,
                                                         child1->int_value /
                                                         child2->int_value);
@@ -699,11 +1105,17 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
-                            // decplugin->decimalMod(decplugin, result, val1, val2);
-                            // TODO We need to implement decimal modulo in the plugin and rxvm
-                            // TODO We need to implement fload modulo in rxvm (missing instructions)
+                            // Calculate the integer division first
+                            decplugin->decimalDiv(decplugin, result, val1, val2);
+                            // Truncate the result to an integer
+                            decplugin->decimalTruncate(decplugin, result, result);
+                            // Now calculate the modulo
+                            decplugin->decimalMul(decplugin, result, val2, result);
+                            decplugin->decimalSub(decplugin, result, val1, result);
                             char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
@@ -716,6 +1128,7 @@ static walker_result opt1_walker(walker_direction direction,
                             free(result);
                         }
                         else {
+                            /* Must be integer */
                             rewrite_to_integer_constant(node, payload,
                                                         child1->int_value %
                                                         child2->int_value);
@@ -735,6 +1148,8 @@ static walker_result opt1_walker(walker_direction direction,
                             int result;
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, zero, "0");
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             result = decplugin->decimalCompare(decplugin, val1, zero);
@@ -761,6 +1176,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* val1 = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalNeg(decplugin, val1, val1);
                             char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
@@ -782,11 +1199,13 @@ static walker_result opt1_walker(walker_direction direction,
                                                           child1->float_value);
                         }
                         else if (node->value_type == TP_DECIMAL) {
-                            /* To ensure correct significant digits we need to
+                            /* To ensure correct significant digits, we need to
                              * convert to a decimal number and back */
                             value* val1 = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
                             decplugin->decimalToString(decplugin, val1, result_string);
@@ -806,19 +1225,55 @@ static walker_result opt1_walker(walker_direction direction,
                     case FLOAT:
                     case DECIMAL:
                     case INTEGER:
-                    case STRING:
+                    case STRING: {
+                        ValueType literal_type;
+                        NodeType literal_node_type;
+
+                        literal_node_type = node->node_type;
                         node->node_type = CONSTANT;
-                        string_to_type(node, node->target_type);
+                        if (node->target_type == TP_STRING && strict_string_compare_operand(node)) {
+                            literal_type = node->target_type;
+
+                            switch (literal_node_type) {
+                                case FLOAT:
+                                    literal_type = TP_FLOAT;
+                                    break;
+
+                                case DECIMAL:
+                                    literal_type = TP_DECIMAL;
+                                    break;
+
+                                case INTEGER:
+                                    literal_type = TP_INTEGER;
+                                    break;
+
+                                case STRING:
+                                    literal_type = TP_STRING;
+                                    break;
+
+                                default:
+                                    if (node->value_type != TP_STRING) literal_type = node->value_type;
+                                    break;
+                            }
+
+                            string_to_type(node, literal_type);
+                        }
+                        else {
+                            string_to_type(node, node->target_type);
+                        }
                         update_string(node);
                         payload->changed = 1;
                         break;
+                    }
 
                     case CONSTANT:
+                        // TODO - This logic validates that a constant is in range if it is a array subscript - is this this right place for it?
+                        /* Check for array out of range errors */
                         if ( node->parent &&
                              ( node->parent->node_type == VAR_REFERENCE ||
                                node->parent->node_type == VAR_TARGET ||
                                node->parent->node_type == VAR_SYMBOL ) ) {
-                            /* If the parent is a Variable then the node is an array subscript, and so it must be >=0 */
+                            /* If the parent is a Variable, then the node is an array subscript, and so it must be >=0 */
                             if (node->target_type == TP_INTEGER) { /* This 'must' be true */
                                 index = ast_chdi(node);
                                 if (node->int_value < node->parent->symbolNode->symbol->dim_base[index]) mknd_err(node, "OUT_OF_RANGE");
@@ -867,7 +1322,9 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     size_t node_string_length;
 
     if (symbol->symbol_type == CONSTANT_SYMBOL) return; /* already done */
+    if (symbol->scope && symbol->scope->type == SCOPE_CLASS) return; /* Attributes must not be optimized away */
     if (symbol->value_dims) return; /* Arrays are never constants */
+    if (symbol->type == TP_BINARY || symbol->type == TP_OBJECT) return; /* Binary and Objects are never constants */
     if (!sym_nond(symbol)) return; /* No nodes - weird - return */
 
 
@@ -988,7 +1445,11 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
         n->node_string_length = node_string_length;
 
         /* Patch up to the right target type */
-        string_to_type(n, n->target_type);
+        if (!(n->target_type == TP_STRING &&
+              n->value_type != TP_STRING &&
+              strict_string_compare_operand(n))) {
+            string_to_type(n, n->target_type);
+        }
         update_string(n);
         payload->changed = 1;
     }
@@ -1006,7 +1467,13 @@ static void propagete_constant_symbols(Scope* scope, Payload* payload) {
 }
 
 /* Step 2
- * - Convert copy by value to copy by reference if the argument is a constant
+ * - Mark pass-by-value formals that are provably read-only so the emitter can
+ *   reuse the incoming argument register instead of materialising a defensive
+ *   local copy.
+ *
+ * This is semantic copy elision, not a type-based shortcut and not a change to
+ * pass-by-reference semantics: writable by-value formals must still get an
+ * isolated local register.
  */
 static walker_result opt2_walker(walker_direction direction,
                                  ASTNode* node,
@@ -1040,7 +1507,8 @@ static walker_result opt2_walker(walker_direction direction,
                             break;
                         }
                     }
-                    /* If it is readonly make the argument as const - this makes the emitter not bother to duplicate the register */
+                    /* A read-only by-value formal can safely share the incoming
+                     * argument register in both no-opt and opt builds. */
                     if (is_constant) node->is_const_arg = 1;
                 }
             }
@@ -1050,12 +1518,33 @@ static walker_result opt2_walker(walker_direction direction,
     return result_normal;
 }
 
+void mark_const_args(Context *context) {
+    Payload payload;
+
+    payload.current_scope = 0;
+    payload.context = context;
+    /* This pass is intentionally callable outside optimise() so no-opt builds
+     * use the same semantic copy-elision rule as optimised builds. */
+    ast_wlkr(context->ast, opt2_walker, (void *) &payload);
+}
+
 /* Optimise AST Tree */
 void optimise(Context *context) {
     Payload payload;
 
     payload.current_scope = 0;
     payload.context = context;
+
+    /* Inlining Pass */
+    if (context->optimise) {
+        int inline_pass;
+
+        for (inline_pass = 0; inline_pass < INLINE_MAX_PASSES; inline_pass++) {
+            if (!rxcp_inline_pass(context)) break;
+        }
+
+        rxcp_inline_prune(context, context->ast);
+    }
 
     payload.changed = 0;
 
@@ -1071,7 +1560,7 @@ void optimise(Context *context) {
         if (!payload.changed) break;
     }
 
-    /* Constant Arguments converted to pass by reference */
-    ast_wlkr(context->ast, opt2_walker, (void *) &payload);
+    /* Mark read-only by-value formals for semantic copy elision. */
+    mark_const_args(context);
 
 }

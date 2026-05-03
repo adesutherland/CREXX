@@ -1,0 +1,323 @@
+/*
+ * interpreter/tests/tests_interfaces.rxas
+ */
+
+.meta "interface_factory_tiebreak.car"="b" ".unknown" .class
+.meta "interface_factory_tiebreak.car"="interface_factory_tiebreak.vehicle" .implements
+.meta "interface_factory_tiebreak.car._name"="b" ".string" .attr 1
+.meta "interface_factory_tiebreak.truck"="b" ".unknown" .class
+.meta "interface_factory_tiebreak.truck"="interface_factory_tiebreak.vehicle" .implements
+.meta "interface_factory_tiebreak.truck._name"="b" ".string" .attr 1
+.meta "interface_factory_tiebreak.vehicle"="b" ".unknown" .interface
+.meta "interface_factory_tiebreak.vehicle"="method" "describe" ".string" "" .member
+.meta "interface_factory_tiebreak.vehicle"="factory" "*" ".vehicle" "name=.string" .member
+.meta "interface_factory_tiebreak.vehicle"="factory" "from_name" ".vehicle" "name=.string" .member
+.meta "interface_default_vm.box"="b" ".unknown" .class
+.meta "interface_default_vm.box"="interface_default_vm.shape" .implements
+.meta "interface_default_vm.shape"="b" ".unknown" .interface
+.meta "interface_default_vm.shape"="method final" "describe" ".string" "" .member
+.meta "interface_default_vm.shape"="method final" "prefix" ".string" "" .member
+.meta "interface_default_vm.shape"="method" "summary" ".string" "" .member
+.meta "interface_default_vm.shape"="factory" "*" ".shape" "" .member
+
+.globals=0
+
+main() .locals=10
+   say "Test Suite: Interface Factory Dispatch"
+
+   load r1,58
+   metadecodeinst r2,r1
+   linkattr r3,r2,1
+   seq r4,r3,"SRCFPROC_REG_STRING_REG"
+   brf fail_opcode_name,r4
+   linkattr r3,r2,3
+   ieq r4,r3,3
+   brf fail_opcode_arity,r4
+
+   load r1,1
+   load r2,"duo"
+   settp r2,3
+   srcfproc r0,"interface_factory_tiebreak.vehicle",r1
+   dcall r0,r0,r1
+
+   load r1,1
+   settp r0,1
+   swap r2,r0
+   srcmethod r3,r2,"describe"
+   dcall r3,r3,r1
+   swap r0,r2
+   seq r4,r3,"car:duo"
+   brf fail_tiebreak,r4
+
+   load r1,1
+   load r2,"duo"
+   settp r2,3
+   srcfproc r0,"interface_factory_tiebreak.vehicle..from_name",r1
+   dcall r0,r0,r1
+
+   load r1,1
+   settp r0,1
+   swap r2,r0
+   srcmethod r3,r2,"describe"
+   dcall r3,r3,r1
+   swap r0,r2
+   seq r4,r3,"truck:truck:named:duo"
+   brf fail_named_tiebreak,r4
+
+   load r1,0
+   srcfproc r0,"interface_default_vm.shape",r1
+   dcall r0,r0,r1
+
+   load r1,1
+   settp r0,1
+   swap r2,r0
+   srcmethod r3,r2,"describe"
+   dcall r3,r3,r1
+   swap r0,r2
+   seq r4,r3,"iface:box"
+   brf fail_default_method,r4
+
+   typeof r5,r0
+   seq r4,r5,".interface_default_vm..box"
+   brf fail_typeof,r4
+
+   istype r5,r0,".interface_default_vm..shape"
+   ieq r4,r5,1
+   brf fail_istype_interface,r4
+
+   istype r5,r0,"interface_default_vm.box"
+   ieq r4,r5,1
+   brf fail_istype_class,r4
+
+   asserttype r0,".interface_default_vm..shape"
+
+   say "PASS: Interface Dispatch Suite"
+   ret 0
+
+fail_opcode_name:
+   say "FAIL: METADECODEINST SRCFPROC Name"
+   ret 0
+
+fail_opcode_arity:
+   say "FAIL: METADECODEINST SRCFPROC Operand Count"
+   ret 0
+
+fail_tiebreak:
+   say "FAIL: SRCFPROC Tie-Break"
+   say r3
+   ret 0
+
+fail_named_tiebreak:
+   say "FAIL: SRCFPROC Named Tie-Break"
+   say r3
+   ret 0
+
+fail_default_method:
+   say "FAIL: SRCMETHOD Default Body"
+   say r3
+   ret 0
+
+fail_typeof:
+   say "FAIL: TYPEOF Concrete Type"
+   say r5
+   ret 0
+
+fail_istype_interface:
+   say "FAIL: ISTYPE Interface"
+   say r5
+   ret 0
+
+fail_istype_class:
+   say "FAIL: ISTYPE Class"
+   say r5
+   ret 0
+
+§interface_factory_tiebreak.car.§factory() .locals=3
+   .meta "interface_factory_tiebreak.car.§factory"="b" ".vehicle" §interface_factory_tiebreak.car.§factory() "name=.string"
+   setattrs r1,2
+   setobjtype r1,"interface_factory_tiebreak.car"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_factory_tiebreak.car.§factory.name"="b" ".string" a1
+   .meta "interface_factory_tiebreak.car.§factory.§factory"="b" ".car" r1
+   linkattr1 r2,r1,1
+   scopy r2,a1
+   unlink r2
+   ret r1
+   .meta "interface_factory_tiebreak.car.§factory.name"
+   .meta "interface_factory_tiebreak.car.§factory.§factory"
+
+§interface_factory_tiebreak.car.§match() .locals=1
+   .meta "interface_factory_tiebreak.car.§match"="b" ".int" §interface_factory_tiebreak.car.§match() "name=.string"
+   .meta "interface_factory_tiebreak.car.§match.name"="b" ".string" a1
+   ret 20
+   .meta "interface_factory_tiebreak.car.§match.name"
+
+§interface_factory_tiebreak.car.§factory.from_name() .locals=4
+   .meta "interface_factory_tiebreak.car.§factory.from_name"="b" ".vehicle" §interface_factory_tiebreak.car.§factory.from_name() "name=.string"
+   .src 1:1="from_name"
+   setattrs r1,2
+   setobjtype r1,"interface_factory_tiebreak.car"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_factory_tiebreak.car.§factory.from_name.name"="b" ".string" a1
+   .meta "interface_factory_tiebreak.car.§factory.from_name.§factory"="b" ".car" r1
+   concat r3,"car:named:",a1
+   linkattr1 r2,r1,1
+   scopy r2,r3
+   unlink r2
+   ret r1
+   .meta "interface_factory_tiebreak.car.§factory.from_name.name"
+   .meta "interface_factory_tiebreak.car.§factory.from_name.§factory"
+
+§interface_factory_tiebreak.car.§match.from_name() .locals=1
+   .meta "interface_factory_tiebreak.car.§match.from_name"="b" ".int" §interface_factory_tiebreak.car.§match.from_name() "name=.string"
+   .meta "interface_factory_tiebreak.car.§match.from_name.name"="b" ".string" a1
+   ret 5
+   .meta "interface_factory_tiebreak.car.§match.from_name.name"
+
+§interface_factory_tiebreak.car.describe() .locals=3
+   .meta "interface_factory_tiebreak.car.describe"="b" ".string" §interface_factory_tiebreak.car.describe() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_factory_tiebreak.car.describe.§this"="b" ".car" a1
+   linkattr1 r1,a1,1
+   concat r2,"car:",r1
+   unlink r1
+   ret r2
+   .meta "interface_factory_tiebreak.car.describe.§this"
+
+§interface_factory_tiebreak.truck.§factory() .locals=3
+   .meta "interface_factory_tiebreak.truck.§factory"="b" ".vehicle" §interface_factory_tiebreak.truck.§factory() "name=.string"
+   setattrs r1,2
+   setobjtype r1,"interface_factory_tiebreak.truck"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_factory_tiebreak.truck.§factory.name"="b" ".string" a1
+   .meta "interface_factory_tiebreak.truck.§factory.§factory"="b" ".truck" r1
+   linkattr1 r2,r1,1
+   scopy r2,a1
+   unlink r2
+   ret r1
+   .meta "interface_factory_tiebreak.truck.§factory.name"
+   .meta "interface_factory_tiebreak.truck.§factory.§factory"
+
+§interface_factory_tiebreak.truck.§match() .locals=1
+   .meta "interface_factory_tiebreak.truck.§match"="b" ".int" §interface_factory_tiebreak.truck.§match() "name=.string"
+   .meta "interface_factory_tiebreak.truck.§match.name"="b" ".string" a1
+   ret 5
+   .meta "interface_factory_tiebreak.truck.§match.name"
+
+§interface_factory_tiebreak.truck.§factory.from_name() .locals=4
+   .meta "interface_factory_tiebreak.truck.§factory.from_name"="b" ".vehicle" §interface_factory_tiebreak.truck.§factory.from_name() "name=.string"
+   .src 1:1="from_name"
+   setattrs r1,2
+   setobjtype r1,"interface_factory_tiebreak.truck"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_factory_tiebreak.truck.§factory.from_name.name"="b" ".string" a1
+   .meta "interface_factory_tiebreak.truck.§factory.from_name.§factory"="b" ".truck" r1
+   concat r3,"truck:named:",a1
+   linkattr1 r2,r1,1
+   scopy r2,r3
+   unlink r2
+   ret r1
+   .meta "interface_factory_tiebreak.truck.§factory.from_name.name"
+   .meta "interface_factory_tiebreak.truck.§factory.from_name.§factory"
+
+§interface_factory_tiebreak.truck.§match.from_name() .locals=1
+   .meta "interface_factory_tiebreak.truck.§match.from_name"="b" ".int" §interface_factory_tiebreak.truck.§match.from_name() "name=.string"
+   .meta "interface_factory_tiebreak.truck.§match.from_name.name"="b" ".string" a1
+   ret 50
+   .meta "interface_factory_tiebreak.truck.§match.from_name.name"
+
+§interface_factory_tiebreak.truck.describe() .locals=3
+   .meta "interface_factory_tiebreak.truck.describe"="b" ".string" §interface_factory_tiebreak.truck.describe() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_factory_tiebreak.truck.describe.§this"="b" ".truck" a1
+   linkattr1 r1,a1,1
+   concat r2,"truck:",r1
+   unlink r1
+   ret r2
+   .meta "interface_factory_tiebreak.truck.describe.§this"
+
+§interface_default_vm.box.§factory() .locals=1
+   .meta "interface_default_vm.box.§factory"="b" ".shape" §interface_default_vm.box.§factory() ""
+   setattrs r0,0
+   setobjtype r0,"interface_default_vm.box"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   ret r0
+
+§interface_default_vm.box.§match() .locals=0
+   .meta "interface_default_vm.box.§match"="b" ".int" §interface_default_vm.box.§match() ""
+   ret 10
+
+§interface_default_vm.shape.describe() .locals=5
+   .meta "interface_default_vm.shape.describe"="b" ".string" §interface_default_vm.shape.describe() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_default_vm.shape.describe.§this"="b" ".shape" a1
+   load r1,1
+   settp a1,1
+   swap r2,a1
+   srcmethod r3,r2,"prefix"
+   dcall r3,r3,r1
+   swap a1,r2
+   concat r3,r3,":"
+   load r1,1
+   settp a1,1
+   swap r2,a1
+   srcmethod r4,r2,"summary"
+   dcall r4,r4,r1
+   swap a1,r2
+   concat r4,r3,r4
+   ret r4
+   .meta "interface_default_vm.shape.describe.§this"
+
+§interface_default_vm.shape.prefix() .locals=1
+   .meta "interface_default_vm.shape.prefix"="b" ".string" §interface_default_vm.shape.prefix() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_default_vm.shape.prefix.§this"="b" ".shape" a1
+   ret "iface"
+   .meta "interface_default_vm.shape.prefix.§this"
+
+§interface_default_vm.box.summary() .locals=1
+   .meta "interface_default_vm.box.summary"="b" ".string" §interface_default_vm.box.summary() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "interface_default_vm.box.summary.§this"="b" ".box" a1
+   ret "box"
+   .meta "interface_default_vm.box.summary.§this"

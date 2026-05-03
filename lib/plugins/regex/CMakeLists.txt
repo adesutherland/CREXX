@@ -14,12 +14,12 @@ target_link_libraries(_regex PRIVATE regex)
 
 # Build Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
+        COMMAND $<TARGET_FILE:rxc>
+        -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o regex_test \"${CMAKE_CURRENT_SOURCE_DIR}/regex_test\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas regex_test
+        $<TARGET_FILE:rxas> regex_test
 
-        DEPENDS rxas rxc library _regex ${CMAKE_CURRENT_SOURCE_DIR}/regex_test.rexx
+        DEPENDS rxas rxc library compiler_exit_bin _regex ${CMAKE_CURRENT_SOURCE_DIR}/regex_test.rexx
         OUTPUT regex_test.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -32,6 +32,6 @@ enable_testing()
 
 # Basic test to run regex_test.rxbin with the regex plugin
 add_test(NAME regex_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm regex_test rx_regex ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+        COMMAND $<TARGET_FILE:rxvm> regex_test rx_regex ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

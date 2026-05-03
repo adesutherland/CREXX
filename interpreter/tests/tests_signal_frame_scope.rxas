@@ -1,0 +1,30 @@
+/*
+ * CREXX Interpreter test for per-frame signal handler table inheritance.
+ */
+
+.globals=0
+
+main() .locals=0
+    sigcall frame_handler(),"OTHER"
+    call child_signal()
+    call child_ignore()
+    signal "OTHER","after child ignore"
+    say "frame-main-after"
+    ret 0
+
+child_signal() .locals=0
+    say "frame-child-signal"
+    signal "OTHER","from child"
+    ret
+
+child_ignore() .locals=0
+    sigignore "OTHER"
+    signal "OTHER","ignored child"
+    say "frame-child-ignore-after"
+    ret
+
+frame_handler() .locals=1
+    linkattr1 r0,a1,5
+    sayx "frame-handler: "
+    say r0
+    ret

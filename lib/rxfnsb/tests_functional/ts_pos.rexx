@@ -73,4 +73,16 @@ if pos('foo','foo foo b') \= 1 then do
   errors=errors+1
   say 'POS failed in test 17 '
 end
+if pos('c','a→bc') \= 4 then do
+  errors=errors+1
+  say 'POS failed in test 18 '
+end
+if pos('→','a→b→c',3) \= 4 then do
+  errors=errors+1
+  say 'POS failed in test 19 '
+end
+if pos('}','{say ''→'' v}') \= 11 then do
+  errors=errors+1
+  say 'POS failed in test 20 '
+end
 return errors<>0

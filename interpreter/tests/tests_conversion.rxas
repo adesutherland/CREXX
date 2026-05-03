@@ -1,0 +1,275 @@
+/*
+ * interpreter/tests/tests_conversion.rxas
+ */
+
+.globals=0
+
+main() .locals=10
+    say "Test Suite: Type Conversion & Formatting"
+
+    /* Section A: Standard Conversions */
+    say "Section A: Standard Conversions"
+
+    /* ITOS: Int -> String */
+    load r1, 123
+    itos r1
+    seq r0, r1, "123"
+    brt itos_pass, r0
+    say "FAIL: ITOS"
+    br itos_end
+itos_pass:
+    say "PASS: ITOS"
+itos_end:
+
+    /* STOI: String -> Int */
+    load r1, "456"
+    stoi r1
+    ieq r0, r1, 456
+    brt stoi_pass, r0
+    say "FAIL: STOI"
+    br stoi_end
+stoi_pass:
+    say "PASS: STOI"
+stoi_end:
+
+    /* FTOS: Float -> String */
+    load r1, 1.25
+    ftos r1
+    seq r0, r1, "1.25"
+    brt ftos_pass, r0
+    say "FAIL: FTOS"
+    br ftos_end
+ftos_pass:
+    say "PASS: FTOS"
+ftos_end:
+
+    /* STOF: String -> Float */
+    load r1, "3.5"
+    stof r1
+    load r2, 3.5
+    feq r0, r1, r2
+    brt stof_pass, r0
+    say "FAIL: STOF"
+    br stof_end
+stof_pass:
+    say "PASS: STOF"
+stof_end:
+
+    /* FTOI: Float -> Int */
+    /* Using integer float to avoid conversion error signal in current VM implementation */
+    load r1, 7.0
+    ftoi r1
+    ieq r0, r1, 7
+    brt ftoi_pass, r0
+    say "FAIL: FTOI"
+    br ftoi_end
+ftoi_pass:
+    say "PASS: FTOI"
+ftoi_end:
+
+    /* ITOB: Int -> Bool */
+    load r1, 1
+    itob r1
+    ieq r0, r1, 1
+    brt itob_1_pass, r0
+    say "FAIL: ITOB (1)"
+    br itob_1_end
+itob_1_pass:
+    say "PASS: ITOB (1)"
+itob_1_end:
+
+    load r1, 0
+    itob r1
+    ieq r0, r1, 0
+    brt itob_0_pass, r0
+    say "FAIL: ITOB (0)"
+    br itob_0_end
+itob_0_pass:
+    say "PASS: ITOB (0)"
+itob_0_end:
+
+    /* BTOI: Bool -> Int */
+    load r1, 1
+    btoi r1
+    ieq r0, r1, 1
+    brt btoi_1_pass, r0
+    say "FAIL: BTOI (1)"
+    br btoi_1_end
+btoi_1_pass:
+    say "PASS: BTOI (1)"
+btoi_1_end:
+
+    load r1, 0
+    btoi r1
+    ieq r0, r1, 0
+    brt btoi_0_pass, r0
+    say "FAIL: BTOI (0)"
+    br btoi_0_end
+btoi_0_pass:
+    say "PASS: BTOI (0)"
+btoi_0_end:
+
+
+    /* Section B: Decimal Conversions */
+    say "Section B: Decimal Conversions"
+
+    /* ITOD: Int -> Dec */
+    load r1, 100
+    itod r1
+    dtos r1
+    seq r0, r1, "100"
+    brt itod_pass, r0
+    say "FAIL: ITOD"
+    br itod_end
+itod_pass:
+    say "PASS: ITOD"
+itod_end:
+
+    /* FTOD: Float -> Dec */
+    load r1, 12.5
+    ftod r1
+    dtos r1
+    seq r0, r1, "12.5"
+    brt ftod_pass, r0
+    say "FAIL: FTOD"
+    br ftod_end
+ftod_pass:
+    say "PASS: FTOD"
+ftod_end:
+
+    /* BTOD: Bool -> Dec */
+    load r1, 1
+    btod r1
+    dtos r1
+    seq r0, r1, "1"
+    brt btod_pass, r0
+    say "FAIL: BTOD"
+    br btod_end
+btod_pass:
+    say "PASS: BTOD"
+btod_end:
+
+    /* DTOI: Dec -> Int */
+    load r1, "999"
+    stod r1
+    dtoi r1
+    ieq r0, r1, 999
+    brt dtoi_pass, r0
+    say "FAIL: DTOI"
+    br dtoi_end
+dtoi_pass:
+    say "PASS: DTOI"
+dtoi_end:
+
+    /* DTOF: Dec -> Float */
+    load r1, "0.5"
+    stod r1
+    dtof r1
+    load r2, 0.5
+    feq r0, r1, r2
+    brt dtof_pass, r0
+    say "FAIL: DTOF"
+    br dtof_end
+dtof_pass:
+    say "PASS: DTOF"
+dtof_end:
+
+    /* DTOB: Dec -> Bool */
+    load r1, "1"
+    stod r1
+    dtob r1
+    ieq r0, r1, 1
+    brt dtob_1_pass, r0
+    say "FAIL: DTOB (1)"
+    br dtob_1_end
+dtob_1_pass:
+    say "PASS: DTOB (1)"
+dtob_1_end:
+
+    load r1, "0"
+    stod r1
+    dtob r1
+    ieq r0, r1, 0
+    brt dtob_0_pass, r0
+    say "FAIL: DTOB (0)"
+    br dtob_0_end
+dtob_0_pass:
+    say "PASS: DTOB (0)"
+dtob_0_end:
+
+
+    /* Section C: Numeric Formatting */
+    say "Section C: Numeric Formatting"
+
+    /* Precision: SETNUMDGTS */
+    setnumdgts 3
+    load r1, "1"
+    stod r1
+    load r2, "3"
+    stod r2
+    ddiv r3, r1, r2
+    dtos r3
+    seq r0, r3, "0.333"
+    brt dgts3_pass, r0
+    say "FAIL: SETNUMDGTS 3 (Result: "
+    say r3
+    say ")"
+    br dgts3_end
+dgts3_pass:
+    say "PASS: SETNUMDGTS 3"
+dgts3_end:
+
+    setnumdgts 5
+    load r1, "1"
+    stod r1
+    load r2, "3"
+    stod r2
+    ddiv r3, r1, r2
+    dtos r3
+    seq r0, r3, "0.33333"
+    brt dgts5_pass, r0
+    say "FAIL: SETNUMDGTS 5 (Result: "
+    say r3
+    say ")"
+    br dgts5_end
+dgts5_pass:
+    say "PASS: SETNUMDGTS 5"
+dgts5_end:
+
+    /* Form: SETNUMFRM (1=sci, 2=eng) */
+    setnumdgts 10
+    load r1, "10"
+    stod r1
+    load r2, "10"
+    stod r2
+    dpow r3, r1, r2
+    
+    /* Scientific */
+    setnumfrm 1
+    setnumcas 2
+    dtos r3
+    seq r0, r3, "1E+10"
+    brt frm_sci_pass, r0
+    say "FAIL: SETNUMFRM Scientific (Result: "
+    say r3
+    say ")"
+    br frm_sci_end
+frm_sci_pass:
+    say "PASS: SETNUMFRM Scientific"
+frm_sci_end:
+
+    /* Engineering */
+    setnumfrm 2
+    setnumcas 2
+    dtos r3
+    seq r0, r3, "10E+9"
+    brt frm_eng_pass, r0
+    say "FAIL: SETNUMFRM Engineering (Result: "
+    say r3
+    say ")"
+    br frm_eng_end
+frm_eng_pass:
+    say "PASS: SETNUMFRM Engineering"
+frm_eng_end:
+
+    ret 0

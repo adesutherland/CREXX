@@ -1,0 +1,16 @@
+* Optimiser fixed-register shortcut coverage.
+
+main() .locals=5
+    load r0,1
+    load r1,2
+    load r2,3
+    load r3,4
+    inc r0
+    inc r1
+    inc r2
+    inc r3
+    dec r0
+    dec r1
+    dec r2
+    dec r3
+    ret

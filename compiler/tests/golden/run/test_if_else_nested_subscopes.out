@@ -1,0 +1,15 @@
+Warning in test_if_else_nested_subscopes.rexx @ 10:5 - #SHADOWING, original definition "test_if_nested.x" @ 2:33, "x"
+Warning in test_if_else_nested_subscopes.rexx @ 11:5 - #SHADOWING, original definition "test_if_nested.x" @ 2:33, "x"
+Warning in test_if_else_nested_subscopes.rexx @ 13:31 - #SHADOWING, original definition "test_if_nested.x" @ 2:33, "x"
+Warning in test_if_else_nested_subscopes.rexx @ 16:7 - #SHADOWING, original definition "test_if_nested.y" @ 2:35, "y"
+Warning in test_if_else_nested_subscopes.rexx @ 17:7 - #SHADOWING, original definition "test_if_nested.y" @ 2:35, "y"
+Warning in test_if_else_nested_subscopes.rexx @ 19:45 - #SHADOWING, original definition "test_if_nested.x" @ 2:33, "x"
+Warning in test_if_else_nested_subscopes.rexx @ 19:53 - #SHADOWING, original definition "test_if_nested.y" @ 2:35, "y"
+Warning in test_if_else_nested_subscopes.rexx @ 22:29 - #SHADOWING, original definition "test_if_nested.x" @ 2:33, "x"
+8 warning(s) in source file
+Initial: x=1 y=2 z=3
+  Inside IF DO: x=10 y=20 z=3
+    Inside Nested DO in IF: x=10 y=200 z=300
+  Back IF DO: x=10 y=20 z=300
+Final: x=1 y=20 z=300
+SUCCESS: IF subscopes work correctly

@@ -1,3 +1,27 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 // REXX Assembler
 // Scanner
 
@@ -43,7 +67,7 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     rreg = 'r' digit+;
     greg = 'g' digit+;
     areg = 'a' digit+;
-    id = (letter | [_]) (letter | digit | [_\-.#])*;
+    id = (letter | [_\xc2\xa7]) (letter | digit | [_\-.#\xc2\xa7])*;
 
     "/*" {
       depth = 1;
@@ -51,12 +75,12 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     }
     eol1 {
        s->line++;
-       s->linestart = s->cursor+1;
+       s->linestart = s->cursor;
        return(NEWLINE);
     }
     eol2 {
        s->line++;
-       s->linestart = s->cursor+2;
+       s->linestart = s->cursor;
        return(NEWLINE);
     }
 
@@ -84,6 +108,11 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     '.src' { return(KW_SRC); }
     '.srcfile' { return(KW_SRCFILE); }
     '.meta' { return(KW_META); }
+    '.class' { return(KW_CLASS); }
+    '.attr' { return(KW_ATTR); }
+    '.interface' { return(KW_INTERFACE); }
+    '.implements' { return(KW_IMPLEMENTS); }
+    '.member' { return(KW_MEMBER); }
     eof { return(EOS); }
     whitespace {
       s->top = s->cursor;
@@ -103,7 +132,7 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
   }
   "\r\n" {
     s->line++;
-    s->linestart = s->cursor+1;
+    s->linestart = s->cursor;
     goto comment;
   }
   [\r] | [\n] {

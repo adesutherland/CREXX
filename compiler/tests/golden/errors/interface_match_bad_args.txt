@@ -1,0 +1,2 @@
+Error in interface_match_bad_args.rexx @ 8:1 - #INTERFACE_MATCH_SIGNATURE_MISMATCH, "interface_match_bad_args.vehicle", "*", "car: class implements .vehicle"
+1 error(s) in source file

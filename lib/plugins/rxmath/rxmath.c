@@ -8,6 +8,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <time.h>
+#include <string.h>
 
 /* --------------------------------------------------------------------------------------------
  * some internal macros for the RXMATH library, can remain in coding

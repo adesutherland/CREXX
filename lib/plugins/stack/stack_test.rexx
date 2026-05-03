@@ -1,4 +1,4 @@
-/* GETPI Plugin Test */
+/* Stack Plugin Test */
 options levelb
 import stack
 import rxfnsb

@@ -1,0 +1,2 @@
+Error in err_trace_exit_disabled.rexx @ 4:3 - #CERTIFIED_EXIT_DISABLED, "TRACE", "trace rexx"
+1 error(s) in source file

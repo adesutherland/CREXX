@@ -1,0 +1,324 @@
+options levelb
+import rxcptest
+import rxcpexits
+import rxcp
+
+main: procedure
+  failures = .int
+  failures = 0
+
+  failures = failures + test_descriptor()
+  failures = failures + test_set_environment()
+  failures = failures + test_explicit_address()
+  failures = failures + test_explicit_quoted_command()
+  failures = failures + test_explicit_quoted_command_clauses()
+  failures = failures + test_explicit_quoted_command_sandbox()
+  failures = failures + test_implicit_address()
+  failures = failures + test_implicit_join_before()
+  failures = failures + test_implicit_string_no_warning()
+  failures = failures + test_expose_array_stem()
+  failures = failures + test_host_variable_anchors()
+  failures = failures + test_host_variable_anchors_generated_request()
+
+  call report_result failures
+  return
+
+test_descriptor: procedure = .int
+  failures = .int
+  addr = .addressexit(1000)
+  desc = .exitdescriptor
+  failures = 0
+
+  desc = addr.describe()
+  if check_equal("address protocol version", "2", desc.get_protocol_version()) = 0 then failures = failures + 1
+  if check_true("address certified flag", descriptor_has_flag(desc, "certified") > 0, "missing certified flag") = 0 then failures = failures + 1
+  if check_true("address reserved flag", descriptor_has_flag(desc, "reserved_keyword") > 0, "missing reserved flag") = 0 then failures = failures + 1
+  if check_true("address implicit flag", descriptor_has_flag(desc, "implicit_command") > 0, "missing implicit flag") = 0 then failures = failures + 1
+
+  return failures
+
+test_set_environment: procedure = .int
+  failures = .int
+  addr = .addressexit(1003)
+  plan = .exitplan
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "cms"
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address set env pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address set env process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_contains("address set env replacement", join_result_lines(result), "_set_address_environment('cms')") = 0 then failures = failures + 1
+
+  return failures
+
+test_explicit_address: procedure = .int
+  failures = .int
+  addr = .addressexit(1001)
+  plan = .exitplan
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "system"
+  call pushidentifier tokens, "cmd", ".string", 0
+  call pushidentifier tokens, "INPUT"
+  call pushidentifier tokens, "input_lines", ".string[]", 1
+  call pushidentifier tokens, "OUTPUT"
+  call pushidentifier tokens, "output_lines", ".string[]", 1
+  call pushidentifier tokens, "ERROR"
+  call pushidentifier tokens, "error_lines", ".string[]", 1
+  call pushidentifier tokens, "EXPOSE"
+  call pushidentifier tokens, "request_id", ".string", 0
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address explicit pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address explicit process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address explicit env", replacement, "_address('system',cmd") = 0 then failures = failures + 1
+  if check_contains("address explicit input", replacement, "_array2redir(input_lines)") = 0 then failures = failures + 1
+  if check_contains("address explicit output", replacement, "_redir2array(output_lines)") = 0 then failures = failures + 1
+  if check_contains("address explicit error", replacement, "_redir2array(error_lines)") = 0 then failures = failures + 1
+  if check_contains("address explicit expose", replacement, "'request_id', request_id") = 0 then failures = failures + 1
+
+  return failures
+
+test_explicit_quoted_command: procedure = .int
+  failures = .int
+  addr = .addressexit(1007)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushstring tokens, '"echo QUOTED"'
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address quoted command pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address quoted command process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address quoted command current env", replacement, "_address('',") = 0 then failures = failures + 1
+  if check_contains("address quoted command text", replacement, '"echo QUOTED"') = 0 then failures = failures + 1
+  if check_equal("address quoted command warning count", "0", result.get_diagnostic_count()) = 0 then failures = failures + 1
+
+  return failures
+
+test_explicit_quoted_command_clauses: procedure = .int
+  failures = .int
+  addr = .addressexit(1008)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushstring tokens, '"SET BUFFER UPDATED"'
+  call pushidentifier tokens, "OUTPUT"
+  call pushidentifier tokens, "output_lines", ".string[]", 1
+  call pushidentifier tokens, "EXPOSE"
+  call pushidentifier tokens, "buffer", ".string", 0
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address quoted clauses pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address quoted clauses process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address quoted clauses current env", replacement, "_address('',") = 0 then failures = failures + 1
+  if check_contains("address quoted clauses text", replacement, '"SET BUFFER UPDATED"') = 0 then failures = failures + 1
+  if check_contains("address quoted clauses output", replacement, "_redir2array(output_lines)") = 0 then failures = failures + 1
+  if check_contains("address quoted clauses expose", replacement, "'buffer', buffer") = 0 then failures = failures + 1
+  if check_equal("address quoted clauses warning count", "0", result.get_diagnostic_count()) = 0 then failures = failures + 1
+
+  return failures
+
+test_explicit_quoted_command_sandbox: procedure = .int
+  failures = .int
+  addr = .addressexit(1009)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushstring tokens, '"SANDBOX ROUNDTRIP"'
+  call pushidentifier tokens, "SANDBOX"
+  call pushidentifier tokens, "pool", ".addresssandbox", 0
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address quoted sandbox pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address quoted sandbox process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address quoted sandbox current env", replacement, "_address_with_sandbox('',") = 0 then failures = failures + 1
+  if check_contains("address quoted sandbox text", replacement, '"SANDBOX ROUNDTRIP"') = 0 then failures = failures + 1
+  if check_contains("address quoted sandbox operand", replacement, ",pool)") = 0 then failures = failures + 1
+  if check_equal("address quoted sandbox warning count", "0", result.get_diagnostic_count()) = 0 then failures = failures + 1
+
+  return failures
+
+test_implicit_address: procedure = .int
+  failures = .int
+  addr = .addressexit(1002)
+  plan = .exitplan
+  result = .exitresult
+  diagnostic = .exitdiagnostic
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "cmd", ".string", 0
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address implicit pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address implicit process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_contains("address implicit current env", join_result_lines(result), "_address('',cmd,_noredir(),_noredir(),_noredir())") = 0 then failures = failures + 1
+  if check_equal("address implicit warning count", "1", result.get_diagnostic_count()) = 0 then failures = failures + 1
+  diagnostic = result.get_diagnostic(1)
+  if check_equal("address implicit warning severity", "warning", diagnostic.get_severity()) = 0 then failures = failures + 1
+  if check_equal("address implicit warning code", "IMPLICIT_ADDRESS", diagnostic.get_code()) = 0 then failures = failures + 1
+
+  return failures
+
+test_implicit_join_before: procedure = .int
+  failures = .int
+  addr = .addressexit(1005)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushstring tokens, "'echo'"
+  call pushidentifier tokens, "name", ".string", 0, "sconcat"
+  call pushstring tokens, "'.txt'", "concat"
+  call pushidentifier tokens, "OUTPUT"
+  call pushidentifier tokens, "output_lines", ".string[]", 1
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address implicit join pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address implicit join process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address implicit join command", replacement, "_address('','echo' name'.txt'") = 0 then failures = failures + 1
+  if check_contains("address implicit join output", replacement, "_redir2array(output_lines)") = 0 then failures = failures + 1
+  if check_equal("address implicit join warning count", "0", result.get_diagnostic_count()) = 0 then failures = failures + 1
+
+  return failures
+
+test_implicit_string_no_warning: procedure = .int
+  failures = .int
+  addr = .addressexit(1004)
+  plan = .exitplan
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushstring tokens, "'echo OK'"
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address implicit string pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address implicit string process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_equal("address implicit string warning count", "0", result.get_diagnostic_count()) = 0 then failures = failures + 1
+
+  return failures
+
+test_expose_array_stem: procedure = .int
+  failures = .int
+  addr = .addressexit(1006)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "cms"
+  call pushstring tokens, '"EXPOSE ARRAY"'
+  call pushidentifier tokens, "EXPOSE"
+  call pushidentifier tokens, "items", ".string[]", 1
+  call pushbracket tokens, "["
+  call pushbracket tokens, "]"
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address expose array pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address expose array process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address expose array stem object", replacement, ".standardaddressstem()") = 0 then failures = failures + 1
+  if check_contains("address expose array binding", replacement, ".addressbinding('stem','items','items','','')") = 0 then failures = failures + 1
+  if check_contains("address expose array request update", replacement, "_address_apply_response_request_stem") = 0 then failures = failures + 1
+  if check_contains("address expose array writeback", replacement, "get_binding_stem_value") = 0 then failures = failures + 1
+
+  return failures
+
+test_host_variable_anchors: procedure = .int
+  failures = .int
+  addr = .addressexit(1010)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "kv"
+  call pushstring tokens, '"PUT :key ${value}"'
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address host anchors pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address host anchors process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address host anchors command", replacement, '"PUT :key ${value}"') = 0 then failures = failures + 1
+  if check_contains("address host anchors key", replacement, ".addressbinding('var','key','key',key,'')") = 0 then failures = failures + 1
+  if check_contains("address host anchors value", replacement, ".addressbinding('var','value','value',value,'')") = 0 then failures = failures + 1
+
+  return failures
+
+test_host_variable_anchors_generated_request: procedure = .int
+  failures = .int
+  addr = .addressexit(1011)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "ADDRESS"
+  call pushidentifier tokens, "cms"
+  call pushstring tokens, '"GET :key INTO ${target}"'
+  call pushidentifier tokens, "EXPOSE"
+  call pushidentifier tokens, "items", ".string[]", 1
+  call pushbracket tokens, "["
+  call pushbracket tokens, "]"
+
+  plan = addr.pre_process(tokens)
+  if check_equal("address generated host anchors pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  result = addr.process(tokens)
+  if check_equal("address generated host anchors process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("address generated host anchors key", replacement, ".addressbinding('var','key','key',key,'')") = 0 then failures = failures + 1
+  if check_contains("address generated host anchors target", replacement, ".addressbinding('var','target','target',target,'')") = 0 then failures = failures + 1
+  if check_contains("address generated host anchors writeback", replacement, "call _address_apply_response_var(__rxaddr_response,'target',target)") = 0 then failures = failures + 1
+
+  return failures

@@ -1,0 +1,7 @@
+* inc0 does not touch r3/r4, so unrelated swaps may still cancel.
+
+main() .locals=5
+    swap r3,r4
+    inc0
+    swap r3,r4
+    ret

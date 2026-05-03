@@ -1,1 +1,0 @@
-/* Tests for latest show and tells */options levelbnamespace gtest expose counterimport rxfnsbsay "Start"call reset_countcall countsay get_count()call countsay get_count()say countersay substr("abc",1,2)say lib2()return

@@ -1,0 +1,6 @@
+car:car alpha
+bike:bike beta
+truck:other
+car:named:car gamma
+bike:named:bike delta
+truck:named:other

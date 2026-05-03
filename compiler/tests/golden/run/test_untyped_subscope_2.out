@@ -1,0 +1,5 @@
+Warning in test_untyped_subscope_2.rexx @ 8:22 - ##NOT_IN_SAME_SCOPE, original definition @ 5:5, "x"
+1 warning(s) in source file
+Inside: x = 2
+Outside: x = x
+Untyped variables are DO-block-scoped

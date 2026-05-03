@@ -1,0 +1,320 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : inline_test_class_methods.rexx
+ * BUILT                  : 2026-04-30 16:47:29
+ */
+
+.meta "inline_test_class_methods.box"="b" ".unknown" .class
+.meta "inline_test_class_methods.box.name"="b" ".string" .attr 1
+.srcfile="inline_test_class_methods.rexx"
+.globals=0
+
+main() .locals=35
+   .meta "inline_test_class_methods.main"="b" ".int" main() ""
+   .src 4:1="main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 5:3="box = .Box(\"alpha\")"
+   .src 28:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r2,2
+   .src 28:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r2,"inline_test_class_methods.box"
+   .src 30:5="name = initial"
+   load r20,"alpha"
+   linkattr1 r19,r2,1
+   scopy r19,r20
+   unlink r19
+   .src 31:5="return"
+   copy r0,r2
+   .src 6:3="say box.label"
+   .meta "inline_test_class_methods.main.box"="b" ".box" r0
+   .src 6:7="box"
+   .src 6:7="box"
+   copy r3,r0
+   .src 34:5="return name"
+   linkattr1 r19,r3,1
+   scopy r21,r19
+   acopy r21,r19
+   unlink r19
+   br l194bexprend
+l194bexprend:
+   say r21
+   .src 7:3="call box.setLabel(\"beta\")"
+   .src 7:8="box"
+   copy r4,r0
+   .src 38:5="name = next"
+   load r22,"beta"
+   linkattr1 r21,r4,1
+   scopy r21,r22
+   unlink r21
+   .src 7:8="box.setLabel(\"beta\")"
+   copy r0,r4
+   .src 7:8="box.setLabel(\"beta\")"
+   acopy r0,r4
+   .src 8:3="say box.label"
+   .src 8:7="box"
+   .src 8:7="box"
+   copy r5,r0
+   .src 34:5="return name"
+   linkattr1 r21,r5,1
+   scopy r23,r21
+   acopy r23,r21
+   unlink r21
+   br l219bexprend
+l219bexprend:
+   say r23
+   .src 9:3="say box.prefix(\"p\")"
+   .src 9:7="box"
+   .src 9:7="box"
+   copy r6,r0
+   .src 43:5="return tag || \":\" || label"
+   .src 43:26="label"
+   .src 43:26="label"
+   copy r7,r6
+   .src 34:5="return name"
+   linkattr1 r23,r7,1
+   scopy r24,r23
+   acopy r24,r23
+   unlink r23
+   br l239bexprend
+l239bexprend:
+   concat r24,"p:",r24
+   scopy r25,r24
+   acopy r25,r24
+   br l226bexprend
+l226bexprend:
+   say r25
+   .src 10:3="call update(box, \"gamma\")"
+   .src 22:3="call item.setLabel(value)"
+   .src 22:8="item"
+   copy r9,r0
+   .src 38:5="name = next"
+   load r26,"gamma"
+   linkattr1 r25,r9,1
+   scopy r25,r26
+   unlink r25
+   .src 22:8="item.setLabel(value)"
+   copy r0,r9
+   .src 22:8="item.setLabel(value)"
+   acopy r0,r9
+   .src 11:3="say box.label"
+   .src 11:7="box"
+   .src 11:7="box"
+   copy r10,r0
+   .src 34:5="return name"
+   linkattr1 r25,r10,1
+   scopy r27,r25
+   acopy r27,r25
+   unlink r25
+   br l266bexprend
+l266bexprend:
+   say r27
+   .src 12:3="saved = box.setAndReport(\"delta\")"
+   .src 12:11="box"
+   copy r11,r0
+   .src 47:5="name = next"
+   load r28,"delta"
+   linkattr1 r27,r11,1
+   scopy r27,r28
+   unlink r27
+   .src 48:5="return"
+   linkattr1 r27,r11,1
+   copy r1,r27
+   unlink r27
+   .src 12:11="box.setAndReport(\"delta\")"
+   copy r0,r11
+   .src 12:11="box.setAndReport(\"delta\")"
+   acopy r0,r11
+   .src 13:3="say saved"
+   .meta "inline_test_class_methods.main.saved"="b" ".string" r1
+   say r1
+   .src 14:3="say box.label"
+   .src 14:7="box"
+   .src 14:7="box"
+   copy r12,r0
+   .src 34:5="return name"
+   linkattr1 r27,r12,1
+   scopy r29,r27
+   acopy r29,r27
+   unlink r27
+   br l294bexprend
+l294bexprend:
+   say r29
+   .src 15:3="say box.setAndReport(\"epsilon\")"
+   .src 15:7="box"
+   .src 15:7="box"
+   copy r14,r0
+   .src 47:5="name = next"
+   load r30,"epsilon"
+   linkattr1 r29,r14,1
+   scopy r29,r30
+   unlink r29
+   .src 48:12="name"
+   linkattr1 r29,r14,1
+   scopy r13,r29
+   unlink r29
+   .src 48:5="return name"
+   copy r0,r14
+   .src 48:5="return name"
+   acopy r0,r14
+   .src 48:5="return name"
+   scopy r29,r13
+   acopy r29,r13
+   br l301bexprend
+l301bexprend:
+   say r29
+   .src 16:3="say box.label"
+   .src 16:7="box"
+   .src 16:7="box"
+   copy r15,r0
+   .src 34:5="return name"
+   linkattr1 r29,r15,1
+   scopy r31,r29
+   acopy r31,r29
+   unlink r29
+   br l326bexprend
+l326bexprend:
+   say r31
+   .src 17:3="say .Box(\"direct\").prefix(\"q\")"
+   .src 17:7=".Box"
+   .src 17:7=".Box(\"direct\").prefix(\"q\")"
+   .src 28:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setattrs r18,2
+   .src 28:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   setobjtype r18,"inline_test_class_methods.box"
+   .src 30:5="name = initial"
+   load r32,"direct"
+   linkattr1 r31,r18,1
+   scopy r31,r32
+   unlink r31
+   .src 31:5="return"
+   copy r16,r18
+   .src 43:5="return tag || \":\" || label"
+   .src 43:26="label"
+   .src 43:26="label"
+   copy r17,r16
+   .src 34:5="return name"
+   linkattr1 r31,r17,1
+   scopy r33,r31
+   acopy r33,r31
+   unlink r31
+   br l347bexprend
+l347bexprend:
+   concat r33,"q:",r33
+   scopy r34,r33
+   acopy r34,r33
+   br l333bexprend
+l333bexprend:
+   say r34
+   .src 18:3="return 0"
+   ret 0
+   .meta "inline_test_class_methods.main.box"
+   .meta "inline_test_class_methods.main.saved"
+
+§inline_test_class_methods.box.§factory() .locals=3
+   .meta "inline_test_class_methods.box.§factory"="b" ".box" §inline_test_class_methods.box.§factory() "initial=.string"
+   .src 28:3="*: factory"
+   setattrs r1,2
+   setobjtype r1,"inline_test_class_methods.box"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 29:9="initial = .string"
+   .meta "inline_test_class_methods.box.§factory.initial"="b" ".string" a1
+   .meta "inline_test_class_methods.box.§factory.§factory"="b" ".box" r1
+   .src 30:5="name = initial"
+   linkattr1 r2,r1,1
+   scopy r2,a1
+   unlink r2
+   .src 31:5="return"
+   ret r1
+   .meta "inline_test_class_methods.box.§factory.initial"
+   .meta "inline_test_class_methods.box.§factory.§factory"
+
+§inline_test_class_methods.box.label() .locals=2
+   .meta "inline_test_class_methods.box.label"="b" ".string" §inline_test_class_methods.box.label() ""
+   .src 33:3="label: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 34:5="return name"
+   .meta "inline_test_class_methods.box.label.§this"="b" ".box" a1
+   linkattr1 r1,a1,1
+   ret r1
+   .meta "inline_test_class_methods.box.label.§this"
+
+§inline_test_class_methods.box.setlabel() .locals=3
+   .meta "inline_test_class_methods.box.setlabel"="b" ".void" §inline_test_class_methods.box.setlabel() "next=.string"
+   .src 36:3="setLabel: method = .void"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 37:9="next = .string"
+   .meta "inline_test_class_methods.box.setlabel.next"="b" ".string" a2
+   .meta "inline_test_class_methods.box.setlabel.§this"="b" ".box" a1
+   .src 38:5="name = next"
+   linkattr1 r2,a1,1
+   scopy r2,a2
+   unlink r2
+   .src 39:5="return"
+   ret
+   .meta "inline_test_class_methods.box.setlabel.next"
+   .meta "inline_test_class_methods.box.setlabel.§this"
+
+§inline_test_class_methods.box.prefix() .locals=6
+   .meta "inline_test_class_methods.box.prefix"="b" ".string" §inline_test_class_methods.box.prefix() "tag=.string"
+   .src 41:3="prefix: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 42:9="tag = .string"
+   .meta "inline_test_class_methods.box.prefix.tag"="b" ".string" a2
+   .meta "inline_test_class_methods.box.prefix.§this"="b" ".box" a1
+   .src 43:5="return tag || \":\" || label"
+   concat r3,a2,":"
+   .src 43:26="label"
+   .src 43:26="label"
+   copy r2,a1
+   .src 34:5="return name"
+   linkattr1 r4,r2,1
+   scopy r5,r4
+   acopy r5,r4
+   unlink r4
+   br l187bexprend
+l187bexprend:
+   concat r5,r3,r5
+   ret r5
+   .meta "inline_test_class_methods.box.prefix.tag"
+   .meta "inline_test_class_methods.box.prefix.§this"
+
+§inline_test_class_methods.box.setandreport() .locals=3
+   .meta "inline_test_class_methods.box.setandreport"="b" ".string" §inline_test_class_methods.box.setandreport() "next=.string"
+   .src 45:3="setAndReport: method = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 46:9="next = .string"
+   .meta "inline_test_class_methods.box.setandreport.next"="b" ".string" a2
+   .meta "inline_test_class_methods.box.setandreport.§this"="b" ".box" a1
+   .src 47:5="name = next"
+   linkattr1 r2,a1,1
+   scopy r2,a2
+   unlink r2
+   .src 48:5="return name"
+   linkattr1 r2,a1,1
+   ret r2
+   .meta "inline_test_class_methods.box.setandreport.next"
+   .meta "inline_test_class_methods.box.setandreport.§this"

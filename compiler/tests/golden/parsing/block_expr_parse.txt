@@ -1,0 +1,154 @@
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      SAY : "say" (-1:-1) [Type: .unknown]
+        OP_ADD : "+" (-1:-1) [Type: .unknown]
+          INTEGER : "10" (-1:-1) [Type: .unknown]
+          BLOCK_EXPR : "do" (-1:-1) [Type: .unknown]
+            INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+              ASSIGN : "=" (-1:-1) [Type: .unknown]
+                VAR_TARGET : "a" (-1:-1) [Type: .unknown]
+                INTEGER : "5" (-1:-1) [Type: .unknown]
+              IF : "if" (-1:-1) [Type: .unknown]
+                OP_COMPARE_GT : ">" (-1:-1) [Type: .unknown]
+                  VAR_SYMBOL : "a" (-1:-1) [Type: .unknown]
+                  INTEGER : "0" (-1:-1) [Type: .unknown]
+                LEAVE_WITH : "leave" (-1:-1) [Type: .unknown]
+                  OP_MULT : "*" (-1:-1) [Type: .unknown]
+                    VAR_SYMBOL : "a" (-1:-1) [Type: .unknown]
+                    INTEGER : "2" (-1:-1) [Type: .unknown]
+              LEAVE_WITH : "leave" (-1:-1) [Type: .unknown]
+                INTEGER : "0" (-1:-1) [Type: .unknown]
+
+--- STAGE_FIXUP ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "block_expr_parse" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main:" (2:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .unknown]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        SAY : "say" (2:0) [Type: .unknown]
+          OP_ADD : "+" (2:4) [Type: .unknown]
+            INTEGER : "10" (2:4) [Type: .unknown]
+            BLOCK_EXPR : "do" (2:9) [Type: .unknown]
+              INSTRUCTIONS : "" (3:2) [Type: .unknown]
+                ASSIGN : "=" (3:2) [Type: .unknown]
+                  VAR_TARGET : "a" (3:2) [Type: .unknown]
+                  INTEGER : "5" (3:6) [Type: .unknown]
+                IF : "if" (4:2) [Type: .unknown]
+                  OP_COMPARE_GT : ">" (4:5) [Type: .unknown]
+                    VAR_SYMBOL : "a" (4:5) [Type: .unknown]
+                    INTEGER : "0" (4:9) [Type: .unknown]
+                  LEAVE_WITH : "leave" (4:16) [Type: .unknown]
+                    OP_MULT : "*" (4:27) [Type: .unknown]
+                      VAR_SYMBOL : "a" (4:27) [Type: .unknown]
+                      INTEGER : "2" (4:31) [Type: .unknown]
+                LEAVE_WITH : "leave" (5:2) [Type: .unknown]
+                  INTEGER : "0" (5:13) [Type: .unknown]
+        RETURN : "" (2:67) [Type: .unknown]
+
+--- STAGE_SYMBOLS (Iteration 0) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "block_expr_parse" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        SAY : "say" (2:0) [Type: .unknown]
+          OP_ADD : "+" (2:4) [Type: .unknown]
+            INTEGER : "10" (2:4) [Type: .unknown]
+            BLOCK_EXPR : "do" (2:9) [Type: .unknown]
+              INSTRUCTIONS : "" (3:2) [Type: .unknown]
+                ASSIGN : "=" (3:2) [Type: .unknown]
+                  VAR_TARGET : "a" (3:2) [Type: .unknown]
+                  INTEGER : "5" (3:6) [Type: .unknown]
+                IF : "if" (4:2) [Type: .unknown]
+                  OP_COMPARE_GT : ">" (4:5) [Type: .unknown]
+                    VAR_SYMBOL : "a" (4:5) [Type: .unknown]
+                    INTEGER : "0" (4:9) [Type: .unknown]
+                  LEAVE_WITH : "leave" (4:16) [Type: .unknown]
+                    OP_MULT : "*" (4:27) [Type: .unknown]
+                      VAR_SYMBOL : "a" (4:27) [Type: .unknown]
+                      INTEGER : "2" (4:31) [Type: .unknown]
+                LEAVE_WITH : "leave" (5:2) [Type: .unknown]
+                  INTEGER : "0" (5:13) [Type: .unknown]
+        RETURN : "" (2:67) [Type: .unknown]
+Scope [0]: Unnamed
+  block_expr_parse (Namespace) -> .unknown
+  Scope [1]: block_expr_parse
+    main (Function) -> .unknown
+    Scope [2]: main
+      Scope [3]: Unnamed
+        a (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 1) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "block_expr_parse" (0:1) [Type: .void]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        SAY : "say" (2:0) [Type: .unknown]
+          OP_ADD : "+" (2:4) [Type: .unknown]
+            INTEGER : "10" (2:4) [Type: .int]
+            BLOCK_EXPR : "do" (2:9) [Type: .unknown]
+              INSTRUCTIONS : "" (3:2) [Type: .unknown]
+                ASSIGN : "=" (3:2) [Type: .unknown]
+                  VAR_TARGET : "a" (3:2) [Type: .unknown]
+                  INTEGER : "5" (3:6) [Type: .int]
+                IF : "if" (4:2) [Type: .unknown]
+                  OP_COMPARE_GT : ">" (4:5) [Type: .unknown]
+                    VAR_SYMBOL : "a" (4:5) [Type: .unknown]
+                    INTEGER : "0" (4:9) [Type: .int]
+                  LEAVE_WITH : "leave" (4:16) [Type: .unknown]
+                    OP_MULT : "*" (4:27) [Type: .unknown]
+                      VAR_SYMBOL : "a" (4:27) [Type: .unknown]
+                      INTEGER : "2" (4:31) [Type: .int]
+                LEAVE_WITH : "leave" (5:2) [Type: .unknown]
+                  INTEGER : "0" (5:13) [Type: .int]
+        RETURN : "" (2:67) [Type: .unknown]
+Scope [0]: Unnamed
+  block_expr_parse (Namespace) -> .unknown
+  Scope [1]: block_expr_parse
+    main (Function) -> .void
+    Scope [2]: main
+      Scope [3]: Unnamed
+        a (Variable) -> .int
+
+--- STAGE_FINAL ---
+REXX_UNIVERSE : "" (0:1) [Type: .void]
+  PROGRAM_FILE : "block_expr_parse" (0:1) [Type: .void]
+    REXX_OPTIONS : "options" (0:1) [Type: .void]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .void]
+        SAY : "say" (2:0) [Type: .void]
+          OP_ADD : "+" (2:4) [Type: .int]
+            CONSTANT : "10" (2:4) [Type: .int]
+            BLOCK_EXPR : "do" (2:9) [Type: .int]
+              INSTRUCTIONS : "" (3:2) [Type: .void]
+                LEAVE_WITH : "leave" (4:16) [Type: .int]
+                  CONSTANT : "10" (4:27) [Type: .int]
+                LEAVE_WITH : "leave" (5:2) [Type: .int]
+                  CONSTANT : "0" (5:13) [Type: .int]
+        RETURN : "" (2:67) [Type: .void]
+Scope [0]: Unnamed
+  block_expr_parse (Namespace) -> .unknown
+  Scope [1]: block_expr_parse
+    main (Function) -> .void
+    Scope [2]: main
+      Scope [3]: Unnamed
+        a (Constant) -> .int
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

@@ -8,7 +8,7 @@
 .globals=0
 
 main() .locals=1
-   .meta "hello.main"="b" ".void" main() "" ""
+   .meta "hello.main"="b" ".void" main() ""
    .src 3:1="say 'hello cRexx world!'"
    say "hello cRexx world!"
    .src 3:25=""

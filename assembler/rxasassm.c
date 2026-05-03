@@ -1,15 +1,189 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 /* REXX ASSEMBLER               */
 /* The Assembler itself         */
 #include <string.h>
 #include <stdint.h>
 #include "platform.h"
 #include "rxasassm.h"
-#include "rxvminst.h"
+#include "../binutils/include/rxdefs.h"
+#include "../binutils/include/opdata.c"
+#include <ctype.h>
+
+static int get_operand_types(OpFormat format, OperandType *types) {
+    switch (format) {
+        case FMT_EMPTY: return 0;
+        case FMT_C: types[0] = OP_CHAR; return 1;
+        case FMT_F: types[0] = OP_FLOAT; return 1;
+        case FMT_I: types[0] = OP_INT; return 1;
+        case FMT_I_I: types[0] = OP_INT; types[1] = OP_INT; return 2;
+        case FMT_I_I_I: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_INT; return 3;
+        case FMT_I_I_R: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_REG; return 3;
+        case FMT_I_R: types[0] = OP_INT; types[1] = OP_REG; return 2;
+        case FMT_I_R_R: types[0] = OP_INT; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_L: types[0] = OP_ID; return 1;
+        case FMT_L_L_R: types[0] = OP_ID; types[1] = OP_ID; types[2] = OP_REG; return 3;
+        case FMT_L_P_S: types[0] = OP_ID; types[1] = OP_FUNC; types[2] = OP_STRING; return 3;
+        case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; return 2;
+        case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; return 3;
+        case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_L_R_S: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_STRING; return 3;
+        case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; return 2;
+        case FMT_P: types[0] = OP_FUNC; return 1;
+        case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
+        case FMT_R: types[0] = OP_REG; return 1;
+        case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
+        case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
+        case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
+        case FMT_R_F: types[0] = OP_REG; types[1] = OP_FLOAT; return 2;
+        case FMT_R_F_I: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_INT; return 3;
+        case FMT_R_F_R: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_REG; return 3;
+        case FMT_R_I: types[0] = OP_REG; types[1] = OP_INT; return 2;
+        case FMT_R_I_I: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_INT; return 3;
+        case FMT_R_I_R: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_REG; return 3;
+        case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; return 2;
+        case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; return 3;
+        case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; return 2;
+        case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; return 3;
+        case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; return 3;
+        case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; return 3;
+        case FMT_R_R_R: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_R_R_S: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_STRING; return 3;
+        case FMT_R_S: types[0] = OP_REG; types[1] = OP_STRING; return 2;
+        case FMT_R_S_I: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_INT; return 3;
+        case FMT_R_S_R: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_REG; return 3;
+        case FMT_R_S_S: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_STRING; return 3;
+        case FMT_S: types[0] = OP_STRING; return 1;
+        case FMT_S_R: types[0] = OP_STRING; types[1] = OP_REG; return 2;
+        case FMT_S_S: types[0] = OP_STRING; types[1] = OP_STRING; return 2;
+        case FMT_S_S_R: types[0] = OP_STRING; types[1] = OP_STRING; types[2] = OP_REG; return 3;
+        default: return 0;
+    }
+}
+
+static int match_format(OpFormat format, OperandType t1, OperandType t2, OperandType t3) {
+    OperandType types[3];
+    int num_ops = get_operand_types(format, types);
+    int expected_num_ops = 0;
+    if (t1 != OP_NONE) expected_num_ops = 1;
+    if (t2 != OP_NONE) expected_num_ops = 2;
+    if (t3 != OP_NONE) expected_num_ops = 3;
+
+    if (num_ops != expected_num_ops) return 0;
+    if (num_ops >= 1 && types[0] != t1) return 0;
+    if (num_ops >= 2 && types[1] != t2) return 0;
+    if (num_ops >= 3 && types[2] != t3) return 0;
+    return 1;
+}
+
+static int mnemonic_matches(const char *mnemonic, const char *table_name) {
+    int i = 0;
+    while (mnemonic[i]) {
+        if (toupper((unsigned char)mnemonic[i]) != table_name[i]) return 0;
+        i++;
+    }
+    if (table_name[i] == 0 || table_name[i] == '_') return 1;
+    return 0;
+}
+
+static const OpInfo* find_opcode(const char *mnemonic, OperandType t1, OperandType t2, OperandType t3) {
+    int i;
+    for (i = 0; op_table[i].mnemonic != NULL; i++) {
+        if (match_format(op_table[i].format, t1, t2, t3)) {
+            if (mnemonic_matches(mnemonic, op_table[i].mnemonic)) {
+                return &op_table[i];
+            }
+        }
+    }
+    return NULL;
+}
 
 #include "rxastree.h"
 #ifndef NUTF8
 #include "utf.h"
 #endif
+
+struct float_wrapper {
+    uint64_t bits;
+    size_t value;
+    struct avl_tree_node index_node;
+};
+
+#define GET_FLOAT_BITS(i) avl_tree_entry((i), struct float_wrapper, index_node)->bits
+#define GET_FLOAT_VALUE(i) avl_tree_entry((i), struct float_wrapper, index_node)->value
+
+static uint64_t float_to_bits(double value) {
+    uint64_t bits = 0;
+    memcpy(&bits, &value, sizeof(bits));
+    return bits;
+}
+
+static int compare_float_node_node(const struct avl_tree_node *node1,
+                                   const struct avl_tree_node *node2) {
+    uint64_t n1 = GET_FLOAT_BITS(node1);
+    uint64_t n2 = GET_FLOAT_BITS(node2);
+    if (n1 < n2) return -1;
+    if (n1 > n2) return 1;
+    return 0;
+}
+
+static int compare_float_node_value(const void *value,
+                                    const struct avl_tree_node *nodeptr) {
+    uint64_t n1 = *(const uint64_t *)value;
+    uint64_t n2 = GET_FLOAT_BITS(nodeptr);
+    if (n1 < n2) return -1;
+    if (n1 > n2) return 1;
+    return 0;
+}
+
+static int add_float_node(struct avl_tree_node **root, uint64_t bits, size_t value) {
+    struct float_wrapper *entry = malloc(sizeof(struct float_wrapper));
+    entry->bits = bits;
+    entry->value = value;
+    if (avl_tree_insert(root, &entry->index_node, compare_float_node_node)) {
+        free(entry);
+        return 1;
+    }
+    return 0;
+}
+
+static int src_float_node(struct avl_tree_node *root, uint64_t bits, size_t *value) {
+    struct avl_tree_node *result = avl_tree_lookup(root, &bits, compare_float_node_value);
+    if (!result) return 0;
+    *value = GET_FLOAT_VALUE(result);
+    return 1;
+}
+
+static void free_float_tree(struct avl_tree_node **root) {
+    struct float_wrapper *entry;
+
+    avl_tree_for_each_in_postorder(entry, *root, struct float_wrapper, index_node) {
+        free(entry);
+    }
+    *root = 0;
+}
 
 /* Structure to handle "backpatching" - fixing forward references */
 struct backpatching_references;
@@ -30,6 +204,7 @@ struct backpatching_references {
 void freeasbl(Assembler_Context *context) {
     if (context->string_constants_tree) free_tree(&context->string_constants_tree);
     if (context->decimal_constants_tree) free_tree(&context->decimal_constants_tree);
+    if (context->float_constants_tree) free_float_tree(&context->float_constants_tree);
     if (context->binary_constants_tree) free_tree(&context->binary_constants_tree);
     if (context->proc_constants_tree) free_tree(&context->proc_constants_tree);
     if (context->label_constants_tree) free_tree(&context->label_constants_tree);
@@ -90,7 +265,7 @@ static void optimise_labels(Assembler_Context *context) {
     struct string_wrapper *i;
     struct backpatching *patch, *p;
 
-    Instruction *br = src_inst("br", OP_ID, OP_NONE, OP_NONE);
+    const OpInfo *br = find_opcode("br", OP_ID, OP_NONE, OP_NONE);
     int changed = 1;
 
     /* Labels - walk and process the tree of labels */
@@ -318,6 +493,24 @@ void rxassetg(Assembler_Context *context, Assembler_Token *globalsToken) {
 }
 
 /* Expose a global register */
+static void append_expose_entry(Assembler_Context *context, size_t entry_index) {
+    expose_reg_constant *tail_entry;
+    expose_reg_constant *new_entry = (expose_reg_constant *)(context->binary.const_pool + entry_index);
+
+    new_entry->next = -1;
+
+    if (context->expose_head != -1) {
+        tail_entry = (expose_reg_constant *)(context->binary.const_pool + context->expose_tail);
+        tail_entry->next = (int)entry_index;
+        context->expose_tail = (int)entry_index;
+    }
+    else {
+        context->expose_head = (int)entry_index;
+        context->expose_tail = (int)entry_index;
+    }
+}
+
+/* Expose a global register */
 void rxasexre(Assembler_Context *context, Assembler_Token *registerToken,
               Assembler_Token *exposeToken) {
     size_t entry_size, entry_index;
@@ -352,9 +545,10 @@ void rxasexre(Assembler_Context *context, Assembler_Token *registerToken,
            strlen((char*)exposeToken->token_value.string) + 1);
 
     centry->global_reg = (int)registerToken->token_value.integer;
+    append_expose_entry(context, entry_index);
 }
 
-static void gen_instr(Assembler_Context *context, Instruction *inst) {
+static void gen_instr(Assembler_Context *context, int opcode, int operands) {
     /* Extend the buffer if we need to */
     size_t new_size;
     if (context->inst_buffer_size <= context->binary.inst_size + 1) { /* +1 = Make room for the end null */
@@ -365,8 +559,8 @@ static void gen_instr(Assembler_Context *context, Instruction *inst) {
         context->inst_buffer_size = new_size;
     }
 
-    context->binary.binary[context->binary.inst_size].instruction.opcode = inst->opcode;
-    context->binary.binary[context->binary.inst_size++].instruction.no_ops = inst->operands;
+    context->binary.binary[context->binary.inst_size].instruction.opcode = opcode;
+    context->binary.binary[context->binary.inst_size++].instruction.no_ops = operands;
 }
 
 static size_t add_string_to_pool(Assembler_Context *context, char* string) {
@@ -420,6 +614,21 @@ static size_t add_decimal_to_pool(Assembler_Context *context, char* decimal) {
     return entry_index;
 }
 
+static size_t add_float_to_pool(Assembler_Context *context, double value) {
+    float_constant *entry;
+    size_t entry_index;
+    uint64_t bits = float_to_bits(value);
+
+    if (!src_float_node(context->float_constants_tree, bits, &entry_index)) {
+        entry_index = reserve_in_const_pool(context, sizeof(float_constant), FLOAT_CONST);
+        entry = FLOAT_CONST_AT(context->binary.const_pool, entry_index);
+        entry->double_value = value;
+        add_float_node(&context->float_constants_tree, bits, entry_index);
+    }
+
+    return entry_index;
+}
+
 static size_t add_binary_to_pool(Assembler_Context *context, char* hex) {
     string_constant *sentry;
     size_t entry_index;
@@ -437,7 +646,7 @@ static size_t add_binary_to_pool(Assembler_Context *context, char* hex) {
         sentry->string_len = bin_len;
 
         // Convert the hex string to binary
-        unsigned char *b = sentry->string;
+        unsigned char *b = (unsigned char *)sentry->string;
         char *h = hex;
         while (*h) {
             int val = hexchar2int(*h);
@@ -603,8 +812,8 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
                     operandToken->token_value.integer;
             return;
         case FLOAT:
-            context->binary.binary[context->binary.inst_size++].fconst =
-                    operandToken->token_value.real;
+            s_index = add_float_to_pool(context, operandToken->token_value.real);
+            context->binary.binary[context->binary.inst_size++].index = s_index;
             return;
         case CHAR:
             context->binary.binary[context->binary.inst_size++].cconst =
@@ -664,13 +873,13 @@ void promote_floats_to_decimals(Assembler_Token *instrToken,
     t2 = operand2Token?token_to_operand_type(operand2Token->token_type):OP_NONE;
     t3 = operand3Token?token_to_operand_type(operand3Token->token_type):OP_NONE;
 
-    // If none of the operands are FLOATs, then we can't promote them
+    /* If none of the operands are FLOATs, then we can't promote them */
     if (t1 != OP_FLOAT && t2 != OP_FLOAT && t3 != OP_FLOAT) return;
 
-    // If the instruction is valid, there is no need to promote the operands
-    if (src_inst(inst, t1, t2, t3)) return;
+    /* If the instruction is valid, there is no need to promote the operands */
+    if (find_opcode(inst, t1, t2, t3)) return;
 
-    // Need to loop through all the operand combinations trying to find a valid instruction by promoting OP_FLOATs to OP_DECIMALs
+    /* Need to loop through all the operand combinations trying to find a valid instruction by promoting OP_FLOATs to OP_DECIMALs */
     int i;
     for (i = 1; i < 8; i++) {
         int try = 0;
@@ -694,14 +903,14 @@ void promote_floats_to_decimals(Assembler_Token *instrToken,
         }
 
         if (try) {
-            if (src_inst(inst, t1, t2, t3)) {
-                // Found a valid instruction - promote the operands
+            if (find_opcode(inst, t1, t2, t3)) {
+                /* Found a valid instruction - promote the operands */
                 if (t1 == OP_DECIMAL) convert_float_to_decimal(operand1Token);
                 if (t2 == OP_DECIMAL) convert_float_to_decimal(operand2Token);
                 if (t3 == OP_DECIMAL) convert_float_to_decimal(operand3Token);
                 return;
             }
-            // Reset the types for the next try
+            /* Reset the types for the next try */
             if (t1 == OP_DECIMAL) t1 = OP_FLOAT;
             if (t2 == OP_DECIMAL) t2 = OP_FLOAT;
             if (t3 == OP_DECIMAL) t3 = OP_FLOAT;
@@ -710,33 +919,62 @@ void promote_floats_to_decimals(Assembler_Token *instrToken,
     }
 }
 
-static Instruction *validate_instruction(Assembler_Context* context, Assembler_Token *instrToken,
+static void append_format_description(OpFormat format, char *buffer, size_t buffer_len) {
+    OperandType types[3];
+    int num_ops = get_operand_types(format, types);
+    int i;
+    if (num_ops == 0) {
+        strncat(buffer, "no operands", buffer_len - strlen(buffer) - 1);
+        return;
+    }
+    for (i = 0; i < num_ops; i++) {
+        if (i > 0) strncat(buffer, ", ", buffer_len - strlen(buffer) - 1);
+        switch (types[i]) {
+            case OP_REG: strncat(buffer, "register", buffer_len - strlen(buffer) - 1); break;
+            case OP_INT: strncat(buffer, "integer", buffer_len - strlen(buffer) - 1); break;
+            case OP_FLOAT: strncat(buffer, "float", buffer_len - strlen(buffer) - 1); break;
+            case OP_STRING: strncat(buffer, "string", buffer_len - strlen(buffer) - 1); break;
+            case OP_ID: strncat(buffer, "label", buffer_len - strlen(buffer) - 1); break;
+            case OP_FUNC: strncat(buffer, "procedure", buffer_len - strlen(buffer) - 1); break;
+            case OP_DECIMAL: strncat(buffer, "decimal", buffer_len - strlen(buffer) - 1); break;
+            case OP_CHAR: strncat(buffer, "character", buffer_len - strlen(buffer) - 1); break;
+            case OP_BINARY: strncat(buffer, "binary", buffer_len - strlen(buffer) - 1); break;
+            default: strncat(buffer, "unknown", buffer_len - strlen(buffer) - 1); break;
+        }
+    }
+}
+
+static const OpInfo *validate_instruction(Assembler_Context* context, Assembler_Token *instrToken,
                                          OperandType type1,
                                          OperandType type2,
                                          OperandType type3 ) {
     char errorBuffer[MAX_ERROR_LENGTH];
-    size_t i;
-    Instruction *possible_inst, *next_possible_inst;
-    Instruction *inst = src_inst((char*)instrToken->token_value.string, type1, type2, type3);
+    size_t i_len;
+    int j;
+    int first = 1;
+    const char *mnemonic = (char*)instrToken->token_value.string;
+    const OpInfo *inst = find_opcode(mnemonic, type1, type2, type3);
 
     if (inst) return inst;
 
     /* Make a useful error message */
-    possible_inst = fst_inst((char*)instrToken->token_value.string);
-    if (!possible_inst) rxaserat(context, instrToken, "invalid instruction mnemonic");
-    else {
-        strncpy(errorBuffer, "invalid operand, expecting ", MAX_ERROR_LENGTH - 1);
-        i = strlen(errorBuffer);
-        exp_opds(possible_inst, errorBuffer + i, MAX_ERROR_LENGTH - 1 - i);
-        possible_inst = nxt_inst(possible_inst);
-        while (possible_inst) {
-            next_possible_inst = nxt_inst(possible_inst);
-            if (next_possible_inst) strncat(errorBuffer,", ", MAX_ERROR_LENGTH - 1);
-            else strncat(errorBuffer," or ", MAX_ERROR_LENGTH - 1);
-            i = strlen(errorBuffer);
-            exp_opds(possible_inst, errorBuffer + i, MAX_ERROR_LENGTH - 1 - i);
-            possible_inst = next_possible_inst;
+    errorBuffer[0] = 0;
+    for (j = 0; op_table[j].mnemonic != NULL; j++) {
+        if (mnemonic_matches(mnemonic, op_table[j].mnemonic)) {
+            if (first) {
+                strncpy(errorBuffer, "invalid operand, expecting ", MAX_ERROR_LENGTH - 1);
+            } else {
+                strncat(errorBuffer, " or ", MAX_ERROR_LENGTH - strlen(errorBuffer) - 1);
+            }
+            first = 0;
+            i_len = strlen(errorBuffer);
+            append_format_description(op_table[j].format, errorBuffer + i_len, MAX_ERROR_LENGTH - 1 - i_len);
         }
+    }
+
+    if (first) {
+        rxaserat(context, instrToken, "invalid instruction mnemonic");
+    } else {
         rxaseaft(context, instrToken, errorBuffer);
     }
     return 0;
@@ -744,58 +982,24 @@ static Instruction *validate_instruction(Assembler_Context* context, Assembler_T
 
 /** Generate code for an instruction with no operands */
 void rxasgen0(Assembler_Context *context, Assembler_Token *instrToken) {
-
-    Instruction *inst=validate_instruction(context, instrToken,
-                                           0,
-                                           0,
-                                           0 );
-    if (inst) {
-        gen_instr(context, inst);
-    }
+    rxasgen(context, instrToken, 0, 0, 0);
 }
 
 /** Generate code for an instruction with one operand */
 void rxasgen1(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token) {
-
-    Instruction *inst=validate_instruction(context, instrToken,
-                                           token_to_operand_type(operand1Token->token_type),
-                                           0,
-                                           0 );
-    if (inst) {
-        gen_instr(context, inst);
-        gen_operand(context, operand1Token);
-    }
+    rxasgen(context, instrToken, operand1Token, 0, 0);
 }
 
 /** Generate code for an instruction with two operand */
 void rxasgen2(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token) {
-
-    Instruction *inst=validate_instruction(context, instrToken,
-                                           token_to_operand_type(operand1Token->token_type),
-                                           token_to_operand_type(operand2Token->token_type),
-                                           0 );
-    if (inst) {
-        gen_instr(context, inst);
-        gen_operand(context, operand1Token);
-        gen_operand(context, operand2Token);
-    }
+    rxasgen(context, instrToken, operand1Token, operand2Token, 0);
 }
 
 /** Generate code for an instruction with three operands */
 void rxasgen3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
-
-    Instruction *inst=validate_instruction(context, instrToken,
-                                           token_to_operand_type(operand1Token->token_type),
-                                           token_to_operand_type(operand2Token->token_type),
-                                           token_to_operand_type(operand3Token->token_type));
-    if (inst) {
-        gen_instr(context, inst);
-        gen_operand(context, operand1Token);
-        gen_operand(context, operand2Token);
-        gen_operand(context, operand3Token);
-    }
+    rxasgen(context, instrToken, operand1Token, operand2Token, operand3Token);
 }
 
 /** Generate code for an instruction with up to three operands
@@ -803,15 +1007,76 @@ void rxasgen3(Assembler_Context *context, Assembler_Token *instrToken, Assembler
 void rxasgen(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
              Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
 
-    Instruction *inst=validate_instruction(context, instrToken,
-                                           operand1Token?token_to_operand_type(operand1Token->token_type):0,
-                                           operand2Token?token_to_operand_type(operand2Token->token_type):0,
-                                           operand3Token?token_to_operand_type(operand3Token->token_type):0);
+    OperandType type1 = operand1Token?token_to_operand_type(operand1Token->token_type):OP_NONE;
+    OperandType type2 = operand2Token?token_to_operand_type(operand2Token->token_type):OP_NONE;
+    OperandType type3 = operand3Token?token_to_operand_type(operand3Token->token_type):OP_NONE;
+
+    const OpInfo *inst = validate_instruction(context, instrToken, type1, type2, type3);
+
     if (inst) {
-        gen_instr(context, inst);
-        if (operand1Token) gen_operand(context, operand1Token);
-        if (operand2Token) gen_operand(context, operand2Token);
-        if (operand3Token) gen_operand(context, operand3Token);
+        OperandType types[3];
+        int num_ops = get_operand_types(inst->format, types);
+        gen_instr(context, inst->opcode, num_ops);
+        switch (inst->format) {
+            case FMT_EMPTY:
+                break;
+
+            case FMT_C:
+            case FMT_F:
+            case FMT_I:
+            case FMT_L:
+            case FMT_P:
+            case FMT_R:
+            case FMT_S:
+                gen_operand(context, operand1Token);
+                break;
+
+            case FMT_I_I:
+            case FMT_I_R:
+            case FMT_L_R:
+            case FMT_L_S:
+            case FMT_P_S:
+            case FMT_R_C:
+            case FMT_R_D:
+            case FMT_R_F:
+            case FMT_R_I:
+            case FMT_R_P:
+            case FMT_R_R:
+            case FMT_R_S:
+            case FMT_S_R:
+            case FMT_S_S:
+                gen_operand(context, operand1Token);
+                gen_operand(context, operand2Token);
+                break;
+
+            case FMT_I_I_I:
+            case FMT_I_I_R:
+            case FMT_I_R_R:
+            case FMT_L_L_R:
+            case FMT_L_P_S:
+            case FMT_L_R_I:
+            case FMT_L_R_R:
+            case FMT_L_R_S:
+            case FMT_R_D_R:
+            case FMT_R_F_I:
+            case FMT_R_F_R:
+            case FMT_R_I_I:
+            case FMT_R_I_R:
+            case FMT_R_P_R:
+            case FMT_R_R_D:
+            case FMT_R_R_F:
+            case FMT_R_R_I:
+            case FMT_R_R_R:
+            case FMT_R_R_S:
+            case FMT_R_S_I:
+            case FMT_R_S_R:
+            case FMT_R_S_S:
+            case FMT_S_S_R:
+                gen_operand(context, operand1Token);
+                gen_operand(context, operand2Token);
+                gen_operand(context, operand3Token);
+                break;
+        }
     }
 }
 
@@ -858,8 +1123,7 @@ static size_t define_proc(Assembler_Context *context, Assembler_Token *funcToken
     centry->locals = -1;
     centry->start = SIZE_MAX;
     centry->exposed = SIZE_MAX;
-
-    centry->binarySpace = 0;
+    centry->next = -1;
     ref_header->defined = 1;
 //    ref_header->def_token = funcToken;
 
@@ -984,19 +1248,10 @@ void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
     centry->procedure = pentry_index;
     centry->imported = 0;
 
-    /* Chain the exposed constant entries */
-    if (context->expose_head != -1) {
-        ((expose_proc_constant*)(context->binary.const_pool + context->expose_tail))->next = (int)entry_index;
-        context->expose_tail = (int)entry_index;
-        centry->next = -1;
-    }
-    else {
-        context->expose_head = (int)entry_index;
-        context->expose_tail = (int)entry_index;
-        centry->next = -1;
-    }
+    append_expose_entry(context, entry_index);
 
     /* Proc Entry has a pointer to the external entry */
+    pentry = (proc_constant*)(context->binary.const_pool + pentry_index); /* It might have moved */
     pentry->exposed = entry_index;
 }
 
@@ -1038,17 +1293,7 @@ void rxasdecl(Assembler_Context *context, Assembler_Token *funcToken,
     centry->procedure = pentry_index;
     centry->imported = 1;
 
-    /* Chain the exposed constant entries */
-    if (context->expose_head != -1) {
-        ((expose_proc_constant*)(context->binary.const_pool + context->expose_tail))->next = (int)entry_index;
-        context->expose_tail = (int)entry_index;
-        centry->next = -1;
-    }
-    else {
-        context->expose_head = (int)entry_index;
-        context->expose_tail = (int)entry_index;
-        centry->next = -1;
-    }
+    append_expose_entry(context, entry_index);
 
     /* Proc Entry has a pointer to the external entry */
     pentry = (proc_constant*)(context->binary.const_pool + pentry_index); /* It might have moved */
@@ -1106,7 +1351,7 @@ void rxasmesr(Assembler_Context *context, Assembler_Token *line, Assembler_Token
 }
 
 /* Function Metadata */
-void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args, Assembler_Token *inliner) {
+void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args) {
     size_t entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);
     size_t sentry;
 
@@ -1121,14 +1366,6 @@ void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     ((meta_func_constant*)(context->binary.const_pool + entry))->func = sentry;
     sentry = add_string_to_pool(context, (char*)args->token_value.string);
     ((meta_func_constant*)(context->binary.const_pool + entry))->args = sentry;
-    if (inliner) {
-        sentry = add_string_to_pool(context, (char*)inliner->token_value.string);
-        ((meta_func_constant*)(context->binary.const_pool + entry))->inliner = sentry;
-    }
-    else {
-        sentry = add_string_to_pool(context, "");
-        ((meta_func_constant *) (context->binary.const_pool + entry))->inliner = sentry;
-    }
 }
 
 /* Register Metadata */
@@ -1169,4 +1406,105 @@ void rxasmecl(Assembler_Context *context, Assembler_Token *symbol) {
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
     ((meta_clear_constant*)(context->binary.const_pool + entry))->symbol = sentry;
+}
+
+/* Class Metadata */
+void rxasmeclss(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type) {
+    size_t entry = add_meta_entry(context, sizeof(meta_class_constant), META_CLASS);
+    size_t s_sym, s_opt, s_typ;
+
+    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
+    s_opt = add_string_to_pool(context, (char*)option->token_value.string);
+    s_typ = add_string_to_pool(context, (char*)type->token_value.string);
+
+    /* Recalculate pointer after potential pool growth */
+    meta_class_constant *mentry = (meta_class_constant*)(context->binary.const_pool + entry);
+    mentry->symbol = s_sym;
+    mentry->option = s_opt;
+    mentry->type = s_typ;
+}
+
+/* Attribute Metadata */
+void rxasmeattr(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg) {
+    size_t entry = add_meta_entry(context, sizeof(meta_attr_constant), META_ATTR);
+    size_t s_sym, s_opt, s_typ;
+
+    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
+    s_opt = add_string_to_pool(context, (char*)option->token_value.string);
+    s_typ = add_string_to_pool(context, (char*)type->token_value.string);
+
+    /* Recalculate pointer after potential pool growth */
+    meta_attr_constant *mentry = (meta_attr_constant*)(context->binary.const_pool + entry);
+    mentry->symbol = s_sym;
+    mentry->option = s_opt;
+    mentry->type = s_typ;
+    mentry->reg = (size_t)reg->token_value.integer;
+}
+
+/* Interface Metadata */
+void rxasmeintf(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type) {
+    size_t entry = add_meta_entry(context, sizeof(meta_interface_constant), META_INTERFACE);
+    size_t s_sym, s_opt, s_typ;
+
+    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
+    s_opt = add_string_to_pool(context, (char*)option->token_value.string);
+    s_typ = add_string_to_pool(context, (char*)type->token_value.string);
+
+    meta_interface_constant *mentry = (meta_interface_constant*)(context->binary.const_pool + entry);
+    mentry->symbol = s_sym;
+    mentry->option = s_opt;
+    mentry->type = s_typ;
+}
+
+/* Implements Metadata */
+void rxasmeimpl(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *interface_symbol) {
+    size_t entry = add_meta_entry(context, sizeof(meta_implements_constant), META_IMPLEMENTS);
+    size_t s_sym, s_iface;
+
+    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
+    s_iface = add_string_to_pool(context, (char*)interface_symbol->token_value.string);
+
+    meta_implements_constant *mentry = (meta_implements_constant*)(context->binary.const_pool + entry);
+    mentry->symbol = s_sym;
+    mentry->interface_symbol = s_iface;
+}
+
+/* Interface Member Metadata */
+void rxasmememb(Assembler_Context *context, Assembler_Token *owner, Assembler_Token *kind, Assembler_Token *member, Assembler_Token *type, Assembler_Token *args) {
+    size_t entry = add_meta_entry(context, sizeof(meta_member_constant), META_MEMBER);
+    size_t s_owner, s_kind, s_member, s_type, s_args;
+
+    s_owner = add_string_to_pool(context, (char*)owner->token_value.string);
+    s_kind = add_string_to_pool(context, (char*)kind->token_value.string);
+    s_member = add_string_to_pool(context, (char*)member->token_value.string);
+    s_type = add_string_to_pool(context, (char*)type->token_value.string);
+    s_args = add_string_to_pool(context, (char*)args->token_value.string);
+
+    meta_member_constant *mentry = (meta_member_constant*)(context->binary.const_pool + entry);
+    mentry->owner = s_owner;
+    mentry->kind = s_kind;
+    mentry->member = s_member;
+    mentry->type = s_type;
+    mentry->args = s_args;
+}
+
+/* Inline Metadata */
+void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *payload) {
+    size_t entry;
+    size_t s_sym;
+    size_t s_payload;
+    meta_inline_constant *mentry;
+
+    if (strcmp((char*)option->token_value.string, ".inline") != 0) {
+        rxaserat(context, option, "Expecting .inline metadata option");
+        return;
+    }
+
+    entry = add_meta_entry(context, sizeof(meta_inline_constant), META_INLINE);
+    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
+    s_payload = add_string_to_pool(context, (char*)payload->token_value.string);
+
+    mentry = (meta_inline_constant*)(context->binary.const_pool + entry);
+    mentry->symbol = s_sym;
+    mentry->payload = s_payload;
 }

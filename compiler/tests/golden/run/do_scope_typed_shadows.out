@@ -1,0 +1,4 @@
+Warning in do_scope_typed_shadows.rexx @ 7:5 - #SHADOWING, original definition "do_scope_typed_shadows.main.x" @ 4:3, "x"
+Warning in do_scope_typed_shadows.rexx @ 8:5 - #SHADOWING, original definition "do_scope_typed_shadows.main.x" @ 4:3, "x"
+2 warning(s) in source file
+1

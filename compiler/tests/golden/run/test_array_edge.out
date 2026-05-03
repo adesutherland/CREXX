@@ -1,0 +1,6 @@
+Testing Array Edge Cases...
+ary[1]: 10 ary[5]: 50
+new ary[1]: 100 ary[10]: 1000
+objAry[1].val = 1
+objAry[2].val = 2
+objAry[3].val = 3

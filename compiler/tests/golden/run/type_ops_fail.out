@@ -1,0 +1,1 @@
+PANIC: Cannot cast .type_ops_fail..car to .type_ops_fail..truck (SIGNAL CONVERSION_ERROR)

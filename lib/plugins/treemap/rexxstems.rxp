@@ -1,0 +1,109 @@
+/* STEM coding */
+##cflags def nset iflink 1buf 2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+
+##define stemcreate(name,size)    {name##_keys.1=''; name##_values.1=''; name##_keys_overflow.1=''; name##_value_overflow.1='' \
+                                   call stemdefine name##_keys, name##_values, name##_keys_overflow, name##_value_overflow,size }
+##define stemput(name,key,value)  {stemputx(key,value, name##_keys, name##_values, name##_keys_overflow, name##_value_overflow)}
+##define stemget(name,key,value)  {stemgetx(key,name##_keys, name##_values, name##_keys_overflow, name##_value_overflow)}
+##define stemhash(key)            {1+(5381+fnv(key))}
+##define stemoverflow(name)       {name##_keys_overflow[0]}
+
+max=25000
+stemcreate(pej,max)
+
+say time('l')
+do i=1 to max
+   rc=stemput(pej, 'mystem.used.to keep.something.'i,'record_'i)
+end
+say time('l')
+
+ok=0
+nok=0
+say stemoverflow(pej)' overflow size'
+say 'Test result'
+say '-----------'
+say time('l')
+do i=1 to max
+   ## say "'"stemget(pej, 'mystem.used.to keep.something.'i)"'"
+   if stemget(pej, 'mystem.used.to keep.something.'i)='record_'i then ok=ok+1
+   else nok=nok+1
+end
+say time('l')
+say ok' records ok'
+say nok' records not ok'
+say stemoverflow(pej)' overflow size'
+
+exit
+/* ----------------------------------------------------------------------------------------------------------
+ * Create Stem
+ * ----------------------------------------------------------------------------------------------------------
+ */
+stemdefine: procedure=.int
+  arg expose keys = .string[],values = .string[],keyoverflow = .string[],valueoverflow = .string[],size=.int
+  size=size*2.1%1
+  say time('l')' locate nearest prime of size='size
+  size=find_nearest_prime(size)
+  say time('l')' nearest prime will be used as size='size
+  values[size]=''
+  keys[size]=''
+  valueoverflow[size]=''
+  keyoverflow[size]=''
+return 0
+/* ----------------------------------------------------------------------------------------------------------
+ * Find the nearest prime to the proposed size. Find nearest prime <= max
+ * ----------------------------------------------------------------------------------------------------------
+ */
+find_nearest_prime: procedure=.int
+  arg max=.int
+  do while max > 2
+     if is_prime(max) then return max
+     max = max - 1
+  end
+return 2
+/* ----------------------------------------------------------------------------------------------------------
+ * Check if a number is prime
+ * ----------------------------------------------------------------------------------------------------------
+ */
+is_prime: procedure=.int
+  arg n=.int
+  if n <= 1 then return 0
+  if n <= 3 then return 1
+  if n // 2 = 0 | n // 3 = 0 then return 0
+  i = 5
+  do while i * i <= n
+    if n // i = 0 | n // (i + 2) = 0 then return 0
+    i = i + 6
+  end
+return 1
+/* ----------------------------------------------------------------------------------------------------------
+ * Put record into the stem array
+ * ----------------------------------------------------------------------------------------------------------
+ */
+stemputx: procedure=.int
+arg key=.string,value=.string,expose keys = .string[], expose values=.string[],expose keyoverflow = .string[],expose valueoverflow = .string[]
+    hash=stemhash(key)//keys[0]  /* adding 12345 as "salt" to the hash, it's rotating the hash space so repeated keys don’t fall into repeated collision */
+    if keys[hash]\='' then do
+    ##  say 'collision 'key' with 'keys[hash]
+       new=keyoverflow[0]+1
+       keyoverflow[new]=key
+       valueoverflow[new]=value
+    end
+    else do
+       keys[hash]=key
+       values[hash]=value
+   end
+return 0
+/* ----------------------------------------------------------------------------------------------------------
+ * Get record from the stem array
+ * ----------------------------------------------------------------------------------------------------------
+ */
+stemgetx: procedure=.string
+  arg key=.string, expose keys = .string[], values=.string[], keyoverflow=.string[],valueoverflow=.string[]
+  hash=stemhash(key)//keys[0]
+  if keys[hash]=key then return values[hash]
+  ## say 'read collision 'key' with 'keys[hash] keyoverflow[0] valueoverflow[0]
+  do i=1 to keyoverflow[0]
+    ## say i 'ISAM' key keyoverflow[i]
+     if keyoverflow[i]=key then return valueoverflow[i]
+  end
+return ""

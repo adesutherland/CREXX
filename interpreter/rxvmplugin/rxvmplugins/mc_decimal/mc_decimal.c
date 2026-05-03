@@ -1,4 +1,28 @@
 /*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*
  * Description: This file contains the implementation of the rxvmplugin plugin using the ICU
  *              decNumber library.
  *
@@ -24,6 +48,26 @@
 #include "rxvmplugin.h"
 #include "decNumber.h"
 #include "decNumberLocal.h"
+
+/* Update the plugin internals with the Numeric Context */
+static void syncNumericContext(decplugin *plugin) {
+    numeric_context default_context = {DEFAULT_NUMERIC_DIGITS, DEFAULT_NUMERIC_FUZZ, DEFAULT_NUMERIC_FORM, DEFAULT_NUMERIC_CASE, NUMERIC_STANDARD_COMMON};
+
+    numeric_context *num_context = plugin->num_context;
+    if (!num_context) {
+        num_context = &default_context;
+    }
+
+    ((decContext*)(plugin->base.private_context))->digits = (int32_t)num_context->digits;
+    if (num_context->standard == NUMERIC_STANDARD_COMMON) {
+        ((decContext*)(plugin->base.private_context))->clamp = 1;
+        ((decContext*)(plugin->base.private_context))->round = DEC_ROUND_HALF_EVEN;
+    }
+    else {
+        ((decContext*)(plugin->base.private_context))->clamp = 0;
+        ((decContext*)(plugin->base.private_context))->round = DEC_ROUND_HALF_UP;
+    }
+}
 
 // Note that signal_string is set to a static buffer in the check_signal function (or NULL)
 static void check_signal(decplugin *plugin) {
@@ -110,11 +154,6 @@ static size_t getDigits(decplugin *plugin) {
     return ((decContext*)(plugin->base.private_context))->digits;
 }
 
-/* Set the number of digits in the rxvmplugin context */
-static void setDigits(decplugin *plugin, size_t digits) {
-    ((decContext*)(plugin->base.private_context))->digits = (int32_t)digits;
-}
-
 /* Get the required string size for the rxvmplugin context */
 static size_t getRequiredStringSize(decplugin *plugin) {
     return ((decContext*)(plugin->base.private_context))->digits + 14;
@@ -129,8 +168,12 @@ static void decNumberToCREXXString(decplugin *plugin, decNumber *number, char *b
     // if the exponent is within a certain range. This function will print the number in simple form if the exponent is
     // within a certain range, otherwise it will print it in scientific form.
     decContext *context = (decContext*)(plugin->base.private_context);
+    numeric_context *num_context = plugin->num_context;
+    numeric_form form = num_context ? num_context->form : DEFAULT_NUMERIC_FORM;
+    case_type casetype = num_context ? num_context->casetype : DEFAULT_NUMERIC_CASE;
 
-    #define LOWER_THRESHOLD -5
+    // CREXX %g specifier lower threshold
+    #define LOWER_THRESHOLD (-5)
 
     // If a longer buffer is needed, it will be dynamically allocated
     #define CONVERSION_BUFFER_LEN 100
@@ -163,19 +206,41 @@ static void decNumberToCREXXString(decplugin *plugin, decNumber *number, char *b
         size_t bufferSize = context->digits + 14;
         if (bufferSize > CONVERSION_BUFFER_LEN) {
             char *temp_buffer = malloc(bufferSize);
-            decNumberToString(number, temp_buffer);
+            if (form == NUMERIC_FORM_ENGINEERING)
+                decNumberToEngString(number, temp_buffer);
+            else
+                decNumberToString(number, temp_buffer);
             plugin->number_to_simple_format(temp_buffer, buffer);
             free(temp_buffer);
         }
         else {
-            decNumberToString(number, conversion_buffer);
+            if (form == NUMERIC_FORM_ENGINEERING)
+                decNumberToEngString(number, conversion_buffer);
+            else
+                decNumberToString(number, conversion_buffer);
             plugin->number_to_simple_format(conversion_buffer, buffer);
         }
     }
 
     else {
         // Exponential notation
-        decNumberToString(number, buffer);
+        if (form == NUMERIC_FORM_ENGINEERING)
+            decNumberToEngString(number, buffer);
+        else
+            decNumberToString(number, buffer);
+    }
+
+    // Handle case
+    if (casetype == CASE_LOWER) {
+        char *p;
+        for (p = buffer; *p; p++) {
+            if (*p == 'E') *p = 'e';
+        }
+    } else if (casetype == CASE_UPPER) {
+        char *p;
+        for (p = buffer; *p; p++) {
+            if (*p == 'e') *p = 'E';
+        }
     }
 }
 
@@ -504,6 +569,33 @@ static void decimalExtract(decplugin *plugin, char *coefficient, rxinteger *expo
     trim_numeric_trailing_zeros(coefficient);
 }
 
+/* Is zero */
+static int decimalIsZero(decplugin *plugin, const value *number) {
+    decNumber *dn = number->decimal_value;
+    return (decNumberIsZero(dn));
+}
+
+/* Truncate the decimal value to an integer */
+static void decimalTruncate(decplugin *plugin, value *result, const value *op1) {
+    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    enum rounding rounding_value = decContextGetRounding((decContext*)(plugin->base.private_context));
+    decContextSetRounding((decContext*)(plugin->base.private_context), DEC_ROUND_DOWN); // Set rounding to truncate
+    decNumberToIntegralValue(result->decimal_value, op1->decimal_value, (decContext*)(plugin->base.private_context));
+    decContextSetRounding((decContext*)(plugin->base.private_context), rounding_value); // Restore original rounding
+    check_signal(plugin);
+}
+
+/* Round the decimal value to the nearest integer */
+static void decimalRound(decplugin *plugin, value *result, const value *op1) {
+    // TODO Check Rounding Logic & Standard
+    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    enum rounding rounding_value = decContextGetRounding((decContext*)(plugin->base.private_context));
+ //   decContextSetRounding((decContext*)(plugin->base.private_context), DEC_ROUND_HALF_EVEN); // Set rounding to round
+    decNumberToIntegralValue(result->decimal_value, op1->decimal_value, (decContext*)(plugin->base.private_context));
+//    decContextSetRounding((decContext*)(plugin->base.private_context), rounding_value); // Restore original rounding
+    check_signal(plugin);
+}
+
 /* Function to destroy a rxvmplugin plugin */
 static void destroy_decplugin(rxvm_plugin *plugin) {
     free(plugin->private_context);
@@ -526,8 +618,8 @@ static rxvm_plugin *new_decplugin() {
     plugin->base.version = "Plugin:0.1 Library:3.64";
     plugin->base.description = "Decimal Plugin using Mike Cowlishaw's decNumber library";
     plugin->base.free = destroy_decplugin;
+    plugin->syncNumericContext = syncNumericContext;
     plugin->getDigits = getDigits;
-    plugin->setDigits = setDigits;
     plugin->getRequiredStringSize = getRequiredStringSize;
     plugin->decimalFromString = decimalFromString;
     plugin->decimalToString = decimalToString;
@@ -544,6 +636,9 @@ static rxvm_plugin *new_decplugin() {
     plugin->decimalCompare = decimalCompare;
     plugin->decimalCompareString = decimalCompareString;
     plugin->decimalExtract = decimalExtract;
+    plugin->decimalIsZero = decimalIsZero;
+    plugin->decimalTruncate = decimalTruncate;
+    plugin->decimalRound = decimalRound;
 
     return (rxvm_plugin*)plugin;
 }

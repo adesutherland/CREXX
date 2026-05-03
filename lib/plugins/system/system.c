@@ -4,12 +4,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <string.h>
+
+#ifndef _WIN32
+#include <libgen.h>
+#endif
+
 #if defined(__APPLE__)
+ #include <mach-o/dyld.h>
+ #include <pwd.h>
  #include <sys/stat.h>
  #include <sys/time.h>
+ #include <sys/wait.h>
  #include <sys/sysctl.h>
  #include <errno.h>
-#include <unistd.h>        // For POSIX systems (Linux/macOS)
+ #include <unistd.h>        // For POSIX systems (Linux/macOS)
 #define max(a,b)             \
   ({			     \
     __typeof__ (a) _a = (a); \
@@ -31,17 +40,46 @@
 #else
   #include <dirent.h>
   #include <ctype.h>
+  #include <pwd.h>
+  #include <unistd.h>
+  #include <sys/stat.h>
+  #include <errno.h>
+  #include <time.h>
+#endif
+
+#if defined(__linux__)
+#include <sys/sysinfo.h>
 #endif
 
 #ifdef _WIN32
-#define wait(ms) Sleep(ms);
-#elif defined(__APPLE__)
+static void wait_ms(unsigned int ms) {
+    Sleep(ms);
+}
 #else
-// #include <arpa/inet.h>    // Linux
-   #define wait(ms) usleep(ms*1000)
+static void wait_ms(unsigned int ms) {
+    struct timespec ts;
+
+    ts.tv_sec = ms / 1000;
+    ts.tv_nsec = (ms % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+}
 #endif
 
 char * path;
+
+static char *dup_string(const char *value) {
+    char *copy;
+    size_t len;
+
+    if (!value) return NULL;
+
+    len = strlen(value) + 1;
+    copy = malloc(len);
+    if (!copy) return NULL;
+
+    memcpy(copy, value, len);
+    return copy;
+}
 
 #include "crexxpa.h"      // crexx/pa - Plugin Architecture header file
 // distinguish between Windows and Linux and MAC
@@ -55,7 +93,7 @@ char * path;
     #define REMOVE_DIR(path) rmdir(path)
     #define MAKE_DIR(path)   mkdir(path, 0755)
     #define TEST_DIR(path)   access(path, F_OK)
-    #define TEST_FILE(fname) access(path, F_OK)
+    #define TEST_FILE(fname) access(fname, F_OK)
     #define RENAME_FILE(source,target)  rename(source, target)
 #endif
 
@@ -72,18 +110,18 @@ void searchReplace(char *str, char search, char replace) {
  * Get environment variable (directory)
  * -------------------------------------------------------------------------------------
  */
-PROCEDURE(getEnv) {
-    char *varName = GETSTRING(ARG0);    
-    if (!varName) {
-        RETURNSIGNAL(SIGNAL_FAILURE, "Invalid argument")
-    }
-    char *varValue = getenv(varName);   
-    if (varValue == NULL) {             
-        RETURNSIGNAL(SIGNAL_FAILURE, "Environment variable not found")
-    }
-    RETURNSTR(varValue);
-ENDPROC
-}
+/* PROCEDURE(getEnv) { */
+/*     char *varName = GETSTRING(ARG0); */
+/*     if (!varName) { */
+/*         RETURNSIGNAL(SIGNAL_FAILURE, "Invalid argument") */
+/*     } */
+/*     char *varValue = getenv(varName);    */
+/*     if (varValue == NULL) {              */
+/*         RETURNSIGNAL(SIGNAL_FAILURE, "Environment variable not found") */
+/*     } */
+/*     RETURNSTR(varValue); */
+/* ENDPROC */
+/* } */
 /* -------------------------------------------------------------------------------------
  * Get current working directory
  * -------------------------------------------------------------------------------------
@@ -97,6 +135,61 @@ PROCEDURE(getdir) {
     }
 ENDPROC
 }
+/* -------------------------------------------------------------------------------------
+ * Get current load path
+ * -------------------------------------------------------------------------------------
+ */
+PROCEDURE(getLoadPath) {
+    char path[4096];
+    char *dir = NULL;
+
+#if defined(_WIN32)
+    if (GetModuleFileNameA(NULL, path, sizeof(path)) == 0) {
+      RETURNSIGNAL(SIGNAL_FAILURE, "Unable to get current load path")
+    }
+    char *last_backslash = strrchr(path, '\\');
+    if (last_backslash)
+        *last_backslash = '\0';
+    dir = _strdup(path);
+
+#elif defined(__APPLE__)
+    uint32_t size = sizeof(path);
+     if (_NSGetExecutablePath(path, &size) != 0)
+       RETURNSIGNAL(SIGNAL_FAILURE, "Unable to get current load path")
+
+    char resolved[PATH_MAX];
+    if (realpath(path, resolved) == NULL)
+      RETURNSIGNAL(SIGNAL_FAILURE, "Unable to get current load path")
+
+    // dirname may modify its argument, so copy it
+    char *dirbuf = dup_string(resolved);
+    if (dirbuf) {
+        dir = dup_string(dirname(dirbuf));
+        free(dirbuf);
+    }
+
+#elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+    ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
+    if (len != -1) {
+        path[len] = '\0';
+        char *dirbuf = dup_string(path);
+        if (dirbuf) {
+            dir = dup_string(dirname(dirbuf));
+            free(dirbuf);
+        }
+    }
+#endif
+    if (dir) {
+        SETSTRING(RETURN, dir);
+        free(dir);
+    } else {
+        SETSTRING(RETURN, "");
+    }
+    PROCRETURN
+ENDPROC
+}
+
+
 /* -------------------------------------------------------------------------------------
  * Set new current working directory
  * -------------------------------------------------------------------------------------
@@ -336,7 +429,7 @@ PROCEDURE(rxbin_modules) {
 
     // Scan for components
     long pos = 0, modnum=0;
-    printf("List Library content\n",modnum);
+    printf("List Library content\n");
     printf("--------------------------------------------------------------------------------\n");
     while (pos < filesize - MARKER_LEN) {
         if (memcmp(&buffer[pos], MARKER, MARKER_LEN) == 0) {
@@ -355,10 +448,13 @@ PROCEDURE(rxbin_modules) {
             if (component_length > NAME_OFFSET) {
                 char raw_name[256+ 1] = {0};
                 long name_pos = component_start + NAME_OFFSET;
-             // Copy and null-terminate
-                strcpy(raw_name, &buffer[name_pos]);
-             // Normalize path separators
-                for (int i = 0; i < MAX_NAME_LEN; i++) {
+             // Copy bounded and null-terminate
+                size_t avail = (component_length > NAME_OFFSET) ? (size_t)(component_length - NAME_OFFSET) : 0;
+                size_t copy_len = (avail < 256) ? avail : 256;
+                memcpy(raw_name, (const char *)&buffer[name_pos], copy_len);
+                raw_name[copy_len] = '\0';
+             // Normalize path separators (limit to expected name length)
+                for (int i = 0; raw_name[i] && i < MAX_NAME_LEN; i++) {
                     if (raw_name[i] == '\\') raw_name[i] = '/';
                 }
 
@@ -409,78 +505,78 @@ void trim(char *str) {
     }
 }
 
-PROCEDURE(parse) {
-    int patternpos = 0, plen, indx=0;
-    char * stringpos,* stringoffset;
-    int begin, end;
-    char tchar;
-    char *string =  GETSTRING(ARG0);
-    char *pattern = GETSTRING(ARG1);
-    int debug = 0;
-    char patstring[255];
-    char valstring[512];
-    char variable[64];
-    plen = strlen(pattern);
-    if (strstr(GETSTRING(ARG2), "debug") > 0) debug=1;
+/* PROCEDURE(parse) { */
+/*     int patternpos = 0, plen, indx=0; */
+/*     char * stringpos,* stringoffset; */
+/*     int begin, end; */
+/*     char tchar; */
+/*     char *string =  GETSTRING(ARG0); */
+/*     char *pattern = GETSTRING(ARG1); */
+/*     int debug = 0; */
+/*     char patstring[255]; */
+/*     char valstring[512]; */
+/*     char variable[64]; */
+/*     plen = strlen(pattern); */
+/*     if (strstr(GETSTRING(ARG2), "debug") > 0) debug=1; */
 
-    RETURNINT(-8);
-    stringoffset=string;
-    while (patternpos < plen) {
-        indx++;
-     // locate first quote, can be a single or a double quote
-        patternpos = min(nextdel(pattern, 0, plen, '"'), nextdel(pattern, patternpos, plen, '\"'));
-        if (patternpos == INT_MAX) break;    // nothing there, 1. iteration to n. iteration
-        tchar = pattern[patternpos];         // save the quote type
-        begin = patternpos;                  // here the pattern begines
-        patternpos = nextdel(pattern, patternpos + 1, plen, tchar);  // search the ending (same quote type)
-        if (patternpos == INT_MAX) patternpos = plen;  // not found assume it lasts to the end of the pattern string
-        end = patternpos;                    // save the end position
-     // Extract string pattern and variable preceding it
-     // ------------------------------------------------
-        memset(patstring, 0, sizeof(patstring));
-        memset(valstring, 0, sizeof(valstring));
-        memset(variable,  0, sizeof(variable));
+/*     RETURNINT(-8); */
+/*     stringoffset=string; */
+/*     while (patternpos < plen) { */
+/*         indx++; */
+/*      // locate first quote, can be a single or a double quote */
+/*         patternpos = min(nextdel(pattern, 0, plen, '"'), nextdel(pattern, patternpos, plen, '\"')); */
+/*         if (patternpos == INT_MAX) break;    // nothing there, 1. iteration to n. iteration */
+/*         tchar = pattern[patternpos];         // save the quote type */
+/*         begin = patternpos;                  // here the pattern begines */
+/*         patternpos = nextdel(pattern, patternpos + 1, plen, tchar);  // search the ending (same quote type) */
+/*         if (patternpos == INT_MAX) patternpos = plen;  // not found assume it lasts to the end of the pattern string */
+/*         end = patternpos;                    // save the end position */
+/*      // Extract string pattern and variable preceding it */
+/*      // ------------------------------------------------ */
+/*         memset(patstring, 0, sizeof(patstring)); */
+/*         memset(valstring, 0, sizeof(valstring)); */
+/*         memset(variable,  0, sizeof(variable)); */
 
-        strncpy(variable, pattern, begin);
-        trim(variable);
-        strncpy(patstring, pattern + begin, end - begin + 1);
-        if (debug==1) printf("... located pattern : '%s'\n",patstring);
-        if (strlen(variable)>0) {   // first pattern has no preceding variable
-            if (debug==1)  printf("... located variable    : '%s'\n",variable);
-            SETARRAYHI(ARG2, indx);
-            SETSARRAY(ARG2, indx - 1, variable);
-            SETARRAYHI(ARG3, indx);
-            SETSARRAY(ARG3, indx - 1, "");
-        } else printf("... no prior variable assignment\n");
-        pattern = pattern + end + 1;
-     // now find pattern in string
-     // --------------------------
-        stringpos = strstr(stringoffset, patstring);
-        if (stringpos == 0) break;
-        strncpy(valstring, stringoffset, stringpos - stringoffset);
-        stringoffset = stringpos + strlen(patstring);
-        trim(valstring);
-        if (debug==1) printf("... extracted value : '%s' preceeding pattern\n",valstring);
-        if (strlen(variable)>0) {   // first pattern has no preceding variable
-             SETSARRAY(ARG3, indx - 1, valstring);
-        } else indx--;   // there is no variable reset indx by -1
-    }
- // now handle remaining parts past last pattern
-    memset(valstring, 0, sizeof(valstring));
-    memset(variable, 0, sizeof(variable));
-    sprintf(valstring, "%s",stringoffset);
-    trim(valstring);
-    sprintf(variable, "%s",pattern);
-    trim(variable);
-    SETARRAYHI(ARG2, indx);
-    SETARRAYHI(ARG3,indx);
-    if (strlen(variable)==0) SETSARRAY(ARG2, indx - 1, "not_assigned");
-       else SETSARRAY(ARG2, indx - 1, variable);
-    SETSARRAY(ARG3,indx-1,valstring);
-    RETURNINT(0);
-    PROCRETURN
-    ENDPROC
-}
+/*         strncpy(variable, pattern, begin); */
+/*         trim(variable); */
+/*         strncpy(patstring, pattern + begin, end - begin + 1); */
+/*         if (debug==1) printf("... located pattern : '%s'\n",patstring); */
+/*         if (strlen(variable)>0) {   // first pattern has no preceding variable */
+/*             if (debug==1)  printf("... located variable    : '%s'\n",variable); */
+/*             SETARRAYHI(ARG2, indx); */
+/*             SETSARRAY(ARG2, indx - 1, variable); */
+/*             SETARRAYHI(ARG3, indx); */
+/*             SETSARRAY(ARG3, indx - 1, ""); */
+/*         } else printf("... no prior variable assignment\n"); */
+/*         pattern = pattern + end + 1; */
+/*      // now find pattern in string */
+/*      // -------------------------- */
+/*         stringpos = strstr(stringoffset, patstring); */
+/*         if (stringpos == 0) break; */
+/*         strncpy(valstring, stringoffset, stringpos - stringoffset); */
+/*         stringoffset = stringpos + strlen(patstring); */
+/*         trim(valstring); */
+/*         if (debug==1) printf("... extracted value : '%s' preceeding pattern\n",valstring); */
+/*         if (strlen(variable)>0) {   // first pattern has no preceding variable */
+/*              SETSARRAY(ARG3, indx - 1, valstring); */
+/*         } else indx--;   // there is no variable reset indx by -1 */
+/*     } */
+/*  // now handle remaining parts past last pattern */
+/*     memset(valstring, 0, sizeof(valstring)); */
+/*     memset(variable, 0, sizeof(variable)); */
+/*     sprintf(valstring, "%s",stringoffset); */
+/*     trim(valstring); */
+/*     sprintf(variable, "%s",pattern); */
+/*     trim(variable); */
+/*     SETARRAYHI(ARG2, indx); */
+/*     SETARRAYHI(ARG3,indx); */
+/*     if (strlen(variable)==0) SETSARRAY(ARG2, indx - 1, "not_assigned"); */
+/*        else SETSARRAY(ARG2, indx - 1, variable); */
+/*     SETSARRAY(ARG3,indx-1,valstring); */
+/*     RETURNINT(0); */
+/*     PROCRETURN */
+/*     ENDPROC */
+/* } */
 
 // Function to check if a format specifier is valid
 int count_valid_format_specifiers(char *format) {
@@ -752,40 +848,33 @@ PROCEDURE(getglobal) {
 ENDPROC
 }
 
-PROCEDURE(uptime) {
-    // Get system uptime in milliseconds
-    char result[64];
+PROCEDURE(sysuptime) {
 #if defined(_WIN32)
     ULONGLONG uptime = GetTickCount64();
-    RETURNINTX(uptime/1000)
-    // Convert uptime to seconds, minutes, hours, and days
- #elif defined(__linux__)
-    #include <sys/sysinfo.h>
+    RETURNINTX((rxinteger)(uptime / 1000));
+#elif defined(__linux__)
     struct sysinfo info;
     if (sysinfo(&info) == 0) {
-        // Convert uptime to seconds, minutes, hours, and days
-        long uptime_seconds = info.uptime;
-        RETURNINTX(uptime_seconds)
-     } else {
-        RETURNINTX(result, "-1");
+        RETURNINTX((rxinteger)info.uptime);
+    } else {
+        RETURNINTX(-1);
     }
 #elif defined(__APPLE__)
-    // Declare a struct to hold boot time information
     struct timeval boottime;
+    long uptime_seconds;
     size_t len = sizeof(boottime);
 
-    // Get the boot time from sysctl
     if (sysctlbyname("kern.boottime", &boottime, &len, NULL, 0) == 0) {
-        // Get the current time
         struct timeval now;
         gettimeofday(&now, NULL);
 
-        // Calculate the uptime in seconds
-        long uptime_seconds = now.tv_sec - boottime.tv_sec;
+        uptime_seconds = now.tv_sec - boottime.tv_sec;
         RETURNINTX(uptime_seconds);
     }
+    RETURNINTX(-1);
+#else
+    RETURNINTX(-1);
 #endif
-    RETURNSTR(result);
 ENDPROC
 }
 /* ------------------------------------------------------------------------------------------------
@@ -793,17 +882,15 @@ ENDPROC
  * ------------------------------------------------------------------------------------------------
  */
 PROCEDURE(waitX) {
-    int waittime = GETINT(ARG0);
-#ifdef _WIN32
-    wait(waittime);
-#else
-    wait(&waittime);
-#endif
+    rxinteger waittime = GETINT(ARG0);
+
+    if (waittime < 0) waittime = 0;
+    wait_ms((unsigned int)waittime);
     RETURNINTX(0);
     ENDPROC
 }
 /* ------------------------------------------------------------------------------------------------
- * Beep creates a primitive beep
+ * Beep creates a primitive beep. TODO does not seem to works and is not platform independent
  * ------------------------------------------------------------------------------------------------
  */
 PROCEDURE(beep) {
@@ -835,8 +922,15 @@ uint32_t username_len = sizeof(username);
     RETURNSTRX(username);
     } else RETURNSTRX("unknown");
 #else
-    char buffer[32];
-    snprintf(buffer, sizeof(buffer), "%u", getuid());
+    struct passwd pwd;
+    struct passwd *result;
+    char buffer[16384];  // sufficiently large buffer
+    
+    if (getpwuid_r(getuid(), &pwd, buffer, sizeof(buffer), &result) == 0 && result) {
+      snprintf(buffer, sizeof(buffer), "%s", result->pw_name);
+    } else {
+      snprintf(buffer, sizeof(buffer), "%s", "invalid");
+    }
     RETURNSTRX(buffer);
 #endif
 ENDPROC
@@ -876,15 +970,350 @@ PROCEDURE(opsys) {
 #endif
 ENDPROC
 }
+// #define PIPE ON
+#if 0
+/* ++++++++++++++++++++++++++++++ doesn't work in macOS, drop it for the moment
+/* ----------------------------------------------------------------------------
+ * PIPE Interface
+ * ----------------------------------------------------------------------------
+ */
+#ifdef _WIN32
+typedef struct {
+    PROCESS_INFORMATION pi;
+    HANDLE hRead;
+    int running;
+} ChildProcess;
 
+#else
+typedef struct {
+    pid_t pid;
+    int fd;
+    int running;
+} ChildProcess;
+#endif
+#define MAX_LINE_LENGTH 1024
+#define MAX_BUFFER_LENGTH (32 * 1024)+1
+/* ----------------------------------------------------------------------------
+ * Split a received captured buffer into a CREXX array
+ * ----------------------------------------------------------------------------
+ */
+int splitBuffer(char *buffer, void *array) {
+    char line[MAX_LINE_LENGTH];
+    int line_len = 0;
+    int lino = GETARRAYHI(array);
+    char *ptr = buffer;
+    while (*ptr) {
+        while (*ptr && *ptr != '\n' && *ptr != '\r' && line_len < MAX_LINE_LENGTH - 1) {
+            line[line_len++] = *ptr++;
+        }
+        if (*ptr == '\n' || *ptr == '\r') {
+            line[line_len] = '\0';
+            lino++;
+            SETARRAYHI(array, lino);
+            SETSARRAY(array, lino - 1, line);
+            line_len = 0;
+            line[0] = '\0';
+            if (*ptr == '\r' && *(ptr + 1) == '\n') ++ptr;
+            ++ptr;
+        }
+    }
+    if (line_len > 0) {
+        line[line_len] = '\0';
+        lino++;
+        SETARRAYHI(array, lino);
+        SETSARRAY(array, lino - 1, line);
+    }
+    return lino;
+}
+/* +++++++++++++++++++++++ PIPE functions dropped from system plugin, for the moment
+/* ----------------------------------------------------------------------------
+ * Process captured output
+ * 1. read into the maximum avaialable buffer
+ * 2. split it into single lines save them in a CREXX array
+ * 3. repeat until no more data are available
+ * ----------------------------------------------------------------------------
+ */
+#ifdef _WIN32
+int process_lines_from_pipe(HANDLE hRead, void *array) {
+#else
+    int process_lines_from_fd_or_handle(int fd, void *array) {
+#endif
+    int lino = 0;
+    char buffer[MAX_BUFFER_LENGTH];
+    for (;;) {
+#ifdef _WIN32
+        DWORD nRead = 0;
+        BOOL bSuccess = ReadFile(hRead, buffer, sizeof(buffer) - 1, &nRead, NULL);
+        if (bSuccess && nRead > 0) {
+#else
+        ssize_t nRead = read(fd, buffer, sizeof(buffer) - 1);
+        if (nRead > 0) {
+#endif
+        buffer[nRead] = '\0';
+        lino += splitBuffer(buffer, array);  // You probably want splitBuffer to return # lines added
+        } else {
+            break; // Either EOF or error
+        }
+    }
+    return lino;
+}
+/* ----------------------------------------------------------------------------
+ * Create Pipe
+ * ----------------------------------------------------------------------------
+ */
+int start_child_process(const char *cmd, ChildProcess *out_proc) {
+#ifdef _WIN32
+    HANDLE hRead, hWrite;
+    SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    if (!CreatePipe(&hRead, &hWrite, &sa, 0)) return -1;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.hStdOutput = hWrite;
+    si.hStdError  = hWrite;
+    si.dwFlags |= STARTF_USESTDHANDLES;
+
+    ZeroMemory(&pi, sizeof(pi));
+    char cmdline[512];
+    strncpy(cmdline, cmd, sizeof(cmdline)-1);
+    cmdline[sizeof(cmdline)-1] = 0;
+
+    if (!CreateProcess(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi)) {
+        CloseHandle(hRead); CloseHandle(hWrite);
+        return -2;
+    }
+    CloseHandle(hWrite);
+    out_proc->pi = pi;
+    out_proc->hRead = hRead;
+    return 0;
+#else
+    int pipefd[2];
+    if (pipe(pipefd) == -1) return -1;
+    pid_t pid = fork();
+    if (pid == -1) {
+        close(pipefd[0]); close(pipefd[1]);
+        return -2;
+    }
+    if (pid == 0) {
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        dup2(pipefd[1], STDERR_FILENO);
+        close(pipefd[1]);
+        execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
+        exit(127);
+    }
+    close(pipefd[1]);
+    out_proc->pid = pid;
+    out_proc->fd = pipefd[0];
+    return 0;
+#endif
+}
+/* ----------------------------------------------------------------------------
+ * Cleanup a pipe
+ * ----------------------------------------------------------------------------
+ */
+void cleanup_child_process(ChildProcess *proc) {
+#ifdef _WIN32
+    CloseHandle(proc->hRead);
+    CloseHandle(proc->pi.hProcess);
+    CloseHandle(proc->pi.hThread);
+#else
+    close(proc->fd);
+#endif
+}
+/* ----------------------------------------------------------------------------
+ * WAIT/POLL for a pipe has finished
+ * ----------------------------------------------------------------------------
+ */
+int wait_child_process(ChildProcess *proc, int block) {
+#ifdef _WIN32
+    DWORD result = WaitForSingleObject(proc->pi.hProcess, block ? INFINITE : 0);
+    if (result == WAIT_OBJECT_0) return 1;   // Exited
+    if (result == WAIT_TIMEOUT)  return 0;   // Still running
+    return -1; // Error
+#else
+    int status = 0;
+    pid_t res = waitpid(proc->pid, &status, block ? 0 : WNOHANG);
+    if (res == 0) return 0;     // Still running
+    if (res == proc->pid) return 1; // Exited
+    return -1; // Error
+#endif
+}
+/* ----------------------------------------------------------------------------
+ * Cancel running pipe
+ * ----------------------------------------------------------------------------
+ */
+#ifdef _WIN32
+int cancel_child_process(ChildProcess *proc) {
+    if (proc->running<0) return 0;   // was already cancelled
+    if (proc->running) {
+        BOOL ok = TerminateProcess(proc->pi.hProcess, 1);
+        if (ok) {
+            proc->running = -1;
+            return 0;   // Success
+        } else {
+            return -12; // Error
+        }
+    }
+    return -8; // Not running
+}
+#endif
+#ifndef _WIN32
+#include <signal.h>
+int cancel_child_process(ChildProcess *proc) {
+    if (proc->running) {
+        int ok = kill(proc->pid, SIGKILL);
+        if (ok == 0) {
+            proc->running = 0;
+            return 0; // Success
+        } else {
+            return -12; // Error
+        }
+    }
+    return -8; // Not running
+}
+#endif
+/* ----------------------------------------------------------------------------
+ * CREXX Create pipe
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipecreate) {
+    char * cmd = GETSTRING(ARG0);
+    ChildProcess *proc = malloc(sizeof(ChildProcess)); // Allocate!
+    if (!proc) {
+        RETURNINTX(-8); // Out of memory
+    }
+    rxinteger rproc=(rxinteger) proc;
+    RETURNINTX(rproc);
+    ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPSEND Send command to a pipe
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(piperun) {
+    rxinteger rproc = GETINT(ARG0);
+    char *cmd = GETSTRING(ARG1);
+    ChildProcess *proc = (ChildProcess *) rproc;
+    if (start_child_process(cmd, proc) != 0) {
+        fprintf(stderr, "Failed to start child process\n");
+        RETURNINTX(-8)
+    }
+    proc->running=1;
+    RETURNINTX(0)
+ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * Wait for ending of a pipe or reach a timeout
+ * ----------------------------------------------------------------------------
+ */
+int waitfor(ChildProcess *proc,int maxsleep) {
+    int msleep=0;
+    int sleepInterval=200;
+    // Async demo: poll for completion
+    while (wait_child_process(proc, 0) == 0) {
+#ifdef _WIN32
+        Sleep(sleepInterval);
+#else
+        usleep(sleepInterval*1000);
+#endif
+        msleep=msleep+sleepInterval;
+        if(msleep>maxsleep) {
+           // printf("Maximum wait reached %d\n",maxsleep);
+            return 4;
+        }
+    }
+  //  printf("Child exited\n");
+    proc->running=0;
+    return 0;
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPEWAIT
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipewait) {
+    rxinteger rproc = GETINT(ARG0);
+    rxinteger maxsleep = GETINT(ARG1);
+    ChildProcess *proc = (ChildProcess *) rproc;
+    int rc=waitfor(proc,maxsleep);
+    RETURNINTX(rc);
+    ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPEGET
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipeget) {
+    rxinteger rproc = GETINT(ARG0);
+    ChildProcess *proc = (ChildProcess *) rproc;
+    if (proc->running<=-100){
+        SETARRAYHI(ARG1,1);
+        SETSARRAY(ARG1,0,"No entries available");
+        RETURNINTX(4)
+    }
+#ifdef _WIN32
+    process_lines_from_pipe(proc->hRead, ARG1);
+#else
+    process_lines_from_pipe(proc->fd,ARG1) ;
+#endif
+    RETURNINTX(0);
+ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPESTATUS
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipestatus) {
+    rxinteger rproc = GETINT(ARG0);
+    ChildProcess *proc = (ChildProcess *) rproc;
+  //  if(proc->running = -1) RETURNINTX(0);
+    int status = wait_child_process(proc, 0);  // Non-blocking check
+    // Optionally, update your .running flag:
+    if (status == 1 || status == -1) {
+        proc->running = 0;
+        RETURNINTX(0);  // 0=exited or error
+    }
+    RETURNINTX(1); // 1=still running, 0=exited or error
+    ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPECANCEL
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipecancel) {
+    rxinteger rproc = GETINT(ARG0);
+    ChildProcess *proc = (ChildProcess *)rproc;
+    int rc = cancel_child_process(proc);
+    int rc2=waitfor(proc,1000);
+    if(rc2 != 0) rc=rc2;
+    RETURNINTX(rc);
+    ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPECLOSE
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipeclose) {
+    rxinteger rproc = GETINT(ARG0);
+    ChildProcess *proc = (ChildProcess *) rproc;
+    proc->running=0;
+    cleanup_child_process(proc);
+    free(proc);
+}
+
+#endif
 /* -------------------------------------------------------------------------------------
  * Expose functions to CREXX
  * -------------------------------------------------------------------------------------
  */
 LOADFUNCS
 //      C Function, REXX namespace & name, Option, Return Type, Arguments
-    ADDPROC(getEnv,      "system.getenv",      "b",    ".string", "input=.string");
     ADDPROC(getdir,      "system.getdir",      "b",    ".string", "");
+    ADDPROC(getdir,      "system.getCWD",      "b",    ".string", "");
+    ADDPROC(getLoadPath, "system.getloadpath", "b",    ".string", "");
     ADDPROC(setdir,      "system.setdir",      "b",    ".int",    "arg0=.string");
     ADDPROC(testdir,     "system.testdir",     "b",    ".int",    "arg0=.string");
     ADDPROC(createdir,   "system.createdir",   "b",    ".int",    "arg0=.string");
@@ -892,20 +1321,28 @@ LOADFUNCS
     ADDPROC(deletefile,  "system.deletefile",  "b",    ".int",    "arg0=.string");
     ADDPROC(renamefileP, "system.renamefile",  "b",    ".int",    "arg0=.string,arg1=.string");
     ADDPROC(testfile,    "system.testfile",    "b",    ".int",    "arg0=.string");
-    ADDPROC(listdir,     "system.listdir",     "b",    ".int",    "file=.string,expose entries=.string[]");
+    ADDPROC(listdir,     "system._listdir",     "b",    ".int",    "file=.string,expose entries=.string[]");
     ADDPROC(getclipboard,"system.getclipboard","b",    ".string","");
     ADDPROC(setclipboard,"system.setclipboard","b",    ".int","arg0=.string");
     ADDPROC(getglobal,   "system.getglobal"   ,"b",    ".string","key=.string");
     ADDPROC(setglobal,   "system.setglobal"   ,"b",    ".int",  "key=.string,value=.string");
-    ADDPROC(uptime,      "system.uptime"      ,"b",    ".int",  "");
-    ADDPROC(waitX,       "system.wait"        ,"b",    ".int",  "time=.int");
-    ADDPROC(beep,        "system.beep"        ,"b",    ".int",  "");
+    ADDPROC(sysuptime,    "system.sysuptime"      ,"b",    ".int",  "");
+    ADDPROC(waitX,       "system._wait"        ,"b",    ".int",  "time=.int");
+    ADDPROC(beep,        "system._beep"        ,"b",    ".int",  "");
     ADDPROC(getuser,     "system.userid"      ,"b",    ".string",  "");
     ADDPROC(getcomputer, "system.host"        ,"b",    ".string",  "");
     ADDPROC(opsys,       "system.opsys"       ,"b",    ".string",  "");
     ADDPROC(append_binary_file,"system.append","b",    ".int","source=.string,target=.string");
     ADDPROC(rxbin_modules,"system.lmodules",   "b",    ".int","source=.string");
+/*
     ADDPROC(parse,       "system.parse",       "b",    ".int" ,"string=.string,pattern=.string,expose variable=.string[],expose value=.string[]");
     ADDPROC(parsex,      "system.parsex",      "b",    ".int" ,"string=.string,pattern=.string,expose entries=.string[]");
+    ADDPROC(pipecreate,  "system.pipecreate",  "b",    ".int" ," ");
+    ADDPROC(piperun,     "system.pipesend",    "b",    ".int" ,"proc=.int,cmd=.string");
+    ADDPROC(pipewait,    "system.pipewait",    "b",    ".int" ,"proc=.int,mwait=10000");
+    ADDPROC(pipeget,     "system.pipeget",     "b",    ".int" ,"proc=.int, expose array=.string[]");
+    ADDPROC(pipestatus,  "system.pipestatus",  "b",    ".int" ,"proc=.int");
+    ADDPROC(pipecancel,  "system.pipecancel",  "b",    ".int" ,"proc=.int");
+    ADDPROC(pipeclose,   "system.pipeclose",   "b",    ".int" ,"proc=.int");
+ */
 ENDLOADFUNCS
-

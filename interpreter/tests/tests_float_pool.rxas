@@ -1,0 +1,32 @@
+/*
+ * interpreter/tests/tests_float_pool.rxas
+ *
+ * The first three float operands are used by test_float_pool_format.c:
+ *   slot 2 ->  1.5
+ *   slot 5 ->  1.5
+ *   slot 8 -> -0.0
+ */
+
+.globals=0
+
+main() .locals=8
+    load r1, 1.5
+    load r2, 1.5
+    load r3, -0.0
+
+    load r4, 1
+    load r5, 2
+    metaloadfoperand r6, r4, r5
+    feq r0, r6, 1.5
+    brf fail, r0
+
+    load r5, 5
+    metaloadfoperand r6, r4, r5
+    feq r0, r6, 1.5
+    brf fail, r0
+
+    ret 0
+
+fail:
+    say "FAIL: float pool operand decode"
+    ret 1

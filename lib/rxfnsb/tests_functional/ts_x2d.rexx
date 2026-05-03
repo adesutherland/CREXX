@@ -1,5 +1,5 @@
 /* rexx */
-options levelb
+options levelb numeric_classic
 import rxfnsb
 
 /* say "Hex to char" */
@@ -110,13 +110,20 @@ if x2d('FF81') \= 65409 then do
   errors=errors+1
   say 'failed in test 14 x2d('FF81')' x2d('FF81') 'but must be 65409'
 end
-if x2d('c6 f0'x) \= 240 then do
+/*
+if x2d('c6 f0'x) \= 240 then do /* LOL this is an EBCDIC joke: c6 f0 -> F 0 -> 240 */
   errors=errors+1
-  say 'failed in test 15 x2d('c6 f0'x)' x2d('c6 f0'x) 'but must be 240 but gives error because of space in c6 f0'
+  say 'failed in test 15 x2d('c6 f0'x)' x2d('c6 f0'x) 'but must be 240'
+end
+*/
+/* This is the above test in ascii! */
+if x2d('46 30'x) \= 240 then do
+  errors=errors+1
+  say 'failed in test 15 x2d('c6 f0'x)' x2d('c6 f0'x) 'but must be 240'
 end
 if x2d('F0') \= 240 then do
   errors=errors+1
-  say 'failed in test 16 x2d('F0')' x2d('F0') 'but must be 240'
+  say 'failed in test 16 x2d("F0")' x2d('F0') 'but must be 240'
 end
 if x2d('81',2) \= -127 then do
   errors=errors+1
@@ -277,7 +284,7 @@ if x2d( 'ff80', 5) \= "65408" then do
 end
 if x2d( 'ff81', 1) \= "1" then do
   errors=errors+1
-  say 'failed in test 56 x2d( 'ff81', 1) ' x2d( 'ff81', 1) 'but must be 1'
+  say 'failed in test 56 x2d( "ff81", 1) ' x2d( 'ff81', 1) 'but must be 1'
 end
 if x2d( 'ff81', 2) \= "-127" then do
   errors=errors+1

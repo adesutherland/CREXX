@@ -1,98 +1,65 @@
-# CREXX
+# CREXX Documentation
 
-_Release Documentation - crexx-DEV2507 - Sept 2022_
+_Release documentation for `crexx-1.0.0-beta.1`._
 
-## REXX Language Implementation Architecture
+This site is the public entry point for current CREXX documentation. It should
+describe what is implemented in the release branch, not old plans or speculative
+designs.
 
-Project to develop a modern ground up implementation of a REXX
-interpreter and compiler, and experiments with language improvements.
-To implement REXX using the best language tools available
-today, including the LLVM Compiler Infrastructure. These tools will
-allow a REXX compiler to be produced supporting multiple backends
-(including 64 bit architectures).
+## Start Here
 
-One aspect of the project is to revisit the REXX language - what can be
-improved? And most importantly how can it be improved while keeping the
-essence of REXX:
+- [README](https://github.com/adesutherland/CREXX/blob/develop/README.md): short project overview, build commands, and first run
+- [Release notes](releases/v1.0.0-beta.1.md): what is included in CREXX 1.0.0 beta 1
+- [Documentation map](DOCS_MAP.md): where each kind of information belongs
+- [Building CREXX](books/crexx_programming_guide/Building_cRexx.md)
+- [Running CREXX](books/crexx_programming_guide/running.md)
+- [Toolchain overview](books/crexx_programming_guide/toolchain.md)
+- [Architecture overview](books/crexx_programming_guide/architecture.md)
 
-> to make programming easier than before
+## Language
 
-CREXX will be targeted to run on VM/370 (a nod to REXX's heritage)
-and it will also run on Linux, Windows, OSX, and z/Architecture.
+- [Language reference](books/crexx_language_reference/about.md)
+- [Language levels](books/crexx_language_reference/crexx_levels.md)
+- [Data types](books/crexx_language_reference/data_types.md)
+- [Statements](books/crexx_language_reference/statements.md)
+- [Classes and interfaces](books/crexx_language_reference/classes_and_interfaces.md)
+- [Namespaces](books/crexx_language_reference/namespace.md)
+- [Standard library](books/crexx_language_reference/standard_library.md)
+- [Built-in function reference](books/crexx_language_reference/bifs_function_reference.md)
 
-## Wiki Based Documentation
+## Tools
 
-This represents the latest thoughts, aims, architecture, designs and details; some of this may have been built, some things may have been built to older designs and some may just be a future wish. This is the place where we are developing the cREXX Architecture.
+- [crexx driver](books/crexx_programming_guide/crexx.md)
+- [rxc compiler](books/crexx_programming_guide/rxc.md)
+- [rxas assembler](books/crexx_programming_guide/rxas.md)
+- [rxlink linker](books/crexx_programming_guide/rxlink.md)
+- [rxdas disassembler](books/crexx_programming_guide/rxdas.md)
+- [Assembler programming guide](books/crexx_programming_guide/rxas_programming_guide.md)
+- [Plugin architecture](books/crexx_programming_guide/rxpa.md)
+- [crexxsaa host integration](books/crexx_programming_guide/crexxsaa.md)
+- [Compiler exits](books/crexx_programming_guide/compiler_exits.md)
 
-Key Links:
+## Runtime And Internals
 
-- [Wiki Home](https://github.com/adesutherland/CREXX/wiki "CREXX Wiki Home")
-- [Issues](https://github.com/adesutherland/CREXX/issues "CREXX Issues")
-- [Discussions](https://github.com/adesutherland/CREXX/discussions "CREXX Discussions")
-- [Project Kanban](https://github.com/adesutherland/CREXX/projects/1 "CREXX Kanban")
-- And of course the [Github Home](https://github.com/adesutherland/CREXX "CREXX Github Home")
+- [VM specification](books/crexx_vm_spec/about.md)
+- [Instruction characteristics](books/crexx_vm_spec/instruction_characteristics.md)
+- [Platform considerations](books/crexx_vm_spec/platform_considerations.md)
+- [Current architecture notes](ai-context/CREXX_ARCHITECTURE.md)
+- [Assembler internals](ai-context/RXAS_ASSEMBLER.md)
+- [Linker internals](ai-context/RXLINK_LINKER.md)
+- [Interpreter internals](ai-context/RXVM_INTERPRETER.md)
+- [Standard library implementation notes](ai-context/CREXX_LIBS.md)
 
-## Release Based Documentation
+## Contributor References
 
-This is the "As Built" documentation, specific to its release; the current [develop branch](https://adesutherland.github.io/CREXX/) version is available as a website.
+- [Repository instructions](https://github.com/adesutherland/CREXX/blob/develop/AGENTS.md)
+- [Level B authoring guide](ai-context/CREXX_LEVELB_AUTHORING.md)
+- [Debugging workflow](ai-context/CREXX_DEBUGGING.md)
+- [Compiler documentation](https://github.com/adesutherland/CREXX/blob/develop/compiler/docs/compiler_architecture_and_debt.md)
+- [Compiler testing guide](https://github.com/adesutherland/CREXX/blob/develop/compiler/docs/testing.md)
 
-The documentation is stored in the code repository/branch under the [/doc](https://github.com/adesutherland/CREXX/tree/develop/docs) directory as markdown files.
+## Project Direction
 
-# Current Component User Documentation
-
-crexx-DEV2507
-
-## Running a REXX program
-
-Assuming test.rexx is the source program
-
-    rxc test
-    rxas test.rxas
-    rxvm test.rxbin
-
-## Compiler
-
-Handles REXX Level B subset 
-- Assignments / Expressions
-- SAY
-- IF/THEN/ELSE
-- DO/TO/BY
-- ADDRESS 
-
-Type 
-
-    rxc -h 
-
-for command format / options
-
-## Assembler
-
-See [REXX Assembler Specification](assembler).
-
-Type
-
-    rxas -h 
-
-for command format / options
-
-Type 
-
-    rxas -i 
-
-for list of assembler instructions
-
-## Disassembler
-
-Type
-
-    rxdas -h 
-
-for command format / options
-
-## VM/Interpreter
-
-Type
-
-    rxvm -h 
-
-for command format / options
+The [GitHub wiki](https://github.com/adesutherland/CREXX/wiki) is retained for
+project vision, direction, and history. It is intentionally not the technical
+source of truth for the current release.

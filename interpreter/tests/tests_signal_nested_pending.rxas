@@ -1,0 +1,24 @@
+/*
+ * CREXX Interpreter test that signals raised inside a handler stay pending
+ * until the interrupt frame returns.
+ */
+
+.globals=0
+
+main() .locals=0
+    sigcall nested_outer(),"OTHER"
+    sigcall nested_inner(),"FAILURE"
+    sayx "nested:"
+    signal "OTHER","outer"
+    say "main-after"
+    ret 0
+
+nested_outer() .locals=0
+    sayx "outer-before>"
+    signal "FAILURE","inner"
+    sayx "outer-after>"
+    ret
+
+nested_inner() .locals=0
+    sayx "inner>"
+    ret

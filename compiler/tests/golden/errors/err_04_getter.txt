@@ -1,0 +1,4 @@
+Error in err_04_getter.rexx @ 4:5 - #BAD_CONVERSION, "a.bar"
+Error in err_04_getter.rexx @ 4:5 - #ARRAY_DIMS_MISMATCH, "a.bar"
+Error in err_04_getter.rexx @ 4:7 - #BAD_CONVERSION, "bar"
+3 error(s) in source file

@@ -54,6 +54,18 @@ set(CMAKE_CXX_STANDARD 98)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # make sure object libraries work with shared libraries
 
+# Suppress noisy warnings from external dependency when using Clang
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(
+        -Wno-switch-default
+        -Wno-reserved-identifier
+        -Wno-poison-system-directories
+        -Wno-unused-macros
+        -Wno-exit-time-destructors
+        -Wno-format
+    )
+endif()
+
 # use system stdint.h if present, otherwise fallback to src/c99_stdint.h
 ac_check_headers("stdint.h")
 # needed for POSIX file API

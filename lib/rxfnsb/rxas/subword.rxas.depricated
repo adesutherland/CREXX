@@ -4,7 +4,7 @@
  */
           .globals=0
 subword() .locals=12 .expose=rxfnsb.subword
-   .meta "rxfnsb.subword"="b" ".string" subword() "string1 = .string, start = .int" ""
+   .meta "rxfnsb.subword"="b" ".string" subword() "string1 = .string, start = .int"
    copy  r1,a1
    copy  r2,a2         /* word number to find   */
    load  r3,0          /* offset in string      */

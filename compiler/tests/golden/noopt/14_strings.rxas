@@ -1,0 +1,30 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : 14_strings.rexx
+ * BUILT                  : 2026-03-18 11:58:56
+ */
+
+.srcfile="14_strings.rexx"
+.globals=0
+
+main() .locals=1
+   .meta "14_strings.main"="b" ".void" main() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="say \"Hello\" || \"World\""
+   load r0,"World"
+   concat r0,"Hello",r0
+   say r0
+   .src 4:1="say \"Hello\" \"World\""
+   load r0,"World"
+   sconcat r0,"Hello",r0
+   say r0
+   .src 6:1="say \"Hello\"'World'"
+   load r0,"World"
+   concat r0,"Hello",r0
+   say r0
+   .src 6:19=""
+   ret

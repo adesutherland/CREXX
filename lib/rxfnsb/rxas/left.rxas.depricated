@@ -8,7 +8,7 @@
 substr()  .expose=rxfnsb.substr
 
 left()    .locals=10 .expose=rxfnsb.left
-   .meta "rxfnsb.left"="b" ".string" left() "string = .string, length1 = .int, pad = \' \'" ""
+   .meta "rxfnsb.left"="b" ".string" left() "string = .string, length1 = .int, pad = \' \'"
     ieq  r7,a2,0   /* return empty when length = 0 */
     brt  return_empty,r7
     brtpandt havepad,a3,1

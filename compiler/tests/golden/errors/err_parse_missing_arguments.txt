@@ -1,0 +1,2 @@
+Error in err_parse_missing_arguments.rexx @ 4:3 - #MISSING_ARGUMENTS, "PARSE requires arguments", "parse"
+1 error(s) in source file

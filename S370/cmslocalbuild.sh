@@ -30,7 +30,7 @@ docker cp "../assembler" "vm370:/opt/hercules/vm370/io"
 docker cp "../compiler" "vm370:/opt/hercules/vm370/io"
 docker cp "../disassembler" "vm370:/opt/hercules/vm370/io"
 docker cp "../interpreter" "vm370:/opt/hercules/vm370/io"
-docker cp "../machine" "vm370:/opt/hercules/vm370/io"
+docker cp "../binutils" "vm370:/opt/hercules/vm370/io"
 docker cp "../tests" "vm370:/opt/hercules/vm370/io"
 
 # Build

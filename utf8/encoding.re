@@ -6,5 +6,5 @@
 /*!re2c
 letter = L;
 whitespace = (Zs | [\t\v\f])+;
-not_char = [~\^¬];
+not_char = [/~\\^¬];
 */

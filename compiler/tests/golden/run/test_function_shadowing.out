@@ -1,0 +1,5 @@
+Warning in test_function_shadowing.rexx @ 6:5 - #SHADOWING, original definition "rxfnsb.translate" @ 3:1, "translate"
+Warning in test_function_shadowing.rexx @ 9:5 - #EXTERNAL_SHADOW_BYPASS, external procedure "rxfnsb.translate" shadowing local procedure "translate", "\'TRANSLATE\'(\'AAP NOOT MIES\', \' \', \'O\')"
+2 warning(s) in source file
+LOCAL_TRANSLATE: AAP NOOT MIES
+AAP N  T MIES

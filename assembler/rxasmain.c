@@ -1,11 +1,132 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 // REXX Assembler
 // Main Program
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rxvminst.h"
+#include "platform.h"
+#include "rxas.h"
 #include "rxasassm.h"
+#include "../binutils/include/rxdefs.h"
+
+extern const OpInfo op_table[];
+
+static char* operand_name_str(OperandType type) {
+    switch(type) {
+        case OP_ID: return "ID";
+        case OP_REG: return "REG";
+        case OP_FUNC: return "FUNC";
+        case OP_INT: return "INT";
+        case OP_FLOAT: return "FLOAT";
+        case OP_CHAR: return "CHAR";
+        case OP_STRING: return "STRING";
+        case OP_DECIMAL: return "DECIMAL";
+        case OP_BINARY: return "BINARY";
+        case OP_NONE:
+        default:
+            return "NONE";
+    }
+}
+
+static void prt_ops_new() {
+    int i;
+    printf("\n* REXX Assembly Instruction List\n");
+    for (i = 0; op_table[i].mnemonic != NULL; i++) {
+        char buffer[100];
+        OperandType types[3];
+        int num_ops = 0;
+        switch (op_table[i].format) {
+            case FMT_EMPTY: num_ops = 0; break;
+            case FMT_C: types[0] = OP_CHAR; num_ops = 1; break;
+            case FMT_F: types[0] = OP_FLOAT; num_ops = 1; break;
+            case FMT_I: types[0] = OP_INT; num_ops = 1; break;
+            case FMT_I_I: types[0] = OP_INT; types[1] = OP_INT; num_ops = 2; break;
+            case FMT_I_I_I: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_INT; num_ops = 3; break;
+            case FMT_I_I_R: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_I_R: types[0] = OP_INT; types[1] = OP_REG; num_ops = 2; break;
+            case FMT_I_R_R: types[0] = OP_INT; types[1] = OP_REG; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_L: types[0] = OP_ID; num_ops = 1; break;
+            case FMT_L_L_R: types[0] = OP_ID; types[1] = OP_ID; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_L_P_S: types[0] = OP_ID; types[1] = OP_FUNC; types[2] = OP_STRING; num_ops = 3; break;
+            case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; num_ops = 2; break;
+            case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; num_ops = 3; break;
+            case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_L_R_S: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_STRING; num_ops = 3; break;
+            case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; num_ops = 2; break;
+            case FMT_P: types[0] = OP_FUNC; num_ops = 1; break;
+            case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; num_ops = 2; break;
+            case FMT_R: types[0] = OP_REG; num_ops = 1; break;
+            case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; num_ops = 2; break;
+            case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; num_ops = 2; break;
+            case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_R_F: types[0] = OP_REG; types[1] = OP_FLOAT; num_ops = 2; break;
+            case FMT_R_F_I: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_INT; num_ops = 3; break;
+            case FMT_R_F_R: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_R_I: types[0] = OP_REG; types[1] = OP_INT; num_ops = 2; break;
+            case FMT_R_I_I: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_INT; num_ops = 3; break;
+            case FMT_R_I_R: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; num_ops = 2; break;
+            case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; num_ops = 2; break;
+            case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; num_ops = 3; break;
+            case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; num_ops = 3; break;
+            case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; num_ops = 3; break;
+            case FMT_R_R_R: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_R_R_S: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_STRING; num_ops = 3; break;
+            case FMT_R_S: types[0] = OP_REG; types[1] = OP_STRING; num_ops = 2; break;
+            case FMT_R_S_I: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_INT; num_ops = 3; break;
+            case FMT_R_S_R: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_R_S_S: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_STRING; num_ops = 3; break;
+            case FMT_S: types[0] = OP_STRING; num_ops = 1; break;
+            case FMT_S_R: types[0] = OP_STRING; types[1] = OP_REG; num_ops = 2; break;
+            case FMT_S_S: types[0] = OP_STRING; types[1] = OP_STRING; num_ops = 2; break;
+            case FMT_S_S_R: types[0] = OP_STRING; types[1] = OP_STRING; types[2] = OP_REG; num_ops = 3; break;
+        }
+        switch (num_ops) {
+            case 0: snprintf(buffer, 100, "no operand"); break;
+            case 1: snprintf(buffer, 100, "{%s}", operand_name_str(types[0])); break;
+            case 2: snprintf(buffer, 100, "{%s,%s}", operand_name_str(types[0]), operand_name_str(types[1])); break;
+            case 3: snprintf(buffer, 100, "{%s,%s,%s}", operand_name_str(types[0]), operand_name_str(types[1]), operand_name_str(types[2])); break;
+        }
+
+        {
+            char mnemonic[100];
+            int j = 0;
+            while (op_table[i].mnemonic[j] && op_table[i].mnemonic[j] != '_') {
+                mnemonic[j] = (char)tolower((unsigned char)op_table[i].mnemonic[j]);
+                j++;
+            }
+            mnemonic[j] = 0;
+            printf("0x%.4x %-10s %-20s %s\n",
+                   op_table[i].opcode, mnemonic, buffer, op_table[i].description);
+        }
+    }
+    printf("\n");
+}
 
 static void help() {
     char* helpMessage =
@@ -21,34 +142,15 @@ static void help() {
         "  -d              Debug/Verbose Mode\n"
         "  -l location     Working Location (directory)\n"
         "  -o output_file  Binary Output File\n"
-        "  -n              No Optimising\n";
+        "  -n              No Optimising\n"
+        "Notes   :\n"
+        "- source_file : The source file to be assembled; filetype (rxas) is added to the name.\n";
 
     printf("%s",helpMessage);
 }
 
 static void license() {
-    char *message =
-    "cREXX License (MIT)\n"
-    "Copyright (c) 2020-2024 Adrian Sutherland\n\n"
-
-    "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
-    "of this software and associated documentation files (the \"Software\"), to deal\n"
-    "in the Software without restriction, including without limitation the rights\n"
-    "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
-    "copies of the Software, and to permit persons to whom the Software is\n"
-    "furnished to do so, subject to the following conditions:\n\n"
-
-    "The above copyright notice and this permission notice shall be included in all\n"
-    "copies or substantial portions of the Software.\n\n"
-
-    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
-    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
-    "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
-    "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
-    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
-    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
-    "SOFTWARE.\n\n"
-    "See https://github.com/adesutherland/CREXX for project details\n";
+    char *message = CREXX_LICENSE_TEXT;
 
     printf("%s",message);
 }
@@ -59,12 +161,25 @@ static void error_and_exit(int rc, char* message) {
     exit(rc);
 }
 
+#ifdef ENABLE_PARSER_MODE
+int rxas_parser_mode_main(int stdio_mode, int port, const char *file_name, int debug_mode);
+#endif
+
 int main(int argc, char *argv[]) {
     Assembler_Context scanner;
+    char *combined_location = 0;
+    char *exe_path = 0;
     int i;
+#ifdef ENABLE_PARSER_MODE
+    int parser_mode = 0;
+    int stdio_mode = 1;
+    int port = 0;
+#endif
+
+    platform_install_signal_handlers();
 
     /* Load Instruction Database */
-    init_ops();
+    /* init_ops(); - NO LONGER NEEDED */
 
     /* scanner context parameter */
     scanner.debug_mode = 0;
@@ -73,15 +188,33 @@ int main(int argc, char *argv[]) {
     scanner.file_name = 0;
     scanner.output_file_name = 0;
     scanner.location = 0;
+    scanner.quiet = 0;
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
-        if (strlen(argv[i]) > 2) {
+#ifdef ENABLE_PARSER_MODE
+        if (strcmp(argv[i], "--syntaxhighlight") == 0) {
+            parser_mode = 1;
+            continue;
+        } else if (strcmp(argv[i], "--stdio") == 0) {
+            stdio_mode = 1;
+            continue;
+        } else if (strcmp(argv[i], "--port") == 0) {
+            stdio_mode = 0;
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing port after --port");
+            }
+            port = atoi(argv[i]);
+            continue;
+        }
+#endif
+        if (strlen(argv[i]) > 2 && argv[i][1] != '-') {
             error_and_exit(2, "Invalid argument");
         }
         switch (toupper((argv[i][1]))) {
             case '-':
-                break;
+                continue;
 
             case 'O': /* Output File */
                 i++;
@@ -120,7 +253,7 @@ int main(int argc, char *argv[]) {
                 exit(0);
 
             case 'I': /* Instructions */
-                prt_ops();
+                prt_ops_new();
                 exit(0);
 
             case 'N': /* No optimisation */
@@ -136,9 +269,32 @@ int main(int argc, char *argv[]) {
         }
     }
 
+#ifdef ENABLE_PARSER_MODE
+    if (parser_mode) {
+        const char *file_name = NULL;
+        if (i < argc) {
+            file_name = argv[i];
+        }
+        exit(rxas_parser_mode_main(stdio_mode, port, file_name, scanner.debug_mode));
+    }
+#endif
+
     if (i == argc) {
         error_and_exit(2, "Missing input source file");
     }
+
+    /* Add current and executable path to location */
+    exe_path = exepath();
+    if (scanner.location) {
+        combined_location = malloc(strlen(scanner.location) + strlen(exe_path) + 5);
+        sprintf(combined_location, ".;%s;%s", scanner.location, exe_path);
+        scanner.location = combined_location;
+    } else {
+        combined_location = malloc(strlen(exe_path) + 5);
+        sprintf(combined_location, ".;%s", exe_path);
+        scanner.location = combined_location;
+    }
+    free(exe_path);
 
     scanner.file_name = argv[i++];
 
@@ -158,8 +314,8 @@ int main(int argc, char *argv[]) {
     /* Assemble */
     if (rxasmble(&scanner)) exit(-1);
 
-    // Free Instruction Database
-    free_ops();
+    /* Free Instruction Database */
+    /* init_ops() / free_ops() - NO LONGER NEEDED */
 
     if (scanner.traceFile) fclose(scanner.traceFile);
 

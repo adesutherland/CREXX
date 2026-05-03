@@ -1,0 +1,45 @@
+/*
+ * cREXX COMPILER VERSION : crexx-dev-260110
+ * SOURCE                 : 04_literals.rexx
+ * BUILT                  : 2026-03-18 11:58:53
+ */
+
+.srcfile="04_literals.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "04_literals.main"="b" ".void" main() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="a = 123"
+   .meta "04_literals.main.a"="b" ".int" r0
+   load r0,123
+   .src 4:1="b = \"String\""
+   .meta "04_literals.main.b"="b" ".string" r1
+   load r1,"String"
+   .src 5:1="c = 'String'"
+   .meta "04_literals.main.c"="b" ".string" r2
+   load r2,"String"
+   .src 6:1="d = '414243'x"
+   .meta "04_literals.main.d"="b" ".string" r3
+   load r3,"ABC"
+   .src 7:1="e = '1010'b"
+   .meta "04_literals.main.e"="b" ".string" r4
+   load r4,"\n"
+   .src 8:1="say a b c d e"
+   itos r0
+   sconcat r5,r0,r1
+   sconcat r5,r5,r2
+   sconcat r5,r5,r3
+   sconcat r5,r5,r4
+   say r5
+   .src 8:14=""
+   ret
+   .meta "04_literals.main.a"
+   .meta "04_literals.main.b"
+   .meta "04_literals.main.c"
+   .meta "04_literals.main.d"
+   .meta "04_literals.main.e"

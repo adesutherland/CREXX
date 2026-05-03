@@ -544,6 +544,7 @@ long long parse_expression(const char **expr) {
                 (*expr)++;
                 break;
             continue_case:
+                break;
         }
         break_case:;
     }
