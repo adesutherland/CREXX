@@ -5,7 +5,7 @@ compiler-to-bytecode toolchain. Source programs are compiled to cREXX assembler,
 assembled into `rxbin` bytecode, optionally linked into a deployable image, and
 run by the CREXX virtual machine.
 
-Current baseline: `crexx-1.0.0-beta.1`.
+Current baseline: `crexx-1.0.0-beta.2`.
 
 ## What Is Included
 
@@ -62,7 +62,7 @@ cmake-build-debug/bin/rxvm path/to/program.rxbin
 
 ## Documentation
 
-- [Release notes](docs/releases/v1.0.0-beta.1.md) summarize the beta 1 scope,
+- [Release notes](docs/releases/v1.0.0-beta.2.md) summarize the beta 2 scope,
   signing status, and known limitations.
 - [Release documentation](docs/index.md) is the main entry point for current
   as-built user and technical documentation.

@@ -10,7 +10,7 @@ NRX_OBJS	:= $(NRX_SRC:.nrx=.class)
 LATEX_EXE	:= xelatex -output-driver="xdvipdfmx -i dvipdfmx-unsafe.cfg -q -E" -shell-esc
 RAIL_EXE	:= rail
 #RELEASE		:= `java org.netrexx.process.NrVersion`
-RELEASE		:= 1.0.0-beta.1
+RELEASE		:= 1.0.0-beta.2
 DOCNAME         := "cRexx $(RELEASE) Language Reference.pdf"
 
 

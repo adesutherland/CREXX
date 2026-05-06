@@ -32,9 +32,9 @@ Download the `windows-x64` ZIP archive and unblock it before extracting:
 Add the extracted package `bin` directory to your user or system `PATH`, or run
 the tools by their full path.
 
-Windows binaries are not code-signed in beta 1. Windows download warnings and
-SmartScreen prompts are expected. Windows code signing is planned for a later
-beta.
+Prefer the `windows-x64-signed` ZIP asset when it is present on the release.
+The signed package contains Authenticode-signed Windows executables, libraries,
+and native plugin binaries.
 
 ## Linux
 
@@ -57,11 +57,11 @@ Choose the package for your Mac:
 Unpack the ZIP with Finder or with `ditto`:
 
 ```sh
-ditto -x -k CREXX-v1.0.0-beta.1-macos-arm64.zip "$HOME/CREXX"
+ditto -x -k CREXX-v1.0.0-beta.2-macos-arm64.zip "$HOME/CREXX"
 cd "$HOME/CREXX/CREXX-macos-arm64"
 ```
 
-The beta 1 macOS packages are Developer ID signed and notarized during the
+The beta 2 macOS packages are Developer ID signed and notarized during the
 release workflow. You should not need to remove quarantine attributes as a
 normal installation step.
 
