@@ -258,7 +258,7 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
    if \decimal then decstat =  rxpath'bin/rxvm_db_decimal_manual.a'
    
    if verbose>2 then     do
-     call banner
+     call banner nocolor
      say 'INVOCATION OPTIONS'
      say 'Options in effect:'
     if \nocolor then say '  COLOR'
@@ -316,7 +316,7 @@ do i=1 to words(filenames)
       filename = left(filename,dotpos-1)
       /* print the file when verbose ibm style output is requested */
     if verbose>3 then do
-      call printFileToSTDout filename'.rxpp'
+      call printFileToSTDout filename'.rxpp', nocolor
     end
     ''rxpath'/'lpath'/rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose 'verbose
     if verbose then do
@@ -331,7 +331,7 @@ do i=1 to words(filenames)
     if lower(right(filename,5))='.rexx' then filename=substr(filename,1,length(filename)-5)   /* if file has .rexx extension, chop it off */
   /* print the file when verbose ibm style output is requested */
     if verbose>3 then do
-      call printFileToSTDout filename'.rexx'
+      call printFileToSTDout filename'.rexx', nocolor
     end
   compat_flags = ''
   if \hasSourceHeader(filename'.rexx') then do
@@ -378,13 +378,14 @@ do i=1 to words(filenames)
   if compile then do
 /* print the file when verbose ibm style output is requested */
     if verbose>3 then do
-      call printFileToSTDout filename'.rxas'
+      call printFileToSTDout filename'.rxas', nocolor
     end
 
     cleanupFiles = appendWordUnique(cleanupFiles, binfile'.rxas')
     cleanupFiles = appendWordUnique(cleanupFiles, binfile'.rxbin')
     asmcmd = rxpath'bin'dirsep'rxas' optiflag '-o' binfile binfile
     address cmd asmcmd output out error err
+    if RC<>0 then say '[rxas     - Assembly Failed    ' esc||ANSI_BLUE||binfile'.rxas'||esc||ANSI_RESET
     if verbose then do
       if verbose>1 then say esc||ANSI_GREEN||'rxas command    :'   asmcmd
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
@@ -404,7 +405,7 @@ do i=1 to words(filenames)
 
   modules = translate(libs,' ',';')
   
-  if verbose>2 then call banner
+  if verbose>2 then call banner nocolor
 
   if native then do
     linkedOutput = binfile'_linked'
@@ -635,16 +636,25 @@ return 'printed'
 
   
 banner: procedure
+arg nocolor = .string
+rversion = ''
+/* note that for brevity we use an assembler directive to get to the version */
+assembler rxvers rversion
+rvers2 = word(rversion,3)
+
 esc = '1b'x
-say esc'[34m'||'======> RexxLA cREXX compiler release 0.01                          'date() time() esc'[0m'
+if nocolor then do
+  say '======> RexxLA cREXX compiler 'rvers2'            'date() time()
+  end
+else say esc'[34m'||'======> RexxLA cREXX compiler 'rvers2'            'date() time() esc'[0m'
 say;say
 
 formfeed: procedure
 say x2c('0C')
 
 printFileToSTDout: procedure
-arg toread = .string
-call banner
+arg toread = .string, nocolor = .string
+call banner nocolor
 say '  LINENUM' copies('----+',15)
 i=1
 do while lines(toread)

@@ -105,3 +105,4 @@ say a.remove('zzy')
 
 b = .TreeMap()
 say 'the new treemap size is: ' b.size()
+
