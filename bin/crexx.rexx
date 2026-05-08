@@ -334,6 +334,7 @@ do i=1 to words(filenames)
       call printFileToSTDout filename'.rexx', nocolor
     end
   compat_flags = ''
+  /* TODO the next part fixes the name to have a .rexx filename extension */
   if \hasSourceHeader(filename'.rexx') then do
     compat_flags = ' --level levelb --import rxfnsb'
     if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
@@ -345,7 +346,10 @@ do i=1 to words(filenames)
   if binaryRoots <> '' then binaryPath = binaryPath';'binaryRoots
   if binaryPath <> '' then rxc_flags = rxc_flags' -i 'binaryPath
   if importRxas then rxc_flags = rxc_flags' --import-rxas'
-  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags filename
+
+  rxas_filename = chop_suffix(filename) /* temp fix for two-part filename files */
+
+  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags '-o' rxas_filename filename
   if verbose>1 then
     do
       if compile then say esc||ANSI_GREEN'rxc command     :' rxcmd
