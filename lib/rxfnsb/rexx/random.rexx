@@ -24,6 +24,7 @@
 
 /* rexx random */
 options levelb numeric_classic
+import _rxsysb
 
 namespace rxfnsb expose random
 
@@ -35,7 +36,7 @@ if min<0 then do
    return -999999
 end
 if min>max then do
-   call raise "syntax", "40.??","minimum value greater than maximum value ("min","max")"
+  call raise "syntax", "40.??","minimum value greater than maximum value ("min","max")"
   return -9999999
 end
 rx1=0

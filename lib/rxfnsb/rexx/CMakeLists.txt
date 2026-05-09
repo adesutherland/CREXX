@@ -86,6 +86,7 @@ set(BIFS
 		x2b
 		x2c
 		x2d
+		random
 		reradix
 		sequence
 		find
