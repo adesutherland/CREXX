@@ -102,6 +102,34 @@ then calls the same cREXX parser-mode entry point. The committed parser mirror
 and the editor's real `CodeBuffer` version are not advanced. This is intended
 for completion previews and similar "what would this look like?" queries.
 
+## Manual Parser-Mode Testing
+
+The ctest syntax-highlighting fixtures use DSLSH's `parser_tester` tool. The
+test helper launches `rxc` with `-d --syntaxhighlight`, so tests pass the bare
+compiler path:
+
+```sh
+cmake-build-debug/dslsyntax-tools/parser_tester \
+  -q \
+  -p cmake-build-debug/bin/rxc \
+  -s compiler/tests/rexx_src/levelc_tracer.rexx \
+  compiler/tests/highlighting/dump_ast.txt
+```
+
+For a real editor integration such as THE, configure the parser command to run
+`rxc --syntaxhighlight` directly. Add `-d` only when you want parser-mode debug
+logging:
+
+```sh
+/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc --syntaxhighlight
+```
+
+Level C parser-mode support currently covers only the tracer subset documented
+in `compiler/docs/levelc_working_architecture.md`. For manual Level C tests,
+use headerless Classic REXX source for now. `OPTIONS LEVELC` is recognized by
+the pre-scan, but the Level C grammar has not yet parsed `OPTIONS` as a normal
+instruction after that pre-scan.
+
 ## DSLSH Features Used
 
 cREXX parser mode currently uses these DSLSH concepts:

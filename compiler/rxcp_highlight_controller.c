@@ -1555,7 +1555,6 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     context->debug_mode = 0;
     context->stop_after_parse = 1;
     context->optimise = 0;
-    context->level = LEVELB;
     context->disable_exits = root_context ? root_context->disable_exits : (have_doc_info ? doc_info.disable_exits : 0);
     context->location = root_context ? root_context->location : (have_doc_info ? doc_info.document_dir : 0);
 
@@ -1569,14 +1568,19 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
         if (!context->disable_exits) rxcp_init_exits(context);
         if (!context->importable_file_list) context->importable_file_list = rxfl_lst(context);
     }
-    rexbpars(context);
+    if (context->level == LEVELC) {
+        rexcpars(context);
+    } else {
+        rexbpars(context);
+    }
 
     if (!context->ast) {
         rxcp_run_fallback_diagnostics(context);
     } else {
-        rxcp_prepare_source_ast(context);
+        if (context->level == LEVELC) rxcp_levelc_prepare_source_ast(context);
+        else rxcp_prepare_source_ast(context);
         source_tree_sync_diagnostics(context);
-        if (!highlight_has_source_errors(context)) {
+        if (context->level != LEVELC && !highlight_has_source_errors(context)) {
             validate_ast(context);
             source_tree_sync_diagnostics(context);
             source_tree_sync_semantics(context);

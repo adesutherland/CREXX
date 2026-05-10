@@ -201,6 +201,12 @@ void RexxB(void *parser, int token, Token *minor, Context *context);
 void RexxBFree(void *parser, void (*freeProc)(void*));
 void RexxBTrace(FILE *stream, char *zPrefix);
 
+/* Level C Parser */
+void *RexxCAlloc(void *(*mallocProc)(size_t));
+void RexxC(void *parser, int token, Token *minor, Context *context);
+void RexxCFree(void *parser, void (*freeProc)(void*));
+void RexxCTrace(FILE *stream, char *zPrefix);
+
 /* Context Factory */
 Context *cntx_f();
 /* Set Context Buffer */
@@ -210,6 +216,9 @@ void fre_cntx(Context *context);
 
 int rexbscan(Context* s);
 int rexbpars(Context *context);
+int rexcscan(Context* s);
+int rexcpars(Context *context);
+void rxcp_levelc_prepare_source_ast(Context *context);
 int opt_scan(Context* s);
 int opt_pars(Context *context);
 int rxcp_scan_source_header(const char *location, const char *file_name, RexxLevel cli_default_level,

@@ -1388,10 +1388,73 @@ if (ENABLE_PARSER_MODE)
     set_tests_properties(syntaxhighlight_top_level_statements PROPERTIES LABELS "compiler;syntax_highlighting;stage1")
 
     add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_tracer
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_tracer.rexx
+            MUST_MATCH
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=0, len=2, sev=48, text=\"if\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"then\""
+            "Node: type=56 \\(LEXER_FUNCTION_IDENTIFIER\\), pos=[0-9]+, len=6, sev=48, text=\"label:\""
+            "PARSE_TREE_STATEMENT"
+            MUST_NOT_MATCH
+            "SYNTAX_ERROR"
+    )
+    set_tests_properties(syntaxhighlight_levelc_tracer PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_keyword_variables
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_keyword_variables.rexx
+            MUST_MATCH
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=0, len=2, sev=48, text=\"if\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=4, sev=48, text=\"then\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            "PARSE_TREE_EXPR"
+            MUST_NOT_MATCH
+            "SYNTAX_ERROR"
+    )
+    set_tests_properties(syntaxhighlight_levelc_keyword_variables PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_if_else
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_if_else.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=2, sev=48, text=\"if\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"then\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"else\""
+            "PARSE_TREE_STATEMENT"
+            MUST_NOT_MATCH
+            "SYNTAX_ERROR"
+    )
+    set_tests_properties(syntaxhighlight_levelc_if_else PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_labels_literals
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_labels_literals.rexx
+            MUST_MATCH
+            "Node: type=56 \\(LEXER_FUNCTION_IDENTIFIER\\), pos=0, len=6, sev=48, text=\"start:\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=8, sev=48, text=\"\"double\"\""
+            "Node: type=40 \\(LEXER_NUMBER_LITERAL\\), pos=[0-9]+, len=3, sev=48, text=\"123\""
+            MUST_NOT_MATCH
+            "SYNTAX_ERROR"
+    )
+    set_tests_properties(syntaxhighlight_levelc_labels_literals PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_then_boundary
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_then_boundary.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"then\""
+            "SYNTAX_ERROR"
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_then_boundary PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
             syntaxhighlight_block_comment
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_block_comment.rexx
             MUST_MATCH
-            "Node: type=38 \\(LEXER_COMMENT\\), pos=0, len=[0-9]+, sev=48"
+            "Node: type=38 \\(LEXER_COMMENT\\), pos=[0-9]+, len=[0-9]+, sev=48"
             MUST_NOT_MATCH
             "LEXER_OPERATOR_ARITHMETIC"
     )
@@ -1405,6 +1468,28 @@ if (ENABLE_PARSER_MODE)
             "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=1, sev=48, text=\"-\""
     )
 endif()
+
+set(LEVELC_UNSUPPORTED_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/levelc_compile_unsupported.cmake")
+file(GENERATE OUTPUT "${LEVELC_UNSUPPORTED_SCRIPT}" CONTENT
+"execute_process(
+    COMMAND \"$<TARGET_FILE:rxc>\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_unsupported.rexx\"
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+    OUTPUT_VARIABLE out
+    ERROR_VARIABLE err
+    RESULT_VARIABLE res
+)
+set(all \"\${out}\${err}\")
+if(res EQUAL 0)
+  message(FATAL_ERROR \"Level C compile unexpectedly succeeded.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")
+endif()
+if(NOT all MATCHES \"REXX Level A/C/D \\\\(cREXX Classic\\\\) - Not supported yet\")
+  message(FATAL_ERROR \"Missing Level C unsupported diagnostic.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")
+endif()
+")
+add_test(NAME levelc_compile_unsupported
+         COMMAND ${CMAKE_COMMAND} -P "${LEVELC_UNSUPPORTED_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(levelc_compile_unsupported PROPERTIES LABELS "compiler;levelc")
 
 # Bridge Connectivity Test
 add_custom_command(

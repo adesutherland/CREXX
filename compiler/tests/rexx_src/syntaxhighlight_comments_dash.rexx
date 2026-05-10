@@ -1,2 +1,2 @@
-options comments_dash
+options levelb comments_dash
 -- dash line comment
