@@ -175,6 +175,11 @@ These container nodes are the basis for:
 - subtree-aware selection,
 - future scope-aware editor features.
 
+Parser mode only emits a structural container when that source node has its own
+authored span. Empty helper nodes must not fall back to a parent span for DSLSH
+projection, because a zero-content structural node would otherwise become a
+leaf token and overwrite real token highlighting during DSLSH flattening.
+
 ### Leaf token mapping
 
 cREXX starts from compiler lexer categories, then refines those leaves with

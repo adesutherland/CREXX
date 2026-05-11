@@ -60,6 +60,14 @@ static int levelc_promote_clause_keyword(Token *token) {
         token->token_type = TK_IF;
         return CTK_IF;
     }
+    if (levelc_token_is(token, "SELECT")) {
+        token->token_type = TK_SELECT;
+        return CTK_SELECT;
+    }
+    if (levelc_token_is(token, "WHEN")) {
+        token->token_type = TK_WHEN;
+        return CTK_WHEN;
+    }
     if (levelc_token_is(token, "THEN")) {
         token->token_type = TK_THEN;
         return CTK_THEN;
@@ -67,6 +75,18 @@ static int levelc_promote_clause_keyword(Token *token) {
     if (levelc_token_is(token, "ELSE")) {
         token->token_type = TK_ELSE;
         return CTK_ELSE;
+    }
+    if (levelc_token_is(token, "OTHERWISE")) {
+        token->token_type = TK_OTHERWISE;
+        return CTK_OTHERWISE;
+    }
+    if (levelc_token_is(token, "DO")) {
+        token->token_type = TK_DO;
+        return CTK_DO;
+    }
+    if (levelc_token_is(token, "END")) {
+        token->token_type = TK_END;
+        return CTK_END;
     }
     return CTK_VAR_SYMBOL;
 }
@@ -81,6 +101,7 @@ int rexcpars(Context *context) {
     int last_parser_token;
     int clause_start;
     int if_condition;
+    int when_condition;
     int pending_else;
 
     parser = RexxCAlloc(malloc);
@@ -93,6 +114,7 @@ int rexcpars(Context *context) {
     last_parser_token = CTK_EOC;
     clause_start = 1;
     if_condition = 0;
+    when_condition = 0;
     pending_else = 0;
 
     while (1) {
@@ -125,7 +147,8 @@ int rexcpars(Context *context) {
         }
 
         if (token_type == TK_EOC &&
-            (last_parser_token == CTK_THEN || last_parser_token == CTK_ELSE) &&
+            (last_parser_token == CTK_THEN || last_parser_token == CTK_ELSE ||
+             last_parser_token == CTK_OTHERWISE) &&
             peek_token->token_type != TK_EOS) {
             continue;
         }
@@ -149,6 +172,12 @@ int rexcpars(Context *context) {
                 pending_else++;
                 clause_start = 1;
             }
+            else if (when_condition && levelc_token_is(token, "THEN")) {
+                token->token_type = TK_THEN;
+                parser_token = CTK_THEN;
+                when_condition = 0;
+                clause_start = 1;
+            }
             else if (pending_else && levelc_token_is(token, "ELSE") && peek_token->token_type != TK_EQUAL) {
                 token->token_type = TK_ELSE;
                 parser_token = CTK_ELSE;
@@ -161,6 +190,10 @@ int rexcpars(Context *context) {
                     if_condition = 1;
                     clause_start = 0;
                 }
+                else if (parser_token == CTK_WHEN) {
+                    when_condition = 1;
+                    clause_start = 0;
+                }
                 else if (parser_token == CTK_SAY) {
                     clause_start = 0;
                 }
@@ -170,8 +203,11 @@ int rexcpars(Context *context) {
         if (parser_token == CTK_EOC || parser_token == CTK_LABEL) {
             clause_start = 1;
             if_condition = 0;
+            when_condition = 0;
         }
-        else if (parser_token != CTK_THEN && parser_token != CTK_ELSE) {
+        else if (parser_token != CTK_THEN &&
+                 parser_token != CTK_ELSE &&
+                 parser_token != CTK_OTHERWISE) {
             clause_start = 0;
         }
 
@@ -189,5 +225,6 @@ int rexcpars(Context *context) {
     }
 
     RexxCFree(parser, free);
+    if (!context->ast) rxcp_levelc_run_fallback_diagnostics(context);
     return 0;
 }

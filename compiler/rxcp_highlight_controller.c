@@ -779,6 +779,36 @@ static int source_node_span_utf8(Context *context, SourceNode *node, size_t *pos
     return 0;
 }
 
+static int source_node_own_span_utf8(Context *context, SourceNode *node, size_t *pos, size_t *len) {
+    size_t start_offset;
+    size_t byte_length;
+
+    if (!context || !node || !pos || !len) return 0;
+    if (node->source_start && node->source_end &&
+        node->source_start >= context->buff_start &&
+        node->source_end >= node->source_start) {
+        start_offset = (size_t)(node->source_start - context->buff_start);
+        byte_length = (size_t)(node->source_end - node->source_start) + 1;
+        *pos = utf8nlen(context->buff_start, start_offset);
+        *len = utf8nlen(node->source_start, byte_length);
+        return *len > 0;
+    }
+
+    if (node->token_start && node->token_end &&
+        node->token_start->token_string && node->token_end->token_string &&
+        node->token_start->token_string >= context->buff_start &&
+        node->token_end->token_string >= node->token_start->token_string) {
+        start_offset = (size_t)(node->token_start->token_string - context->buff_start);
+        byte_length = (size_t)(node->token_end->token_string - node->token_start->token_string) +
+                      (size_t)node->token_end->length;
+        *pos = utf8nlen(context->buff_start, start_offset);
+        *len = utf8nlen(node->token_start->token_string, byte_length);
+        return *len > 0;
+    }
+
+    return token_span_utf8(context, node->token, pos, len);
+}
+
 static int source_diagnostic_span_utf8(Context *context, SourceDiagnostic *diag, size_t *pos, size_t *len) {
     size_t start_offset;
     size_t byte_length;
@@ -1167,7 +1197,7 @@ static void emit_source_projection(CB_ParseTree *tb,
     while (child) {
         if (child->node_type != RXCP_ERROR && child->node_type != RXCP_WARNING &&
             source_container_type(child, &child_type) &&
-            source_node_span_utf8(context, child, &child_pos, &child_len)) {
+            source_node_own_span_utf8(context, child, &child_pos, &child_len)) {
             emit_tokens_until(tb, cursor, child_pos);
             child_node = cb_create_node(child_type, child_pos, child_len);
             cb_add_child_node(tb, child_node);
@@ -1574,9 +1604,11 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
         rexbpars(context);
     }
 
-    if (!context->ast) {
+    if (!context->ast && !context->diagnostics_list) {
         rxcp_run_fallback_diagnostics(context);
-    } else {
+    }
+
+    if (context->ast) {
         if (context->level == LEVELC) rxcp_levelc_prepare_source_ast(context);
         else rxcp_prepare_source_ast(context);
         source_tree_sync_diagnostics(context);

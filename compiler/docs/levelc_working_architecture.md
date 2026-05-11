@@ -1,7 +1,7 @@
 # Level C Classic REXX Working Architecture
 
 Status: working draft, tracer bullet implementation started
-Last updated: 2026-05-10
+Last updated: 2026-05-11
 
 This document is the working record for the Level C programme. Level C means
 Classic REXX compatibility, using the current cREXX compiler front-end style:
@@ -1061,9 +1061,9 @@ inside new Level C components and parser-mode routing:
 - `compiler/rxcpcscn.re`: neutral Level C scanner. Words scan as variable
   symbols; the scanner does not reserve Classic instruction words.
 - `compiler/rxcpcpar.c`: Level C parser glue and contextual adapter. The
-  current tracer promotes only `SAY`, `IF`, `THEN`, and `ELSE`, preserves
-  keyword-spelled assignment left-hand sides, and treats a same-line label as a
-  clause boundary for the next instruction.
+  current tracer promotes the implemented Level C statement/control keywords,
+  preserves keyword-spelled assignment left-hand sides, and treats a same-line
+  label as a clause boundary for the next instruction.
 - `compiler/rxcpcgmr.y`: small Level C Lemon grammar for the tracer subset.
 - `compiler/rxcpcval.c`: minimal Level C source-tree preparation for DSLSH.
 - `compiler/rxcp_highlight_controller.c`: parser mode now dispatches to the
@@ -1148,6 +1148,108 @@ ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-
 ```
 
 Result: full build passes; all 1039 CTest tests pass.
+
+Diagnostic slice 2 was added on 2026-05-11:
+
+- The Level C adapter promotes `SELECT`, `WHEN`, `OTHERWISE`, and `END` as
+  contextual keywords when they are not assignment left-hand sides.
+- Parser-mode editor configuration now includes `select`, `when`, and
+  `otherwise` in its keyword list so THE/editor lexical coloring agrees with
+  the parser projection for the new SELECT-family syntax.
+- The Level C grammar now parses the first Classic `SELECT` subset:
+  `SELECT`, one or more `WHEN expression THEN instruction` clauses, optional
+  `OTHERWISE`, and matching `END`.
+- The grammar and Level C fallback now emit standard identities for the first
+  SELECT-family recovery cases:
+  - `7.1`: SELECT reaches END without any WHEN clause.
+  - `9.1`: WHEN has no corresponding SELECT.
+  - `9.2`: OTHERWISE has no corresponding SELECT.
+  - `10.1`: END has no corresponding DO or SELECT.
+  - `14.2`: SELECT requires a matching END.
+  - `18.2`: WHEN expression reaches end-of-clause without a matching THEN.
+- Level C fallback diagnostics are owned by the Level C front end, not by the
+  shared fallback module. `rexcpars()` invokes the Level C fallback only when
+  Lemon does not produce an AST. The shared fallback remains the Level B-style
+  last-resort path, and DSLSH only calls it when the parser has not already
+  supplied detached diagnostics.
+
+Regression tests added:
+
+- `syntaxhighlight_levelc_select_when_otherwise`
+- `syntaxhighlight_levelc_select_do_otherwise`
+- `syntaxhighlight_levelc_select_do_otherwise_upper`
+- `syntaxhighlight_levelc_do_keyword_variables`
+- `syntaxhighlight_levelc_select_keyword_variables`
+- `syntaxhighlight_levelc_select_missing_when`
+- `syntaxhighlight_levelc_select_missing_end`
+- `syntaxhighlight_levelc_loose_when`
+- `syntaxhighlight_levelc_loose_otherwise`
+- `syntaxhighlight_levelc_loose_end`
+- `syntaxhighlight_levelc_when_missing_then`
+
+Focused verification for the SELECT slice:
+
+```sh
+cmake -S /Users/adrian/CLionProjects/CREXX -B /Users/adrian/CLionProjects/CREXX/cmake-build-release
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target rxc -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release -R 'syntaxhighlight_levelc|levelc_compile_unsupported' --output-on-failure
+```
+
+Result: all 18 Level C syntax-highlighting and unsupported-compile tests pass.
+
+Full release verification after the SELECT slice:
+
+```sh
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target all -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-on-failure
+```
+
+Result: full build passes; all 1047 CTest tests pass.
+
+SELECT/DO highlighter correction on 2026-05-11:
+
+- DSLSH `parser_tester` debug was used against the classic shape:
+  `SELECT`, `WHEN condition THEN DO`, body, `END`, `OTHERWISE`, `END`.
+- Before the correction, the parser projected `OTHERWISE` as a keyword but with
+  error severity because the inner simple `DO ... END` was not yet accepted by
+  the Level C tracer grammar. In THE this can render as not-blue/diagnostic
+  coloring even though a keyword leaf exists.
+- The Level C adapter now promotes clause-leading `DO` as a keyword only when
+  it is not an assignment left-hand side.
+- The Level C grammar now accepts a simple `DO`, end-of-clause, nested
+  instruction list, and matching `END` as a grouping instruction. This is still
+  syntax-highlighter support only; repetitive `DO` options and DO validation
+  remain later slices.
+- New fixtures keep the no-reserved-word rule in view: `do = 1` still
+  highlights `do` as an identifier, while `THEN DO` highlights `DO` as a
+  keyword.
+
+Regina compatibility probe for the corrected fixtures:
+
+```sh
+rexx compiler/tests/rexx_src/levelc_select_do_otherwise.rexx
+rexx compiler/tests/rexx_src/levelc_select_do_otherwise_upper.rexx
+```
+
+Result: both run successfully and print `fallback`.
+
+Focused verification for the SELECT/DO correction:
+
+```sh
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target rxc -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release -R 'syntaxhighlight_levelc|levelc_compile_unsupported|highlight_editor_diagnostics|highlight_cache' --output-on-failure
+```
+
+Result: all 23 focused Level C/highlighting tests pass.
+
+Full release verification after the SELECT/DO correction:
+
+```sh
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target all -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-on-failure
+```
+
+Result: full build passes; all 1050 CTest tests pass.
 
 Manual DSLSH/THE testing:
 

@@ -266,7 +266,7 @@ int rxc_parser_mode_main(int stdio_mode, int port, const char *file_name, int de
 
     const char *crexx_config = 
         "[.rexx]\n"
-        "keywords=say,if,then,else,do,end,procedure,expose,return,exit,pull,parse,arg\n"
+        "keywords=say,if,then,else,select,when,otherwise,do,end,procedure,expose,return,exit,pull,parse,arg\n"
         "operators=+,-,*,/,=,<,>,(,),{,},,,;\n"
         "line_comment=--\n"
         "block_start=/*\n"
