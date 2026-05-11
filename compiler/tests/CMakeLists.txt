@@ -1552,13 +1552,127 @@ if (ENABLE_PARSER_MODE)
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_do_keyword_variables.rexx
             MUST_MATCH
             "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=0, len=2, sev=48, text=\"do\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=2, sev=48, text=\"to\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=2, sev=48, text=\"by\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=3, sev=48, text=\"for\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=5, sev=48, text=\"while\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=5, sev=48, text=\"until\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=7, sev=48, text=\"forever\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=5, sev=48, text=\"leave\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=7, sev=48, text=\"iterate\""
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
-            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=2, sev=48, text=\"do\""
             MUST_NOT_MATCH
             "RXC-LC-"
             "PARSE_FAILURE"
     )
     set_tests_properties(syntaxhighlight_levelc_do_keyword_variables PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_do_control
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_do_control.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=2, sev=48, text=\"do\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=2, sev=48, text=\"to\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=2, sev=48, text=\"by\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"for\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"end\""
+            MUST_NOT_MATCH
+            "RXC-LC-"
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_do_control PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_do_conditions_leave
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_do_conditions_leave.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"while\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"until\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=7, sev=48, text=\"forever\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"leave\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=7, sev=48, text=\"iterate\""
+            MUST_NOT_MATCH
+            "RXC-LC-"
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_do_conditions_leave PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_do_end_bad_symbol
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_do_end_bad_symbol.rexx
+            MUST_MATCH
+            "RXC-LC-10\\.2 linenumber=\"1\" token=\"j\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=1, sev=51, text=\"j\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_do_end_bad_symbol PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_do_end_uncontrolled_symbol
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_do_end_uncontrolled_symbol.rexx
+            MUST_MATCH
+            "RXC-LC-10\\.3 linenumber=\"1\" token=\"i\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=1, sev=51, text=\"i\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_do_end_uncontrolled_symbol PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_select_end_symbol
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_select_end_symbol.rexx
+            MUST_MATCH
+            "RXC-LC-10\\.4 linenumber=\"1\" token=\"i\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=1, sev=51, text=\"i\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_select_end_symbol PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_leave_outside_loop
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_leave_outside_loop.rexx
+            MUST_MATCH
+            "RXC-LC-28\\.1"
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=0, len=5, sev=51, text=\"leave\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_leave_outside_loop PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_iterate_bad_target
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_iterate_bad_target.rexx
+            MUST_MATCH
+            "RXC-LC-28\\.4 token=\"k\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=1, sev=51, text=\"k\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_iterate_bad_target PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_do_forever_bad_tail
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_do_forever_bad_tail.rexx
+            MUST_MATCH
+            "RXC-LC-25\\.16 keywords=\"WHILE UNTIL\" token=\"to\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=2, sev=51, text=\"to\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_do_forever_bad_tail PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_do_invalid_initial_to
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_do_invalid_initial_to.rexx
+            MUST_MATCH
+            "RXC-LC-27\\.1 token=\"to\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=2, sev=51, text=\"to\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_do_invalid_initial_to PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
     add_crexx_syntax_highlight_test(
             syntaxhighlight_levelc_select_keyword_variables

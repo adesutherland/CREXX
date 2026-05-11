@@ -1260,6 +1260,95 @@ Manual DSLSH/THE testing:
 - Use headerless Classic REXX source for Level C manual tests until the Level C
   grammar parses `OPTIONS` as an ordinary instruction after the pre-scan.
 
+Level C DO/END control slice on 2026-05-11:
+
+- The Level C token adapter now recognizes the Classic DO-specification words
+  `TO`, `BY`, `FOR`, `WHILE`, `UNTIL`, and `FOREVER` only while scanning a
+  `DO` header. Clause-leading `LEAVE` and `ITERATE` are recognized as
+  instructions. Assignment lookahead still wins, so forms such as `to = 1`,
+  `forever = 7`, `leave = 8`, and `do to = 1 to 2` remain variables/control
+  variables rather than reserved words.
+- Regina confirms that `DO TO` is not a counted-loop expression using variable
+  `TO`; it is standard error `27.1`. The adapter therefore promotes
+  `TO`/`BY`/`FOR` in the DO header unless assignment lookahead identifies the
+  word as the control variable. Once a `WHILE` or `UNTIL` condition starts,
+  subsequent words are left as expression variables for the no-reserved-words
+  rule.
+- The Level C grammar now accepts these tracer/highlighter forms:
+  - `DO` simple grouping.
+  - `DO expression`.
+  - `DO symbol = expression [TO expression] [BY expression] [FOR expression]`.
+  - `DO WHILE expression` and `DO UNTIL expression`.
+  - `DO repetition WHILE/UNTIL expression`.
+  - `DO FOREVER`, optionally followed by `WHILE` or `UNTIL`.
+  - `END [symbol]`.
+  - `LEAVE [symbol]` and `ITERATE [symbol]`.
+- Validation remains Level C-only and currently runs as a structural token scan
+  after the Level C AST is projected. It emits standard identities for:
+  - `10.2`: controlled `DO` ended with the wrong symbol.
+  - `10.3`: un-controlled `DO` ended with a symbol.
+  - `10.4`: `SELECT` ended with a symbol.
+  - `25.16`: `FOREVER` followed by something other than `WHILE`, `UNTIL`, or
+    end-of-clause.
+  - `28.1`/`28.2`: `LEAVE`/`ITERATE` outside a repetitive `DO`.
+  - `28.3`/`28.4`: named `LEAVE`/`ITERATE` not matching a current repetitive
+    DO control variable.
+- The validator intentionally checks repetitive loops rather than every
+  grouping `DO`, so `LEAVE` inside plain `DO ... END` is rejected until an
+  enclosing repetitive loop exists.
+- Runtime checks such as whole-number repetition counts, logical values for
+  `WHILE`/`UNTIL`, and numeric `TO`/`BY`/`FOR` values are recorded for later
+  validation/lowering slices. The first milestone still stops at
+  syntax-highlighting and structural diagnostics.
+
+Regina compatibility probes for the DO slice:
+
+```sh
+rexx compiler/tests/rexx_src/levelc_do_control.rexx
+rexx compiler/tests/rexx_src/levelc_do_conditions_leave.rexx
+```
+
+These fixtures are intended to run under Regina and provide an external sanity
+check for the accepted Classic REXX syntax while the cREXX Level C path still
+stops at parsing/highlighting.
+
+Result: `levelc_do_control.rexx` prints `1`, `2`, `3`;
+`levelc_do_conditions_leave.rexx` prints `1`. Regina also rejects
+`DO TO` with standard error `27.1`, matching
+`syntaxhighlight_levelc_do_invalid_initial_to`.
+
+Regression tests added for the DO slice:
+
+- `syntaxhighlight_levelc_do_control`
+- `syntaxhighlight_levelc_do_conditions_leave`
+- `syntaxhighlight_levelc_do_end_bad_symbol`
+- `syntaxhighlight_levelc_do_end_uncontrolled_symbol`
+- `syntaxhighlight_levelc_select_end_symbol`
+- `syntaxhighlight_levelc_leave_outside_loop`
+- `syntaxhighlight_levelc_iterate_bad_target`
+- `syntaxhighlight_levelc_do_forever_bad_tail`
+- `syntaxhighlight_levelc_do_invalid_initial_to`
+- expanded `syntaxhighlight_levelc_do_keyword_variables`
+
+Focused verification for the DO slice:
+
+```sh
+cmake -S /Users/adrian/CLionProjects/CREXX -B /Users/adrian/CLionProjects/CREXX/cmake-build-release
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target rxc parser_tester -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release -R 'syntaxhighlight_levelc|levelc_compile_unsupported|highlight_editor_diagnostics|highlight_cache' --output-on-failure
+```
+
+Result: all 32 focused Level C/highlighting tests pass.
+
+Full release verification after the DO slice:
+
+```sh
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target all -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-on-failure
+```
+
+Result: full build passes; all 1059 CTest tests pass.
+
 The remaining first implementation sequence is:
 
 1. Expand the Level C scanner toward full ANSI token categories and

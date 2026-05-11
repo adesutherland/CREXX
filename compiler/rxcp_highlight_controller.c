@@ -1073,6 +1073,8 @@ static int source_container_type(SourceNode *node, CB_NodeType *type) {
         case EXIT:
         case EXIT_EXTENDED:
         case IMPLICIT_CMD:
+        case ITERATE:
+        case LEAVE:
         case SAY:
         case PULL:
         case PARSE:

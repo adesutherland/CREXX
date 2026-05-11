@@ -29,4 +29,5 @@ void rxcp_levelc_prepare_source_ast(Context *context) {
 
     ast_wlkr(context->ast, source_location_walker, (void *)context);
     source_tree_build(context, context->ast);
+    rxcp_levelc_validate_control_diagnostics(context);
 }

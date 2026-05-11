@@ -139,10 +139,95 @@ static ASTNode *levelc_unexpected_keyword(Context *context,
     if (statement) add_ast(block, statement);
     return block;
 }
+
+static ASTNode *levelc_end_clause_node(Context *context, Token *end_token, Token *symbol_token) {
+    ASTNode *node;
+
+    node = ast_f(context, TOKEN, end_token);
+    if (symbol_token) add_ast(node, ast_f(context, VAR_SYMBOL, symbol_token));
+    return node;
+}
+
+static Token *levelc_end_clause_token(ASTNode *node) {
+    return node ? node->token : 0;
+}
+
+static ASTNode *levelc_repeat_count(Context *context, ASTNode *expression) {
+    ASTNode *repeat;
+    ASTNode *count;
+
+    repeat = ast_ft(context, REPEAT);
+    count = ast_ft(context, FOR);
+    add_ast(count, expression);
+    add_ast(repeat, count);
+    return repeat;
+}
+
+static ASTNode *levelc_repeat_assignment(Context *context,
+                                         Token *assign_token,
+                                         Token *target_token,
+                                         ASTNode *initial_expression,
+                                         ASTNode *items) {
+    ASTNode *repeat;
+    ASTNode *assign;
+    ASTNode *target;
+
+    repeat = ast_ft(context, REPEAT);
+    assign = ast_f(context, ASSIGN, assign_token);
+    target = ast_f(context, VAR_TARGET, target_token);
+    add_ast(assign, target);
+    add_ast(assign, initial_expression);
+    add_ast(repeat, assign);
+    if (items) add_ast(repeat, items);
+    return repeat;
+}
+
+static ASTNode *levelc_condition_node(Context *context,
+                                      NodeType node_type,
+                                      Token *token,
+                                      ASTNode *expression) {
+    ASTNode *node;
+
+    node = ast_f(context, node_type, token);
+    add_ast(node, expression);
+    return node;
+}
+
+static ASTNode *levelc_forever_node(Context *context, Token *token) {
+    return ast_f(context, REPEAT, token);
+}
+
+static ASTNode *levelc_forever_bad_tail(Context *context,
+                                        Token *forever_token,
+                                        Token *bad_token,
+                                        ASTNode *tail_expression) {
+    ASTNode *node;
+    char *found;
+
+    node = ast_f(context, REPEAT, forever_token);
+    found = levelc_diag_token_text(bad_token);
+    add_ast(node, rxcp_levelc_ast_error_insert2(context, "25.16", bad_token,
+                                                "keywords", "WHILE UNTIL",
+                                                "token", found));
+    if (tail_expression) add_ast(node, tail_expression);
+    free(found);
+    return node;
+}
+
+static ASTNode *levelc_do_bad_keyword(Context *context,
+                                      Token *bad_token,
+                                      ASTNode *tail_expression) {
+    ASTNode *node;
+
+    node = rxcp_levelc_ast_error_token(context, "27.1", bad_token);
+    if (tail_expression) add_ast(node, tail_expression);
+    return node;
+}
 }
 
 %token CTK_UNKNOWN CTK_BADCOMMENT CTK_EOS CTK_EOC CTK_VAR_SYMBOL CTK_LABEL CTK_INTEGER CTK_STRING.
 %token CTK_EQUAL CTK_SAY CTK_IF CTK_THEN CTK_ELSE CTK_SELECT CTK_WHEN CTK_OTHERWISE CTK_DO CTK_END.
+%token CTK_TO CTK_BY CTK_FOR CTK_WHILE CTK_UNTIL CTK_FOREVER CTK_LEAVE CTK_ITERATE.
 
 %nonassoc CTK_IF.
 %nonassoc CTK_SELECT.
@@ -200,6 +285,11 @@ top_instruction(I) ::= CTK_END(T) CTK_EOC.
     I = rxcp_levelc_ast_error(context, "10.1", T);
 }
 
+top_instruction(I) ::= CTK_END(T) CTK_VAR_SYMBOL CTK_EOC.
+{
+    I = rxcp_levelc_ast_error(context, "10.1", T);
+}
+
 instruction(I) ::= simple_instruction(S).
 {
     I = S;
@@ -240,6 +330,21 @@ instruction(I) ::= unexpected_otherwise(O).
     I = O;
 }
 
+instruction(I) ::= CTK_TO(T).
+{
+    I = rxcp_levelc_ast_error_token(context, "27.1", T);
+}
+
+instruction(I) ::= CTK_BY(T).
+{
+    I = rxcp_levelc_ast_error_token(context, "27.1", T);
+}
+
+instruction(I) ::= CTK_FOR(T).
+{
+    I = rxcp_levelc_ast_error_token(context, "27.1", T);
+}
+
 instruction(E) ::= CTK_BADCOMMENT(T).
 {
     E = rxcp_levelc_ast_error(context, "6.1", T);
@@ -258,6 +363,16 @@ simple_instruction(S) ::= say_instruction(I).
 simple_instruction(S) ::= assignment(A).
 {
     S = A;
+}
+
+simple_instruction(S) ::= leave_instruction(L).
+{
+    S = L;
+}
+
+simple_instruction(S) ::= iterate_instruction(I).
+{
+    S = I;
 }
 
 say_instruction(S) ::= CTK_SAY(T) expression(E).
@@ -316,18 +431,23 @@ then_instruction(I) ::= instruction(S).
     I = S;
 }
 
-select_instruction(S) ::= CTK_SELECT(T) CTK_EOC select_body(B) CTK_END.
+then_instruction(I) ::= end_clause(E).
+{
+    I = rxcp_levelc_ast_error(context, "10.5", levelc_end_clause_token(E));
+}
+
+select_instruction(S) ::= CTK_SELECT(T) CTK_EOC select_body(B) end_clause.
 {
     S = ast_f(context, SELECT, T);
     add_ast(S, B);
 }
 
-select_instruction(S) ::= CTK_SELECT(T) CTK_EOC CTK_END(E).
+select_instruction(S) ::= CTK_SELECT(T) CTK_EOC end_clause(E).
 {
-    S = levelc_select_missing_when(context, T, E);
+    S = levelc_select_missing_when(context, T, levelc_end_clause_token(E));
 }
 
-select_instruction(S) ::= CTK_SELECT(T) CTK_EOC CTK_OTHERWISE(O) CTK_EOC select_inner_list(L) CTK_END.
+select_instruction(S) ::= CTK_SELECT(T) CTK_EOC CTK_OTHERWISE(O) CTK_EOC select_inner_list(L) end_clause.
 {
     ASTNode *other;
 
@@ -337,7 +457,7 @@ select_instruction(S) ::= CTK_SELECT(T) CTK_EOC CTK_OTHERWISE(O) CTK_EOC select_
     add_ast(S, other);
 }
 
-select_instruction(S) ::= CTK_SELECT(T) CTK_EOC CTK_OTHERWISE(O) recovery_instruction(I) CTK_EOC select_inner_list(L) CTK_END.
+select_instruction(S) ::= CTK_SELECT(T) CTK_EOC CTK_OTHERWISE(O) recovery_instruction(I) CTK_EOC select_inner_list(L) end_clause.
 {
     ASTNode *other;
 
@@ -484,6 +604,11 @@ else_clause(I) ::= CTK_ELSE instruction(S).
     I = S;
 }
 
+else_clause(I) ::= CTK_ELSE end_clause(E).
+{
+    I = rxcp_levelc_ast_error(context, "10.6", levelc_end_clause_token(E));
+}
+
 else_clause(I) ::= CTK_ELSE(T).
 {
     I = rxcp_levelc_ast_error(context, "14.4", T);
@@ -504,10 +629,181 @@ recovery_instruction(I) ::= do_instruction(D).
     I = D;
 }
 
-do_instruction(D) ::= CTK_DO(T) CTK_EOC select_inner_list(L) CTK_END.
+do_instruction(D) ::= CTK_DO(T) do_header(H) CTK_EOC select_inner_list(L) end_clause.
 {
     D = ast_f(context, DO, T);
+    if (H) add_ast(D, H);
     add_ast(D, L);
+}
+
+do_header(H) ::= .
+{
+    H = 0;
+}
+
+do_header(H) ::= do_repetition(R).
+{
+    H = R;
+}
+
+do_header(H) ::= do_condition(C).
+{
+    H = C;
+}
+
+do_header(H) ::= do_invalid_keyword(K).
+{
+    H = levelc_do_bad_keyword(context, K ? K->token : 0, 0);
+}
+
+do_header(H) ::= do_invalid_keyword(K) expression(E).
+{
+    H = levelc_do_bad_keyword(context, K ? K->token : 0, E);
+}
+
+do_header(H) ::= do_repetition(R) do_condition(C).
+{
+    H = R;
+    add_sbtr(H, C);
+}
+
+do_header(H) ::= CTK_FOREVER(T).
+{
+    H = levelc_forever_node(context, T);
+}
+
+do_header(H) ::= CTK_FOREVER(T) do_condition(C).
+{
+    H = levelc_forever_node(context, T);
+    add_sbtr(H, C);
+}
+
+do_header(H) ::= CTK_FOREVER(T) do_forever_invalid(B).
+{
+    H = levelc_forever_bad_tail(context, T, B ? B->token : T, 0);
+}
+
+do_header(H) ::= CTK_FOREVER(T) do_forever_invalid(B) expression(E).
+{
+    H = levelc_forever_bad_tail(context, T, B ? B->token : T, E);
+}
+
+do_repetition(R) ::= expression(E).
+{
+    R = levelc_repeat_count(context, E);
+}
+
+do_repetition(R) ::= CTK_VAR_SYMBOL(V) CTK_EQUAL(T) expression(E).
+{
+    R = levelc_repeat_assignment(context, T, V, E, 0);
+}
+
+do_repetition(R) ::= CTK_VAR_SYMBOL(V) CTK_EQUAL(T) expression(E) do_control_list(L).
+{
+    R = levelc_repeat_assignment(context, T, V, E, L);
+}
+
+do_control_list(L) ::= do_control_item(I).
+{
+    L = I;
+}
+
+do_control_list(L) ::= do_control_list(L0) do_control_item(I).
+{
+    L = L0;
+    add_sbtr(L, I);
+}
+
+do_control_item(I) ::= CTK_TO(T) expression(E).
+{
+    I = levelc_condition_node(context, TO, T, E);
+}
+
+do_control_item(I) ::= CTK_BY(T) expression(E).
+{
+    I = levelc_condition_node(context, BY, T, E);
+}
+
+do_control_item(I) ::= CTK_FOR(T) expression(E).
+{
+    I = levelc_condition_node(context, FOR, T, E);
+}
+
+do_condition(C) ::= CTK_WHILE(T) expression(E).
+{
+    C = levelc_condition_node(context, WHILE, T, E);
+}
+
+do_condition(C) ::= CTK_UNTIL(T) expression(E).
+{
+    C = levelc_condition_node(context, UNTIL, T, E);
+}
+
+do_forever_invalid(B) ::= CTK_TO(T).
+{
+    B = ast_f(context, TOKEN, T);
+}
+
+do_forever_invalid(B) ::= CTK_BY(T).
+{
+    B = ast_f(context, TOKEN, T);
+}
+
+do_forever_invalid(B) ::= CTK_FOR(T).
+{
+    B = ast_f(context, TOKEN, T);
+}
+
+do_forever_invalid(B) ::= CTK_VAR_SYMBOL(T).
+{
+    B = ast_f(context, TOKEN, T);
+}
+
+do_invalid_keyword(K) ::= CTK_TO(T).
+{
+    K = ast_f(context, TOKEN, T);
+}
+
+do_invalid_keyword(K) ::= CTK_BY(T).
+{
+    K = ast_f(context, TOKEN, T);
+}
+
+do_invalid_keyword(K) ::= CTK_FOR(T).
+{
+    K = ast_f(context, TOKEN, T);
+}
+
+end_clause(E) ::= CTK_END(T).
+{
+    E = levelc_end_clause_node(context, T, 0);
+}
+
+end_clause(E) ::= CTK_END(T) CTK_VAR_SYMBOL(S).
+{
+    E = levelc_end_clause_node(context, T, S);
+}
+
+leave_instruction(L) ::= CTK_LEAVE(T).
+{
+    L = ast_f(context, LEAVE, T);
+}
+
+leave_instruction(L) ::= CTK_LEAVE(T) CTK_VAR_SYMBOL(S).
+{
+    L = ast_f(context, LEAVE, T);
+    add_ast(L, ast_f(context, VAR_SYMBOL, S));
+}
+
+iterate_instruction(I) ::= CTK_ITERATE(T).
+{
+    I = ast_f(context, ITERATE, T);
+}
+
+iterate_instruction(I) ::= CTK_ITERATE(T) CTK_VAR_SYMBOL(S).
+{
+    I = ast_f(context, ITERATE, T);
+    add_ast(I, ast_f(context, VAR_SYMBOL, S));
 }
 
 unexpected_then(E) ::= CTK_THEN(T) recovery_instruction(S).

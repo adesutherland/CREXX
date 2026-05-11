@@ -88,6 +88,42 @@ static int levelc_promote_clause_keyword(Token *token) {
         token->token_type = TK_END;
         return CTK_END;
     }
+    if (levelc_token_is(token, "LEAVE")) {
+        token->token_type = TK_LEAVE;
+        return CTK_LEAVE;
+    }
+    if (levelc_token_is(token, "ITERATE")) {
+        token->token_type = TK_ITERATE;
+        return CTK_ITERATE;
+    }
+    return CTK_VAR_SYMBOL;
+}
+
+static int levelc_promote_do_keyword(Token *token, int first_header_token) {
+    if (levelc_token_is(token, "TO")) {
+        token->token_type = TK_TO;
+        return CTK_TO;
+    }
+    if (levelc_token_is(token, "BY")) {
+        token->token_type = TK_BY;
+        return CTK_BY;
+    }
+    if (levelc_token_is(token, "FOR")) {
+        token->token_type = TK_FOR;
+        return CTK_FOR;
+    }
+    if (levelc_token_is(token, "WHILE")) {
+        token->token_type = TK_WHILE;
+        return CTK_WHILE;
+    }
+    if (levelc_token_is(token, "UNTIL")) {
+        token->token_type = TK_UNTIL;
+        return CTK_UNTIL;
+    }
+    if (first_header_token && levelc_token_is(token, "FOREVER")) {
+        token->token_type = TK_FOREVER;
+        return CTK_FOREVER;
+    }
     return CTK_VAR_SYMBOL;
 }
 
@@ -103,6 +139,9 @@ int rexcpars(Context *context) {
     int if_condition;
     int when_condition;
     int pending_else;
+    int do_header;
+    int do_header_first;
+    int do_condition_expr;
 
     parser = RexxCAlloc(malloc);
 #ifndef NDEBUG
@@ -116,6 +155,9 @@ int rexcpars(Context *context) {
     if_condition = 0;
     when_condition = 0;
     pending_else = 0;
+    do_header = 0;
+    do_header_first = 0;
+    do_condition_expr = 0;
 
     while (1) {
         token = peek_token;
@@ -184,6 +226,9 @@ int rexcpars(Context *context) {
                 pending_else--;
                 clause_start = 1;
             }
+            else if (do_header && !do_condition_expr && peek_token->token_type != TK_EQUAL) {
+                parser_token = levelc_promote_do_keyword(token, do_header_first);
+            }
             else if (clause_start && peek_token->token_type != TK_EQUAL) {
                 parser_token = levelc_promote_clause_keyword(token);
                 if (parser_token == CTK_IF) {
@@ -204,11 +249,26 @@ int rexcpars(Context *context) {
             clause_start = 1;
             if_condition = 0;
             when_condition = 0;
+            do_header = 0;
+            do_header_first = 0;
+            do_condition_expr = 0;
         }
         else if (parser_token != CTK_THEN &&
                  parser_token != CTK_ELSE &&
                  parser_token != CTK_OTHERWISE) {
             clause_start = 0;
+        }
+
+        if (parser_token == CTK_DO) {
+            do_header = 1;
+            do_header_first = 1;
+            do_condition_expr = 0;
+        }
+        else if (parser_token == CTK_WHILE || parser_token == CTK_UNTIL) {
+            do_condition_expr = 1;
+        }
+        else if (do_header && parser_token != CTK_EOC) {
+            do_header_first = 0;
         }
 
         if (parser_token != CTK_EOC && last_parser_token == CTK_EOC) {

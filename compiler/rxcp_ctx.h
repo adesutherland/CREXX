@@ -256,6 +256,7 @@ ASTNode *rxcp_levelc_add_error2(ASTNode *node,
                                 const char *insert_name2,
                                 const char *insert_value2);
 int rxcp_levelc_run_fallback_diagnostics(Context *context);
+int rxcp_levelc_validate_control_diagnostics(Context *context);
 int opt_scan(Context* s);
 int opt_pars(Context *context);
 int rxcp_scan_source_header(const char *location, const char *file_name, RexxLevel cli_default_level,

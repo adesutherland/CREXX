@@ -17,6 +17,7 @@
  * Level C Classic REXX diagnostic helpers.
  */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +32,8 @@ typedef enum {
 typedef struct {
     LevelCFallbackFrameType type;
     Token *token;
+    Token *control;
+    int repetitive;
 } LevelCFallbackFrame;
 
 static char *levelc_escape_diag_value(const char *value) {
@@ -304,6 +307,150 @@ static void levelc_append_missing_then(Context *context,
     free(message);
 }
 
+static void levelc_append_line_token(Context *context,
+                                     Token *anchor,
+                                     const char *standard_code,
+                                     Token *line_token,
+                                     Token *found_token) {
+    char *line;
+    char *token_text;
+    char *message;
+
+    line = levelc_fallback_line_text(line_token);
+    token_text = levelc_fallback_token_text(found_token);
+    message = rxcp_levelc_diag_format2(standard_code,
+                                       "linenumber", line,
+                                       "token", token_text);
+    levelc_append_detached_diagnostic(context, anchor, message);
+    free(line);
+    free(token_text);
+    free(message);
+}
+
+static void levelc_append_keywords_token(Context *context,
+                                         Token *anchor,
+                                         const char *standard_code,
+                                         const char *keywords,
+                                         Token *found_token) {
+    char *token_text;
+    char *message;
+
+    token_text = levelc_fallback_token_text(found_token);
+    message = rxcp_levelc_diag_format2(standard_code,
+                                       "keywords", keywords,
+                                       "token", token_text);
+    levelc_append_detached_diagnostic(context, anchor, message);
+    free(token_text);
+    free(message);
+}
+
+static int levelc_token_is_boundary(Token *token) {
+    if (!token) return 1;
+    return token->token_type == TK_EOC ||
+           token->token_type == TK_EOL ||
+           token->token_type == TK_EOS;
+}
+
+static Token *levelc_next_clause_token(Token *token) {
+    Token *next;
+
+    if (!token) return 0;
+    next = token->token_next;
+    if (levelc_token_is_boundary(next)) return 0;
+    return next;
+}
+
+static int levelc_token_text_equals(Token *left, Token *right) {
+    int i;
+
+    if (!left || !right || left->length != right->length) return 0;
+    if (!left->token_string || !right->token_string) return 0;
+    for (i = 0; i < left->length; i++) {
+        if (toupper((unsigned char)left->token_string[i]) !=
+            toupper((unsigned char)right->token_string[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void levelc_scan_do_header(Token *do_token,
+                                  Token **control,
+                                  int *repetitive,
+                                  Token **bad_forever_token) {
+    Token *first;
+    Token *second;
+
+    if (control) *control = 0;
+    if (repetitive) *repetitive = 0;
+    if (bad_forever_token) *bad_forever_token = 0;
+    first = levelc_next_clause_token(do_token);
+    if (!first) return;
+
+    if (repetitive) *repetitive = 1;
+    if (first->token_type == TK_FOREVER) {
+        second = levelc_next_clause_token(first);
+        if (second &&
+            second->token_type != TK_WHILE &&
+            second->token_type != TK_UNTIL &&
+            bad_forever_token) {
+            *bad_forever_token = second;
+        }
+        return;
+    }
+
+    if (first->token_type == TK_VAR_SYMBOL) {
+        second = levelc_next_clause_token(first);
+        if (second && second->token_type == TK_EQUAL && control) {
+            *control = first;
+        }
+    }
+}
+
+static Token *levelc_end_symbol(Token *end_token) {
+    Token *symbol;
+
+    symbol = levelc_next_clause_token(end_token);
+    if (symbol && symbol->token_type == TK_VAR_SYMBOL) return symbol;
+    return 0;
+}
+
+static Token *levelc_leave_iterate_symbol(Token *keyword_token) {
+    Token *symbol;
+
+    symbol = levelc_next_clause_token(keyword_token);
+    if (symbol && symbol->token_type == TK_VAR_SYMBOL) return symbol;
+    return 0;
+}
+
+static int levelc_has_repetitive_do(LevelCFallbackFrame *frames, size_t count) {
+    size_t i;
+
+    for (i = count; i > 0; i--) {
+        if (frames[i - 1].type == LEVELC_FB_FRAME_DO &&
+            frames[i - 1].repetitive) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int levelc_has_controlled_do(LevelCFallbackFrame *frames,
+                                    size_t count,
+                                    Token *target) {
+    size_t i;
+
+    for (i = count; i > 0; i--) {
+        if (frames[i - 1].type == LEVELC_FB_FRAME_DO &&
+            frames[i - 1].repetitive &&
+            frames[i - 1].control &&
+            levelc_token_text_equals(frames[i - 1].control, target)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static Token *levelc_fallback_anchor_token(Context *context) {
     Token *token;
 
@@ -331,7 +478,9 @@ static int levelc_push_frame(LevelCFallbackFrame **frames,
                              size_t *count,
                              size_t *capacity,
                              LevelCFallbackFrameType type,
-                             Token *token) {
+                             Token *token,
+                             Token *control,
+                             int repetitive) {
     LevelCFallbackFrame *new_frames;
     size_t new_capacity;
 
@@ -345,8 +494,142 @@ static int levelc_push_frame(LevelCFallbackFrame **frames,
 
     (*frames)[*count].type = type;
     (*frames)[*count].token = token;
+    (*frames)[*count].control = control;
+    (*frames)[*count].repetitive = repetitive;
     (*count)++;
     return 1;
+}
+
+int rxcp_levelc_validate_control_diagnostics(Context *context) {
+    ASTNode *diag;
+    Token *token;
+    Token *control;
+    Token *bad_forever_token;
+    Token *end_name;
+    Token *target_name;
+    LevelCFallbackFrame *frames;
+    LevelCFallbackFrame frame;
+    size_t frame_count;
+    size_t frame_capacity;
+    int diagnostics_before;
+    int diagnostics_after;
+    int repetitive;
+    int token_type;
+
+    if (!context) return 0;
+
+    diagnostics_before = 0;
+    diag = (ASTNode *)context->diagnostics_list;
+    while (diag) {
+        diagnostics_before++;
+        diag = diag->sibling;
+    }
+
+    frames = 0;
+    frame_count = 0;
+    frame_capacity = 0;
+
+    token = context->token_head;
+    while (token) {
+        token_type = token->token_type;
+
+        switch (token_type) {
+            case TK_DO:
+            case TK_LOOP:
+                control = 0;
+                repetitive = 0;
+                bad_forever_token = 0;
+                levelc_scan_do_header(token, &control, &repetitive, &bad_forever_token);
+                if (!levelc_push_frame(&frames, &frame_count, &frame_capacity,
+                                       LEVELC_FB_FRAME_DO, token, control, repetitive)) {
+                    free(frames);
+                    return 0;
+                }
+                if (bad_forever_token) {
+                    levelc_append_keywords_token(context, bad_forever_token, "25.16",
+                                                 "WHILE UNTIL", bad_forever_token);
+                }
+                break;
+
+            case TK_SELECT:
+                if (!levelc_push_frame(&frames, &frame_count, &frame_capacity,
+                                       LEVELC_FB_FRAME_SELECT, token, 0, 0)) {
+                    free(frames);
+                    return 0;
+                }
+                break;
+
+            case TK_END:
+                end_name = levelc_end_symbol(token);
+                if (frame_count == 0) {
+                    levelc_append_code(context, token, "10.1");
+                    break;
+                }
+
+                frame_count--;
+                frame = frames[frame_count];
+                if (frame.type == LEVELC_FB_FRAME_SELECT) {
+                    if (end_name) {
+                        levelc_append_line_token(context, end_name, "10.4",
+                                                 frame.token, end_name);
+                    }
+                } else if (frame.control) {
+                    if (end_name && !levelc_token_text_equals(frame.control, end_name)) {
+                        levelc_append_line_token(context, end_name, "10.2",
+                                                 frame.token, end_name);
+                    }
+                } else if (end_name) {
+                    levelc_append_line_token(context, end_name, "10.3",
+                                             frame.token, end_name);
+                }
+                break;
+
+            case TK_LEAVE:
+                target_name = levelc_leave_iterate_symbol(token);
+                if (target_name) {
+                    if (!levelc_has_controlled_do(frames, frame_count, target_name)) {
+                        levelc_append_code_token(context, target_name, "28.3");
+                    }
+                } else if (!levelc_has_repetitive_do(frames, frame_count)) {
+                    levelc_append_code(context, token, "28.1");
+                }
+                break;
+
+            case TK_ITERATE:
+                target_name = levelc_leave_iterate_symbol(token);
+                if (target_name) {
+                    if (!levelc_has_controlled_do(frames, frame_count, target_name)) {
+                        levelc_append_code_token(context, target_name, "28.4");
+                    }
+                } else if (!levelc_has_repetitive_do(frames, frame_count)) {
+                    levelc_append_code(context, token, "28.2");
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        token = token->token_next;
+    }
+
+    while (frame_count > 0) {
+        frame_count--;
+        levelc_append_code(context,
+                           frames[frame_count].token,
+                           frames[frame_count].type == LEVELC_FB_FRAME_SELECT ? "14.2" : "14.1");
+    }
+
+    free(frames);
+
+    diagnostics_after = 0;
+    diag = (ASTNode *)context->diagnostics_list;
+    while (diag) {
+        diagnostics_after++;
+        diag = diag->sibling;
+    }
+
+    return diagnostics_after - diagnostics_before;
 }
 
 int rxcp_levelc_run_fallback_diagnostics(Context *context) {
@@ -398,7 +681,7 @@ int rxcp_levelc_run_fallback_diagnostics(Context *context) {
             case TK_DO:
             case TK_LOOP:
                 if (!levelc_push_frame(&frames, &frame_count, &frame_capacity,
-                                       LEVELC_FB_FRAME_DO, token)) {
+                                       LEVELC_FB_FRAME_DO, token, 0, 0)) {
                     free(frames);
                     return 0;
                 }
@@ -406,7 +689,7 @@ int rxcp_levelc_run_fallback_diagnostics(Context *context) {
 
             case TK_SELECT:
                 if (!levelc_push_frame(&frames, &frame_count, &frame_capacity,
-                                       LEVELC_FB_FRAME_SELECT, token)) {
+                                       LEVELC_FB_FRAME_SELECT, token, 0, 0)) {
                     free(frames);
                     return 0;
                 }
