@@ -67,6 +67,7 @@ regular:
   eof = [\000];
   any = [^] \ eof;
   digit = [0-9];
+  not = "\\";
   lcfsymchr = letter | [_!?];
   lcsymchr = lcfsymchr | digit | [.];
   lcsimple = lcfsymchr lcsymchr*;
@@ -87,14 +88,35 @@ regular:
       goto comment;
     }
 
-    "=" { RET(TK_EQUAL); }
+    "|" ob "|" { RET(TK_CONCAT); }
+    "*" ob "*" { RET(TK_POWER_L); }
+    "/" ob "/" { RET(TK_MOD); }
+    not ob "=" ob "=" { RET(TK_S_NEQ); }
+    ">" ob ">" ob "=" | not ob "<" ob "<" { RET(TK_S_GTE); }
+    "<" ob "<" ob "=" | not ob ">" ob ">" { RET(TK_S_LTE); }
+    "=" ob "=" { RET(TK_S_EQ); }
+    not ob "=" | "<" ob ">" | ">" ob "<" { RET(TK_NEQ); }
+    ">" ob "=" | not ob "<" { RET(TK_GTE); }
+    "<" ob "=" | not ob ">" { RET(TK_LTE); }
+    ">" ob ">" { RET(TK_S_GT); }
+    "<" ob "<" { RET(TK_S_LT); }
+    "&" ob "&" { RET(TK_XOR); }
+
     "," { RET(TK_COMMA); }
     ";" { RET(TK_EOC); }
     "(" { RET(TK_OPEN_BRACKET); }
     ")" { RET(TK_CLOSE_BRACKET); }
+    "=" { RET(TK_EQUAL); }
     "+" { RET(TK_PLUS); }
-    "-" { RET(TK_MINUS); }
-    "\\" { RET(TK_NOT); }
+    "-" { RET(TK_HIGH_PRIORITY_MINUS); }
+    "*" { RET(TK_MULT); }
+    "/" { RET(TK_DIV); }
+    "%" { RET(TK_IDIV); }
+    ">" { RET(TK_GT); }
+    "<" { RET(TK_LT); }
+    "&" { RET(TK_AND); }
+    "|" { RET(TK_OR); }
+    not { RET(TK_NOT); }
 
     lcsimple ob ":" { RET(TK_LABEL); }
     integer { RET(TK_INTEGER); }

@@ -420,6 +420,50 @@ void emit_expression(ASTNode *node, void *payload) {
             type_promotion(node);
             break;
 
+        case OP_XOR:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            if (child2->output) output_concat(node->output, child2->output);
+
+            temp1 = mprintf(
+                    "   brf l%dxorleftfalse,%c%d\n"
+                    "   brf l%dxortrue,%c%d\n"
+                    "   load %c%d,0\n"
+                    "   br l%dxorend\n"
+                    "l%dxorleftfalse:\n"
+                    "   brt l%dxortrue,%c%d\n"
+                    "   load %c%d,0\n"
+                    "   br l%dxorend\n"
+                    "l%dxortrue:\n"
+                    "   load %c%d,1\n"
+                    "l%dxorend:\n",
+                    node->node_number,
+                    child1->register_type,
+                    child1->register_num,
+                    node->node_number,
+                    child2->register_type,
+                    child2->register_num,
+                    node->register_type,
+                    node->register_num,
+                    node->node_number,
+                    node->node_number,
+                    node->node_number,
+                    child2->register_type,
+                    child2->register_num,
+                    node->register_type,
+                    node->register_num,
+                    node->node_number,
+                    node->node_number,
+                    node->register_type,
+                    node->register_num,
+                    node->node_number);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child2->cleanup) output_concat(node->output, child2->cleanup);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            type_promotion(node);
+            break;
+
         /* These operators have a prefix type of that of the first child */
         case OP_COMPARE_EQUAL:
             if (!op) op="eq";

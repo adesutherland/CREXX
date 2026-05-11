@@ -479,6 +479,7 @@ static walker_result emit_walker(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
+            case OP_XOR:
 
             /* These operators use the type prefix already set (i.e. of their type) */
             case OP_ADD:

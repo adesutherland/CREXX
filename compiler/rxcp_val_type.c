@@ -760,6 +760,7 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case OP_AND:
             case OP_OR:
+            case OP_XOR:
             case OP_COMPARE_EQUAL:
             case OP_COMPARE_NEQ:
             case OP_COMPARE_GT:
@@ -1419,6 +1420,7 @@ walker_result type_safety_walker(walker_direction direction,
 
             case OP_AND:
             case OP_OR:
+            case OP_XOR:
                 set_node_target_type(context, child1, TP_BOOLEAN);
                 set_node_target_type(context, child2, TP_BOOLEAN);
                 break;

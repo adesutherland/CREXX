@@ -119,6 +119,7 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_S_LTE:
         case TK_AND:
         case TK_OR:
+        case TK_XOR:
         case TK_NOT: return LEXER_OPERATOR_LOGICAL;
         case TK_OPEN_BRACKET:
         case TK_OPEN_SBRACKET: return LEXER_LH_EXPR;

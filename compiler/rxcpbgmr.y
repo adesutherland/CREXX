@@ -1534,6 +1534,8 @@ command_or_expression(P)     ::= command_comparison(E).
                          { P = E; }
 command_or_expression(A)     ::= command_or_expression(B) TK_OR(O) comparison(C).
                          { A = ast_f(context, OP_OR, O); add_ast(A,B); add_ast(A,C); }
+command_or_expression(A)     ::= command_or_expression(B) TK_XOR(O) comparison(C).
+                         { A = ast_f(context, OP_XOR, O); add_ast(A,B); add_ast(A,C); }
 command_and_expression(P)    ::= command_or_expression(E).
                          { P = E; }
 command_and_expression(A)    ::= command_and_expression(B) TK_AND(O) or_expression(C).
@@ -1689,6 +1691,8 @@ or_expression(P)     ::= comparison(E).
                          { P = E; }
 or_expression(A)     ::= or_expression(B) TK_OR(O) comparison(C).
                          { A = ast_f(context, OP_OR, O); add_ast(A,B); add_ast(A,C); }
+or_expression(A)     ::= or_expression(B) TK_XOR(O) comparison(C).
+                         { A = ast_f(context, OP_XOR, O); add_ast(A,B); add_ast(A,C); }
 and_expression(P)    ::= or_expression(E).
                          { P = E; }
 and_expression(A)    ::= and_expression(B) TK_AND(O) or_expression(C).
@@ -1716,6 +1720,7 @@ and_expression(E)  ::= TK_S_GTE(U) error. { E = ast_err(context, "BADEXPR", U); 
 and_expression(E)  ::= TK_S_LTE(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_AND(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_OR(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_XOR(U) error. { E = ast_err(context, "BADEXPR", U); }
 
 expression(P)  ::= and_expression(E). { P = E; }
 expression(E)  ::= TK_COMMA(U) error. { E = ast_err(context, "BADEXPR", U); }

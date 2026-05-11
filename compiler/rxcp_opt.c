@@ -760,6 +760,25 @@ static walker_result opt1_walker(walker_direction direction,
             }
         }
 
+        else if (node->node_type == OP_XOR) {
+            /* Are both operands constants? - If so fold */
+            if (child1->node_type == CONSTANT && child2->node_type == CONSTANT)
+                rewrite_to_boolean_constant(node, payload,
+                                            (child1->int_value != 0) !=
+                                            (child2->int_value != 0));
+
+            /* x XOR 0 == x, once operands have been boolean-targeted. */
+            else if (child1->node_type == CONSTANT && !child1->int_value) {
+                ast_rpl(node, child2);
+                payload->changed = 1;
+            }
+
+            else if (child2->node_type == CONSTANT && !child2->int_value) {
+                ast_rpl(node, child1);
+                payload->changed = 1;
+            }
+        }
+
         else {
             /* 'Normal' Cases */
 

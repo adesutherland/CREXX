@@ -585,6 +585,7 @@ const char* token_to_string(int token_id) {
         case TK_CONCAT: return "TK_CONCAT";
         case TK_AND: return "TK_AND";
         case TK_OR: return "TK_OR";
+        case TK_XOR: return "TK_XOR";
         case TK_NOT: return "TK_NOT";
         case TK_EQUAL: return "TK_EQUAL";
         case TK_NEQ: return "TK_NEQ";
@@ -1094,6 +1095,7 @@ const char* node_type_to_string(NodeType type) {
         case OP_IDIV: return "OP_IDIV";
         case OP_MOD: return "OP_MOD";
         case OP_OR: return "OP_OR";
+        case OP_XOR: return "OP_XOR";
         case OP_POWER: return "OP_POWER";
         case OP_NOT: return "OP_NOT";
         case OP_NEG: return "OP_NEG";

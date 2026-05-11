@@ -146,9 +146,9 @@ int rexbscan(Context* s) {
     ">" ob ">" ob "=" | not ob "<" ob "<" { RET(TK_S_GTE); }
     "<" ob "<" ob "=" | not ob ">" ob ">" { RET(TK_S_LTE); }
 
+    "&" ob "&" { RET(s->numeric_standard ? TK_XOR : TK_UNKNOWN); }
     "&" { RET(TK_AND); }
     "|" { RET(TK_OR); }
-  //  "&" ob "&" { RET(TK_OR); } // TODO Check
     not { RET(TK_NOT); }         // Note that '/' will be treated as divide as it is listed first
     "," { RET(TK_COMMA); }
     "..." { RET(TK_ELLIPSIS); }

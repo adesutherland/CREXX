@@ -47,11 +47,43 @@ static int levelc_parser_token_for_raw(int token_type) {
         case TK_INTEGER: return CTK_INTEGER;
         case TK_STRING: return CTK_STRING;
         case TK_EQUAL: return CTK_EQUAL;
+        case TK_COMMA: return CTK_COMMA;
+        case TK_OPEN_BRACKET: return CTK_OPEN_BRACKET;
+        case TK_CLOSE_BRACKET: return CTK_CLOSE_BRACKET;
+        case TK_PLUS: return CTK_PLUS;
+        case TK_MINUS: return CTK_MINUS;
+        case TK_HIGH_PRIORITY_MINUS: return CTK_HIGH_PRIORITY_MINUS;
+        case TK_NOT: return CTK_NOT;
+        case TK_CONCAT: return CTK_CONCAT;
+        case TK_MULT: return CTK_MULT;
+        case TK_DIV: return CTK_DIV;
+        case TK_IDIV: return CTK_IDIV;
+        case TK_MOD: return CTK_MOD;
+        case TK_POWER_L:
+        case TK_POWER_R: return CTK_POWER;
+        case TK_NEQ: return CTK_NEQ;
+        case TK_GT: return CTK_GT;
+        case TK_LT: return CTK_LT;
+        case TK_GTE: return CTK_GTE;
+        case TK_LTE: return CTK_LTE;
+        case TK_S_EQ: return CTK_S_EQ;
+        case TK_S_NEQ: return CTK_S_NEQ;
+        case TK_S_GT: return CTK_S_GT;
+        case TK_S_LT: return CTK_S_LT;
+        case TK_S_GTE: return CTK_S_GTE;
+        case TK_S_LTE: return CTK_S_LTE;
+        case TK_AND: return CTK_AND;
+        case TK_OR: return CTK_OR;
+        case TK_XOR: return CTK_XOR;
         default: return CTK_UNKNOWN;
     }
 }
 
 static int levelc_promote_clause_keyword(Token *token) {
+    if (levelc_token_is(token, "OPTIONS")) {
+        token->token_type = TK_OPTIONS;
+        return CTK_OPTIONS;
+    }
     if (levelc_token_is(token, "SAY")) {
         token->token_type = TK_SAY;
         return CTK_SAY;
@@ -143,6 +175,7 @@ int rexcpars(Context *context) {
     int do_header_first;
     int do_condition_expr;
 
+    context->numeric_standard = 1;
     parser = RexxCAlloc(malloc);
 #ifndef NDEBUG
     if (context->debug_mode >= 2) RexxCTrace(stderr, "[PARSER-C] ");
@@ -225,6 +258,9 @@ int rexcpars(Context *context) {
                 parser_token = CTK_ELSE;
                 pending_else--;
                 clause_start = 1;
+            }
+            else if (do_header && do_header_first && !do_condition_expr && peek_token->token_type == TK_EQUAL) {
+                parser_token = CTK_DO_CONTROL_SYMBOL;
             }
             else if (do_header && !do_condition_expr && peek_token->token_type != TK_EQUAL) {
                 parser_token = levelc_promote_do_keyword(token, do_header_first);

@@ -1175,6 +1175,8 @@ const char *ast_ndtp(NodeType type) {
             return "OP_MOD";
         case OP_OR:
             return "OP_OR";
+        case OP_XOR:
+            return "OP_XOR";
         case OP_POWER:
             return "OP_POWER";
         case OP_NOT:

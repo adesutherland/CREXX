@@ -722,6 +722,7 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_S_LTE:
         case TK_AND:
         case TK_OR:
+        case TK_XOR:
         case TK_NOT: return LEXER_OPERATOR_LOGICAL;
         case TK_OPEN_BRACKET:
         case TK_OPEN_SBRACKET: return LEXER_LH_EXPR;
@@ -1078,6 +1079,7 @@ static int source_container_type(SourceNode *node, CB_NodeType *type) {
         case SAY:
         case PULL:
         case PARSE:
+        case REXX_OPTIONS:
             *type = PARSE_TREE_STATEMENT;
             return 1;
         case BLOCK_EXPR:
@@ -1092,6 +1094,7 @@ static int source_container_type(SourceNode *node, CB_NodeType *type) {
         case OP_SCONCAT:
         case OP_AND:
         case OP_OR:
+        case OP_XOR:
         case OP_COMPARE_EQUAL:
         case OP_COMPARE_NEQ:
         case OP_COMPARE_GT:

@@ -237,6 +237,7 @@ add_crexx_compiler_test(03_calc rexx_src/03_calc.rexx)
 add_crexx_compiler_test(04_literals rexx_src/04_literals.rexx)
 add_crexx_compiler_test(05_ops_common rexx_src/05_ops_common.rexx)
 add_crexx_compiler_test(05_ops_classic rexx_src/05_ops_classic.rexx)
+add_crexx_compiler_fail_test(err_xor_common rexx_src/err_xor_common.rexx err_xor_common.txt)
 add_crexx_compiler_test(strict_compare_codegen rexx_src/strict_compare_codegen.rexx)
 add_crexx_compiler_test(address_expose rexx_src/address_expose.rexx)
 add_crexx_compiler_test(div_ops_common rexx_src/div_ops_common.rexx)
@@ -1184,6 +1185,7 @@ add_crexx_run_test(test_utf_math rexx_src/test_utf_math.rexx)
 add_crexx_run_test(test_lib_boundary rexx_src/test_lib_boundary.rexx)
 add_crexx_run_test(div_ops_common rexx_src/div_ops_common.rexx)
 add_crexx_run_test(div_ops_classic rexx_src/div_ops_classic.rexx)
+add_crexx_run_test(classic_xor rexx_src/classic_xor.rexx)
 
 # Shadowing behavior in simple DO blocks
 add_crexx_run_test(do_scope_typed_shadows rexx_src/do_scope_typed_shadows.rexx)
@@ -1759,6 +1761,83 @@ if (ENABLE_PARSER_MODE)
             "PARSE_FAILURE"
     )
     set_tests_properties(syntaxhighlight_levelc_when_missing_then PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_expression_precedence
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_expression_precedence.rexx
+            MUST_MATCH
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=2, sev=48, text=\"\\*\\*\""
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=1, sev=48, text=\"%\""
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=2, sev=48, text=\"//\""
+            "Node: type=42 \\(LEXER_OPERATOR\\), pos=[0-9]+, len=2, sev=48, text=\"\\|\\|\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=1, sev=48, text=\"&\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=1, sev=48, text=\"\\|\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=2, sev=48, text=\"&&\""
+            MUST_NOT_MATCH
+            "RXC-LC-"
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_expression_precedence PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_expression_comparisons
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_expression_comparisons.rexx
+            MUST_MATCH
+            "Node: type=43 \\(LEXER_OPERATOR_ASSIGN\\), pos=[0-9]+, len=1, sev=48, text=\"=\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=2, sev=48, text=\"<>\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=2, sev=48, text=\"><\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=2, sev=48, text=\"==\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=2, sev=48, text=\">>\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=2, sev=48, text=\"<<\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=3, sev=48, text=\">>=\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=3, sev=48, text=\"<<=\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=3, sev=48, text=\"\\\\==\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=3, sev=48, text=\"\\\\>>\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=3, sev=48, text=\"\\\\<<\""
+            MUST_NOT_MATCH
+            "RXC-LC-"
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_expression_comparisons PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_expression_bad_comma
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_expression_bad_comma.rexx
+            MUST_MATCH
+            "RXC-LC-37\\.1"
+            "Node: type=46 \\(LEXER_SEPARATOR\\), pos=[0-9]+, len=1, sev=51, text=\",\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=7, sev=48, text=\"'after'\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_expression_bad_comma PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_expression_bad_rparen
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_expression_bad_rparen.rexx
+            MUST_MATCH
+            "RXC-LC-37\\.2"
+            "Node: type=53 \\(LEXER_RH_EXPR\\), pos=[0-9]+, len=1, sev=51, text=\"\\)\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=7, sev=48, text=\"'after'\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_expression_bad_rparen PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_expression_bad_trailing_compare
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_expression_bad_trailing_compare.rexx
+            MUST_MATCH
+            "RXC-LC-35\\.1 token=\"end-of-clause\""
+            "Node: type=43 \\(LEXER_OPERATOR_ASSIGN\\), pos=[0-9]+, len=1, sev=51, text=\"=\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=7, sev=48, text=\"'after'\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_expression_bad_trailing_compare PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
     add_crexx_syntax_highlight_test(
             syntaxhighlight_block_comment

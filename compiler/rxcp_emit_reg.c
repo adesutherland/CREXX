@@ -463,6 +463,7 @@ walker_result register_walker(walker_direction direction,
              * constant */
             case OP_COMPARE_EQUAL:
             case OP_COMPARE_NEQ:
+            case OP_XOR:
             case OP_ADD:
             case OP_MULT:
 

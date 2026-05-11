@@ -508,6 +508,25 @@ Extraction notes:
 
 - Function calls use a taken constant followed by `(` argument list `)`.
 - The leftmost function-name component must not end with a period.
+- Level C uses Classic numeric syntax by default in the parser path:
+  `context->numeric_standard = 1`, Classic `%` integer divide, Classic `//`
+  remainder, and Classic `**` left associativity.
+- Classic prefix `-` is higher priority than `**`. This matches the existing
+  Level B `NUMERIC_CLASSIC` scanner/parser shape: the scanner returns the
+  high-priority minus token and the grammar places it in the prefix level above
+  power.
+- The first expression-core implementation covers symbols, integer and string
+  terms, parenthesized expressions, prefix `+`/`-`/`\`, power, multiplication,
+  integer division, remainder, addition/subtraction, explicit and blank
+  concatenation, all normal comparisons, all ANSI strict comparisons, `&`, `|`,
+  and `&&`.
+- `&&` is accepted at the Classic logical OR/exclusive-OR precedence level and
+  maps to the shared `OP_XOR` logical-expression node. The node is distinct from
+  `OP_COMPARE_NEQ` so boolean/logical targeting can happen before code emission
+  or future Level C tree surgery.
+- Function calls, omitted argument lists, compound/stem references, number
+  forms beyond integers, and expression-level runtime validation remain later
+  slices.
 - Expression lists support omitted expressions around commas.
 - A comma or unmatched right parenthesis at expression level is a syntax error.
 - The ANSI grammar's power expression is left-recursive. Current Level B
@@ -1348,6 +1367,110 @@ ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-
 ```
 
 Result: full build passes; all 1059 CTest tests pass.
+
+Level C expression-core slice on 2026-05-11:
+
+- The Level C scanner now recognizes the Classic expression operator set needed
+  for the highlighter milestone:
+  - arithmetic: `+`, `-`, `*`, `/`, `%`, `//`, `**`
+  - concatenation: `||` and inferred blank concatenation in the grammar
+  - logical: prefix `\`, `&`, `|`, `&&`
+  - normal comparisons: `=`, `\=`, `<>`, `><`, `>`, `<`, `>=`, `<=`, `\>`,
+    `\<`
+  - strict comparisons: `==`, `\==`, `>>`, `<<`, `>>=`, `<<=`, `\>>`, `\<<`
+- Compound operators continue to accept optional blanks between their character
+  components, matching the ANSI extraction notes.
+- The grammar implements the Classic precedence ladder documented in section
+  6.4 and mirrors the Level B `NUMERIC_CLASSIC` expression structure where that
+  is already proven: high-priority prefix minus above left-associative power,
+  then multiplication, addition, concatenation, comparison, logical AND, and
+  logical OR/exclusive-OR.
+- `&&` now maps to shared `OP_XOR`, not to ordinary not-equals. This keeps the
+  syntax tree aligned with Classic REXX logical semantics and leaves the Level C
+  validator room to enforce ANSI logical-value diagnostics before lowering.
+- `DO symbol = expression` now uses a Level C-only contextual
+  `CTK_DO_CONTROL_SYMBOL` parser token when the first DO-header symbol is
+  followed by `=`, avoiding the Lemon ambiguity between a counted control
+  assignment and a comparison expression.
+- Bad comma and stray right-parenthesis recovery now emit standard error
+  identities `37.1` and `37.2` and preserve the following clause for
+  highlighting. Formatting of the final user-facing text is still deferred to
+  the common error-message stage.
+- A trailing comparison operator at end-of-clause, for example `say 1 =`,
+  is invalid Classic REXX. The Level C tracer now anchors standard error
+  `35.1` on the visible operator with `token="end-of-clause"` and keeps the
+  next clause as a separate source-tree statement.
+- DSLSH currently classifies the single `=` token as
+  `LEXER_OPERATOR_ASSIGN` even when it is a comparison operator. That is a
+  shared highlighting classification issue, not a Level C parse failure.
+
+Regina compatibility probes for the expression slice:
+
+```sh
+rexx compiler/tests/rexx_src/levelc_expression_precedence.rexx
+rexx compiler/tests/rexx_src/levelc_expression_comparisons.rexx
+rexx compiler/tests/rexx_src/levelc_expression_bad_comma.rexx
+rexx compiler/tests/rexx_src/levelc_expression_bad_rparen.rexx
+printf "say 1 =\n" >/tmp/levelc_bad_trailing_compare.rexx && rexx /tmp/levelc_bad_trailing_compare.rexx
+```
+
+Result: the positive precedence fixture prints `69 0 ab c 0`, confirming the
+Classic prefix-minus/power, remainder, blank-concatenation, and logical
+precedence shape. The comparison fixture runs and prints only the expected true
+branches under Regina's uninitialized-variable behaviour. The bad-comma fixture
+is rejected by Regina with syntax error `64.1`; the Level C highlighter reports
+the ANSI-derived identity `RXC-LC-37.1` and resynchronizes at the following
+`SAY`. The bad-right-parenthesis fixture is rejected by Regina and the Level C
+highlighter reports `RXC-LC-37.2`. Regina also rejects `say 1 =` with syntax
+error `64.1`; the Level C highlighter reports `RXC-LC-35.1
+token="end-of-clause"` and resynchronizes at the next `SAY`.
+
+Regina also confirms the Classic XOR truth table: `0 && 0`, `0 && 1`, `1 && 0`,
+`1 && 1` prints `0`, `1`, `1`, `0`.
+
+Regression tests added for the expression slice:
+
+- `syntaxhighlight_levelc_expression_precedence`
+- `syntaxhighlight_levelc_expression_comparisons`
+- `syntaxhighlight_levelc_expression_bad_comma`
+- `syntaxhighlight_levelc_expression_bad_rparen`
+- `syntaxhighlight_levelc_expression_bad_trailing_compare`
+- `err_xor_common_fail`
+- `classic_xor_run_noopt`
+- `classic_xor_run_opt`
+
+The XOR tests deliberately include `2 && 3`, which must evaluate as false after
+logical targeting. This distinguishes Classic logical exclusive-or from normal
+not-equals code generation.
+
+Focused verification for the expression slice:
+
+```sh
+cmake -S /Users/adrian/CLionProjects/CREXX -B /Users/adrian/CLionProjects/CREXX/cmake-build-release
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target rxc parser_tester -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release -R 'syntaxhighlight_levelc_expression|syntaxhighlight_levelc_do_control|syntaxhighlight_levelc_if_else' --output-on-failure
+```
+
+Result: all 6 focused tests pass.
+
+XOR follow-up verification:
+
+```sh
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target compiler_exit_bin -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release -R 'classic_xor|err_xor_common|syntaxhighlight_levelc_expression|levelc_compile_unsupported|highlight_editor_diagnostics|highlight_cache' --output-on-failure
+```
+
+Result: the compiler exit bundle rebuilds cleanly after regenerating the bundled
+exit artifacts, and all 10 focused XOR/Level C/highlighting tests pass.
+
+Full release verification after the expression slice:
+
+```sh
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target all -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-on-failure
+```
+
+Result: full build passes; all 1067 CTest tests pass.
 
 The remaining first implementation sequence is:
 
