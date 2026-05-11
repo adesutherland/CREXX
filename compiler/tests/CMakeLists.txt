@@ -1444,11 +1444,62 @@ if (ENABLE_PARSER_MODE)
             syntaxhighlight_levelc_then_boundary
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_then_boundary.rexx
             MUST_MATCH
-            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"then\""
-            "SYNTAX_ERROR"
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=51, text=\"then\""
+            "RXC-LC-35\\.1 token=\"then\""
+            "RXC-LC-8\\.1"
+            MUST_NOT_MATCH
             "PARSE_FAILURE"
     )
     set_tests_properties(syntaxhighlight_levelc_then_boundary PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_if_missing_then
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_if_missing_then.rexx
+            MUST_MATCH
+            "RXC-LC-18\\.1 linenumber=\"1\" token=\"end-of-clause\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_if_missing_then PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_loose_then
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_loose_then.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=0, len=4, sev=51, text=\"then\""
+            "RXC-LC-8\\.1"
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_loose_then PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_loose_else
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_loose_else.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=0, len=4, sev=51, text=\"else\""
+            "RXC-LC-8\\.2"
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_loose_else PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_multiline_if_else
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_multiline_if_else.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=2, sev=48, text=\"if\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"then\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"else\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            MUST_NOT_MATCH
+            "RXC-LC-"
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_multiline_if_else PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
     add_crexx_syntax_highlight_test(
             syntaxhighlight_block_comment

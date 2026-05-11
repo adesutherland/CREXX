@@ -43,6 +43,8 @@ optimization, assembly, or VM execution.
   - `/Users/adrian/Library/CloudStorage/GoogleDrive-adrian@sutherlandonline.org/My Drive/Language Projects/REXX Collaboration/draft-ansi-rexx-standard.pdf`
   - Extracted locally with `pypdf`; relevant sections are 5.3, 6.2, 6.3,
     6.4, plus limited variable-pool context from 7.1 through 7.3.
+  - Standard error-message catalog extracted from section 8.2.1 into
+    `compiler/docs/levelc_standard_error_messages.md`.
 
 This draft deliberately excludes built-in function definitions.
 
@@ -749,6 +751,45 @@ Additional Level C highlighting needs:
 - Distinguish reserved symbols from ordinary variables.
 - Correct comment recovery for nested block comments.
 - Correct inferred semicolon ownership for diagnostics.
+- Standard diagnostic text and error numbers from
+  `levelc_standard_error_messages.md` once parser recovery and validation are
+  mapped to ANSI message identifiers.
+
+Level C diagnostics should be emitted in two layers:
+
+1. The parser and validators emit a stable diagnostic identity plus any
+   structured inserts. The first implementation encodes that identity in the
+   existing diagnostic string field so it can flow through DSLSH and parser
+   mode without changing shared diagnostic APIs.
+2. A later common formatting stage maps the identity and inserts to human
+   message text from `levelc_standard_error_messages.md`.
+
+The interim machine-readable string format is:
+
+```text
+RXC-LC-<standard-code> [insert-name="escaped value" ...]
+```
+
+Examples:
+
+```text
+RXC-LC-18.1 linenumber="12"
+RXC-LC-35.1 token="then"
+RXC-LC-40.4 name="FOO"
+```
+
+Insert names should follow the standard placeholder where there is an obvious
+one, such as `token`, `linenumber`, `keywords`, `value`, `name`, `operator`,
+`char`, `argnumber`, `bif`, `description`, and `position`. The string is not
+intended to be final user-facing prose. Tests should primarily assert the
+`RXC-LC-...` identity, and only assert insert payloads where the insert is part
+of the parser contract under test.
+
+Recovery should be attached to the offending source token where possible. For
+statement-level syntax errors, the first recovery boundary is the end of the
+current clause. IF/THEN/ELSE recovery may also use `THEN`, `ELSE`, and `END`
+as synchronization points where doing so preserves useful highlighting for the
+following clause.
 
 The Level C highlighter should not use a separate highlighting grammar. It
 should use the Level C parser and validation path, as Level B does today.
@@ -1065,7 +1106,48 @@ Regression tests added:
 - `syntaxhighlight_levelc_if_else`
 - `syntaxhighlight_levelc_labels_literals`
 - `syntaxhighlight_levelc_then_boundary`
+- `syntaxhighlight_levelc_if_missing_then`
+- `syntaxhighlight_levelc_loose_then`
+- `syntaxhighlight_levelc_loose_else`
+- `syntaxhighlight_levelc_multiline_if_else`
 - `levelc_compile_unsupported`
+
+Diagnostic slice 1 was added on 2026-05-10:
+
+- `compiler/rxcpcdiag.c` provides Level C-only diagnostic helpers for the
+  interim `RXC-LC-<standard-code> insert="value"` record format.
+- The Level C grammar now emits standard identities for the first
+  IF/THEN/ELSE recovery cases:
+  - `18.1`: IF expression reaches end-of-clause without a matching THEN.
+  - `35.1`: IF condition cannot start because `THEN` was found immediately
+    after IF.
+  - `8.1`: THEN has no corresponding IF or WHEN clause.
+  - `8.2`: ELSE has no corresponding THEN clause.
+  - `6.1` and `13.1`: initial mappings for unmatched comments and invalid
+    source characters.
+- The Level C adapter now promotes loose clause-leading `THEN` and `ELSE`
+  only when they are not assignment left-hand sides, and suppresses physical
+  EOL tokens after `THEN`, after `ELSE`, and immediately before a pending
+  `ELSE` so multiline IF/THEN/ELSE source parses as one instruction.
+
+Focused verification for the diagnostic slice:
+
+```sh
+cmake -S /Users/adrian/CLionProjects/CREXX -B /Users/adrian/CLionProjects/CREXX/cmake-build-release
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target rxc -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release -R 'syntaxhighlight_levelc|levelc_compile_unsupported' --output-on-failure
+```
+
+Result: all 10 Level C syntax-highlighting and unsupported-compile tests pass.
+
+Full release verification after the slice:
+
+```sh
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target all -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-on-failure
+```
+
+Result: full build passes; all 1039 CTest tests pass.
 
 Manual DSLSH/THE testing:
 

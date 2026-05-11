@@ -60,6 +60,14 @@ static int levelc_promote_clause_keyword(Token *token) {
         token->token_type = TK_IF;
         return CTK_IF;
     }
+    if (levelc_token_is(token, "THEN")) {
+        token->token_type = TK_THEN;
+        return CTK_THEN;
+    }
+    if (levelc_token_is(token, "ELSE")) {
+        token->token_type = TK_ELSE;
+        return CTK_ELSE;
+    }
     return CTK_VAR_SYMBOL;
 }
 
@@ -116,6 +124,19 @@ int rexcpars(Context *context) {
             continue;
         }
 
+        if (token_type == TK_EOC &&
+            (last_parser_token == CTK_THEN || last_parser_token == CTK_ELSE) &&
+            peek_token->token_type != TK_EOS) {
+            continue;
+        }
+
+        if (token_type == TK_EOC &&
+            pending_else &&
+            peek_token->token_type == TK_VAR_SYMBOL &&
+            levelc_token_is(peek_token, "ELSE")) {
+            continue;
+        }
+
         if (token_type == TK_EOC && last_parser_token == CTK_EOC) continue;
 
         parser_token = levelc_parser_token_for_raw(token_type);
@@ -128,7 +149,7 @@ int rexcpars(Context *context) {
                 pending_else++;
                 clause_start = 1;
             }
-            else if (pending_else && levelc_token_is(token, "ELSE")) {
+            else if (pending_else && levelc_token_is(token, "ELSE") && peek_token->token_type != TK_EQUAL) {
                 token->token_type = TK_ELSE;
                 parser_token = CTK_ELSE;
                 pending_else--;

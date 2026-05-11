@@ -219,6 +219,42 @@ int rexbpars(Context *context);
 int rexcscan(Context* s);
 int rexcpars(Context *context);
 void rxcp_levelc_prepare_source_ast(Context *context);
+char *rxcp_levelc_diag_format(const char *standard_code,
+                              const char *insert_name,
+                              const char *insert_value);
+char *rxcp_levelc_diag_format2(const char *standard_code,
+                               const char *insert_name1,
+                               const char *insert_value1,
+                               const char *insert_name2,
+                               const char *insert_value2);
+ASTNode *rxcp_levelc_ast_error(Context *context,
+                               const char *standard_code,
+                               Token *token);
+ASTNode *rxcp_levelc_ast_error_insert(Context *context,
+                                      const char *standard_code,
+                                      Token *token,
+                                      const char *insert_name,
+                                      const char *insert_value);
+ASTNode *rxcp_levelc_ast_error_insert2(Context *context,
+                                       const char *standard_code,
+                                       Token *token,
+                                       const char *insert_name1,
+                                       const char *insert_value1,
+                                       const char *insert_name2,
+                                       const char *insert_value2);
+ASTNode *rxcp_levelc_ast_error_token(Context *context,
+                                     const char *standard_code,
+                                     Token *token);
+ASTNode *rxcp_levelc_add_error(ASTNode *node,
+                               const char *standard_code,
+                               const char *insert_name,
+                               const char *insert_value);
+ASTNode *rxcp_levelc_add_error2(ASTNode *node,
+                                const char *standard_code,
+                                const char *insert_name1,
+                                const char *insert_value1,
+                                const char *insert_name2,
+                                const char *insert_value2);
 int opt_scan(Context* s);
 int opt_pars(Context *context);
 int rxcp_scan_source_header(const char *location, const char *file_name, RexxLevel cli_default_level,

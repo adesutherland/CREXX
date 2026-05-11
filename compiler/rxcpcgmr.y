@@ -30,7 +30,64 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "rxcpmain.h"
+
+static char *levelc_diag_token_text(Token *token) {
+    if (!token) return strdup("end-of-source");
+    if (!token->token_string || token->length <= 0) return strdup("end-of-clause");
+    if (token->token_string[0] == '\n' || token->token_string[0] == '\r') return strdup("end-of-clause");
+    return rx_strndup(token->token_string, (size_t)token->length);
+}
+
+static char *levelc_diag_line_text(Token *token) {
+    char buffer[32];
+
+    snprintf(buffer, sizeof(buffer), "%d", token ? token->line + 1 : 0);
+    return strdup(buffer);
+}
+
+static ASTNode *levelc_error_then_or_else(Context *context,
+                                          const char *standard_code,
+                                          Token *token,
+                                          ASTNode *statement) {
+    ASTNode *block;
+
+    block = ast_ft(context, INSTRUCTIONS);
+    add_ast(block, rxcp_levelc_ast_error(context, standard_code, token));
+    if (statement) add_ast(block, statement);
+    return block;
+}
+
+static ASTNode *levelc_if_missing_then(Context *context, Token *if_token, ASTNode *condition) {
+    ASTNode *node;
+    char *line;
+    char *found;
+
+    node = ast_f(context, IF, if_token);
+    if (condition) add_ast(node, condition);
+
+    line = levelc_diag_line_text(if_token);
+    found = levelc_diag_token_text(context ? context->current_parser_token : 0);
+    add_ast(node, rxcp_levelc_ast_error_insert2(context, "18.1", if_token,
+                                                "linenumber", line,
+                                                "token", found));
+    free(line);
+    free(found);
+    return node;
+}
+
+static ASTNode *levelc_if_bad_condition(Context *context,
+                                        Token *if_token,
+                                        Token *bad_token,
+                                        ASTNode *then_statement) {
+    ASTNode *node;
+
+    node = ast_f(context, IF, if_token);
+    add_ast(node, rxcp_levelc_ast_error_token(context, "35.1", bad_token));
+    if (then_statement) add_ast(node, then_statement);
+    return node;
+}
 }
 
 %token CTK_UNKNOWN CTK_BADCOMMENT CTK_EOS CTK_EOC CTK_VAR_SYMBOL CTK_LABEL CTK_INTEGER CTK_STRING.
@@ -93,14 +150,24 @@ instruction(I) ::= if_instruction(F).
     I = F;
 }
 
+instruction(I) ::= unexpected_then(T).
+{
+    I = T;
+}
+
+instruction(I) ::= unexpected_else(E).
+{
+    I = E;
+}
+
 instruction(E) ::= CTK_BADCOMMENT(T).
 {
-    E = ast_err(context, "BAD_COMMENT", T);
+    E = rxcp_levelc_ast_error(context, "6.1", T);
 }
 
 instruction(E) ::= CTK_UNKNOWN(T).
 {
-    E = ast_err(context, "SYNTAX_ERROR", T);
+    E = rxcp_levelc_ast_error_token(context, "13.1", T);
 }
 
 simple_instruction(S) ::= say_instruction(I).
@@ -134,7 +201,7 @@ assignment(A) ::= CTK_VAR_SYMBOL(V) CTK_EQUAL(T) expression(E).
     add_ast(A, E);
 }
 
-if_instruction(I) ::= CTK_IF(T) expression(C) CTK_THEN then_instruction(Then) CTK_ELSE instruction(Else).
+if_instruction(I) ::= CTK_IF(T) expression(C) CTK_THEN then_instruction(Then) else_clause(Else).
 {
     I = ast_f(context, IF, T);
     add_ast(I, C);
@@ -149,9 +216,64 @@ if_instruction(I) ::= CTK_IF(T) expression(C) CTK_THEN then_instruction(Then). [
     add_ast(I, Then);
 }
 
+if_instruction(I) ::= CTK_IF(T) expression(C). [CTK_IF]
+{
+    I = levelc_if_missing_then(context, T, C);
+}
+
+if_instruction(I) ::= CTK_IF(T) CTK_THEN(Th) then_instruction(Then). [CTK_IF]
+{
+    I = levelc_if_bad_condition(context, T, Th, Then);
+}
+
+if_instruction(I) ::= CTK_IF(T) CTK_THEN(Th). [CTK_IF]
+{
+    I = levelc_if_bad_condition(context, T, Th, rxcp_levelc_ast_error(context, "14.3", Th));
+}
+
 then_instruction(I) ::= instruction(S).
 {
     I = S;
+}
+
+else_clause(I) ::= CTK_ELSE instruction(S).
+{
+    I = S;
+}
+
+else_clause(I) ::= CTK_ELSE(T).
+{
+    I = rxcp_levelc_ast_error(context, "14.4", T);
+}
+
+recovery_instruction(I) ::= simple_instruction(S).
+{
+    I = S;
+}
+
+recovery_instruction(I) ::= if_instruction(F).
+{
+    I = F;
+}
+
+unexpected_then(E) ::= CTK_THEN(T) recovery_instruction(S).
+{
+    E = levelc_error_then_or_else(context, "8.1", T, S);
+}
+
+unexpected_then(E) ::= CTK_THEN(T).
+{
+    E = rxcp_levelc_ast_error(context, "8.1", T);
+}
+
+unexpected_else(E) ::= CTK_ELSE(T) recovery_instruction(S).
+{
+    E = levelc_error_then_or_else(context, "8.2", T, S);
+}
+
+unexpected_else(E) ::= CTK_ELSE(T).
+{
+    E = rxcp_levelc_ast_error(context, "8.2", T);
 }
 
 expression(E) ::= expression(L) term(R).
