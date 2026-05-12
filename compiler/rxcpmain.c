@@ -143,8 +143,8 @@ static void help() {
             "  -n              No Optimising\n"
             "  -x              Disable compiler exits\n"
 #ifdef ENABLE_PARSER_MODE
-            "  --parser        Run as a language server (stdio mode)\n"
-            "  --port port     Run as a language server (socket mode on port)\n"
+            "  --syntaxhighlight  Run as a DSLSH syntax-highlighting server (stdio mode)\n"
+            "  --port port     Run as a DSLSH syntax-highlighting server (socket mode on port)\n"
 #endif
             ;
 
@@ -318,8 +318,13 @@ int rxcmain(int argc, char *argv[]) {
     for (i = 1; i < argc; i++) {
         if (argv[i][0] != '-') break; /* End of options */
 
+        if (strcmp(argv[i], "--help") == 0) {
+            help();
+            exit(0);
+        }
+
 #ifdef ENABLE_PARSER_MODE
-        if (strcmp(argv[i], "--syntaxhighlight") == 0) {
+        if (strcmp(argv[i], "--syntaxhighlight") == 0 || strcmp(argv[i], "--parser") == 0) {
             parser_mode = 1;
             parser_stdio = 1;
             continue;
@@ -600,10 +605,13 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Parse program for real */
     switch (context->level){
-        case LEVELA:
         case LEVELC:
+            fprintf(stderr,"REXX Level C (Classic REXX) is currently supported only for DSLSH syntax highlighting. Compilation is not supported yet\n");
+            break;
+
+        case LEVELA:
         case LEVELD:
-            fprintf(stderr,"REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
+            fprintf(stderr,"REXX Level A/D (cREXX Classic) - Not supported yet\n");
             break;
 
         case LEVELB:

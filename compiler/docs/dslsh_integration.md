@@ -105,8 +105,8 @@ for completion previews and similar "what would this look like?" queries.
 ## Manual Parser-Mode Testing
 
 The ctest syntax-highlighting fixtures use DSLSH's `parser_tester` tool. The
-test helper launches `rxc` with `-d --syntaxhighlight`, so tests pass the bare
-compiler path:
+test helper launches the parser command through DSLSH's parser-mode wrapper, so
+tests pass the bare compiler path:
 
 ```sh
 cmake-build-debug/dslsyntax-tools/parser_tester \
@@ -124,11 +124,11 @@ logging:
 /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc --syntaxhighlight
 ```
 
-Level C parser-mode support currently covers only the tracer subset documented
-in `compiler/docs/levelc_working_architecture.md`. For manual Level C tests,
-use headerless Classic REXX source for now. `OPTIONS LEVELC` is recognized by
-the pre-scan, but the Level C grammar has not yet parsed `OPTIONS` as a normal
-instruction after that pre-scan.
+Level C parser-mode support now uses the dedicated Classic REXX scanner, glue,
+Lemon grammar, and validation path documented in
+[Level C Syntax Highlighting And Integration Plan](levelc_syntax_highlighting.md).
+Use `OPTIONS LEVELC` at the top of manual Classic REXX smoke tests unless you
+are intentionally checking headerless parser-mode defaulting.
 
 ## DSLSH Features Used
 
@@ -346,6 +346,8 @@ The current implementation is spread across a small number of files:
 | `compiler/rxcp_source_tree.h` / `compiler/rxcp_source_tree.c` | immutable source tree, source-owned diagnostics, source-owned semantic sidecars |
 | `compiler/rxcp_val_orch.c` | build order for source-tree creation and validation pipeline |
 | `compiler/rxcpmain.c` | normal compiler path sync of source-owned diagnostics and semantics |
+| `compiler/rxcpcscn.re` / `rxcpcpar.c` / `rxcpcgmr.y` | Level C scanner, contextual adapter, and Lemon grammar |
+| `compiler/rxcpcdiag.c` / `rxcpcval.c` / `rxcpcsym.c` | Level C standard diagnostics, source-tree preparation, and symbol helpers |
 | `compiler/tests/src/test_highlight_cache.c` | retained-cache regression coverage |
 | `compiler/tests/src/test_source_semantics.c` | semantic sync and `identifier_id` coverage |
 | `compiler/tests/src/test_highlight_editor_diagnostics.c` | real editor-path diagnostics coverage |
@@ -376,5 +378,7 @@ The current implementation is spread across a small number of files:
 - decide which fold kinds should be promoted from editor heuristics to explicit
   emitted structure,
 - add grouped comment containers if multi-line comment folding is wanted,
+- keep Level C parser-mode fixtures in lockstep with tree-surgery lowering so
+  the highlighter remains the static syntax canary,
 - expand source-owned semantic metadata so hover, completion, and navigation can
   reuse the same source-tree path.

@@ -19,6 +19,46 @@ if (ENABLE_PARSER_MODE)
     add_executable(crexx_fake_editor src/fake_editor.c)
     target_link_libraries(crexx_fake_editor DSLSH::editor)
 
+    set(RXC_HELP_SYNTAXHIGHLIGHT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_help_syntaxhighlight.cmake")
+    file(GENERATE OUTPUT "${RXC_HELP_SYNTAXHIGHLIGHT_SCRIPT}" CONTENT
+"execute_process(
+    COMMAND \"$<TARGET_FILE:rxc>\" -h
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+    OUTPUT_VARIABLE out
+    ERROR_VARIABLE err
+    RESULT_VARIABLE res
+)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"rxc -h failed with exit code \${res}.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")
+endif()
+if(NOT out MATCHES \"--syntaxhighlight\")
+  message(FATAL_ERROR \"rxc help does not advertise --syntaxhighlight.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")
+endif()
+if(out MATCHES \"--parser\")
+  message(FATAL_ERROR \"rxc help still advertises --parser instead of --syntaxhighlight.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")
+endif()
+execute_process(
+    COMMAND \"$<TARGET_FILE:rxc>\" --help
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+    OUTPUT_VARIABLE long_out
+    ERROR_VARIABLE long_err
+    RESULT_VARIABLE long_res
+)
+if(NOT long_res EQUAL 0)
+  message(FATAL_ERROR \"rxc --help failed with exit code \${long_res}.\\nSTDOUT:\\n\${long_out}\\nSTDERR:\\n\${long_err}\")
+endif()
+if(NOT long_out MATCHES \"--syntaxhighlight\")
+  message(FATAL_ERROR \"rxc --help does not advertise --syntaxhighlight.\\nSTDOUT:\\n\${long_out}\\nSTDERR:\\n\${long_err}\")
+endif()
+if(long_out MATCHES \"--parser\")
+  message(FATAL_ERROR \"rxc --help still advertises --parser instead of --syntaxhighlight.\\nSTDOUT:\\n\${long_out}\\nSTDERR:\\n\${long_err}\")
+endif()
+")
+    add_test(NAME rxc_help_syntaxhighlight
+             COMMAND ${CMAKE_COMMAND} -P "${RXC_HELP_SYNTAXHIGHLIGHT_SCRIPT}"
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(rxc_help_syntaxhighlight PROPERTIES LABELS "compiler;syntax_highlighting")
+
     function(add_crexx_syntax_highlight_test NAME SOURCE_FILE)
         set(options)
         set(oneValueArgs)
@@ -2204,7 +2244,7 @@ set(all \"\${out}\${err}\")
 if(res EQUAL 0)
   message(FATAL_ERROR \"Level C compile unexpectedly succeeded.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")
 endif()
-if(NOT all MATCHES \"REXX Level A/C/D \\\\(cREXX Classic\\\\) - Not supported yet\")
+if(NOT all MATCHES \"REXX Level C \\\\(Classic REXX\\\\) is currently supported only for DSLSH syntax highlighting\\\\. Compilation is not supported yet\")
   message(FATAL_ERROR \"Missing Level C unsupported diagnostic.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")
 endif()
 ")

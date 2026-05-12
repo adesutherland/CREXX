@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
     cb_log_init(NULL); // Log to stderr
 
-    snprintf(cmd, sizeof(cmd), "%s -d --parser", rxc_path);
+    snprintf(cmd, sizeof(cmd), "%s -d --syntaxhighlight", rxc_path);
 
     printf("Starting parser with command: %s\n", cmd);
     comm = create_stdio_communication_functions(cmd);

@@ -1,6 +1,6 @@
 # Level C Classic REXX Working Architecture
 
-Status: working draft, tracer bullet implementation started
+Status: working draft; syntax-highlighting milestone implemented, lowering not started
 Last updated: 2026-05-12
 
 This document is the working record for the Level C programme. Level C means
@@ -11,6 +11,9 @@ The first milestone is a Level C syntax highlighter through DSLSH. That
 milestone parses and validates Level C source, builds the user-facing source
 tree, emits diagnostics/highlighting, and stops before canonical lowering,
 optimization, assembly, or VM execution.
+
+For the implemented highlighter contract and the forward plan into canonical
+lowering, see `compiler/docs/levelc_syntax_highlighting.md`.
 
 ## 1. Source Material Reviewed
 
@@ -1079,7 +1082,7 @@ PoC 2 execution result:
   useful tracing of nested `IF` fixtures; Lemon and the walkers should still
   own full dangling-`ELSE` validation.
 
-## 11. First Implementation Sketch
+## 11. First Implementation Sketch (Historical)
 
 The first production tracer bullet was added on 2026-05-10. It keeps Level C
 inside new Level C components and parser-mode routing:
@@ -1120,10 +1123,9 @@ Safety boundary:
   `REXX Level A/C/D (cREXX Classic) - Not supported yet`.
 - The tracer does not lower to canonical Level B, validate Classic semantics,
   emit assembly, or execute.
-- The Level C highlighter grammar has not yet parsed `OPTIONS` as a normal
-  instruction after the pre-scan. The first DSLSH tracer fixture is therefore
-  headerless Classic source. Adding `OPTIONS` as a parsed Level C instruction
-  is an early follow-up.
+- At this historical point, the Level C highlighter grammar had not yet parsed
+  `OPTIONS` as a normal instruction after the pre-scan. That gap is now closed;
+  current manual tests should usually include `OPTIONS LEVELC`.
 
 Regression tests added:
 
@@ -1283,8 +1285,8 @@ Manual DSLSH/THE testing:
   `parser_tester` appends `-d --syntaxhighlight` itself.
 - For THE or another real DSLSH editor integration, use the parser command
   `/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc --syntaxhighlight`.
-- Use headerless Classic REXX source for Level C manual tests until the Level C
-  grammar parses `OPTIONS` as an ordinary instruction after the pre-scan.
+- Use `OPTIONS LEVELC` for Level C manual tests unless intentionally checking
+  headerless parser-mode defaulting.
 
 Level C DO/END control slice on 2026-05-11:
 
@@ -1695,7 +1697,8 @@ Level C parse/instruction completion slice on 2026-05-12:
   preserves common Classic REXX command-program style while making likely typos
   such as `SEY value` visible in DSLSH.
 - This remains parser/highlighter work only. Normal compilation of Level C still
-  stops with the existing "not supported yet" message outside parser mode.
+  stops outside parser mode with a diagnostic that Level C is currently
+  supported only for DSLSH syntax highlighting.
 
 Regression tests added or widened for this slice:
 
