@@ -9,14 +9,15 @@ options levelb numeric_common comments_slash
 
 ## Language Level
 
-Release 1 beta 1 documents Level B as the supported language level:
+The Release 1 beta line documents Level B as the supported compiler language:
 
 ```rexx
 options levelb
 ```
 
-Other level names may appear in project discussions or experimental code, but
-they should not be treated as release languages unless the page describing them
+Other level names identify historical, directional, or DSLSH tooling surfaces.
+See [Language levels](crexx_levels.md) for the full catalogue. Do not treat a
+level name as a release compiler language unless the page describing it
 explicitly says so.
 
 The compiler can also receive a default with `rxc --level levelb`. A source

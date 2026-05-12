@@ -1,13 +1,26 @@
 # Language Levels
 
-\crexx{} uses language levels to separate the implemented Level B systems
-language from planned or experimental REXX-family layers.
+\crexx{} uses language levels to name related REXX-family language surfaces
+without pretending they are all implemented by the same compiler. The letters
+are a map, not a compatibility promise.
 
-For Release 1 beta 1, Level B is the supported language level documented by
-this reference. Other levels are project direction unless their documentation
-explicitly states that a feature is implemented and tested.
+For the Release 1 beta line, Level B is the supported cREXX language documented
+by this reference. Other levels are either historical context, project
+direction, or editor/tooling targets unless their documentation explicitly says
+that a compiler feature is implemented and tested.
 
-## Level B
+## Summary
+
+- use Level B for current cREXX programs
+- treat Level C as Classic REXX compatibility work with real DSLSH
+  syntax-highlighting/parser-mode progress, but not yet a release compiler
+  language
+- treat Levels E and N as planned DSLSH syntax-highlighting targets for
+  Object REXX and NetRexx source, not as languages that cREXX intends to compile
+  or run
+- treat Levels D, G, and L as cREXX direction for future language work
+
+## Level B: Current cREXX
 
 Level B is the foundation language for the current compiler, standard library,
 tooling, and examples. It is deliberately more explicit than Classic REXX:
@@ -24,19 +37,37 @@ Level B is used to implement much of the standard library. That is an
 intentional part of the architecture: the same language available to users is
 also used to build the platform.
 
-## Current Level Status
+## Level Catalogue
 
-The following names are used by the project, but their status is different:
+The following names are used by the project, but their status is deliberately
+different:
 
-| Level | Release 1 beta 1 status |
-| --- | --- |
-| Level A | Historical proof of concept. Not a release target. |
-| Level B | Implemented foundation language and the focus of this documentation. |
-| Level C | Classic REXX compatibility direction. Not implemented as a release language. |
-| Level D | Direction for Classic-compatible extensions. Not a release language. |
-| Level E | OO REXX relationship point. Not delivered by this project. |
-| Level G | Modern general-purpose direction built on Level B. Some library work exists, but the level is not the baseline user language for this release. |
-| Level L | Language-engineering direction. Not a release language. |
+| Level | Meaning | Current project status                                                                                                                                 |
+| --- | --- |--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Level A | Early compact REXX proof-of-concept foundation. | Historical only. Not a release target.                                                                                                                 |
+| Level B | Current typed cREXX foundation language. | Implemented and documented as the Release 1 beta user language.                                                                                        |
+| Level C | Classic REXX compatibility. | Not a release compiler language yet. A dedicated DSLSH syntax-highlighting/parser-mode front end now exists as the first concrete compatibility slice. |
+| Level D | A cREXX-compatible extension direction above Classic REXX. | Direction only. Not a release language yet.                                                                                                            |
+| Level E | Object REXX / ooRexx relationship point. | Planned only as a DSLSH syntax-highlighting target. cREXX does not plan to compile or run ooRexx as Level E.                                           |
+| Level G | General-purpose modern cREXX direction built on Level B. | Directional, with some real library work such as `rxfnsg`; not the baseline user language for this release.                                            |
+| Level L | Language-engineering cREXX direction for parser, grammar, AST, and symbol-table work. | Direction only. Not a release language yet.                                                                                                            |
+| Level N | NetRexx relationship point: Rexx-family syntax with Java/JVM integration. | Planned only as a DSLSH syntax-highlighting target. cREXX does not plan to compile or run NetRexx as Level N.                                          |
+
+## DSLSH And Compatibility
+
+DSLSH syntax-highlighting support is allowed to be wider than the compiler. It
+can help users edit and diagnose REXX-family source without claiming that cREXX
+can execute that source.
+
+Level C is the first example of that split. The project now has Level C
+parser-mode and syntax-highlighting work for Classic REXX source, while normal
+`rxc` compilation of `options levelc` remains gated as unsupported. This lets
+the project build useful editor support and standard-diagnostic experience
+before committing to a full Classic REXX lowering/runtime path.
+
+Levels E and N should be understood in that same tooling sense. They reserve
+clear names for Object REXX and NetRexx editor support, but they are not cREXX
+runtime or source-compatibility commitments.
 
 ## Defaults
 
@@ -55,6 +86,6 @@ Programs that rely on Classic REXX's untyped variable model, late binding, or
 default built-in function visibility usually need small, explicit Level B
 changes.
 
-The compatibility goal for future levels is important project direction, but
+The compatibility goals for future levels are important project direction, but
 this Release 1 beta documentation should not describe future compatibility as
 current behaviour.
