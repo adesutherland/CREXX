@@ -169,6 +169,19 @@ static ASTNode *levelc_bad_expression_start(Context *context, Token *bad_token, 
     return node;
 }
 
+static ASTNode *levelc_current_token_error(Context *context,
+                                           const char *standard_code,
+                                           Token *anchor_token) {
+    ASTNode *node;
+    char *found;
+
+    found = levelc_diag_token_text(context ? context->current_parser_token : 0);
+    node = rxcp_levelc_ast_error_insert(context, standard_code, anchor_token,
+                                        "token", found);
+    free(found);
+    return node;
+}
+
 static ASTNode *levelc_unmatched_open_bracket(Context *context, Token *open_token, ASTNode *expression) {
     ASTNode *node;
 
@@ -253,15 +266,75 @@ static ASTNode *levelc_do_bad_keyword(Context *context,
     if (tail_expression) add_ast(node, tail_expression);
     return node;
 }
+
+static ASTNode *levelc_expected_keywords(Context *context,
+                                         const char *standard_code,
+                                         Token *bad_token,
+                                         const char *keywords) {
+    char *found;
+    ASTNode *node;
+
+    found = levelc_diag_token_text(bad_token);
+    node = rxcp_levelc_ast_error_insert2(context, standard_code, bad_token,
+                                         "keywords", keywords,
+                                         "token", found);
+    free(found);
+    return node;
+}
+
+static ASTNode *levelc_first_implicit_cmd_leaf(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    if (node->node_type == ERROR || node->node_type == WARNING) return 0;
+
+    if (node->node_type == OP_CONCAT || node->node_type == OP_SCONCAT ||
+        node->node_type == IMPLICIT_CMD) {
+        child = node->child;
+        while (child) {
+            ASTNode *leaf;
+
+            leaf = levelc_first_implicit_cmd_leaf(child);
+            if (leaf) return leaf;
+            child = child->sibling;
+        }
+        return 0;
+    }
+
+    return node;
+}
+
+static int levelc_implicit_cmd_starts_with_string(ASTNode *expression) {
+    ASTNode *leaf;
+
+    leaf = levelc_first_implicit_cmd_leaf(expression);
+    return leaf && leaf->node_type == STRING;
+}
+
+static ASTNode *levelc_implicit_cmd_warning(Context *context, ASTNode *expression) {
+    ASTNode *leaf;
+    ASTNode *node;
+
+    leaf = levelc_first_implicit_cmd_leaf(expression);
+    if (!leaf || !leaf->token) return 0;
+
+    node = ast_f(context, TOKEN, leaf->token);
+    mknd_war(node, "RXC-LC-IMPLICIT_ADDRESS");
+    return node;
+}
 }
 
 %token CTK_UNKNOWN CTK_BADCOMMENT CTK_EOS CTK_EOC CTK_MISSING_EXPR CTK_MISSING_RPAREN.
-%token CTK_VAR_SYMBOL CTK_DO_CONTROL_SYMBOL CTK_LABEL CTK_INTEGER CTK_STRING.
+%token CTK_VAR_SYMBOL CTK_COMMAND_SYMBOL CTK_DO_CONTROL_SYMBOL CTK_LABEL CTK_INTEGER CTK_STRING.
 %token CTK_EQUAL CTK_ADDRESS CTK_ARG CTK_CALL CTK_DROP CTK_EXIT CTK_INTERPRET CTK_NOP CTK_NUMERIC.
-%token CTK_OPTIONS CTK_PROCEDURE CTK_PULL CTK_PUSH CTK_QUEUE CTK_RETURN CTK_SAY CTK_SIGNAL CTK_TRACE.
+%token CTK_OPTIONS CTK_PARSE CTK_PROCEDURE CTK_PULL CTK_PUSH CTK_QUEUE CTK_RETURN CTK_SAY CTK_SIGNAL CTK_TRACE.
 %token CTK_IF CTK_THEN CTK_ELSE CTK_SELECT CTK_WHEN CTK_OTHERWISE CTK_DO CTK_END.
 %token CTK_TO CTK_BY CTK_FOR CTK_WHILE CTK_UNTIL CTK_FOREVER CTK_LEAVE CTK_ITERATE.
-%token CTK_COMMA CTK_OPEN_BRACKET CTK_CLOSE_BRACKET.
+%token CTK_UPPER CTK_SOURCE CTK_LINEIN CTK_VERSION CTK_VALUE CTK_VAR CTK_WITH.
+%token CTK_EXPOSE CTK_DIGITS CTK_FORM CTK_FUZZ CTK_ENGINEERING CTK_SCIENTIFIC.
+%token CTK_ON CTK_OFF CTK_NAME CTK_ERROR CTK_FAILURE CTK_HALT CTK_NOTREADY CTK_NOVALUE CTK_SYNTAX CTK_LOSTDIGITS.
+%token CTK_INPUT CTK_OUTPUT CTK_STREAM CTK_STEM CTK_NORMAL CTK_APPEND CTK_REPLACE.
+%token CTK_COMMA CTK_DOT CTK_OPEN_BRACKET CTK_CLOSE_BRACKET.
 %token CTK_PLUS CTK_MINUS CTK_HIGH_PRIORITY_MINUS CTK_NOT.
 %token CTK_CONCAT CTK_MULT CTK_DIV CTK_IDIV CTK_MOD CTK_POWER.
 %token CTK_NEQ CTK_GT CTK_LT CTK_GTE CTK_LTE.
@@ -276,6 +349,11 @@ static ASTNode *levelc_do_bad_keyword(Context *context,
 %nonassoc CTK_ELSE.
 
 %type bad_expression_start {Token*}
+%type bad_condition_start {Token*}
+%type bad_form_option_start {Token*}
+%type bad_instruction_tail_start {Token*}
+%type bad_name_target_start {Token*}
+%type bad_variable_ref_start {Token*}
 
 %stack_size 0
 
@@ -396,6 +474,11 @@ instruction(E) ::= CTK_UNKNOWN(T).
     E = rxcp_levelc_ast_error_token(context, "13.1", T);
 }
 
+instruction(E) ::= CTK_DOT(T).
+{
+    E = rxcp_levelc_ast_error_token(context, "13.1", T);
+}
+
 simple_instruction(S) ::= say_instruction(I).
 {
     S = I;
@@ -446,6 +529,11 @@ simple_instruction(S) ::= options_instruction(O).
     S = O;
 }
 
+simple_instruction(S) ::= parse_instruction(I).
+{
+    S = I;
+}
+
 simple_instruction(S) ::= procedure_instruction(I).
 {
     S = I;
@@ -481,6 +569,11 @@ simple_instruction(S) ::= trace_instruction(I).
     S = I;
 }
 
+simple_instruction(S) ::= command_instruction(I).
+{
+    S = I;
+}
+
 simple_instruction(S) ::= assignment(A).
 {
     S = A;
@@ -496,28 +589,107 @@ simple_instruction(S) ::= iterate_instruction(I).
     S = I;
 }
 
-address_instruction(I) ::= CTK_ADDRESS(T) simple_tail(L).
+address_instruction(I) ::= CTK_ADDRESS(T) address_value_opt(V) address_with_opt(W).
 {
     I = ast_f(context, LEVELC_ADDRESS, T);
-    if (L) add_ast(I, L);
+    if (V) add_ast(I, V);
+    if (W) add_ast(I, W);
 }
 
-arg_instruction(I) ::= CTK_ARG(T) simple_tail(L).
+arg_instruction(I) ::= CTK_ARG(T) template_list_opt(L).
 {
     I = ast_f(context, LEVELC_ARG, T);
     if (L) add_ast(I, L);
 }
 
-call_instruction(I) ::= CTK_CALL(T) simple_tail(L).
+call_instruction(I) ::= CTK_CALL(T) call_target(C) simple_tail(L).
 {
     I = ast_f(context, CALL, T);
+    add_ast(I, C);
     if (L) add_ast(I, L);
 }
 
-drop_instruction(I) ::= CTK_DROP(T) simple_tail(L).
+call_instruction(I) ::= CTK_CALL(T) CTK_ON(O) callable_condition(C) call_name_opt(N).
+{
+    I = ast_f(context, CALL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, C);
+    if (N) add_ast(I, N);
+}
+
+call_instruction(I) ::= CTK_CALL(T) CTK_ON(O) bad_condition_start(B) simple_tail(L).
+{
+    I = ast_f(context, CALL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, levelc_expected_keywords(context, "25.1", B,
+                                        "ERROR FAILURE HALT NOTREADY"));
+    if (L) add_ast(I, L);
+}
+
+call_instruction(I) ::= CTK_CALL(T) CTK_ON(O).
+{
+    I = ast_f(context, CALL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, levelc_expected_keywords(context, "25.1",
+                                        context ? context->current_parser_token : O,
+                                        "ERROR FAILURE HALT NOTREADY"));
+}
+
+call_instruction(I) ::= CTK_CALL(T) CTK_OFF(O) callable_condition(C).
+{
+    I = ast_f(context, CALL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, C);
+}
+
+call_instruction(I) ::= CTK_CALL(T) CTK_OFF(O) bad_condition_start(B) simple_tail(L).
+{
+    I = ast_f(context, CALL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, levelc_expected_keywords(context, "25.2", B,
+                                        "ERROR FAILURE HALT NOTREADY"));
+    if (L) add_ast(I, L);
+}
+
+call_instruction(I) ::= CTK_CALL(T) CTK_OFF(O).
+{
+    I = ast_f(context, CALL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, levelc_expected_keywords(context, "25.2",
+                                        context ? context->current_parser_token : O,
+                                        "ERROR FAILURE HALT NOTREADY"));
+}
+
+call_instruction(I) ::= CTK_CALL(T) bad_name_target_start(B) simple_tail(L).
+{
+    I = ast_f(context, CALL, T);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "19.2", B));
+    if (L) add_ast(I, L);
+}
+
+call_instruction(I) ::= CTK_CALL(T).
+{
+    I = ast_f(context, CALL, T);
+    add_ast(I, rxcp_levelc_ast_error(context, "19.2", T));
+}
+
+drop_instruction(I) ::= CTK_DROP(T) variable_list(L).
 {
     I = ast_f(context, LEVELC_DROP, T);
     if (L) add_ast(I, L);
+}
+
+drop_instruction(I) ::= CTK_DROP(T) bad_variable_ref_start(B) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_DROP, T);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "20.1", B));
+    if (L) add_ast(I, L);
+}
+
+drop_instruction(I) ::= CTK_DROP(T).
+{
+    I = ast_f(context, LEVELC_DROP, T);
+    add_ast(I, rxcp_levelc_ast_error(context, "20.1", T));
 }
 
 exit_instruction(I) ::= CTK_EXIT(T) expression(E).
@@ -548,22 +720,279 @@ nop_instruction(I) ::= CTK_NOP(T).
     I = ast_f(context, NOP, T);
 }
 
-numeric_instruction(I) ::= CTK_NUMERIC(T) simple_tail(L).
+numeric_instruction(I) ::= CTK_NUMERIC(T) CTK_DIGITS(D) expression_opt(E).
 {
     I = ast_f(context, LEVELC_NUMERIC, T);
+    add_ast(I, ast_f(context, LITERAL, D));
+    if (E) add_ast(I, E);
+}
+
+numeric_instruction(I) ::= CTK_NUMERIC(T) CTK_FORM(F) CTK_ENGINEERING(E).
+{
+    I = ast_f(context, LEVELC_NUMERIC, T);
+    add_ast(I, ast_f(context, LITERAL, F));
+    add_ast(I, ast_f(context, LITERAL, E));
+}
+
+numeric_instruction(I) ::= CTK_NUMERIC(T) CTK_FORM(F) CTK_SCIENTIFIC(S).
+{
+    I = ast_f(context, LEVELC_NUMERIC, T);
+    add_ast(I, ast_f(context, LITERAL, F));
+    add_ast(I, ast_f(context, LITERAL, S));
+}
+
+numeric_instruction(I) ::= CTK_NUMERIC(T) CTK_FORM(F) CTK_VALUE expression(E).
+{
+    I = ast_f(context, LEVELC_NUMERIC, T);
+    add_ast(I, ast_f(context, LITERAL, F));
+    add_ast(I, E);
+}
+
+numeric_instruction(I) ::= CTK_NUMERIC(T) CTK_FORM(F) CTK_VALUE(V).
+{
+    I = ast_f(context, LEVELC_NUMERIC, T);
+    add_ast(I, ast_f(context, LITERAL, F));
+    add_ast(I, ast_f(context, LITERAL, V));
+    add_ast(I, levelc_current_token_error(context, "35.1", V));
+}
+
+numeric_instruction(I) ::= CTK_NUMERIC(T) CTK_FORM(F) bad_form_option_start(B) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_NUMERIC, T);
+    add_ast(I, ast_f(context, LITERAL, F));
+    add_ast(I, levelc_expected_keywords(context, "25.11", B,
+                                        "ENGINEERING SCIENTIFIC VALUE"));
     if (L) add_ast(I, L);
 }
 
-procedure_instruction(I) ::= CTK_PROCEDURE(T) simple_tail(L).
+numeric_instruction(I) ::= CTK_NUMERIC(T) CTK_FORM(F).
+{
+    I = ast_f(context, LEVELC_NUMERIC, T);
+    add_ast(I, ast_f(context, LITERAL, F));
+    add_ast(I, levelc_expected_keywords(context, "25.11", F,
+                                        "ENGINEERING SCIENTIFIC VALUE"));
+}
+
+numeric_instruction(I) ::= CTK_NUMERIC(T) CTK_FUZZ(F) expression_opt(E).
+{
+    I = ast_f(context, LEVELC_NUMERIC, T);
+    add_ast(I, ast_f(context, LITERAL, F));
+    if (E) add_ast(I, E);
+}
+
+numeric_instruction(I) ::= CTK_NUMERIC(T) CTK_VAR_SYMBOL(B) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_NUMERIC, T);
+    add_ast(I, levelc_expected_keywords(context, "25.15", B,
+                                        "DIGITS FORM FUZZ"));
+    if (L) add_ast(I, L);
+}
+
+numeric_instruction(I) ::= CTK_NUMERIC(T) bad_instruction_tail_start(B) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_NUMERIC, T);
+    add_ast(I, levelc_expected_keywords(context, "25.15", B,
+                                        "DIGITS FORM FUZZ"));
+    if (L) add_ast(I, L);
+}
+
+procedure_instruction(I) ::= CTK_PROCEDURE(T).
 {
     I = ast_f(context, LEVELC_PROCEDURE, T);
+}
+
+procedure_instruction(I) ::= CTK_PROCEDURE(T) CTK_EXPOSE(E) variable_list(L).
+{
+    I = ast_f(context, LEVELC_PROCEDURE, T);
+    add_ast(I, ast_f(context, LITERAL, E));
+    add_ast(I, L);
+}
+
+procedure_instruction(I) ::= CTK_PROCEDURE(T) CTK_EXPOSE(E).
+{
+    I = ast_f(context, LEVELC_PROCEDURE, T);
+    add_ast(I, ast_f(context, LITERAL, E));
+    add_ast(I, levelc_current_token_error(context, "20.1", E));
+}
+
+procedure_instruction(I) ::= CTK_PROCEDURE(T) CTK_EXPOSE(E) bad_variable_ref_start(B) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_PROCEDURE, T);
+    add_ast(I, ast_f(context, LITERAL, E));
+    add_ast(I, rxcp_levelc_ast_error_token(context, "20.1", B));
     if (L) add_ast(I, L);
 }
 
-pull_instruction(I) ::= CTK_PULL(T) simple_tail(L).
+procedure_instruction(I) ::= CTK_PROCEDURE(T) CTK_VAR_SYMBOL(B) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_PROCEDURE, T);
+    add_ast(I, levelc_expected_keywords(context, "25.17", B, "EXPOSE"));
+    if (L) add_ast(I, L);
+}
+
+procedure_instruction(I) ::= CTK_PROCEDURE(T) bad_instruction_tail_start(B) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_PROCEDURE, T);
+    add_ast(I, levelc_expected_keywords(context, "25.17", B, "EXPOSE"));
+    if (L) add_ast(I, L);
+}
+
+pull_instruction(I) ::= CTK_PULL(T) template_list_opt(L).
 {
     I = ast_f(context, PULL, T);
     if (L) add_ast(I, L);
+}
+
+parse_instruction(I) ::= CTK_PARSE(T) parse_type(P) template_list_opt(L).
+{
+    I = ast_f(context, PARSE, T);
+    add_ast(I, P);
+    if (L) add_ast(I, L);
+}
+
+parse_instruction(I) ::= CTK_PARSE(T) CTK_UPPER(U) parse_type(P) template_list_opt(L).
+{
+    ASTNode *options;
+
+    I = ast_f(context, PARSE, T);
+    options = ast_ft(context, OPTIONS);
+    add_ast(options, ast_f(context, LITERAL, U));
+    add_ast(I, options);
+    add_ast(I, P);
+    if (L) add_ast(I, L);
+}
+
+parse_instruction(I) ::= CTK_PARSE(T).
+{
+    I = ast_f(context, PARSE, T);
+    add_ast(I, levelc_expected_keywords(context, "25.12", T,
+                                        "ARG PULL SOURCE LINEIN VERSION VALUE VAR"));
+}
+
+parse_instruction(I) ::= CTK_PARSE(T) CTK_UPPER(U).
+{
+    I = ast_f(context, PARSE, T);
+    add_ast(I, ast_f(context, LITERAL, U));
+    add_ast(I, levelc_expected_keywords(context, "25.13", U,
+                                        "ARG PULL SOURCE LINEIN VERSION VALUE VAR"));
+}
+
+parse_instruction(I) ::= CTK_PARSE(T) CTK_VAR_SYMBOL(B) simple_tail(L).
+{
+    I = ast_f(context, PARSE, T);
+    add_ast(I, levelc_expected_keywords(context, "25.12", B,
+                                        "ARG PULL SOURCE LINEIN VERSION VALUE VAR"));
+    if (L) add_ast(I, L);
+}
+
+parse_instruction(I) ::= CTK_PARSE(T) CTK_UPPER(U) CTK_VAR_SYMBOL(B) simple_tail(L).
+{
+    I = ast_f(context, PARSE, T);
+    add_ast(I, ast_f(context, LITERAL, U));
+    add_ast(I, levelc_expected_keywords(context, "25.13", B,
+                                        "ARG PULL SOURCE LINEIN VERSION VALUE VAR"));
+    if (L) add_ast(I, L);
+}
+
+parse_instruction(I) ::= CTK_PARSE(T) bad_instruction_tail_start(B) simple_tail(L).
+{
+    I = ast_f(context, PARSE, T);
+    add_ast(I, levelc_expected_keywords(context, "25.12", B,
+                                        "ARG PULL SOURCE LINEIN VERSION VALUE VAR"));
+    if (L) add_ast(I, L);
+}
+
+parse_instruction(I) ::= CTK_PARSE(T) CTK_UPPER(U) bad_instruction_tail_start(B) simple_tail(L).
+{
+    I = ast_f(context, PARSE, T);
+    add_ast(I, ast_f(context, LITERAL, U));
+    add_ast(I, levelc_expected_keywords(context, "25.13", B,
+                                        "ARG PULL SOURCE LINEIN VERSION VALUE VAR"));
+    if (L) add_ast(I, L);
+}
+
+parse_instruction(I) ::= CTK_PARSE(T) CTK_VAR(V).
+{
+    I = ast_f(context, PARSE, T);
+    add_ast(I, ast_f(context, LITERAL, V));
+    add_ast(I, levelc_current_token_error(context, "20.1", V));
+}
+
+parse_instruction(I) ::= CTK_PARSE(T) CTK_UPPER(U) CTK_VAR(V).
+{
+    I = ast_f(context, PARSE, T);
+    add_ast(I, ast_f(context, LITERAL, U));
+    add_ast(I, ast_f(context, LITERAL, V));
+    add_ast(I, levelc_current_token_error(context, "20.1", V));
+}
+
+parse_instruction(I) ::= CTK_PARSE(T) CTK_VALUE(V) expression_c(E).
+{
+    I = ast_f(context, PARSE, T);
+    add_ast(I, ast_f(context, LITERAL, V));
+    add_ast(I, E);
+    add_ast(I, rxcp_levelc_ast_error(context, "38.3", V));
+}
+
+parse_instruction(I) ::= CTK_PARSE(T) CTK_UPPER(U) CTK_VALUE(V) expression_c(E).
+{
+    ASTNode *options;
+
+    I = ast_f(context, PARSE, T);
+    options = ast_ft(context, OPTIONS);
+    add_ast(options, ast_f(context, LITERAL, U));
+    add_ast(I, options);
+    add_ast(I, ast_f(context, LITERAL, V));
+    add_ast(I, E);
+    add_ast(I, rxcp_levelc_ast_error(context, "38.3", V));
+}
+
+parse_type(P) ::= CTK_ARG(T).
+{
+    P = ast_f(context, LITERAL, T);
+}
+
+parse_type(P) ::= CTK_PULL(T).
+{
+    P = ast_f(context, LITERAL, T);
+}
+
+parse_type(P) ::= CTK_SOURCE(T).
+{
+    P = ast_f(context, LITERAL, T);
+}
+
+parse_type(P) ::= CTK_LINEIN(T).
+{
+    P = ast_f(context, LITERAL, T);
+}
+
+parse_type(P) ::= CTK_VERSION(T).
+{
+    P = ast_f(context, LITERAL, T);
+}
+
+parse_type(P) ::= CTK_VALUE(T) CTK_WITH.
+{
+    P = ast_f(context, LITERAL, T);
+}
+
+parse_type(P) ::= CTK_VALUE(T) expression_c(E) CTK_WITH.
+{
+    P = ast_f(context, LITERAL, T);
+    add_ast(P, E);
+}
+
+parse_type(P) ::= CTK_VAR(T) CTK_VAR_SYMBOL(V).
+{
+    P = ast_f(context, VAR_REFERENCE, V);
+    add_ast(P, ast_f(context, TOKEN, T));
+}
+
+parse_type(P) ::= CTK_VAR(T) bad_name_target_start(B).
+{
+    P = ast_f(context, TOKEN, T);
+    add_ast(P, rxcp_levelc_ast_error_token(context, "20.1", B));
 }
 
 push_instruction(I) ::= CTK_PUSH(T) expression(E).
@@ -599,16 +1028,116 @@ return_instruction(I) ::= CTK_RETURN(T).
     I = ast_f(context, RETURN, T);
 }
 
-signal_instruction(I) ::= CTK_SIGNAL(T) simple_tail(L).
+signal_instruction(I) ::= CTK_SIGNAL(T) signal_target(S).
 {
     I = ast_f(context, LEVELC_SIGNAL, T);
+    add_ast(I, S);
+}
+
+signal_instruction(I) ::= CTK_SIGNAL(T) CTK_ON(O) signal_condition(C) call_name_opt(N).
+{
+    I = ast_f(context, LEVELC_SIGNAL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, C);
+    if (N) add_ast(I, N);
+}
+
+signal_instruction(I) ::= CTK_SIGNAL(T) CTK_ON(O) bad_condition_start(B) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_SIGNAL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, levelc_expected_keywords(context, "25.3", B,
+                                        "ERROR FAILURE HALT NOTREADY NOVALUE SYNTAX LOSTDIGITS"));
     if (L) add_ast(I, L);
 }
 
-trace_instruction(I) ::= CTK_TRACE(T) simple_tail(L).
+signal_instruction(I) ::= CTK_SIGNAL(T) CTK_ON(O).
+{
+    I = ast_f(context, LEVELC_SIGNAL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, levelc_expected_keywords(context, "25.3",
+                                        context ? context->current_parser_token : O,
+                                        "ERROR FAILURE HALT NOTREADY NOVALUE SYNTAX LOSTDIGITS"));
+}
+
+signal_instruction(I) ::= CTK_SIGNAL(T) CTK_OFF(O) signal_condition(C).
+{
+    I = ast_f(context, LEVELC_SIGNAL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, C);
+}
+
+signal_instruction(I) ::= CTK_SIGNAL(T) CTK_OFF(O) bad_condition_start(B) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_SIGNAL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, levelc_expected_keywords(context, "25.4", B,
+                                        "ERROR FAILURE HALT NOTREADY NOVALUE SYNTAX LOSTDIGITS"));
+    if (L) add_ast(I, L);
+}
+
+signal_instruction(I) ::= CTK_SIGNAL(T) CTK_OFF(O).
+{
+    I = ast_f(context, LEVELC_SIGNAL, T);
+    add_ast(I, ast_f(context, LITERAL, O));
+    add_ast(I, levelc_expected_keywords(context, "25.4",
+                                        context ? context->current_parser_token : O,
+                                        "ERROR FAILURE HALT NOTREADY NOVALUE SYNTAX LOSTDIGITS"));
+}
+
+signal_instruction(I) ::= CTK_SIGNAL(T) CTK_VALUE expression(E).
+{
+    I = ast_f(context, LEVELC_SIGNAL, T);
+    add_ast(I, E);
+}
+
+signal_instruction(I) ::= CTK_SIGNAL(T) CTK_VALUE(V).
+{
+    I = ast_f(context, LEVELC_SIGNAL, T);
+    add_ast(I, ast_f(context, LITERAL, V));
+    add_ast(I, levelc_current_token_error(context, "19.4", V));
+}
+
+signal_instruction(I) ::= CTK_SIGNAL(T) bad_name_target_start(B) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_SIGNAL, T);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "19.4", B));
+    if (L) add_ast(I, L);
+}
+
+signal_instruction(I) ::= CTK_SIGNAL(T).
+{
+    I = ast_f(context, LEVELC_SIGNAL, T);
+    add_ast(I, rxcp_levelc_ast_error(context, "19.4", T));
+}
+
+trace_instruction(I) ::= CTK_TRACE(T).
 {
     I = ast_f(context, LEVELC_TRACE, T);
-    if (L) add_ast(I, L);
+}
+
+trace_instruction(I) ::= CTK_TRACE(T) trace_target(C).
+{
+    I = ast_f(context, LEVELC_TRACE, T);
+    add_ast(I, C);
+}
+
+trace_instruction(I) ::= CTK_TRACE(T) CTK_VALUE expression(E).
+{
+    I = ast_f(context, LEVELC_TRACE, T);
+    add_ast(I, E);
+}
+
+command_instruction(I) ::= command_expression(E).
+{
+    I = ast_ft(context, IMPLICIT_CMD);
+    add_ast(I, E);
+    if (!levelc_implicit_cmd_starts_with_string(E)) {
+        ASTNode *W;
+
+        W = levelc_implicit_cmd_warning(context, E);
+        if (W) add_ast(I, W);
+    }
 }
 
 say_instruction(S) ::= CTK_SAY(T) expression(E).
@@ -645,6 +1174,405 @@ option_tail(L) ::= .
     L = 0;
 }
 
+expression_opt(E) ::= expression(V).
+{
+    E = V;
+}
+
+expression_opt(E) ::= .
+{
+    E = 0;
+}
+
+address_value_opt(V) ::= .
+{
+    V = 0;
+}
+
+address_value_opt(V) ::= CTK_VALUE(T) expression(E).
+{
+    V = ast_f(context, LITERAL, T);
+    add_ast(V, E);
+}
+
+address_value_opt(V) ::= CTK_VALUE(T).
+{
+    V = ast_f(context, LITERAL, T);
+    add_ast(V, levelc_current_token_error(context, "19.1", T));
+}
+
+address_value_opt(V) ::= CTK_VAR_SYMBOL(T) simple_tail(L).
+{
+    V = ast_f(context, LITERAL, T);
+    if (L) add_ast(V, L);
+}
+
+address_value_opt(V) ::= CTK_STRING(T) simple_tail(L).
+{
+    V = ast_f(context, STRING, T);
+    if (L) add_ast(V, L);
+}
+
+address_with_opt(W) ::= .
+{
+    W = 0;
+}
+
+address_with_opt(W) ::= CTK_WITH(T) address_connection(C).
+{
+    W = ast_f(context, WITH, T);
+    add_ast(W, C);
+}
+
+address_with_opt(W) ::= CTK_WITH(T) bad_name_target_start(B) simple_tail(L).
+{
+    W = ast_f(context, WITH, T);
+    add_ast(W, levelc_expected_keywords(context, "25.5", B,
+                                        "INPUT OUTPUT ERROR"));
+    if (L) add_ast(W, L);
+}
+
+address_with_opt(W) ::= CTK_WITH(T) CTK_VAR_SYMBOL(B) simple_tail(L).
+{
+    W = ast_f(context, WITH, T);
+    add_ast(W, levelc_expected_keywords(context, "25.5", B,
+                                        "INPUT OUTPUT ERROR"));
+    if (L) add_ast(W, L);
+}
+
+address_with_opt(W) ::= CTK_WITH(T) CTK_STRING(B) simple_tail(L).
+{
+    W = ast_f(context, WITH, T);
+    add_ast(W, levelc_expected_keywords(context, "25.5", B,
+                                        "INPUT OUTPUT ERROR"));
+    if (L) add_ast(W, L);
+}
+
+address_with_opt(W) ::= CTK_WITH(T).
+{
+    W = ast_f(context, WITH, T);
+    add_ast(W, levelc_expected_keywords(context, "25.5", T,
+                                        "INPUT OUTPUT ERROR"));
+}
+
+address_connection(C) ::= address_connection(C0) address_connection_clause(A).
+{
+    C = C0;
+    add_ast(C, A);
+}
+
+address_connection(C) ::= address_connection_clause(A).
+{
+    C = ast_ft(context, ARGS);
+    add_ast(C, A);
+}
+
+address_connection_clause(A) ::= address_connection_head(H) address_connection_tail(T).
+{
+    A = H;
+    if (T) add_ast(A, T);
+}
+
+address_connection_head(A) ::= CTK_INPUT(T).
+{
+    A = ast_f(context, LITERAL, T);
+}
+
+address_connection_head(A) ::= CTK_OUTPUT(T).
+{
+    A = ast_f(context, LITERAL, T);
+}
+
+address_connection_head(A) ::= CTK_ERROR(T).
+{
+    A = ast_f(context, LITERAL, T);
+}
+
+address_connection_tail(L) ::= address_connection_tail(L0) address_connection_atom(A).
+{
+    L = L0 ? L0 : ast_ft(context, ARGS);
+    add_ast(L, A);
+}
+
+address_connection_tail(L) ::= .
+{
+    L = 0;
+}
+
+address_connection_atom(A) ::= CTK_STREAM(T).
+{
+    A = ast_f(context, LITERAL, T);
+}
+
+address_connection_atom(A) ::= CTK_STEM(T).
+{
+    A = ast_f(context, LITERAL, T);
+}
+
+address_connection_atom(A) ::= CTK_NORMAL(T).
+{
+    A = ast_f(context, LITERAL, T);
+}
+
+address_connection_atom(A) ::= CTK_APPEND(T).
+{
+    A = ast_f(context, LITERAL, T);
+}
+
+address_connection_atom(A) ::= CTK_REPLACE(T).
+{
+    A = ast_f(context, LITERAL, T);
+}
+
+address_connection_atom(A) ::= CTK_VAR_SYMBOL(T).
+{
+    A = ast_f(context, LITERAL, T);
+}
+
+address_connection_atom(A) ::= CTK_STRING(T).
+{
+    A = ast_f(context, STRING, T);
+}
+
+address_connection_atom(A) ::= bad_name_target_start(T).
+{
+    A = rxcp_levelc_ast_error_token(context, "20.1", T);
+}
+
+call_target(T) ::= CTK_VAR_SYMBOL(S).
+{
+    T = ast_f(context, LITERAL, S);
+}
+
+call_target(T) ::= CTK_STRING(S).
+{
+    T = ast_f(context, STRING, S);
+}
+
+callable_condition(C) ::= CTK_ERROR(T).
+{
+    C = ast_f(context, LITERAL, T);
+}
+
+callable_condition(C) ::= CTK_FAILURE(T).
+{
+    C = ast_f(context, LITERAL, T);
+}
+
+callable_condition(C) ::= CTK_HALT(T).
+{
+    C = ast_f(context, LITERAL, T);
+}
+
+callable_condition(C) ::= CTK_NOTREADY(T).
+{
+    C = ast_f(context, LITERAL, T);
+}
+
+signal_condition(C) ::= callable_condition(K).
+{
+    C = K;
+}
+
+signal_condition(C) ::= CTK_NOVALUE(T).
+{
+    C = ast_f(context, LITERAL, T);
+}
+
+signal_condition(C) ::= CTK_SYNTAX(T).
+{
+    C = ast_f(context, LITERAL, T);
+}
+
+signal_condition(C) ::= CTK_LOSTDIGITS(T).
+{
+    C = ast_f(context, LITERAL, T);
+}
+
+call_name_opt(N) ::= .
+{
+    N = 0;
+}
+
+call_name_opt(N) ::= CTK_NAME(T) call_target(C).
+{
+    N = ast_f(context, LITERAL, T);
+    add_ast(N, C);
+}
+
+call_name_opt(N) ::= CTK_NAME(T) bad_name_target_start(B) simple_tail(L).
+{
+    N = ast_f(context, LITERAL, T);
+    add_ast(N, rxcp_levelc_ast_error_token(context, "19.3", B));
+    if (L) add_ast(N, L);
+}
+
+call_name_opt(N) ::= CTK_NAME(T).
+{
+    N = ast_f(context, LITERAL, T);
+    add_ast(N, levelc_current_token_error(context, "19.3", T));
+}
+
+signal_target(S) ::= CTK_VAR_SYMBOL(T).
+{
+    S = ast_f(context, LITERAL, T);
+}
+
+signal_target(S) ::= CTK_STRING(T).
+{
+    S = ast_f(context, STRING, T);
+}
+
+trace_target(C) ::= CTK_VAR_SYMBOL(T).
+{
+    C = ast_f(context, LITERAL, T);
+}
+
+trace_target(C) ::= CTK_STRING(T).
+{
+    C = ast_f(context, STRING, T);
+}
+
+trace_target(C) ::= CTK_INTEGER(T).
+{
+    C = ast_f(context, INTEGER, T);
+}
+
+variable_list(L) ::= variable_list(L0) variable_ref(V).
+{
+    L = L0;
+    add_ast(L, V);
+}
+
+variable_list(L) ::= variable_ref(V).
+{
+    L = ast_ft(context, ARGS);
+    add_ast(L, V);
+}
+
+variable_ref(V) ::= CTK_VAR_SYMBOL(T).
+{
+    V = ast_f(context, VAR_TARGET, T);
+}
+
+variable_ref(V) ::= CTK_OPEN_BRACKET(O) CTK_VAR_SYMBOL(T) CTK_CLOSE_BRACKET.
+{
+    V = ast_f(context, VAR_REFERENCE, T);
+    add_ast(V, ast_f(context, TOKEN, O));
+}
+
+variable_ref(V) ::= CTK_OPEN_BRACKET bad_variable_ref_start(B) CTK_CLOSE_BRACKET.
+{
+    V = rxcp_levelc_ast_error_token(context, "20.1", B);
+}
+
+variable_ref(V) ::= CTK_OPEN_BRACKET(O) CTK_CLOSE_BRACKET(C).
+{
+    V = ast_f(context, TOKEN, O);
+    add_ast(V, rxcp_levelc_ast_error_token(context, "20.1", C));
+}
+
+bad_condition_start(T) ::= CTK_VAR_SYMBOL(S). { T = S; }
+bad_condition_start(T) ::= CTK_STRING(S). { T = S; }
+bad_condition_start(T) ::= bad_name_target_start(S). { T = S; }
+
+bad_form_option_start(T) ::= CTK_VAR_SYMBOL(S). { T = S; }
+bad_form_option_start(T) ::= bad_instruction_tail_start(S). { T = S; }
+
+bad_variable_ref_start(T) ::= CTK_INTEGER(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_STRING(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_DOT(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_CLOSE_BRACKET(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_COMMA(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_EQUAL(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_PLUS(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_MINUS(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_HIGH_PRIORITY_MINUS(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_NOT(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_CONCAT(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_MULT(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_DIV(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_IDIV(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_MOD(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_POWER(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_NEQ(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_GT(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_LT(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_GTE(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_LTE(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_S_EQ(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_S_NEQ(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_S_GT(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_S_LT(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_S_GTE(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_S_LTE(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_AND(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_OR(S). { T = S; }
+bad_variable_ref_start(T) ::= CTK_XOR(S). { T = S; }
+
+bad_name_target_start(T) ::= CTK_INTEGER(S). { T = S; }
+bad_name_target_start(T) ::= CTK_DOT(S). { T = S; }
+bad_name_target_start(T) ::= CTK_OPEN_BRACKET(S). { T = S; }
+bad_name_target_start(T) ::= CTK_CLOSE_BRACKET(S). { T = S; }
+bad_name_target_start(T) ::= CTK_COMMA(S). { T = S; }
+bad_name_target_start(T) ::= CTK_EQUAL(S). { T = S; }
+bad_name_target_start(T) ::= CTK_PLUS(S). { T = S; }
+bad_name_target_start(T) ::= CTK_MINUS(S). { T = S; }
+bad_name_target_start(T) ::= CTK_HIGH_PRIORITY_MINUS(S). { T = S; }
+bad_name_target_start(T) ::= CTK_NOT(S). { T = S; }
+bad_name_target_start(T) ::= CTK_CONCAT(S). { T = S; }
+bad_name_target_start(T) ::= CTK_MULT(S). { T = S; }
+bad_name_target_start(T) ::= CTK_DIV(S). { T = S; }
+bad_name_target_start(T) ::= CTK_IDIV(S). { T = S; }
+bad_name_target_start(T) ::= CTK_MOD(S). { T = S; }
+bad_name_target_start(T) ::= CTK_POWER(S). { T = S; }
+bad_name_target_start(T) ::= CTK_NEQ(S). { T = S; }
+bad_name_target_start(T) ::= CTK_GT(S). { T = S; }
+bad_name_target_start(T) ::= CTK_LT(S). { T = S; }
+bad_name_target_start(T) ::= CTK_GTE(S). { T = S; }
+bad_name_target_start(T) ::= CTK_LTE(S). { T = S; }
+bad_name_target_start(T) ::= CTK_S_EQ(S). { T = S; }
+bad_name_target_start(T) ::= CTK_S_NEQ(S). { T = S; }
+bad_name_target_start(T) ::= CTK_S_GT(S). { T = S; }
+bad_name_target_start(T) ::= CTK_S_LT(S). { T = S; }
+bad_name_target_start(T) ::= CTK_S_GTE(S). { T = S; }
+bad_name_target_start(T) ::= CTK_S_LTE(S). { T = S; }
+bad_name_target_start(T) ::= CTK_AND(S). { T = S; }
+bad_name_target_start(T) ::= CTK_OR(S). { T = S; }
+bad_name_target_start(T) ::= CTK_XOR(S). { T = S; }
+
+bad_instruction_tail_start(T) ::= CTK_INTEGER(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_STRING(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_DOT(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_OPEN_BRACKET(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_CLOSE_BRACKET(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_COMMA(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_EQUAL(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_PLUS(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_MINUS(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_HIGH_PRIORITY_MINUS(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_NOT(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_CONCAT(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_MULT(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_DIV(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_IDIV(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_MOD(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_POWER(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_NEQ(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_GT(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_LT(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_GTE(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_LTE(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_S_EQ(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_S_NEQ(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_S_GT(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_S_LT(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_S_GTE(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_S_LTE(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_AND(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_OR(S). { T = S; }
+bad_instruction_tail_start(T) ::= CTK_XOR(S). { T = S; }
+
 simple_tail(L) ::= simple_tail(L0) simple_tail_atom(A).
 {
     L = L0 ? L0 : ast_ft(context, ARGS);
@@ -672,6 +1600,11 @@ simple_tail_atom(A) ::= CTK_STRING(T).
 }
 
 simple_tail_atom(A) ::= CTK_COMMA(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_DOT(T).
 {
     A = ast_f(context, TOKEN, T);
 }
@@ -809,6 +1742,144 @@ simple_tail_atom(A) ::= CTK_OR(T).
 simple_tail_atom(A) ::= CTK_XOR(T).
 {
     A = ast_f(context, TOKEN, T);
+}
+
+template_list_opt(L) ::= template_list(T).
+{
+    L = T;
+}
+
+template_list_opt(L) ::= .
+{
+    L = 0;
+}
+
+template_list(L) ::= template(T).
+{
+    L = ast_ft(context, TEMPLATES);
+    if (T) add_ast(L, T);
+}
+
+template_list(L) ::= template_list(L0) CTK_COMMA template_opt(T).
+{
+    L = L0;
+    if (T) add_ast(L, T);
+}
+
+template_opt(T) ::= template(T0).
+{
+    T = T0;
+}
+
+template_opt(T) ::= .
+{
+    T = 0;
+}
+
+template(T) ::= template_item(I).
+{
+    T = ast_ft(context, TEMPLATES);
+    add_ast(T, I);
+}
+
+template(T) ::= template(T0) template_item(I).
+{
+    T = T0;
+    add_ast(T, I);
+}
+
+template_item(I) ::= CTK_VAR_SYMBOL(T).
+{
+    I = ast_f(context, TARGET, T);
+}
+
+template_item(I) ::= CTK_DOT(T).
+{
+    I = ast_f(context, TARGET, T);
+}
+
+template_item(I) ::= CTK_STRING(T).
+{
+    I = ast_f(context, PATTERN, T);
+}
+
+template_item(I) ::= parse_pattern_variable(V).
+{
+    I = ast_ft(context, PATTERN);
+    add_ast(I, V);
+}
+
+template_item(I) ::= CTK_INTEGER(T).
+{
+    I = ast_f(context, ABS_POS, T);
+}
+
+template_item(I) ::= CTK_EQUAL(T) parse_position(P).
+{
+    I = ast_f(context, ABS_POS, T);
+    add_ast(I, P);
+}
+
+template_item(I) ::= CTK_PLUS(T) parse_position(P).
+{
+    I = ast_f(context, REL_POS, T);
+    add_ast(I, P);
+}
+
+template_item(I) ::= CTK_MINUS(T) parse_position(P).
+{
+    I = ast_f(context, REL_POS, T);
+    add_ast(I, P);
+}
+
+template_item(I) ::= CTK_HIGH_PRIORITY_MINUS(T) parse_position(P).
+{
+    I = ast_f(context, REL_POS, T);
+    add_ast(I, P);
+}
+
+template_item(I) ::= CTK_UNKNOWN(T).
+{
+    I = rxcp_levelc_ast_error_token(context, "38.1", T);
+}
+
+parse_position(P) ::= CTK_INTEGER(T).
+{
+    P = ast_f(context, INTEGER, T);
+}
+
+parse_position(P) ::= parse_pattern_variable(V).
+{
+    P = V;
+}
+
+parse_position(P) ::= CTK_VAR_SYMBOL(T).
+{
+    P = rxcp_levelc_ast_error_token(context, "38.2", T);
+}
+
+parse_pattern_variable(V) ::= CTK_OPEN_BRACKET(O) CTK_VAR_SYMBOL(T) CTK_CLOSE_BRACKET.
+{
+    V = ast_f(context, VAR_REFERENCE, T);
+    add_ast(V, ast_f(context, TOKEN, O));
+}
+
+parse_pattern_variable(V) ::= CTK_OPEN_BRACKET(O) CTK_VAR_SYMBOL(T).
+{
+    V = ast_f(context, VAR_REFERENCE, T);
+    add_ast(V, rxcp_levelc_ast_error(context, "46.1", O));
+}
+
+parse_pattern_variable(V) ::= CTK_OPEN_BRACKET(O) CTK_CLOSE_BRACKET(C).
+{
+    V = ast_f(context, TOKEN, O);
+    add_ast(V, rxcp_levelc_ast_error_token(context, "19.7", C));
+}
+
+parse_pattern_variable(V) ::= CTK_OPEN_BRACKET(O) CTK_STRING(S) CTK_CLOSE_BRACKET.
+{
+    V = ast_f(context, TOKEN, O);
+    add_ast(V, rxcp_levelc_ast_error_token(context, "19.7", S));
 }
 
 assignment(A) ::= CTK_VAR_SYMBOL(V) CTK_EQUAL(T) expression(E).
@@ -1276,6 +2347,435 @@ unexpected_otherwise(E) ::= CTK_OTHERWISE(T).
     E = rxcp_levelc_ast_error(context, "9.2", T);
 }
 
+command_primary_expr(T) ::= CTK_COMMAND_SYMBOL(S).
+{
+    T = ast_f(context, VAR_SYMBOL, S);
+}
+
+command_primary_expr(T) ::= CTK_INTEGER(S).
+{
+    T = ast_f(context, INTEGER, S);
+}
+
+command_primary_expr(T) ::= CTK_STRING(S).
+{
+    T = ast_fstr(context, S);
+}
+
+command_primary_expr(T) ::= CTK_OPEN_BRACKET expression(E) CTK_CLOSE_BRACKET.
+{
+    T = E;
+}
+
+command_primary_expr(T) ::= CTK_OPEN_BRACKET(O) expression(E) missing_close_bracket.
+{
+    T = levelc_unmatched_open_bracket(context, O, E);
+}
+
+command_primary_expr(T) ::= CTK_OPEN_BRACKET(O) missing_close_bracket.
+{
+    T = levelc_unmatched_open_bracket(context, O, 0);
+}
+
+command_primary_expr(T) ::= CTK_COMMA(S).
+{
+    T = rxcp_levelc_ast_error(context, "37.1", S);
+}
+
+command_primary_expr(T) ::= bad_expression_start(S).
+{
+    T = levelc_bad_expression_start(context, S, 0);
+}
+
+command_prefix_expr(E) ::= command_primary_expr(P).
+{
+    E = P;
+}
+
+command_prefix_expr(E) ::= CTK_NOT(T) command_prefix_expr(P).
+{
+    E = ast_f(context, OP_NOT, T);
+    add_ast(E, P);
+}
+
+command_prefix_expr(E) ::= CTK_NOT(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_NOT, T, 0);
+}
+
+command_prefix_expr(E) ::= CTK_PLUS(T) command_prefix_expr(P).
+{
+    E = ast_f(context, OP_PLUS, T);
+    add_ast(E, P);
+}
+
+command_prefix_expr(E) ::= CTK_PLUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_PLUS, T, 0);
+}
+
+command_prefix_expr(E) ::= CTK_HIGH_PRIORITY_MINUS(T) command_prefix_expr(P).
+{
+    E = ast_f(context, OP_NEG, T);
+    add_ast(E, P);
+}
+
+command_prefix_expr(E) ::= CTK_HIGH_PRIORITY_MINUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_NEG, T, 0);
+}
+
+command_power_expr(E) ::= command_power_expr(L) CTK_POWER(T) prefix_expr(R).
+{
+    E = ast_f(context, OP_POWER, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_power_expr(E) ::= command_power_expr(L) CTK_POWER(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_POWER, T, L);
+}
+
+command_power_expr(E) ::= command_prefix_expr(P).
+{
+    E = P;
+}
+
+command_low_prefix_expr(E) ::= command_power_expr(P).
+{
+    E = P;
+}
+
+command_low_prefix_expr(E) ::= CTK_MINUS(T) power_expr(P).
+{
+    E = ast_f(context, OP_NEG, T);
+    add_ast(E, P);
+}
+
+command_low_prefix_expr(E) ::= CTK_MINUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_NEG, T, 0);
+}
+
+command_multiplication(E) ::= command_low_prefix_expr(P).
+{
+    E = P;
+}
+
+command_multiplication(E) ::= command_multiplication(L) CTK_MULT(T) low_prefix_expr(R).
+{
+    E = ast_f(context, OP_MULT, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_multiplication(E) ::= command_multiplication(L) CTK_MULT(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_MULT, T, L);
+}
+
+command_multiplication(E) ::= command_multiplication(L) CTK_DIV(T) low_prefix_expr(R).
+{
+    E = ast_f(context, OP_DIV, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_multiplication(E) ::= command_multiplication(L) CTK_DIV(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_DIV, T, L);
+}
+
+command_multiplication(E) ::= command_multiplication(L) CTK_IDIV(T) low_prefix_expr(R).
+{
+    E = ast_f(context, OP_IDIV, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_multiplication(E) ::= command_multiplication(L) CTK_IDIV(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_IDIV, T, L);
+}
+
+command_multiplication(E) ::= command_multiplication(L) CTK_MOD(T) low_prefix_expr(R).
+{
+    E = ast_f(context, OP_MOD, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_multiplication(E) ::= command_multiplication(L) CTK_MOD(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_MOD, T, L);
+}
+
+command_addition(E) ::= command_multiplication(P).
+{
+    E = P;
+}
+
+command_addition(E) ::= command_addition(L) CTK_PLUS(T) multiplication(R).
+{
+    E = ast_f(context, OP_ADD, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_addition(E) ::= command_addition(L) CTK_PLUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_ADD, T, L);
+}
+
+command_addition(E) ::= command_addition(L) CTK_MINUS(T) multiplication(R).
+{
+    E = ast_f(context, OP_MINUS, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_addition(E) ::= command_addition(L) CTK_MINUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_MINUS, T, L);
+}
+
+command_addition(E) ::= command_addition(L) CTK_HIGH_PRIORITY_MINUS(T) multiplication(R).
+{
+    E = ast_f(context, OP_MINUS, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_addition(E) ::= command_addition(L) CTK_HIGH_PRIORITY_MINUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_MINUS, T, L);
+}
+
+command_concat_expr(E) ::= command_addition(P).
+{
+    E = P;
+}
+
+command_concat_expr(E) ::= command_concat_expr(L) CTK_CONCAT(T) addition(R).
+{
+    E = ast_f(context, OP_CONCAT, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_concat_expr(E) ::= command_concat_expr(L) CTK_CONCAT(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_CONCAT, T, L);
+}
+
+command_concat_expr(E) ::= command_concat_expr(L) addition_c(R).
+{
+    E = ast_ft(context, OP_SCONCAT);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_concat_expr(P).
+{
+    E = P;
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_EQUAL(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_EQUAL, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_EQUAL(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_EQUAL, T, L);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_NEQ(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_NEQ, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_NEQ(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_NEQ, T, L);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_GT(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_GT, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_GT(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_GT, T, L);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_LT(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_LT, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_LT(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_LT, T, L);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_GTE(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_GTE, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_GTE(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_GTE, T, L);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_LTE(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_LTE, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_LTE(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_LTE, T, L);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_EQ(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_S_EQ, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_EQ(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_S_EQ, T, L);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_NEQ(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_S_NEQ, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_NEQ(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_S_NEQ, T, L);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_GT(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_S_GT, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_GT(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_S_GT, T, L);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_LT(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_S_LT, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_LT(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_S_LT, T, L);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_GTE(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_S_GTE, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_GTE(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_S_GTE, T, L);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_LTE(T) concat_expr(R).
+{
+    E = ast_f(context, OP_COMPARE_S_LTE, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_comparison(E) ::= command_comparison(L) CTK_S_LTE(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_COMPARE_S_LTE, T, L);
+}
+
+command_and_expr(E) ::= command_comparison(P).
+{
+    E = P;
+}
+
+command_and_expr(E) ::= command_and_expr(L) CTK_AND(T) comparison(R).
+{
+    E = ast_f(context, OP_AND, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_and_expr(E) ::= command_and_expr(L) CTK_AND(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_AND, T, L);
+}
+
+command_or_expr(E) ::= command_and_expr(P).
+{
+    E = P;
+}
+
+command_or_expr(E) ::= command_or_expr(L) CTK_OR(T) and_expr(R).
+{
+    E = ast_f(context, OP_OR, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_or_expr(E) ::= command_or_expr(L) CTK_OR(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_OR, T, L);
+}
+
+command_or_expr(E) ::= command_or_expr(L) CTK_XOR(T) and_expr(R).
+{
+    E = ast_f(context, OP_XOR, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+command_or_expr(E) ::= command_or_expr(L) CTK_XOR(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_XOR, T, L);
+}
+
+command_expression(E) ::= command_or_expr(P).
+{
+    E = P;
+}
+
 primary_expr(T) ::= CTK_VAR_SYMBOL(S).
 {
     T = ast_f(context, VAR_SYMBOL, S);
@@ -1586,6 +3086,150 @@ addition_c(E) ::= addition_c(L) CTK_HIGH_PRIORITY_MINUS(T) multiplication_c(R).
     E = ast_f(context, OP_MINUS, T);
     add_ast(E, L);
     add_ast(E, R);
+}
+
+concat_expr_c(E) ::= addition_c(P).
+{
+    E = P;
+}
+
+concat_expr_c(E) ::= concat_expr_c(L) CTK_CONCAT(T) addition_c(R).
+{
+    E = ast_f(context, OP_CONCAT, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+concat_expr_c(E) ::= concat_expr_c(L) addition_c(R).
+{
+    E = ast_ft(context, OP_SCONCAT);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= concat_expr_c(P).
+{
+    E = P;
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_EQUAL(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_EQUAL, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_NEQ(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_NEQ, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_GT(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_GT, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_LT(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_LT, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_GTE(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_GTE, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_LTE(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_LTE, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_S_EQ(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_S_EQ, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_S_NEQ(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_S_NEQ, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_S_GT(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_S_GT, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_S_LT(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_S_LT, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_S_GTE(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_S_GTE, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+comparison_c(E) ::= comparison_c(L) CTK_S_LTE(T) concat_expr_c(R).
+{
+    E = ast_f(context, OP_COMPARE_S_LTE, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+and_expr_c(E) ::= comparison_c(P).
+{
+    E = P;
+}
+
+and_expr_c(E) ::= and_expr_c(L) CTK_AND(T) comparison_c(R).
+{
+    E = ast_f(context, OP_AND, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+or_expr_c(E) ::= and_expr_c(P).
+{
+    E = P;
+}
+
+or_expr_c(E) ::= or_expr_c(L) CTK_OR(T) and_expr_c(R).
+{
+    E = ast_f(context, OP_OR, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+or_expr_c(E) ::= or_expr_c(L) CTK_XOR(T) and_expr_c(R).
+{
+    E = ast_f(context, OP_XOR, T);
+    add_ast(E, L);
+    add_ast(E, R);
+}
+
+expression_c(E) ::= or_expr_c(P).
+{
+    E = P;
 }
 
 concat_expr(E) ::= addition(P).

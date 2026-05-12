@@ -1436,12 +1436,126 @@ if (ENABLE_PARSER_MODE)
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"return\""
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"signal\""
             "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"trace\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"value\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"with\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"output\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"stream\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=7, sev=48, text=\"replace\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=2, sev=48, text=\"on\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"off\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"error\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"halt\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"name\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"digits\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"form\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=10, sev=48, text=\"scientific\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"fuzz\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"expose\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=7, sev=48, text=\"novalue\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"syntax\""
             "PARSE_TREE_STATEMENT"
             MUST_NOT_MATCH
             "RXC-LC-"
             "PARSE_FAILURE"
     )
     set_tests_properties(syntaxhighlight_levelc_simple_instructions PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_command_instructions
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_command_instructions.rexx
+            MUST_MATCH
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=14, sev=48, text=\"'host command'\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=4, sev=50, text=\"host\""
+            "PARSE_TREE_EXPR"
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=2, sev=48, text=\"if\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"then\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"select\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=9, sev=48, text=\"otherwise\""
+            "RXC-LC-IMPLICIT_ADDRESS"
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_command_instructions PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_implicit_command_warning
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_implicit_command_warning.rexx
+            MUST_MATCH
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=11, sev=48, text=\"'listfiles'\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=3, sev=50, text=\"SEY\""
+            "RXC-LC-IMPLICIT_ADDRESS"
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=5, sev=48, text=\"after\""
+            MUST_NOT_MATCH
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=11, sev=50, text=\"'listfiles'\""
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_implicit_command_warning PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_instruction_bad_forms
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_instruction_bad_forms.rexx
+            MUST_MATCH
+            "RXC-LC-20\\.1"
+            "RXC-LC-19\\.2"
+            "RXC-LC-19\\.4"
+            "RXC-LC-25\\.15"
+            "RXC-LC-25\\.11"
+            "RXC-LC-25\\.5"
+            "RXC-LC-35\\.1"
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_instruction_bad_forms PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_instruction_recovery_boundaries
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_instruction_recovery_boundaries.rexx
+            MUST_MATCH
+            "RXC-LC-25\\.15 keywords=\"DIGITS FORM FUZZ\" token=\"10\""
+            "RXC-LC-25\\.17 keywords=\"EXPOSE\" token=\"10\""
+            "RXC-LC-20\\.1 token=\"10\""
+            "RXC-LC-25\\.12 keywords=\"ARG PULL SOURCE LINEIN VERSION VALUE VAR\" token=\"10\""
+            "RXC-LC-25\\.13 keywords=\"ARG PULL SOURCE LINEIN VERSION VALUE VAR\" token=\"10\""
+            "RXC-LC-19\\.2 token=\"10\""
+            "RXC-LC-19\\.4 token=\"10\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"arg\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=1, sev=48, text=\"a\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=11, sev=48, text=\"afterSignal\""
+            MUST_NOT_MATCH
+            "token=\"a\""
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_instruction_recovery_boundaries PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_instruction_tail_bad_forms
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_instruction_tail_bad_forms.rexx
+            MUST_MATCH
+            "RXC-LC-25\\.1 keywords=\"ERROR FAILURE HALT NOTREADY\" token=\"end-of-clause\""
+            "RXC-LC-25\\.1 keywords=\"ERROR FAILURE HALT NOTREADY\" token=\"syntax\""
+            "RXC-LC-25\\.2 keywords=\"ERROR FAILURE HALT NOTREADY\" token=\"10\""
+            "RXC-LC-19\\.3 token=\"end-of-clause\""
+            "RXC-LC-19\\.3 token=\"10\""
+            "RXC-LC-25\\.3 keywords=\"ERROR FAILURE HALT NOTREADY NOVALUE SYNTAX LOSTDIGITS\" token=\"end-of-clause\""
+            "RXC-LC-25\\.3 keywords=\"ERROR FAILURE HALT NOTREADY NOVALUE SYNTAX LOSTDIGITS\" token=\"banana\""
+            "RXC-LC-25\\.4 keywords=\"ERROR FAILURE HALT NOTREADY NOVALUE SYNTAX LOSTDIGITS\" token=\"10\""
+            "RXC-LC-19\\.1 token=\"end-of-clause\""
+            "RXC-LC-25\\.5 keywords=\"INPUT OUTPUT ERROR\" token=\"banana\""
+            "RXC-LC-25\\.5 keywords=\"INPUT OUTPUT ERROR\" token=\"10\""
+            "RXC-LC-25\\.11 keywords=\"ENGINEERING SCIENTIFIC VALUE\" token=\"10\""
+            "RXC-LC-35\\.1 token=\"end-of-clause\""
+            "RXC-LC-20\\.1 token=\"end-of-clause\""
+            "RXC-LC-20\\.1 token=\"\\)\""
+            "RXC-LC-20\\.1 token=\"10\""
+            "RXC-LC-19\\.7 token=\"\\)\""
+            "RXC-LC-46\\.1"
+            "RXC-LC-19\\.4 token=\"end-of-clause\""
+            "Node: type=54 \\(LEXER_IDENTIFIER\\), pos=[0-9]+, len=24, sev=48, text=\"afterAddressValueBadExpr\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_instruction_tail_bad_forms PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
     add_crexx_syntax_highlight_test(
             syntaxhighlight_levelc_simple_instruction_keyword_variables
@@ -1457,6 +1571,40 @@ if (ENABLE_PARSER_MODE)
             "PARSE_FAILURE"
     )
     set_tests_properties(syntaxhighlight_levelc_simple_instruction_keyword_variables PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_parse_templates
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_parse_templates.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"parse\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"upper\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"pull\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"source\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=6, sev=48, text=\"linein\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=7, sev=48, text=\"version\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"value\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=4, sev=48, text=\"with\""
+            "Node: type=46 \\(LEXER_SEPARATOR\\), pos=[0-9]+, len=1, sev=48, text=\"\\.\""
+            "PARSE_TREE_STATEMENT"
+            MUST_NOT_MATCH
+            "RXC-LC-"
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_parse_templates PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_parse_bad_forms
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_parse_bad_forms.rexx
+            MUST_MATCH
+            "RXC-LC-25\\.12"
+            "RXC-LC-25\\.13"
+            "RXC-LC-38\\.3"
+            "RXC-LC-38\\.2"
+            "RXC-LC-19\\.7"
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_parse_bad_forms PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
     add_crexx_syntax_highlight_test(
             syntaxhighlight_levelc_if_else

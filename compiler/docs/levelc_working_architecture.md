@@ -1,7 +1,7 @@
 # Level C Classic REXX Working Architecture
 
 Status: working draft, tracer bullet implementation started
-Last updated: 2026-05-11
+Last updated: 2026-05-12
 
 This document is the working record for the Level C programme. Level C means
 Classic REXX compatibility, using the current cREXX compiler front-end style:
@@ -789,6 +789,13 @@ The interim machine-readable string format is:
 RXC-LC-<standard-code> [insert-name="escaped value" ...]
 ```
 
+Level C warning identities use the same prefix and are carried on WARNING
+nodes rather than ERROR nodes. The first non-standard warning identity is
+`RXC-LC-IMPLICIT_ADDRESS`, emitted when a clause is parsed as an implicit
+ADDRESS command and its first command token is not a string literal. This
+matches the Level B migration warning while keeping Classic REXX string-literal
+commands such as `"listfiles"` or `'listfiles' template` warning-free.
+
 Examples:
 
 ```text
@@ -1534,19 +1541,121 @@ ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-
 Result: full build passes; all 1071 CTest tests pass after the bad-expression
 coverage sign-off.
 
+Level C parse/instruction completion slice on 2026-05-12:
+
+- The Level C adapter now promotes `PARSE` and its contextual words:
+  `UPPER`, `ARG`, `PULL`, `SOURCE`, `LINEIN`, `VERSION`, `VALUE`, `VAR`, and
+  `WITH`. `WITH` is treated as the `PARSE VALUE` expression/template boundary,
+  and parse-template syntax after that point is not parsed as an ordinary
+  expression.
+- Parse templates now cover the milestone-1 syntax sublanguage:
+  direct targets, dot placeholders, string patterns, parenthesized variable
+  patterns, absolute positions, relative positions, and comma-separated template
+  lists with omitted templates.
+- `ARG` and `PULL` now share the parse-template list grammar, so their tails are
+  no longer flat token lists.
+- Structured instruction tails were added for the remaining simple instruction
+  families needed before the validation/symbols slice:
+  - `ADDRESS [VALUE expression] [WITH ...]`, including `INPUT`, `OUTPUT`,
+    `ERROR`, `STREAM`, `STEM`, `NORMAL`, `APPEND`, and `REPLACE` keyword roles.
+  - `CALL` target form plus `CALL ON/OFF condition [NAME target]`.
+  - `DROP` variable lists and parenthesized indirect references.
+  - `NUMERIC DIGITS`, `NUMERIC FORM ENGINEERING/SCIENTIFIC/VALUE`, and
+    `NUMERIC FUZZ`.
+  - `PROCEDURE [EXPOSE variable-list]`.
+  - `SIGNAL` target, `SIGNAL VALUE expression`, and condition-control forms.
+  - `TRACE` target and `TRACE VALUE expression`.
+- Command clauses are now parsed as Level C-only `IMPLICIT_CMD` statements. The
+  adapter emits a special command-start parser token only for a clause-leading
+  symbol that is not assignment lookahead and not a promoted instruction keyword;
+  this keeps `name = value` as assignment while accepting `name value` as a
+  command expression.
+- The grammar now emits additional standard diagnostic identities for malformed
+  simple-instruction forms:
+  - `19.2`: bare `CALL`.
+  - `19.4`: bare `SIGNAL`.
+  - `20.1`: bare `DROP` or empty indirect variable reference.
+  - `25.5`: `ADDRESS WITH` without a connection keyword.
+  - `25.11`: `NUMERIC FORM` without `ENGINEERING`, `SCIENTIFIC`, or `VALUE`.
+  - `25.12`/`25.13`: invalid or missing `PARSE` type, including after `UPPER`.
+  - `25.15`: invalid `NUMERIC` subkeyword.
+  - `25.17`: invalid `PROCEDURE` tail keyword.
+  - `38.2`/`38.3`: invalid parse positional form and missing `WITH` for
+    `PARSE VALUE`.
+  - `19.7`/`46.1`: invalid or unterminated parenthesized parse pattern variable.
+- The AST source-projection cleanup in this slice makes structured child keyword
+  nodes refer to the actual contextual token (`ON`, `OFF`, `DIGITS`, `FUZZ`)
+  instead of reusing the parent instruction token.
+- Follow-up recovery tightening anchors invalid immediate tail tokens on the
+  offending token rather than allowing the next clause to be blamed. The smoke
+  case `NUMERIC 10` followed by `ARG a b` now reports `25.15` on `10`, while
+  `ARG` and its template targets remain clean. The same boundary fixture covers
+  `DROP 10`, `CALL 10`, `SIGNAL 10`, `PROCEDURE 10`,
+  `PROCEDURE EXPOSE 10`, `PARSE 10`, and `PARSE UPPER 10`.
+- Silent accepts are a first-class highlighter failure. The recovery/warning
+  tightening pass adds explicit recovery for malformed instruction tails that
+  previously flattened into ordinary tokens: `CALL ON/OFF` condition tails,
+  `CALL/SIGNAL ... NAME` missing and bad targets, `SIGNAL ON/OFF` condition
+  tails, `ADDRESS VALUE`, `ADDRESS WITH`, `NUMERIC FORM`, `PROCEDURE EXPOSE`,
+  `PARSE VAR`, bad `ARG`/`PULL` templates, and expression-required tails such
+  as `PUSH +`, `RETURN +`, `SIGNAL VALUE`, and `ADDRESS VALUE +`.
+- `ADDRESS WITH` now requires the first connection word after `WITH` to be
+  `INPUT`, `OUTPUT`, or `ERROR`; a bare word such as `ADDRESS WITH banana`
+  reports `25.5` at `banana` rather than being accepted as a connection atom.
+- Non-string implicit commands now emit the Level C warning
+  `RXC-LC-IMPLICIT_ADDRESS`. String-literal command clauses remain clean, which
+  preserves common Classic REXX command-program style while making likely typos
+  such as `SEY value` visible in DSLSH.
+- This remains parser/highlighter work only. Normal compilation of Level C still
+  stops with the existing "not supported yet" message outside parser mode.
+
+Regression tests added or widened for this slice:
+
+- `syntaxhighlight_levelc_simple_instructions`
+- `syntaxhighlight_levelc_command_instructions`
+- `syntaxhighlight_levelc_implicit_command_warning`
+- `syntaxhighlight_levelc_instruction_bad_forms`
+- `syntaxhighlight_levelc_instruction_recovery_boundaries`
+- `syntaxhighlight_levelc_instruction_tail_bad_forms`
+- `syntaxhighlight_levelc_parse_templates`
+- `syntaxhighlight_levelc_parse_bad_forms`
+
+Focused verification for the parse/instruction completion slice:
+
+```sh
+cmake -S /Users/adrian/CLionProjects/CREXX -B /Users/adrian/CLionProjects/CREXX/cmake-build-release
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target rxc parser_tester -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release -R 'syntaxhighlight_levelc|levelc_compile_unsupported|highlight_editor_diagnostics|highlight_cache' --output-on-failure
+```
+
+Result after the recovery/warning tightening slice: all 50 focused
+Level C/highlighting tests pass.
+
+Full release verification after the parse/instruction completion slice:
+
+```sh
+cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target all -j 32
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-on-failure
+```
+
+Result after the recovery/warning tightening slice: full build passes; all
+1080 CTest tests pass.
+
 The remaining first implementation sequence is:
 
-1. Expand the Level C scanner toward full ANSI token categories and
-   blank-presence metadata.
-2. Keep the dedicated Lemon `%fallback` PoC available as a reference while
-   designing the Level C keyword token set.
-3. Expand Level C glue for EOL, continuation, contextual keyword promotion, label
-   recognition, assignment recognition, `VALUE` insertion, and concatenation
-   inference.
-4. Add Level C Lemon grammar for clauses, grouping instructions, single
-   instructions, parse templates, and expressions.
-5. Add Level C source-shaping/validation walkers and DSLSH projection tests.
-6. Add parser-mode fixtures for classic keyword-as-variable cases, labels,
-   nested comments, continuation, `DO`/`IF`/`SELECT`, and parse templates.
-7. Only after highlighter validation is stable, start canonical lowering and
-   tree surgery hardening.
+1. Review Level C symbols and source-tree semantics:
+   direct variables, stems, compound names, reserved symbols, labels, routine
+   targets, parse targets, and indirect variable-list references.
+2. Add syntax-adjacent validation walkers before tree surgery:
+   `CALL`/`SIGNAL` condition names and `NAME` targets, `NUMERIC` expression
+   requirements, `ADDRESS WITH` connection shape, `PROCEDURE` placement, parse
+   template target restrictions, reserved-symbol rules, and command-expression
+   boundaries.
+3. Expand scanner coverage toward the remaining ANSI lexical details:
+   non-integer number forms, period-start constants/reserved symbols, binary and
+   hexadecimal strings, nested comments, continuation edge cases, and
+   blank-presence metadata where later validation needs it.
+4. Keep adding parser-mode fixtures for every accepted/rejected instruction form,
+   with positive coverage and negative `RXC-LC-...` identities.
+5. Only after highlighter validation is stable, start canonical lowering and tree
+   surgery hardening.
