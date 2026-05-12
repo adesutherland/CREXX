@@ -1170,6 +1170,16 @@ const char* node_type_to_string(NodeType type) {
         case SIGNAL_HANDLER: return "SIGNAL_HANDLER";
         case SIGNAL_NAMES: return "SIGNAL_NAMES";
         case SIGNAL_NAME: return "SIGNAL_NAME";
+        case LEVELC_ADDRESS: return "LEVELC_ADDRESS";
+        case LEVELC_ARG: return "LEVELC_ARG";
+        case LEVELC_DROP: return "LEVELC_DROP";
+        case LEVELC_INTERPRET: return "LEVELC_INTERPRET";
+        case LEVELC_NUMERIC: return "LEVELC_NUMERIC";
+        case LEVELC_PROCEDURE: return "LEVELC_PROCEDURE";
+        case LEVELC_PUSH: return "LEVELC_PUSH";
+        case LEVELC_QUEUE: return "LEVELC_QUEUE";
+        case LEVELC_SIGNAL: return "LEVELC_SIGNAL";
+        case LEVELC_TRACE: return "LEVELC_TRACE";
     }
     return "UNKNOWN";
 }

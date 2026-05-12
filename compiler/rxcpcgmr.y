@@ -257,7 +257,9 @@ static ASTNode *levelc_do_bad_keyword(Context *context,
 
 %token CTK_UNKNOWN CTK_BADCOMMENT CTK_EOS CTK_EOC CTK_MISSING_EXPR CTK_MISSING_RPAREN.
 %token CTK_VAR_SYMBOL CTK_DO_CONTROL_SYMBOL CTK_LABEL CTK_INTEGER CTK_STRING.
-%token CTK_EQUAL CTK_OPTIONS CTK_SAY CTK_IF CTK_THEN CTK_ELSE CTK_SELECT CTK_WHEN CTK_OTHERWISE CTK_DO CTK_END.
+%token CTK_EQUAL CTK_ADDRESS CTK_ARG CTK_CALL CTK_DROP CTK_EXIT CTK_INTERPRET CTK_NOP CTK_NUMERIC.
+%token CTK_OPTIONS CTK_PROCEDURE CTK_PULL CTK_PUSH CTK_QUEUE CTK_RETURN CTK_SAY CTK_SIGNAL CTK_TRACE.
+%token CTK_IF CTK_THEN CTK_ELSE CTK_SELECT CTK_WHEN CTK_OTHERWISE CTK_DO CTK_END.
 %token CTK_TO CTK_BY CTK_FOR CTK_WHILE CTK_UNTIL CTK_FOREVER CTK_LEAVE CTK_ITERATE.
 %token CTK_COMMA CTK_OPEN_BRACKET CTK_CLOSE_BRACKET.
 %token CTK_PLUS CTK_MINUS CTK_HIGH_PRIORITY_MINUS CTK_NOT.
@@ -399,9 +401,84 @@ simple_instruction(S) ::= say_instruction(I).
     S = I;
 }
 
+simple_instruction(S) ::= address_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= arg_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= call_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= drop_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= exit_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= interpret_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= nop_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= numeric_instruction(I).
+{
+    S = I;
+}
+
 simple_instruction(S) ::= options_instruction(O).
 {
     S = O;
+}
+
+simple_instruction(S) ::= procedure_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= pull_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= push_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= queue_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= return_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= signal_instruction(I).
+{
+    S = I;
+}
+
+simple_instruction(S) ::= trace_instruction(I).
+{
+    S = I;
 }
 
 simple_instruction(S) ::= assignment(A).
@@ -417,6 +494,121 @@ simple_instruction(S) ::= leave_instruction(L).
 simple_instruction(S) ::= iterate_instruction(I).
 {
     S = I;
+}
+
+address_instruction(I) ::= CTK_ADDRESS(T) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_ADDRESS, T);
+    if (L) add_ast(I, L);
+}
+
+arg_instruction(I) ::= CTK_ARG(T) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_ARG, T);
+    if (L) add_ast(I, L);
+}
+
+call_instruction(I) ::= CTK_CALL(T) simple_tail(L).
+{
+    I = ast_f(context, CALL, T);
+    if (L) add_ast(I, L);
+}
+
+drop_instruction(I) ::= CTK_DROP(T) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_DROP, T);
+    if (L) add_ast(I, L);
+}
+
+exit_instruction(I) ::= CTK_EXIT(T) expression(E).
+{
+    I = ast_f(context, EXIT, T);
+    add_ast(I, E);
+}
+
+exit_instruction(I) ::= CTK_EXIT(T).
+{
+    I = ast_f(context, EXIT, T);
+}
+
+interpret_instruction(I) ::= CTK_INTERPRET(T) expression(E).
+{
+    I = ast_f(context, LEVELC_INTERPRET, T);
+    add_ast(I, E);
+}
+
+interpret_instruction(I) ::= CTK_INTERPRET(T).
+{
+    I = ast_f(context, LEVELC_INTERPRET, T);
+    add_ast(I, rxcp_levelc_ast_error(context, "35.1", T));
+}
+
+nop_instruction(I) ::= CTK_NOP(T).
+{
+    I = ast_f(context, NOP, T);
+}
+
+numeric_instruction(I) ::= CTK_NUMERIC(T) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_NUMERIC, T);
+    if (L) add_ast(I, L);
+}
+
+procedure_instruction(I) ::= CTK_PROCEDURE(T) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_PROCEDURE, T);
+    if (L) add_ast(I, L);
+}
+
+pull_instruction(I) ::= CTK_PULL(T) simple_tail(L).
+{
+    I = ast_f(context, PULL, T);
+    if (L) add_ast(I, L);
+}
+
+push_instruction(I) ::= CTK_PUSH(T) expression(E).
+{
+    I = ast_f(context, LEVELC_PUSH, T);
+    add_ast(I, E);
+}
+
+push_instruction(I) ::= CTK_PUSH(T).
+{
+    I = ast_f(context, LEVELC_PUSH, T);
+}
+
+queue_instruction(I) ::= CTK_QUEUE(T) expression(E).
+{
+    I = ast_f(context, LEVELC_QUEUE, T);
+    add_ast(I, E);
+}
+
+queue_instruction(I) ::= CTK_QUEUE(T).
+{
+    I = ast_f(context, LEVELC_QUEUE, T);
+}
+
+return_instruction(I) ::= CTK_RETURN(T) expression(E).
+{
+    I = ast_f(context, RETURN, T);
+    add_ast(I, E);
+}
+
+return_instruction(I) ::= CTK_RETURN(T).
+{
+    I = ast_f(context, RETURN, T);
+}
+
+signal_instruction(I) ::= CTK_SIGNAL(T) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_SIGNAL, T);
+    if (L) add_ast(I, L);
+}
+
+trace_instruction(I) ::= CTK_TRACE(T) simple_tail(L).
+{
+    I = ast_f(context, LEVELC_TRACE, T);
+    if (L) add_ast(I, L);
 }
 
 say_instruction(S) ::= CTK_SAY(T) expression(E).
@@ -451,6 +643,172 @@ option_tail(L) ::= option_tail(L0) CTK_VAR_SYMBOL(S).
 option_tail(L) ::= .
 {
     L = 0;
+}
+
+simple_tail(L) ::= simple_tail(L0) simple_tail_atom(A).
+{
+    L = L0 ? L0 : ast_ft(context, ARGS);
+    add_ast(L, A);
+}
+
+simple_tail(L) ::= .
+{
+    L = 0;
+}
+
+simple_tail_atom(A) ::= CTK_VAR_SYMBOL(T).
+{
+    A = ast_f(context, LITERAL, T);
+}
+
+simple_tail_atom(A) ::= CTK_INTEGER(T).
+{
+    A = ast_f(context, INTEGER, T);
+}
+
+simple_tail_atom(A) ::= CTK_STRING(T).
+{
+    A = ast_f(context, STRING, T);
+}
+
+simple_tail_atom(A) ::= CTK_COMMA(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_OPEN_BRACKET(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_CLOSE_BRACKET(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_EQUAL(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_PLUS(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_MINUS(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_HIGH_PRIORITY_MINUS(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_NOT(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_CONCAT(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_MULT(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_DIV(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_IDIV(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_MOD(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_POWER(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_NEQ(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_GT(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_LT(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_GTE(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_LTE(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_S_EQ(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_S_NEQ(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_S_GT(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_S_LT(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_S_GTE(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_S_LTE(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_AND(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_OR(T).
+{
+    A = ast_f(context, TOKEN, T);
+}
+
+simple_tail_atom(A) ::= CTK_XOR(T).
+{
+    A = ast_f(context, TOKEN, T);
 }
 
 assignment(A) ::= CTK_VAR_SYMBOL(V) CTK_EQUAL(T) expression(E).

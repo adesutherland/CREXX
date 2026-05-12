@@ -26,6 +26,16 @@
 #include "rxcpmain.h"
 #include "rxcp_util.h"
 
+enum {
+    TK_LEVELC_ADDRESS = 50000,
+    TK_LEVELC_DROP,
+    TK_LEVELC_INTERPRET,
+    TK_LEVELC_PULL,
+    TK_LEVELC_PUSH,
+    TK_LEVELC_QUEUE,
+    TK_LEVELC_TRACE
+};
+
 static int levelc_token_is(Token *token, const char *text) {
     int i;
 
@@ -34,6 +44,11 @@ static int levelc_token_is(Token *token, const char *text) {
         if (toupper((unsigned char)token->token_string[i]) != toupper((unsigned char)text[i])) return 0;
     }
     return 1;
+}
+
+static int levelc_promote_token(Token *token, int token_type, int parser_token) {
+    token->token_type = token_type;
+    return parser_token;
 }
 
 static int levelc_parser_token_for_raw(int token_type) {
@@ -80,53 +95,86 @@ static int levelc_parser_token_for_raw(int token_type) {
 }
 
 static int levelc_promote_clause_keyword(Token *token) {
+    if (levelc_token_is(token, "ADDRESS")) {
+        return levelc_promote_token(token, TK_LEVELC_ADDRESS, CTK_ADDRESS);
+    }
+    if (levelc_token_is(token, "ARG")) {
+        return levelc_promote_token(token, TK_ARG, CTK_ARG);
+    }
+    if (levelc_token_is(token, "CALL")) {
+        return levelc_promote_token(token, TK_CALL, CTK_CALL);
+    }
+    if (levelc_token_is(token, "DROP")) {
+        return levelc_promote_token(token, TK_LEVELC_DROP, CTK_DROP);
+    }
+    if (levelc_token_is(token, "EXIT")) {
+        return levelc_promote_token(token, TK_EXIT, CTK_EXIT);
+    }
+    if (levelc_token_is(token, "INTERPRET")) {
+        return levelc_promote_token(token, TK_LEVELC_INTERPRET, CTK_INTERPRET);
+    }
+    if (levelc_token_is(token, "NOP")) {
+        return levelc_promote_token(token, TK_NOP, CTK_NOP);
+    }
+    if (levelc_token_is(token, "NUMERIC")) {
+        return levelc_promote_token(token, TK_NUMERIC, CTK_NUMERIC);
+    }
     if (levelc_token_is(token, "OPTIONS")) {
-        token->token_type = TK_OPTIONS;
-        return CTK_OPTIONS;
+        return levelc_promote_token(token, TK_OPTIONS, CTK_OPTIONS);
+    }
+    if (levelc_token_is(token, "PROCEDURE")) {
+        return levelc_promote_token(token, TK_PROCEDURE, CTK_PROCEDURE);
+    }
+    if (levelc_token_is(token, "PULL")) {
+        return levelc_promote_token(token, TK_LEVELC_PULL, CTK_PULL);
+    }
+    if (levelc_token_is(token, "PUSH")) {
+        return levelc_promote_token(token, TK_LEVELC_PUSH, CTK_PUSH);
+    }
+    if (levelc_token_is(token, "QUEUE")) {
+        return levelc_promote_token(token, TK_LEVELC_QUEUE, CTK_QUEUE);
+    }
+    if (levelc_token_is(token, "RETURN")) {
+        return levelc_promote_token(token, TK_RETURN, CTK_RETURN);
     }
     if (levelc_token_is(token, "SAY")) {
-        token->token_type = TK_SAY;
-        return CTK_SAY;
+        return levelc_promote_token(token, TK_SAY, CTK_SAY);
+    }
+    if (levelc_token_is(token, "SIGNAL")) {
+        return levelc_promote_token(token, TK_SIGNAL, CTK_SIGNAL);
+    }
+    if (levelc_token_is(token, "TRACE")) {
+        return levelc_promote_token(token, TK_LEVELC_TRACE, CTK_TRACE);
     }
     if (levelc_token_is(token, "IF")) {
-        token->token_type = TK_IF;
-        return CTK_IF;
+        return levelc_promote_token(token, TK_IF, CTK_IF);
     }
     if (levelc_token_is(token, "SELECT")) {
-        token->token_type = TK_SELECT;
-        return CTK_SELECT;
+        return levelc_promote_token(token, TK_SELECT, CTK_SELECT);
     }
     if (levelc_token_is(token, "WHEN")) {
-        token->token_type = TK_WHEN;
-        return CTK_WHEN;
+        return levelc_promote_token(token, TK_WHEN, CTK_WHEN);
     }
     if (levelc_token_is(token, "THEN")) {
-        token->token_type = TK_THEN;
-        return CTK_THEN;
+        return levelc_promote_token(token, TK_THEN, CTK_THEN);
     }
     if (levelc_token_is(token, "ELSE")) {
-        token->token_type = TK_ELSE;
-        return CTK_ELSE;
+        return levelc_promote_token(token, TK_ELSE, CTK_ELSE);
     }
     if (levelc_token_is(token, "OTHERWISE")) {
-        token->token_type = TK_OTHERWISE;
-        return CTK_OTHERWISE;
+        return levelc_promote_token(token, TK_OTHERWISE, CTK_OTHERWISE);
     }
     if (levelc_token_is(token, "DO")) {
-        token->token_type = TK_DO;
-        return CTK_DO;
+        return levelc_promote_token(token, TK_DO, CTK_DO);
     }
     if (levelc_token_is(token, "END")) {
-        token->token_type = TK_END;
-        return CTK_END;
+        return levelc_promote_token(token, TK_END, CTK_END);
     }
     if (levelc_token_is(token, "LEAVE")) {
-        token->token_type = TK_LEAVE;
-        return CTK_LEAVE;
+        return levelc_promote_token(token, TK_LEAVE, CTK_LEAVE);
     }
     if (levelc_token_is(token, "ITERATE")) {
-        token->token_type = TK_ITERATE;
-        return CTK_ITERATE;
+        return levelc_promote_token(token, TK_ITERATE, CTK_ITERATE);
     }
     return CTK_VAR_SYMBOL;
 }

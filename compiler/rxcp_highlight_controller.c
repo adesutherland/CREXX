@@ -1069,7 +1069,18 @@ static int source_container_type(SourceNode *node, CB_NodeType *type) {
             return 1;
         case IF:
         case ASSIGN:
+        case LEVELC_ADDRESS:
+        case LEVELC_ARG:
+        case LEVELC_DROP:
+        case LEVELC_INTERPRET:
+        case LEVELC_NUMERIC:
+        case LEVELC_PROCEDURE:
+        case LEVELC_PUSH:
+        case LEVELC_QUEUE:
+        case LEVELC_SIGNAL:
+        case LEVELC_TRACE:
         case CALL:
+        case NOP:
         case RETURN:
         case EXIT:
         case EXIT_EXTENDED:

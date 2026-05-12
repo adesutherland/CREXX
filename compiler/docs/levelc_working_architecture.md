@@ -1332,8 +1332,8 @@ check for the accepted Classic REXX syntax while the cREXX Level C path still
 stops at parsing/highlighting.
 
 Result: `levelc_do_control.rexx` prints `1`, `2`, `3`;
-`levelc_do_conditions_leave.rexx` prints `1`. Regina also rejects
-`DO TO` with standard error `27.1`, matching
+`levelc_do_conditions_leave.rexx` prints `1`. Regina also rejects `DO TO`
+with standard error `27.1`, matching
 `syntaxhighlight_levelc_do_invalid_initial_to`.
 
 Regression tests added for the DO slice:
@@ -1348,6 +1348,40 @@ Regression tests added for the DO slice:
 - `syntaxhighlight_levelc_do_forever_bad_tail`
 - `syntaxhighlight_levelc_do_invalid_initial_to`
 - expanded `syntaxhighlight_levelc_do_keyword_variables`
+
+Level C simple-instruction header slice on 2026-05-12:
+
+- The Level C token adapter now recognizes these remaining Classic single
+  instruction headers at clause start only: `ADDRESS`, `ARG`, `CALL`, `DROP`,
+  `EXIT`, `INTERPRET`, `NOP`, `NUMERIC`, `PROCEDURE`, `PULL`, `PUSH`,
+  `QUEUE`, `RETURN`, `SIGNAL`, and `TRACE`.
+- Assignment lookahead still wins. Forms such as `address = 1`, `arg = 2`,
+  `call = 3`, and `trace = 15` remain ordinary assignment clauses, preserving
+  the Classic REXX no-reserved-words rule.
+- For milestone 1 highlighting, this slice gives each instruction a distinct
+  statement-shaped AST node and source-tree statement projection. Full operand
+  validation is deliberately narrower than the standard grammar for now:
+  `EXIT`, `INTERPRET`, `PUSH`, `QUEUE`, and `RETURN` use the current expression
+  parser; `ARG`, `CALL`, `DROP`, `NUMERIC`, `PROCEDURE`, `PULL`, `SIGNAL`,
+  `TRACE`, and `ADDRESS` retain a flat token tail until their subgrammars are
+  widened.
+- `PARSE` and full parse-template recognition remain deferred. `ARG` and
+  `PULL` are accepted as instruction headers in this slice, but complete
+  template validation, dot placeholders, positional patterns, and
+  parenthesized pattern variables belong with the `PARSE` slice.
+- Contextual tail keywords such as `WITH`, `VALUE`, `ON`, `OFF`, `NAME`,
+  `DIGITS`, `FORM`, `FUZZ`, and `EXPOSE` are not yet promoted separately in
+  Level C tails. They remain identifier-colored inside the flat tail until the
+  related subgrammar owns them.
+
+Regina compatibility probe for the simple-instruction header slice:
+
+A temporary smoke script was generated and run with Regina using `rexx "$probe"`.
+Result: exits with status `0` for a smoke script covering bare
+`ADDRESS`, `ARG`, `DROP`, `INTERPRET`, `NOP`, `NUMERIC DIGITS`, `NUMERIC FORM`,
+`NUMERIC FUZZ`, `PUSH`, `QUEUE`, `CALL`, `SIGNAL`, `TRACE`, `PROCEDURE EXPOSE`,
+and `RETURN`. The probe is execution-safe and keeps `PULL` in a non-executed
+branch because running `PULL` would wait for input.
 
 Focused verification for the DO slice:
 
