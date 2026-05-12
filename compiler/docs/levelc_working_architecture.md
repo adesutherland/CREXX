@@ -1339,6 +1339,29 @@ Level C DO/END control slice on 2026-05-11:
     clauses emit `26.5`, `26.6`, and `33.6` when the invalid value is known at
     parse/highlight time, including direct quoted-string constants for
     `DIGITS`/`FUZZ`.
+- The deep validation pass adds conservative source-proven checks that are still
+  Level C-only:
+  - binary and hexadecimal string literals emit ANSI identities `15.1` through
+    `15.4` for invalid blank placement and invalid characters. The shared
+    string decoder still owns the raw decoding, but Level C source-tree
+    preparation rewrites its legacy `INVALID_HEX`/`INVALID_BIN` AST diagnostics
+    into the standard Level C codes before DSLSH sees them;
+  - static `TRACE` request constants emit `24.1` when the first effective
+    request letter is not one of `ACEFILNOR`; signed whole-number trace settings
+    are accepted, and a bare sign after `TRACE` emits `19.6`;
+  - malformed `LEAVE` and `ITERATE` targets emit `20.2` and suppress the
+    misleading loop-context `28.*` diagnostics for the same clause;
+  - number-leading assignment such as `10 = value` emits `31.1` rather than
+    being treated as an implicit ADDRESS command;
+  - `ADDRESS WITH` resources now validate the reachable static resource shape:
+    missing `INPUT`/`OUTPUT`/`ERROR` resources (`25.6`, `25.7`, `25.14`),
+    invalid `APPEND`/`REPLACE` resources (`25.8`, `25.9`), missing
+    `STREAM`/`STEM` variables (`53.1`, `53.2`), and invalid `STEM` names
+    (`53.3`).
+- The `ADDRESS WITH` validation deliberately checks resource syntax, not every
+  possible connection-order semantic. Duplicate or oddly ordered connection
+  clauses can be tightened in a later AST validation pass if the standard text
+  gives us a source-proven compile-time error.
 - The validator intentionally checks repetitive loops rather than every
   grouping `DO`, so `LEAVE` inside plain `DO ... END` is rejected until an
   enclosing repetitive loop exists.
@@ -1382,6 +1405,29 @@ the placement of the `PROCEDURE` instruction itself, but it does not make an
 unknown `CALL` target invalid: external procedure/function resolution remains a
 runtime concern and the Level C parser/highlighter should not emit
 label-not-found diagnostics for unknown `CALL` or future function-call targets.
+
+Additional Regina probes for the deep-validation slice:
+
+```sh
+probe=$(mktemp /tmp/levelc-regina-positive.XXXXXX)
+printf '%s\n' \
+  'options levelc' \
+  'trace normal' \
+  'trace "??"' \
+  'trace 3' \
+  'trace -3' \
+  "say 'F'X" \
+  "say '0F 0A'X" \
+  "say '1'B" \
+  "say '0000 1111'B" > "$probe"
+rexx "$probe"
+```
+
+The probe returned zero under Regina, confirming the accepted `TRACE` constants,
+signed numeric `TRACE`, and valid binary/hexadecimal string forms. Regina rejects
+the new `ADDRESS WITH INPUT ...` positive fixture with `25.5`; for this slice
+the cREXX parser follows the ANSI grammar text for `ADDRESS WITH` rather than
+using Regina as the deciding oracle for that subgrammar.
 
 Regression tests added for the DO slice:
 
@@ -1661,6 +1707,8 @@ Regression tests added or widened for this slice:
 - `syntaxhighlight_levelc_instruction_tail_bad_forms`
 - `syntaxhighlight_levelc_parse_templates`
 - `syntaxhighlight_levelc_parse_bad_forms`
+- `syntaxhighlight_levelc_deep_validation`
+- `syntaxhighlight_levelc_deep_validation_ok`
 
 Focused verification for the parse/instruction completion slice:
 
@@ -1670,8 +1718,7 @@ cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target rxc
 ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release -R 'syntaxhighlight_levelc|levelc_compile_unsupported|highlight_editor_diagnostics|highlight_cache' --output-on-failure
 ```
 
-Result after the recovery/warning tightening slice: all 50 focused
-Level C/highlighting tests pass.
+Result after the deep-validation slice: all 52 Level C tests pass.
 
 Full release verification after the parse/instruction completion slice:
 
@@ -1680,24 +1727,20 @@ cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target all
 ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-on-failure
 ```
 
-Result after the recovery/warning tightening slice: full build passes; all
-1080 CTest tests pass.
+Result after the deep-validation slice: full build passes; all
+1084 CTest tests pass.
 
 The remaining first implementation sequence is:
 
-1. Review Level C symbols and source-tree semantics:
-   direct variables, stems, compound names, reserved symbols, labels, routine
-   targets, parse targets, and indirect variable-list references.
-2. Add syntax-adjacent validation walkers before tree surgery:
-   `CALL`/`SIGNAL` condition names and `NAME` targets, `NUMERIC` expression
-   requirements, `ADDRESS WITH` connection shape, `PROCEDURE` placement, parse
-   template target restrictions, reserved-symbol rules, and command-expression
-   boundaries.
-3. Expand scanner coverage toward the remaining ANSI lexical details:
-   non-integer number forms, period-start constants/reserved symbols, binary and
-   hexadecimal strings, nested comments, continuation edge cases, and
-   blank-presence metadata where later validation needs it.
-4. Keep adding parser-mode fixtures for every accepted/rejected instruction form,
+1. Review the remaining lexer/parser gaps against the ANSI syntax text:
+   non-integer number forms, period-start constants and reserved symbols,
+   function-call syntax, nested comments, continuation edge cases, and any
+   keyword fallback cases that still depend on adapter state.
+2. Add the next conservative AST validation pass before tree surgery:
+   parse-template target restrictions, `CALL`/`SIGNAL` condition and `NAME`
+   target checks, compound/stem symbol-table rules, reserved-symbol rules, and
+   any source-proven `ADDRESS WITH` connection-order diagnostics.
+3. Keep adding parser-mode fixtures for every accepted/rejected instruction form,
    with positive coverage and negative `RXC-LC-...` identities.
-5. Only after highlighter validation is stable, start canonical lowering and tree
+4. Only after highlighter validation is stable, start canonical lowering and tree
    surgery hardening.

@@ -296,6 +296,20 @@ static void levelc_append_code_token(Context *context,
     free(message);
 }
 
+static void levelc_append_code_found_token(Context *context,
+                                           Token *anchor,
+                                           const char *standard_code,
+                                           Token *found_token) {
+    char *token_text;
+    char *message;
+
+    token_text = levelc_fallback_token_text(found_token);
+    message = rxcp_levelc_diag_format(standard_code, "token", token_text);
+    levelc_append_detached_diagnostic(context, anchor, message);
+    free(token_text);
+    free(message);
+}
+
 static void levelc_append_code_name(Context *context,
                                     Token *token,
                                     const char *standard_code,
@@ -314,6 +328,33 @@ static void levelc_append_code_value(Context *context,
     char *message;
 
     message = rxcp_levelc_diag_format(standard_code, "value", value);
+    levelc_append_detached_diagnostic(context, token, message);
+    free(message);
+}
+
+static void levelc_append_code_char(Context *context,
+                                    Token *token,
+                                    const char *standard_code,
+                                    char value) {
+    char char_text[2];
+    char *message;
+
+    char_text[0] = value;
+    char_text[1] = '\0';
+    message = rxcp_levelc_diag_format(standard_code, "char", char_text);
+    levelc_append_detached_diagnostic(context, token, message);
+    free(message);
+}
+
+static void levelc_append_code_position(Context *context,
+                                        Token *token,
+                                        const char *standard_code,
+                                        int position) {
+    char position_text[32];
+    char *message;
+
+    snprintf(position_text, sizeof(position_text), "%d", position);
+    message = rxcp_levelc_diag_format(standard_code, "position", position_text);
     levelc_append_detached_diagnostic(context, token, message);
     free(message);
 }
@@ -556,6 +597,125 @@ static char *levelc_simple_string_value(Token *token) {
     return value;
 }
 
+static int levelc_string_suffix(Token *token, char *suffix, int *raw_length) {
+    char quote;
+    char last;
+
+    if (suffix) *suffix = '\0';
+    if (raw_length) *raw_length = 0;
+    if (!token || token->token_type != TK_STRING || !token->token_string ||
+        token->length < 3) {
+        return 0;
+    }
+
+    quote = token->token_string[0];
+    if (quote != '\'' && quote != '"') return 0;
+    last = token->token_string[token->length - 1];
+    if ((last != 'x' && last != 'X' && last != 'b' && last != 'B') ||
+        token->token_string[token->length - 2] != quote) {
+        return 0;
+    }
+
+    if (suffix) *suffix = (char)toupper((unsigned char)last);
+    if (raw_length) *raw_length = token->length - 3;
+    return 1;
+}
+
+static int levelc_hex_digit(char ch) {
+    return (ch >= '0' && ch <= '9') ||
+           (ch >= 'a' && ch <= 'f') ||
+           (ch >= 'A' && ch <= 'F');
+}
+
+static int levelc_binary_digit(char ch) {
+    return ch == '0' || ch == '1';
+}
+
+static int levelc_validate_string_grouping(Context *context,
+                                           Token *token,
+                                           int raw_length,
+                                           int group_size,
+                                           const char *standard_code) {
+    char *raw;
+    int i;
+    int group_length;
+    int after_blank;
+
+    if (raw_length <= 0) return 1;
+    raw = token->token_string + 1;
+
+    if (raw[0] == ' ') {
+        levelc_append_code_position(context, token, standard_code, 1);
+        return 0;
+    }
+    if (raw[raw_length - 1] == ' ') {
+        levelc_append_code_position(context, token, standard_code, raw_length);
+        return 0;
+    }
+
+    i = 0;
+    while (i < raw_length && raw[i] != ' ') i++;
+    if (i >= raw_length) return 1;
+
+    after_blank = 1;
+    group_length = 0;
+    while (i < raw_length) {
+        if (raw[i] == ' ') {
+            if (after_blank) {
+                i++;
+                continue;
+            }
+            if (group_length != group_size) {
+                levelc_append_code_position(context, token, standard_code, i + 1);
+                return 0;
+            }
+            after_blank = 1;
+            group_length = 0;
+            i++;
+            continue;
+        }
+
+        after_blank = 0;
+        group_length++;
+        i++;
+    }
+
+    if (group_length != group_size) {
+        levelc_append_code_position(context, token, standard_code, raw_length + 1);
+        return 0;
+    }
+    return 1;
+}
+
+static void levelc_validate_string_token(Context *context, Token *token) {
+    char suffix;
+    char *raw;
+    int raw_length;
+    int i;
+
+    if (!levelc_string_suffix(token, &suffix, &raw_length)) return;
+    raw = token->token_string + 1;
+
+    for (i = 0; i < raw_length; i++) {
+        if (raw[i] == ' ') continue;
+        if (suffix == 'X') {
+            if (!levelc_hex_digit(raw[i])) {
+                levelc_append_code_char(context, token, "15.3", raw[i]);
+                return;
+            }
+        } else if (!levelc_binary_digit(raw[i])) {
+            levelc_append_code_char(context, token, "15.4", raw[i]);
+            return;
+        }
+    }
+
+    if (suffix == 'X') {
+        levelc_validate_string_grouping(context, token, raw_length, 2, "15.1");
+    } else {
+        levelc_validate_string_grouping(context, token, raw_length, 4, "15.2");
+    }
+}
+
 static int levelc_simple_string_operand(Token *head,
                                         char **value_text,
                                         Token **anchor) {
@@ -575,6 +735,183 @@ static int levelc_simple_string_operand(Token *head,
         if (!*value_text) return 0;
     }
     return 1;
+}
+
+static int levelc_trace_letter_ok(char ch) {
+    ch = (char)toupper((unsigned char)ch);
+    return ch == 'A' || ch == 'C' || ch == 'E' || ch == 'F' ||
+           ch == 'I' || ch == 'L' || ch == 'N' || ch == 'O' ||
+           ch == 'R';
+}
+
+static void levelc_validate_trace_value(Context *context,
+                                        Token *token,
+                                        const char *value) {
+    const char *cursor;
+    char bad[2];
+
+    if (!value) return;
+    cursor = value;
+    while (*cursor == '?') cursor++;
+    if (*cursor == '\0') return;
+    if (levelc_trace_letter_ok(*cursor)) return;
+
+    bad[0] = (char)toupper((unsigned char)*cursor);
+    bad[1] = '\0';
+    levelc_append_code_value(context, token, "24.1", bad);
+}
+
+static void levelc_validate_trace_instruction(Context *context, Token *trace_token) {
+    Token *target;
+    Token *after_sign;
+    char *value;
+
+    target = levelc_next_clause_token(trace_token);
+    if (!target) return;
+    if (target->token_type == TK_LEVELC_VALUE) return;
+    if (target->token_type == TK_INTEGER) return;
+    if (target->token_type == TK_PLUS ||
+        target->token_type == TK_MINUS ||
+        target->token_type == TK_HIGH_PRIORITY_MINUS) {
+        after_sign = levelc_next_clause_token(target);
+        if (after_sign && after_sign->token_type == TK_INTEGER &&
+            !levelc_next_clause_token(after_sign)) {
+            return;
+        }
+    }
+
+    if (target->token_type == TK_STRING) {
+        value = levelc_simple_string_value(target);
+        if (value) {
+            levelc_validate_trace_value(context, target, value);
+            free(value);
+        }
+        return;
+    }
+    if (target->token_type != TK_VAR_SYMBOL) return;
+
+    value = levelc_token_value(target);
+    if (!value) return;
+    levelc_validate_trace_value(context, target, value);
+    free(value);
+}
+
+static int levelc_address_connection_head(Token *token) {
+    if (!token) return 0;
+    return token->token_type == TK_LEVELC_INPUT ||
+           token->token_type == TK_LEVELC_OUTPUT ||
+           token->token_type == TK_LEVELC_ERROR;
+}
+
+static int levelc_address_resource_head(Token *token) {
+    if (!token) return 0;
+    return token->token_type == TK_LEVELC_STREAM ||
+           token->token_type == TK_LEVELC_STEM;
+}
+
+static int levelc_stem_symbol_is_valid(Token *token) {
+    int i;
+    int periods;
+
+    if (!token || !token->token_string || token->length <= 0) return 0;
+    periods = 0;
+    for (i = 0; i < token->length; i++) {
+        if (token->token_string[i] == '.') periods++;
+    }
+    return periods == 1 && token->token_string[token->length - 1] == '.';
+}
+
+static Token *levelc_address_validate_resource(Context *context, Token *resource) {
+    Token *name;
+    char *value;
+
+    name = resource ? resource->token_next : 0;
+    if (levelc_token_is_boundary(name) || !name || name->token_type != TK_VAR_SYMBOL) {
+        levelc_append_code_found_token(context, resource,
+                                       resource && resource->token_type == TK_LEVELC_STEM ? "53.2" : "53.1",
+                                       name);
+        if (levelc_address_connection_head(name)) return name;
+        return name ? name->token_next : 0;
+    }
+
+    if (resource->token_type == TK_LEVELC_STEM && !levelc_stem_symbol_is_valid(name)) {
+        value = levelc_token_value(name);
+        levelc_append_code_name(context, name, "53.3", value ? value : "");
+        if (value) free(value);
+    }
+    return name->token_next;
+}
+
+static Token *levelc_address_validate_input(Context *context, Token *head) {
+    Token *token;
+
+    token = head ? head->token_next : 0;
+    if (levelc_token_is_boundary(token) ||
+        (!levelc_address_resource_head(token) &&
+         (!token || token->token_type != TK_LEVELC_NORMAL))) {
+        levelc_append_keywords_token(context, head, "25.6",
+                                     "STREAM STEM NORMAL", token);
+        if (levelc_address_connection_head(token)) return token;
+        return token ? token->token_next : 0;
+    }
+    if (token->token_type == TK_LEVELC_NORMAL) return token->token_next;
+    return levelc_address_validate_resource(context, token);
+}
+
+static Token *levelc_address_validate_output_like(Context *context,
+                                                  Token *head,
+                                                  const char *missing_code) {
+    Token *token;
+    Token *resource;
+    const char *append_code;
+
+    token = head ? head->token_next : 0;
+    if (levelc_token_is_boundary(token) ||
+        (!levelc_address_resource_head(token) &&
+         (!token || (token->token_type != TK_LEVELC_NORMAL &&
+                     token->token_type != TK_LEVELC_APPEND &&
+                     token->token_type != TK_LEVELC_REPLACE)))) {
+        levelc_append_keywords_token(context, head, missing_code,
+                                     "APPEND REPLACE STREAM STEM NORMAL", token);
+        if (levelc_address_connection_head(token)) return token;
+        return token ? token->token_next : 0;
+    }
+
+    if (token->token_type == TK_LEVELC_NORMAL) return token->token_next;
+    if (levelc_address_resource_head(token)) return levelc_address_validate_resource(context, token);
+
+    append_code = token->token_type == TK_LEVELC_APPEND ? "25.8" : "25.9";
+    resource = token->token_next;
+    if (levelc_token_is_boundary(resource) || !levelc_address_resource_head(resource)) {
+        levelc_append_keywords_token(context, token, append_code,
+                                     "STREAM STEM", resource);
+        if (levelc_address_connection_head(resource)) return resource;
+        return resource ? resource->token_next : 0;
+    }
+    return levelc_address_validate_resource(context, resource);
+}
+
+static void levelc_validate_address_with(Context *context, Token *address_token) {
+    Token *token;
+
+    token = levelc_next_clause_token(address_token);
+    while (token && token->token_type != TK_LEVELC_WITH) {
+        token = levelc_next_clause_token(token);
+    }
+    if (!token) return;
+
+    token = token->token_next;
+    while (!levelc_token_is_boundary(token)) {
+        if (token->token_type == TK_LEVELC_INPUT) {
+            token = levelc_address_validate_input(context, token);
+        } else if (token->token_type == TK_LEVELC_OUTPUT) {
+            token = levelc_address_validate_output_like(context, token, "25.7");
+        } else if (token->token_type == TK_LEVELC_ERROR) {
+            token = levelc_address_validate_output_like(context, token, "25.14");
+        } else {
+            token = token->token_next;
+        }
+    }
 }
 
 static void levelc_scan_do_header(Token *do_token,
@@ -624,6 +961,13 @@ static Token *levelc_leave_iterate_symbol(Token *keyword_token) {
     symbol = levelc_next_clause_token(keyword_token);
     if (symbol && symbol->token_type == TK_VAR_SYMBOL) return symbol;
     return 0;
+}
+
+static int levelc_leave_iterate_has_bad_target(Token *keyword_token) {
+    Token *target;
+
+    target = levelc_next_clause_token(keyword_token);
+    return target && target->token_type != TK_VAR_SYMBOL;
 }
 
 static int levelc_has_repetitive_do(LevelCFallbackFrame *frames, size_t count) {
@@ -899,6 +1243,18 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
         }
 
         switch (token_type) {
+            case TK_STRING:
+                levelc_validate_string_token(context, token);
+                break;
+
+            case TK_LEVELC_ADDRESS:
+                levelc_validate_address_with(context, token);
+                break;
+
+            case TK_LEVELC_TRACE:
+                levelc_validate_trace_instruction(context, token);
+                break;
+
             case TK_DO:
             case TK_LOOP:
                 control = 0;
@@ -957,6 +1313,8 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
                     if (!levelc_has_controlled_do(frames, frame_count, target_name)) {
                         levelc_append_code_token(context, target_name, "28.3");
                     }
+                } else if (levelc_leave_iterate_has_bad_target(token)) {
+                    /* The grammar reports Msg20.2 for the malformed target. */
                 } else if (!levelc_has_repetitive_do(frames, frame_count)) {
                     levelc_append_code(context, token, "28.1");
                 }
@@ -968,6 +1326,8 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
                     if (!levelc_has_controlled_do(frames, frame_count, target_name)) {
                         levelc_append_code_token(context, target_name, "28.4");
                     }
+                } else if (levelc_leave_iterate_has_bad_target(token)) {
+                    /* The grammar reports Msg20.2 for the malformed target. */
                 } else if (!levelc_has_repetitive_do(frames, frame_count)) {
                     levelc_append_code(context, token, "28.2");
                 }

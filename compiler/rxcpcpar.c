@@ -589,6 +589,11 @@ int rexcpars(Context *context) {
                 }
             }
         }
+        else if (clause_start &&
+                 token_type == TK_INTEGER &&
+                 peek_token->token_type == TK_EQUAL) {
+            parser_token = CTK_BAD_ASSIGN_NUMBER;
+        }
 
         if (parser_token == CTK_EOC || parser_token == CTK_LABEL) {
             clause_start = 1;

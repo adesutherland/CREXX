@@ -1600,6 +1600,44 @@ if (ENABLE_PARSER_MODE)
     set_tests_properties(syntaxhighlight_levelc_numeric_validation PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
     add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_deep_validation
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_deep_validation.rexx
+            MUST_MATCH
+            "RXC-LC-24\\.1 value=\"B\""
+            "RXC-LC-19\\.6 token=\"\\+\""
+            "RXC-LC-20\\.2 token=\"10\""
+            "RXC-LC-31\\.1 token=\"10\""
+            "RXC-LC-25\\.6 keywords=\"STREAM STEM NORMAL\" token=\"end-of-clause\""
+            "RXC-LC-53\\.1 token=\"end-of-clause\""
+            "RXC-LC-53\\.1 token=\"10\""
+            "RXC-LC-25\\.8 keywords=\"STREAM STEM\" token=\"normal\""
+            "RXC-LC-53\\.3 name=\"out\""
+            "RXC-LC-15\\.3 char=\"G\""
+            "RXC-LC-15\\.4 char=\"2\""
+            "RXC-LC-15\\.1"
+            "RXC-LC-15\\.2"
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_deep_validation PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_deep_validation_ok
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_deep_validation_ok.rexx
+            MUST_MATCH
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=5, sev=48, text=\"trace\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=7, sev=48, text=\"address\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=4, sev=48, text=\"'F'X\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=12, sev=48, text=\"'0000 1111'B\""
+            MUST_NOT_MATCH
+            "RXC-LC-"
+            "INVALID_HEX"
+            "INVALID_BIN"
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_deep_validation_ok PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
             syntaxhighlight_levelc_simple_instruction_keyword_variables
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_simple_instruction_keyword_variables.rexx
             MUST_MATCH

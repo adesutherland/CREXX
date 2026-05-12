@@ -345,7 +345,7 @@ static ASTNode *levelc_implicit_cmd_warning(Context *context, ASTNode *expressio
 }
 
 %token CTK_UNKNOWN CTK_BAD_STRING CTK_BADCOMMENT CTK_EOS CTK_EOC CTK_MISSING_EXPR CTK_MISSING_RPAREN.
-%token CTK_VAR_SYMBOL CTK_COMMAND_SYMBOL CTK_DO_CONTROL_SYMBOL CTK_LABEL CTK_INTEGER CTK_STRING.
+%token CTK_VAR_SYMBOL CTK_COMMAND_SYMBOL CTK_DO_CONTROL_SYMBOL CTK_BAD_ASSIGN_NUMBER CTK_LABEL CTK_INTEGER CTK_STRING.
 %token CTK_EQUAL CTK_ADDRESS CTK_ARG CTK_CALL CTK_DROP CTK_EXIT CTK_INTERPRET CTK_NOP CTK_NUMERIC.
 %token CTK_OPTIONS CTK_PARSE CTK_PROCEDURE CTK_PULL CTK_PUSH CTK_QUEUE CTK_RETURN CTK_SAY CTK_SIGNAL CTK_TRACE.
 %token CTK_IF CTK_THEN CTK_ELSE CTK_SELECT CTK_WHEN CTK_OTHERWISE CTK_DO CTK_END.
@@ -1148,6 +1148,30 @@ trace_instruction(I) ::= CTK_TRACE(T) CTK_VALUE expression(E).
     add_ast(I, E);
 }
 
+trace_instruction(I) ::= CTK_TRACE(T) CTK_BAD_STRING(B).
+{
+    I = ast_f(context, LEVELC_TRACE, T);
+    add_ast(I, levelc_unknown_token_error(context, B, "19.6"));
+}
+
+trace_instruction(I) ::= CTK_TRACE(T) CTK_PLUS(B).
+{
+    I = ast_f(context, LEVELC_TRACE, T);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "19.6", B));
+}
+
+trace_instruction(I) ::= CTK_TRACE(T) CTK_MINUS(B).
+{
+    I = ast_f(context, LEVELC_TRACE, T);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "19.6", B));
+}
+
+trace_instruction(I) ::= CTK_TRACE(T) CTK_HIGH_PRIORITY_MINUS(B).
+{
+    I = ast_f(context, LEVELC_TRACE, T);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "19.6", B));
+}
+
 command_instruction(I) ::= command_expression(E).
 {
     I = ast_ft(context, IMPLICIT_CMD);
@@ -1456,6 +1480,24 @@ trace_target(C) ::= CTK_STRING(T).
 trace_target(C) ::= CTK_INTEGER(T).
 {
     C = ast_f(context, INTEGER, T);
+}
+
+trace_target(C) ::= CTK_PLUS(P) CTK_INTEGER(T).
+{
+    C = ast_f(context, INTEGER, T);
+    add_ast(C, ast_f(context, TOKEN, P));
+}
+
+trace_target(C) ::= CTK_MINUS(P) CTK_INTEGER(T).
+{
+    C = ast_f(context, INTEGER, T);
+    add_ast(C, ast_f(context, TOKEN, P));
+}
+
+trace_target(C) ::= CTK_HIGH_PRIORITY_MINUS(P) CTK_INTEGER(T).
+{
+    C = ast_f(context, INTEGER, T);
+    add_ast(C, ast_f(context, TOKEN, P));
 }
 
 variable_list(L) ::= variable_list(L0) variable_ref(V).
@@ -1922,6 +1964,13 @@ assignment(A) ::= CTK_VAR_SYMBOL(V) CTK_EQUAL(T) expression(E).
     add_ast(A, E);
 }
 
+assignment(A) ::= CTK_BAD_ASSIGN_NUMBER(V) CTK_EQUAL(T) expression(E).
+{
+    A = ast_f(context, ASSIGN, T);
+    add_ast(A, rxcp_levelc_ast_error_token(context, "31.1", V));
+    add_ast(A, E);
+}
+
 if_instruction(I) ::= CTK_IF(T) expression(C) CTK_THEN then_instruction(Then) else_clause(Else).
 {
     I = ast_f(context, IF, T);
@@ -2321,6 +2370,13 @@ leave_instruction(L) ::= CTK_LEAVE(T) CTK_VAR_SYMBOL(S).
     add_ast(L, ast_f(context, VAR_SYMBOL, S));
 }
 
+leave_instruction(L) ::= CTK_LEAVE(T) bad_name_target_start(B) simple_tail(S).
+{
+    L = ast_f(context, LEAVE, T);
+    add_ast(L, rxcp_levelc_ast_error_token(context, "20.2", B));
+    if (S) add_ast(L, S);
+}
+
 iterate_instruction(I) ::= CTK_ITERATE(T).
 {
     I = ast_f(context, ITERATE, T);
@@ -2330,6 +2386,13 @@ iterate_instruction(I) ::= CTK_ITERATE(T) CTK_VAR_SYMBOL(S).
 {
     I = ast_f(context, ITERATE, T);
     add_ast(I, ast_f(context, VAR_SYMBOL, S));
+}
+
+iterate_instruction(I) ::= CTK_ITERATE(T) bad_name_target_start(B) simple_tail(S).
+{
+    I = ast_f(context, ITERATE, T);
+    add_ast(I, rxcp_levelc_ast_error_token(context, "20.2", B));
+    if (S) add_ast(I, S);
 }
 
 unexpected_then(E) ::= CTK_THEN(T) recovery_instruction(S).
