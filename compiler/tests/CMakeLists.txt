@@ -1840,6 +1840,70 @@ if (ENABLE_PARSER_MODE)
     set_tests_properties(syntaxhighlight_levelc_expression_bad_trailing_compare PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
     add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_expression_bad_trailing_operator
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_expression_bad_trailing_operator.rexx
+            MUST_MATCH
+            "RXC-LC-35\\.1 token=\"end-of-clause\""
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=1, sev=51, text=\"\\+\""
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=1, sev=51, text=\"\\*\""
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=2, sev=51, text=\"\\*\\*\""
+            "Node: type=42 \\(LEXER_OPERATOR\\), pos=[0-9]+, len=2, sev=51, text=\"\\|\\|\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=1, sev=51, text=\"&\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=1, sev=51, text=\"\\|\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=2, sev=51, text=\"&&\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=11, sev=48, text=\"'after-xor'\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_expression_bad_trailing_operator PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_expression_bad_prefix_operator
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_expression_bad_prefix_operator.rexx
+            MUST_MATCH
+            "RXC-LC-35\\.1 token=\"end-of-clause\""
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=1, sev=51, text=\"\\+\""
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=1, sev=51, text=\"-\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=1, sev=51, text=\"\\\\\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=11, sev=48, text=\"'after-not'\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_expression_bad_prefix_operator PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_expression_bad_leading_operator
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_expression_bad_leading_operator.rexx
+            MUST_MATCH
+            "RXC-LC-35\\.1 token=\"\\*\""
+            "RXC-LC-35\\.1 token=\"/\""
+            "RXC-LC-35\\.1 token=\"&\""
+            "RXC-LC-35\\.1 token=\"<>\""
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=1, sev=51, text=\"\\*\""
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=1, sev=51, text=\"/\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=1, sev=51, text=\"&\""
+            "Node: type=45 \\(LEXER_OPERATOR_LOGICAL\\), pos=[0-9]+, len=2, sev=51, text=\"<>\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=11, sev=48, text=\"'after-neq'\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_expression_bad_leading_operator PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_expression_bad_paren
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_expression_bad_paren.rexx
+            MUST_MATCH
+            "RXC-LC-36"
+            "RXC-LC-35\\.1 token=\"\\)\""
+            "Node: type=52 \\(LEXER_LH_EXPR\\), pos=[0-9]+, len=1, sev=51, text=\"\\(\""
+            "Node: type=44 \\(LEXER_OPERATOR_ARITHMETIC\\), pos=[0-9]+, len=1, sev=51, text=\"\\+\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=11, sev=48, text=\"'after-rhs'\""
+            MUST_NOT_MATCH
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_expression_bad_paren PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
             syntaxhighlight_block_comment
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_block_comment.rexx
             MUST_MATCH

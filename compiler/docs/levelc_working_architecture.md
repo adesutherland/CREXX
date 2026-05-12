@@ -1400,6 +1400,18 @@ Level C expression-core slice on 2026-05-11:
   is invalid Classic REXX. The Level C tracer now anchors standard error
   `35.1` on the visible operator with `token="end-of-clause"` and keeps the
   next clause as a separate source-tree statement.
+- The bad-expression sign-off slice extends that same recovery shape to:
+  trailing arithmetic/concatenation/logical operators, dangling prefix
+  operators, leading binary operators, unmatched left parentheses, and missing
+  operands before `)`. The grammar uses Level C-only synthetic
+  `CTK_MISSING_EXPR` and `CTK_MISSING_RPAREN` tokens from the glue layer rather
+  than broad empty productions; this keeps Lemon conflicts out of the normal
+  expression grammar while still letting the editor resynchronize at the clause
+  boundary. Standard identities are `35.1` for invalid/missing expression
+  operands and `36` for unmatched `(`.
+- `say = 1` is deliberately not treated as a bad expression in Classic REXX:
+  because there are no reserved words, it is an assignment to a variable named
+  `say`.
 - DSLSH currently classifies the single `=` token as
   `LEXER_OPERATOR_ASSIGN` even when it is a comparison operator. That is a
   shared highlighting classification issue, not a Level C parse failure.
@@ -1411,6 +1423,10 @@ rexx compiler/tests/rexx_src/levelc_expression_precedence.rexx
 rexx compiler/tests/rexx_src/levelc_expression_comparisons.rexx
 rexx compiler/tests/rexx_src/levelc_expression_bad_comma.rexx
 rexx compiler/tests/rexx_src/levelc_expression_bad_rparen.rexx
+rexx compiler/tests/rexx_src/levelc_expression_bad_trailing_operator.rexx
+rexx compiler/tests/rexx_src/levelc_expression_bad_prefix_operator.rexx
+rexx compiler/tests/rexx_src/levelc_expression_bad_leading_operator.rexx
+rexx compiler/tests/rexx_src/levelc_expression_bad_paren.rexx
 printf "say 1 =\n" >/tmp/levelc_bad_trailing_compare.rexx && rexx /tmp/levelc_bad_trailing_compare.rexx
 ```
 
@@ -1425,6 +1441,13 @@ highlighter reports `RXC-LC-37.2`. Regina also rejects `say 1 =` with syntax
 error `64.1`; the Level C highlighter reports `RXC-LC-35.1
 token="end-of-clause"` and resynchronizes at the next `SAY`.
 
+Regina behaviour for the wider bad-expression fixtures is consistent with the
+standard-message mapping: trailing operators produce syntax error `64.1`,
+dangling prefixes and leading binary operators produce `35.1`, and unmatched
+left parentheses produce `36`. The Level C highlighter reports the same
+standard identities where the standard provides them and keeps the following
+`SAY` clause as a separate source-tree statement.
+
 Regina also confirms the Classic XOR truth table: `0 && 0`, `0 && 1`, `1 && 0`,
 `1 && 1` prints `0`, `1`, `1`, `0`.
 
@@ -1435,6 +1458,10 @@ Regression tests added for the expression slice:
 - `syntaxhighlight_levelc_expression_bad_comma`
 - `syntaxhighlight_levelc_expression_bad_rparen`
 - `syntaxhighlight_levelc_expression_bad_trailing_compare`
+- `syntaxhighlight_levelc_expression_bad_trailing_operator`
+- `syntaxhighlight_levelc_expression_bad_prefix_operator`
+- `syntaxhighlight_levelc_expression_bad_leading_operator`
+- `syntaxhighlight_levelc_expression_bad_paren`
 - `err_xor_common_fail`
 - `classic_xor_run_noopt`
 - `classic_xor_run_opt`
@@ -1470,7 +1497,8 @@ cmake --build /Users/adrian/CLionProjects/CREXX/cmake-build-release --target all
 ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release --output-on-failure
 ```
 
-Result: full build passes; all 1067 CTest tests pass.
+Result: full build passes; all 1071 CTest tests pass after the bad-expression
+coverage sign-off.
 
 The remaining first implementation sequence is:
 

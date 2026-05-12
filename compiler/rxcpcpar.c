@@ -159,6 +159,45 @@ static int levelc_promote_do_keyword(Token *token, int first_header_token) {
     return CTK_VAR_SYMBOL;
 }
 
+static int levelc_missing_expression_boundary(int parser_token) {
+    return parser_token == CTK_EOC ||
+           parser_token == CTK_EOS ||
+           parser_token == CTK_CLOSE_BRACKET;
+}
+
+static int levelc_token_expects_expression_rhs(int parser_token) {
+    switch (parser_token) {
+        case CTK_EQUAL:
+        case CTK_PLUS:
+        case CTK_MINUS:
+        case CTK_HIGH_PRIORITY_MINUS:
+        case CTK_NOT:
+        case CTK_CONCAT:
+        case CTK_MULT:
+        case CTK_DIV:
+        case CTK_IDIV:
+        case CTK_MOD:
+        case CTK_POWER:
+        case CTK_NEQ:
+        case CTK_GT:
+        case CTK_LT:
+        case CTK_GTE:
+        case CTK_LTE:
+        case CTK_S_EQ:
+        case CTK_S_NEQ:
+        case CTK_S_GT:
+        case CTK_S_LT:
+        case CTK_S_GTE:
+        case CTK_S_LTE:
+        case CTK_AND:
+        case CTK_OR:
+        case CTK_XOR:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 int rexcpars(Context *context) {
     Token *token;
     Token *peek_token;
@@ -174,6 +213,7 @@ int rexcpars(Context *context) {
     int do_header;
     int do_header_first;
     int do_condition_expr;
+    int paren_depth;
 
     context->numeric_standard = 1;
     parser = RexxCAlloc(malloc);
@@ -191,6 +231,7 @@ int rexcpars(Context *context) {
     do_header = 0;
     do_header_first = 0;
     do_condition_expr = 0;
+    paren_depth = 0;
 
     while (1) {
         token = peek_token;
@@ -199,6 +240,16 @@ int rexcpars(Context *context) {
 
         if (token_type == TK_EOS || token_type == TK_BADCOMMENT) {
             if (last_parser_token != CTK_EOC) {
+                context->current_parser_token = token;
+                context->next_parser_token = token;
+                if (levelc_missing_expression_boundary(CTK_EOC) &&
+                    levelc_token_expects_expression_rhs(last_parser_token)) {
+                    RexxC(parser, CTK_MISSING_EXPR, token, context);
+                }
+                while (paren_depth > 0) {
+                    RexxC(parser, CTK_MISSING_RPAREN, token, context);
+                    paren_depth--;
+                }
                 RexxC(parser, CTK_EOC, 0, context);
             }
             if (token_type == TK_BADCOMMENT) {
@@ -316,7 +367,23 @@ int rexcpars(Context *context) {
             fprintf(stderr, "[GLUE-C] Line %d: Passing raw %d (%s) as parser token %d\n",
                     context->line, token_type, token_to_string(token_type), parser_token);
         }
+        if (levelc_missing_expression_boundary(parser_token) &&
+            levelc_token_expects_expression_rhs(last_parser_token)) {
+            RexxC(parser, CTK_MISSING_EXPR, token, context);
+        }
+        if ((parser_token == CTK_EOC || parser_token == CTK_EOS) && paren_depth > 0) {
+            while (paren_depth > 0) {
+                RexxC(parser, CTK_MISSING_RPAREN, token, context);
+                paren_depth--;
+            }
+        }
         RexxC(parser, parser_token, token, context);
+        if (parser_token == CTK_OPEN_BRACKET) {
+            paren_depth++;
+        }
+        else if (parser_token == CTK_CLOSE_BRACKET && paren_depth > 0) {
+            paren_depth--;
+        }
         last_parser_token = parser_token;
     }
 

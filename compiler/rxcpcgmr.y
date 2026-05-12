@@ -150,11 +150,31 @@ static ASTNode *levelc_end_clause_node(Context *context, Token *end_token, Token
 
 static ASTNode *levelc_missing_expression_rhs(Context *context, NodeType operator_type, Token *operator_token, ASTNode *left) {
     ASTNode *node;
+    char *found;
 
     node = ast_f(context, operator_type, operator_token);
-    add_ast(node, left);
+    if (left) add_ast(node, left);
+    found = levelc_diag_token_text(context ? context->current_parser_token : 0);
     add_ast(node, rxcp_levelc_ast_error_insert(context, "35.1", operator_token,
-                                               "token", "end-of-clause"));
+                                               "token", found));
+    free(found);
+    return node;
+}
+
+static ASTNode *levelc_bad_expression_start(Context *context, Token *bad_token, ASTNode *tail) {
+    ASTNode *node;
+
+    node = rxcp_levelc_ast_error_token(context, "35.1", bad_token);
+    if (tail) add_ast(node, tail);
+    return node;
+}
+
+static ASTNode *levelc_unmatched_open_bracket(Context *context, Token *open_token, ASTNode *expression) {
+    ASTNode *node;
+
+    node = ast_f(context, BLOCK_EXPR, open_token);
+    if (expression) add_ast(node, expression);
+    add_ast(node, rxcp_levelc_ast_error(context, "36", open_token));
     return node;
 }
 
@@ -235,7 +255,8 @@ static ASTNode *levelc_do_bad_keyword(Context *context,
 }
 }
 
-%token CTK_UNKNOWN CTK_BADCOMMENT CTK_EOS CTK_EOC CTK_VAR_SYMBOL CTK_DO_CONTROL_SYMBOL CTK_LABEL CTK_INTEGER CTK_STRING.
+%token CTK_UNKNOWN CTK_BADCOMMENT CTK_EOS CTK_EOC CTK_MISSING_EXPR CTK_MISSING_RPAREN.
+%token CTK_VAR_SYMBOL CTK_DO_CONTROL_SYMBOL CTK_LABEL CTK_INTEGER CTK_STRING.
 %token CTK_EQUAL CTK_OPTIONS CTK_SAY CTK_IF CTK_THEN CTK_ELSE CTK_SELECT CTK_WHEN CTK_OTHERWISE CTK_DO CTK_END.
 %token CTK_TO CTK_BY CTK_FOR CTK_WHILE CTK_UNTIL CTK_FOREVER CTK_LEAVE CTK_ITERATE.
 %token CTK_COMMA CTK_OPEN_BRACKET CTK_CLOSE_BRACKET.
@@ -251,6 +272,8 @@ static ASTNode *levelc_do_bad_keyword(Context *context,
 %nonassoc CTK_OTHERWISE.
 %nonassoc CTK_DO.
 %nonassoc CTK_ELSE.
+
+%type bad_expression_start {Token*}
 
 %stack_size 0
 
@@ -915,9 +938,24 @@ primary_expr(T) ::= CTK_OPEN_BRACKET expression(E) CTK_CLOSE_BRACKET.
     T = E;
 }
 
+primary_expr(T) ::= CTK_OPEN_BRACKET(O) expression(E) missing_close_bracket.
+{
+    T = levelc_unmatched_open_bracket(context, O, E);
+}
+
+primary_expr(T) ::= CTK_OPEN_BRACKET(O) missing_close_bracket.
+{
+    T = levelc_unmatched_open_bracket(context, O, 0);
+}
+
 primary_expr(T) ::= CTK_COMMA(S).
 {
     T = rxcp_levelc_ast_error(context, "37.1", S);
+}
+
+primary_expr(T) ::= bad_expression_start(S).
+{
+    T = levelc_bad_expression_start(context, S, 0);
 }
 
 prefix_expr(E) ::= primary_expr(P).
@@ -931,10 +969,20 @@ prefix_expr(E) ::= CTK_NOT(T) prefix_expr(P).
     add_ast(E, P);
 }
 
+prefix_expr(E) ::= CTK_NOT(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_NOT, T, 0);
+}
+
 prefix_expr(E) ::= CTK_PLUS(T) prefix_expr(P).
 {
     E = ast_f(context, OP_PLUS, T);
     add_ast(E, P);
+}
+
+prefix_expr(E) ::= CTK_PLUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_PLUS, T, 0);
 }
 
 prefix_expr(E) ::= CTK_HIGH_PRIORITY_MINUS(T) prefix_expr(P).
@@ -943,11 +991,21 @@ prefix_expr(E) ::= CTK_HIGH_PRIORITY_MINUS(T) prefix_expr(P).
     add_ast(E, P);
 }
 
+prefix_expr(E) ::= CTK_HIGH_PRIORITY_MINUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_NEG, T, 0);
+}
+
 power_expr(E) ::= power_expr(L) CTK_POWER(T) prefix_expr(R).
 {
     E = ast_f(context, OP_POWER, T);
     add_ast(E, L);
     add_ast(E, R);
+}
+
+power_expr(E) ::= power_expr(L) CTK_POWER(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_POWER, T, L);
 }
 
 power_expr(E) ::= prefix_expr(P).
@@ -966,6 +1024,11 @@ low_prefix_expr(E) ::= CTK_MINUS(T) power_expr(P).
     add_ast(E, P);
 }
 
+low_prefix_expr(E) ::= CTK_MINUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_NEG, T, 0);
+}
+
 multiplication(E) ::= low_prefix_expr(P).
 {
     E = P;
@@ -978,11 +1041,21 @@ multiplication(E) ::= multiplication(L) CTK_MULT(T) low_prefix_expr(R).
     add_ast(E, R);
 }
 
+multiplication(E) ::= multiplication(L) CTK_MULT(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_MULT, T, L);
+}
+
 multiplication(E) ::= multiplication(L) CTK_DIV(T) low_prefix_expr(R).
 {
     E = ast_f(context, OP_DIV, T);
     add_ast(E, L);
     add_ast(E, R);
+}
+
+multiplication(E) ::= multiplication(L) CTK_DIV(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_DIV, T, L);
 }
 
 multiplication(E) ::= multiplication(L) CTK_IDIV(T) low_prefix_expr(R).
@@ -992,11 +1065,21 @@ multiplication(E) ::= multiplication(L) CTK_IDIV(T) low_prefix_expr(R).
     add_ast(E, R);
 }
 
+multiplication(E) ::= multiplication(L) CTK_IDIV(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_IDIV, T, L);
+}
+
 multiplication(E) ::= multiplication(L) CTK_MOD(T) low_prefix_expr(R).
 {
     E = ast_f(context, OP_MOD, T);
     add_ast(E, L);
     add_ast(E, R);
+}
+
+multiplication(E) ::= multiplication(L) CTK_MOD(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_MOD, T, L);
 }
 
 addition(E) ::= multiplication(P).
@@ -1011,6 +1094,11 @@ addition(E) ::= addition(L) CTK_PLUS(T) multiplication(R).
     add_ast(E, R);
 }
 
+addition(E) ::= addition(L) CTK_PLUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_ADD, T, L);
+}
+
 addition(E) ::= addition(L) CTK_MINUS(T) multiplication(R).
 {
     E = ast_f(context, OP_MINUS, T);
@@ -1018,11 +1106,21 @@ addition(E) ::= addition(L) CTK_MINUS(T) multiplication(R).
     add_ast(E, R);
 }
 
+addition(E) ::= addition(L) CTK_MINUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_MINUS, T, L);
+}
+
 addition(E) ::= addition(L) CTK_HIGH_PRIORITY_MINUS(T) multiplication(R).
 {
     E = ast_f(context, OP_MINUS, T);
     add_ast(E, L);
     add_ast(E, R);
+}
+
+addition(E) ::= addition(L) CTK_HIGH_PRIORITY_MINUS(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_MINUS, T, L);
 }
 
 primary_expr_c(T) ::= CTK_VAR_SYMBOL(S).
@@ -1142,6 +1240,11 @@ concat_expr(E) ::= concat_expr(L) CTK_CONCAT(T) addition(R).
     E = ast_f(context, OP_CONCAT, T);
     add_ast(E, L);
     add_ast(E, R);
+}
+
+concat_expr(E) ::= concat_expr(L) CTK_CONCAT(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_CONCAT, T, L);
 }
 
 concat_expr(E) ::= concat_expr(L) addition_c(R).
@@ -1300,7 +1403,7 @@ comparison(E) ::= comparison(L) CTK_S_LTE(T) missing_expression_rhs.
     E = levelc_missing_expression_rhs(context, OP_COMPARE_S_LTE, T, L);
 }
 
-missing_expression_rhs ::= .
+missing_expression_rhs ::= CTK_MISSING_EXPR.
 
 and_expr(E) ::= comparison(P).
 {
@@ -1312,6 +1415,11 @@ and_expr(E) ::= and_expr(L) CTK_AND(T) comparison(R).
     E = ast_f(context, OP_AND, T);
     add_ast(E, L);
     add_ast(E, R);
+}
+
+and_expr(E) ::= and_expr(L) CTK_AND(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_AND, T, L);
 }
 
 or_expr(E) ::= and_expr(P).
@@ -1326,6 +1434,11 @@ or_expr(E) ::= or_expr(L) CTK_OR(T) and_expr(R).
     add_ast(E, R);
 }
 
+or_expr(E) ::= or_expr(L) CTK_OR(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_OR, T, L);
+}
+
 or_expr(E) ::= or_expr(L) CTK_XOR(T) and_expr(R).
 {
     E = ast_f(context, OP_XOR, T);
@@ -1333,7 +1446,36 @@ or_expr(E) ::= or_expr(L) CTK_XOR(T) and_expr(R).
     add_ast(E, R);
 }
 
+or_expr(E) ::= or_expr(L) CTK_XOR(T) missing_expression_rhs.
+{
+    E = levelc_missing_expression_rhs(context, OP_XOR, T, L);
+}
+
 expression(E) ::= or_expr(P).
 {
     E = P;
 }
+
+missing_close_bracket ::= CTK_MISSING_RPAREN.
+
+bad_expression_start(T) ::= CTK_CONCAT(S). { T = S; }
+bad_expression_start(T) ::= CTK_MULT(S). { T = S; }
+bad_expression_start(T) ::= CTK_DIV(S). { T = S; }
+bad_expression_start(T) ::= CTK_IDIV(S). { T = S; }
+bad_expression_start(T) ::= CTK_MOD(S). { T = S; }
+bad_expression_start(T) ::= CTK_POWER(S). { T = S; }
+bad_expression_start(T) ::= CTK_EQUAL(S). { T = S; }
+bad_expression_start(T) ::= CTK_NEQ(S). { T = S; }
+bad_expression_start(T) ::= CTK_GT(S). { T = S; }
+bad_expression_start(T) ::= CTK_LT(S). { T = S; }
+bad_expression_start(T) ::= CTK_GTE(S). { T = S; }
+bad_expression_start(T) ::= CTK_LTE(S). { T = S; }
+bad_expression_start(T) ::= CTK_S_EQ(S). { T = S; }
+bad_expression_start(T) ::= CTK_S_NEQ(S). { T = S; }
+bad_expression_start(T) ::= CTK_S_GT(S). { T = S; }
+bad_expression_start(T) ::= CTK_S_LT(S). { T = S; }
+bad_expression_start(T) ::= CTK_S_GTE(S). { T = S; }
+bad_expression_start(T) ::= CTK_S_LTE(S). { T = S; }
+bad_expression_start(T) ::= CTK_AND(S). { T = S; }
+bad_expression_start(T) ::= CTK_OR(S). { T = S; }
+bad_expression_start(T) ::= CTK_XOR(S). { T = S; }
