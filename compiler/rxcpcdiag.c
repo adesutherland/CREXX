@@ -18,11 +18,13 @@
  */
 
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "rxcpbgmr.h"
 #include "rxcpmain.h"
+#include "rxcpcsym.h"
 
 typedef enum {
     LEVELC_FB_FRAME_DO,
@@ -35,6 +37,12 @@ typedef struct {
     Token *control;
     int repetitive;
 } LevelCFallbackFrame;
+
+typedef struct {
+    char *name;
+    Token *token;
+    int group_depth;
+} LevelCLabel;
 
 static char *levelc_escape_diag_value(const char *value) {
     char *escaped;
@@ -288,6 +296,28 @@ static void levelc_append_code_token(Context *context,
     free(message);
 }
 
+static void levelc_append_code_name(Context *context,
+                                    Token *token,
+                                    const char *standard_code,
+                                    const char *name) {
+    char *message;
+
+    message = rxcp_levelc_diag_format(standard_code, "name", name);
+    levelc_append_detached_diagnostic(context, token, message);
+    free(message);
+}
+
+static void levelc_append_code_value(Context *context,
+                                     Token *token,
+                                     const char *standard_code,
+                                     const char *value) {
+    char *message;
+
+    message = rxcp_levelc_diag_format(standard_code, "value", value);
+    levelc_append_detached_diagnostic(context, token, message);
+    free(message);
+}
+
 static void levelc_append_missing_then(Context *context,
                                        Token *keyword,
                                        Token *found,
@@ -370,6 +400,179 @@ static int levelc_token_text_equals(Token *left, Token *right) {
             toupper((unsigned char)right->token_string[i])) {
             return 0;
         }
+    }
+    return 1;
+}
+
+static int levelc_add_label(LevelCLabel **labels,
+                            size_t *count,
+                            size_t *capacity,
+                            Token *token,
+                            int group_depth) {
+    LevelCLabel *new_labels;
+    char *name;
+    size_t new_capacity;
+
+    name = rxcp_levelc_upper_symbol_from_token(token, 1);
+    if (!name) return 1;
+
+    if (*count == *capacity) {
+        new_capacity = (*capacity == 0) ? 8 : (*capacity * 2);
+        new_labels = realloc(*labels, sizeof(LevelCLabel) * new_capacity);
+        if (!new_labels) {
+            free(name);
+            return 0;
+        }
+        *labels = new_labels;
+        *capacity = new_capacity;
+    }
+
+    (*labels)[*count].name = name;
+    (*labels)[*count].token = token;
+    (*labels)[*count].group_depth = group_depth;
+    (*count)++;
+    return 1;
+}
+
+static void levelc_free_labels(LevelCLabel *labels, size_t count) {
+    size_t i;
+
+    if (!labels) return;
+    for (i = 0; i < count; i++) {
+        if (labels[i].name) free(labels[i].name);
+    }
+    free(labels);
+}
+
+static LevelCLabel *levelc_find_label(LevelCLabel *labels,
+                                      size_t count,
+                                      const char *name) {
+    size_t i;
+
+    if (!name) return 0;
+    for (i = 0; i < count; i++) {
+        if (labels[i].name && strcmp(labels[i].name, name) == 0) return &labels[i];
+    }
+    return 0;
+}
+
+static int levelc_parse_long_text(const char *text, long *value) {
+    const char *cursor;
+    const char *tail;
+    char *end;
+    long parsed;
+
+    if (!text || !value) return 0;
+    cursor = text;
+    while (*cursor && isspace((unsigned char)*cursor)) cursor++;
+    errno = 0;
+    parsed = strtol(cursor, &end, 10);
+    if (errno != 0 || !end || end == cursor) return 0;
+    tail = end;
+    while (*tail && isspace((unsigned char)*tail)) tail++;
+    if (*tail != '\0') return 0;
+
+    *value = parsed;
+    return 1;
+}
+
+static int levelc_parse_long_token(Token *token, long *value) {
+    char *text;
+    int ok;
+
+    if (!token || token->token_type != TK_INTEGER || !value) return 0;
+    text = levelc_token_value(token);
+    if (!text) return 0;
+    ok = levelc_parse_long_text(text, value);
+    free(text);
+    return ok;
+}
+
+static int levelc_simple_integer_operand(Token *head,
+                                         long *value,
+                                         char **value_text,
+                                         Token **anchor) {
+    Token *first;
+    Token *number;
+    Token *after;
+    int sign;
+    long parsed;
+
+    if (value) *value = 0;
+    if (value_text) *value_text = 0;
+    if (anchor) *anchor = 0;
+
+    first = levelc_next_clause_token(head);
+    if (!first) return 0;
+
+    sign = 1;
+    number = first;
+    if (first->token_type == TK_PLUS ||
+        first->token_type == TK_MINUS ||
+        first->token_type == TK_HIGH_PRIORITY_MINUS) {
+        if (first->token_type == TK_MINUS ||
+            first->token_type == TK_HIGH_PRIORITY_MINUS) {
+            sign = -1;
+        }
+        number = levelc_next_clause_token(first);
+    }
+
+    if (!number || number->token_type != TK_INTEGER) return 0;
+    after = levelc_next_clause_token(number);
+    if (after) return 0;
+    if (!levelc_parse_long_token(number, &parsed)) return 0;
+
+    if (value) *value = sign < 0 ? -parsed : parsed;
+    if (anchor) *anchor = sign < 0 ? first : number;
+    if (value_text) {
+        if (first != number) {
+            *value_text = mprintf("%.*s%.*s",
+                                  first->length,
+                                  first->token_string ? first->token_string : "",
+                                  number->length,
+                                  number->token_string ? number->token_string : "");
+        } else {
+            *value_text = levelc_token_value(number);
+        }
+    }
+    return 1;
+}
+
+static char *levelc_simple_string_value(Token *token) {
+    char *value;
+    char quote;
+    int length;
+
+    if (!token || token->token_type != TK_STRING || !token->token_string) return 0;
+    length = token->length;
+    if (length < 2) return 0;
+    quote = token->token_string[0];
+    if ((quote != '\'' && quote != '"') || token->token_string[length - 1] != quote) return 0;
+
+    value = malloc((size_t)length - 1);
+    if (!value) return 0;
+    if (length > 2) memcpy(value, token->token_string + 1, (size_t)length - 2);
+    value[length - 2] = '\0';
+    return value;
+}
+
+static int levelc_simple_string_operand(Token *head,
+                                        char **value_text,
+                                        Token **anchor) {
+    Token *first;
+    Token *after;
+
+    if (value_text) *value_text = 0;
+    if (anchor) *anchor = 0;
+
+    first = levelc_next_clause_token(head);
+    if (!first || first->token_type != TK_STRING) return 0;
+    after = levelc_next_clause_token(first);
+    if (after) return 0;
+    if (anchor) *anchor = first;
+    if (value_text) {
+        *value_text = levelc_simple_string_value(first);
+        if (!*value_text) return 0;
     }
     return 1;
 }
@@ -500,6 +703,130 @@ static int levelc_push_frame(LevelCFallbackFrame **frames,
     return 1;
 }
 
+static void levelc_validate_signal_target(Context *context,
+                                          LevelCLabel *labels,
+                                          size_t label_count,
+                                          Token *signal_token) {
+    LevelCLabel *label;
+    Token *target;
+    char *name;
+
+    target = levelc_next_clause_token(signal_token);
+    if (!target ||
+        target->token_type == TK_ON ||
+        target->token_type == TK_LEVELC_OFF ||
+        target->token_type == TK_LEVELC_VALUE) {
+        return;
+    }
+    if (target->token_type != TK_VAR_SYMBOL) return;
+
+    name = rxcp_levelc_upper_symbol_from_token(target, 0);
+    if (!name) return;
+    label = levelc_find_label(labels, label_count, name);
+    if (!label) {
+        levelc_append_code_name(context, target, "16.1", name);
+    } else if (label->group_depth > 0) {
+        levelc_append_code_name(context, target, "16.2", name);
+    }
+    free(name);
+}
+
+static void levelc_validate_call_target(Context *context,
+                                        LevelCLabel *labels,
+                                        size_t label_count,
+                                        Token *call_token) {
+    LevelCLabel *label;
+    Token *target;
+    char *name;
+
+    target = levelc_next_clause_token(call_token);
+    if (!target ||
+        target->token_type == TK_ON ||
+        target->token_type == TK_LEVELC_OFF) {
+        return;
+    }
+    if (target->token_type != TK_VAR_SYMBOL) return;
+
+    name = rxcp_levelc_upper_symbol_from_token(target, 0);
+    if (!name) return;
+    label = levelc_find_label(labels, label_count, name);
+    if (label && label->group_depth > 0) {
+        levelc_append_code_name(context, target, "16.3", name);
+    } else if (!label && rxcp_levelc_is_ansi_bif_name(name)) {
+        /* Seeded BIF names are accepted as non-local CALL targets. */
+    }
+    free(name);
+}
+
+static void levelc_validate_numeric_instruction(Context *context, Token *numeric_token) {
+    Token *head;
+    Token *value_token;
+    Token *anchor;
+    char *value_text;
+    char *string_value;
+    long value;
+
+    head = levelc_next_clause_token(numeric_token);
+    if (!head) return;
+
+    if (head->token_type == TK_LEVELC_DIGITS) {
+        if (levelc_simple_integer_operand(head, &value, &value_text, &anchor)) {
+            if (value <= 0) levelc_append_code_value(context, anchor, "26.5", value_text);
+            if (value_text) free(value_text);
+        } else if (levelc_simple_string_operand(head, &value_text, &anchor)) {
+            if (!levelc_parse_long_text(value_text, &value) || value <= 0) {
+                levelc_append_code_value(context, anchor, "26.5", value_text);
+            }
+            free(value_text);
+        }
+        return;
+    }
+
+    if (head->token_type == TK_LEVELC_FUZZ) {
+        if (levelc_simple_integer_operand(head, &value, &value_text, &anchor)) {
+            if (value < 0) levelc_append_code_value(context, anchor, "26.6", value_text);
+            if (value_text) free(value_text);
+        } else if (levelc_simple_string_operand(head, &value_text, &anchor)) {
+            if (!levelc_parse_long_text(value_text, &value) || value < 0) {
+                levelc_append_code_value(context, anchor, "26.6", value_text);
+            }
+            free(value_text);
+        }
+        return;
+    }
+
+    if (head->token_type != TK_LEVELC_FORM) return;
+    value_token = levelc_next_clause_token(head);
+    if (!value_token || value_token->token_type != TK_LEVELC_VALUE) return;
+    value_token = levelc_next_clause_token(value_token);
+    if (!value_token || levelc_next_clause_token(value_token)) return;
+
+    string_value = levelc_simple_string_value(value_token);
+    if (!string_value) return;
+    if (string_value[0] == '\0' ||
+        (toupper((unsigned char)string_value[0]) != 'E' &&
+         toupper((unsigned char)string_value[0]) != 'S')) {
+        levelc_append_code_value(context, value_token, "33.6", string_value);
+    }
+    free(string_value);
+}
+
+static void levelc_validate_label_references(Context *context,
+                                             LevelCLabel *labels,
+                                             size_t label_count) {
+    Token *token;
+
+    token = context ? context->token_head : 0;
+    while (token) {
+        if (token->token_type == TK_SIGNAL) {
+            levelc_validate_signal_target(context, labels, label_count, token);
+        } else if (token->token_type == TK_CALL) {
+            levelc_validate_call_target(context, labels, label_count, token);
+        }
+        token = token->token_next;
+    }
+}
+
 int rxcp_levelc_validate_control_diagnostics(Context *context) {
     ASTNode *diag;
     Token *token;
@@ -509,12 +836,17 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
     Token *target_name;
     LevelCFallbackFrame *frames;
     LevelCFallbackFrame frame;
+    LevelCLabel *labels;
     size_t frame_count;
     size_t frame_capacity;
+    size_t label_count;
+    size_t label_capacity;
     int diagnostics_before;
     int diagnostics_after;
     int repetitive;
     int token_type;
+    int clause_start;
+    int procedure_allowed;
 
     if (!context) return 0;
 
@@ -528,10 +860,43 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
     frames = 0;
     frame_count = 0;
     frame_capacity = 0;
+    labels = 0;
+    label_count = 0;
+    label_capacity = 0;
+    clause_start = 1;
+    procedure_allowed = 0;
 
     token = context->token_head;
     while (token) {
         token_type = token->token_type;
+
+        if (token_type == TK_EOC || token_type == TK_EOL) {
+            clause_start = 1;
+        } else if (token_type == TK_THEN ||
+                   token_type == TK_ELSE ||
+                   token_type == TK_OTHERWISE) {
+            clause_start = 1;
+            procedure_allowed = 0;
+        } else if (token_type == TK_LABEL) {
+            if (!levelc_add_label(&labels, &label_count, &label_capacity,
+                                  token, (int)frame_count)) {
+                free(frames);
+                levelc_free_labels(labels, label_count);
+                return 0;
+            }
+            clause_start = 1;
+            procedure_allowed = 1;
+        } else if (clause_start &&
+                   token_type != TK_EOS &&
+                   token_type != TK_BADCOMMENT) {
+            if (token_type == TK_PROCEDURE) {
+                if (!procedure_allowed) {
+                    levelc_append_code(context, token, "17.1");
+                }
+            }
+            procedure_allowed = 0;
+            clause_start = 0;
+        }
 
         switch (token_type) {
             case TK_DO:
@@ -543,6 +908,7 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
                 if (!levelc_push_frame(&frames, &frame_count, &frame_capacity,
                                        LEVELC_FB_FRAME_DO, token, control, repetitive)) {
                     free(frames);
+                    levelc_free_labels(labels, label_count);
                     return 0;
                 }
                 if (bad_forever_token) {
@@ -555,6 +921,7 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
                 if (!levelc_push_frame(&frames, &frame_count, &frame_capacity,
                                        LEVELC_FB_FRAME_SELECT, token, 0, 0)) {
                     free(frames);
+                    levelc_free_labels(labels, label_count);
                     return 0;
                 }
                 break;
@@ -606,6 +973,10 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
                 }
                 break;
 
+            case TK_NUMERIC:
+                levelc_validate_numeric_instruction(context, token);
+                break;
+
             default:
                 break;
         }
@@ -620,7 +991,10 @@ int rxcp_levelc_validate_control_diagnostics(Context *context) {
                            frames[frame_count].type == LEVELC_FB_FRAME_SELECT ? "14.2" : "14.1");
     }
 
+    levelc_validate_label_references(context, labels, label_count);
+
     free(frames);
+    levelc_free_labels(labels, label_count);
 
     diagnostics_after = 0;
     diag = (ASTNode *)context->diagnostics_list;

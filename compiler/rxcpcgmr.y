@@ -164,9 +164,29 @@ static ASTNode *levelc_missing_expression_rhs(Context *context, NodeType operato
 static ASTNode *levelc_bad_expression_start(Context *context, Token *bad_token, ASTNode *tail) {
     ASTNode *node;
 
-    node = rxcp_levelc_ast_error_token(context, "35.1", bad_token);
+    if (bad_token && bad_token->token_string && bad_token->length > 0 &&
+        bad_token->token_string[0] == '\'') {
+        node = rxcp_levelc_ast_error(context, "6.2", bad_token);
+    } else if (bad_token && bad_token->token_string && bad_token->length > 0 &&
+               bad_token->token_string[0] == '"') {
+        node = rxcp_levelc_ast_error(context, "6.3", bad_token);
+    } else {
+        node = rxcp_levelc_ast_error_token(context, "35.1", bad_token);
+    }
     if (tail) add_ast(node, tail);
     return node;
+}
+
+static ASTNode *levelc_unknown_token_error(Context *context, Token *bad_token, const char *fallback_code) {
+    if (bad_token && bad_token->token_string && bad_token->length > 0 &&
+        bad_token->token_string[0] == '\'') {
+        return rxcp_levelc_ast_error(context, "6.2", bad_token);
+    }
+    if (bad_token && bad_token->token_string && bad_token->length > 0 &&
+        bad_token->token_string[0] == '"') {
+        return rxcp_levelc_ast_error(context, "6.3", bad_token);
+    }
+    return rxcp_levelc_ast_error_token(context, fallback_code, bad_token);
 }
 
 static ASTNode *levelc_current_token_error(Context *context,
@@ -324,7 +344,7 @@ static ASTNode *levelc_implicit_cmd_warning(Context *context, ASTNode *expressio
 }
 }
 
-%token CTK_UNKNOWN CTK_BADCOMMENT CTK_EOS CTK_EOC CTK_MISSING_EXPR CTK_MISSING_RPAREN.
+%token CTK_UNKNOWN CTK_BAD_STRING CTK_BADCOMMENT CTK_EOS CTK_EOC CTK_MISSING_EXPR CTK_MISSING_RPAREN.
 %token CTK_VAR_SYMBOL CTK_COMMAND_SYMBOL CTK_DO_CONTROL_SYMBOL CTK_LABEL CTK_INTEGER CTK_STRING.
 %token CTK_EQUAL CTK_ADDRESS CTK_ARG CTK_CALL CTK_DROP CTK_EXIT CTK_INTERPRET CTK_NOP CTK_NUMERIC.
 %token CTK_OPTIONS CTK_PARSE CTK_PROCEDURE CTK_PULL CTK_PUSH CTK_QUEUE CTK_RETURN CTK_SAY CTK_SIGNAL CTK_TRACE.
@@ -471,7 +491,7 @@ instruction(E) ::= CTK_BADCOMMENT(T).
 
 instruction(E) ::= CTK_UNKNOWN(T).
 {
-    E = rxcp_levelc_ast_error_token(context, "13.1", T);
+    E = levelc_unknown_token_error(context, T, "13.1");
 }
 
 instruction(E) ::= CTK_DOT(T).
@@ -1599,6 +1619,11 @@ simple_tail_atom(A) ::= CTK_STRING(T).
     A = ast_f(context, STRING, T);
 }
 
+simple_tail_atom(A) ::= CTK_BAD_STRING(T).
+{
+    A = levelc_unknown_token_error(context, T, "13.1");
+}
+
 simple_tail_atom(A) ::= CTK_COMMA(T).
 {
     A = ast_f(context, TOKEN, T);
@@ -1840,7 +1865,12 @@ template_item(I) ::= CTK_HIGH_PRIORITY_MINUS(T) parse_position(P).
 
 template_item(I) ::= CTK_UNKNOWN(T).
 {
-    I = rxcp_levelc_ast_error_token(context, "38.1", T);
+    I = levelc_unknown_token_error(context, T, "38.1");
+}
+
+template_item(I) ::= CTK_BAD_STRING(T).
+{
+    I = levelc_unknown_token_error(context, T, "38.1");
 }
 
 parse_position(P) ::= CTK_INTEGER(T).
@@ -2092,7 +2122,7 @@ select_inner_instruction(E) ::= CTK_BADCOMMENT(T).
 
 select_inner_instruction(E) ::= CTK_UNKNOWN(T).
 {
-    E = rxcp_levelc_ast_error_token(context, "13.1", T);
+    E = levelc_unknown_token_error(context, T, "13.1");
 }
 
 else_clause(I) ::= CTK_ELSE instruction(S).
@@ -3481,3 +3511,4 @@ bad_expression_start(T) ::= CTK_S_LTE(S). { T = S; }
 bad_expression_start(T) ::= CTK_AND(S). { T = S; }
 bad_expression_start(T) ::= CTK_OR(S). { T = S; }
 bad_expression_start(T) ::= CTK_XOR(S). { T = S; }
+bad_expression_start(T) ::= CTK_BAD_STRING(S). { T = S; }

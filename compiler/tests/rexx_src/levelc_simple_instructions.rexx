@@ -13,7 +13,6 @@ numeric digits 9
 numeric form scientific
 numeric form value formSetting
 numeric fuzz 0
-procedure expose shared stem.tail
 pull first second
 push 'front'
 queue 'back'
@@ -25,4 +24,5 @@ signal value handler
 trace normal
 trace value traceSetting
 handler: nop
-subroutine: return
+subroutine: procedure expose shared stem.tail
+return

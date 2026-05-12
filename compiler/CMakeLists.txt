@@ -52,7 +52,7 @@ add_library(rxclib STATIC
         rxcp_dsl.c rxcp_highlight_controller.c rxcp_source_tree.c
         ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h rxcpopar.c
         ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h rxcpbpar.c
-        ${CMAKE_CURRENT_BINARY_DIR}/rexcscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.h rxcpcpar.c rxcpcdiag.c rxcpcval.c
+        ${CMAKE_CURRENT_BINARY_DIR}/rexcscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.h rxcpcpar.c rxcpcdiag.c rxcpcsym.c rxcpcsym.h rxcpcval.c
         ${CMAKE_SOURCE_DIR}/assembler/rxas.h
         rxcp_val_sym.c rxcp_val_type.c rxcp_val_trans.c rxcp_ast_rewrite.c rxcp_val_check.c rxcp_val_plugin.c rxcp_val_orch.c rxcpsymb.c rxcp_fixup.c rxcp_ast_val.c
         rxcp_inline.c

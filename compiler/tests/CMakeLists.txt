@@ -1558,6 +1558,48 @@ if (ENABLE_PARSER_MODE)
     set_tests_properties(syntaxhighlight_levelc_instruction_tail_bad_forms PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
 
     add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_labels_validation
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_labels_validation.rexx
+            MUST_MATCH
+            "RXC-LC-16\\.1 name=\"MISSING\""
+            "RXC-LC-16\\.2 name=\"INNER\""
+            "RXC-LC-16\\.3 name=\"INNER\""
+            "RXC-LC-17\\.1"
+            "Node: type=56 \\(LEXER_FUNCTION_IDENTIFIER\\), pos=[0-9]+, len=5, sev=48, text=\"good:\""
+            "Node: type=56 \\(LEXER_FUNCTION_IDENTIFIER\\), pos=[0-9]+, len=6, sev=48, text=\"inner:\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=9, sev=48, text=\"procedure\""
+            MUST_NOT_MATCH
+            "RXC-LC-16\\.1 name=\"GOOD\""
+            "RXC-LC-16\\.3 name=\"DATE\""
+            "RXC-LC-16\\.3 name=\"EXTERNAL_PROC\""
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_labels_validation PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
+            syntaxhighlight_levelc_numeric_validation
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_numeric_validation.rexx
+            MUST_MATCH
+            "RXC-LC-26\\.5 value=\"0\""
+            "RXC-LC-26\\.5 value=\"buzz\""
+            "RXC-LC-6\\.3"
+            "RXC-LC-26\\.6 value=\"-1\""
+            "RXC-LC-26\\.6 value=\"buzz\""
+            "RXC-LC-6\\.2"
+            "RXC-LC-33\\.6 value=\"bad\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=7, sev=48, text=\"numeric\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=13, sev=48, text=\"'engineering'\""
+            "Node: type=39 \\(LEXER_STRING_LITERAL\\), pos=[0-9]+, len=12, sev=48, text=\"'scientific'\""
+            MUST_NOT_MATCH
+            "RXC-LC-26\\.5 value=\"9\""
+            "RXC-LC-26\\.6 value=\"0\""
+            "RXC-LC-33\\.6 value=\"engineering\""
+            "RXC-LC-33\\.6 value=\"scientific\""
+            "PARSE_FAILURE"
+    )
+    set_tests_properties(syntaxhighlight_levelc_numeric_validation PROPERTIES LABELS "compiler;syntax_highlighting;stage1;levelc")
+
+    add_crexx_syntax_highlight_test(
             syntaxhighlight_levelc_simple_instruction_keyword_variables
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_simple_instruction_keyword_variables.rexx
             MUST_MATCH

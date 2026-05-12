@@ -185,7 +185,7 @@ the insert value is part of the expected parser contract.
 | `33` | Invalid expression result |
 | `33.1` | Value of NUMERIC DIGITS ("`<value>`") must exceed value of NUMERIC FUZZ "(`<value>`)" |
 | `33.2` | Value of NUMERIC DIGITS ("`<value>`") must not exceed `#Limit_Digits` |
-| `33.3` | Result of expression following NUMERIC FORM must start with "E" or "S"; found "`<value>`" |
+| `33.6` | Result of expression following NUMERIC FORM must start with "E" or "S"; found "`<value>`" |
 | `34` | Logical value not "0" or "1" |
 | `34.1` | Value of expression following IF keyword must be exactly "0" or "1"; found "`<value>`" |
 | `34.2` | Value of expression following WHEN keyword must be exactly "0" or "1"; found "`<value>`" |

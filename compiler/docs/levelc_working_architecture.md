@@ -1149,8 +1149,8 @@ Diagnostic slice 1 was added on 2026-05-10:
     after IF.
   - `8.1`: THEN has no corresponding IF or WHEN clause.
   - `8.2`: ELSE has no corresponding THEN clause.
-  - `6.1` and `13.1`: initial mappings for unmatched comments and invalid
-    source characters.
+  - `6.1`, `6.2`, `6.3`, and `13.1`: initial mappings for unmatched comments,
+    unmatched quotes, and invalid source characters.
 - The Level C adapter now promotes loose clause-leading `THEN` and `ELSE`
   only when they are not assignment left-hand sides, and suppresses physical
   EOL tokens after `THEN`, after `ELSE`, and immediately before a pending
@@ -1319,6 +1319,26 @@ Level C DO/END control slice on 2026-05-11:
   - `28.1`/`28.2`: `LEAVE`/`ITERATE` outside a repetitive `DO`.
   - `28.3`/`28.4`: named `LEAVE`/`ITERATE` not matching a current repetitive
     DO control variable.
+- The first source-symbol validation slice adds a small Level C-only symbol
+  helper (`rxcpcsym.c`) and keeps the checks deliberately before tree surgery:
+  - labels are canonicalized case-insensitively and recorded with their current
+    `DO`/`SELECT` group depth;
+  - direct `SIGNAL label` emits `16.1` when the label is not present in the
+    current source, and `16.2` when the source proves the target label is inside
+    a `DO`/`SELECT` group;
+  - direct `CALL label` emits `16.3` only when the target is a present local
+    label inside a `DO`/`SELECT` group;
+  - unknown `CALL` targets are not errors, because Classic REXX procedures and
+    functions can be external and resolved at runtime;
+  - ANSI BIF names are preloaded in the Level C helper so later BIF-aware
+    validation has one source of truth, but this slice does not make unknown
+    external calls invalid;
+  - `PROCEDURE` emits `17.1` unless it is the first instruction following a
+    local label;
+  - simple constant `NUMERIC DIGITS`, `NUMERIC FUZZ`, and `NUMERIC FORM VALUE`
+    clauses emit `26.5`, `26.6`, and `33.6` when the invalid value is known at
+    parse/highlight time, including direct quoted-string constants for
+    `DIGITS`/`FUZZ`.
 - The validator intentionally checks repetitive loops rather than every
   grouping `DO`, so `LEAVE` inside plain `DO ... END` is rejected until an
   enclosing repetitive loop exists.
@@ -1326,6 +1346,11 @@ Level C DO/END control slice on 2026-05-11:
   `WHILE`/`UNTIL`, and numeric `TO`/`BY`/`FOR` values are recorded for later
   validation/lowering slices. The first milestone still stops at
   syntax-highlighting and structural diagnostics.
+- Compile-time validation intentionally remains conservative. We should only
+  emit standard errors when the source text proves the error before execution;
+  dynamic procedure/function lookup, `SIGNAL VALUE`, variable-driven `NUMERIC`
+  settings, and BIF argument semantics stay for later runtime or post-lowering
+  validation.
 
 Regina compatibility probes for the DO slice:
 
@@ -1342,6 +1367,21 @@ Result: `levelc_do_control.rexx` prints `1`, `2`, `3`;
 `levelc_do_conditions_leave.rexx` prints `1`. Regina also rejects `DO TO`
 with standard error `27.1`, matching
 `syntaxhighlight_levelc_do_invalid_initial_to`.
+
+Additional Regina probes for the source-symbol slice:
+
+```sh
+rexx /tmp/levelc-procedure-main.rexx
+rexx /tmp/levelc-procedure-caller/caller.rexx
+```
+
+where the first file starts with `PROCEDURE`, and the second calls an external
+file whose first instruction is `PROCEDURE`. Regina reports standard error
+`17.1` for the `PROCEDURE` instruction in both cases. That supports checking
+the placement of the `PROCEDURE` instruction itself, but it does not make an
+unknown `CALL` target invalid: external procedure/function resolution remains a
+runtime concern and the Level C parser/highlighter should not emit
+label-not-found diagnostics for unknown `CALL` or future function-call targets.
 
 Regression tests added for the DO slice:
 
@@ -1572,6 +1612,8 @@ Level C parse/instruction completion slice on 2026-05-12:
   command expression.
 - The grammar now emits additional standard diagnostic identities for malformed
   simple-instruction forms:
+  - `6.2`/`6.3`: unmatched single or double quotes, including malformed string
+    operands in instruction tails.
   - `19.2`: bare `CALL`.
   - `19.4`: bare `SIGNAL`.
   - `20.1`: bare `DROP` or empty indirect variable reference.

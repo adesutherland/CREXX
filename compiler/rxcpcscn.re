@@ -74,6 +74,8 @@ regular:
   integer = digit+;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
+  badsqstr = ['] ((any\['\n\r])|(['][']))*;
+  baddqstr = ["] ((any\["\n\r])|(["]["]))*;
   str = sqstr | dqstr;
   ob = [ \t]*;
   lcspace = [ \t\v\f]+;
@@ -122,6 +124,8 @@ regular:
     integer { RET(TK_INTEGER); }
     str { RET(TK_STRING); }
     str [bBxX] / (any\(lcfsymchr | digit | [.])) { RET(TK_STRING); }
+    badsqstr { RET(TK_UNKNOWN); }
+    baddqstr { RET(TK_UNKNOWN); }
     lcsimple { RET(TK_VAR_SYMBOL); }
 
     eol2 {
