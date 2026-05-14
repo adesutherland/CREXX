@@ -37,10 +37,10 @@ foreach(_binfile IN LISTS CLSBINS)
     COMMAND $<TARGET_FILE:rxc>
             -i "${CMAKE_BINARY_DIR}/bin"
             -o "${_basename}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.bcrx"
+            "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx"
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
-      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.bcrx"
+      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx"
       rxc
       rxas
       library

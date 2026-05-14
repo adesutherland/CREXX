@@ -334,11 +334,21 @@ do i=1 to words(filenames)
       call printFileToSTDout filename'.rexx', nocolor
     end
   compat_flags = ''
-  /* TODO the next part fixes the name to have a .rexx filename extension */
+
   if \hasSourceHeader(filename'.rexx') then do
     compat_flags = ' --level levelb --import rxfnsb'
     if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
   end
+  if \hasSourceHeader(filename'.bcrx') then do
+    compat_flags = ' --level levelb --import rxfnsb'
+    if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
+  end
+  # note that the next commented out sequence fails tests 1074 & 1076
+  -- if \hasSourceHeader(filename'.ccrx') then do
+  --   compat_flags = ' --level levelc --import rxfnsb'
+  --   if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
+  -- end
+
   optiflag=''; if optimize=0 then optiflag= '-n'
   rxc_flags = ''
   if sourceRoots <> '' then rxc_flags = rxc_flags' -s 'sourceRoots
