@@ -1,7 +1,7 @@
 options levelb comments_dash
-import system_os
+import system_Os
 
-x = .os()
+x = .Os()
 say x.uptime()
 say x.user()
 lp = x.loadpath() 

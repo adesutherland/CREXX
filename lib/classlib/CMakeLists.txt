@@ -9,16 +9,16 @@ set(CLSS
   HashMapIterator
   HashSet
   HashSetIterator
-  id
+  Id
   KeyDB
   LinkedList
-  rexx
+  Rexx
   Stack
   TreeMap
   TreeMapIterator
   TreeSet
   TreeSetIterator
-  os
+  Os
   Qfind
 )
 
