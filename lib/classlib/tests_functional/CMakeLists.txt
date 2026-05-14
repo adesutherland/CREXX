@@ -28,8 +28,8 @@ unset(_prev_target)
 foreach(_binfile ${REXXBINS})
     get_filename_component(_basename ${_binfile} NAME_WE)
 
-    set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx")
-    set(_rexx_dep "${_basename}.rexx")
+    set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.bcrx")
+    set(_rexx_dep "${_basename}.bcrx")
 
 
     add_custom_target(${_basename})
