@@ -338,6 +338,18 @@ jobs:
           fi
           echo "CREXX_RELEASE_ASSET=$asset_dir/$asset" >> "$GITHUB_ENV"
 
+      - name: Package Linux Debian dev snapshot
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && matrix.platform == 'linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          asset_dir="${{ runner.temp }}/release-assets"
+          scripts/package-linux-deb.sh \
+            --payload-dir "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" \
+            --output "$asset_dir/CREXX-dev-snapshot-linux-x64.deb" \
+            --display-version "${{ needs.version.outputs.display_version }}"
+
       - name: Package release asset
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'windows'
         shell: pwsh
@@ -393,7 +405,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact_name }}-release-asset
-          path: ${{ runner.temp }}/release-assets/CREXX-*.zip
+          path: ${{ runner.temp }}/release-assets/CREXX-*
           if-no-files-found: error
 
       - name: Cleanup Apple signing keychain
@@ -550,10 +562,13 @@ jobs:
           asset_dir="${{ runner.temp }}/dev-snapshot-assets"
           mkdir -p "$asset_dir"
 
-          find "$download_dir" -name 'CREXX-dev-snapshot-*.zip' -type f -exec cp {} "$asset_dir/" \;
+          find "$download_dir" \
+            \( -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' \) \
+            -type f -exec cp {} "$asset_dir/" \;
 
           expected_assets=(
             CREXX-dev-snapshot-linux-x64.zip
+            CREXX-dev-snapshot-linux-x64.deb
             CREXX-dev-snapshot-windows-x64.zip
             CREXX-dev-snapshot-macos-arm64.zip
             CREXX-dev-snapshot-macos-x86_64.zip
@@ -567,9 +582,9 @@ jobs:
             fi
           done
 
-          asset_count="$(find "$asset_dir" -maxdepth 1 -name 'CREXX-dev-snapshot-*.zip' -type f | wc -l | tr -d ' ')"
-          if [ "$asset_count" != "4" ]; then
-            echo "Expected 4 dev snapshot assets, found $asset_count" >&2
+          asset_count="$(find "$asset_dir" -maxdepth 1 -name 'CREXX-dev-snapshot-*' -type f | wc -l | tr -d ' ')"
+          if [ "$asset_count" != "${#expected_assets[@]}" ]; then
+            echo "Expected ${#expected_assets[@]} dev snapshot assets, found $asset_count" >&2
             find "$asset_dir" -maxdepth 1 -type f -print >&2
             exit 1
           fi
@@ -655,13 +670,29 @@ jobs:
               gh release view "$SNAPSHOT_TAG" \
                 -R "$GITHUB_REPOSITORY" \
                 --json assets \
-                --jq '.assets[] | select(.name | startswith("CREXX-dev-snapshot-") and endswith(".tmp.zip")) | .apiUrl' |
+                --jq '.assets[] | select(.name | startswith("CREXX-dev-snapshot-") and (endswith(".tmp.zip") or endswith(".tmp.deb"))) | .apiUrl' |
                 sed 's#^https://api.github.com/##'
             )
           }
 
+          temp_asset_name() {
+            local asset="$1"
+            case "$asset" in
+              *.zip)
+                echo "${asset%.zip}-${GITHUB_RUN_ID}.tmp.zip"
+                ;;
+              *.deb)
+                echo "${asset%.deb}-${GITHUB_RUN_ID}.tmp.deb"
+                ;;
+              *)
+                echo "${asset}-${GITHUB_RUN_ID}.tmp"
+                ;;
+            esac
+          }
+
           expected_assets=(
             CREXX-dev-snapshot-linux-x64.zip
+            CREXX-dev-snapshot-linux-x64.deb
             CREXX-dev-snapshot-windows-x64.zip
             CREXX-dev-snapshot-macos-arm64.zip
             CREXX-dev-snapshot-macos-x86_64.zip
@@ -670,16 +701,16 @@ jobs:
           delete_stale_temp_assets
 
           for asset in "${expected_assets[@]}"; do
-            temp_asset="${asset%.zip}-${GITHUB_RUN_ID}.tmp.zip"
+            temp_asset="$(temp_asset_name "$asset")"
             cp "$asset_dir/$asset" "$upload_dir/$temp_asset"
           done
 
-          gh release upload "$SNAPSHOT_TAG" "$upload_dir"/*.zip \
+          gh release upload "$SNAPSHOT_TAG" "$upload_dir"/* \
             -R "$GITHUB_REPOSITORY" \
             --clobber
 
           for asset in "${expected_assets[@]}"; do
-            temp_asset="${asset%.zip}-${GITHUB_RUN_ID}.tmp.zip"
+            temp_asset="$(temp_asset_name "$asset")"
             temp_api_path="$(asset_api_path "$temp_asset")"
             if [ -z "$temp_api_path" ]; then
               echo "Uploaded temporary asset is not visible: $temp_asset" >&2
