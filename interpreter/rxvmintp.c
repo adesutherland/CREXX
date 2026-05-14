@@ -7239,29 +7239,29 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(RXVERS_REG) CALC_DISPATCH(1)
     DEBUG("TRACE - RXVERS R%d\n", (int) REG_IDX(1));
     {
-        char vers[64];
+        char vers[256];
+        const char *platform;
+        const char *bits;
 
 #if defined(__linux__)
-        strcpy(vers, "linux ");
+        platform = "linux";
 #elif defined(_WIN32)
-        strcpy(vers, "windows ");
+        platform = "windows";
 #elif defined(__APPLE__)
-        strcpy(vers, "macOS ");
+        platform = "macOS";
 #elif defined(__CMS__)
-        strcpy(vers, "cms ");
+        platform = "cms";
 #else
-        strcpy(vers, "unknown ");
+        platform = "unknown";
 #endif
 
 #ifdef __32BIT__
-        strcat(vers, "32 ");
+        bits = "32";
 #else
-        strcat(vers, "64 ");
+        bits = "64";
 #endif
 
-        strcat(vers, rxversion);
-        strcat(vers, " ");
-        strcat(vers, compile_date); /* compile_date defined earlier in this file */
+        snprintf(vers, sizeof(vers), "%s %s %s %s", platform, bits, rxversion, compile_date);
 
         set_null_string(op1R, vers);
     }

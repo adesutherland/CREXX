@@ -53,12 +53,10 @@ void emit_proc(ASTNode *node, void *pl) {
         case REXX_UNIVERSE:
         {
             char *buf = mprintf("/*\n"
-                                " * cREXX COMPILER VERSION : %s\n"
                                 " * SOURCE                 : %s\n"
                                 " * BUILT                  : %d-%02d-%02d %02d:%02d:%02d\n"
                                 " */\n"
                                 "\n",
-                                rxversion,
                                 payload->context->file_name,
                                 tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 

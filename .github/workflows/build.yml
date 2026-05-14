@@ -16,8 +16,74 @@ permissions:
   contents: read
 
 jobs:
+  version:
+    name: Determine Version Metadata
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      channel: ${{ steps.metadata.outputs.channel }}
+      timestamp: ${{ steps.metadata.outputs.timestamp }}
+      commit: ${{ steps.metadata.outputs.commit }}
+      display_version: ${{ steps.metadata.outputs.display_version }}
+      release_name: ${{ steps.metadata.outputs.release_name }}
+
+    steps:
+      - name: Checkout version file
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Determine metadata
+        id: metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version_file="$(tr -d '[:space:]' < VERSION)"
+          version="$version_file"
+          channel="local"
+          timestamp="$(date -u +'%Y%m%dT%H%M%SZ')"
+          short_sha="${GITHUB_SHA:0:12}"
+          release_name="CREXX Local Build ${timestamp}"
+
+          if [ "${GITHUB_EVENT_NAME}" = "create" ] && [[ "${GITHUB_REF_NAME}" == v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+            channel="release"
+            release_name="CREXX ${version}"
+
+            if [ "$version" != "$version_file" ]; then
+              echo "Release tag ${GITHUB_REF_NAME} does not match VERSION file ${version_file}" >&2
+              exit 1
+            fi
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
+            channel="dev-snapshot"
+            release_name="CREXX Dev Snapshot ${timestamp}"
+          fi
+
+          version_without_build="${version%%+*}"
+          version_build_metadata=""
+          if [[ "$version" == *+* ]]; then
+            version_build_metadata="${version#*+}"
+          fi
+
+          if [ "$channel" = "release" ]; then
+            display_version="crexx-${version}"
+          elif [ -n "$version_build_metadata" ]; then
+            display_version="crexx-${version_without_build}+${version_build_metadata}.${channel}.${timestamp}.g${short_sha}"
+          else
+            display_version="crexx-${version_without_build}+${channel}.${timestamp}.g${short_sha}"
+          fi
+
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "channel=${channel}" >> "$GITHUB_OUTPUT"
+          echo "timestamp=${timestamp}" >> "$GITHUB_OUTPUT"
+          echo "commit=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "display_version=${display_version}" >> "$GITHUB_OUTPUT"
+          echo "release_name=${release_name}" >> "$GITHUB_OUTPUT"
+
   build:
     name: ${{ matrix.name }}
+    needs: version
     if: github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v'))
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -74,6 +140,10 @@ jobs:
         run: |
           cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
             -DCMAKE_BUILD_TYPE=MinSizeRel \
+            -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
+            -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
+            -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
+            -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
             ${{ matrix.cmake_args }}
 
       - name: Configure
@@ -82,6 +152,10 @@ jobs:
         run: |
           cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
             -DCMAKE_BUILD_TYPE=MinSizeRel \
+            -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
+            -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
+            -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
+            -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
             ${{ matrix.cmake_args }}
 
       - name: Build
@@ -115,7 +189,7 @@ jobs:
             --parallel 1
 
       - name: Stage release payload
-        if: github.event_name == 'create' && matrix.platform != 'windows'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform != 'windows'
         shell: bash
         run: |
           set -euo pipefail
@@ -125,10 +199,12 @@ jobs:
 
           cp "${{ runner.temp }}/build/bin/"* "$stage/bin/"
           cp examples/* "$stage/examples/"
-          cp LICENSE README.md SECURITY.md INSTALL-RUN.md VERSION "$stage/"
+          cp LICENSE README.md SECURITY.md INSTALL-RUN.md "$stage/"
+          cp "${{ runner.temp }}/build/generated/VERSION" "$stage/VERSION"
+          cp "${{ runner.temp }}/build/generated/BUILDINFO" "$stage/BUILDINFO"
 
       - name: Stage release payload
-        if: github.event_name == 'create' && matrix.platform == 'windows'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'windows'
         shell: pwsh
         run: |
           $stage = Join-Path "${{ runner.temp }}" "release-payload/${{ matrix.artifact_name }}"
@@ -137,10 +213,12 @@ jobs:
 
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/bin/*") -Destination (Join-Path $stage "bin") -Recurse
           Copy-Item -Path "examples/*" -Destination (Join-Path $stage "examples") -Recurse
-          Copy-Item -Path "LICENSE", "README.md", "SECURITY.md", "INSTALL-RUN.md", "VERSION" -Destination $stage
+          Copy-Item -Path "LICENSE", "README.md", "SECURITY.md", "INSTALL-RUN.md" -Destination $stage
+          Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/VERSION") -Destination (Join-Path $stage "VERSION") -Force
+          Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/BUILDINFO") -Destination (Join-Path $stage "BUILDINFO") -Force
 
       - name: Configure Apple signing keychain
-        if: github.event_name == 'create' && matrix.platform == 'macos'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
         shell: bash
         env:
           APPLE_DEVELOPER_ID_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_BASE64 }}
@@ -178,7 +256,7 @@ jobs:
           echo "APPLE_SIGNING_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
 
       - name: Sign macOS release payload
-        if: github.event_name == 'create' && matrix.platform == 'macos'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
         shell: bash
         env:
           APPLE_DEVELOPER_ID_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_IDENTITY }}
@@ -221,7 +299,7 @@ jobs:
           echo "Signed $signed_count Mach-O files"
 
       - name: Verify macOS signatures
-        if: github.event_name == 'create' && matrix.platform == 'macos'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
         shell: bash
         run: |
           set -euo pipefail
@@ -235,17 +313,22 @@ jobs:
           done < <(find "$stage" -type f -print0)
 
       - name: Package release asset
-        if: github.event_name == 'create' && matrix.platform != 'windows'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform != 'windows'
         shell: bash
         run: |
           set -euo pipefail
 
-          tag="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
+            package_id="dev-snapshot"
+          else
+            package_id="${GITHUB_REF_NAME}"
+          fi
+
           payload_root="${{ runner.temp }}/release-payload"
           payload="${{ matrix.artifact_name }}"
           suffix="${payload#CREXX-}"
           asset_dir="${{ runner.temp }}/release-assets"
-          asset="CREXX-${tag}-${suffix}.zip"
+          asset="CREXX-${package_id}-${suffix}.zip"
 
           mkdir -p "$asset_dir"
           if [ "${{ matrix.platform }}" = "macos" ]; then
@@ -256,15 +339,20 @@ jobs:
           echo "CREXX_RELEASE_ASSET=$asset_dir/$asset" >> "$GITHUB_ENV"
 
       - name: Package release asset
-        if: github.event_name == 'create' && matrix.platform == 'windows'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'windows'
         shell: pwsh
         run: |
-          $tag = $env:GITHUB_REF_NAME
+          if ($env:GITHUB_EVENT_NAME -eq "push" -and $env:GITHUB_REF -eq "refs/heads/develop") {
+            $packageId = "dev-snapshot"
+          } else {
+            $packageId = $env:GITHUB_REF_NAME
+          }
+
           $payloadRoot = Join-Path "${{ runner.temp }}" "release-payload"
           $payload = "${{ matrix.artifact_name }}"
           $suffix = $payload -replace "^CREXX-", ""
           $assetDir = Join-Path "${{ runner.temp }}" "release-assets"
-          $asset = "CREXX-$tag-$suffix.zip"
+          $asset = "CREXX-$packageId-$suffix.zip"
           $assetPath = Join-Path $assetDir $asset
 
           New-Item -ItemType Directory -Force -Path $assetDir | Out-Null
@@ -272,7 +360,7 @@ jobs:
           "CREXX_RELEASE_ASSET=$assetPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Notarize macOS release asset
-        if: github.event_name == 'create' && matrix.platform == 'macos'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
         shell: bash
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -300,8 +388,8 @@ jobs:
             --team-id "$APPLE_TEAM_ID" \
             --wait
 
-      - name: Upload release asset
-        if: github.event_name == 'create'
+      - name: Upload packaged asset
+        if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
         uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact_name }}-release-asset
@@ -309,7 +397,7 @@ jobs:
           if-no-files-found: error
 
       - name: Cleanup Apple signing keychain
-        if: always() && github.event_name == 'create' && matrix.platform == 'macos'
+        if: always() && (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
         shell: bash
         run: |
           set -euo pipefail
@@ -320,7 +408,9 @@ jobs:
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: build
+    needs:
+      - build
+      - version
     if: github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')
     timeout-minutes: 15
     permissions:
@@ -362,7 +452,7 @@ jobs:
           set -euo pipefail
 
           tag="${GITHUB_REF_NAME}"
-          echo "RELEASE_NAME=CREXX ${tag#v}" >> "$GITHUB_ENV"
+          echo "RELEASE_NAME=${{ needs.version.outputs.release_name }}" >> "$GITHUB_ENV"
 
           case "$tag" in
             *alpha*|*beta*|*rc*|*test*)
@@ -407,3 +497,216 @@ jobs:
           body_path: ${{ env.RELEASE_NOTES_PATH }}
           fail_on_unmatched_files: true
           files: ${{ runner.temp }}/release-assets/*.zip
+
+  dev-snapshot:
+    name: Publish Dev Snapshot
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - version
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    concurrency:
+      group: crexx-dev-snapshot
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Verify develop still points at this commit
+        id: publish_target
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          latest_develop_sha="$(git ls-remote origin refs/heads/develop | awk '{print $1}')"
+          if [ "$latest_develop_sha" != "$GITHUB_SHA" ]; then
+            echo "develop now points at $latest_develop_sha; this run built $GITHUB_SHA."
+            echo "Skipping dev snapshot publish so an older run cannot replace a newer build."
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "should_publish=true" >> "$GITHUB_OUTPUT"
+
+      - name: Download packaged assets
+        if: steps.publish_target.outputs.should_publish == 'true'
+        uses: actions/download-artifact@v5
+        with:
+          path: ${{ runner.temp }}/downloaded-dev-snapshot-assets
+
+      - name: Collect dev snapshot assets
+        if: steps.publish_target.outputs.should_publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          download_dir="${{ runner.temp }}/downloaded-dev-snapshot-assets"
+          asset_dir="${{ runner.temp }}/dev-snapshot-assets"
+          mkdir -p "$asset_dir"
+
+          find "$download_dir" -name 'CREXX-dev-snapshot-*.zip' -type f -exec cp {} "$asset_dir/" \;
+
+          expected_assets=(
+            CREXX-dev-snapshot-linux-x64.zip
+            CREXX-dev-snapshot-windows-x64.zip
+            CREXX-dev-snapshot-macos-arm64.zip
+            CREXX-dev-snapshot-macos-x86_64.zip
+          )
+
+          for asset in "${expected_assets[@]}"; do
+            if [ ! -f "$asset_dir/$asset" ]; then
+              echo "Missing dev snapshot asset: $asset" >&2
+              find "$asset_dir" -maxdepth 1 -type f -print >&2
+              exit 1
+            fi
+          done
+
+          asset_count="$(find "$asset_dir" -maxdepth 1 -name 'CREXX-dev-snapshot-*.zip' -type f | wc -l | tr -d ' ')"
+          if [ "$asset_count" != "4" ]; then
+            echo "Expected 4 dev snapshot assets, found $asset_count" >&2
+            find "$asset_dir" -maxdepth 1 -type f -print >&2
+            exit 1
+          fi
+
+          ls -lh "$asset_dir"
+
+      - name: Prepare dev snapshot notes
+        if: steps.publish_target.outputs.should_publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          notes_file="${RUNNER_TEMP}/dev-snapshot-notes.md"
+          short_sha="${GITHUB_SHA:0:12}"
+
+          {
+            echo "# ${{ needs.version.outputs.release_name }}"
+            echo
+            echo "This is the latest successful build from the \`develop\` branch."
+            echo "It is replaced by the next successful \`develop\` build and is not a versioned release."
+            echo
+            echo "- Version: \`${{ needs.version.outputs.display_version }}\`"
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Built: \`${{ needs.version.outputs.timestamp }}\`"
+            echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo
+            echo "Windows signing is completed separately. Prefer the \`CREXX-dev-snapshot-windows-x64-signed.zip\` asset when it is present and matches commit \`${short_sha}\` in this note."
+          } > "$notes_file"
+
+          echo "DEV_SNAPSHOT_NOTES_PATH=$notes_file" >> "$GITHUB_ENV"
+
+      - name: Publish dev snapshot release
+        if: steps.publish_target.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SNAPSHOT_TAG: dev-snapshot
+          SNAPSHOT_NAME: ${{ needs.version.outputs.release_name }}
+        run: |
+          set -euo pipefail
+
+          asset_dir="${{ runner.temp }}/dev-snapshot-assets"
+          upload_dir="${{ runner.temp }}/dev-snapshot-upload"
+          mkdir -p "$upload_dir"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f "$SNAPSHOT_TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/${SNAPSHOT_TAG}" --force
+
+          if gh release view "$SNAPSHOT_TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$SNAPSHOT_TAG" \
+              -R "$GITHUB_REPOSITORY" \
+              --title "$SNAPSHOT_NAME" \
+              --notes-file "$DEV_SNAPSHOT_NOTES_PATH" \
+              --prerelease \
+              --latest=false
+          else
+            gh release create "$SNAPSHOT_TAG" \
+              -R "$GITHUB_REPOSITORY" \
+              --title "$SNAPSHOT_NAME" \
+              --notes-file "$DEV_SNAPSHOT_NOTES_PATH" \
+              --prerelease \
+              --latest=false \
+              --verify-tag
+          fi
+
+          asset_api_path() {
+            local name="$1"
+            gh release view "$SNAPSHOT_TAG" \
+              -R "$GITHUB_REPOSITORY" \
+              --json assets \
+              --jq ".assets[] | select(.name == \"$name\") | .apiUrl" |
+              sed 's#^https://api.github.com/##'
+          }
+
+          delete_stale_temp_assets() {
+            local temp_api_path
+            while IFS= read -r temp_api_path; do
+              [ -n "$temp_api_path" ] || continue
+              gh api -X DELETE "$temp_api_path"
+            done < <(
+              gh release view "$SNAPSHOT_TAG" \
+                -R "$GITHUB_REPOSITORY" \
+                --json assets \
+                --jq '.assets[] | select(.name | startswith("CREXX-dev-snapshot-") and endswith(".tmp.zip")) | .apiUrl' |
+                sed 's#^https://api.github.com/##'
+            )
+          }
+
+          expected_assets=(
+            CREXX-dev-snapshot-linux-x64.zip
+            CREXX-dev-snapshot-windows-x64.zip
+            CREXX-dev-snapshot-macos-arm64.zip
+            CREXX-dev-snapshot-macos-x86_64.zip
+          )
+
+          delete_stale_temp_assets
+
+          for asset in "${expected_assets[@]}"; do
+            temp_asset="${asset%.zip}-${GITHUB_RUN_ID}.tmp.zip"
+            cp "$asset_dir/$asset" "$upload_dir/$temp_asset"
+          done
+
+          gh release upload "$SNAPSHOT_TAG" "$upload_dir"/*.zip \
+            -R "$GITHUB_REPOSITORY" \
+            --clobber
+
+          for asset in "${expected_assets[@]}"; do
+            temp_asset="${asset%.zip}-${GITHUB_RUN_ID}.tmp.zip"
+            temp_api_path="$(asset_api_path "$temp_asset")"
+            if [ -z "$temp_api_path" ]; then
+              echo "Uploaded temporary asset is not visible: $temp_asset" >&2
+              exit 1
+            fi
+
+            current_api_path="$(asset_api_path "$asset" || true)"
+            if [ -n "$current_api_path" ]; then
+              gh api -X DELETE "$current_api_path"
+            fi
+
+            gh api -X PATCH "$temp_api_path" -f name="$asset"
+          done
+
+          signed_asset_api_path="$(asset_api_path "CREXX-dev-snapshot-windows-x64-signed.zip" || true)"
+          if [ -n "$signed_asset_api_path" ]; then
+            gh api -X DELETE "$signed_asset_api_path"
+          fi
+
+          for asset in "${expected_assets[@]}"; do
+            final_api_path="$(asset_api_path "$asset")"
+            if [ -z "$final_api_path" ]; then
+              echo "Final dev snapshot asset is not visible: $asset" >&2
+              exit 1
+            fi
+          done
+
+          delete_stale_temp_assets
+
+          gh release view "$SNAPSHOT_TAG" -R "$GITHUB_REPOSITORY"
