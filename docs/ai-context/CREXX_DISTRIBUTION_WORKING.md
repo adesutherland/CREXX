@@ -62,7 +62,9 @@ The package helper is `scripts/package-linux-deb.sh`.
 macOS should add `.pkg` packages after the Linux `.deb` path is stable. The
 package should use the already signed Mach-O payload, then be signed with a
 Developer ID Installer identity, notarized, and stapled. Keep the ZIP assets
-alongside `.pkg` assets.
+alongside `.pkg` assets. Maintainer setup instructions for Apple certificates,
+notarization credentials, and GitHub secrets live in
+`docs/packaging/macos-signing-notarization.md`.
 
 Windows should add an MSI after the ZIP signing flow. Preferred flow:
 
