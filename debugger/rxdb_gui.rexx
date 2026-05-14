@@ -103,8 +103,14 @@ rxdbtextgui: class
     batch = _step_batch
     batch_label = .string
     batch_label = _step_batch_label
-    if _plain = 0 then say _green"RXDB Version 0.2.0"
-    else say "RXDB Version 0.2.0 [text]"
+    rxvers_text = .string
+    rxvers_text = ""
+    assembler rxvers rxvers_text
+    runtime_version = .string
+    runtime_version = word(rxvers_text, 3)
+    if runtime_version = "" then runtime_version = "unknown"
+    if _plain = 0 then say _green"RXDB "runtime_version
+    else say "RXDB "runtime_version" [text]"
     if batch > 1 then say "RXDB text mode: ENTER steps " || batch_label || " trace events before prompting again."
     say ""
     return
