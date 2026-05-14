@@ -1,0 +1,18 @@
+/* factorial.rexx
+   The factorial of n is the product of all integers from 1 to n.
+   For example: 5! = 5 * 4 * 3 * 2 * 1 = 120.
+*/
+options levelb
+import rxfnsb
+
+arg parms = .string[]            /* Command-line arguments */
+if parms[1] = '' then factnum = 8
+else factnum = parms[1]
+
+say factnum'! =' fact(factnum)   /* Compute and display n! */
+return
+
+fact: procedure = .int
+  arg n = .int                   /* Argument automatically converted to integer */
+  if n <= 1 then return 1        /* Base case: 0! = 1 and 1! = 1 */
+return n * fact(n - 1)           /* Recursive definition: n! = n * (n-1)! */
