@@ -23,8 +23,10 @@ Options:
   -t, --tag TAG              Release tag. $default_tag_help
   -a, --asset NAME           Windows ZIP asset. Defaults to the only matching
                              unsigned Windows ZIP in the release.
-      --delete-unsigned      Delete the original unsigned asset after the
-                             signed asset is visible in the release.
+      --keep-unsigned        Keep the original unsigned asset after the signed
+                             asset is visible in the release.
+      --delete-unsigned      Accepted for compatibility; deletion is now the
+                             default after the signed asset is visible.
       --dry-run              Show what would be done without signing/uploading.
       --keep-work            Keep the temporary working directory after exit.
       --work-dir DIR         Use DIR as the working directory instead of mktemp.
@@ -50,7 +52,7 @@ EOF
   repo=""
   tag=""
   asset=""
-  delete_unsigned=0
+  delete_unsigned=1
   dry_run=0
   keep_work=0
   work=""
@@ -74,6 +76,10 @@ EOF
         ;;
       --delete-unsigned)
         delete_unsigned=1
+        shift
+        ;;
+      --keep-unsigned)
+        delete_unsigned=0
         shift
         ;;
       --dry-run)
@@ -225,6 +231,11 @@ EOF
   echo "Release tag:      $tag"
   echo "Unsigned asset:   $asset"
   echo "Signed asset:     $signed_asset"
+  if [[ "$delete_unsigned" -eq 1 ]]; then
+    echo "Unsigned cleanup: delete after signed upload is visible"
+  else
+    echo "Unsigned cleanup: keep original unsigned asset"
+  fi
   echo "Provider config:  $provider"
   echo "Certum alias:     $certum_alias"
   echo "Timestamp URL:    $tsa_url"
@@ -322,6 +333,8 @@ EOF
     if asset_exists "$asset"; then
       die "unsigned asset still exists after delete attempt: $asset"
     fi
+  else
+    echo "Keeping unsigned asset $asset"
   fi
 
   echo "Done. Signed $signed_count file(s), skipped $skipped_count already-signed file(s)."

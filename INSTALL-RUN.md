@@ -39,14 +39,15 @@ Download the `windows-x64` ZIP archive and unblock it before extracting:
 Add the extracted package `bin` directory to your user or system `PATH`, or run
 the tools by their full path.
 
-Prefer the `windows-x64-signed` ZIP asset when it is present on the release.
-The signed package contains Authenticode-signed Windows executables, libraries,
-and native plugin binaries.
+Prefer the `windows-x64-signed` ZIP asset. The signed package contains
+Authenticode-signed Windows executables, libraries, and native plugin binaries.
+After the local signing script has uploaded the signed ZIP and verified that it
+is visible on the release, it deletes the matching unsigned Windows ZIP.
 
 For the moving dev snapshot, prefer `CREXX-dev-snapshot-windows-x64-signed.zip`
 when it is present. The unsigned `CREXX-dev-snapshot-windows-x64.zip` asset is
-published by CI first and may be replaced by a signed sibling after local
-Windows signing is completed.
+published by CI first and is normally removed by the local signing script after
+the signed asset is uploaded successfully.
 
 ## Linux
 
