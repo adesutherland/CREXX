@@ -2,13 +2,20 @@
 
 These instructions are for binary packages downloaded from the
 [CREXX GitHub Releases](https://github.com/adesutherland/CREXX/releases) page.
+Versioned releases are stable distribution points. The `CREXX Dev Snapshot`
+pre-release is a moving interim build from the `develop` branch; its assets are
+replaced by the next successful `develop` build.
 
 Each package expands to a platform directory such as `CREXX-linux-x64`,
 `CREXX-windows-x64`, `CREXX-macos-arm64`, or `CREXX-macos-x86_64`.
 
 The main tools and runtime files are in `bin/`. The release package also
-contains `README.md`, `LICENSE`, `SECURITY.md`, `VERSION`, this file, and a
-small `examples/` directory.
+contains `README.md`, `LICENSE`, `SECURITY.md`, `VERSION`, `BUILDINFO`, this
+file, and a small `examples/` directory.
+
+`VERSION` contains the exact build identity reported by the packaged tools.
+`BUILDINFO` includes the base version, build channel, timestamp, and source
+commit used to produce the package.
 
 You can run tools by using their full path, for example:
 
@@ -35,6 +42,11 @@ the tools by their full path.
 Prefer the `windows-x64-signed` ZIP asset when it is present on the release.
 The signed package contains Authenticode-signed Windows executables, libraries,
 and native plugin binaries.
+
+For the moving dev snapshot, prefer `CREXX-dev-snapshot-windows-x64-signed.zip`
+when it is present. The unsigned `CREXX-dev-snapshot-windows-x64.zip` asset is
+published by CI first and may be replaced by a signed sibling after local
+Windows signing is completed.
 
 ## Linux
 

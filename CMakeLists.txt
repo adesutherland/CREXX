@@ -1,18 +1,118 @@
 cmake_minimum_required(VERSION 3.24)
 
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" CREXX_VERSION_RAW)
-string(STRIP "${CREXX_VERSION_RAW}" CREXX_VERSION)
+set(CREXX_VERSION_OVERRIDE "" CACHE STRING "Override CREXX base version; CI release builds pass the tag version without the leading v")
+set(CREXX_BUILD_CHANNEL "local" CACHE STRING "Build channel embedded in the version string: release, dev-snapshot, or local")
+set(CREXX_BUILD_TIMESTAMP "" CACHE STRING "UTC build timestamp for version metadata, formatted as YYYYMMDDTHHMMSSZ")
+set(CREXX_BUILD_COMMIT "" CACHE STRING "Git commit SHA for version metadata")
+
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" CREXX_VERSION_FILE_RAW)
+string(STRIP "${CREXX_VERSION_FILE_RAW}" CREXX_VERSION_FILE)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
-if(NOT CREXX_VERSION MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)([-+][0-9A-Za-z.-]+)?$")
-    message(FATAL_ERROR "VERSION must be a semantic version such as 1.0.0 or 1.0.0-beta.1")
+
+if(CREXX_VERSION_OVERRIDE)
+    string(STRIP "${CREXX_VERSION_OVERRIDE}" CREXX_VERSION_SOURCE)
+else()
+    set(CREXX_VERSION_SOURCE "${CREXX_VERSION_FILE}")
+endif()
+
+if(NOT CREXX_VERSION_SOURCE MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)(-[0-9A-Za-z.-]+)?(\\+([0-9A-Za-z.-]+))?$")
+    message(FATAL_ERROR "CREXX version must be a semantic version such as 1.0.0, 1.0.0-beta.1, or 1.0.0-beta.1+build.7")
 endif()
 set(CREXX_VERSION_MAJOR "${CMAKE_MATCH_1}")
 set(CREXX_VERSION_MINOR "${CMAKE_MATCH_2}")
 set(CREXX_VERSION_PATCH "${CMAKE_MATCH_3}")
+set(CREXX_VERSION_PRERELEASE "${CMAKE_MATCH_4}")
+set(CREXX_VERSION_BUILD_METADATA_BASE "${CMAKE_MATCH_6}")
 set(CREXX_VERSION_CORE "${CREXX_VERSION_MAJOR}.${CREXX_VERSION_MINOR}.${CREXX_VERSION_PATCH}")
+set(CREXX_VERSION_WITHOUT_BUILD "${CREXX_VERSION_CORE}${CREXX_VERSION_PRERELEASE}")
+
+string(TOLOWER "${CREXX_BUILD_CHANNEL}" CREXX_BUILD_CHANNEL)
+if(NOT CREXX_BUILD_CHANNEL MATCHES "^[0-9a-z][0-9a-z.-]*$")
+    message(FATAL_ERROR "CREXX_BUILD_CHANNEL must contain only ASCII letters, digits, dots, and hyphens")
+endif()
+
+if(NOT CREXX_BUILD_TIMESTAMP)
+    string(TIMESTAMP CREXX_BUILD_TIMESTAMP "%Y%m%dT%H%M%SZ" UTC)
+endif()
+if(NOT CREXX_BUILD_TIMESTAMP MATCHES "^[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]T[0-9][0-9][0-9][0-9][0-9][0-9]Z$")
+    message(FATAL_ERROR "CREXX_BUILD_TIMESTAMP must be formatted as YYYYMMDDTHHMMSSZ")
+endif()
+
+if(NOT CREXX_BUILD_COMMIT)
+    find_package(Git QUIET)
+    if(Git_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+        execute_process(
+                COMMAND "${GIT_EXECUTABLE}" rev-parse --verify HEAD
+                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+                OUTPUT_VARIABLE CREXX_BUILD_COMMIT
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET)
+    endif()
+endif()
+
+set(CREXX_BUILD_COMMIT_SHORT "")
+if(CREXX_BUILD_COMMIT)
+    string(LENGTH "${CREXX_BUILD_COMMIT}" CREXX_BUILD_COMMIT_LENGTH)
+    if(CREXX_BUILD_COMMIT MATCHES "^[0-9A-Fa-f]+$" AND CREXX_BUILD_COMMIT_LENGTH GREATER_EQUAL 7)
+        if(CREXX_BUILD_COMMIT_LENGTH LESS 12)
+            set(CREXX_BUILD_COMMIT_SHORT_LENGTH "${CREXX_BUILD_COMMIT_LENGTH}")
+        else()
+            set(CREXX_BUILD_COMMIT_SHORT_LENGTH 12)
+        endif()
+        string(SUBSTRING "${CREXX_BUILD_COMMIT}" 0 "${CREXX_BUILD_COMMIT_SHORT_LENGTH}" CREXX_BUILD_COMMIT_SHORT)
+    else()
+        message(WARNING "CREXX_BUILD_COMMIT is not a git SHA and will not be embedded: ${CREXX_BUILD_COMMIT}")
+    endif()
+endif()
+
+set(CREXX_BUILD_DIRTY 0)
+if(CREXX_BUILD_CHANNEL STREQUAL "local")
+    find_package(Git QUIET)
+    if(Git_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+        execute_process(
+                COMMAND "${GIT_EXECUTABLE}" diff --quiet --ignore-submodules HEAD --
+                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+                RESULT_VARIABLE CREXX_GIT_DIFF_RESULT
+                OUTPUT_QUIET
+                ERROR_QUIET)
+        if(NOT CREXX_GIT_DIFF_RESULT EQUAL 0)
+            set(CREXX_BUILD_DIRTY 1)
+        endif()
+    endif()
+endif()
+
+set(CREXX_VERSION_BUILD_METADATA_EXTRA "")
+if(NOT CREXX_BUILD_CHANNEL STREQUAL "release")
+    set(CREXX_VERSION_BUILD_METADATA_EXTRA "${CREXX_BUILD_CHANNEL}.${CREXX_BUILD_TIMESTAMP}")
+    if(CREXX_BUILD_COMMIT_SHORT)
+        string(APPEND CREXX_VERSION_BUILD_METADATA_EXTRA ".g${CREXX_BUILD_COMMIT_SHORT}")
+    endif()
+    if(CREXX_BUILD_DIRTY)
+        string(APPEND CREXX_VERSION_BUILD_METADATA_EXTRA ".dirty")
+    endif()
+endif()
+
+if(CREXX_VERSION_BUILD_METADATA_EXTRA)
+    if(CREXX_VERSION_BUILD_METADATA_BASE)
+        set(CREXX_VERSION "${CREXX_VERSION_WITHOUT_BUILD}+${CREXX_VERSION_BUILD_METADATA_BASE}.${CREXX_VERSION_BUILD_METADATA_EXTRA}")
+    else()
+        set(CREXX_VERSION "${CREXX_VERSION_WITHOUT_BUILD}+${CREXX_VERSION_BUILD_METADATA_EXTRA}")
+    endif()
+else()
+    if(CREXX_VERSION_BUILD_METADATA_BASE)
+        set(CREXX_VERSION "${CREXX_VERSION_WITHOUT_BUILD}+${CREXX_VERSION_BUILD_METADATA_BASE}")
+    else()
+        set(CREXX_VERSION "${CREXX_VERSION_WITHOUT_BUILD}")
+    endif()
+endif()
+
+set(CREXX_VERSION_SEMVER "${CREXX_VERSION}")
 set(CREXX_VERSION_DISPLAY "crexx-${CREXX_VERSION}")
+set(CREXX_BUILDINFO_PATH "${CMAKE_BINARY_DIR}/generated/BUILDINFO")
+set(CREXX_VERSION_FILE_PATH "${CMAKE_BINARY_DIR}/generated/VERSION")
 
 project(CREXX VERSION ${CREXX_VERSION_CORE})
+set(CREXX_VERSION "${CREXX_VERSION_SEMVER}")
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   # Fallback to local user bin to avoid sudo permission errors during testing
@@ -26,6 +126,11 @@ endif()
 # Print the CMake version
 message(STATUS "CMake Version: ${CMAKE_VERSION}")
 message(STATUS "CREXX Version: ${CREXX_VERSION_DISPLAY}")
+message(STATUS "CREXX Build Channel: ${CREXX_BUILD_CHANNEL}")
+message(STATUS "CREXX Build Timestamp: ${CREXX_BUILD_TIMESTAMP}")
+if(CREXX_BUILD_COMMIT_SHORT)
+    message(STATUS "CREXX Build Commit: ${CREXX_BUILD_COMMIT_SHORT}")
+endif()
 
 # Print the CMake gererator
 message(STATUS "CMake Generator: ${CMAKE_GENERATOR}")
@@ -130,8 +235,19 @@ configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/crexx_version.h.in
         ${CMAKE_BINARY_DIR}/generated/crexx_version.h
         @ONLY)
+file(WRITE "${CREXX_VERSION_FILE_PATH}" "${CREXX_VERSION_DISPLAY}\n")
+file(WRITE "${CREXX_BUILDINFO_PATH}"
+        "display=${CREXX_VERSION_DISPLAY}\n"
+        "version=${CREXX_VERSION}\n"
+        "base_version=${CREXX_VERSION_SOURCE}\n"
+        "version_file=${CREXX_VERSION_FILE}\n"
+        "channel=${CREXX_BUILD_CHANNEL}\n"
+        "timestamp=${CREXX_BUILD_TIMESTAMP}\n"
+        "commit=${CREXX_BUILD_COMMIT}\n"
+        "dirty=${CREXX_BUILD_DIRTY}\n")
 include_directories(${CMAKE_BINARY_DIR}/generated)
 install(FILES ${CMAKE_BINARY_DIR}/generated/crexx_version.h DESTINATION include)
+install(FILES "${CREXX_VERSION_FILE_PATH}" "${CREXX_BUILDINFO_PATH}" DESTINATION .)
 
 add_subdirectory(platform)
 add_subdirectory(avl_tree)
