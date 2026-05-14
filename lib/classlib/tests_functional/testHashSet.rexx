@@ -1,4 +1,4 @@
-options levelb
+options levelb comments_dash
 import data_HashSet
 
 a = .HashSet()
@@ -23,14 +23,11 @@ rc = a.add('schapen')
 
 say a.size()
 
-i = .HashSetIterator
 i = a.iterator()
 
 loop while i.hasNext()
   say i.next()
 end
-
-say a.toString()
 
 say a.toString()
 
