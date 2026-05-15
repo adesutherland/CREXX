@@ -109,6 +109,7 @@ val = .string
 
 -- 		d2x
   d2x: method = .string
+    assembler stoi val
     return .rxfnsb::d2x(val)
       
 -- 		date: no date, is a bif but not really string related

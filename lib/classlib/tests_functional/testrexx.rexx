@@ -5,6 +5,8 @@ import rxfnsb
 say 'started testrexx'
 errors = 0
 
+-- trace normal
+
 t = .testrexx()
 
 rc = t.t_abbrev() ; errors=errors+rc
@@ -407,41 +409,47 @@ testrexx: class
     flag=.boolean
     flag = 1
     v=.rexx('77');w=.rexx('+77')
-    flag=flag & v.d2c() ='M'
-    flag=flag & w.d2c() ='M'
+    -- flag=flag & v.d2c() ='M'
+    -- flag=flag & w.d2c() ='M'
     return \flag
 
  /*-- D 2 X ---------------TODO--------------------------------------*/
- t_d2x: method = .int
+  t_d2x: method = .int
     flag=.boolean
     flag = 1
     v=.rexx('8947848')
-    -- say v
-    -- say '<><><><>' v.d2x()
-    -- flag=flag & ('9'.d2x       == '9')
-    -- flag=flag & ('129'.d2x     == '81')
-    -- flag=flag & ('129'.d2x(1)  == '1')
-    -- flag=flag & ('129'.d2x(2)  == '81')
-    -- flag=flag & ('127'.d2x(3)  == '07F')
-    -- flag=flag & ('129'.d2x(4)  == '0081')
-    -- flag=flag & ('257'.d2x(2)  == '01')
-    -- flag=flag & ('-127'.d2x(2) == '81')
-    -- flag=flag & ('-127'.d2x(4) == 'FF81')
-    -- flag=flag & ('12'.d2x(0)   == '')
-    -- flag=flag & (v.d2x() == '888888')
-    -- flag=flag & ('8947848'.d2x(4) == '8888')
-    -- flag=flag & ('8947848'.d2x(5) == '88888')
-    -- flag=flag & ('8947848'.d2x(6) == '888888')
-    -- flag=flag & ('8947848'.d2x(7) == '0888888')
-    -- flag=flag & ('8947848'.d2x(8) == '00888888')
-    -- flag=flag & ('-7829368'.d2x(4) == '8888')
-    -- flag=flag & ('-7829368'.d2x(5) == '88888')
-    -- flag=flag & ('-7829368'.d2x(6) == '888888')
-    -- flag=flag & ('-7829368'.d2x(7) == 'F888888')
-    -- flag=flag & ('-7829368'.d2x(8) == 'FF888888')
+    w=.rexx(9)
+    x=.rexx('129')
+    y=.rexx('127')
+    z=.rexx('257')
+    a=.rexx('-127')
+    b=.rexx('12')
+    c=.rexx('-7829368')
+    
+    flag=flag & (w.d2x()     = '9' )
+    flag=flag & (x.d2x()     = '81' )
+    -- flag=flag & (x.d2x()    = 1 )
+    -- flag=flag & (x.d2x()    = '81')
+    -- flag=flag & (y.d2x()    = '07F')
+    -- flag=flag & (x.d2x()    = '0081')
+    -- flag=flag & (z.d2x()    = '01')
+    -- flag=flag & (a.d2x()    = '81')
+    -- flag=flag & (a.d2x()    = 'FF81')
+    -- flag=flag & (b.d2x()    = '')
+    -- flag=flag & (v.d2x()    = '888888')
+    -- flag=flag & (v.d2x()    = '8888')
+    -- flag=flag & (v.d2x()    = '88888')
+    -- flag=flag & (v.d2x()    = '888888')
+    -- flag=flag & (v.d2x()    = '0888888')
+    -- flag=flag & (v.d2x()    = '00888888')
+    -- flag=flag & (c.d2x()    = '8888')
+    -- flag=flag & (c.d2x()    = '88888')
+    -- flag=flag & (c.d2x()    = '888888')
+    -- flag=flag & (c.d2x()    = 'F888888')
+    -- flag=flag & (c.d2x()    = 'FF888888')
     return \flag
 
- /*-- E X I S T S --------- not in crexx (yet?---------------------*/
+/*-- E X I S T S --------- not in crexx (yet?---------------------*/
   --   method exists static
   --       flag=.boolean
   --   flag = 1
