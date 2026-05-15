@@ -2,17 +2,32 @@
 
 Global variables are shared among modules and are linked to the namespace of the modules, similar to exposed procedures.
 
-**Auto-Exposing (Recommended):** Variables exposed through the module `namespace` instruction are automatically mapped into the local scope of all procedures within the module file. This eliminates the need to repeatedly `expose` the variable in every procedure.
+**Namespace auto-exposing:** Variables exposed through the module `namespace`
+instruction are automatically mapped into the local scope of all procedures
+within the module file. Use this when the variable is part of the module's
+published namespace surface.
 
 ```rexx
 namespace myproject expose global_var
 ```
 
-Alternatively, the `expose` keyword in the `procedure` instruction can be used to explicitly import variables from a dynamic caller or when managing variables not declared in the top-level namespace.
+**Procedure-level exposing:** The `expose` keyword in a `procedure`
+instruction binds the listed names to module-global storage for that procedure
+only. Use this for private module state shared by selected local procedures
+without publishing that variable through the namespace.
 
 ```rexx
-proc: procedure expose caller_var
+proc1: procedure = .void expose global_var
+  global_var = "Hello World"
+  return
+
+proc2: procedure = .void expose global_var
+  say "global_var is" global_var
+  return
 ```
+
+A procedure that does not list `global_var` does not see this shared storage
+unless `global_var` is also in the file-level `namespace ... expose ...` list.
 
 **Physical Placement and Hoisting:**
 To ensure robust scoping, global variables physically reside in the **Namespace Scope** of the module. During the compilation process, when a variable is identified as global (either via the `namespace expose` list or a `procedure expose` list), the compiler physically **hoists** the variable symbol from its local discovery scope up to the Namespace Scope. This ensures that standard tiered resolution (Local -> Namespace -> Universe) correctly identifies the variable across all procedures and blocks within the module. This hoisting is strictly upward; the compiler never demotes a namespace-level variable to a local scope.

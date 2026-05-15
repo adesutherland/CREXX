@@ -57,9 +57,9 @@ References:
 - `tests/demo/countlines.rexx`
 - `compiler/exits/address/test_address.rexx`
 
-### 3. Tool-style entry point with exposed module state
+### 3. Tool-style entry point with procedure-exposed module state
 
-Longer tools often use `main:` plus `procedure expose` for module state:
+Longer tools often use `main:` plus procedure-level `expose` for module state:
 
 ```rexx
 options levelb
@@ -69,6 +69,19 @@ import globals
 
 main: procedure = .int expose next_instruction last_instruction mode
     arg cmd_line = .string[]
+```
+
+The `expose` list belongs to that one procedure. Other local procedures see
+the same module-global storage only if they also list the variable:
+
+```rexx
+proc1: procedure = .void expose var
+    var = "Hello World"
+    return
+
+proc2: procedure = .void expose var
+    say "var is" var
+    return
 ```
 
 Reference:
@@ -145,15 +158,25 @@ Reference:
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `docs/books/crexx_programming_guide/rxc.md`
 
-### Namespace-exposed globals auto-bind into procedures
+### Procedure-level expose and namespace auto-bind
 
-If a module declares namespace-exposed globals, Level B automatically binds
-them into local `procedure` scopes. Do not add `procedure expose ...` just out
-of habit when a namespace-exposed module global is what you actually want.
+There are two ways a Level B procedure can intentionally bind a module-global
+variable:
+
+- file-level `namespace name expose var` exposes the symbol from the module and
+  automatically binds it into local `procedure` scopes in that source file
+- procedure-level `name: procedure [= .type] expose var ...` binds the listed
+  variables only for that procedure; every local procedure that needs the same
+  storage must list the variable itself
+
+Use procedure-level `expose` for private module state that several local
+procedures share, or when you are following an existing stateful tool/library
+pattern. Do not add `procedure expose ...` just out of habit when a
+namespace-exposed module global is what you actually want.
 
 Use `procedure expose` or `arg expose` when:
 
-- you are intentionally sharing dynamic caller state
+- you are intentionally sharing private module state across selected local procedures
 - you are mutating a passed-in array/object
 - you are following an existing stateful tool pattern such as `rxdb`
 

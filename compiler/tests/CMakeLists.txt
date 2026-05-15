@@ -356,6 +356,7 @@ add_crexx_compiler_fail_test(err_parse_missing_arguments rexx_src/err_parse_miss
 
 # Warning tests
 add_crexx_compiler_warning_test(loop rexx_src/loop.rexx loop.txt)
+add_crexx_compiler_warning_test(procedure_expose_no_duplicate rexx_src/procedure_expose_no_duplicate_warning.rexx procedure_expose_no_duplicate.txt)
 
 # Regression tests for rxpp issue
 add_crexx_compiler_test(repro_dotted_index rexx_src/repro_dotted_index.rexx)

@@ -24,6 +24,7 @@ code before editing user-facing docs.
 | `README.md` | GitHub front door | New visitors, contributors | What CREXX is, current baseline, build/run, links | Short and welcoming |
 | `docs/index.md` | GitHub Pages landing page | Users and contributors | Release documentation index | Clear and navigable |
 | `docs/releases` | Release notes | Users, packagers, contributors | Milestone summaries, release scope, signing status, known beta limitations | Concise and release-focused |
+| `docs/packaging` | Distribution operations | Maintainers, release engineers | Signing, notarization, packaging setup, GitHub secret setup | Procedural and security-conscious |
 | `docs/books/crexx_language_reference` | Language reference | CREXX programmers | Syntax, types, statements, classes, libraries | Formal, as-implemented |
 | `docs/books/crexx_programming_guide` | Practical guide | Users and integrators | Build, run, tools, host integration, plugins | Practical and task-oriented |
 | `docs/books/crexx_vm_spec` | VM and bytecode reference | Implementers | VM model, instruction set, platform notes | Precise and technical |

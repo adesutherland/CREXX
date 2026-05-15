@@ -255,7 +255,7 @@ EOF
   if [[ "$keep_work" -eq 1 ]]; then
     echo "Working directory: $work"
   else
-    trap 'rm -rf "$work"' EXIT
+    trap "rm -rf -- $(printf '%q' "$work")" EXIT
   fi
 
   local download_dir unpacked_dir

@@ -218,21 +218,39 @@ jobs:
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/BUILDINFO") -Destination (Join-Path $stage "BUILDINFO") -Force
 
       - name: Configure Apple signing keychain
+        id: macos_signing
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
         shell: bash
         env:
           APPLE_DEVELOPER_ID_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_BASE64 }}
           APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          APPLE_DEVELOPER_ID_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_IDENTITY }}
         run: |
           set -euo pipefail
 
+          missing=()
           if [ -z "${APPLE_DEVELOPER_ID_CERTIFICATE_BASE64:-}" ]; then
-            echo "APPLE_DEVELOPER_ID_CERTIFICATE_BASE64 is not set" >&2
-            exit 1
+            missing+=(APPLE_DEVELOPER_ID_CERTIFICATE_BASE64)
           fi
           if [ -z "${APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD:-}" ]; then
-            echo "APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD is not set" >&2
-            exit 1
+            missing+=(APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD)
+          fi
+          if [ -z "${APPLE_DEVELOPER_ID_IDENTITY:-}" ]; then
+            missing+=(APPLE_DEVELOPER_ID_IDENTITY)
+          fi
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping macOS code signing because Apple Developer ID Application secrets are not configured: ${missing[*]}"
+            {
+              echo "### macOS signing skipped"
+              echo
+              echo "Apple Developer ID Application secrets are not configured for this repository or fork:"
+              printf -- "- \`%s\`\n" "${missing[@]}"
+              echo
+              echo "The workflow will continue and upload unsigned macOS ZIP assets. No macOS .pkg asset is produced by this workflow yet."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
 
           certificate_path="${RUNNER_TEMP}/developer-id-application.p12"
@@ -253,10 +271,11 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s \
             -k "$keychain_password" "$keychain_path"
 
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
           echo "APPLE_SIGNING_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
 
       - name: Sign macOS release payload
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         env:
           APPLE_DEVELOPER_ID_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_IDENTITY }}
@@ -299,7 +318,7 @@ jobs:
           echo "Signed $signed_count Mach-O files"
 
       - name: Verify macOS signatures
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -338,6 +357,18 @@ jobs:
           fi
           echo "CREXX_RELEASE_ASSET=$asset_dir/$asset" >> "$GITHUB_ENV"
 
+      - name: Package Linux Debian dev snapshot
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && matrix.platform == 'linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          asset_dir="${{ runner.temp }}/release-assets"
+          scripts/package-linux-deb.sh \
+            --payload-dir "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" \
+            --output "$asset_dir/CREXX-dev-snapshot-linux-x64.deb" \
+            --display-version "${{ needs.version.outputs.display_version }}"
+
       - name: Package release asset
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'windows'
         shell: pwsh
@@ -359,8 +390,20 @@ jobs:
           Compress-Archive -Path (Join-Path $payloadRoot $payload) -DestinationPath $assetPath -Force
           "CREXX_RELEASE_ASSET=$assetPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Notarize macOS release asset
+      - name: Report macOS package status
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "### macOS package status"
+            echo
+            echo "This workflow currently publishes the macOS ZIP asset only."
+            echo "The future .pkg asset will remain disabled until Developer ID Installer signing is added."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notarize macOS release asset
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -369,17 +412,26 @@ jobs:
         run: |
           set -euo pipefail
 
+          missing=()
           if [ -z "${APPLE_ID:-}" ]; then
-            echo "APPLE_ID is not set" >&2
-            exit 1
+            missing+=(APPLE_ID)
           fi
           if [ -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]; then
-            echo "APPLE_APP_SPECIFIC_PASSWORD is not set" >&2
-            exit 1
+            missing+=(APPLE_APP_SPECIFIC_PASSWORD)
           fi
           if [ -z "${APPLE_TEAM_ID:-}" ]; then
-            echo "APPLE_TEAM_ID is not set" >&2
-            exit 1
+            missing+=(APPLE_TEAM_ID)
+          fi
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Skipping macOS notarization because Apple notarization secrets are not configured: ${missing[*]}"
+            {
+              echo "### macOS notarization skipped"
+              echo
+              echo "The macOS ZIP payload was signed, but notarization secrets are not configured:"
+              printf -- "- \`%s\`\n" "${missing[@]}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
 
           xcrun notarytool submit "$CREXX_RELEASE_ASSET" \
@@ -393,7 +445,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact_name }}-release-asset
-          path: ${{ runner.temp }}/release-assets/CREXX-*.zip
+          path: ${{ runner.temp }}/release-assets/CREXX-*
           if-no-files-found: error
 
       - name: Cleanup Apple signing keychain
@@ -550,10 +602,13 @@ jobs:
           asset_dir="${{ runner.temp }}/dev-snapshot-assets"
           mkdir -p "$asset_dir"
 
-          find "$download_dir" -name 'CREXX-dev-snapshot-*.zip' -type f -exec cp {} "$asset_dir/" \;
+          find "$download_dir" \
+            \( -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' \) \
+            -type f -exec cp {} "$asset_dir/" \;
 
           expected_assets=(
             CREXX-dev-snapshot-linux-x64.zip
+            CREXX-dev-snapshot-linux-x64.deb
             CREXX-dev-snapshot-windows-x64.zip
             CREXX-dev-snapshot-macos-arm64.zip
             CREXX-dev-snapshot-macos-x86_64.zip
@@ -567,9 +622,9 @@ jobs:
             fi
           done
 
-          asset_count="$(find "$asset_dir" -maxdepth 1 -name 'CREXX-dev-snapshot-*.zip' -type f | wc -l | tr -d ' ')"
-          if [ "$asset_count" != "4" ]; then
-            echo "Expected 4 dev snapshot assets, found $asset_count" >&2
+          asset_count="$(find "$asset_dir" -maxdepth 1 -name 'CREXX-dev-snapshot-*' -type f | wc -l | tr -d ' ')"
+          if [ "$asset_count" != "${#expected_assets[@]}" ]; then
+            echo "Expected ${#expected_assets[@]} dev snapshot assets, found $asset_count" >&2
             find "$asset_dir" -maxdepth 1 -type f -print >&2
             exit 1
           fi
@@ -655,13 +710,29 @@ jobs:
               gh release view "$SNAPSHOT_TAG" \
                 -R "$GITHUB_REPOSITORY" \
                 --json assets \
-                --jq '.assets[] | select(.name | startswith("CREXX-dev-snapshot-") and endswith(".tmp.zip")) | .apiUrl' |
+                --jq '.assets[] | select(.name | startswith("CREXX-dev-snapshot-") and (endswith(".tmp.zip") or endswith(".tmp.deb"))) | .apiUrl' |
                 sed 's#^https://api.github.com/##'
             )
           }
 
+          temp_asset_name() {
+            local asset="$1"
+            case "$asset" in
+              *.zip)
+                echo "${asset%.zip}-${GITHUB_RUN_ID}.tmp.zip"
+                ;;
+              *.deb)
+                echo "${asset%.deb}-${GITHUB_RUN_ID}.tmp.deb"
+                ;;
+              *)
+                echo "${asset}-${GITHUB_RUN_ID}.tmp"
+                ;;
+            esac
+          }
+
           expected_assets=(
             CREXX-dev-snapshot-linux-x64.zip
+            CREXX-dev-snapshot-linux-x64.deb
             CREXX-dev-snapshot-windows-x64.zip
             CREXX-dev-snapshot-macos-arm64.zip
             CREXX-dev-snapshot-macos-x86_64.zip
@@ -670,16 +741,16 @@ jobs:
           delete_stale_temp_assets
 
           for asset in "${expected_assets[@]}"; do
-            temp_asset="${asset%.zip}-${GITHUB_RUN_ID}.tmp.zip"
+            temp_asset="$(temp_asset_name "$asset")"
             cp "$asset_dir/$asset" "$upload_dir/$temp_asset"
           done
 
-          gh release upload "$SNAPSHOT_TAG" "$upload_dir"/*.zip \
+          gh release upload "$SNAPSHOT_TAG" "$upload_dir"/* \
             -R "$GITHUB_REPOSITORY" \
             --clobber
 
           for asset in "${expected_assets[@]}"; do
-            temp_asset="${asset%.zip}-${GITHUB_RUN_ID}.tmp.zip"
+            temp_asset="$(temp_asset_name "$asset")"
             temp_api_path="$(asset_api_path "$temp_asset")"
             if [ -z "$temp_api_path" ]; then
               echo "Uploaded temporary asset is not visible: $temp_asset" >&2

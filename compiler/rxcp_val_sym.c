@@ -1155,13 +1155,18 @@ walker_result exposed_symbols_walker(walker_direction direction,
                             }
                         }
                         else {
-                            /* Either we have already processed this symbol (duplicate) or it is not used in the proc at all */
+                            /* Either we have already processed this expose node
+                             * or the symbol is not used in the procedure body.
+                             */
                             ASTNode *instr = ast_chld(node->parent, INSTRUCTIONS, NOP);
-                            if (instr && symislnk(instr, symbol)) {
-                                /* It's linked to the procedure's instructions - therefore a duplicate */
-                                /* Add a warning - if it has not already errored/warned */
-                                if (!context->after_rewrite && ast_chld(n, ERROR, WARNING) == 0)
-                                    mknd_war(n, "DUPLICATE_SYMBOL");
+                            if (symislnk(n, symbol)) {
+                                /* An earlier symbol pass already seeded and linked
+                                 * this procedure-level EXPOSE item. Re-visiting it
+                                 * here is normal fixed-point validation work.
+                                 */
+                                if (instr && !symislnk(instr, symbol)) {
+                                    sym_adnd(symbol, instr, 0, 0);
+                                }
                             }
                             else {
                                 /* Not yet linked to this procedure's instructions - so link it now */

@@ -60,6 +60,20 @@ If the executable bits are not preserved by your unzip tool, restore them with:
 chmod +x bin/*
 ```
 
+The moving dev snapshot also publishes a prototype Debian package:
+`CREXX-dev-snapshot-linux-x64.deb`. Install it with:
+
+```sh
+sudo apt install ./CREXX-dev-snapshot-linux-x64.deb
+```
+
+The Debian package installs CREXX under `/opt/crexx` and creates command
+symlinks in `/usr/bin`. Remove it with:
+
+```sh
+sudo apt remove crexx
+```
+
 ## macOS
 
 Choose the package for your Mac:
