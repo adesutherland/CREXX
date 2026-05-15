@@ -6,10 +6,13 @@ Status: maintainer procedure. Verify secret names against
 This document describes the Apple Developer credentials and GitHub Actions
 secrets needed to sign and notarize CREXX macOS release assets.
 
-The current workflow signs Mach-O files in the macOS ZIP payloads, then submits
-the ZIPs to Apple notarization. The future `.pkg` workflow will additionally
-need a Developer ID Installer certificate so the installer package itself can
-be signed, notarized, and stapled.
+When the required secrets are present, the current workflow signs Mach-O files
+in the macOS ZIP payloads, then submits the ZIPs to Apple notarization. When
+the secrets are absent, for example in a fork, the workflow logs the missing
+setup, skips signing/notarization, and still uploads the unsigned ZIP asset.
+The future `.pkg` workflow will additionally need a Developer ID Installer
+certificate so the installer package itself can be signed, notarized, and
+stapled.
 
 ## Required Apple Account Access
 
@@ -134,7 +137,8 @@ xcrun notarytool history --keychain-profile CREXX_NOTARY_TEST
 
 ## Current GitHub Secrets
 
-The current ZIP signing/notarization workflow expects these repository secrets:
+The current ZIP signing/notarization workflow uses these repository secrets when
+they are available:
 
 | Secret | Purpose |
 | --- | --- |
@@ -145,6 +149,11 @@ The current ZIP signing/notarization workflow expects these repository secrets:
 | `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password for notarization |
 | `APPLE_TEAM_ID` | Apple Developer Team ID |
 
+Missing Application signing secrets cause the macOS signing and notarization
+steps to be skipped. The build still succeeds and uploads an unsigned ZIP.
+Missing notarization secrets after a successful signing step cause only
+notarization to be skipped.
+
 The future `.pkg` workflow should add these secrets:
 
 | Secret | Purpose |
@@ -152,6 +161,9 @@ The future `.pkg` workflow should add these secrets:
 | `APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64` | Base64 text for `DeveloperIDInstaller.p12` |
 | `APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD` | Export password for `DeveloperIDInstaller.p12` |
 | `APPLE_DEVELOPER_ID_INSTALLER_IDENTITY` | Exact Developer ID Installer identity name |
+
+Until those Installer secrets are configured and the `.pkg` workflow is added,
+the build should clearly report that no macOS `.pkg` asset is produced.
 
 ## Add Secrets With GitHub CLI
 

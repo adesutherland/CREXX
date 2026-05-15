@@ -218,21 +218,39 @@ jobs:
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/BUILDINFO") -Destination (Join-Path $stage "BUILDINFO") -Force
 
       - name: Configure Apple signing keychain
+        id: macos_signing
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
         shell: bash
         env:
           APPLE_DEVELOPER_ID_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_BASE64 }}
           APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          APPLE_DEVELOPER_ID_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_IDENTITY }}
         run: |
           set -euo pipefail
 
+          missing=()
           if [ -z "${APPLE_DEVELOPER_ID_CERTIFICATE_BASE64:-}" ]; then
-            echo "APPLE_DEVELOPER_ID_CERTIFICATE_BASE64 is not set" >&2
-            exit 1
+            missing+=(APPLE_DEVELOPER_ID_CERTIFICATE_BASE64)
           fi
           if [ -z "${APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD:-}" ]; then
-            echo "APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD is not set" >&2
-            exit 1
+            missing+=(APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD)
+          fi
+          if [ -z "${APPLE_DEVELOPER_ID_IDENTITY:-}" ]; then
+            missing+=(APPLE_DEVELOPER_ID_IDENTITY)
+          fi
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping macOS code signing because Apple Developer ID Application secrets are not configured: ${missing[*]}"
+            {
+              echo "### macOS signing skipped"
+              echo
+              echo "Apple Developer ID Application secrets are not configured for this repository or fork:"
+              printf -- "- \`%s\`\n" "${missing[@]}"
+              echo
+              echo "The workflow will continue and upload unsigned macOS ZIP assets. No macOS .pkg asset is produced by this workflow yet."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
 
           certificate_path="${RUNNER_TEMP}/developer-id-application.p12"
@@ -253,10 +271,11 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s \
             -k "$keychain_password" "$keychain_path"
 
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
           echo "APPLE_SIGNING_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
 
       - name: Sign macOS release payload
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         env:
           APPLE_DEVELOPER_ID_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_IDENTITY }}
@@ -299,7 +318,7 @@ jobs:
           echo "Signed $signed_count Mach-O files"
 
       - name: Verify macOS signatures
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -371,8 +390,20 @@ jobs:
           Compress-Archive -Path (Join-Path $payloadRoot $payload) -DestinationPath $assetPath -Force
           "CREXX_RELEASE_ASSET=$assetPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Notarize macOS release asset
+      - name: Report macOS package status
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "### macOS package status"
+            echo
+            echo "This workflow currently publishes the macOS ZIP asset only."
+            echo "The future .pkg asset will remain disabled until Developer ID Installer signing is added."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notarize macOS release asset
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -381,17 +412,26 @@ jobs:
         run: |
           set -euo pipefail
 
+          missing=()
           if [ -z "${APPLE_ID:-}" ]; then
-            echo "APPLE_ID is not set" >&2
-            exit 1
+            missing+=(APPLE_ID)
           fi
           if [ -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]; then
-            echo "APPLE_APP_SPECIFIC_PASSWORD is not set" >&2
-            exit 1
+            missing+=(APPLE_APP_SPECIFIC_PASSWORD)
           fi
           if [ -z "${APPLE_TEAM_ID:-}" ]; then
-            echo "APPLE_TEAM_ID is not set" >&2
-            exit 1
+            missing+=(APPLE_TEAM_ID)
+          fi
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Skipping macOS notarization because Apple notarization secrets are not configured: ${missing[*]}"
+            {
+              echo "### macOS notarization skipped"
+              echo
+              echo "The macOS ZIP payload was signed, but notarization secrets are not configured:"
+              printf -- "- \`%s\`\n" "${missing[@]}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
 
           xcrun notarytool submit "$CREXX_RELEASE_ASSET" \

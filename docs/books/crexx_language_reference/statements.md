@@ -116,7 +116,34 @@ Current implementation status:
 
 ## PROCEDURE
 
-See Procedures and Arguments Section.
+`PROCEDURE` starts a named local routine and optionally declares its return
+type and the module-global variables that routine can see.
+
+Common forms:
+
+```rexx
+name: procedure
+name: procedure = .int
+name: procedure = .void expose state count
+```
+
+Procedure-level `expose` is local to that procedure declaration. The listed
+names are bound to module-global storage shared with other procedures that
+also expose the same names. A procedure that does not list the name does not
+see that exposed storage unless the name is also exposed by the file-level
+`namespace ... expose ...` declaration.
+
+```rexx
+proc1: procedure = .void expose var
+  var = "Hello World"
+  return
+
+proc2: procedure = .void expose var
+  say "var is" var
+  return
+```
+
+This is distinct from `ARG expose`, which exposes a call argument by reference.
 
 ## SAY
 
@@ -220,6 +247,42 @@ exit loading; compiling with exits disabled rejects the statement rather than
 treating it as an implicit command.
 
 # Procedures and Arguments
+
+## Procedure-Level Expose
+
+`procedure expose` is the local procedure form for sharing module-global state:
+
+```rexx
+main: procedure
+  call proc1
+  call proc2
+  say "but var in main is" var
+  return
+
+proc1: procedure = .void expose var
+  var = "Hello World"
+  return
+
+proc2: procedure = .void expose var
+  say "var is" var
+  return
+```
+
+Here `proc1` and `proc2` share the exposed global `var`. `main` does not list
+`var`, so its bare `var` reference is not the same exposed variable. To let
+`main` read or write the shared value, declare `main: procedure expose var` as
+well.
+
+The `expose` list follows the return type if a return type is present. The
+items in the procedure-level list are bare variable names:
+
+```rexx
+worker: procedure = .int expose state errors
+```
+
+For globally published module variables, prefer file-level
+`namespace name expose var`; those namespace-exposed globals auto-bind into
+procedures in the same source file.
 
 ## Function Arguments
 

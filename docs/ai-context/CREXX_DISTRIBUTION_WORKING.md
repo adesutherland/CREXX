@@ -66,6 +66,12 @@ alongside `.pkg` assets. Maintainer setup instructions for Apple certificates,
 notarization credentials, and GitHub secrets live in
 `docs/packaging/macos-signing-notarization.md`.
 
+Forks and repositories without Apple signing secrets should still build and
+upload unsigned macOS ZIP assets. The workflow should log the skipped
+signing/notarization state rather than failing on missing secrets. No macOS
+`.pkg` asset should be produced until the package-signing workflow and
+Developer ID Installer secrets are in place.
+
 Windows should add an MSI after the ZIP signing flow. Preferred flow:
 
 1. GitHub builds and publishes the unsigned Windows ZIP.
