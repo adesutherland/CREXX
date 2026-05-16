@@ -109,6 +109,7 @@ val = .string
 
 -- 		d2x
   d2x: method = .string
+    assembler stoi val
     return .rxfnsb::d2x(val)
       
 -- 		date: no date, is a bif but not really string related
@@ -210,13 +211,13 @@ val = .string
     return .rxfnsb::substr(val,start,len,pad)
     
 -- 		symbol
-symbol: method = .string
+  symbol: method = .string
     return .rxfnsb::symbol(val)
 
 -- 		time : not relevant for this class
 
 -- 		translate
-translate: method = .string
+  translate: method = .string
   arg  tochar = "?????", fromchar = "?????",pad=" "
     return .rxfnsb::translate(val,tochar,fromchar,pad)
 
@@ -226,7 +227,7 @@ translate: method = .string
     return .rxfnsb::trunc(fraction)
 
 -- 		upper
-upper: method = .string
+  upper: method = .string
     return .rxfnsb::upper(val)
 
 -- 		value
@@ -234,7 +235,7 @@ upper: method = .string
     return .rxfnsb::value(val)
 
 -- 		verify
-verify: method = .int
+  verify: method = .int
     arg intab = .string, match_mode='N', spos=1
     return .rxfnsb::verify(val,intab,match_mode,spos)
 
@@ -259,7 +260,7 @@ verify: method = .int
     return .rxfnsb::subword(val,wordnum)
 
     -- 		wordlength
-wordlength: method  = .string
+  wordlength: method  = .string
     arg wordnum = .int
     return .rxfnsb::wordlength(val,wordnum)
 
@@ -277,7 +278,7 @@ wordlength: method  = .string
 -- 		qsubword
 -- 		regex
     -- 		x2b
-x2b: method = .string
+  x2b: method = .string
     arg slen=-1
     return .rxfnsb::x2b(val,slen)
     

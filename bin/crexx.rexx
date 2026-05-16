@@ -33,9 +33,9 @@
  * The options processor can receive files and options in any
  * sequence, where options need at least one dash at the left
  * of the option string. This determines if the strings fed to
- * it are options or filenames.
+ * it are options or filenames. The --args option needs to be last.
  *
- * if a filename has a suffix of .rxpp, the crexx precompiler
+ * If a filename has a suffix of .rxpp, the crexx precompiler
  * is invoked to perform its magic - it produces a .rexx
  * which then is compiled and executed, or compiled to an
  * object file which is linked to the interpreter to
@@ -51,7 +51,7 @@
  main: procedure = .int
  arg fn = .string[]
  module = .string[]
- 
+
  /* defaults for options for this program */
 native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
 execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=1;decimal=1
@@ -111,137 +111,146 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
      else
        do
 	 /* allow for single- and double dash options */
-       if left(fn.i,2) = '--'  then fn.i=substr(fn.i,2)
-       if fn.i = '-help'       then ret = help(nocolor)
-       if fn.i = '-exec'       then execute=1
-       if fn.i = '-noexec'     then execute=0
-       if fn.i = '-native'     then native=1
-       if fn.i = '-nonative'   then native=0
-       if fn.i = '-compile'    then compile=1
-       if fn.i = '-nocompile'  then compile=0
-       if fn.i = '-version'    then version=1
-       if fn.i = '-verbose'    then verbose=1
-       if fn.i = '-verbose0'   then verbose=0
-       if fn.i = '-verbose1'   then verbose=1
-       if fn.i = '-verbose2'   then verbose=2
-       if fn.i = '-verbose3'   then verbose=3
-       if fn.i = '-verbose4'   then verbose=4
-       if fn.i = '-color'      then nocolor=0
-       if fn.i = '-colour'     then nocolor=0
-       if fn.i = '-nocolor'    then nocolor=1
-       if fn.i = '-nocolour'   then nocolor=1
-       if fn.i = '-optimize'   then optimize=1
-       if fn.i = '-nooptimize' then optimize=0
-       if fn.i = '-keep'       then keep=1
-       if fn.i = '-nokeep'     then keep=0
-       if fn.i = '-nodecimal'  then decimal=0
-       if fn.i = '-decimal'    then decimal=1
-       if fn.i = '-import-rxas' then importRxas=1
-       if fn.i = '-link-keep-source' then do
-         linkStripSource = 0
-         linkOptionsUsed = 1
-       end
-       if fn.i = '-link-strip-source' then do
-         linkStripSource = 1
-         linkOptionsUsed = 1
-       end
-       if fn.i = '-link-keep-inline' then do
-         linkPreserveInline = 1
-         linkOptionsUsed = 1
-       end
-       if fn.i = '-link-strip-inline' then do
-         linkPreserveInline = 0
-         linkOptionsUsed = 1
-       end
-
-       optarg = ''
-       if fn.i = '-source' | fn.i = '-s' then do
-         i = i + 1
-         if i > fn.0 then do
-           say 'missing source root after' fn.i
-           return 2
-         end
-         optarg = fn.i
-         sourceRoots = appendSemicolonValue(sourceRoots, optarg)
-       end
-       else if left(fn.i,2) = '-s' & fn.i <> '-source' then do
-         optarg = substr(fn.i,3)
-         if optarg = '' then do
-           say 'missing source root after' fn.i
-           return 2
-         end
-         sourceRoots = appendSemicolonValue(sourceRoots, optarg)
-       end
-
-       if fn.i = '-i' then do
-         i = i + 1
-         if i > fn.0 then do
-           say 'missing binary import root after -i'
-           return 2
-         end
-         optarg = fn.i
-         binaryRoots = appendSemicolonValue(binaryRoots, optarg)
-       end
-       else if left(fn.i,2) = '-i' & fn.i <> '-import-rxas' then do
-         optarg = substr(fn.i,3)
-         if optarg = '' then do
-           say 'missing binary import root after' fn.i
-           return 2
-         end
-         binaryRoots = appendSemicolonValue(binaryRoots, optarg)
-       end
-
-       if fn.i = '-l' then do
-         i = i + 1
-         if i > fn.0 then do
-           say 'missing library path after -l'
-           return 2
-         end
-         optarg = fn.i
-         fullLibrary = rxpath||'bin'dirsep||optarg
-         lastSlash = lastpos('/',fullLibrary)
-         if lastSlash = 0 then lastSlash = lastpos('\',fullLibrary)
-         libs = libs';'fullLibrary
-         if lastSlash > 0 then libraries = libraries';'left(fullLibrary,lastSlash-1)
-         else libraries = libraries';'fullLibrary
-         modulenumber = modulenumber+1
-       end
-       else if left(fn.i,2)= '-l' & fn.i <> '-l' & left(fn.i,5) <> '-link' then do
-         optarg = substr(fn.i,3)
-         if optarg = '' then do
-           say 'missing library path after' fn.i
-           return 2
-         end
-         fullLibrary = rxpath||'bin'dirsep||optarg
-         lastSlash = lastpos('/',fullLibrary)
-         if lastSlash = 0 then lastSlash = lastpos('\',fullLibrary)
-         libs = libs';'fullLibrary
-         if lastSlash > 0 then libraries = libraries';'left(fullLibrary,lastSlash-1)
-         else libraries = libraries';'fullLibrary
-         modulenumber = modulenumber+1
-       end
-
-       if fn.i = '-linkmap' then do
-         i = i + 1
-         if i > fn.0 then do
-           say 'missing map path after -linkmap'
-           return 2
-         end
-         linkMap = fn.i
-         linkOptionsUsed = 1
-       end
-       else if left(fn.i,8) = '-linkmap' & fn.i <> '-linkmap' then do
-         optarg = substr(fn.i,9)
-         if optarg = '' then do
-           say 'missing map path after' fn.i
-           return 2
-         end
-         linkMap = optarg
-         linkOptionsUsed = 1
-       end
-     end
-   end
-
+	 if left(fn.i,2) = '--'  then fn.i=substr(fn.i,2)
+	 if fn.i = '-args'       then leave
+	 if fn.i = '-help'       then ret = help(nocolor)
+	 if fn.i = '-exec'       then execute=1
+	 if fn.i = '-noexec'     then execute=0
+	 if fn.i = '-native'     then native=1
+	 if fn.i = '-nonative'   then native=0
+	 if fn.i = '-compile'    then compile=1
+	 if fn.i = '-nocompile'  then compile=0
+	 if fn.i = '-version'    then version=1
+	 if fn.i = '-verbose'    then verbose=1
+	 if fn.i = '-verbose0'   then verbose=0
+	 if fn.i = '-verbose1'   then verbose=1
+	 if fn.i = '-verbose2'   then verbose=2
+	 if fn.i = '-verbose3'   then verbose=3
+	 if fn.i = '-verbose4'   then verbose=4
+	 if fn.i = '-color'      then nocolor=0
+	 if fn.i = '-colour'     then nocolor=0
+	 if fn.i = '-nocolor'    then nocolor=1
+	 if fn.i = '-nocolour'   then nocolor=1
+	 if fn.i = '-optimize'   then optimize=1
+	 if fn.i = '-nooptimize' then optimize=0
+	 if fn.i = '-keep'       then keep=1
+	 if fn.i = '-nokeep'     then keep=0
+	 if fn.i = '-nodecimal'  then decimal=0
+	 if fn.i = '-decimal'    then decimal=1
+	 if fn.i = '-import-rxas' then importRxas=1
+	 if fn.i = '-link-keep-source' then do
+           linkStripSource = 0
+           linkOptionsUsed = 1
+	 end
+	 if fn.i = '-link-strip-source' then do
+           linkStripSource = 1
+           linkOptionsUsed = 1
+	 end
+	 if fn.i = '-link-keep-inline' then do
+           linkPreserveInline = 1
+           linkOptionsUsed = 1
+	 end
+	 if fn.i = '-link-strip-inline' then do
+           linkPreserveInline = 0
+           linkOptionsUsed = 1
+	 end
+	 
+	 optarg = ''
+	 if fn.i = '-source' | fn.i = '-s' then do
+           i = i + 1
+           if i > fn.0 then do
+             say 'missing source root after' fn.i
+             return 2
+           end
+           optarg = fn.i
+           sourceRoots = appendSemicolonValue(sourceRoots, optarg)
+	 end
+	 else if left(fn.i,2) = '-s' & fn.i <> '-source' then do
+           optarg = substr(fn.i,3)
+           if optarg = '' then do
+             say 'missing source root after' fn.i
+             return 2
+           end
+           sourceRoots = appendSemicolonValue(sourceRoots, optarg)
+	 end
+	 
+	 if fn.i = '-i' then do
+           i = i + 1
+           if i > fn.0 then do
+             say 'missing binary import root after -i'
+             return 2
+           end
+           optarg = fn.i
+           binaryRoots = appendSemicolonValue(binaryRoots, optarg)
+	 end
+	 else if left(fn.i,2) = '-i' & fn.i <> '-import-rxas' then do
+           optarg = substr(fn.i,3)
+           if optarg = '' then do
+             say 'missing binary import root after' fn.i
+             return 2
+           end
+           binaryRoots = appendSemicolonValue(binaryRoots, optarg)
+	 end
+	 
+	 if fn.i = '-l' then do
+           i = i + 1
+           if i > fn.0 then do
+             say 'missing library path after -l'
+             return 2
+           end
+           optarg = fn.i
+           fullLibrary = rxpath||'bin'dirsep||optarg
+           lastSlash = lastpos('/',fullLibrary)
+           if lastSlash = 0 then lastSlash = lastpos('\',fullLibrary)
+           libs = libs';'fullLibrary
+           if lastSlash > 0 then libraries = libraries';'left(fullLibrary,lastSlash-1)
+           else libraries = libraries';'fullLibrary
+             modulenumber = modulenumber+1
+	   end
+	   else if left(fn.i,2)= '-l' & fn.i <> '-l' & left(fn.i,5) <> '-link' then do
+             optarg = substr(fn.i,3)
+             if optarg = '' then do
+               say 'missing library path after' fn.i
+               return 2
+             end
+             fullLibrary = rxpath||'bin'dirsep||optarg
+             lastSlash = lastpos('/',fullLibrary)
+             if lastSlash = 0 then lastSlash = lastpos('\',fullLibrary)
+             libs = libs';'fullLibrary
+             if lastSlash > 0 then libraries = libraries';'left(fullLibrary,lastSlash-1)
+             else libraries = libraries';'fullLibrary
+               modulenumber = modulenumber+1
+	     end
+	     
+	     if fn.i = '-linkmap' then do
+               i = i + 1
+               if i > fn.0 then do
+		 say 'missing map path after -linkmap'
+		 return 2
+               end
+               linkMap = fn.i
+               linkOptionsUsed = 1
+	     end
+	     else if left(fn.i,8) = '-linkmap' & fn.i <> '-linkmap' then do
+               optarg = substr(fn.i,9)
+               if optarg = '' then do
+		 say 'missing map path after' fn.i
+		 return 2
+               end
+               linkMap = optarg
+               linkOptionsUsed = 1
+	     end
+	   end
+	 end
+	 
+-- parse --args out of the full command line
+ commandline = ''
+ loop fn_i=1 to fn.0
+    commandline = commandline fn.fn_i
+  end
+  parse commandline '-args' cli_args
+  cli_args = '-a' cli_args
+   
    -- standard libs plugin & classlibs included
    libs = libs';'rxpath||'bin'dirsep'classlib'
    libs = libs';'rxpath||'bin'dirsep'rx_treemap'
@@ -253,11 +262,11 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
    declib = ''
    if \decimal then declib = '-p rxvm_db_decimal'
    if verbose>1 then call logo nocolor  
-
+   
    decstat = rxpath'bin/rxvm_mc_decimal_manual.a'
    if \decimal then decstat =  rxpath'bin/rxvm_db_decimal_manual.a'
    
-   if verbose>2 then     do
+   if verbose>2 then do
      call banner nocolor
      say 'INVOCATION OPTIONS'
      say 'Options in effect:'
@@ -286,8 +295,7 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
        
 if version then call logo nocolor
 
-    
-  if verbose>1 then say esc||ANSI_GREEN'using relpath   :'esc||ANSI_RESET rxpath
+if verbose>1 then say esc||ANSI_GREEN'using relpath   :'esc||ANSI_RESET rxpath
 
 lpath = libraries
 
@@ -330,15 +338,22 @@ do i=1 to words(filenames)
   /* if all is well, we now have a .rexx ready for compilation    */  
     if lower(right(filename,5))='.rexx' then filename=substr(filename,1,length(filename)-5)   /* if file has .rexx extension, chop it off */
   /* print the file when verbose ibm style output is requested */
-    if verbose>3 then do
-      call printFileToSTDout filename'.rexx', nocolor
-    end
   compat_flags = ''
-  /* TODO the next part fixes the name to have a .rexx filename extension */
-  if \hasSourceHeader(filename'.rexx') then do
+
+  if \hasSourceHeader(filename'.crexx') then do
     compat_flags = ' --level levelb --import rxfnsb'
     if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
   end
+  if \hasSourceHeader(filename'.bcrexx') then do
+    compat_flags = ' --level levelb --import rxfnsb'
+    if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
+  end
+  # note that the next commented out sequence currently fails tests 1074 & 1076
+  -- if \hasSourceHeader(filename'.ccrexx') then do
+  --   compat_flags = ' --level levelc --import rxfnsb'
+  --   if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
+  -- end
+
   optiflag=''; if optimize=0 then optiflag= '-n'
   rxc_flags = ''
   if sourceRoots <> '' then rxc_flags = rxc_flags' -s 'sourceRoots
@@ -347,9 +362,16 @@ do i=1 to words(filenames)
   if binaryPath <> '' then rxc_flags = rxc_flags' -i 'binaryPath
   if importRxas then rxc_flags = rxc_flags' --import-rxas'
 
-  rxas_filename = chop_suffix(filename) /* temp fix for two-part filename files */
+  binfile = chop_suffix(filename)
+  binfiles = binfiles binfile
 
-  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags '-o' rxas_filename filename
+  if verbose>3 then do
+    call printFileToSTDout filename, nocolor
+  end
+
+  -- rxas_filename = chop_suffix(filename) /* temp fix for two-part filename files */
+
+  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags '-o' binfile filename
   if verbose>1 then
     do
       if compile then say esc||ANSI_GREEN'rxc command     :' rxcmd
@@ -360,7 +382,7 @@ do i=1 to words(filenames)
     end
   rxcOut = .string[]
   rxcErr = .string[]
-  if compile then address cmd rxcmd output rxcOut error rxcErr /* Note that cmd has no meaning currently */
+  if compile then address cmd rxcmd output rxcOut error rxcErr 
   else RC = 0
   do j = 1 to rxcOut.0
     say '> rxc output:' rxcOut.j
@@ -376,13 +398,13 @@ do i=1 to words(filenames)
   if RC>0 then exit RC
 
 
-  binfile = chop_suffix(filename)
-  binfiles = binfiles binfile
+  -- binfile = chop_suffix(filename)
+  -- binfiles = binfiles binfile
 
   if compile then do
 /* print the file when verbose ibm style output is requested */
     if verbose>3 then do
-      call printFileToSTDout filename'.rxas', nocolor
+      call printFileToSTDout binfile'.rxas', nocolor
     end
 
     cleanupFiles = appendWordUnique(cleanupFiles, binfile'.rxas')
@@ -507,7 +529,7 @@ do i=1 to words(filenames)
     end
     end
   else do
-    ex_command = rxpath'bin'dirsep'rxvme' declib binfiles modules
+    ex_command = rxpath'bin'dirsep'rxvme' declib binfiles modules cli_args
 
     if verbose>1 then do
       if execute then say 'crexx executes:' ex_command
@@ -682,10 +704,16 @@ loop i=1 to words(filenames)
 end
 return 0
 
+/*
+ * chop_suffix gets rid of file extensions
+ * and changes dots to underscores
+ * if they are not the separator
+ */
 chop_suffix: procedure = .string
 arg fn = .string
--- we want to use parse when it is available
+number_of_dots = countstr('.',fn)
 lp=lastpos('.',fn)
+if number_of_dots > 1 then fn=translate(fn,'_','.')
 if lp >0 then
   do
     return left(fn,lp-1)
@@ -741,3 +769,68 @@ arg filePath = .string
 if testfile(filePath) = 0 then return 1
 return 0
   
+/* ---------------------------------------------------------------------
+* ISRXPP procedure checks for type of file
+* Returns:
+*  -1 = file could not be loaded / empty
+*   0 = not recognised as REXX/RXPP
+*   1 = RXPP/preprocessor source
+*   2 = likely plain REXX source
+* ---------------------------------------------------------------------
+*/
+isrxpp: procedure=.int
+  arg file=.string
+
+  /* Load the whole source as text. This is cheap enough for source files and avoids line-by-line I/O overhead. */
+  code=loadText(file)
+
+  /* Empty or unreadable files cannot be classified. */
+  if length(code)<1 then return -1
+
+  code=upper(code)  /* Case-insensitive scan. */
+
+  /* Direct RXPP directives. These are strong evidence that the file must pass through the preprocessor. */
+  if pos('##IF',code)    >0 then return 1
+  if pos('##CFLAGS',code)>0 then return 1
+  if pos('##ELSE',code)  >0 then return 1
+  if pos('##SET',code)   >0 then return 1
+
+  /* Generic RXPP/macro marker scan.
+     A plain '##' is not enough by itself because it may occur in comments or
+     strings. verifyMacCall() performs a cheap follow-up check. */
+  ppi=pos('##',code)
+  do while ppi>0
+     if verifyMacCall(code,ppi)=1 then return 1
+     ppi=pos('##',code,ppi+2)
+  end
+
+  /* Plain REXX smoke test.
+     These checks do not prove correctness; they only avoid classifying obvious
+     REXX programs as unknown when no RXPP marker was found. */
+  if pos('SAY ',code)    >0 then return 2
+  if pos('SUBSTR(',code) >0 then return 2
+  if pos('POS(',code)    >0 then return 2
+  if pos('LEFT(',code)   >0 then return 2
+  if pos('RIGHT(',code)  >0 then return 2
+  if pos('IF ',code)     >0 then return 2
+  if pos('CALL ',code)   >0 then return 2
+return 0
+/* ---------------------------------------------------------------------
+* Checks whether a found '##' looks like an RXPP macro/directive start.
+* Current heuristic:
+*  - '## ' is ignored.
+*  - '##' followed by A-Z or '_' is treated as RXPP.
+* ---------------------------------------------------------------------
+*/
+verifyMacCall: procedure=.int
+  arg expose code=.string, startpos=.int
+
+  /* Character immediately after '##'. */
+  firstchar=substr(code,startpos+2,1)
+
+  /* Ignore blank after ##. */
+  if firstchar =' ' then return 0
+
+  /* RXPP directives/macros normally start with a letter or underscore. */
+  if pos(firstchar, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_') > 0 then return 1
+return 0

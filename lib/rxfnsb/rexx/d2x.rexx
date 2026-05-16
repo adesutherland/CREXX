@@ -72,7 +72,7 @@ d2x: procedure = .string
         if slen>0 then do
            if sign>0 then xstr=right(xstr,slen,'F')
              else xstr=right(xstr,slen,'0')
-        end
+            end
         return xstr
      end
   end
