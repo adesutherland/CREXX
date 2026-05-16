@@ -704,10 +704,16 @@ loop i=1 to words(filenames)
 end
 return 0
 
+/*
+ * chop_suffix gets rid of file extensions
+ * and changes dots to underscores
+ * if they are not the separator
+ */
 chop_suffix: procedure = .string
 arg fn = .string
--- we want to use parse when it is available
+number_of_dots = countstr('.',fn)
 lp=lastpos('.',fn)
+if number_of_dots > 1 then fn=translate(fn,'_','.')
 if lp >0 then
   do
     return left(fn,lp-1)
