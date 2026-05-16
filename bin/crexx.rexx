@@ -338,9 +338,6 @@ do i=1 to words(filenames)
   /* if all is well, we now have a .rexx ready for compilation    */  
     if lower(right(filename,5))='.rexx' then filename=substr(filename,1,length(filename)-5)   /* if file has .rexx extension, chop it off */
   /* print the file when verbose ibm style output is requested */
-    if verbose>3 then do
-      call printFileToSTDout filename'.rexx', nocolor
-    end
   compat_flags = ''
 
   if \hasSourceHeader(filename'.crexx') then do
@@ -365,9 +362,16 @@ do i=1 to words(filenames)
   if binaryPath <> '' then rxc_flags = rxc_flags' -i 'binaryPath
   if importRxas then rxc_flags = rxc_flags' --import-rxas'
 
-  rxas_filename = chop_suffix(filename) /* temp fix for two-part filename files */
+  binfile = chop_suffix(filename)
+  binfiles = binfiles binfile
 
-  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags '-o' rxas_filename filename
+  if verbose>3 then do
+    call printFileToSTDout filename, nocolor
+  end
+
+  -- rxas_filename = chop_suffix(filename) /* temp fix for two-part filename files */
+
+  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags '-o' binfile filename
   if verbose>1 then
     do
       if compile then say esc||ANSI_GREEN'rxc command     :' rxcmd
@@ -394,13 +398,13 @@ do i=1 to words(filenames)
   if RC>0 then exit RC
 
 
-  binfile = chop_suffix(filename)
-  binfiles = binfiles binfile
+  -- binfile = chop_suffix(filename)
+  -- binfiles = binfiles binfile
 
   if compile then do
 /* print the file when verbose ibm style output is requested */
     if verbose>3 then do
-      call printFileToSTDout filename'.rxas', nocolor
+      call printFileToSTDout binfile'.rxas', nocolor
     end
 
     cleanupFiles = appendWordUnique(cleanupFiles, binfile'.rxas')
