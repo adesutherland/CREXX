@@ -162,7 +162,7 @@ end
 if source_kind = "" then do
    token_ix = 2
    if case_mode \= "" then token_ix = token_ix + 1
-   if log_level > 0 then token_ix = token_ix + 1
+   if log_level  > 0  then token_ix = token_ix + 1
    if trace_enabled > 0 then token_ix = token_ix + 1
    if _wanttrim > 0 then token_ix = token_ix + 1
    if _into \= "" then token_ix = token_ix + 2
