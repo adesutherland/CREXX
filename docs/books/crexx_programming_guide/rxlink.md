@@ -100,7 +100,7 @@ The most common pattern is:
 
 ### Minimal Application Control File
 
-```text
+```bash
 * app.ctl
 INPUT build/app.rxbin
 INPUT build/library.rxbin
@@ -121,7 +121,7 @@ rxlink -c app.ctl
 
 ### Advanced Include Example
 
-```text
+```bash
 # app_with_optional_provider.ctl
 INPUT build/app.rxbin
 INPUT build/providers.rxbin
@@ -137,7 +137,7 @@ the normal static reachability analysis can see.
 
 ### Omit One Provider Variant
 
-```text
+```bash
 * app_choose_provider.ctl
 INPUT build/app.rxbin
 INPUT build/provider_a.rxbin
@@ -152,7 +152,7 @@ the choice explicitly at packaging time.
 
 ### Add A Map File
 
-```text
+```bash
 INPUT build/app.rxbin
 INPUT build/library.rxbin
 ROOT app
@@ -170,13 +170,13 @@ metadata is intended for library artifacts consumed by `rxc`; it is not needed
 after a final linked image has been built. Use `rxlink -i` to preserve it for
 diagnostic or tooling builds. The equivalent control-file form is:
 
-```text
+```bash
 PRESERVE INLINE
 ```
 
 `rxlink -s` strips source/file metadata from the linked output. The equivalent control-file form is:
 
-```text
+```bash
 STRIP SOURCE
 ```
 
@@ -199,7 +199,7 @@ rxlink -s -o app_small linked_root.rxbin helpers.rxbin
 
 The equivalent control-file driven form is:
 
-```text
+```bash
 INPUT linked_root.rxbin
 INPUT helpers.rxbin
 ROOT linked_root

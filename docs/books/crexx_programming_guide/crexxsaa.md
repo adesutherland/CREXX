@@ -162,7 +162,7 @@ entries. `--location` alone prints only the resolved cache directory.
 
 Example list output:
 
-```text
+```bash
 cache: /Users/adrian/Library/Caches/crexx/crexxsaa
 source: /path/to/profile.the
   bucket: 0379ad70148bf7ca
@@ -176,7 +176,7 @@ source: /path/to/profile.the
 
 The cache schema is versioned. Current entries live under `v1`:
 
-```text
+```bash
 <cache-root>/v1/<source-key>/
   manifest
   <object-hash>.rxbin
@@ -190,7 +190,7 @@ includes the source content hash and compiler/library configuration hash.
 
 Manifest fields:
 
-```text
+```bash
 version=1
 source_path=/absolute/or/supplied/source/path
 source_hash=<16-hex-content-hash>

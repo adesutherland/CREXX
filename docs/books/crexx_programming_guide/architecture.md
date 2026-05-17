@@ -3,7 +3,7 @@
 \crexx{} is a compiler toolchain and runtime rather than a single monolithic
 interpreter. The main flow is:
 
-```text
+```bash
 .rexx source -> rxc -> .rxas assembly -> rxas -> .rxbin bytecode -> rxvm
 ```
 

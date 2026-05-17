@@ -113,3 +113,14 @@ This keeps the direct interpreter path fast while still producing compact native
 Headerless top-level scripts are still compiled with `--level levelb --import rxfnsb`.
 
 ## Examples
+
+### Just run it
+
+The simplest way to run a \crexx{} program is to just specify its source file as input to the `crexx` program. It will excute the compiler, the assembler and start it with the standard threaded runtime interpreter. All included libraries and plugins are linked automatically.
+
+```rexx <!--crexx-1.crexx-->
+say 'hello crexx!'
+say 'today''s date is:' date()
+```
+
+<!--splice--crexx-1.crexx-->
