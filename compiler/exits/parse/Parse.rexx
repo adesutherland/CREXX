@@ -64,12 +64,12 @@ pre_process: method = .exitplan
   _template_kindtab = ""
   _template_texttab = ""
   _template = ""
-  start_of_template=.int
-  parmtype=""
+  token_ix=.int
+  source_kind=""
   source_found=0
-  uplow=.string
-  wantlog=0
-  wanttrace=0
+  case_mode=.string
+  log_level=0
+  trace_enabled=0
   _wanttrim=0
   _into=''
  /* -------------------------------------------------------------------------------------------------------------------
@@ -77,56 +77,56 @@ pre_process: method = .exitplan
   * UPPER, LOWER, LOG, TRACE, TRIM, INTO, VALUE, VAR, ARG.
   * -------------------------------------------------------------------------------------------------------------------
   */
-  do start_of_template=2 to tokens.0
-     ti   = tokens[start_of_template]
+  do token_ix=2 to tokens.0
+     ti   = tokens[token_ix]
      type = strip(ti.get_type())
      text = strip(ti.get_text())
      utext=upper(text)
      if isParseKeywordToken(ti, "UPPER") | isParseKeywordToken(ti, "LOWER") then do
-        uplow=utext
-        call compile_plan.add_keyword(start_of_template, text, "parse_option", "parse")
+        case_mode=utext
+        call compile_plan.add_keyword(token_ix, text, "parse_option", "parse")
      end
      else if isParseKeywordToken(ti, "LOG") then do
-        wantlog=1
-        call compile_plan.add_keyword(start_of_template, text, "parse_option", "parse")
+        log_level=1
+        call compile_plan.add_keyword(token_ix, text, "parse_option", "parse")
      end
      else if isParseKeywordToken(ti, "TRACE") then do
-        wanttrace=1
-        call compile_plan.add_keyword(start_of_template, text, "parse_option", "parse")
+        trace_enabled=1
+        call compile_plan.add_keyword(token_ix, text, "parse_option", "parse")
      end
      else if isParseKeywordToken(ti, "TRIM") then do
         _wanttrim=1
-        call compile_plan.add_keyword(start_of_template, text, "parse_option", "parse")
+        call compile_plan.add_keyword(token_ix, text, "parse_option", "parse")
      end
      else if isParseKeywordToken(ti, "INTO") then do
-        call compile_plan.add_keyword(start_of_template, text, "parse_option", "parse")
-        if start_of_template + 1 > tokens.0 then do
-           call compile_plan.set_error(start_of_template, "PARSE INTO requires a target variable", "MISSING_ARGUMENTS")
+        call compile_plan.add_keyword(token_ix, text, "parse_option", "parse")
+        if token_ix + 1 > tokens.0 then do
+           call compile_plan.set_error(token_ix, "PARSE INTO requires a target variable", "MISSING_ARGUMENTS")
            return compile_plan
         end
-        ti = tokens[start_of_template+1]
+        ti = tokens[token_ix+1]
         if isParseIdentifierToken(ti)=0 then do
-           call compile_plan.set_error(start_of_template + 1, "PARSE INTO target must be an identifier", "INVALID_ARGUMENTS")
+           call compile_plan.set_error(token_ix + 1, "PARSE INTO target must be an identifier", "INVALID_ARGUMENTS")
            return compile_plan
         end
-        start_of_template = start_of_template + 1
+        token_ix = token_ix + 1
         call compile_plan.add_binding("var", ti.get_text(), "", "", 0, "parse_into", "")
         _into = ti.get_text()
         iterate
      end
      else if isParseKeywordToken(ti, "VALUE") | isParseKeywordToken(ti, "VAR") | isParseKeywordToken(ti, "ARG") then do
-        parmtype = utext
-        call compile_plan.add_keyword(start_of_template, text, "parse_source", "parse")
-        if parmtype = "ARG" then do
+        source_kind = utext
+        call compile_plan.add_keyword(token_ix, text, "parse_source", "parse")
+        if source_kind = "ARG" then do
            source_found = 1
            leave
         end
      end
-     else if isParseIdentifierToken(ti) & (parmtype='VAR' | parmtype='VALUE') then do
+     else if isParseIdentifierToken(ti) & (source_kind='VAR' | source_kind='VALUE') then do
         source_found = 1
         leave
      end
-     else if type='string_literal' & (parmtype='VAR' | parmtype='VALUE') then do
+     else if type='string_literal' & (source_kind='VAR' | source_kind='VALUE') then do
         source_found = 1
         leave
      end
@@ -140,8 +140,8 @@ pre_process: method = .exitplan
  * identify a corresponding source expression, compilation fails.
  * -------------------------------------------------------------------------------------------------------------------
  */
-if parmtype \= "" & source_found = 0 then do
-   call compile_plan.set_error(1, "PARSE " || parmtype || " requires a source expression", "MISSING_ARGUMENTS")
+if source_kind \= "" & source_found = 0 then do
+   call compile_plan.set_error(1, "PARSE " || source_kind || " requires a source expression", "MISSING_ARGUMENTS")
    return compile_plan
 end
 
@@ -159,20 +159,20 @@ end
  *   INTO target    (occupies two tokens)
  * -------------------------------------------------------------------------------------------------------------------
  */
-if parmtype = "" then do
-   start_of_template = 2
-   if uplow \= "" then start_of_template = start_of_template + 1
-   if wantlog > 0 then start_of_template = start_of_template + 1
-   if wanttrace > 0 then start_of_template = start_of_template + 1
-   if _wanttrim > 0 then start_of_template = start_of_template + 1
-   if _into \= "" then start_of_template = start_of_template + 2
+if source_kind = "" then do
+   token_ix = 2
+   if case_mode \= "" then token_ix = token_ix + 1
+   if log_level > 0 then token_ix = token_ix + 1
+   if trace_enabled > 0 then token_ix = token_ix + 1
+   if _wanttrim > 0 then token_ix = token_ix + 1
+   if _into \= "" then token_ix = token_ix + 2
 end
 
 /* -------------------------------------------------------------------------------------------------------------------
  * Ensure at least one template token remains after removing leading options.
  * -------------------------------------------------------------------------------------------------------------------
  */
-if start_of_template > tokens.0 then do
+if token_ix > tokens.0 then do
    call compile_plan.set_error(1, "PARSE requires arguments", "MISSING_ARGUMENTS")
    return compile_plan
 end
@@ -181,7 +181,7 @@ end
  * PARSE ARG requires at least one template token following ARG.
  * -------------------------------------------------------------------------------------------------------------------
  */
-if parmtype = "ARG" & start_of_template + 1 > tokens.0 then do
+if source_kind = "ARG" & token_ix + 1 > tokens.0 then do
    call compile_plan.set_error(1, "PARSE requires arguments", "MISSING_ARGUMENTS")
    return compile_plan
 end
@@ -193,77 +193,86 @@ end
  * TRACE elevates the log level to 9.
  * -------------------------------------------------------------------------------------------------------------------
  */
-if wanttrace > 0 then wantlog = 9
+if trace_enabled > 0 then log_level = 9
 
 /* -------------------------------------------------------------------------------------------------------------------
  * Initialize working structures used to compile the PARSE template:
  *
- *   out               Number of compiled plan entries.
+ *   plan_count               Number of compiled plan entries.
  *   _template         Reconstructed template text.
  *   pkind[]           Numeric token kind codes.
  *   ptext[]           Associated token text.
- *   template_end      Last token considered part of the template before
+ *   token_end      Last token considered part of the template before
  *                     stripping trailing options such as INTO and TRIM.
  * -------------------------------------------------------------------------------------------------------------------
  */
-out = 0
+plan_count = 0
 _template = ''
 pkind = .int[]
 ptext = .string[]
-template_end = tokens.0
+token_end = tokens.0
 
 /* -------------------------------------------------------------------------------------------------------------------
  * Scan trailing PARSE options: INTO target and TRIM.
- * These may appear after the template and must be removed from template_end.
+ * These may appear after the template and must be removed from token_end.
  * -------------------------------------------------------------------------------------------------------------------
  */
-  do while template_end >= start_of_template + 1
-     ti   = tokens[template_end]
+  do while token_end >= token_ix + 1
+     ti   = tokens[token_end]
      type = strip(ti.get_type())
      text = strip(ti.get_text())
      utext=upper(text)
 
-     if isParseIdentifierToken(ti) & _into='' & template_end > start_of_template + 1 then do
-        tj = tokens[template_end - 1]
+     if isParseIdentifierToken(ti) & _into='' & token_end > token_ix + 1 then do
+        tj = tokens[token_end - 1]
         if isParseKeywordToken(tj, "INTO") then do
-           call compile_plan.add_keyword(template_end - 1, tj.get_text(), "parse_option", "parse")
+           call compile_plan.add_keyword(token_end - 1, tj.get_text(), "parse_option", "parse")
            call compile_plan.add_binding("var", text, "", "", 0, "parse_into", "")
            _into=text
-           template_end = template_end - 2
+           token_end = token_end - 2
            iterate
         end
      end
 
      if isParseKeywordToken(ti, "TRIM") & _wanttrim=0 then do
-        call compile_plan.add_keyword(template_end, text, "parse_option", "parse")
+        call compile_plan.add_keyword(token_end, text, "parse_option", "parse")
         _wanttrim=1
-        template_end = template_end - 1
+        token_end = token_end - 1
         iterate
      end
 
      leave
   end
-##  scan trailing PARSE options
-
-   valstart=start_of_template
-   split = find_parse_value_split(tokens, start_of_template, template_end)
+/* -------------------------------------------------------------------------------------------------------------------
+ * token_ix now points at the source expression for PARSE VALUE / VAR.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+   source_start_ix=token_ix
+   split = find_parse_value_split(tokens, token_ix, token_end)
 
    if split = 0 then do
-      call compile_plan.set_error(1, ,
-           "PARSE VALUE requires source expression and template", ,
-           "MISSING_ARGUMENTS")
+      call compile_plan.set_error(1, "PARSE VALUE requires source expression and template", "MISSING_ARGUMENTS")
       return compile_plan
    end
-   save=start_of_template
-   varRange=split-1
-   valClause=''
-   do i=valstart to varRange
-      ti   = tokens[i]
-      type = strip(ti.get_type())
-      text = strip(ti.get_text())
-      valClause=valClause||'{'i'}'
+   /* -------------------------------------------------------------------------------------------------------------------
+    * Build a token placeholder string for the source expression.
+    *
+    * Each token is represented as:
+    *
+    *   {n}
+    *
+    * where n is the token index in TOKENS[].
+    *
+    * The replacement engine resolves these placeholders to the original source
+    * text during code generation.
+    * -------------------------------------------------------------------------------------------------------------------
+    */
+   source_end_ix=split-1
+   source_expr=''
+   do i=source_start_ix to source_end_ix
+      source_expr=source_expr||'{'i'}'    /* collect all token indexes as {i}, this will be replaced later by the token name */
    end
-   start_of_template=split
+   token_ix=split
 
 /* -------------------------------------------------------------------------------------------------------------------
  * Scan the PARSE template tokens and build the executable parse plan.
@@ -294,61 +303,59 @@ template_end = tokens.0
  * returns the current exit plan.
  * -------------------------------------------------------------------------------------------------------------------
  */
-  i = start_of_template
-  haswith=0
+  i = token_ix-1
+  with_seen=0
   prevkind = 0
-
-  do while i <= template_end
+  do while i < token_end
+     i=i+1
      ti   = tokens[i]
      type = strip(ti.get_type())
      text = strip(ti.get_text())
      tlen=length(text)
 
-     if haswith=0 & isParseKeywordToken(ti, "WITH") then do
-        haswith=1
-        i = i + 1
+     if with_seen=0 & isParseKeywordToken(ti, "WITH") then do
+        with_seen=1
         iterate
      end
-
+/* Reconstruct the original template text for diagnostics and parseExec() logging. */
      _template = _template || " " || text
 
-     if type = "bracket" then do
-        i = i + 1
+     if type = "bracket" then iterate
+
+/* Decimal literals following an identifier are treated as part of a stem tail.
+ *   Example token sequence:
+ *     stem . 123 becomes: stem.123
+ */
+      if type = "decimal_literal"  then do      /* is a token which belongs to the previous identifier, it is a tail of a stem in the form .number */
+        ptext[plan_count] = ptext[plan_count]||text
         iterate
      end
 
-     if type = "decimal_literal"  then do      /* is a token which belongs to the previous identifier, it is a tail of a stem in the form .number */
-        ptext[out] = ptext[out]||text
-        i = i + 1
-        iterate
-     end
      if type = "identifier" & substr(text,1,1)='.' & tlen>1  then do   /* is a token which belongs to the previous identifier, it is a tail of a stem in the form .variable */
-        ptext[out] = ptext[out]||text                                  /* a single . is not part of a stem it is template drop identifier */
-        i = i + 1
+        ptext[plan_count] = ptext[plan_count]||text                                  /* a single . is not part of a stem it is template drop identifier */
         iterate
      end
      if type = "int_literal" then do
-        out = out + 1
-        pkind[out] = 3
-        ptext[out] = text
-        prevkind = 3
-        i = i + 1
+        plan_count=append_plan_token(plan_count, pkind, 3, ptext,text,prevkind)
+      /*                       +1   pkind=3  ptext=text */
         iterate
      end
-
+/* Relative movement operator.
+ *   +n  Move forward n characters.
+ *   -n  Move backward n characters.
+ * The following integer literal is consumed as part of this template item.
+ */
      if type = "operator" then do
         if text = "+" | text = "-" then do
-           if i + 1 <= tokens.0 then do
+           if i + 1 <= tokens_end then do
               tj    = tokens[i+1]
               ntype = strip(tj.get_type())
               ntext = strip(tj.get_text())
               if ntype = "int_literal" then do
-                 out = out + 1
-                 if text = "+" then pkind[out] = 4
-                 else pkind[out] = 5
-                 ptext[out] = ntext
-                 prevkind = pkind[out]
-                 i = i + 2
+                 if text = "+" then kind = 4
+                 else kind = 5
+                 plan_count = append_plan_token(plan_count, pkind, kind, ptext, ntext, prevkind)
+                 i = i + 1    /* actually +2, but next i+1 after iterate */
                  iterate
               end
            end
@@ -358,54 +365,38 @@ template_end = tokens.0
      end
 
      if type = "string_literal" then do
-        out = out + 1
-        pkind[out] = 2
-        ptext[out] = substr(text, 2, length(text) - 2)
-        prevkind = 2
-        i = i + 1
+        plan_count=append_plan_token(plan_count, pkind, 2, ptext,substr(text, 2, length(text) - 2),prevkind)
+     /*                       +1   pkind =2   ptext=substr(...)  */
         iterate
      end
 
      if type = "identifier" then do
-        if out = 0 then do
-           out = out + 1
-           pkind[out] = 3
-           ptext[out] = "1"
-           prevkind = 3
+        if plan_count = 0 then do
+           plan_count=append_plan_token(plan_count, pkind, 3, ptext,"1",prevkind)
+        /*                       +1   pkind =3  ptext=1   */
         end
         else if prevkind = 1 then do
-           out = out + 1
-           pkind[out] = 6
-           ptext[out] = "{implicit}"
-           prevkind = 6
+           plan_count=append_plan_token(plan_count, pkind, 6, ptext,"{implicit}",prevkind)
+     /*                          +1   pkind =6  ptext="{implicit}"   */
         end
-        out = out + 1
-        pkind[out] = 1
-        ptext[out] = text
+        plan_count=append_plan_token(plan_count, pkind, 1, ptext,text,prevkind)
+     /*                      +1   pkind =1  ptext=text   */
+
         call compile_plan.add_binding("var", text, "", "", 0, "parse_target", "")
-        prevkind = 1
-        i = i + 1
         iterate
      end
 
      if type = "other" & text = "." then do
-        if out = 0 then do
-           out = out + 1
-           pkind[out] = 3
-           ptext[out] = "1"
-           prevkind = 3
+        if plan_count = 0 then do
+           plan_count=append_plan_token(plan_count, pkind, 3, ptext,"1",prevkind)
+         /*                      +1   pkind =3  ptext=text   */
         end
         else if prevkind = 1 then do
-           out = out + 1
-           pkind[out] = 6
-           ptext[out] = "{implicit}"
-           prevkind = 6
+          plan_count=append_plan_token(plan_count, pkind, 6, ptext,"{implicit}",prevkind)
+        /*                      +1   pkind =6  ptext="{implicit}"   */
         end
-        out = out + 1
-        pkind[out] = 1
-        ptext[out] = "."
-        prevkind = 1
-        i = i + 1
+       plan_count=append_plan_token(plan_count, pkind, 1, ptext,".",prevkind)
+      /*                      +1   pkind =1  ptext="."   */
         iterate
      end
 
@@ -413,33 +404,42 @@ template_end = tokens.0
      return compile_plan
   end
 
-  plan = compile_parse_plan(pkind, ptext, out)
+  plan = compile_parse_plan(pkind, ptext, plan_count)
   if substr(plan,1,8)=">>>ERROR" then do
      call compile_plan.set_error(1, substr(plan,9))
      return compile_plan
   end
-
+/* -------------------------------------------------------------------------------------------------------------------
+ * Serialize the compiled template arrays into blank-delimited strings.
+ *
+ * These serialized representations are stored in instance variables so that
+ * PROCESS() can later reconstruct the PARSE target list and generate the
+ * final assignment statements:
+ *
+ *   _template_kindtab  "3 1 6 1 ..."
+ *   _template_texttab  "1 name {implicit} surname ..."
+ *
+ * Only entries whose kind is 1 (PARSE targets) result in assignments, but the
+ * full sequence is preserved so PROCESS() can maintain correct result indexing.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
   _template_kindtab=""
   _template_texttab=""
-  do i = 1 to out
+  do i = 1 to plan_count
      _template_kindtab = _template_kindtab' 'pkind[i]
      if strip(ptext[i])='' then ptext[i]='?'
      _template_texttab = _template_texttab' 'ptext[i]
   end
 
-  ti = start_of_template
   _replacement=''
-  if parmtype = "ARG" then parse_string = build_parse_arg_source_expr()
-  else do
-     tj = tokens[ti]
-     parse_string = strip(tj.get_text())
-     parse_string =valClause
-   end
+  if source_kind = "ARG" then parse_string = build_parse_arg_source_expr()
+  else parse_string =source_expr
+
   if _into='' then _into='_parseResult'
-  if uplow='UPPER' then _replacement = _replacement"; _source=upper("parse_string")"
-  else if uplow='LOWER' then _replacement = _replacement"; _source=lower("parse_string")"
+  if case_mode='UPPER' then _replacement = _replacement"; _source=upper("parse_string")"
+  else if case_mode='LOWER' then _replacement = _replacement"; _source=lower("parse_string")"
   else _replacement = _replacement"; _source="parse_string
-  _replacement = _replacement || '; ' || _into || '=parseExec(_source,' || quote_rexx_string(plan) || ',' || quote_rexx_string(_template) || ',' || wantlog || ')'
+  _replacement = _replacement || '; ' || _into || '=parseExec(_source,' || quote_rexx_string(plan) || ',' || quote_rexx_string(_template) || ',' || log_level || ')'
 return compile_plan
 
 /* -------------------------------------------------------------------------------------------------------------------
@@ -496,16 +496,16 @@ process: method = .exitresult
     j = 0
     wrds = words(_template_kindtab)
     do i = 1 to wrds
-        if word(_template_kindtab, i) \= "1" then iterate
-        j = j + 1
-        var = word(_template_texttab, i)
-        if var='.' then iterate
-        if isVar(var)=0 then do
-            call result.set_error(1, "PARSE invalid variable name=" || var)
-            return result
-        end
-        if _wanttrim=0 then replacement = replacement '; 'var|| '='_into'[' || j || ']'
-        else replacement = replacement '; 'var|| '=strip('_into'[' || j || '])'
+       if word(_template_kindtab, i) \= "1" then iterate
+       j = j + 1
+       var = word(_template_texttab, i)
+       if var='.' then iterate
+       if isVar(var)=0 then do
+          call result.set_error(1, "PARSE invalid variable name=" || var)
+          return result
+       end
+       if _wanttrim=0 then replacement = replacement '; 'var|| '='_into'[' || j || ']'
+       else replacement = replacement '; 'var|| '=strip('_into'[' || j || '])'
     end
     call result.set_status("REPLACE")
     call result.add_replacement_line(replacement)
@@ -548,7 +548,7 @@ process: method = .exitresult
  * Parameters:
  *   pkind  Array containing token kind codes.
  *   ptext  Array containing token text.
- *   out    Number of populated entries in both arrays.
+ *   plan_count    Number of populated entries in both arrays.
  *
  * Returns:
  *   Serialized plan string.
@@ -560,10 +560,10 @@ process: method = .exitresult
  * -------------------------------------------------------------------------------------------------------------------
  */
 compile_parse_plan: procedure = .string
-  arg pkind=.int[], ptext=.string[], out=.int
+  arg pkind=.int[], ptext=.string[], plan_count=.int
 
   planStr = ""
-  do i = 1 to out
+  do i = 1 to plan_count
      k = pkind[i]
      t = ptext[i]
      if k \= 1 & k \= 2 & k \= 3 & k \= 4 & k \= 5 & k \= 6 then do
@@ -739,6 +739,9 @@ return 0
  * - Therefore: PARSE VALUE a b c  => source=a, template=b c
  * - To use a multi-token source expression, code WITH:
  *   PARSE VALUE a b WITH c        => source=a b, template=c
+ *
+ * Tokens such as ".tail" or ".123" are continuation fragments of a compound
+ * variable and do not terminate the source expression.
  * -------------------------------------------------------------------------------------------------------------------
  */
 find_parse_value_split: procedure = .int
@@ -777,3 +780,36 @@ find_parse_value_split: procedure = .int
      seen_expr = 1
   end
 return 0
+/* -------------------------------------------------------------------------------------------------------------------
+ * Append one entry to the compiled PARSE template arrays.
+ *
+ * Parameters:
+ *   kind  Numeric token kind code.
+ *   text  Associated token text.
+ *
+ * Exposed Variables:
+ *   pkind[]   Array of token kind codes.
+ *   ptext[]   Array of token text values.
+ *   plan_count       Number of populated entries.
+ *   prevkind  Kind code of the last appended entry.
+ *
+ * Side Effects:
+ *   - Increments plan_count.
+ *   - Stores KIND and TEXT in PKIND[] and PTEXT[].
+ *   - Updates PREVKIND.
+ *
+ * Example:
+ *   call append_plan_token(3, "1")
+ *   call append_plan_token(1, "name")
+ *
+ * Returns:
+ *   Updated plan_count value.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+append_plan_token: procedure=.int
+  arg plan_count=.int, expose pkind=.int[], kind=.int,expose ptext=.string[],text=.string,expose prevkind=.int
+  plan_count = plan_count + 1
+  pkind[plan_count] = kind
+  ptext[plan_count] = text
+  prevkind   = kind
+return plan_count
