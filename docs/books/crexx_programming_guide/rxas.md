@@ -41,7 +41,7 @@ When the command line argument -h is specified the options are shown:
 \fontspec{IBM Plex Mono}
 \begin{shaded}
   \small
-  \obeylines \splice{rxas -h | sed "s/&/\and/g"}
+  \obeylines \splice{rxas -h | | sed 's/\&/\\\&/g'}
  \end{shaded}
  \fontspec{TeX Gyre Pagella}
 
