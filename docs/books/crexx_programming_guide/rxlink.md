@@ -7,7 +7,7 @@
 \fontspec{IBM Plex Mono}
 \begin{shaded}
   \small
-  \obeylines \splice{rxlink -h | sed "s/&/\and/g"}
+  \obeylines \splice{rxlink -h | sed 's/\&/\\\&/g'}
  \end{shaded}
  \fontspec{TeX Gyre Pagella}
 
