@@ -20,6 +20,7 @@ set(CLSS
   TreeSetIterator
   Os
   Qfind
+  Scanlex
 )
 
 set(CLSBINS)

@@ -18,6 +18,8 @@ set(REXXBINS
   testStack
   ts_TreeMap
   testQfind
+  testTokenise
+  testJSON
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)

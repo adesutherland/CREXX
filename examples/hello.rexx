@@ -1,5 +1,11 @@
 /* Minimal CREXX Release 1 beta 1 example. */
 options levelb
+import rxfnsb
+mystem =.stem()
+ii=2
+jj=15
+mystem.ii.jj=4711
+say mystem.2.15
 
 say "hello CREXX world!"
 return 0
