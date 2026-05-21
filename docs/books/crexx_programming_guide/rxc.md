@@ -16,6 +16,10 @@
 - source roots, searched for `.rexx` project sources
 - binary roots, searched for `.rxbin`, optional `.rxas`, and `.rxplugin`
 
+Only `.rexx` files participate in source-root discovery. Other source-like
+file extensions may be compiled when named directly on the command line, but
+they are not discovered as imported source modules.
+
 The primary source root is the directory of the source file being
 compiled. If the source file name does not include a directory, the
 compiler uses the working location from `-l`. Additional source roots
@@ -25,6 +29,9 @@ Binary roots are controlled separately with `-i`. The compiler always
 includes the executable directory in the binary-root set so deployed
 libraries remain visible without adding them explicitly. `-i` can be
 repeated, and repeated `-s` options are accumulated in the same way.
+The source file's directory is not automatically treated as a binary root; pass
+`-i .` or `-i build-dir` when a sibling or build-output `.rxbin` is an intended
+compile-time dependency.
 
 Search order is:
 
@@ -36,7 +43,8 @@ Search order is:
 
 This keeps same-project source imports preferred over deployed binary
 artifacts, while stopping the compiler from treating every binary
-directory as a source tree.
+directory as a source tree. It also prevents stale generated `.rxbin` files
+left beside edited source files from silently satisfying imports.
 
 ## Import Discovery Notes
 

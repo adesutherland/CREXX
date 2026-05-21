@@ -43,6 +43,9 @@ say date("w")
 The compiler searches source roots for `.rexx` imports and binary roots for
 `.rxbin`, optional `.rxas`, and `.rxplugin` imports. `rxc -s` adds source roots;
 `rxc -i` adds binary roots. Repeated `-s` and `-i` options are accumulated.
+The source file's directory is a source root only, not an implicit binary root;
+use `-i .` or `-i build-dir` when a nearby `.rxbin` should satisfy compile-time
+imports. Only `.rexx` files are discovered as source imports.
 
 Qualified references use the imported namespace:
 

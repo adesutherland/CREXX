@@ -402,6 +402,10 @@ mycar: class implements .vehicle
 
 Pure contract modules are valid: a source file that contains only interface or
 class/interface metadata can compile and assemble into a metadata-only `.rxbin`.
+A provider that consumes that binary contract must compile with the contract's
+directory on the binary import path, for example `rxc -i build-dir provider.rexx`.
+Keeping source roots and binary roots separate prevents stale `.rxbin` side
+products beside edited source from silently satisfying interface imports.
 
 The class factory must have the same argument signature as the interface
 factory. The return contract is implicit on both sides: the interface factory
@@ -409,15 +413,16 @@ returns the interface, and the class factory returns the concrete class. The
 compiler checks that the concrete class value is assignable to the interface
 return type.
 
-If a provider reports `#INTERFACE_MEMBER_SIGNATURE_MISMATCH` for member `*`,
-check these first:
+If a provider reports `#INTERFACE_NOT_FOUND` or
+`#INTERFACE_MEMBER_SIGNATURE_MISMATCH`, check these first:
 
-- the provider compile can find the source or binary module that exposes the
+- the provider compile can find the source module (`.rexx` in a source root) or
+  binary module (`.rxbin` in a directory passed with `-i`) that exposes the
   interface
 - the class factory argument list exactly matches the interface factory argument
   list
-- stale `.rxas` or `.rxbin` artifacts for the interface are not being found
-  before the updated source
+- a binary contract is intentional; sibling `.rxbin` files are not searched
+  unless their directory is a binary root
 - the provider module is loaded or linked into any program that calls the
   interface factory
 

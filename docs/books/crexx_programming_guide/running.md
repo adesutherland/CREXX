@@ -81,6 +81,11 @@ import roots. With the `crexx` driver, `-s[path]` and `-i[path]` affect the
 compiler phase only. Runtime/native loading still uses the runtime library path
 controlled by `-l`.
 
+The source file's directory is not an implicit binary import root. If a local
+`.rxbin` is meant to provide compile-time signatures or class/interface
+metadata, pass that directory with `-i`; this keeps stale generated `.rxbin`
+files from unexpectedly winning over source edits.
+
 ## Linked Images
 
 For deployable bytecode, link the needed modules:

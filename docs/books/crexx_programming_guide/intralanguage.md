@@ -100,10 +100,20 @@ At compile time, \code{rxc} now distinguishes between:
 
 The source file being compiled contributes its own directory as the primary
 source root. Additional source roots may be passed with `-s`. Binary roots are
-passed with `-i`.
+passed with `-i`. The primary source directory is not automatically a binary
+root, so a sibling `.rxbin` is visible only when that directory is also passed
+with `-i`.
+
+Only `.rexx` files are discovered from source roots. Files with extensions such
+as `.crexx` or `.arexx` may be compiled directly, but they are not scanned as
+source import candidates.
 
 For ordinary project work this means:
 
 - keep project source modules in source roots
 - keep packaged binary libraries in binary roots
 - use namespace qualification only when imported namespaces collide
+
+This split is deliberate: it keeps active source preferred during development
+and stops stale generated `.rxbin` files beside source files from silently
+satisfying imports.
