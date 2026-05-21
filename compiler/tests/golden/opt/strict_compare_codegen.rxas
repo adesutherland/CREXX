@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : strict_compare_codegen.rexx
+ * SOURCE                 : strict_compare_codegen.crexx
  * BUILT                  : 2026-04-21 17:35:06
  */
 
-.srcfile="strict_compare_codegen.rexx"
+.srcfile="strict_compare_codegen.crexx"
 .globals=0
 
 main() .locals=0

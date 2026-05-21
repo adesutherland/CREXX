@@ -1,4 +1,4 @@
-/* factorial.rexx
+/* factorial.crexx
    The factorial of n is the product of all integers from 1 to n.
    For example: 5! = 5 * 4 * 3 * 2 * 1 = 120.
 */

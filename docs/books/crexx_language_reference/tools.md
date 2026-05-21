@@ -27,12 +27,21 @@ Common options:
 - `--parser`: parser-mode service
 - `--port port`: parser-mode port
 
-Source imports and binary imports are searched separately. Source roots contain
-`.crexx`, `.crx`, `.rexx`, and any arbitrary extension used by the initial
-source file for this compile. Binary roots contain `.rxbin`, optional `.rxas`,
-and `.rxplugin`.
+Source imports and binary imports are searched separately. If the initial source
+name has no extension, `rxc` falls back to `.crexx`. `.crexx` and `.crx` default
+to Level G when the source has no `options` clause; `.rexx` defaults to Level C.
+An arbitrary extension on the initial source, such as `.the`, is treated as a
+source extension for that compile and also defaults to Level G.
+
+Source roots contain `.crexx`, `.crx`, `.rexx`, and any arbitrary extension used
+by the initial source file for this compile. Binary roots contain `.rxbin`,
+optional `.rxas`, and `.rxplugin`.
 The source file's directory is not an implicit binary root, so pass `-i .` or
 another `-i` path when a local build-output `.rxbin` is an intended import.
+
+The `.rxpp` preprocessor input extension is reserved for preprocessing and is
+not part of source-import discovery. The `crexx` driver writes preprocessed
+output as `.crexx` before invoking `rxc`.
 
 ## Assembler: `rxas`
 

@@ -83,12 +83,12 @@ unset(_prev_target)
 foreach(_binfile ${REXXBINS})
     get_filename_component(_basename ${_binfile} NAME_WE)
 
-    set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx")
-    set(_rexx_dep "${_basename}.rexx")
+    set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")
+    set(_rexx_dep "${_basename}.crexx")
 
     # if("${_basename}" STREQUAL "ts_parse2")
     #     # Technical Debt: ts_parse2 is pre-compiled from .rxpp
-    #     set(_rexx_file "${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rexx")
+    #     set(_rexx_file "${CMAKE_CURRENT_BINARY_DIR}/${_basename}.crexx")
     #     set(_rexx_dep "${_rexx_file}")
     #     add_custom_command(
     #             OUTPUT ${_rexx_file}

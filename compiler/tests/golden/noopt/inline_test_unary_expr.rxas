@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_unary_expr.rexx
+ * SOURCE                 : inline_test_unary_expr.crexx
  * BUILT                  : 2026-03-26 08:59:14
  */
 
-.srcfile="inline_test_unary_expr.rexx"
+.srcfile="inline_test_unary_expr.crexx"
 .globals=0
 
 main() .locals=6

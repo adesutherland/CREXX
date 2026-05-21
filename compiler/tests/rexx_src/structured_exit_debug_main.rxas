@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : structured_exit_debug_main.rexx
+ * SOURCE                 : structured_exit_debug_main.crexx
  * BUILT                  : 2026-04-21 14:30:04
  */
 
-.srcfile="structured_exit_debug_main.rexx"
+.srcfile="structured_exit_debug_main.crexx"
 .globals=0
 
 main() .locals=8

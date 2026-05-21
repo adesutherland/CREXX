@@ -9,8 +9,8 @@ REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
         VAR_SYMBOL : "a" (-1:-1) [Type: .unknown]
         TOKEN : "then" (-1:-1) [Type: .unknown]
           ERROR : "MISSING_END" (-1:-1) [Type: .unknown]
-Error in err_struct_01.rexx @ 2:6 - #MISSING_END, "then"
+Error in err_struct_01.crexx @ 2:6 - #MISSING_END, "then"
 1 error(s) in source file
-Error in err_struct_01.rexx @ 2:6 - #MISSING_END, "then"
+Error in err_struct_01.crexx @ 2:6 - #MISSING_END, "then"
 1 error(s) in source file
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

@@ -1,4 +1,4 @@
-/* lcm_gcd.rexx
+/* lcm_gcd.crexx
    The least common multiple (LCM) is the smallest positive
    integer that is divisible by both numbers.
 

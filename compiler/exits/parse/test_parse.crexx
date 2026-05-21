@@ -3,7 +3,7 @@ import rxfnsb
 
 ## main: procedure
 /* --------------------------------------------------------------
- * test_parse.rexx
+ * test_parse.crexx
  *
  * Regression tests for custom parse implementation
  * -------------------------------------------------------------- */

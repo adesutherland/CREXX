@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_complex_lhs_assign.rexx
+ * SOURCE                 : inline_test_complex_lhs_assign.crexx
  * BUILT                  : 2026-04-29 14:16:42
  */
 
-.srcfile="inline_test_complex_lhs_assign.rexx"
+.srcfile="inline_test_complex_lhs_assign.crexx"
 .globals=0
 
 main() .locals=4

@@ -1,12 +1,12 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_class_methods.rexx
+ * SOURCE                 : inline_test_class_methods.crexx
  * BUILT                  : 2026-04-30 16:47:29
  */
 
 .meta "inline_test_class_methods.box"="b" ".unknown" .class
 .meta "inline_test_class_methods.box.name"="b" ".string" .attr 1
-.srcfile="inline_test_class_methods.rexx"
+.srcfile="inline_test_class_methods.crexx"
 .globals=0
 
 main() .locals=35

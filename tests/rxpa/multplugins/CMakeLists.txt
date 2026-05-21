@@ -30,7 +30,7 @@ add_dependencies(_plugin2 rxpa library rxvm rxc) # The test (not plugin) depends
 add_custom_target(rxpa_mult_test ALL)
 crexx_add_rexx_opt_matrix(
         NAME rxpa_mult_test
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_mult_test.rexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_mult_test.crexx
         TARGET_GROUP rxpa_mult_test
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS library _plugin1 _plugin2

@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : test_array_dump.rexx
+ * SOURCE                 : test_array_dump.crexx
  * BUILT                  : 2026-02-23 17:17:38
  */
 
-.srcfile="test_array_dump.rexx"
+.srcfile="test_array_dump.crexx"
 .globals=0
 
 main() .locals=6

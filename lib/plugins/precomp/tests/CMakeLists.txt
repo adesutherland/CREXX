@@ -11,7 +11,7 @@ add_test(NAME rxpp_smoke_precomp
          COMMAND ${CMAKE_COMMAND}
              -DRXPP_BIN=$<TARGET_FILE:rxpp>
              -DINPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rxpp_smoke.rxpp
-             -DOUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/rxpp_smoke.out.rexx
+             -DOUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/rxpp_smoke.out.crexx
              -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/lib/plugins/precomp/maclib.rexx
              -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_smoke.cmake
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

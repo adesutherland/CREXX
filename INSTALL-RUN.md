@@ -20,7 +20,7 @@ commit used to produce the package.
 You can run tools by using their full path, for example:
 
 ```sh
-./bin/crexx examples/hello.rexx
+./bin/crexx examples/hello.crexx
 ```
 
 For day-to-day use, add the package `bin/` directory to your `PATH`. The
@@ -122,7 +122,7 @@ Use the matching extracted directory name if you installed the Intel package.
 From the extracted package directory, run the included hello world example:
 
 ```sh
-bin/crexx examples/hello.rexx
+bin/crexx examples/hello.crexx
 ```
 
 Expected output:
@@ -134,7 +134,7 @@ hello CREXX world!
 After adding `bin/` to `PATH`, the same command can be run as:
 
 ```sh
-crexx examples/hello.rexx
+crexx examples/hello.crexx
 ```
 
 For more detail while learning the toolchain, use `-verbose1` through
@@ -161,7 +161,7 @@ Terminal window usually prompts macOS to install them if they are missing.
 Then run:
 
 ```sh
-crexx examples/hello.rexx -native
+crexx examples/hello.crexx -native
 ```
 
 Native executables and user-built native plugins may have platform-specific

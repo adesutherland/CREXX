@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : address_expose.rexx
+ * SOURCE                 : address_expose.crexx
  * BUILT                  : 2026-04-30 20:04:08
  */
 
-.srcfile="address_expose.rexx"
+.srcfile="address_expose.crexx"
 .globals=0
 
 main() .locals=11
@@ -41,7 +41,7 @@ main() .locals=11
    swap r9,r1
    call r0,_rxsysb._address(),r2
    swap r1,r9
-   .srcfile="address_expose.rexx"
+   .srcfile="address_expose.crexx"
    .src 6:3="return"
    ret
    .meta "address_expose.main.rc"

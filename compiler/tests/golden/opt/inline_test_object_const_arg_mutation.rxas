@@ -1,12 +1,12 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_object_const_arg_mutation.rexx
+ * SOURCE                 : inline_test_object_const_arg_mutation.crexx
  * BUILT                  : 2026-04-29 14:16:43
  */
 
 .meta "inline_test_object_const_arg_mutation.box"="b" ".unknown" .class
 .meta "inline_test_object_const_arg_mutation.box.name"="b" ".string" .attr 1
-.srcfile="inline_test_object_const_arg_mutation.rexx"
+.srcfile="inline_test_object_const_arg_mutation.crexx"
 .globals=0
 
 main() .locals=9

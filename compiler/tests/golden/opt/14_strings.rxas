@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : 14_strings.rexx
+ * SOURCE                 : 14_strings.crexx
  * BUILT                  : 2026-03-18 11:58:56
  */
 
-.srcfile="14_strings.rexx"
+.srcfile="14_strings.crexx"
 .globals=0
 
 main() .locals=0

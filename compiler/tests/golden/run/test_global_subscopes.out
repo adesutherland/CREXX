@@ -1,6 +1,6 @@
-Warning in test_global_subscopes.rexx @ 73:5 - #SHADOWING, original definition "test_global_subscopes.x" @ 2:40, "x"
-Warning in test_global_subscopes.rexx @ 74:5 - #SHADOWING, original definition "test_global_subscopes.x" @ 2:40, "x"
-Warning in test_global_subscopes.rexx @ 75:9 - #SHADOWING, original definition "test_global_subscopes.x" @ 2:40, "x"
+Warning in test_global_subscopes.crexx @ 73:5 - #SHADOWING, original definition "test_global_subscopes.x" @ 2:40, "x"
+Warning in test_global_subscopes.crexx @ 74:5 - #SHADOWING, original definition "test_global_subscopes.x" @ 2:40, "x"
+Warning in test_global_subscopes.crexx @ 75:9 - #SHADOWING, original definition "test_global_subscopes.x" @ 2:40, "x"
 3 warning(s) in source file
 test_simple_no_subscope OK
 test_simple OK

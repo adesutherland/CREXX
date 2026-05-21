@@ -18,7 +18,7 @@ Command: `./rxc -d3 <test_file.rexx>`
 
 ### 4. Running the Code
 To test end-to-end execution:
-1. Compile: `./rxc test.rexx` (produces `test.rxas`)
+1. Compile: `./rxc test.crexx` (produces `test.rxas`)
 2. Assemble: `./rxas test.rxas` (produces `test.rxbin`)
 3. Execute: `./rxvm test.rxbin`
 
@@ -42,7 +42,7 @@ incorrectly.
 
 ### 6. RXDB Trace Debugger
 
-`debugger/rxdb.rexx` is the early Level B debugger prototype. It now delegates
+`debugger/rxdb.crexx` is the early Level B debugger prototype. It now delegates
 source lookup, ASM instruction decoding, module/procedure lookup, breakpoint
 enable/disable, and default trace filtering to `rxfnsb.trace` classes:
 
@@ -50,7 +50,7 @@ enable/disable, and default trace filtering to `rxfnsb.trace` classes:
 - `.tracecontext`
 
 Debugger presentation lives outside the runtime library in
-`debugger/rxdb_gui.rexx`, which exposes `.rxdbtextgui` for banners, prompts,
+`debugger/rxdb_gui.crexx`, which exposes `.rxdbtextgui` for banners, prompts,
 ANSI cursor control, and plain text output.
 
 The default `rxdb` UI still uses ANSI cursor control. For log-friendly or

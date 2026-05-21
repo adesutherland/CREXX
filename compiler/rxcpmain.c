@@ -501,7 +501,7 @@ int rxcmain(int argc, char *argv[]) {
     if (!input_source_extension) error_and_exit(255, "Out of memory copying source extension");
     if (!input_source_extension[0]) {
         free(input_source_extension);
-        input_source_extension = strdup("rexx");
+        input_source_extension = strdup("crexx");
         if (!input_source_extension) error_and_exit(255, "Out of memory copying source extension");
     }
 
@@ -534,8 +534,8 @@ int rxcmain(int argc, char *argv[]) {
     /* Open input file */
     if (filename_extension[0] == 0)
       {
-        context->file_pointer = openfile(file_name,"rexx", location, "r");
-        context->file_name = mprintf("%s.rexx", filename(file_name));
+        context->file_pointer = openfile(file_name,"crexx", location, "r");
+        context->file_name = mprintf("%s.crexx", filename(file_name));
       }
     else {
         context->file_pointer = openfile(file_name,"", location, "r");

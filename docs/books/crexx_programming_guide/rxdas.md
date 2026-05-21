@@ -37,12 +37,12 @@ When the command line argument -h is specified the options are shown:\\
 
 ## Example
 
- <!-- \lstinputlisting[language=rexx,label=disasm,caption=disasmexample]{examples/sumLoop1000.rexx} -->
+ <!-- \lstinputlisting[language=rexx,label=disasm,caption=disasmexample]{examples/sumLoop1000.crexx} -->
  <!-- % \splice{rxc examples/sumLoop1000} \obeylines -->
  <!-- \lstinputlisting[language=rxas,label=disasm1,caption=disasmexample1]{examples/sumLoop1000.rxas} -->
  <!-- \splice{rxas examples/sumLoop1000} -->
  
-```rexx <!--sumloop.rexx-->
+```rexx <!--sumloop.crexx-->
 /* compute sum of numbers 1 to 100 (5050) */
 options levelb
 /* compute sum of numbers 1 to 100000  */
@@ -59,11 +59,11 @@ This program, when compiled by the 'rxc' compiler, produces the following assemb
 ```rxas <!--sumloop.rxas-->
 /*
  * cREXX COMPILER VERSION : cREXX F0044
- * SOURCE                 : sumLoop1000.rexx
+ * SOURCE                 : sumLoop1000.crexx
  * BUILT                  : 2023-03-03 23:56:03
  */
 
-.srcfile="sumLoop1000.rexx"
+.srcfile="sumLoop1000.crexx"
 .globals=0
 
 main() .locals=4
@@ -112,7 +112,7 @@ What follows is the disassembly from this 'rxbin' file.
 * CODE SEGMENT - Size 0x1d
 
 .globals=0
-.srcfile="sumLoop1000.rexx"
+.srcfile="sumLoop1000.crexx"
 
 main()          .locals=4
                 .meta "sumloop1000.rexx.main"="b" ".void" main() ""

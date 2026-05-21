@@ -1,6 +1,7 @@
 # cREXX Level B Authoring Guide For Agents
 
-Use this guide when you need to write or edit `.rexx` in this repository.
+Use this guide when you need to write or edit Level B/Level G `.crexx` in this
+repository.
 Generic training data about "REXX" is often too vague, too classic-Rexx
 oriented, or simply wrong for cREXX Level B as it exists in this tree.
 
@@ -16,7 +17,8 @@ For Level B authoring, these sources are more reliable than model memory:
 - `docs/books/crexx_language_reference/classes_and_interfaces.md`
 - `docs/books/crexx_language_reference/data_types.md`
 - `docs/books/crexx_language_reference/statements.md`
-- nearby working `.rexx` files in `lib/`, `bin/`, `compiler/exits/`, `debugger/`, and `tests/`
+- nearby working `.crexx` files in `lib/`, `bin/`, `compiler/exits/`,
+  `debugger/`, and `tests/`
 
 ## Repo-Native Level B Patterns
 
@@ -36,7 +38,7 @@ return number
 ```
 
 Reference:
-- `lib/rxfnsb/rexx/abs.rexx`
+- `lib/rxfnsb/rexx/abs.crexx`
 
 ### 2. Top-level script
 
@@ -48,14 +50,14 @@ import rxfnsb
 
 arg searches = .string[]
 
-if searches.0 < 1 then searches.1 = ".rexx"
+if searches.0 < 1 then searches.1 = ".crexx"
 ordered_searches = .string[]
 address cmd "sort" input searches output ordered_searches
 ```
 
 References:
-- `tests/demo/countlines.rexx`
-- `compiler/exits/address/test_address.rexx`
+- `tests/demo/countlines.crexx`
+- `compiler/exits/address/test_address.crexx`
 
 ### 3. Tool-style entry point with procedure-exposed module state
 
@@ -85,7 +87,7 @@ proc2: procedure = .void expose var
 ```
 
 Reference:
-- `debugger/rxdb.rexx`
+- `debugger/rxdb.crexx`
 
 ### 4. Mutating an exposed argument
 
@@ -100,7 +102,7 @@ pushidentifier: procedure = .int
 ```
 
 Reference:
-- `compiler/exits/ExitTestSupport.rexx`
+- `compiler/exits/ExitTestSupport.crexx`
 
 ## Level B Differences That Matter In Practice
 
@@ -120,10 +122,10 @@ Common examples in-tree:
 - `arg expose tokens = .token[]`
 
 References:
-- `lib/rxfnsb/rexx/abs.rexx`
-- `debugger/rxdb.rexx`
-- `compiler/exits/ExitTestSupport.rexx`
-- `tests/levelbfunc.rexx`
+- `lib/rxfnsb/rexx/abs.crexx`
+- `debugger/rxdb.crexx`
+- `compiler/exits/ExitTestSupport.crexx`
+- `tests/levelbfunc.crexx`
 
 ### Namespace/import syntax is part of the real language surface
 
@@ -183,7 +185,7 @@ Use `procedure expose` or `arg expose` when:
 References:
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `docs/books/crexx_programming_guide/global_variables.md`
-- `debugger/rxdb.rexx`
+- `debugger/rxdb.crexx`
 
 ### Arrays are first-class Level B objects
 
@@ -198,8 +200,8 @@ Patterns used in-tree:
 - both bracket and dot indexing appear in the repo, so preserve the local style
 
 References:
-- `tests/demo/countlines.rexx`
-- `compiler/exits/ExitTestSupport.rexx`
+- `tests/demo/countlines.crexx`
+- `compiler/exits/ExitTestSupport.crexx`
 - `docs/books/crexx_language_reference/data_types.md`
 
 ### Class and interface factories omit return types
@@ -244,9 +246,9 @@ if rc <> 0 then say "command failed"
 ```
 
 References:
-- `compiler/exits/address/test_address.rexx`
-- `bin/crexx.rexx`
-- `tests/demo/countlines.rexx`
+- `compiler/exits/address/test_address.crexx`
+- `bin/crexx.crexx`
+- `tests/demo/countlines.crexx`
 
 ### Signal handlers live on simple `do` groups
 
@@ -273,7 +275,7 @@ for fixed cleanup/logging handlers.
 References:
 - `docs/books/crexx_language_reference/statements.md`
 - `docs/ai-context/LEVELB_SIGNALS_TRACE_WORKING.md`
-- `compiler/exits/signal/test_signal_block.rexx`
+- `compiler/exits/signal/test_signal_block.crexx`
 
 ### Headerless scripts are a driver convenience, not a style rule
 
@@ -308,37 +310,37 @@ Launcher-side guidance:
 References:
 - `docs/books/crexx_language_reference/arguments.md`
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
-- `debugger/rxdb.rexx`
-- `tests/demo/countlines.rexx`
+- `debugger/rxdb.crexx`
+- `tests/demo/countlines.crexx`
 
 ## Wayfinding: Best Example Files By Task
 
 ### Writing a tiny BIF or helper
 
-- `lib/rxfnsb/rexx/abs.rexx`
-- `lib/rxfnsb/rexx/fileio.rexx`
-- `lib/rxfnsb/rexx/regex.rexx`
+- `lib/rxfnsb/rexx/abs.crexx`
+- `lib/rxfnsb/rexx/fileio.crexx`
+- `lib/rxfnsb/rexx/regex.crexx`
 
 ### Writing a top-level command/script
 
-- `tests/demo/countlines.rexx`
-- `bin/crexx.rexx`
-- `compiler/exits/address/test_address.rexx`
+- `tests/demo/countlines.crexx`
+- `bin/crexx.crexx`
+- `compiler/exits/address/test_address.crexx`
 
 ### Writing a stateful tool
 
-- `debugger/rxdb.rexx`
+- `debugger/rxdb.crexx`
 
 ### Writing compiler-exit or structured typed code
 
-- `compiler/exits/ExitTestSupport.rexx`
-- `compiler/exits/address/Address.rexx`
-- `compiler/exits/parse/Parse.rexx`
+- `compiler/exits/ExitTestSupport.crexx`
+- `compiler/exits/address/Address.crexx`
+- `compiler/exits/parse/Parse.crexx`
 
 ### Checking argument signature syntax
 
-- `tests/levelbfunc.rexx`
-- `compiler/exits/ExitTestSupport.rexx`
+- `tests/levelbfunc.crexx`
+- `compiler/exits/ExitTestSupport.crexx`
 
 ### Checking namespace/global behavior
 
@@ -348,14 +350,14 @@ References:
 ### Checking argument handling
 
 - `docs/books/crexx_language_reference/arguments.md`
-- `debugger/rxdb.rexx`
-- `tests/demo/countlines.rexx`
+- `debugger/rxdb.crexx`
+- `tests/demo/countlines.crexx`
 
 ## Agent Guidance
 
 When writing Level B code:
 
-1. Read one doc source and two nearby working `.rexx` examples before editing.
+1. Read one doc source and two nearby working `.crexx` examples before editing.
 2. Match the local style of the directory you are in.
 3. Prefer explicit Level B headers in committed repo code.
 4. Prefer canonical `namespace..symbol` qualification.

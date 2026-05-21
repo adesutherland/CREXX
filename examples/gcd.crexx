@@ -1,4 +1,4 @@
-/* gcd.rexx
+/* gcd.crexx
    The greatest common divisor (GCD) is the largest integer
    that divides two numbers without leaving a remainder.
    Euclid's algorithm repeatedly replaces (a,b) with

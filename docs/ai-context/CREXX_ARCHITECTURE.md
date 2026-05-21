@@ -72,7 +72,8 @@ The pipeline of transforming REXX source code into executable bytecode is struct
 `rxc` does not treat every import location as both source and binary
 space anymore. Import discovery is now split into two root classes:
 
-- source roots for `.rexx`
+- source roots for `.crexx`, `.crx`, `.rexx`, and the arbitrary extension used
+  by the initial source file, if any
 - binary roots for `.rxbin`, optional `.rxas`, and `.rxplugin`
 
 The primary source root is the directory containing the source file
@@ -80,6 +81,11 @@ being compiled. Additional source roots come from `-s`. Binary roots
 come from any `-i` paths and the compiler executable directory.
 Repeated `-i` and `-s` options are accumulated in order. Search order
 keeps project source files ahead of deployed binary artifacts.
+
+An extensionless initial `rxc` input falls back to `.crexx`. Headerless
+`.crexx`, `.crx`, and arbitrary-extension sources default to Level G;
+headerless `.rexx` defaults to Level C. `.rxpp` is reserved for the
+preprocessor and is not scanned as an import source extension.
 
 For source discovery the compiler now performs a lightweight header scan
 before any full parse. That scan reads the leading `options`,

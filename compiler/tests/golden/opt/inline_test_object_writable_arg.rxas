@@ -1,12 +1,12 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_object_writable_arg.rexx
+ * SOURCE                 : inline_test_object_writable_arg.crexx
  * BUILT                  : 2026-04-29 14:16:43
  */
 
 .meta "inline_test_object_writable_arg.box"="b" ".unknown" .class
 .meta "inline_test_object_writable_arg.box.name"="b" ".string" .attr 1
-.srcfile="inline_test_object_writable_arg.rexx"
+.srcfile="inline_test_object_writable_arg.crexx"
 .globals=0
 
 main() .locals=10

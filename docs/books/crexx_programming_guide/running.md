@@ -8,7 +8,7 @@ For most users, the `crexx` driver is the simplest entry point.
 
 ## A First Program
 
-Create `hello.rexx`:
+Create `hello.crexx`:
 
 ```rexx
 options levelb
@@ -22,7 +22,7 @@ return 0
 Run it with:
 
 ```bash
-crexx hello.rexx
+crexx hello.crexx
 ```
 
 The driver compiles, assembles, and executes the program. It keeps
@@ -48,7 +48,7 @@ from driver convenience.
 The equivalent explicit tool sequence is:
 
 ```bash
-rxc hello.rexx
+rxc hello.crexx
 rxas hello.rxas
 rxvme hello.rxbin
 ```
@@ -104,7 +104,7 @@ load as a normal RXBIN file.
 The `crexx` driver can package a native executable:
 
 ```bash
-crexx hello.rexx -native
+crexx hello.crexx -native
 ```
 
 Native packaging links the bytecode image, serializes it with `rxcpack`, and

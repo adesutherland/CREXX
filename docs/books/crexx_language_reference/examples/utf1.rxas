@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-DEV2507
- * SOURCE                 : utf1.rexx
+ * SOURCE                 : utf1.crexx
  * BUILT                  : 2024-06-30 18:27:51
  */
 
-.srcfile="utf1.rexx"
+.srcfile="utf1.crexx"
 .globals=0
 
 main() .locals=3

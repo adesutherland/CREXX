@@ -241,16 +241,16 @@ Scope [0]: Unnamed
       Scope [3]: setvalue
         new_val (Variable) -> .int
         §this (Variable) -> .myclass
-DEBUG_INLINE §factory @ 16_classes.rexx:10:4 - accept: nodes=12 returns=1 final_return=1 cutoff=300
-DEBUG_INLINE getvalue @ 16_classes.rexx:15:4 - accept: nodes=6 returns=1 final_return=1 cutoff=300
-DEBUG_INLINE setvalue @ 16_classes.rexx:18:4 - accept: nodes=11 returns=1 final_return=1 cutoff=300
-DEBUG_INLINE_FAILCLOSED §factory @ 16_classes.rexx:2:6 - expression context belongs to a dedicated statement rewrite
-DEBUG_INLINE §factory @ 16_classes.rexx:10:4 - accept: nodes=12 returns=1 final_return=1 cutoff=300
-DEBUG_INLINE getvalue @ 16_classes.rexx:15:4 - accept: nodes=6 returns=1 final_return=1 cutoff=300
-DEBUG_INLINE setvalue @ 16_classes.rexx:18:4 - accept: nodes=11 returns=1 final_return=1 cutoff=300
-DEBUG_INLINE §factory @ 16_classes.rexx:10:4 - accept: nodes=12 returns=1 final_return=1 cutoff=300
-DEBUG_INLINE getvalue @ 16_classes.rexx:15:4 - accept: nodes=6 returns=1 final_return=1 cutoff=300
-DEBUG_INLINE setvalue @ 16_classes.rexx:18:4 - accept: nodes=11 returns=1 final_return=1 cutoff=300
+DEBUG_INLINE §factory @ 16_classes.crexx:10:4 - accept: nodes=12 returns=1 final_return=1 cutoff=300
+DEBUG_INLINE getvalue @ 16_classes.crexx:15:4 - accept: nodes=6 returns=1 final_return=1 cutoff=300
+DEBUG_INLINE setvalue @ 16_classes.crexx:18:4 - accept: nodes=11 returns=1 final_return=1 cutoff=300
+DEBUG_INLINE_FAILCLOSED §factory @ 16_classes.crexx:2:6 - expression context belongs to a dedicated statement rewrite
+DEBUG_INLINE §factory @ 16_classes.crexx:10:4 - accept: nodes=12 returns=1 final_return=1 cutoff=300
+DEBUG_INLINE getvalue @ 16_classes.crexx:15:4 - accept: nodes=6 returns=1 final_return=1 cutoff=300
+DEBUG_INLINE setvalue @ 16_classes.crexx:18:4 - accept: nodes=11 returns=1 final_return=1 cutoff=300
+DEBUG_INLINE §factory @ 16_classes.crexx:10:4 - accept: nodes=12 returns=1 final_return=1 cutoff=300
+DEBUG_INLINE getvalue @ 16_classes.crexx:15:4 - accept: nodes=6 returns=1 final_return=1 cutoff=300
+DEBUG_INLINE setvalue @ 16_classes.crexx:18:4 - accept: nodes=11 returns=1 final_return=1 cutoff=300
 
 --- STAGE_FINAL ---
 REXX_UNIVERSE : "" (0:1) [Type: .void]

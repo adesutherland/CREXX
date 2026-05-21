@@ -57,9 +57,9 @@ endfunction()
 # Build token.rxbin
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin
-    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -o token ${CMAKE_CURRENT_SOURCE_DIR}/token.rexx
+    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -o token ${CMAKE_CURRENT_SOURCE_DIR}/token.crexx
     COMMAND $<TARGET_FILE:rxas> -o token token
-    DEPENDS rxc rxas ${CMAKE_CURRENT_SOURCE_DIR}/token.rexx
+    DEPENDS rxc rxas ${CMAKE_CURRENT_SOURCE_DIR}/token.crexx
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/token.rxas
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building token.rxbin"
@@ -68,9 +68,9 @@ add_custom_target(token_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin)
 
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/bin/exittestsupport.rxbin
-    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i ${CREXX_EXIT_IMPORT_PATH} -o exittestsupport ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.rexx
+    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i ${CREXX_EXIT_IMPORT_PATH} -o exittestsupport ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.crexx
     COMMAND $<TARGET_FILE:rxas> -o ${CMAKE_BINARY_DIR}/bin/exittestsupport exittestsupport
-    DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.rexx ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin
+    DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.crexx ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/exittestsupport.rxas
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building exittestsupport.rxbin"

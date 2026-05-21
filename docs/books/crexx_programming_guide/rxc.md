@@ -93,7 +93,7 @@ timestamps tie, `.rxbin` wins over `.rxas`.
  operation can be done at compile time, to avoid instruction scheduling and execution at
  runtime:
  
-\lstinputlisting[language=rexx,label=fpow_example]{examples/fpowtest.rexx}
+\lstinputlisting[language=rexx,label=fpow_example]{examples/fpowtest.crexx}
 \fontspec{IBM Plex Mono}
 \splice{rxc examples/fpowtest}
 \splice{rxas examples/fpowtest}

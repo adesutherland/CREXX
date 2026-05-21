@@ -505,7 +505,7 @@ Recommendation:
 
 ### Runtime Trace Controller
 
-Extract reusable logic from `debugger/rxdb.rexx` into Level B library classes:
+Extract reusable logic from `debugger/rxdb.crexx` into Level B library classes:
 
 ```rexx
 namespace rxfnsb expose tracecontroller tracecontext trace_interrupt_raw
@@ -533,7 +533,7 @@ Responsibilities:
 
 The existing `rxdb` is now a client of these classes for source/ASM lookup,
 module/procedure lookup, mode state, breakpoint enable/disable, and filtering.
-Debugger presentation is local to `debugger/rxdb_gui.rexx`. `rxdb` still owns
+Debugger presentation is local to `debugger/rxdb_gui.crexx`. `rxdb` still owns
 watch-value inspection because `metalinkpreg` must run in the interrupted child
 frame; moving that through an ordinary method call would inspect the
 debugger/helper frame instead.
@@ -742,14 +742,14 @@ Status on 2026-04-28:
 
 Status on 2026-04-28:
 
-- added `lib/rxfnsb/rexx/trace.rexx` to the Level B `rxfnsb` library bundle
+- added `lib/rxfnsb/rexx/trace.crexx` to the Level B `rxfnsb` library bundle
 - added `.tracecontext` for signal/module/address/source/ASM/procedure event
   snapshots
 - added `.trace_interrupt_raw` to map the VM breakpoint/signal interrupt object
   without hand-written `linkattr1` in the trace library
 - added `.tracecontroller` for breakpoint control, source and ASM metadata
   lookup, module/procedure helpers, and default runtime/debugger filtering
-- added `debugger/rxdb_gui.rexx` with `.rxdbtextgui` and refactored `rxdb` to
+- added `debugger/rxdb_gui.crexx` with `.rxdbtextgui` and refactored `rxdb` to
   keep UI text out of the runtime trace library
 - added `rxdb llm`/`rxdb text`/`rxdb plain` as escape-free debugger modes for
   log and LLM-facing trace-runtime debugging

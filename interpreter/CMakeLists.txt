@@ -586,11 +586,11 @@ crexx_add_vm_dual_test(NAME rxasstresstests RXVM_ARGS tests_stress)
 # Re-entrancy Test
 add_custom_command(
         OUTPUT test_reentrancy.rxbin
-        COMMAND $<TARGET_FILE:rxc> -o test_reentrancy ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_reentrancy.rexx
+        COMMAND $<TARGET_FILE:rxc> -o test_reentrancy ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_reentrancy.crexx
         COMMAND $<TARGET_FILE:rxas> test_reentrancy
-        DEPENDS tests/rexx/test_reentrancy.rexx rxc rxas compiler_exit_bin
+        DEPENDS tests/rexx/test_reentrancy.crexx rxc rxas compiler_exit_bin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Compiling test_reentrancy.rexx ..."
+        COMMENT "Compiling test_reentrancy.crexx ..."
 )
 add_custom_target(test_reentrancy_bin ALL DEPENDS test_reentrancy.rxbin)
 

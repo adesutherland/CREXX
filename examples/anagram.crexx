@@ -1,4 +1,4 @@
-/* anagram.rexx
+/* anagram.crexx
    Two words are anagrams if they contain the same letters
    in a different order. By sorting the letters alphabetically,
    both words produce the same normalized representation.

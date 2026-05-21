@@ -176,9 +176,9 @@ The shipped implementation is covered across:
 
 Representative examples live under:
 
-- `compiler/tests/rexx_src/interface_showcase_same_module.rexx`
-- `compiler/tests/rexx_src/interface_multi_interface_same_module.rexx`
-- `compiler/tests/rexx_src/qualified_interface_main.rexx`
+- `compiler/tests/rexx_src/interface_showcase_same_module.crexx`
+- `compiler/tests/rexx_src/interface_multi_interface_same_module.crexx`
+- `compiler/tests/rexx_src/qualified_interface_main.crexx`
 - `interpreter/tests/tests_interfaces.rxas`
 
 ## Related Docs

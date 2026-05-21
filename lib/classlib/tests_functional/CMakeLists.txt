@@ -30,8 +30,8 @@ unset(_prev_target)
 foreach(_binfile ${REXXBINS})
     get_filename_component(_basename ${_binfile} NAME_WE)
 
-    set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx")
-    set(_rexx_dep "${_basename}.rexx")
+    set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")
+    set(_rexx_dep "${_basename}.crexx")
 
 
     add_custom_target(${_basename})
@@ -48,4 +48,3 @@ foreach(_binfile ${REXXBINS})
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
-

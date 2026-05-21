@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : cREXX F0044
- * SOURCE                 : sumLoop1000.rexx
+ * SOURCE                 : sumLoop1000.crexx
  * BUILT                  : 2023-03-03 23:56:03
  */
 
-.srcfile="sumLoop1000.rexx"
+.srcfile="sumLoop1000.crexx"
 .globals=0
 
 main() .locals=4

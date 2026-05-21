@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : test_global_subscopes.rexx
+ * SOURCE                 : test_global_subscopes.crexx
  * BUILT                  : 2026-03-08 09:29:38
  */
 
-.srcfile="test_global_subscopes.rexx"
+.srcfile="test_global_subscopes.crexx"
 .globals=4
 g0 .expose=test_global_subscopes.arr
 g1 .expose=test_global_subscopes.x

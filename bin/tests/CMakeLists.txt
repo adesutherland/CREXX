@@ -1,8 +1,8 @@
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_simple.rexx
                ${CMAKE_CURRENT_BINARY_DIR}/headerless_simple.rexx
                COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/explicit_header.rexx
-               ${CMAKE_CURRENT_BINARY_DIR}/explicit_header.rexx
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/explicit_header.crexx
+               ${CMAKE_CURRENT_BINARY_DIR}/explicit_header.crexx
                COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/bin/crxc.rexx
                ${CMAKE_CURRENT_BINARY_DIR}/crxc.rexx
@@ -32,7 +32,7 @@ add_test(NAME crexx_headerless_simple_smoke
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 set(CREXX_EXPLICIT_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_explicit_smoke.cmake")
-set(CREXX_EXPLICIT_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"${CMAKE_CURRENT_BINARY_DIR}/explicit_header.rexx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+set(CREXX_EXPLICIT_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"${CMAKE_CURRENT_BINARY_DIR}/explicit_header.crexx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND CREXX_EXPLICIT_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx explicit-header script failed: \\n\${out}\")\nendif()\n")
 string(APPEND CREXX_EXPLICIT_SMOKE_CONTENT "if(NOT out STREQUAL \"EXPLICIT\\n\")\n  message(FATAL_ERROR \"Unexpected explicit-header output. Got: \\n\${out}\")\nendif()\n")
 file(GENERATE OUTPUT "${CREXX_EXPLICIT_SMOKE_SCRIPT}" CONTENT "${CREXX_EXPLICIT_SMOKE_CONTENT}")
@@ -235,46 +235,46 @@ function(add_crexx_native_test NAME SOURCE_FILE)
     set_tests_properties(${NAME} PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 endfunction()
 
-add_crexx_compile_only_import_test(crexx_source_root_compile_only rexx_src/source_import_main.rexx rexx_src/source_import_dep.rexx source)
-add_crexx_compile_only_import_test(crexx_rxas_import_compile_only rexx_src/rxas_import_main.rexx rexx_src/wrapperasm.rxas rxas)
+add_crexx_compile_only_import_test(crexx_source_root_compile_only rexx_src/source_import_main.crexx rexx_src/source_import_dep.crexx source)
+add_crexx_compile_only_import_test(crexx_rxas_import_compile_only rexx_src/rxas_import_main.crexx rexx_src/wrapperasm.rxas rxas)
 add_crexx_nocompile_test(
         crexx_nocompile_exec_smoke
-        rexx_src/explicit_header.rexx
+        rexx_src/explicit_header.crexx
         EXPECT_OUTPUT "EXPLICIT\n"
 )
 add_crexx_nocompile_test(
         crexx_native_nocompile_smoke
-        rexx_src/explicit_header.rexx
+        rexx_src/explicit_header.crexx
         NATIVE
         EXPECT_OUTPUT "EXPLICIT\n"
 )
 add_crexx_native_test(
         crexx_native_explicit_header_smoke
-        rexx_src/explicit_header.rexx
+        rexx_src/explicit_header.crexx
         EXPECT_OUTPUT "EXPLICIT\n"
 )
 add_crexx_native_test(
         crexx_native_default_link_strip
-        rexx_src/explicit_header.rexx
+        rexx_src/explicit_header.crexx
         EXPECT_DAS_ABSENT ".srcfile="
 )
 add_crexx_native_test(
         crexx_native_linkmap_keep_source
-        rexx_src/explicit_header.rexx
+        rexx_src/explicit_header.crexx
         CREXX_ARGS "--linkmap" "explicit_header.map" "--link-keep-source"
         MAP_FILE "explicit_header.map"
         EXPECT_DAS_CONTAINS ".srcfile="
 )
 add_crexx_native_test(
         crexx_native_link_keep_inline
-        rexx_src/native_inline_helper.rexx
+        rexx_src/native_inline_helper.crexx
         CREXX_ARGS "--link-keep-inline"
         EXPECT_OUTPUT "7\n"
         EXPECT_DAS_CONTAINS ".meta \"native_inline_helper.helper\"=\".inline\""
 )
 add_crexx_native_test(
         crexx_native_nokeep_cleanup
-        rexx_src/explicit_header.rexx
+        rexx_src/explicit_header.crexx
         CREXX_ARGS "-nokeep"
         EXPECT_OUTPUT "EXPLICIT\n"
         EXPECT_NO_LINKED_INTERMEDIATE

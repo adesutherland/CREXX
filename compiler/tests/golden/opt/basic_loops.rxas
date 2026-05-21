@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : basic_loops.rexx
+ * SOURCE                 : basic_loops.crexx
  * BUILT                  : 2026-03-18 11:59:00
  */
 
-.srcfile="basic_loops.rexx"
+.srcfile="basic_loops.crexx"
 .globals=0
 
 main() .locals=9

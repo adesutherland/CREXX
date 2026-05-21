@@ -16,7 +16,7 @@ The (multiplatform) GTK Plugin enables a straightforward way to implement portab
 ## Overview
 
 This section provides an overview of a lightweight graphical user interface (GUI) plugin for \crexx{}, focusing on the most essential widgets. 
-<!-- It contains two files: `gui.c`, which implements the GUI functionality using GTK, and `gui_test.rexx`, which demonstrates how to use the procedures defined in `gui.c`. -->
+<!-- It contains two files: `gui.c`, which implements the GUI functionality using GTK, and `gui_test.crexx`, which demonstrates how to use the procedures defined in `gui.c`. -->
 
 ## Quick Start Guide
 

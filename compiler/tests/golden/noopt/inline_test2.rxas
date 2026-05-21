@@ -1,11 +1,11 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test2.rexx
+ * SOURCE                 : inline_test2.crexx
  * BUILT                  : 2026-04-30 20:04:11
  */
 
 .meta "inline_test2.myclass"="b" ".unknown" .class
-.srcfile="inline_test2.rexx"
+.srcfile="inline_test2.crexx"
 .globals=0
 
 main() .locals=8

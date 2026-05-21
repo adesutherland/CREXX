@@ -1,6 +1,6 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : object_reference_regression.rexx
+ * SOURCE                 : object_reference_regression.crexx
  * BUILT                  : 2026-04-30 20:04:00
  */
 
@@ -18,7 +18,7 @@
 .meta "object_reference_regression.largepayload.values"="b" ".string" .attr 11
 .meta "object_reference_regression.smallpayload"="b" ".unknown" .class
 .meta "object_reference_regression.smallpayload.name"="b" ".string" .attr 1
-.srcfile="object_reference_regression.rexx"
+.srcfile="object_reference_regression.crexx"
 .globals=0
 
 main() .locals=7

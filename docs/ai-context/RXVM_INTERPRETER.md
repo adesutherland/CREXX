@@ -399,7 +399,7 @@ request (`SQLITE` initially), looks up a driver table, and then treats SQL
 named parameters such as `:name` as handler-specific uses of ADDRESS
 host-variable bindings. This is the intended shape for later database drivers.
 
-`demos/llm/llm_address_environment.rexx` shows the same idea for Rexx-hosted
+`demos/llm/llm_address_environment.crexx` shows the same idea for Rexx-hosted
 providers. One Rexx environment class claims a family of model-shaped
 environment names (`LLM_GPT_4_1`, `CLAUDE_SONNET_4_5`, `GEMINI_2_5_FLASH`,
 `GEMMA4_LATEST`) and routes internally to the `rxfnsg` LLM drivers. This keeps

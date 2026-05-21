@@ -36,7 +36,7 @@
  * it are options or filenames. The --args option needs to be last.
  *
  * If a filename has a suffix of .rxpp, the crexx precompiler
- * is invoked to perform its magic - it produces a .rexx
+ * is invoked to perform its magic - it produces a .crexx
  * which then is compiled and executed, or compiled to an
  * object file which is linked to the interpreter to
  * form a native executable.
@@ -316,17 +316,19 @@ err = .string[]
 /* while we have no exists(file) function, specify the .rxpp extension */
 do i=1 to words(filenames)
   filename=word(filenames,i)
+  sourceFile=filename
   if i=words(filenames) then lastfile=1
     dotpos = pos('.',filename)
   if dotpos > 0 then do
     if right(filename,4) = 'rxpp'
     then do /* run the preprocessor */
       filename = left(filename,dotpos-1)
+      sourceFile = filename'.crexx'
       /* print the file when verbose ibm style output is requested */
     if verbose>3 then do
       call printFileToSTDout filename'.rxpp', nocolor
     end
-    ''rxpath'/'lpath'/rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose 'verbose
+    ''rxpath'/'lpath'/rxpp -i' filename'.rxpp -o' filename'.crexx -m 'rxpath'bin/maclib.rexx -verbose 'verbose
     if verbose then do
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
@@ -335,16 +337,14 @@ do i=1 to words(filenames)
       if RC>0 then exit RC
     end
   end
-  /* if all is well, we now have a .rexx ready for compilation    */  
+  /* if all is well, we now have a .crexx ready for compilation    */
+    if lower(right(filename,6))='.crexx' then filename=substr(filename,1,length(filename)-6)   /* if file has .crexx extension, chop it off */
     if lower(right(filename,5))='.rexx' then filename=substr(filename,1,length(filename)-5)   /* if file has .rexx extension, chop it off */
+    if lower(right(filename,7))='.bcrexx' then filename=substr(filename,1,length(filename)-7)   /* if file has .bcrexx extension, chop it off */
   /* print the file when verbose ibm style output is requested */
   compat_flags = ''
 
-  if \hasSourceHeader(filename'.crexx') then do
-    compat_flags = ' --level levelb --import rxfnsb'
-    if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
-  end
-  if \hasSourceHeader(filename'.bcrexx') then do
+  if \hasSourceHeader(sourceFile) then do
     compat_flags = ' --level levelb --import rxfnsb'
     if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
   end
@@ -366,12 +366,12 @@ do i=1 to words(filenames)
   binfiles = binfiles binfile
 
   if verbose>3 then do
-    call printFileToSTDout filename, nocolor
+    call printFileToSTDout sourceFile, nocolor
   end
 
   -- rxas_filename = chop_suffix(filename) /* temp fix for two-part filename files */
 
-  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags '-o' binfile filename
+  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags '-o' binfile sourceFile
   if verbose>1 then
     do
       if compile then say esc||ANSI_GREEN'rxc command     :' rxcmd
@@ -393,7 +393,7 @@ do i=1 to words(filenames)
   if verbose then do
     if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
     else res = esc||ANSI_RED||RC||esc||ANSI_RESET
-    if compile then say '[ 'res' ] rxc      - Compiled       ' esc||ANSI_BLUE||filename||esc||ANSI_RESET
+    if compile then say '[ 'res' ] rxc      - Compiled       ' esc||ANSI_BLUE||sourceFile||esc||ANSI_RESET
     end
   if RC>0 then exit RC
 

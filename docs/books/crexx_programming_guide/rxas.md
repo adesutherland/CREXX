@@ -119,7 +119,7 @@ the complications of an assembly language program can be handled by the
 \crexx{} compiler, like assigning registers to variables, and the
 conversion of datatypes like \emph{integer} for display as \emph{string}.
 
-\lstinputlisting[language=rexx,label=iexample,caption=ipowexample]{examples/pow.rexx}
+\lstinputlisting[language=rexx,label=iexample,caption=ipowexample]{examples/pow.crexx}
 \fontspec{IBM Plex Mono}
 \begin{shaded}
   \small

@@ -1,6 +1,6 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_block_expr_live_sibling.rexx
+ * SOURCE                 : inline_test_block_expr_live_sibling.crexx
  * BUILT                  : 2026-04-30 20:04:00
  */
 
@@ -11,7 +11,7 @@
 .meta "inline_test_block_expr_live_sibling.holder.left"="b" ".string" .attr 2
 .meta "inline_test_block_expr_live_sibling.holder.name"="b" ".string" .attr 3
 .meta "inline_test_block_expr_live_sibling.holder.right"="b" ".string" .attr 4
-.srcfile="inline_test_block_expr_live_sibling.rexx"
+.srcfile="inline_test_block_expr_live_sibling.crexx"
 .globals=0
 
 main() .locals=4

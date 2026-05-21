@@ -1,6 +1,6 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_named_factory_selector.rexx
+ * SOURCE                 : inline_test_named_factory_selector.crexx
  * BUILT                  : 2026-04-30 20:04:01
  */
 
@@ -11,7 +11,7 @@
 .meta "inline_test_named_factory_selector.vehicle"="method" "describe" ".string" "" .member
 .meta "inline_test_named_factory_selector.vehicle"="factory" "*" ".vehicle" "name=.string" .member
 .meta "inline_test_named_factory_selector.vehicle"="factory" "from_name" ".vehicle" "name=.string" .member
-.srcfile="inline_test_named_factory_selector.rexx"
+.srcfile="inline_test_named_factory_selector.crexx"
 .globals=0
 
 main() .locals=6

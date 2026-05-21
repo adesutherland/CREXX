@@ -8,7 +8,7 @@ add_custom_target(performance_inline ALL)
 
 crexx_add_rexx_opt_matrix(
         NAME inlining_simple
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/inlining_simple.rexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/inlining_simple.crexx
         TARGET_GROUP performance_inline
         DEPENDS library compiler_exit_bin
         TEST_LABELS "performance;inlining"
@@ -16,7 +16,7 @@ crexx_add_rexx_opt_matrix(
 
 crexx_add_rexx_opt_matrix(
         NAME inlining_complex
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/inlining_complex.rexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/inlining_complex.crexx
         TARGET_GROUP performance_inline
         DEPENDS library compiler_exit_bin
         TEST_LABELS "performance;inlining"

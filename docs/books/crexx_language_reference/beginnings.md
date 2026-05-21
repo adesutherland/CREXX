@@ -4,13 +4,13 @@
 
 \rexx{} is designed as a small language, but there are already a lot of  things you can do without involving anything outside of it. One of those is to greet the world, as is the usual and obligatory first example of any programming language book:
 
-```rexx <!--hello.rexx-->
+```rexx <!--hello.crexx-->
 options levelb
 /* rexx: welcoming the world */
 say 'hello world!'
 ```
 
-<!--splice--hello.rexx-->
+<!--splice--hello.crexx-->
 
 There is no need to include the starting comment, but by all means include it if you want to.[^1]
 

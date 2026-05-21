@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : 18_array_class_main.rexx
+ * SOURCE                 : 18_array_class_main.crexx
  * BUILT                  : 2026-04-30 20:38:13
  */
 
-.srcfile="18_array_class_main.rexx"
+.srcfile="18_array_class_main.crexx"
 .globals=0
 
 main() .locals=17
@@ -22,7 +22,7 @@ main() .locals=17
    .src 5:1="say \"Main\""
    say "Main"
    .src 6:1="it1 = .Item(\"Hello\")"
-   .srcfile="array_class_lib.rexx"
+   .srcfile="array_class_lib.crexx"
    .src 5:3="*: factory\n  arg v = .string"
    setattrs r2,2
    .src 5:3="*: factory\n  arg v = .string"
@@ -32,7 +32,7 @@ main() .locals=17
    linkattr1 r11,r2,1
    scopy r11,r12
    unlink r11
-   .srcfile="18_array_class_main.rexx"
+   .srcfile="18_array_class_main.crexx"
    .src 8:16=""
    copy r1,r2
    .src 7:1="say \"Created it1\""
@@ -125,7 +125,7 @@ l165bexprend:
    .meta "18_array_class_main.main.ary"
    .meta "18_array_class_main.main.it1"
 
-/* Imported Declaration from file: array_class_lib.rexx */
+/* Imported Declaration from file: array_class_lib.crexx */
 
 §array_class_lib.item.§factory() .expose=array_class_lib.item.§factory
    .meta "array_class_lib.item.§factory"="b" ".item" §array_class_lib.item.§factory() "v=.string"

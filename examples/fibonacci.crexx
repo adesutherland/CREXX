@@ -1,4 +1,4 @@
-/* fibonacci.rexx
+/* fibonacci.crexx
    The Fibonacci sequence starts with 0 and 1.
    Each following number is the sum of the two previous ones.
 */

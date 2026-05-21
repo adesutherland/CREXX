@@ -1,12 +1,12 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_object_return_expr.rexx
+ * SOURCE                 : inline_test_object_return_expr.crexx
  * BUILT                  : 2026-04-30 20:04:09
  */
 
 .meta "inline_test_object_return_expr.box"="b" ".unknown" .class
 .meta "inline_test_object_return_expr.box.name"="b" ".string" .attr 1
-.srcfile="inline_test_object_return_expr.rexx"
+.srcfile="inline_test_object_return_expr.crexx"
 .globals=0
 
 main() .locals=16

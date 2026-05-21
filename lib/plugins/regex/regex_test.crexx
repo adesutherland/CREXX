@@ -2,7 +2,7 @@ options levelb
 import regex
 import rxfnsb
 
-/* regex_test.rexx */
+/* regex_test.crexx */
 
 /* Define constants for error codes */
 RX_SUCCESS = 0
@@ -143,7 +143,7 @@ do i=1 to 9
 end
 
 
-/* regex_test.rexx - Test the regex plugin functionality */
+/* regex_test.crexx - Test the regex plugin functionality */
 
 /* Define flags */
 RX_BASIC    = 0      /* Basic Regular Expressions (BRE) */

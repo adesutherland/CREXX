@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_multi_return_call.rexx
+ * SOURCE                 : inline_test_multi_return_call.crexx
  * BUILT                  : 2026-03-26 17:40:39
  */
 
-.srcfile="inline_test_multi_return_call.rexx"
+.srcfile="inline_test_multi_return_call.crexx"
 .globals=0
 
 main() .locals=6

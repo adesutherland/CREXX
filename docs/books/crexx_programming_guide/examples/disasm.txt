@@ -8,7 +8,7 @@
 * CODE SEGMENT - Size 0x21
 
 .globals=0
-.srcfile="sumLoop1000.rexx"
+.srcfile="sumLoop1000.crexx"
 
 main()          .locals=4
                 .meta "sumloop1000.rexx.main"="b" ".void" main() ""

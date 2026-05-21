@@ -4,7 +4,7 @@
 interpreter. The main flow is:
 
 ```bash
-.rexx source -> rxc -> .rxas assembly -> rxas -> .rxbin bytecode -> rxvm
+.crexx source -> rxc -> .rxas assembly -> rxas -> .rxbin bytecode -> rxvm
 ```
 
 `rxlink` can combine bytecode modules into a shared-pool linked image, and

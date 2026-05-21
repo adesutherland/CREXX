@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : repro_opt_args.rexx
+ * SOURCE                 : repro_opt_args.crexx
  * BUILT                  : 2026-04-29 14:21:08
  */
 
-.srcfile="repro_opt_args.rexx"
+.srcfile="repro_opt_args.crexx"
 .globals=0
 
 main() .locals=0

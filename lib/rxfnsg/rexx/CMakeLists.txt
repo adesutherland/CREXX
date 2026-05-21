@@ -18,10 +18,10 @@ foreach(_binfile IN LISTS RXFNSG_REXX_BINS)
             -x
             -i "${CMAKE_BINARY_DIR}/bin"
             -o "${_basename}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx"
+            "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
-      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx"
+      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
       "${CMAKE_BINARY_DIR}/bin/library.rxbin"
       rxc
       rxas

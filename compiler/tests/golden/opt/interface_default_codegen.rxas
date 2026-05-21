@@ -1,6 +1,6 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : interface_default_codegen.rexx
+ * SOURCE                 : interface_default_codegen.crexx
  * BUILT                  : 2026-04-30 20:04:07
  */
 
@@ -11,7 +11,7 @@
 .meta "interface_default_codegen.shape"="method final" "prefix" ".string" "" .member
 .meta "interface_default_codegen.shape"="method" "summary" ".string" "" .member
 .meta "interface_default_codegen.shape"="factory" "*" ".shape" "" .member
-.srcfile="interface_default_codegen.rexx"
+.srcfile="interface_default_codegen.crexx"
 .globals=0
 
 main() .locals=3

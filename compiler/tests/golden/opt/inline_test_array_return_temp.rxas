@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_array_return_temp.rexx
+ * SOURCE                 : inline_test_array_return_temp.crexx
  * BUILT                  : 2026-04-30 20:04:10
  */
 
-.srcfile="inline_test_array_return_temp.rexx"
+.srcfile="inline_test_array_return_temp.crexx"
 .globals=0
 
 main() .locals=4

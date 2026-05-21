@@ -307,7 +307,7 @@ Compiler behavior:
 
 ### 7. Protocol Objects
 
-The shared protocol classes live in `compiler/exits/token.rexx`.
+The shared protocol classes live in `compiler/exits/token.crexx`.
 
 #### 7.1 `rxcp.token`
 

@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_binary_arg_return.rexx
+ * SOURCE                 : inline_test_binary_arg_return.crexx
  * BUILT                  : 2026-04-30 20:04:09
  */
 
-.srcfile="inline_test_binary_arg_return.rexx"
+.srcfile="inline_test_binary_arg_return.crexx"
 .globals=0
 
 main() .locals=4

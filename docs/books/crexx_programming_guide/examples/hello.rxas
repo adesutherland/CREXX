@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-f0049
- * SOURCE                 : hello.rexx
+ * SOURCE                 : hello.crexx
  * BUILT                  : 2024-06-30 18:26:56
  */
 
-.srcfile="hello.rexx"
+.srcfile="hello.crexx"
 .globals=0
 
 main() .locals=1

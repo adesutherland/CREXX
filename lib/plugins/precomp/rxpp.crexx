@@ -43,7 +43,7 @@ internal_testing=0    ## activate only for rxpp internal tests
   
   if internal_testing=1 then do
      infile  = 'C:/Users/PeterJ/CLionProjects/CREXX260401/lib/plugins/system/treemap_test.rxpp'
-     outfile = 'C:/Users/PeterJ/CLionProjects/CREXX260401/lib/plugins/system/treemap_test.rexx'
+     outfile = 'C:/Users/PeterJ/CLionProjects/CREXX260401/lib/plugins/system/treemap_test.crexx'
      maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX260401/lib/plugins/precomp/Maclib.rexx'
   end
 

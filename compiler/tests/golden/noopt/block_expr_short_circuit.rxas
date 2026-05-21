@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : block_expr_short_circuit.rexx
+ * SOURCE                 : block_expr_short_circuit.crexx
  * BUILT                  : 2026-03-24 17:43:22
  */
 
-.srcfile="block_expr_short_circuit.rexx"
+.srcfile="block_expr_short_circuit.crexx"
 .globals=0
 
 main() .locals=8

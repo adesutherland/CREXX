@@ -101,7 +101,7 @@ target_include_directories(testvm PRIVATE
 add_custom_target(rxpa_dynlink_run ALL)
 crexx_add_rexx_opt_matrix(
         NAME rxpa_dynlink_run
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink.rexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink.crexx
         TARGET_GROUP rxpa_dynlink_run
         IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
         DEPENDS library _rxpa_dynlink
@@ -111,7 +111,7 @@ crexx_add_rexx_opt_matrix(
 add_custom_target(rxpa_staticlink_run ALL)
 crexx_add_rexx_opt_matrix(
         NAME rxpa_staticlink_run
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink.rexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink.crexx
         TARGET_GROUP rxpa_staticlink_run
         COMPILER_TARGET rxc_staticlink
         IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
@@ -143,13 +143,13 @@ foreach(_mode IN ITEMS noopt opt)
 
     add_test(
             NAME rxpa_classdecl_dynamic_compile_${_mode}
-            COMMAND $<TARGET_FILE:rxc> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_dynamic_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.rexx
+            COMMAND $<TARGET_FILE:rxc> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_dynamic_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.crexx
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     add_test(
             NAME rxpa_classdecl_static_compile_${_mode}
-            COMMAND $<TARGET_FILE:rxc_classdecl_static> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_static_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.rexx
+            COMMAND $<TARGET_FILE:rxc_classdecl_static> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_static_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.crexx
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 endforeach()
@@ -223,7 +223,7 @@ math(EXPR num_tests "${num_tests} - 1") # Correct upper bound for RANGE
 foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
     list(GET FUNC_TESTS ${idx} _rexxtest)
     list(GET OUTPUTS ${idx} _expected_output)
-    set(_rexxtest_source ${_rexxtest}.rexx)
+    set(_rexxtest_source ${_rexxtest}.crexx)
     add_custom_target(rxpa_${_rexxtest}_dynamic ALL)
     crexx_add_rexx_opt_matrix(
             NAME rxpa_${_rexxtest}_dynamic

@@ -6,16 +6,16 @@ set(VECS
 
 foreach (VEC ${VECS})
 	set(VECBINS ${VECBINS} ${VEC}.rxbin)
-	set(REXXSRC ${REXXSRC} ${VEC}.rexx)
+	set(REXXSRC ${REXXSRC} ${VEC}.crexx)
 endforeach ()
 
 unset(_prev_target)
 foreach(_binfile ${VECBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
 	add_custom_command(
-		  COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+		  COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
 		  COMMAND $<TARGET_FILE:rxas> ${_basename}
-		  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx rxc rxas library compiler_exit_bin
+		  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx rxc rxas library compiler_exit_bin
 		  OUTPUT ${_binfile}
 		  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		  COMMENT "cREXX compile and assemble ${_basename} ..."

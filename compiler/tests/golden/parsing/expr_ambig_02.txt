@@ -74,10 +74,10 @@ Scope [0]: Unnamed
       a (Variable) -> .float
       b (Constant) -> .string
       c (Constant) -> .string
-Error in expr_ambig_02.rexx @ 2:5 - #BAD_CONVERSION, "b"
-Error in expr_ambig_02.rexx @ 2:8 - #BAD_CONVERSION, "c"
+Error in expr_ambig_02.crexx @ 2:5 - #BAD_CONVERSION, "b"
+Error in expr_ambig_02.crexx @ 2:8 - #BAD_CONVERSION, "c"
 2 error(s) in source file
-Error in expr_ambig_02.rexx @ 2:5 - #BAD_CONVERSION, "b"
-Error in expr_ambig_02.rexx @ 2:8 - #BAD_CONVERSION, "c"
+Error in expr_ambig_02.crexx @ 2:5 - #BAD_CONVERSION, "b"
+Error in expr_ambig_02.crexx @ 2:8 - #BAD_CONVERSION, "c"
 2 error(s) in source file
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

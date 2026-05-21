@@ -1,3 +1,3 @@
-Error in interface_factory_return_type.rexx @ 5:3 - #FACTORY_RETURN_TYPE_NOT_ALLOWED, "*:"
-Error in interface_factory_return_type.rexx @ 8:3 - #FACTORY_RETURN_TYPE_NOT_ALLOWED, "*: factory = .widget"
+Error in interface_factory_return_type.crexx @ 5:3 - #FACTORY_RETURN_TYPE_NOT_ALLOWED, "*:"
+Error in interface_factory_return_type.crexx @ 8:3 - #FACTORY_RETURN_TYPE_NOT_ALLOWED, "*: factory = .widget"
 2 error(s) in source file

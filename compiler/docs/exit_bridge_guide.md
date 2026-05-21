@@ -127,7 +127,7 @@ Practical consequence:
 Relevant implementation:
 
 - `compiler/rxcp_exit.c`
-- `compiler/exits/token.rexx`
+- `compiler/exits/token.crexx`
 
 ## 5. Imports
 

@@ -255,7 +255,7 @@ say fallback.describe()   /* cache:memo:1 */
 ```
 
 This complete example is mirrored by the test
-`compiler/tests/rexx_src/interface_showcase_same_module.rexx`.
+`compiler/tests/rexx_src/interface_showcase_same_module.crexx`.
 
 ## Multiple Interfaces
 
@@ -296,7 +296,7 @@ say by_size.size()
 ```
 
 This example is mirrored by the test
-`compiler/tests/rexx_src/interface_multi_interface_same_module.rexx`.
+`compiler/tests/rexx_src/interface_multi_interface_same_module.crexx`.
 
 ## Namespace Qualification
 
@@ -348,7 +348,7 @@ implementation with the same factory name and argument signature; its concrete
 class return is accepted because the class implements the interface.
 
 This same-file shape is mirrored by
-`compiler/tests/rexx_src/interface_dep_contract.rexx`.
+`compiler/tests/rexx_src/interface_dep_contract.crexx`.
 
 ## Split-File Contract and Provider Pattern
 
@@ -428,9 +428,9 @@ If a provider reports `#INTERFACE_NOT_FOUND` or
 
 This example is mirrored by:
 
-- `compiler/tests/rexx_src/qualified_interface_main.rexx`
-- `compiler/tests/rexx_src/qualified_interface_dep_a.rexx`
-- `compiler/tests/rexx_src/qualified_interface_dep_b.rexx`
+- `compiler/tests/rexx_src/qualified_interface_main.crexx`
+- `compiler/tests/rexx_src/qualified_interface_dep_a.crexx`
+- `compiler/tests/rexx_src/qualified_interface_dep_b.crexx`
 
 ## Casts and Type Tests
 
@@ -459,8 +459,8 @@ Rules:
 
 These operations are mirrored by:
 
-- `compiler/tests/rexx_src/type_ops_showcase.rexx`
-- `compiler/tests/rexx_src/type_ops_fail.rexx`
+- `compiler/tests/rexx_src/type_ops_showcase.crexx`
+- `compiler/tests/rexx_src/type_ops_fail.crexx`
 
 ## Notes and Current Boundaries
 

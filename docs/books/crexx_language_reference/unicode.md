@@ -40,7 +40,7 @@ world.
 <!-- \setTransitionsForCJK{\mychinesefont}{\myregularfont} -->
 
 <!-- \fontspec{Courier New} -->
-<!-- \lstinputlisting[language=rexx,label=itf1,caption=utf example.]{../../examples/utf1.rexx} -->
+<!-- \lstinputlisting[language=rexx,label=itf1,caption=utf example.]{../../examples/utf1.crexx} -->
 <!-- \begin{shaded} -->
 <!--   \small -->
 <!--   \splice{rxc examples/utf1} \splice{rxas examples/utf1} \obeylines \splice{rxvm examples/utf1} -->

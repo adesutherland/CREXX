@@ -1,14 +1,14 @@
 /*
  * cREXX COMPILER VERSION : cREXX F0044
- * SOURCE                 : hellodate.rexx
+ * SOURCE                 : hellodate.crexx
  * BUILT                  : 2023-03-05 00:29:57
  */
 
-.srcfile="hellodate.rexx"
+.srcfile="hellodate.crexx"
 .globals=0
 
 main() .locals=8
-   .meta "hellodate.rexx.main"="b" ".int" main() ""
+   .meta "hellodate.crexx.main"="b" ".int" main() ""
    .src 4:1="say 'hello cRexx world!'"
    say "hello cRexx world!"
    .src 5:1="say 'today is a' date('w')"
@@ -25,6 +25,6 @@ main() .locals=8
    .src 6:1="return 0"
    ret 0
 
-/* Imported Declaration from file: hellodate.rexx */
+/* Imported Declaration from file: hellodate.crexx */
 date() .expose=rxfnsb.date
    .meta "rxfnsb.date"="b" ".string" date() "oformat = \"\" , idate = \"\" , iformat = \"\" , osep = \"\" , isep = \"\""

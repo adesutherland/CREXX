@@ -1,2 +1,2 @@
-Error in err_select_c_no_when.rexx @ 6:3 - #MISSING_WHEN, "otherwise"
+Error in err_select_c_no_when.crexx @ 6:3 - #MISSING_WHEN, "otherwise"
 1 error(s) in source file

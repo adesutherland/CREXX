@@ -158,7 +158,7 @@ static void test_editor_receives_syntax_error_diagnostics(void) {
     BufferDiagnosticMatch buffer_match;
 
     comm = 0;
-    cb = load_document_in_editor("err_02_syntax.rexx", syntax_error_source, &comm);
+    cb = load_document_in_editor("err_02_syntax.crexx", syntax_error_source, &comm);
     if (!cb) return;
 
     memset(&tree_match, 0, sizeof(tree_match));
@@ -184,7 +184,7 @@ static void test_editor_receives_warning_diagnostics(void) {
     BufferDiagnosticMatch buffer_match;
 
     comm = 0;
-    cb = load_document_in_editor("test_disjoint_detailed.rexx", warning_source, &comm);
+    cb = load_document_in_editor("test_disjoint_detailed.crexx", warning_source, &comm);
     if (!cb) return;
 
     memset(&tree_match, 0, sizeof(tree_match));

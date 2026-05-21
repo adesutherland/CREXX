@@ -1,2 +1,2 @@
-Error in interface_default_redefine.rexx @ 8:1 - #INTERFACE_DEFAULT_METHOD_REDEFINED, "interface_default_redefine.shape", "describe", "box: class implements .shape"
+Error in interface_default_redefine.crexx @ 8:1 - #INTERFACE_DEFAULT_METHOD_REDEFINED, "interface_default_redefine.shape", "describe", "box: class implements .shape"
 1 error(s) in source file

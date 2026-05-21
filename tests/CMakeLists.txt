@@ -99,7 +99,7 @@ foreach(_binfile ${REXXTESTBINS})
    add_custom_target(${_basename} ALL)
    crexx_add_rexx_opt_matrix(
            NAME ${_basename}
-           SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx
+           SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
            TARGET_GROUP ${_basename}
            DEPENDS library compiler_exit_bin ${_prev_dependency}
    )

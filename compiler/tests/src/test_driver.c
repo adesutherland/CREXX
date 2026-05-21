@@ -315,7 +315,7 @@ int main(int argc, char *argv[]) {
         }
         strcat(command, "\"");
         if (i == argc - 1) {
-            /* Pass the name without extension so rxc adds .rexx and .rxas correctly */
+            /* Pass the name without extension so rxc adds .crexx and .rxas correctly */
             strcat(command, temp_source_name);
         } else {
             strcat(command, argv[i]);

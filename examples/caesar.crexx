@@ -1,4 +1,4 @@
-/* caesar.rexx
+/* caesar.crexx
    A Caesar cipher shifts each character by a fixed number of
    positions within a predefined alphabet. Applying the inverse
    shift restores the original text.

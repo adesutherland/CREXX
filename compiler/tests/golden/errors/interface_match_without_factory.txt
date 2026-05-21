@@ -1,2 +1,2 @@
-Error in interface_match_without_factory.rexx @ 5:3 - #MATCH_WITHOUT_FACTORY, "*: match"
+Error in interface_match_without_factory.crexx @ 5:3 - #MATCH_WITHOUT_FACTORY, "*: match"
 1 error(s) in source file

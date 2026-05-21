@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_nested_scope_if_do.rexx
+ * SOURCE                 : inline_test_nested_scope_if_do.crexx
  * BUILT                  : 2026-04-29 14:16:43
  */
 
-.srcfile="inline_test_nested_scope_if_do.rexx"
+.srcfile="inline_test_nested_scope_if_do.crexx"
 .globals=0
 
 main() .locals=6

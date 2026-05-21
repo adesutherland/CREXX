@@ -2111,7 +2111,7 @@ Invalidation:
     registration through the canonical Rexx `_register_address_environment`
     path via `.nativeaddressenvironment`
   - `compiler/tests/src/test_address_callback_host.c` and
-    `compiler/tests/rexx_src/address_callback_host.rexx` provide the dummy
+    `compiler/tests/rexx_src/address_callback_host.crexx` provide the dummy
     host/fixture for debugger-friendly validation
   - focused ADDRESS/interface/bridge verification passed `82/82`
   - full debug CTest passed `852/852`
@@ -2278,15 +2278,15 @@ Invalidation:
 - `compiler/rxcp_val_orch.c`
 - `compiler/rxcp_exit.c`
 - `compiler/rxcpbpar.c`
-- `compiler/exits/address/Address.rexx`
-- `compiler/exits/parse/Parse.rexx`
-- `compiler/exits/execio/Execio.rexx`
+- `compiler/exits/address/Address.crexx`
+- `compiler/exits/parse/Parse.crexx`
+- `compiler/exits/execio/Execio.crexx`
 - `lib/rxfnsb/rexx/_address.rexx`
 - `lib/rxfnsb/rexx/rxjson.rexx`
 - `lib/rxfnsb/rexx/rxjson.md`
 - `lib/rxfnsb/tests_functional/ts_rxjson.rexx`
 - `compiler/tests/rexx_src/address_cms_provider.rexx`
-- `compiler/tests/rexx_src/address_cms_host.rexx`
+- `compiler/tests/rexx_src/address_cms_host.crexx`
 - `interpreter/crexxsaa.h`
 - `interpreter/crexxsaa.c`
 - `interpreter/crexxsaa_tool.c`

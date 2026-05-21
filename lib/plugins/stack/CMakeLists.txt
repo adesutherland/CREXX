@@ -14,7 +14,7 @@ add_dynamic_plugin_target(_stack stack.c)
 add_custom_target(stack_test ALL)
 crexx_add_rexx_opt_matrix(
         NAME stack_test
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stack_test.rexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stack_test.crexx
         TARGET_GROUP stack_test
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS library _stack

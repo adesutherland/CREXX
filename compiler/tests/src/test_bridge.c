@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     rxvml_set_int(args[3], 10);
     rxvml_set_int(args[4], 1);
     rxvml_set_int(args[5], 5);
-    rxvml_set_str(args[6], "test.rexx", 9);
+    rxvml_set_str(args[6], "test.crexx", 9);
     rxvml_set_int(args[7], 0);
     rxvml_set_int(args[8], 0);
     

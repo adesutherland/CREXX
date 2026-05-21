@@ -1,10 +1,10 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : 15_imports.rexx
+ * SOURCE                 : 15_imports.crexx
  * BUILT                  : 2026-04-30 20:04:08
  */
 
-.srcfile="15_imports.rexx"
+.srcfile="15_imports.crexx"
 .globals=0
 
 main() .locals=3
@@ -23,7 +23,7 @@ main() .locals=3
    .src 6:15=""
    ret
 
-/* Imported Declaration from file: mymath.rexx */
+/* Imported Declaration from file: mymath.crexx */
 
 mymath.myfunc() .expose=mymath.myfunc
    .meta "mymath.myfunc"="b" ".int" mymath.myfunc() "x=.int"

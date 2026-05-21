@@ -9,7 +9,7 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 - `lib/rxmath/` (Math extensions)
 - `lib/plugins/` (General-purpose extensions like `fileio`, `regex`, `strings`, `socket`, etc.)
 
-`lib/rxfnsb/rexx/rxjson.rexx` contains the first JSON foundation library module
+`lib/rxfnsb/rexx/rxjson.crexx` contains the first JSON foundation library module
 for Level B web-service and transport work. It is implemented in Rexx, ships in
 `library.rxbin`, and intentionally exposes string-oriented helpers first:
 
@@ -30,7 +30,7 @@ extract common response fields without introducing a full object mapper yet.
 For the full API contract, path syntax, examples, limits, and test location, see
 `lib/rxfnsb/rexx/rxjson.md`.
 
-`lib/rxfnsb/rexx/rxsocket.rexx` provides the Level B wrapper for the VM's core
+`lib/rxfnsb/rexx/rxsocket.crexx` provides the Level B wrapper for the VM's core
 TCP socket instructions. It ships in `library.rxbin` and exposes a small raw
 socket API for loopback clients, servers, and future web-service work:
 
@@ -72,7 +72,7 @@ builds by default. Developers who still need it can configure with
 `CREXX_BUILD_LEGACY_SOCKET_PLUGIN=ON`; otherwise source builds avoid that
 plugin's OpenSSL discovery and distribution burden.
 
-`lib/rxfnsb/rexx/rxhttp.rexx` provides a reusable Level B HTTP client on top of
+`lib/rxfnsb/rexx/rxhttp.crexx` provides a reusable Level B HTTP client on top of
 `rxsocket`. It builds request text with UTF-8 byte-counted `Content-Length`,
 reads raw socket responses, decodes `Content-Length` and HTTP/1.1 chunked
 bodies, preserves non-2xx response bodies for diagnostics, and exposes the last
@@ -84,7 +84,7 @@ out of scope. A non-zero fourth factory argument enables TLS through
 how hosted provider authentication is layered without duplicating HTTP framing.
 See `lib/rxfnsb/rexx/rxhttp.md`.
 
-`lib/rxfnsb/rexx/trace.rexx` provides the Level B trace/debugger internals used
+`lib/rxfnsb/rexx/trace.crexx` provides the Level B trace/debugger internals used
 by `rxdb` and by the `TRACE` certified compiler exit:
 
 - `.tracecontroller`: breakpoint enable/disable, module/procedure helpers,
@@ -102,16 +102,16 @@ The helpers rely on VM metadata instructions such as `metaloaddata`,
 `metaloadinst`, `metadecodeinst`, and `metaloadedmodules`, so deployable linked
 images that strip source metadata may still provide ASM/module data while
 source-line lookup returns empty. Debugger UI text and menu rendering belong to
-`debugger/rxdb_gui.rexx`, not the library trace internals.
+`debugger/rxdb_gui.crexx`, not the library trace internals.
 
-`lib/rxfnsb/rexx/_address.rexx` owns the Rexx-side ADDRESS protocol. In
+`lib/rxfnsb/rexx/_address.crexx` owns the Rexx-side ADDRESS protocol. In
 addition to command dispatch, redirects, sandboxes, and function calls,
 `addressrequest.get_binding_value(name)` gives Rexx providers a simple way to
 read scalar bindings auto-exposed from ADDRESS host-variable anchors such as
 `:name` and `${name}`. Anchor interpretation remains provider-specific; the VM
 only carries binding values and write-back updates.
 
-`lib/rxfnsg/rexx/llm.rexx` contains the first Level G LLM integration surface.
+`lib/rxfnsg/rexx/llm.crexx` contains the first Level G LLM integration surface.
 Level G is layered on the Level B foundation: the module is `options levelg`,
 builds into `rxfnsg.rxbin`, and imports the Level B `rxfnsb`, `rxjson`, and
 `rxhttp` modules rather than duplicating their work. It exposes a
@@ -129,7 +129,7 @@ request/response JSON. It keeps the last raw HTTP response plus decoded JSON
 body available for diagnostics. Hosted providers are also Rexx implementations:
 they use environment-variable API keys by default, build provider-specific JSON
 request bodies and authentication headers, and send through `rxhttp` with TLS
-enabled. `demos/llm/llm_address_environment.rexx` layers a Rexx ADDRESS
+enabled. `demos/llm/llm_address_environment.crexx` layers a Rexx ADDRESS
 provider over these clients so scripts can use model-shaped environments such
 as `ADDRESS LLM_GPT_4_1`, `ADDRESS CLAUDE_SONNET_4_5`, and
 `ADDRESS GEMMA4_LATEST`; the provider caches by environment instance and routes
@@ -143,13 +143,13 @@ A significant portion of the Classic REXX Built-In Functions (such as `abs()`, `
 This approach minimizes the VM footprint and demonstrates the capability of the cREXX compiler to handle system-level logic.
 
 For repo-native Level B authoring patterns, argument signature examples, and
-wayfinding to real `.rexx` examples, see `docs/ai-context/CREXX_LEVELB_AUTHORING.md`.
+wayfinding to real `.crexx` examples, see `docs/ai-context/CREXX_LEVELB_AUTHORING.md`.
 
 ### Anatomy of a cREXX BIF
 Functions written in cREXX follow standard language rules, utilizing namespaces and type enforcement:
 
 ```rexx
-/* lib/rxfnsb/rexx/abs.rexx */
+/* lib/rxfnsb/rexx/abs.crexx */
 options levelb
 
 namespace rxfnsb expose abs
@@ -162,8 +162,8 @@ abs: procedure = .string
 
 **Key Features:**
 1. **Namespaces:** Functions must declare `namespace rxfnsb expose <function_name>` so they correctly bind into the Standard Library space that user scripts import.
-2. **Inline Assembly (`assembler`)**: When low-level access is required (such as fetching the current system time in `date.rexx`), cREXX BIFs can drop down into inline bytecode using the `assembler` keyword.
-3. **Compilation:** These `.rexx` files are compiled into `.rxbin` bytecodes during the build process and are packaged or shipped exactly like user-compiled binaries.
+2. **Inline Assembly (`assembler`)**: When low-level access is required (such as fetching the current system time in `date.crexx`), cREXX BIFs can drop down into inline bytecode using the `assembler` keyword.
+3. **Compilation:** These `.crexx` files are compiled into `.rxbin` bytecodes during the build process and are packaged or shipped exactly like user-compiled binaries.
 4. **Explicit Late Load:** `loadmodule(path) -> .int` wraps the VM's
    `METALOADMODULE` instruction. Use it when Rexx code deliberately loads a
    `.rxbin` or `.rxplugin` provider before calling imports supplied by that
@@ -181,7 +181,7 @@ abs: procedure = .string
 For functions requiring native performance or access to C-level system libraries (like cryptography or sockets), `crexx` provides the RXPA framework. This macro-driven C API (defined in `rxpa/crexxpa.h` and `rxpa/rxpa.h`) allows developers to write REXX-callable functions without interacting directly with the VM's internal `stack_frame` or `value` structures.
 
 Plugins can be compiled in two ways:
-1. **Dynamic Plugins (`.rxplugin`)**: Recommended for user extensions. They are discovered and loaded at runtime using the same search paths as regular `.rexx` modules.
+1. **Dynamic Plugins (`.rxplugin`)**: Recommended for user extensions. They are discovered and loaded at runtime using the same search paths as regular `.crexx` modules.
 2. **Static Plugins**: Built directly into the `crexx` binaries. These are typically reserved for core Standard Libraries to guarantee they are always available.
 
 ## 3. Writing a Native Function

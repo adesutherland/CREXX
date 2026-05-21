@@ -18,7 +18,7 @@ end
 
 array.1=""
 
-say readall(array,"c:\temp\test.rexx",11)
+say readall(array,"c:\temp\test.crexx",11)
 do i=1 to array.0
    say right(i,6) array.i
 end

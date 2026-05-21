@@ -4,9 +4,9 @@ set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Signal.rxbin
-        COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i ${CREXX_EXIT_IMPORT_PATH} -o Signal ${CMAKE_CURRENT_SOURCE_DIR}/Signal.rexx
+        COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i ${CREXX_EXIT_IMPORT_PATH} -o Signal ${CMAKE_CURRENT_SOURCE_DIR}/Signal.crexx
         COMMAND $<TARGET_FILE:rxas> -o Signal Signal
-        DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/Signal.rexx ${CMAKE_CURRENT_BINARY_DIR}/../token.rxbin
+        DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/Signal.crexx ${CMAKE_CURRENT_BINARY_DIR}/../token.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Building Signal.rxbin"
 )
@@ -14,20 +14,20 @@ add_custom_target(exit_signal_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Signal.rxb
 
 crexx_add_compiler_exit_runtime_test(
         test_signal
-        test_signal.rexx
+        test_signal.crexx
         RUN_SUFFIX ${LIBRPATH}
 )
 
 crexx_add_compiler_exit_runtime_test(
         test_signal_direct
-        test_signal_direct.rexx
+        test_signal_direct.crexx
         EXTRA_DEPENDS exit_test_support_bin
         RUN_SUFFIX ${CMAKE_BINARY_DIR}/bin/exittestsupport.rxbin ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${LIBRPATH}
 )
 
 crexx_add_compiler_exit_runtime_test(
         test_signal_block
-        test_signal_block.rexx
+        test_signal_block.crexx
         RUN_SUFFIX ${LIBRPATH}
 )
 
@@ -68,30 +68,30 @@ endfunction()
 
 crexx_add_signal_compile_fail_test(
         test_signal_bad_arg_diagnostic
-        test_signal_bad_arg.rexx
-        "Error in test_signal_bad_arg\\.rexx @ [0-9]+:[0-9]+ - #SIGNAL_HANDLER_BAD_SIGNATURE, \"handle_other\", \"handle_other\""
+        test_signal_bad_arg.crexx
+        "Error in test_signal_bad_arg\\.crexx @ [0-9]+:[0-9]+ - #SIGNAL_HANDLER_BAD_SIGNATURE, \"handle_other\", \"handle_other\""
 )
 
 crexx_add_signal_compile_fail_test(
         test_signal_bad_return_diagnostic
-        test_signal_bad_return.rexx
-        "Error in test_signal_bad_return\\.rexx @ [0-9]+:[0-9]+ - #SIGNAL_HANDLER_BAD_SIGNATURE, \"handle_other\", \"handle_other\""
+        test_signal_bad_return.crexx
+        "Error in test_signal_bad_return\\.crexx @ [0-9]+:[0-9]+ - #SIGNAL_HANDLER_BAD_SIGNATURE, \"handle_other\", \"handle_other\""
 )
 
 crexx_add_signal_compile_fail_test(
         test_signal_no_arg_diagnostic
-        test_signal_no_arg.rexx
-        "Error in test_signal_no_arg\\.rexx @ [0-9]+:[0-9]+ - #SIGNAL_HANDLER_BAD_SIGNATURE, \"handle_other\", \"handle_other\""
+        test_signal_no_arg.crexx
+        "Error in test_signal_no_arg\\.crexx @ [0-9]+:[0-9]+ - #SIGNAL_HANDLER_BAD_SIGNATURE, \"handle_other\", \"handle_other\""
 )
 
 crexx_add_signal_compile_fail_test(
         test_signal_missing_handler_diagnostic
-        test_signal_missing_handler.rexx
-        "Error in test_signal_missing_handler\\.rexx @ [0-9]+:[0-9]+ - #SIGNAL_HANDLER_NOT_FOUND, \"missing_handler\", \"missing_handler\""
+        test_signal_missing_handler.crexx
+        "Error in test_signal_missing_handler\\.crexx @ [0-9]+:[0-9]+ - #SIGNAL_HANDLER_NOT_FOUND, \"missing_handler\", \"missing_handler\""
 )
 
 crexx_add_signal_compile_fail_test(
         test_signal_block_counted_bad_diagnostic
-        test_signal_block_counted_bad.rexx
+        test_signal_block_counted_bad.crexx
         "#SYNTAX_ERROR, \"on\""
 )

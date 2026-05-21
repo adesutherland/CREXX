@@ -781,14 +781,12 @@ static void attach_imported_member_inline_payloads(Context *context, ASTNode *no
 }
 
 static int imported_class_has_source_contract(struct imported_class *cls) {
-    const char *name;
-    size_t len;
+    const char *extension;
 
     if (!cls || !cls->file_name) return 0;
 
-    name = cls->file_name;
-    len = strlen(name);
-    return len >= 5 && strcmp(name + len - 5, ".rexx") == 0;
+    extension = filenext(cls->file_name);
+    return extension && extension[0] && !rxcp_source_extension_is_reserved(extension);
 }
 
 static Symbol *load_imported_contract(Context *context, struct imported_class *found_cls) {

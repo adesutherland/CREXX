@@ -62,7 +62,7 @@ Example of manually updating a single golden file:
 ./compiler/tests/crexx_test_driver --update-gold \
   ../compiler/tests/golden/noopt/01_assign.rxas \
   ./01_assign_noopt.rxas \
-  ./compiler/rxc -n -o ./01_assign_noopt ../compiler/tests/rexx_src/01_assign.rexx
+  ./compiler/rxc -n -o ./01_assign_noopt ../compiler/tests/rexx_src/01_assign.crexx
 ```
 
 ### Batch Update
