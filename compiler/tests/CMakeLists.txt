@@ -1137,6 +1137,22 @@ add_test(NAME inline_cross_file_source_opt
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(inline_cross_file_source_opt PROPERTIES LABELS "linked_opt")
 
+set(SOURCE_IMPORT_DOTTED_DECIMAL_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_import_dotted_floats_decimal_opt.cmake")
+set(SOURCE_IMPORT_DOTTED_DECIMAL_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_import_dotted_floats_decimal_opt_ws\")\n")
+string(APPEND SOURCE_IMPORT_DOTTED_DECIMAL_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND SOURCE_IMPORT_DOTTED_DECIMAL_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND SOURCE_IMPORT_DOTTED_DECIMAL_CONTENT "file(WRITE \"\${work}/hello.aap.noot.mies\" \"options levelb\\nnamespace main\\nimport dep_ns\\nsay dep()\\n\")\n")
+string(APPEND SOURCE_IMPORT_DOTTED_DECIMAL_CONTENT "file(WRITE \"\${work}/dep.aap.noot.mies.rexx\" \"options levelb floats_decimal\\nnamespace dep_ns expose dep\\ndep: procedure = .decimal\\n  return 1.1 + 2.2\\n\")\n")
+string(APPEND SOURCE_IMPORT_DOTTED_DECIMAL_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"main\" \"\${work}/hello.aap.noot.mies\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND SOURCE_IMPORT_DOTTED_DECIMAL_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on dotted floats_decimal source import: \${out}\")\nendif()\n")
+string(APPEND SOURCE_IMPORT_DOTTED_DECIMAL_CONTENT "if(NOT EXISTS \"\${work}/main.rxas\")\n  message(FATAL_ERROR \"Expected main.rxas was not produced\")\nendif()\n")
+file(GENERATE OUTPUT "${SOURCE_IMPORT_DOTTED_DECIMAL_SCRIPT}" CONTENT "${SOURCE_IMPORT_DOTTED_DECIMAL_CONTENT}")
+
+add_test(NAME source_import_dotted_floats_decimal_opt
+         COMMAND ${CMAKE_COMMAND} -P "${SOURCE_IMPORT_DOTTED_DECIMAL_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(source_import_dotted_floats_decimal_opt PROPERTIES LABELS "compiler;imports;linked_opt")
+
 set(INLINE_LOCAL_MEMBER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_local_member_scalar_opt.cmake")
 set(INLINE_LOCAL_MEMBER_CONTENT "set(full_out \"\")\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_local_member_scalar_opt_ws\")\n")
