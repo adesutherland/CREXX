@@ -53,6 +53,7 @@ struct Context {
     int stop_after_parse;
     char* location;
     char* file_name;
+    char *initial_source_extension;
     char** import_locations;
     char import_locations_owns_buffer;
     char** source_import_locations;
@@ -98,6 +99,7 @@ struct Context {
     char processedOptions;
     char source_has_options;
     RexxLevel level;
+    RexxLevel cli_level_override;
     RexxLevel cli_default_level;
     char comments_hash;
     char comments_dash;
@@ -180,6 +182,7 @@ struct importable_file {
     char *location;
     char imported;
     char source_root;
+    RexxLevel source_default_level;
     time_t mtime;
     char *namespace_name;
     char header_scanned;

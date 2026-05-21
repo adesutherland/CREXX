@@ -28,7 +28,9 @@ Common options:
 - `--port port`: parser-mode port
 
 Source imports and binary imports are searched separately. Source roots contain
-`.rexx`; binary roots contain `.rxbin`, optional `.rxas`, and `.rxplugin`.
+`.crexx`, `.crx`, `.rexx`, and any arbitrary extension used by the initial
+source file for this compile. Binary roots contain `.rxbin`, optional `.rxas`,
+and `.rxplugin`.
 The source file's directory is not an implicit binary root, so pass `-i .` or
 another `-i` path when a local build-output `.rxbin` is an intended import.
 

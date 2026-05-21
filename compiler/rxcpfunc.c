@@ -36,6 +36,7 @@
 #include "platform.h"
 #include "rxcpmain.h"
 #include "rxcp_emit.h"
+#include "rxcp_source_ext.h"
 #include "rxbin.h"
 #include "rxas.h"
 #include "rxpa.h"
@@ -2400,12 +2401,14 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
     fclose(fp);
 }
 
-static void parseRexxFileForFunctions(Context *parent_context, char* file_name, char* location) {
+static void parseRexxFileForFunctions(Context *parent_context, char* file_name, char* location,
+                                      RexxLevel source_default_level) {
     size_t bytes;
     Context *context;
     char *buff_start;
     imported_func *global;
     size_t i;
+    RexxLevel cli_level_override;
 
     if (parent_context->debug_mode >= 2) printf("Importing Procedures - Reading REXX file %s for possible procedure imports\n", file_name);
 
@@ -2442,6 +2445,15 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     context->file_name = (char*) filename(file_name);
     context->disable_exits = parent_context->disable_exits;
     context->decimal_plugin = parent_context->decimal_plugin;
+    cli_level_override = parent_context->master_context ?
+                         parent_context->master_context->cli_level_override :
+                         parent_context->cli_level_override;
+    context->cli_level_override = cli_level_override;
+    context->cli_default_level = cli_level_override != UNKNOWN ?
+                                 cli_level_override :
+                                 (source_default_level != UNKNOWN ?
+                                  source_default_level :
+                                  rxcp_source_default_level_for_file(file_name));
 
     /* Propagate the master_context */
     context->master_context = parent_context->master_context;
@@ -2550,12 +2562,15 @@ static char *default_import_namespace_from_file_name(const char *file_name) {
     return rxcp_normalize_source_symbol_name(base_name, stem_len, 0, 0);
 }
 
-static void ensure_importable_source_header(importable_file *file, RexxLevel cli_default_level) {
+static void ensure_importable_source_header(importable_file *file, RexxLevel cli_level_override) {
     char *raw_namespace = 0;
+    RexxLevel default_level;
 
     if (!file || file->type != REXX_FILE || file->header_scanned) return;
 
-    rxcp_scan_source_header(file->location, file->name, cli_default_level, 0, &raw_namespace);
+    default_level = cli_level_override != UNKNOWN ? cli_level_override : file->source_default_level;
+    if (default_level == UNKNOWN) default_level = rxcp_source_default_level_for_file(file->name);
+    rxcp_scan_source_header(file->location, file->name, default_level, 0, &raw_namespace);
     if (raw_namespace) {
         file->namespace_name = rxcp_normalize_source_symbol_name(raw_namespace, strlen(raw_namespace), 0, 1);
         free(raw_namespace);
@@ -2569,7 +2584,10 @@ static void ensure_importable_source_header(importable_file *file, RexxLevel cli
 static int source_import_file_is_visible(Context *context, importable_file *file) {
     if (!file || file->type != REXX_FILE) return 1;
 
-    ensure_importable_source_header(file, context ? context->cli_default_level : UNKNOWN);
+    ensure_importable_source_header(file,
+                                    context && context->master_context ?
+                                    context->master_context->cli_level_override :
+                                    UNKNOWN);
     if (!file->namespace_name || !file->namespace_name[0]) return 1;
     if (!context || !context->ast || !context->ast->scope) return 1;
 
@@ -2693,7 +2711,8 @@ static int load_another_file(Context *context) {
                 case REXX_FILE:
                     parseRexxFileForFunctions(context,
                                               master_context->importable_file_list[f]->name,
-                                              master_context->importable_file_list[f]->location);
+                                              master_context->importable_file_list[f]->location,
+                                              master_context->importable_file_list[f]->source_default_level);
                     break;
                 case RXBIN_FILE:
                     parseRxbinFileForFunctions(context,
@@ -3375,6 +3394,7 @@ static importable_file* importable_file_f(char* name, file_type type, char *loca
     else file->location = 0;
     file->imported = 0;
     file->source_root = 0;
+    file->source_default_level = UNKNOWN;
     file->mtime = read_importable_mtime(location, name);
     file->namespace_name = 0;
     file->header_scanned = 0;
@@ -3434,6 +3454,33 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
     dirclose(&dir_ptr);
 }
 
+static void list_source_files_in_dir(char *directory, const char *extension, RexxLevel default_level,
+                                     char* skip_name, char *skip_module,
+                                     importable_file ***list, size_t *number, int debug_mode, char source_root) {
+
+    void *dir_ptr;
+    char* name;
+    importable_file *file;
+
+    if (!extension || !extension[0]) return;
+
+    name = dirfstfl(directory, 0, (char*) extension, &dir_ptr);
+    while (name) {
+        if ((!skip_name || strcmp(name, skip_name) != 0) &&
+            (!skip_module || !module_name_equals(name, skip_module))) {
+            if (debug_mode >= 2) fprintf(stderr, "Found importable source file: %s in %s\n", name, directory);
+            file = importable_file_f(name, REXX_FILE, directory);
+            if (file) {
+                file->source_root = source_root;
+                file->source_default_level = default_level;
+                add_file_to_list(file, number, list);
+            }
+        }
+        name = dirnxtfl(&dir_ptr);
+    }
+    dirclose(&dir_ptr);
+}
+
 static importable_file *find_stage_module(importable_file **list, int stage, const char *name) {
     size_t i;
 
@@ -3469,6 +3516,28 @@ static void collect_root_files(char *directory, file_type type, char *skip_name,
     root_count = 0;
 
     list_files_in_dir(directory, type, skip_name, skip_module, &root_list, &root_count, debug_mode, source_root);
+    for (i = 0; i < root_count; i++) {
+        add_unique_stage_file(list, number, root_list[i]);
+    }
+    free(root_list);
+}
+
+static void collect_source_root_files(char *directory, const RxcpSourceExtension *extension,
+                                      char *skip_name, char *skip_module,
+                                      importable_file ***list, size_t *number, int debug_mode, char source_root) {
+    importable_file **root_list;
+    size_t root_count;
+    size_t i;
+
+    if (!extension || !extension->extension) return;
+
+    root_list = malloc(sizeof(importable_file *));
+    if (!root_list) return;
+    root_list[0] = 0;
+    root_count = 0;
+
+    list_source_files_in_dir(directory, extension->extension, extension->default_level,
+                             skip_name, skip_module, &root_list, &root_count, debug_mode, source_root);
     for (i = 0; i < root_count; i++) {
         add_unique_stage_file(list, number, root_list[i]);
     }
@@ -3535,21 +3604,32 @@ importable_file **rxfl_lst(Context *context) {
     importable_file **list = 0;
     char *skip_module;
     size_t d;
+    RxcpSourceExtension source_extensions[RXCP_SOURCE_EXTENSION_MAX];
+    size_t source_extension_count;
+    size_t e;
 
     list = malloc(sizeof(importable_file *));
     if (!list) return 0;
     list[0] = 0;
     skip_module = context ? context->file_name : 0;
+    source_extension_count = rxcp_source_extension_list(context ? context->initial_source_extension : 0,
+                                                        source_extensions);
 
     if (context->debug_mode >= 2) {
         fprintf(stderr, "Scanning source import roots. Primary source root: %s\n", context->location ? context->location : ".");
     }
 
-    collect_root_files(context->location, REXX_FILE, context->file_name, skip_module, &list, &number, context->debug_mode, 1);
+    for (e = 0; e < source_extension_count; e++) {
+        collect_source_root_files(context->location, &source_extensions[e], context->file_name, skip_module,
+                                  &list, &number, context->debug_mode, 1);
+    }
     if (context->source_import_locations) {
         for (d = 0; context->source_import_locations[d]; d++) {
             if (context->debug_mode >= 2) fprintf(stderr, "Scanning source import root: %s\n", context->source_import_locations[d]);
-            collect_root_files(context->source_import_locations[d], REXX_FILE, 0, skip_module, &list, &number, context->debug_mode, 1);
+            for (e = 0; e < source_extension_count; e++) {
+                collect_source_root_files(context->source_import_locations[d], &source_extensions[e], 0, skip_module,
+                                          &list, &number, context->debug_mode, 1);
+            }
         }
     }
 

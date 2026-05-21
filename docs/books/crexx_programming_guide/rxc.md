@@ -13,12 +13,26 @@
 
 `rxc` now separates automatic import discovery into two root classes:
 
-- source roots, searched for `.rexx` project sources
+- source roots, searched for CREXX source files
 - binary roots, searched for `.rxbin`, optional `.rxas`, and `.rxplugin`
 
-Only `.rexx` files participate in source-root discovery. Other source-like
-file extensions may be compiled when named directly on the command line, but
-they are not discovered as imported source modules.
+The recommended source extensions are:
+
+- `.crexx`: canonical CREXX source, defaulting to Level G when no
+  `options level...` clause is present
+- `.crx`: short CREXX source alias, also defaulting to Level G
+- `.rexx`: compatibility/classic source, defaulting to Level C
+
+An initial source file may also use another extension, such as `.the` for an
+editor macro integration. That extension is added to source-root discovery for
+that compile and defaults to Level G unless the source states another level
+explicitly. This supports host-specific source names without making every
+possible extension a recommended CREXX extension.
+
+`.rxpp` remains the preprocessor-oriented source extension for existing RXPP
+workflows. Longer term, preprocessing may become idempotent and better
+integrated so ordinary `.crexx` and `.crx` sources can pass through it safely,
+but that is separate from the source import extension rules.
 
 The primary source root is the directory of the source file being
 compiled. If the source file name does not include a directory, the
@@ -56,6 +70,11 @@ For source imports, `rxc` performs a cheap header scan before doing a
 full parse. That scan reads the leading `options`, `namespace`, and
 `import` clauses so the compiler can reject namespace-mismatched source
 files early and avoid unnecessary full validation work.
+
+Within each source root, the compiler looks for `.crexx`, `.crx`, `.rexx`, and
+the initial file's extension when it is different from those standard names.
+Source files with the same module stem are de-duplicated within that source
+stage so one source module is imported for a stem.
 
 Within a single binary root, when multiple artifacts share the same
 module stem, the compiler keeps only the freshest candidate. If

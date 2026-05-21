@@ -1,7 +1,9 @@
 # Modules
 
-Each `.rexx` source file compiles to a module. The compiler writes RXAS
-assembly (`.rxas`), and the assembler writes RXBIN bytecode (`.rxbin`).
+Each source file compiles to a module. New CREXX source normally uses `.crexx`
+or `.crx`; `.rexx` remains the compatibility/classic extension. The compiler
+writes RXAS assembly (`.rxas`), and the assembler writes RXBIN bytecode
+(`.rxbin`).
 
 A module can contain:
 
@@ -40,12 +42,18 @@ import rxfnsb
 say date("w")
 ```
 
-The compiler searches source roots for `.rexx` imports and binary roots for
+The compiler searches source roots for source imports and binary roots for
 `.rxbin`, optional `.rxas`, and `.rxplugin` imports. `rxc -s` adds source roots;
 `rxc -i` adds binary roots. Repeated `-s` and `-i` options are accumulated.
 The source file's directory is a source root only, not an implicit binary root;
 use `-i .` or `-i build-dir` when a nearby `.rxbin` should satisfy compile-time
-imports. Only `.rexx` files are discovered as source imports.
+imports.
+
+Source roots search `.crexx`, `.crx`, and `.rexx`. If the initial source file
+uses another extension, such as `.the`, that extension is searched as source
+for this compile too. Default levels are Level G for `.crexx`, `.crx`, and
+arbitrary initial extensions, and Level C for `.rexx`, unless the source has an
+explicit `options level...` clause.
 
 Qualified references use the imported namespace:
 

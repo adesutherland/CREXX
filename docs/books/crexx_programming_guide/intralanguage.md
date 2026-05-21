@@ -95,7 +95,7 @@ say current is .garage..car
 
 At compile time, \code{rxc} now distinguishes between:
 
-- source roots, used for `.rexx`
+- source roots, used for CREXX source files
 - binary roots, used for `.rxbin`, optional `.rxas`, and plugins
 
 The source file being compiled contributes its own directory as the primary
@@ -104,9 +104,15 @@ passed with `-i`. The primary source directory is not automatically a binary
 root, so a sibling `.rxbin` is visible only when that directory is also passed
 with `-i`.
 
-Only `.rexx` files are discovered from source roots. Files with extensions such
-as `.crexx` or `.arexx` may be compiled directly, but they are not scanned as
-source import candidates.
+Source-root discovery includes `.crexx`, `.crx`, and `.rexx`. If the initial
+source file has another extension, for example `.the`, that extension is added
+to source-root discovery for that compile. The default language level is Level
+G for `.crexx`, `.crx`, and arbitrary initial extensions, and Level C for
+`.rexx`; explicit `options level...` always wins.
+
+`.rxpp` remains the extension for existing RXPP preprocessor workflows. A
+future idempotent preprocessor path may reduce the need for a separate
+preprocessor extension, but that is not part of the source import rule.
 
 For ordinary project work this means:
 

@@ -1153,6 +1153,77 @@ add_test(NAME source_import_dotted_floats_decimal_opt
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(source_import_dotted_floats_decimal_opt PROPERTIES LABELS "compiler;imports;linked_opt")
 
+set(SOURCE_EXTENSION_DIRECT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_extension_direct_defaults.cmake")
+set(SOURCE_EXTENSION_DIRECT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_extension_direct_defaults_ws\")\n")
+string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "file(WRITE \"\${work}/direct.crexx\" \"namespace direct_crexx\\nmain: procedure\\n  say 'direct-crexx'\\n  return\\n\")\n")
+string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "file(WRITE \"\${work}/direct.crx\" \"namespace direct_crx\\nmain: procedure\\n  say 'direct-crx'\\n  return\\n\")\n")
+string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "file(WRITE \"\${work}/direct.the\" \"namespace direct_the\\nmain: procedure\\n  say 'direct-the'\\n  return\\n\")\n")
+string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "file(WRITE \"\${work}/direct.rexx\" \"namespace direct_rexx\\nmain: procedure\\n  say 'direct-rexx'\\n  return\\n\")\n")
+foreach(_source_ext IN ITEMS crexx crx the)
+    string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"direct_${_source_ext}\" \"\${work}/direct.${_source_ext}\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed for direct .${_source_ext} default source: \${out}\")\nendif()\n")
+    string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "if(NOT EXISTS \"\${work}/direct_${_source_ext}.rxas\")\n  message(FATAL_ERROR \"Expected direct_${_source_ext}.rxas was not produced\")\nendif()\n")
+endforeach()
+string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"direct_rexx\" \"\${work}/direct.rexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "if(res EQUAL 0)\n  message(FATAL_ERROR \"Headerless .rexx source unexpectedly compiled as CREXX source\")\nendif()\n")
+string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "if(NOT out MATCHES \"Level C\")\n  message(FATAL_ERROR \"Headerless .rexx should default to Level C; got: \${out}\")\nendif()\n")
+file(GENERATE OUTPUT "${SOURCE_EXTENSION_DIRECT_SCRIPT}" CONTENT "${SOURCE_EXTENSION_DIRECT_CONTENT}")
+
+add_test(NAME source_extension_direct_defaults
+         COMMAND ${CMAKE_COMMAND} -P "${SOURCE_EXTENSION_DIRECT_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(source_extension_direct_defaults PROPERTIES LABELS "compiler;imports;extensions")
+
+set(SOURCE_EXTENSION_STANDARD_IMPORT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_extension_standard_imports.cmake")
+set(SOURCE_EXTENSION_STANDARD_IMPORT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_extension_standard_imports_ws\")\n")
+string(APPEND SOURCE_EXTENSION_STANDARD_IMPORT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND SOURCE_EXTENSION_STANDARD_IMPORT_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND SOURCE_EXTENSION_STANDARD_IMPORT_CONTENT "file(WRITE \"\${work}/main.crexx\" \"namespace source_extension_standard\\nimport extdepcrexx\\nimport extdepcrx\\nimport extdeprexx\\nsay dep_crexx() || ':' || dep_crx() || ':' || dep_rexx()\\n\")\n")
+string(APPEND SOURCE_EXTENSION_STANDARD_IMPORT_CONTENT "file(WRITE \"\${work}/dep_crexx.crexx\" \"namespace extdepcrexx expose dep_crexx\\ndep_crexx: procedure = .string\\n  return 'crexx'\\n\")\n")
+string(APPEND SOURCE_EXTENSION_STANDARD_IMPORT_CONTENT "file(WRITE \"\${work}/dep_crx.crx\" \"namespace extdepcrx expose dep_crx\\ndep_crx: procedure = .string\\n  return 'crx'\\n\")\n")
+string(APPEND SOURCE_EXTENSION_STANDARD_IMPORT_CONTENT "file(WRITE \"\${work}/dep_rexx.rexx\" \"options levelg\\nnamespace extdeprexx expose dep_rexx\\ndep_rexx: procedure = .string\\n  return 'rexx'\\n\")\n")
+string(APPEND SOURCE_EXTENSION_STANDARD_IMPORT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"main\" \"\${work}/main.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND SOURCE_EXTENSION_STANDARD_IMPORT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed to discover standard source extensions: \${out}\")\nendif()\n")
+file(GENERATE OUTPUT "${SOURCE_EXTENSION_STANDARD_IMPORT_SCRIPT}" CONTENT "${SOURCE_EXTENSION_STANDARD_IMPORT_CONTENT}")
+
+add_test(NAME source_extension_standard_imports
+         COMMAND ${CMAKE_COMMAND} -P "${SOURCE_EXTENSION_STANDARD_IMPORT_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(source_extension_standard_imports PROPERTIES LABELS "compiler;imports;extensions")
+
+set(SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_extension_rexx_import_default.cmake")
+set(SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_extension_rexx_import_default_ws\")\n")
+string(APPEND SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_CONTENT "file(WRITE \"\${work}/main.crexx\" \"namespace source_extension_rexx_default\\nimport extdeprexx\\nsay dep_rexx()\\n\")\n")
+string(APPEND SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_CONTENT "file(WRITE \"\${work}/dep_rexx.rexx\" \"namespace extdeprexx expose dep_rexx\\ndep_rexx: procedure = .string\\n  return 'rexx'\\n\")\n")
+string(APPEND SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"main\" \"\${work}/main.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_CONTENT "if(res EQUAL 0)\n  message(FATAL_ERROR \"Headerless .rexx import unexpectedly inherited the .crexx Level G default\")\nendif()\n")
+string(APPEND SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_CONTENT "if(NOT out MATCHES \"FUNCTION_NOT_FOUND\")\n  message(FATAL_ERROR \"Expected headerless .rexx import to remain unavailable as Level C source; got: \${out}\")\nendif()\n")
+file(GENERATE OUTPUT "${SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_SCRIPT}" CONTENT "${SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_CONTENT}")
+
+add_test(NAME source_extension_rexx_import_default
+         COMMAND ${CMAKE_COMMAND} -P "${SOURCE_EXTENSION_REXX_IMPORT_DEFAULT_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(source_extension_rexx_import_default PROPERTIES LABELS "compiler;imports;extensions")
+
+set(SOURCE_EXTENSION_ARBITRARY_IMPORT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_extension_arbitrary_imports.cmake")
+set(SOURCE_EXTENSION_ARBITRARY_IMPORT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_extension_arbitrary_imports_ws\")\n")
+string(APPEND SOURCE_EXTENSION_ARBITRARY_IMPORT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND SOURCE_EXTENSION_ARBITRARY_IMPORT_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND SOURCE_EXTENSION_ARBITRARY_IMPORT_CONTENT "file(WRITE \"\${work}/main.the\" \"namespace source_extension_the\\nimport thedep\\nsay the_value()\\n\")\n")
+string(APPEND SOURCE_EXTENSION_ARBITRARY_IMPORT_CONTENT "file(WRITE \"\${work}/dep.the\" \"namespace thedep expose the_value\\nthe_value: procedure = .string\\n  return 'from-the'\\n\")\n")
+string(APPEND SOURCE_EXTENSION_ARBITRARY_IMPORT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"main\" \"\${work}/main.the\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND SOURCE_EXTENSION_ARBITRARY_IMPORT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed to discover arbitrary initial source extension: \${out}\")\nendif()\n")
+file(GENERATE OUTPUT "${SOURCE_EXTENSION_ARBITRARY_IMPORT_SCRIPT}" CONTENT "${SOURCE_EXTENSION_ARBITRARY_IMPORT_CONTENT}")
+
+add_test(NAME source_extension_arbitrary_imports
+         COMMAND ${CMAKE_COMMAND} -P "${SOURCE_EXTENSION_ARBITRARY_IMPORT_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(source_extension_arbitrary_imports PROPERTIES LABELS "compiler;imports;extensions")
+
 set(INLINE_LOCAL_MEMBER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_local_member_scalar_opt.cmake")
 set(INLINE_LOCAL_MEMBER_CONTENT "set(full_out \"\")\n")
 string(APPEND INLINE_LOCAL_MEMBER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_local_member_scalar_opt_ws\")\n")

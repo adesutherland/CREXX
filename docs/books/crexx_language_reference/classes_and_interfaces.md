@@ -416,9 +416,9 @@ return type.
 If a provider reports `#INTERFACE_NOT_FOUND` or
 `#INTERFACE_MEMBER_SIGNATURE_MISMATCH`, check these first:
 
-- the provider compile can find the source module (`.rexx` in a source root) or
-  binary module (`.rxbin` in a directory passed with `-i`) that exposes the
-  interface
+- the provider compile can find the source module (`.crexx`, `.crx`, `.rexx`,
+  or the initial file's arbitrary extension in a source root) or binary module
+  (`.rxbin` in a directory passed with `-i`) that exposes the interface
 - the class factory argument list exactly matches the interface factory argument
   list
 - a binary contract is intentional; sibling `.rxbin` files are not searched

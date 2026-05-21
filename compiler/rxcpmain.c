@@ -32,6 +32,7 @@
 #include <string.h>
 #include "platform.h"
 #include "rxcpmain.h"
+#include "rxcp_source_ext.h"
 #include "rxcp_source_tree.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
@@ -164,6 +165,7 @@ Context *cntx_f() {
     context = calloc(1, sizeof(Context)); /* Zero Contents */
 
     context->level = UNKNOWN;
+    context->cli_level_override = UNKNOWN;
     context->cli_default_level = UNKNOWN;
     context->lexer_stem_mode = 0;
     context->comments_hash = 1; /* This is the recommended & default line comment style */
@@ -279,6 +281,8 @@ void fre_cntx(Context *context)  {
 
     if (context->traceFile) fclose(context->traceFile);
 
+    if (context->initial_source_extension) free(context->initial_source_extension);
+
     free(context);
 }
 
@@ -304,6 +308,8 @@ int rxcmain(int argc, char *argv[]) {
     int disable_exits = 0;
     int auto_import_rxas = 0;
     char *file_directory = 0;
+    char *input_source_extension = 0;
+    const char* filename_extension;
     RexxLevel cli_default_level = UNKNOWN;
     char **cli_import_names = 0;
     size_t cli_import_count = 0;
@@ -490,15 +496,28 @@ int rxcmain(int argc, char *argv[]) {
     if (source_import_locations && debug_mode >= 2) fprintf(stderr, "Combined source import roots: %s\n", source_import_locations);
     if (import_locations && debug_mode >= 2) fprintf(stderr, "Combined binary import roots: %s\n", import_locations);
 
+    filename_extension = filenext(file_name);
+    input_source_extension = rxcp_source_extension_copy(file_name);
+    if (!input_source_extension) error_and_exit(255, "Out of memory copying source extension");
+    if (!input_source_extension[0]) {
+        free(input_source_extension);
+        input_source_extension = strdup("rexx");
+        if (!input_source_extension) error_and_exit(255, "Out of memory copying source extension");
+    }
+
     char *allocated_output_file_name = 0;
     if (!output_file_name) {
-        allocated_output_file_name = strip_rightmost_extension_if(file_name, "rexx");
+        allocated_output_file_name = strip_rightmost_extension_if(file_name, input_source_extension);
         output_file_name = allocated_output_file_name;
     }
 
     /* Context Structure */
     context = cntx_f();
-    context->cli_default_level = cli_default_level;
+    context->initial_source_extension = input_source_extension;
+    context->cli_level_override = cli_default_level;
+    context->cli_default_level = cli_default_level != UNKNOWN ?
+                                 cli_default_level :
+                                 rxcp_source_default_level_for_extension(context->initial_source_extension);
     context->cli_import_names = cli_import_names;
     context->cli_import_count = cli_import_count;
 
@@ -513,7 +532,6 @@ int rxcmain(int argc, char *argv[]) {
     if (debug_mode >= 2) fprintf(stderr, "Input file is %s\n", file_name);
 
     /* Open input file */
-    const char* filename_extension = filenext(file_name);
     if (filename_extension[0] == 0)
       {
         context->file_pointer = openfile(file_name,"rexx", location, "r");
