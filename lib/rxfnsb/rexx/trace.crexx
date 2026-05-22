@@ -25,7 +25,7 @@
 /* REXX Level B trace runtime internals */
 options levelb
 
-namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_handler
+namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_format _trace_set_output _trace_handler
 
 trace_interrupt_raw: class
   _code = .int with register.1.int
@@ -283,7 +283,7 @@ tracecontroller: class
     arg mod_num = .int, name = .string
     return _trace_find_proc(mod_num, name)
 
-_trace_set: procedure = .void expose _trace_runtime_ready _trace_controller _trace_last_line
+_trace_set: procedure = .void expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format
   arg mode = .string
   call _trace_ensure_runtime
   normalized = _trace_normalize_mode(mode)
@@ -294,10 +294,43 @@ _trace_set: procedure = .void expose _trace_runtime_ready _trace_controller _tra
     return
   end
 
+  if normalized = "LLM" then do
+    _trace_format = "LLM"
+    call _trace_controller.set_mode("REXX")
+    return
+  end
+
+  _trace_format = "TEXT"
   call _trace_controller.set_mode(normalized)
   return
 
-_trace_handler: procedure = .int expose _trace_runtime_ready _trace_controller _trace_last_line
+_trace_set_format: procedure = .void expose _trace_runtime_ready _trace_format
+  arg format = .string
+  call _trace_ensure_runtime
+  normalized = upper(strip(format))
+  if normalized = "JSON" then normalized = "LLM"
+  if normalized = "META" then normalized = "LLM"
+  if normalized = "METADATA" then normalized = "LLM"
+  if normalized <> "LLM" then normalized = "TEXT"
+  _trace_format = normalized
+  return
+
+_trace_set_output: procedure = .void expose _trace_runtime_ready _trace_output_target
+  arg target = .string
+  call _trace_ensure_runtime
+  target = strip(target)
+  if target = "" then target = "stdout"
+  normalized = lower(target)
+  if normalized = "out" then target = "stdout"
+  else if normalized = "output" then target = "stdout"
+  else if normalized = "stdout" then target = "stdout"
+  else if normalized = "err" then target = "stderr"
+  else if normalized = "error" then target = "stderr"
+  else if normalized = "stderr" then target = "stderr"
+  _trace_output_target = target
+  return
+
+_trace_handler: procedure = .int expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format _trace_output_target
   arg expose raw = .trace_interrupt_raw
   call _trace_ensure_runtime
 
@@ -305,26 +338,33 @@ _trace_handler: procedure = .int expose _trace_runtime_ready _trace_controller _
   event = _trace_controller.context_from_interrupt(raw)
   if _trace_controller.should_trace(event) = 0 then return 0
 
-  line = .string
+  line = ""
+  key = ""
   if _trace_controller.mode() = "ASM" then do
-    line = event.asm_line()
-    if event.has_source() <> 0 then line = line || " " || event.source_line()
+    if event.asm_line() = "" then return 0
+    key = "ASM|" || event.module() || "|" || event.address() || "|" || event.asm_line()
+    if _trace_format = "LLM" then line = _trace_format_llm(event)
+    else line = _trace_format_text(event)
   end
   else do
     if event.has_source() = 0 then return 0
-    line = event.source_line()
-    if line = _trace_last_line then return 0
+    key = "SRC|" || event.module() || "|" || event.line() || "|" || event.column() || "|" || event.source()
+    if _trace_format = "LLM" then line = _trace_format_llm(event)
+    else line = _trace_format_text(event)
   end
 
   if line = "" then return 0
-  _trace_last_line = line
-  say line
+  if key = _trace_last_line then return 0
+  _trace_last_line = key
+  call _trace_write_line(line)
   return 0
 
-_trace_ensure_runtime: procedure expose _trace_runtime_ready _trace_controller _trace_last_line
+_trace_ensure_runtime: procedure expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format _trace_output_target
   if _trace_runtime_ready = 1 then return
   _trace_controller = .tracecontroller()
   _trace_last_line = ""
+  _trace_format = "TEXT"
+  _trace_output_target = "stdout"
   _trace_runtime_ready = 1
   return
 
@@ -333,9 +373,86 @@ _trace_normalize_mode: procedure = .string
   normalized = upper(strip(mode))
   if normalized = "" then return "REXX"
   if normalized = "NORMAL" then return "REXX"
+  if normalized = "LLM" then return "LLM"
+  if normalized = "META" then return "LLM"
+  if normalized = "METADATA" then return "LLM"
   if normalized = "ASM" then return "ASM"
   if normalized = "OFF" then return "OFF"
   return "REXX"
+
+_trace_format_text: procedure = .string
+  arg event = .tracecontext
+  if event.has_source() <> 0 then do
+    return "(" || event.line() || ":" || event.column() || ") " || _trace_escape_text(event.source())
+  end
+  return event.asm_line()
+
+_trace_format_llm: procedure = .string
+  arg event = .tracecontext
+  return "{" || ,
+         _trace_json_pair("event", "trace") || "," || ,
+         _trace_json_pair("format", "llm") || "," || ,
+         _trace_json_pair("mode", event.mode()) || "," || ,
+         _trace_json_pair("module", event.module()) || "," || ,
+         _trace_json_pair("address", event.address()) || "," || ,
+         _trace_json_pair("procedure", event.procedure()) || "," || ,
+         _trace_json_pair("line", event.line()) || "," || ,
+         _trace_json_pair("column", event.column()) || "," || ,
+         _trace_json_pair("source", event.source()) || "," || ,
+         _trace_json_pair("asm", event.asm_line()) || ,
+         "}"
+
+_trace_json_pair: procedure = .string
+  arg name = .string, value = .string
+  return _trace_json_string(name) || ":" || _trace_json_string(value)
+
+_trace_json_string: procedure = .string
+  arg value = .string
+  return '"' || _trace_escape_text(value) || '"'
+
+_trace_escape_text: procedure = .string
+  arg text = .string
+  result = ""
+  do i = 1 to length(text)
+    ch = substr(text, i, 1)
+    if ch = '\' then result = result || '\\'
+    else if ch = '"' then result = result || '\"'
+    else if ch = '09'x then result = result || '\t'
+    else if ch = '0a'x then result = result || '\n'
+    else if ch = '0c'x then result = result || '\f'
+    else if ch = '0d'x then result = result || '\r'
+    else do
+      code = x2d(c2x(ch))
+      if code < 32 then result = result || '\x' || right(c2x(ch), 2, "0")
+      else result = result || ch
+    end
+  end
+  return result
+
+_trace_write_line: procedure = .void expose _trace_output_target
+  arg line = .string
+  target = _trace_output_target
+  if target = "" then target = "stdout"
+
+  nl = '0a'x
+  mode = "a"
+  if target = "stdout" | target = "stderr" then mode = "w"
+
+  fileid = 0
+  assembler fopen fileid, target, mode
+  if fileid = 0 then do
+    say "TRACE output target" target "could not open"
+    return
+  end
+
+  assembler fwrite fileid, line
+  assembler fwrite fileid, nl
+
+  if target <> "stdout" & target <> "stderr" then do
+    rc = 0
+    assembler fclose rc, fileid
+  end
+  return
 
 _trace_exact_source: procedure = .int
   arg module = .int, addr = .int, expose line = .int, expose column = .int, expose source = .string, expose result = .string
