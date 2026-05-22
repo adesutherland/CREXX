@@ -20,7 +20,7 @@ main() .locals=0
    say "0"
    .src 5:1="say t | f"
    say "1"
-   .src 6:1="say \t"
+   .src 6:1="say \\t"
    say "0"
    .src 6:7=""
    ret

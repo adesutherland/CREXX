@@ -30,7 +30,7 @@ main() .locals=10
    .src 13:3="say calls"
    itos r0
    say r0
-   .src 15:2="if \probe(0, calls)"
+   .src 15:2="if \\probe(0, calls)"
    .src 15:7="probe"
    .src 32:3="count = count + 1"
    iadd r0,r0,1

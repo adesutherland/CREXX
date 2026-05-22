@@ -38,7 +38,7 @@ l16ortrue:
 l16orend:
    btos r2
    say r2
-   .src 6:1="say \t"
+   .src 6:1="say \\t"
    not r2,r1
    btos r2
    say r2

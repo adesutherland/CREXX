@@ -20,7 +20,7 @@ main() .locals=15
    .meta "13_stems.main.s"="b" ".stem" r1
    load r2,0
    call r1,§rxfnsb.stem.§factory(),r2
-   .src 7:0="if s.missing \= \"\""
+   .src 7:0="if s.missing \\= \"\""
    .meta "13_stems.main.missing"="b" ".string" "missing"
    load r4,"missing"
    load r2,2
@@ -77,7 +77,7 @@ l28iffalse:
    settp r6,3
    call r8,§rxfnsb.stem.set(),r3
    swap r1,r4
-   .src 16:0="if s.alpha \= \"one\""
+   .src 16:0="if s.alpha \\= \"one\""
    load r6,"alpha"
    load r4,2
    settp r1,1
@@ -101,7 +101,7 @@ l28iffalse:
    sconcat r9,"Stem dotted lookup mismatch:",r9
    say r9
 l56iffalse:
-   .src 21:0="if s[\"beta\"] \= \"two\""
+   .src 21:0="if s[\"beta\"] \\= \"two\""
    load r11,"beta"
    load r9,2
    settp r1,1
@@ -135,7 +135,7 @@ l72iffalse:
    settp r14,3
    call r10,§rxfnsb.stem.set(),r11
    swap r1,r12
-   .src 27:0="if s.alpha \= \"updated\""
+   .src 27:0="if s.alpha \\= \"updated\""
    load r14,"alpha"
    load r12,2
    settp r1,1

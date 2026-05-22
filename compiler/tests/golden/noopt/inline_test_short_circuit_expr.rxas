@@ -64,7 +64,7 @@ l32ifend:
    .src 13:3="say calls"
    itos r0
    say r0
-   .src 15:2="if \probe(0, calls)"
+   .src 15:2="if \\probe(0, calls)"
    load r2,0
    load r1,2
    swap r3,r0

@@ -33,7 +33,7 @@ main() .locals=8
    itos r3
    sconcat r7,"Length of a[10] (a[]):",r3
    say r7
-   .src 9:0="if len \= 10"
+   .src 9:0="if len \\= 10"
    ine r7,r3,10
    brf l28iffalse,r7
    .src 9:14="then"
@@ -50,7 +50,7 @@ l28iffalse:
    itos r4
    sconcat r7,"Length of b[5] (b[0]):",r4
    say r7
-   .src 17:0="if len_b \= 5"
+   .src 17:0="if len_b \\= 5"
    ine r7,r4,5
    brf l51iffalse,r7
    .src 17:15="then"
@@ -70,7 +70,7 @@ l51iffalse:
    itos r5
    sconcat r7,"Length of c[3, 4] second dimension at index 1 (c[1, ]):",r5
    say r7
-   .src 25:0="if len_c \= 4"
+   .src 25:0="if len_c \\= 4"
    ine r7,r5,4
    brf l78iffalse,r7
    .src 25:15="then"

@@ -359,6 +359,10 @@ static size_t encode_line_source(char* buffer, size_t buffer_len, const char* st
                 ADD_CHAR_TO_BUFFER('\\')
                 ADD_CHAR_TO_BUFFER('\"')
                 break;
+            case '\\':
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('\\')
+                break;
             case '\t':
                 ADD_CHAR_TO_BUFFER('\\')
                 ADD_CHAR_TO_BUFFER('t')

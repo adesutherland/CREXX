@@ -23,7 +23,7 @@ main() .locals=4
    .src 14:1="say 'CONCAT test (a = \"Hello\" || \"World\"): ' || a"
    concat r3,"CONCAT test (a = \"Hello\" || \"World\"): ",r0
    say r3
-   .src 15:0="if a \= 'HelloWorld'"
+   .src 15:0="if a \\= 'HelloWorld'"
    sne r3,r0,"HelloWorld"
    brf l23iffalse,r3
    .src 15:22="then"
@@ -39,7 +39,7 @@ l23iffalse:
    .src 21:1="say 'SCONCAT test (b = \"Hello\" \"World\"): ' || b"
    concat r3,"SCONCAT test (b = \"Hello\" \"World\"): ",r1
    say r3
-   .src 22:0="if b \= 'Hello World'"
+   .src 22:0="if b \\= 'Hello World'"
    sne r3,r1,"Hello World"
    brf l41iffalse,r3
    .src 22:23="then"
@@ -57,7 +57,7 @@ l41iffalse:
    concat r3,"SCONCAT (diff quotes) test (c = \"Hello\"",r3
    concat r3,r3,r2
    say r3
-   .src 32:0="if c \= 'HelloWorld'"
+   .src 32:0="if c \\= 'HelloWorld'"
    sne r3,r2,"HelloWorld"
    brf l61iffalse,r3
    .src 32:22="then"

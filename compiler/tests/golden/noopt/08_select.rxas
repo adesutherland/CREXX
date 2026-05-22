@@ -104,7 +104,7 @@ l174iffalse:
    .src 28:13="errors = errors + 1"
    iadd r3,r3,1
 l174ifend:
-   .src 31:0="if classic_seen \= 1"
+   .src 31:0="if classic_seen \\= 1"
    ine r8,r1,1
    brf l110iffalse,r8
    .src 31:22="then"
@@ -113,7 +113,7 @@ l174ifend:
    .src 33:3="say \"Classic SELECT branch did not run\""
    say "Classic SELECT branch did not run"
 l110iffalse:
-   .src 36:0="if cstyle_seen \= 1"
+   .src 36:0="if cstyle_seen \\= 1"
    ine r8,r2,1
    brf l122iffalse,r8
    .src 36:21="then"
@@ -122,7 +122,7 @@ l110iffalse:
    .src 38:3="say \"C-style SELECT branch did not run\""
    say "C-style SELECT branch did not run"
 l122iffalse:
-   .src 41:0="if nested_seen \= 1"
+   .src 41:0="if nested_seen \\= 1"
    ine r8,r4,1
    brf l134iffalse,r8
    .src 41:21="then"

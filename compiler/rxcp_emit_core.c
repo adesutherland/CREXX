@@ -56,11 +56,14 @@ void reset_metaline_source_file(const char *file_name) {
 
 static char *prefix_source_file_if_needed(char *line, const char *file_name) {
     char *result;
+    char *src_file;
 
     if (!line || !line[0] || !file_name) return line;
     if (active_source_file && strcmp(active_source_file, file_name) == 0) return line;
 
-    result = mprintf("   .srcfile=\"%s\"\n%s", file_name, line);
+    src_file = encode_line_source_malloc(file_name, strlen(file_name));
+    result = mprintf("   .srcfile=\"%s\"\n%s", src_file, line);
+    free(src_file);
     free(line);
     active_source_file = file_name;
     return result;

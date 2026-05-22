@@ -51,7 +51,7 @@ main() .locals=5
    unlink r4
    concat r3,r3,"]"
    say r3
-   .src 12:0="if s.i \= \"first\""
+   .src 12:0="if s.i \\= \"first\""
    minattrs r1,1
    linkattr1 r4,r1,1
    sne r3,r4,"first"

@@ -20,6 +20,13 @@ crexx_add_compiler_exit_runtime_test(
 )
 
 crexx_add_compiler_exit_runtime_test(
+        test_trace_negated_string
+        test_trace_negated_string.crexx
+        PASS_REGULAR_EXPRESSION "\\(6:3\\).*return \\\\flag"
+        RUN_SUFFIX ${LIBRPATH}
+)
+
+crexx_add_compiler_exit_runtime_test(
         test_trace_direct
         test_trace_direct.crexx
         EXTRA_DEPENDS exit_test_support_bin

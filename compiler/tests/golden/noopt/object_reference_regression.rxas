@@ -459,7 +459,7 @@ l191doend:
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 100:4="if values[17] \= name || \":17\""
+   .src 100:4="if values[17] \\= name || \":17\""
    linkattr1 r2,a1,11
    minattrs r2,17
    linkattr1 r1,r2,17
@@ -474,7 +474,7 @@ l191doend:
    .meta "object_reference_regression.largepayload.check.§this"="b" ".largepayload" a1
    ret "bad-17"
 l335iffalse:
-   .src 101:4="if marker1 \= name || \":m1\""
+   .src 101:4="if marker1 \\= name || \":m1\""
    linkattr1 r3,a1,2
    linkattr1 r2,a1,10
    concat r1,r2,":m1"
@@ -486,7 +486,7 @@ l335iffalse:
    .src 101:38="return \"bad-m1\""
    ret "bad-m1"
 l343iffalse:
-   .src 102:4="if marker8 \= name || \":m8\""
+   .src 102:4="if marker8 \\= name || \":m8\""
    linkattr1 r3,a1,9
    linkattr1 r2,a1,10
    concat r1,r2,":m8"

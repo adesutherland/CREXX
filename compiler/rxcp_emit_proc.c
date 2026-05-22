@@ -86,10 +86,13 @@ void emit_proc(ASTNode *node, void *pl) {
 
         case PROGRAM_FILE:
         {
+            char *src_file = encode_line_source_malloc(payload->context->file_name,
+                                                       strlen(payload->context->file_name));
             char *buf = mprintf(".srcfile=\"%s\"\n"
                                 ".globals=%d\n",
-                                payload->context->file_name,
+                                src_file,
                                 payload->globals);
+            free(src_file);
 
             if (node->output) output_prepend_text(buf, node->output);
             else node->output = output_fs(buf);
