@@ -74,6 +74,9 @@ It writes escaped JSON-lines-style records through the trace runtime and can be
 combined with `TO STDERR` or `TO FILE expr` when debugger automation needs a
 separate trace stream.
 
+See `docs/ai-context/CREXX_TRACE_REQUIREMENTS.md` for the TRACE compatibility
+target, current implementation status, output formats, and enhancement roadmap.
+
 Keep watch-value reads in the interrupt handler unless the VM exposes a
 frame-safe abstraction: `metalinkpreg` must inspect the interrupted child frame,
 and moving that logic behind an ordinary method call changes the frame being

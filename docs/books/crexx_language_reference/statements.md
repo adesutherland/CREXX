@@ -263,6 +263,9 @@ TRACE is implemented as a certified compiler exit. It requires normal compiler
 exit loading; compiling with exits disabled rejects the statement rather than
 treating it as an implicit command.
 
+Implementation status and compatibility requirements are tracked in
+`docs/ai-context/CREXX_TRACE_REQUIREMENTS.md`.
+
 # Procedures and Arguments
 
 ## Procedure-Level Expose
