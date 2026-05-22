@@ -1354,7 +1354,9 @@ dispatch_address_request: procedure = .addressresponse expose _address_runtime_r
   if idx = 0 then return unknown_environment_response(env_name)
 
   env_obj = _address_environment_objects[idx] as .addressenvironment
+  call rxfnsb.._trace_command_before(env_name, request.get_command())
   response = env_obj.execute(request)
+  call rxfnsb.._trace_command_after(env_name, request.get_command(), response.get_rc(), response.get_condition_name())
   _address_environment_objects[idx] = env_obj
   return response
 

@@ -1,7 +1,7 @@
 options levelb comments_dash
 
 main: procedure
-  trace normal
+  trace results
   say "TRACE REXX ACTIVE"
   trace off
   trace asm

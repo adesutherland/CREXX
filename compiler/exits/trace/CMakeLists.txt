@@ -15,14 +15,21 @@ add_custom_target(exit_trace_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Trace.rxbin
 crexx_add_compiler_exit_runtime_test(
         test_trace_exit
         test_trace_exit.crexx
-        PASS_REGULAR_EXPRESSION "\\(5:3\\).*TRACE REXX ACTIVE"
+        PASS_REGULAR_EXPRESSION "[ ]*5 \\*-\\* say .*TRACE REXX ACTIVE"
         RUN_SUFFIX ${LIBRPATH}
 )
 
 crexx_add_compiler_exit_runtime_test(
         test_trace_negated_string
         test_trace_negated_string.crexx
-        PASS_REGULAR_EXPRESSION "\\(6:3\\).*return \\\\\\\\flag"
+        PASS_REGULAR_EXPRESSION "[ ]*6 \\*-\\* return \\\\\\\\flag"
+        RUN_SUFFIX ${LIBRPATH}
+)
+
+crexx_add_compiler_exit_runtime_test(
+        test_trace_results
+        test_trace_results.crexx
+        PASS_REGULAR_EXPRESSION ">>>[ ]+\"42\""
         RUN_SUFFIX ${LIBRPATH}
 )
 
@@ -137,7 +144,7 @@ endfunction()
 crexx_add_trace_capture_test(
         test_trace_stderr
         test_trace_stderr.crexx
-        EXPECT_STDERR_REGEX "\\(6:3\\).*return"
+        EXPECT_STDERR_REGEX "[ ]*6 \\*-\\* return"
         REJECT_STDOUT_REGEX "return"
 )
 
@@ -148,6 +155,19 @@ crexx_add_trace_capture_test(
         EXPECT_FILE_REGEX "\"format\":\"llm\".*\"source\":\"return"
         REJECT_STDOUT_REGEX "return"
         REJECT_STDERR_REGEX "return"
+)
+
+crexx_add_trace_capture_test(
+        test_trace_normal_quiet
+        test_trace_normal_quiet.crexx
+        EXPECT_STDOUT_REGEX "TRACE NORMAL QUIET"
+        REJECT_STDOUT_REGEX "\\*-\\*"
+)
+
+crexx_add_trace_capture_test(
+        test_trace_normal_command
+        test_trace_normal_command.crexx
+        EXPECT_STDOUT_REGEX "\\+\\+\\+[ ]+RC=-3 NOSUCH whatever"
 )
 
 set(TRACE_COMPILE_FAIL_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/trace_compile_fail.cmake")

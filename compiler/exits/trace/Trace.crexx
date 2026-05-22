@@ -61,7 +61,7 @@ traceexit: class
                 mode = canonicalTraceMode(mode_text)
                 if mode <> "" then do
                     call plan.add_keyword(start, tokens[start].get_text(), "trace_option", "trace")
-                    if mode <> "OFF" then call plan.add_helper(makeTraceHelper())
+                    if traceNeedsBreakpoints(mode) <> 0 then call plan.add_helper(makeTraceHelper())
                 end
             end
         end
@@ -90,6 +90,7 @@ traceexit: class
             call result.add_replacement_line("__rxtrace_mode=_trace_mode_from_option(" || mode_expr || ")")
             call result.add_replacement_line("call _trace_set(__rxtrace_mode)")
             call result.add_replacement_line("if __rxtrace_mode = ""OFF"" then assembler bpoff")
+            call result.add_replacement_line("else if _trace_needs_breakpoints(__rxtrace_mode) = 0 then assembler bpoff")
             call result.add_replacement_line("else do")
             call result.add_replacement_line("  assembler sigcall __rxtrace_handler(),""BREAKPOINT""")
             call result.add_replacement_line("  assembler bpon")
@@ -108,6 +109,10 @@ traceexit: class
         if mode = "OFF" then do
             call result.add_replacement_line("assembler bpoff")
             call result.add_replacement_line("call _trace_set(""OFF"")")
+        end
+        else if traceNeedsBreakpoints(mode) = 0 then do
+            call result.add_replacement_line("call _trace_set(""" || mode || """)")
+            call result.add_replacement_line("assembler bpoff")
         end
         else do
             call result.add_replacement_line("call _trace_set(""" || mode || """)")
@@ -160,31 +165,31 @@ canonicalTraceMode: procedure = .string
     if mode = "" then return "REXX"
     if isSignedInteger(mode) <> 0 then do
         if mode + 0 = 0 then return "OFF"
-        return "REXX"
+        return "N"
     end
-    if mode = "A" then return "REXX"
-    if mode = "ALL" then return "REXX"
-    if mode = "C" then return "REXX"
-    if mode = "COMMAND" then return "REXX"
-    if mode = "COMMANDS" then return "REXX"
-    if mode = "E" then return "REXX"
-    if mode = "ERROR" then return "REXX"
-    if mode = "ERRORS" then return "REXX"
-    if mode = "F" then return "REXX"
-    if mode = "FAILURE" then return "REXX"
-    if mode = "FAILURES" then return "REXX"
-    if mode = "I" then return "REXX"
-    if mode = "INTERMEDIATE" then return "REXX"
-    if mode = "INTERMEDIATES" then return "REXX"
-    if mode = "L" then return "REXX"
-    if mode = "LABEL" then return "REXX"
-    if mode = "LABELS" then return "REXX"
-    if mode = "NORMAL" then return "REXX"
-    if mode = "N" then return "REXX"
+    if mode = "A" then return "A"
+    if mode = "ALL" then return "A"
+    if mode = "C" then return "C"
+    if mode = "COMMAND" then return "C"
+    if mode = "COMMANDS" then return "C"
+    if mode = "E" then return "E"
+    if mode = "ERROR" then return "E"
+    if mode = "ERRORS" then return "E"
+    if mode = "F" then return "F"
+    if mode = "FAILURE" then return "F"
+    if mode = "FAILURES" then return "F"
+    if mode = "I" then return "I"
+    if mode = "INTERMEDIATE" then return "I"
+    if mode = "INTERMEDIATES" then return "I"
+    if mode = "L" then return "L"
+    if mode = "LABEL" then return "L"
+    if mode = "LABELS" then return "L"
+    if mode = "NORMAL" then return "N"
+    if mode = "N" then return "N"
     if mode = "REXX" then return "REXX"
-    if mode = "R" then return "REXX"
-    if mode = "RESULT" then return "REXX"
-    if mode = "RESULTS" then return "REXX"
+    if mode = "R" then return "R"
+    if mode = "RESULT" then return "R"
+    if mode = "RESULTS" then return "R"
     if mode = "ASM" then return "ASM"
     if mode = "LLM" then return "LLM"
     if mode = "JSON" then return "LLM"
@@ -193,6 +198,17 @@ canonicalTraceMode: procedure = .string
     if mode = "O" then return "OFF"
     if mode = "OFF" then return "OFF"
     return ""
+
+traceNeedsBreakpoints: procedure = .int
+    arg mode = .string
+    mode = upper(strip(mode))
+    if mode = "ASM" then return 1
+    if mode = "LLM" then return 1
+    if mode = "A" then return 1
+    if mode = "I" then return 1
+    if mode = "R" then return 1
+    if mode = "REXX" then return 1
+    return 0
 
 isSignedInteger: procedure = .int
     arg text = .string
@@ -244,6 +260,30 @@ makeTraceHelper: procedure = .helperplan
     helper = .helperplan("__rxtrace_handler", "file_tail", "__rxtrace_handler", "")
     call helper.add_line("__rxtrace_handler: procedure = .int")
     call helper.add_line("  arg expose __rxtrace_raw = .trace_interrupt_raw")
+    call helper.add_line("  __rxtrace_parent_type = """"")
+    call helper.add_line("  __rxtrace_parent_value = """"")
+    call helper.add_line("  __rxtrace_parent_register = _trace_pending_parent_register(__rxtrace_raw.module(), __rxtrace_parent_type, __rxtrace_parent_value)")
+    call helper.add_line("  if __rxtrace_parent_register = -2 then call _trace_supply_parent_value(__rxtrace_parent_value)")
+    call helper.add_line("  else if __rxtrace_parent_register >= 0 then do")
+    call helper.add_line("    if __rxtrace_parent_type = "".int"" then do")
+    call helper.add_line("      __rxtrace_i_value = 0")
+    call helper.add_line("      assembler metalinkpreg __rxtrace_i_value,__rxtrace_parent_register")
+    call helper.add_line("      call _trace_supply_parent_value(__rxtrace_i_value)")
+    call helper.add_line("      assembler unlink __rxtrace_i_value")
+    call helper.add_line("    end")
+    call helper.add_line("    else if __rxtrace_parent_type = "".float"" then do")
+    call helper.add_line("      __rxtrace_f_value = 0.0")
+    call helper.add_line("      assembler metalinkpreg __rxtrace_f_value,__rxtrace_parent_register")
+    call helper.add_line("      call _trace_supply_parent_value(__rxtrace_f_value)")
+    call helper.add_line("      assembler unlink __rxtrace_f_value")
+    call helper.add_line("    end")
+    call helper.add_line("    else do")
+    call helper.add_line("      __rxtrace_s_value = """"")
+    call helper.add_line("      assembler metalinkpreg __rxtrace_s_value,__rxtrace_parent_register")
+    call helper.add_line("      call _trace_supply_parent_value(__rxtrace_s_value)")
+    call helper.add_line("      assembler unlink __rxtrace_s_value")
+    call helper.add_line("    end")
+    call helper.add_line("  end")
     call helper.add_line("  return _trace_handler(__rxtrace_raw)")
     return helper
 

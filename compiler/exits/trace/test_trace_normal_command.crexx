@@ -1,0 +1,7 @@
+options levelb
+
+main: procedure
+  trace normal
+  address nosuch "whatever"
+  say "TRACE NORMAL COMMAND"
+  return

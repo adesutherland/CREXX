@@ -1,0 +1,6 @@
+options levelb
+
+main: procedure
+  trace normal
+  say "TRACE NORMAL QUIET"
+  return

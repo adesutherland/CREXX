@@ -79,8 +79,11 @@ target, current implementation status, output formats, and enhancement roadmap.
 
 Keep watch-value reads in the interrupt handler unless the VM exposes a
 frame-safe abstraction: `metalinkpreg` must inspect the interrupted child frame,
-and moving that logic behind an ordinary method call changes the frame being
-linked.
+and moving that operation behind an ordinary method call changes the frame being
+linked. The shared `rxfnsb.trace` controller should own metadata lookup and
+target selection; generated/debugger handlers should limit themselves to the
+unavoidable frame-local register link and then hand the value back to the
+shared trace runtime.
 
 ### 7. Known Build and Platform Issues
 When encountering unusual build or execution errors on new platforms (e.g., macOS ARM, Windows), keep these documented issues in mind:

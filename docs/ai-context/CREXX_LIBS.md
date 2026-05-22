@@ -88,23 +88,34 @@ See `lib/rxfnsb/rexx/rxhttp.md`.
 by `rxdb` and by the `TRACE` certified compiler exit:
 
 - `.tracecontroller`: breakpoint enable/disable, module/procedure helpers,
-  source/ASM lookup, and default runtime/debugger filtering
+  source/ASM lookup, default runtime/debugger filtering, and shared
+  trace-value metadata lookup for simple assignment results
 - `.tracecontext`: immutable per-event module/address/source/ASM/procedure
   snapshot
 - `.trace_interrupt_raw`: internal register-mapped view of the VM interrupt
   object used by breakpoint handlers
 - `_trace_set(mode)`, `_trace_set_format(format)`, `_trace_set_output(target)`,
-  `_trace_mode_from_option(option)`, and `_trace_handler(raw)`: the
+  `_trace_mode_from_option(option)`, `_trace_needs_breakpoints(mode)`,
+  `_trace_pending_parent_register(module, type, value)`,
+  `_trace_supply_parent_value(value)`, and `_trace_handler(raw)`: the
   compiler-exit-facing runtime surface for setting trace mode/format/output,
-  normalizing dynamic `TRACE VALUE` options, and servicing `BREAKPOINT` events.
-  The exit still emits caller-frame assembler to enable/disable breakpoints and
-  install the handler, because VM signal tables are frame-owned.
+  normalizing dynamic `TRACE VALUE` options, coordinating simple `TRACE R`
+  parent-frame value reads, and servicing `BREAKPOINT` events.
+  `.tracecontroller` owns the result-target metadata lookup and pending value
+  state so other trace/debug users can share the same interpretation. The exit
+  still emits caller-frame assembler to enable/disable breakpoints, install the
+  handler, and perform the actual `metalinkpreg` read for a pending register,
+  because VM signal tables and `metalinkpreg` are frame-sensitive.
+- `_trace_command_before(environment, command)` and
+  `_trace_command_after(environment, command, rc, condition)`: ADDRESS dispatch
+  hooks used by `TRACE C`, `TRACE E`, `TRACE F`, and quiet/default `TRACE N`.
 
 Trace output is formatted in the runtime before being written. Text mode emits
-escaped source snippets such as `(line:column) source`, while `LLM` format emits
-one JSON-lines-style record per event for source metadata validation and
-automation-friendly debugging. `_trace_set_output` accepts `stdout`, `stderr`,
-or a file path; file targets are opened in append mode per trace record.
+standard-style prefixed records such as `line *-* source`, `>>> "result"`, and
+`+++ RC=...`, while `LLM` format emits one JSON-lines-style record per event
+for source metadata validation and automation-friendly debugging.
+`_trace_set_output` accepts `stdout`, `stderr`, or a file path; file targets are
+opened in append mode per trace record.
 
 The helpers rely on VM metadata instructions such as `metaloaddata`,
 `metaloadinst`, `metadecodeinst`, and `metaloadedmodules`, so deployable linked

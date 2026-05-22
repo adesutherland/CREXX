@@ -60,15 +60,15 @@ Current cREXX static `TRACE` accepts these names:
 
 Current gaps:
 
-- `TRACE N`/`TRACE NORMAL` has the wrong runtime behavior today: it is accepted,
-  but it traces source clauses. Standard Rexx `N` should be quiet except for
-  failing host commands after execution.
 - Static `TRACE` does not yet accept arbitrary trailing characters after a
   valid standard option letter.
 - `!` command inhibition is not accepted.
 - `S`/`Scan` is not accepted.
 - `TRACE` with no option does not yet restore defaults.
 - The public `TRACE()` BIF is not wired to the breakpoint-backed trace runtime.
+- The ADDRESS condition taxonomy is still coarse. `TRACE N` and `TRACE E`
+  currently report any non-zero `RC` or condition; `TRACE F` reports negative
+  `RC` or a `FAILURE` condition.
 
 ## Standard Text Output Format
 
@@ -96,29 +96,34 @@ The standard prefix tags are:
 The standard format encloses result values in double quotes so leading and
 trailing blanks are visible. Control characters may be made display-safe.
 
-Current cREXX text output is intentionally simpler and provisional:
+Current cREXX text output uses the standard prefix vocabulary for implemented
+events:
 
 ```text
-(line:column) escaped-source
+     5 *-* escaped-source
+       >>>   "escaped-result"
+       +++   RC=-3 ENVIRONMENT escaped-command
 ```
 
-For example, source text containing a backslash is printed visibly as
-`return \\flag`. This is good for immediate metadata debugging, but it is not
-yet the standard Rexx `line *-* clause` layout.
+The source line number is right-aligned in a six-character field. cREXX does
+not yet add nesting indentation. Source, command, and result text is escaped so
+backslashes, quotes, newlines, and other control characters stay visible and a
+single trace event stays on a single output line. For example, source text
+containing a backslash is printed visibly as `return \\flag`.
 
 ## Output By Option
 
 | Option | Required standard records | Current cREXX status |
 | --- | --- | --- |
-| `A` / `All` | `*-*` for all executed clauses before execution. | Accepted; currently maps to source-clause trace only. |
-| `C` / `Commands` | `*-*`/command text before each host command; `+++` return-code messages for command errors/failures. | Accepted; currently maps to source-clause trace, not host-command events. |
-| `E` / `Error` | `+++` for host commands with error or failure return status after execution. | Accepted; currently maps to source-clause trace, not command result events. |
-| `F` / `Failure` | `+++` for host commands with failure return status after execution. | Accepted; currently maps to source-clause trace, not command result events. |
-| `I` / `Intermediates` | `*-*`, final `>>>`, and intermediate `>C>`, `>F>`, `>L>`, `>O>`, `>P>`, `>V>` records. | Accepted; currently maps to source-clause trace only. Symbol and variable values appear feasible from interrupt-frame metadata, but operation-result tracing needs compiler or VM expression instrumentation. |
-| `L` / `Labels` | `*-*` for labels passed during execution. | Accepted; currently maps to source-clause trace. Needs label/pass events. |
-| `N` / `Normal` | Default; `+++` for failing host commands after execution. It should not trace every statement. | Accepted, but currently wrong: maps to source-clause trace. Default no-option reset is not implemented. |
+| `A` / `All` | `*-*` for all executed clauses before execution. | Implemented for source clauses with standard `*-*` text output. |
+| `C` / `Commands` | `*-*`/command text before each host command; `+++` return-code messages for command errors/failures. | Implemented for ADDRESS dispatch. Command-before records use `       *-* command`; non-zero `RC` or condition also emits `+++`. |
+| `E` / `Error` | `+++` for host commands with error or failure return status after execution. | Implemented for ADDRESS dispatch as non-zero `RC` or any condition. |
+| `F` / `Failure` | `+++` for host commands with failure return status after execution. | Implemented for ADDRESS dispatch as negative `RC` or `FAILURE` condition. |
+| `I` / `Intermediates` | `*-*`, final `>>>`, and intermediate `>C>`, `>F>`, `>L>`, `>O>`, `>P>`, `>V>` records. | Accepted. Currently emits source records and the same simple-assignment `>>>` subset as `R`; intermediate records still need compiler or VM expression instrumentation. |
+| `L` / `Labels` | `*-*` for labels passed during execution. | Accepted, but no label-pass events are emitted yet. |
+| `N` / `Normal` | Default; `+++` for failing host commands after execution. It should not trace every statement. | Implemented for ADDRESS dispatch and intentionally quiet for ordinary statements. Default no-option reset is not implemented. |
 | `O` / `Off` | No trace output; reset `?` and `!` prefix states. | Implemented for breakpoint trace disable. Prefix reset is incomplete because `!` is not implemented. |
-| `R` / `Results` | `*-*` for all clauses and `>>>` final expression results. | Accepted; currently maps to source-clause trace only. Final expression result events are not emitted. |
+| `R` / `Results` | `*-*` for all clauses and `>>>` final expression results. | Implemented for source clauses plus `>>>` for simple assignment targets where `.meta_reg`/`.meta_const` identifies the left-hand variable. `.tracecontroller` owns the metadata lookup and pending value state; the generated signal helper only performs the frame-local `metalinkpreg` read that must happen before returning to the shared runtime handler. Full expression and subexpression result coverage is not complete. |
 | `S` / `Scan` | Syntax-scan remaining clauses without executing them. | Not implemented or accepted. Requires compiler/runtime scan semantics separate from normal execution. |
 | `ASM` | cREXX extension: VM/RXAS instruction trace with source when available. | Implemented. |
 | `LLM` | cREXX extension: structured trace records for tooling. | Implemented. |
@@ -182,16 +187,13 @@ large number of interrupts. Recommended requirements before enabling it:
      new setting when an argument is supplied.
 
 2. Standard text output:
-   - add `line *-* source` output;
-   - add `+++`, `>>>`, `>.>`, and intermediate prefixes;
-   - preserve the current escaped-source behavior, either as the default cREXX
-     safety policy or behind a trace formatting option.
+   - add nesting indentation;
+   - add `>.>` and intermediate prefixes;
+   - broaden `>>>` beyond the current simple-assignment subset.
 
 3. Event coverage:
-   - add host-command before/after events in ADDRESS dispatch for `C`, `E`, `F`,
-     and `N`;
    - add label-pass events for `L`;
-   - add final expression result events for `R`;
+   - add full final expression result events for `R`;
    - add variable, literal, function, operation, prefix-operation, and compound
      variable events for `I`.
 
