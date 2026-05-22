@@ -24,6 +24,8 @@ foreach(_rxas_bin ${RXASBINS})
   list(APPEND RXXFNSB_RXAS_SELECTORS ${_rxas_selector})
 endforeach()
 set(RXXFNSB_RXAS_SELECTORS ${RXXFNSB_RXAS_SELECTORS} PARENT_SCOPE)
+set(RXXFNSB_RXAS_ARCHIVE "${CMAKE_CURRENT_BINARY_DIR}/library-rxas.rxbin")
+set(RXXFNSB_RXAS_ARCHIVE "${RXXFNSB_RXAS_ARCHIVE}" PARENT_SCOPE)
 
 unset(_prev_target)
 foreach(_binfile ${RXASBINS})
@@ -39,10 +41,11 @@ foreach(_binfile ${RXASBINS})
 endforeach()
 
 add_custom_command(
-        OUTPUT library-rxas.rxbin
-        COMMAND ${CMAKE_COMMAND} -E cat ${RXASBINS} > library-rxas.rxbin
+        OUTPUT "${RXXFNSB_RXAS_ARCHIVE}"
+        COMMAND ${CMAKE_COMMAND} -E cat ${RXASBINS} > "${RXXFNSB_RXAS_ARCHIVE}"
         COMMENT "cREXX RXAS Library Archive ..."
         DEPENDS ${RXASBINS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-add_custom_target(library-rxas ALL DEPENDS library-rxas.rxbin)
+add_custom_target(library-rxas ALL DEPENDS "${RXXFNSB_RXAS_ARCHIVE}")

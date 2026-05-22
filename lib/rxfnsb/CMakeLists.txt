@@ -11,8 +11,8 @@ add_subdirectory(tests_performance)
 set(_library_control_file ${CMAKE_CURRENT_BINARY_DIR}/library_link_$<CONFIG>.ctl)
 string(CONCAT _library_control_text
         "* Auto-generated control file for the consolidated cREXX library\n"
-        "INPUT rexx/library-rexx.rxbin\n"
-        "INPUT rxas/library-rxas.rxbin\n")
+        "INPUT ${RXXFNSB_REXX_ARCHIVE}\n"
+        "INPUT ${RXXFNSB_RXAS_ARCHIVE}\n")
 
 foreach(_selector ${RXXFNSB_REXX_SELECTORS})
     string(APPEND _library_control_text "INCLUDE ${_selector}\n")
@@ -31,7 +31,7 @@ add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/bin/library.rxbin
         COMMAND $<TARGET_FILE:rxlink> -c ${_library_control_file}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS rxlink library-rexx library-rxas rexx/library-rexx.rxbin rxas/library-rxas.rxbin ${_library_control_file}
+        DEPENDS rxlink library-rexx library-rxas "${RXXFNSB_REXX_ARCHIVE}" "${RXXFNSB_RXAS_ARCHIVE}" ${_library_control_file}
         COMMENT "cREXX Linked Library Image ..."
 )
 

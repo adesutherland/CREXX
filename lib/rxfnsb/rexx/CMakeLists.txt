@@ -123,6 +123,8 @@ foreach (BIF ${BIFS})
 endforeach ()
 
 set(RXXFNSB_REXX_SELECTORS ${BIFS} PARENT_SCOPE)
+set(RXXFNSB_REXX_ARCHIVE "${CMAKE_CURRENT_BINARY_DIR}/library-rexx.rxbin")
+set(RXXFNSB_REXX_ARCHIVE "${RXXFNSB_REXX_ARCHIVE}" PARENT_SCOPE)
 set(REXX_IMPORT_RXAS
 		${CMAKE_CURRENT_SOURCE_DIR}/../rxas/_rxvml_address_native.rxas
 )
@@ -144,10 +146,11 @@ foreach(_binfile ${REXXBINS})
 endforeach()
 
 add_custom_command(
- 		OUTPUT library-rexx.rxbin
-		COMMAND ${CMAKE_COMMAND} -E cat ${REXXBINS} > library-rexx.rxbin
+		OUTPUT "${RXXFNSB_REXX_ARCHIVE}"
+		COMMAND ${CMAKE_COMMAND} -E cat ${REXXBINS} > "${RXXFNSB_REXX_ARCHIVE}"
 		COMMENT "cREXX REXX Library Archive ..."
 		DEPENDS ${REXXBINS}
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-add_custom_target(library-rexx ALL DEPENDS library-rexx.rxbin)
+add_custom_target(library-rexx ALL DEPENDS "${RXXFNSB_REXX_ARCHIVE}")
