@@ -228,19 +228,36 @@ directly. To protect code inside a loop, put a simple signal-handling
 `TRACE` enables or disables VM breakpoint-backed tracing for the current call
 frame and procedures called from it.
 
-The initial supported forms are:
+Supported forms are:
 
 ```rexx
 trace off
 trace normal
 trace rexx
 trace asm
+trace llm
+trace value expr
+trace rexx to stderr
+trace llm to file "trace.jsonl"
 ```
 
-`TRACE NORMAL` and `TRACE REXX` currently both trace authored Rexx clauses and
-skip the runtime/debugger internals by default. `TRACE ASM` traces VM/RXAS
-instruction information and includes source text where metadata is available.
-`TRACE OFF` disables breakpoint tracing and resets the trace runtime state.
+The standard Rexx option letters `A`, `C`, `E`, `F`, `I`, `L`, `N`, `O`, and
+`R` are accepted, including a leading `?` prefix and signed integer settings.
+The current runtime maps active source-level options to authored Rexx clause
+tracing; `O`/`OFF` disables breakpoint tracing. `TRACE NORMAL`, `TRACE N`, and
+`TRACE REXX` trace authored Rexx clauses and skip runtime/debugger internals by
+default. `TRACE ASM` traces VM/RXAS instruction information and includes source
+text where metadata is available.
+
+`TRACE LLM` is a cREXX extension that emits one JSON-lines-style trace record
+per event. It is intended for debugger automation and for validating emitted
+`.src` metadata; source text is escaped so control characters and backslashes
+remain visible. `TRACE VALUE expr` evaluates `expr` at runtime and normalizes it
+using the same trace option rules.
+
+Trace output defaults to stdout. Add `TO STDERR`, `TO STDOUT`, `TO FILE expr`,
+or `TO expr` to choose a sink. `TO FILE` opens the selected file in append mode
+for each trace record.
 
 TRACE is implemented as a certified compiler exit. It requires normal compiler
 exit loading; compiling with exits disabled rejects the statement rather than

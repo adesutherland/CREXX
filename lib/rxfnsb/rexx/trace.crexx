@@ -25,7 +25,7 @@
 /* REXX Level B trace runtime internals */
 options levelb
 
-namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_format _trace_set_output _trace_handler
+namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_format _trace_set_output _trace_mode_from_option _trace_handler
 
 trace_interrupt_raw: class
   _code = .int with register.1.int
@@ -379,6 +379,53 @@ _trace_normalize_mode: procedure = .string
   if normalized = "ASM" then return "ASM"
   if normalized = "OFF" then return "OFF"
   return "REXX"
+
+_trace_mode_from_option: procedure = .string
+  arg option = .string
+  normalized = upper(strip(option))
+  do while left(normalized, 1) = "?"
+    normalized = substr(normalized, 2)
+  end
+  if normalized = "" then return "REXX"
+  if _trace_is_signed_integer(normalized) <> 0 then do
+    if normalized + 0 = 0 then return "OFF"
+    return "REXX"
+  end
+  if normalized = "ASM" then return "ASM"
+  if normalized = "LLM" then return "LLM"
+  if normalized = "JSON" then return "LLM"
+  if normalized = "META" then return "LLM"
+  if normalized = "METADATA" then return "LLM"
+  if normalized = "NORMAL" then return "REXX"
+  if normalized = "OFF" then return "OFF"
+  if normalized = "ALL" then return "REXX"
+  if normalized = "COMMAND" then return "REXX"
+  if normalized = "COMMANDS" then return "REXX"
+  if normalized = "ERROR" then return "REXX"
+  if normalized = "ERRORS" then return "REXX"
+  if normalized = "FAILURE" then return "REXX"
+  if normalized = "FAILURES" then return "REXX"
+  if normalized = "INTERMEDIATE" then return "REXX"
+  if normalized = "INTERMEDIATES" then return "REXX"
+  if normalized = "LABEL" then return "REXX"
+  if normalized = "LABELS" then return "REXX"
+  if normalized = "RESULT" then return "REXX"
+  if normalized = "RESULTS" then return "REXX"
+
+  first = left(normalized, 1)
+  if first = "O" then return "OFF"
+  if pos(first, "ACEFILNR") > 0 then return "REXX"
+  return "REXX"
+
+_trace_is_signed_integer: procedure = .int
+  arg text = .string
+  if text = "" then return 0
+  if left(text, 1) = "+" | left(text, 1) = "-" then text = substr(text, 2)
+  if text = "" then return 0
+  do i = 1 to length(text)
+    if pos(substr(text, i, 1), "0123456789") = 0 then return 0
+  end
+  return 1
 
 _trace_format_text: procedure = .string
   arg event = .tracecontext

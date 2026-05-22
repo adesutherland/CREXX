@@ -93,10 +93,18 @@ by `rxdb` and by the `TRACE` certified compiler exit:
   snapshot
 - `.trace_interrupt_raw`: internal register-mapped view of the VM interrupt
   object used by breakpoint handlers
-- `_trace_set(mode)` and `_trace_handler(raw)`: the compiler-exit-facing
-  runtime surface for setting trace mode and servicing `BREAKPOINT` events.
+- `_trace_set(mode)`, `_trace_set_format(format)`, `_trace_set_output(target)`,
+  `_trace_mode_from_option(option)`, and `_trace_handler(raw)`: the
+  compiler-exit-facing runtime surface for setting trace mode/format/output,
+  normalizing dynamic `TRACE VALUE` options, and servicing `BREAKPOINT` events.
   The exit still emits caller-frame assembler to enable/disable breakpoints and
   install the handler, because VM signal tables are frame-owned.
+
+Trace output is formatted in the runtime before being written. Text mode emits
+escaped source snippets such as `(line:column) source`, while `LLM` format emits
+one JSON-lines-style record per event for source metadata validation and
+automation-friendly debugging. `_trace_set_output` accepts `stdout`, `stderr`,
+or a file path; file targets are opened in append mode per trace record.
 
 The helpers rely on VM metadata instructions such as `metaloaddata`,
 `metaloadinst`, `metadecodeinst`, and `metaloadedmodules`, so deployable linked

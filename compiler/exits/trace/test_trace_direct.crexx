@@ -9,6 +9,8 @@ main: procedure
 
   failures = failures + test_descriptor()
   failures = failures + test_modes()
+  failures = failures + test_value_option()
+  failures = failures + test_output_options()
   failures = failures + test_pre_process_keywords()
   failures = failures + test_errors()
 
@@ -55,12 +57,85 @@ test_modes: procedure = .int
 
   tokens = newtokens()
   call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "all"
+  result = tx.process(tokens)
+  if check_equal("trace all process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace all mode", replacement, 'call _trace_set("REXX")') = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushoperator tokens, "?"
+  call pushidentifier tokens, "r"
+  result = tx.process(tokens)
+  if check_equal("trace ?r process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace ?r mode", replacement, 'call _trace_set("REXX")') = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "llm"
+  result = tx.process(tokens)
+  if check_equal("trace llm process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace llm mode", replacement, 'call _trace_set("LLM")') = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
   call pushidentifier tokens, "off"
   result = tx.process(tokens)
   if check_equal("trace off process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
   replacement = join_result_lines(result)
   if check_contains("trace off mode", replacement, 'call _trace_set("OFF")') = 0 then failures = failures + 1
   if check_contains("trace off bpoff", replacement, 'assembler bpoff') = 0 then failures = failures + 1
+
+  return failures
+
+test_value_option: procedure = .int
+  failures = .int
+  tx = .traceexit(3004)
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "VALUE"
+  call pushidentifier tokens, "setting"
+  result = tx.process(tokens)
+  if check_equal("trace value process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace value normalizes", replacement, "__rxtrace_mode=_trace_mode_from_option(setting)") = 0 then failures = failures + 1
+  if check_contains("trace value set", replacement, "call _trace_set(__rxtrace_mode)") = 0 then failures = failures + 1
+
+  return failures
+
+test_output_options: procedure = .int
+  failures = .int
+  tx = .traceexit(3005)
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "rexx"
+  call pushidentifier tokens, "to"
+  call pushidentifier tokens, "stderr"
+  result = tx.process(tokens)
+  if check_equal("trace stderr process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace stderr output", replacement, 'call _trace_set_output("stderr")') = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "llm"
+  call pushidentifier tokens, "to"
+  call pushidentifier tokens, "file"
+  call pushidentifier tokens, "trace_file"
+  result = tx.process(tokens)
+  if check_equal("trace file process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace file output", replacement, "call _trace_set_output(trace_file)") = 0 then failures = failures + 1
+  if check_contains("trace file llm", replacement, 'call _trace_set("LLM")') = 0 then failures = failures + 1
 
   return failures
 
@@ -98,7 +173,7 @@ test_errors: procedure = .int
 
   tokens = newtokens()
   call pushexitkeyword tokens, "TRACE"
-  call pushidentifier tokens, "all"
+  call pushidentifier tokens, "potato"
   result = tx.process(tokens)
   if check_equal("trace unknown option status", "ERROR", result.get_status()) = 0 then failures = failures + 1
   if result.get_diagnostic_count() > 0 then do

@@ -48,10 +48,21 @@ traceexit: class
         plan = .exitplan("READY")
         start = firstPayloadToken(tokens)
         if start > 0 & start <= tokens.0 then do
-            mode = canonicalTraceMode(tokens[start].get_text())
-            if mode <> "" then do
+            to_index = findTraceOutputClause(tokens, start)
+            limit = tokens.0
+            if to_index > 0 then limit = to_index - 1
+            if upper(strip(tokens[start].get_text())) = "VALUE" then do
                 call plan.add_keyword(start, tokens[start].get_text(), "trace_option", "trace")
-                if mode <> "OFF" then call plan.add_helper(makeTraceHelper())
+                call plan.add_helper(makeTraceHelper())
+            end
+            else do
+                mode_end = 0
+                mode_text = staticTraceModeText(tokens, start, limit, mode_end)
+                mode = canonicalTraceMode(mode_text)
+                if mode <> "" then do
+                    call plan.add_keyword(start, tokens[start].get_text(), "trace_option", "trace")
+                    if mode <> "OFF" then call plan.add_helper(makeTraceHelper())
+                end
             end
         end
         return plan
@@ -60,12 +71,40 @@ traceexit: class
         arg tokens = .token[]
         start = firstPayloadToken(tokens)
         if start = 0 then return error_result(1, "TRACE_REQUIRES_OPTION")
-        if start <> tokens.0 then return error_result(start + 1, "TRACE_UNEXPECTED_OPERAND")
 
-        mode = canonicalTraceMode(tokens[start].get_text())
-        if mode = "" then return error_result(start, "TRACE_UNKNOWN_OPTION")
+        to_index = findTraceOutputClause(tokens, start)
+        limit = tokens.0
+        if to_index > 0 then limit = to_index - 1
 
         result = .exitresult("REPLACE")
+        if to_index > 0 then do
+            error_token = 0
+            output_expr = traceOutputExpression(tokens, to_index, error_token)
+            if output_expr = "" then return error_result(error_token, "TRACE_OUTPUT_REQUIRES_TARGET")
+            call result.add_replacement_line("call _trace_set_output(" || output_expr || ")")
+        end
+
+        if upper(strip(tokens[start].get_text())) = "VALUE" then do
+            if start + 1 > limit then return error_result(start, "TRACE_VALUE_REQUIRES_EXPRESSION")
+            mode_expr = joinTokenText(tokens, start + 1, limit)
+            call result.add_replacement_line("__rxtrace_mode=_trace_mode_from_option(" || mode_expr || ")")
+            call result.add_replacement_line("call _trace_set(__rxtrace_mode)")
+            call result.add_replacement_line("if __rxtrace_mode = ""OFF"" then assembler bpoff")
+            call result.add_replacement_line("else do")
+            call result.add_replacement_line("  assembler sigcall __rxtrace_handler(),""BREAKPOINT""")
+            call result.add_replacement_line("  assembler bpon")
+            call result.add_replacement_line("end")
+            return result
+        end
+
+        mode_end = 0
+        mode_text = staticTraceModeText(tokens, start, limit, mode_end)
+        if mode_text = "" then return error_result(start, "TRACE_REQUIRES_OPTION")
+        if mode_end <> limit then return error_result(mode_end + 1, "TRACE_UNEXPECTED_OPERAND")
+
+        mode = canonicalTraceMode(mode_text)
+        if mode = "" then return error_result(start, "TRACE_UNKNOWN_OPTION")
+
         if mode = "OFF" then do
             call result.add_replacement_line("assembler bpoff")
             call result.add_replacement_line("call _trace_set(""OFF"")")
@@ -86,14 +125,120 @@ firstPayloadToken: procedure = .int
     end
     return 1
 
+findTraceOutputClause: procedure = .int
+    arg tokens = .token[], start = .int
+    do i = start + 1 to tokens.0
+        if upper(strip(tokens[i].get_text())) = "TO" then return i
+    end
+    return 0
+
+staticTraceModeText: procedure = .string
+    arg tokens = .token[], start = .int, limit = .int, expose mode_end = .int
+    if start > limit then return ""
+    text = strip(tokens[start].get_text())
+    mode_end = start
+
+    if text = "?" then do
+        if start = limit then return "?"
+        mode_end = start + 1
+        return "?" || strip(tokens[mode_end].get_text())
+    end
+
+    if (text = "+" | text = "-") & start < limit then do
+        mode_end = start + 1
+        return text || strip(tokens[mode_end].get_text())
+    end
+
+    return text
+
 canonicalTraceMode: procedure = .string
     arg text = .string
     mode = upper(strip(text))
+    do while left(mode, 1) = "?"
+        mode = substr(mode, 2)
+    end
+    if mode = "" then return "REXX"
+    if isSignedInteger(mode) <> 0 then do
+        if mode + 0 = 0 then return "OFF"
+        return "REXX"
+    end
+    if mode = "A" then return "REXX"
+    if mode = "ALL" then return "REXX"
+    if mode = "C" then return "REXX"
+    if mode = "COMMAND" then return "REXX"
+    if mode = "COMMANDS" then return "REXX"
+    if mode = "E" then return "REXX"
+    if mode = "ERROR" then return "REXX"
+    if mode = "ERRORS" then return "REXX"
+    if mode = "F" then return "REXX"
+    if mode = "FAILURE" then return "REXX"
+    if mode = "FAILURES" then return "REXX"
+    if mode = "I" then return "REXX"
+    if mode = "INTERMEDIATE" then return "REXX"
+    if mode = "INTERMEDIATES" then return "REXX"
+    if mode = "L" then return "REXX"
+    if mode = "LABEL" then return "REXX"
+    if mode = "LABELS" then return "REXX"
     if mode = "NORMAL" then return "REXX"
+    if mode = "N" then return "REXX"
     if mode = "REXX" then return "REXX"
+    if mode = "R" then return "REXX"
+    if mode = "RESULT" then return "REXX"
+    if mode = "RESULTS" then return "REXX"
     if mode = "ASM" then return "ASM"
+    if mode = "LLM" then return "LLM"
+    if mode = "JSON" then return "LLM"
+    if mode = "META" then return "LLM"
+    if mode = "METADATA" then return "LLM"
+    if mode = "O" then return "OFF"
     if mode = "OFF" then return "OFF"
     return ""
+
+isSignedInteger: procedure = .int
+    arg text = .string
+    if text = "" then return 0
+    if left(text, 1) = "+" | left(text, 1) = "-" then text = substr(text, 2)
+    if text = "" then return 0
+    do i = 1 to length(text)
+        if pos(substr(text, i, 1), "0123456789") = 0 then return 0
+    end
+    return 1
+
+traceOutputExpression: procedure = .string
+    arg tokens = .token[], to_index = .int, expose error_token = .int
+    error_token = to_index
+    if to_index >= tokens.0 then return ""
+
+    target_token = to_index + 1
+    target = upper(strip(tokens[target_token].get_text()))
+    if target = "STDOUT" then return """stdout"""
+    if target = "OUT" then return """stdout"""
+    if target = "OUTPUT" then return """stdout"""
+    if target = "STDERR" then return """stderr"""
+    if target = "ERR" then return """stderr"""
+    if target = "ERROR" then return """stderr"""
+
+    if target = "FILE" then do
+        if target_token >= tokens.0 then do
+            error_token = target_token
+            return ""
+        end
+        error_token = 0
+        return joinTokenText(tokens, target_token + 1, tokens.0)
+    end
+
+    error_token = 0
+    return joinTokenText(tokens, target_token, tokens.0)
+
+joinTokenText: procedure = .string
+    arg tokens = .token[], first = .int, last = .int
+    result = ""
+    if first > last then return result
+    do i = first to last
+        if result <> "" then result = result || " "
+        result = result || tokens[i].get_text()
+    end
+    return result
 
 makeTraceHelper: procedure = .helperplan
     helper = .helperplan("__rxtrace_handler", "file_tail", "__rxtrace_handler", "")

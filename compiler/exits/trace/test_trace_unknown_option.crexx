@@ -1,5 +1,5 @@
 options levelb
 
 main: procedure
-  trace all
+  trace potato
   return

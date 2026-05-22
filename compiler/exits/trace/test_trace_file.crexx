@@ -1,0 +1,7 @@
+options levelb
+
+main: procedure = .int
+  trace_file = "trace-output.txt"
+  trace llm to file trace_file
+  flag = 1
+  return \flag
