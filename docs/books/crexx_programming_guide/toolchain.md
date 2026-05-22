@@ -24,17 +24,17 @@ steps for day-to-day use.
 
 ## Source, Assembly, and Bytecode
 
-Source files are UTF-8 text. New CREXX source normally uses `.crexx`, with
+Source files are UTF-8 text. New \crexx{} source normally uses `.crexx`, with
 `.crx` as a short alias. `.rexx` remains the compatibility/classic extension.
 The compiler output is RXAS assembly:
 
-```bash
+```bash <!--rxc1.sh-->
 rxc hello.crexx
 ```
 
 The assembler output is RXBIN bytecode:
 
-```bash
+```bash <!--rxas1.sh-->
 rxas hello.rxas
 ```
 
