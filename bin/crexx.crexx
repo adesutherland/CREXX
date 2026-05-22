@@ -589,6 +589,7 @@ say
 say 'The following options are available:'
 say
 say '-help            -- display (this) help info'
+say '-args            -- execute with command line args (as final option only)'
 say '-version         -- display the version number'
 say '-exec            -- execute the compiled rxbin (default)'
 say '-noexec          -- compile only; do not execute with rxvme'
