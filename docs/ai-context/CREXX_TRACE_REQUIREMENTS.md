@@ -60,6 +60,9 @@ Current cREXX static `TRACE` accepts these names:
 
 Current gaps:
 
+- `TRACE N`/`TRACE NORMAL` has the wrong runtime behavior today: it is accepted,
+  but it traces source clauses. Standard Rexx `N` should be quiet except for
+  failing host commands after execution.
 - Static `TRACE` does not yet accept arbitrary trailing characters after a
   valid standard option letter.
 - `!` command inhibition is not accepted.
@@ -113,7 +116,7 @@ yet the standard Rexx `line *-* clause` layout.
 | `F` / `Failure` | `+++` for host commands with failure return status after execution. | Accepted; currently maps to source-clause trace, not command result events. |
 | `I` / `Intermediates` | `*-*`, final `>>>`, and intermediate `>C>`, `>F>`, `>L>`, `>O>`, `>P>`, `>V>` records. | Accepted; currently maps to source-clause trace only. Symbol and variable values appear feasible from interrupt-frame metadata, but operation-result tracing needs compiler or VM expression instrumentation. |
 | `L` / `Labels` | `*-*` for labels passed during execution. | Accepted; currently maps to source-clause trace. Needs label/pass events. |
-| `N` / `Normal` | Default; `+++` for failing host commands after execution. | Accepted; currently maps to source-clause trace. Default no-option reset is not implemented. |
+| `N` / `Normal` | Default; `+++` for failing host commands after execution. It should not trace every statement. | Accepted, but currently wrong: maps to source-clause trace. Default no-option reset is not implemented. |
 | `O` / `Off` | No trace output; reset `?` and `!` prefix states. | Implemented for breakpoint trace disable. Prefix reset is incomplete because `!` is not implemented. |
 | `R` / `Results` | `*-*` for all clauses and `>>>` final expression results. | Accepted; currently maps to source-clause trace only. Final expression result events are not emitted. |
 | `S` / `Scan` | Syntax-scan remaining clauses without executing them. | Not implemented or accepted. Requires compiler/runtime scan semantics separate from normal execution. |
@@ -200,4 +203,3 @@ large number of interrupts. Recommended requirements before enabling it:
 5. Command inhibition:
    - implement `!` in ADDRESS dispatch so host commands are traced but not
      executed, with `RC` set to `0`.
-

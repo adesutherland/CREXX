@@ -243,11 +243,12 @@ trace llm to file "trace.jsonl"
 
 The standard Rexx option letters `A`, `C`, `E`, `F`, `I`, `L`, `N`, `O`, and
 `R` are accepted, including a leading `?` prefix and signed integer settings.
-The current runtime maps active source-level options to authored Rexx clause
-tracing; `O`/`OFF` disables breakpoint tracing. `TRACE NORMAL`, `TRACE N`, and
-`TRACE REXX` trace authored Rexx clauses and skip runtime/debugger internals by
-default. `TRACE ASM` traces VM/RXAS instruction information and includes source
-text where metadata is available.
+This is not yet full semantic compatibility: options such as `N`, `E`, and `F`
+are currently accepted by the compiler exit but still route through the
+source-clause trace runtime. Standard Rexx `TRACE N` is the quiet/default mode:
+it should trace only failing host commands after execution, not every
+statement. `O`/`OFF` disables breakpoint tracing. `TRACE ASM` traces VM/RXAS
+instruction information and includes source text where metadata is available.
 
 `TRACE LLM` is a cREXX extension that emits one JSON-lines-style trace record
 per event. It is intended for debugger automation and for validating emitted
