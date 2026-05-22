@@ -53,10 +53,11 @@
  module = .string[]
 
  /* defaults for options for this program */
-native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
+native=0;version=0;help=0;compile=0;filename='';verbose=0
 execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=1;decimal=1
-binfiles='';lastfile=0;sourceRoots='';binaryRoots='';importRxas=0
-linkStripSource=1;linkPreserveInline=0;linkMap='';linkOptionsUsed=0;cleanupFiles=''
+lastfile=0;sourceRoots='';binaryRoots='';importRxas=0
+linkStripSource=1;linkPreserveInline=0;linkMap='';linkOptionsUsed=0
+filenames=.string[];binfiles=.string[];cleanupFiles=.string[]
  
  esc             = '1b'X
  ANSI_RESET      = '[0m'
@@ -106,7 +107,7 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
    if left(fn.i,1)<>'-' then
      do /* it is not a flag but a filename */
        filename=fn.i
-       filenames=strip(filenames) strip(filename)
+       call appendArrayValue filenames, filename
      end
      else
        do
@@ -314,10 +315,10 @@ err = .string[]
 
 /* see if there is a .rxpp file to run the preprocessor against        */
 /* while we have no exists(file) function, specify the .rxpp extension */
-do i=1 to words(filenames)
-  filename=word(filenames,i)
+do i=1 to filenames[0]
+  filename=filenames[i]
   sourceFile=filename
-  if i=words(filenames) then lastfile=1
+  if i=filenames[0] then lastfile=1
     dotpos = pos('.',filename)
   if dotpos > 0 then do
     if right(filename,4) = 'rxpp'
@@ -328,7 +329,12 @@ do i=1 to words(filenames)
     if verbose>3 then do
       call printFileToSTDout filename'.rxpp', nocolor
     end
-    ''rxpath'/'lpath'/rxpp -i' filename'.rxpp -o' filename'.crexx -m 'rxpath'bin/maclib.rexx -verbose 'verbose
+    rxppcmd = rxpath'/'lpath'/rxpp'
+    rxppcmd = rxppcmd || ' -i ' || quoteCommandArg(filename'.rxpp', platformUpper)
+    rxppcmd = rxppcmd || ' -o ' || quoteCommandArg(filename'.crexx', platformUpper)
+    rxppcmd = rxppcmd || ' -m ' || quoteCommandArg(rxpath'bin/maclib.rexx', platformUpper)
+    rxppcmd = rxppcmd || ' -verbose ' || verbose
+    address cmd rxppcmd
     if verbose then do
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
@@ -356,14 +362,14 @@ do i=1 to words(filenames)
 
   optiflag=''; if optimize=0 then optiflag= '-n'
   rxc_flags = ''
-  if sourceRoots <> '' then rxc_flags = rxc_flags' -s 'sourceRoots
+  if sourceRoots <> '' then rxc_flags = rxc_flags || ' -s ' || quoteCommandArg(sourceRoots, platformUpper)
   binaryPath = rxpath||lpath
   if binaryRoots <> '' then binaryPath = binaryPath';'binaryRoots
-  if binaryPath <> '' then rxc_flags = rxc_flags' -i 'binaryPath
+  if binaryPath <> '' then rxc_flags = rxc_flags || ' -i ' || quoteCommandArg(binaryPath, platformUpper)
   if importRxas then rxc_flags = rxc_flags' --import-rxas'
 
   binfile = chop_suffix(filename)
-  binfiles = binfiles binfile
+  call appendArrayUnique binfiles, binfile
 
   if verbose>3 then do
     call printFileToSTDout sourceFile, nocolor
@@ -371,7 +377,9 @@ do i=1 to words(filenames)
 
   -- rxas_filename = chop_suffix(filename) /* temp fix for two-part filename files */
 
-  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags '-o' binfile sourceFile
+  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags
+  rxcmd = rxcmd || ' -o ' || quoteCommandArg(binfile, platformUpper)
+  rxcmd = rxcmd || ' ' || quoteCommandArg(sourceFile, platformUpper)
   if verbose>1 then
     do
       if compile then say esc||ANSI_GREEN'rxc command     :' rxcmd
@@ -407,9 +415,11 @@ do i=1 to words(filenames)
       call printFileToSTDout binfile'.rxas', nocolor
     end
 
-    cleanupFiles = appendWordUnique(cleanupFiles, binfile'.rxas')
-    cleanupFiles = appendWordUnique(cleanupFiles, binfile'.rxbin')
-    asmcmd = rxpath'bin'dirsep'rxas' optiflag '-o' binfile binfile
+    call appendArrayUnique cleanupFiles, binfile'.rxas'
+    call appendArrayUnique cleanupFiles, binfile'.rxbin'
+    asmcmd = rxpath'bin'dirsep'rxas' optiflag
+    asmcmd = asmcmd || ' -o ' || quoteCommandArg(binfile, platformUpper)
+    asmcmd = asmcmd || ' ' || quoteCommandArg(binfile, platformUpper)
     address cmd asmcmd output out error err
     if RC<>0 then say '[rxas     - Assembly Failed    ' esc||ANSI_BLUE||binfile'.rxas'||esc||ANSI_RESET
     if verbose then do
@@ -429,37 +439,49 @@ do i=1 to words(filenames)
     if verbose>1 then say esc||ANSI_GREEN'using existing rxbin:'esc||ANSI_RESET existingRxbin
   end
 
-  modules = translate(libs,' ',';')
-  
   if verbose>2 then call banner nocolor
 
   if native then do
     linkedOutput = binfile'_linked'
     outputStem = binfile
     staticFlags = ''
-    linkInputs = ''
-    linkInputs = appendWordUnique(linkInputs, binfile)
-    linkInputs = appendWordUnique(linkInputs, rxpath || 'bin' || dirsep || 'library')
-    loop f=1 to words(modules)
-      modulePath = word(modules,f)
+    linkInputs = .string[]
+    libsRest = .string
+    modulePath = .string
+    staticModule = .string
+    sep = .int
+    call appendArrayUnique linkInputs, binfile
+    call appendArrayUnique linkInputs, rxpath || 'bin' || dirsep || 'library'
+    libsRest = libs
+    do while libsRest <> ''
+      sep = pos(';', libsRest)
+      if sep = 0 then do
+        modulePath = libsRest
+        libsRest = ''
+      end
+      else do
+        modulePath = left(libsRest, sep - 1)
+        libsRest = substr(libsRest, sep + 1)
+      end
+      if modulePath = '' then iterate
       staticModule = findStaticModule(modulePath)
       if staticModule <> '' then do
         if isMacPlatform(platformUpper) then
-          staticFlags = staticFlags ' -Wl,-force_load,'staticModule
+          staticFlags = staticFlags || ' ' || quoteCommandArg('-Wl,-force_load,' || staticModule, platformUpper)
         else
-          staticFlags = staticFlags ' -Wl,--whole-archive 'staticModule' -Wl,--no-whole-archive'
+          staticFlags = staticFlags || ' -Wl,--whole-archive ' || quoteCommandArg(staticModule, platformUpper) || ' -Wl,--no-whole-archive'
       end
       else
-        linkInputs = appendWordUnique(linkInputs, modulePath)
+        call appendArrayUnique linkInputs, modulePath
     end
 
     link_cmd = rxpath || 'bin' || dirsep || 'rxlink'
     if linkStripSource then link_cmd = link_cmd || ' -s'
     if linkPreserveInline then link_cmd = link_cmd || ' -i'
-    if linkMap <> '' then link_cmd = link_cmd || ' -m ' || linkMap
-    link_cmd = link_cmd || ' -o ' || linkedOutput
-    loop f=1 to words(linkInputs)
-      link_cmd = link_cmd || ' ' || word(linkInputs,f)
+    if linkMap <> '' then link_cmd = link_cmd || ' -m ' || quoteCommandArg(linkMap, platformUpper)
+    link_cmd = link_cmd || ' -o ' || quoteCommandArg(linkedOutput, platformUpper)
+    loop f=1 to linkInputs[0]
+      link_cmd = appendCommandArg(link_cmd, linkInputs[f], platformUpper)
     end
     if verbose>1 then say esc||ANSI_GREEN'rxlink command  :'esc||ANSI_RESET link_cmd
     address cmd link_cmd output out error err
@@ -470,7 +492,9 @@ do i=1 to words(filenames)
     end
     if RC>0 then exit RC
 
-    pack_cmd = rxpath || 'bin' || dirsep || 'rxcpack -o ' || outputStem || ' ' || linkedOutput
+    pack_cmd = rxpath || 'bin' || dirsep || 'rxcpack'
+    pack_cmd = pack_cmd || ' -o ' || quoteCommandArg(outputStem, platformUpper)
+    pack_cmd = appendCommandArg(pack_cmd, linkedOutput, platformUpper)
     if verbose>1 then
     do
       say esc||ANSI_GREEN'rxcpack command :'esc||ANSI_RESET pack_cmd
@@ -490,12 +514,12 @@ do i=1 to words(filenames)
     if nativeRuntimeLibs <> '' then socketLibs = socketLibs || ' ' || nativeRuntimeLibs
     if isMacPlatform(platformUpper) then
       cc_command = cc_command ' -Wl,-search_paths_first -Wl,-headerpad_max_install_names'
-    cc_command = cc_command ' -o 'outputStem
-    cc_command = cc_command ' 'outputStem'.c'
-    cc_command = cc_command ' -L'rxpath'bin'
+    cc_command = cc_command || ' -o ' || quoteCommandArg(outputStem, platformUpper)
+    cc_command = cc_command || ' ' || quoteCommandArg(outputStem'.c', platformUpper)
+    cc_command = cc_command || ' ' || quoteCommandArg('-L' || rxpath || 'bin', platformUpper)
     if isMacPlatform(platformUpper) then do
       cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lplatform'
-      cc_command = cc_command ' 'decstat
+      cc_command = appendCommandArg(cc_command, decstat, platformUpper)
       cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm' || socketLibs
       if staticFlags <> '' then cc_command = cc_command staticFlags
     end
@@ -503,7 +527,7 @@ do i=1 to words(filenames)
       cc_command = cc_command ' -Wl,--start-group'
       if staticFlags <> '' then cc_command = cc_command staticFlags
       cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lplatform'
-      cc_command = cc_command ' 'decstat
+      cc_command = appendCommandArg(cc_command, decstat, platformUpper)
       cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm' || socketLibs
       cc_command = cc_command ' -Wl,--end-group'
     end
@@ -523,13 +547,24 @@ do i=1 to words(filenames)
 	end
     if RC>0 then exit RC  
     if \keep then do
-      nativeCleanupFiles = linkedOutput'.rxbin' outputStem'.c'
-      if compile then nativeCleanupFiles = binfile'.rxas' binfile'.rxbin' nativeCleanupFiles
+      nativeCleanupFiles = .string[]
+      if compile then do
+        call appendArrayUnique nativeCleanupFiles, binfile'.rxas'
+        call appendArrayUnique nativeCleanupFiles, binfile'.rxbin'
+      end
+      call appendArrayUnique nativeCleanupFiles, linkedOutput'.rxbin'
+      call appendArrayUnique nativeCleanupFiles, outputStem'.c'
       delrc = deleteFiles(nativeCleanupFiles,verbose)
     end
     end
   else do
-    ex_command = rxpath'bin'dirsep'rxvme' declib binfiles modules cli_args
+    ex_command = rxpath'bin'dirsep'rxvme'
+    if declib <> '' then ex_command = ex_command || ' ' || declib
+    do bf=1 to binfiles[0]
+      ex_command = appendCommandArg(ex_command, binfiles[bf], platformUpper)
+    end
+    ex_command = appendSemicolonArgs(ex_command, libs, platformUpper)
+    if cli_args <> '' then ex_command = ex_command || ' ' || cli_args
 
     if verbose>1 then do
       if execute then say 'crexx executes:' ex_command
@@ -540,7 +575,7 @@ do i=1 to words(filenames)
 end   -- do i
 
   /* now determine if the compile/link intermediates need to be deleted */
-  if \keep & \native=0 then delrc = deleteFiles(cleanupFiles,verbose)
+  if \keep & native=0 then delrc = deleteFiles(cleanupFiles,verbose)
   
 return 0
 
@@ -696,9 +731,9 @@ call lineout toread
  * @return .int
  */
 deleteFiles: procedure = .int
-arg filenames = .string, verbosity = .int
-loop i=1 to words(filenames)
-  filename = word(filenames,i)
+arg filenames = .string[], verbosity = .int
+loop i=1 to filenames[0]
+  filename = filenames[i]
   if verbosity > 2 then say 'deleting' filename
   rc = deletefile(filename)
 end
@@ -735,6 +770,56 @@ if value = '' then return current
 if current = '' then return value
 if wordpos(value, current) > 0 then return current
 return current value
+
+appendArrayValue: procedure
+arg expose current = .string[], item = .string
+index = .int
+index = current[0] + 1
+current[index] = item
+return
+
+appendArrayUnique: procedure
+arg expose current = .string[], item = .string
+i = .int
+if item = '' then return
+do i = 1 to current[0]
+  if current[i] = item then return
+end
+call appendArrayValue current, item
+return
+
+appendCommandArg: procedure = .string
+arg command = .string, item = .string, platformName = .string
+if item = '' then return command
+if command = '' then return quoteCommandArg(item, platformName)
+return command || ' ' || quoteCommandArg(item, platformName)
+
+appendSemicolonArgs: procedure = .string
+arg command = .string, values = .string, platformName = .string
+rest = .string
+item = .string
+sep = .int
+rest = values
+do while rest <> ''
+  sep = pos(';', rest)
+  if sep = 0 then do
+    item = rest
+    rest = ''
+  end
+  else do
+    item = left(rest, sep - 1)
+    rest = substr(rest, sep + 1)
+  end
+  if item <> '' then command = appendCommandArg(command, item, platformName)
+end
+return command
+
+quoteCommandArg: procedure = .string
+arg item = .string, platformName = .string
+if item = '' then return '""'
+if pos('"', item) = 0 then return '"' || item || '"'
+if \isWindowsPlatform(platformName) & pos("'", item) = 0 then return "'" || item || "'"
+return '"' || item || '"'
 
 findStaticModule: procedure = .string
 arg modulePath = .string

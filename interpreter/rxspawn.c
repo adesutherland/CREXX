@@ -1263,7 +1263,7 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
         while ((*command)[l]) {
             switch ((*command)[l]) {
                 case '"':
-                    *argv[a] = *command + l + 1;
+                    (*argv)[a] = *command + l + 1;
                     for (l++; (*command)[l]; l++) {
                         if ((*command)[l] == '"') {
                             (*command)[l] = 0;
@@ -1274,7 +1274,7 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
                     a++;
                     break;
                 case '\'':
-                    *argv[a] = *command + l + 1;
+                    (*argv)[a] = *command + l + 1;
                     for (l++; (*command)[l]; l++) {
                         if ((*command)[l] == '\'') {
                             (*command)[l] = 0;
