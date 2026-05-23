@@ -16,6 +16,41 @@ if controller.toggle_mode() \= "REXX" then do
   say "TRACE failed mode toggle"
 end
 
+if rxfnsb.._trace_mode_from_option("r") \= "R" then do
+  errors = errors + 1
+  say "TRACE failed result letter"
+end
+
+if rxfnsb.._trace_mode_from_option("re") \= "R" then do
+  errors = errors + 1
+  say "TRACE failed result short abbreviation"
+end
+
+if rxfnsb.._trace_mode_from_option("res") \= "R" then do
+  errors = errors + 1
+  say "TRACE failed result abbreviation"
+end
+
+if rxfnsb.._trace_mode_from_option("results") \= "R" then do
+  errors = errors + 1
+  say "TRACE failed result full word"
+end
+
+if rxfnsb.._trace_mode_from_option("as") \= "ASM" then do
+  errors = errors + 1
+  say "TRACE failed asm abbreviation"
+end
+
+if rxfnsb.._trace_mode_from_option("ll") \= "LLM" then do
+  errors = errors + 1
+  say "TRACE failed llm abbreviation"
+end
+
+if rxfnsb.._trace_mode_from_option("ras") \= "" then do
+  errors = errors + 1
+  say "TRACE failed invalid abbreviation"
+end
+
 module = 0
 addr = -1
 module_count = controller.loaded_module_count()

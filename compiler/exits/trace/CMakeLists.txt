@@ -210,3 +210,9 @@ crexx_add_trace_compile_fail_test(
         test_trace_unknown_option.crexx
         "#TRACE_UNKNOWN_OPTION, \"potato\""
 )
+
+crexx_add_trace_compile_fail_test(
+        test_trace_bad_abbreviation_diagnostic
+        test_trace_bad_abbreviation.crexx
+        "#TRACE_UNKNOWN_OPTION, \"ras\""
+)

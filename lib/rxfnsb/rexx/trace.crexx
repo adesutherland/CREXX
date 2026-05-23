@@ -506,41 +506,41 @@ _trace_normalize_mode: procedure = .string
     if normalized + 0 = 0 then return "OFF"
     return "N"
   end
-  if normalized = "ALL" then return "A"
-  if normalized = "A" then return "A"
-  if normalized = "COMMAND" then return "C"
-  if normalized = "COMMANDS" then return "C"
-  if normalized = "C" then return "C"
-  if normalized = "ERROR" then return "E"
-  if normalized = "ERRORS" then return "E"
-  if normalized = "E" then return "E"
-  if normalized = "FAILURE" then return "F"
-  if normalized = "FAILURES" then return "F"
-  if normalized = "F" then return "F"
-  if normalized = "INTERMEDIATE" then return "I"
-  if normalized = "INTERMEDIATES" then return "I"
-  if normalized = "I" then return "I"
-  if normalized = "LABEL" then return "L"
-  if normalized = "LABELS" then return "L"
-  if normalized = "L" then return "L"
-  if normalized = "NORMAL" then return "N"
-  if normalized = "N" then return "N"
-  if normalized = "RESULT" then return "R"
-  if normalized = "RESULTS" then return "R"
-  if normalized = "R" then return "R"
   if normalized = "REXX" then return "REXX"
-  if normalized = "LLM" then return "LLM"
+  if _trace_option_prefix(normalized, "ASM", 2) <> 0 then return "ASM"
+  if _trace_option_prefix(normalized, "LLM", 2) <> 0 then return "LLM"
   if normalized = "JSON" then return "LLM"
   if normalized = "META" then return "LLM"
   if normalized = "METADATA" then return "LLM"
-  if normalized = "ASM" then return "ASM"
-  if normalized = "O" then return "OFF"
-  if normalized = "OFF" then return "OFF"
-  return "N"
+  if _trace_option_prefix(normalized, "ALL", 1) <> 0 then return "A"
+  if _trace_option_prefix(normalized, "COMMAND", 1) <> 0 then return "C"
+  if _trace_option_prefix(normalized, "COMMANDS", 1) <> 0 then return "C"
+  if _trace_option_prefix(normalized, "ERROR", 1) <> 0 then return "E"
+  if _trace_option_prefix(normalized, "ERRORS", 1) <> 0 then return "E"
+  if _trace_option_prefix(normalized, "FAILURE", 1) <> 0 then return "F"
+  if _trace_option_prefix(normalized, "FAILURES", 1) <> 0 then return "F"
+  if _trace_option_prefix(normalized, "INTERMEDIATE", 1) <> 0 then return "I"
+  if _trace_option_prefix(normalized, "INTERMEDIATES", 1) <> 0 then return "I"
+  if _trace_option_prefix(normalized, "LABEL", 1) <> 0 then return "L"
+  if _trace_option_prefix(normalized, "LABELS", 1) <> 0 then return "L"
+  if _trace_option_prefix(normalized, "NORMAL", 1) <> 0 then return "N"
+  if _trace_option_prefix(normalized, "OFF", 1) <> 0 then return "OFF"
+  if _trace_option_prefix(normalized, "RESULT", 1) <> 0 then return "R"
+  if _trace_option_prefix(normalized, "RESULTS", 1) <> 0 then return "R"
+  return ""
 
 _trace_mode_from_option: procedure = .string
   arg option = .string
   return _trace_normalize_mode(option)
+
+_trace_option_prefix: procedure = .int
+  arg option = .string, word = .string, minimum = .int
+  option = upper(strip(option))
+  word = upper(strip(word))
+  if length(option) < minimum then return 0
+  if length(option) > length(word) then return 0
+  if left(word, length(option)) = option then return 1
+  return 0
 
 _trace_needs_breakpoints: procedure = .int
   arg mode = .string

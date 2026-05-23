@@ -15,11 +15,12 @@ Classic Rexx TRACE has three option families:
 - Numeric options: positive numbers skip interactive pauses; negative numbers
   temporarily suppress trace output and pauses for matching clauses.
 
-The standard option abbreviation rule is that the highlighted initial capital
-letter is sufficient and trailing characters are ignored. For example, `R`,
-`Results`, and any other word beginning with `R` select Results in classic
-Rexx. cREXX should eventually follow that rule for both static `TRACE` and
-dynamic `TRACE VALUE`.
+cREXX follows a CMS-style minimum-abbreviation rule for implemented TRACE
+options: the supplied option must be a left-prefix of the canonical option word
+and must be at least the documented minimum length. Classic Rexx options use a
+one-letter minimum (`R`, `RE`, `RES`, `RESULT`, and `RESULTS` all select
+Results). Non-prefix spellings such as `RAS` are rejected instead of being
+treated as Results.
 
 Useful primary references:
 
@@ -33,7 +34,7 @@ Useful primary references:
 
 Target standard names:
 
-| Letter | Full word | Required meaning |
+| Minimum | Full word | Required meaning |
 | --- | --- | --- |
 | `A` | `All` | Trace all clauses before execution. |
 | `C` | `Commands` | Trace host commands before execution and trace command return codes when they error or fail. |
@@ -45,23 +46,25 @@ Target standard names:
 | `O` | `Off` | Disable trace and reset prefix options. |
 | `R` | `Results` | Trace all clauses and final expression results. |
 | `S` | `Scan` | Syntax-scan remaining clauses without executing them. |
+| `AS` | `ASM` | cREXX extension: VM/RXAS instruction trace. |
+| `LL` | `LLM` | cREXX extension: JSON-lines-style trace records for tooling. |
 
 Current cREXX static `TRACE` accepts these names:
 
-- Standard-ish source modes: `A`, `ALL`, `C`, `COMMAND`, `COMMANDS`, `E`,
-  `ERROR`, `ERRORS`, `F`, `FAILURE`, `FAILURES`, `I`, `INTERMEDIATE`,
-  `INTERMEDIATES`, `L`, `LABEL`, `LABELS`, `N`, `NORMAL`, `R`, `RESULT`,
-  `RESULTS`.
-- Off modes: `O`, `OFF`.
-- cREXX extensions: `ASM`, `LLM`, `JSON`, `META`, `METADATA`.
+- Implemented classic modes: any valid left-prefix of `ALL`, `COMMAND`,
+  `COMMANDS`, `ERROR`, `ERRORS`, `FAILURE`, `FAILURES`, `INTERMEDIATE`,
+  `INTERMEDIATES`, `LABEL`, `LABELS`, `NORMAL`, `OFF`, `RESULT`, or
+  `RESULTS`, with a one-character minimum.
+- cREXX extensions: `AS`/`ASM` and `LL`/`LLM`; `JSON`, `META`, and `METADATA`
+  are exact aliases for `LLM`.
+- Legacy cREXX source trace spelling: exact `REXX`. It is not abbreviated,
+  because `R` and `RE...` belong to `RESULTS`.
 - Prefix/status forms: leading `?`, signed integer settings, and
   `TRACE VALUE expr`.
 - Output sinks: `TO STDOUT`, `TO STDERR`, `TO FILE expr`, and `TO expr`.
 
 Current gaps:
 
-- Static `TRACE` does not yet accept arbitrary trailing characters after a
-  valid standard option letter.
 - `!` command inhibition is not accepted.
 - `S`/`Scan` is not accepted.
 - `TRACE` with no option does not yet restore defaults.
