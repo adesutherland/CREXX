@@ -25,7 +25,7 @@
 /* REXX Level B trace runtime internals */
 options levelb
 
-namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_format _trace_set_output _trace_current_mode _trace_mode_from_option _trace_needs_breakpoints _trace_pending_parent_register _trace_supply_parent_value _trace_command_before _trace_command_after _trace_handler
+namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_from_env _trace_set_format _trace_set_output _trace_current_mode _trace_mode_from_option _trace_needs_breakpoints _trace_pending_parent_register _trace_supply_parent_value _trace_command_before _trace_command_after _trace_handler
 
 trace_interrupt_raw: class
   _code = .int with register.1.int
@@ -385,20 +385,10 @@ tracecontroller: class
   supplied_value: method = .string
     return _supplied_value
 
-_trace_set: procedure = .void expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format _trace_active _trace_env_checked _trace_output_target _trace_output_explicit
+_trace_set: procedure = .void expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format _trace_active
   arg mode = .string
   call _trace_ensure_runtime
   normalized = _trace_normalize_mode(mode)
-  if _trace_env_checked = 0 then do
-    _trace_env_checked = 1
-    env_output = getenv("CREXX_TRACE_TO")
-    if strip(env_output) <> "" & _trace_output_explicit = 0 then do
-      _trace_output_target = _trace_normalize_output_target(env_output)
-    end
-    env_mode = getenv("CREXX_TRACE")
-    env_normalized = _trace_normalize_mode(env_mode)
-    if strip(env_mode) <> "" & env_normalized <> "" then normalized = env_normalized
-  end
   _trace_last_line = ""
   call _trace_controller.clear_pending_result()
 
@@ -420,6 +410,27 @@ _trace_set: procedure = .void expose _trace_runtime_ready _trace_controller _tra
   if _trace_needs_breakpoints(normalized) = 0 then call _trace_controller.disable_breakpoints()
   return
 
+_trace_set_from_env: procedure = .void expose _trace_runtime_ready _trace_output_target
+  arg allow_output = .int
+  call _trace_ensure_runtime
+  if allow_output <> 0 then do
+    env_output = getenv("CREXX_TRACE_TO")
+    if strip(env_output) <> "" then _trace_output_target = _trace_normalize_output_target(env_output)
+  end
+  env_mode = getenv("CREXX_TRACE")
+  if strip(env_mode) = "" then do
+    call _trace_set("OFF")
+    return
+  end
+  normalized = _trace_normalize_mode(env_mode)
+  if normalized = "" then do
+    call _trace_set("OFF")
+    call _trace_write_line(_trace_format_message("TRACE ENV invalid CREXX_TRACE value " || _trace_quote_result(env_mode)))
+    return
+  end
+  call _trace_set(normalized)
+  return
+
 _trace_set_format: procedure = .void expose _trace_runtime_ready _trace_format
   arg format = .string
   call _trace_ensure_runtime
@@ -431,10 +442,9 @@ _trace_set_format: procedure = .void expose _trace_runtime_ready _trace_format
   _trace_format = normalized
   return
 
-_trace_set_output: procedure = .void expose _trace_runtime_ready _trace_output_target _trace_output_explicit
+_trace_set_output: procedure = .void expose _trace_runtime_ready _trace_output_target
   arg target = .string
   call _trace_ensure_runtime
-  _trace_output_explicit = 1
   _trace_output_target = _trace_normalize_output_target(target)
   return
 
@@ -505,15 +515,13 @@ _trace_handler: procedure = .int expose _trace_runtime_ready _trace_controller _
   end
   return 0
 
-_trace_ensure_runtime: procedure expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format _trace_output_target _trace_active _trace_env_checked _trace_output_explicit
+_trace_ensure_runtime: procedure expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format _trace_output_target _trace_active
   if _trace_runtime_ready = 1 then return
   _trace_controller = .tracecontroller()
   _trace_last_line = ""
   _trace_format = "TEXT"
   _trace_output_target = "stdout"
   _trace_active = 0
-  _trace_env_checked = 0
-  _trace_output_explicit = 0
   _trace_runtime_ready = 1
   return
 

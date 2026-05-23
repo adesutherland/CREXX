@@ -190,6 +190,25 @@ crexx_add_trace_capture_test(
         REJECT_STDOUT_REGEX "\\*-\\*"
 )
 
+crexx_add_trace_capture_test(
+        test_trace_env_invalid
+        test_trace_env.crexx
+        ENV_CREXX_TRACE "ras"
+        ENV_CREXX_TRACE_TO "stderr"
+        EXPECT_STDOUT_REGEX "TRACE ENV DONE 42"
+        EXPECT_STDERR_REGEX "\\+\\+\\+[ ]+TRACE ENV invalid CREXX_TRACE value.*ras"
+        REJECT_STDERR_REGEX ">>>"
+)
+
+crexx_add_trace_capture_test(
+        test_trace_env_ignored
+        test_trace_env_ignored.crexx
+        ENV_CREXX_TRACE "results"
+        ENV_CREXX_TRACE_TO "stderr"
+        EXPECT_STDOUT_REGEX "TRACE ENV IGNORED 42"
+        REJECT_STDERR_REGEX ">>>"
+)
+
 set(TRACE_COMPILE_FAIL_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/trace_compile_fail.cmake")
 file(WRITE "${TRACE_COMPILE_FAIL_SCRIPT}" [=[
 execute_process(

@@ -94,14 +94,15 @@ by `rxdb` and by the `TRACE` certified compiler exit:
   snapshot
 - `.trace_interrupt_raw`: internal register-mapped view of the VM interrupt
   object used by breakpoint handlers
-- `_trace_set(mode)`, `_trace_set_format(format)`, `_trace_set_output(target)`,
+- `_trace_set(mode)`, `_trace_set_from_env(allow_output)`,
+  `_trace_set_format(format)`, `_trace_set_output(target)`,
   `_trace_current_mode()`, `_trace_mode_from_option(option)`,
   `_trace_needs_breakpoints(mode)`,
   `_trace_pending_parent_register(module, type, value)`,
   `_trace_supply_parent_value(value)`, and `_trace_handler(raw)`: the
   compiler-exit-facing runtime surface for setting trace mode/format/output,
-  normalizing dynamic `TRACE VALUE` options, applying the one-shot
-  `CREXX_TRACE` / `CREXX_TRACE_TO` environment override, coordinating simple
+  normalizing dynamic `TRACE VALUE` options, applying explicit `TRACE ENV`
+  `CREXX_TRACE` / `CREXX_TRACE_TO` environment settings, coordinating simple
   `TRACE R` parent-frame value reads, and servicing `BREAKPOINT` events.
   `.tracecontroller` owns the result-target metadata lookup and pending value
   state so other trace/debug users can share the same interpretation. The exit

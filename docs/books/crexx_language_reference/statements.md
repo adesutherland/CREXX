@@ -239,6 +239,7 @@ trace asm
 trace as
 trace llm
 trace ll
+trace env
 trace value expr
 trace results to stderr
 trace llm to file "trace.jsonl"
@@ -250,9 +251,10 @@ Options use a minimum-abbreviation rule: the spelling must be a left-prefix of
 the full option word. For example, `TRACE R`, `TRACE RE`, `TRACE RES`,
 `TRACE RESULT`, and `TRACE RESULTS` all select Results, while `TRACE RAS` is
 invalid. The cREXX extensions use `AS` as the minimum abbreviation for `ASM`
-and `LL` as the minimum abbreviation for `LLM`. `TRACE REXX` remains supported
-as an exact legacy cREXX source-trace spelling; it is not abbreviated because
-`R` and `RE...` belong to Results.
+and `LL` as the minimum abbreviation for `LLM`; `ENV` is an exact cREXX
+extension spelling. `TRACE REXX` remains supported as an exact legacy cREXX
+source-trace spelling; it is not abbreviated because `R` and `RE...` belong to
+Results.
 This is not yet full semantic compatibility, but the noninteractive output
 shape follows the standard prefix vocabulary for implemented events:
 
@@ -283,14 +285,14 @@ Trace output defaults to stdout. Add `TO STDERR`, `TO STDOUT`, `TO FILE expr`,
 or `TO expr` to choose a sink. `TO FILE` opens the selected file in append mode
 for each trace record.
 
-The first generated TRACE setup in a program also checks two environment
-variables. `CREXX_TRACE` supplies an initial mode using the same option rules as
-`TRACE VALUE`, and `CREXX_TRACE_TO` supplies an initial sink using the same
-rules as `TO`. For example, `CREXX_TRACE=results CREXX_TRACE_TO=stderr` can
-switch tracing on at a compiled `TRACE OFF` or `TRACE NORMAL` marker without
-editing the source. A program currently still needs at least one compiled
-`TRACE` statement so the certified exit imports the trace runtime and installs
-the breakpoint helper.
+`TRACE ENV` explicitly checks two environment variables at that point in the
+program. `CREXX_TRACE` supplies the mode using the same option rules as
+`TRACE VALUE`, and `CREXX_TRACE_TO` supplies the sink using the same rules as
+`TO`. For example, `CREXX_TRACE=results CREXX_TRACE_TO=stderr` can switch
+tracing on at a compiled `TRACE ENV` marker without editing the source. If
+`CREXX_TRACE` is unset or empty, `TRACE ENV` turns tracing off. If `CREXX_TRACE`
+has an invalid value, `TRACE ENV` turns tracing off and emits a `+++` trace
+message naming the invalid value.
 
 TRACE is implemented as a certified compiler exit. It requires normal compiler
 exit loading; compiling with exits disabled rejects the statement rather than

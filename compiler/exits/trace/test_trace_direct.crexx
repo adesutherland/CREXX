@@ -97,6 +97,14 @@ test_modes: procedure = .int
 
   tokens = newtokens()
   call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "env"
+  result = tx.process(tokens)
+  if check_equal("trace env process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace env mode", replacement, "call _trace_set_from_env(1)") = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
   call pushidentifier tokens, "as"
   result = tx.process(tokens)
   if check_equal("trace as process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
@@ -172,6 +180,17 @@ test_output_options: procedure = .int
   if check_equal("trace stderr process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
   replacement = join_result_lines(result)
   if check_contains("trace stderr output", replacement, 'call _trace_set_output("stderr")') = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "env"
+  call pushidentifier tokens, "TO"
+  call pushidentifier tokens, "STDERR"
+  result = tx.process(tokens)
+  if check_equal("trace env stderr process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace env stderr output", replacement, 'call _trace_set_output("stderr")') = 0 then failures = failures + 1
+  if check_contains("trace env stderr mode", replacement, "call _trace_set_from_env(0)") = 0 then failures = failures + 1
 
   tokens = newtokens()
   call pushexitkeyword tokens, "TRACE"

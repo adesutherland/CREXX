@@ -77,10 +77,12 @@ traceexit: class
         if to_index > 0 then limit = to_index - 1
 
         result = .exitresult("REPLACE")
+        output_is_explicit = 0
         if to_index > 0 then do
             error_token = 0
             output_expr = traceOutputExpression(tokens, to_index, error_token)
             if output_expr = "" then return error_result(error_token, "TRACE_OUTPUT_REQUIRES_TARGET")
+            output_is_explicit = 1
             call result.add_replacement_line("call _trace_set_output(" || output_expr || ")")
         end
 
@@ -100,7 +102,8 @@ traceexit: class
         mode = canonicalTraceMode(mode_text)
         if mode = "" then return error_result(start, "TRACE_UNKNOWN_OPTION")
 
-        call result.add_replacement_line("call _trace_set(""" || mode || """)")
+        if mode = "ENV" then call result.add_replacement_line("call _trace_set_from_env(" || (1 - output_is_explicit) || ")")
+        else call result.add_replacement_line("call _trace_set(""" || mode || """)")
         call addTraceActivation result
         return result
 
@@ -150,6 +153,7 @@ canonicalTraceMode: procedure = .string
         if mode + 0 = 0 then return "OFF"
         return "N"
     end
+    if mode = "ENV" then return "ENV"
     if mode = "REXX" then return "REXX"
     if traceOptionPrefix(mode, "ASM", 2) <> 0 then return "ASM"
     if traceOptionPrefix(mode, "LLM", 2) <> 0 then return "LLM"
