@@ -108,7 +108,10 @@ by `rxdb` and by the `TRACE` certified compiler exit:
   state so other trace/debug users can share the same interpretation. The exit
   still emits caller-frame assembler to enable/disable breakpoints, install the
   handler, and perform the actual `metalinkpreg` read for a pending register,
-  because VM signal tables and `metalinkpreg` are frame-sensitive.
+  because VM signal tables and `metalinkpreg` are frame-sensitive. This
+  simple-result path is beta-only: `.meta_reg` records scope/register placement,
+  not value changes, so complete `TRACE R`/`TRACE I` value reporting needs
+  trace-specific compiler hints rather than handler-side source parsing.
 - `_trace_command_before(environment, command)` and
   `_trace_command_after(environment, command, rc, condition)`: ADDRESS dispatch
   hooks used by `TRACE C`, `TRACE E`, `TRACE F`, and quiet/default `TRACE N`.

@@ -260,20 +260,33 @@ shape follows the standard prefix vocabulary for implemented events:
 
 ```text
      5 *-* escaped-source
-       >>>   "escaped-result"
+       >=>   "escaped-assignment-result"
        +++   RC=-3 ENVIRONMENT escaped-command
 ```
 
 `TRACE N` is the quiet/default mode: it does not trace ordinary statements and
 emits `+++` only for failing ADDRESS commands. `TRACE C`, `TRACE E`, and
 `TRACE F` are ADDRESS-command driven. `TRACE A` traces source clauses.
-`TRACE R` traces source clauses and currently emits `>>>` for simple assignment
-results where compiler metadata identifies the target register. `TRACE I` is
-accepted but currently has the same result coverage as `R`; intermediate
-`>V>`, `>O>`, and related records are future work. `TRACE L` is accepted, but
+Classic `TRACE R` traces source clauses, variable substitutions, and assignment
+or expression results. cREXX currently emits source clauses and assignment
+results only for a narrow simple-assignment subset where compiler metadata
+identifies the target register, and it currently formats those records as
+`>>>`; Regina-compatible assignment output uses `>=>`. `TRACE I` is accepted
+but currently has the same result coverage as `R`; intermediate `>V>`, `>C>`,
+`>L>`, `>O>`, and related records are future work. `TRACE L` is accepted, but
 label-pass events are not emitted yet. `O`/`OFF` disables breakpoint tracing.
 `TRACE ASM` traces VM/RXAS instruction information and includes source text
 where metadata is available.
+
+This TRACE implementation is still beta. The current runtime uses `.src`
+instruction/source-span metadata and simple symbol metadata to produce text
+trace output. That is useful for debugging generated code, but it is not yet a
+complete classic TRACE event stream: counted loops may expose generated
+fragments such as `to 2` or bare loop-variable increments, some indexed or
+compound source spans may be display-rough, and result records for stems,
+compound variables, function calls, operations, `SAY`, and conditions are
+partial. Future work will add compiler-provided trace-event hints so the
+handler does not have to guess semantic values from source text.
 
 `TRACE LLM` is a cREXX extension that emits one JSON-lines-style trace record
 per event. It is intended for debugger automation and for validating emitted

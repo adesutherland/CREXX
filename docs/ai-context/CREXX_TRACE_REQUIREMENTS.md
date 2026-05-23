@@ -99,13 +99,14 @@ The standard prefix tags are:
 | `*-*` | Source text of a single clause. |
 | `+++` | Trace message, command return code, interactive prompt, syntax traceback, or similar processor message. |
 | `>>>` | Result of an expression, parse assignment, or subroutine return value. |
+| `>=>` | Value assigned to a variable by an assignment clause. Observed in Regina-compatible output for `TRACE R`; cREXX should treat this as the assignment-result form unless the final compatibility target says otherwise. |
 | `>.>` | Value assigned to a PARSE placeholder period. |
-| `>C>` | Compound-variable name after substitution, before value fetch. Intermediates only. |
+| `>C>` | Compound-variable name after substitution, before value fetch. Required for `TRACE I`; useful for stem/compound debugging. |
 | `>F>` | Function call result. Intermediates only. |
 | `>L>` | Literal, uninitialized variable, or constant symbol. Intermediates only. |
 | `>O>` | Binary operation result. Intermediates only. |
 | `>P>` | Prefix operation result. Intermediates only. |
-| `>V>` | Variable contents. Intermediates only. |
+| `>V>` | Variable contents. Required for `TRACE I`; also appears in Regina-compatible `TRACE R` for variable substitutions that contribute to an expression or command. |
 
 The standard format encloses result values in double quotes so leading and
 trailing blanks are visible. Control characters may be made display-safe.
@@ -115,7 +116,7 @@ events:
 
 ```text
      5 *-* escaped-source
-       >>>   "escaped-result"
+       >=>   "escaped-assignment-result"
        +++   RC=-3 ENVIRONMENT escaped-command
 ```
 
@@ -133,14 +134,74 @@ containing a backslash is printed visibly as `return \\flag`.
 | `C` / `Commands` | `*-*`/command text before each host command; `+++` return-code messages for command errors/failures. | Implemented for ADDRESS dispatch. Command-before records use `       *-* command`; non-zero `RC` or condition also emits `+++`. |
 | `E` / `Error` | `+++` for host commands with error or failure return status after execution. | Implemented for ADDRESS dispatch as non-zero `RC` or any condition. |
 | `F` / `Failure` | `+++` for host commands with failure return status after execution. | Implemented for ADDRESS dispatch as negative `RC` or `FAILURE` condition. |
-| `I` / `Intermediates` | `*-*`, final `>>>`, and intermediate `>C>`, `>F>`, `>L>`, `>O>`, `>P>`, `>V>` records. | Accepted. Currently emits source records and the same simple-assignment `>>>` subset as `R`; intermediate records still need compiler or VM expression instrumentation. |
+| `I` / `Intermediates` | `*-*` plus intermediate `>C>`, `>F>`, `>L>`, `>O>`, `>P>`, `>V>`, and related final-result records. | Accepted. Currently emits source records and the same simple-assignment result subset as `R`; intermediate records still need compiler or VM expression instrumentation. |
 | `L` / `Labels` | `*-*` for labels passed during execution. | Accepted, but no label-pass events are emitted yet. |
 | `N` / `Normal` | Default; `+++` for failing host commands after execution. It should not trace every statement. | Implemented for ADDRESS dispatch and intentionally quiet for ordinary statements. Default no-option reset is not implemented. |
 | `O` / `Off` | No trace output; reset `?` and `!` prefix states. | Implemented for breakpoint trace disable. Prefix reset is incomplete because `!` is not implemented. |
-| `R` / `Results` | `*-*` for all clauses and `>>>` final expression results. | Implemented for source clauses plus `>>>` for simple assignment targets where `.meta_reg`/`.meta_const` identifies the left-hand variable. `.tracecontroller` owns the metadata lookup and pending value state; the generated signal helper only performs the frame-local `metalinkpreg` read that must happen before returning to the shared runtime handler. Full expression and subexpression result coverage is not complete. |
+| `R` / `Results` | `*-*` for all clauses, `>V>` for variable substitutions used by expressions or commands, and `>=>`/`>>>` final results as appropriate. | Implemented for source clauses plus assignment-result records for a narrow simple-assignment subset where `.meta_reg`/`.meta_const` identifies the left-hand variable. cREXX currently prints those assignment results with `>>>`; Regina-compatible output uses `>=>`. `.tracecontroller` owns the metadata lookup and pending value state; the generated signal helper only performs the frame-local `metalinkpreg` read that must happen before returning to the shared runtime handler. Full expression, variable-substitution, stem/compound, and subexpression result coverage is not complete. |
 | `S` / `Scan` | Syntax-scan remaining clauses without executing them. | Not implemented or accepted. Requires compiler/runtime scan semantics separate from normal execution. |
 | `ASM` | cREXX extension: VM/RXAS instruction trace with source when available. | Implemented. |
 | `LLM` | cREXX extension: structured trace records for tooling. | Implemented. |
+
+## Regina Compatibility Observations
+
+Local Regina probes are useful as a classic Rexx compatibility reference. For
+this program:
+
+```rexx
+trace results
+s. = "default"
+s.1 = "one"
+i = 1
+x = s.i
+say x s.2
+```
+
+Regina `TRACE R` emits assignment results with `>=>`, variable substitution
+values with `>V>`, and both the compound tail value and the resolved compound
+value for `x = s.i`. Regina `TRACE I` emits the same variable values, plus
+`>C>` records for resolved compound names such as `S.1`, and `>O>` records for
+operation results such as a concatenated `SAY` expression.
+
+That behavior means `TRACE R` is not limited to assignment values, and
+`TRACE I` is not just `TRACE R` plus one final expression record. Stems and
+compound variables require the compiler/runtime to know the evaluated tail, the
+resolved compound name, and the fetched or assigned value at the point those
+events happen.
+
+## Beta Health Warnings
+
+The current implementation is suitable for beta use, but not yet a faithful
+classic TRACE implementation:
+
+- `.meta_reg` is scope/register metadata. It is emitted when a register comes
+  into scope, not when a variable changes. It is appropriate for lookup-style
+  tools such as `VALUE()`, including search-backwards behavior, but it is not a
+  reliable trace-result event stream.
+- Current assignment-result capture parses the left hand side from `.src` text
+  and then looks for nearby `.meta_reg`/`.meta_const` records. This misses
+  ordinary reassignments, indexed writes, stem/compound assignments, `SAY` and
+  `IF` variable substitutions, operations, function results, and many final
+  expression results.
+- `.src` metadata is currently exact instruction/source-span metadata. It is
+  valuable for debugger stepping and `TRACE LLM`, but classic text TRACE needs
+  an authored-clause view. Counted loops can currently expose generated
+  fragments such as `to 2`, bare loop-variable increments such as `i`, and empty
+  source records after a final `say`.
+- Some compound/indexed source spans are not yet display-clean for text TRACE;
+  for example, array-style `x = s[i]` can appear as `x = s[i` when the current
+  `.src` span excludes the closing bracket.
+- The default filtering of trace-runtime procedures is currently heuristic and
+  substring-based. It works for the initial exit/runtime split, but it is brittle
+  and should be replaced with explicit trace roles plus stack-frame/history
+  rules.
+- Formatting currently lives largely in the generic `rxfnsb.trace` driver. The
+  long-term shape should be a generic structured trace-event driver plus a
+  TRACE-specific exit handler/formatter layered on top.
+
+The recommended beta stance is to describe `TRACE R` and `TRACE I` result
+records as partial, and to use `TRACE LLM` primarily for inspecting actual
+`.src`/instruction metadata rather than as proof of classic TRACE formatting.
 
 ## cREXX LLM Output Format
 
@@ -203,20 +264,40 @@ large number of interrupts. Recommended requirements before enabling it:
 
 2. Standard text output:
    - add nesting indentation;
+   - use `>=>` for assignment-result records;
    - add `>.>` and intermediate prefixes;
-   - broaden `>>>` beyond the current simple-assignment subset.
+   - broaden result output beyond the current simple-assignment subset.
 
 3. Event coverage:
    - add label-pass events for `L`;
    - add full final expression result events for `R`;
-   - add variable, literal, function, operation, prefix-operation, and compound
-     variable events for `I`.
+   - add variable substitution events for `R`;
+   - add variable, literal, function, operation, prefix-operation, assignment,
+     and compound-variable events for `I`.
 
-4. Interactive mode:
+4. Compiler-provided trace event hints:
+   - add trace-specific metadata or helper calls separate from `.meta_reg`,
+     including authored clause id/span, nesting depth, generated-fragment role,
+     event prefix, mode mask, value type, value register/constant, target symbol,
+     and resolved compound name when applicable;
+   - have the generated signal helper read only registers named by trace-event
+     hints, keeping frame-sensitive `metalinkpreg` use local to the interrupted
+     frame;
+   - keep `.src` exact-address metadata available for debuggers and `TRACE LLM`,
+     but do not make classic text TRACE infer semantic results from `.src`.
+
+5. Structured driver and formatter split:
+   - move semantic event collection into a generic trace-event driver;
+   - move classic text formatting, Regina/IBM compatibility decisions, and
+     cREXX extension formatting into a TRACE-specific formatter;
+   - replace substring runtime-procedure filtering with explicit module/procedure
+     trace roles and stack-frame/history rules.
+
+6. Interactive mode:
    - implement `?` as a real toggle, not only accepted syntax;
    - implement numeric skip/suppress behavior;
    - add a minimal prompt command set and stress tests for long-running traces.
 
-5. Command inhibition:
+7. Command inhibition:
    - implement `!` in ADDRESS dispatch so host commands are traced but not
      executed, with `RC` set to `0`.
