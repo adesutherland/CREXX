@@ -41,7 +41,7 @@ The `OPTIONS {NUMERIC_CLASSIC|NUMERIC_COMMON}` setting determines which symbols 
 * Under **`OPTIONS NUMERIC_COMMON`**:
     * **`%`** performs the **remainder** operation.
     * **`/`** performs **integer division** if both operands are integers; otherwise, it performs normal division.
-    * **`//`** is not strickly a valid operator, however, to support legacy code, it is treated as an alias for `%`.
+    * **`//`** is not strictly a valid operator, however, to support legacy code, it is treated as an alias for `%`.
 
 ## Comparison operators
 
@@ -163,7 +163,7 @@ first **promotes both operands to their string representation**.
 
 | Operator        | Description                                                                 |
 |:----------------|:----------------------------------------------------------------------------|
-| `\|\|`          | Concatenate terms (with no blank between them)                              |
+| `||`            | Concatenate terms (with no blank between them)                              |
 | space (`     `) | Concatenate with a single space added between terms                         |
 | abuttal         | Concatenate without a space (i.e., no space between a literal and variable) |
 
@@ -174,7 +174,7 @@ Table: String Concatenation Operators {#tbl:id}
 | Operator   | Description                                                     |
 |:-----------|:----------------------------------------------------------------|
 | `&`        | AND (returns `1` if both terms are true)                        |
-| `\|`       | Inclusive OR (returns `1` if either term is true)               |
+| `|`        | Inclusive OR (returns `1` if either term is true)               |
 | `&&`       | Exclusive OR (returns `1` if either term is true, but not both) |
 | Prefix `¬` | Logical NOT (negates; `1` becomes `0` and vice versa)           |
 
@@ -193,16 +193,21 @@ Table: Term Operators {#tbl:id}
 
 The order of priority of the operators (from highest to lowest). Note that the `OPTIONS` instruction affects the precedence and associativity of certain operators.
 
-| Priority  | Operators                      | Description                         | Notes                                                                                                                                                             |
-|:----------|:-------------------------------|:------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1         | `()` `[]` `.`                  | Term operators (grouping, indexing) |                                                                                                                                                                   |
-| 2         | Prefix `+` `-` `¬`             | Unary operators                     | **`OPTIONS NUMERIC_CLASSIC`**: Prefix `-` has higher priority than `**`.                                                                                           |
-| 3         | `**`                           | Exponentiation                      | **`NUMERIC_CLASSIC`**: Left-associative and has lower priority than Prefix `-`.<br>**`NUMERIC_COMMON`**: Right-associative and has higher priority than Prefix `-`. |
-| 4         | `*` `/` `%` `//`               | Multiply and divide                 | Which operators are valid depends on `OPTIONS`.                                                                                                                   |
-| 5         | `+` `-`                        | Add and subtract                    |                                                                                                                                                                   |
-| 6         | `\|\|` (space, abuttal)        | Concatenation                       |                                                                                                                                                                   |
-| 7         | `=` `>` `<` `==` `~~` `~~~`... | All comparison operators            |                                                                                                                                                                   |
-| 8         | `&`                            | Logical AND                         |                                                                                                                                                                   |
-| 9         | `\|` `&&`                      | Logical OR and exclusive OR         |                                                                                                                                                                   |
+| Priority  | Operators                      | Description                         | Notes  |
+|-----------|--------------------------------|-------------------------------------|--------|
+| 1         | `()` `[]` `.`                  | Term operators (grouping, indexing) |        |
+| 2         | Prefix `+` `-` `¬`             | Unary operators                     | [^1]   |
+| 3         | `**`                           | Exponentiation                      | [^2],[^3] |
+| 4         | `*` `/` `%` `//`               | Multiply and divide                 | [^4]   |
+| 5         | `+` `-`                        | Add and subtract                    |        |
+| 6         | `||` (space, abuttal)          | Concatenation                       |        |
+| 7         | `=` `>` `<` `==` `~~` `~~~`... | All comparison operators            |        |
+| 8         | `&`                            | Logical AND                         |        |
+| 9         | `|` `&&`                       | Logical OR and exclusive OR         |        |
 
 Table: Operator Priorities {#tbl:id}
+
+[^1]: **`OPTIONS NUMERIC_CLASSIC`**: Prefix `-` has higher priority than `**`.
+[^2]: **`NUMERIC_CLASSIC`**: Left-associative and has lower priority than Prefix `-`. 
+[^3]: **`NUMERIC_COMMON`**: Right-associative and has higher priority than Prefix `-`.
+[^4]: Which operators are valid depends on `OPTIONS`.

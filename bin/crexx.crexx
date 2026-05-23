@@ -106,6 +106,7 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
  do i=1 to fn.0
    if left(fn.i,1)<>'-' then
      do /* it is not a flag but a filename */
+       if left(fn.i,2) = './' then fn.i=substr(fn.i,3) -- make shebangs work
        filename=fn.i
        call appendArrayValue filenames, filename
      end
@@ -589,6 +590,7 @@ say
 say 'The following options are available:'
 say
 say '-help            -- display (this) help info'
+say '-args            -- execute with command line args (as final option only)'
 say '-version         -- display the version number'
 say '-exec            -- execute the compiled rxbin (default)'
 say '-noexec          -- compile only; do not execute with rxvme'
