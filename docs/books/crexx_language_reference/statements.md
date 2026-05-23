@@ -233,22 +233,26 @@ Supported forms are:
 ```rexx
 trace off
 trace normal
+trace results
 trace rexx
 trace asm
+trace as
 trace llm
+trace ll
 trace value expr
-trace rexx to stderr
+trace results to stderr
 trace llm to file "trace.jsonl"
 ```
 
 The standard Rexx option letters `A`, `C`, `E`, `F`, `I`, `L`, `N`, `O`, and
 `R` are accepted, including a leading `?` prefix and signed integer settings.
 Options use a minimum-abbreviation rule: the spelling must be a left-prefix of
-the full option word. For example, `TRACE R`, `TRACE RE`, and `TRACE RES` all
-select Results, while `TRACE RAS` is invalid. The cREXX extensions use `AS` as
-the minimum abbreviation for `ASM` and `LL` as the minimum abbreviation for
-`LLM`; `REXX` is accepted only as the exact legacy spelling because `R` belongs
-to Results.
+the full option word. For example, `TRACE R`, `TRACE RE`, `TRACE RES`,
+`TRACE RESULT`, and `TRACE RESULTS` all select Results, while `TRACE RAS` is
+invalid. The cREXX extensions use `AS` as the minimum abbreviation for `ASM`
+and `LL` as the minimum abbreviation for `LLM`. `TRACE REXX` remains supported
+as an exact legacy cREXX source-trace spelling; it is not abbreviated because
+`R` and `RE...` belong to Results.
 This is not yet full semantic compatibility, but the noninteractive output
 shape follows the standard prefix vocabulary for implemented events:
 

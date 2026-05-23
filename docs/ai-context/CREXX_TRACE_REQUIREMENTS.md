@@ -49,7 +49,8 @@ Target standard names:
 | `AS` | `ASM` | cREXX extension: VM/RXAS instruction trace. |
 | `LL` | `LLM` | cREXX extension: JSON-lines-style trace records for tooling. |
 
-Current cREXX static `TRACE` accepts these names:
+Current cREXX `TRACE` accepts these names for static options, and
+`TRACE VALUE expr` normalizes dynamic option values with the same rules:
 
 - Implemented classic modes: any valid left-prefix of `ALL`, `COMMAND`,
   `COMMANDS`, `ERROR`, `ERRORS`, `FAILURE`, `FAILURES`, `INTERMEDIATE`,
@@ -184,7 +185,6 @@ large number of interrupts. Recommended requirements before enabling it:
 1. Parser and option state compatibility:
    - accept `!`;
    - accept `S`;
-   - accept arbitrary trailing characters after valid standard option letters;
    - implement `TRACE` with no option as default reset;
    - add the public `TRACE()` BIF, returning the previous setting and applying a
      new setting when an argument is supplied.
