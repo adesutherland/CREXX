@@ -1,6 +1,6 @@
 # Standard Library
 
-The \crexx{} standard library is built from a mix of Level B source, RXAS, and
+The \crexx{} standard library is built from a mix of Level B source, rxas, and
 native support. The release model is explicit: source imports name the
 namespace to use, and runtime images or linked artifacts provide the bytecode
 and native pieces needed by the VM.
@@ -75,5 +75,5 @@ loaded by the VM, and selected plugins can be statically linked into packaged
 executables depending on build configuration.
 
 From Level B source, calls look the same whether the implementation is written
-in \crexx{}, RXAS, or native code. The import and runtime library path decide
+in \crexx{}, rxas, or native code. The import and runtime library path decide
 which module or plugin is available.

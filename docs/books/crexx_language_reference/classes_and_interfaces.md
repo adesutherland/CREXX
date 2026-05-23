@@ -1,6 +1,6 @@
 # Classes and Interfaces {#classes-and-interfaces}
 
-Level B now implements the core class/interface model:
+Level B implements the core class/interface model:
 
 - interfaces and classes
 - classes implementing one or more interfaces
@@ -434,7 +434,7 @@ This example is mirrored by:
 
 ## Casts and Type Tests
 
-Level B now supports explicit object casts and runtime type inspection:
+Level B supports explicit object casts and runtime type inspection:
 
 ```rexx
 vehicle = .car("roadster") as .vehicle

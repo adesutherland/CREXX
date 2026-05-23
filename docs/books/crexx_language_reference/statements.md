@@ -149,7 +149,9 @@ This is distinct from `ARG expose`, which exposes a call argument by reference.
 
 SAY \[ expr \] ;
 
-Evaluates the expression expr and prints the resulting string onto the standard output stream.
+Evaluates the expression expr and prints the resulting string onto the standard output stream.[^newline]
+
+[^newline]: with an added newline. For cases where no newline is wanted, the conventional way of using `call lineout` can be used, or the `sayx` assembler instruction.
 
 ## SELECT/WHEN/OTHERWISE
 

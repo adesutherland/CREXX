@@ -1,7 +1,7 @@
 # Tools {#tools}
 
 The public \crexx{} toolchain is intentionally split into small tools. The
-programming guide contains workflow examples; this page is a compact reference.
+Programming Guide contains workflow examples; this page is a compact reference.
 
 ## Compiler: `rxc`
 
