@@ -283,6 +283,15 @@ Trace output defaults to stdout. Add `TO STDERR`, `TO STDOUT`, `TO FILE expr`,
 or `TO expr` to choose a sink. `TO FILE` opens the selected file in append mode
 for each trace record.
 
+The first generated TRACE setup in a program also checks two environment
+variables. `CREXX_TRACE` supplies an initial mode using the same option rules as
+`TRACE VALUE`, and `CREXX_TRACE_TO` supplies an initial sink using the same
+rules as `TO`. For example, `CREXX_TRACE=results CREXX_TRACE_TO=stderr` can
+switch tracing on at a compiled `TRACE OFF` or `TRACE NORMAL` marker without
+editing the source. A program currently still needs at least one compiled
+`TRACE` statement so the certified exit imports the trace runtime and installs
+the breakpoint helper.
+
 TRACE is implemented as a certified compiler exit. It requires normal compiler
 exit loading; compiling with exits disabled rejects the statement rather than
 treating it as an implicit command.

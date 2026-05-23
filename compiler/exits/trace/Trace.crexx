@@ -61,7 +61,7 @@ traceexit: class
                 mode = canonicalTraceMode(mode_text)
                 if mode <> "" then do
                     call plan.add_keyword(start, tokens[start].get_text(), "trace_option", "trace")
-                    if traceNeedsBreakpoints(mode) <> 0 then call plan.add_helper(makeTraceHelper())
+                    call plan.add_helper(makeTraceHelper())
                 end
             end
         end
@@ -87,14 +87,8 @@ traceexit: class
         if upper(strip(tokens[start].get_text())) = "VALUE" then do
             if start + 1 > limit then return error_result(start, "TRACE_VALUE_REQUIRES_EXPRESSION")
             mode_expr = joinTokenText(tokens, start + 1, limit)
-            call result.add_replacement_line("__rxtrace_mode=_trace_mode_from_option(" || mode_expr || ")")
-            call result.add_replacement_line("call _trace_set(__rxtrace_mode)")
-            call result.add_replacement_line("if __rxtrace_mode = ""OFF"" then assembler bpoff")
-            call result.add_replacement_line("else if _trace_needs_breakpoints(__rxtrace_mode) = 0 then assembler bpoff")
-            call result.add_replacement_line("else do")
-            call result.add_replacement_line("  assembler sigcall __rxtrace_handler(),""BREAKPOINT""")
-            call result.add_replacement_line("  assembler bpon")
-            call result.add_replacement_line("end")
+            call result.add_replacement_line("call _trace_set(_trace_mode_from_option(" || mode_expr || "))")
+            call addTraceActivation result
             return result
         end
 
@@ -106,19 +100,8 @@ traceexit: class
         mode = canonicalTraceMode(mode_text)
         if mode = "" then return error_result(start, "TRACE_UNKNOWN_OPTION")
 
-        if mode = "OFF" then do
-            call result.add_replacement_line("assembler bpoff")
-            call result.add_replacement_line("call _trace_set(""OFF"")")
-        end
-        else if traceNeedsBreakpoints(mode) = 0 then do
-            call result.add_replacement_line("call _trace_set(""" || mode || """)")
-            call result.add_replacement_line("assembler bpoff")
-        end
-        else do
-            call result.add_replacement_line("call _trace_set(""" || mode || """)")
-            call result.add_replacement_line("assembler sigcall __rxtrace_handler(),""BREAKPOINT""")
-            call result.add_replacement_line("assembler bpon")
-        end
+        call result.add_replacement_line("call _trace_set(""" || mode || """)")
+        call addTraceActivation result
         return result
 
 firstPayloadToken: procedure = .int
@@ -255,6 +238,17 @@ joinTokenText: procedure = .string
         result = result || tokens[i].get_text()
     end
     return result
+
+addTraceActivation: procedure = .void
+    arg result = .exitresult
+    call result.add_replacement_line("__rxtrace_mode=_trace_current_mode()")
+    call result.add_replacement_line("if __rxtrace_mode = ""OFF"" then assembler bpoff")
+    call result.add_replacement_line("else if _trace_needs_breakpoints(__rxtrace_mode) = 0 then assembler bpoff")
+    call result.add_replacement_line("else do")
+    call result.add_replacement_line("  assembler sigcall __rxtrace_handler(),""BREAKPOINT""")
+    call result.add_replacement_line("  assembler bpon")
+    call result.add_replacement_line("end")
+    return
 
 makeTraceHelper: procedure = .helperplan
     helper = .helperplan("__rxtrace_handler", "file_tail", "__rxtrace_handler", "")

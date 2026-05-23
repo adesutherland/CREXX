@@ -51,6 +51,13 @@ if rxfnsb.._trace_mode_from_option("ras") \= "" then do
   say "TRACE failed invalid abbreviation"
 end
 
+call rxfnsb.._trace_set "results"
+if rxfnsb.._trace_current_mode() \= "R" then do
+  errors = errors + 1
+  say "TRACE failed current mode"
+end
+call rxfnsb.._trace_set "off"
+
 module = 0
 addr = -1
 module_count = controller.loaded_module_count()

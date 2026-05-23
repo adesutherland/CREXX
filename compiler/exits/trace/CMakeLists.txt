@@ -54,6 +54,14 @@ if(DEFINED TRACE_FILE AND NOT "${TRACE_FILE}" STREQUAL "")
     file(REMOVE "${WORKDIR}/${TRACE_FILE}")
 endif()
 
+if(DEFINED ENV_CREXX_TRACE AND NOT "${ENV_CREXX_TRACE}" STREQUAL "")
+    set(ENV{CREXX_TRACE} "${ENV_CREXX_TRACE}")
+endif()
+
+if(DEFINED ENV_CREXX_TRACE_TO AND NOT "${ENV_CREXX_TRACE_TO}" STREQUAL "")
+    set(ENV{CREXX_TRACE_TO} "${ENV_CREXX_TRACE_TO}")
+endif()
+
 execute_process(
         COMMAND "${RXVM}" "${RXBIN}" "${LIBRPATH}"
         WORKING_DIRECTORY "${WORKDIR}"
@@ -96,7 +104,7 @@ endif()
 
 function(crexx_add_trace_capture_test TARGET_NAME SOURCE_FILE)
     set(options)
-    set(oneValueArgs EXPECT_STDOUT_REGEX REJECT_STDOUT_REGEX EXPECT_STDERR_REGEX REJECT_STDERR_REGEX TRACE_FILE EXPECT_FILE_REGEX)
+    set(oneValueArgs EXPECT_STDOUT_REGEX REJECT_STDOUT_REGEX EXPECT_STDERR_REGEX REJECT_STDERR_REGEX TRACE_FILE EXPECT_FILE_REGEX ENV_CREXX_TRACE ENV_CREXX_TRACE_TO)
     cmake_parse_arguments(TRACE_CAPTURE "${options}" "${oneValueArgs}" "" ${ARGN})
 
     set(_outputs)
@@ -127,6 +135,8 @@ function(crexx_add_trace_capture_test TARGET_NAME SOURCE_FILE)
                         -DRXBIN=${_output}
                         -DLIBRPATH=${LIBRPATH}
                         -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/${_base}_work
+                        -DENV_CREXX_TRACE=${TRACE_CAPTURE_ENV_CREXX_TRACE}
+                        -DENV_CREXX_TRACE_TO=${TRACE_CAPTURE_ENV_CREXX_TRACE_TO}
                         -DEXPECT_STDOUT_REGEX=${TRACE_CAPTURE_EXPECT_STDOUT_REGEX}
                         -DREJECT_STDOUT_REGEX=${TRACE_CAPTURE_REJECT_STDOUT_REGEX}
                         -DEXPECT_STDERR_REGEX=${TRACE_CAPTURE_EXPECT_STDERR_REGEX}
@@ -168,6 +178,16 @@ crexx_add_trace_capture_test(
         test_trace_normal_command
         test_trace_normal_command.crexx
         EXPECT_STDOUT_REGEX "\\+\\+\\+[ ]+RC=-3 NOSUCH whatever"
+)
+
+crexx_add_trace_capture_test(
+        test_trace_env
+        test_trace_env.crexx
+        ENV_CREXX_TRACE "results"
+        ENV_CREXX_TRACE_TO "stderr"
+        EXPECT_STDOUT_REGEX "TRACE ENV DONE 42"
+        EXPECT_STDERR_REGEX ">>>[ ]+\"42\""
+        REJECT_STDOUT_REGEX "\\*-\\*"
 )
 
 set(TRACE_COMPILE_FAIL_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/trace_compile_fail.cmake")

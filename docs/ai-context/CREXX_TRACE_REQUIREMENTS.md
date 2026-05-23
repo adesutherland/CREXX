@@ -63,12 +63,19 @@ Current cREXX `TRACE` accepts these names for static options, and
 - Prefix/status forms: leading `?`, signed integer settings, and
   `TRACE VALUE expr`.
 - Output sinks: `TO STDOUT`, `TO STDERR`, `TO FILE expr`, and `TO expr`.
+- Runtime environment override: `CREXX_TRACE` supplies the initial trace mode
+  and `CREXX_TRACE_TO` supplies the initial output sink. The override is applied
+  once, during the first generated TRACE setup, and uses the same mode and sink
+  normalization rules as the instruction form.
 
 Current gaps:
 
 - `!` command inhibition is not accepted.
 - `S`/`Scan` is not accepted.
 - `TRACE` with no option does not yet restore defaults.
+- Environment-variable tracing still needs at least one compiled `TRACE`
+  statement so the certified exit imports `rxfnsb.trace` and emits the
+  breakpoint helper.
 - The public `TRACE()` BIF is not wired to the breakpoint-backed trace runtime.
 - The ADDRESS condition taxonomy is still coarse. `TRACE N` and `TRACE E`
   currently report any non-zero `RC` or condition; `TRACE F` reports negative
@@ -186,6 +193,8 @@ large number of interrupts. Recommended requirements before enabling it:
    - accept `!`;
    - accept `S`;
    - implement `TRACE` with no option as default reset;
+   - add a compiler/runtime bootstrap path for `CREXX_TRACE` when a program has
+     no explicit `TRACE` statement;
    - add the public `TRACE()` BIF, returning the previous setting and applying a
      new setting when an argument is supplied.
 
