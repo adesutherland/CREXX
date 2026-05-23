@@ -13,7 +13,7 @@ emitting `rxas` assembly. If that proof is not available, the call is left as an
 ordinary call. This means inlining should be treated as an implementation
 optimisation, not as a source-language guarantee.
 
-The implementation is deliberately conservative because cREXX inlining is not
+The implementation is deliberately conservative because /crexx{} inlining is not
 simple text substitution. The compiler rewrites the already-validated abstract
 syntax tree and then continues through the normal compiler pipeline. That tree
 surgery must preserve:
@@ -24,7 +24,7 @@ surgery must preserve:
 - nested scopes, local variables, and source/debug locations
 - method receiver state and copyback for mutating methods
 - factory setup and object initialization
-- multi-level imports, where source, RXAS, RXDAS, binary metadata, and linked
+- multi-level imports, where source, rxas, rxdas, binary metadata, and linked
   libraries must all describe the same callable contracts
 
 Some cases are intentionally left as calls. Examples include procedure-level

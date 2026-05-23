@@ -7,11 +7,11 @@ depending on these APIs in a packaged release.
 
 ## The GTK Plugin
 
-The (multiplatform) GTK Plugin enables a straightforward way to implement portable Rexx programs with agraphical user interface.
+The (multiplatform) GTK Plugin enables a straightforward way to implement portable Rexx programs with a graphical user interface.
 
 \crexx{} does not implement event loop multitasking or callbacks yet. At the moment, the inclusion of the GTK plugin is a build time option[^option]. 
 
-[^option]: \code{-DENABLE_GTK=ON}
+[^option]: `-DENABLE_GTK=ON`
 
 ## Overview
 
@@ -24,7 +24,7 @@ This section provides an overview of a lightweight graphical user interface (GUI
 
 Creating a basic window is the first step in building a GUI application. Here's a minimal example:
 
-```rexx <!--initwindow-->
+```rexx <!--initwindow.rexx-->
 /* Initialize the window */
 call init_window "My First GUI", 400, 300  /* title, width, height */
 
@@ -284,6 +284,7 @@ add_button(button_text,x-offset,y-offset)
   - The index of the button in the global widgets array. 
   - Returns `-1` if the button cannot be created.
 - **Example**:
+
 ```rexx <!--addbuttonexample.rexx-->
   button_index = add_button("Submit", 50, 100)
   if button_index < 0 then
@@ -303,6 +304,7 @@ add_text(text,x-offset,y-offset)
   - `y`: Y-coordinate for label placement.
 - **Returns**: The index of the label in the global widgets array.
 - **Example**:
+
 ```rexx <!--addtextexample.rexx-->
   label_index = add_text("Hello World", 10, 50)
 ```
@@ -320,6 +322,7 @@ add_combo(item-list,x-offset,y-offset)
   - `y`: Y-coordinate for combo box placement.
 - **Returns**: The index of the combo box in the global widgets array.
 - **Example**:
+
 ```rexx <!--addcomboexample-->
   combo_index = add_combo(["Option 1", "Option 2", "Option 3"], 10, 100)
 ```
@@ -338,6 +341,7 @@ add_list(x-offset,y-offset,width,height)
   - `height`: Height of the list box.
 - **Returns**: The index of the list in the global widgets array.
 - **Example**:
+
 ```rexx <!--addlistexample-->
   list_index = add_list(10, 150, 200, 100)
 ```
@@ -355,7 +359,8 @@ add_edit(x-offset,y-offset,intitial-value)
   - `initial-value`: Initial text for the entry.
 - **Returns**: The index of the entry in the global widgets array.
 - **Example**:
-  ```rexx <!--addeditexample.rexx-->
+
+```rexx <!--addeditexample.rexx-->
   edit_index = add_edit(10, 100, "Type here...")
   ```
 
@@ -372,6 +377,7 @@ list_add_item(list,x-offset,y-offset,bg_colour)
   - `bg_colour`: Background colour for the item (refer to the [X11 colours](#appendix-x11-colours) for available colours or use RGB in hexadecimal notation, e.g., `#RRGGBB`).
 - **Returns**: An integer indicating success (1).
 - **Example**:
+
 ```rexx <!--addlistaddexample.rexx-->
   call list_add_item(list_index, "Item 1", "lightblue")
 ```
@@ -387,7 +393,8 @@ list_get_selected(list)
   - `list`: Index of the list to check for selection.
 - **Returns**: The index of the selected item or -1 if no selection is made.
 - **Example**:
-  ```rexx <!--addistgetselectedexample.rexx-->
+
+```rexx <!--addistgetselectedexample.rexx-->
   selected_index = list_get_selected(list_index)
   ```
 
@@ -402,6 +409,7 @@ list_get_selected_item(list)
   - `list`: Index of the list to check for selection.
 - **Returns**: The text of the selected item or an empty string if no selection is made.
 - **Example**:
+
 ```rexx <!--addlistgetselecteditemexample.rexx-->
   selected_text = list_get_selected_item(list_index)
 ```
@@ -448,6 +456,7 @@ get_widget_address(index)
   - `index`: Index of the widget to retrieve.
 - **Returns**: The address of the widget or 0 if the index is invalid.
 - **Example**:
+
 ```rexx <!--getwidgetaddressexample.rexx-->
   widget_address = get_widget_address(button_index)
 ```
@@ -465,6 +474,7 @@ rgb_to_hex(r, g, b)
   - `b`: Blue component (0-255).
 - **Returns**: A string representing the color in hexadecimal format (e.g., `#RRGGBB`). Returns an empty string if the input values are out of range.
 - **Example**:
+
 ```rexx <!--rgbtohexexample.rexx-->
   hex_color = rgb_to_hex(255, 0, 0)  // Returns "#FF0000"
 ```
@@ -506,6 +516,7 @@ copy_file(source_path, destination_path)
   - `0` on success
   - `-8` on failure
 - **Example**:
+
 ```rexx <!--guiex2.rexx-->
   rc = copy_file("C:\source\file.txt", "C:\destination\file.txt")
   if rc = 0 then
@@ -545,6 +556,7 @@ file_pick(title, initial_dir, save_dialog, pattern)
   anyfile = file_pick("Select Any File", "C:\Files", 0, "*.*")
 ```
 - **Error Handling**:
+
 ```rexx <!--guiex5.rexx-->
   filepath = file_pick("Select File", initial_dir, 0, "*.rexx")
   if filepath = "" then do
@@ -570,6 +582,7 @@ path_pick(title, initial_dir)
   - `initial_dir`: Initial directory to open.
 - **Returns**: Selected directory path as string, or empty string if cancelled.
 - **Examples**:
+
 ```rexx <!--guiex7.rexx-->
   /* Basic directory selection */
   dirpath = path_pick("Select Folder", "C:\Documents")
@@ -584,6 +597,7 @@ path_pick(title, initial_dir)
   end
 ```
 - **Error Handling**:
+
 ```rexx <!--guiex8.rexx-->
   dirpath = path_pick("Select Directory", initial_dir)
   if dirpath = "" then do
@@ -616,6 +630,7 @@ date_pick(title, show_time, format)
   - `mm`: Minutes (00-59)
   - `ss`: Seconds (00-59)
 - **Examples**:
+
 ```rexx <!--guiex10.rexx-->
   /* Date only selection */
   date = date_pick("Select Date", 0, "YYYY-MM-DD")
@@ -636,6 +651,7 @@ date_pick(title, show_time, format)
   end
 ```
 - **Error Handling**:
+
 ```rexx <!--guiex11.rexx-->
   date = date_pick("Select Date", 0, "YYYY-MM-DD")
   if date = "" then do
@@ -663,6 +679,7 @@ list_pick(title, items, multi_select, message)
   - `message`: Optional message to display above the list.
 - **Returns**: Selected item(s) as string (comma-separated if multiple), or empty string if cancelled.
 - **Examples**:
+
 ```rexx <!--guiex13.rexx-->
   /* Single selection */
   options = ["Small", "Medium", "Large"]
@@ -681,6 +698,7 @@ list_pick(title, items, multi_select, message)
   end
 ```
 - **Error Handling**:
+
 ```rexx <!--guiex14.rexx-->
   /* Check for empty selection */
   result = list_pick("Select Items", items, 1, "Please select:")
@@ -718,6 +736,7 @@ combo_pick(title, message, items)
   - `items`: Array of items to display in the combo box.
 - **Returns**: Selected item as string, or empty string if cancelled.
 - **Example**:
+
 ```rexx <!--guiex16.rexx-->
   items = ["Option 1", "Option 2", "Option 3"]
   selected = combo_pick("Choose Option", "Please select:", items)
@@ -738,6 +757,7 @@ tree_pick(title, message, items, parents, multi_select)
   - `multi_select`: 1 to allow multiple selections, 0 for single selection.
 - **Returns**: Selected item(s) as string (comma-separated if multiple), or empty string if cancelled.
 - **Examples**:
+
 ```rexx <!--guiex18.rexx-->
   /* Basic tree structure */
   items.1 = "Root"
@@ -781,6 +801,7 @@ tree_pick(title, message, items, parents, multi_select)
   positions = tree_pick("Organization", "Select department:", items, parents, 0)
 ```
 - **Error Handling**:
+
 ```rexx <!--guiex19.rexx-->
   if selected = "" then do
       say "No selection made or dialog cancelled"
@@ -814,6 +835,7 @@ input_pick(title, message, default_value, password_mode)
   - `password_mode`: 1 to mask input (for passwords), 0 for normal text.
 - **Returns**: Entered text as string, or empty string if cancelled.
 - **Example**:
+
 ```rexx <!--guiex21.rexx-->
   /* Normal input */
   name = input_pick("Name Entry", "Enter your name:", "", 0)
@@ -856,6 +878,7 @@ page_pick(title, pages, labels, defaults)
   - `defaults`: Array of default values for input fields.
 - **Returns**: Comma-separated string of entered values, or empty string if cancelled.
 - **Example**:
+
 ```rexx <!--guiex23.rexx-->
   pages = ["Personal", "Contact", "Preferences"]
   labels = ["Name,Age", "Email,Phone", "Theme,Language"]
@@ -894,6 +917,7 @@ notify_pick(title, message, type)
   - `type`: Type of notification ("info", "warning", "error", "question").
 - **Returns**: Empty string.
 - **Example**:
+
 ```rexx <!--guiex26.rexx-->
   call notify_pick "Success", "Operation completed successfully", "info"
   call notify_pick "Warning", "Low disk space", "warning"
@@ -915,6 +939,7 @@ splash_pick(title, message, duration, width, height, image_path)
   - `image_path`: Path to an image file to display (optional).
 - **Returns**: Empty string.
 - **Example**:
+
 ```rexx <!--guiex28.rexx-->
   /* Show splash screen for 3 seconds */
   call splash_pick "Welcome", "Loading...", 3, 400, 300, "logo.png"
@@ -933,6 +958,7 @@ text_display(title, message, item_text)
   - `item_text`: Text content to display (can include newlines).
 - **Returns**: Empty string.
 - **Example**:
+
 ```rexx <!--guiex30.rexx-->
   text = "First line\nSecond line\nThird line"
   call text_display "Document", "Content:", text
@@ -951,6 +977,7 @@ text_display_pick(title, message, item_texts)
   - `item_texts`: Array of text items to display.
 - **Returns**: Empty string.
 - **Example**:
+
 ```rexx <!--guiex32.rexx-->
   texts = ["First paragraph", "Second paragraph", "Third paragraph"]
   call text_display_pick "Document", "Preview:", texts
@@ -969,6 +996,7 @@ color_pick(title, message, default_color)
   - `default_color`: Initial color (in hex format or X11 color name).
 - **Returns**: Selected color in hex format (#RRGGBB), or empty string if cancelled.
 - **Example**:
+
 ```rexx <!--guiex34.rexx-->
   color = color_pick("Choose Color", "Select background color:", "#FF0000")
 ```
@@ -985,6 +1013,7 @@ tree_diagram(items, parents)
   - `parents`: Array indicating parent-child relationships.
 - **Returns**: Empty string.
 - **Example**:
+
 ```rexx <!--guiex36.rexx-->
   items = ["CEO", "Manager1", "Manager2", "Employee1", "Employee2"]
   parents = ["", "CEO", "CEO", "Manager1", "Manager2"]
@@ -1014,6 +1043,7 @@ add_graph(x, y, width, height, function_type,x1,y1,x2,y2,x3,y3)
 
 - **Returns**: The index of the graph widget in the global widgets array.
 - **Example**:
+
 ```rexx <!--guiex38.rexx-->
   graph1 = add_graph(10, 10, 300, 200,x1,y1,x2,y2,x3,y3)
 ```
@@ -1023,6 +1053,7 @@ add_graph(x, y, width, height, function_type,x1,y1,x2,y2,x3,y3)
   - Multiple graphs can be added to the same window
 
 #### ADD_R2CHART
+
 ```rexx <!--guiex39.rexx-->
 add_r2chart(x, y, width, height, function_type,x1,y1,x2,y2,x3,y3)
 ```
@@ -1041,6 +1072,7 @@ add_r2chart(x, y, width, height, function_type,x1,y1,x2,y2,x3,y3)
   - `y3`: Array of y coordinates for the third graph (optional).
 - **Returns**: The index of the graph widget in the global widgets array.
 - **Example**:
+
 ```rexx <!--guiex40.rexx-->
   /* Create arrays for the graphs */
   j=1
@@ -1073,6 +1105,7 @@ update_graph(graph_index, graph_num, line_type, line_width, color)
     - `color`: Color name (X11 color) or hex value.
 - **Returns**: None.
 - **Example**:
+
 ```rexx <!--guiex42.rexx-->
   /* Update first graph to yellow solid line */
   call update_graph graph, 1, 1, 3, "yellow"
@@ -1093,25 +1126,25 @@ update_graph(graph_index, graph_num, line_type, line_width, color)
 3. **Widget States**: Verify that widget states are being managed correctly, especially when updating or redrawing.
 
 
---- 
+<!-- ---  -->
 
-## Common Patterns and Best Practices
+<!-- ## Common Patterns and Best Practices -->
 
-### GUI Layout Guidelines
+<!-- ### GUI Layout Guidelines -->
 
-### Error Handling Strategies
+<!-- ### Error Handling Strategies -->
 
-### Common Usage Patterns
+<!-- ### Common Usage Patterns -->
 
-### Performance Tips
+<!-- ### Performance Tips -->
 
----
+<!-- --- -->
 
-## Real-World Examples
+<!-- ## Real-World Examples -->
 
-### Form Application
+<!-- ### Form Application -->
 
-### File Processing Application
+<!-- ### File Processing Application -->
 
 ### Configuration Dialog
 
@@ -1225,6 +1258,7 @@ return
    - Ensure GTK is properly initialized
 
 2. **Widget Creation Failures**
+
 ```rexx <!--guiex43.rexx-->
    button = add_button("Click Me", 10, 10)
    if button < 0 then do
@@ -1246,6 +1280,7 @@ return
 ### Debugging Tips
 
 1. **Event Debugging**
+
 ```rexx <!--guiex44.rexx-->
    /* Add debug output */
    do forever
@@ -1256,6 +1291,7 @@ return
    ```
 
 2. **Widget State Verification**
+
 ```rexx <!--guiex45.rexx-->
    /* Check widget status */
    widget_addr = get_widget_address(widget_index)
@@ -1264,6 +1300,7 @@ return
 ```
 
 3. **Status Updates**
+
 ```rexx <!--guiex46.rexx-->
    /* Add status messages */
    call set_status status_bar, "Processing event:" event
@@ -1286,9 +1323,9 @@ return
    - Font and color rendering may vary
    - File paths need platform-specific handling
 
----
+<!-- --- -->
 
-### Function Index
+<!-- ### Function Index -->
 
 ### X11 Colours
 
