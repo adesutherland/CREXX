@@ -50,6 +50,17 @@ void check_value_state(value* v, const char* file, int line) {
 // The macro remains the same
 #define CHECK_STATE(v) check_value_state(v, __FILE__, __LINE__)
 
+void check_status_mask(value* v, uint32_t mask, uint32_t expected, const char* file, int line) {
+    uint32_t actual = v->status.all_type_flags & mask;
+    if (actual != expected) {
+        fprintf(stderr, "VERIFY FAIL (%s:%d): status mask 0x%08x is 0x%08x but should be 0x%08x\n",
+                file, line, mask, actual, expected);
+        exit(1);
+    }
+}
+
+#define CHECK_STATUS(v, mask, expected) check_status_mask(v, mask, expected, __FILE__, __LINE__)
+
 void test_string_positioning() {
     value v;
     value_init(&v);
@@ -180,10 +191,62 @@ void test_flawed_optimization_trigger() {
     printf("--- Flawed Optimization Tests Finished ---\n");
 }
 
+void test_utf_status_flags() {
+#ifndef NUTF8
+    const uint32_t utf_known = RXFLAG_VM_UTF8_VALID | RXFLAG_VM_UTF8_COUNT_VALID;
+    value valid;
+    value copy;
+    value appended;
+    value concatenated;
+    value bad;
+    char invalid_bytes[] = { 'o', 'k', (char)0xff };
+
+    printf("\n--- Running UTF Status Flag Tests ---\n");
+
+    value_init(&valid);
+    value_init(&copy);
+    value_init(&appended);
+    value_init(&concatenated);
+    value_init(&bad);
+
+    set_null_string(&valid, "Hello ©");
+    CHECK_STATUS(&valid, utf_known, utf_known);
+    CHECK_STATE(&valid);
+
+    copy_string_value(&copy, &valid);
+    CHECK_STATUS(&copy, utf_known, utf_known);
+    CHECK_STATE(&copy);
+
+    set_null_string(&appended, "prefix ");
+    string_append(&appended, &valid);
+    CHECK_STATUS(&appended, utf_known, utf_known);
+    CHECK_STATE(&appended);
+
+    string_concat(&concatenated, &valid, &copy);
+    CHECK_STATUS(&concatenated, utf_known, utf_known);
+    CHECK_STATE(&concatenated);
+
+    set_string(&bad, invalid_bytes, sizeof(invalid_bytes));
+    CHECK_STATUS(&bad, utf_known, 0);
+
+    string_append(&bad, &valid);
+    CHECK_STATUS(&bad, utf_known, 0);
+
+    clear_value(&valid);
+    clear_value(&copy);
+    clear_value(&appended);
+    clear_value(&concatenated);
+    clear_value(&bad);
+
+    printf("--- UTF Status Flag Tests Finished ---\n");
+#endif
+}
+
 int main() {
     test_string_positioning();
     test_boundary_conditions();
     test_flawed_optimization_trigger();
+    test_utf_status_flags();
     // Add more tests with other strings (empty, all-ASCII, all-multibyte, etc.)
 
     printf("\nAll tests completed.\n");

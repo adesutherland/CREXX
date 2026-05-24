@@ -327,6 +327,10 @@ crexx_add_vm_dual_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoin
 crexx_add_rxas_vm_binary(tests_register_flags "register flag partitioning")
 crexx_add_vm_dual_test(NAME rxasregisterflagtests RXVM_ARGS tests_register_flags PASS_REGULAR_EXPRESSION "PASS: Register Flag Partition")
 
+# Instruction Sanity Tests - UTF status cache flags
+crexx_add_rxas_vm_binary(tests_utf_flags "UTF flag cache")
+crexx_add_vm_dual_test(NAME rxasutfflagtests RXVM_ARGS tests_utf_flags PASS_REGULAR_EXPRESSION "PASS: UTF Flag Cache")
+
 # Instruction Sanity Tests - focused signal handler mode coverage
 crexx_add_rxas_vm_binary(tests_signal_call_attrs "signal call argument attributes")
 crexx_add_vm_dual_test(NAME rxassignalattrcodetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-code: 30")

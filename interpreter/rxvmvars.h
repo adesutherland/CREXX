@@ -32,6 +32,7 @@
 #ifndef NUTF8
 #include "utf.h"
 #endif
+#include "../binutils/include/rxflags.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -45,6 +46,61 @@
 static void extract_double_decimal(numeric_context* num_context, value *coefficient, value *exponent, double value);
 static void extract_integer_decimal(numeric_context* num_context, value *coefficient, value *exponent, rxinteger value);
 static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_value, value *exponent_value, value *formatted_output_value);
+
+RX_INLINE void clear_vm_private_flags(value *v) {
+    v->status.all_type_flags &= ~RXFLAG_VM_PRIVATE_MASK;
+}
+
+RX_INLINE void set_vm_private_flags(value *v, uint32_t flags) {
+    v->status.all_type_flags = (v->status.all_type_flags & ~RXFLAG_VM_PRIVATE_MASK) |
+                               (flags & RXFLAG_VM_PRIVATE_MASK);
+}
+
+RX_INLINE void copy_vm_private_flags(value *dest, const value *source) {
+    set_vm_private_flags(dest, source->status.all_type_flags);
+}
+
+#ifndef NUTF8
+RX_INLINE int has_utf8_valid_count(const value *v) {
+    return (v->status.all_type_flags & (RXFLAG_VM_UTF8_VALID | RXFLAG_VM_UTF8_COUNT_VALID)) ==
+           (RXFLAG_VM_UTF8_VALID | RXFLAG_VM_UTF8_COUNT_VALID);
+}
+
+RX_INLINE int has_utf8_valid_count_or_empty(const value *v) {
+    return v->string_length == 0 || has_utf8_valid_count(v);
+}
+
+RX_INLINE void mark_utf8_valid_count(value *v) {
+    set_vm_private_flags(v, RXFLAG_VM_UTF8_VALID | RXFLAG_VM_UTF8_COUNT_VALID);
+}
+
+RX_INLINE void mark_ascii_string_valid_count(value *v) {
+    v->string_chars = v->string_length;
+    v->string_char_pos = 0;
+    mark_utf8_valid_count(v);
+}
+
+RX_INLINE void refresh_utf8_flags(value *v) {
+    size_t chars = 0;
+    if (!utf8nvalid_count(v->string_value, v->string_length, &chars)) {
+        v->string_chars = chars;
+        mark_utf8_valid_count(v);
+    } else {
+        v->string_chars = utf8nlen(v->string_value, v->string_length);
+        clear_vm_private_flags(v);
+    }
+}
+
+RX_INLINE void set_utf8_known_concat_flags(value *dest, int left_known, int right_known) {
+    if (left_known && right_known) mark_utf8_valid_count(dest);
+    else clear_vm_private_flags(dest);
+}
+
+RX_INLINE int is_valid_unicode_scalar(rxinteger codepoint) {
+    return codepoint >= 0 && codepoint <= 0x10ffff &&
+           !(codepoint >= 0xd800 && codepoint <= 0xdfff);
+}
+#endif
 
 /* Clears the binary payload and runs native cleanup if the payload owns native resources. */
 RX_INLINE void clear_binary_payload(value *v) {
@@ -401,7 +457,9 @@ RX_INLINE void set_string(value *v, char *value, size_t length) {
     v->string_pos = 0;
 #ifndef NUTF8
     v->string_char_pos = 0;
-    v->string_chars = utf8nlen(v->string_value, v->string_length); /* SLOW! */
+    refresh_utf8_flags(v);
+#else
+    clear_vm_private_flags(v);
 #endif
 }
 
@@ -414,7 +472,9 @@ RX_INLINE void set_null_string(value *v, const char *from) {
     v->string_pos = 0;
 #ifndef NUTF8
     v->string_char_pos = 0;
-    v->string_chars = utf8nlen(v->string_value, v->string_length);
+    refresh_utf8_flags(v);
+#else
+    clear_vm_private_flags(v);
 #endif
 }
 
@@ -426,6 +486,9 @@ RX_INLINE void set_const_string(value *v, string_constant *from) {
 #ifndef NUTF8
     v->string_char_pos = 0;
     v->string_chars = from->string_chars;
+    mark_utf8_valid_count(v);
+#else
+    clear_vm_private_flags(v);
 #endif
 }
 
@@ -438,6 +501,9 @@ RX_INLINE void set_value_string(value *v, value *from) {
 #ifndef NUTF8
     v->string_char_pos = 0;
     v->string_chars = from->string_chars;
+    copy_vm_private_flags(v, from);
+#else
+    clear_vm_private_flags(v);
 #endif
 }
 
@@ -460,6 +526,7 @@ RX_INLINE void set_buffer_string(
     v->string_char_pos = 0;
     v->string_chars = string_chars;
 #endif
+    clear_vm_private_flags(v);
 }
 
 RX_INLINE int set_native_payload(value *v,
@@ -540,6 +607,7 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
         dest->string_char_pos = 0;;
 #endif
     }
+    copy_vm_private_flags(dest, source);
 
     /* Copy Binary */
     if (source->native_payload_ops && source->native_payload_ops->copy) {
@@ -671,6 +739,7 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
         dest->string_char_pos = 0;
 #endif
     }
+    copy_vm_private_flags(dest, source);
 }
 
 /* Compares two strings. returns -1, 0, 1 as appropriate */
@@ -707,6 +776,7 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
     if (actual_chars == 0) {
         if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
         string_set_ascii_length(dest, 0);
+        mark_utf8_valid_count(dest);
         return;
     }
 
@@ -732,12 +802,17 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
 
     string_set_lengths(dest, byte_length, actual_chars);
     null_terminate_string_buffer(dest);
+    if (has_utf8_valid_count(source)) mark_utf8_valid_count(dest);
+    else clear_vm_private_flags(dest);
 }
 
 RX_INLINE void string_truncate_chars(value *v, size_t char_count) {
+    int was_valid = has_utf8_valid_count_or_empty(v);
     string_set_byte_pos(v, char_count);
     string_set_lengths(v, v->string_pos, v->string_char_pos);
     null_terminate_string_buffer(v);
+    if (was_valid || v->string_length == 0) mark_utf8_valid_count(v);
+    else clear_vm_private_flags(v);
 }
 #else
 RX_INLINE void string_reset_cursor(value *v) {
@@ -766,6 +841,7 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
     if (byte_length == 0) {
         if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
         string_set_ascii_length(dest, 0);
+        clear_vm_private_flags(dest);
         return;
     }
 
@@ -778,12 +854,14 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
 
     string_set_ascii_length(dest, byte_length);
     null_terminate_string_buffer(dest);
+    clear_vm_private_flags(dest);
 }
 
 RX_INLINE void string_truncate_chars(value *v, size_t char_count) {
     size_t new_length = MIN(char_count, v->string_length);
     string_set_ascii_length(v, new_length);
     null_terminate_string_buffer(v);
+    clear_vm_private_flags(v);
 }
 #endif
 
@@ -809,18 +887,30 @@ RX_INLINE int string_cmp_const(value *v1, string_constant *v2) {
 
 RX_INLINE void string_append(value *v1, value *v2) {
     size_t start = v1->string_length;
+    size_t append_length = v2->string_length;
+#ifndef NUTF8
+    size_t append_chars = v2->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v1);
+    int right_known = has_utf8_valid_count_or_empty(v2);
+#endif
 
-    extend_string_buffer(v1, v1->string_length + v2->string_length);
-    memcpy(v1->string_value + start, v2->string_value, v2->string_length);
+    extend_string_buffer(v1, v1->string_length + append_length);
+    memcpy(v1->string_value + start, v2->string_value, append_length);
     v1->string_pos = 0;
 #ifndef NUTF8
     v1->string_char_pos = 0;
-    v1->string_chars += v2->string_chars;
+    v1->string_chars += append_chars;
+    set_utf8_known_concat_flags(v1, left_known, right_known);
+#else
+    clear_vm_private_flags(v1);
 #endif
 }
 
 RX_INLINE void string_append_chars(value *v1, char *value, size_t length) {
     size_t start = v1->string_length;
+#ifndef NUTF8
+    int had_valid = has_utf8_valid_count_or_empty(v1);
+#endif
 
     extend_string_buffer(v1, v1->string_length + length);
     memcpy(v1->string_value + start, value, length);
@@ -828,20 +918,41 @@ RX_INLINE void string_append_chars(value *v1, char *value, size_t length) {
     v1->string_pos = 0;
 #ifndef NUTF8
     v1->string_char_pos = 0;
-    v1->string_chars += utf8nlen(value, length); /* SLOW! */
+    {
+        size_t chars = 0;
+        if (!utf8nvalid_count(value, length, &chars)) {
+            v1->string_chars += chars;
+            if (had_valid) mark_utf8_valid_count(v1);
+            else clear_vm_private_flags(v1);
+        } else {
+            v1->string_chars += utf8nlen(value, length); /* SLOW! */
+            clear_vm_private_flags(v1);
+        }
+    }
+#else
+    clear_vm_private_flags(v1);
 #endif
 }
 
 RX_INLINE void string_sappend(value *v1, value *v2) {
     size_t start = v1->string_length;
+    size_t append_length = v2->string_length;
+#ifndef NUTF8
+    size_t append_chars = v2->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v1);
+    int right_known = has_utf8_valid_count_or_empty(v2);
+#endif
 
-    extend_string_buffer(v1, v1->string_length + v2->string_length + 1);
+    extend_string_buffer(v1, v1->string_length + append_length + 1);
     v1->string_value[start++] = ' ';
-    memcpy(v1->string_value + start, v2->string_value, v2->string_length);
+    memcpy(v1->string_value + start, v2->string_value, append_length);
     v1->string_pos = 0;
 #ifndef NUTF8
     v1->string_char_pos = 0;
-    v1->string_chars += v2->string_chars + 1;
+    v1->string_chars += append_chars + 1;
+    set_utf8_known_concat_flags(v1, left_known, right_known);
+#else
+    clear_vm_private_flags(v1);
 #endif
 }
 
@@ -849,6 +960,12 @@ RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
     size_t len = v2->string_length + v3->string_length ;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t left_chars = v2->string_chars;
+    size_t right_chars = v3->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v2);
+    int right_known = has_utf8_valid_count_or_empty(v3);
+#endif
     if (v1 == v2 || v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -860,7 +977,7 @@ RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
-        set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars);
+        set_buffer_string(v1, buffer, len, buffer_len, left_chars + right_chars);
         v1->string_char_pos = 0;
 #endif
     }
@@ -871,16 +988,27 @@ RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
         memcpy(v1->string_value + v2->string_length, v3->string_value, v3->string_length);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars;
+        v1->string_chars = left_chars + right_chars;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, left_known, right_known);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
     size_t len = v2->string_length + v3->string_length + 1;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t left_chars = v2->string_chars;
+    size_t right_chars = v3->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v2);
+    int right_known = has_utf8_valid_count_or_empty(v3);
+#endif
     if (v1 == v2 || v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -892,7 +1020,7 @@ RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
-        set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars + 1);
+        set_buffer_string(v1, buffer, len, buffer_len, left_chars + right_chars + 1);
         v1->string_char_pos = 0;
 #endif
     }
@@ -904,16 +1032,25 @@ RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
         memcpy(v1->string_value + v2->string_length + 1, v3->string_value, v3->string_length);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars + 1;
+        v1->string_chars = left_chars + right_chars + 1;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, left_known, right_known);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3) {
     size_t len = v2->string_length + v3->string_len;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t left_chars = v2->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v2);
+#endif
     if (v1 == v2) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -926,7 +1063,7 @@ RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
-                          v2->string_chars + v3->string_chars);
+                          left_chars + v3->string_chars);
         v1->string_char_pos = 0;
 #endif
     }
@@ -937,16 +1074,25 @@ RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3
         memcpy(v1->string_value + v2->string_length, v3->string, v3->string_len);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars;
+        v1->string_chars = left_chars + v3->string_chars;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, left_known, 1);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v3) {
     size_t len = v2->string_length + v3->string_len + 1;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t left_chars = v2->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v2);
+#endif
     if (v1 == v2) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -960,7 +1106,7 @@ RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
-                          v2->string_chars + v3->string_chars + 1);
+                          left_chars + v3->string_chars + 1);
         v1->string_char_pos = 0;
 #endif
     }
@@ -972,16 +1118,25 @@ RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v
         memcpy(v1->string_value + v2->string_length + 1, v3->string, v3->string_len);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars + 1;
+        v1->string_chars = left_chars + v3->string_chars + 1;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, left_known, 1);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3) {
     size_t len = v2->string_len + v3->string_length;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t right_chars = v3->string_chars;
+    int right_known = has_utf8_valid_count_or_empty(v3);
+#endif
     if (v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -994,7 +1149,7 @@ RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
-                          v2->string_chars + v3->string_chars);
+                          v2->string_chars + right_chars);
         v1->string_char_pos = 0;
 #endif
     }
@@ -1006,16 +1161,25 @@ RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3
         memcpy(v1->string_value + v2->string_len, v3->string_value, v3->string_length);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars;
+        v1->string_chars = v2->string_chars + right_chars;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, 1, right_known);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v3) {
     size_t len = v2->string_len + v3->string_length + 1;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t right_chars = v3->string_chars;
+    int right_known = has_utf8_valid_count_or_empty(v3);
+#endif
     if (v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -1030,7 +1194,7 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
-                          v2->string_chars + v3->string_chars + 1);
+                          v2->string_chars + right_chars + 1);
         v1->string_char_pos = 0;
 #endif
     }
@@ -1043,10 +1207,15 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
                v3->string_length);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars + 1;
+        v1->string_chars = v2->string_chars + right_chars + 1;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, 1, right_known);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 #ifndef NUTF8
@@ -1160,6 +1329,10 @@ RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
 RX_INLINE void string_concat_char(value *v1, value *v2) {
     int char_size;
     char *insert_at;
+#ifndef NUTF8
+    int was_valid = has_utf8_valid_count_or_empty(v1);
+    int scalar_valid = is_valid_unicode_scalar(v2->int_value);
+#endif
 
     v1->string_pos = v1->string_length;
 #ifdef NUTF8
@@ -1174,9 +1347,11 @@ RX_INLINE void string_concat_char(value *v1, value *v2) {
 
 #ifdef NUTF8
     *insert_at = (unsigned char)v2->int_value;
+    clear_vm_private_flags(v1);
 #else
     v1->string_chars += 1;
     utf8catcodepoint(insert_at, v2->int_value, char_size);
+    set_utf8_known_concat_flags(v1, was_valid, scalar_valid);
 #endif
 }
 
@@ -1196,8 +1371,7 @@ RX_INLINE void int_to_string(numeric_context *cnt, value *temp, value *v) {
 #endif
         v->string_pos = 0;
 #ifndef NUTF8
-        v->string_char_pos = 0;
-        v->string_chars = v->string_length;
+        mark_ascii_string_valid_count(v);
 #endif
         return;
     }
@@ -1452,8 +1626,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
         coefficient->string_length = 3;
         coefficient->string_pos = 0;
 #ifndef NUTF8
-        coefficient->string_chars = coefficient->string_length;
-        coefficient->string_char_pos = 0;
+        mark_ascii_string_valid_count(coefficient);
 #endif
         return;
     }
@@ -1465,8 +1638,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
         coefficient->string_length = signbit(value) ? 4 : 3;
         coefficient->string_pos = 0;
 #ifndef NUTF8
-        coefficient->string_chars = coefficient->string_length;
-        coefficient->string_char_pos = 0;
+        mark_ascii_string_valid_count(coefficient);
 #endif
         return;
     }
@@ -1477,8 +1649,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
         coefficient->string_length = 1;
         coefficient->string_pos = 0;
 #ifndef NUTF8
-        coefficient->string_chars = coefficient->string_length;
-        coefficient->string_char_pos = 0;
+        mark_ascii_string_valid_count(coefficient);
 #endif
         return;
     }
@@ -1535,8 +1706,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
     coefficient->string_length = strlen(coefficient->string_value);
     coefficient->string_pos = 0;
 #ifndef NUTF8
-    coefficient->string_chars = coefficient->string_length;
-    coefficient->string_char_pos = 0;
+    mark_ascii_string_valid_count(coefficient);
 #endif
 }
 
@@ -1602,8 +1772,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
     formatted_output_value->string_value[0] = 0; // Null-terminate - just in case
     formatted_output_value->string_pos = 0;
 #ifndef NUTF8
-    formatted_output_value->string_chars = formatted_output_value->string_length;
-    formatted_output_value->string_char_pos = 0;
+    mark_ascii_string_valid_count(formatted_output_value);
 #endif
     char *formatted_output = formatted_output_value->string_value;
 
@@ -1638,8 +1807,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
         formatted_output_value->string_length = strlen(formatted_output_value->string_value);
         formatted_output_value->string_pos = 0;
 #ifndef NUTF8
-        formatted_output_value->string_chars = formatted_output_value->string_length;
-        formatted_output_value->string_char_pos = 0;
+        mark_ascii_string_valid_count(formatted_output_value);
 #endif
         return;
     }
@@ -1656,8 +1824,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
             formatted_output_value->string_length = strlen(formatted_output_value->string_value);
             formatted_output_value->string_pos = 0;
 #ifndef NUTF8
-            formatted_output_value->string_chars = formatted_output_value->string_length;
-            formatted_output_value->string_char_pos = 0;
+            mark_ascii_string_valid_count(formatted_output_value);
 #endif
             return;
         }
@@ -1735,8 +1902,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
         formatted_output_value->string_length = strlen(formatted_output_value->string_value);
         formatted_output_value->string_pos = 0;
 #ifndef NUTF8
-            formatted_output_value->string_chars = formatted_output_value->string_length;
-            formatted_output_value->string_char_pos = 0;
+            mark_ascii_string_valid_count(formatted_output_value);
 #endif
         return;
     }
@@ -1789,8 +1955,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
     formatted_output_value->string_length = strlen(formatted_output_value->string_value);
     formatted_output_value->string_pos = 0;
 #ifndef NUTF8
-    formatted_output_value->string_chars = formatted_output_value->string_length;
-    formatted_output_value->string_char_pos = 0;
+    mark_ascii_string_valid_count(formatted_output_value);
 #endif
 }
 
@@ -1805,8 +1970,7 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
         coefficient->string_length = 1;
         coefficient->string_pos = 0;
 #ifndef NUTF8
-        coefficient->string_char_pos = 0;
-        coefficient->string_chars = 1;
+        mark_ascii_string_valid_count(coefficient);
 #endif
         exponent->int_value = 0;
         return;
@@ -1856,8 +2020,7 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
 
     // Set the utf8 values
 #ifndef NUTF8
-    coefficient->string_char_pos = 0;
-    coefficient->string_chars = coefficient->string_length;
+    mark_ascii_string_valid_count(coefficient);
 #endif
 }
 

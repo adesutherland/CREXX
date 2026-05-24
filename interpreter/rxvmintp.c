@@ -3108,7 +3108,9 @@ START_OF_INSTRUCTIONS
                 op1R->string_pos = 0;
 #ifndef NUTF8
                 op1R->string_char_pos = 0;
-                op1R->string_chars = utf8nlen(op1R->string_value, op1R->string_length);
+                refresh_utf8_flags(op1R);
+#else
+                clear_vm_private_flags(op1R);
 #endif
             }
             DISPATCH
@@ -7592,7 +7594,9 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         }
 #ifndef NUTF8
         op1R->string_char_pos = 0;
-        op1R->string_chars = utf8nlen(op1R->string_value, op1R->string_length);
+        refresh_utf8_flags(op1R);
+#else
+        clear_vm_private_flags(op1R);
 #endif
         DISPATCH
 
@@ -7634,13 +7638,14 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             utf8codepoint(op1R->string_value, &codepoint);
             op1R->int_value = codepoint;
             op1R->string_char_pos = 0;
-            op1R->string_chars = 1;
-#elif
+            refresh_utf8_flags(op1R);
+#else
             prep_string_buffer(op1R, 1);
             op1R->int_value = (unsigned char)fgetc( (FILE*)op2R->int_value );
             op1R->string_value[0] = op1R->int_value;
             op1R->string_length = 1;
             op1R->string_pos = 0;
+            clear_vm_private_flags(op1R);
 #endif
         }
         DISPATCH
@@ -7674,7 +7679,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
 
             end_of_codepoint = utf8catcodepoint(codepoint, op2R->int_value, 4);
             length_of_codepoint = end_of_codepoint - codepoint;
-#elif
+#else
             length_of_codepoint = 1;
             codepoint[0] = op2R->int_value;
 #endif

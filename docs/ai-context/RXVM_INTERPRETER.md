@@ -218,6 +218,15 @@ flag bands so private cache bits do not change legacy branch behavior.
 Status flag instructions still take normal `rxinteger` operands in RXAS/RXBIN;
 the VM applies only the low 32 bits when reading a flag mask.
 
+In normal UTF builds, `RXFLAG_VM_UTF8_VALID` and
+`RXFLAG_VM_UTF8_COUNT_VALID` mean the string byte span is known well-formed
+UTF-8 and `string_chars` is a validated codepoint count. Constant loads mark
+the cache as trusted, bounded string setters and text reads validate before
+marking it, copy/move/string-copy preserve it, and codepoint-safe concat/slice/
+truncate/append paths propagate it. Invalid or unknown byte-oriented text clears
+the VM-private UTF cache bits while preserving the bytes for explicit binary or
+compatibility handling.
+
 The two `object_type_name` fields are the current Level B hook for interface
 dispatch. Class factories stamp object values with `setobjtype`, and later VM
 lookups use that concrete class identity when resolving interface member calls.

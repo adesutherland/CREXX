@@ -144,6 +144,15 @@ that preserve validity, such as copying, concatenating two already-valid
 strings, slicing on codepoint boundaries, and appending a valid Unicode scalar,
 should propagate cached validity/count state rather than rescanning.
 
+The VM now maintains the first two VM-private status bits as a UTF-8 cache:
+`RXFLAG_VM_UTF8_VALID` and `RXFLAG_VM_UTF8_COUNT_VALID`. Trusted string
+constants set both bits, bounded native setters validate and count before
+setting them, and operations that preserve validity copy or propagate the bits.
+If a text setter or append receives invalid UTF-8, the VM keeps the bytes and
+the legacy best-effort codepoint count but clears the UTF cache bits so later
+work can distinguish known-valid text from byte payloads that need explicit
+handling.
+
 The VM register/value status word is a `uint32_t` field partitioned in
 `binutils/include/rxflags.h` instead of adding a second flag field:
 
@@ -164,6 +173,11 @@ semantics.
 
 RXAS/RXBIN integer operands remain `rxinteger`; status instructions cast masks
 to the 32-bit flag word before applying the partition.
+
+Regression coverage for the partition and UTF cache contract lives in
+`interpreter/tests/tests_register_flags.rxas`,
+`interpreter/tests/tests_utf_flags.rxas`, and
+`interpreter/tests/ts_regvalue_tester.c`.
 
 The implementation roadmap is:
 

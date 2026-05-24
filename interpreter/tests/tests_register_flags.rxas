@@ -5,8 +5,6 @@
 .globals=0
 
 main() .locals=4
-   load r0,"flagged"
-
    settp r0,1
    gettp r1,r0
    ieq r2,r1,0
