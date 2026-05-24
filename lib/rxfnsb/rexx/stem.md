@@ -23,6 +23,11 @@ s = .stem()
 s.key = "value"
 val = s.key
 
+/* Multi-tail property syntax preserves separators in the key */
+customer = "acme"
+invoice = "2026.05"
+s.customer.invoice = "value4"  /* key is "acme.2026.05" */
+
 /* Bracket notation for keys that aren't valid identifiers */
 s["my-key"] = "value2"
 

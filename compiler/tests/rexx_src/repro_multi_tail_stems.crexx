@@ -1,0 +1,61 @@
+options levelb
+import rxfnsb
+
+errors = 0
+root = .stem()
+
+root.tail1.tail2 = "Jenny"
+if root.tail1.tail2 \= "Jenny" then do
+  errors = errors + 1
+  say "Literal multi-tail lookup mismatch:" root.tail1.tail2
+end
+if root.get("tail1.tail2") \= "Jenny" then do
+  errors = errors + 1
+  say "Literal multi-tail key mismatch:" root.get("tail1.tail2")
+end
+
+root.123.45 = "numeric-left"
+root.12.345 = "numeric-right"
+if root.123.45 \= "numeric-left" then do
+  errors = errors + 1
+  say "Numeric multi-tail lookup mismatch:" root.123.45
+end
+if root.get("123.45") \= "numeric-left" then do
+  errors = errors + 1
+  say "Numeric separator key mismatch:" root.get("123.45")
+end
+if root.get("12.345") \= "numeric-right" then do
+  errors = errors + 1
+  say "Numeric adjacent key mismatch:" root.get("12.345")
+end
+
+customer = "acme"
+invoice = "2026.05"
+field = "total"
+root.customer.invoice.field = "149.95"
+if root.get("acme.2026.05.total") \= "149.95" then do
+  errors = errors + 1
+  say "Variable multi-tail key mismatch:" root.get("acme.2026.05.total")
+end
+if root.get("customer.invoice.field") \= "" then do
+  errors = errors + 1
+  say "Variable multi-tail used literal names"
+end
+
+root.address.us.ca = "California"
+root.address.usc.a = "University of Southern California"
+if root.get("address.us.ca") \= "California" then do
+  errors = errors + 1
+  say "Hierarchical key mismatch:" root.get("address.us.ca")
+end
+if root.get("address.usc.a") \= "University of Southern California" then do
+  errors = errors + 1
+  say "Hierarchical adjacent key mismatch:" root.get("address.usc.a")
+end
+if root.get("address.usca") \= "" then do
+  errors = errors + 1
+  say "Hierarchical separators collapsed"
+end
+
+if errors = 0 then say "PASS: multi-tail stem object access"
+return errors <> 0

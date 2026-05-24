@@ -439,6 +439,36 @@ walker_result rewrite_constructor_walker(walker_direction direction,
  * Syntactic Sugar: obj.member / obj[expr] -> obj.get(expr)
  *                  obj.member = val / obj[expr] = val -> obj.set(expr, val)
  */
+static ASTRewriteTemplate *stem_tail_key_concat(ASTRewriteTemplate *left,
+                                                ASTRewriteTemplate *right,
+                                                ASTNode *loc_node) {
+    ASTRewriteTemplate *concat_tmpl = ast_rw_loc(ast_rw_new(OP_CONCAT, NULL), loc_node);
+    ast_rw_add(concat_tmpl, left);
+    ast_rw_add(concat_tmpl, right);
+    return concat_tmpl;
+}
+
+static ASTRewriteTemplate *stem_tail_separator(ASTNode *loc_node) {
+    return ast_rw_loc(ast_rw_new(STRING, "."), loc_node);
+}
+
+static ASTRewriteTemplate *stem_tail_key_template(ASTNode *index) {
+    ASTNode *part;
+    ASTRewriteTemplate *key_tmpl;
+
+    if (!index) return NULL;
+
+    key_tmpl = ast_rw_reuse(index);
+    part = index->sibling;
+    while (part) {
+        key_tmpl = stem_tail_key_concat(key_tmpl, stem_tail_separator(part), part);
+        key_tmpl = stem_tail_key_concat(key_tmpl, ast_rw_reuse(part), part);
+        part = part->sibling;
+    }
+
+    return key_tmpl;
+}
+
 walker_result syntax_sugar_walker(walker_direction direction,
                                   ASTNode* node, void *payload) {
     Context *context = (Context *) payload;
@@ -518,7 +548,7 @@ walker_result syntax_sugar_walker(walker_direction direction,
                         ast_rw_add(member_call_tmpl, ast_rw_reuse(stem_copy));
 
                         /* 2. Arguments */
-                        ast_rw_add(member_call_tmpl, ast_rw_reuse(index));
+                        ast_rw_add(member_call_tmpl, stem_tail_key_template(index));
                         if (val) ast_rw_add(member_call_tmpl, ast_rw_reuse(val));
 
                         ast_rw_add(call_tmpl, member_call_tmpl);
@@ -578,7 +608,7 @@ walker_result syntax_sugar_walker(walker_direction direction,
                     ast_rw_add(member_call_tmpl, ast_rw_reuse(stem_copy));
 
                     /* 2. Argument */
-                    ast_rw_add(member_call_tmpl, ast_rw_reuse(index));
+                    ast_rw_add(member_call_tmpl, stem_tail_key_template(index));
 
                     ast_execute_rewrite(context, node, member_call_tmpl);
                     context->changed_flags |= FLAG_VAL_TRANS;

@@ -1,0 +1,367 @@
+/*
+ * SOURCE                 : repro_multi_tail_stems.crexx
+ * BUILT                  : 2026-05-23 20:46:05
+ */
+
+.srcfile="repro_multi_tail_stems.crexx"
+.globals=0
+
+main() .locals=13
+   .meta "repro_multi_tail_stems.main"="b" ".int" main() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:1="errors = 0"
+   .meta "repro_multi_tail_stems.main.errors"="b" ".int" r0
+   load r0,0
+   .src 5:1="root = .stem"
+   .meta "repro_multi_tail_stems.main.root"="b" ".stem" r1
+   load r2,0
+   call r1,§rxfnsb.stem.§factory(),r2
+   .src 7:1="root.tail1.tail2 = \"Jenny\""
+   .meta "repro_multi_tail_stems.main.tail1"="b" ".string" "tail1"
+   .meta "repro_multi_tail_stems.main.tail2"="b" ".string" "tail2"
+   load r4,"tail1.tail2"
+   load r5,"Jenny"
+   load r2,3
+   settp r1,1
+   swap r3,r1
+   settp r4,3
+   settp r5,3
+   call r6,§rxfnsb.stem.set(),r2
+   swap r1,r3
+   .src 8:0="if root.tail1.tail2 \\= \"Jenny\""
+   load r5,"tail1.tail2"
+   load r3,2
+   settp r1,1
+   swap r4,r1
+   settp r5,3
+   call r2,§rxfnsb.stem.get(),r3
+   swap r1,r4
+   sne r5,r2,"Jenny"
+   brf l35iffalse,r5
+   .src 8:32="then"
+   .src 9:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 10:3="say \"Literal multi-tail lookup mismatch:\" root.tail1.tail2"
+   load r4,"tail1.tail2"
+   load r2,2
+   settp r1,1
+   swap r3,r1
+   settp r4,3
+   call r7,§rxfnsb.stem.get(),r2
+   swap r1,r3
+   sconcat r7,"Literal multi-tail lookup mismatch:",r7
+   say r7
+l35iffalse:
+   .src 12:0="if root.get(\"tail1.tail2\") \\= \"Jenny\""
+   load r9,"tail1.tail2"
+   load r7,2
+   settp r1,1
+   swap r8,r1
+   settp r9,3
+   call r5,§rxfnsb.stem.get(),r7
+   swap r1,r8
+   sne r9,r5,"Jenny"
+   brf l55iffalse,r9
+   .src 12:39="then"
+   .src 13:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 14:3="say \"Literal multi-tail key mismatch:\" root.get(\"tail1.tail2\")"
+   load r12,"tail1.tail2"
+   load r10,2
+   settp r1,1
+   swap r11,r1
+   settp r12,3
+   call r8,§rxfnsb.stem.get(),r10
+   swap r1,r11
+   sconcat r12,"Literal multi-tail key mismatch:",r8
+   say r12
+l55iffalse:
+   .src 17:1="root.123.45 = \"numeric-left\""
+   load r11,"123.45"
+   load r12,"numeric-left"
+   load r9,3
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   settp r12,3
+   call r8,§rxfnsb.stem.set(),r9
+   swap r1,r10
+   .src 18:1="root.12.345 = \"numeric-right\""
+   load r11,"12.345"
+   load r12,"numeric-right"
+   load r9,3
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   settp r12,3
+   call r7,§rxfnsb.stem.set(),r9
+   swap r1,r10
+   .src 19:0="if root.123.45 \\= \"numeric-left\""
+   load r12,"123.45"
+   load r10,2
+   settp r1,1
+   swap r11,r1
+   settp r12,3
+   call r9,§rxfnsb.stem.get(),r10
+   swap r1,r11
+   sne r12,r9,"numeric-left"
+   brf l83iffalse,r12
+   .src 19:34="then"
+   .src 20:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 21:3="say \"Numeric multi-tail lookup mismatch:\" root.123.45"
+   load r11,"123.45"
+   load r9,2
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   call r5,§rxfnsb.stem.get(),r9
+   swap r1,r10
+   sconcat r11,"Numeric multi-tail lookup mismatch:",r5
+   say r11
+l83iffalse:
+   .src 23:0="if root.get(\"123.45\") \\= \"numeric-left\""
+   load r12,"123.45"
+   load r10,2
+   settp r1,1
+   swap r11,r1
+   settp r12,3
+   call r9,§rxfnsb.stem.get(),r10
+   swap r1,r11
+   sne r12,r9,"numeric-left"
+   brf l103iffalse,r12
+   .src 23:41="then"
+   .src 24:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 25:3="say \"Numeric separator key mismatch:\" root.get(\"123.45\")"
+   load r11,"123.45"
+   load r9,2
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   call r5,§rxfnsb.stem.get(),r9
+   swap r1,r10
+   sconcat r11,"Numeric separator key mismatch:",r5
+   say r11
+l103iffalse:
+   .src 27:0="if root.get(\"12.345\") \\= \"numeric-right\""
+   load r12,"12.345"
+   load r10,2
+   settp r1,1
+   swap r11,r1
+   settp r12,3
+   call r9,§rxfnsb.stem.get(),r10
+   swap r1,r11
+   sne r12,r9,"numeric-right"
+   brf l123iffalse,r12
+   .src 27:42="then"
+   .src 28:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 29:3="say \"Numeric adjacent key mismatch:\" root.get(\"12.345\")"
+   load r11,"12.345"
+   load r9,2
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   call r5,§rxfnsb.stem.get(),r9
+   swap r1,r10
+   sconcat r11,"Numeric adjacent key mismatch:",r5
+   say r11
+l123iffalse:
+   .src 35:1="root.customer.invoice.field = \"149.95\""
+   .meta "repro_multi_tail_stems.main.us"="b" ".string" "us"
+   .meta "repro_multi_tail_stems.main.address"="b" ".string" "address"
+   .meta "repro_multi_tail_stems.main.customer"="b" ".string" "acme"
+   .meta "repro_multi_tail_stems.main.field"="b" ".string" "total"
+   .meta "repro_multi_tail_stems.main.invoice"="b" ".string" "2026.05"
+   load r11,"acme.2026.05.total"
+   load r12,"149.95"
+   load r9,3
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   settp r12,3
+   call r5,§rxfnsb.stem.set(),r9
+   swap r1,r10
+   .src 36:0="if root.get(\"acme.2026.05.total\") \\= \"149.95\""
+   .meta "repro_multi_tail_stems.main.ca"="b" ".string" "ca"
+   load r12,"acme.2026.05.total"
+   load r10,2
+   settp r1,1
+   swap r11,r1
+   settp r12,3
+   call r9,§rxfnsb.stem.get(),r10
+   swap r1,r11
+   sne r12,r9,"149.95"
+   brf l158iffalse,r12
+   .src 36:47="then"
+   .src 37:3="errors = errors + 1"
+   .meta "repro_multi_tail_stems.main.a"="b" ".string" "a"
+   .meta "repro_multi_tail_stems.main.usc"="b" ".string" "usc"
+   iadd r0,r0,1
+   .src 38:3="say \"Variable multi-tail key mismatch:\" root.get(\"acme.2026.05.total\")"
+   load r11,"acme.2026.05.total"
+   load r9,2
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   call r4,§rxfnsb.stem.get(),r9
+   swap r1,r10
+   sconcat r11,"Variable multi-tail key mismatch:",r4
+   say r11
+l158iffalse:
+   .src 40:0="if root.get(\"customer.invoice.field\") \\= \"\""
+   load r12,"customer.invoice.field"
+   load r10,2
+   settp r1,1
+   swap r11,r1
+   settp r12,3
+   call r9,§rxfnsb.stem.get(),r10
+   swap r1,r11
+   sne r12,r9,""
+   brf l173iffalse,r12
+   .src 40:45="then"
+   .src 41:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 42:3="say \"Variable multi-tail used literal names\""
+   say "Variable multi-tail used literal names"
+l173iffalse:
+   .src 45:1="root.address.us.ca = \"California\""
+   load r11,"address.us.ca"
+   load r12,"California"
+   load r9,3
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   settp r12,3
+   call r4,§rxfnsb.stem.set(),r9
+   swap r1,r10
+   .src 46:1="root.address.usc.a = \"University of Southern California\""
+   load r11,"address.usc.a"
+   load r12,"University of Southern California"
+   load r9,3
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   settp r12,3
+   call r3,§rxfnsb.stem.set(),r9
+   swap r1,r10
+   .src 47:0="if root.get(\"address.us.ca\") \\= \"California\""
+   load r12,"address.us.ca"
+   load r10,2
+   settp r1,1
+   swap r11,r1
+   settp r12,3
+   call r9,§rxfnsb.stem.get(),r10
+   swap r1,r11
+   sne r12,r9,"California"
+   brf l205iffalse,r12
+   .src 47:46="then"
+   .src 48:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 49:3="say \"Hierarchical key mismatch:\" root.get(\"address.us.ca\")"
+   load r11,"address.us.ca"
+   load r9,2
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   call r2,§rxfnsb.stem.get(),r9
+   swap r1,r10
+   sconcat r11,"Hierarchical key mismatch:",r2
+   say r11
+l205iffalse:
+   .src 51:0="if root.get(\"address.usc.a\") \\= \"University of Southern California\""
+   load r12,"address.usc.a"
+   load r10,2
+   settp r1,1
+   swap r11,r1
+   settp r12,3
+   call r9,§rxfnsb.stem.get(),r10
+   swap r1,r11
+   sne r12,r9,"University of Southern California"
+   brf l225iffalse,r12
+   .src 51:69="then"
+   .src 52:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 53:3="say \"Hierarchical adjacent key mismatch:\" root.get(\"address.usc.a\")"
+   load r11,"address.usc.a"
+   load r9,2
+   settp r1,1
+   swap r10,r1
+   settp r11,3
+   call r2,§rxfnsb.stem.get(),r9
+   swap r1,r10
+   sconcat r11,"Hierarchical adjacent key mismatch:",r2
+   say r11
+l225iffalse:
+   .src 55:0="if root.get(\"address.usca\") \\= \"\""
+   load r12,"address.usca"
+   load r10,2
+   settp r1,1
+   swap r11,r1
+   settp r12,3
+   call r9,§rxfnsb.stem.get(),r10
+   swap r1,r11
+   sne r12,r9,""
+   brf l240iffalse,r12
+   .src 55:35="then"
+   .src 56:3="errors = errors + 1"
+   iadd r0,r0,1
+   .src 57:3="say \"Hierarchical separators collapsed\""
+   say "Hierarchical separators collapsed"
+l240iffalse:
+   .src 60:0="if errors = 0"
+   ieq r12,r0,0
+   brf l246iffalse,r12
+   .src 60:15="then"
+   .src 60:20="say \"PASS: multi-tail stem object access\""
+   say "PASS: multi-tail stem object access"
+l246iffalse:
+   .src 61:1="return errors <> 0"
+   ine r12,r0,0
+   btoi r12
+   ret r12
+   .meta "repro_multi_tail_stems.main.a"
+   .meta "repro_multi_tail_stems.main.address"
+   .meta "repro_multi_tail_stems.main.ca"
+   .meta "repro_multi_tail_stems.main.customer"
+   .meta "repro_multi_tail_stems.main.errors"
+   .meta "repro_multi_tail_stems.main.field"
+   .meta "repro_multi_tail_stems.main.invoice"
+   .meta "repro_multi_tail_stems.main.root"
+   .meta "repro_multi_tail_stems.main.tail1"
+   .meta "repro_multi_tail_stems.main.tail2"
+   .meta "repro_multi_tail_stems.main.us"
+   .meta "repro_multi_tail_stems.main.usc"
+
+/* Imported Declaration from file: stem@library.rxbin */
+
+§rxfnsb.stem.§factory() .expose=rxfnsb.stem.§factory
+   .meta "rxfnsb.stem.§factory"="b" ".stem" §rxfnsb.stem.§factory() ""
+
+§rxfnsb.stem.hash() .expose=rxfnsb.stem.hash
+   .meta "rxfnsb.stem.hash"="b" ".int" §rxfnsb.stem.hash() "key=.string"
+
+§rxfnsb.stem.get() .expose=rxfnsb.stem.get
+   .meta "rxfnsb.stem.get"="b" ".string" §rxfnsb.stem.get() "key=.string"
+
+§rxfnsb.stem.set() .expose=rxfnsb.stem.set
+   .meta "rxfnsb.stem.set"="b" ".void" §rxfnsb.stem.set() "key=.string,value=.string"
+
+§rxfnsb.stem.size() .expose=rxfnsb.stem.size
+   .meta "rxfnsb.stem.size"="b" ".int" §rxfnsb.stem.size() ""
+
+§rxfnsb.stem.key() .expose=rxfnsb.stem.key
+   .meta "rxfnsb.stem.key"="b" ".string" §rxfnsb.stem.key() "ix=.int"
+
+§rxfnsb.stem.value() .expose=rxfnsb.stem.value
+   .meta "rxfnsb.stem.value"="b" ".string" §rxfnsb.stem.value() "kv=.string"
+
+/* Imported Declaration from file: value@library.rxbin */
+
+rxfnsb.value() .expose=rxfnsb.value
+   .meta "rxfnsb.value"="b" ".string" rxfnsb.value() "inputstring=.string"
