@@ -43,7 +43,7 @@ main() .locals=8
    .src 14:3="say \"Method result:\" o.myMethod(20)"
    load r7,20
    load r5,2
-   settp r0,1
+   settp r0,256
    swap r6,r0
    call r4,§inline_test2.myclass.mymethod(),r5
    swap r0,r6

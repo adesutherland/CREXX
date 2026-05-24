@@ -39,7 +39,7 @@ main() .locals=16
    br l73bexprend
 l73bexprend:
    load r10,1
-   settp r12,3
+   settp r12,768
    swap r11,r12
    call r14,describeBox(),r10
    swap r12,r11
@@ -64,7 +64,7 @@ l73bexprend:
    br l86bexprend
 l86bexprend:
    load r14,1
-   settp r12,3
+   settp r12,768
    swap r15,r12
    call r10,describeBox(),r14
    swap r12,r15

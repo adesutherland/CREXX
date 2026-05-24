@@ -1,0 +1,60 @@
+/*
+ * CREXX Interpreter test for register flag partitioning.
+ */
+
+.globals=0
+
+main() .locals=4
+   load r0,"flagged"
+
+   settp r0,1
+   gettp r1,r0
+   ieq r2,r1,0
+   brf fail_low_write,r2
+
+   brtpt fail_low_branch,r0
+
+   settp r0,256
+   gettp r1,r0
+   ieq r2,r1,256
+   brf fail_public_write,r2
+
+   getandtp r1,r0,256
+   ieq r2,r1,256
+   brf fail_public_mask,r2
+
+   brtpandt public_branch,r0,256
+   br fail_public_branch
+
+public_branch:
+   settp r0,0
+   gettp r1,r0
+   ieq r2,r1,0
+   brf fail_public_clear,r2
+
+   say "PASS: Register Flag Partition"
+   ret 0
+
+fail_low_write:
+   say "FAIL: low VM-private bit was writable"
+   ret 1
+
+fail_low_branch:
+   say "FAIL: low VM-private bit changed BRTPT"
+   ret 1
+
+fail_public_write:
+   say "FAIL: compiler flag band was not writable"
+   ret 1
+
+fail_public_mask:
+   say "FAIL: compiler flag band was not readable through GETANDTP"
+   ret 1
+
+fail_public_branch:
+   say "FAIL: compiler flag band did not branch through BRTPANDT"
+   ret 1
+
+fail_public_clear:
+   say "FAIL: public flags did not clear"
+   ret 1

@@ -19,13 +19,13 @@ main() .locals=5
    call r0,§class_import_lib.counter.§factory(),r1
    .src 6:1="call c.inc"
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r3,§class_import_lib.counter.inc(),r1
    swap r0,r2
    .src 7:1="say c.value"
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r4,§class_import_lib.counter.value(),r1
    swap r0,r2

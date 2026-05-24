@@ -23,18 +23,18 @@ main() .locals=4
    .meta "inline_test_object_writable_arg.main.box"="b" ".box" r0
    load r2,"alpha"
    load r1,1
-   settp r2,3
+   settp r2,768
    call r0,§inline_test_object_writable_arg.box.§factory(),r1
    .src 6:3="say replaceBox(box)"
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r3,replaceBox(),r1
    swap r0,r2
    say r3
    .src 7:3="say box.getName"
    load r2,1
-   settp r0,1
+   settp r0,256
    swap r3,r0
    call r1,§inline_test_object_writable_arg.box.getname(),r2
    swap r0,r3
@@ -55,7 +55,7 @@ replaceBox() .locals=4
    setnumstd 1
    .src 12:7="value = .Box"
    .meta "inline_test_object_writable_arg.replacebox.value"="b" ".box" r0
-   brtpandt l26c,a1,2
+   brtpandt l26c,a1,512
    copy r0,a1
    acopy r0,a1
    br l26d
@@ -65,11 +65,11 @@ l26d:
    .src 13:3="value = .Box(\"local\")"
    load r2,"local"
    load r1,1
-   settp r2,3
+   settp r2,768
    call r0,§inline_test_object_writable_arg.box.§factory(),r1
    .src 14:3="return value.getName"
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r3,§inline_test_object_writable_arg.box.getname(),r1
    swap r0,r2

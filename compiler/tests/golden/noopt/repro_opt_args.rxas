@@ -18,16 +18,16 @@ main() .locals=7
    load r1,1
    load r3,3
    load r0,3
-   settp r1,1
+   settp r1,256
    settp r2,0
-   settp r3,1
+   settp r3,256
    call r4,test_opt(),r0
    .src 4:1="call test_opt 1, 2"
    load r1,1
    load r2,2
    load r0,3
-   settp r1,1
-   settp r2,1
+   settp r1,256
+   settp r2,256
    settp r3,0
    call r5,test_opt(),r0
    .src 5:1="call test_opt , 2, 3"
@@ -35,8 +35,8 @@ main() .locals=7
    load r3,3
    load r0,3
    settp r1,0
-   settp r2,1
-   settp r3,1
+   settp r2,256
+   settp r3,256
    call r6,test_opt(),r0
    .src 6:1="return 0"
    ret 0
@@ -51,17 +51,17 @@ test_opt() .locals=4
    setnumstd 1
    .src 9:7="a=10"
    .meta "repro_opt_args.test_opt.a"="b" ".int" a1
-   brtpandt l22a,a1,1
+   brtpandt l22a,a1,256
    load a1,10
 l22a:
    .src 9:13="b=20"
    .meta "repro_opt_args.test_opt.b"="b" ".int" a2
-   brtpandt l26a,a2,1
+   brtpandt l26a,a2,256
    load a2,20
 l26a:
    .src 9:19="c=30"
    .meta "repro_opt_args.test_opt.c"="b" ".int" a3
-   brtpandt l29a,a3,1
+   brtpandt l29a,a3,256
    load a3,30
 l29a:
    .src 10:3="say \"a=\" a \"b=\" b \"c=\" c"

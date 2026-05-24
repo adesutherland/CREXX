@@ -33,8 +33,8 @@
 0x00a9 brf        {ID,REG}             Branch to op1 if op2 false
 0x00a8 brt        {ID,REG}             Branch to op1 if op2 true
 0x00aa brtf       {ID,ID,REG}          Branch to op1 if op3 true, otherwise branch to op2
-0x010f brtpandt   {ID,REG,INT}         if op2.typeflag && op3 true then goto op1
-0x010e brtpt      {ID,REG}             if op2.typeflag true then goto op1
+0x010f brtpandt   {ID,REG,INT}         if op2 readable status flags & op3 true then goto op1
+0x010e brtpt      {ID,REG}             if op2 has externally writable status flags then goto op1
 0x00d7 btof       {REG}                Set register float value from its boolean value
 0x00d6 btoi       {REG}                Set register integer value from its boolean value
 0x00d8 btos       {REG}                Set register string value from its boolean value
@@ -157,7 +157,7 @@
 0x0133 fwritebyte {REG,REG}            write byte to op1 file*(int) op2 source(int)
 0x0134 fwritecdpt {REG,REG}            write codepoint to op1 file*(int) op2 source(int)
 0x011e getabufs   {REG,REG}            get attribute buffer size op1 = op2.max_attributes
-0x010d getandtp   {REG,REG,INT}        get the register type flag with mask (op1(int) = op2.typeflag & op3)
+0x010d getandtp   {REG,REG,INT}        get readable register status flags with mask (op1(int) = op2.flags & op3)
 0x0118 getattrs   {REG,REG}            get number attributes op1 = op2.num_attributes
 0x0119 getattrs   {REG,REG,INT}        get number attributes op1 = op2.num_attributes + op3
 0x00e9 getbyte    {REG,REG,REG}        get byte  (op1=op2(op3)
@@ -165,7 +165,7 @@
 0x0115 getenv     {REG,REG}            get environment variable, op1=env[op2]
 0x0116 getenv     {REG,STRING}         get environment variable, op1=env[op2]
 0x0054 getstrpos  {REG,REG}            Get String (op2) charpos into op1
-0x0107 gettp      {REG,REG}            gets the register type flag (op1 = op2.typeflag)
+0x0107 gettp      {REG,REG}            gets the readable register status flags (op1 = op2.flags)
 0x0096 gmap       {REG,REG}            Map op1 to global var name in op2
 0x0097 gmap       {REG,STRING}         Map op1 to global var name op2
 0x0051 hexchar    {REG,REG,REG}        op1 (as hex) = op2[op3]
@@ -250,9 +250,9 @@
 0x00c8 load       {REG,DECIMAL}        Load op1 with op2
 0x00ca load       {INT,REG}            Load op1 with op2 (non symbolic registers)
 0x00c9 load       {INT,INT}            Load op1 with op2 (non symbolic registers)
-0x0109 loadsettp  {REG,INT,INT}        load register and sets the register type flag load op1=op2 (op1.typeflag = op3)
-0x010a loadsettp  {REG,FLOAT,INT}      load register and sets the register type flag load op1=op2 (op1.typeflag = op3)
-0x010b loadsettp  {REG,STRING,INT}     load register and sets the register type flag load op1=op2 (op1.typeflag = op3)
+0x0109 loadsettp  {REG,INT,INT}        load register and sets externally writable status flags (op1.flags = op3)
+0x010a loadsettp  {REG,FLOAT,INT}      load register and sets externally writable status flags (op1.flags = op3)
+0x010b loadsettp  {REG,STRING,INT}     load register and sets externally writable status flags (op1.flags = op3)
 0x0092 map        {REG,REG}            Map op1 to var name in op2
 0x0093 map        {REG,STRING}         Map op1 to var name op2
 0x0180 metadecodeinst {REG,REG}            Decode opcode (op1 decoded op2)
@@ -324,9 +324,9 @@
 0x011d setattrs   {REG,INT,INT}        set number attributes op1.num_attributes = op2 + op3
 0x014f setdgts    {REG}                Set Decimal Digits digits=op1
 0x0150 setdgts    {INT}                Set Decimal Digits digits=op1
-0x010c setortp    {REG,INT}            or the register type flag (op1.typeflag = op1.typeflag | op2)
+0x010c setortp    {REG,INT}            or externally writable register status flags (op1.flags = op1.flags | op2)
 0x0053 setstrpos  {REG,REG}            Set String (op1) charpos set to op2
-0x0108 settp      {REG,INT}            sets the register type flag (op1.typeflag = op2)
+0x0108 settp      {REG,INT}            sets externally writable register status flags, preserving VM-private flags
 0x0080 sgt        {REG,REG,REG}        String Greater than op1=(op2>op3)
 0x0081 sgt        {REG,REG,STRING}     String Greater than op1=(op2>op3)
 0x0082 sgt        {REG,STRING,REG}     String Greater than op1=(op2>op3)

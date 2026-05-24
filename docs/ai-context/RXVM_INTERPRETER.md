@@ -171,7 +171,7 @@ To limit memory fragmentation, strings shorter than `SMALLEST_STRING_BUFFER_LENG
 
 ```c
 struct value {
-    value_type status;               /* Bit flag tracker for types */
+    value_type status;               /* Partitioned status/cache flags */
     rxinteger int_value;             /* 64-bit/32-bit native integer */
     double float_value;              /* Native floating point */
     
@@ -198,6 +198,25 @@ struct value {
 };
 ```
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed strictly by the VM frames. There is no automated background Garbage Collector (GC). Instead, frame-bound variables are deterministically cleared (`clear_value`) and memory released when a `stack_frame` dies and exits scope.
+
+`status.all_type_flags` is a partitioned 32-bit status word stored as
+`uint32_t`. The masks live in `binutils/include/rxflags.h` so
+compiler-emitted RXAS and VM code agree:
+
+- `0x000000FF`: VM-private/read-only outside the VM
+- `0x0000FF00`: compiler call ABI flags
+- `0x00FF0000`: stable library/runtime ABI flags
+- `0x7F000000`: user/experimental flags
+- `0x80000000`: reserved
+
+The first VM-private allocations are reserved for UTF-8 validity,
+codepoint-count validity, and known Unicode normalization forms. `SETTP`,
+`SETORTP`, and `LOADSETTP` mask external writes; they cannot set or clear the
+VM-private band except through VM-owned content setters. `GETTP` and
+`GETANDTP` return readable flags, while unmasked `BRTPT` only tests public
+flag bands so private cache bits do not change legacy branch behavior.
+Status flag instructions still take normal `rxinteger` operands in RXAS/RXBIN;
+the VM applies only the low 32 bits when reading a flag mask.
 
 The two `object_type_name` fields are the current Level B hook for interface
 dispatch. Class factories stamp object values with `setobjtype`, and later VM

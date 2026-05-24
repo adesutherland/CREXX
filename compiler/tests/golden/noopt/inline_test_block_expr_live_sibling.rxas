@@ -26,11 +26,11 @@ main() .locals=4
    .meta "inline_test_block_expr_live_sibling.main.holder"="b" ".holder" r0
    load r2,"seed"
    load r1,1
-   settp r2,3
+   settp r2,768
    call r0,§inline_test_block_expr_live_sibling.holder.§factory(),r1
    .src 5:3="say holder.summary"
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r3,§inline_test_block_expr_live_sibling.holder.summary(),r1
    swap r0,r2
@@ -69,7 +69,7 @@ main() .locals=4
    .src 19:5="child = .Child(label || \":child\")"
    concat r5,a1,":child"
    load r4,1
-   settp r5,3
+   settp r5,768
    call r2,§inline_test_block_expr_live_sibling.child.§factory(),r4
    linkattr1 r3,r1,1
    copy r3,r2
@@ -98,7 +98,7 @@ main() .locals=4
    .meta "inline_test_block_expr_live_sibling.holder.summary.§this"="b" ".holder" a1
    linkattr1 r6,a1,1
    load r4,1
-   settp r6,1
+   settp r6,256
    swap r5,r6
    call r7,§inline_test_block_expr_live_sibling.child.getname(),r4
    swap r6,r5

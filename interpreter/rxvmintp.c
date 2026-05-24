@@ -77,6 +77,7 @@
 #include "platform.h"
 #include "rxas.h"
 #include "../binutils/include/rxdefs.h"
+#include "../binutils/include/rxflags.h"
 #include "rxastree.h"
 #include "rxvmintp.h"
 /* #include <complex.h> */
@@ -7096,91 +7097,91 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DISPATCH
 
 /*
- * GETTP_REG_REG gets the register type flag (op1 = op2.typeflag)
+ * GETTP_REG_REG gets readable register status flags (op1 = op2.flags)
  */
         START_INSTRUCTION(GETTP_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - GETTP R%d R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            op1R->int_value = op2R->status.all_type_flags;
+            op1R->int_value = (rxinteger)(op2R->status.all_type_flags & RXFLAG_READABLE_MASK);
             DISPATCH
 
 /*
- * SETTP_REG_INT sets the register type flag (op1.typeflag = op2)
+ * SETTP_REG_INT sets externally writable register status flags
  */
         START_INSTRUCTION(SETTP_REG_INT) CALC_DISPATCH(2)
             DEBUG("TRACE - SETTP R%d %d\n", (int)REG_IDX(1), (int)op2I);
-            op1R->status.all_type_flags = op2I;
+            op1R->status.all_type_flags = RXFLAGS_PUBLIC_WRITE(op1R->status.all_type_flags, (uint32_t)op2I);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  LOADSETTP_REG_INT load register & set the register type flag pej 11 November 2021
- *   op1=op2 and (op1.typeflag = op3)
+ *  LOADSETTP_REG_INT load register and set externally writable status flags
+ *   op1=op2 and (op1.flags = op3)
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(LOADSETTP_REG_INT_INT) CALC_DISPATCH(3)
         DEBUG("TRACE - LOADSETTP R%d %d %d\n", (int)REG_IDX(1),(int)op2I,(int)op3I);
 
             op1R->int_value = op2I;
-            op1R->status.all_type_flags = op3I;
+            op1R->status.all_type_flags = RXFLAGS_PUBLIC_REPLACE((uint32_t)op3I);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  LOADSETTP_REG_string load string to register & set the register type flag pej 11 November 2021
- *   op1=op2 and (op1.typeflag = op3)
+ *  LOADSETTP_REG_string load string to register and set externally writable status flags
+ *   op1=op2 and (op1.flags = op3)
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(LOADSETTP_REG_STRING_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - LOADSETTP R%d %s %d\n", (int)REG_IDX(1),op2S->string,(int) op3I);
 
             set_const_string(op1R, op2S);
-            op1R->status.all_type_flags = op3I;
+            op1R->status.all_type_flags = RXFLAGS_PUBLIC_WRITE(op1R->status.all_type_flags, (uint32_t)op3I);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  LOADSETTP_REG_FLOAT float to load register & set the register type flag pej 11 November 2021
- *   op1=op2 and (op1.typeflag = op3)
+ *  LOADSETTP_REG_FLOAT float to load register and set externally writable status flags
+ *   op1=op2 and (op1.flags = op3)
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(LOADSETTP_REG_FLOAT_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - LOADSETTP R%d %.15g %d\n", (int)REG_IDX(1), op2F,(int) op3I);
             op1R->float_value = op2F;
-            op1R->status.all_type_flags = op3I;
+            op1R->status.all_type_flags = RXFLAGS_PUBLIC_REPLACE((uint32_t)op3I);
             DISPATCH
 
 /*
- * SETORTP_REG_INT or the register type flag (op1.typeflag = op1.typeflag || op2)
+ * SETORTP_REG_INT or externally writable register status flags
  */
         START_INSTRUCTION(SETORTP_REG_INT) CALC_DISPATCH(2)
             DEBUG("TRACE - SETORTP R%d %d\n", (int)REG_IDX(1), (int)op2I);
-            op1R->status.all_type_flags = op1R->status.all_type_flags | op2I;
+            op1R->status.all_type_flags = RXFLAGS_PUBLIC_OR(op1R->status.all_type_flags, (uint32_t)op2I);
             DISPATCH
 
 /*
- * GETANDTP_REG_REG_INT get the register type flag with mask (op1(int) = op2.typeflag & op3)
+ * GETANDTP_REG_REG_INT get readable register status flags with mask
  */
         START_INSTRUCTION(GETANDTP_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - GETANDTP R%d R%d %d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            op1R->int_value = op2R->status.all_type_flags & op3I;
+            op1R->int_value = (rxinteger)((op2R->status.all_type_flags & RXFLAG_READABLE_MASK) & (uint32_t)op3I);
             DISPATCH
 
 /*
- * BRTPT_ID_REG if op2.typeflag true then goto op1
+ * BRTPT_ID_REG if op2 has public status flags then goto op1
  */
         START_INSTRUCTION(BRTPT_ID_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - BRTPT_ID_REG 0x%x R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2));
-            if (op2R->status.all_type_flags) {
+            if (op2R->status.all_type_flags & RXFLAG_PUBLIC_TEST_MASK) {
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }
             DISPATCH
 
 /*
- * BRTPANDT_ID_REG_INT if op2.typeflag && op3 true then goto op1
+ * BRTPANDT_ID_REG_INT if op2 readable status flags & op3 true then goto op1
 */
         START_INSTRUCTION(BRTPANDT_ID_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - BRTPANDT_ID_REG_INT 0x%x R%d %d\n",
                   (unsigned int)REG_IDX(1),
                   (int)REG_IDX(2),(int)op3I);
-            if (op2R->status.all_type_flags & op3I) {
+            if ((op2R->status.all_type_flags & RXFLAG_READABLE_MASK) & (uint32_t)op3I) {
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }

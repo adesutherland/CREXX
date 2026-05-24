@@ -52,7 +52,7 @@ main() .locals=10
    copy r2,r3
    .src 14:3="return value.getName"
    load r8,1
-   settp r2,1
+   settp r2,256
    swap r9,r2
    call r5,§inline_test_object_writable_arg.box.getname(),r8
    swap r2,r9

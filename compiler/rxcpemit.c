@@ -40,18 +40,6 @@
 #define UNSET_REGISTER (-1)
 #define DONT_ASSIGN_REGISTER (-2)
 
-/* Register Type Flag Byte Values */
-/* Used for optional arguments ONLY
- * set (1) means the register has a specified value */
-#define REGTP_VAL 1
-
-/* Used for "pass be value" large (strings, objects) registers ONLY
- * set (2) means that it is not a symbol so does not need copying as even if it is
- * changed the caller will not use its original value
- * Note: Small registers (int, float) are always copied as this is faster than
- *       setting and checking this flag anyway */
-#define REGTP_NOTSYM 2
-
 static int is_large_value(ASTNode *node) {
     if (!node) return 0;
 

@@ -40,7 +40,7 @@ main() .locals=5
    .src 9:3="say optAdd(3)"
    load r3,3
    load r2,2
-   settp r3,1
+   settp r3,256
    settp r4,0
    call r1,optAdd(),r2
    itos r1
@@ -77,12 +77,12 @@ optAdd() .locals=3
    setnumstd 1
    .src 19:8="a = 10"
    .meta "inline_test_ref_opt.optadd.a"="b" ".int" a1
-   brtpandt l41a,a1,1
+   brtpandt l41a,a1,256
    load a1,10
 l41a:
    .src 19:17="b = 5"
    .meta "inline_test_ref_opt.optadd.b"="b" ".int" a2
-   brtpandt l45a,a2,1
+   brtpandt l45a,a2,256
    load a2,5
 l45a:
    .src 20:3="return a + b"

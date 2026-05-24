@@ -23,7 +23,7 @@ main() .locals=5
    load r2,1
    call r1,selectArray(),r2
    load r0,1
-   settp r1,1
+   settp r1,256
    call r3,renderArray(),r0
    say r3
    .src 6:3="say renderArray(selectArray(0))"
@@ -31,7 +31,7 @@ main() .locals=5
    load r1,1
    call r4,selectArray(),r1
    load r3,1
-   settp r4,1
+   settp r4,256
    call r2,renderArray(),r3
    say r2
    .src 7:3="say renderArray(selectArray(1))"
@@ -39,7 +39,7 @@ main() .locals=5
    load r1,1
    call r4,selectArray(),r1
    load r3,1
-   settp r4,1
+   settp r4,256
    call r2,renderArray(),r3
    say r2
    .src 8:3="say \"Array multi return expr inline test finished.\""

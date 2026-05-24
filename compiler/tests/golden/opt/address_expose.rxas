@@ -33,11 +33,11 @@ main() .locals=11
    call r7,_rxsysb._noredir(),r10
    load r8,"userid"
    load r2,7
-   settp r3,3
-   settp r4,3
-   settp r5,1
-   settp r6,1
-   settp r7,1
+   settp r3,768
+   settp r4,768
+   settp r5,256
+   settp r6,256
+   settp r7,256
    swap r9,r1
    call r0,_rxsysb._address(),r2
    swap r1,r9

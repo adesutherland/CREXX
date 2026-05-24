@@ -32,7 +32,7 @@ main() .locals=5
    unlink r2
    .src 9:3="say \"array-read=\" || readArray(arr)"
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r3,readArray(),r1
    swap r0,r2
@@ -40,7 +40,7 @@ main() .locals=5
    say r3
    .src 10:3="say \"array-mut=\" || mutateArrayLocal(arr)"
    load r2,1
-   settp r0,1
+   settp r0,256
    swap r3,r0
    call r1,mutateArrayLocal(),r2
    swap r0,r3
@@ -61,7 +61,7 @@ main() .locals=5
    load r1,0
    call r3,makeArray(),r1
    load r2,1
-   settp r3,1
+   settp r3,256
    call r1,mutateArrayLocal(),r2
    concat r3,"array-temp=",r1
    say r3
@@ -117,7 +117,7 @@ mutateArrayLocal() .locals=6
    setnumstd 1
    .src 22:7="value = .string"
    .meta "arg_semantics_array.mutatearraylocal.value"="b" ".string[*]" r0
-   brtpandt l82c,a1,2
+   brtpandt l82c,a1,512
    copy r0,a1
    acopy r0,a1
    br l82d

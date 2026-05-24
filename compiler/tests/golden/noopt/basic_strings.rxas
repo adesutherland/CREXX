@@ -43,18 +43,18 @@ main() .locals=10
    load r6,1
    load r7,5
    load r4,4
-   settp r2,1
+   settp r2,256
    swap r5,r2
-   settp r7,1
-   settp r8,2
+   settp r7,256
+   settp r8,512
    call r9,rxfnsb.substr(),r4
    swap r2,r5
    say r9
    .src 13:1="say pos(\"World\", c)"
    load r7,"World"
    load r6,3
-   settp r7,3
-   settp r2,1
+   settp r7,768
+   settp r2,256
    swap r8,r2
    settp r9,0
    call r5,rxfnsb.pos(),r6

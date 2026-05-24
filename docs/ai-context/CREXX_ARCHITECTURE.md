@@ -144,13 +144,34 @@ that preserve validity, such as copying, concatenating two already-valid
 strings, slicing on codepoint boundaries, and appending a valid Unicode scalar,
 should propagate cached validity/count state rather than rescanning.
 
+The VM register/value status word is a `uint32_t` field partitioned in
+`binutils/include/rxflags.h` instead of adding a second flag field:
+
+- `0x000000FF`: VM-private, externally readable but not writable through RXAS
+  flag instructions. This band is reserved first for UTF-8 validity/count and
+  Unicode normalization-form cache bits.
+- `0x0000FF00`: compiler call ABI flags. The current bits are `REGTP_VAL`
+  (`0x00000100`) and `REGTP_NOTSYM` (`0x00000200`).
+- `0x00FF0000`: stable library/runtime ABI flags.
+- `0x7F000000`: user/experimental flags.
+- `0x80000000`: reserved to avoid signed integer ambiguity.
+
+`SETTP`, `SETORTP`, and `LOADSETTP` mask external writes so VM-private bits are
+preserved or cleared only by VM internals. `GETTP`, `GETANDTP`, and explicit
+`BRTPANDT` masks may observe readable VM-private bits; unmasked `BRTPT` only
+tests public/external flag bands so VM cache bits do not change old branch
+semantics.
+
+RXAS/RXBIN integer operands remain `rxinteger`; status instructions cast masks
+to the 32-bit flag word before applying the partition.
+
 The implementation roadmap is:
 
 1. Add a core validate-and-count helper for bounded UTF-8 byte spans.
 2. Enforce valid UTF-8 for assembler `STRING_CONST` creation and compiler
    string literal lowering; route arbitrary byte literals to `.binary`.
-3. Add VM-private content flags for string validity/count knowledge rather than
-   overloading the current public register type/status flags.
+3. Partition the existing register status word and reserve VM-private UTF/
+   normalization cache bits rather than adding a second flag field.
 4. Improve `.binary` with buffer-growth helpers, binary literal/load support,
    byte indexing/update instructions, and binary slice/concat operations.
 5. Add runtime string-boundary signal plumbing for native/RXVML setters and

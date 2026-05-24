@@ -52,7 +52,7 @@ main() .locals=6
    load r1,"mix"
    .src 13:3="say \"str-read=\" || readText(text)"
    load r3,1
-   settp r1,1
+   settp r1,256
    swap r4,r1
    call r5,readText(),r3
    swap r1,r4
@@ -60,7 +60,7 @@ main() .locals=6
    say r5
    .src 14:3="say \"str-mut=\" || shoutText(text)"
    load r4,1
-   settp r1,1
+   settp r1,256
    swap r5,r1
    call r3,shoutText(),r4
    swap r1,r5
@@ -72,7 +72,7 @@ main() .locals=6
    .src 16:3="say \"str-temp=\" || shoutText(\"temp\")"
    load r5,"temp"
    load r4,1
-   settp r5,3
+   settp r5,768
    call r3,shoutText(),r4
    concat r5,"str-temp=",r3
    say r5
@@ -154,7 +154,7 @@ shoutText() .locals=3
    setnumstd 1
    .src 38:7="text = .string"
    .meta "arg_semantics_scalar.shouttext.text"="b" ".string" r0
-   brtpandt l103c,a1,2
+   brtpandt l103c,a1,512
    scopy r0,a1
    acopy r0,a1
    br l103d

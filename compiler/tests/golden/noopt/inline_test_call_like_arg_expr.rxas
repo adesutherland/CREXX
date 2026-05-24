@@ -43,7 +43,7 @@ l8dostart:
    call r7,addOne(),r8
    swap r1,r9
    load r5,2
-   settp r0,1
+   settp r0,256
    swap r6,r0
    call r9,§inline_test_call_like_arg_expr.box.bump(),r5
    swap r0,r6

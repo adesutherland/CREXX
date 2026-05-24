@@ -33,11 +33,11 @@ main() .locals=7
    .meta "object_reference_regression.main.payload"="b" ".largepayload" r1
    load r3,"seed"
    load r2,1
-   settp r3,3
+   settp r3,768
    call r1,§object_reference_regression.largepayload.§factory(),r2
    .src 6:3="say \"factory-summary=\" || payload.summary"
    load r2,1
-   settp r1,1
+   settp r1,256
    swap r3,r1
    call r4,§object_reference_regression.largepayload.summary(),r2
    swap r1,r3
@@ -45,7 +45,7 @@ main() .locals=7
    say r4
    .src 7:3="say \"factory-check=\" || payload.check"
    load r3,1
-   settp r1,1
+   settp r1,256
    swap r4,r1
    call r2,§object_reference_regression.largepayload.check(),r3
    swap r1,r4
@@ -55,12 +55,12 @@ main() .locals=7
    load r4,"rebound"
    load r2,2
    swap r3,r1
-   settp r4,3
+   settp r4,768
    call r5,replacePayloadRef(),r2
    swap r1,r3
    .src 10:3="say \"ref-rebind=\" || payload.summary"
    load r3,1
-   settp r1,1
+   settp r1,256
    swap r4,r1
    call r2,§object_reference_regression.largepayload.summary(),r3
    swap r1,r4
@@ -70,12 +70,12 @@ main() .locals=7
    load r4,"mutated"
    load r2,2
    swap r3,r1
-   settp r4,3
+   settp r4,768
    call r6,mutatePayloadRef(),r2
    swap r1,r3
    .src 13:3="say \"ref-mutate=\" || payload.summary"
    load r3,1
-   settp r1,1
+   settp r1,256
    swap r4,r1
    call r2,§object_reference_regression.largepayload.summary(),r3
    swap r1,r4
@@ -85,9 +85,9 @@ main() .locals=7
    .meta "object_reference_regression.main.local_summary"="b" ".string" r0
    load r4,"local"
    load r2,2
-   settp r1,1
+   settp r1,256
    swap r3,r1
-   settp r4,3
+   settp r4,768
    call r0,replacePayloadLocal(),r2
    swap r1,r3
    .src 16:3="say \"local-replace=\" || local_summary"
@@ -95,7 +95,7 @@ main() .locals=7
    say r4
    .src 17:3="say \"local-after=\" || payload.summary"
    load r3,1
-   settp r1,1
+   settp r1,256
    swap r4,r1
    call r2,§object_reference_regression.largepayload.summary(),r3
    swap r1,r4
@@ -120,7 +120,7 @@ replacePayloadRef() .locals=4
    .meta "object_reference_regression.replacepayloadref.label"="b" ".string" a2
    .src 23:3="item = .LargePayload(label)"
    load r2,1
-   settp a2,1
+   settp a2,256
    swap r3,a2
    call a1,§object_reference_regression.largepayload.§factory(),r2
    swap a2,r3
@@ -143,9 +143,9 @@ mutatePayloadRef() .locals=6
    .meta "object_reference_regression.mutatepayloadref.label"="b" ".string" a2
    .src 28:3="call item.rename(label)"
    load r2,2
-   settp a1,1
+   settp a1,256
    swap r3,a1
-   settp a2,1
+   settp a2,256
    swap r4,a2
    call r5,§object_reference_regression.largepayload.rename(),r2
    swap a1,r3
@@ -165,7 +165,7 @@ replacePayloadLocal() .locals=5
    setnumstd 1
    .src 32:7="item = .LargePayload"
    .meta "object_reference_regression.replacepayloadlocal.item"="b" ".largepayload" r0
-   brtpandt l95c,a1,2
+   brtpandt l95c,a1,512
    copy r0,a1
    acopy r0,a1
    br l95d
@@ -176,13 +176,13 @@ l95d:
    .meta "object_reference_regression.replacepayloadlocal.label"="b" ".string" a2
    .src 33:3="item = .LargePayload(label)"
    load r2,1
-   settp a2,1
+   settp a2,256
    swap r3,a2
    call r0,§object_reference_regression.largepayload.§factory(),r2
    swap a2,r3
    .src 34:3="return item.summary"
    load r2,1
-   settp r0,1
+   settp r0,256
    swap r3,r0
    call r4,§object_reference_regression.largepayload.summary(),r2
    swap r0,r3
@@ -297,7 +297,7 @@ l191doend:
    .src 73:5="child = .SmallPayload(label || \":child\")"
    concat r6,a1,":child"
    load r5,1
-   settp r6,3
+   settp r6,768
    call r4,§object_reference_regression.smallpayload.§factory(),r5
    linkattr1 r7,r2,1
    copy r7,r4
@@ -391,9 +391,9 @@ l191doend:
    linkattr1 r6,a1,1
    concat r5,a2,":child"
    load r3,2
-   settp r6,1
+   settp r6,256
    swap r4,r6
-   settp r5,3
+   settp r5,768
    call r7,§object_reference_regression.smallpayload.setname(),r3
    swap r6,r4
    unlink r6
@@ -421,7 +421,7 @@ l191doend:
    .meta "object_reference_regression.largepayload.summary.§this"="b" ".largepayload" a1
    linkattr1 r4,a1,1
    load r2,1
-   settp r4,1
+   settp r4,256
    swap r3,r4
    call r0,§object_reference_regression.smallpayload.getname(),r2
    swap r4,r3

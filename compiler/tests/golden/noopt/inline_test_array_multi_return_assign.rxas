@@ -33,7 +33,7 @@ main() .locals=6
    call r0,selectArray(),r3
    .src 6:3="say renderArray(left)"
    load r4,1
-   settp r0,1
+   settp r0,256
    swap r5,r0
    call r3,renderArray(),r4
    swap r0,r5
@@ -44,7 +44,7 @@ main() .locals=6
    call r1,selectArray(),r4
    .src 8:3="say renderArray(mid)"
    load r4,1
-   settp r1,1
+   settp r1,256
    swap r5,r1
    call r3,renderArray(),r4
    swap r1,r5
@@ -55,7 +55,7 @@ main() .locals=6
    call r2,selectArray(),r4
    .src 10:3="say renderArray(right)"
    load r4,1
-   settp r2,1
+   settp r2,256
    swap r5,r2
    call r3,renderArray(),r4
    swap r2,r5

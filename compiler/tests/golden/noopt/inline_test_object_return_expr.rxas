@@ -22,19 +22,19 @@ main() .locals=4
    .src 5:3="say describeBox(buildBox(\"seed\"))"
    load r3,"seed"
    load r2,1
-   settp r3,3
+   settp r3,768
    call r1,buildBox(),r2
    load r0,1
-   settp r1,1
+   settp r1,256
    call r3,describeBox(),r0
    say r3
    .src 6:3="say describeBox(buildBox(\"temp\"))"
    load r1,"temp"
    load r0,1
-   settp r1,3
+   settp r1,768
    call r3,buildBox(),r0
    load r2,1
-   settp r3,1
+   settp r3,256
    call r1,describeBox(),r2
    say r1
    .src 7:3="say \"Object return expr inline test finished.\""
@@ -55,7 +55,7 @@ buildBox() .locals=4
    .src 12:3="value = .Box(initial)"
    .meta "inline_test_object_return_expr.buildbox.value"="b" ".box" r1
    load r2,1
-   settp a1,1
+   settp a1,256
    swap r3,a1
    call r1,§inline_test_object_return_expr.box.§factory(),r2
    swap a1,r3
@@ -76,7 +76,7 @@ describeBox() .locals=4
    .meta "inline_test_object_return_expr.describebox.value"="b" ".box" a1
    .src 17:3="return value.getName"
    load r1,1
-   settp a1,1
+   settp a1,256
    swap r2,a1
    call r3,§inline_test_object_return_expr.box.getname(),r1
    swap a1,r2

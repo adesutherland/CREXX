@@ -69,7 +69,7 @@ l168bexprend:
    copy r4,r5
    .src 20:3="return value.getName"
    load r21,1
-   settp r4,1
+   settp r4,256
    swap r22,r4
    call r19,§arg_semantics_object.box.getname(),r21
    swap r4,r22
@@ -129,7 +129,7 @@ l237bexprend:
    copy r10,r12
    .src 20:3="return value.getName"
    load r25,1
-   settp r10,1
+   settp r10,256
    swap r26,r10
    call r21,§arg_semantics_object.box.getname(),r25
    swap r10,r26

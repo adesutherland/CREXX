@@ -32,8 +32,8 @@ insert into instruction values('0x00a7','br',' {ID}                ',' Branch to
 insert into instruction values('0x00a9','brf',' {ID,REG}            ',' Branch to op1 if op2 false');
 insert into instruction values('0x00a8','brt',' {ID,REG}            ',' Branch to op1 if op2 true');
 insert into instruction values('0x00aa','brtf',' {ID,ID,REG}         ',' Branch to op1 if op3 true, otherwise branch to op2');
-insert into instruction values('0x010f','brtpandt',' {ID,REG,INT}        ',' if op2.typeflag && op3 true then goto op1');
-insert into instruction values('0x010e','brtpt',' {ID,REG}            ',' if op2.typeflag true then goto op1');
+insert into instruction values('0x010f','brtpandt',' {ID,REG,INT}        ',' if op2 readable status flags & op3 true then goto op1');
+insert into instruction values('0x010e','brtpt',' {ID,REG}            ',' if op2 has externally writable status flags then goto op1');
 insert into instruction values('0x00d7','btof',' {REG}               ',' Set register float value from its boolean value');
 insert into instruction values('0x00d6','btoi',' {REG}               ',' Set register integer value from its boolean value');
 insert into instruction values('0x00d8','btos',' {REG}               ',' Set register string value from its boolean value');
@@ -165,10 +165,10 @@ insert into instruction values('0x0151','getdgts',' {REG}               ',' Get 
 insert into instruction values('0x0115','getenv',' {REG,REG}           ',' get environment variable, op1=env[op2]');
 insert into instruction values('0x0116','getenv',' {REG,STRING}        ',' get environment variable, op1=env[op2]');
 insert into instruction values('0x0054','getstrpos',' {REG,REG}           ',' Get String (op2) charpos into op1');
-insert into instruction values('0x0107','gettp',' {REG,REG}           ',' gets the register type flag (op1 = op2.typeflag)');
+insert into instruction values('0x0107','gettp',' {REG,REG}           ',' gets the readable register status flags (op1 = op2.flags)');
 insert into instruction values('0x0096','gmap',' {REG,REG}           ',' Map op1 to global var name in op2');
 insert into instruction values('0x0097','gmap',' {REG,STRING}        ',' Map op1 to global var name op2');
-insert into instruction values('0x010d','getandtp',' {REG,REG,INT}       ',' get the register type flag with mask (op1(int) = op2.typeflag');
+insert into instruction values('0x010d','getandtp',' {REG,REG,INT}       ',' get readable register status flags with mask (op1(int) = op2.flags & op3)');
 insert into instruction values('0x0051','hexchar',' {REG,REG,REG}       ',' op1 (as hex) = op2[op3]');
 insert into instruction values('0x0002','iadd',' {REG,REG,INT}       ',' Integer Add (op1=op2+op3)');
 insert into instruction values('0x0032','iand',' {REG,REG,REG}       ',' bit wise and of 2 integers (op1=op2&op3)');
@@ -249,9 +249,9 @@ insert into instruction values('0x00c6','load',' {REG,CHAR}          ',' Load op
 insert into instruction values('0x00c5','load',' {REG,STRING}        ',' Load op1 with op2');
 insert into instruction values('0x00c8','load',' {REG,DECIMAL}       ',' Load op1 with op2');
 insert into instruction values('0x00c9','load',' {INT,INT}           ',' Load op1 with op2 (non symbolic registers)');
-insert into instruction values('0x0109','loadsettp',' {REG,INT,INT}       ',' load register and sets the register type flag load op1=op2 (o');
-insert into instruction values('0x010a','loadsettp',' {REG,FLOAT,INT}     ',' load register and sets the register type flag load op1=op2 (o');
-insert into instruction values('0x010b','loadsettp',' {REG,STRING,INT}    ',' load register and sets the register type flag load op1=op2 (o');
+insert into instruction values('0x0109','loadsettp',' {REG,INT,INT}       ',' load register and sets externally writable status flags (op1.flags = op3)');
+insert into instruction values('0x010a','loadsettp',' {REG,FLOAT,INT}     ',' load register and sets externally writable status flags (op1.flags = op3)');
+insert into instruction values('0x010b','loadsettp',' {REG,STRING,INT}    ',' load register and sets externally writable status flags (op1.flags = op3)');
 insert into instruction values('0x00c0','link',' {REG,REG}           ',' Link op2 to op1');
 insert into instruction values('0x00b3','linkarg',' {REG,REG,INT}       ',' Link args[op2+op3] to op1');
 insert into instruction values('0x0120','minattrs',' {REG,INT}           ',' ensure min number attributes op1.num_attributes >= op2');
@@ -323,9 +323,9 @@ insert into instruction values('0x011b','setattrs',' {REG,INT}           ',' set
 insert into instruction values('0x014f','setdgts',' {REG}               ',' Set Decimal Digits digits=op1');
 insert into instruction values('0x00ce','say',' {INT}               ',' Say op1');
 insert into instruction values('0x0150','setdgts',' {INT}               ',' Set Decimal Digits digits=op1');
-insert into instruction values('0x010c','setortp',' {REG,INT}           ',' or the register type flag (op1.typeflag = op1.typeflag | op2)');
+insert into instruction values('0x010c','setortp',' {REG,INT}           ',' or externally writable register status flags (op1.flags = op1.flags | op2)');
 insert into instruction values('0x0053','setstrpos',' {REG,REG}           ',' Set String (op1) charpos set to op2');
-insert into instruction values('0x0108','settp',' {REG,INT}           ',' sets the register type flag (op1.typeflag = op2)');
+insert into instruction values('0x0108','settp',' {REG,INT}           ',' sets externally writable register status flags, preserving VM-private flags');
 insert into instruction values('0x0080','sgt',' {REG,REG,REG}       ',' String Greater than op1=(op2>op3)');
 insert into instruction values('0x0081','sgt',' {REG,REG,STRING}    ',' String Greater than op1=(op2>op3)');
 insert into instruction values('0x0082','sgt',' {REG,STRING,REG}    ',' String Greater than op1=(op2>op3)');

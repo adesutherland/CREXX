@@ -22,7 +22,7 @@ main() .locals=4
    load r3,0
    call r2,makeBinary(),r3
    load r1,1
-   settp r2,1
+   settp r2,256
    call r0,relayBinary(),r1
    .src 6:3="say \"ok\""
    say "ok"

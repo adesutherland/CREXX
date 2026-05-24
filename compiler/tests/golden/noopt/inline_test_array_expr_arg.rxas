@@ -19,7 +19,7 @@ main() .locals=3
    load r2,0
    call r1,makePair(),r2
    load r0,1
-   settp r1,1
+   settp r1,256
    call r2,bumpFirst(),r0
    itos r2
    say r2
@@ -36,7 +36,7 @@ bumpFirst() .locals=4
    setnumstd 1
    .src 8:7="pair = .int[2"
    .meta "inline_test_array_expr_arg.bumpfirst.pair"="b" ".int[2]" r0
-   brtpandt l14c,a1,2
+   brtpandt l14c,a1,512
    copy r0,a1
    acopy r0,a1
    br l14d

@@ -25,7 +25,7 @@ main() .locals=5
    .src 2:45="say"
    load r1,2
    load r3,3
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r4,word(),r1
    swap r0,r2
@@ -38,7 +38,7 @@ main() .locals=5
    .src 2:45="say"
    load r2,2
    load r4,1
-   settp r0,1
+   settp r0,256
    swap r3,r0
    call r1,word(),r2
    swap r0,r3

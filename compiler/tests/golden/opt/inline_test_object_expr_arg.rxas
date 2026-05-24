@@ -37,7 +37,7 @@ main() .locals=10
    br l78bexprend
 l78bexprend:
    load r5,1
-   settp r7,3
+   settp r7,768
    swap r6,r7
    call r9,renameBox(),r5
    swap r7,r6

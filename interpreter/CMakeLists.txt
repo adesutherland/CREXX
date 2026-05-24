@@ -323,6 +323,10 @@ add_custom_target(run_tests_breakpoint_address ALL DEPENDS tests_breakpoint_addr
 
 crexx_add_vm_dual_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'")
 
+# Instruction Sanity Tests - register flag partitioning
+crexx_add_rxas_vm_binary(tests_register_flags "register flag partitioning")
+crexx_add_vm_dual_test(NAME rxasregisterflagtests RXVM_ARGS tests_register_flags PASS_REGULAR_EXPRESSION "PASS: Register Flag Partition")
+
 # Instruction Sanity Tests - focused signal handler mode coverage
 crexx_add_rxas_vm_binary(tests_signal_call_attrs "signal call argument attributes")
 crexx_add_vm_dual_test(NAME rxassignalattrcodetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-code: 30")

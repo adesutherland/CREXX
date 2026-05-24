@@ -31,6 +31,7 @@
 #define CREXX_VALUE_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
@@ -110,17 +111,8 @@ typedef struct rxvm_native_payload_ops {
 #endif
 
 typedef union {
-    /* todo - these flag definitions are not used and are not correct */
-    /*
-    struct {
-        unsigned int type_object : 1;
-        unsigned int type_string : 1;
-        unsigned int type_decimal : 1;
-        unsigned int type_float : 1;
-        unsigned int type_int : 1;
-    };
-    */
-    unsigned int all_type_flags;
+    /* Register/value status flags. Masks are centralized in binutils/include/rxflags.h. */
+    uint32_t all_type_flags;
 } value_type;
 
 struct value {

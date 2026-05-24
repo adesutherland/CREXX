@@ -30,9 +30,10 @@ expose them safely.
 - `arg expose` already has useful call-time alias semantics: the callee is
   operating on caller-owned state. It is not a durable reference that can safely
   be stored beyond the call.
-- The emitter currently uses two call/register flag bits:
-  `REGTP_VAL = 1` for "argument value supplied" and `REGTP_NOTSYM = 2` for
-  "large by-value argument is not a symbol and does not need preservation".
+- The emitter currently uses two compiler call/register flag bits:
+  `REGTP_VAL = 0x00000100` for "argument value supplied" and `REGTP_NOTSYM =
+  0x00000200` for "large by-value argument is not a symbol and does not need
+  preservation".
 
 ## Design Goals
 
@@ -50,19 +51,21 @@ expose them safely.
 
 ## Register Flags
 
-The 64-bit register/value flag field should be formally partitioned before more
-semantics are added. A proposed split is:
+The current 32-bit register/value flag field is formally partitioned in
+`binutils/include/rxflags.h`:
 
-- low bits: compiler call semantics, including the existing `REGTP_VAL` and
+- `0x000000FF`: VM-private, externally readable and VM-writable only
+- `0x0000FF00`: compiler call semantics, including `REGTP_VAL` and
   `REGTP_NOTSYM`
-- VM bits: runtime storage mode, reference/invalid state, and GC/lifetime
-  bookkeeping
-- formal library bits: stable library/runtime contracts
-- user bits: explicitly documented space for advanced library code
+- `0x00FF0000`: stable library/runtime contracts
+- `0x7F000000`: documented user/experimental space
+- `0x80000000`: reserved to avoid signed integer ambiguity
 
-The exact masks should be defined in one shared header rather than spread across
-compiler, assembler, and VM code. Existing meanings must keep their bit values
-or be migrated with a bytecode/version gate.
+The low VM-private band is intentionally reserved for runtime storage/cache
+state such as UTF-8 validity, codepoint-count validity, reference/invalid state,
+and future GC/lifetime bookkeeping. External `SETTP`, `SETORTP`, and
+`LOADSETTP` operands are masked before mutation, so those low bits are read-only
+outside the VM.
 
 ## VM Reference Model Options
 

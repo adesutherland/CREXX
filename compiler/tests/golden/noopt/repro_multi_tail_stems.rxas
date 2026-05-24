@@ -28,10 +28,10 @@ main() .locals=11
    concat r7,r9,"tail2"
    load r8,"Jenny"
    load r5,3
-   settp r4,1
+   settp r4,256
    swap r6,r4
-   settp r7,3
-   settp r8,3
+   settp r7,768
+   settp r8,768
    call r9,§rxfnsb.stem.set(),r5
    swap r4,r6
    .src 8:0="if root.tail1.tail2 \\= \"Jenny\""
@@ -39,9 +39,9 @@ main() .locals=11
    concat r6,"tail1",r6
    concat r9,r6,"tail2"
    load r7,2
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
+   settp r9,768
    call r6,§rxfnsb.stem.get(),r7
    swap r4,r8
    sne r9,r6,"Jenny"
@@ -54,9 +54,9 @@ main() .locals=11
    concat r5,"tail1",r5
    concat r8,r5,"tail2"
    load r6,2
-   settp r4,1
+   settp r4,256
    swap r7,r4
-   settp r8,3
+   settp r8,768
    call r5,§rxfnsb.stem.get(),r6
    swap r4,r7
    sconcat r8,"Literal multi-tail lookup mismatch:",r5
@@ -65,9 +65,9 @@ l35iffalse:
    .src 12:0="if root.get(\"tail1.tail2\") \\= \"Jenny\""
    load r9,"tail1.tail2"
    load r7,2
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
+   settp r9,768
    call r6,§rxfnsb.stem.get(),r7
    swap r4,r8
    sne r9,r6,"Jenny"
@@ -78,9 +78,9 @@ l35iffalse:
    .src 14:3="say \"Literal multi-tail key mismatch:\" root.get(\"tail1.tail2\")"
    load r8,"tail1.tail2"
    load r6,2
-   settp r4,1
+   settp r4,256
    swap r7,r4
-   settp r8,3
+   settp r8,768
    call r5,§rxfnsb.stem.get(),r6
    swap r4,r7
    sconcat r8,"Literal multi-tail key mismatch:",r5
@@ -95,10 +95,10 @@ l55iffalse:
    concat r8,r5,r10
    load r9,"numeric-left"
    load r6,3
-   settp r4,1
+   settp r4,256
    swap r7,r4
-   settp r8,3
-   settp r9,3
+   settp r8,768
+   settp r9,768
    call r10,§rxfnsb.stem.set(),r6
    swap r4,r7
    .src 18:1="root.12.345 = \"numeric-right\""
@@ -110,10 +110,10 @@ l55iffalse:
    concat r9,r6,r5
    load r10,"numeric-right"
    load r7,3
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
-   settp r10,3
+   settp r9,768
+   settp r10,768
    call r6,§rxfnsb.stem.set(),r7
    swap r4,r8
    .src 19:0="if root.123.45 \\= \"numeric-left\""
@@ -124,9 +124,9 @@ l55iffalse:
    itos r6
    concat r10,r7,r6
    load r8,2
-   settp r4,1
+   settp r4,256
    swap r9,r4
-   settp r10,3
+   settp r10,768
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    sne r10,r7,"numeric-left"
@@ -142,9 +142,9 @@ l55iffalse:
    itos r5
    concat r9,r6,r5
    load r7,2
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
+   settp r9,768
    call r6,§rxfnsb.stem.get(),r7
    swap r4,r8
    sconcat r9,"Numeric multi-tail lookup mismatch:",r6
@@ -153,9 +153,9 @@ l83iffalse:
    .src 23:0="if root.get(\"123.45\") \\= \"numeric-left\""
    load r10,"123.45"
    load r8,2
-   settp r4,1
+   settp r4,256
    swap r9,r4
-   settp r10,3
+   settp r10,768
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    sne r10,r7,"numeric-left"
@@ -166,9 +166,9 @@ l83iffalse:
    .src 25:3="say \"Numeric separator key mismatch:\" root.get(\"123.45\")"
    load r9,"123.45"
    load r7,2
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
+   settp r9,768
    call r6,§rxfnsb.stem.get(),r7
    swap r4,r8
    sconcat r9,"Numeric separator key mismatch:",r6
@@ -177,9 +177,9 @@ l103iffalse:
    .src 27:0="if root.get(\"12.345\") \\= \"numeric-right\""
    load r10,"12.345"
    load r8,2
-   settp r4,1
+   settp r4,256
    swap r9,r4
-   settp r10,3
+   settp r10,768
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    sne r10,r7,"numeric-right"
@@ -190,9 +190,9 @@ l103iffalse:
    .src 29:3="say \"Numeric adjacent key mismatch:\" root.get(\"12.345\")"
    load r9,"12.345"
    load r7,2
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
+   settp r9,768
    call r6,§rxfnsb.stem.get(),r7
    swap r4,r8
    sconcat r9,"Numeric adjacent key mismatch:",r6
@@ -216,19 +216,19 @@ l123iffalse:
    concat r9,r6,r2
    load r10,"149.95"
    load r7,3
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
-   settp r10,3
+   settp r9,768
+   settp r10,768
    call r6,§rxfnsb.stem.set(),r7
    swap r4,r8
    .src 36:0="if root.get(\"acme.2026.05.total\") \\= \"149.95\""
    .meta "repro_multi_tail_stems.main.ca"="b" ".string" "ca"
    load r10,"acme.2026.05.total"
    load r8,2
-   settp r4,1
+   settp r4,256
    swap r9,r4
-   settp r10,3
+   settp r10,768
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    sne r10,r7,"149.95"
@@ -241,9 +241,9 @@ l123iffalse:
    .src 38:3="say \"Variable multi-tail key mismatch:\" root.get(\"acme.2026.05.total\")"
    load r9,"acme.2026.05.total"
    load r7,2
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
+   settp r9,768
    call r6,§rxfnsb.stem.get(),r7
    swap r4,r8
    sconcat r9,"Variable multi-tail key mismatch:",r6
@@ -252,9 +252,9 @@ l158iffalse:
    .src 40:0="if root.get(\"customer.invoice.field\") \\= \"\""
    load r10,"customer.invoice.field"
    load r8,2
-   settp r4,1
+   settp r4,256
    swap r9,r4
-   settp r10,3
+   settp r10,768
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    sne r10,r7,""
@@ -273,10 +273,10 @@ l173iffalse:
    concat r9,r6,"ca"
    load r10,"California"
    load r7,3
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
-   settp r10,3
+   settp r9,768
+   settp r10,768
    call r6,§rxfnsb.stem.set(),r7
    swap r4,r8
    .src 46:1="root.address.usc.a = \"University of Southern California\""
@@ -287,18 +287,18 @@ l173iffalse:
    concat r9,r6,"a"
    load r10,"University of Southern California"
    load r7,3
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
-   settp r10,3
+   settp r9,768
+   settp r10,768
    call r6,§rxfnsb.stem.set(),r7
    swap r4,r8
    .src 47:0="if root.get(\"address.us.ca\") \\= \"California\""
    load r10,"address.us.ca"
    load r8,2
-   settp r4,1
+   settp r4,256
    swap r9,r4
-   settp r10,3
+   settp r10,768
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    sne r10,r7,"California"
@@ -309,9 +309,9 @@ l173iffalse:
    .src 49:3="say \"Hierarchical key mismatch:\" root.get(\"address.us.ca\")"
    load r9,"address.us.ca"
    load r7,2
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
+   settp r9,768
    call r6,§rxfnsb.stem.get(),r7
    swap r4,r8
    sconcat r9,"Hierarchical key mismatch:",r6
@@ -320,9 +320,9 @@ l205iffalse:
    .src 51:0="if root.get(\"address.usc.a\") \\= \"University of Southern California\""
    load r10,"address.usc.a"
    load r8,2
-   settp r4,1
+   settp r4,256
    swap r9,r4
-   settp r10,3
+   settp r10,768
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    sne r10,r7,"University of Southern California"
@@ -333,9 +333,9 @@ l205iffalse:
    .src 53:3="say \"Hierarchical adjacent key mismatch:\" root.get(\"address.usc.a\")"
    load r9,"address.usc.a"
    load r7,2
-   settp r4,1
+   settp r4,256
    swap r8,r4
-   settp r9,3
+   settp r9,768
    call r6,§rxfnsb.stem.get(),r7
    swap r4,r8
    sconcat r9,"Hierarchical adjacent key mismatch:",r6
@@ -344,9 +344,9 @@ l225iffalse:
    .src 55:0="if root.get(\"address.usca\") \\= \"\""
    load r10,"address.usca"
    load r8,2
-   settp r4,1
+   settp r4,256
    swap r9,r4
-   settp r10,3
+   settp r10,768
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    sne r10,r7,""

@@ -24,9 +24,9 @@ main() .locals=15
    .meta "13_stems.main.missing"="b" ".string" "missing"
    load r4,"missing"
    load r2,2
-   settp r1,1
+   settp r1,256
    swap r3,r1
-   settp r4,3
+   settp r4,768
    call r5,§rxfnsb.stem.get(),r2
    swap r1,r3
    sne r5,r5,""
@@ -37,9 +37,9 @@ main() .locals=15
    .src 9:3="say \"Stem default mismatch:\" s.missing"
    load r4,"missing"
    load r2,2
-   settp r1,1
+   settp r1,256
    swap r3,r1
-   settp r4,3
+   settp r4,768
    call r6,§rxfnsb.stem.get(),r2
    swap r1,r3
    sconcat r6,"Stem default mismatch:",r6
@@ -50,10 +50,10 @@ l28iffalse:
    load r5,"alpha"
    load r6,"one"
    load r3,3
-   settp r1,1
+   settp r1,256
    swap r4,r1
-   settp r5,3
-   settp r6,3
+   settp r5,768
+   settp r6,768
    call r2,§rxfnsb.stem.set(),r3
    swap r1,r4
    .src 13:1="s[\"beta\"] = \"two\""
@@ -61,28 +61,28 @@ l28iffalse:
    load r5,"beta"
    load r6,"two"
    load r3,3
-   settp r1,1
+   settp r1,256
    swap r4,r1
-   settp r5,3
-   settp r6,3
+   settp r5,768
+   settp r6,768
    call r7,§rxfnsb.stem.set(),r3
    swap r1,r4
    .src 14:1="s.gamma = \"three\""
    load r5,"gamma"
    load r6,"three"
    load r3,3
-   settp r1,1
+   settp r1,256
    swap r4,r1
-   settp r5,3
-   settp r6,3
+   settp r5,768
+   settp r6,768
    call r8,§rxfnsb.stem.set(),r3
    swap r1,r4
    .src 16:0="if s.alpha \\= \"one\""
    load r6,"alpha"
    load r4,2
-   settp r1,1
+   settp r1,256
    swap r5,r1
-   settp r6,3
+   settp r6,768
    call r3,§rxfnsb.stem.get(),r4
    swap r1,r5
    sne r6,r3,"one"
@@ -93,9 +93,9 @@ l28iffalse:
    .src 18:3="say \"Stem dotted lookup mismatch:\" s.alpha"
    load r5,"alpha"
    load r3,2
-   settp r1,1
+   settp r1,256
    swap r4,r1
-   settp r5,3
+   settp r5,768
    call r9,§rxfnsb.stem.get(),r3
    swap r1,r4
    sconcat r9,"Stem dotted lookup mismatch:",r9
@@ -104,9 +104,9 @@ l56iffalse:
    .src 21:0="if s[\"beta\"] \\= \"two\""
    load r11,"beta"
    load r9,2
-   settp r1,1
+   settp r1,256
    swap r10,r1
-   settp r11,3
+   settp r11,768
    call r6,§rxfnsb.stem.get(),r9
    swap r1,r10
    sne r11,r6,"two"
@@ -117,9 +117,9 @@ l56iffalse:
    .src 23:3="say \"Stem bracket lookup mismatch:\" s[\"beta\""
    load r14,"beta"
    load r12,2
-   settp r1,1
+   settp r1,256
    swap r13,r1
-   settp r14,3
+   settp r14,768
    call r10,§rxfnsb.stem.get(),r12
    swap r1,r13
    sconcat r14,"Stem bracket lookup mismatch:",r10
@@ -129,18 +129,18 @@ l72iffalse:
    load r13,"alpha"
    load r14,"updated"
    load r11,3
-   settp r1,1
+   settp r1,256
    swap r12,r1
-   settp r13,3
-   settp r14,3
+   settp r13,768
+   settp r14,768
    call r10,§rxfnsb.stem.set(),r11
    swap r1,r12
    .src 27:0="if s.alpha \\= \"updated\""
    load r14,"alpha"
    load r12,2
-   settp r1,1
+   settp r1,256
    swap r13,r1
-   settp r14,3
+   settp r14,768
    call r11,§rxfnsb.stem.get(),r12
    swap r1,r13
    sne r14,r11,"updated"
@@ -151,9 +151,9 @@ l72iffalse:
    .src 29:3="say \"Stem update mismatch:\" s.alpha"
    load r13,"alpha"
    load r11,2
-   settp r1,1
+   settp r1,256
    swap r12,r1
-   settp r13,3
+   settp r13,768
    call r9,§rxfnsb.stem.get(),r11
    swap r1,r12
    sconcat r13,"Stem update mismatch:",r9

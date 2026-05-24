@@ -26,7 +26,7 @@ main() .locals=3
    load r2,0
    call r1,§interface_default_codegen.box.§factory(),r2
    load r0,1
-   settp r1,1
+   settp r1,256
    srcmethod r2,r1,"describe"
    dcall r2,r2,r0
    say r2
@@ -44,14 +44,14 @@ main() .locals=3
    .src 11:5="return prefix() || \":\" || summary"
    .meta "interface_default_codegen.shape.describe.§this"="b" ".shape" a1
    load r1,1
-   settp a1,1
+   settp a1,256
    swap r2,a1
    srcmethod r3,r2,"prefix"
    dcall r3,r3,r1
    swap a1,r2
    concat r3,r3,":"
    load r1,1
-   settp a1,1
+   settp a1,256
    swap r2,a1
    srcmethod r4,r2,"summary"
    dcall r4,r4,r1

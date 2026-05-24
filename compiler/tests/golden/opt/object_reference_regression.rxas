@@ -397,9 +397,9 @@ l994bexprend:
    linkattr1 r47,r20,1
    load r51,"mutated:child"
    load r49,2
-   settp r47,1
+   settp r47,256
    swap r50,r47
-   settp r51,3
+   settp r51,768
    call r44,§object_reference_regression.smallpayload.setname(),r49
    swap r47,r50
    unlink r47
@@ -848,9 +848,9 @@ l191doend:
    linkattr1 r6,a1,1
    concat r5,a2,":child"
    load r3,2
-   settp r6,1
+   settp r6,256
    swap r4,r6
-   settp r5,3
+   settp r5,768
    call r7,§object_reference_regression.smallpayload.setname(),r3
    swap r6,r4
    unlink r6

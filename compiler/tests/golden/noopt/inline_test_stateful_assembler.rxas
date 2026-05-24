@@ -21,7 +21,7 @@ main() .locals=8
    .meta "inline_test_stateful_assembler.main.x"="b" ".string" r2
    load r7,4
    load r5,2
-   settp r0,1
+   settp r0,256
    swap r6,r0
    call r2,char_at(),r5
    swap r0,r6
@@ -29,7 +29,7 @@ main() .locals=8
    .meta "inline_test_stateful_assembler.main.y"="b" ".string" r3
    load r7,1
    load r5,2
-   settp r0,1
+   settp r0,256
    swap r6,r0
    call r3,char_at(),r5
    swap r0,r6
@@ -46,7 +46,7 @@ main() .locals=8
    .meta "inline_test_stateful_assembler.main.z"="b" ".string" r4
    load r7,3
    load r5,2
-   settp r1,1
+   settp r1,256
    swap r6,r1
    call r4,left_copy(),r5
    swap r1,r6
@@ -72,7 +72,7 @@ char_at() .locals=5
    setnumstd 1
    .src 13:7="text = .string"
    .meta "inline_test_stateful_assembler.char_at.text"="b" ".string" r4
-   brtpandt l43c,a1,2
+   brtpandt l43c,a1,512
    scopy r4,a1
    acopy r4,a1
    br l43d
@@ -112,7 +112,7 @@ left_copy() .locals=2
    setnumstd 1
    .src 22:7="text = .string"
    .meta "inline_test_stateful_assembler.left_copy.text"="b" ".string" r1
-   brtpandt l72c,a1,2
+   brtpandt l72c,a1,512
    scopy r1,a1
    acopy r1,a1
    br l72d

@@ -17,7 +17,7 @@ right()   .locals=15 .expose=rxfnsb.right
     copy r9,a1          
     /* load the pad, we need it for non-substr processing */
     load  r7," " /* default pad */
-    brtpandt havethree,a3,1
+    brtpandt havethree,a3,256
     isub  a0,a0,1
 havethree:  
     ilt   r1,a0,3

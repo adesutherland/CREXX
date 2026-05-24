@@ -26,17 +26,17 @@ main() .locals=6
    load r3,0
    call r2,directNamed(),r3
    load r1,1
-   settp r2,1
+   settp r2,256
    srcmethod r3,r2,"describe"
    dcall r3,r3,r1
    say r3
    .src 6:3="say assignedNamed(\"beta\").describe"
    load r5,"beta"
    load r4,1
-   settp r5,3
+   settp r5,768
    call r3,assignedNamed(),r4
    load r2,1
-   settp r3,1
+   settp r3,256
    srcmethod r5,r3,"describe"
    dcall r5,r5,r2
    say r5
@@ -45,12 +45,12 @@ main() .locals=6
    .src 23:3="current = .vehicle.from_name(name)"
    load r5,"gamma"
    load r4,1
-   settp r5,1
+   settp r5,256
    srcfproc r0,"inline_test_named_factory_selector.vehicle..from_name",r4
    dcall r0,r0,r4
    .src 24:3="return current.describe"
    load r4,1
-   settp r0,1
+   settp r0,256
    swap r5,r0
    srcmethod r3,r5,"describe"
    dcall r3,r3,r4
@@ -74,7 +74,7 @@ directNamed() .locals=3
    .src 11:3="return .vehicle.from_name(\"alpha\")"
    load r1,"alpha"
    load r0,1
-   settp r1,3
+   settp r1,768
    srcfproc r2,"inline_test_named_factory_selector.vehicle..from_name",r0
    dcall r2,r2,r0
    ret r2
@@ -92,7 +92,7 @@ assignedNamed() .locals=4
    .src 15:3="current = .vehicle.from_name(name)"
    .meta "inline_test_named_factory_selector.assignednamed.current"="b" ".vehicle" r0
    load r2,1
-   settp a1,1
+   settp a1,256
    swap r3,a1
    srcfproc r0,"inline_test_named_factory_selector.vehicle..from_name",r2
    dcall r0,r0,r2

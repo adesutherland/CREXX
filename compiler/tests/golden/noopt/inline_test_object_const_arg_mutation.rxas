@@ -23,17 +23,17 @@ main() .locals=5
    .meta "inline_test_object_const_arg_mutation.main.box"="b" ".box" r0
    load r2,"seed"
    load r1,1
-   settp r2,3
+   settp r2,768
    call r0,§inline_test_object_const_arg_mutation.box.§factory(),r1
    .src 6:3="call mutateBox(box)"
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r3,mutateBox(),r1
    swap r0,r2
    .src 7:3="say box.getName"
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r4,§inline_test_object_const_arg_mutation.box.getname(),r1
    swap r0,r2
@@ -57,9 +57,9 @@ mutateBox() .locals=5
    .src 13:3="call value.setName(\"changed\")"
    load r3,"changed"
    load r1,2
-   settp a1,1
+   settp a1,256
    swap r2,a1
-   settp r3,3
+   settp r3,768
    call r4,§inline_test_object_const_arg_mutation.box.setname(),r1
    swap a1,r2
    .src 14:3="return"

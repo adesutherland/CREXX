@@ -14,11 +14,11 @@ main() .locals=8
    .src 5:1="say 'today is a' date('w')"
    load r1,5
    load r2,"w"
-   settp r2,3
-   settp r3,2
-   settp r4,2
-   settp r5,2
-   settp r6,2
+   settp r2,768
+   settp r3,512
+   settp r4,512
+   settp r5,512
+   settp r6,512
    call r7,date(),r1
    sconcat r7,"today is a",r7
    say r7

@@ -34,9 +34,6 @@
 #include "rxcp_val.h"
 #include "rxcp_util.h"
 
-#define REGTP_VAL 1
-#define REGTP_NOTSYM 2
-
 static int symbol_has_live_node_in_proc(Symbol *symbol, ASTNode *proc_node) {
     size_t i;
 

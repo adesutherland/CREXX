@@ -590,17 +590,17 @@
 \item[\texttt{Operation}]
 \IfFileExists{operation/loadsettp.operation}{\input{operation/loadsettp.operation}}{}
 \item[\texttt{}]
-\item[\texttt{0x0109}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o REGINTINT\\
+\item[\texttt{0x0109}]\fontspec{IBM Plex Sans Condensed} load register and sets externally writable status flags REGINTINT\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/loadsettpREGINTINT.def}{\input{../../examples/loadsettpREGINTINT.def}}{}
 \IfFileExists{../../examples/loadsettpREGINTINT.rexx}{\splice{rxc ../../examples/loadsettpREGINTINT}}{}
 \IfFileExists{../../examples/loadsettpREGINTINT.rxas}{\lstinputlisting[language=rxas,label=loadsettp,caption=loadsettp example.]{../../examples/loadsettpREGINTINT.rxas} \splice{rxas ../../examples/loadsettpREGINTINT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme  ../../examples/loadsettpREGINTINT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
-\item[\texttt{0x010a}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o REGFLOATINT\\
+\item[\texttt{0x010a}]\fontspec{IBM Plex Sans Condensed} load register and sets externally writable status flags REGFLOATINT\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/loadsettpREGFLOATINT.def}{\input{../../examples/loadsettpREGFLOATINT.def}}{}
 \IfFileExists{../../examples/loadsettpREGFLOATINT.rexx}{\splice{rxc ../../examples/loadsettpREGFLOATINT}}{}
 \IfFileExists{../../examples/loadsettpREGFLOATINT.rxas}{\lstinputlisting[language=rxas,label=loadsettp,caption=loadsettp example.]{../../examples/loadsettpREGFLOATINT.rxas} \splice{rxas ../../examples/loadsettpREGFLOATINT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme  ../../examples/loadsettpREGFLOATINT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
-\item[\texttt{0x010b}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o REGSTRINGINT\\
+\item[\texttt{0x010b}]\fontspec{IBM Plex Sans Condensed} load register and sets externally writable status flags REGSTRINGINT\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/loadsettpREGSTRINGINT.def}{\input{../../examples/loadsettpREGSTRINGINT.def}}{}
 \IfFileExists{../../examples/loadsettpREGSTRINGINT.rexx}{\splice{rxc ../../examples/loadsettpREGSTRINGINT}}{}
@@ -1221,17 +1221,17 @@
 \item[\texttt{Operation}]
 \IfFileExists{operation/loadsettp.operation}{\input{operation/loadsettp.operation}}{}
 \item[\texttt{}]
-\item[\texttt{0x0109}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o REGINTINT\\
+\item[\texttt{0x0109}]\fontspec{IBM Plex Sans Condensed} load register and sets externally writable status flags REGINTINT\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/loadsettpREGINTINT.def}{\input{../../examples/loadsettpREGINTINT.def}}{}
 \IfFileExists{../../examples/loadsettpREGINTINT.rexx}{\splice{rxc ../../examples/loadsettpREGINTINT}}{}
 \IfFileExists{../../examples/loadsettpREGINTINT.rxas}{\lstinputlisting[language=rxas,label=loadsettp,caption=loadsettp example.]{../../examples/loadsettpREGINTINT.rxas} \splice{rxas ../../examples/loadsettpREGINTINT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme  ../../examples/loadsettpREGINTINT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
-\item[\texttt{0x010a}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o REGFLOATINT\\
+\item[\texttt{0x010a}]\fontspec{IBM Plex Sans Condensed} load register and sets externally writable status flags REGFLOATINT\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/loadsettpREGFLOATINT.def}{\input{../../examples/loadsettpREGFLOATINT.def}}{}
 \IfFileExists{../../examples/loadsettpREGFLOATINT.rexx}{\splice{rxc ../../examples/loadsettpREGFLOATINT}}{}
 \IfFileExists{../../examples/loadsettpREGFLOATINT.rxas}{\lstinputlisting[language=rxas,label=loadsettp,caption=loadsettp example.]{../../examples/loadsettpREGFLOATINT.rxas} \splice{rxas ../../examples/loadsettpREGFLOATINT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme  ../../examples/loadsettpREGFLOATINT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
-\item[\texttt{0x010b}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o REGSTRINGINT\\
+\item[\texttt{0x010b}]\fontspec{IBM Plex Sans Condensed} load register and sets externally writable status flags REGSTRINGINT\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/loadsettpREGSTRINGINT.def}{\input{../../examples/loadsettpREGSTRINGINT.def}}{}
 \IfFileExists{../../examples/loadsettpREGSTRINGINT.rexx}{\splice{rxc ../../examples/loadsettpREGSTRINGINT}}{}
@@ -1279,7 +1279,7 @@
 \item[\texttt{Operation}]
 \IfFileExists{operation/setortp.operation}{\input{operation/setortp.operation}}{}
 \item[\texttt{}]
-\item[\texttt{0x010c}]\fontspec{IBM Plex Sans Condensed} or the register type flag (op1.typeflag = op1.typeflag | op2) REGINT\\
+\item[\texttt{0x010c}]\fontspec{IBM Plex Sans Condensed} or externally writable register status flags (op1.flags = op1.flags | op2) REGINT\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/setortpREGINT.def}{\input{../../examples/setortpREGINT.def}}{}
 \IfFileExists{../../examples/setortpREGINT.rexx}{\splice{rxc ../../examples/setortpREGINT}}{}
@@ -1565,7 +1565,7 @@
 \item[\texttt{Operation}]
 \IfFileExists{operation/brtpandt.operation}{\input{operation/brtpandt.operation}}{}
 \item[\texttt{}]
-\item[\texttt{0x010f}]\fontspec{IBM Plex Sans Condensed} if op2.typeflag \&\& op3 true then goto op1 IDREGINT\\
+\item[\texttt{0x010f}]\fontspec{IBM Plex Sans Condensed} if op2 readable status flags \& op3 true then goto op1 IDREGINT\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/brtpandtIDREGINT.def}{\input{../../examples/brtpandtIDREGINT.def}}{}
 \IfFileExists{../../examples/brtpandtIDREGINT.rexx}{\splice{rxc ../../examples/brtpandtIDREGINT}}{}
@@ -1581,7 +1581,7 @@
 \item[\texttt{Operation}]
 \IfFileExists{operation/brtpt.operation}{\input{operation/brtpt.operation}}{}
 \item[\texttt{}]
-\item[\texttt{0x010e}]\fontspec{IBM Plex Sans Condensed} if op2.typeflag true then goto op1 IDREG\\
+\item[\texttt{0x010e}]\fontspec{IBM Plex Sans Condensed} if op2 has externally writable status flags then goto op1 IDREG\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/brtptIDREG.def}{\input{../../examples/brtptIDREG.def}}{}
 \IfFileExists{../../examples/brtptIDREG.rexx}{\splice{rxc ../../examples/brtptIDREG}}{}
@@ -1991,7 +1991,7 @@
 \item[\texttt{Operation}]
 \IfFileExists{operation/gettp.operation}{\input{operation/gettp.operation}}{}
 \item[\texttt{}]
-\item[\texttt{0x0107}]\fontspec{IBM Plex Sans Condensed} gets the register type flag (op1 = op2.typeflag) REGREG\\
+\item[\texttt{0x0107}]\fontspec{IBM Plex Sans Condensed} gets the readable register status flags (op1 = op2.flags) REGREG\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/gettpREGREG.def}{\input{../../examples/gettpREGREG.def}}{}
 \IfFileExists{../../examples/gettpREGREG.rexx}{\splice{rxc ../../examples/gettpREGREG}}{}
@@ -2270,7 +2270,7 @@
 \item[\texttt{Operation}]
 \IfFileExists{operation/settp.operation}{\input{operation/settp.operation}}{}
 \item[\texttt{}]
-\item[\texttt{0x0108}]\fontspec{IBM Plex Sans Condensed} sets the register type flag (op1.typeflag = op2) REGINT\\
+\item[\texttt{0x0108}]\fontspec{IBM Plex Sans Condensed} sets externally writable register status flags, preserving VM-private flags REGINT\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/settpREGINT.def}{\input{../../examples/settpREGINT.def}}{}
 \IfFileExists{../../examples/settpREGINT.rexx}{\splice{rxc ../../examples/settpREGINT}}{}

@@ -26,11 +26,11 @@ main() .locals=8
    call r5,_noredir(),r7
    load r7,0
    call r6,_noredir(),r7
-   settp r2,3
-   settp r3,3
-   settp r4,1
-   settp r5,1
-   settp r6,1
+   settp r2,768
+   settp r3,768
+   settp r4,256
+   settp r5,256
+   settp r6,256
    call r0,_address(),r1
    .src 6:3="cmd"
    load r2,5
@@ -43,11 +43,11 @@ main() .locals=8
    call r6,_noredir(),r1
    load r1,0
    call r7,_noredir(),r1
-   settp r3,3
-   settp r4,1
-   settp r5,1
-   settp r6,1
-   settp r7,1
+   settp r3,768
+   settp r4,256
+   settp r5,256
+   settp r6,256
+   settp r7,256
    call r0,_address(),r2
    .src 7:3="return"
    ret
