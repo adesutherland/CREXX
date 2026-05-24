@@ -245,23 +245,11 @@ string(APPEND RXC_INVALID_UTF8_HEX_CONTENT
        "  ERROR_VARIABLE rxc_err\n"
        "  RESULT_VARIABLE rxc_res\n"
        ")\n"
-       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
-       "if(rxc_res EQUAL 0)\n"
-       "  execute_process(\n"
-       "    COMMAND \"$<TARGET_FILE:rxas>\" \"rxc_invalid_utf8_hex_literal\"\n"
-       "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
-       "    OUTPUT_VARIABLE rxas_out\n"
-       "    ERROR_VARIABLE rxas_err\n"
-       "    RESULT_VARIABLE rxas_res\n"
-       "  )\n"
-       "  string(APPEND full_out \"${RXAS_DIAG_DOLLAR}{rxas_out}${RXAS_DIAG_DOLLAR}{rxas_err}\")\n"
-       "else()\n"
-       "  set(rxas_res 1)\n"
-       "endif()\n")
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n")
 string(APPEND RXC_INVALID_UTF8_HEX_CONTENT
        "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
-       "if(rxc_res EQUAL 0 AND rxas_res EQUAL 0)\n"
-       "  message(FATAL_ERROR \"Expected invalid UTF-8 hex literal to fail, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"Expected rxc to reject invalid UTF-8 hex literal, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
        "endif()\n"
        "if(NOT full_out MATCHES \"valid UTF-8\")\n"
        "  message(FATAL_ERROR \"Expected invalid UTF-8 diagnostic was not emitted for source hex literal.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
@@ -270,6 +258,33 @@ file(GENERATE OUTPUT "${RXC_INVALID_UTF8_HEX_SCRIPT}" CONTENT "${RXC_INVALID_UTF
 
 add_test(NAME rxc_invalid_utf8_hex_literal
          COMMAND ${CMAKE_COMMAND} -P "${RXC_INVALID_UTF8_HEX_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_INVALID_UTF8_BINARY_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_utf8_binary_literal.cmake")
+set(RXC_INVALID_UTF8_BINARY_CONTENT "")
+string(APPEND RXC_INVALID_UTF8_BINARY_CONTENT
+       "file(WRITE \"${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_utf8_binary_literal.crexx\" \"options levelb\\n\\nmain: procedure\\n  say '11111111'b\\n\")\n")
+string(APPEND RXC_INVALID_UTF8_BINARY_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -x -o \"rxc_invalid_utf8_binary_literal\" \"${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_utf8_binary_literal.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n")
+string(APPEND RXC_INVALID_UTF8_BINARY_CONTENT
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"Expected rxc to reject invalid UTF-8 binary literal, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "if(NOT full_out MATCHES \"valid UTF-8\")\n"
+       "  message(FATAL_ERROR \"Expected invalid UTF-8 diagnostic was not emitted for source binary literal.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_INVALID_UTF8_BINARY_SCRIPT}" CONTENT "${RXC_INVALID_UTF8_BINARY_CONTENT}")
+
+add_test(NAME rxc_invalid_utf8_binary_literal
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_INVALID_UTF8_BINARY_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Robustness tests

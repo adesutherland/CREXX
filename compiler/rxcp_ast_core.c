@@ -34,6 +34,9 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_source_tree.h"
+#ifndef NUTF8
+#include "utf.h"
+#endif
 
 static void ast_copy_reporting_anchors(ASTNode *dest, ASTNode *src) {
     size_t i;
@@ -576,6 +579,49 @@ ASTNode *add_dast(ASTNode *dest, ASTNode *source) {
     return node;
 }
 
+static int ast_validate_utf8_string_literal(ASTNode *node, const unsigned char *bytes, size_t length) {
+#ifndef NUTF8
+    size_t chars;
+    void *invalid;
+
+    invalid = utf8nvalid_count(bytes, length, &chars);
+    if (invalid) {
+        mknd_err(node,
+                 "string literal is not valid UTF-8 at byte %lu; use .binary for byte data",
+                 (unsigned long)((const unsigned char *)invalid - bytes));
+        return 0;
+    }
+#else
+    (void)node;
+    (void)bytes;
+    (void)length;
+#endif
+    return 1;
+}
+
+static char *ast_escape_bytes_for_rxas(const unsigned char *bytes,
+                                       size_t byte_length,
+                                       size_t *processed_length) {
+    char *processed_string;
+    char *buffer;
+    char *escaped_char;
+    size_t i;
+
+    *processed_length = 0;
+    processed_string = malloc(byte_length * 4);
+    buffer = processed_string;
+
+    for (i = 0; i < byte_length; i++) {
+        escaped_char = escape_character(bytes[i]);
+        while (*escaped_char) {
+            (*processed_length)++;
+            *(buffer++) = *(escaped_char++);
+        }
+    }
+
+    return processed_string;
+}
+
 /* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks
  * and decoding / encoding the string nicely - or converting to an error string */
 #define ADD_CHAR_TO_BUFFER(ch) { processed_length++; *(buffer++) = (ch); }
@@ -584,6 +630,9 @@ ASTNode *ast_fstr(Context* context, Token *token) {
     char* raw_string;
     size_t raw_length;
     size_t hex_bin_length;
+    size_t decoded_length;
+    size_t decoded_index;
+    unsigned char *decoded_string;
     char *processed_string;
     char *buffer;
     char c;
@@ -656,9 +705,9 @@ ASTNode *ast_fstr(Context* context, Token *token) {
             hex_bin_length++;
         }
 
-        processed_length = 0;
-        processed_string = malloc(raw_length * 4); /* Worse case */
-        buffer = processed_string;
+        decoded_length = (hex_bin_length + 1) / 2;
+        decoded_string = malloc(decoded_length);
+        decoded_index = 0;
 
         /* Output the hex string */
         if (hex_bin_length % 2) { /* Odd number of digits - add a leading zero */
@@ -667,23 +716,26 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         }
         else hex_buffer_len = 0;
 
-        while (raw_length) {
-            if (*raw_string != ' ') {
-                hex_bin_buffer[hex_buffer_len] = (char)tolower(*raw_string);
+        for (i = 0; i < raw_length; i++) {
+            if (raw_string[i] != ' ') {
+                hex_bin_buffer[hex_buffer_len] = (char)tolower(raw_string[i]);
                 hex_buffer_len++;
                 if (hex_buffer_len == 2) {
-
-                    escaped_char = escape_character(
+                    decoded_string[decoded_index++] = (unsigned char)(
                             (hexchar2int(hex_bin_buffer[0]) * 16) +
                             hexchar2int(hex_bin_buffer[1]));
-
-                    while (*escaped_char) ADD_CHAR_TO_BUFFER(*(escaped_char++));
                     hex_buffer_len = 0;
                 }
             }
-            raw_string++;
-            raw_length--;
         }
+
+        if (!ast_validate_utf8_string_literal(node, decoded_string, decoded_index)) {
+            free(decoded_string);
+            return node;
+        }
+
+        processed_string = ast_escape_bytes_for_rxas(decoded_string, decoded_index, &processed_length);
+        free(decoded_string);
     }
 
     else  { /* Binary String */
@@ -698,31 +750,35 @@ ASTNode *ast_fstr(Context* context, Token *token) {
             hex_bin_length++;
         }
 
-        processed_length = 0;
-        processed_string = malloc(raw_length * 4); /* Worse case */
-        buffer = processed_string;
+        decoded_length = (hex_bin_length + 7) / 8;
+        decoded_string = malloc(decoded_length);
+        decoded_index = 0;
 
         /* Output the bin string */
         /* Add leaving '0's */
         hex_buffer_len = (hex_bin_length % 8) ? 8 - (int)(hex_bin_length % 8) : 0;
         for (i=0;i<hex_buffer_len;i++) hex_bin_buffer[i]='0';
 
-        while (raw_length) {
-            if (*raw_string != ' ') {
-                hex_bin_buffer[hex_buffer_len] = (char)tolower(*raw_string);
+        for (i = 0; i < raw_length; i++) {
+            if (raw_string[i] != ' ') {
+                hex_bin_buffer[hex_buffer_len] = (char)tolower(raw_string[i]);
                 hex_buffer_len++;
                 if (hex_buffer_len == 8) {
-                    escaped_char = escape_character(
+                    decoded_string[decoded_index++] = (unsigned char)(
                             (binchar2int(hex_bin_buffer) * 16) +
                             binchar2int(hex_bin_buffer + 4));
-
-                    while (*escaped_char) ADD_CHAR_TO_BUFFER(*(escaped_char++));
                     hex_buffer_len = 0;
                 }
             }
-            raw_string++;
-            raw_length--;
         }
+
+        if (!ast_validate_utf8_string_literal(node, decoded_string, decoded_index)) {
+            free(decoded_string);
+            return node;
+        }
+
+        processed_string = ast_escape_bytes_for_rxas(decoded_string, decoded_index, &processed_length);
+        free(decoded_string);
     }
 
     /* Get rid of excess memory */
