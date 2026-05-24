@@ -61,6 +61,21 @@ void check_status_mask(value* v, uint32_t mask, uint32_t expected, const char* f
 
 #define CHECK_STATUS(v, mask, expected) check_status_mask(v, mask, expected, __FILE__, __LINE__)
 
+void check_binary_bytes(value* v, const unsigned char* expected, size_t length, const char* file, int line) {
+    if (v->binary_length != length) {
+        fprintf(stderr, "VERIFY FAIL (%s:%d): binary_length is %zu but should be %zu\n",
+                file, line, v->binary_length, length);
+        exit(1);
+    }
+    if (length && memcmp(v->binary_value, expected, length) != 0) {
+        fprintf(stderr, "VERIFY FAIL (%s:%d): binary bytes did not match expected data\n",
+                file, line);
+        exit(1);
+    }
+}
+
+#define CHECK_BINARY(v, expected, length) check_binary_bytes(v, expected, length, __FILE__, __LINE__)
+
 void test_string_positioning() {
     value v;
     value_init(&v);
@@ -242,11 +257,76 @@ void test_utf_status_flags() {
 #endif
 }
 
+void test_binary_buffers() {
+    value v;
+    value copy;
+    value other;
+    value concat;
+    value slice;
+    unsigned char initial[] = { 0x00, 0x41, 0xff };
+    unsigned char smaller[] = { 0x10, 0x20 };
+    unsigned char extra[] = { 0x30, 0x40, 0x50 };
+    unsigned char appended[] = { 0x10, 0x20, 0x30, 0x40, 0x50 };
+    unsigned char doubled[] = { 0x10, 0x20, 0x30, 0x40, 0x50, 0x10, 0x20, 0x30, 0x40, 0x50 };
+    unsigned char prefix[] = { 0xaa };
+    unsigned char prefix_appended[] = { 0xaa, 0x10, 0x20, 0x30, 0x40, 0x50 };
+    unsigned char combined[] = { 0xaa, 0x10, 0x20, 0x30, 0x40, 0x50, 0x10, 0x20, 0x30, 0x40, 0x50 };
+    unsigned char sliced[] = { 0x10, 0x20, 0x30 };
+    size_t capacity;
+
+    printf("\n--- Running Binary Buffer Tests ---\n");
+
+    value_init(&v);
+    value_init(&copy);
+    value_init(&other);
+    value_init(&concat);
+    value_init(&slice);
+
+    assert(set_binary(&v, initial, sizeof(initial)) == 0);
+    CHECK_BINARY(&v, initial, sizeof(initial));
+    capacity = v.binary_buffer_length;
+
+    assert(set_binary(&v, smaller, sizeof(smaller)) == 0);
+    CHECK_BINARY(&v, smaller, sizeof(smaller));
+    assert(v.binary_buffer_length == capacity && "smaller binary write should reuse capacity");
+
+    assert(append_binary(&v, extra, sizeof(extra)) == 0);
+    CHECK_BINARY(&v, appended, sizeof(appended));
+
+    copy_value(&copy, &v);
+    CHECK_BINARY(&copy, appended, sizeof(appended));
+
+    assert(append_binary_value(&v, &v) == 0);
+    CHECK_BINARY(&v, doubled, sizeof(doubled));
+
+    assert(set_binary(&other, prefix, sizeof(prefix)) == 0);
+    assert(concat_binary(&concat, &other, &v) == 0);
+    CHECK_BINARY(&concat, combined, sizeof(combined));
+
+    assert(concat_binary(&other, &other, &copy) == 0);
+    CHECK_BINARY(&other, prefix_appended, sizeof(prefix_appended));
+
+    assert(slice_binary(&slice, &concat, 1, 3) == 0);
+    CHECK_BINARY(&slice, sliced, sizeof(sliced));
+
+    assert(slice_binary(&concat, &concat, 50, 8) == 0);
+    assert(concat.binary_length == 0);
+
+    clear_value(&v);
+    clear_value(&copy);
+    clear_value(&other);
+    clear_value(&concat);
+    clear_value(&slice);
+
+    printf("--- Binary Buffer Tests Finished ---\n");
+}
+
 int main() {
     test_string_positioning();
     test_boundary_conditions();
     test_flawed_optimization_trigger();
     test_utf_status_flags();
+    test_binary_buffers();
     // Add more tests with other strings (empty, all-ASCII, all-multibyte, etc.)
 
     printf("\nAll tests completed.\n");

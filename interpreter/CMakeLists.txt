@@ -492,6 +492,10 @@ add_custom_target(run_tests_system_io ALL DEPENDS tests_system_io.rxbin)
 
 crexx_add_vm_dual_test(NAME rxassystemiotests RXVM_ARGS tests_system_io)
 
+# Binary Buffer and I/O Instruction Tests
+crexx_add_rxas_vm_binary(tests_binary "binary buffer and I/O")
+crexx_add_vm_dual_test(NAME rxasbinarytests RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO")
+
 # Socket Instruction Tests
 add_custom_command(
 		OUTPUT tests_socket.rxbin

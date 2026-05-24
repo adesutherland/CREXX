@@ -1,0 +1,103 @@
+/*
+ * CREXX Interpreter test for binary byte buffers.
+ */
+
+.globals=0
+
+main() .locals=12
+   load r1,"test_binary_in.tmp"
+   load r2,"wb"
+   fopen r3,r1,r2
+   ine r0,r3,0
+   brf fail_open_write,r0
+
+   load r4,"ABC"
+   fwrite r3,r4
+   fclose r0,r3
+
+   load r2,"rb"
+   fopen r3,r1,r2
+   ine r0,r3,0
+   brf fail_open_read,r0
+
+   load r4,10
+   freadb r5,r3,r4
+   fclose r0,r3
+
+   load r7,0
+   getbyte r6,r5,r7
+   ieq r0,r6,65
+   brf fail_byte0,r0
+
+   load r7,1
+   getbyte r6,r5,r7
+   ieq r0,r6,66
+   brf fail_byte1,r0
+
+   load r7,2
+   getbyte r6,r5,r7
+   ieq r0,r6,67
+   brf fail_byte2,r0
+
+   load r7,3
+   getbyte r6,r5,r7
+   ieq r0,r6,-1
+   brf fail_eob,r0
+
+   load r1,"test_binary_out.tmp"
+   load r2,"wb"
+   fopen r3,r1,r2
+   ine r0,r3,0
+   brf fail_open_binary_write,r0
+
+   fwriteb r3,r5
+   fclose r0,r3
+
+   load r2,"r"
+   fopen r3,r1,r2
+   ine r0,r3,0
+   brf fail_open_verify,r0
+
+   freadline r8,r3
+   fclose r0,r3
+   seq r0,r8,"ABC"
+   brf fail_binary_write,r0
+
+   say "PASS: Binary Buffer IO"
+   ret 0
+
+fail_open_write:
+   say "FAIL: could not open binary input for write"
+   ret 1
+
+fail_open_read:
+   say "FAIL: could not open binary input for read"
+   ret 1
+
+fail_byte0:
+   say "FAIL: binary byte 0 mismatch"
+   ret 1
+
+fail_byte1:
+   say "FAIL: binary byte 1 mismatch"
+   ret 1
+
+fail_byte2:
+   say "FAIL: binary byte 2 mismatch"
+   ret 1
+
+fail_eob:
+   say "FAIL: binary end-of-buffer sentinel mismatch"
+   ret 1
+
+fail_open_binary_write:
+   say "FAIL: could not open binary output for write"
+   ret 1
+
+fail_open_verify:
+   say "FAIL: could not open binary output for verify"
+   ret 1
+
+fail_binary_write:
+   say "FAIL: binary write verification mismatch"
+   ret 1

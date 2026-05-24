@@ -6821,8 +6821,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(GETBYTE_REG_REG_REG) CALC_DISPATCH(3)
     DEBUG("TRACE - GETBYTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
 
-    /* TODO */
-    REG_RETURN_INT(0)
+    if (op3R->int_value < 0 || (size_t)op3R->int_value >= op2R->binary_length) {
+        REG_RETURN_INT(-1)
+    }
+    else {
+        REG_RETURN_INT((unsigned char)op2R->binary_value[op3R->int_value])
+    }
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  CONCCHAR_REG_REG_REG  op1=op2[op3]                                pej 27 August 2021
@@ -7539,21 +7543,17 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(FREADB_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - FREADB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
         {
-            if (op3R->int_value == 0) {
-                clear_binary_payload(op1R);
+            if (op3R->int_value < 0) {
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Invalid binary read size");
             }
-
+            else if (op3R->int_value == 0) {
+                if (prep_binary_buffer(op1R, 0) != 0) SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+            }
+            else if (reserve_binary_buffer(op1R, (size_t)op3R->int_value) != 0) {
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+            }
             else {
-                /* If the binary size is the same (and this is likely to be the case if we are in a loop) we can just
-                 * reuse the buffer - otherwise free/malloc */
-                if (op1R->native_payload_ops || op1R->binary_length != op3R->int_value) {
-                    clear_binary_payload(op1R);
-                    op1R->binary_value = malloc(op3R->int_value);
-                    op1R->binary_length = op3R->int_value;
-                    op1R->binary_buffer_length = op1R->binary_length;
-                }
-
-                op1R->binary_length = fread(op1R->binary_value, op1R->binary_length, 1, (FILE *) op2R->int_value);
+                op1R->binary_length = fread(op1R->binary_value, 1, (size_t)op3R->int_value, (FILE *) op2R->int_value);
             }
         }
         DISPATCH

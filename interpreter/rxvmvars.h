@@ -269,6 +269,104 @@ RX_INLINE size_t buffer_size(size_t value) {
     return power_of_two_size(value);
 }
 
+RX_INLINE int reserve_binary_buffer(value *v, size_t length) {
+    if (v->native_payload_ops) clear_binary_payload(v);
+    if (length > v->binary_buffer_length) {
+        size_t new_size = buffer_size(length);
+        void *new_buffer;
+
+        if (v->binary_value) new_buffer = realloc(v->binary_value, new_size);
+        else new_buffer = malloc(new_size);
+
+        if (!new_buffer) return -1;
+
+        v->binary_value = new_buffer;
+        v->binary_buffer_length = new_size;
+    }
+    return 0;
+}
+
+RX_INLINE int prep_binary_buffer(value *v, size_t length) {
+    if (reserve_binary_buffer(v, length) != 0) return -1;
+    v->binary_length = length;
+    return 0;
+}
+
+RX_INLINE int set_binary(value *v, const void *data, size_t length) {
+    if (prep_binary_buffer(v, length) != 0) return -1;
+    if (length && data) memcpy(v->binary_value, data, length);
+    else if (length) memset(v->binary_value, 0, length);
+    return 0;
+}
+
+RX_INLINE int set_buffer_binary(value *v, char *buffer, size_t length, size_t buffer_length) {
+    if (v->native_payload_ops) clear_binary_payload(v);
+    if (v->binary_value) free(v->binary_value);
+    v->binary_value = buffer;
+    v->binary_length = length;
+    v->binary_buffer_length = buffer_length;
+    return 0;
+}
+
+RX_INLINE int append_binary(value *v, const void *data, size_t length) {
+    size_t start = v->binary_length;
+    if (prep_binary_buffer(v, start + length) != 0) return -1;
+    if (length && data) memcpy(v->binary_value + start, data, length);
+    else if (length) memset(v->binary_value + start, 0, length);
+    return 0;
+}
+
+RX_INLINE int append_binary_value(value *dest, value *source) {
+    size_t source_length = source->binary_length;
+    if (dest == source) {
+        if (prep_binary_buffer(dest, source_length * 2) != 0) return -1;
+        if (source_length) memcpy(dest->binary_value + source_length, dest->binary_value, source_length);
+        return 0;
+    }
+    return append_binary(dest, source->binary_value, source_length);
+}
+
+RX_INLINE int concat_binary(value *dest, value *left, value *right) {
+    size_t left_length = left->binary_length;
+    size_t right_length = right->binary_length;
+    size_t total_length = left_length + right_length;
+
+    if (dest == left || dest == right) {
+        size_t buffer_length = buffer_size(total_length);
+        char *buffer = malloc(buffer_length);
+        if (!buffer) return -1;
+        if (left_length) memcpy(buffer, left->binary_value, left_length);
+        if (right_length) memcpy(buffer + left_length, right->binary_value, right_length);
+        set_buffer_binary(dest, buffer, total_length, buffer_length);
+        return 0;
+    }
+
+    if (prep_binary_buffer(dest, total_length) != 0) return -1;
+    if (left_length) memcpy(dest->binary_value, left->binary_value, left_length);
+    if (right_length) memcpy(dest->binary_value + left_length, right->binary_value, right_length);
+    return 0;
+}
+
+RX_INLINE int slice_binary(value *dest, value *source, size_t offset, size_t length) {
+    size_t actual_length;
+
+    if (offset >= source->binary_length) actual_length = 0;
+    else {
+        actual_length = source->binary_length - offset;
+        if (length < actual_length) actual_length = length;
+    }
+
+    if (dest == source) {
+        if (actual_length) memmove(dest->binary_value, source->binary_value + offset, actual_length);
+        dest->binary_length = actual_length;
+        return 0;
+    }
+
+    if (prep_binary_buffer(dest, actual_length) != 0) return -1;
+    if (actual_length) memcpy(dest->binary_value, source->binary_value + offset, actual_length);
+    return 0;
+}
+
 RX_INLINE void prep_string_buffer(value *v, size_t length) {
     v->string_length = length;
     if (v->string_length > v->string_buffer_length) {
@@ -538,12 +636,7 @@ RX_INLINE int set_native_payload(value *v,
 
     clear_binary_payload(v);
     if (length) {
-        v->binary_value = malloc(length);
-        if (!v->binary_value) return -1;
-        if (payload) memcpy(v->binary_value, payload, length);
-        else memset(v->binary_value, 0, length);
-        v->binary_length = length;
-        v->binary_buffer_length = length;
+        if (set_binary(v, payload, length) != 0) return -1;
     }
     v->native_payload_ops = ops;
     v->native_payload_flags = flags;
@@ -614,10 +707,7 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
         source->native_payload_ops->copy(dest, source);
     }
     else if (source->binary_length) {
-        dest->binary_length = source->binary_length;
-        dest->binary_buffer_length = dest->binary_length;
-        if (dest->binary_value) dest->binary_value = realloc(dest->binary_value, dest->binary_length);
-        else dest->binary_value = malloc(dest->binary_length);
+        if (prep_binary_buffer(dest, source->binary_length) != 0) abort();
         memcpy(dest->binary_value, source->binary_value, dest->binary_length);
         dest->native_payload_ops = source->native_payload_ops;
         dest->native_payload_flags = source->native_payload_flags;

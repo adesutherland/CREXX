@@ -2298,7 +2298,6 @@ rxinteger rxvm_socket_recv_string(struct rxvm_context *context, value *out, rxin
 
 rxinteger rxvm_socket_recv_binary(struct rxvm_context *context, value *out, rxinteger handle, rxinteger max_bytes) {
     rxvm_socket_entry *entry = rxvm_socket_lookup(context, handle);
-    char *buffer;
     rxinteger received;
 
     if (!out) return RXSOCK_ERR_ARGUMENT;
@@ -2314,28 +2313,15 @@ rxinteger rxvm_socket_recv_binary(struct rxvm_context *context, value *out, rxin
         return 0;
     }
 
-    buffer = malloc((size_t)max_bytes);
-    if (!buffer) {
+    if (reserve_binary_buffer(out, (size_t)max_bytes) != 0) {
         rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0, "out of memory");
         return RXSOCK_ERR_NO_MEMORY;
     }
 
-    received = rxvm_socket_recv_bytes(entry, buffer, (size_t)max_bytes);
+    received = rxvm_socket_recv_bytes(entry, out->binary_value, (size_t)max_bytes);
     if (received > 0) {
-        if (out->binary_buffer_length < (size_t)received) {
-            char *new_buffer = realloc(out->binary_value, (size_t)received);
-            if (!new_buffer) {
-                free(buffer);
-                rxvm_socket_entry_status(entry, RXSOCK_ERR_NO_MEMORY, 0, "out of memory");
-                return RXSOCK_ERR_NO_MEMORY;
-            }
-            out->binary_value = new_buffer;
-            out->binary_buffer_length = (size_t)received;
-        }
-        memcpy(out->binary_value, buffer, (size_t)received);
         out->binary_length = (size_t)received;
     }
-    free(buffer);
     return received < 0 ? received : received;
 }
 

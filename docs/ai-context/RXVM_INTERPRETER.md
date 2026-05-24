@@ -264,6 +264,16 @@ the payload owns native resources. The descriptor is normally a static provider
 object shared by many values; the value stores just a pointer to it plus flags,
 so there is no per-instance ops allocation.
 
+Ordinary `.binary` payloads should be built through the shared helpers in
+`rxvmvars.h`: `reserve_binary_buffer()`, `prep_binary_buffer()`, `set_binary()`,
+`append_binary()`, `append_binary_value()`, `concat_binary()`, and
+`slice_binary()`. These helpers keep `binary_length` and
+`binary_buffer_length` consistent, reuse existing capacity where possible, and
+clear native payload finalizers before replacing a native-backed object with an
+ordinary byte sequence. `GETBYTE` reads zero-based binary offsets and returns
+`-1` for out-of-range reads. `FREADB` reads bytes with `fread(ptr, 1, n, file)`,
+so `binary_length` is the actual byte count read, not a C item count.
+
 When `native_payload_ops` is set:
 
 - `clear_value()` calls the payload finalizer, if any, before freeing the
