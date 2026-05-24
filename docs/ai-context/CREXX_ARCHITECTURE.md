@@ -67,6 +67,98 @@ The pipeline of transforming REXX source code into executable bytecode is struct
    - Modules are loaded via `rxldmod`.
    - The execution loop happens inside the `rxvm_run` function (e.g., in `rxvmmain.c` / `rxvmintp.c`).
 
+## Text, UTF-8, and Binary Data
+
+In normal UTF builds, `.string` register data is stored as UTF-8 bytes while
+the VM exposes character operations as codepoint operations. A VM `value`
+tracks `string_length` as the byte length and, in UTF builds, also tracks
+`string_chars` plus a byte/codepoint cursor pair (`string_pos` and
+`string_char_pos`). Instructions such as `strlen`, `strchar`,
+`setstrpos`/`getstrpos`, `substr`, `strpos`, `appendchar`, `fndblnk`, and
+`fndnblnk` operate in codepoint space and use helpers such as
+`string_set_byte_pos()`, `string_slice_from_cursor()`, and
+`string_concat_char()` to walk or synthesize the underlying UTF-8 bytes. Some
+scan paths have ASCII fast paths when byte length and codepoint count match.
+These string instructions assume valid UTF-8 in the register payload. NUTF8
+builds collapse this model back to byte positions and byte lengths.
+
+Hex and binary suffixed source strings currently still enter the compiler as
+`STRING` AST nodes. `ast_fstr()` validates the hex or binary digit syntax,
+turns the decoded bytes into escaped RXAS string text, and `rxas` later
+unescapes that text into a `STRING_CONST`. The assembler records
+`string_chars` with `utf8nlen()`, which counts codepoints but does not validate
+UTF-8 well-formedness. Therefore a literal such as `'FFFFFF'x` can enter the
+string constant path as non-UTF-8 bytes and later reach character opcodes that
+are written for UTF-8 strings. This is the current root cause behind issue 466.
+
+`.binary` is present in the Level B surface and compiler metadata as
+`TP_BINARY`. The VM `value` has a separate `binary_value`, `binary_length`, and
+`binary_buffer_length` slot. Copies and moves preserve that slot, socket and
+file byte operations use it (`socksendb`, `sockrecvb`, `freadb`, `fwriteb`),
+and native payloads reuse it with `rxvm_native_payload_ops`. The binary path is
+much thinner than the string path: there is no general binary append or cursor
+helper equivalent to the string helpers, some construction and literal cases
+still route through ordinary string loading, `GETBYTE` is still a stub, and
+current read/receive paths tend to allocate or resize to exact byte counts
+rather than sharing the string buffer growth machinery.
+
+At the RXAS level, `BINARY_CONST` and `OP_BINARY` support exist and `0x...`
+operands can be converted into constant-pool binary records, but the current
+generated opcode formats do not expose a general binary-immediate instruction
+family. Most character and string opcodes take string operands and assume
+valid UTF-8 in UTF builds.
+
+Level C text and binary behavior should be treated as design space, not as
+settled current compiler behavior. Classic REXX is byte-oriented and commonly
+stores binary data in the same text values used for strings, while current
+Level B separates the intended surfaces as `.string` and `.binary`. Any Level C
+compatibility mode therefore has to choose where Classic byte-text semantics
+map: to UTF-8 `.string` semantics, to `.binary`, or to an explicit option such
+as `bytetext`. Classic REXX BIFs will need to be audited against that decision.
+Level G and library work have a separate Unicode extension path for grapheme,
+word, and sentence boundaries, normalization, and case operations through the
+Unicode plugin hooks; those features sit above the core codepoint-level VM
+string contract.
+
+### Locked Direction
+
+The architecture direction is:
+
+- `.string` means valid UTF-8 text in normal UTF builds.
+- `.binary` means arbitrary bytes.
+- Level B keeps those surfaces strict and typed; invalid byte streams should not
+  silently become `.string` values.
+- Level C may provide Classic REXX byte-text compatibility through an explicit
+  compatibility mode such as `bytetext`, but that mode must not weaken the
+  Level B/G `.string` contract.
+- Level G should build richer Unicode services through the existing Unicode
+  plugin hooks. `utf8proc` is the preferred first implementation candidate for
+  normalization, case folding, Unicode property checks, and grapheme/word/
+  sentence segmentation because it is a small C library under MIT expat plus
+  Unicode data license terms.
+
+Trust boundaries for `.string` validation are compiler/assembler string
+constants, native/RXVML string setters, text file and socket reads, ADDRESS
+callbacks, and any explicit byte-to-text conversion API. Internal operations
+that preserve validity, such as copying, concatenating two already-valid
+strings, slicing on codepoint boundaries, and appending a valid Unicode scalar,
+should propagate cached validity/count state rather than rescanning.
+
+The implementation roadmap is:
+
+1. Add a core validate-and-count helper for bounded UTF-8 byte spans.
+2. Enforce valid UTF-8 for assembler `STRING_CONST` creation and compiler
+   string literal lowering; route arbitrary byte literals to `.binary`.
+3. Add VM-private content flags for string validity/count knowledge rather than
+   overloading the current public register type/status flags.
+4. Improve `.binary` with buffer-growth helpers, binary literal/load support,
+   byte indexing/update instructions, and binary slice/concat operations.
+5. Add runtime string-boundary signal plumbing for native/RXVML setters and
+   text I/O paths that can currently receive arbitrary bytes.
+6. Implement the Level G Unicode plugin with `utf8proc`.
+7. Define Level C byte-text compatibility and migration rules explicitly,
+   including how Classic REXX BIFs behave in byte-text versus UTF modes.
+
 ## Compiler Import Discovery
 
 `rxc` does not treat every import location as both source and binary

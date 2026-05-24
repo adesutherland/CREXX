@@ -233,7 +233,7 @@ testrexx: class
   t_c2x: method = .int
     flag=.boolean
     flag = 1
-    v=.rexx('0123'x);w=.rexx('beef'x);x=.rexx('M');y=.rexx('\0')
+    v=.rexx('0123'x);x=.rexx('M');y=.rexx('\0')
 
     -- flag=flag & v.c2x()=='123'
     -- flag=flag & w.c2x()=='BEEF'
@@ -548,5 +548,4 @@ testrexx: class
     -- flag=flag & ('0.99999'.format(null,4,2,2)     == '1.0000    ')
     
     return \flag
-
 

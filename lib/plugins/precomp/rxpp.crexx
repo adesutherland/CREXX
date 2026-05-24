@@ -1440,7 +1440,7 @@ parsevar: Procedure=.int
   template=preCleanTemplate(template)
   k       = 0
   buf     = ''                              /* pending unquoted text */
-  WHITESPACE = ' '||'09'x||'0D'x||'0A'x||'0B'x||'0C'x||'A0'x
+  WHITESPACE = ' '||'09'x||'0D'x||'0A'x||'0B'x||'0C'x||'C2A0'x
 
  /* flush pending unquoted text as a token */
   tokenhi=0
@@ -1581,7 +1581,7 @@ return "'"strx"'"
 preCleanTemplate: procedure=.string
   arg template=.string
 
-  WHITESPACE = ' '||'09'x||'0D'x||'0A'x||'0B'x||'0C'x||'A0'x
+  WHITESPACE = ' '||'09'x||'0D'x||'0A'x||'0B'x||'0C'x||'C2A0'x
   out = ''
   L = length(template)
   i = 1

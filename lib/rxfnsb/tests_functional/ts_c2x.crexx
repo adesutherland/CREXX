@@ -27,14 +27,6 @@ if c2x( '48656c6c6f'x )\= '48656C6C6F' then do
   say 'failed in test 4: c2x( '48656c6c6f'x ) = ' c2x( '48656c6c6f'x )
 end
 
-if c2x( 'ffff'x )\= 'FFFF' then do
-  errors=errors+1
-  say 'failed in test 5: c2x( 'ffff'x ) = ' c2x( 'ffff'x )
-end
-
-if c2x( 'ffffffff'x )\= 'FFFFFFFF' then do
-  errors=errors+1
-  say 'failed in test 6: c2x( 'ffffffff'x ) = ' c2x( 'ffffffff'x )
-end
+/* Raw non-UTF byte cases such as 'ffff'x now belong to .binary coverage. */
 
 return errors<>0

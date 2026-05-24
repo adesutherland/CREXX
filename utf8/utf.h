@@ -199,6 +199,12 @@ utf8_nonnull utf8_pure utf8_weak void *utf8valid(const void *str);
 // Similar to utf8valid, except that only at most n bytes of src are looked.
 utf8_nonnull utf8_pure utf8_weak void *utf8nvalid(const void *str, size_t n);
 
+// Validates a bounded UTF-8 span and counts codepoints in one pass.
+// Returns 0 on success, or the address of the invalid byte on failure.
+utf8_nonnull utf8_weak void *utf8nvalid_count(const void *str,
+                                              size_t n,
+                                              size_t *out_chars);
+
 // Given a null-terminated string, makes the string valid by replacing invalid
 // codepoints with a 1-byte replacement. Returns 0 on success.
 utf8_nonnull utf8_weak int utf8makevalid(void *str,
@@ -1075,6 +1081,66 @@ void *utf8nvalid(const void *str, size_t n) {
     }
 
     return utf8_null;
+}
+
+void *utf8nvalid_count(const void *str, size_t n, size_t *out_chars) {
+    const unsigned char *s = (const unsigned char *)str;
+    size_t consumed = 0;
+    size_t chars = 0;
+
+    while (consumed < n) {
+        const size_t remained = n - consumed;
+        const unsigned char c = s[0];
+        size_t width;
+
+        if (c <= 0x7f) {
+            width = 1;
+        } else if (c >= 0xc2 && c <= 0xdf) {
+            if (remained < 2 || (s[1] & 0xc0) != 0x80) goto invalid;
+            width = 2;
+        } else if (c == 0xe0) {
+            if (remained < 3 || s[1] < 0xa0 || s[1] > 0xbf ||
+                (s[2] & 0xc0) != 0x80) goto invalid;
+            width = 3;
+        } else if (c >= 0xe1 && c <= 0xec) {
+            if (remained < 3 || (s[1] & 0xc0) != 0x80 ||
+                (s[2] & 0xc0) != 0x80) goto invalid;
+            width = 3;
+        } else if (c == 0xed) {
+            if (remained < 3 || s[1] < 0x80 || s[1] > 0x9f ||
+                (s[2] & 0xc0) != 0x80) goto invalid;
+            width = 3;
+        } else if (c >= 0xee && c <= 0xef) {
+            if (remained < 3 || (s[1] & 0xc0) != 0x80 ||
+                (s[2] & 0xc0) != 0x80) goto invalid;
+            width = 3;
+        } else if (c == 0xf0) {
+            if (remained < 4 || s[1] < 0x90 || s[1] > 0xbf ||
+                (s[2] & 0xc0) != 0x80 || (s[3] & 0xc0) != 0x80) goto invalid;
+            width = 4;
+        } else if (c >= 0xf1 && c <= 0xf3) {
+            if (remained < 4 || (s[1] & 0xc0) != 0x80 ||
+                (s[2] & 0xc0) != 0x80 || (s[3] & 0xc0) != 0x80) goto invalid;
+            width = 4;
+        } else if (c == 0xf4) {
+            if (remained < 4 || s[1] < 0x80 || s[1] > 0x8f ||
+                (s[2] & 0xc0) != 0x80 || (s[3] & 0xc0) != 0x80) goto invalid;
+            width = 4;
+        } else {
+            goto invalid;
+        }
+
+        s += width;
+        consumed += width;
+        chars++;
+    }
+
+    *out_chars = chars;
+    return utf8_null;
+
+invalid:
+    *out_chars = chars;
+    return (void *)s;
 }
 
 int utf8makevalid(void *str, const utf8_int32_t replacement) {

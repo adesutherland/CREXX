@@ -206,6 +206,72 @@ add_test(NAME rxas_invalid_diagnostic
          COMMAND ${CMAKE_COMMAND} -P "${RXAS_DIAG_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(RXAS_INVALID_UTF8_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxas_invalid_utf8_string.cmake")
+set(RXAS_INVALID_UTF8_CONTENT "")
+string(APPEND RXAS_INVALID_UTF8_CONTENT
+       "file(WRITE \"${CMAKE_CURRENT_BINARY_DIR}/rxas_invalid_utf8_string.rxas\" \"main() .locals=1\\n   load r0,\\\"\\\\xff\\\"\\n\")\n")
+string(APPEND RXAS_INVALID_UTF8_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxas>\" -o \"rxas_invalid_utf8_string\" \"${CMAKE_CURRENT_BINARY_DIR}/rxas_invalid_utf8_string.rxas\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE out\n"
+       "  ERROR_VARIABLE err\n"
+       "  RESULT_VARIABLE res\n"
+       ")\n")
+string(APPEND RXAS_INVALID_UTF8_CONTENT
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{out}${RXAS_DIAG_DOLLAR}{err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"Expected rxas to fail on invalid UTF-8 string, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "if(NOT full_out MATCHES \"string constant is not valid UTF-8\")\n"
+       "  message(FATAL_ERROR \"Expected invalid UTF-8 diagnostic was not emitted.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXAS_INVALID_UTF8_SCRIPT}" CONTENT "${RXAS_INVALID_UTF8_CONTENT}")
+
+add_test(NAME rxas_invalid_utf8_string
+         COMMAND ${CMAKE_COMMAND} -P "${RXAS_INVALID_UTF8_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_INVALID_UTF8_HEX_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_utf8_hex_literal.cmake")
+set(RXC_INVALID_UTF8_HEX_CONTENT "")
+string(APPEND RXC_INVALID_UTF8_HEX_CONTENT
+       "file(WRITE \"${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_utf8_hex_literal.crexx\" \"options levelb\\n\\nmain: procedure\\n  say 'FFFFFF'x\\n\")\n")
+string(APPEND RXC_INVALID_UTF8_HEX_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -x -o \"rxc_invalid_utf8_hex_literal\" \"${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_utf8_hex_literal.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "if(rxc_res EQUAL 0)\n"
+       "  execute_process(\n"
+       "    COMMAND \"$<TARGET_FILE:rxas>\" \"rxc_invalid_utf8_hex_literal\"\n"
+       "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "    OUTPUT_VARIABLE rxas_out\n"
+       "    ERROR_VARIABLE rxas_err\n"
+       "    RESULT_VARIABLE rxas_res\n"
+       "  )\n"
+       "  string(APPEND full_out \"${RXAS_DIAG_DOLLAR}{rxas_out}${RXAS_DIAG_DOLLAR}{rxas_err}\")\n"
+       "else()\n"
+       "  set(rxas_res 1)\n"
+       "endif()\n")
+string(APPEND RXC_INVALID_UTF8_HEX_CONTENT
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(rxc_res EQUAL 0 AND rxas_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"Expected invalid UTF-8 hex literal to fail, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "if(NOT full_out MATCHES \"valid UTF-8\")\n"
+       "  message(FATAL_ERROR \"Expected invalid UTF-8 diagnostic was not emitted for source hex literal.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_INVALID_UTF8_HEX_SCRIPT}" CONTENT "${RXC_INVALID_UTF8_HEX_CONTENT}")
+
+add_test(NAME rxc_invalid_utf8_hex_literal
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_INVALID_UTF8_HEX_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 # Robustness tests
 macro(add_crexx_robustness_test NAME MAIN_FILE)
     # The list of dependencies are passed as additional arguments
