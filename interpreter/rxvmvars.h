@@ -96,6 +96,16 @@ RX_INLINE void set_utf8_known_concat_flags(value *dest, int left_known, int righ
     else clear_vm_private_flags(dest);
 }
 
+RX_INLINE int validate_utf8_bytes(const void *bytes, size_t length, size_t *chars) {
+    size_t local_chars = 0;
+    const void *source = bytes ? bytes : "";
+
+    if (!bytes && length != 0) return -1;
+    if (utf8nvalid_count(source, length, &local_chars)) return -1;
+    if (chars) *chars = local_chars;
+    return 0;
+}
+
 RX_INLINE int is_valid_unicode_scalar(rxinteger codepoint) {
     return codepoint >= 0 && codepoint <= 0x10ffff &&
            !(codepoint >= 0xd800 && codepoint <= 0xdfff);
@@ -592,6 +602,26 @@ RX_INLINE void set_null_string(value *v, const char *from) {
 #else
     clear_vm_private_flags(v);
 #endif
+}
+
+RX_INLINE int set_string_validated(value *v, const char *from, size_t length) {
+    if (!from && length != 0) return -1;
+#ifndef NUTF8
+    size_t chars = 0;
+    if (validate_utf8_bytes(from, length, &chars) != 0) return -1;
+#endif
+    set_string(v, (char *)(from ? from : ""), length);
+#ifndef NUTF8
+    v->string_chars = chars;
+    v->string_char_pos = 0;
+    mark_utf8_valid_count(v);
+#endif
+    return 0;
+}
+
+RX_INLINE int set_null_string_validated(value *v, const char *from) {
+    const char *text = from ? from : "";
+    return set_string_validated(v, text, strlen(text));
 }
 
 RX_INLINE void set_const_string(value *v, string_constant *from) {

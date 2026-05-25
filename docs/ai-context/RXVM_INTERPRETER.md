@@ -223,9 +223,14 @@ In normal UTF builds, `RXFLAG_VM_UTF8_VALID` and
 UTF-8 and `string_chars` is a validated codepoint count. Constant loads mark
 the cache as trusted, bounded string setters and text reads validate before
 marking it, copy/move/string-copy preserve it, and codepoint-safe concat/slice/
-truncate/append paths propagate it. Invalid or unknown byte-oriented text clears
-the VM-private UTF cache bits while preserving the bytes for explicit binary or
-compatibility handling.
+truncate/append paths propagate it. Level B text ingress rejects invalid UTF-8:
+public RXVML setters return failure, `freadline`/`freadcdpt` and `bintos` raise
+`UNICODE_ERROR`, socket text receive reports an invalid text status, and RXPA
+native calls recursively validate returned values plus updated argument and
+signal trees after the callback returns. Raw VM helpers can still clear the
+cache for internal materialization, but arbitrary bytes belong on the `.binary`
+path. `CREXX_RXPA_DISABLE_UTF8_CHECKS=1` disables the RXPA post-call check for
+developer migration/debugging; normal builds should leave it enabled.
 
 The two `object_type_name` fields are the current Level B hook for interface
 dispatch. Class factories stamp object values with `setobjtype`, and later VM
@@ -428,6 +433,13 @@ are not needed. The native provider object stores the callback handle and
 instance id, so both `ADDRESS env "command"` and explicit
 `(addressenv(env) as .addressfunctionenvironment).invoke(...)` reach
 the same host environment instance.
+
+Native ADDRESS text uses the same Level B UTF-8 boundary as RXVML. CREXXSAA
+validates variable setter values before buffering write-back records, and the
+lower RXVML ADDRESS helpers validate command text, output/error text, sandbox
+updates, and stem updates before copying them into VM strings. Invalid bytes
+should be passed through `.binary` or native payload APIs rather than through
+text callbacks.
 
 As of `RXVML_ABI_VERSION` 7, native `rxvml_address_request` also carries
 `stdin_endpoint`, `stdout_endpoint`, and `stderr_endpoint` VM values. Native

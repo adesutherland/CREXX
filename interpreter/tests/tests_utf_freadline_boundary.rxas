@@ -1,0 +1,33 @@
+/*
+ * Invalid byte input must not enter a Level B .string through freadline.
+ */
+
+.globals=0
+
+main() .locals=8
+   load r1,"test_utf_freadline_boundary.tmp"
+   load r2,"wb"
+   fopen r3,r1,r2
+   ine r0,r3,0
+   brf fail_open_write,r0
+
+   load r4,0xff
+   fwriteb r3,r4
+   fclose r0,r3
+
+   load r2,"rb"
+   fopen r3,r1,r2
+   ine r0,r3,0
+   brf fail_open_read,r0
+
+   freadline r5,r3
+   say "FAIL: invalid UTF-8 freadline accepted"
+   ret 1
+
+fail_open_write:
+   say "FAIL: could not open invalid UTF-8 fixture for write"
+   ret 1
+
+fail_open_read:
+   say "FAIL: could not open invalid UTF-8 fixture for read"
+   ret 1

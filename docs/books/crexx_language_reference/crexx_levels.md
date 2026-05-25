@@ -65,6 +65,23 @@ parser-mode and syntax-highlighting work for Classic \rexx{} source, while norma
 the project build useful editor support and standard-diagnostic experience
 before committing to a full Classic \rexx{} lowering/runtime path.
 
+Level C also owns the Classic REXX byte-text compatibility decision. Level B and
+Level G `.string` values are valid UTF-8 text, while `.binary` carries arbitrary
+bytes. A future Level C lowering path may choose a compatibility option such as
+`bytetext`, but that choice should be isolated to Level C and accompanied by an
+audit of Classic BIFs so byte-oriented legacy programs and UTF text programs do
+not silently share incompatible semantics.
+
+Level G owns richer Unicode services above the Level B codepoint contract. The
+VM reserves private status bits for normalization-form cache knowledge, but NFC,
+NFD, NFKC, and NFKD bits should only be assigned meaning when Level G APIs set
+and consume them. `utf8proc` is the preferred first implementation candidate for
+the Unicode plugin, subject to vendoring/build work and carrying its MIT expat
+and Unicode data license notices. Initial coverage should target normalization,
+case folding, Unicode property checks, and grapheme/word/sentence segmentation.
+There is also room for a Level B cREXX proof of concept of UTF helper libraries
+while the Level G design settles.
+
 Levels E and N should be understood in that same tooling sense. They reserve
 clear names for Object \rexx{} and NetRexx editor support, but they are not \crexx{}
 runtime or source-compatibility commitments.

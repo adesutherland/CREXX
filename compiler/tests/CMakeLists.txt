@@ -2781,6 +2781,10 @@ target_compile_definitions(test_dynamic_load PRIVATE
         CREXX_TEST_DYNAMIC_LOAD_PROVIDER_MODULE="${CMAKE_CURRENT_BINARY_DIR}/dynamic_load_provider.rxbin")
 add_dependencies(test_dynamic_load dynamic_load_fixture_bin library)
 
+add_executable(test_rxvml_utf_boundaries src/test_rxvml_utf_boundaries.c)
+target_link_libraries(test_rxvml_utf_boundaries PRIVATE rxvml rxpashim)
+target_include_directories(test_rxvml_utf_boundaries PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+
 add_custom_command(
         OUTPUT crexxsaa_variables_host.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o crexxsaa_variables_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_variables_host.crexx
@@ -2867,6 +2871,8 @@ endif()
 
 # Commented out until fix found for multiple calls to the VM
 add_test(NAME BridgeConnectivity COMMAND test_bridge)
+add_test(NAME rxvml_utf_boundaries COMMAND test_rxvml_utf_boundaries)
+set_tests_properties(rxvml_utf_boundaries PROPERTIES LABELS "compiler;rxvml;utf")
 add_test(NAME address_bridge COMMAND test_address_bridge)
 set_tests_properties(address_bridge PROPERTIES
         LABELS "compiler;stage3"

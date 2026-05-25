@@ -1777,6 +1777,19 @@ else { SET_SIGNAL_MSG(signal__, (message)); } }
 if (signal__ == RXSIGNAL_MAX) { SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE); } \
 else { SET_SIGNAL_PAYLOAD(signal__, (payload)); } }
 
+#ifndef NUTF8
+#define REQUIRE_VALID_UTF8_REGISTER(reg) \
+do { \
+    if (!has_utf8_valid_count_or_empty((reg))) refresh_utf8_flags((reg)); \
+    if (!has_utf8_valid_count_or_empty((reg))) { \
+        SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 string operand"); \
+        DISPATCH; \
+    } \
+} while (0)
+#else
+#define REQUIRE_VALID_UTF8_REGISTER(reg) do { } while (0)
+#endif
+
 // Macro and function to detect and throw a signal if a RXPA plugin-raised error is present
 #define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) { if (!current_frame->is_interrupt) interrupted_pc = pc; interrupt_from_rxpa_signal(signal,interrupt_object); }
 
@@ -5451,6 +5464,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             int p1, p2;
             int len1, len2;
 
+            REQUIRE_VALID_UTF8_REGISTER(op2R);
+            REQUIRE_VALID_UTF8_REGISTER(op3R);
             GETSTRLEN(len1, op2R)
             GETSTRLEN(len2, op3R)
 
@@ -6353,6 +6368,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 char *c;
                 for (c = op1R->string_value; *c; ++c) *c = (char)tolower(*c);
 #else
+                REQUIRE_VALID_UTF8_REGISTER(op1R);
                 utf8lwr(op1R->string_value);
 #endif
             }
@@ -6372,6 +6388,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 char *c;
                 for (c = op1R->string_value ; *c; ++c) *c = (char)toupper(*c);
 #else
+                REQUIRE_VALID_UTF8_REGISTER(op1R);
                 utf8upr(op1R->string_value);
 #endif
             }
@@ -6386,6 +6403,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             {
 #ifndef NUTF8
                 int result;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 string_set_byte_pos(op2R, op3R->int_value);
                 utf8codepoint(op2R->string_value + op2R->string_pos, &result);
                 REG_RETURN_INT(result)
@@ -6422,6 +6440,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
                 char *start, *end;
 #ifndef NUTF8
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 setCodePointETC()   //calculate Codepoint/length, etc. in a macro, character is in ch
 #else
                 ch=op2R->string_value[op3R->int_value];
@@ -6433,6 +6452,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
    /* ----- create full UTF8 code -------------- */
                 hexm2:
 #ifndef NUTF8
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 setCodePointETC()   //calculate Codepoint/length, etc. in a macro, character is in ch
                 for (i = 0; i < bytelen && i < 4; ++i) {
                     bytebuf[i] = (unsigned char) start[i];
@@ -6450,6 +6470,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     /* ----- add UTF8 code depending on length -------------- */
             hexm3:
 #ifndef NUTF8
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 setCodePointETC()   //calculate Codepoint/length, etc. in a macro
 #else
                 ch=op2R->string_value[op3R->int_value];
@@ -6474,6 +6495,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger result = -1, i;
                 int ch;
 
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 for (i = 0; i < op2R->string_length; i++) {
 #ifndef NUTF8
                     string_set_byte_pos(op2R, i);
@@ -6725,6 +6747,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger len;
                 rxinteger result;
                 int ch;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
 #ifndef NUTF8
                 len = (rxinteger) op2R->string_chars;
 #if ASCII_FAST_PATH
@@ -6773,6 +6796,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger result;
                 rxinteger len;
                 int ch;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
 
 #ifndef NUTF8
              len = (rxinteger)op2R->string_chars;
@@ -6997,6 +7021,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger temp = op3R->int_value;   // save offset, we misuse v3 later
 #ifndef NUTF8
                 int ch;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 string_set_byte_pos(op2R, op3R->int_value);
                 utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
                 op3R->int_value = ch;
@@ -7019,6 +7044,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger len, i;
                 int ch;
 
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
+                REQUIRE_VALID_UTF8_REGISTER(op3R);
                 GETSTRLEN(len, op3R)
 
                 for (i = 0; i < len; i++) {
@@ -7043,6 +7070,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger i, len1, len2;
                 int found;
                 int ch;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
+                REQUIRE_VALID_UTF8_REGISTER(op3R);
                 GETSTRLEN(len1, op2R)
                 GETSTRLEN(len2, op3R)
                 if (len2 == 0) len2 = (rxinteger) op3R->string_length;
@@ -7076,6 +7105,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SUBSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             {
                 rxinteger length = op3R->int_value;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 if (length <= 0) {
                     PUTSTRLEN(op1R, 0);
                 } else {
@@ -7092,6 +7122,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SUBSTCUT R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
 
         /* input parm op2 defines how many leading codepoints remain in the string */
+           REQUIRE_VALID_UTF8_REGISTER(op1R);
            string_truncate_chars(op1R, (size_t) op2R->int_value);
            DISPATCH
 
@@ -7131,6 +7162,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 char *charpos;
                 rxinteger start_pos = op1RI;
 
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
+                REQUIRE_VALID_UTF8_REGISTER(op3R);
                 if (start_pos <= 0) {
                     REG_RETURN_INT(0);
                 } else {
@@ -7211,6 +7244,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(STRLEN_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - STRLEN R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
+            REQUIRE_VALID_UTF8_REGISTER(op2R);
 #ifndef NUTF8
             op1R->int_value = (rxinteger)op2R->string_chars;
 #else
@@ -7224,6 +7258,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(SETSTRPOS_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SETSTRPOS R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
+            REQUIRE_VALID_UTF8_REGISTER(op1R);
 #ifndef NUTF8
             string_set_byte_pos(op1R, op2R->int_value);
 #else
@@ -7253,6 +7288,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             {
                 int ch;
 #ifndef NUTF8
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
                 op1R->int_value = ch;
 #else
@@ -7450,6 +7486,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         uint64_t hash=0;
 #endif
         int i1,len;
+        REQUIRE_VALID_UTF8_REGISTER(op2R);
         GETSTRLEN(len, op2R);
         if(len<=0) len=op2R->string_length;
         else if(op2R->string_length<len) len=op2R->string_length;
@@ -7754,8 +7791,16 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         }
         }
 #ifndef NUTF8
-        op1R->string_char_pos = 0;
-        refresh_utf8_flags(op1R);
+        {
+            size_t chars = 0;
+            if (validate_utf8_bytes(op1R->string_value, op1R->string_length, &chars) != 0) {
+                SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 in text file read");
+            } else {
+                op1R->string_char_pos = 0;
+                op1R->string_chars = chars;
+                mark_utf8_valid_count(op1R);
+            }
+        }
 #else
         clear_vm_private_flags(op1R);
 #endif
@@ -7773,38 +7818,74 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         {
 #ifndef NUTF8
             int codepoint;
+            int first_byte;
+            int next_byte;
+            int invalid = 0;
+            size_t chars = 0;
             op1R->string_pos = 0;
             prep_string_buffer(op1R, 4);
 
             /* Read the first byte - determines length */
-            op1R->string_value[0] = (char)fgetc((FILE *)op2R->int_value);
-
-            /* Read the rest of the code point */
-            if ((unsigned char)op1R->string_value[0] < 128) {
-                op1R->string_length = 1;
-            } else if ((unsigned char)op1R->string_value[0] < 224) {
-                op1R->string_length = 2;
-                op1R->string_value[1] = (char)fgetc((FILE *)op2R->int_value);
-            } else if ((unsigned char)op1R->string_value[0] < 240) {
-                op1R->string_length = 3;
-                op1R->string_value[1] = (char)fgetc((FILE *)op2R->int_value);
-                op1R->string_value[2] = (char)fgetc((FILE *)op2R->int_value);
+            first_byte = fgetc((FILE *)op2R->int_value);
+            if (first_byte == EOF) {
+                op1R->int_value = -1;
+                op1R->string_length = 0;
+                op1R->string_char_pos = 0;
+                op1R->string_chars = 0;
+                mark_utf8_valid_count(op1R);
             } else {
-                op1R->string_length = 4;
-                op1R->string_value[1] = (char)fgetc((FILE *)op2R->int_value);
-                op1R->string_value[2] = (char)fgetc((FILE *)op2R->int_value);
-                op1R->string_value[3] = (char)fgetc((FILE *)op2R->int_value);
-            }
+                op1R->string_value[0] = (char)first_byte;
 
-            utf8codepoint(op1R->string_value, &codepoint);
-            op1R->int_value = codepoint;
-            op1R->string_char_pos = 0;
-            refresh_utf8_flags(op1R);
+                /* Read the rest of the code point */
+                if ((unsigned char)op1R->string_value[0] < 128) {
+                    op1R->string_length = 1;
+                } else if ((unsigned char)op1R->string_value[0] < 224) {
+                    op1R->string_length = 2;
+                } else if ((unsigned char)op1R->string_value[0] < 240) {
+                    op1R->string_length = 3;
+                } else {
+                    op1R->string_length = 4;
+                }
+
+                if (op1R->string_length > 1) {
+                    next_byte = fgetc((FILE *)op2R->int_value);
+                    if (next_byte == EOF) invalid = 1;
+                    else op1R->string_value[1] = (char)next_byte;
+                }
+                if (op1R->string_length > 2) {
+                    next_byte = fgetc((FILE *)op2R->int_value);
+                    if (next_byte == EOF) invalid = 1;
+                    else op1R->string_value[2] = (char)next_byte;
+                }
+                if (op1R->string_length > 3) {
+                    next_byte = fgetc((FILE *)op2R->int_value);
+                    if (next_byte == EOF) invalid = 1;
+                    else op1R->string_value[3] = (char)next_byte;
+                }
+
+                if (invalid || validate_utf8_bytes(op1R->string_value, op1R->string_length, &chars) != 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 codepoint in text file read");
+                } else {
+                    utf8codepoint(op1R->string_value, &codepoint);
+                    op1R->int_value = codepoint;
+                    op1R->string_char_pos = 0;
+                    op1R->string_chars = chars;
+                    mark_utf8_valid_count(op1R);
+                }
+            }
 #else
-            prep_string_buffer(op1R, 1);
-            op1R->int_value = (unsigned char)fgetc( (FILE*)op2R->int_value );
-            op1R->string_value[0] = op1R->int_value;
-            op1R->string_length = 1;
+            {
+                int byte = fgetc( (FILE*)op2R->int_value );
+                if (byte == EOF) {
+                    op1R->int_value = -1;
+                    op1R->string_length = 0;
+                } else {
+                    prep_string_buffer(op1R, 1);
+                    op1R->int_value = (unsigned char)byte;
+                    op1R->string_value[0] = op1R->int_value;
+                    op1R->string_length = 1;
+                }
+            }
             op1R->string_pos = 0;
             clear_vm_private_flags(op1R);
 #endif

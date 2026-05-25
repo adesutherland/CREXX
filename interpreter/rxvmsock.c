@@ -2291,7 +2291,11 @@ rxinteger rxvm_socket_recv_string(struct rxvm_context *context, value *out, rxin
     }
 
     received = rxvm_socket_recv_bytes(entry, buffer, (size_t)max_bytes);
-    if (received > 0) set_string(out, buffer, (size_t)received);
+    if (received > 0 && set_string_validated(out, buffer, (size_t)received) != 0) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_ARGUMENT, 0, "received text is not valid UTF-8");
+        free(buffer);
+        return RXSOCK_ERR_ARGUMENT;
+    }
     free(buffer);
     return received < 0 ? received : received;
 }

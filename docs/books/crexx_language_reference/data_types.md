@@ -140,6 +140,13 @@ assignment and is rejected when the decoded bytes are not valid UTF-8. That rule
 keeps accidental invalid text out of string operations; use `.binary` when the
 program is handling bytes.
 
+The same boundary applies outside source literals. Native RXVML string setters,
+CREXXSAA ADDRESS variable setters, RXPA native return/argument trees,
+command-line arguments passed through RXVML, ADDRESS callback text, text file
+reads, socket text reads, and explicit binary-to-string casts validate UTF-8 in
+normal Level B builds. Invalid bytes should be read or carried as `.binary`
+first, then decoded to `.string` only when the program has a valid encoding.
+
 ## Object Values
 
 Classes and interfaces are object contracts. A concrete class instance can be

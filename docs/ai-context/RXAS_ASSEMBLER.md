@@ -117,6 +117,12 @@ current string bytes into its binary slot. `bintos` validates the register's
 current binary bytes as UTF-8 and copies them into its string slot; invalid
 bytes raise `UNICODE_ERROR` in UTF builds.
 
+In UTF builds, RXAS string constants are text, not byte containers. Hand-written
+string operands are unescaped and validated before entering the constant pool;
+invalid UTF-8 is an assembly error with guidance to use `0x...` binary
+literals. Use `load rDst,0x...`, `freadb`, `fwriteb`, `sockrecvb`, or
+`socksendb` for arbitrary bytes.
+
 ### Symbol Tracking (AVL Trees)
 To deduplicate constants and resolve identifiers in `O(log N)` time, the assembler leverages a custom AVL tree implementation (`avl_tree.h`). Active trees include:
 - `string_constants_tree`

@@ -25,6 +25,9 @@
 //
 // RXPA (CREXX Plugin Architecture) support functions
 //
+#include <stdlib.h>
+#include <string.h>
+
 #include "crexxpa.h"
 #include "rxvmintp.h"
 #include "rxvmvars.h"
@@ -36,6 +39,132 @@ typedef struct rxpa_pool_node {
 } rxpa_pool_node;
 
 static rxpa_pool_node* current_pool_head = NULL;
+
+typedef struct rxpa_value_visit_set {
+    value** items;
+    size_t count;
+    size_t capacity;
+} rxpa_value_visit_set;
+
+typedef enum rxpa_utf8_validation_result {
+    RXPA_UTF8_OK = 0,
+    RXPA_UTF8_INVALID = 1,
+    RXPA_UTF8_NO_MEMORY = 2
+} rxpa_utf8_validation_result;
+
+static int rxpa_utf8_checks_disabled(void) {
+    const char* env = getenv("CREXX_RXPA_DISABLE_UTF8_CHECKS");
+    if (!env || !*env) return 0;
+    if (strcmp(env, "0") == 0 ||
+        strcmp(env, "false") == 0 ||
+        strcmp(env, "FALSE") == 0 ||
+        strcmp(env, "off") == 0 ||
+        strcmp(env, "OFF") == 0 ||
+        strcmp(env, "no") == 0 ||
+        strcmp(env, "NO") == 0) {
+        return 0;
+    }
+    return 1;
+}
+
+static int rxpa_visit_value(rxpa_value_visit_set* visited, value* v) {
+    value** items;
+    size_t i;
+    size_t new_capacity;
+
+    if (!visited || !v) return 0;
+    for (i = 0; i < visited->count; i++) {
+        if (visited->items[i] == v) return 0;
+    }
+
+    if (visited->count == visited->capacity) {
+        new_capacity = visited->capacity ? visited->capacity * 2 : 16;
+        items = (value**)realloc(visited->items, new_capacity * sizeof(value*));
+        if (!items) return -1;
+        visited->items = items;
+        visited->capacity = new_capacity;
+    }
+
+    visited->items[visited->count++] = v;
+    return 1;
+}
+
+static rxpa_utf8_validation_result rxpa_validate_value_tree(
+    value* v,
+    rxpa_value_visit_set* visited) {
+
+    int visit_rc;
+    size_t i;
+
+    if (!v) return RXPA_UTF8_OK;
+
+    visit_rc = rxpa_visit_value(visited, v);
+    if (visit_rc < 0) return RXPA_UTF8_NO_MEMORY;
+    if (visit_rc == 0) return RXPA_UTF8_OK;
+
+#ifndef NUTF8
+    {
+        size_t chars = 0;
+        if (validate_utf8_bytes(v->string_value, v->string_length, &chars) != 0) {
+            return RXPA_UTF8_INVALID;
+        }
+        v->string_chars = chars;
+        v->string_char_pos = 0;
+        mark_utf8_valid_count(v);
+    }
+#endif
+
+    for (i = 0; i < v->num_attributes; i++) {
+        rxpa_utf8_validation_result rc;
+        rc = rxpa_validate_value_tree(v->attributes ? v->attributes[i] : NULL, visited);
+        if (rc != RXPA_UTF8_OK) return rc;
+    }
+
+    return RXPA_UTF8_OK;
+}
+
+static void rxpa_set_signal(value* signal, rxsignal code, const char* message) {
+    if (!signal) return;
+    if (signal->num_attributes) set_num_attributes(signal, 0);
+    set_int(signal, (rxinteger)code);
+    set_null_string(signal, message ? message : "");
+}
+
+static void rxpa_validate_native_outputs(
+    int args,
+    value** argv,
+    value* ret,
+    value* signal) {
+
+    rxpa_value_visit_set visited;
+    rxpa_utf8_validation_result rc;
+    int i;
+
+    if (rxpa_utf8_checks_disabled()) return;
+
+    visited.items = NULL;
+    visited.count = 0;
+    visited.capacity = 0;
+
+    rc = rxpa_validate_value_tree(ret, &visited);
+    if (rc == RXPA_UTF8_OK && args > 0 && argv) {
+        for (i = 0; i < args; i++) {
+            rc = rxpa_validate_value_tree(argv[i], &visited);
+            if (rc != RXPA_UTF8_OK) break;
+        }
+    }
+    if (rc == RXPA_UTF8_OK) {
+        rc = rxpa_validate_value_tree(signal, &visited);
+    }
+
+    free(visited.items);
+
+    if (rc == RXPA_UTF8_INVALID) {
+        rxpa_set_signal(signal, SIGNAL_UNICODE_ERROR, "Invalid UTF-8 returned by native RXPA function");
+    } else if (rc == RXPA_UTF8_NO_MEMORY) {
+        rxpa_set_signal(signal, SIGNAL_FAILURE, "Unable to validate native RXPA UTF-8 output");
+    }
+}
 
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
 void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal) {
@@ -51,6 +180,8 @@ void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* si
 
     /* Call */
     native_function(args, arg_values, return_value, signal_value);
+
+    rxpa_validate_native_outputs(args, argv, ret, signal);
 
     /* Cleanup */
     while (current_pool_head) {
