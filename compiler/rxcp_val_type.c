@@ -170,6 +170,7 @@ static ValueType node_type(ASTNode* node) {
     if (node->node_type == INTEGER || node->node_type == OP_ARGS) return TP_INTEGER;
     if (node->node_type == FLOAT) return TP_FLOAT;
     if (node->node_type == DECIMAL) return TP_DECIMAL;
+    if (node->node_type == BINARY) return TP_BINARY;
     if (node->node_type == STRING || node->node_type == CONSTANT) return TP_STRING;
     return TP_UNKNOWN;
 }
@@ -886,7 +887,14 @@ walker_result set_node_types_walker(walker_direction direction,
             case OP_CONCAT:
             case OP_SCONCAT:
                 if (node->value_type == TP_UNKNOWN) {
-                    /* context->changed_flags |= FLAG_VAL_TYPE; */ set_node_type(node, TP_STRING);
+                    ValueType left_type = node_type(child1);
+                    ValueType right_type = node_type(child2);
+                    if (left_type == TP_BINARY || right_type == TP_BINARY) {
+                        if (node->node_type == OP_SCONCAT) mknd_err(node, "TYPE_MISMATCH");
+                        else set_node_type(node, TP_BINARY);
+                    } else {
+                        /* context->changed_flags |= FLAG_VAL_TYPE; */ set_node_type(node, TP_STRING);
+                    }
                 }
                 break;
 

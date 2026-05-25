@@ -117,6 +117,12 @@ current string bytes into its binary slot. `bintos` validates the register's
 current binary bytes as UTF-8 and copies them into its string slot; invalid
 bytes raise `UNICODE_ERROR` in UTF builds.
 
+Level B exposes these byte-buffer instructions through the `rxfnsb` binary
+helpers (`binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`,
+`binoverlay`, `bininsert`, `bindelstr`, `binpos`, `bincompare`, `bin2x`,
+`x2bin`). The source-level `||` operator also lowers to `bconcat` when either
+operand is `.binary`; blank concat remains a text-only operation.
+
 In UTF builds, RXAS string constants are text, not byte containers. Hand-written
 string operands are unescaped and validated before entering the constant pool;
 invalid UTF-8 is an assembly error with guidance to use `0x...` binary

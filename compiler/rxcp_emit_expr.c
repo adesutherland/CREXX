@@ -364,6 +364,23 @@ void emit_expression(ASTNode *node, void *payload) {
         case OP_SCONCAT:
             if (!op) op="sconcat";
             if (!node->output) node->output = output_f();
+            if (node->value_type == TP_BINARY || node->target_type == TP_BINARY) {
+                if (child1->output) output_concat(node->output, child1->output);
+                if (child2->output) output_concat(node->output, child2->output);
+                temp1 = mprintf("   bconcat %c%d,%c%d,%c%d\n",
+                                node->register_type,
+                                node->register_num,
+                                child1->register_type,
+                                child1->register_num,
+                                child2->register_type,
+                                child2->register_num);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                if (child2->cleanup) output_concat(node->output, child2->cleanup);
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
+                type_promotion(node);
+                break;
+            }
             /* One or other of the operands may be a constant */
             /* If the register is not set then the child is a constant */
             if (child1->register_num == DONT_ASSIGN_REGISTER) {

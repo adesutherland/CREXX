@@ -140,6 +140,20 @@ assignment and is rejected when the decoded bytes are not valid UTF-8. That rule
 keeps accidental invalid text out of string operations; use `.binary` when the
 program is handling bytes.
 
+Binary concatenation is byte concatenation. If either operand of `||` is
+`.binary`, the expression result is `.binary`; string operands in that binary
+expression are converted to their exact UTF-8 bytes. Blank concatenation remains
+a text operation and should not be used for binary payload assembly.
+
+```rexx
+prefix = "ff"x as .binary
+packet = prefix || "OK"      /* bytes ff 4f 4b */
+```
+
+The `rxfnsb` library provides byte-oriented helpers for common binary work:
+`binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`, `binoverlay`,
+`bininsert`, `bindelstr`, `binpos`, `bincompare`, `bin2x`, and `x2bin`.
+
 The same boundary applies outside source literals. Native RXVML string setters,
 CREXXSAA ADDRESS variable setters, RXPA native return/argument trees,
 command-line arguments passed through RXVML, ADDRESS callback text, text file

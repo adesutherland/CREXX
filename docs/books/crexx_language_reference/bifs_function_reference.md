@@ -1,8 +1,8 @@
-# Built-in functions for \crexx{} strings
+# Built-in functions for \crexx{} strings and binary values
 
-The `.string` type is central to the \rexx{} language and all its variants. This is true for \crexx{} and this implementation also contains the expected *built-in-functions*.[^bif]
+The `.string` type is central to the \rexx{} language and all its variants. This is true for \crexx{} and this implementation also contains the expected *built-in-functions*.[^bif] Level B also provides byte-oriented helpers for the `.binary` type.
 
-Use of these functions needs import of the rxfnsb pachage:
+Use of these functions needs import of the `rxfnsb` package:
 ```rexx
 import rxfnsb
 ```
@@ -17,11 +17,23 @@ import rxfnsb
 | SIGN            | SIGN(x)                                      |
 | TRUNC           | TRUNC(x, n)                                  |
 | B2X             | B2X(b)                                       |
+| BIN2X           | BIN2X(binary)                                |
+| BINBYTE         | BINBYTE(binary, position)                    |
+| BINCOMPARE      | BINCOMPARE(left, right)                      |
+| BINCONCAT       | BINCONCAT(left, right)                       |
+| BINDELSTR       | BINDELSTR(binary, start, length)             |
+| BININSERT       | BININSERT(new, target, before)               |
+| BINLENGTH       | BINLENGTH(binary)                            |
+| BINOVERLAY      | BINOVERLAY(new, target, start)               |
+| BINPOS          | BINPOS(needle, haystack, start)              |
+| BINSETBYTE      | BINSETBYTE(binary, position, byte)           |
+| BINSUBSTR       | BINSUBSTR(binary, start, length)             |
 | C2D             | C2D(s)                                       |
 | C2X             | C2X(s)                                       |
 | D2C             | D2C(n)                                       |
 | D2X             | D2X(n)                                       |
 | X2B             | X2B(x)                                       |
+| X2BIN           | X2BIN(x)                                     |
 | X2C             | X2C(x)                                       |
 | X2D             | X2D(x)                                       |
 | CENTER          | CENTER(s, n, pad)                            |
@@ -76,6 +88,32 @@ Table: SAA Rexx Built-In-Functions. {#tbl:id}
 Table: Non-SAA Functions. {#tbl:id}
 
 [^bif]: also colloqually referred to with the jargon-like expression BIFs.
+
+## Binary byte helpers
+
+These Level B helpers operate on `.binary` byte buffers, not `.string`
+codepoints. Positions are 1-based at the Rexx surface; byte values are integers
+in the range `0..255`. Invalid text is never routed through these functions.
+
+| Function | Result | Notes |
+|----------|--------|-------|
+| `BINLENGTH(data)` | `.int` | Byte length. |
+| `BINBYTE(data, position)` | `.int` | Byte at position, or `-1` if out of range. |
+| `BINSETBYTE(data, position, byte)` | `.binary` | Copy with one byte replaced; invalid byte/position raises `OUT_OF_RANGE`. |
+| `BINSUBSTR(data, start, length)` | `.binary` | Byte slice; omitted/negative length means to the end. |
+| `BINCONCAT(left, right)` | `.binary` | Byte concatenation. The `||` operator does the same when either operand is `.binary`. |
+| `BINOVERLAY(new, target, start)` | `.binary` | Fixed-size byte overlay; writes past target raise `OUT_OF_RANGE`. |
+| `BININSERT(new, target, before)` | `.binary` | Insert before the 1-based byte position; past the end appends. |
+| `BINDELSTR(target, start, length)` | `.binary` | Delete a byte range; length `0` deletes to the end. |
+| `BINPOS(needle, haystack, start)` | `.int` | 1-based byte search, `0` when not found. |
+| `BINCOMPARE(left, right)` | `.int` | `0` if equal, otherwise first differing byte position. |
+| `BIN2X(data)` | `.string` | Uppercase hexadecimal text for the bytes. |
+| `X2BIN(hex)` | `.binary` | Hex text to bytes; blanks are ignored and an odd nibble is left-padded with `0`. |
+
+The `||` operator also performs byte concatenation when either operand is
+`.binary`. In that case the result is `.binary`; a `.string` operand is copied
+as its exact UTF-8 bytes. Blank concatenation remains a text operation and is
+not for binary payload construction.
 
 
 ## ABS(x)
@@ -331,6 +369,185 @@ B2X('10111')     == '17'
 B2X('0101')      == '5'
 B2X('101')       == '5'
 B2X('111110000') == '1F0'
+```
+
+
+## BINLENGTH(data)
+
+Binary byte length.
+Returns the number of bytes stored in `.binary` value *data*.
+This is a byte count, not a UTF-8 codepoint count.
+
+**Examples:**
+```rexx
+BINLENGTH("ff0041"x as .binary) == 3
+empty = .binary
+BINLENGTH(empty)                == 0
+BINLENGTH("α" as .binary)       == 2
+```
+
+
+## BINBYTE(data, position)
+
+Binary byte lookup.
+Returns the byte at 1-based byte *position* in `.binary` value *data* as an
+integer in the range `0..255`. If *position* is outside the byte buffer, `-1`
+is returned.
+
+**Examples:**
+```rexx
+BINBYTE("ff0041"x as .binary, 1) == 255
+BINBYTE("ff0041"x as .binary, 3) == 65
+BINBYTE("ff0041"x as .binary, 4) == -1
+```
+
+
+## BINSETBYTE(data, position, byte)
+
+Binary byte replacement.
+Returns a copy of `.binary` value *data* with the byte at 1-based byte
+*position* replaced by *byte*. *byte* must be in the range `0..255`; invalid
+positions or byte values raise `OUT_OF_RANGE`.
+
+**Examples:**
+```rexx
+BIN2X(BINSETBYTE("001122"x as .binary, 2, 255)) == "00FF22"
+```
+
+
+## BINSUBSTR(data, start, length)
+
+Binary substring.
+Returns a `.binary` byte slice from `.binary` value *data*, starting at 1-based
+byte position *start*. If *length* is omitted or negative, the slice continues
+to the end of the buffer. If the requested range extends past the end, the
+result is truncated at the end of *data*.
+
+**Examples:**
+```rexx
+BIN2X(BINSUBSTR("001122ff"x as .binary, 2, 2)) == "1122"
+BIN2X(BINSUBSTR("001122ff"x as .binary, 3))    == "22FF"
+BIN2X(BINSUBSTR("001122ff"x as .binary, 9))    == ""
+```
+
+
+## BINCONCAT(left, right)
+
+Binary concatenation.
+Returns the byte concatenation of `.binary` values *left* and *right*. The
+source-level `||` operator performs the same byte concatenation when either
+operand is `.binary`.
+
+**Examples:**
+```rexx
+BIN2X(BINCONCAT("0011"x as .binary, "22ff"x as .binary)) == "001122FF"
+BIN2X(("ff"x as .binary) || "A")                         == "FF41"
+```
+
+
+## BINOVERLAY(new, target, start)
+
+Binary overlay.
+Returns a copy of `.binary` value *target* with the bytes from `.binary` value
+*new* overlaid starting at 1-based byte position *start*. The overlay is
+fixed-size: it must fit inside *target*, or `OUT_OF_RANGE` is raised.
+
+**Examples:**
+```rexx
+BIN2X(BINOVERLAY("abcd"x as .binary, "001122ff"x as .binary, 2)) == "00ABCDFF"
+```
+
+
+## BININSERT(new, target, before)
+
+Binary insert.
+Returns a copy of `.binary` value *target* with `.binary` value *new* inserted
+before 1-based byte position *before*. If *before* is less than or equal to 1,
+*new* is prepended. If *before* is beyond the end of *target*, *new* is
+appended.
+
+**Examples:**
+```rexx
+BIN2X(BININSERT("abcd"x as .binary, "001122ff"x as .binary, 3))  == "0011ABCD22FF"
+BIN2X(BININSERT("abcd"x as .binary, "001122ff"x as .binary, 99)) == "001122FFABCD"
+```
+
+
+## BINDELSTR(target, start, length)
+
+Binary delete substring.
+Returns a copy of `.binary` value *target* with a byte range removed. Deletion
+starts at 1-based byte position *start*. If *length* is omitted or `0`, bytes
+from *start* to the end are removed.
+
+**Examples:**
+```rexx
+BIN2X(BINDELSTR("001122ff"x as .binary, 2, 2)) == "00FF"
+BIN2X(BINDELSTR("001122ff"x as .binary, 3))    == "0011"
+```
+
+
+## BINPOS(needle, haystack, start)
+
+Binary position.
+Searches `.binary` value *haystack* for `.binary` value *needle*, starting at
+1-based byte position *start* (default `1`). Returns the 1-based byte position
+of the first match, or `0` if no match is found. A zero-length *needle* returns
+`0`.
+
+**Examples:**
+```rexx
+BINPOS("1122"x as .binary, "001122ff"x as .binary)    == 2
+BINPOS("22"x as .binary, "001122ff"x as .binary, 3)   == 3
+BINPOS("33"x as .binary, "001122ff"x as .binary)      == 0
+```
+
+
+## BINCOMPARE(left, right)
+
+Binary compare.
+Compares two `.binary` values byte by byte. Returns `0` when they are equal.
+Otherwise, returns the 1-based position of the first differing byte. If one
+value is a prefix of the other, the first differing position is one past the
+shorter value.
+
+**Examples:**
+```rexx
+BINCOMPARE("001122ff"x as .binary, "001122ff"x as .binary) == 0
+BINCOMPARE("001122ff"x as .binary, "001123ff"x as .binary) == 3
+BINCOMPARE("001122ff"x as .binary, "001122"x as .binary)   == 4
+```
+
+
+## BIN2X(data)
+
+Binary bytes to hexadecimal.
+Converts `.binary` value *data* to uppercase hexadecimal text. Each byte becomes
+two hexadecimal characters, so the output length is always twice the input byte
+length.
+
+**Examples:**
+```rexx
+BIN2X("ff0041"x as .binary) == "FF0041"
+empty = .binary
+BIN2X(empty)                == ""
+BIN2X("α" as .binary)       == "CEB1"
+```
+
+
+## X2BIN(hex)
+
+Hexadecimal to binary bytes.
+Converts hexadecimal text *hex* to a `.binary` byte buffer. Blanks are ignored.
+If there is an odd number of hexadecimal digits, a leading `0` nibble is
+assumed. If any non-blank character is not a hexadecimal digit, the current
+implementation returns an empty `.binary` value.
+
+**Examples:**
+```rexx
+BIN2X(X2BIN("ff 00 aa")) == "FF00AA"
+BIN2X(X2BIN("f"))        == "0F"
+BINLENGTH(X2BIN("zz"))   == 0
 ```
 
 
@@ -1250,5 +1467,3 @@ select  /* keyword1 is to be the default */
 
 
 ## QUEUED()
-
-
