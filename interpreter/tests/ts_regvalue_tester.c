@@ -61,6 +61,26 @@ void check_status_mask(value* v, uint32_t mask, uint32_t expected, const char* f
 
 #define CHECK_STATUS(v, mask, expected) check_status_mask(v, mask, expected, __FILE__, __LINE__)
 
+void check_rc_zero(int rc, const char* expression, const char* file, int line) {
+    if (rc != 0) {
+        fprintf(stderr, "VERIFY FAIL (%s:%d): %s returned %d\n",
+                file, line, expression, rc);
+        exit(1);
+    }
+}
+
+#define CHECK_RC_ZERO(expression) check_rc_zero((expression), #expression, __FILE__, __LINE__)
+
+void check_size_equal(size_t actual, size_t expected, const char* message, const char* file, int line) {
+    if (actual != expected) {
+        fprintf(stderr, "VERIFY FAIL (%s:%d): %s is %zu but should be %zu\n",
+                file, line, message, actual, expected);
+        exit(1);
+    }
+}
+
+#define CHECK_SIZE_EQUAL(actual, expected, message) check_size_equal((actual), (expected), (message), __FILE__, __LINE__)
+
 void check_binary_bytes(value* v, const unsigned char* expected, size_t length, const char* file, int line) {
     if (v->binary_length != length) {
         fprintf(stderr, "VERIFY FAIL (%s:%d): binary_length is %zu but should be %zu\n",
@@ -147,7 +167,7 @@ void test_boundary_conditions() {
     printf("  Testing seek to end position (pos %zu)...\n", v.string_chars);
     string_set_byte_pos(&v, v.string_chars);
     CHECK_STATE(&v);
-    assert(v.string_pos == v.string_length && "Byte position should be at the very end");
+    CHECK_SIZE_EQUAL(v.string_pos, v.string_length, "string_pos at end position");
 
     // Test 2: Seek ONE position beyond the end.
     // THIS IS THE KEY TEST. The original code will read past the buffer, corrupting its
@@ -282,35 +302,35 @@ void test_binary_buffers() {
     value_init(&concat);
     value_init(&slice);
 
-    assert(set_binary(&v, initial, sizeof(initial)) == 0);
+    CHECK_RC_ZERO(set_binary(&v, initial, sizeof(initial)));
     CHECK_BINARY(&v, initial, sizeof(initial));
     capacity = v.binary_buffer_length;
 
-    assert(set_binary(&v, smaller, sizeof(smaller)) == 0);
+    CHECK_RC_ZERO(set_binary(&v, smaller, sizeof(smaller)));
     CHECK_BINARY(&v, smaller, sizeof(smaller));
-    assert(v.binary_buffer_length == capacity && "smaller binary write should reuse capacity");
+    CHECK_SIZE_EQUAL(v.binary_buffer_length, capacity, "binary_buffer_length after smaller binary write");
 
-    assert(append_binary(&v, extra, sizeof(extra)) == 0);
+    CHECK_RC_ZERO(append_binary(&v, extra, sizeof(extra)));
     CHECK_BINARY(&v, appended, sizeof(appended));
 
     copy_value(&copy, &v);
     CHECK_BINARY(&copy, appended, sizeof(appended));
 
-    assert(append_binary_value(&v, &v) == 0);
+    CHECK_RC_ZERO(append_binary_value(&v, &v));
     CHECK_BINARY(&v, doubled, sizeof(doubled));
 
-    assert(set_binary(&other, prefix, sizeof(prefix)) == 0);
-    assert(concat_binary(&concat, &other, &v) == 0);
+    CHECK_RC_ZERO(set_binary(&other, prefix, sizeof(prefix)));
+    CHECK_RC_ZERO(concat_binary(&concat, &other, &v));
     CHECK_BINARY(&concat, combined, sizeof(combined));
 
-    assert(concat_binary(&other, &other, &copy) == 0);
+    CHECK_RC_ZERO(concat_binary(&other, &other, &copy));
     CHECK_BINARY(&other, prefix_appended, sizeof(prefix_appended));
 
-    assert(slice_binary(&slice, &concat, 1, 3) == 0);
+    CHECK_RC_ZERO(slice_binary(&slice, &concat, 1, 3));
     CHECK_BINARY(&slice, sliced, sizeof(sliced));
 
-    assert(slice_binary(&concat, &concat, 50, 8) == 0);
-    assert(concat.binary_length == 0);
+    CHECK_RC_ZERO(slice_binary(&concat, &concat, 50, 8));
+    CHECK_SIZE_EQUAL(concat.binary_length, 0, "binary_length after out-of-range slice");
 
     clear_value(&v);
     clear_value(&copy);
