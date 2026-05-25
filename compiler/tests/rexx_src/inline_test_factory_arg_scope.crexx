@@ -1,0 +1,46 @@
+options levelb
+namespace inline_test_factory_arg_scope
+import rxfnsb
+
+main: procedure = .int
+  name = .rexx1("Adrian")
+  say name.reverse().toString()
+  say name.reverseWithTemp().toString()
+  pair = .pair("Adrian")
+  say pair.copyViaMethod().toString()
+  return 0
+
+rexx1: class
+  val = .string
+
+  *: factory
+    arg s = .string
+    val = s
+    return
+
+  reverse: method = .rexx1
+    return .rexx1(.rxfnsb..reverse(val))
+
+  reverseWithTemp: method = .rexx1
+    reversed = .rxfnsb..reverse(val)
+    return .rexx1(reversed)
+
+  replace: method = .rexx1
+    arg s = .string
+    return .rexx1(s)
+
+  toString: method = .string
+    return val
+
+pair: class
+  val = .string
+  box = .rexx1
+
+  *: factory
+    arg s = .string
+    val = s
+    box = .rexx1("box")
+    return
+
+  copyViaMethod: method = .rexx1
+    return box.replace(val)

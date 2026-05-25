@@ -111,6 +111,14 @@ Objects can also carry native payloads when exposed through the plugin API, but
 ordinary Level B code should interact with objects through factories, methods,
 and interfaces.
 
+Level B does not define implicit object-to-string promotion. Statements such as
+`say value`, string concatenation, and string comparison operate on values whose
+types are already string-compatible under the Level B type rules; they do not
+automatically call a `toString()` method on arbitrary objects. A future Level G
+object-promotion capability is still undesigned. The likely direction is an
+explicit contract, such as a supported interface for string rendering, rather
+than a convention based only on a method name.
+
 ## Type Inference
 
 The compiler infers a variable type from the first binding in many common
