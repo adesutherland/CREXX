@@ -43,8 +43,8 @@ const char* emit_promotion[9][9] = {
 /* TP_INTEGER */   {0,         0,      0,         0,         "itof", "itod",    "itos",   0,        0},
 /* TP_FLOAT   */   {0,         0,      "ftob",    "ftoi",    0,      "ftod",    "ftos",   0,        0},
 /* TP_DECIMAL */   {0,         0,      "dtob",    "dtoi",    "dtof", 0,         "dtos",   0,        0},
-/* TP_STRING  */   {0,         0,      "stoi",    "stoi",    "stof", "stod",    0,        0,        0},
-/* TP_BINARY  */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
+/* TP_STRING  */   {0,         0,      "stoi",    "stoi",    "stof", "stod",    0,        "stobin", 0},
+/* TP_BINARY  */   {0,         0,      0,         0,         0,      0,         "bintos", 0,        0},
 /* TP_OBJECT  */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
 };
 
@@ -604,7 +604,7 @@ char* format_constant(ValueType type, ASTNode* node) {
                         node->node_string);
     }
     else if (type == TP_BINARY) {
-        if (node->node_type == BINARY) {
+        if (node->node_type == BINARY || node->value_type == TP_BINARY) {
             buffer = mprintf("%.*s",
                              node->node_string_length,
                              node->node_string);

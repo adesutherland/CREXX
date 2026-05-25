@@ -99,9 +99,17 @@ and follows the normal escaped RXAS string path. When the decoded span is not
 valid UTF-8, the literal becomes a `BINARY` AST node with canonical `0x...`
 RXAS text. That keeps arbitrary bytes out of string-only character opcodes:
 using such a byte literal in a text context is rejected as `CANNOT_CAST_BINARY`,
-while assigning it to `.binary` emits an RXAS binary load. Assigning an ordinary
-string literal to a `.binary` target also emits a binary load containing the
-literal's UTF-8 bytes.
+while assigning it to `.binary`, or writing `literal as .binary`, emits an RXAS
+binary load. A first untyped assignment such as `x = 'ffff'x` is deliberately
+treated as a text context, so invalid UTF-8 byte literals do not silently infer
+`.binary`. Ordinary strings can still be converted to `.binary`; the conversion
+stores the exact current UTF-8 byte sequence with no normalization. Constant
+strings in an explicitly binary target may be folded into a binary load, and
+runtime string expressions use the VM `stobin` instruction. The reverse
+conversion is explicit-only: `.binary as .string` validates the bytes as UTF-8.
+Valid constant binary values may be folded back into string literals, while
+invalid constant binary-to-string casts are rejected as `CANNOT_CAST_BINARY` and
+invalid runtime binary values raise `UNICODE_ERROR` through `bintos`.
 
 `.binary` is present in the Level B surface and compiler metadata as
 `TP_BINARY`. The VM `value` has a separate `binary_value`, `binary_length`, and
@@ -121,9 +129,12 @@ string slot. Binary literals are byte-paired hex (`0x00ff` is two bytes);
 `0x`/`0X` is the empty binary literal, and disassembly canonicalizes as
 lowercase `0x...`. RXAS also exposes byte-buffer instructions for length,
 single-byte update, concat, append, byte-cursor get/set, cursor-based slice,
-and fixed-size overlay update. These instructions never validate UTF-8 and
-clear VM-private UTF cache flags on the destination. Most character and string
-opcodes still take string operands and assume valid UTF-8 in UTF builds.
+fixed-size overlay update, `stobin` string-byte conversion, and `bintos`
+binary-to-string conversion. Binary-buffer instructions never validate UTF-8 and
+clear VM-private UTF cache flags on the destination. `bintos` is the exception:
+it validates the source bytes and raises `UNICODE_ERROR` in UTF builds when they
+are not valid text. Most character and string opcodes still take string operands
+and assume valid UTF-8 in UTF builds.
 
 Level C text and binary behavior should be treated as design space, not as
 settled current compiler behavior. Classic REXX is byte-oriented and commonly

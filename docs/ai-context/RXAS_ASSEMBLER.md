@@ -106,11 +106,16 @@ slot, not its string slot. Binary-buffer VM instructions exposed at RXAS are:
 - `getbinpos rOut,rBin`
 - `bslice rDst,rSrc,rLen`
 - `bupdate rDst,rOffset,rSrc`
+- `stobin rReg`
+- `bintos rReg`
 
 Indexes and lengths are bytes and zero-based. `bslice` reads from the source
 binary cursor and truncates at end-of-buffer. `setbyte` and `bupdate` are
 strict and raise `OUT_OF_RANGE` for invalid indexes, bytes outside `0..255`, or
-overlay writes past the destination length.
+overlay writes past the destination length. `stobin` copies the register's
+current string bytes into its binary slot. `bintos` validates the register's
+current binary bytes as UTF-8 and copies them into its string slot; invalid
+bytes raise `UNICODE_ERROR` in UTF builds.
 
 ### Symbol Tracking (AVL Trees)
 To deduplicate constants and resolve identifiers in `O(log N)` time, the assembler leverages a custom AVL tree implementation (`avl_tree.h`). Active trees include:

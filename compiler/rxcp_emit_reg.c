@@ -691,6 +691,7 @@ walker_result register_walker(walker_direction direction,
             case DECIMAL:
             case INTEGER:
             case STRING:
+            case BINARY:
             case CONSTANT:
             case CONST_SYMBOL:
             case CLASS:

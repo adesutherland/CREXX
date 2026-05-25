@@ -3,6 +3,10 @@ options levelb
 main: procedure = .int
   data = .binary
   textbin = .binary
+  castbin = .binary
+  alphabin = .binary
+  text = ""
+  folded = ""
   len = 0
   b0 = 0
   b1 = 0
@@ -30,6 +34,29 @@ main: procedure = .int
   if b0 <> 65 then return 21
   if b1 <> 66 then return 22
   if b2 <> 67 then return 23
+
+  castbin = 'ffff'x as .binary
+  assembler blen len,castbin
+  assembler getbyte b0,castbin,idx0
+  assembler getbyte b1,castbin,idx1
+  if len <> 2 then return 30
+  if b0 <> 255 then return 31
+  if b1 <> 255 then return 32
+
+  alphabin = "α" as .binary
+  assembler blen len,alphabin
+  assembler getbyte b0,alphabin,idx0
+  assembler getbyte b1,alphabin,idx1
+  if len <> 2 then return 40
+  if b0 <> 206 then return 41
+  if b1 <> 177 then return 42
+
+  data = 'ceb1'x as .binary
+  text = data as .string
+  if text <> "α" then return 50
+
+  folded = ('4142'x as .binary) as .string
+  if folded <> "AB" then return 51
 
   say "ok"
   return 0

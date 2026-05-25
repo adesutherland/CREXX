@@ -86,11 +86,59 @@ f = .float(i)
 d = .decimal("42.50")
 ```
 
+The checked cast form can also be used for scalar conversions:
+
+```rexx
+f = 1 as .float
+i = "42" as .int
+d = "42.50" as .decimal
+s = 42 as .string
+ok = "1" as .boolean
+```
+
+Scalar casts use the same conversion rules as the corresponding constructor or
+promotion opcode. A cast is still type checked; for example, `.binary` values
+only cast back to `.string` when the cast is explicit and the bytes are valid
+UTF-8.
+
 ## Strings and Binary Values
 
 `.string` values are character data. `.binary` values are byte data. Keep the
 two distinct when working with sockets, files, encodings, or native payloads:
 string operations are text operations, while binary operations preserve bytes.
+
+In UTF builds, `.string` source values are valid UTF-8 text. Converting a
+string to `.binary` stores the exact UTF-8 bytes currently held by the string;
+the conversion does not normalize, transcode, or reinterpret the text:
+
+```rexx
+payload = "alpha" as .binary
+```
+
+Converting `.binary` to `.string` validates the byte sequence as UTF-8:
+
+```rexx
+payload = "ceb1"x as .binary
+text = payload as .string     /* "α" */
+```
+
+An invalid binary-to-string conversion raises `UNICODE_ERROR` at runtime. If the
+invalid bytes are visible as a constant literal in the cast, the compiler rejects
+the program with `CANNOT_CAST_BINARY`.
+
+Invalid UTF-8 byte sequences are only valid in an explicit binary context:
+
+```rexx
+payload = .binary
+payload = 'ffff'x
+
+other = 'ffff'x as .binary
+```
+
+A first untyped assignment such as `payload = 'ffff'x` is treated as a text
+assignment and is rejected when the decoded bytes are not valid UTF-8. That rule
+keeps accidental invalid text out of string operations; use `.binary` when the
+program is handling bytes.
 
 ## Object Values
 

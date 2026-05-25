@@ -6951,6 +6951,43 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
+ *  STOBIN_REG  op1.binary = op1.string bytes
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(STOBIN_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - STOBIN R%d\n", (int)REG_IDX(1));
+    if (set_binary(op1R, op1R->string_value, op1R->string_length) != 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BINTOS_REG  op1.string = op1.binary bytes, validated as UTF-8
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BINTOS_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - BINTOS R%d\n", (int)REG_IDX(1));
+#ifndef NUTF8
+    {
+        size_t chars = 0;
+        if (utf8nvalid_count(op1R->binary_value, op1R->binary_length, &chars)) {
+            SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 in binary-to-string conversion");
+        } else {
+            set_string(op1R,
+                       op1R->binary_value ? op1R->binary_value : "",
+                       op1R->binary_length);
+            op1R->string_chars = chars;
+            mark_utf8_valid_count(op1R);
+        }
+    }
+#else
+    set_string(op1R,
+               op1R->binary_value ? op1R->binary_value : "",
+               op1R->binary_length);
+#endif
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
  *  CONCCHAR_REG_REG_REG  op1=op2[op3]                                pej 27 August 2021
  *  -----------------------------------------------------------------------------------
  */
@@ -8222,8 +8259,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         RESERVED_IMPL(RESERVED_097)
         RESERVED_IMPL(RESERVED_098)
         RESERVED_IMPL(RESERVED_099)
-        RESERVED_IMPL(RESERVED_192)
-        RESERVED_IMPL(RESERVED_193)
         RESERVED_IMPL(RESERVED_194)
         RESERVED_IMPL(RESERVED_195)
         RESERVED_IMPL(RESERVED_196)

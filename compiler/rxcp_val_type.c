@@ -368,6 +368,109 @@ static int type_node_is_runtime_type_target(ASTNode *type_node) {
     return 1;
 }
 
+static int scalar_type_cast_supported(ValueType from, ValueType to) {
+    if (from == TP_UNKNOWN || to == TP_UNKNOWN) return 1;
+    if (from == to) return 1;
+
+    switch (from) {
+        case TP_BOOLEAN:
+            return to == TP_INTEGER || to == TP_FLOAT ||
+                   to == TP_DECIMAL || to == TP_STRING;
+        case TP_INTEGER:
+            return to == TP_BOOLEAN || to == TP_FLOAT ||
+                   to == TP_DECIMAL || to == TP_STRING;
+        case TP_FLOAT:
+            return to == TP_BOOLEAN || to == TP_INTEGER ||
+                   to == TP_DECIMAL || to == TP_STRING;
+        case TP_DECIMAL:
+            return to == TP_BOOLEAN || to == TP_INTEGER ||
+                   to == TP_FLOAT || to == TP_STRING;
+        case TP_STRING:
+            return to == TP_BOOLEAN || to == TP_INTEGER ||
+                   to == TP_FLOAT || to == TP_DECIMAL ||
+                   to == TP_BINARY;
+        case TP_BINARY:
+            return to == TP_STRING;
+        default:
+            return 0;
+    }
+}
+
+static int binary_hex_value(char ch) {
+    if (ch >= '0' && ch <= '9') return ch - '0';
+    if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+    if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+    return -1;
+}
+
+static int binary_literal_cast_to_string_is_valid(ASTNode *node) {
+#ifndef NUTF8
+    unsigned char *bytes;
+    size_t byte_length;
+    size_t i;
+    size_t chars = 0;
+
+    if (!node || node->value_type != TP_BINARY) return 1;
+    if (node->node_type != BINARY && node->node_type != CONSTANT) return 1;
+    if (!node->node_string || node->node_string_length < 2) return 0;
+    if (node->node_string[0] != '0' ||
+        (node->node_string[1] != 'x' && node->node_string[1] != 'X')) return 0;
+    if ((node->node_string_length - 2) % 2) return 0;
+
+    byte_length = (node->node_string_length - 2) / 2;
+    bytes = malloc(byte_length ? byte_length : 1);
+    if (!bytes) return 0;
+
+    for (i = 0; i < byte_length; i++) {
+        int hi = binary_hex_value(node->node_string[2 + (i * 2)]);
+        int lo = binary_hex_value(node->node_string[3 + (i * 2)]);
+        if (hi < 0 || lo < 0) {
+            free(bytes);
+            return 0;
+        }
+        bytes[i] = (unsigned char)((hi << 4) | lo);
+    }
+
+    i = utf8nvalid_count(bytes, byte_length, &chars) == 0;
+    free(bytes);
+    return (int)i;
+#else
+    (void)node;
+    return 1;
+#endif
+}
+
+static void infer_text_type_for_binary_literal(Symbol *symbol) {
+    if (!symbol) return;
+
+    if (symbol->dim_base) {
+        free(symbol->dim_base);
+        symbol->dim_base = 0;
+    }
+    if (symbol->dim_elements) {
+        free(symbol->dim_elements);
+        symbol->dim_elements = 0;
+    }
+    if (symbol->value_class) {
+        free(symbol->value_class);
+        symbol->value_class = 0;
+    }
+
+    symbol->type = TP_STRING;
+    symbol->value_dims = 0;
+}
+
+static int target_is_first_untyped_symbol_assignment(ASTNode *target) {
+    Symbol *symbol;
+
+    if (!target || target->node_type != VAR_TARGET) return 0;
+    if (!target->parent || target->parent->node_type != ASSIGN) return 0;
+    if (!target->symbolNode || !target->symbolNode->symbol) return 0;
+
+    symbol = target->symbolNode->symbol;
+    return symbol->creation_node == target;
+}
+
 static int same_contract_signature(Context *context, ASTNode *iface_member, ASTNode *class_member) {
     ASTNode *iface_args;
     ASTNode *class_args;
@@ -1199,6 +1302,11 @@ walker_result set_node_types_walker(walker_direction direction,
                     set_node_type(node, TP_VOID);
 
                 }
+                if (child2->node_type == BINARY &&
+                    target_is_first_untyped_symbol_assignment(child1)) {
+                    infer_text_type_for_binary_literal(child1->symbolNode->symbol);
+                    ast_svtp(child1, child1->symbolNode->symbol);
+                }
                 if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
                     /* If the symbol does not have a known type yet - then determine it */
                     if (node->parent->node_type == REPEAT) {
@@ -1211,16 +1319,20 @@ walker_result set_node_types_walker(walker_direction direction,
                             /* context->changed_flags |= FLAG_VAL_TYPE; */ ast_svtp(child1, child1->symbolNode->symbol);
                         }
                     } else {
-                        child1->symbolNode->symbol->type =
-                                node_to_type(context, child2,
-                                             &(child1->symbolNode->symbol->value_dims),
-                                             &(child1->symbolNode->symbol->dim_base),
-                                             &(child1->symbolNode->symbol->dim_elements),
-                                             &(child1->symbolNode->symbol->value_class));
+                        if (child2->node_type == BINARY) {
+                            infer_text_type_for_binary_literal(child1->symbolNode->symbol);
+                        } else {
+                            child1->symbolNode->symbol->type =
+                                    node_to_type(context, child2,
+                                                 &(child1->symbolNode->symbol->value_dims),
+                                                 &(child1->symbolNode->symbol->dim_base),
+                                                 &(child1->symbolNode->symbol->dim_elements),
+                                                 &(child1->symbolNode->symbol->value_class));
 
-                        if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
-                            node_to_dims(context, child1, &(child1->symbolNode->symbol->value_dims),
-                                         &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
+                            if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
+                                node_to_dims(context, child1, &(child1->symbolNode->symbol->value_dims),
+                                             &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
+                        }
 
                         if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
                             /* context->changed_flags |= FLAG_VAL_TYPE; */ ast_svtp(child1, child1->symbolNode->symbol);
@@ -1464,6 +1576,18 @@ walker_result type_safety_walker(walker_direction direction,
                     mknd_err(node, "TYPE_MISMATCH");
                 } else if (child2->target_type != TP_OBJECT && child1->value_type == TP_OBJECT) {
                     mknd_err(node, "TYPE_MISMATCH");
+                } else if (child1->value_type == TP_BINARY &&
+                           child2->target_type == TP_STRING &&
+                           !binary_literal_cast_to_string_is_valid(child1)) {
+                    mknd_err(node, "CANNOT_CAST_BINARY");
+                } else if (child1->value_type == TP_BINARY &&
+                           child2->target_type != TP_BINARY &&
+                           child2->target_type != TP_STRING) {
+                    mknd_err(node, "CANNOT_CAST_BINARY");
+                } else if (child2->target_type != TP_OBJECT &&
+                           child1->value_type != TP_OBJECT &&
+                           !scalar_type_cast_supported(child1->value_type, child2->target_type)) {
+                    mknd_err(node, "TYPE_MISMATCH");
                 }
                 break;
 
@@ -1684,18 +1808,27 @@ walker_result type_safety_walker(walker_direction direction,
                     mknd_err(child2, "RETURNS_VOID");
                 }
                 else {
+                    if (child2->node_type == BINARY &&
+                        target_is_first_untyped_symbol_assignment(child1)) {
+                        infer_text_type_for_binary_literal(child1->symbolNode->symbol);
+                        ast_svtp(child1, child1->symbolNode->symbol);
+                    }
                     if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
                         /* If the symbol does not have a known type yet - then determine it */
-                        child1->symbolNode->symbol->type =
-                                node_to_type(context, child2,
-                                             &(child1->symbolNode->symbol->value_dims),
-                                             &(child1->symbolNode->symbol->dim_base),
-                                             &(child1->symbolNode->symbol->dim_elements),
-                                             &(child1->symbolNode->symbol->value_class));
+                        if (child2->node_type == BINARY) {
+                            infer_text_type_for_binary_literal(child1->symbolNode->symbol);
+                        } else {
+                            child1->symbolNode->symbol->type =
+                                    node_to_type(context, child2,
+                                                 &(child1->symbolNode->symbol->value_dims),
+                                                 &(child1->symbolNode->symbol->dim_base),
+                                                 &(child1->symbolNode->symbol->dim_elements),
+                                                 &(child1->symbolNode->symbol->value_class));
 
-                        if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
-                            node_to_dims(context, child1, &(child1->symbolNode->symbol->value_dims),
-                                         &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
+                            if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
+                                node_to_dims(context, child1, &(child1->symbolNode->symbol->value_dims),
+                                             &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
+                        }
                     }
                     if (child1->symbolNode) {
                         int skip_svtp = 0;
