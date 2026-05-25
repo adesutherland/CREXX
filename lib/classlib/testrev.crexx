@@ -1,0 +1,21 @@
+options comments_dash
+import rexx
+import rxfnsb
+
+say 'testing the rexx class with a returned rexx type on rexx.reverse()'
+name_s = 'Adrian'
+say 'typeof(name_s):' typeof(name_s)
+name_r = .rexx('Adrian')
+say 'typeof(name_r):' typeof(name_r)
+
+say 'name_s:'  name_s
+say 'name_r:' name_r 
+say 'name_r.toString():' name_r.toString()
+say 'typeof(name_r):' typeof(name_r)
+
+say 'reverse(name_s):' reverse(name_s)
+say 'name_r.reverse():' name_r.reverse().toString()
+-- eman = .rexx
+-- eman = eman.reverse()
+-- say eman.toString()
+
