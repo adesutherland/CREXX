@@ -12,6 +12,7 @@ set(BIFS
 		abs
 		b2x
 		b2d
+		binary
 		c2x
 		c2d
 		center

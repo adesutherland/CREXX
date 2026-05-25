@@ -1,0 +1,56 @@
+options levelb
+import rxfnsb
+
+check: procedure = .int
+  arg ok = .boolean, label = .string
+  if \ok then do
+    say "binary BIF failed:" label
+    return 1
+  end
+  return 0
+
+main: procedure = .int
+errors = 0
+
+a = "ff00"x as .binary
+b = "41c3"x as .binary
+c = a || b
+errors = errors + check(bin2x(c) = "FF0041C3", "operator concat keeps bytes")
+errors = errors + check(binlength(c) = 4, "binlength")
+errors = errors + check(binbyte(c,1) = 255, "binbyte first")
+errors = errors + check(binbyte(c,4) = 195, "binbyte fourth")
+
+mixed = a || "A"
+errors = errors + check(bin2x(mixed) = "FF0041", "mixed binary/text concat returns binary")
+
+d = binconcat("0011"x as .binary, "22ff"x as .binary)
+errors = errors + check(bin2x(d) = "001122FF", "binconcat")
+
+e = binsetbyte(d,2,170)
+errors = errors + check(bin2x(e) = "00AA22FF", "binsetbyte")
+errors = errors + check(bin2x(d) = "001122FF", "binsetbyte returns copy")
+
+errors = errors + check(bin2x(binsubstr(d,2,2)) = "1122", "binsubstr middle")
+errors = errors + check(bin2x(binsubstr(d,3)) = "22FF", "binsubstr rest")
+errors = errors + check(bin2x(binsubstr(d,10)) = "", "binsubstr past end")
+
+errors = errors + check(bin2x(binoverlay("abcd"x as .binary, d, 2)) = "00ABCDFF", "binoverlay")
+errors = errors + check(bin2x(bininsert("abcd"x as .binary, d, 3)) = "0011ABCD22FF", "bininsert middle")
+errors = errors + check(bin2x(bininsert("abcd"x as .binary, d, 99)) = "001122FFABCD", "bininsert append")
+errors = errors + check(bin2x(bindelstr(d,2,2)) = "00FF", "bindelstr count")
+errors = errors + check(bin2x(bindelstr(d,3)) = "0011", "bindelstr rest")
+
+errors = errors + check(binpos("1122"x as .binary, d) = 2, "binpos")
+errors = errors + check(binpos("22"x as .binary, d, 3) = 3, "binpos start")
+errors = errors + check(binpos("33"x as .binary, d) = 0, "binpos not found")
+
+errors = errors + check(bincompare(d, "001122ff"x as .binary) = 0, "bincompare equal")
+errors = errors + check(bincompare(d, "001123ff"x as .binary) = 3, "bincompare mismatch")
+errors = errors + check(bincompare(d, "001122"x as .binary) = 4, "bincompare length")
+
+errors = errors + check(bin2x(x2bin("ff 00 aa")) = "FF00AA", "x2bin spaces lower")
+errors = errors + check(bin2x(x2bin("f")) = "0F", "x2bin odd nibble")
+errors = errors + check(binlength(x2bin("zz")) = 0, "x2bin invalid")
+
+if errors = 0 then say "PASS: binary helpers"
+return errors <> 0

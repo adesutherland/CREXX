@@ -1,6 +1,6 @@
-# Built-in functions for \crexx{} strings
+# Built-in functions for \crexx{} strings and binary values
 
-The `.string` type is central to the \rexx{} language and all its variants. This is true for \crexx{} and this implementation also contains the expected *built-in-functions*.[^bif]
+The `.string` type is central to the \rexx{} language and all its variants. This is true for \crexx{} and this implementation also contains the expected *built-in-functions*.[^bif] Level B also provides byte-oriented helpers for the `.binary` type.
 
 | BIF             | Signature                                    |
 |-----------------|----------------------------------------------|
@@ -11,11 +11,23 @@ The `.string` type is central to the \rexx{} language and all its variants. This
 | SIGN            | SIGN(x)                                      |
 | TRUNC           | TRUNC(x, n)                                  |
 | B2X             | B2X(b)                                       |
+| BIN2X           | BIN2X(binary)                                |
+| BINBYTE         | BINBYTE(binary, position)                    |
+| BINCOMPARE      | BINCOMPARE(left, right)                      |
+| BINCONCAT       | BINCONCAT(left, right)                       |
+| BINDELSTR       | BINDELSTR(binary, start, length)             |
+| BININSERT       | BININSERT(new, target, before)               |
+| BINLENGTH       | BINLENGTH(binary)                            |
+| BINOVERLAY      | BINOVERLAY(new, target, start)               |
+| BINPOS          | BINPOS(needle, haystack, start)              |
+| BINSETBYTE      | BINSETBYTE(binary, position, byte)           |
+| BINSUBSTR       | BINSUBSTR(binary, start, length)             |
 | C2D             | C2D(s)                                       |
 | C2X             | C2X(s)                                       |
 | D2C             | D2C(n)                                       |
 | D2X             | D2X(n)                                       |
 | X2B             | X2B(x)                                       |
+| X2BIN           | X2BIN(x)                                     |
 | X2C             | X2C(x)                                       |
 | X2D             | X2D(x)                                       |
 | CENTER          | CENTER(s, n, pad)                            |
@@ -70,4 +82,3 @@ Table: SAA Rexx Built-In-Functions. {#tbl:id}
 Table: Non-SAA Functions. {#tbl:id}
 
 [^bif]: also colloqually referred to with the jargon-like expression BIFs.
-

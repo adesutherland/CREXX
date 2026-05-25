@@ -394,8 +394,10 @@ walker_result register_walker(walker_direction direction,
             case OP_CONCAT:
             case OP_SCONCAT:
                 /* one or the other can be a constant - not both */
-                if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
-                else if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                if (node->value_type != TP_BINARY && node->target_type != TP_BINARY) {
+                    if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                    else if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                }
                 break;
 
             case OP_AND:

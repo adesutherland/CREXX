@@ -122,6 +122,19 @@ index and returns `-1` when the requested byte is outside the current binary
 length. `FREADB` and socket binary receive reuse the binary buffer growth
 machinery instead of reallocating to exact byte counts.
 
+At the Level B source surface, `||` is byte concatenation when either operand is
+`.binary`; the compiler targets both operands as `.binary` and emits `bconcat`.
+This means a string operand in a binary concat is converted to its exact UTF-8
+bytes with `stobin`, while binary bytes are never routed through `.string` or
+`bintos`. Blank concatenation (`OP_SCONCAT`) remains a text-only operation for
+now and binary use is a type mismatch.
+
+The public byte-helper BIFs live in `lib/rxfnsb/rexx/binary.crexx`: `binlength`,
+`binbyte`, `binsetbyte`, `binsubstr`, `binconcat`, `binoverlay`, `bininsert`,
+`bindelstr`, `binpos`, `bincompare`, `bin2x`, and `x2bin`. They are thin Level B
+wrappers over the RXAS byte-buffer instructions plus small loops for search and
+hex conversion.
+
 At the RXAS level, `BINARY_CONST` and `OP_BINARY` support exist and `0x...`
 operands are constant-pool binary records. `load rN,0x...` lowers to
 `LOAD_REG_BINARY` and populates the register's binary slot rather than the
