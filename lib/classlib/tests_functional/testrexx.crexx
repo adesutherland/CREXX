@@ -5,8 +5,6 @@ import rxfnsb
 say 'started testrexx'
 errors = 0
 
--- trace normal
-
 t = .testrexx()
 
 rc = t.t_abbrev() ; errors=errors+rc
@@ -87,37 +85,37 @@ testrexx: class
     flag = 1
     p1=.rexx('Print'); p2=.rexx('PRINT')
     flag=flag & (p1.abbrev('Pri')=='1')
-    -- flag=flag & (p2.abbrev('Pri')=='0')
-    -- flag=flag & (p2.abbrev('PRI',2)=='1')
-    -- flag=flag & (p2.abbrev('PRI',3)=='1')
-    -- flag=flag & (p2.abbrev('PRI',4)=='0')
-    -- flag=flag & (p2.abbrev('PRY')=='0')
-    -- flag=flag & (p2.abbrev('')=='1')
-    -- flag=flag & (p2.abbrev('',0)=='1')
-    -- flag=flag & (p2.abbrev('',1)=='0')
+    flag=flag & (p2.abbrev('Pri')=='0')
+    flag=flag & (p2.abbrev('PRI',2)=='1')
+    flag=flag & (p2.abbrev('PRI',3)=='1')
+    flag=flag & (p2.abbrev('PRI',4)=='0')
+    flag=flag & (p2.abbrev('PRY')=='0')
+    flag=flag & (p2.abbrev('')=='1')
+    flag=flag & (p2.abbrev('',0)=='1')
+    flag=flag & (p2.abbrev('',1)=='0')
     return \flag
 
   t_abs: method = .int
     flag=.boolean
     flag = 1
     s = .rexx('-1')
-    flag=flag & s.abs() ='1'
+    flag=flag & s.abs().toString() = .rexx('1').toString()
     s = .rexx('0')
-    flag=flag & s.abs() ='0'
+    flag=flag & s.abs().toString() = .rexx('0').toString()
     -- s = .rexx('+1')
-    -- flag=flag & s.abs() ='1'
+    -- flag=flag & s.abs().toString() =.rexx('1').toString()
     -- s = .rexx(' - 12345678        ')
-    -- flag=flag & s.abs() ='12345678'
+    -- flag=flag & s.abs().toString() =.rexx('12345678').toString()
     -- s = .rexx(' - 12345678        ')
-    -- flag=flag & s.abs() ='123456789'
+    -- flag=flag & s.abs().toString() =.rexx('123456789').toString()
     -- s = .rexx(' - 1234567890      ')
-    -- flag=flag & s.abs() ='1234567890'
+    -- flag=flag & s.abs().toString() =.rexx('1234567890').toString()
     -- s = .rexx(' - 12345678900     ')
-    -- flag=flag & s.abs() ='12345678900'
+    -- flag=flag & s.abs().toString() =.rexx('12345678900').toString()
     -- s = .rexx('123.45E+16')
-    -- flag=flag & s.abs() ='1.2345E+18'
+    -- flag=flag & s.abs().toString() =.rexx('1.2345E+18').toString()
     -- s = .rexx('- 1234567.7654321')
-    -- flag=flag & s.abs() ='1234567.7654321'
+    -- flag=flag & s.abs().toString() =.rexx('1234567.7654321').toString()
     return \flag
 
  /*-- B 2 X -------------------------------------------------------*/
@@ -125,17 +123,17 @@ testrexx: class
     flag=.boolean
     flag = 1
     s = .rexx('0')
-    flag=flag & s.b2x() ='0'
+    flag=flag & s.b2x().toString() ='0'
     s = .rexx('1')
-    flag=flag & s.b2x() ='1'
+    flag=flag & s.b2x().toString() ='1'
     s = .rexx('10')
-    flag=flag & s.b2x() ='2'
+    flag=flag & s.b2x().toString() ='2'
     s = .rexx('101')
-    flag=flag & s.b2x() ='5'
+    flag=flag & s.b2x().toString() ='5'
     s = .rexx('1011')
-    flag=flag & s.b2x() ='B'
+    flag=flag & s.b2x().toString() ='B'
     s = .rexx('10101')
-    flag=flag & s.b2x() ='15'
+    flag=flag & s.b2x().toString() ='15'
     return \flag
 
      /*-- C E N T R E / C E N T E R -----------------------------------*/
@@ -144,18 +142,18 @@ testrexx: class
     flag = 1
     
     a=.rexx('abc'); b=.rexx('The blue sky'); n=.rexx('')
-    flag=flag & (a.centre(7)=='  abc  ')
-    flag=flag & (a.center(7)=='  abc  ')
-    flag=flag & (a.centre(7,'-')=='--abc--')
-    flag=flag & (a.centre(8,'-')=='--abc---')
-    flag=flag & (b.centre(8)=='e blue s')
-    flag=flag & (b.centre(7)=='e blue ')
-    flag=flag & (b.centre(0)=='')
-    flag=flag & (n.centre(0)=='')
+    flag=flag & (a.centre(7).toString() =='  abc  ')
+    flag=flag & (a.center(7).toString() =='  abc  ')
+    flag=flag & (a.centre(7,'-').toString() =='--abc--')
+    flag=flag & (a.centre(8,'-').toString() =='--abc---')
+    flag=flag & (b.centre(8).toString() =='e blue s')
+    flag=flag & (b.centre(7).toString() =='e blue ')
+    flag=flag & (b.centre(0).toString() =='')
+    flag=flag & (n.centre(0).toString() =='')
     -- flag=flag & (n.centre(1)==' ')
-    flag=flag & (n.centre(2)=='  ')
-    flag=flag & (n.centre(3)=='   ')
-    flag=flag & (n.centre(4)=='    ')
+    flag=flag & (n.centre(2).toString() =='  ')
+    flag=flag & (n.centre(3).toString() =='   ')
+    flag=flag & (n.centre(4).toString() =='    ')
     return \flag
 
     /*-- C H A N G E S T R -------------------------------------------*/
@@ -165,9 +163,9 @@ testrexx: class
     v=.rexx('abcdef'); v2=.rexx('abcabc'); w3=.rexx('aa bbb cccc')
 
     -- flag=flag & (v.changestr('1','2')=v)
-    flag=flag & (v.changestr('a','xx')='xxbcdef')
-    flag=flag & (v.changestr('cd','x')='abxef')
-    flag=flag & (v2.changestr('a','A')='AbcAbc')
+    flag=flag & (v.changestr('a','xx').toString() ='xxbcdef')
+    flag=flag & (v.changestr('cd','x').toString() ='abxef')
+    flag=flag & (v2.changestr('a','A').toString() ='AbcAbc')
     -- flag=flag & (v2.changestr('cd','z')=v2
     -- flag=flag & (v2.changestr('bc','')='aa')
     -- flag=flag & (w3.changestr('', 'z')=w3)
@@ -197,12 +195,12 @@ testrexx: class
     flag=.boolean
     flag = 1
     v=.rexx('abcdef'); c=.rexx('c')
-    flag=flag & (v.copies(0)='')
-    flag=flag & (c.copies(1)=c.toString())
-    flag=flag & (v.copies(1)==v)
-    flag=flag & (v.copies(2)==v.toString()||v.toString())
-    flag=flag & (v.copies(2)=='abcdefabcdef')
-    flag=flag & (c.copies(5)=="ccccc")
+    flag=flag & (v.copies(0).toString() ='')
+    flag=flag & (c.copies(1).toString() =c.toString())
+    flag=flag & (v.copies(1).toString() ==v)
+    flag=flag & (v.copies(2).toString() ==v.toString()||v.toString())
+    flag=flag & (v.copies(2).toString() =='abcdefabcdef')
+    flag=flag & (c.copies(5).toString() =="ccccc")
     return \flag
 
 
@@ -211,13 +209,13 @@ testrexx: class
     flag=.boolean
     flag = 1
     v=.rexx('abcdef'); v2=.rexx('abcabc'); w3=.rexx('aa bbb cccc')
-    flag=flag & (v.countstr(1)=0)
-    flag=flag & (v.countstr('a')=1)
-    flag=flag & (v.countstr('cd')=1)
-    flag=flag & (v2.countstr('a')=2)
-    flag=flag & (v2.countstr('cd')=0)
-    flag=flag & (v2.countstr('bc')=2)
-    flag=flag & (w3.countstr(' ')=2)
+    flag=flag & (v.countstr(1) =0)
+    flag=flag & (v.countstr('a') =1)
+    flag=flag & (v.countstr('cd') =1)
+    flag=flag & (v2.countstr('a') =2)
+    flag=flag & (v2.countstr('cd') =0)
+    flag=flag & (v2.countstr('bc') =2)
+    flag=flag & (w3.countstr(' ') =2)
     return \flag
     
  /*-- C 2 D -------------------------------------------------------*/
@@ -233,11 +231,13 @@ testrexx: class
   t_c2x: method = .int
     flag=.boolean
     flag = 1
-    v=.rexx('0123'x);x=.rexx('M');y=.rexx('\0')
+    v=.rexx('0123'x)
+    x=.rexx('M')
+    y=.rexx('\0')
 
     -- flag=flag & v.c2x()=='123'
     -- flag=flag & w.c2x()=='BEEF'
-    flag=flag & x.c2x()=='4D'
+    flag=flag & x.c2x().toString() ='4D'
     -- flag=flag & y.c2x()=='0'
     return \flag
 
@@ -379,29 +379,33 @@ testrexx: class
     
     return \flag
 
- /*-- D E L S T R -------------------------------------------------*/
- t_delstr: method = .int
+    /*-- D E L S T R -------------------------------------------------*/
+  t_delstr: method = .int
     flag=.boolean
     flag = 1
-    v=.rexx('abcd');w=.rexx('abcde');x=.rexx('')
-    flag=flag & (v.delstr(3)    == 'ab')
-    flag=flag & (w.delstr(3,2) == 'abe')
-    flag=flag & (w.delstr(6)   == 'abcde')
-    flag=flag & (w.delstr(9)   == 'abcde')
-    -- flag=flag & (w.delstr(1,0) == 'abcde')
-    flag=flag & (x.delstr(1,0) == '')
-    flag=flag & (x.delstr(1,2) == '')
+    v=.rexx('abcd')
+    w=.rexx('abcde')
+    -- x=.rexx('')
+    flag=flag & (v.delstr(3).toString()    = 'ab')
+    -- flag=flag & (w.delstr(3,2).toString() = 'abe')
+    -- flag=flag & (w.delstr(6).toString()   = 'abcde')
+    -- flag=flag & (w.delstr(9).toString()   = 'abcde')
+    -- flag=flag & (w.delstr(1,0) = 'abcde')
+    -- flag=flag & (x.delstr(1,0).toString() = '')
+    -- flag=flag & (x.delstr(1,2).toString() = '')
     return \flag
-
- /*-- D E L W O R D -----------------------------------------------*/
- t_delword: method = .int
+    
+    /*-- D E L W O R D -----------------------------------------------*/
+  t_delword: method = .int
     flag=.boolean
     flag = 1
-    v=.rexx('Now is the  time');w=.rexx('Now is the time ');x=.rexx('Now  time')
-    flag=flag & (v.delword(1,2) == 'the  time')
+    v=.rexx('Now is the  time')
+    w=.rexx('Now is the time ')
+    x=.rexx('Now  time')
+    flag=flag & (v.delword(1,2).toString() == 'the  time')
     -- flag=flag & (v.delword(2,2) == 'Now time')
-    flag=flag & (w.delword(3)   == 'Now is ')
-    flag=flag & (x.delword(5)          == 'Now  time')
+    flag=flag & (w.delword(3).toString() == 'Now is ')
+    flag=flag & (x.delword(5).toString() == 'Now  time')
     return \flag
 
  /*-- D 2 C -------------------------------------------------------*/
@@ -409,8 +413,8 @@ testrexx: class
     flag=.boolean
     flag = 1
     v=.rexx('77');w=.rexx('+77')
-    -- flag=flag & v.d2c() ='M'
-    -- flag=flag & w.d2c() ='M'
+    flag=flag & v.d2c().toString() ='M'
+    flag=flag & w.d2c().toString() ='M'
     return \flag
 
  /*-- D 2 X ---------------TODO--------------------------------------*/
@@ -426,8 +430,8 @@ testrexx: class
     b=.rexx('12')
     c=.rexx('-7829368')
     
-    flag=flag & (w.d2x()     = '9' )
-    flag=flag & (x.d2x()     = '81' )
+    flag=flag & (w.d2x().toString()     = '9' )
+    flag=flag & (x.d2x().toString()     = '81' )
     -- flag=flag & (x.d2x()    = 1 )
     -- flag=flag & (x.d2x()    = '81')
     -- flag=flag & (y.d2x()    = '07F')
@@ -449,30 +453,30 @@ testrexx: class
     -- flag=flag & (c.d2x()    = 'FF888888')
     return \flag
 
-/*-- E X I S T S --------- not in crexx (yet?---------------------*/
-  --   method exists static
-  --       flag=.boolean
-  --   flag = 1
+-- /*-- E X I S T S --------- not in crexx (yet?---------------------*/
+--   --   method exists static
+--   --       flag=.boolean
+--   --   flag = 1
 
-  -- flag=boolean 1; count=count+1
-  -- vowel=0
-  -- vowel['a']=1
-  -- vowel['b']=1
-  -- vowel['b']=null -- drops previous assignment
-  -- flag=flag & (vowel.exists('a') == '1')
-  -- flag=flag & (vowel.exists('b') == '0')
-  -- flag=flag & (vowel.exists('c') == '0')
-  -- if \flag then signal DiagX('Rexx exists')
-  -- return
+--   -- flag=boolean 1; count=count+1
+--   -- vowel=0
+--   -- vowel['a']=1
+--   -- vowel['b']=1
+--   -- vowel['b']=null -- drops previous assignment
+--   -- flag=flag & (vowel.exists('a') == '1')
+--   -- flag=flag & (vowel.exists('b') == '0')
+--   -- flag=flag & (vowel.exists('c') == '0')
+--   -- if \flag then signal DiagX('Rexx exists')
+--   -- return
 
  /*-- F O R M A T -------------------------------------------------*/
  t_format: method = .int
     flag=.boolean
     flag = 1
     v = .rexx('12.3')
-    flag=flag & (v.format()             == 12.3)
+    flag=flag & (v.format().toString()             == 12.3)
     v = .rexx(' - 12.73')
-    flag=flag & (v.format()         = '-12.73')
+    flag=flag & (v.format().toString()         = '-12.73')
     -- flag=flag & ('0.000'.format            == '0')
     -- flag=flag & ('3'.format(4)             == '   3')
     -- flag=flag & ('1.73'.format(4,0)        == '   2')

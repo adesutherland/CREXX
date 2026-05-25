@@ -22,12 +22,15 @@
  * SOFTWARE.
  */
 
-options levelb
-
+options levelb comments_dash
 namespace rxfnsb expose abs
 
 abs: procedure = .string
 arg number = .string
+-- say 'in:' number
+strip(number,'b')
+-- say 'stripped:' number
 if left(number,1) = '-' then number = substr(number,2)
+-- say 'out:' number
 return number
 

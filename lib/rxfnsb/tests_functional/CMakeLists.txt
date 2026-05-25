@@ -9,7 +9,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 set(REXXBINS
         tlinesz.rxbin
         ts_abbrev.rxbin
-	    ts_address.rxbin
+	ts_abs.rxbin
+	ts_address.rxbin
         ts_binary.rxbin
         ts_c2x.rxbin
         ts_center.rxbin

@@ -14,7 +14,6 @@ set(REXXBINS
   testHashSet
   testTreeMap
   testTreeSet
-  testrexx
   testStack
   ts_TreeMap
   testQfind
