@@ -498,6 +498,76 @@ void type_promotion(ASTNode *node) {
     }
 }
 
+static int rxas_hex_value(char ch) {
+    if (ch >= '0' && ch <= '9') return ch - '0';
+    if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+    if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+    return -1;
+}
+
+static void append_hex_byte(char *buffer, size_t *pos, unsigned char byte) {
+    static const char hex[] = "0123456789abcdef";
+    buffer[(*pos)++] = hex[(byte >> 4) & 0x0f];
+    buffer[(*pos)++] = hex[byte & 0x0f];
+}
+
+static char *format_rxas_escaped_string_as_binary(ASTNode *node) {
+    char *buffer;
+    size_t i;
+    size_t out;
+    unsigned char byte;
+    char esc;
+    int hi;
+    int lo;
+
+    buffer = malloc(3 + (node->node_string_length * 2));
+    buffer[0] = '0';
+    buffer[1] = 'x';
+    out = 2;
+
+    for (i = 0; i < node->node_string_length; i++) {
+        byte = (unsigned char)node->node_string[i];
+        if (byte == '\\' && i + 1 < node->node_string_length) {
+            esc = node->node_string[++i];
+            switch (esc) {
+                case '\\': byte = '\\'; break;
+                case 'n': byte = '\n'; break;
+                case 't': byte = '\t'; break;
+                case 'a': byte = '\a'; break;
+                case 'b': byte = '\b'; break;
+                case 'f': byte = '\f'; break;
+                case 'r': byte = '\r'; break;
+                case 'v': byte = '\v'; break;
+                case '\'': byte = '\''; break;
+                case '\"': byte = '\"'; break;
+                case '0': byte = '\0'; break;
+                case '?': byte = '\?'; break;
+                case 'x':
+                    if (i + 2 < node->node_string_length) {
+                        hi = rxas_hex_value(node->node_string[i + 1]);
+                        lo = rxas_hex_value(node->node_string[i + 2]);
+                        if (hi != -1 && lo != -1) {
+                            byte = (unsigned char)((hi << 4) | lo);
+                            i += 2;
+                            break;
+                        }
+                    }
+                    append_hex_byte(buffer, &out, '\\');
+                    byte = (unsigned char)esc;
+                    break;
+                default:
+                    append_hex_byte(buffer, &out, '\\');
+                    byte = (unsigned char)esc;
+                    break;
+            }
+        }
+        append_hex_byte(buffer, &out, byte);
+    }
+
+    buffer[out] = 0;
+    return buffer;
+}
+
 /* Formats a constant value returned as a malloced buffer */
 char* format_constant(ValueType type, ASTNode* node) {
     char *buffer;
@@ -533,6 +603,16 @@ char* format_constant(ValueType type, ASTNode* node) {
                         node->node_string_length,
                         node->node_string);
     }
+    else if (type == TP_BINARY) {
+        if (node->node_type == BINARY) {
+            buffer = mprintf("%.*s",
+                             node->node_string_length,
+                             node->node_string);
+        }
+        else {
+            buffer = format_rxas_escaped_string_as_binary(node);
+        }
+    }
     else {
         /* Integer */
         buffer = mprintf("%.*s",
@@ -553,6 +633,8 @@ char* type_to_prefix(ValueType value_type) {
             return "f";
         case TP_DECIMAL:
             return "d";
+        case TP_BINARY:
+            return "";
         default:
             return "";
     }
@@ -566,6 +648,7 @@ int is_constant(ASTNode* node) {
         case STRING: /* This and the following will exist if the optimiser has not been run */
         case FLOAT:
         case DECIMAL:
+        case BINARY:
         case INTEGER:
         case CLASS:
             if (node->value_type == node->target_type)

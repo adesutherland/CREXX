@@ -92,14 +92,16 @@ for linked expression values too. The VM does not currently set or consume a
 previously materialized string form across multiple uses; this remains a
 potential performance improvement rather than current behaviour.
 
-Hex and binary suffixed source strings currently still enter the compiler as
-`STRING` AST nodes. `ast_fstr()` validates the hex or binary digit syntax,
-turns the decoded bytes into escaped RXAS string text, and `rxas` later
-unescapes that text into a `STRING_CONST`. The assembler records
-`string_chars` with `utf8nlen()`, which counts codepoints but does not validate
-UTF-8 well-formedness. Therefore a literal such as `'FFFFFF'x` can enter the
-string constant path as non-UTF-8 bytes and later reach character opcodes that
-are written for UTF-8 strings. This is the current root cause behind issue 466.
+Hex and binary suffixed source strings now split by decoded byte content.
+`ast_fstr()` validates the hex or binary digit syntax and decodes the bytes.
+When the decoded span is valid UTF-8, the literal remains a `STRING` AST node
+and follows the normal escaped RXAS string path. When the decoded span is not
+valid UTF-8, the literal becomes a `BINARY` AST node with canonical `0x...`
+RXAS text. That keeps arbitrary bytes out of string-only character opcodes:
+using such a byte literal in a text context is rejected as `CANNOT_CAST_BINARY`,
+while assigning it to `.binary` emits an RXAS binary load. Assigning an ordinary
+string literal to a `.binary` target also emits a binary load containing the
+literal's UTF-8 bytes.
 
 `.binary` is present in the Level B surface and compiler metadata as
 `TP_BINARY`. The VM `value` has a separate `binary_value`, `binary_length`, and

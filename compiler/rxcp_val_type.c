@@ -1248,6 +1248,12 @@ walker_result set_node_types_walker(walker_direction direction,
                 }
                 break;
 
+            case BINARY:
+                if (node->value_type == TP_UNKNOWN) {
+                    /* context->changed_flags |= FLAG_VAL_TYPE; */ set_node_type(node, TP_BINARY);
+                }
+                break;
+
             case FLOAT:
                 if (node->value_type == TP_UNKNOWN) {
                     /* context->changed_flags |= FLAG_VAL_TYPE; */ set_node_type(node, TP_FLOAT);
@@ -2013,6 +2019,7 @@ walker_result type_safety_walker(walker_direction direction,
 
 
             case STRING:
+            case BINARY:
                 if (ast_nchd(node)) mknd_err(ast_chdn(node,0), "TAKENCONSTANT_ARRAY");
                 break;
 

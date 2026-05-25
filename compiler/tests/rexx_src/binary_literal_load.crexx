@@ -1,0 +1,35 @@
+options levelb
+
+main: procedure = .int
+  data = .binary
+  textbin = .binary
+  len = 0
+  b0 = 0
+  b1 = 0
+  b2 = 0
+  idx0 = 0
+  idx1 = 1
+  idx2 = 2
+
+  data = '00ff41'x
+  assembler blen len,data
+  assembler getbyte b0,data,idx0
+  assembler getbyte b1,data,idx1
+  assembler getbyte b2,data,idx2
+  if len <> 3 then return 10
+  if b0 <> 0 then return 11
+  if b1 <> 255 then return 12
+  if b2 <> 65 then return 13
+
+  textbin = "ABC"
+  assembler blen len,textbin
+  assembler getbyte b0,textbin,idx0
+  assembler getbyte b1,textbin,idx1
+  assembler getbyte b2,textbin,idx2
+  if len <> 3 then return 20
+  if b0 <> 65 then return 21
+  if b1 <> 66 then return 22
+  if b2 <> 67 then return 23
+
+  say "ok"
+  return 0

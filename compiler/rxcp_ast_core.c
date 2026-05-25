@@ -579,24 +579,16 @@ ASTNode *add_dast(ASTNode *dest, ASTNode *source) {
     return node;
 }
 
-static int ast_validate_utf8_string_literal(ASTNode *node, const unsigned char *bytes, size_t length) {
+static int ast_is_valid_utf8_string_literal(const unsigned char *bytes, size_t length) {
 #ifndef NUTF8
     size_t chars;
-    void *invalid;
 
-    invalid = utf8nvalid_count(bytes, length, &chars);
-    if (invalid) {
-        mknd_err(node,
-                 "string literal is not valid UTF-8 at byte %lu; use .binary for byte data",
-                 (unsigned long)((const unsigned char *)invalid - bytes));
-        return 0;
-    }
+    return utf8nvalid_count(bytes, length, &chars) == 0;
 #else
-    (void)node;
     (void)bytes;
     (void)length;
-#endif
     return 1;
+#endif
 }
 
 static char *ast_escape_bytes_for_rxas(const unsigned char *bytes,
@@ -619,6 +611,25 @@ static char *ast_escape_bytes_for_rxas(const unsigned char *bytes,
         }
     }
 
+    return processed_string;
+}
+
+static char *ast_binary_literal_from_bytes(const unsigned char *bytes,
+                                           size_t byte_length,
+                                           size_t *processed_length) {
+    static const char hex[] = "0123456789abcdef";
+    char *processed_string;
+    size_t i;
+
+    *processed_length = 2 + (byte_length * 2);
+    processed_string = malloc(*processed_length + 1);
+    processed_string[0] = '0';
+    processed_string[1] = 'x';
+    for (i = 0; i < byte_length; i++) {
+        processed_string[2 + (i * 2)] = hex[(bytes[i] >> 4) & 0x0f];
+        processed_string[3 + (i * 2)] = hex[bytes[i] & 0x0f];
+    }
+    processed_string[*processed_length] = 0;
     return processed_string;
 }
 
@@ -729,8 +740,13 @@ ASTNode *ast_fstr(Context* context, Token *token) {
             }
         }
 
-        if (!ast_validate_utf8_string_literal(node, decoded_string, decoded_index)) {
+        if (!ast_is_valid_utf8_string_literal(decoded_string, decoded_index)) {
+            node->node_type = BINARY;
+            processed_string = ast_binary_literal_from_bytes(decoded_string, decoded_index, &processed_length);
             free(decoded_string);
+            node->node_string = processed_string;
+            node->node_string_length = processed_length;
+            node->free_node_string = 1;
             return node;
         }
 
@@ -772,8 +788,13 @@ ASTNode *ast_fstr(Context* context, Token *token) {
             }
         }
 
-        if (!ast_validate_utf8_string_literal(node, decoded_string, decoded_index)) {
+        if (!ast_is_valid_utf8_string_literal(decoded_string, decoded_index)) {
+            node->node_type = BINARY;
+            processed_string = ast_binary_literal_from_bytes(decoded_string, decoded_index, &processed_length);
             free(decoded_string);
+            node->node_string = processed_string;
+            node->node_string_length = processed_length;
+            node->free_node_string = 1;
             return node;
         }
 

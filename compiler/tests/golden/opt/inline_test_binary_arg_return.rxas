@@ -25,7 +25,7 @@ main() .locals=6
    .src 14:3="data = .binary"
    null r4
    .src 15:3="data = \"abc\""
-   load r4,"abc"
+   load r4,0x616263
    .src 16:3="return data"
    copy r5,r4
    acopy r5,r4

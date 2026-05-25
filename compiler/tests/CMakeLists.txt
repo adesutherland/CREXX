@@ -251,8 +251,8 @@ string(APPEND RXC_INVALID_UTF8_HEX_CONTENT
        "if(rxc_res EQUAL 0)\n"
        "  message(FATAL_ERROR \"Expected rxc to reject invalid UTF-8 hex literal, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
        "endif()\n"
-       "if(NOT full_out MATCHES \"valid UTF-8\")\n"
-       "  message(FATAL_ERROR \"Expected invalid UTF-8 diagnostic was not emitted for source hex literal.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT full_out MATCHES \"CANNOT_CAST_BINARY\")\n"
+       "  message(FATAL_ERROR \"Expected binary-to-text diagnostic was not emitted for source hex literal.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
        "endif()\n")
 file(GENERATE OUTPUT "${RXC_INVALID_UTF8_HEX_SCRIPT}" CONTENT "${RXC_INVALID_UTF8_HEX_CONTENT}")
 
@@ -278,13 +278,42 @@ string(APPEND RXC_INVALID_UTF8_BINARY_CONTENT
        "if(rxc_res EQUAL 0)\n"
        "  message(FATAL_ERROR \"Expected rxc to reject invalid UTF-8 binary literal, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
        "endif()\n"
-       "if(NOT full_out MATCHES \"valid UTF-8\")\n"
-       "  message(FATAL_ERROR \"Expected invalid UTF-8 diagnostic was not emitted for source binary literal.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT full_out MATCHES \"CANNOT_CAST_BINARY\")\n"
+       "  message(FATAL_ERROR \"Expected binary-to-text diagnostic was not emitted for source binary literal.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
        "endif()\n")
 file(GENERATE OUTPUT "${RXC_INVALID_UTF8_BINARY_SCRIPT}" CONTENT "${RXC_INVALID_UTF8_BINARY_CONTENT}")
 
 add_test(NAME rxc_invalid_utf8_binary_literal
          COMMAND ${CMAKE_COMMAND} -P "${RXC_INVALID_UTF8_BINARY_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_BINARY_LITERAL_LOAD_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_binary_literal_load.cmake")
+set(RXC_BINARY_LITERAL_LOAD_CONTENT "")
+string(APPEND RXC_BINARY_LITERAL_LOAD_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -n -o \"binary_literal_load_rxas_check\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_literal_load.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"rxc failed for binary literal load check.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/binary_literal_load_rxas_check.rxas\" rxas_out)\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" rxas_out \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "if(NOT rxas_out MATCHES [=[load r[0-9]+,0x00ff41]=])\n"
+       "  message(FATAL_ERROR \"Binary hex literal did not lower to an RXAS binary load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT rxas_out MATCHES [=[load r[0-9]+,0x414243]=])\n"
+       "  message(FATAL_ERROR \"String assigned to .binary did not lower to an RXAS binary load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_BINARY_LITERAL_LOAD_SCRIPT}" CONTENT "${RXC_BINARY_LITERAL_LOAD_CONTENT}")
+
+add_test(NAME rxc_binary_literal_load
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_LITERAL_LOAD_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Robustness tests
@@ -1397,6 +1426,7 @@ add_crexx_run_test(test_meth_vs_proc rexx_src/test_meth_vs_proc.crexx)
 add_crexx_run_test(test_class_adv rexx_src/test_class_adv.crexx)
 add_crexx_run_test(test_array_edge rexx_src/test_array_edge.crexx)
 add_crexx_run_test(test_utf_math rexx_src/test_utf_math.crexx)
+add_crexx_run_test(binary_literal_load rexx_src/binary_literal_load.crexx)
 add_crexx_run_test(test_lib_boundary rexx_src/test_lib_boundary.crexx)
 add_crexx_run_test(div_ops_common rexx_src/div_ops_common.crexx)
 add_crexx_run_test(div_ops_classic rexx_src/div_ops_classic.crexx)

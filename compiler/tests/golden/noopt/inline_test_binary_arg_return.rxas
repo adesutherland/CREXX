@@ -56,7 +56,7 @@ makeBinary() .locals=1
    .src 14:3="data = .binary"
    null r0
    .src 15:3="data = \"abc\""
-   load r0,"abc"
+   load r0,0x616263
    .src 16:3="return data"
    ret r0
    .meta "inline_test_binary_arg_return.makebinary.data"
