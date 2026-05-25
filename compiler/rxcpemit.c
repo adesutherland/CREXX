@@ -743,6 +743,8 @@ static walker_result emit_walker(walker_direction direction,
                     temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
                     node->cleanup = output_fs(temp1);
                     free(temp1);
+
+                    type_promotion(node);
                     break;
                 } else if (child1) {
                     /* We are an array */

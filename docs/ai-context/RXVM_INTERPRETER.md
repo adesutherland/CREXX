@@ -235,6 +235,14 @@ codepoint count. Any instruction that synthesizes or truncates a string must
 keep both in sync and reset `string_pos` / `string_char_pos` to the start of
 the new value.
 
+The `xtos` family of scalar-to-string conversions is allowed to mutate the
+destination value to materialize its string representation. This is acceptable
+for linked values, including object attributes, as representation
+materialization rather than user-visible assignment. The current VM does not
+maintain a validity flag for a cached string representation, so repeated
+conversions still perform the conversion work and the compiler does not rely on
+string-form reuse.
+
 ### Copy, Move, and Native Payloads
 
 Rexx objects are not user-visible native pointers. A Rexx object value is still

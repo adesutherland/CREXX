@@ -1,0 +1,29 @@
+options levelb
+namespace class_attr_string_promotion
+
+sample = .Box(7)
+say sample.direct()
+say sample.via_local()
+call sample.bump(5)
+say sample.direct()
+exit 0
+
+Box: class
+  value = .int
+
+  *: factory
+    arg initial = .int
+    value = initial
+    return
+
+  direct: method = .string
+    return "v=" || value
+
+  via_local: method = .string
+    local = value
+    return "local=" || local
+
+  bump: method = .void
+    arg amount = .int
+    value = value + amount
+    return

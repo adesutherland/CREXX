@@ -82,6 +82,16 @@ scan paths have ASCII fast paths when byte length and codepoint count match.
 These string instructions assume valid UTF-8 in the register payload. NUTF8
 builds collapse this model back to byte positions and byte lengths.
 
+Numeric-to-string promotion opcodes such as `itos`, `btos`, `ftos`, and `dtos`
+may mutate the target VM value to materialize its string representation. That is
+valid even when the target register is linked to caller-visible storage, such as
+a class attribute, because this is representation materialization rather than a
+source-level assignment. The compiler must therefore emit normal type promotion
+for linked expression values too. The VM does not currently set or consume a
+"string representation is valid" cache flag, and the compiler does not reuse a
+previously materialized string form across multiple uses; this remains a
+potential performance improvement rather than current behaviour.
+
 Hex and binary suffixed source strings currently still enter the compiler as
 `STRING` AST nodes. `ast_fstr()` validates the hex or binary digit syntax,
 turns the decoded bytes into escaped RXAS string text, and `rxas` later
