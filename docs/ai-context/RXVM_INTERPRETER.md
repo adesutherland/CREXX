@@ -278,9 +278,19 @@ Ordinary `.binary` payloads should be built through the shared helpers in
 `slice_binary()`. These helpers keep `binary_length` and
 `binary_buffer_length` consistent, reuse existing capacity where possible, and
 clear native payload finalizers before replacing a native-backed object with an
-ordinary byte sequence. `GETBYTE` reads zero-based binary offsets and returns
-`-1` for out-of-range reads. `FREADB` reads bytes with `fread(ptr, 1, n, file)`,
-so `binary_length` is the actual byte count read, not a C item count.
+ordinary byte sequence. The register also carries `binary_pos`, a byte cursor
+used by `SETBINPOS`, `GETBINPOS`, and cursor-based `BSLICE`.
+
+RXAS-level binary opcodes operate only on the binary slot. `LOAD_REG_BINARY`
+loads a `BINARY_CONST` from `0x...` RXAS syntax. `GETBYTE` reads zero-based
+binary offsets and returns `-1` for out-of-range reads. `SETBYTE` and
+`BUPDATE` are strict and raise `OUT_OF_RANGE` for invalid byte indexes or
+fixed-size overlay writes past the destination length. `BCONCAT`, `BAPPEND`,
+and `BSLICE` build ordinary byte buffers without UTF-8 validation and clear
+VM-private UTF cache flags on the destination.
+
+`FREADB` reads bytes with `fread(ptr, 1, n, file)`, so `binary_length` is the
+actual byte count read, not a C item count.
 
 When `native_payload_ops` is set:
 

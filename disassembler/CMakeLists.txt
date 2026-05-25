@@ -86,6 +86,11 @@ crexx_add_rxdas_roundtrip(
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_disassembler_imported.rxas
 )
 
+crexx_add_rxdas_roundtrip(
+        NAME rxdas_roundtrip_binary
+        SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_binary.rxas
+)
+
 add_executable(test_disassembler_dump tests/test_disassembler_dump.c rxdadism.c)
 add_dependencies(test_disassembler_dump avl_tree platform rxdas_test_prereqs)
 target_link_libraries(test_disassembler_dump avl_tree platform)

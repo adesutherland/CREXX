@@ -103,21 +103,25 @@ are written for UTF-8 strings. This is the current root cause behind issue 466.
 
 `.binary` is present in the Level B surface and compiler metadata as
 `TP_BINARY`. The VM `value` has a separate `binary_value`, `binary_length`, and
-`binary_buffer_length` slot. Copies and moves preserve that slot, socket and
-file byte operations use it (`socksendb`, `sockrecvb`, `freadb`, `fwriteb`),
-and native payloads reuse it with `rxvm_native_payload_ops`. The binary path is
-still thinner than the string path, but the VM now has shared binary buffer
-helpers for reserve/set/append/concat/slice operations. `GETBYTE` reads a
-zero-based byte index and returns `-1` when the requested byte is outside the
-current binary length. `FREADB` and socket binary receive reuse the binary buffer
-growth machinery instead of reallocating to exact byte counts. Some construction
-and literal cases still route through ordinary string loading.
+`binary_pos`, and `binary_buffer_length` slot. Copies and moves preserve that
+slot, socket and file byte operations use it (`socksendb`, `sockrecvb`,
+`freadb`, `fwriteb`), and native payloads reuse it with
+`rxvm_native_payload_ops`. The VM has shared binary buffer helpers for
+reserve/set/append/concat/slice operations. `GETBYTE` reads a zero-based byte
+index and returns `-1` when the requested byte is outside the current binary
+length. `FREADB` and socket binary receive reuse the binary buffer growth
+machinery instead of reallocating to exact byte counts.
 
 At the RXAS level, `BINARY_CONST` and `OP_BINARY` support exist and `0x...`
-operands can be converted into constant-pool binary records, but the current
-generated opcode formats do not expose a general binary-immediate instruction
-family. Most character and string opcodes take string operands and assume
-valid UTF-8 in UTF builds.
+operands are constant-pool binary records. `load rN,0x...` lowers to
+`LOAD_REG_BINARY` and populates the register's binary slot rather than the
+string slot. Binary literals are byte-paired hex (`0x00ff` is two bytes);
+`0x`/`0X` is the empty binary literal, and disassembly canonicalizes as
+lowercase `0x...`. RXAS also exposes byte-buffer instructions for length,
+single-byte update, concat, append, byte-cursor get/set, cursor-based slice,
+and fixed-size overlay update. These instructions never validate UTF-8 and
+clear VM-private UTF cache flags on the destination. Most character and string
+opcodes still take string operands and assume valid UTF-8 in UTF builds.
 
 Level C text and binary behavior should be treated as design space, not as
 settled current compiler behavior. Classic REXX is byte-oriented and commonly

@@ -135,6 +135,7 @@ struct value {
 #endif
     char *binary_value; // Must be malloced
     size_t binary_length; // binary_value length
+    size_t binary_pos; // byte cursor for binary operations
     size_t binary_buffer_length; // binary_value buffer length
     const rxvm_native_payload_ops *native_payload_ops; // Shared native payload operations, or NULL
     unsigned int native_payload_flags;

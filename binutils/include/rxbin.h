@@ -347,6 +347,7 @@ static int check_header_version(module_header *header) {
 static int rxbin_get_operand_types(OpFormat format, OperandType *types) {
     switch (format) {
         case FMT_EMPTY: return 0;
+        case FMT_B: types[0] = OP_BINARY; return 1;
         case FMT_C: types[0] = OP_CHAR; return 1;
         case FMT_F: types[0] = OP_FLOAT; return 1;
         case FMT_I: types[0] = OP_INT; return 1;
@@ -366,6 +367,7 @@ static int rxbin_get_operand_types(OpFormat format, OperandType *types) {
         case FMT_P: types[0] = OP_FUNC; return 1;
         case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
         case FMT_R: types[0] = OP_REG; return 1;
+        case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; return 2;
         case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
         case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
         case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;

@@ -304,33 +304,51 @@ void test_binary_buffers() {
 
     CHECK_RC_ZERO(set_binary(&v, initial, sizeof(initial)));
     CHECK_BINARY(&v, initial, sizeof(initial));
+    CHECK_SIZE_EQUAL(v.binary_pos, 0, "binary_pos after binary write");
     capacity = v.binary_buffer_length;
 
+    v.binary_pos = 2;
     CHECK_RC_ZERO(set_binary(&v, smaller, sizeof(smaller)));
     CHECK_BINARY(&v, smaller, sizeof(smaller));
+    CHECK_SIZE_EQUAL(v.binary_pos, 0, "binary_pos after replacing binary");
     CHECK_SIZE_EQUAL(v.binary_buffer_length, capacity, "binary_buffer_length after smaller binary write");
 
+    v.binary_pos = 1;
     CHECK_RC_ZERO(append_binary(&v, extra, sizeof(extra)));
     CHECK_BINARY(&v, appended, sizeof(appended));
+    CHECK_SIZE_EQUAL(v.binary_pos, 1, "binary_pos after binary append");
 
     copy_value(&copy, &v);
     CHECK_BINARY(&copy, appended, sizeof(appended));
+    CHECK_SIZE_EQUAL(copy.binary_pos, 1, "binary_pos after binary copy");
 
     CHECK_RC_ZERO(append_binary_value(&v, &v));
     CHECK_BINARY(&v, doubled, sizeof(doubled));
+    CHECK_SIZE_EQUAL(v.binary_pos, 1, "binary_pos after self append");
 
     CHECK_RC_ZERO(set_binary(&other, prefix, sizeof(prefix)));
     CHECK_RC_ZERO(concat_binary(&concat, &other, &v));
     CHECK_BINARY(&concat, combined, sizeof(combined));
+    CHECK_SIZE_EQUAL(concat.binary_pos, 0, "binary_pos after binary concat");
 
+    other.binary_pos = 1;
     CHECK_RC_ZERO(concat_binary(&other, &other, &copy));
     CHECK_BINARY(&other, prefix_appended, sizeof(prefix_appended));
+    CHECK_SIZE_EQUAL(other.binary_pos, 0, "binary_pos after in-place binary concat");
 
     CHECK_RC_ZERO(slice_binary(&slice, &concat, 1, 3));
     CHECK_BINARY(&slice, sliced, sizeof(sliced));
+    CHECK_SIZE_EQUAL(slice.binary_pos, 0, "binary_pos after binary slice");
 
+    concat.binary_pos = 4;
     CHECK_RC_ZERO(slice_binary(&concat, &concat, 50, 8));
     CHECK_SIZE_EQUAL(concat.binary_length, 0, "binary_length after out-of-range slice");
+    CHECK_SIZE_EQUAL(concat.binary_pos, 0, "binary_pos after out-of-range slice");
+
+    CHECK_RC_ZERO(set_binary(&other, 0, 0));
+    CHECK_RC_ZERO(concat_binary(&other, &other, &other));
+    CHECK_SIZE_EQUAL(other.binary_length, 0, "binary_length after empty self concat");
+    CHECK_SIZE_EQUAL(other.binary_pos, 0, "binary_pos after empty self concat");
 
     clear_value(&v);
     clear_value(&copy);

@@ -30,6 +30,7 @@
 /* Operand Formats */
 typedef enum {
     FMT_EMPTY,
+    FMT_B,
     FMT_C,
     FMT_F,
     FMT_I,
@@ -49,6 +50,7 @@ typedef enum {
     FMT_P,
     FMT_P_S,
     FMT_R,
+    FMT_R_B,
     FMT_R_C,
     FMT_R_D,
     FMT_R_D_R,

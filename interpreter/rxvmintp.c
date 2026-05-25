@@ -1940,6 +1940,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
      * Instruction database - loaded from a generated header file
      */
 #define FMT_EMPTY_MAP 0, OP_NONE, OP_NONE, OP_NONE
+#define FMT_B_MAP 1, OP_BINARY, OP_NONE, OP_NONE
 #define FMT_C_MAP 1, OP_CHAR, OP_NONE, OP_NONE
 #define FMT_F_MAP 1, OP_FLOAT, OP_NONE, OP_NONE
 #define FMT_I_MAP 1, OP_INT, OP_NONE, OP_NONE
@@ -1959,6 +1960,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 #define FMT_P_MAP 1, OP_FUNC, OP_NONE, OP_NONE
 #define FMT_P_S_MAP 2, OP_FUNC, OP_STRING, OP_NONE
 #define FMT_R_MAP 1, OP_REG, OP_NONE, OP_NONE
+#define FMT_R_B_MAP 2, OP_REG, OP_BINARY, OP_NONE
 #define FMT_R_C_MAP 2, OP_REG, OP_CHAR, OP_NONE
 #define FMT_R_D_MAP 2, OP_REG, OP_DECIMAL, OP_NONE
 #define FMT_R_D_R_MAP 3, OP_REG, OP_DECIMAL, OP_REG
@@ -3074,6 +3076,15 @@ START_OF_INSTRUCTIONS
                   (CONSTSTRING_OP(2))->string);
             set_const_string(op1R, CONSTSTRING_OP(2));
             DISPATCH
+
+        START_INSTRUCTION(LOAD_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - LOAD R%lu,binary[%zu]\n",
+                  REG_IDX(1), (CONSTSTRING_OP(2))->string_len);
+            if (set_binary(op1R, (CONSTSTRING_OP(2))->string, (CONSTSTRING_OP(2))->string_len) != 0) {
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+            }
+            DISPATCH
+
         START_INSTRUCTION(LOAD_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - LOAD R%lu,R%lu\n",
                   REG_IDX(1), REG_IDX(2));
@@ -6828,6 +6839,117 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         REG_RETURN_INT((unsigned char)op2R->binary_value[op3R->int_value])
     }
     DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BLEN_REG_REG  Int op1 = byte length of op2
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BLEN_REG_REG) CALC_DISPATCH(2)
+    DEBUG("TRACE - BLEN R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+    REG_RETURN_INT((rxinteger)op2R->binary_length)
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  SETBYTE_REG_REG_REG  op1[op2] = op3
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(SETBYTE_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - SETBYTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    if (op2R->int_value < 0 || (size_t)op2R->int_value >= op1R->binary_length ||
+        op3R->int_value < 0 || op3R->int_value > 255) {
+        SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+    }
+    else {
+        op1R->binary_value[(size_t)op2R->int_value] = (char)(unsigned char)op3R->int_value;
+        clear_vm_private_flags(op1R);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BCONCAT_REG_REG_REG  op1 = op2 || op3
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BCONCAT_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCONCAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    if (concat_binary(op1R, op2R, op3R) != 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BAPPEND_REG_REG  op1 = op1 || op2
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BAPPEND_REG_REG) CALC_DISPATCH(2)
+    DEBUG("TRACE - BAPPEND R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+    if (append_binary_value(op1R, op2R) != 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  SETBINPOS_REG_REG  op1 binary cursor = clamp(op2, 0..len)
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(SETBINPOS_REG_REG) CALC_DISPATCH(2)
+    DEBUG("TRACE - SETBINPOS R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+    if (op2R->int_value < 0) {
+        op1R->binary_pos = 0;
+    }
+    else if ((size_t)op2R->int_value > op1R->binary_length) {
+        op1R->binary_pos = op1R->binary_length;
+    }
+    else {
+        op1R->binary_pos = (size_t)op2R->int_value;
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  GETBINPOS_REG_REG  Int op1 = op2 binary cursor
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(GETBINPOS_REG_REG) CALC_DISPATCH(2)
+    DEBUG("TRACE - GETBINPOS R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+    REG_RETURN_INT((rxinteger)op2R->binary_pos)
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BSLICE_REG_REG_REG  op1 = op2[op2.binary_pos..op2.binary_pos + op3)
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BSLICE_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSLICE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    if (op3R->int_value < 0) {
+        SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+    }
+    else if (slice_binary(op1R, op2R, op2R->binary_pos, (size_t)op3R->int_value) != 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BUPDATE_REG_REG_REG  overlay op3 into op1 at byte offset op2
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BUPDATE_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BUPDATE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    if (op2R->int_value < 0 || (size_t)op2R->int_value > op1R->binary_length) {
+        SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+    }
+    else {
+        size_t offset = (size_t)op2R->int_value;
+        if (op3R->binary_length > op1R->binary_length - offset) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            if (op3R->binary_length) {
+                memmove(op1R->binary_value + offset, op3R->binary_value, op3R->binary_length);
+            }
+            clear_vm_private_flags(op1R);
+        }
+    }
+    DISPATCH
+
 /* ------------------------------------------------------------------------------------
  *  CONCCHAR_REG_REG_REG  op1=op2[op3]                                pej 27 August 2021
  *  -----------------------------------------------------------------------------------
@@ -7554,6 +7676,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             }
             else {
                 op1R->binary_length = fread(op1R->binary_value, 1, (size_t)op3R->int_value, (FILE *) op2R->int_value);
+                op1R->binary_pos = 0;
+                clear_vm_private_flags(op1R);
             }
         }
         DISPATCH
@@ -8098,15 +8222,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         RESERVED_IMPL(RESERVED_097)
         RESERVED_IMPL(RESERVED_098)
         RESERVED_IMPL(RESERVED_099)
-        RESERVED_IMPL(RESERVED_183)
-        RESERVED_IMPL(RESERVED_184)
-        RESERVED_IMPL(RESERVED_185)
-        RESERVED_IMPL(RESERVED_186)
-        RESERVED_IMPL(RESERVED_187)
-        RESERVED_IMPL(RESERVED_188)
-        RESERVED_IMPL(RESERVED_189)
-        RESERVED_IMPL(RESERVED_190)
-        RESERVED_IMPL(RESERVED_191)
         RESERVED_IMPL(RESERVED_192)
         RESERVED_IMPL(RESERVED_193)
         RESERVED_IMPL(RESERVED_194)

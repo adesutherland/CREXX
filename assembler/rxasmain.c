@@ -61,6 +61,7 @@ static void prt_ops_new() {
         int num_ops = 0;
         switch (op_table[i].format) {
             case FMT_EMPTY: num_ops = 0; break;
+            case FMT_B: types[0] = OP_BINARY; num_ops = 1; break;
             case FMT_C: types[0] = OP_CHAR; num_ops = 1; break;
             case FMT_F: types[0] = OP_FLOAT; num_ops = 1; break;
             case FMT_I: types[0] = OP_INT; num_ops = 1; break;
@@ -80,6 +81,7 @@ static void prt_ops_new() {
             case FMT_P: types[0] = OP_FUNC; num_ops = 1; break;
             case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; num_ops = 2; break;
             case FMT_R: types[0] = OP_REG; num_ops = 1; break;
+            case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; num_ops = 2; break;
             case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; num_ops = 2; break;
             case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; num_ops = 2; break;
             case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; num_ops = 3; break;
