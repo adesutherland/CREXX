@@ -37,6 +37,8 @@
 static int symbol_has_live_node_in_proc(Symbol *symbol, ASTNode *proc_node) {
     size_t i;
 
+    if (symbol && symbol->name && strncmp(symbol->name, "__inline_", 9) == 0) return 0;
+
     for (i = 0; i < sym_nond(symbol); i++) {
         SymbolNode *sn = sym_trnd(symbol, i);
         ASTNode *n = sn ? sn->node : NULL;

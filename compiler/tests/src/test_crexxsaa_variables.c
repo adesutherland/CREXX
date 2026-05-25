@@ -20,6 +20,7 @@ typedef struct host_state {
     int scalar_compat_seen;
     int stem_seen;
     int sandbox_seen;
+    int invalid_utf8_seen;
 } host_state;
 
 static int check_text(const char* label, const char* actual, const char* expected) {
@@ -56,6 +57,26 @@ static int set_variable_text(
     return rc;
 }
 
+static int reject_invalid_variable_text(
+    const crexxsaa_address_request* request,
+    const char* name) {
+
+    char invalid_utf8[] = { (char)0xff, '\0' };
+    int rc = crexxsaa_address_variable_set(request->context, name, invalid_utf8, 1);
+    if (rc == CREXXSAA_VARIABLE_OK) {
+        fprintf(stderr, "set %s with invalid UTF-8 unexpectedly succeeded\n", name);
+        return 1;
+    }
+    if (!strstr(crexxsaa_last_error(request->context), "Invalid UTF-8")) {
+        fprintf(stderr,
+                "set %s with invalid UTF-8 failed with unexpected error: %s\n",
+                name,
+                crexxsaa_last_error(request->context));
+        return 1;
+    }
+    return 0;
+}
+
 static int editor_callback(
     const crexxsaa_address_request* request,
     crexxsaa_address_response* response,
@@ -83,6 +104,11 @@ static int editor_callback(
             response->rc = 12;
             return 0;
         }
+        if (reject_invalid_variable_text(request, "direct")) {
+            response->rc = 13;
+            return 0;
+        }
+        state->invalid_utf8_seen = 1;
         state->direct_seen = 1;
         return 0;
     }
@@ -215,14 +241,16 @@ int main(void) {
         !state.direct_seen ||
         !state.scalar_compat_seen ||
         !state.stem_seen ||
-        !state.sandbox_seen) {
+        !state.sandbox_seen ||
+        !state.invalid_utf8_seen) {
         fprintf(stderr,
-                "Unexpected callback coverage: calls=%d direct=%d scalar_compat=%d stem=%d sandbox=%d\n",
+                "Unexpected callback coverage: calls=%d direct=%d scalar_compat=%d stem=%d sandbox=%d invalid_utf8=%d\n",
                 state.calls,
                 state.direct_seen,
                 state.scalar_compat_seen,
                 state.stem_seen,
-                state.sandbox_seen);
+                state.sandbox_seen,
+                state.invalid_utf8_seen);
         goto cleanup;
     }
 

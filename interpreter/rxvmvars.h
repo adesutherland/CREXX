@@ -96,6 +96,16 @@ RX_INLINE void set_utf8_known_concat_flags(value *dest, int left_known, int righ
     else clear_vm_private_flags(dest);
 }
 
+RX_INLINE int validate_utf8_bytes(const void *bytes, size_t length, size_t *chars) {
+    size_t local_chars = 0;
+    const void *source = bytes ? bytes : "";
+
+    if (!bytes && length != 0) return -1;
+    if (utf8nvalid_count(source, length, &local_chars)) return -1;
+    if (chars) *chars = local_chars;
+    return 0;
+}
+
 RX_INLINE int is_valid_unicode_scalar(rxinteger codepoint) {
     return codepoint >= 0 && codepoint <= 0x10ffff &&
            !(codepoint >= 0xd800 && codepoint <= 0xdfff);
@@ -111,6 +121,7 @@ RX_INLINE void clear_binary_payload(value *v) {
     if (v->binary_value) free(v->binary_value);
     v->binary_value = 0;
     v->binary_length = 0;
+    v->binary_pos = 0;
     v->binary_buffer_length = 0;
     v->native_payload_ops = 0;
     v->native_payload_flags = 0;
@@ -139,6 +150,7 @@ RX_INLINE void value_zero(value *v) {
 
     /* Lazy Free binary - just zero the used length */
     v->binary_length = 0;
+    v->binary_pos = 0;
 }
 
 /* Setup a new value structure */
@@ -151,6 +163,7 @@ RX_INLINE void value_init(value *v) {
     v->num_attribute_buffers = 0;
     v->max_num_attributes = 0;
     v->binary_value = 0;
+    v->binary_pos = 0;
     v->binary_buffer_length = 0;
     v->native_payload_ops = 0;
     v->native_payload_flags = 0;
@@ -296,6 +309,8 @@ RX_INLINE int set_binary(value *v, const void *data, size_t length) {
     if (prep_binary_buffer(v, length) != 0) return -1;
     if (length && data) memcpy(v->binary_value, data, length);
     else if (length) memset(v->binary_value, 0, length);
+    v->binary_pos = 0;
+    clear_vm_private_flags(v);
     return 0;
 }
 
@@ -304,7 +319,9 @@ RX_INLINE int set_buffer_binary(value *v, char *buffer, size_t length, size_t bu
     if (v->binary_value) free(v->binary_value);
     v->binary_value = buffer;
     v->binary_length = length;
+    v->binary_pos = 0;
     v->binary_buffer_length = buffer_length;
+    clear_vm_private_flags(v);
     return 0;
 }
 
@@ -313,6 +330,8 @@ RX_INLINE int append_binary(value *v, const void *data, size_t length) {
     if (prep_binary_buffer(v, start + length) != 0) return -1;
     if (length && data) memcpy(v->binary_value + start, data, length);
     else if (length) memset(v->binary_value + start, 0, length);
+    if (v->binary_pos > v->binary_length) v->binary_pos = v->binary_length;
+    clear_vm_private_flags(v);
     return 0;
 }
 
@@ -321,6 +340,8 @@ RX_INLINE int append_binary_value(value *dest, value *source) {
     if (dest == source) {
         if (prep_binary_buffer(dest, source_length * 2) != 0) return -1;
         if (source_length) memcpy(dest->binary_value + source_length, dest->binary_value, source_length);
+        if (dest->binary_pos > dest->binary_length) dest->binary_pos = dest->binary_length;
+        clear_vm_private_flags(dest);
         return 0;
     }
     return append_binary(dest, source->binary_value, source_length);
@@ -330,6 +351,8 @@ RX_INLINE int concat_binary(value *dest, value *left, value *right) {
     size_t left_length = left->binary_length;
     size_t right_length = right->binary_length;
     size_t total_length = left_length + right_length;
+
+    if (total_length == 0) return set_binary(dest, 0, 0);
 
     if (dest == left || dest == right) {
         size_t buffer_length = buffer_size(total_length);
@@ -344,6 +367,8 @@ RX_INLINE int concat_binary(value *dest, value *left, value *right) {
     if (prep_binary_buffer(dest, total_length) != 0) return -1;
     if (left_length) memcpy(dest->binary_value, left->binary_value, left_length);
     if (right_length) memcpy(dest->binary_value + left_length, right->binary_value, right_length);
+    dest->binary_pos = 0;
+    clear_vm_private_flags(dest);
     return 0;
 }
 
@@ -359,11 +384,14 @@ RX_INLINE int slice_binary(value *dest, value *source, size_t offset, size_t len
     if (dest == source) {
         if (actual_length) memmove(dest->binary_value, source->binary_value + offset, actual_length);
         dest->binary_length = actual_length;
+        dest->binary_pos = 0;
+        clear_vm_private_flags(dest);
         return 0;
     }
 
     if (prep_binary_buffer(dest, actual_length) != 0) return -1;
     if (actual_length) memcpy(dest->binary_value, source->binary_value + offset, actual_length);
+    dest->binary_pos = 0;
     return 0;
 }
 
@@ -576,6 +604,26 @@ RX_INLINE void set_null_string(value *v, const char *from) {
 #endif
 }
 
+RX_INLINE int set_string_validated(value *v, const char *from, size_t length) {
+    if (!from && length != 0) return -1;
+#ifndef NUTF8
+    size_t chars = 0;
+    if (validate_utf8_bytes(from, length, &chars) != 0) return -1;
+#endif
+    set_string(v, (char *)(from ? from : ""), length);
+#ifndef NUTF8
+    v->string_chars = chars;
+    v->string_char_pos = 0;
+    mark_utf8_valid_count(v);
+#endif
+    return 0;
+}
+
+RX_INLINE int set_null_string_validated(value *v, const char *from) {
+    const char *text = from ? from : "";
+    return set_string_validated(v, text, strlen(text));
+}
+
 RX_INLINE void set_const_string(value *v, string_constant *from) {
     if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v,from->string_len);
@@ -709,11 +757,13 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     else if (source->binary_length) {
         if (prep_binary_buffer(dest, source->binary_length) != 0) abort();
         memcpy(dest->binary_value, source->binary_value, dest->binary_length);
+        dest->binary_pos = source->binary_pos;
         dest->native_payload_ops = source->native_payload_ops;
         dest->native_payload_flags = source->native_payload_flags;
     }
     else {
         dest->binary_length = 0;
+        dest->binary_pos = 0;
         dest->native_payload_ops = 0;
         dest->native_payload_flags = 0;
     }
@@ -779,12 +829,14 @@ RX_INLINE void move_value(value *dest, value *source) {
     /* Move Binary */
     if (source->binary_value) {
         dest->binary_length = source->binary_length;
+        dest->binary_pos = source->binary_pos;
         dest->binary_value = source->binary_value;
         dest->binary_buffer_length = source->binary_buffer_length;
         dest->native_payload_ops = source->native_payload_ops;
         dest->native_payload_flags = source->native_payload_flags;
         source->binary_value = 0;
         source->binary_length = 0;
+        source->binary_pos = 0;
         source->binary_buffer_length = 0;
         source->native_payload_ops = 0;
         source->native_payload_flags = 0;

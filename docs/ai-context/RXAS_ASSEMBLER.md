@@ -9,6 +9,9 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
 1. **Lexical Analysis (`re2c`)**:
    - Source defined in `assembler/rxasscan.re`.
    - Tokenizes input into REXX Assembly primitives: registers (`RREG`, `GREG`, `AREG`), literal types (`STRING`, `INT`, `FLOAT`, `DECIMAL`, `HEX`), symbols (`ID`, `LABEL`, `FUNC`), and assembler directives (e.g., `.locals`, `.globals`, `.expose`, `.meta`).
+   - `HEX` is the RXAS binary-literal token. It accepts byte-paired
+     `0x...`/`0X...` text, including empty `0x`, and is stored as
+     `OP_BINARY` rather than as an integer literal.
    - The lexer also recognizes the interface metadata keywords used at the end of
      `.meta` records: `.interface`, `.implements`, and `.member`.
 
@@ -24,7 +27,7 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
 3. **In-Memory Buffering & Constant Pooling**:
    - Handled in `assembler/rxasassm.c`.
    - Instructions and operand slots are appended sequentially into a dynamic array of `bin_code` elements.
-   - Complex and pooled literal types (Strings, Floats, Decimals, Procedure Headers, Metadata) are deduplicated via AVL Trees and injected into a variable-length **Constant Pool**.
+   - Complex and pooled literal types (Strings, Binary literals, Floats, Decimals, Procedure Headers, Metadata) are deduplicated via AVL Trees and injected into a variable-length **Constant Pool**.
 
 4. **Backpatching & Optimization (Second Pass)**:
    - Forward references (branches to undefined labels, calls to undefined procedures) are logged as a linked list of references.
@@ -47,8 +50,8 @@ context->binary.binary[context->binary.inst_size++].iconst = token->integer;
 ```
 
 ### Constant Pool
-Strings, pooled float literals, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
-Types include: `STRING_CONST`, `FLOAT_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_INLINE`, `META_REG`, etc.
+Strings, binary literals, pooled float literals, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
+Types include: `STRING_CONST`, `BINARY_CONST`, `FLOAT_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_INLINE`, `META_REG`, etc.
 
 The serialized `expose_head` chain includes both `EXPOSE_REG_CONST` and
 `EXPOSE_PROC_CONST` records. Runtime linking and other module-local walkers now
@@ -84,6 +87,41 @@ the contract metadata.
 For interface methods, the member-kind string now distinguishes:
 - `method` for an abstract interface method
 - `method final` for a Level B final/default interface method body
+
+### Binary Literals
+RXAS binary literals are written as byte-paired hex with a `0x` or `0X`
+prefix. `0x00ff` stores two bytes (`00 ff`) in a `BINARY_CONST`, and `0x`
+stores an empty binary constant. `rxdas` emits the canonical lowercase
+`0x...` spelling.
+
+`load rDst,0x...` uses `LOAD_REG_BINARY` and loads the VM register's binary
+slot, not its string slot. Binary-buffer VM instructions exposed at RXAS are:
+
+- `blen rOut,rBin`
+- `getbyte rOut,rBin,rIndex`
+- `setbyte rBin,rIndex,rByte`
+- `bconcat rDst,rLeft,rRight`
+- `bappend rDst,rRight`
+- `setbinpos rBin,rOffset`
+- `getbinpos rOut,rBin`
+- `bslice rDst,rSrc,rLen`
+- `bupdate rDst,rOffset,rSrc`
+- `stobin rReg`
+- `bintos rReg`
+
+Indexes and lengths are bytes and zero-based. `bslice` reads from the source
+binary cursor and truncates at end-of-buffer. `setbyte` and `bupdate` are
+strict and raise `OUT_OF_RANGE` for invalid indexes, bytes outside `0..255`, or
+overlay writes past the destination length. `stobin` copies the register's
+current string bytes into its binary slot. `bintos` validates the register's
+current binary bytes as UTF-8 and copies them into its string slot; invalid
+bytes raise `UNICODE_ERROR` in UTF builds.
+
+In UTF builds, RXAS string constants are text, not byte containers. Hand-written
+string operands are unescaped and validated before entering the constant pool;
+invalid UTF-8 is an assembly error with guidance to use `0x...` binary
+literals. Use `load rDst,0x...`, `freadb`, `fwriteb`, `sockrecvb`, or
+`socksendb` for arbitrary bytes.
 
 ### Symbol Tracking (AVL Trees)
 To deduplicate constants and resolve identifiers in `O(log N)` time, the assembler leverages a custom AVL tree implementation (`avl_tree.h`). Active trees include:

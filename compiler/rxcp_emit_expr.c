@@ -966,14 +966,23 @@ void emit_expression(ASTNode *node, void *payload) {
         case CONSTANT:
         case CONST_SYMBOL:
         case STRING:
+        case BINARY:
         case FLOAT:
         case DECIMAL:
         case INTEGER:
             /* If register is not set then the parent node will handle this
              * as a constant - we just set the value as a string */
             if (node->register_num != DONT_ASSIGN_REGISTER) {
+                ValueType load_type = node->value_type;
+                int skip_promotion = 0;
+                if (node->target_type == TP_BINARY &&
+                    (node->value_type == TP_STRING || node->value_type == TP_BINARY)) {
+                    load_type = TP_BINARY;
+                    if (node->value_type == TP_STRING) skip_promotion = 1;
+                }
+
                 /* Get the constant string */
-                temp2 = format_constant(node->value_type, node);
+                temp2 = format_constant(load_type, node);
 
                 /* Make the register load instruction */
                 temp1 = mprintf("   load %c%d,%s\n",
@@ -988,7 +997,7 @@ void emit_expression(ASTNode *node, void *payload) {
                 free(temp2);
 
                 /* Do any type promotion */
-                type_promotion(node);
+                if (!skip_promotion) type_promotion(node);
             }
             break;
 

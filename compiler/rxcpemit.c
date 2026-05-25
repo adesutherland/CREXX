@@ -974,6 +974,7 @@ static walker_result emit_walker(walker_direction direction,
             case CONSTANT:
             case CONST_SYMBOL:
             case STRING:
+            case BINARY:
             case FLOAT:
             case DECIMAL:
             case INTEGER:

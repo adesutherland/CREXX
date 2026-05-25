@@ -1,0 +1,62 @@
+options levelb
+
+main: procedure = .int
+  data = .binary
+  textbin = .binary
+  castbin = .binary
+  alphabin = .binary
+  text = ""
+  folded = ""
+  len = 0
+  b0 = 0
+  b1 = 0
+  b2 = 0
+  idx0 = 0
+  idx1 = 1
+  idx2 = 2
+
+  data = '00ff41'x
+  assembler blen len,data
+  assembler getbyte b0,data,idx0
+  assembler getbyte b1,data,idx1
+  assembler getbyte b2,data,idx2
+  if len <> 3 then return 10
+  if b0 <> 0 then return 11
+  if b1 <> 255 then return 12
+  if b2 <> 65 then return 13
+
+  textbin = "ABC"
+  assembler blen len,textbin
+  assembler getbyte b0,textbin,idx0
+  assembler getbyte b1,textbin,idx1
+  assembler getbyte b2,textbin,idx2
+  if len <> 3 then return 20
+  if b0 <> 65 then return 21
+  if b1 <> 66 then return 22
+  if b2 <> 67 then return 23
+
+  castbin = 'ffff'x as .binary
+  assembler blen len,castbin
+  assembler getbyte b0,castbin,idx0
+  assembler getbyte b1,castbin,idx1
+  if len <> 2 then return 30
+  if b0 <> 255 then return 31
+  if b1 <> 255 then return 32
+
+  alphabin = "α" as .binary
+  assembler blen len,alphabin
+  assembler getbyte b0,alphabin,idx0
+  assembler getbyte b1,alphabin,idx1
+  if len <> 2 then return 40
+  if b0 <> 206 then return 41
+  if b1 <> 177 then return 42
+
+  data = 'ceb1'x as .binary
+  text = data as .string
+  if text <> "α" then return 50
+
+  folded = ('4142'x as .binary) as .string
+  if folded <> "AB" then return 51
+
+  say "ok"
+  return 0

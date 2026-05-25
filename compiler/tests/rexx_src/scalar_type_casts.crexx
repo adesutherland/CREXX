@@ -1,0 +1,20 @@
+options levelb
+
+main: procedure = .int
+  f = 1 as .float
+  i = "42" as .int
+  d = "42.5" as .decimal
+  s = 42 as .string
+  truth = "1" as .boolean
+
+  if typeof(f) <> ".float" then return 10
+  if typeof(i) <> ".int" then return 11
+  if typeof(d) <> ".decimal" then return 12
+  if typeof(s) <> ".string" then return 13
+  if typeof(truth) <> ".boolean" then return 14
+  if i <> 42 then return 15
+  if s <> "42" then return 16
+  if truth <> 1 then return 17
+
+  say "ok"
+  return 0

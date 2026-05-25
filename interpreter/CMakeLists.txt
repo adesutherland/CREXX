@@ -225,6 +225,19 @@ add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.
 target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
 target_link_libraries(ts_regvalue_tester m)
 
+add_executable(test_rxpa_utf_validation tests/test_rxpa_utf_validation.c rxpafuncs.c rxvalue.h rxvmvars.h)
+target_include_directories(test_rxpa_utf_validation PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        .
+        ../assembler
+        ../binutils/include
+        ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform
+        ../avl_tree
+        ../utf8
+        ../inc)
+target_link_libraries(test_rxpa_utf_validation m)
+
 # Enable testing
 enable_testing()
 
@@ -239,6 +252,12 @@ add_test(
         COMMAND crexxsaa_tool --cache-dir ${CMAKE_CURRENT_BINARY_DIR}/crexxsaa-cache-tool-test --clear --list)
 set_tests_properties(crexxsaa_cache_tool_clear PROPERTIES
         PASS_REGULAR_EXPRESSION "cleared")
+
+add_test(
+        NAME rxpa_utf_validation
+        COMMAND test_rxpa_utf_validation
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpa_utf_validation PROPERTIES LABELS "interpreter;rxpa;utf")
 
 function(crexx_add_vm_dual_test)
     set(options)
@@ -273,6 +292,44 @@ function(crexx_add_rxas_vm_binary SOURCE_NAME DESCRIPTION)
     )
 
     add_custom_target(run_${SOURCE_NAME} ALL DEPENDS ${SOURCE_NAME}.rxbin)
+endfunction()
+
+function(crexx_add_rxas_vm_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+    set(DOLLAR "$")
+
+    string(APPEND SCRIPT_CONTENT
+            "execute_process(\n"
+            "  COMMAND \"$<TARGET_FILE:rxas>\" -o \"${SOURCE_NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/tests/${SOURCE_NAME}.rxas\"\n"
+            "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+            "  OUTPUT_VARIABLE rxas_out\n"
+            "  ERROR_VARIABLE rxas_err\n"
+            "  RESULT_VARIABLE rxas_res\n"
+            ")\n"
+            "if(NOT rxas_res EQUAL 0)\n"
+            "  message(FATAL_ERROR \"rxas failed for ${SOURCE_NAME}.\\nSTDOUT:\\n${DOLLAR}{rxas_out}\\nSTDERR:\\n${DOLLAR}{rxas_err}\")\n"
+            "endif()\n"
+            "execute_process(\n"
+            "  COMMAND \"$<TARGET_FILE:rxvm>\" \"${SOURCE_NAME}\"\n"
+            "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+            "  OUTPUT_VARIABLE rxvm_out\n"
+            "  ERROR_VARIABLE rxvm_err\n"
+            "  RESULT_VARIABLE rxvm_res\n"
+            ")\n"
+            "set(full_out \"${DOLLAR}{rxvm_out}${DOLLAR}{rxvm_err}\")\n"
+            "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${DOLLAR}{full_out}\")\n"
+            "if(NOT full_out MATCHES \"${EXPECTED_REGEX}\")\n"
+            "  message(FATAL_ERROR \"Expected ${SOURCE_NAME} to report ${EXPECTED_REGEX}.\\nSTDOUT/STDERR:\\n${DOLLAR}{full_out}\\nExit: ${DOLLAR}{rxvm_res}\")\n"
+            "endif()\n")
+
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+
+    add_test(
+            NAME ${NAME}
+            COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME} PROPERTIES LABELS "interpreter;rxas;utf")
 endfunction()
 
 # Value Tests
@@ -330,6 +387,8 @@ crexx_add_vm_dual_test(NAME rxasregisterflagtests RXVM_ARGS tests_register_flags
 # Instruction Sanity Tests - UTF status cache flags
 crexx_add_rxas_vm_binary(tests_utf_flags "UTF flag cache")
 crexx_add_vm_dual_test(NAME rxasutfflagtests RXVM_ARGS tests_utf_flags PASS_REGULAR_EXPRESSION "PASS: UTF Flag Cache")
+crexx_add_rxas_vm_failure_regex(rxasutfboundaryfreadlinetests tests_utf_freadline_boundary "UNICODE_ERROR")
+crexx_add_rxas_vm_failure_regex(rxasutfboundaryfreadcdpttests tests_utf_freadcdpt_boundary "UNICODE_ERROR")
 
 # Instruction Sanity Tests - focused signal handler mode coverage
 crexx_add_rxas_vm_binary(tests_signal_call_attrs "signal call argument attributes")

@@ -92,32 +92,49 @@ for linked expression values too. The VM does not currently set or consume a
 previously materialized string form across multiple uses; this remains a
 potential performance improvement rather than current behaviour.
 
-Hex and binary suffixed source strings currently still enter the compiler as
-`STRING` AST nodes. `ast_fstr()` validates the hex or binary digit syntax,
-turns the decoded bytes into escaped RXAS string text, and `rxas` later
-unescapes that text into a `STRING_CONST`. The assembler records
-`string_chars` with `utf8nlen()`, which counts codepoints but does not validate
-UTF-8 well-formedness. Therefore a literal such as `'FFFFFF'x` can enter the
-string constant path as non-UTF-8 bytes and later reach character opcodes that
-are written for UTF-8 strings. This is the current root cause behind issue 466.
+Hex and binary suffixed source strings now split by decoded byte content.
+`ast_fstr()` validates the hex or binary digit syntax and decodes the bytes.
+When the decoded span is valid UTF-8, the literal remains a `STRING` AST node
+and follows the normal escaped RXAS string path. When the decoded span is not
+valid UTF-8, the literal becomes a `BINARY` AST node with canonical `0x...`
+RXAS text. That keeps arbitrary bytes out of string-only character opcodes:
+using such a byte literal in a text context is rejected as `CANNOT_CAST_BINARY`,
+while assigning it to `.binary`, or writing `literal as .binary`, emits an RXAS
+binary load. A first untyped assignment such as `x = 'ffff'x` is deliberately
+treated as a text context, so invalid UTF-8 byte literals do not silently infer
+`.binary`. Ordinary strings can still be converted to `.binary`; the conversion
+stores the exact current UTF-8 byte sequence with no normalization. Constant
+strings in an explicitly binary target may be folded into a binary load, and
+runtime string expressions use the VM `stobin` instruction. The reverse
+conversion is explicit-only: `.binary as .string` validates the bytes as UTF-8.
+Valid constant binary values may be folded back into string literals, while
+invalid constant binary-to-string casts are rejected as `CANNOT_CAST_BINARY` and
+invalid runtime binary values raise `UNICODE_ERROR` through `bintos`.
 
 `.binary` is present in the Level B surface and compiler metadata as
 `TP_BINARY`. The VM `value` has a separate `binary_value`, `binary_length`, and
-`binary_buffer_length` slot. Copies and moves preserve that slot, socket and
-file byte operations use it (`socksendb`, `sockrecvb`, `freadb`, `fwriteb`),
-and native payloads reuse it with `rxvm_native_payload_ops`. The binary path is
-still thinner than the string path, but the VM now has shared binary buffer
-helpers for reserve/set/append/concat/slice operations. `GETBYTE` reads a
-zero-based byte index and returns `-1` when the requested byte is outside the
-current binary length. `FREADB` and socket binary receive reuse the binary buffer
-growth machinery instead of reallocating to exact byte counts. Some construction
-and literal cases still route through ordinary string loading.
+`binary_pos`, and `binary_buffer_length` slot. Copies and moves preserve that
+slot, socket and file byte operations use it (`socksendb`, `sockrecvb`,
+`freadb`, `fwriteb`), and native payloads reuse it with
+`rxvm_native_payload_ops`. The VM has shared binary buffer helpers for
+reserve/set/append/concat/slice operations. `GETBYTE` reads a zero-based byte
+index and returns `-1` when the requested byte is outside the current binary
+length. `FREADB` and socket binary receive reuse the binary buffer growth
+machinery instead of reallocating to exact byte counts.
 
 At the RXAS level, `BINARY_CONST` and `OP_BINARY` support exist and `0x...`
-operands can be converted into constant-pool binary records, but the current
-generated opcode formats do not expose a general binary-immediate instruction
-family. Most character and string opcodes take string operands and assume
-valid UTF-8 in UTF builds.
+operands are constant-pool binary records. `load rN,0x...` lowers to
+`LOAD_REG_BINARY` and populates the register's binary slot rather than the
+string slot. Binary literals are byte-paired hex (`0x00ff` is two bytes);
+`0x`/`0X` is the empty binary literal, and disassembly canonicalizes as
+lowercase `0x...`. RXAS also exposes byte-buffer instructions for length,
+single-byte update, concat, append, byte-cursor get/set, cursor-based slice,
+fixed-size overlay update, `stobin` string-byte conversion, and `bintos`
+binary-to-string conversion. Binary-buffer instructions never validate UTF-8 and
+clear VM-private UTF cache flags on the destination. `bintos` is the exception:
+it validates the source bytes and raises `UNICODE_ERROR` in UTF builds when they
+are not valid text. Most character and string opcodes still take string operands
+and assume valid UTF-8 in UTF builds.
 
 Level C text and binary behavior should be treated as design space, not as
 settled current compiler behavior. Classic REXX is byte-oriented and commonly
@@ -149,9 +166,10 @@ The architecture direction is:
   Unicode data license terms.
 
 Trust boundaries for `.string` validation are compiler/assembler string
-constants, native/RXVML string setters, text file and socket reads, ADDRESS
-callbacks, and any explicit byte-to-text conversion API. Internal operations
-that preserve validity, such as copying, concatenating two already-valid
+constants, RXVML string setters, CREXXSAA ADDRESS variable setters, RXPA native
+function returns and updated argument trees, text file and socket reads,
+ADDRESS callbacks, and any explicit byte-to-text conversion API. Internal
+operations that preserve validity, such as copying, concatenating two already-valid
 strings, slicing on codepoint boundaries, and appending a valid Unicode scalar,
 should propagate cached validity/count state rather than rescanning.
 
@@ -159,10 +177,17 @@ The VM now maintains the first two VM-private status bits as a UTF-8 cache:
 `RXFLAG_VM_UTF8_VALID` and `RXFLAG_VM_UTF8_COUNT_VALID`. Trusted string
 constants set both bits, bounded native setters validate and count before
 setting them, and operations that preserve validity copy or propagate the bits.
-If a text setter or append receives invalid UTF-8, the VM keeps the bytes and
-the legacy best-effort codepoint count but clears the UTF cache bits so later
-work can distinguish known-valid text from byte payloads that need explicit
-handling.
+Internal raw setters can still clear the cache when they are used to materialize
+bytes, but Level B user-facing text boundaries reject invalid UTF-8 instead of
+letting those bytes become `.string` values. RXAS string constants, source
+literals in text context, RXVML setters, CREXXSAA variable setters, RXPA native
+return/argument trees, command-line arguments, ADDRESS callback text/result
+copying, `freadline`, `freadcdpt`, socket text receive, and explicit
+`.binary as .string` all validate. RXPA validation is recursive over child
+attributes and is enabled by default; developers can temporarily opt out with
+`CREXX_RXPA_DISABLE_UTF8_CHECKS=1` while migrating plugins. Invalid byte input
+must stay on the binary path (`.binary`, `freadb`, `fwriteb`, `sockrecvb`, and
+`socksendb`) until it is decoded explicitly.
 
 The VM register/value status word is a `uint32_t` field partitioned in
 `binutils/include/rxflags.h` instead of adding a second flag field:
@@ -189,21 +214,55 @@ Regression coverage for the partition and UTF cache contract lives in
 `interpreter/tests/tests_register_flags.rxas`,
 `interpreter/tests/tests_utf_flags.rxas`, and
 `interpreter/tests/ts_regvalue_tester.c`.
+Compiler and runtime regression coverage for `.string`/`.binary` coexistence
+lives in `compiler/tests/rexx_src/binary_literal_load.crexx`,
+`compiler/tests/rexx_src/scalar_type_casts.crexx`, and the generated negative
+tests in `compiler/tests/CMakeLists.txt`. Boundary regressions include direct
+RXAS invalid string constants, `compiler/tests/src/test_rxvml_utf_boundaries.c`,
+and `interpreter/tests/tests_utf_freadline_boundary.rxas` /
+`interpreter/tests/tests_utf_freadcdpt_boundary.rxas`.
 
-The implementation roadmap is:
+The completed UTF baseline is:
 
-1. Add a core validate-and-count helper for bounded UTF-8 byte spans.
-2. Enforce valid UTF-8 for assembler `STRING_CONST` creation and compiler
-   string literal lowering; route arbitrary byte literals to `.binary`.
-3. Partition the existing register status word and reserve VM-private UTF/
-   normalization cache bits rather than adding a second flag field.
-4. Improve `.binary` with buffer-growth helpers, binary literal/load support,
-   byte indexing/update instructions, and binary slice/concat operations.
-5. Add runtime string-boundary signal plumbing for native/RXVML setters and
-   text I/O paths that can currently receive arbitrary bytes.
-6. Implement the Level G Unicode plugin with `utf8proc`.
-7. Define Level C byte-text compatibility and migration rules explicitly,
-   including how Classic REXX BIFs behave in byte-text versus UTF modes.
+1. Bounded UTF-8 validate-and-count support exists through `utf8nvalid_count()`
+   and is used by VM string cache refresh paths.
+2. Compiler source hex/binary literals are decoded as bytes, stay `.string`
+   only when valid UTF-8, and otherwise require explicit `.binary`.
+3. The register status word is partitioned in `rxflags.h`; VM-private UTF cache
+   bits are preserved from external writes.
+4. `.binary` has growable buffer helpers plus RXAS/VM literal load, length,
+   byte get/set, append, concat, cursor, slice, and overlay instructions.
+5. Explicit `.string`/`.binary` coexistence is first class in Level B:
+   `as .binary` stores exact UTF-8 bytes through `stobin`, `as .string`
+   validates bytes through `bintos`, and valid constant casts fold in both
+   directions. Invalid constant byte-to-text casts fail as `CANNOT_CAST_BINARY`;
+   invalid runtime byte-to-text conversions raise `UNICODE_ERROR`.
+6. Direct RXAS string constants are part of the same contract: hand-written
+   RXAS `STRING_CONST` / `OP_STRING` creation validates and rejects invalid
+   UTF-8 with guidance to use binary literals.
+7. External Level B text ingress validates. The public `rxvml_set_str()` returns
+   non-zero for invalid UTF-8, RXVML run arguments and ADDRESS native callback
+   text are checked, CREXXSAA rejects invalid variable setter values
+   immediately, RXPA recursively validates returned values and updated
+   arguments after native calls, `freadline`/`freadcdpt` raise `UNICODE_ERROR`,
+   and socket text receive reports an invalid text status. Character-walking
+   opcodes require valid UTF cache state before using codepoint iterators.
+
+The open work has moved to its owning levels:
+
+- Level G owns normalization cache semantics and richer Unicode services. The
+  VM-private status band reserves space for normalization knowledge, but NFC,
+  NFD, NFKC, and NFKD bits should only become meaningful when Level G
+  normalization APIs set and consume them. The preferred first Unicode plugin
+  candidate is `utf8proc`, subject to vendoring/build work and carrying its MIT
+  expat plus Unicode data license notices. Initial coverage should target
+  normalization, case folding, Unicode property checks, and grapheme/word/
+  sentence segmentation. There is also room for a Level B cREXX proof of
+  concept of UTF helper libraries while Level G remains design work.
+- Level C owns Classic REXX migration and byte-text compatibility. Classic
+  byte-text behavior should be isolated behind an explicit compatibility option
+  such as `bytetext`; Classic BIFs then need auditing so users can choose UTF
+  text semantics, byte semantics, or explicit `.binary` operations predictably.
 
 ## Compiler Import Discovery
 

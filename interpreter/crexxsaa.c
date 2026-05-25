@@ -62,6 +62,7 @@
 
 #include "crexxsaa.h"
 #include "rxvml.h"
+#include "utf.h"
 
 #define CREXXSAA_CACHE_SCHEMA "1"
 #define CREXXSAA_FNV_OFFSET UINT64_C(1469598103934665603)
@@ -120,6 +121,27 @@ static void crexxsaa_set_errorf(crexxsaa_context* ctx, const char* format, ...) 
     vsnprintf(ctx->last_error, sizeof(ctx->last_error), format, args);
     va_end(args);
     ctx->last_error[sizeof(ctx->last_error) - 1] = '\0';
+}
+
+static int crexxsaa_validate_utf8_text(
+    crexxsaa_context* ctx,
+    const char* label,
+    const char* text,
+    size_t len) {
+
+#ifndef NUTF8
+    size_t chars = 0;
+    if ((!text && len != 0) || utf8nvalid_count(text ? text : "", len, &chars)) {
+        crexxsaa_set_errorf(ctx, "Invalid UTF-8 in %s", label ? label : "CREXXSAA text value");
+        return -1;
+    }
+#else
+    (void)ctx;
+    (void)label;
+    (void)text;
+    (void)len;
+#endif
+    return 0;
 }
 
 static void crexxsaa_copy_rxvml_error(crexxsaa_context* ctx, const char* fallback) {
@@ -292,6 +314,13 @@ static int crexxsaa_add_var_update(
     int rc;
 
     if (!ctx || !binding || !ctx->active_address_response) return CREXXSAA_VARIABLE_NO_ACTIVE_REQUEST;
+    if (crexxsaa_validate_utf8_text(
+            ctx,
+            "CREXXSAA ADDRESS variable update",
+            value ? value : "",
+            strlen(value ? value : "")) != 0) {
+        return CREXXSAA_VARIABLE_UNSUPPORTED;
+    }
 
     value_copy = crexxsaa_track_response_string(ctx, value);
     if (!value_copy) return CREXXSAA_VARIABLE_NO_MEMORY;
@@ -1288,6 +1317,14 @@ int crexxsaa_address_variable_set(
     if (rc != CREXXSAA_VARIABLE_OK) {
         crexxsaa_set_error(ctx, "Invalid CREXXSAA variable name");
         return rc;
+    }
+
+    if (crexxsaa_validate_utf8_text(
+            ctx,
+            "CREXXSAA variable value",
+            value,
+            value ? value_len : 0) != 0) {
+        return CREXXSAA_VARIABLE_UNSUPPORTED;
     }
 
     value_text = crexxsaa_strndup(value ? value : "", value ? value_len : 0);

@@ -68,6 +68,7 @@
 #include "rxvmplugin_framework.h"
 #include "rxbin.h" /* Needed for rxvmvars.h */
 #include "rxcp_val.h"
+#include "rxcp_util.h"
 #include "rxvmvars.h"
 #include "rxvalue.h"
 
@@ -85,6 +86,7 @@ static void rewrite_to_float_constant(ASTNode* node, Payload* payload, double va
 static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* value);
 static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteger value);
 static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int value);
+static void rewrite_to_binary_constant(ASTNode* node, Payload* payload, char* string, size_t length);
 static int strict_string_compare_operand(ASTNode *node);
 
 /*
@@ -253,9 +255,163 @@ static void update_string(ASTNode* node) {
     }
 }
 
+static int opt_hex_value(char ch) {
+    if (ch >= '0' && ch <= '9') return ch - '0';
+    if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+    if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+    return -1;
+}
+
+static void opt_append_hex_byte(char *buffer, size_t *pos, unsigned char byte) {
+    static const char hex[] = "0123456789abcdef";
+    buffer[(*pos)++] = hex[(byte >> 4) & 0x0f];
+    buffer[(*pos)++] = hex[byte & 0x0f];
+}
+
+static unsigned char *rxas_escaped_string_to_bytes(const char *string,
+                                                   size_t length,
+                                                   size_t *byte_length) {
+    unsigned char *buffer;
+    size_t i;
+    size_t out = 0;
+
+    buffer = malloc(length ? length : 1);
+    if (!buffer) return 0;
+
+    for (i = 0; i < length; i++) {
+        unsigned char byte = (unsigned char)string[i];
+        if (byte == '\\' && i + 1 < length) {
+            char esc = string[++i];
+            switch (esc) {
+                case '\\': byte = '\\'; break;
+                case 'n': byte = '\n'; break;
+                case 't': byte = '\t'; break;
+                case 'a': byte = '\a'; break;
+                case 'b': byte = '\b'; break;
+                case 'f': byte = '\f'; break;
+                case 'r': byte = '\r'; break;
+                case 'v': byte = '\v'; break;
+                case '\'': byte = '\''; break;
+                case '\"': byte = '\"'; break;
+                case '0': byte = '\0'; break;
+                case '?': byte = '\?'; break;
+                case 'x':
+                    if (i + 2 < length) {
+                        int hi = opt_hex_value(string[i + 1]);
+                        int lo = opt_hex_value(string[i + 2]);
+                        if (hi != -1 && lo != -1) {
+                            byte = (unsigned char)((hi << 4) | lo);
+                            i += 2;
+                            break;
+                        }
+                    }
+                    buffer[out++] = '\\';
+                    byte = (unsigned char)esc;
+                    break;
+                default:
+                    buffer[out++] = '\\';
+                    byte = (unsigned char)esc;
+                    break;
+            }
+        }
+        buffer[out++] = byte;
+    }
+
+    *byte_length = out;
+    return buffer;
+}
+
+static char *bytes_to_binary_literal(const unsigned char *bytes,
+                                     size_t byte_length,
+                                     size_t *literal_length) {
+    char *buffer;
+    size_t i;
+    size_t out = 2;
+
+    *literal_length = 2 + (byte_length * 2);
+    buffer = malloc(*literal_length + 1);
+    if (!buffer) return 0;
+
+    buffer[0] = '0';
+    buffer[1] = 'x';
+    for (i = 0; i < byte_length; i++) {
+        opt_append_hex_byte(buffer, &out, bytes[i]);
+    }
+    buffer[out] = 0;
+    return buffer;
+}
+
+static char *rxas_escaped_string_to_binary_literal(ASTNode *node,
+                                                   size_t *literal_length) {
+    unsigned char *bytes;
+    size_t byte_length = 0;
+    char *literal;
+
+    bytes = rxas_escaped_string_to_bytes(node->node_string,
+                                         node->node_string_length,
+                                         &byte_length);
+    if (!bytes) return 0;
+
+    literal = bytes_to_binary_literal(bytes, byte_length, literal_length);
+    free(bytes);
+    return literal;
+}
+
+static unsigned char *binary_literal_to_bytes(ASTNode *node, size_t *byte_length) {
+    unsigned char *bytes;
+    size_t i;
+
+    if (!node || !node->node_string || node->node_string_length < 2) return 0;
+    if (node->node_string[0] != '0' ||
+        (node->node_string[1] != 'x' && node->node_string[1] != 'X')) return 0;
+    if ((node->node_string_length - 2) % 2) return 0;
+
+    *byte_length = (node->node_string_length - 2) / 2;
+    bytes = malloc(*byte_length ? *byte_length : 1);
+    if (!bytes) return 0;
+
+    for (i = 0; i < *byte_length; i++) {
+        int hi = opt_hex_value(node->node_string[2 + (i * 2)]);
+        int lo = opt_hex_value(node->node_string[3 + (i * 2)]);
+        if (hi < 0 || lo < 0) {
+            free(bytes);
+            return 0;
+        }
+        bytes[i] = (unsigned char)((hi << 4) | lo);
+    }
+
+    return bytes;
+}
+
+static char *bytes_to_rxas_escaped_string(const unsigned char *bytes,
+                                          size_t byte_length,
+                                          size_t *string_length) {
+    char *buffer;
+    char *out;
+    size_t i;
+
+    *string_length = 0;
+    buffer = malloc((byte_length * 4) + 1);
+    if (!buffer) return 0;
+    out = buffer;
+
+    for (i = 0; i < byte_length; i++) {
+        char *escaped = escape_character(bytes[i]);
+        while (*escaped) {
+            *out++ = *escaped++;
+            (*string_length)++;
+        }
+    }
+
+    *out = 0;
+    return buffer;
+}
+
 /* Convert a CONSTANT node from a STRING to new_type */
 static void string_to_type(ASTNode* node, ValueType new_type) {
         double f, floor_val;
+        char *buffer;
+        size_t length;
         switch (new_type) {
             case TP_FLOAT:
                 node->value_type = TP_FLOAT;
@@ -315,7 +471,63 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                 node->target_type = TP_STRING;
                 return;
 
+            case TP_BINARY:
+                buffer = rxas_escaped_string_to_binary_literal(node, &length);
+                if (!buffer) {
+                    mknd_err(node, "BAD_CONVERSION");
+                    return;
+                }
+                node->value_type = TP_BINARY;
+                node->target_type = TP_BINARY;
+                ast_sstr(node, buffer, length);
+                return;
+
             default: ;
+        }
+    }
+
+    static void binary_to_type(ASTNode* node, ValueType new_type) {
+        unsigned char *bytes;
+        size_t byte_length = 0;
+        char *buffer;
+        size_t length;
+
+        switch (new_type) {
+            case TP_BINARY:
+                node->value_type = TP_BINARY;
+                node->target_type = TP_BINARY;
+                return;
+
+            case TP_STRING:
+                bytes = binary_literal_to_bytes(node, &byte_length);
+                if (!bytes) {
+                    mknd_err(node, "BAD_CONVERSION");
+                    return;
+                }
+#ifndef NUTF8
+                {
+                    size_t chars = 0;
+                    if (utf8nvalid_count(bytes, byte_length, &chars)) {
+                        free(bytes);
+                        mknd_err(node, "CANNOT_CAST_BINARY");
+                        return;
+                    }
+                }
+#endif
+                buffer = bytes_to_rxas_escaped_string(bytes, byte_length, &length);
+                free(bytes);
+                if (!buffer) {
+                    mknd_err(node, "BAD_CONVERSION");
+                    return;
+                }
+                node->value_type = TP_STRING;
+                node->target_type = TP_STRING;
+                ast_sstr(node, buffer, length);
+                return;
+
+            default:
+                mknd_err(node, "CANNOT_CAST_BINARY");
+                return;
         }
     }
 
@@ -327,6 +539,15 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
         node->node_type = CONSTANT;
         ast_sstr(node, string, length);
         string_to_type(node, node->target_type);
+        payload->changed = 1;
+    }
+
+    static void rewrite_to_binary_constant(ASTNode* node, Payload* payload, char* string, size_t length) {
+        ast_prnc(node);
+        node->value_type = TP_BINARY;
+        node->node_type = CONSTANT;
+        ast_sstr(node, string, length);
+        binary_to_type(node, node->target_type);
         payload->changed = 1;
     }
 
@@ -787,11 +1008,65 @@ static walker_result opt1_walker(walker_direction direction,
             if (child1) arity++;
             if (child2) arity++;
             if (child3) arity++;
+            if (node->node_type == OP_TYPE_CAST) arity = 1;
 
             can_do_code_folding = can_code_fold(node, arity);
 
             if (can_do_code_folding)
                 switch (node->node_type) {
+                    case OP_TYPE_CAST:
+                        if (child1 && child2 &&
+                            (child1->node_type == CONSTANT ||
+                             child1->node_type == STRING ||
+                             child1->node_type == BINARY ||
+                             child1->node_type == FLOAT ||
+                             child1->node_type == DECIMAL ||
+                             child1->node_type == INTEGER)) {
+                            switch (child1->value_type) {
+                                case TP_STRING:
+                                    buffer = malloc(child1->node_string_length ? child1->node_string_length : 1);
+                                    if (buffer && child1->node_string_length) {
+                                        memcpy(buffer, child1->node_string, child1->node_string_length);
+                                    }
+                                    if (!buffer) {
+                                        mknd_err(node, "BAD_CONVERSION");
+                                        break;
+                                    }
+                                    rewrite_to_string_constant(node, payload, buffer, child1->node_string_length);
+                                    break;
+
+                                case TP_BINARY:
+                                    buffer = malloc(child1->node_string_length ? child1->node_string_length : 1);
+                                    if (buffer && child1->node_string_length) {
+                                        memcpy(buffer, child1->node_string, child1->node_string_length);
+                                    }
+                                    if (!buffer) {
+                                        mknd_err(node, "BAD_CONVERSION");
+                                        break;
+                                    }
+                                    rewrite_to_binary_constant(node, payload, buffer, child1->node_string_length);
+                                    break;
+
+                                case TP_FLOAT:
+                                    rewrite_to_float_constant(node, payload, child1->float_value);
+                                    break;
+
+                                case TP_DECIMAL:
+                                    if (child1->decimal_value) {
+                                        rewrite_to_decimal_constant(node, payload, child1->decimal_value);
+                                    }
+                                    break;
+
+                                case TP_BOOLEAN:
+                                case TP_INTEGER:
+                                    rewrite_to_integer_constant(node, payload, child1->int_value);
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+                        break;
 
                     case OP_COMPARE_EQUAL:
                         compare = compare_nodes(child1, child2, node->scope);
@@ -1244,6 +1519,7 @@ static walker_result opt1_walker(walker_direction direction,
                     case FLOAT:
                     case DECIMAL:
                     case INTEGER:
+                    case BINARY:
                     case STRING: {
                         ValueType literal_type;
                         NodeType literal_node_type;
@@ -1270,15 +1546,21 @@ static walker_result opt1_walker(walker_direction direction,
                                     literal_type = TP_STRING;
                                     break;
 
+                                case BINARY:
+                                    literal_type = TP_BINARY;
+                                    break;
+
                                 default:
                                     if (node->value_type != TP_STRING) literal_type = node->value_type;
                                     break;
                             }
 
-                            string_to_type(node, literal_type);
+                            if (node->value_type == TP_BINARY) binary_to_type(node, literal_type);
+                            else string_to_type(node, literal_type);
                         }
                         else {
-                            string_to_type(node, node->target_type);
+                            if (node->value_type == TP_BINARY) binary_to_type(node, node->target_type);
+                            else string_to_type(node, node->target_type);
                         }
                         update_string(node);
                         payload->changed = 1;

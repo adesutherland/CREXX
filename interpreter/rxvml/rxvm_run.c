@@ -121,7 +121,24 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
             ctx->ext_args = malloc(sizeof(value*) * argc);
             for (i = 0; i < argc; i++) {
                 ctx->ext_args[i] = value_f();
-                set_null_string(ctx->ext_args[i], argv[i]);
+                if (set_null_string_validated(ctx->ext_args[i], argv[i] ? argv[i] : "") != 0) {
+                    int j;
+                    fprintf(stderr, "ERROR: Invalid UTF-8 argument\n");
+                    clear_value(ctx->ext_args[i]);
+                    free(ctx->ext_args[i]);
+                    for (j = 0; j < i; j++) {
+                        clear_value(ctx->ext_args[j]);
+                        free(ctx->ext_args[j]);
+                    }
+                    free(ctx->ext_args);
+                    ctx->ext_args = NULL;
+                    ctx->ext_argc = 0;
+                    ctx->ext_proc = NULL;
+                    clear_value(ret_val);
+                    free(ret_val);
+                    ctx->ext_ret = NULL;
+                    return -1;
+                }
             }
         } else {
             fprintf(stderr, "ERROR: Procedure %s not found\n", proc_name);

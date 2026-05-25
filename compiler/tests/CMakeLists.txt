@@ -251,8 +251,8 @@ string(APPEND RXC_INVALID_UTF8_HEX_CONTENT
        "if(rxc_res EQUAL 0)\n"
        "  message(FATAL_ERROR \"Expected rxc to reject invalid UTF-8 hex literal, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
        "endif()\n"
-       "if(NOT full_out MATCHES \"valid UTF-8\")\n"
-       "  message(FATAL_ERROR \"Expected invalid UTF-8 diagnostic was not emitted for source hex literal.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT full_out MATCHES \"CANNOT_CAST_BINARY\")\n"
+       "  message(FATAL_ERROR \"Expected binary-to-text diagnostic was not emitted for source hex literal.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
        "endif()\n")
 file(GENERATE OUTPUT "${RXC_INVALID_UTF8_HEX_SCRIPT}" CONTENT "${RXC_INVALID_UTF8_HEX_CONTENT}")
 
@@ -278,13 +278,170 @@ string(APPEND RXC_INVALID_UTF8_BINARY_CONTENT
        "if(rxc_res EQUAL 0)\n"
        "  message(FATAL_ERROR \"Expected rxc to reject invalid UTF-8 binary literal, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
        "endif()\n"
-       "if(NOT full_out MATCHES \"valid UTF-8\")\n"
-       "  message(FATAL_ERROR \"Expected invalid UTF-8 diagnostic was not emitted for source binary literal.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT full_out MATCHES \"CANNOT_CAST_BINARY\")\n"
+       "  message(FATAL_ERROR \"Expected binary-to-text diagnostic was not emitted for source binary literal.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
        "endif()\n")
 file(GENERATE OUTPUT "${RXC_INVALID_UTF8_BINARY_SCRIPT}" CONTENT "${RXC_INVALID_UTF8_BINARY_CONTENT}")
 
 add_test(NAME rxc_invalid_utf8_binary_literal
          COMMAND ${CMAKE_COMMAND} -P "${RXC_INVALID_UTF8_BINARY_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_INVALID_BINARY_ASSIGN_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_binary_assign_literal.cmake")
+set(RXC_INVALID_BINARY_ASSIGN_CONTENT "")
+string(APPEND RXC_INVALID_BINARY_ASSIGN_CONTENT
+       "file(WRITE \"${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_binary_assign_literal.crexx\" \"options levelb\\n\\nmain: procedure = .int\\n  x = 'ffff'x\\n  return 0\\n\")\n")
+string(APPEND RXC_INVALID_BINARY_ASSIGN_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -x -o \"rxc_invalid_binary_assign_literal\" \"${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_binary_assign_literal.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"Expected rxc to reject untyped invalid UTF-8 byte literal assignment, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "if(NOT full_out MATCHES \"CANNOT_CAST_BINARY\")\n"
+       "  message(FATAL_ERROR \"Expected binary-to-text diagnostic was not emitted for untyped invalid byte literal assignment.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_INVALID_BINARY_ASSIGN_SCRIPT}" CONTENT "${RXC_INVALID_BINARY_ASSIGN_CONTENT}")
+
+add_test(NAME rxc_invalid_binary_assign_literal
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_INVALID_BINARY_ASSIGN_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_INVALID_BINARY_AS_STRING_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_binary_literal_as_string.cmake")
+set(RXC_INVALID_BINARY_AS_STRING_CONTENT "")
+string(APPEND RXC_INVALID_BINARY_AS_STRING_CONTENT
+       "file(WRITE \"${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_binary_literal_as_string.crexx\" \"options levelb\\n\\nmain: procedure = .int\\n  x = 'ffff'x as .string\\n  say x\\n  return 0\\n\")\n")
+string(APPEND RXC_INVALID_BINARY_AS_STRING_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -x -o \"rxc_invalid_binary_literal_as_string\" \"${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_binary_literal_as_string.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"Expected rxc to reject invalid byte literal cast to .string, but it succeeded.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "if(NOT full_out MATCHES \"CANNOT_CAST_BINARY\")\n"
+       "  message(FATAL_ERROR \"Expected binary-to-text diagnostic was not emitted for invalid byte literal cast to .string.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_INVALID_BINARY_AS_STRING_SCRIPT}" CONTENT "${RXC_INVALID_BINARY_AS_STRING_CONTENT}")
+
+add_test(NAME rxc_invalid_binary_literal_as_string
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_INVALID_BINARY_AS_STRING_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_INVALID_BINARY_TO_STRING_RUNTIME_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_binary_to_string_runtime.cmake")
+set(RXC_INVALID_BINARY_TO_STRING_RUNTIME_CONTENT "")
+string(APPEND RXC_INVALID_BINARY_TO_STRING_RUNTIME_CONTENT
+       "file(WRITE \"${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_binary_to_string_runtime.crexx\" \"options levelb\\n\\nmain: procedure = .int\\n  payload = .binary\\n  text = \\\"\\\"\\n  payload = 'ffff'x\\n  text = payload as .string\\n  say text\\n  return 0\\n\")\n")
+string(APPEND RXC_INVALID_BINARY_TO_STRING_RUNTIME_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -n -o \"rxc_invalid_binary_to_string_runtime\" \"${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_binary_to_string_runtime.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "if(NOT rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"rxc failed for runtime invalid binary-to-string test.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxas>\" -o \"rxc_invalid_binary_to_string_runtime.rxbin\" \"rxc_invalid_binary_to_string_runtime\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxas_out\n"
+       "  ERROR_VARIABLE rxas_err\n"
+       "  RESULT_VARIABLE rxas_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{full_out}${RXAS_DIAG_DOLLAR}{rxas_out}${RXAS_DIAG_DOLLAR}{rxas_err}\")\n"
+       "if(NOT rxas_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"rxas failed for runtime invalid binary-to-string test.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"rxc_invalid_binary_to_string_runtime.rxbin\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxvm_out\n"
+       "  ERROR_VARIABLE rxvm_err\n"
+       "  RESULT_VARIABLE rxvm_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{full_out}${RXAS_DIAG_DOLLAR}{rxvm_out}${RXAS_DIAG_DOLLAR}{rxvm_err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT full_out MATCHES \"UNICODE_ERROR\")\n"
+       "  message(FATAL_ERROR \"Expected runtime binary-to-string conversion to raise UNICODE_ERROR.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_INVALID_BINARY_TO_STRING_RUNTIME_SCRIPT}" CONTENT "${RXC_INVALID_BINARY_TO_STRING_RUNTIME_CONTENT}")
+
+add_test(NAME rxc_invalid_binary_to_string_runtime
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_INVALID_BINARY_TO_STRING_RUNTIME_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_BINARY_LITERAL_LOAD_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_binary_literal_load.cmake")
+set(RXC_BINARY_LITERAL_LOAD_CONTENT "")
+string(APPEND RXC_BINARY_LITERAL_LOAD_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -n -o \"binary_literal_load_rxas_check\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_literal_load.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"rxc failed for binary literal load check.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/binary_literal_load_rxas_check.rxas\" rxas_out)\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" rxas_out \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "if(NOT rxas_out MATCHES [=[load r[0-9]+,0x00ff41]=])\n"
+       "  message(FATAL_ERROR \"Binary hex literal did not lower to an RXAS binary load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT rxas_out MATCHES [=[load r[0-9]+,0x414243]=])\n"
+       "  message(FATAL_ERROR \"String assigned to .binary did not lower to an RXAS binary load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT rxas_out MATCHES [=[load r[0-9]+,0xffff]=])\n"
+       "  message(FATAL_ERROR \"Explicit binary cast literal did not lower to an RXAS binary load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT rxas_out MATCHES [=[stobin r[0-9]+]=])\n"
+       "  message(FATAL_ERROR \"String cast to .binary did not emit stobin.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT rxas_out MATCHES [=[bintos r[0-9]+]=])\n"
+       "  message(FATAL_ERROR \"Binary cast to .string did not emit bintos.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"binary_literal_load_rxas_check_opt\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_literal_load.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_opt_out\n"
+       "  ERROR_VARIABLE rxc_opt_err\n"
+       "  RESULT_VARIABLE rxc_opt_res\n"
+       ")\n"
+       "set(full_opt_out \"${RXAS_DIAG_DOLLAR}{rxc_opt_out}${RXAS_DIAG_DOLLAR}{rxc_opt_err}\")\n"
+       "if(NOT rxc_opt_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"optimized rxc failed for binary literal load check.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_opt_out}\")\n"
+       "endif()\n"
+       "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/binary_literal_load_rxas_check_opt.rxas\" opt_rxas_out)\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" opt_rxas_out \"${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "if(NOT opt_rxas_out MATCHES [=[load r[0-9]+,0xceb1]=])\n"
+       "  message(FATAL_ERROR \"Optimized string-to-binary constant cast did not fold to a binary load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT opt_rxas_out MATCHES [=[load r[0-9]+,\"AB\"]=])\n"
+       "  message(FATAL_ERROR \"Optimized binary-to-string constant cast did not fold to a string load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "endif()\n"
+       "if(opt_rxas_out MATCHES [=[0x3078]=])\n"
+       "  message(FATAL_ERROR \"Optimized binary constants were re-encoded as ASCII hex text.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_BINARY_LITERAL_LOAD_SCRIPT}" CONTENT "${RXC_BINARY_LITERAL_LOAD_CONTENT}")
+
+add_test(NAME rxc_binary_literal_load
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_LITERAL_LOAD_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Robustness tests
@@ -1397,6 +1554,8 @@ add_crexx_run_test(test_meth_vs_proc rexx_src/test_meth_vs_proc.crexx)
 add_crexx_run_test(test_class_adv rexx_src/test_class_adv.crexx)
 add_crexx_run_test(test_array_edge rexx_src/test_array_edge.crexx)
 add_crexx_run_test(test_utf_math rexx_src/test_utf_math.crexx)
+add_crexx_run_test(binary_literal_load rexx_src/binary_literal_load.crexx)
+add_crexx_run_test(scalar_type_casts rexx_src/scalar_type_casts.crexx)
 add_crexx_run_test(test_lib_boundary rexx_src/test_lib_boundary.crexx)
 add_crexx_run_test(div_ops_common rexx_src/div_ops_common.crexx)
 add_crexx_run_test(div_ops_classic rexx_src/div_ops_classic.crexx)
@@ -1430,6 +1589,7 @@ add_crexx_run_test(inline_test_condition_contexts rexx_src/inline_test_condition
 add_crexx_run_test(inline_test_loop_bound_expr rexx_src/inline_test_loop_bound_expr.crexx)
 add_crexx_run_test(inline_test_member_receiver_expr rexx_src/inline_test_member_receiver_expr.crexx)
 add_crexx_run_test(inline_test_named_factory_selector rexx_src/inline_test_named_factory_selector.crexx)
+add_crexx_run_test(inline_test_factory_arg_scope rexx_src/inline_test_factory_arg_scope.crexx)
 add_crexx_run_test(inline_test_ref_opt rexx_src/inline_test_ref_opt.crexx)
 add_crexx_run_test(inline_test_ref_indexed rexx_src/inline_test_ref_indexed.crexx)
 add_crexx_run_test(inline_test_ref_stem rexx_src/inline_test_ref_stem.crexx)
@@ -2621,6 +2781,10 @@ target_compile_definitions(test_dynamic_load PRIVATE
         CREXX_TEST_DYNAMIC_LOAD_PROVIDER_MODULE="${CMAKE_CURRENT_BINARY_DIR}/dynamic_load_provider.rxbin")
 add_dependencies(test_dynamic_load dynamic_load_fixture_bin library)
 
+add_executable(test_rxvml_utf_boundaries src/test_rxvml_utf_boundaries.c)
+target_link_libraries(test_rxvml_utf_boundaries PRIVATE rxvml rxpashim)
+target_include_directories(test_rxvml_utf_boundaries PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+
 add_custom_command(
         OUTPUT crexxsaa_variables_host.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o crexxsaa_variables_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_variables_host.crexx
@@ -2707,6 +2871,8 @@ endif()
 
 # Commented out until fix found for multiple calls to the VM
 add_test(NAME BridgeConnectivity COMMAND test_bridge)
+add_test(NAME rxvml_utf_boundaries COMMAND test_rxvml_utf_boundaries)
+set_tests_properties(rxvml_utf_boundaries PROPERTIES LABELS "compiler;rxvml;utf")
 add_test(NAME address_bridge COMMAND test_address_bridge)
 set_tests_properties(address_bridge PROPERTIES
         LABELS "compiler;stage3"

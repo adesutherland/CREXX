@@ -86,11 +86,66 @@ f = .float(i)
 d = .decimal("42.50")
 ```
 
+The checked cast form can also be used for scalar conversions:
+
+```rexx
+f = 1 as .float
+i = "42" as .int
+d = "42.50" as .decimal
+s = 42 as .string
+ok = "1" as .boolean
+```
+
+Scalar casts use the same conversion rules as the corresponding constructor or
+promotion opcode. A cast is still type checked; for example, `.binary` values
+only cast back to `.string` when the cast is explicit and the bytes are valid
+UTF-8.
+
 ## Strings and Binary Values
 
 `.string` values are character data. `.binary` values are byte data. Keep the
 two distinct when working with sockets, files, encodings, or native payloads:
 string operations are text operations, while binary operations preserve bytes.
+
+In UTF builds, `.string` source values are valid UTF-8 text. Converting a
+string to `.binary` stores the exact UTF-8 bytes currently held by the string;
+the conversion does not normalize, transcode, or reinterpret the text:
+
+```rexx
+payload = "alpha" as .binary
+```
+
+Converting `.binary` to `.string` validates the byte sequence as UTF-8:
+
+```rexx
+payload = "ceb1"x as .binary
+text = payload as .string     /* "α" */
+```
+
+An invalid binary-to-string conversion raises `UNICODE_ERROR` at runtime. If the
+invalid bytes are visible as a constant literal in the cast, the compiler rejects
+the program with `CANNOT_CAST_BINARY`.
+
+Invalid UTF-8 byte sequences are only valid in an explicit binary context:
+
+```rexx
+payload = .binary
+payload = 'ffff'x
+
+other = 'ffff'x as .binary
+```
+
+A first untyped assignment such as `payload = 'ffff'x` is treated as a text
+assignment and is rejected when the decoded bytes are not valid UTF-8. That rule
+keeps accidental invalid text out of string operations; use `.binary` when the
+program is handling bytes.
+
+The same boundary applies outside source literals. Native RXVML string setters,
+CREXXSAA ADDRESS variable setters, RXPA native return/argument trees,
+command-line arguments passed through RXVML, ADDRESS callback text, text file
+reads, socket text reads, and explicit binary-to-string casts validate UTF-8 in
+normal Level B builds. Invalid bytes should be read or carried as `.binary`
+first, then decoded to `.string` only when the program has a valid encoding.
 
 ## Object Values
 
@@ -110,6 +165,14 @@ Level B supports:
 Objects can also carry native payloads when exposed through the plugin API, but
 ordinary Level B code should interact with objects through factories, methods,
 and interfaces.
+
+Level B does not define implicit object-to-string promotion. Statements such as
+`say value`, string concatenation, and string comparison operate on values whose
+types are already string-compatible under the Level B type rules; they do not
+automatically call a `toString()` method on arbitrary objects. A future Level G
+object-promotion capability is still undesigned. The likely direction is an
+explicit contract, such as a supported interface for string rendering, rather
+than a convention based only on a method name.
 
 ## Type Inference
 

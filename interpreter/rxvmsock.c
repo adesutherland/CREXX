@@ -2291,7 +2291,11 @@ rxinteger rxvm_socket_recv_string(struct rxvm_context *context, value *out, rxin
     }
 
     received = rxvm_socket_recv_bytes(entry, buffer, (size_t)max_bytes);
-    if (received > 0) set_string(out, buffer, (size_t)received);
+    if (received > 0 && set_string_validated(out, buffer, (size_t)received) != 0) {
+        rxvm_socket_entry_status(entry, RXSOCK_ERR_ARGUMENT, 0, "received text is not valid UTF-8");
+        free(buffer);
+        return RXSOCK_ERR_ARGUMENT;
+    }
     free(buffer);
     return received < 0 ? received : received;
 }
@@ -2303,6 +2307,7 @@ rxinteger rxvm_socket_recv_binary(struct rxvm_context *context, value *out, rxin
     if (!out) return RXSOCK_ERR_ARGUMENT;
     if (out->native_payload_ops) clear_binary_payload(out);
     out->binary_length = 0;
+    out->binary_pos = 0;
     if (!entry) return RXSOCK_ERR_INVALID_HANDLE;
     if (max_bytes < 0) {
         rxvm_socket_entry_status(entry, RXSOCK_ERR_ARGUMENT, 0, "invalid receive size");
@@ -2321,6 +2326,8 @@ rxinteger rxvm_socket_recv_binary(struct rxvm_context *context, value *out, rxin
     received = rxvm_socket_recv_bytes(entry, out->binary_value, (size_t)max_bytes);
     if (received > 0) {
         out->binary_length = (size_t)received;
+        out->binary_pos = 0;
+        clear_vm_private_flags(out);
     }
     return received < 0 ? received : received;
 }

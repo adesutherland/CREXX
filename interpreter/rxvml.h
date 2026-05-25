@@ -102,7 +102,7 @@ int rxvml_load_module_buffer(rxvml_context* ctx, const void* buf, size_t len);
 /* Value construction & setting */
 rxvml_value* rxvml_value_new(rxvml_context* ctx);
 void         rxvml_set_int(rxvml_value* v, rxinteger i);
-void         rxvml_set_str(rxvml_value* v, const char* s, size_t len);
+int          rxvml_set_str(rxvml_value* v, const char* s, size_t len);
 int          rxvml_set_native_payload(rxvml_value* v, const void* payload, size_t len,
                                       const rxvm_native_payload_ops* ops, unsigned int flags);
 void*        rxvml_get_native_payload(rxvml_value* v, size_t* out_len,

@@ -129,6 +129,24 @@ static ASTNode *inline_create_temp_value_ref(Context *context,
                                              InlineCloneState *state,
                                              const char *prefix,
                                              size_t suffix);
+static int inline_capture_scoped_call_actuals(Context *context,
+                                              ASTNode *instr_list,
+                                              Scope *inline_scope,
+                                              ASTNode *proc_def,
+                                              ASTNode *call_node,
+                                              InlineCloneState *clone_state,
+                                              Symbol **captured_receiver_out,
+                                              Symbol ***captured_symbols_out,
+                                              size_t *captured_count_out);
+static int inline_capture_varg_captured_actuals(Context *context,
+                                                ASTNode *instr_list,
+                                                Scope *inline_scope,
+                                                ASTNode *varg_arg,
+                                                ASTNode *actual_arg,
+                                                InlineCloneState *state,
+                                                Symbol **captured_symbols,
+                                                size_t captured_count,
+                                                size_t first_actual_index);
 static int inline_initialise_varg_array(Context *context,
                                         ASTNode *instr_list,
                                         Scope *inline_scope,
@@ -145,6 +163,8 @@ static int inline_analyse_varg_usage(ASTNode *proc_def, int *unsupported_out, si
 static int inline_call_is_recursive(ASTNode *call_node, Symbol *proc_sym);
 static int inline_analyse_return_shape(ASTNode *proc_def, InlineReturnShape *shape_out);
 static int inline_method_writes_class_attribute(ASTNode *proc_def);
+static int inline_subtree_reads_class_attribute(ASTNode *node);
+static int inline_sibling_list_reads_class_attribute(ASTNode *node);
 static int inline_assembler_has_unsupported_aliasing(ASTNode *node);
 static int inline_assembler_has_unsupported_effect(ASTNode *node);
 static int inline_proc_has_procedure_expose(ASTNode *node);
@@ -756,6 +776,369 @@ static ASTNode *inline_create_temp_value_ref(Context *context,
                         source_node->target_class);
 
     return temp_ref;
+}
+
+static int inline_should_capture_scoped_actual(ASTNode *param_arg, ASTNode *actual_arg) {
+    ASTNode *formal_target;
+
+    if (!param_arg || !actual_arg) return 0;
+    if (inline_is_missing_actual(actual_arg)) return 0;
+    if (param_arg->is_ref_arg) return 0;
+    if (!inline_subtree_reads_class_attribute(actual_arg)) return 0;
+
+    formal_target = inline_formal_target(param_arg);
+    if (inline_node_is_plain_object(formal_target) && param_arg->is_const_arg) return 0;
+
+    return 1;
+}
+
+static int inline_subtree_reads_class_attribute(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    if (inline_node_is_callable_def(node)) return 0;
+
+    if (node->node_type == VAR_SYMBOL &&
+        node->symbolNode &&
+        inline_symbol_is_class_attribute(node->symbolNode->symbol)) {
+        return 1;
+    }
+
+    child = node->child;
+    while (child) {
+        if (inline_subtree_reads_class_attribute(child)) return 1;
+        child = child->sibling;
+    }
+
+    return 0;
+}
+
+static int inline_sibling_list_reads_class_attribute(ASTNode *node) {
+    while (node) {
+        if (inline_subtree_reads_class_attribute(node)) return 1;
+        node = node->sibling;
+    }
+
+    return 0;
+}
+
+static Scope *inline_find_callsite_instance_scope(ASTNode *call_node) {
+    ASTNode *node;
+
+    node = call_node;
+    while (node) {
+        ASTNode *association;
+
+        association = node->association;
+        if (association &&
+            (association->node_type == METHOD || association->node_type == FACTORY) &&
+            node->scope) {
+            ASTNode lookup_node;
+            const char *name;
+
+            name = association->node_type == FACTORY ? "\xc2\xa7" "factory" : "\xc2\xa7" "this";
+            memset(&lookup_node, 0, sizeof(lookup_node));
+            lookup_node.node_string = (char *)name;
+            lookup_node.node_string_length = strlen(name);
+
+            if (sym_lrsv(node->scope, &lookup_node)) return node->scope;
+        }
+
+        node = node->parent;
+    }
+
+    return call_node ? call_node->scope : NULL;
+}
+
+static ASTNode *inline_scope_callable_association(Scope *scope) {
+    while (scope) {
+        ASTNode *defining_node;
+
+        defining_node = scope->defining_node;
+        if (inline_node_is_callable_def(defining_node)) return defining_node;
+        if (defining_node && inline_node_is_callable_def(defining_node->association)) {
+            return defining_node->association;
+        }
+
+        scope = scope->parent;
+    }
+
+    return NULL;
+}
+
+static int inline_scoped_call_needs_actual_capture(ASTNode *proc_def, ASTNode *call_node) {
+    ASTNode *param_list;
+    ASTNode *param_arg;
+    ASTNode *actual_arg;
+    ASTNode *varg_arg;
+
+    if (!proc_def || !call_node) return 0;
+    if (proc_def->node_type != FACTORY && proc_def->node_type != METHOD) return 0;
+
+    param_list = ast_chld(proc_def, ARGS, 0);
+    param_arg = param_list ? param_list->child : NULL;
+    actual_arg = inline_call_first_user_actual(call_node);
+    varg_arg = inline_find_varg_arg(proc_def);
+
+    while (param_arg && actual_arg) {
+        if (param_arg == varg_arg) {
+            if (param_arg->is_ref_arg) return 0;
+            return inline_sibling_list_reads_class_attribute(actual_arg);
+        }
+
+        if (inline_should_capture_scoped_actual(param_arg, actual_arg)) return 1;
+
+        param_arg = param_arg->sibling;
+        actual_arg = actual_arg->sibling;
+    }
+
+    return 0;
+}
+
+static Symbol *inline_capture_method_receiver_for_scoped_args(Context *context,
+                                                              ASTNode *instr_list,
+                                                              Scope *caller_scope,
+                                                              ASTNode *proc_def,
+                                                              ASTNode *call_node,
+                                                              InlineCloneState *clone_state) {
+    ASTNode *receiver;
+    Symbol *temp_symbol;
+    ASTNode *capture_assign;
+    ASTNode *capture_lhs;
+    ASTNode *capture_rhs;
+
+    if (!context || !instr_list || !caller_scope || !proc_def || !call_node || !clone_state) return NULL;
+    if (proc_def->node_type != METHOD) return NULL;
+
+    receiver = inline_call_receiver(call_node);
+    if (!receiver) return NULL;
+
+    temp_symbol = inline_create_temp_symbol(context,
+                                            caller_scope,
+                                            receiver,
+                                            "__inline_method_receiver",
+                                            0);
+    if (!temp_symbol) return NULL;
+
+    capture_assign = ast_f(context, ASSIGN, receiver->token);
+    if (!capture_assign) return NULL;
+    capture_assign->association = inline_scope_callable_association(caller_scope);
+    capture_assign->scope = caller_scope;
+    capture_assign->inherit_parent_scope = 1;
+    capture_assign->value_type = receiver->value_type;
+    capture_assign->target_type = receiver->target_type;
+
+    capture_lhs = inline_create_symbol_node(context,
+                                            caller_scope,
+                                            receiver,
+                                            temp_symbol,
+                                            VAR_TARGET,
+                                            0,
+                                            1);
+    capture_rhs = inline_clone_subtree_in_scope(context, receiver, clone_state, caller_scope);
+    if (!capture_lhs || !capture_rhs) return NULL;
+
+    add_ast(capture_assign, capture_lhs);
+    add_ast(capture_assign, capture_rhs);
+    add_ast(instr_list, capture_assign);
+
+    return temp_symbol;
+}
+
+static int inline_capture_scoped_call_actuals(Context *context,
+                                              ASTNode *instr_list,
+                                              Scope *inline_scope,
+                                              ASTNode *proc_def,
+                                              ASTNode *call_node,
+                                              InlineCloneState *clone_state,
+                                              Symbol **captured_receiver_out,
+                                              Symbol ***captured_symbols_out,
+                                              size_t *captured_count_out) {
+    Scope *caller_scope;
+    ASTNode *param_list;
+    ASTNode *param_arg;
+    ASTNode *actual_arg;
+    ASTNode *varg_arg;
+    Symbol **captured_symbols;
+    size_t actual_count;
+    size_t actual_index;
+    int capture_varg_actuals;
+
+    if (captured_receiver_out) *captured_receiver_out = NULL;
+    if (captured_symbols_out) *captured_symbols_out = NULL;
+    if (captured_count_out) *captured_count_out = 0;
+
+    if (!context || !instr_list || !inline_scope || !proc_def || !call_node || !clone_state ||
+        !captured_receiver_out || !captured_symbols_out || !captured_count_out) {
+        return 0;
+    }
+    if (proc_def->node_type != FACTORY && proc_def->node_type != METHOD) return 1;
+    if (!inline_scoped_call_needs_actual_capture(proc_def, call_node)) return 1;
+
+    actual_arg = inline_call_first_user_actual(call_node);
+    actual_count = inline_count_siblings(actual_arg);
+    if (actual_count == 0) return 1;
+
+    caller_scope = inline_find_callsite_instance_scope(call_node);
+    if (!caller_scope) caller_scope = call_node->scope ? call_node->scope : inline_scope->parent;
+    if (!caller_scope) return 0;
+
+    if (proc_def->node_type == METHOD) {
+        *captured_receiver_out = inline_capture_method_receiver_for_scoped_args(context,
+                                                                               instr_list,
+                                                                               caller_scope,
+                                                                               proc_def,
+                                                                               call_node,
+                                                                               clone_state);
+        if (!*captured_receiver_out) return 0;
+    }
+
+    captured_symbols = calloc(actual_count, sizeof(Symbol *));
+    if (!captured_symbols) return 0;
+
+    param_list = ast_chld(proc_def, ARGS, 0);
+    param_arg = param_list ? param_list->child : NULL;
+    varg_arg = inline_find_varg_arg(proc_def);
+    actual_index = 0;
+    capture_varg_actuals = 0;
+
+    while (param_arg && actual_arg) {
+        ASTNode *capture_assign;
+        ASTNode *capture_lhs;
+        ASTNode *capture_rhs;
+        Symbol *temp_symbol;
+
+        if (param_arg == varg_arg && param_arg->is_ref_arg) break;
+
+        if (param_arg != varg_arg && !inline_should_capture_scoped_actual(param_arg, actual_arg)) {
+            param_arg = param_arg->sibling;
+            actual_arg = actual_arg->sibling;
+            actual_index++;
+            continue;
+        }
+        if (param_arg == varg_arg && !capture_varg_actuals) {
+            capture_varg_actuals = inline_sibling_list_reads_class_attribute(actual_arg);
+        }
+        if (param_arg == varg_arg &&
+            (inline_is_missing_actual(actual_arg) || !capture_varg_actuals)) {
+            actual_arg = actual_arg->sibling;
+            actual_index++;
+            continue;
+        }
+
+        temp_symbol = inline_create_temp_symbol(context,
+                                                caller_scope,
+                                                actual_arg,
+                                                "__inline_scoped_arg",
+                                                actual_index);
+        if (!temp_symbol) {
+            free(captured_symbols);
+            return 0;
+        }
+
+        capture_assign = ast_f(context, ASSIGN, actual_arg->token);
+        if (!capture_assign) {
+            free(captured_symbols);
+            return 0;
+        }
+        capture_assign->association = inline_scope_callable_association(caller_scope);
+        capture_assign->scope = caller_scope;
+        capture_assign->inherit_parent_scope = 1;
+        capture_assign->value_type = actual_arg->value_type;
+        capture_assign->target_type = actual_arg->target_type;
+
+        capture_lhs = inline_create_symbol_node(context,
+                                                caller_scope,
+                                                actual_arg,
+                                                temp_symbol,
+                                                VAR_TARGET,
+                                                0,
+                                                1);
+        capture_rhs = inline_clone_subtree_in_scope(context, actual_arg, clone_state, caller_scope);
+        if (!capture_lhs || !capture_rhs) {
+            free(captured_symbols);
+            return 0;
+        }
+
+        add_ast(capture_assign, capture_lhs);
+        add_ast(capture_assign, capture_rhs);
+        add_ast(instr_list, capture_assign);
+
+        captured_symbols[actual_index] = temp_symbol;
+        if (param_arg != varg_arg) param_arg = param_arg->sibling;
+        actual_arg = actual_arg->sibling;
+        actual_index++;
+    }
+
+    *captured_symbols_out = captured_symbols;
+    *captured_count_out = actual_count;
+    return 1;
+}
+
+static int inline_capture_varg_captured_actuals(Context *context,
+                                                ASTNode *instr_list,
+                                                Scope *inline_scope,
+                                                ASTNode *varg_arg,
+                                                ASTNode *actual_arg,
+                                                InlineCloneState *state,
+                                                Symbol **captured_symbols,
+                                                size_t captured_count,
+                                                size_t first_actual_index) {
+    ASTNode *varg_type;
+    ASTNode *source_template;
+    size_t child_index;
+
+    if (!context || !instr_list || !inline_scope || !varg_arg || !state) return 0;
+
+    varg_type = inline_formal_default(varg_arg);
+    source_template = varg_type ? varg_type : varg_arg;
+
+    if (!actual_arg) {
+        state->varg_symbols = NULL;
+        state->varg_count = 0;
+        return inline_initialise_varg_array(context, instr_list, inline_scope, varg_arg, source_template, state);
+    }
+
+    source_template = varg_type ? varg_type : actual_arg;
+    state->varg_count = inline_count_siblings(actual_arg);
+    state->varg_symbols = calloc(state->varg_count, sizeof(Symbol *));
+    if (!state->varg_symbols) return 0;
+
+    child_index = 0;
+    while (actual_arg) {
+        Symbol *captured_symbol;
+
+        if (actual_arg->node_type == NOVAL) return 0;
+        if (first_actual_index + child_index >= captured_count) return 0;
+
+        captured_symbol = captured_symbols ? captured_symbols[first_actual_index + child_index] : NULL;
+        if (!captured_symbol) return 0;
+
+        state->varg_symbols[child_index] = captured_symbol;
+        child_index++;
+        actual_arg = actual_arg->sibling;
+    }
+
+    return inline_initialise_varg_array(context, instr_list, inline_scope, varg_arg, source_template, state);
+}
+
+static int inline_varg_actuals_are_captured(Symbol **captured_symbols,
+                                            size_t captured_count,
+                                            size_t first_actual_index,
+                                            ASTNode *actual_arg) {
+    size_t actual_index;
+
+    if (!captured_symbols || !actual_arg) return 0;
+
+    actual_index = first_actual_index;
+    while (actual_arg) {
+        if (actual_arg->node_type == NOVAL) return 0;
+        if (actual_index >= captured_count || !captured_symbols[actual_index]) return 0;
+        actual_arg = actual_arg->sibling;
+        actual_index++;
+    }
+
+    return 1;
 }
 
 static ASTNode *inline_find_varg_arg(ASTNode *proc_def) {
@@ -1491,7 +1874,8 @@ static int inline_bind_method_receiver(Context *context,
                                        Scope *inline_scope,
                                        ASTNode *proc_def,
                                        ASTNode *call_node,
-                                       InlineCloneState *clone_state) {
+                                       InlineCloneState *clone_state,
+                                       Symbol *captured_receiver_symbol) {
     Symbol *this_symbol;
     ASTNode *receiver;
     ASTNode *assign_node;
@@ -1520,7 +1904,17 @@ static int inline_bind_method_receiver(Context *context,
                                            VAR_TARGET,
                                            0,
                                            1);
-    assign_rhs = inline_clone_subtree(context, receiver, clone_state);
+    if (captured_receiver_symbol) {
+        assign_rhs = inline_create_symbol_node(context,
+                                               inline_scope,
+                                               receiver,
+                                               captured_receiver_symbol,
+                                               VAR_SYMBOL,
+                                               1,
+                                               0);
+    } else {
+        assign_rhs = inline_clone_subtree(context, receiver, clone_state);
+    }
     if (!assign_lhs || !assign_rhs) return 0;
 
     add_ast(assign_node, assign_lhs);
@@ -1845,12 +2239,42 @@ static int inline_bind_call_arguments(Context *context,
     ASTNode *param_arg;
     ASTNode *actual_arg;
     ASTNode *varg_arg;
+    Symbol *captured_method_receiver;
+    Symbol **captured_scoped_actuals;
+    size_t captured_scoped_actual_count;
+    size_t actual_index;
+
+#define INLINE_BIND_RETURN(value) do { free(captured_scoped_actuals); return (value); } while (0)
 
     if (!context || !instr_list || !inline_scope || !proc_def || !call_node || !proc_sym || !clone_state) return 0;
 
-    if (!inline_call_arity_matches(call_node, proc_sym, NULL)) return 0;
-    if (!inline_initialise_factory_instance(context, instr_list, inline_scope, proc_def, clone_state)) return 0;
-    if (!inline_bind_method_receiver(context, instr_list, inline_scope, proc_def, call_node, clone_state)) return 0;
+    captured_scoped_actuals = NULL;
+    captured_method_receiver = NULL;
+    captured_scoped_actual_count = 0;
+    actual_index = 0;
+
+    if (!inline_call_arity_matches(call_node, proc_sym, NULL)) INLINE_BIND_RETURN(0);
+    if (!inline_capture_scoped_call_actuals(context,
+                                            instr_list,
+                                            inline_scope,
+                                            proc_def,
+                                            call_node,
+                                            clone_state,
+                                            &captured_method_receiver,
+                                            &captured_scoped_actuals,
+                                            &captured_scoped_actual_count)) {
+        INLINE_BIND_RETURN(0);
+    }
+    if (!inline_initialise_factory_instance(context, instr_list, inline_scope, proc_def, clone_state)) INLINE_BIND_RETURN(0);
+    if (!inline_bind_method_receiver(context,
+                                     instr_list,
+                                     inline_scope,
+                                     proc_def,
+                                     call_node,
+                                     clone_state,
+                                     captured_method_receiver)) {
+        INLINE_BIND_RETURN(0);
+    }
 
     param_list = ast_chld(proc_def, ARGS, 0);
     param_arg = param_list ? param_list->child : NULL;
@@ -1864,34 +2288,39 @@ static int inline_bind_call_arguments(Context *context,
         ASTNode *bind_lhs;
         ASTNode *bind_rhs;
         ASTNode *bind_source;
+        Symbol *captured_actual_symbol;
 
         if (param_arg == varg_arg) break;
 
         formal_target = inline_formal_target(param_arg);
         formal_default = inline_formal_default(param_arg);
-        if (!formal_target || !actual_arg) return 0;
+        captured_actual_symbol = actual_index < captured_scoped_actual_count ?
+                                 captured_scoped_actuals[actual_index] : NULL;
+        if (!formal_target || !actual_arg) INLINE_BIND_RETURN(0);
 
         if (param_arg->is_ref_arg && !inline_is_missing_actual(actual_arg)) {
             if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, clone_state)) {
-                return 0;
+                INLINE_BIND_RETURN(0);
             }
             param_arg = param_arg->sibling;
             actual_arg = actual_arg->sibling;
+            actual_index++;
             continue;
         }
 
         if (inline_is_missing_actual(actual_arg)) {
-            if (!param_arg->is_opt_arg || !formal_default) return 0;
+            if (!param_arg->is_opt_arg || !formal_default) INLINE_BIND_RETURN(0);
         }
 
         if (inline_node_is_plain_object(formal_target) &&
             param_arg->is_const_arg &&
             !inline_is_missing_actual(actual_arg)) {
             if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, clone_state)) {
-                return 0;
+                INLINE_BIND_RETURN(0);
             }
             param_arg = param_arg->sibling;
             actual_arg = actual_arg->sibling;
+            actual_index++;
             continue;
         }
 
@@ -1903,11 +2332,21 @@ static int inline_bind_call_arguments(Context *context,
         bind_lhs = inline_clone_subtree(context, formal_target, clone_state);
         if (inline_is_missing_actual(actual_arg)) {
             bind_source = formal_default;
+        } else if (captured_actual_symbol) {
+            bind_source = actual_arg;
         } else {
             bind_source = actual_arg;
         }
 
-        if (inline_formal_needs_isolated_copy(formal_target, param_arg) &&
+        if (captured_actual_symbol) {
+            bind_rhs = inline_create_symbol_node(context,
+                                                 inline_scope,
+                                                 actual_arg,
+                                                 captured_actual_symbol,
+                                                 VAR_SYMBOL,
+                                                 1,
+                                                 0);
+        } else if (inline_formal_needs_isolated_copy(formal_target, param_arg) &&
             !inline_is_direct_symbol_actual(bind_source)) {
             bind_rhs = inline_create_temp_value_ref(context,
                                                     instr_list,
@@ -1924,7 +2363,7 @@ static int inline_bind_call_arguments(Context *context,
             bind_source = actual_arg;
         }
 
-        if (!bind_lhs || !bind_rhs) return 0;
+        if (!bind_lhs || !bind_rhs) INLINE_BIND_RETURN(0);
 
         if (inline_formal_needs_isolated_copy(formal_target, param_arg)) {
             ASTNode *bind_copy;
@@ -1932,7 +2371,7 @@ static int inline_bind_call_arguments(Context *context,
 
             bind_copy = inline_create_register_copy_instr(context, inline_scope, "copy", bind_lhs, bind_rhs);
             attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", bind_lhs, bind_rhs);
-            if (!bind_copy || !attr_copy) return 0;
+            if (!bind_copy || !attr_copy) INLINE_BIND_RETURN(0);
 
             add_ast(instr_list, bind_copy);
             add_ast(instr_list, attr_copy);
@@ -1944,25 +2383,43 @@ static int inline_bind_call_arguments(Context *context,
 
         param_arg = param_arg->sibling;
         actual_arg = actual_arg->sibling;
+        actual_index++;
     }
 
     if (varg_arg) {
         if (varg_arg->is_ref_arg) {
             if (!inline_capture_ref_varg_actuals(context, instr_list, inline_scope, actual_arg, clone_state)) {
-                return 0;
+                INLINE_BIND_RETURN(0);
+            }
+        } else if ((proc_def->node_type == FACTORY || proc_def->node_type == METHOD) &&
+                   inline_varg_actuals_are_captured(captured_scoped_actuals,
+                                                    captured_scoped_actual_count,
+                                                    actual_index,
+                                                    actual_arg)) {
+            if (!inline_capture_varg_captured_actuals(context,
+                                                      instr_list,
+                                                      inline_scope,
+                                                      varg_arg,
+                                                      actual_arg,
+                                                      clone_state,
+                                                      captured_scoped_actuals,
+                                                      captured_scoped_actual_count,
+                                                      actual_index)) {
+                INLINE_BIND_RETURN(0);
             }
         } else {
             if (!inline_capture_varg_actuals(context, instr_list, inline_scope, varg_arg, actual_arg, clone_state)) {
-                return 0;
+                INLINE_BIND_RETURN(0);
             }
         }
         actual_arg = NULL;
         param_arg = varg_arg ? varg_arg->sibling : param_arg;
     }
 
-    if (actual_arg || param_arg) return 0;
+    if (actual_arg || param_arg) INLINE_BIND_RETURN(0);
 
-    return 1;
+    INLINE_BIND_RETURN(1);
+#undef INLINE_BIND_RETURN
 }
 
 static int inline_append_scope_map_entry(InlineCloneState *state, Scope *old_scope, Scope *new_scope) {
@@ -2072,6 +2529,13 @@ static Scope *inline_prepare_cloned_node_scope(Context *context,
     if (!new_node) return NULL;
 
     node_scope = current_scope ? current_scope : old_node->scope;
+
+    if (old_node->inherit_parent_scope && old_node->scope) {
+        Scope *mapped_scope;
+
+        mapped_scope = inline_find_mapped_scope(state, old_node->scope);
+        if (mapped_scope) node_scope = mapped_scope;
+    }
 
     if (old_node->scope && old_node->scope->defining_node == old_node) {
         node_scope = inline_find_mapped_scope(state, old_node->scope);
