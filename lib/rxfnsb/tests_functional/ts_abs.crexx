@@ -1,0 +1,27 @@
+/* rexx test abs bif */
+options levelb
+import rxfnsb
+
+errors = 0
+
+if abs('12.3') <> '12.3' then do
+  errors=errors+1
+  say 'ABS failed in test 1'
+end
+
+if abs(' -0.307') <> '0.307' then do
+  errors=errors+1
+  say 'ABS failed in test 2'
+end
+
+if abs(-12.345) <> "12.345" then do
+  errors=errors+1
+  say 'ABS failed in test 3'
+end
+
+if abs(12.345) <>  12.345 then do
+  errors=errors+1
+  say 'ABS failed in test 4'
+end
+
+return errors<>0

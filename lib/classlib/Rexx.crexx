@@ -208,7 +208,7 @@ val = .string
  * @return the hexadecimal result as a Rexx string object.
  */
   d2x: method = .rexx
-    assembler stoi val
+    -- assembler stoi val
     return .rexx(.rxfnsb..d2x(val))
 
 /**
@@ -229,7 +229,7 @@ val = .string
  * @param wcount the number of words to delete.
  * @return the resulting value as a Rexx string object.
  */
-  delword: method  = .rexx
+  delword: method = .rexx
     arg wnum = .int, wcount = -1
     return .rexx(.rxfnsb..delword(val,wnum,wcount))
 
