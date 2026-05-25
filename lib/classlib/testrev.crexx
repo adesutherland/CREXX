@@ -19,3 +19,5 @@ say 'name_r.reverse():' name_r.reverse().toString()
 -- eman = eman.reverse()
 -- say eman.toString()
 
+x = .rexx('255')
+say x.d2x().toString()
