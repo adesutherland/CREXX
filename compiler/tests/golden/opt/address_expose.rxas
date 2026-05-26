@@ -1,13 +1,12 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : address_expose.crexx
- * BUILT                  : 2026-04-30 20:04:08
+ * BUILT                  : 2026-05-26 16:33:15
  */
 
 .srcfile="address_expose.crexx"
 .globals=0
 
-main() .locals=11
+main() .locals=16
    .meta "address_expose.main"="b" ".void" main() ""
    .src 3:1="main: procedure"
    setnumdgts 18
@@ -23,24 +22,52 @@ main() .locals=11
    load r1,"ALICE"
    .srcfile="exit_fragment"
    .src 2:1="rc=_address('system',\"echo EXPOSE_OK\",_noredir(),_noredir(),_noredir(), 'userid', userid)"
-   load r3,"system"
-   load r4,"echo EXPOSE_OK"
-   load r10,0
-   call r5,_rxsysb._noredir(),r10
-   load r10,0
-   call r6,_rxsysb._noredir(),r10
-   load r10,0
-   call r7,_rxsysb._noredir(),r10
-   load r8,"userid"
-   load r2,7
-   settp r3,768
-   settp r4,768
-   settp r5,256
-   settp r6,256
-   settp r7,256
-   swap r9,r1
-   call r0,_rxsysb._address(),r2
-   swap r1,r9
+   load r6,"system"
+   load r7,"echo EXPOSE_OK"
+   .src 2:39="_noredir"
+   .meta "address_expose.main.handle"="b" ".binary" r2
+   .srcfile="_address.crexx"
+   .src 1519:5="handle = .binary"
+   null r2
+   .src 1520:5="return handle"
+   copy r13,r2
+   acopy r13,r2
+   br l83bexprend
+l83bexprend:
+   .src 2:50="_noredir"
+   .meta "address_expose.main.handle"="b" ".binary" r3
+   .src 1519:5="handle = .binary"
+   null r3
+   .src 1520:5="return handle"
+   copy r14,r3
+   acopy r14,r3
+   br l90bexprend
+l90bexprend:
+   .src 2:61="_noredir"
+   .meta "address_expose.main.handle"="b" ".binary" r4
+   .src 1519:5="handle = .binary"
+   null r4
+   .src 1520:5="return handle"
+   copy r15,r4
+   acopy r15,r4
+   br l97bexprend
+l97bexprend:
+   load r11,"userid"
+   load r5,7
+   settp r6,768
+   settp r7,768
+   settp r13,768
+   swap r8,r13
+   settp r14,768
+   swap r9,r14
+   settp r15,768
+   swap r10,r15
+   swap r12,r1
+   call r0,_rxsysb._address(),r5
+   swap r13,r8
+   swap r14,r9
+   swap r15,r10
+   swap r1,r12
    .srcfile="address_expose.crexx"
    .src 6:3="return"
    ret

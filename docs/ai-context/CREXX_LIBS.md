@@ -173,10 +173,35 @@ wayfinding to real `.crexx` examples, see `docs/ai-context/CREXX_LEVELB_AUTHORIN
 The standard Level B array helpers live in `lib/rxfnsb/rexx` and are preferred
 over the legacy `lib/plugins/arrays` RXPA plugin. Current array BIFs include
 `arrayfind`, `arrayinsert`, `arraydelete`, `arraysort`, `arraycopy`,
-`arraydrop`, `arrayhi`, `arraymove`, `arraydump`, and `arrayformat`.
-Insertion, deletion, and movement use VM bulk attribute instructions so the
-logical array pointer list can be shifted without a Rexx-level per-element
-copy loop. Mutating array BIFs must declare the array with `arg expose`.
+`arraydrop`, `arrayhi`, `arraymove`, `arraydump`, `arrayformat`,
+`arrayappend`, `arrayprepend`, `arraypop`, `arrayshift`, `arrayget`,
+`arrayset`, `arraycontains`, `arrayindexof`, `arrayreverse`, and `arrayjoin`.
+Insertion, deletion, movement, append, prepend, pop, shift, and gap-growing set
+use VM bulk attribute instructions so the logical array pointer list can be
+shifted without a Rexx-level per-element copy loop. Mutating array BIFs must
+declare the array with `arg expose`.
+
+Container naming is intentionally split by shape:
+
+- Arrays/lists are ordered, one-based, duplicate-preserving sequences using
+  `array[0]` as the high water mark. Classic code should use the `array*` BIFs;
+  OO code should expose the same semantics through `ArrayList`/`LinkedList`
+  methods such as `add`/`append`, `insert`, `remove`, `get`, `set`, `size`,
+  `clear`, `contains`, and `indexOf`.
+- Maps/stems are keyed containers. Do not overload `array*` for keyed lookup;
+  use `stem*` or `map*` BIF names and class methods such as `put`, `get`,
+  `containsKey`, `remove`, `keys`, and `values`.
+- Sets are uniqueness containers. Use `add`, `contains`, `remove`, `size`,
+  `clear`, and `toArray`/`fromArray` semantics consistently across classic and
+  class-shaped APIs.
+
+Imported Rexx BIF calls inline only when the imported artifact carries
+`META_INLINE`. `rxlink` strips `META_INLINE` by default, so the standard-library
+link explicitly uses `PRESERVE INLINE`. Release linked libraries also use
+`STRIP SOURCE`, keeping inline bodies available to downstream optimisation while
+dropping `.src`/file metadata. Debug linked libraries keep both inline bodies
+and source metadata. Class-library hot paths that rely on this should inspect
+generated `.rxas` when changing import paths or link-strip policy.
 
 `lib/plugins/arrays` is deprecated and retained only as a legacy plugin smoke
 test. New Level B code should import `rxfnsb` and use the standard BIFs.

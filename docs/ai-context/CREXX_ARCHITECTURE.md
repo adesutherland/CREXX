@@ -41,7 +41,13 @@ The pipeline of transforming REXX source code into executable bytecode is struct
      policy, not as a semantic safety boundary. Unsupported semantic gates
      still fail closed, including procedure-level `expose`, assembler aliasing,
      dynamic-index varargs, receiver/copyback shapes without proof, and
-     interface/member dispatch that cannot be proved monomorphic.
+     interface/member dispatch that cannot be proved monomorphic. When a
+     right-hand eager-operator call is inlineable but the left operand is
+     already a computed value, the inliner rewrites the whole operator to a
+     `BLOCK_EXPR`: first capture the left operand in a compiler temp, then
+     `LEAVE WITH temp <op> call(...)`. The next fixed-point pass can inline
+     the call with a stable left operand, avoiding BLOCK_EXPR result-register
+     aliasing without giving up the inline opportunity.
    - Inlining is implemented as AST tree surgery, not textual substitution.
      The cloned body must preserve callee-local scopes, remap symbols, bind
      arguments exactly as a real call would, preserve source/debug metadata,

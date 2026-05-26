@@ -22,6 +22,7 @@ foreach(_selector ${RXXFNSB_RXAS_SELECTORS})
 endforeach()
 
 string(APPEND _library_control_text
+        "PRESERVE INLINE\n"
         "$<$<NOT:$<CONFIG:Debug>>:STRIP SOURCE\n>"
         "OUTPUT ${CMAKE_BINARY_DIR}/bin/library\n")
 

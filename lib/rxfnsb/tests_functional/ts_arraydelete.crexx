@@ -25,6 +25,9 @@ failures = failures + test_move("move after removed block", "A B C D E", 2, 2, 5
 failures = failures + test_move("move inside block no-op", "A B C D E", 2, 2, 3, "A B C D E")
 failures = failures + test_move("move tail clamp", "A B C D E", 4, 9, 1, "D E A B C")
 
+failures = failures + test_stack_queue_helpers()
+failures = failures + test_access_search_helpers()
+failures = failures + test_reverse_join_helpers()
 failures = failures + test_hi_drop_copy()
 
 if failures <> 0 then do
@@ -58,6 +61,55 @@ test_move: procedure=.int
   call load_array a, data
   call arraymove a, from, count, tto
 return check_join(label, a, expected)
+
+test_stack_queue_helpers: procedure=.int
+  failures = 0
+
+  a = .string[]
+  failures = failures + check_int("arrayappend one rc", arrayappend(a, "B"), 1)
+  failures = failures + check_int("arrayappend repeat rc", arrayappend(a, "C", 2), 3)
+  failures = failures + check_int("arrayprepend one rc", arrayprepend(a, "A"), 4)
+  failures = failures + check_join("append/prepend data", a, "A B C C")
+
+  failures = failures + check_string("arraypop value", arraypop(a, "?"), "C")
+  failures = failures + check_string("arrayshift value", arrayshift(a, "?"), "A")
+  failures = failures + check_join("pop/shift data", a, "B C")
+
+  call arraydrop a
+  failures = failures + check_string("arraypop empty default", arraypop(a, "?"), "?")
+  failures = failures + check_string("arrayshift empty default", arrayshift(a, "?"), "?")
+return failures
+
+test_access_search_helpers: procedure=.int
+  failures = 0
+
+  a = .string[]
+  failures = failures + check_int("arrayset grow rc", arrayset(a, 3, "C", "_"), 3)
+  failures = failures + check_join("arrayset grow data", a, "_ _ C")
+  failures = failures + check_int("arrayset middle rc", arrayset(a, 2, "B"), 3)
+  failures = failures + check_int("arrayset first rc", arrayset(a, 1, "A"), 3)
+  failures = failures + check_join("arrayset data", a, "A B C")
+
+  failures = failures + check_string("arrayget present", arrayget(a, 2, "?"), "B")
+  failures = failures + check_string("arrayget default", arrayget(a, 9, "?"), "?")
+  failures = failures + check_int("arraycontains exact", arraycontains(a, "B"), 1)
+  failures = failures + check_int("arraycontains missing exact", arraycontains(a, "b"), 0)
+  failures = failures + check_int("arraycontains nocase", arraycontains(a, "b", 0), 1)
+  failures = failures + check_int("arrayindexof exact", arrayindexof(a, "C"), 3)
+  failures = failures + check_int("arrayindexof from", arrayindexof(a, "A", 2), 0)
+  failures = failures + check_int("arrayindexof nocase", arrayindexof(a, "c", 1, 0), 3)
+return failures
+
+test_reverse_join_helpers: procedure=.int
+  failures = 0
+
+  a = .string[]
+  call load_array a, "A B C"
+  failures = failures + check_int("arrayreverse rc", arrayreverse(a), 3)
+  failures = failures + check_join("arrayreverse data", a, "C B A")
+  failures = failures + check_string("arrayjoin comma", arrayjoin(a, ","), "C,B,A")
+  failures = failures + check_string("arrayjoin empty separator", arrayjoin(a), "CBA")
+return failures
 
 test_hi_drop_copy: procedure=.int
   failures = 0
@@ -103,6 +155,15 @@ check_int: procedure=.int
 
   if actual <> expected then do
     say label": expected" expected "got" actual
+    return 1
+  end
+return 0
+
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
     return 1
   end
 return 0

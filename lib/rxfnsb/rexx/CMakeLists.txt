@@ -101,6 +101,16 @@ set(BIFS
 		splice
 		arrayinsert
 		arraydelete
+		arrayappend
+		arrayprepend
+		arraypop
+		arrayshift
+		arrayget
+		arrayset
+		arraycontains
+		arrayindexof
+		arrayreverse
+		arrayjoin
 		arraysort
 		arraycopy
 		arraydrop

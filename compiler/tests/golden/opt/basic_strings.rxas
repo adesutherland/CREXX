@@ -1,13 +1,12 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : basic_strings.crexx
- * BUILT                  : 2026-04-30 20:04:10
+ * BUILT                  : 2026-05-26 16:33:16
  */
 
 .srcfile="basic_strings.crexx"
 .globals=0
 
-main() .locals=7
+main() .locals=21
    .meta "basic_strings.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
@@ -24,35 +23,190 @@ main() .locals=7
    .src 9:1="say d"
    .meta "basic_strings.main.d"="b" ".string" "Hello   World"
    say "Hello   World"
+   .srcfile="basic_strings.crexx"
    .src 11:1="say length(c)"
-   load r1,1
-   swap r2,r0
-   call r3,rxfnsb.length(),r1
-   swap r0,r2
-   itos r3
-   say r3
+   .src 11:5="length"
+   .srcfile="length.crexx"
+   .src 35:3="result = 0"
+   load r1,0
+   .src 36:13="strlen result,string1"
+   strlen r1,r0
+   .src 37:3="return result"
+   icopy r17,r1
+   acopy r17,r1
+   br l320bexprend
+l320bexprend:
+   itos r17
+   say r17
+   .srcfile="basic_strings.crexx"
    .src 12:1="say substr(c, 1, 5)"
-   load r3,1
+   .src 12:5="substr"
+   .meta "basic_strings.main.outputstring"="b" ".string" r5
+   .srcfile="substr.crexx"
+   .src 55:3="outputstring = .string"
+   null r5
+   .srcfile="basic_strings.crexx"
+   .src 12:11=""
+   scopy r10,r0
+   .src 12:11=""
+   load r9,1
+   .src 12:11=""
    load r4,5
-   load r1,4
-   settp r0,256
-   swap r2,r0
-   settp r4,256
-   settp r5,512
-   call r6,rxfnsb.substr(),r1
-   swap r0,r2
-   say r6
+   .src 12:11=""
+   load r6," "
+   .srcfile="substr.crexx"
+   .src 36:3="inputLength  = 0"
+   load r3,0
+   .src 37:13="strlen inputLength, string1"
+   strlen r3,r10
+   ieq r17,r4,-256
+   brf l350iffalse,r17
+   .src 38:20="len=inputLength + 1 - start"
+   iadd r18,r3,1
+   isub r4,r18,r9
+l350iffalse:
+   ilt r18,r9,1
+   brf l361iffalse,r18
+   .srcfile="basic_strings.crexx"
+   .src 40:56=""
+   itos r9
+   scopy r11,r9
+   .srcfile="raise.crexx"
+   .src 34:3="say \"RUNTIME\" type \"ERROR:\" code parm1"
+   sconcat r17,"RUNTIME syntax ERROR: 40.13",r11
+   say r17
+l361iffalse:
+   ilte r18,r4,0
+   brf l373iffalse,r18
+   .srcfile="substr.crexx"
+   .src 42:22="return ''"
+   load r17,""
+   scopy r19,r17
+   acopy r19,r17
+   br l330bexprend
+l373iffalse:
+   .src 44:3="start = start - 1"
+   isub r9,r9,1
+   ieq r18,r9,0
+   brf l384iffalse,r18
+   ieq r19,r4,r3
+   brf l389iffalse,r19
+   .src 48:32="return string1"
+   scopy r19,r10
+   acopy r19,r10
+   br l330bexprend
+l389iffalse:
+   ilte r19,r4,r3
+   brf l395iffalse,r19
+   .src 50:19="substcut string1,len"
+   substcut r10,r4
+   .src 51:9="return string1"
+   scopy r19,r10
+   acopy r19,r10
+   br l330bexprend
+l395iffalse:
+l384iffalse:
+   iadd r19,r9,r4
+   ilte r19,r19,r3
+   brf l408iffalse,r19
+   .src 57:16="SETSTRPOS string1,start"
+   setstrpos r10,r9
+   .src 58:16="substring outputstring,string1,len"
+   substring r5,r10,r4
+   .src 59:6="return outputstring"
+   scopy r19,r5
+   acopy r19,r5
+   br l330bexprend
+l408iffalse:
+   .src 63:3="padchar      = 0"
+   load r7,0
+   .src 65:3="padLength    = 0"
+   load r8,0
+   seq r19,r6,""
+   brf l430iffalse,r19
+   .src 68:20="pad = ' '"
+   load r6," "
+l430iffalse:
+   .src 69:13="strlen padLength, pad"
+   strlen r8,r6
+   igt r19,r8,1
+   brf l440iffalse,r19
+   .srcfile="basic_strings.crexx"
+   .src 70:58=""
+   scopy r12,r6
+   .srcfile="raise.crexx"
+   .src 34:3="say \"RUNTIME\" type \"ERROR:\" code parm1"
+   sconcat r18,"RUNTIME syntax ERROR: 40.23",r12
+   say r18
+l440iffalse:
+   .srcfile="substr.crexx"
+   .src 71:13="strchar padchar, pad"
+   strchar r7,r6
+   .src 74:3="inputLength = inputLength - start"
+   isub r3,r3,r9
+   .src 77:13="SETSTRPOS string1, start"
+   setstrpos r10,r9
+   ilte r19,r3,0
+   brf l463iffalse,r19
+   .src 80:16="padstr outputstring, padchar, len"
+   padstr r5,r7,r4
+   br l463ifend
+l463iffalse:
+   ilte r18,r4,r3
+   brf l472iffalse,r18
+   .src 83:16="substring outputstring, string1, len"
+   substring r5,r10,r4
+   br l472ifend
+l472iffalse:
+   .src 86:16="substring outputstring, string1, inputLength"
+   substring r5,r10,r3
+   .src 87:6="pcount = len - inputLength"
+   isub r13,r4,r3
+   .src 88:16="padstr outputstring, padchar, pcount"
+   padstr r5,r7,r13
+l472ifend:
+l463ifend:
+   .src 90:3="return outputstring"
+   scopy r19,r5
+   acopy r19,r5
+   br l330bexprend
+l330bexprend:
+   say r19
+   .srcfile="basic_strings.crexx"
    .src 13:1="say pos(\"World\", c)"
-   load r4,"World"
-   load r3,3
-   settp r4,768
-   settp r0,256
-   swap r5,r0
-   settp r6,0
-   call r2,rxfnsb.pos(),r3
-   swap r0,r5
-   itos r2
-   say r2
+   .src 13:5="pos"
+   .src 13:8=""
+   load r16,"World"
+   .src 13:8=""
+   scopy r15,r0
+   seq r19,r16,""
+   brf l508iffalse,r19
+   .srcfile="pos.crexx"
+   .src 33:21="return 0"
+   load r18,0
+   icopy r19,r18
+   acopy r19,r18
+   br l497bexprend
+l508iffalse:
+   seq r19,r15,""
+   brf l514iffalse,r19
+   .src 34:23="return 0"
+   load r20,0
+   icopy r19,r20
+   acopy r19,r20
+   br l497bexprend
+l514iffalse:
+   .src 35:3="foundpos=start"
+   load r14,1
+   .src 36:13="strpos foundpos,needle,haystack"
+   strpos r14,r16,r15
+   .src 37:1="return foundpos"
+   icopy r19,r14
+   acopy r19,r14
+   br l497bexprend
+l497bexprend:
+   itos r19
+   say r19
    .src 14:1="return"
    ret
    .meta "basic_strings.main.a"

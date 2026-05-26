@@ -2,45 +2,64 @@ options levelb comments_dash
 import data_List
 import rxfnsb
 
+failures = 0
+
 l = .ArrayList()
 
-say date() time()
+failures = failures + check_int("new list size", l.size(), 0)
+failures = failures + check_int("new list empty", l.isEmpty(), 1)
 
--- rc = l.add("A")
--- rc = l.add("B")
+rc = l.add("B")
+rc = l.append("C")
+rc = l.prepend("A")
+failures = failures + check_int("append/prepend size", l.size(), 3)
+failures = failures + check_string("append/prepend first", l.get(1), "A")
+failures = failures + check_string("append/prepend second", l.get(2), "B")
+failures = failures + check_string("append/prepend third", l.get(3), "C")
 
--- say l.size()     -- 2
--- say l[2]         -- B
+rc = l.insert(2, "X")
+failures = failures + check_int("insert size", l.size(), 4)
+failures = failures + check_string("insert value", l.get(2), "X")
+failures = failures + check_string("insert shifted", l.get(3), "B")
 
--- l[1] = "X"
--- say l.get(1)     -- X
+failures = failures + check_string("remove value", l.remove(2), "X")
+failures = failures + check_int("remove size", l.size(), 3)
+failures = failures + check_string("remove shifted", l.get(2), "B")
 
--- say l.remove(1)  -- X
--- say l.isEmpty()  -- 0
+failures = failures + check_int("contains present", l.contains("C"), 1)
+failures = failures + check_int("contains absent", l.contains("X"), 0)
+failures = failures + check_int("indexOf present", l.indexOf("C"), 3)
+failures = failures + check_int("indexOf from miss", l.indexOf("A", 2), 0)
 
-rc = l.add('aap')
-rc = l.add('noot')
-rc = l.add('mies')
-rc = l.add('wim')
-rc = l.add('zus')
-rc = l.add('jet')
-rc = l.add('teun')
-rc = l.add('vuur')
-rc = l.add('gijs')
-rc = l.add('lam')
-rc = l.add('kees')
-rc = l.add('bok')
-rc = l.add('weide')
-rc = l.add('does')
-rc = l.add('hok')
-rc = l.add('duif')
-rc = l.add('schapen')
+rc = l.set(2, "D")
+failures = failures + check_string("set value", l.get(2), "D")
 
-say l.size()
+call l.clear()
+failures = failures + check_int("clear size", l.size(), 0)
+failures = failures + check_int("clear empty", l.isEmpty(), 1)
 
+if failures <> 0 then do
+  say "ArrayList failures:" failures
+  exit 1
+end
 
--- i = l.iterator()
--- loop while i.hasNext()
---   say i.next()
--- end
-  
+say "PASS: ArrayList"
+exit 0
+
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0
+
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0

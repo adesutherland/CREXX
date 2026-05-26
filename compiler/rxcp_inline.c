@@ -613,6 +613,66 @@ static int inline_parent_is_eager_operator(ASTNode *parent) {
     }
 }
 
+static int inline_node_is_constant_literal(ASTNode *node) {
+    if (!node) return 0;
+
+    switch (node->node_type) {
+        case CONSTANT:
+        case CONST_SYMBOL:
+        case STRING:
+        case FLOAT:
+        case DECIMAL:
+        case BINARY:
+        case INTEGER:
+        case CLASS:
+            return node->value_type == node->target_type;
+
+        default:
+            return 0;
+    }
+}
+
+static int inline_node_is_plain_stable_value(ASTNode *node) {
+    Symbol *symbol;
+
+    if (!node || node->node_type != VAR_SYMBOL || node->child) return 0;
+    if (!node->symbolNode || !node->symbolNode->symbol) return 0;
+
+    symbol = node->symbolNode->symbol;
+    if (symbol->symbol_type == FUNCTION_SYMBOL) return 0;
+    return !inline_symbol_is_class_attribute(symbol);
+}
+
+static int inline_eager_operator_context_is_safe(ASTNode *node) {
+    ASTNode *parent;
+
+    if (!node) return 0;
+
+    parent = node->parent;
+    if (!inline_parent_is_eager_operator(parent)) return 0;
+
+    if (parent->child == node) return 1;
+
+    return inline_node_is_constant_literal(parent->child) ||
+           inline_node_is_plain_stable_value(parent->child);
+}
+
+static int inline_rhs_eager_operator_needs_left_capture(ASTNode *node) {
+    ASTNode *parent;
+    ASTNode *left;
+
+    if (!node) return 0;
+
+    parent = node->parent;
+    if (!inline_parent_is_eager_operator(parent)) return 0;
+
+    left = parent->child;
+    if (!left || left == node) return 0;
+    if (left->sibling != node || node->sibling) return 0;
+
+    return !inline_eager_operator_context_is_safe(node);
+}
+
 static int inline_parent_is_short_circuit_operator(ASTNode *parent) {
     return parent &&
            (parent->node_type == OP_AND ||
@@ -1352,6 +1412,7 @@ static ASTNode *inline_clone_ref_actual(Context *context,
         formal_child = formal_child->sibling;
     }
 
+    inline_copy_replacement_semantics(replacement, formal_node);
     return replacement;
 }
 
@@ -2861,7 +2922,9 @@ static InlineExprContext inline_classify_expr_context(ASTNode *node) {
 
         default:
             if (inline_parent_is_eager_operator(parent)) {
-                return INLINE_EXPR_CONTEXT_EAGER_OPERATOR;
+                return inline_eager_operator_context_is_safe(node) ?
+                       INLINE_EXPR_CONTEXT_EAGER_OPERATOR :
+                       INLINE_EXPR_CONTEXT_NONE;
             }
             return inline_is_direct_single_value_consumer(node) ?
                    INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER :
@@ -3857,6 +3920,166 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
     return 1;
 }
 
+static int ast_inline_rhs_eager_operator(Context *context,
+                                         ASTNode *op_node,
+                                         ASTNode *rhs_call,
+                                         Symbol *proc_sym) {
+    ASTNode *left;
+    ASTNode *block_expr;
+    ASTNode *instr_list;
+    ASTNode *assign_node;
+    ASTNode *assign_lhs;
+    ASTNode *assign_rhs;
+    ASTNode *leave_node;
+    ASTNode *op_expr;
+    ASTNode *temp_ref;
+    ASTNode *rhs_expr;
+    Scope *parent_scope;
+    Scope *inline_scope;
+    Symbol *left_symbol;
+    InlineCloneState clone_state;
+
+    if (!context || !op_node || !rhs_call) return 0;
+    if (!inline_parent_is_eager_operator(op_node)) return 0;
+
+    left = op_node->child;
+    if (!left || left->sibling != rhs_call || rhs_call->sibling) return 0;
+
+    parent_scope = op_node->scope ? op_node->scope :
+                   (rhs_call->scope ? rhs_call->scope : left->scope);
+    if (!parent_scope) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "RHS eager-operator inline requires a parent scope");
+        return 0;
+    }
+
+    block_expr = ast_dup(context, op_node);
+    if (!block_expr) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to create RHS eager-operator BLOCK_EXPR");
+        return 0;
+    }
+    block_expr->node_type = BLOCK_EXPR;
+    block_expr->node_string = "do";
+    block_expr->node_string_length = 2;
+    block_expr->free_node_string = 0;
+
+    inline_scope = scp_f(context, parent_scope, block_expr, NULL, SCOPE_LOCAL);
+    if (!inline_scope) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to create RHS eager-operator inline scope");
+        return 0;
+    }
+    block_expr->scope = inline_scope;
+
+    instr_list = ast_f(context, INSTRUCTIONS, op_node->token);
+    if (!instr_list) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to create RHS eager-operator instruction list");
+        return 0;
+    }
+    instr_list->scope = inline_scope;
+    instr_list->value_type = TP_VOID;
+    instr_list->target_type = TP_VOID;
+    add_ast(block_expr, instr_list);
+
+    left_symbol = inline_create_temp_symbol(context,
+                                            inline_scope,
+                                            left,
+                                            "__inline_lhs",
+                                            (size_t)op_node->node_number);
+    if (!left_symbol) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to create RHS eager-operator left temp");
+        return 0;
+    }
+
+    memset(&clone_state, 0, sizeof(clone_state));
+    clone_state.inline_scope = inline_scope;
+
+    assign_rhs = inline_clone_subtree_in_scope(context, left, &clone_state, inline_scope);
+    if (!assign_rhs) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to clone RHS eager-operator left operand");
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+
+    rhs_expr = inline_clone_subtree_in_scope(context, rhs_call, &clone_state, inline_scope);
+    if (!rhs_expr) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to clone RHS eager-operator right operand");
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+
+    assign_node = ast_f(context, ASSIGN, left->token ? left->token : op_node->token);
+    if (!assign_node) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+    assign_node->scope = inline_scope;
+    assign_node->value_type = assign_rhs->value_type;
+    assign_node->target_type = assign_rhs->target_type;
+
+    assign_lhs = inline_create_symbol_node(context,
+                                           inline_scope,
+                                           left,
+                                           left_symbol,
+                                           VAR_TARGET,
+                                           0,
+                                           1);
+    if (!assign_lhs) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+
+    add_ast(assign_node, assign_lhs);
+    add_ast(assign_node, assign_rhs);
+    add_ast(instr_list, assign_node);
+
+    op_expr = ast_dup(context, op_node);
+    if (!op_expr) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+    op_expr->scope = inline_scope;
+
+    temp_ref = inline_create_symbol_node(context,
+                                         inline_scope,
+                                         left,
+                                         left_symbol,
+                                         VAR_SYMBOL,
+                                         1,
+                                         0);
+    if (!temp_ref) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+
+    add_ast(op_expr, temp_ref);
+    add_ast(op_expr, rhs_expr);
+
+    leave_node = ast_f(context, LEAVE_WITH, op_node->token);
+    if (!leave_node) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+    leave_node->scope = inline_scope;
+    leave_node->association = block_expr;
+    leave_node->value_type = op_expr->value_type;
+    leave_node->target_type = op_expr->target_type;
+
+    add_ast(leave_node, op_expr);
+    add_ast(instr_list, leave_node);
+
+    ast_rpl(op_node, block_expr);
+    inline_disconnect_subtree_symbols(op_node);
+    inline_free_symbol_map(&clone_state);
+
+    return 1;
+}
+
 /* Walker to find statement-shaped call sites and inline them */
 walker_result inline_procedure_walker(walker_direction direction, ASTNode *node, void *payload) {
     InlineWalkerPayload *inline_payload;
@@ -3871,11 +4094,28 @@ walker_result inline_procedure_walker(walker_direction direction, ASTNode *node,
 
     if (direction == in) return result_normal;
 
+    if (inline_parent_is_eager_operator(node)) {
+        lhs = node->child;
+        rhs = lhs ? lhs->sibling : NULL;
+
+        if (rhs && !rhs->sibling &&
+            inline_node_is_inlineable_call(rhs, &proc_sym) &&
+            inline_rhs_eager_operator_needs_left_capture(rhs)) {
+            if (ast_inline_rhs_eager_operator(context, node, rhs, proc_sym) && inline_payload) {
+                inline_payload->changed = 1;
+            }
+        }
+        return result_normal;
+    }
+
     if (node->node_type == FUNCTION ||
         node->node_type == MEMBER_CALL ||
         node->node_type == FACTORY_CALL) {
         if (inline_node_is_inlineable_call(node, &proc_sym)) {
-            if (ast_inline_expression(context, node, proc_sym) && inline_payload) inline_payload->changed = 1;
+            if (!inline_rhs_eager_operator_needs_left_capture(node) &&
+                ast_inline_expression(context, node, proc_sym) && inline_payload) {
+                inline_payload->changed = 1;
+            }
         }
         return result_normal;
     }

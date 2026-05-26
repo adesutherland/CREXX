@@ -115,6 +115,42 @@ The `||` operator also performs byte concatenation when either operand is
 as its exact UTF-8 bytes. Blank concatenation remains a text operation and is
 not for binary payload construction.
 
+## Array helpers
+
+Level B arrays use `array[0]` as the high-water mark. User elements are stored
+in `array[1]` through `array[array[0]]`. The `array*` helpers below live in
+`rxfnsb`; mutating helpers take the array by `expose` and update it in place.
+They are the supported array surface for new code. The older native arrays
+plugin is deprecated.
+
+| Function | Result | Notes |
+|----------|--------|-------|
+| `ARRAYHI(array, mode, newhi)` | `.int` | Get the high-water mark, or shrink it with mode `SET`. |
+| `ARRAYDROP(array)` | `.int` | Clear the array in place and return `0`. |
+| `ARRAYINSERT(array, from, count, default)` | `.int` | Open a gap at `from`, fill it, and return the new high-water mark. |
+| `ARRAYDELETE(array, from, count)` | `.int` | Delete a range and return the new high-water mark. |
+| `ARRAYAPPEND(array, value, count)` | `.int` | Append `value` `count` times. |
+| `ARRAYPREPEND(array, value, count)` | `.int` | Prepend `value` `count` times. |
+| `ARRAYPOP(array, default)` | `.string` | Remove and return the last element, or `default` when empty. |
+| `ARRAYSHIFT(array, default)` | `.string` | Remove and return the first element, or `default` when empty. |
+| `ARRAYSET(array, index, value, fill)` | `.int` | Set an element; growing gaps are initialised with `fill`. |
+| `ARRAYGET(array, index, default)` | `.string` | Return an element, or `default` for an out-of-range index. |
+| `ARRAYCOPY(array, from, count)` | `.string[]` | Return a copied slice; negative `from` counts from the end. |
+| `ARRAYMOVE(array, from, count, to)` | `.int` | Move a range within the same array. |
+| `ARRAYREVERSE(array)` | `.int` | Reverse the array in place. |
+| `ARRAYSORT(array, offset, order, debug)` | `.int` | Sort strings by a substring key. |
+| `ARRAYFIND(find, array, from, case)` | `.int` | Find the first element containing a substring. |
+| `ARRAYINDEXOF(array, value, from, case)` | `.int` | Find the first element equal to `value`. |
+| `ARRAYCONTAINS(array, value, case)` | `.int` | Return `1` when an element equals `value`, else `0`. |
+| `ARRAYJOIN(array, separator)` | `.string` | Join all elements with `separator`. |
+| `ARRAYFORMAT(array, from, to, flags, hdr, prefix)` | `.string[]` | Return a formatted dump as an array. |
+| `ARRAYDUMP(array, from, to, flags, hdr, prefix)` | `.int` | Print a formatted dump and return the printed count. |
+
+Insert, delete, append, prepend, pop, shift, shrink, and clear operations use
+the VM array attribute instructions, so the pointer array can be adjusted
+without a Rexx-level per-element copy loop. Element values are still ordinary
+Rexx strings and keep the usual copy and lifetime rules.
+
 
 ## ABS(x)
 

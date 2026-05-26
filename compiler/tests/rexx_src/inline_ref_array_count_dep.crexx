@@ -1,0 +1,7 @@
+options levelb
+namespace inline_ref_array_count_dep expose firstOr
+
+firstOr: procedure = .string
+  arg expose array = .string[], default = "?"
+  if array[0] < 1 then return default
+  return array[1]

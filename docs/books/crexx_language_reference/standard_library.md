@@ -9,7 +9,12 @@ and native pieces needed by the VM.
 
 `rxfnsb` is the Level B built-in-function library. It contains many
 REXX-familiar functions such as string, numeric, date/time, argument, and
-conversion helpers.
+conversion helpers. It also contains the supported Level B array helper
+surface: `arrayinsert`, `arraydelete`, `arrayappend`, `arrayprepend`,
+`arraypop`, `arrayshift`, `arrayget`, `arrayset`, `arraycontains`,
+`arrayindexof`, `arrayreverse`, `arrayjoin`, and the older copy, move, sort,
+format, dump, find, high-water, and drop helpers. New code should prefer these
+standard BIFs over the deprecated native arrays plugin.
 
 Use it explicitly in reusable Level B source:
 
@@ -26,7 +31,10 @@ top-level scripts.
 
 Many `rxfnsb` functions are written in \crexx{} itself under
 `lib/rxfnsb/rexx/`. Low-level functionality is provided through RXAS or native
-runtime support where needed.
+runtime support where needed. The mutating array helpers use VM array
+attribute instructions for insert, delete, shrink, and clear operations, so
+common list-like operations can adjust the pointer array without a Rexx-level
+per-element copy loop.
 
 ## JSON, Sockets, and HTTP
 

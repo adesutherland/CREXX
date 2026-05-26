@@ -1322,6 +1322,61 @@ add_test(NAME inline_cross_file_binary_opt
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(inline_cross_file_binary_opt PROPERTIES LABELS "linked_opt")
 
+set(INLINE_REF_ARRAY_COUNT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_ref_array_count_binary_opt.cmake")
+set(INLINE_REF_ARRAY_COUNT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_ref_array_count_binary_opt_ws\")\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_ref_array_count_dep.crexx\" \"\${work}/inline_ref_array_count_dep.crexx\" RESULT_VARIABLE res)\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage inline ref-array-count dependency\")\nendif()\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_ref_array_count_main.crexx\" \"\${work}/inline_ref_array_count_main.crexx\" RESULT_VARIABLE res)\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage inline ref-array-count main\")\nendif()\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"inline_ref_array_count_dep\" \"\${work}/inline_ref_array_count_dep.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on inline ref-array-count dependency: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_ref_array_count_dep.rxbin\" \"inline_ref_array_count_dep\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on inline ref-array-count dependency: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "file(REMOVE \"\${work}/inline_ref_array_count_dep.crexx\" \"\${work}/inline_ref_array_count_dep.rxas\")\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"\${work}\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"inline_ref_array_count_main\" \"\${work}/inline_ref_array_count_main.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on inline ref-array-count main: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "file(READ \"\${work}/inline_ref_array_count_main.rxas\" main_rxas)\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(main_rxas MATCHES [=[call [^\\n]*firstor\\(\\)]=])\n  message(FATAL_ERROR \"Optimized binary import still calls firstOr():\\n\${main_rxas}\")\nendif()\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(main_rxas MATCHES [=[slt [^\\n]*\\\"1\\\"]=])\n  message(FATAL_ERROR \"Optimized binary import lowered array[0] count compare as string compare:\\n\${main_rxas}\")\nendif()\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT main_rxas MATCHES [=[ilt [^\\n]*,1]=])\n  message(FATAL_ERROR \"Optimized binary import did not lower array[0] count compare as integer compare:\\n\${main_rxas}\")\nendif()\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_ref_array_count_main.rxbin\" \"inline_ref_array_count_main\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on inline ref-array-count main: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_ref_array_count_dep.rxbin\" \"\${work}/inline_ref_array_count_main.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed on inline ref-array-count binary import: \${run_out}\${err}\")\nendif()\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" run_out \"\${run_out}\")\n")
+string(APPEND INLINE_REF_ARRAY_COUNT_CONTENT "if(NOT run_out STREQUAL \"?\\nA\\n\")\n  message(FATAL_ERROR \"Output mismatch: expected ? and A, got: \${run_out}\")\nendif()\n")
+file(GENERATE OUTPUT "${INLINE_REF_ARRAY_COUNT_SCRIPT}" CONTENT "${INLINE_REF_ARRAY_COUNT_CONTENT}")
+
+add_test(NAME inline_ref_array_count_binary_opt
+         COMMAND ${CMAKE_COMMAND} -P "${INLINE_REF_ARRAY_COUNT_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(inline_ref_array_count_binary_opt PROPERTIES LABELS "linked_opt")
+
+set(INLINE_RHS_BLOCK_EXPR_CONCAT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_rhs_block_expr_concat_binary_opt.cmake")
+set(INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_rhs_block_expr_concat_binary_opt_ws\")\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_rhs_block_expr_concat.crexx\" \"\${work}/inline_rhs_block_expr_concat.crexx\" RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage inline RHS block-expression concat source\")\nendif()\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"inline_rhs_block_expr_concat\" \"\${work}/inline_rhs_block_expr_concat.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on inline RHS block-expression concat: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_rhs_block_expr_concat.rxbin\" \"inline_rhs_block_expr_concat\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on inline RHS block-expression concat: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${work}/inline_rhs_block_expr_concat.rxbin\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE run_out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvm failed on inline RHS block-expression concat: \${run_out}\${err}\")\nendif()\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" run_out \"\${run_out}\")\n")
+string(APPEND INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT "if(NOT run_out STREQUAL \"prefix:abc:def\\n\")\n  message(FATAL_ERROR \"Output mismatch: expected prefix:abc:def, got: \${run_out}\")\nendif()\n")
+file(GENERATE OUTPUT "${INLINE_RHS_BLOCK_EXPR_CONCAT_SCRIPT}" CONTENT "${INLINE_RHS_BLOCK_EXPR_CONCAT_CONTENT}")
+
+add_test(NAME inline_rhs_block_expr_concat_binary_opt
+         COMMAND ${CMAKE_COMMAND} -P "${INLINE_RHS_BLOCK_EXPR_CONCAT_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(inline_rhs_block_expr_concat_binary_opt PROPERTIES
+        LABELS "linked_opt"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
 set(INLINE_CROSS_FILE_SOURCE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_cross_file_source_opt.cmake")
 set(INLINE_CROSS_FILE_SOURCE_CONTENT "set(full_out \"\")\n")
 string(APPEND INLINE_CROSS_FILE_SOURCE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_cross_file_source_opt_ws\")\n")
