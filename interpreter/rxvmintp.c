@@ -90,6 +90,50 @@
 
 int rxvm_link(rxvm_context *ctx);
 
+static int rxvm_insert_attributes_checked(value *array, rxinteger index, rxinteger count) {
+    size_t insert_index;
+    size_t insert_count;
+
+    if (!array || index < 0 || count < 0) return -1;
+
+    insert_index = (size_t)index;
+    insert_count = (size_t)count;
+    if (insert_index > array->num_attributes) return -1;
+    if (insert_count > SIZE_MAX - array->num_attributes) return -1;
+
+    insert_attributes(array, insert_index, insert_count);
+    return 0;
+}
+
+static int rxvm_insert_attributes1_checked(value *array, rxinteger index, rxinteger count) {
+    if (index <= 0) return -1;
+    return rxvm_insert_attributes_checked(array, index - 1, count);
+}
+
+static int rxvm_delete_attributes_checked(value *array, rxinteger index, rxinteger count) {
+    size_t delete_index;
+    size_t delete_count;
+
+    if (!array || index < 0 || count < 0) return -1;
+
+    delete_index = (size_t)index;
+    delete_count = (size_t)count;
+    if (delete_count == 0) {
+        if (delete_index > array->num_attributes) return -1;
+        return 0;
+    }
+    if (delete_index >= array->num_attributes) return -1;
+    if (delete_count > array->num_attributes - delete_index) return -1;
+
+    delete_attributes(array, delete_index, delete_count);
+    return 0;
+}
+
+static int rxvm_delete_attributes1_checked(value *array, rxinteger index, rxinteger count) {
+    if (index <= 0) return -1;
+    return rxvm_delete_attributes_checked(array, index - 1, count);
+}
+
 /* This defines the expected max number of args - if a call has more args than
  * this then an oversized block will be malloced
  * In terms of memory usage / waste each one is only 2 x pointer size */
@@ -4661,7 +4705,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DISPATCH
 
         /* Unlink attribute op1 of op2 */
-        START_INSTRUCTION(UNLINKATTR_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(UNLINKATTR_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - UNLINKATTR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             if (op1R->int_value < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -4675,7 +4719,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DISPATCH
 
         /* Unlink attribute op1 of op2 */
-        START_INSTRUCTION(UNLINKATTR_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(UNLINKATTR_INT_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - UNLINKATTR %d,R%lu\n", (int)op1I, REG_IDX(2));
             if ((int)op1I < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -4689,7 +4733,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DISPATCH
 
         /* Unlink attribute op1 (1 base) of op2 */
-        START_INSTRUCTION(UNLINKATTR1_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(UNLINKATTR1_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - UNLINKATTR1 R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             if (op1R->int_value - 1 < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -4703,7 +4747,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DISPATCH
 
         /* Unlink attribute op1 (1 base) of op2 */
-        START_INSTRUCTION(UNLINKATTR1_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(UNLINKATTR1_INT_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - UNLINKATTR1 %d,R%lu\n", (int)op1I, REG_IDX(2));
             if ((int)op1I - 1 < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -4830,6 +4874,118 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(GETABUFS_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - GETABUFS R%lu,R%lu\n", REG_IDX(1),REG_IDX(1));
             REG_RETURN_INT(op2R->max_num_attributes)
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
+            if (rxvm_insert_attributes_checked(op1R, op2RI, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
+            if (rxvm_insert_attributes_checked(op1R, op2RI, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS_REG_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
+            if (rxvm_insert_attributes_checked(op1R, op2I, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS_REG_INT_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
+            if (rxvm_insert_attributes_checked(op1R, op2I, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS1_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS1 R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
+            if (rxvm_insert_attributes1_checked(op1R, op2RI, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS1_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS1 R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
+            if (rxvm_insert_attributes1_checked(op1R, op2RI, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS1_REG_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS1 R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
+            if (rxvm_insert_attributes1_checked(op1R, op2I, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS1_REG_INT_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS1 R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
+            if (rxvm_insert_attributes1_checked(op1R, op2I, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
+            if (rxvm_delete_attributes_checked(op1R, op2RI, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
+            if (rxvm_delete_attributes_checked(op1R, op2RI, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS_REG_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
+            if (rxvm_delete_attributes_checked(op1R, op2I, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS_REG_INT_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
+            if (rxvm_delete_attributes_checked(op1R, op2I, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS1_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS1 R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
+            if (rxvm_delete_attributes1_checked(op1R, op2RI, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS1_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS1 R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
+            if (rxvm_delete_attributes1_checked(op1R, op2RI, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS1_REG_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS1 R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
+            if (rxvm_delete_attributes1_checked(op1R, op2I, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS1_REG_INT_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS1 R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
+            if (rxvm_delete_attributes1_checked(op1R, op2I, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
             DISPATCH
 
         START_INSTRUCTION(DEC0) CALC_DISPATCH(0)

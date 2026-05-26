@@ -199,6 +199,19 @@ struct value {
 ```
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed strictly by the VM frames. There is no automated background Garbage Collector (GC). Instead, frame-bound variables are deterministically cleared (`clear_value`) and memory released when a `stack_frame` dies and exits scope.
 
+Attribute arrays use two parallel pointer arrays:
+
+- `attributes`: the live logical slots
+- `unlinked_attributes`: the VM-owned backing values used when a slot is
+  unlinked or recycled
+
+`set_num_attributes()` owns allocation and capacity growth. Bulk attribute
+insert/delete instructions (`INSATTRS`/`INSATTRS1` and
+`DELATTRS`/`DELATTRS1`) manipulate the pointer arrays directly by rotating
+both arrays together, then clearing only the VM-owned backing values for
+inserted or removed slots. This preserves the `UNLINKATTR` invariant and avoids
+clearing an externally linked register when a logical attribute slot is deleted.
+
 `status.all_type_flags` is a partitioned 32-bit status word stored as
 `uint32_t`. The masks live in `binutils/include/rxflags.h` so
 compiler-emitted RXAS and VM code agree:

@@ -62,7 +62,7 @@ namespace rxfnsb expose arrayhi
  *
  * ------------------------------------------------------------------ */
 arrayhi: procedure=.int
-  arg array=.string[],mode='GET',newhi=0
+  arg expose array=.string[],mode='GET',newhi=0
   mode=upper(mode)
   if mode='SET' then do
      if newhi>=array[0] then return array[0]

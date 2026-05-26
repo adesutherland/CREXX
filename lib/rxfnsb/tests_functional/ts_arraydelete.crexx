@@ -1,61 +1,118 @@
-/* rexx test arraydelete bif */
+/* rexx test array helper bifs */
 options levelb
 import rxfnsb
 
-errors=0
-array=.string[]
-/* ---------------------------------------------------------------
- * Test script for ARRAYDELETE(array, from, count)
- * --------------------------------------------------------------- */
+failures = 0
 
-/* ---------- test harness ---------- */
+failures = failures + test_delete("delete middle", "A B C D E F", 3, 2, "A B E F")
+failures = failures + test_delete("delete first element", "A B C D", 1, 1, "B C D")
+failures = failures + test_delete("delete last element", "A B C D", 4, 1, "A B C")
+failures = failures + test_delete("delete entire array", "A B C", 1, 10, "")
+failures = failures + test_delete("delete beyond end no-op", "A B C", 5, 2, "A B C")
+failures = failures + test_delete("delete count zero no-op", "A B C", 2, 0, "A B C")
+failures = failures + test_delete("delete low index no-op", "A B C", 0, 2, "A B C")
+failures = failures + test_delete("delete tail clamp", "A B C D E", 3, 10, "A B")
 
-say "=== ARRAYDELETE() tests ==="
-say
-call test "1) delete middle", "A B C D E F", 3, 2, "A B E F"
-call test "2) delete first element", "A B C D", 1, 1, "B C D"
-call test "3) delete last element", "A B C D", 4, 1, "A B C"
-call test "4) delete entire array", "A B C", 1, 10, ""
-call test "5) delete beyond end (no-op)", "A B C", 5, 2, "A B C"
-call test "6) delete with count=0 (no-op)", "A B C", 2, 0, "A B C"
-call test "7) delete with from<1 (no-op)", "A B C", 0, 2, "A B C"
-call test "8) delete tail", "A B C D E", 3, 10, "A B"
-call test "9) delete single middle", "A B C D E", 3, 1, "A B D E"
-say
-say "Done."
+failures = failures + test_insert("insert middle default", "A B D", 2, 1, "C", "A C B D")
+failures = failures + test_insert("insert two middle", "A D", 2, 2, "X", "A X X D")
+failures = failures + test_insert("insert append clamp", "A B", 20, 1, "Z", "A B Z")
+failures = failures + test_insert("insert count zero no-op", "A B", 2, 0, "Z", "A B")
+failures = failures + test_insert("insert low index no-op", "A B", 0, 1, "Z", "A B")
+
+failures = failures + test_move("move middle to front", "A B C D E", 3, 2, 1, "C D A B E")
+failures = failures + test_move("move first block to append", "A B C D E", 1, 2, 6, "C D E A B")
+failures = failures + test_move("move after removed block", "A B C D E", 2, 2, 5, "A D B C E")
+failures = failures + test_move("move inside block no-op", "A B C D E", 2, 2, 3, "A B C D E")
+failures = failures + test_move("move tail clamp", "A B C D E", 4, 9, 1, "D E A B C")
+
+failures = failures + test_hi_drop_copy()
+
+if failures <> 0 then do
+  say "array helper failures:" failures
+  exit 1
+end
+
+say "PASS: array helpers"
 exit 0
 
-
-/* ---------- helpers ---------- */
-
-test: procedure
+test_delete: procedure=.int
   arg label=.string, data=.string, from=.int, count=.int, expected=.string
 
   a = .string[]
-  do i = 1 to words(data)
-     a[i] = word(data, i)
-  end
+  call load_array a, data
   call arraydelete a, from, count
-  got = join(a)
+return check_join(label, a, expected)
 
-  if got = expected then say "OK   - "label
-  else do
-    say "FAIL - "label
-    say "       from="from "count="count
-    say "       expect='"expected"'"
-    say "       got   ='"got"'"
+test_insert: procedure=.int
+  arg label=.string, data=.string, from=.int, count=.int, default=.string, expected=.string
+
+  a = .string[]
+  call load_array a, data
+  call arrayinsert a, from, count, default
+return check_join(label, a, expected)
+
+test_move: procedure=.int
+  arg label=.string, data=.string, from=.int, count=.int, tto=.int, expected=.string
+
+  a = .string[]
+  call load_array a, data
+  call arraymove a, from, count, tto
+return check_join(label, a, expected)
+
+test_hi_drop_copy: procedure=.int
+  failures = 0
+
+  a = .string[]
+  call load_array a, "A B C D"
+  failures = failures + check_int("arrayhi get", arrayhi(a), 4)
+  failures = failures + check_int("arrayhi shrink", arrayhi(a, "SET", 2), 2)
+  failures = failures + check_join("arrayhi shrink data", a, "A B")
+  failures = failures + check_int("arrayhi grow ignored", arrayhi(a, "SET", 5), 2)
+  failures = failures + check_join("arrayhi grow ignored data", a, "A B")
+
+  b = arraycopy(a)
+  failures = failures + check_join("arraycopy full", b, "A B")
+  b = arraycopy(a, -1)
+  failures = failures + check_join("arraycopy negative from", b, "B")
+
+  failures = failures + check_int("arraydrop rc", arraydrop(a), 0)
+  failures = failures + check_join("arraydrop data", a, "")
+return failures
+
+load_array: procedure
+  arg expose a=.string[], data=.string
+
+  call arraydrop a
+  do i = 1 to words(data)
+    a[i] = word(data, i)
   end
 return
 
+check_join: procedure=.int
+  arg label=.string, a=.string[], expected=.string
+
+  actual = join(a)
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0
+
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0
 
 join: procedure=.string
   arg a=.string[]
+
   out = ""
   do i = 1 to a[0]
     out = out || a[i]
-    if i < a[0] then out= out || " "
+    if i < a[0] then out = out || " "
   end
 return out
-
-
-

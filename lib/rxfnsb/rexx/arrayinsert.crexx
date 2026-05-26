@@ -53,10 +53,7 @@ arrayinsert: procedure=.int
   /* clamp: inserting beyond end means append at end+1 */
   if from > hi + 1 then from = hi + 1
 
-  /* shift up to make room (work backwards to avoid overwriting) */
-  do i = hi to from by -1
-    array[i + count] = array[i]
-  end
+  assembler INSATTRS1 array,from,count
 
   /* create the empty slots */
   do i = from to from + count - 1

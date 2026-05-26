@@ -132,3 +132,5 @@ set_tests_properties(ts_version_noopt ts_version_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: version helper")
 set_tests_properties(ts_binary_noopt ts_binary_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: binary helpers")
+set_tests_properties(ts_arraydelete_noopt ts_arraydelete_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: array helpers")

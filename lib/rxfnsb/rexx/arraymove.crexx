@@ -67,22 +67,13 @@ arraymove: procedure=.int
      tmp[i] = array[from + i - 1]
   end
 
-/* delete original block (close gap) */
-  do i = from + count to hi
-     array[i - count] = array[i]
-  end
-  do i = hi - count + 1 to hi
-     array[i] = ''
-  end
+  assembler DELATTRS1 array,from,count
 
 /* adjust destination if it was after the removed block */
   if tto > from then tto = tto - count
 
-/* insert gap at destination */
-  hi2 = array[0]                 /* after delete, size should be hi-count */
-  do i = hi2 to tto by -1
-     array[i + count] = array[i]
-  end
+  assembler INSATTRS1 array,tto,count
+
   do i = 0 to count - 1
      array[tto + i] = tmp[i + 1]
   end

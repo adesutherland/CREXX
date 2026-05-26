@@ -8,7 +8,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 # Including RXPA Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
-# Create dynamic plugin module
+# Deprecated legacy plugin. Prefer the standard rxfnsb array BIFs, which are
+# backed by VM bulk attribute instructions for insert/delete/move operations.
 add_dynamic_plugin_target(_arrays arrays.c)
 
 add_custom_target(arrays_test ALL)
@@ -19,6 +20,7 @@ crexx_add_rexx_opt_matrix(
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS library _arrays
         RUNTIME_ARGS rx_arrays ${CMAKE_BINARY_DIR}/bin/library
+        TEST_LABELS deprecated slow plugin_arrays
 )
 
 enable_testing()

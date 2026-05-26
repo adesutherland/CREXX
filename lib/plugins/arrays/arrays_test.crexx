@@ -3,7 +3,7 @@ options levelb
 import arrays
 import rxfnsb
 
-imax=100000
+imax=1000
 ## Step 1 Sort Array descending order, sort criteria is column 6
 j=imax
 array = .string[]
@@ -110,5 +110,4 @@ call list_array xarray,imax-10,imax
 
 
 exit
-
 

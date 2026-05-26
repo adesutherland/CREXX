@@ -490,6 +490,76 @@ RX_MOSTLYINLINE void clear_value(value* v) {
     value_zero(v);
 }
 
+RX_INLINE void reverse_attribute_pointers(value **items, size_t start, size_t count) {
+    size_t left;
+    size_t right;
+
+    if (!items || count < 2) return;
+
+    left = start;
+    right = start + count - 1;
+    while (left < right) {
+        value *tmp = items[left];
+        items[left] = items[right];
+        items[right] = tmp;
+        left++;
+        right--;
+    }
+}
+
+RX_INLINE void rotate_attribute_pointer_blocks(value **items, size_t start, size_t left_count, size_t right_count) {
+    if (!items || left_count == 0 || right_count == 0) return;
+
+    /* Swap adjacent blocks [left][right] into [right][left] without a temp buffer. */
+    reverse_attribute_pointers(items, start, left_count);
+    reverse_attribute_pointers(items, start + left_count, right_count);
+    reverse_attribute_pointers(items, start, left_count + right_count);
+}
+
+RX_INLINE void insert_attributes(value *v, size_t index, size_t count) {
+    size_t old_num;
+    size_t i;
+
+    if (!v || count == 0) return;
+
+    old_num = v->num_attributes;
+    set_num_attributes(v, old_num + count);
+
+    if (index < old_num) {
+        rotate_attribute_pointer_blocks(v->attributes, index, old_num - index, count);
+        rotate_attribute_pointer_blocks(v->unlinked_attributes, index, old_num - index, count);
+    }
+
+    for (i = index; i < index + count; i++) {
+        v->attributes[i] = v->unlinked_attributes[i];
+        clear_value(v->attributes[i]);
+    }
+}
+
+RX_INLINE void delete_attributes(value *v, size_t index, size_t count) {
+    size_t old_num;
+    size_t new_num;
+    size_t tail_count;
+    size_t i;
+
+    if (!v || count == 0) return;
+
+    old_num = v->num_attributes;
+    tail_count = old_num - index - count;
+
+    if (tail_count > 0) {
+        rotate_attribute_pointer_blocks(v->attributes, index, count, tail_count);
+        rotate_attribute_pointer_blocks(v->unlinked_attributes, index, count, tail_count);
+    }
+
+    new_num = old_num - count;
+    for (i = new_num; i < old_num; i++) {
+        v->attributes[i] = v->unlinked_attributes[i];
+        clear_value(v->attributes[i]);
+    }
+    v->num_attributes = new_num;
+}
+
 /* Int Flag */
 /*
 RX_INLINE void set_type_int(value *v) {

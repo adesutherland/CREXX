@@ -123,6 +123,25 @@ helpers (`binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`,
 `x2bin`). The source-level `||` operator also lowers to `bconcat` when either
 operand is `.binary`; blank concat remains a text-only operation.
 
+### Attribute Array Helpers
+
+RXAS exposes VM attribute-array operations for array/object backing storage:
+
+- `getattrs rOut,rArray`
+- `setattrs rArray,rCount` / `setattrs rArray,count`
+- `minattrs rArray,rCount` / `minattrs rArray,count`
+- `linkattr` / `linkattr1`, `linktoattr` / `linktoattr1`, and
+  `unlinkattr` / `unlinkattr1`
+- `insattrs rArray,index,count` and `delattrs rArray,index,count`
+- `insattrs1 rArray,index,count` and `delattrs1 rArray,index,count`
+
+The forms without a `1` suffix use zero-based indexes. The `*1` forms use
+one-based indexes and are the usual fit for Level B array BIFs. Bulk insert
+accepts an index in `0..num_attributes` (`1..num_attributes+1` for `*1`) and
+inserts before that position. Bulk delete is strict: the requested range must
+fit inside the current attributes. Passing a count of zero is a no-op, but the
+index still must be in range. Invalid ranges raise `OUT_OF_RANGE`.
+
 In UTF builds, RXAS string constants are text, not byte containers. Hand-written
 string operands are unescaped and validated before entering the constant pool;
 invalid UTF-8 is an assembly error with guidance to use `0x...` binary

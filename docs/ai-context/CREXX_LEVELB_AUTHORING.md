@@ -198,6 +198,8 @@ Patterns used in-tree:
 - `items[1]` for first element
 - `items.1` is also used in older code
 - both bracket and dot indexing appear in the repo, so preserve the local style
+- BIFs or helpers that resize/mutate a caller-owned array must use
+  `arg expose items = .type[]`; otherwise they work on a local value copy
 
 References:
 - `tests/demo/countlines.crexx`

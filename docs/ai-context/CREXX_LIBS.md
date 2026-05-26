@@ -170,6 +170,17 @@ This approach minimizes the VM footprint and demonstrates the capability of the 
 For repo-native Level B authoring patterns, argument signature examples, and
 wayfinding to real `.crexx` examples, see `docs/ai-context/CREXX_LEVELB_AUTHORING.md`.
 
+The standard Level B array helpers live in `lib/rxfnsb/rexx` and are preferred
+over the legacy `lib/plugins/arrays` RXPA plugin. Current array BIFs include
+`arrayfind`, `arrayinsert`, `arraydelete`, `arraysort`, `arraycopy`,
+`arraydrop`, `arrayhi`, `arraymove`, `arraydump`, and `arrayformat`.
+Insertion, deletion, and movement use VM bulk attribute instructions so the
+logical array pointer list can be shifted without a Rexx-level per-element
+copy loop. Mutating array BIFs must declare the array with `arg expose`.
+
+`lib/plugins/arrays` is deprecated and retained only as a legacy plugin smoke
+test. New Level B code should import `rxfnsb` and use the standard BIFs.
+
 ### Anatomy of a cREXX BIF
 Functions written in cREXX follow standard language rules, utilizing namespaces and type enforcement:
 

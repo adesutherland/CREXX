@@ -390,6 +390,10 @@ crexx_add_vm_dual_test(NAME rxasutfflagtests RXVM_ARGS tests_utf_flags PASS_REGU
 crexx_add_rxas_vm_failure_regex(rxasutfboundaryfreadlinetests tests_utf_freadline_boundary "UNICODE_ERROR")
 crexx_add_rxas_vm_failure_regex(rxasutfboundaryfreadcdpttests tests_utf_freadcdpt_boundary "UNICODE_ERROR")
 
+# Instruction Sanity Tests - bulk attribute insert/delete
+crexx_add_rxas_vm_binary(tests_attributes "attribute bulk insert/delete")
+crexx_add_vm_dual_test(NAME rxasattributebulktests RXVM_ARGS tests_attributes PASS_REGULAR_EXPRESSION "PASS: Attribute Bulk Ops")
+
 # Instruction Sanity Tests - focused signal handler mode coverage
 crexx_add_rxas_vm_binary(tests_signal_call_attrs "signal call argument attributes")
 crexx_add_vm_dual_test(NAME rxassignalattrcodetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-code: 30")

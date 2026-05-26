@@ -54,16 +54,5 @@ arraydelete: procedure=.int
   /* clamp delete length to available elements */
   if from + count - 1 > hi then count = hi - from + 1
 
-  /* shift down to close the gap */
-  do i = from + count to hi
-     array[i - count] = array[i]
-  end
-
-  /* clear trailing slots (optional but nice hygiene) dropped for the moment
-  do i = hi - count + 1 to hi
-     array[i] = ''
-  end
-  */
-  hi=hi-count
-  assembler SETATTRS array,hi
+  assembler DELATTRS1 array,from,count
 return array[0]
