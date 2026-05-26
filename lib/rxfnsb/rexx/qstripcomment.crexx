@@ -31,7 +31,7 @@ namespace rxfnsb expose qstripcomment
  *   Function:  QCOMMENT
  *  Purpose:   Remove comment segments from a string.
  *
- *  Usage:     clean = QCOMMENT(open, close, text)
+ *  Usage:     clean = QSTRIPCOMMENT(open, close, text)
  *
  *  Arguments:
  *     open   - Opening delimiter (e.g. '/*' or '--')

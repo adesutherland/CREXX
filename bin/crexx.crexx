@@ -294,7 +294,18 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
      -- call formfeed
      say;say;say
      end
-       
+
+if nocolor then do
+  esc             = ''
+  ANSI_RESET      = ''
+  ANSI_GREEN      = ''
+  ANSI_BLUE       = ''
+  ANSI_RED        = ''
+  ANSI_YELLOW     = ''
+  ANSI_LINE_CLEAR = ''
+  ANSI_LINE_UP    = ''
+end
+     
 if version then call logo nocolor
 
 if verbose>1 then say esc||ANSI_GREEN'using relpath   :'esc||ANSI_RESET rxpath

@@ -17,17 +17,6 @@ import rxfnsb
 | SIGN            | SIGN(x)                                      |
 | TRUNC           | TRUNC(x, n)                                  |
 | B2X             | B2X(b)                                       |
-| BIN2X           | BIN2X(binary)                                |
-| BINBYTE         | BINBYTE(binary, position)                    |
-| BINCOMPARE      | BINCOMPARE(left, right)                      |
-| BINCONCAT       | BINCONCAT(left, right)                       |
-| BINDELSTR       | BINDELSTR(binary, start, length)             |
-| BININSERT       | BININSERT(new, target, before)               |
-| BINLENGTH       | BINLENGTH(binary)                            |
-| BINOVERLAY      | BINOVERLAY(new, target, start)               |
-| BINPOS          | BINPOS(needle, haystack, start)              |
-| BINSETBYTE      | BINSETBYTE(binary, position, byte)           |
-| BINSUBSTR       | BINSUBSTR(binary, start, length)             |
 | C2D             | C2D(s)                                       |
 | C2X             | C2X(s)                                       |
 | D2C             | D2C(n)                                       |
@@ -84,8 +73,64 @@ Table: SAA Rexx Built-In-Functions. {#tbl:id}
 | FUZZ       | FUZZ()                              |
 | QUEUED     | QUEUED()                            |
 
-
 Table: Non-SAA Functions. {#tbl:id}
+
+
+| Function | Signature                  |
+|----------|----------------------------|
+| ARRAYAPPEND | ARRAYAPPEND(array, value [,count]) |
+| ARRAYCONTAINS | ARRAYCONTAINS(array, value [,case]) |
+| ARRAYCOPY | ARRAYCOPY(array, from [, count]) |
+| ARRAYDELETE | ARRAYDELETE(array, from, count) |
+| ARRAYDROP | ARRAYDROP(array) |
+| ARRAYDUMP | ARRAYDUMP(array[, from[, to[, flags[, hdr[, prefix]]]]]) |
+| ARRAYFIND | ARRAYFIND(find, array[, from[, case]]) |
+| ARRAYFORMAT | ARRAYFORMAT(array[, from[, to[, flags[, hdr[, prefix]]]]]) |
+| ARRAYGET | ARRAYGET(array=, index [, default]) |
+| ARRAYHI | ARRAYHI(array[, 'GET' | 'SET'[, new_hi]]) |
+| ARRAYINDEXOF | ARRAYINDEXOF(array, value,[from] ,[case]) |
+| ARRAYINSERT | ARRAYINSERT(array, from, count[, default]) |
+| ARRAYJOIN | ARRAYJOIN(array, [, separator]) |
+| ARRAYMOVE | ARRAYMOVE(array, from, count, to) |
+| ARRAYPOP | ARRAYPOP(array, [default]) |
+| ARRAYPREPEND | ARRAYPREPEND(array, value [,default]) |
+| ARRAYREVERSE | ARRAYREVERSE(array) |
+| ARRAYSET | ARRAYSET(array, index, value [, fill]) | 
+| ARRAYSHIFT | ARRAYSHIFT(array [,default]) |
+| ARRAYSORT | ARRAYSORT(array [, offset] [, order] [,debug]) |
+| BIN2X           | BIN2X(binary)                                |
+| BINBYTE         | BINBYTE(binary, position)                    |
+| BINCOMPARE      | BINCOMPARE(left, right)                      |
+| BINCONCAT       | BINCONCAT(left, right)                       |
+| BINDELSTR       | BINDELSTR(binary, start, length)             |
+| BININSERT       | BININSERT(new, target, before)               |
+| BINLENGTH       | BINLENGTH(binary)                            |
+| BINOVERLAY      | BINOVERLAY(new, target, start)               |
+| BINPOS          | BINPOS(needle, haystack, start)              |
+| BINSETBYTE      | BINSETBYTE(binary, position, byte)           |
+| BINSUBSTR       | BINSUBSTR(binary, start, length)             |
+| QEXTRACTALL | QEXTRACTALL(open, close, text [, start])      |
+| QEXTRACTPAIR | QEXTRACTPAIR(open, close, text, start, mode=')   |
+| QPOS | QPOS(needle, text [, start]) |
+| QREMOVEALL | QREMOVEALL(open, close, text [, mode])   |
+| QSPLIT | QREMOVEALL(open, close, text [, mode]) |
+| QSPLITSAFE | QSPLITSAFE(text, sep, start, pairs) |
+| QSTRIPCOMMENT | QSTRIPCOMMENT(open, close, text) |
+| QSUBWORD | QSUBWORD(string,wordnum)|
+| QWORD | QWORD(line, wanted) |
+| QWORDINDEX | QWORDINDEX(string,wordnum) |
+| QWORDLENGTH | QWORDLENTH(string,wordnum) |
+| QWORDPOS | QWORDPOS(search, string [,start])  |
+| QWORDS | QWORDS(string) |
+| RERADIX | RERADIX(subject, fromradix, toradix) |
+| SPLICE | SPLICE(needle, haystack, at, len) |
+| VERSION | VERSION() |
+
+
+Table: \crexx{} additional functions. {#tbl:id}
+
+
+
 
 [^bif]: also colloqually referred to with the jargon-like expression BIFs.
 

@@ -13,21 +13,21 @@
 
 `rxc` now separates automatic import discovery into two root classes:
 
-- source roots, searched for CREXX source files
+- source roots, searched for \crexx{} source files
 - binary roots, searched for `.rxbin`, optional `.rxas`, and `.rxplugin`
 
 The recommended source extensions are:
 
-- `.crexx`: canonical CREXX source, defaulting to Level G when no
+- `.crexx`: canonical \crexx{} source, defaulting to Level G when no
   `options level...` clause is present
-- `.crx`: short CREXX source alias, also defaulting to Level G
+- `.crx`: short \crexx{} source alias, also defaulting to Level G
 - `.rexx`: compatibility/classic source, defaulting to Level C
 
 An initial source file may also use another extension, such as `.the` for an
 editor macro integration. That extension is added to source-root discovery for
 that compile and defaults to Level G unless the source states another level
 explicitly. This supports host-specific source names without making every
-possible extension a recommended CREXX extension.
+possible extension a recommended \crexx{} extension.
 
 `.rxpp` remains the preprocessor-oriented source extension for existing RXPP
 workflows. Longer term, preprocessing may become idempotent and better

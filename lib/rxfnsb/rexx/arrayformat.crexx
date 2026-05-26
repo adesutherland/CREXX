@@ -28,7 +28,7 @@ options levelb
 namespace rxfnsb expose arrayformat
 
 /* ----------------------------------------------------------------------
- * ARRAYDUMP(array[, from[, to[, flags[, hdr[, prefix]]]]])
+ * ARRAYFORMAT(array[, from[, to[, flags[, hdr[, prefix]]]]])
  *
  * flags:
  *   I = print index
