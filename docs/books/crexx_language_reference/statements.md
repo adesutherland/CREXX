@@ -260,7 +260,7 @@ Results.
 This is not yet full semantic compatibility, but the noninteractive output
 shape follows the standard prefix vocabulary for implemented events:
 
-```text
+```
      5 *-* escaped-source
        >=>   "escaped-assignment-result"
        +++   RC=-3 ENVIRONMENT escaped-command
