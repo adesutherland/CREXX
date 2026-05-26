@@ -30,9 +30,6 @@ paths are passed to the compiler phase consistently.
 
 Options are used to differentiate between the choices that can be made while building a program. All options have defaults so that they can be left out in standard cases.
 
-## Verbosity
-
-With the default verbosity level the tools behaves in the standard unix way where a lack of messages indicates success. This level can be increased gradually to a full explanation of everything that is done.
 
 ## Options description
 
@@ -51,7 +48,7 @@ The following options are available (single and double dashes work for all optio
 : Compile only; do not execute the resulting `.rxbin`.
 
 `-compile`
-: Compile all REXX program files on the command line to `.rxbin` files (default).
+: Compile all \crexx{} program files on the command line to `.rxbin` files (default).
 
 `-nocompile`
 : Skip the `rxc` and `rxas` phases and reuse an existing `<stem>.rxbin`.
@@ -85,7 +82,7 @@ The following options are available (single and double dashes work for all optio
 
 For native packaging, `crexx` now separates `-l` inputs into two groups:
 
-- packaged REXX libraries (`.rxbin` inputs such as `classlib`) are passed into `rxlink`
+- packaged \crexx{} libraries (`.rxbin` inputs such as `classlib`) are passed into `rxlink`
 - plugin/static-native libraries are linked natively when a matching platform static library is available
 
 This keeps the direct interpreter path fast while still producing compact native executables.
@@ -124,3 +121,66 @@ say 'today''s date is:' date()
 ```
 
 <!--splice--crexx-1.crexx-->
+
+## Verbosity
+
+With the default verbosity level the tools behaves in the standard unix way where a lack of messages indicates success. This level can be increased gradually to a full explanation of everything that is done. The default is `--verbose0`, which gives no inidcation of what happened unless something went wrong. This is the way to run known-good programs without any overhead.
+
+All verbosity level examples run the following short script:
+
+```rexx <!--hello.crexx-->
+options levelb
+import rxfnsb
+say 'hello rexx!'
+say 'today it''s' date('w')
+'echo 42'
+```
+
+## `--verbose1`
+
+With `--verbose1`, the driver tells in a very condensed way what it did and how it went. When the return codes from the `rxc` and `rxas` are 0, these are displayed with an 'OK' between square brackets.
+
+<!--splice--hello --verbose1 --nocolor -->
+
+It issues some reassuring messages about the compiler and the assembler running successfully and skips the starting of the runtime engine, because the output of the program follows these messages. 
+
+## `--verbose2`
+
+With the `--verbose2` setting, there is more tourist information.
+
+<!--splice--hello --verbose2 --nocolor -->
+
+It starts by identifying the exact release of the crexx version. After this, a number of paths are shown:
+
+| Name | Meaning  |
+|------|----------|
+| relpath | The path where the \crexx{} system is installed|
+| lpath   | The path from which executables and libraries are found |
+| s roots | additional sourcefile lookup locations |
+| i roots | additional binary (.rxbin) lookup locations |
+
+After this, the *simple script defaults* are mentioned: these are the lines that are inserted for scripts that have no explicit `main` procedure.
+
+With this verbosity level, the exact invocations of the tools in the toolchain are documented, including the complete paths and arguments. Also, the invocation of the runtime engine, with all libraries explicity named - and this includes the libraries that are not used. With native compiles, the `rxlink` tool will extract the used code from these libraries into the executable. It also shows the `-a` flag as a last option, even if this is unused.
+
+## `--verbose3`
+
+In verbosity level 3, the output level is on par with traditional IBM compiler output, with a complete summary of used and unused compiler options.
+
+<!--splice--hello --verbose3 --nocolor -->
+
+## `--verbose4`
+
+Verbosity level 4 is for the moment the most verbose level of tool output. In this level, the complete \rexx{} input source is expanded (when it is produced by the `rxpp` preprocessor), and all generated assembler output is visible and available for inspection and debugging, as well as the set of generated import statements for runtime linking.  It is advisable to page this output through a `less`-like processor.
+
+<!--splice--hello --verbose4 --nocolor -->
+
+## `--verbose[2-4]` with native compilation
+
+When the program is compiled and linked to a native executable, no execution of this program follows. Instead the arguments to the `rxpack` object packager and the linkage editor `rxlink` and their results are included.
+
+Also, the complete command line to the c-compiler and its linkage editor step is documented here, and can be copied into private building tools or scripts. Here the use of static import libraries for the native executables can be seen.
+
+
+In the following chapters, these tools are documented in detail.
+
