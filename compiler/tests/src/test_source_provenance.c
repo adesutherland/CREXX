@@ -263,9 +263,10 @@ static void test_reporting_anchor_helpers(void) {
 
     {
         char *metalines = get_reporting_metalines(synthetic_block);
-        expect_true(strstr(metalines, ".src 1:1=\"call a()\"") != 0,
+        expect_true(strstr(metalines, ".srcstep ") != 0 &&
+                    strstr(metalines, "\"call a()\"") != 0,
                     "primary reporting anchor should emit the original source line");
-        expect_true(strstr(metalines, ".src 2:1=\"call b()\"") != 0,
+        expect_true(strstr(metalines, "\"call b()\"") != 0,
                     "additional reporting anchors should emit extra source lines");
         free(metalines);
     }

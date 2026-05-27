@@ -795,7 +795,17 @@ _trace_exact_source: procedure = .int
   assembler metaloaddata meta_array, module, addr
   do i = 1 to meta_array
     assembler linkattr1 meta_entry, meta_array, i
-    if meta_entry = ".meta_src" then do
+    if meta_entry = ".meta_source_step" then do
+      assembler linkattr1 line_value, meta_entry, 5
+      assembler linkattr1 column_value, meta_entry, 6
+      assembler linkattr1 source_value, meta_entry, 8
+      line = line_value
+      column = column_value
+      source = source_value
+      result = result || "(" || line_value || ":" || column_value || ") '" || source_value || "'; "
+      found = 1
+    end
+    else if meta_entry = ".meta_src" then do
       assembler linkattr1 line_value, meta_entry, 1
       assembler linkattr1 column_value, meta_entry, 2
       assembler linkattr1 source_value, meta_entry, 3

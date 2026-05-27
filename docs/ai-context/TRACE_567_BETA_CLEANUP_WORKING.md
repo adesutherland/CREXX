@@ -66,9 +66,45 @@ where feasible, and do not store final output prefixes such as `>=>` in binary
 metadata. Binary TRACE events carry semantic codes. TRACE classic text, LLM
 records, and RXDB UI rendering map those codes to presentation strings later.
 
+## Progress Log
+
+Step 1 is complete in commit `de00363bd`:
+
+- Binary version is `004`.
+- `META_SOURCE_STEP` exists with pooled file/source-line strings, compact
+  numeric fields, and provenance flags.
+- RXAS accepts `.srcstep`; RXDAS round-trips it; RXLINK rewrites/strips it with
+  source metadata; RXVM source lookup and `metaloaddata` prefer/expose
+  `.meta_source_step`.
+
+Step 2 is complete in the follow-up implementation:
+
+- New `rxc` output uses `.srcstep` whole source lines and no longer emits sticky
+  `.srcfile` for compiler-generated RXAS.
+- Source-step active ranges remain available for sub-clause stepping, but the
+  text payload is the whole authored/source line, including counted-loop,
+  bracketed/indexed, and escaped-source cases.
+- Inline source anchors are exported as `I5` source records:
+  `;u,<source-id>,<file-id|-1>,<line>,<active-start-column>,<active-end-column>,<SourceProvenance>,<hex-whole-source-line>`.
+  Import still accepts legacy `I4` payloads during the beta transition.
+- Inlined source emitted after binary or source import keeps the original callee
+  file and source line when available.
+- `signal.crexx` and the transitional shared trace helper read
+  `.meta_source_step` before falling back to old `.meta_src`/`.meta_file`.
+- Codegen goldens treat source metadata as volatile; source metadata coverage is
+  now carried by focused source provenance, inline, trace, linker, and native
+  source-preservation tests.
+
+Step 2 verification:
+
+- Focused compiler/inline/source-shape checks passed.
+- Full `cmake --build cmake-build-debug` passed.
+- Full `ctest --test-dir cmake-build-debug --output-on-failure` passed
+  `1155/1155`.
+
 ## Binary Version
 
-Stage 1 should bump:
+Stage 1 bumped:
 
 ```c
 #define BIN_VERSION "004"

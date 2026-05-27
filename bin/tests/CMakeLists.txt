@@ -294,13 +294,14 @@ add_crexx_native_test(
         crexx_native_default_link_strip
         rexx_src/explicit_header.crexx
         EXPECT_DAS_ABSENT ".srcfile="
+        EXPECT_DAS_ABSENT ".srcstep"
 )
 add_crexx_native_test(
         crexx_native_linkmap_keep_source
         rexx_src/explicit_header.crexx
         CREXX_ARGS "--linkmap" "explicit_header.map" "--link-keep-source"
         MAP_FILE "explicit_header.map"
-        EXPECT_DAS_CONTAINS ".srcfile="
+        EXPECT_DAS_CONTAINS ".srcstep"
 )
 add_crexx_native_test(
         crexx_native_link_keep_inline

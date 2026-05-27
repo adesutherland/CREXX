@@ -144,7 +144,10 @@ static int is_volatile(const char *line) {
             return 1;
         }
     }
-    if (strstr(line, ".srcfile")) {
+    /* Source metadata has dedicated tests; codegen goldens compare executable RXAS. */
+    if (strncmp(line, ".srcfile", 8) == 0 ||
+        strncmp(line, ".srcstep", 8) == 0 ||
+        strncmp(line, ".src ", 5) == 0) {
         return 1;
     }
     if (strcmp(line, "/*") == 0 || strcmp(line, " */") == 0) {

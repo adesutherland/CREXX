@@ -4519,7 +4519,8 @@ typedef struct {
 typedef struct {
     const char *file_name;
     int line;
-    int column;
+    int active_start_column;
+    int active_end_column;
     char provenance;
     const char *source_start;
     size_t source_length;
@@ -5063,23 +5064,100 @@ static int inline_meta_collect_file(InlineMetaExport *meta, const char *file_nam
     return 1;
 }
 
+static int inline_meta_pointer_in_range(const char *ptr, const char *range_start, const char *range_end) {
+    return ptr && range_start && range_end && ptr >= range_start && ptr <= range_end;
+}
+
+static int inline_meta_context_range(Context *context, const char *ptr, const char **range_start, const char **range_end) {
+    if (!context || !context->buff_start || !context->buff_end || !ptr) return 0;
+    if (ptr < context->buff_start || ptr > context->buff_end) return 0;
+    if (range_start) *range_start = context->buff_start;
+    if (range_end) *range_end = context->buff_end;
+    return 1;
+}
+
+static int inline_meta_owned_source_range(SourceNode *source_node,
+                                          const char *ptr,
+                                          const char **range_start,
+                                          const char **range_end) {
+    size_t length;
+
+    if (!source_node || !source_node->owned_source_text || !ptr) return 0;
+    length = strlen(source_node->owned_source_text);
+    if (!inline_meta_pointer_in_range(ptr, source_node->owned_source_text, source_node->owned_source_text + length)) return 0;
+    if (range_start) *range_start = source_node->owned_source_text;
+    if (range_end) *range_end = source_node->owned_source_text + length;
+    return 1;
+}
+
+static int inline_meta_source_range(ASTNode *node,
+                                    const char *source_start,
+                                    const char **range_start,
+                                    const char **range_end) {
+    if (!node || !source_start) return 0;
+    if (inline_meta_owned_source_range(node->source_node, source_start, range_start, range_end)) return 1;
+    if (inline_meta_context_range(node->context, source_start, range_start, range_end)) return 1;
+    if (node->source_node && inline_meta_context_range(node->source_node->context, source_start, range_start, range_end)) return 1;
+    return 0;
+}
+
+static int inline_meta_line_bounds(const char *ptr,
+                                   const char *range_start,
+                                   const char *range_end,
+                                   const char **line_start_out,
+                                   const char **line_end_out) {
+    const char *line_start;
+    const char *line_end;
+
+    if (!ptr || !range_start || !range_end || ptr < range_start || ptr > range_end) return 0;
+    if (ptr == range_end && ptr > range_start) ptr--;
+
+    line_start = ptr;
+    while (line_start > range_start &&
+           line_start[-1] != '\n' &&
+           line_start[-1] != '\r') {
+        line_start--;
+    }
+
+    line_end = ptr;
+    while (line_end < range_end &&
+           *line_end != '\n' &&
+           *line_end != '\r' &&
+           *line_end != 0) {
+        line_end++;
+    }
+
+    if (line_start_out) *line_start_out = line_start;
+    if (line_end_out) *line_end_out = line_end;
+    return 1;
+}
+
 static int inline_meta_node_source_data(ASTNode *node,
                                         const char **file_name_out,
                                         int *line_out,
-                                        int *column_out,
+                                        int *active_start_column_out,
+                                        int *active_end_column_out,
                                         char *provenance_out,
                                         const char **source_start_out,
                                         size_t *source_length_out) {
     const char *source_start;
     const char *source_end;
+    const char *range_start;
+    const char *range_end;
+    const char *line_start;
+    const char *line_end;
+    const char *active_end;
     const char *file_name;
     int line;
     int column;
+    int active_start_column;
+    int active_end_column;
     char provenance;
 
     if (file_name_out) *file_name_out = NULL;
     if (line_out) *line_out = -1;
-    if (column_out) *column_out = -1;
+    if (active_start_column_out) *active_start_column_out = -1;
+    if (active_end_column_out) *active_end_column_out = -1;
     if (provenance_out) *provenance_out = AST_SOURCE_NONE;
     if (source_start_out) *source_start_out = NULL;
     if (source_length_out) *source_length_out = 0;
@@ -5101,15 +5179,35 @@ static int inline_meta_node_source_data(ASTNode *node,
     }
 
     if (!source_start || !source_end || source_end < source_start) return 0;
-    if ((size_t)(source_end - source_start) + 1 > INLINE_META_MAX_SOURCE_SPAN) return 0;
-    if (memchr(source_start, 0, (size_t)(source_end - source_start) + 1)) return 0;
+
+    range_start = 0;
+    range_end = 0;
+    line_start = source_start;
+    line_end = source_end + 1;
+    active_start_column = column >= 0 ? column + 1 : 1;
+    active_end_column = active_start_column + (int)(source_end - source_start) + 1;
+    if (inline_meta_source_range(node, source_start, &range_start, &range_end) &&
+        inline_meta_line_bounds(source_start, range_start, range_end, &line_start, &line_end)) {
+        active_end = source_end;
+        if (active_end >= line_end && line_end > line_start) active_end = line_end - 1;
+        active_start_column = (int)(source_start - line_start) + 1;
+        active_end_column = (int)(active_end - line_start) + 2;
+        if (active_end_column > (int)(line_end - line_start) + 1) {
+            active_end_column = (int)(line_end - line_start) + 1;
+        }
+    }
+
+    if (line_end < line_start) return 0;
+    if ((size_t)(line_end - line_start) > INLINE_META_MAX_SOURCE_SPAN) return 0;
+    if (memchr(line_start, 0, (size_t)(line_end - line_start))) return 0;
 
     if (file_name_out) *file_name_out = file_name;
     if (line_out) *line_out = line;
-    if (column_out) *column_out = column;
+    if (active_start_column_out) *active_start_column_out = active_start_column;
+    if (active_end_column_out) *active_end_column_out = active_end_column;
     if (provenance_out) *provenance_out = provenance;
-    if (source_start_out) *source_start_out = source_start;
-    if (source_length_out) *source_length_out = (size_t)(source_end - source_start) + 1;
+    if (source_start_out) *source_start_out = line_start;
+    if (source_length_out) *source_length_out = (size_t)(line_end - line_start);
     return 1;
 }
 
@@ -5118,7 +5216,8 @@ static int inline_meta_find_source_id(InlineMetaExport *meta, ASTNode *node, siz
     const char *source_start;
     size_t source_length;
     int line;
-    int column;
+    int active_start_column;
+    int active_end_column;
     char provenance;
     size_t i;
 
@@ -5126,7 +5225,8 @@ static int inline_meta_find_source_id(InlineMetaExport *meta, ASTNode *node, siz
     if (!inline_meta_node_source_data(node,
                                       &file_name,
                                       &line,
-                                      &column,
+                                      &active_start_column,
+                                      &active_end_column,
                                       &provenance,
                                       &source_start,
                                       &source_length)) {
@@ -5136,7 +5236,8 @@ static int inline_meta_find_source_id(InlineMetaExport *meta, ASTNode *node, siz
     for (i = 0; i < meta->source_count; i++) {
         InlineMetaSourceEntry *source = &meta->sources[i];
         if (source->line == line &&
-            source->column == column &&
+            source->active_start_column == active_start_column &&
+            source->active_end_column == active_end_column &&
             source->provenance == provenance &&
             source->source_length == source_length &&
             ((source->file_name == file_name) ||
@@ -5157,7 +5258,8 @@ static int inline_meta_collect_source(InlineMetaExport *meta, ASTNode *node) {
     size_t source_length;
     size_t file_id;
     int line;
-    int column;
+    int active_start_column;
+    int active_end_column;
     char provenance;
 
     if (!meta || !node) return 0;
@@ -5165,7 +5267,8 @@ static int inline_meta_collect_source(InlineMetaExport *meta, ASTNode *node) {
     if (!inline_meta_node_source_data(node,
                                       &file_name,
                                       &line,
-                                      &column,
+                                      &active_start_column,
+                                      &active_end_column,
                                       &provenance,
                                       &source_start,
                                       &source_length)) {
@@ -5181,7 +5284,8 @@ static int inline_meta_collect_source(InlineMetaExport *meta, ASTNode *node) {
     meta->sources = new_sources;
     meta->sources[meta->source_count].file_name = file_name;
     meta->sources[meta->source_count].line = line;
-    meta->sources[meta->source_count].column = column;
+    meta->sources[meta->source_count].active_start_column = active_start_column;
+    meta->sources[meta->source_count].active_end_column = active_end_column;
     meta->sources[meta->source_count].provenance = provenance;
     meta->sources[meta->source_count].source_start = source_start;
     meta->sources[meta->source_count].source_length = source_length;
@@ -5498,11 +5602,12 @@ static int inline_meta_emit_sources(InlineMetaText *text, InlineMetaExport *meta
         char *source_hex = inline_meta_hex_encode(source->source_start, source->source_length);
         if (!source_hex) return 0;
         if (!inline_meta_text_appendf(text,
-                                      ";u,%zu,%ld,%d,%d,%d,%s",
+                                      ";u,%zu,%ld,%d,%d,%d,%d,%s",
                                       source->id,
                                       file_id,
                                       source->line,
-                                      source->column,
+                                      source->active_start_column,
+                                      source->active_end_column,
                                       (int)source->provenance,
                                       source_hex)) {
             free(source_hex);
@@ -5847,7 +5952,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 
     inline_meta_text_init(&text);
     if (!text.ok ||
-        !inline_meta_text_append(&text, "I4") ||
+        !inline_meta_text_append(&text, "I5") ||
         !inline_meta_emit_files(&text, &meta) ||
         !inline_meta_emit_sources(&text, &meta) ||
         !inline_meta_emit_scopes(&text, &meta) ||
@@ -5876,7 +5981,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 }
 
 int rxcp_inline_payload_is_supported(const char *payload) {
-    return payload && payload[0] == 'I' && payload[1] == '4' &&
+    return payload && payload[0] == 'I' && (payload[1] == '4' || payload[1] == '5') &&
            (payload[2] == 0 || payload[2] == ';');
 }
 
@@ -6049,14 +6154,19 @@ static int inline_meta_import_source(Context *context, InlineMetaImport *meta, c
     char *id_field;
     char *file_field;
     char *line_field;
-    char *column_field;
+    char *start_column_field;
+    char *end_column_field;
     char *provenance_field;
     char *source_field;
     char *source_text;
     char *file_name;
     size_t id;
     size_t source_length;
+    size_t start_offset;
+    size_t end_offset;
     long file_id;
+    int start_column;
+    int end_column;
     SourceNode *source_node;
 
     if (!context || !meta || !record) return 0;
@@ -6065,10 +6175,13 @@ static int inline_meta_import_source(Context *context, InlineMetaImport *meta, c
     id_field = inline_meta_next_field(&cursor);
     file_field = inline_meta_next_field(&cursor);
     line_field = inline_meta_next_field(&cursor);
-    column_field = inline_meta_next_field(&cursor);
+    start_column_field = inline_meta_next_field(&cursor);
+    end_column_field = NULL;
+    if (meta->version >= 5) end_column_field = inline_meta_next_field(&cursor);
     provenance_field = inline_meta_next_field(&cursor);
     source_field = inline_meta_next_field(&cursor);
-    if (!id_field || !file_field || !line_field || !column_field || !provenance_field || !source_field) return 0;
+    if (!id_field || !file_field || !line_field || !start_column_field || !provenance_field || !source_field) return 0;
+    if (meta->version >= 5 && !end_column_field) return 0;
 
     id = (size_t)strtoul(id_field, NULL, 10);
     if (!inline_meta_ensure_source_slot(meta, id)) return 0;
@@ -6094,10 +6207,26 @@ static int inline_meta_import_source(Context *context, InlineMetaImport *meta, c
     source_node->owned_file_name = file_name ? strdup(file_name) : NULL;
     source_node->file_name = source_node->owned_file_name;
     source_node->owned_source_text = source_text;
-    source_node->source_start = source_text;
-    source_node->source_end = source_length ? source_text + source_length - 1 : source_text;
     source_node->line = atoi(line_field);
-    source_node->column = atoi(column_field);
+    if (meta->version >= 5) {
+        start_column = atoi(start_column_field);
+        end_column = atoi(end_column_field);
+        if (start_column < 1) start_column = 1;
+        if (end_column < start_column) end_column = start_column;
+        start_offset = (size_t)(start_column - 1);
+        end_offset = (size_t)(end_column - 1);
+        if (start_offset > source_length) start_offset = source_length;
+        if (end_offset > source_length) end_offset = source_length;
+        if (end_offset < start_offset) end_offset = start_offset;
+        source_node->source_start = source_text + start_offset;
+        if (end_offset > start_offset) source_node->source_end = source_text + end_offset - 1;
+        else source_node->source_end = source_node->source_start;
+        source_node->column = start_column - 1;
+    } else {
+        source_node->source_start = source_text;
+        source_node->source_end = source_length ? source_text + source_length - 1 : source_text;
+        source_node->column = atoi(start_column_field);
+    }
     source_node->free_list = context->source_free_list;
     if (source_node->free_list) source_node->node_number = source_node->free_list->node_number + 1;
     else source_node->node_number = 1;
@@ -6824,6 +6953,7 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     else if (strcmp(record, "I2") == 0) meta.version = 2;
     else if (strcmp(record, "I3") == 0) meta.version = 3;
     else if (strcmp(record, "I4") == 0) meta.version = 4;
+    else if (strcmp(record, "I5") == 0) meta.version = 5;
     else {
         free(copy);
         return 0;
