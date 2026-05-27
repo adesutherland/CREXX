@@ -31,6 +31,7 @@
 
 #include "rxcp_types.h"
 #include "rxflags.h"
+#include "rxbin.h"
 
 #define UNSET_REGISTER (-1)
 #define DONT_ASSIGN_REGISTER (-2)
@@ -70,6 +71,38 @@ char* get_metaline_clause(ASTNode *node);
 char* get_metaline_token_at(ASTNode *node);
 char* get_comment(ASTNode *node, char* prefix);
 char* get_comment_line_number_only(ASTNode *node, char* comment_text);
+unsigned int trace_source_step_id_from_metaline(const char *metaline);
+unsigned int trace_clause_id_from_metaline(const char *metaline);
+char *trace_symbol_name_malloc(ASTNode *node);
+char *trace_event_metaline(char kind,
+                           unsigned int mode_mask,
+                           char value_source,
+                           ValueType value_type,
+                           char register_type,
+                           int value_ref,
+                           unsigned int source_step_id,
+                           unsigned int clause_id,
+                           unsigned int flags,
+                           const char *symbol,
+                           const char *resolved_name);
+char *trace_event_register_metaline(char kind,
+                                    unsigned int mode_mask,
+                                    ASTNode *value_node,
+                                    unsigned int source_step_id,
+                                    unsigned int clause_id,
+                                    const char *symbol,
+                                    const char *resolved_name);
+void output_append_trace_event_register(OutputFragment *output,
+                                        char kind,
+                                        unsigned int mode_mask,
+                                        ASTNode *value_node,
+                                        unsigned int source_step_id,
+                                        unsigned int clause_id,
+                                        const char *symbol,
+                                        const char *resolved_name);
+void output_apply_trace_source_ids(OutputFragment *output,
+                                   unsigned int source_step_id,
+                                   unsigned int clause_id);
 
 void type_promotion(ASTNode *node);
 void add_variable_metadata(ASTNode* node);

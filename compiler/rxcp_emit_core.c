@@ -29,9 +29,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_util.h"
 #include "rxbin.h"
 
 /* Type promotion matrix for numeric operators */
@@ -72,6 +74,147 @@ static char *empty_metaline(void) {
     result = malloc(1);
     if (result) result[0] = 0;
     return result;
+}
+
+static char trace_value_type_code(ValueType type) {
+    switch (type) {
+        case TP_BOOLEAN: return 'B';
+        case TP_INTEGER: return 'I';
+        case TP_FLOAT: return 'F';
+        case TP_DECIMAL: return 'D';
+        case TP_STRING: return 'S';
+        case TP_BINARY: return 'X';
+        case TP_OBJECT: return 'O';
+        case TP_VOID: return 'V';
+        case TP_UNKNOWN:
+        default:
+            return 0;
+    }
+}
+
+static void parse_source_step_ids(const char *metaline, unsigned int *step_id, unsigned int *clause_id) {
+    const char *srcstep;
+    unsigned int step = 0;
+    unsigned int clause = 0;
+
+    if (step_id) *step_id = 0;
+    if (clause_id) *clause_id = 0;
+    if (!metaline) return;
+
+    srcstep = strstr(metaline, ".srcstep ");
+    if (!srcstep) return;
+    if (sscanf(srcstep, ".srcstep %u %u", &step, &clause) < 1) return;
+
+    if (step_id) *step_id = step;
+    if (clause_id) *clause_id = clause;
+}
+
+unsigned int trace_source_step_id_from_metaline(const char *metaline) {
+    unsigned int step_id = 0;
+    parse_source_step_ids(metaline, &step_id, 0);
+    return step_id;
+}
+
+unsigned int trace_clause_id_from_metaline(const char *metaline) {
+    unsigned int clause_id = 0;
+    parse_source_step_ids(metaline, 0, &clause_id);
+    return clause_id;
+}
+
+char *trace_symbol_name_malloc(ASTNode *node) {
+    Symbol *symbol;
+    char *result;
+
+    if (!node) return 0;
+    symbol = node->symbolNode ? node->symbolNode->symbol : 0;
+    if (symbol && symbol->name) return strdup(symbol->name);
+    if (!node->node_string || node->node_string_length == 0) return 0;
+
+    result = malloc(node->node_string_length + 1);
+    if (!result) return 0;
+    memcpy(result, node->node_string, node->node_string_length);
+    result[node->node_string_length] = 0;
+    return result;
+}
+
+char *trace_event_metaline(char kind,
+                           unsigned int mode_mask,
+                           char value_source,
+                           ValueType value_type,
+                           char register_type,
+                           int value_ref,
+                           unsigned int source_step_id,
+                           unsigned int clause_id,
+                           unsigned int flags,
+                           const char *symbol,
+                           const char *resolved_name) {
+    char type_code;
+    char value_type_text[2];
+    char register_type_text[2];
+    char *encoded_symbol;
+    char *encoded_resolved_name;
+    char *result;
+
+    if (!kind) return empty_metaline();
+
+    type_code = trace_value_type_code(value_type);
+    value_type_text[0] = type_code;
+    value_type_text[1] = 0;
+    register_type_text[0] = register_type;
+    register_type_text[1] = 0;
+
+    if (!value_source) value_source = RXBIN_TRACE_VALUE_NONE;
+    if (!register_type) value_ref = -1;
+    if (value_ref < 0) value_source = RXBIN_TRACE_VALUE_NONE;
+
+    encoded_symbol = encode_line_source_malloc(symbol ? symbol : "", symbol ? strlen(symbol) : 0);
+    encoded_resolved_name = encode_line_source_malloc(resolved_name ? resolved_name : "",
+                                                      resolved_name ? strlen(resolved_name) : 0);
+    if (!encoded_symbol || !encoded_resolved_name) {
+        if (encoded_symbol) free(encoded_symbol);
+        if (encoded_resolved_name) free(encoded_resolved_name);
+        return empty_metaline();
+    }
+
+    result = mprintf("   .traceevent \"%c\" %u \"%c\" \"%s\" \"%s\" %d %u %u %u \"%s\" \"%s\"\n",
+                     kind,
+                     mode_mask,
+                     value_source,
+                     value_type_text,
+                     register_type ? register_type_text : "",
+                     value_ref,
+                     source_step_id,
+                     clause_id,
+                     flags,
+                     encoded_symbol,
+                     encoded_resolved_name);
+    free(encoded_symbol);
+    free(encoded_resolved_name);
+    return result;
+}
+
+char *trace_event_register_metaline(char kind,
+                                    unsigned int mode_mask,
+                                    ASTNode *value_node,
+                                    unsigned int source_step_id,
+                                    unsigned int clause_id,
+                                    const char *symbol,
+                                    const char *resolved_name) {
+    ValueType value_type;
+
+    if (!value_node || value_node->register_num < 0 || !value_node->register_type) return empty_metaline();
+    value_type = value_node->target_type != TP_UNKNOWN ? value_node->target_type : value_node->value_type;
+    return trace_event_metaline(kind,
+                                mode_mask,
+                                RXBIN_TRACE_VALUE_REGISTER,
+                                value_type,
+                                value_node->register_type,
+                                value_node->register_num,
+                                source_step_id,
+                                clause_id,
+                                0,
+                                symbol,
+                                resolved_name);
 }
 
 static unsigned int source_step_flags(char provenance, int compiler_added, SourceNode *source_node) {
@@ -306,6 +449,200 @@ void output_append_text(OutputFragment* before, char* after) {
     else {
         before->output = malloc(strlen(after) + 1);
         strcpy(before->output, after);
+    }
+}
+
+void output_append_trace_event_register(OutputFragment *output,
+                                        char kind,
+                                        unsigned int mode_mask,
+                                        ASTNode *value_node,
+                                        unsigned int source_step_id,
+                                        unsigned int clause_id,
+                                        const char *symbol,
+                                        const char *resolved_name) {
+    char *event;
+
+    if (!output) return;
+    event = trace_event_register_metaline(kind,
+                                          mode_mask,
+                                          value_node,
+                                          source_step_id,
+                                          clause_id,
+                                          symbol,
+                                          resolved_name);
+    if (event && event[0]) output_append_text(output, event);
+    if (event) free(event);
+}
+
+static const char *trace_skip_space(const char *p, const char *end) {
+    while (p < end && isspace((unsigned char)*p)) p++;
+    return p;
+}
+
+static int trace_skip_quoted(const char **cursor, const char *end) {
+    const char *p = trace_skip_space(*cursor, end);
+
+    if (p >= end || *p != '"') return 0;
+    p++;
+    while (p < end) {
+        if (*p == '\\' && p + 1 < end) {
+            p += 2;
+        } else if (*p == '"') {
+            *cursor = p + 1;
+            return 1;
+        } else {
+            p++;
+        }
+    }
+    return 0;
+}
+
+static int trace_skip_integer(const char **cursor, const char *end) {
+    const char *p = trace_skip_space(*cursor, end);
+
+    if (p < end && (*p == '-' || *p == '+')) p++;
+    if (p >= end || !isdigit((unsigned char)*p)) return 0;
+    while (p < end && isdigit((unsigned char)*p)) p++;
+    *cursor = p;
+    return 1;
+}
+
+static int trace_read_unsigned(const char **cursor,
+                               const char *end,
+                               const char **start_out,
+                               const char **end_out,
+                               unsigned int *value_out) {
+    const char *p = trace_skip_space(*cursor, end);
+    char *number_end;
+    unsigned long value;
+
+    if (p >= end || !isdigit((unsigned char)*p)) return 0;
+    value = strtoul(p, &number_end, 10);
+    if (number_end == p || number_end > end) return 0;
+
+    if (start_out) *start_out = p;
+    if (end_out) *end_out = number_end;
+    if (value_out) *value_out = (unsigned int)value;
+    *cursor = number_end;
+    return 1;
+}
+
+static char *trace_event_line_with_source_ids(const char *line,
+                                              size_t line_len,
+                                              unsigned int source_step_id,
+                                              unsigned int clause_id) {
+    const char *end = line + line_len;
+    const char *p = trace_skip_space(line, end);
+    const char *step_start;
+    const char *step_end;
+    const char *clause_start;
+    const char *clause_end;
+    unsigned int current_step;
+    unsigned int current_clause;
+    size_t prefix_len;
+    size_t suffix_len;
+    char *replacement;
+    char *result;
+
+    if (source_step_id == 0 && clause_id == 0) return 0;
+    if ((size_t)(end - p) < 11 || strncmp(p, ".traceevent", 11) != 0) return 0;
+    p += 11;
+
+    if (!trace_skip_quoted(&p, end)) return 0;   /* kind */
+    if (!trace_read_unsigned(&p, end, 0, 0, 0)) return 0; /* mode mask */
+    if (!trace_skip_quoted(&p, end)) return 0;   /* value source */
+    if (!trace_skip_quoted(&p, end)) return 0;   /* value type */
+    if (!trace_skip_quoted(&p, end)) return 0;   /* register type */
+    if (!trace_skip_integer(&p, end)) return 0;  /* value ref */
+    if (!trace_read_unsigned(&p, end, &step_start, &step_end, &current_step)) return 0;
+    if (!trace_read_unsigned(&p, end, &clause_start, &clause_end, &current_clause)) return 0;
+
+    (void)step_end;
+    (void)clause_start;
+    if (current_step != 0 || current_clause != 0) return 0;
+
+    replacement = mprintf("%u %u", source_step_id, clause_id);
+    prefix_len = (size_t)(step_start - line);
+    suffix_len = (size_t)(end - clause_end);
+    result = malloc(prefix_len + strlen(replacement) + suffix_len + 1);
+    if (!result) {
+        free(replacement);
+        return 0;
+    }
+
+    memcpy(result, line, prefix_len);
+    memcpy(result + prefix_len, replacement, strlen(replacement));
+    memcpy(result + prefix_len + strlen(replacement), clause_end, suffix_len);
+    result[prefix_len + strlen(replacement) + suffix_len] = 0;
+    free(replacement);
+    return result;
+}
+
+static char *trace_output_with_source_ids(const char *text,
+                                          unsigned int source_step_id,
+                                          unsigned int clause_id) {
+    const char *line_start;
+    const char *line_end;
+    char *result;
+    size_t result_len;
+
+    if (!text || (source_step_id == 0 && clause_id == 0)) return 0;
+    result = malloc(1);
+    if (!result) return 0;
+    result[0] = 0;
+    result_len = 0;
+
+    line_start = text;
+    while (*line_start) {
+        char *replacement;
+        size_t line_len;
+
+        line_end = strchr(line_start, '\n');
+        if (line_end) line_len = (size_t)(line_end - line_start + 1);
+        else line_len = strlen(line_start);
+
+        replacement = trace_event_line_with_source_ids(line_start,
+                                                       line_len,
+                                                       source_step_id,
+                                                       clause_id);
+        if (replacement) {
+            size_t replacement_len = strlen(replacement);
+            result = realloc(result, result_len + replacement_len + 1);
+            memcpy(result + result_len, replacement, replacement_len + 1);
+            result_len += replacement_len;
+            free(replacement);
+        } else {
+            result = realloc(result, result_len + line_len + 1);
+            memcpy(result + result_len, line_start, line_len);
+            result_len += line_len;
+            result[result_len] = 0;
+        }
+
+        line_start += line_len;
+    }
+
+    return result;
+}
+
+void output_apply_trace_source_ids(OutputFragment *output,
+                                   unsigned int source_step_id,
+                                   unsigned int clause_id) {
+    OutputFragment *fragment;
+
+    if (!output || (source_step_id == 0 && clause_id == 0)) return;
+    fragment = output;
+    while (fragment->before) fragment = fragment->before;
+    while (fragment) {
+        if (fragment->output && strstr(fragment->output, ".traceevent")) {
+            char *updated = trace_output_with_source_ids(fragment->output,
+                                                        source_step_id,
+                                                        clause_id);
+            if (updated) {
+                free(fragment->output);
+                fragment->output = updated;
+            }
+        }
+        fragment = fragment->after;
     }
 }
 

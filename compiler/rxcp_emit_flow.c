@@ -151,6 +151,8 @@ void emit_flow(ASTNode *node, void *pl) {
     char *comment_meta;
     char *op;
     int j;
+    unsigned int trace_step_id;
+    unsigned int trace_clause_id;
 
     child1 = node->child;
     if (child1) child2 = child1->sibling;
@@ -284,6 +286,8 @@ void emit_flow(ASTNode *node, void *pl) {
         case SAY:
             /* Add source metadata */
             comment_meta = get_metaline(node);
+            trace_step_id = trace_source_step_id_from_metaline(comment_meta);
+            trace_clause_id = trace_clause_id_from_metaline(comment_meta);
             if (node->output) output_prepend_text(comment_meta, node->output);
             else node->output = output_fs(comment_meta);
             free(comment_meta);
@@ -300,6 +304,7 @@ void emit_flow(ASTNode *node, void *pl) {
             }
             else {
                 output_concat(node->output, child1->output);
+                output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
                 temp1 = mprintf("   say %c%d\n",
                                 child1->register_type,
                                 child1->register_num);
@@ -314,6 +319,8 @@ void emit_flow(ASTNode *node, void *pl) {
         case RETURN:
             /* Add source metadata */
             comment_meta = get_metaline(node);
+            trace_step_id = trace_source_step_id_from_metaline(comment_meta);
+            trace_clause_id = trace_clause_id_from_metaline(comment_meta);
             if (node->output) output_prepend_text(comment_meta, node->output);
             else node->output = output_fs(comment_meta);
             free(comment_meta);
@@ -333,6 +340,7 @@ void emit_flow(ASTNode *node, void *pl) {
             }
             else {
                 output_concat(node->output, child1->output);
+                output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
                 temp1 = mprintf("   ret %c%d\n",
                                 child1->register_type,
                                 child1->register_num);
@@ -345,11 +353,14 @@ void emit_flow(ASTNode *node, void *pl) {
         case IF:
             /* Add source metadata */
             comment_meta = get_metaline_range(node, child1);
+            trace_step_id = trace_source_step_id_from_metaline(comment_meta);
+            trace_clause_id = trace_clause_id_from_metaline(comment_meta);
             if (node->output) output_prepend_text(comment_meta, node->output);
             else node->output = output_fs(comment_meta);
             free(comment_meta);
 
             if (child1->output) output_concat(node->output, child1->output);
+            output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
             comment_meta = get_metaline_token_after(child1);
             temp1 = mprintf("   brf l%diffalse,%c%d\n%s",
                             node->node_number,

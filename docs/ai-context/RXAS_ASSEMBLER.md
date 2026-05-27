@@ -79,6 +79,21 @@ spelling so source, RXAS, and binary import paths do not drift. Linked final
 images normally strip `META_INLINE`; library artifacts preserve it for
 downstream `rxc` optimisation.
 
+Source/debug metadata now has two separate identities:
+
+- `.srcstep` `step-id` is a module-local id for one concrete source anchor:
+  pooled file name, whole source line, active range, and provenance flags. It is
+  not an instruction address or a source line number.
+- `.srcstep` and `.traceevent` `clause-id` is a module-local grouping key for
+  all anchors and semantic events that belong to one logical authored clause.
+  Simple clauses often use the same value for both ids; split clauses, generated
+  helper code, loop pieces, or inlined fragments may use several step ids for one
+  clause id.
+
+`0` means there is no source/clause anchor. In a linked image, consumers should
+treat identity as module plus id because ids are only local to their original
+module.
+
 Metadata-only modules are valid. For example, an interface contract file may
 compile to `.rxas` containing `.meta` records and no function bodies; `rxas`
 must still emit a `.rxbin` so import and runtime factory resolution can load

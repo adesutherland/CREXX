@@ -278,11 +278,18 @@ large number of interrupts. Recommended requirements before enabling it:
 4. Compiler-provided trace event hints:
    - add trace-specific metadata or helper calls separate from `.meta_reg`,
      including authored clause id/span, nesting depth, generated-fragment role,
-     event prefix, mode mask, value type, value register/constant, target symbol,
-     and resolved compound name when applicable;
+     compact event kind, mode mask, value type, value register/constant, target
+     symbol, and resolved compound name when applicable;
+   - define source ids as metadata identities, not addresses: `source_step_id`
+     identifies one source-step anchor in a module, while `clause_id` groups all
+     source steps and trace events for one logical authored clause; `0` means no
+     anchor, and linked-image consumers should qualify ids by module;
    - have the generated signal helper read only registers named by trace-event
      hints, keeping frame-sensitive `metalinkpreg` use local to the interrupted
      frame;
+   - treat optimized-away or folded values as absent events; the compiler emits
+     trace-event hints for values that still exist at an address, rather than
+     recreating values solely for TRACE;
    - keep `.src` exact-address metadata available for debuggers and `TRACE LLM`,
      but do not make classic text TRACE infer semantic results from `.src`.
 

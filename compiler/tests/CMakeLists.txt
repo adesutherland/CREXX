@@ -2970,6 +2970,13 @@ set_tests_properties(crexxsaa_variables PROPERTIES
 add_test(NAME source_provenance COMMAND test_source_provenance)
 set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")
 
+add_test(NAME trace_event_metadata
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DWORK=${CMAKE_CURRENT_BINARY_DIR}/trace_event_metadata
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_trace_event_metadata.cmake)
+set_tests_properties(trace_event_metadata PROPERTIES LABELS "compiler;stage4")
+
 if (ENABLE_PARSER_MODE)
     add_test(NAME highlight_cache COMMAND test_highlight_cache)
     set_tests_properties(highlight_cache PROPERTIES

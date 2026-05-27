@@ -1438,6 +1438,8 @@ void rxasmete(Assembler_Context *context, Assembler_Token *kind, Assembler_Token
               Assembler_Token *value_ref, Assembler_Token *source_step, Assembler_Token *clause,
               Assembler_Token *flags, Assembler_Token *symbol, Assembler_Token *resolved_name) {
     size_t entry = add_meta_entry(context, sizeof(meta_trace_event_constant), META_TRACE_EVENT);
+    size_t symbol_entry = add_optional_string_to_pool(context, symbol);
+    size_t resolved_name_entry = add_optional_string_to_pool(context, resolved_name);
     meta_trace_event_constant *meta;
 
     meta = (meta_trace_event_constant*)(context->binary.const_pool + entry);
@@ -1450,8 +1452,8 @@ void rxasmete(Assembler_Context *context, Assembler_Token *kind, Assembler_Token
     meta->source_step_id = trace_u32_from_token(source_step);
     meta->clause_id = trace_u32_from_token(clause);
     meta->flags = trace_u32_from_token(flags);
-    meta->symbol = add_optional_string_to_pool(context, symbol);
-    meta->resolved_name = add_optional_string_to_pool(context, resolved_name);
+    meta->symbol = symbol_entry;
+    meta->resolved_name = resolved_name_entry;
 }
 
 /* Function Metadata */

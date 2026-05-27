@@ -354,10 +354,22 @@ void emit_expression(ASTNode *node, void *payload) {
                 }
                 if (n->cleanup) output_concat(node->output, n->cleanup);
                 n = n->sibling; i++;
-            }
+	            }
 
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            {
+	                char *symbol_name = trace_symbol_name_malloc(node);
+	                output_append_trace_event_register(node->output,
+	                                                   RXBIN_TRACE_KIND_FUNCTION,
+	                                                   RXBIN_TRACE_MODE_I,
+	                                                   node,
+	                                                   0,
+	                                                   0,
+	                                                   symbol_name,
+	                                                   "");
+	                if (symbol_name) free(symbol_name);
+	            }
+	            break;
 
         case OP_CONCAT:
             op="concat";
@@ -378,8 +390,16 @@ void emit_expression(ASTNode *node, void *payload) {
                 free(temp1);
                 if (child2->cleanup) output_concat(node->output, child2->cleanup);
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
-                type_promotion(node);
-                break;
+	            type_promotion(node);
+	            output_append_trace_event_register(node->output,
+	                                               RXBIN_TRACE_KIND_BINARY_OP,
+	                                               RXBIN_TRACE_MODE_I,
+	                                               node,
+	                                               0,
+	                                               0,
+	                                               "",
+	                                               "");
+	            break;
             }
             /* One or other of the operands may be a constant */
             /* If the register is not set then the child is a constant */
@@ -434,8 +454,16 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
             }
 
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            output_append_trace_event_register(node->output,
+	                                               RXBIN_TRACE_KIND_BINARY_OP,
+	                                               RXBIN_TRACE_MODE_I,
+	                                               node,
+	                                               0,
+	                                               0,
+	                                               "",
+	                                               "");
+	            break;
 
         case OP_XOR:
             if (!node->output) node->output = output_f();
@@ -478,8 +506,16 @@ void emit_expression(ASTNode *node, void *payload) {
             free(temp1);
             if (child2->cleanup) output_concat(node->output, child2->cleanup);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            output_append_trace_event_register(node->output,
+	                                               RXBIN_TRACE_KIND_BINARY_OP,
+	                                               RXBIN_TRACE_MODE_I,
+	                                               node,
+	                                               0,
+	                                               0,
+	                                               "",
+	                                               "");
+	            break;
 
         /* These operators have a prefix type of that of the first child */
         case OP_COMPARE_EQUAL:
@@ -589,8 +625,16 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
             }
 
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            output_append_trace_event_register(node->output,
+	                                               RXBIN_TRACE_KIND_BINARY_OP,
+	                                               RXBIN_TRACE_MODE_I,
+	                                               node,
+	                                               0,
+	                                               0,
+	                                               "",
+	                                               "");
+	            break;
 
         case OP_AND:
             if (!node->output) node->output = output_f();
@@ -685,8 +729,16 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 if (child2->cleanup) output_concat(node->output, child2->cleanup);
             }
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            output_append_trace_event_register(node->output,
+	                                               RXBIN_TRACE_KIND_BINARY_OP,
+	                                               RXBIN_TRACE_MODE_I,
+	                                               node,
+	                                               0,
+	                                               0,
+	                                               "",
+	                                               "");
+	            break;
 
         case OP_OR:
             if (!node->output) node->output = output_f();
@@ -783,6 +835,14 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (child2->cleanup) output_concat(node->output, child2->cleanup);
             }
             type_promotion(node);
+            output_append_trace_event_register(node->output,
+                                               RXBIN_TRACE_KIND_BINARY_OP,
+                                               RXBIN_TRACE_MODE_I,
+                                               node,
+                                               0,
+                                               0,
+                                               "",
+                                               "");
             break;
 
         case OP_NOT:
@@ -797,8 +857,16 @@ void emit_expression(ASTNode *node, void *payload) {
             free(temp1);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
 
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            output_append_trace_event_register(node->output,
+	                                               RXBIN_TRACE_KIND_PREFIX_OP,
+	                                               RXBIN_TRACE_MODE_I,
+	                                               node,
+	                                               0,
+	                                               0,
+	                                               "",
+	                                               "");
+	            break;
 
         case OP_NEG:
             if (!node->output) node->output = output_f();
@@ -828,8 +896,16 @@ void emit_expression(ASTNode *node, void *payload) {
             free(temp1);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
 
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            output_append_trace_event_register(node->output,
+	                                               RXBIN_TRACE_KIND_PREFIX_OP,
+	                                               RXBIN_TRACE_MODE_I,
+	                                               node,
+	                                               0,
+	                                               0,
+	                                               "",
+	                                               "");
+	            break;
 
         case OP_PLUS:
             /* Same as assignment really */
@@ -856,6 +932,14 @@ void emit_expression(ASTNode *node, void *payload) {
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
 
             type_promotion(node);
+            output_append_trace_event_register(node->output,
+                                               RXBIN_TRACE_KIND_PREFIX_OP,
+                                               RXBIN_TRACE_MODE_I,
+                                               node,
+                                               0,
+                                               0,
+                                               "",
+                                               "");
             break;
 
         case OP_TYPE_CAST:
@@ -1014,8 +1098,16 @@ void emit_expression(ASTNode *node, void *payload) {
                 free(temp2);
 
                 /* Do any type promotion */
-                if (!skip_promotion) type_promotion(node);
-            }
+	                if (!skip_promotion) type_promotion(node);
+	                output_append_trace_event_register(node->output,
+	                                                   RXBIN_TRACE_KIND_LITERAL,
+	                                                   RXBIN_TRACE_MODE_I,
+	                                                   node,
+	                                                   0,
+	                                                   0,
+	                                                   "",
+	                                                   "");
+	            }
             break;
 
         case BLOCK_EXPR:

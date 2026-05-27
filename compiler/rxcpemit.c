@@ -53,6 +53,47 @@ static int is_large_value(ASTNode *node) {
            node->target_type == TP_BINARY;
 }
 
+static void append_symbol_trace_event(OutputFragment *output,
+                                      char kind,
+                                      unsigned int mode_mask,
+                                      ASTNode *symbol_node,
+                                      ASTNode *value_node,
+                                      unsigned int source_step_id,
+                                      unsigned int clause_id) {
+    char *symbol_name;
+
+    symbol_name = trace_symbol_name_malloc(symbol_node);
+    output_append_trace_event_register(output,
+                                       kind,
+                                       mode_mask,
+                                       value_node,
+                                       source_step_id,
+                                       clause_id,
+                                       symbol_name,
+                                       "");
+    if (symbol_name) free(symbol_name);
+}
+
+static void append_compound_trace_event(OutputFragment *output,
+                                        ASTNode *compound_node,
+                                        ASTNode *tail_node,
+                                        unsigned int source_step_id,
+                                        unsigned int clause_id) {
+    char *symbol_name;
+
+    if (!tail_node || tail_node->register_num < 0) return;
+    symbol_name = trace_symbol_name_malloc(compound_node);
+    output_append_trace_event_register(output,
+                                       RXBIN_TRACE_KIND_COMPOUND,
+                                       RXBIN_TRACE_MODE_I,
+                                       tail_node,
+                                       source_step_id,
+                                       clause_id,
+                                       symbol_name,
+                                       "");
+    if (symbol_name) free(symbol_name);
+}
+
 static Symbol *current_procedure_symbol(ASTNode *node) {
     ASTNode *proc_node;
 
@@ -218,6 +259,8 @@ static walker_result emit_walker(walker_direction direction,
     struct tm tm = *localtime(&t);
     char ret_type;
     int ret_num;
+    unsigned int trace_step_id;
+    unsigned int trace_clause_id;
 
     child1 = node->child;
     if (child1) child2 = child1->sibling;
@@ -429,6 +472,8 @@ static walker_result emit_walker(walker_direction direction,
             case CALL:
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
+                trace_step_id = trace_source_step_id_from_metaline(comment_meta);
+                trace_clause_id = trace_clause_id_from_metaline(comment_meta);
                 if (node->output) output_prepend_text(comment_meta, node->output);
                 else node->output = output_fs(comment_meta);
                 free(comment_meta);
@@ -438,6 +483,7 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* TODO - set result */
                 output_concat(node->output, child1->output);
+                output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 break;
 
@@ -706,8 +752,8 @@ static walker_result emit_walker(walker_direction direction,
                 emit_expression(node, payload);
                 break;
 
-            case VAR_SYMBOL:
-            case VAR_TARGET:
+	            case VAR_SYMBOL:
+	            case VAR_TARGET:
                 /* If we are a define no code is generated */
                 if (node->parent->node_type == DEFINE) break;
 
@@ -741,12 +787,19 @@ static walker_result emit_walker(walker_direction direction,
 
                     /* Cleanup */
                     temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
-                    node->cleanup = output_fs(temp1);
-                    free(temp1);
+	                    node->cleanup = output_fs(temp1);
+	                    free(temp1);
 
-                    type_promotion(node);
-                    break;
-                } else if (child1) {
+	                    type_promotion(node);
+	                    append_symbol_trace_event(node->output,
+	                                              RXBIN_TRACE_KIND_VARIABLE,
+	                                              RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
+	                                              node,
+	                                              node,
+	                                              0,
+	                                              0);
+	                    break;
+	                } else if (child1) {
                     /* We are an array */
                     /* Essentially, we are linking the found array element as the nodes result - which will need unlinking later */
                     char from_reg_type = node->symbolNode->symbol->register_type;
@@ -794,12 +847,13 @@ static walker_result emit_walker(walker_direction direction,
                     int math_reg = node->additional_registers + is_property;
 
                     /* Now we need to link the array elements */
-                    while (child1) {
-                        int base = node->symbolNode->symbol->dim_base[ast_chdi(child1)];
+	                    while (child1) {
+	                        int base = node->symbolNode->symbol->dim_base[ast_chdi(child1)];
 
-                        if (child1->output) output_concat(node->output, child1->output);
+	                        if (child1->output) output_concat(node->output, child1->output);
+	                        append_compound_trace_event(node->output, node, child1, 0, 0);
 
-                        if (node->node_type == VAR_SYMBOL && child1->node_type == NOVAL) {
+	                        if (node->node_type == VAR_SYMBOL && child1->node_type == NOVAL) {
                             /* This is the logic for getting the number of elements in an array */
                             /* This is last parameter - we may have done earlier parameters */
 
@@ -949,10 +1003,19 @@ static walker_result emit_walker(walker_direction direction,
                         free(temp1);
                     }
                 }
-                var_symbol_end:
+	                var_symbol_end:
 
-                if (node->node_type == VAR_SYMBOL) type_promotion(node);
-                break;
+	                if (node->node_type == VAR_SYMBOL) {
+	                    type_promotion(node);
+	                    append_symbol_trace_event(node->output,
+	                                              RXBIN_TRACE_KIND_VARIABLE,
+	                                              RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
+	                                              node,
+	                                              node,
+	                                              0,
+	                                              0);
+	                }
+	                break;
 
             case VAR_REFERENCE:
                 break;
@@ -1072,19 +1135,23 @@ static walker_result emit_walker(walker_direction direction,
             }
             break;
 
-            case ASSIGN:
-                /* Add source metadata */
-                comment_meta = get_metaline(node);
-                if (node->output) output_prepend_text(comment_meta, node->output);
-                else node->output = output_fs(comment_meta);
-                free(comment_meta);
+	            case ASSIGN: {
+	                int trace_assignment_event = 1;
+	                /* Add source metadata */
+	                comment_meta = get_metaline(node);
+	                trace_step_id = trace_source_step_id_from_metaline(comment_meta);
+	                trace_clause_id = trace_clause_id_from_metaline(comment_meta);
+	                if (node->output) output_prepend_text(comment_meta, node->output);
+	                else node->output = output_fs(comment_meta);
+	                free(comment_meta);
 
                 /* Add Variable Metadata */
                 add_variable_metadata(node);
-                output_concat(node->output, child1->output);
-                output_concat(node->output, child2->output);
+		                output_concat(node->output, child1->output);
+		                output_concat(node->output, child2->output);
+		                output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
 
-                if (child1->symbolNode && child1->symbolNode->symbol && child1->symbolNode->symbol->scope &&
+	                if (child1->symbolNode && child1->symbolNode->symbol && child1->symbolNode->symbol->scope &&
                     !child1->child &&
                     child1->symbolNode->symbol->scope->defining_node &&
                     child1->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
@@ -1104,9 +1171,9 @@ static walker_result emit_walker(walker_direction direction,
 
                     char this_type = 'a'; int this_num = 1; /* Default for METHOD */
                     attribute_owner_register(node, child1, &this_type, &this_num);
-                    temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
-                                    "   %scopy %c%d,%c%d\n"
-                                    "   unlink %c%d\n",
+	                    temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
+	                                    "   %scopy %c%d,%c%d\n"
+	                                    "   unlink %c%d\n",
                                     child1->register_type, child1->register_num,
                                     this_type, this_num,
                                     index,
@@ -1114,9 +1181,10 @@ static walker_result emit_walker(walker_direction direction,
                                     child1->register_type, child1->register_num,
                                     child2->register_type, child2->register_num,
                                     child1->register_type, child1->register_num);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                } else if (child1->register_num != child2->register_num ||
+	                    output_append_text(node->output, temp1);
+	                    free(temp1);
+	                    trace_assignment_event = 0;
+	                } else if (child1->register_num != child2->register_num ||
                     child1->register_type != child2->register_type) {
                     int aggregate_assign =
                             !child1->child &&
@@ -1144,17 +1212,27 @@ static walker_result emit_walker(walker_direction direction,
                                         child2->register_type,
                                         child2->register_num);
                     }
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                }
-                output_concat(node->output, child2->cleanup);
+	                    output_append_text(node->output, temp1);
+	                    free(temp1);
+	                }
+	                if (trace_assignment_event) {
+	                    append_symbol_trace_event(node->output,
+	                                              RXBIN_TRACE_KIND_ASSIGNMENT,
+	                                              RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
+	                                              child1,
+	                                              child1,
+	                                              trace_step_id,
+	                                              trace_clause_id);
+	                }
+	                output_concat(node->output, child2->cleanup);
                 if (node->parent->node_type == REPEAT) {
                     /* Defer cleanup for repeat - the inc/to needs the register */
                     node->cleanup = child1->cleanup;
                     child1->cleanup = 0;
                 }
                 else output_concat(node->output, child1->cleanup);
-                break;
+	                break;
+	            }
 
             case NOP:
                 emit_flow(node, pl);

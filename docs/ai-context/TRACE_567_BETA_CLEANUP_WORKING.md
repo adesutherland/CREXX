@@ -187,10 +187,30 @@ Proposed source-step flags:
 #define RXBIN_SOURCE_COMPOSITE  0x00000040u
 ```
 
-`step_id` and `clause_id` are local numeric ids. Stage 1 may assign both from
-the same monotonic id if a richer clause-grouping map would delay the source
-metadata migration. The field is present so later debug/TRACE policy can step
-per address, active range, authored line, or clause.
+`step_id` and `clause_id` are module-local numeric ids, not instruction
+addresses and not source line numbers. In a linked image, treat the stable
+identity as module plus id; ids may collide across modules. `0` means "no
+source-step/clause anchor".
+
+`step_id` names one concrete source-step metadata record: file, line text,
+active range, and provenance flags for one executable/reportable source anchor.
+It is the id trace-event metadata uses when a value event should be grouped with
+that exact source anchor. A debugger may still stop per bytecode address, but
+`step_id` lets it explain that address in source terms.
+
+`clause_id` is a grouping key for all source steps and trace events that belong
+to the same logical authored clause. Simple clauses may use the same value for
+`step_id` and `clause_id`; split clauses (`IF ... THEN ...`), loop helper code,
+generated steps, and future inlined/source-provenance cases may use several
+`step_id` values with one `clause_id`. TRACE text should normally use
+`clause_id` plus provenance flags to avoid reprinting unhelpful generated
+fragments, while RXDB can choose a finer policy such as per address or per active
+range.
+
+The compiler currently assigns monotonic ids per emitted module. Stage 4 stamps
+trace events emitted by child expression fragments with the enclosing statement's
+source ids, so `V`, `C`, `L`, `O`, `P`, and `F` events can be associated with the
+authored clause without emitting extra source-step records.
 
 ## RXAS Source-Step Spelling
 
@@ -501,8 +521,15 @@ Step 4, compiler trace-event emission and TRACE regressions:
    operations where values are available.
 2. Make emitted events point at registers/constants that are genuinely
    available at that address.
-3. Add regression tests comparing expected TRACE output for scalar assignment,
-   reassignment, `SAY`, `IF`, counted loops, and array/stem-style access.
+3. Compiler-side compound/indexed access is represented by a `C` event on the
+   index/tail value register. The TRACE formatter derives the displayed
+   compound name from the symbol plus that runtime tail value; the stem/array
+   runtime classes do not need to know trace mode or append to the trace stream.
+4. Optimized builds may legitimately omit events for values optimized away or
+   folded into immediates. That is normal compiler behavior, not TRACE debt; the
+   contract is to emit events for values that survive at an address.
+5. Add metadata smoke coverage first, then TRACE text regressions once the
+   runtime/exit formatting split consumes these events.
 
 Focused checks:
 
@@ -510,6 +537,9 @@ Focused checks:
 - `TRACE R` scalar assignment and reassignment use semantic events.
 - `say a`, `if a > 0 then say a`, and `s[i]` cases no longer depend on
   source-text LHS guessing.
+- The compiler metadata smoke test compares only the `.srcstep`/`.traceevent`
+  slice and prints a unified diff of that slice when the expected shape changes,
+  so broad RXAS goldens do not churn just because semantic metadata improved.
 
 Step 5, runtime/exit/RXDB split and docs:
 
@@ -517,14 +547,17 @@ Step 5, runtime/exit/RXDB split and docs:
 2. Move classic TRACE text and LLM formatting into the TRACE exit handler.
 3. Remove/quarantine source-text LHS guessing.
 4. Update RXDB to use source-step and trace-event metadata directly.
-5. Update `docs/ai-context/CREXX_TRACE_REQUIREMENTS.md`.
-6. Update `docs/books/crexx_language_reference/statements.md`.
-7. Update `docs/ai-context/CREXX_LIBS.md`.
-8. Update `docs/ai-context/RXAS_ASSEMBLER.md`.
-9. Update `docs/ai-context/RXLINK_LINKER.md`.
-10. Update `docs/ai-context/RXVM_INTERPRETER.md`.
-11. Update inliner/source provenance docs if needed.
-12. Remove beta warnings fixed by these stages and keep TODOs for remaining
+5. Remove the temporary compiler-golden `.traceevent` volatility filter, refresh
+   affected RXAS goldens, and use the metadata smoke diff as the review aid for
+   accepting the new `.srcstep`/`.traceevent` shape.
+6. Update `docs/ai-context/CREXX_TRACE_REQUIREMENTS.md`.
+7. Update `docs/books/crexx_language_reference/statements.md`.
+8. Update `docs/ai-context/CREXX_LIBS.md`.
+9. Update `docs/ai-context/RXAS_ASSEMBLER.md`.
+10. Update `docs/ai-context/RXLINK_LINKER.md`.
+11. Update `docs/ai-context/RXVM_INTERPRETER.md`.
+12. Update inliner/source provenance docs if needed.
+13. Remove beta warnings fixed by these stages and keep TODOs for remaining
    TRACE modes.
 
 Focused checks:
@@ -532,6 +565,8 @@ Focused checks:
 - Classic TRACE text formatting still matches expected output.
 - RXDB source display uses source-step whole lines and active ranges.
 - `return \flag` escaping remains stable.
+- Codegen goldens include trace-event metadata again after the formatter/runtime
+  split has stabilized the emitted shape.
 
 ## Regression Cases To Preserve
 
