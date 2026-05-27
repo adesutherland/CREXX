@@ -44,7 +44,7 @@ struct avl_tree_node;
 enum queue_item_type {
     EMPTY, ASM_LABEL, OP_CODE, SRC_FILE, SRC_LINE, SRC_STEP,
     FUNC_META, REG_META, CONST_META, CLEAR_META,
-    CLASS_META, ATTR_META, INTERFACE_META, IMPLEMENTS_META, MEMBER_META, INLINE_META
+    CLASS_META, ATTR_META, INTERFACE_META, IMPLEMENTS_META, MEMBER_META, INLINE_META, TRACE_EVENT
 };
 
 /* Keyhole Queue Item  */
@@ -58,6 +58,9 @@ typedef struct instruction_queue {
     Assembler_Token *operand5Token;
     Assembler_Token *operand6Token;
     Assembler_Token *operand7Token;
+    Assembler_Token *operand8Token;
+    Assembler_Token *operand9Token;
+    Assembler_Token *operand10Token;
 } instruction_queue;
 
 typedef struct Assembler_Context {

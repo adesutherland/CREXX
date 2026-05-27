@@ -911,6 +911,7 @@ static int is_meta_constant_type(enum const_pool_type type) {
         case META_SRC:
         case META_FILE:
         case META_SOURCE_STEP:
+        case META_TRACE_EVENT:
         case META_FUNC:
         case META_REG:
         case META_CONST:
@@ -964,6 +965,23 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
             meta->base.next = next_offset;
             meta->file = file_offset;
             meta->source_line = source_line_offset;
+            return *ok;
+        }
+        case META_TRACE_EVENT: {
+            meta_trace_event_constant *source = (meta_trace_event_constant *)entry;
+            meta_trace_event_constant *meta = (meta_trace_event_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            if (source->value_source == RXBIN_TRACE_VALUE_CONSTANT &&
+                source->value_ref != RXBIN_TRACE_REF_NONE) {
+                meta->value_ref = link_constant_offset(context, output_module, input_module, source->value_ref, ok);
+            }
+            if (source->symbol != RXBIN_TRACE_REF_NONE) {
+                meta->symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+            }
+            if (source->resolved_name != RXBIN_TRACE_REF_NONE) {
+                meta->resolved_name = link_constant_offset(context, output_module, input_module, source->resolved_name, ok);
+            }
             return *ok;
         }
         case META_FUNC: {
@@ -1244,6 +1262,7 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
         case META_SRC:
         case META_FILE:
         case META_SOURCE_STEP:
+        case META_TRACE_EVENT:
         case META_FUNC:
         case META_REG:
         case META_CONST:

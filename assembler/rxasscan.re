@@ -105,6 +105,7 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     '.globals' { return(KW_GLOBALS); }
     '.locals' { return(KW_LOCALS); }
     '.expose' { return(KW_EXPOSE); }
+    '.traceevent' { return(KW_TRACEEVENT); }
     '.srcstep' { return(KW_SRCSTEP); }
     '.src' { return(KW_SRC); }
     '.srcfile' { return(KW_SRCFILE); }

@@ -17,6 +17,7 @@ g0 .expose=disassembler_roundtrip.shared
 main() .locals=6
    .meta "disassembler_roundtrip.main"="b" ".void" main() ""
    .src 1:1="local = \"hello\""
+   .traceevent "A" 6 "R" "S" "s" 1 1 1 0 "local" ""
    .meta "disassembler_roundtrip.main.local"="b" ".string" r1
    .meta "disassembler_roundtrip.main.answer"="b" ".string" "forty-two"
    load r1,"hello"

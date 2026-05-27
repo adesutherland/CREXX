@@ -3045,6 +3045,35 @@ START_OF_INSTRUCTIONS
                             x = (rxinteger) ((meta_source_step_constant *) (pool + i))->source_line;
                             set_const_string(op1R->attributes[j]->attributes[7], (string_constant *) (pool + x));
                             break;
+                        case META_TRACE_EVENT:
+                            set_null_string(op1R->attributes[j], ".meta_trace_event");
+                            set_num_attributes(op1R->attributes[j], 11);
+                            op1R->attributes[j]->attributes[0]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->kind;
+                            op1R->attributes[j]->attributes[1]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->mode_mask;
+                            op1R->attributes[j]->attributes[2]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->value_source;
+                            op1R->attributes[j]->attributes[3]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->value_type;
+                            op1R->attributes[j]->attributes[4]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->register_type;
+                            op1R->attributes[j]->attributes[5]->int_value =
+                                    ((meta_trace_event_constant *) (pool + i))->value_ref == RXBIN_TRACE_REF_NONE ?
+                                    (rxinteger)-1 : (rxinteger) ((meta_trace_event_constant *) (pool + i))->value_ref;
+                            op1R->attributes[j]->attributes[6]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->source_step_id;
+                            op1R->attributes[j]->attributes[7]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->clause_id;
+                            op1R->attributes[j]->attributes[8]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->flags;
+                            x = (rxinteger) ((meta_trace_event_constant *) (pool + i))->symbol;
+                            if ((size_t)x == RXBIN_TRACE_REF_NONE) set_null_string(op1R->attributes[j]->attributes[9], "");
+                            else set_const_string(op1R->attributes[j]->attributes[9], (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_trace_event_constant *) (pool + i))->resolved_name;
+                            if ((size_t)x == RXBIN_TRACE_REF_NONE) set_null_string(op1R->attributes[j]->attributes[10], "");
+                            else set_const_string(op1R->attributes[j]->attributes[10], (string_constant *) (pool + x));
+                            break;
                         case META_FUNC:
                             set_null_string(op1R->attributes[j], ".meta_func");
                             set_num_attributes(op1R->attributes[j], 5);

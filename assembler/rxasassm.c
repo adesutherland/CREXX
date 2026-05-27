@@ -642,6 +642,38 @@ static size_t add_decimal_to_pool(Assembler_Context *context, char* decimal) {
     return entry_index;
 }
 
+static uint8_t trace_code_from_token(Assembler_Context *context, Assembler_Token *token, uint8_t empty_value) {
+    char *value;
+
+    if (!token) return empty_value;
+    value = (char *) token->token_value.string;
+    if (!value || !value[0]) return empty_value;
+    if (value[1]) {
+        rxaserat(context, token, "trace event code must be a one-character string");
+        return empty_value;
+    }
+    return (uint8_t) value[0];
+}
+
+static size_t trace_ref_from_token(Assembler_Token *token) {
+    if (!token || token->token_value.integer < 0) return RXBIN_TRACE_REF_NONE;
+    return (size_t) token->token_value.integer;
+}
+
+static uint32_t trace_u32_from_token(Assembler_Token *token) {
+    if (!token || token->token_value.integer < 0) return 0;
+    return (uint32_t) token->token_value.integer;
+}
+
+static size_t add_optional_string_to_pool(Assembler_Context *context, Assembler_Token *token) {
+    char *value;
+
+    if (!token) return RXBIN_TRACE_REF_NONE;
+    value = (char *) token->token_value.string;
+    if (!value || !value[0]) return RXBIN_TRACE_REF_NONE;
+    return add_string_to_pool(context, token, value);
+}
+
 static size_t add_float_to_pool(Assembler_Context *context, double value) {
     float_constant *entry;
     size_t entry_index;
@@ -1398,6 +1430,28 @@ void rxasmestp(Assembler_Context *context, Assembler_Token *step, Assembler_Toke
     meta->active_start_column = (uint32_t) start->token_value.integer;
     meta->active_end_column = (uint32_t) end->token_value.integer;
     meta->flags = (uint32_t) flags->token_value.integer;
+}
+
+/* Trace Event */
+void rxasmete(Assembler_Context *context, Assembler_Token *kind, Assembler_Token *mode_mask,
+              Assembler_Token *value_source, Assembler_Token *value_type, Assembler_Token *register_type,
+              Assembler_Token *value_ref, Assembler_Token *source_step, Assembler_Token *clause,
+              Assembler_Token *flags, Assembler_Token *symbol, Assembler_Token *resolved_name) {
+    size_t entry = add_meta_entry(context, sizeof(meta_trace_event_constant), META_TRACE_EVENT);
+    meta_trace_event_constant *meta;
+
+    meta = (meta_trace_event_constant*)(context->binary.const_pool + entry);
+    meta->kind = trace_code_from_token(context, kind, 0);
+    meta->mode_mask = trace_u32_from_token(mode_mask);
+    meta->value_source = trace_code_from_token(context, value_source, RXBIN_TRACE_VALUE_NONE);
+    meta->value_type = trace_code_from_token(context, value_type, 0);
+    meta->register_type = trace_code_from_token(context, register_type, 0);
+    meta->value_ref = trace_ref_from_token(value_ref);
+    meta->source_step_id = trace_u32_from_token(source_step);
+    meta->clause_id = trace_u32_from_token(clause);
+    meta->flags = trace_u32_from_token(flags);
+    meta->symbol = add_optional_string_to_pool(context, symbol);
+    meta->resolved_name = add_optional_string_to_pool(context, resolved_name);
 }
 
 /* Function Metadata */

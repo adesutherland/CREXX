@@ -102,6 +102,30 @@ Step 2 verification:
 - Full `ctest --test-dir cmake-build-debug --output-on-failure` passed
   `1155/1155`.
 
+Step 3 is complete in the follow-up implementation:
+
+- `META_TRACE_EVENT` exists with compact one-character semantic/value codes,
+  numeric mode masks, optional pooled `symbol`/`resolved_name` strings, and
+  register/constant/none value references.
+- RXAS accepts `.traceevent`; RXDAS round-trips it; RXLINK rewrites optional
+  strings and constant value references; RXVM `metaloaddata` exposes
+  `.meta_trace_event`.
+- Source stripping preserves trace-event metadata. It only removes source
+  metadata (`META_SRC`, `META_FILE`, `META_SOURCE_STEP`).
+- Focused round-trip, linker strip/preserve, and VM `metaloaddata` checks
+  passed.
+- Full `cmake --build cmake-build-debug` passed.
+- Full `ctest --test-dir cmake-build-debug --output-on-failure` passed
+  `1157/1157`.
+
+Legacy removal timing:
+
+- New compiler output stopped emitting `.srcfile`/`.src` in step 2.
+- Old `.srcfile`/`.src` RXAS parsing, old `META_SRC`/`META_FILE`
+  disassembly/runtime fallback, and legacy inline `I4` import support should
+  remain until step 5, then be removed or quarantined after trace-event emission
+  and TRACE/RXDB consumers no longer need the compatibility paths.
+
 ## Binary Version
 
 Stage 1 bumped:

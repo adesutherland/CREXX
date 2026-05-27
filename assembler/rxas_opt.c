@@ -1428,6 +1428,13 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
                       item->operand3Token, item->operand4Token, item->operand5Token,
                       item->operand6Token, item->operand7Token);
             break;
+        case TRACE_EVENT:
+            /* Queue Trace Event */
+            rxasmete(context, item->instrToken, item->operand1Token, item->operand2Token,
+                     item->operand3Token, item->operand4Token, item->operand5Token,
+                     item->operand6Token, item->operand7Token, item->operand8Token,
+                     item->operand9Token, item->operand10Token);
+            break;
         case SRC_FILE:
             /* Source File */
             rxasmefl(context, item->instrToken);
@@ -1436,10 +1443,12 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
     }
 }
 
-static void queue_instruction_ext(Assembler_Context *context, enum queue_item_type type,
-                                  Assembler_Token *instrToken, Assembler_Token *operand1Token, Assembler_Token *operand2Token,
-                                  Assembler_Token *operand3Token, Assembler_Token *operand4Token, Assembler_Token *operand5Token,
-                                  Assembler_Token *operand6Token, Assembler_Token *operand7Token) {
+static void queue_instruction_ext_full(Assembler_Context *context, enum queue_item_type type,
+                                       Assembler_Token *instrToken, Assembler_Token *operand1Token, Assembler_Token *operand2Token,
+                                       Assembler_Token *operand3Token, Assembler_Token *operand4Token, Assembler_Token *operand5Token,
+                                       Assembler_Token *operand6Token, Assembler_Token *operand7Token,
+                                       Assembler_Token *operand8Token, Assembler_Token *operand9Token,
+                                       Assembler_Token *operand10Token) {
 
     /* Remove old instructions to get queue down to the target length */
     /* Note that instruction rules can add instructions to the queue  */
@@ -1465,10 +1474,34 @@ static void queue_instruction_ext(Assembler_Context *context, enum queue_item_ty
     context->optimiser_queue[context->optimiser_queue_items].operand5Token = operand5Token;
     context->optimiser_queue[context->optimiser_queue_items].operand6Token = operand6Token;
     context->optimiser_queue[context->optimiser_queue_items].operand7Token = operand7Token;
+    context->optimiser_queue[context->optimiser_queue_items].operand8Token = operand8Token;
+    context->optimiser_queue[context->optimiser_queue_items].operand9Token = operand9Token;
+    context->optimiser_queue[context->optimiser_queue_items].operand10Token = operand10Token;
     context->optimiser_queue_items++;
 
     /* Optimise */
     optimise(context);
+}
+
+static void queue_instruction_ext(Assembler_Context *context, enum queue_item_type type,
+                                  Assembler_Token *instrToken, Assembler_Token *operand1Token, Assembler_Token *operand2Token,
+                                  Assembler_Token *operand3Token, Assembler_Token *operand4Token, Assembler_Token *operand5Token,
+                                  Assembler_Token *operand6Token, Assembler_Token *operand7Token) {
+    queue_instruction_ext_full(context, type, instrToken, operand1Token, operand2Token,
+                               operand3Token, operand4Token, operand5Token,
+                               operand6Token, operand7Token, 0, 0, 0);
+}
+
+static void queue_trace_event(Assembler_Context *context,
+                              Assembler_Token *kind, Assembler_Token *mode_mask,
+                              Assembler_Token *value_source, Assembler_Token *value_type,
+                              Assembler_Token *register_type, Assembler_Token *value_ref,
+                              Assembler_Token *source_step, Assembler_Token *clause,
+                              Assembler_Token *flags, Assembler_Token *symbol,
+                              Assembler_Token *resolved_name) {
+    queue_instruction_ext_full(context, TRACE_EVENT, kind, mode_mask, value_source, value_type,
+                               register_type, value_ref, source_step, clause,
+                               flags, symbol, resolved_name);
 }
 
 static void queue_instruction(Assembler_Context *context, enum queue_item_type type,
@@ -1551,6 +1584,19 @@ void rxasqmstp(Assembler_Context *context, Assembler_Token *step, Assembler_Toke
         queue_instruction_ext(context, SRC_STEP, step, clause, flags, file, line, start, end, source);
     }
     else rxasmestp(context, step, clause, flags, file, line, start, end, source);
+}
+
+/* Queue Trace Event */
+void rxasqmte(Assembler_Context *context, Assembler_Token *kind, Assembler_Token *mode_mask,
+              Assembler_Token *value_source, Assembler_Token *value_type, Assembler_Token *register_type,
+              Assembler_Token *value_ref, Assembler_Token *source_step, Assembler_Token *clause,
+              Assembler_Token *flags, Assembler_Token *symbol, Assembler_Token *resolved_name) {
+    if (context->optimise) {
+        queue_trace_event(context, kind, mode_mask, value_source, value_type, register_type, value_ref,
+                          source_step, clause, flags, symbol, resolved_name);
+    }
+    else rxasmete(context, kind, mode_mask, value_source, value_type, register_type, value_ref,
+                  source_step, clause, flags, symbol, resolved_name);
 }
 
 /* Queue Function Metadata */

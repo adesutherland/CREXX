@@ -285,6 +285,64 @@ static void output_meta_source_step_line(FILE *stream, bin_space *pgm, meta_sour
             source_buffer);
 }
 
+static void trace_code_string(uint8_t code, char *buffer, size_t buffer_len) {
+    if (!buffer || buffer_len == 0) return;
+    if (!code) {
+        snprintf(buffer, buffer_len, "\"\"");
+    } else {
+        snprintf(buffer, buffer_len, "\"%c\"", (char) code);
+    }
+}
+
+static void trace_ref_string(size_t ref, char *buffer, size_t buffer_len) {
+    if (!buffer || buffer_len == 0) return;
+    if (ref == RXBIN_TRACE_REF_NONE) {
+        snprintf(buffer, buffer_len, "-1");
+    } else {
+        snprintf(buffer, buffer_len, "%lu", (unsigned long) ref);
+    }
+}
+
+static void trace_optional_string(bin_space *pgm, size_t ref, char *buffer, size_t buffer_len) {
+    if (!buffer || buffer_len == 0) return;
+    if (ref == RXBIN_TRACE_REF_NONE) {
+        snprintf(buffer, buffer_len, "\"\"");
+    } else {
+        get_const_string(pgm, buffer, buffer_len, ref);
+    }
+}
+
+static void output_meta_trace_event_line(FILE *stream, bin_space *pgm, meta_trace_event_constant *mentry, const char *indent) {
+    char kind_buffer[8];
+    char value_source_buffer[8];
+    char value_type_buffer[8];
+    char register_type_buffer[8];
+    char value_ref_buffer[32];
+    char symbol_buffer[MAX_LINE_SIZE];
+    char resolved_buffer[MAX_LINE_SIZE];
+
+    trace_code_string(mentry->kind, kind_buffer, sizeof(kind_buffer));
+    trace_code_string(mentry->value_source, value_source_buffer, sizeof(value_source_buffer));
+    trace_code_string(mentry->value_type, value_type_buffer, sizeof(value_type_buffer));
+    trace_code_string(mentry->register_type, register_type_buffer, sizeof(register_type_buffer));
+    trace_ref_string(mentry->value_ref, value_ref_buffer, sizeof(value_ref_buffer));
+    trace_optional_string(pgm, mentry->symbol, symbol_buffer, sizeof(symbol_buffer));
+    trace_optional_string(pgm, mentry->resolved_name, resolved_buffer, sizeof(resolved_buffer));
+    fprintf(stream, "%s.traceevent %s %u %s %s %s %s %u %u %u %s %s\n",
+            indent ? indent : "",
+            kind_buffer,
+            mentry->mode_mask,
+            value_source_buffer,
+            value_type_buffer,
+            register_type_buffer,
+            value_ref_buffer,
+            mentry->source_step_id,
+            mentry->clause_id,
+            mentry->flags,
+            symbol_buffer,
+            resolved_buffer);
+}
+
 static void output_meta_inline_for_symbol(FILE *stream, module_file *module, bin_space *pgm, const char *symbol, const char *indent) {
     int m;
 
@@ -553,6 +611,12 @@ static void output_meta_pre_proc(FILE *stream, module_file *module, bin_space *p
             }
             break;
 
+            case META_TRACE_EVENT: {
+                meta_trace_event_constant *mentry = ((meta_trace_event_constant *) (module->constant + m));
+                (void)mentry;
+            }
+            break;
+
             case META_FUNC: {
                 /* META function symbol */
                 meta_func_constant *mentry = ((meta_func_constant *) (module->constant + m));
@@ -679,6 +743,12 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
             }
             break;
 
+            case META_TRACE_EVENT: {
+                meta_trace_event_constant *mentry = ((meta_trace_event_constant *) (module->constant + m));
+                output_meta_trace_event_line(stream, pgm, mentry, "                ");
+            }
+            break;
+
             case META_FUNC: {
                 /* META function symbol - .meta "MAIN"="B" ".int" main() "" */
 
@@ -801,6 +871,12 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
             case META_SOURCE_STEP: {
                 meta_source_step_constant *mentry = ((meta_source_step_constant *) (module->constant + m));
                 output_meta_source_step_line(stream, pgm, mentry, "                ");
+            }
+            break;
+
+            case META_TRACE_EVENT: {
+                meta_trace_event_constant *mentry = ((meta_trace_event_constant *) (module->constant + m));
+                output_meta_trace_event_line(stream, pgm, mentry, "                ");
             }
             break;
 
@@ -1088,6 +1164,34 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     fprintf(stream, "%s ", line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->source_line);
                     fprintf(stream, "%s\n", line_buffer);
+                }
+                    break;
+
+                case META_TRACE_EVENT:
+                {
+                    meta_trace_event_constant *mentry = (meta_trace_event_constant *) entry;
+                    char symbol_buffer[MAX_LINE_SIZE];
+                    char resolved_buffer[MAX_LINE_SIZE];
+                    trace_optional_string(pgm, mentry->symbol, symbol_buffer, sizeof(symbol_buffer));
+                    trace_optional_string(pgm, mentry->resolved_name, resolved_buffer, sizeof(resolved_buffer));
+                    fprintf(stream,
+                            "* 0x%.6lx META-TRACE-EVENT @0x%.6lx kind=%c modes=%u source=%c type=%c reg=%c value=",
+                            i,
+                            mentry->base.address,
+                            mentry->kind ? (char) mentry->kind : '-',
+                            mentry->mode_mask,
+                            mentry->value_source ? (char) mentry->value_source : '-',
+                            mentry->value_type ? (char) mentry->value_type : '-',
+                            mentry->register_type ? (char) mentry->register_type : '-');
+                    if (mentry->value_ref == RXBIN_TRACE_REF_NONE) fprintf(stream, "-1");
+                    else fprintf(stream, "%lu", (unsigned long) mentry->value_ref);
+                    fprintf(stream,
+                            " step=%u clause=%u flags=%u symbol=%s resolved=%s\n",
+                            mentry->source_step_id,
+                            mentry->clause_id,
+                            mentry->flags,
+                            symbol_buffer,
+                            resolved_buffer);
                 }
                     break;
 

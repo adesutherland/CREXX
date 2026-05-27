@@ -81,7 +81,8 @@ struct bin_space {
 enum const_pool_type {
     STRING_CONST, BINARY_CONST, DECIMAL_CONST, FLOAT_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
     META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR,
-    META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE, META_SOURCE_STEP
+    META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE, META_SOURCE_STEP,
+    META_TRACE_EVENT
 };
 
 /* cREXX chameleon entry in the constant pool
@@ -181,6 +182,48 @@ typedef struct meta_source_step_constant {
     uint32_t active_end_column;
     uint32_t flags;
 } meta_source_step_constant;
+
+#define RXBIN_TRACE_REF_NONE ((size_t)-1)
+
+#define RXBIN_TRACE_KIND_SOURCE      'S'
+#define RXBIN_TRACE_KIND_VARIABLE    'V'
+#define RXBIN_TRACE_KIND_ASSIGNMENT  'A'
+#define RXBIN_TRACE_KIND_COMPOUND    'C'
+#define RXBIN_TRACE_KIND_LITERAL     'L'
+#define RXBIN_TRACE_KIND_BINARY_OP   'O'
+#define RXBIN_TRACE_KIND_PREFIX_OP   'P'
+#define RXBIN_TRACE_KIND_FUNCTION    'F'
+#define RXBIN_TRACE_KIND_RESULT      'R'
+#define RXBIN_TRACE_KIND_MESSAGE     'M'
+
+#define RXBIN_TRACE_VALUE_NONE       'N'
+#define RXBIN_TRACE_VALUE_REGISTER   'R'
+#define RXBIN_TRACE_VALUE_CONSTANT   'K'
+
+#define RXBIN_TRACE_MODE_A           0x00000001u
+#define RXBIN_TRACE_MODE_R           0x00000002u
+#define RXBIN_TRACE_MODE_I           0x00000004u
+#define RXBIN_TRACE_MODE_C           0x00000008u
+#define RXBIN_TRACE_MODE_E           0x00000010u
+#define RXBIN_TRACE_MODE_F           0x00000020u
+#define RXBIN_TRACE_MODE_L           0x00000040u
+#define RXBIN_TRACE_MODE_ASM         0x00000080u
+#define RXBIN_TRACE_MODE_LLM         0x00000100u
+
+typedef struct meta_trace_event_constant {
+    meta_entry base;
+    uint8_t kind;
+    uint8_t value_source;
+    uint8_t value_type;
+    uint8_t register_type;
+    uint32_t mode_mask;
+    uint32_t flags;
+    size_t value_ref;
+    size_t symbol;
+    size_t resolved_name;
+    uint32_t source_step_id;
+    uint32_t clause_id;
+} meta_trace_event_constant;
 
 typedef struct meta_func_constant {
     meta_entry base;

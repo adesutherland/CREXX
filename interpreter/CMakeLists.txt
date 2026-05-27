@@ -379,6 +379,7 @@ add_custom_command(
 add_custom_target(run_tests_breakpoint_address ALL DEPENDS tests_breakpoint_address.rxbin)
 
 crexx_add_vm_dual_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'")
+crexx_add_vm_dual_test(NAME rxasbreakpointtraceeventtests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-symbol: target")
 
 # Instruction Sanity Tests - register flag partitioning
 crexx_add_rxas_vm_binary(tests_register_flags "register flag partitioning")
