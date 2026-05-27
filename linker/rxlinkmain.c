@@ -910,6 +910,7 @@ static int is_meta_constant_type(enum const_pool_type type) {
     switch (type) {
         case META_SRC:
         case META_FILE:
+        case META_SOURCE_STEP:
         case META_FUNC:
         case META_REG:
         case META_CONST:
@@ -927,7 +928,7 @@ static int is_meta_constant_type(enum const_pool_type type) {
 }
 
 static int should_strip_meta_constant(const rxlink_build_context *context, enum const_pool_type type) {
-    if (context->strip_source_metadata && (type == META_SRC || type == META_FILE)) return 1;
+    if (context->strip_source_metadata && (type == META_SRC || type == META_FILE || type == META_SOURCE_STEP)) return 1;
     if (context->strip_inline_metadata && type == META_INLINE) return 1;
     return 0;
 }
@@ -952,6 +953,17 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
             meta->base.prev = prev_offset;
             meta->base.next = next_offset;
             meta->file = file_offset;
+            return *ok;
+        }
+        case META_SOURCE_STEP: {
+            meta_source_step_constant *source = (meta_source_step_constant *)entry;
+            size_t file_offset = link_constant_offset(context, output_module, input_module, source->file, ok);
+            size_t source_line_offset = link_constant_offset(context, output_module, input_module, source->source_line, ok);
+            meta_source_step_constant *meta = (meta_source_step_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->file = file_offset;
+            meta->source_line = source_line_offset;
             return *ok;
         }
         case META_FUNC: {
@@ -1231,6 +1243,7 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
         }
         case META_SRC:
         case META_FILE:
+        case META_SOURCE_STEP:
         case META_FUNC:
         case META_REG:
         case META_CONST:

@@ -1380,6 +1380,26 @@ void rxasmesr(Assembler_Context *context, Assembler_Token *line, Assembler_Token
     ((meta_src_constant*)(context->binary.const_pool + entry))->source = sentry;
 }
 
+/* Source Step */
+void rxasmestp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
+               Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,
+               Assembler_Token *source) {
+    size_t entry = add_meta_entry(context, sizeof(meta_source_step_constant), META_SOURCE_STEP);
+    size_t file_entry = add_string_to_pool(context, file, (char*)file->token_value.string);
+    size_t source_entry = add_string_to_pool(context, source, (char*)source->token_value.string);
+    meta_source_step_constant *meta;
+
+    meta = (meta_source_step_constant*)(context->binary.const_pool + entry);
+    meta->file = file_entry;
+    meta->source_line = source_entry;
+    meta->step_id = (uint32_t) step->token_value.integer;
+    meta->clause_id = (uint32_t) clause->token_value.integer;
+    meta->line = (uint32_t) line->token_value.integer;
+    meta->active_start_column = (uint32_t) start->token_value.integer;
+    meta->active_end_column = (uint32_t) end->token_value.integer;
+    meta->flags = (uint32_t) flags->token_value.integer;
+}
+
 /* Function Metadata */
 void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args) {
     size_t entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);

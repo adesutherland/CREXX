@@ -44,6 +44,10 @@ void rxasqlbl(Assembler_Context *context, Assembler_Token *labelToken);
 void rxasqmfl(Assembler_Context *context, Assembler_Token *file);
 /* Source Line */
 void rxasqmsr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source);
+/* Source Step */
+void rxasqmstp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
+               Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,
+               Assembler_Token *source);
 /* Function Metadata */
 void rxasqmfu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args);
 /* Register Metadata */
@@ -89,6 +93,10 @@ void rxasdecl(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
 void rxasmefl(Assembler_Context *context, Assembler_Token *file);
 /* Source Line */
 void rxasmesr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source);
+/* Source Step */
+void rxasmestp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
+               Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,
+               Assembler_Token *source);
 /* Function Metadata */
 void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args);
 /* Register Metadata */

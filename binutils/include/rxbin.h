@@ -41,7 +41,7 @@
 #include "platform.h"
 #include "rxdefs.h"
 
-#define BIN_VERSION "003"
+#define BIN_VERSION "004"
 
 #define BIN_HEADER "cReXx" /* Do not change */
 
@@ -81,7 +81,7 @@ struct bin_space {
 enum const_pool_type {
     STRING_CONST, BINARY_CONST, DECIMAL_CONST, FLOAT_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
     META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR,
-    META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE
+    META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE, META_SOURCE_STEP
 };
 
 /* cREXX chameleon entry in the constant pool
@@ -161,6 +161,26 @@ typedef struct meta_file_constant {
     meta_entry base;
     size_t file;
 } meta_file_constant;
+
+#define RXBIN_SOURCE_AUTHORED   0x00000001u
+#define RXBIN_SOURCE_GENERATED  0x00000002u
+#define RXBIN_SOURCE_SYNTHETIC  0x00000004u
+#define RXBIN_SOURCE_INLINED    0x00000008u
+#define RXBIN_SOURCE_EXACT      0x00000010u
+#define RXBIN_SOURCE_INHERITED  0x00000020u
+#define RXBIN_SOURCE_COMPOSITE  0x00000040u
+
+typedef struct meta_source_step_constant {
+    meta_entry base;
+    size_t file;
+    size_t source_line;
+    uint32_t step_id;
+    uint32_t clause_id;
+    uint32_t line;
+    uint32_t active_start_column;
+    uint32_t active_end_column;
+    uint32_t flags;
+} meta_source_step_constant;
 
 typedef struct meta_func_constant {
     meta_entry base;

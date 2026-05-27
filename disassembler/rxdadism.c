@@ -33,6 +33,9 @@
 #include "rxas.h"
 #include "rxdadism.h"
 #include "../binutils/include/rxdefs.h"
+
+/* Max buffer size - todo change to a dynamic solution */
+#define MAX_LINE_SIZE 5000
 #include "../binutils/include/opdata.c"
 
 static int get_operand_types(OpFormat format, OperandType *types) {
@@ -264,6 +267,24 @@ static void output_meta_inline_line(FILE *stream, bin_space *pgm, meta_inline_co
     if (payload) free(payload);
 }
 
+static void output_meta_source_step_line(FILE *stream, bin_space *pgm, meta_source_step_constant *mentry, const char *indent) {
+    char file_buffer[MAX_LINE_SIZE];
+    char source_buffer[MAX_LINE_SIZE];
+
+    get_const_string(pgm, file_buffer, MAX_LINE_SIZE, mentry->file);
+    get_const_string(pgm, source_buffer, MAX_LINE_SIZE, mentry->source_line);
+    fprintf(stream, "%s.srcstep %u %u %u %s %u %u %u %s\n",
+            indent ? indent : "",
+            mentry->step_id,
+            mentry->clause_id,
+            mentry->flags,
+            file_buffer,
+            mentry->line,
+            mentry->active_start_column,
+            mentry->active_end_column,
+            source_buffer);
+}
+
 static void output_meta_inline_for_symbol(FILE *stream, module_file *module, bin_space *pgm, const char *symbol, const char *indent) {
     int m;
 
@@ -392,9 +413,6 @@ typedef struct code_line {
  * to include and where to put the procedure details.
  * So we have to run through the code and flag where to add label and procedure
  * details - in sum, 2 passes */
-
-/* Max buffer size - todo change to a dynamic solution */
-#define MAX_LINE_SIZE 5000
 
 /* Get the address of the first meta constant entry at address (or -1 if none) */
 static int get_first_meta_at(module_file *module, size_t address) {
@@ -529,6 +547,12 @@ static void output_meta_pre_proc(FILE *stream, module_file *module, bin_space *p
             }
             break;
 
+            case META_SOURCE_STEP: {
+                meta_source_step_constant *mentry = ((meta_source_step_constant *) (module->constant + m));
+                (void)mentry;
+            }
+            break;
+
             case META_FUNC: {
                 /* META function symbol */
                 meta_func_constant *mentry = ((meta_func_constant *) (module->constant + m));
@@ -649,6 +673,12 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
             }
             break;
 
+            case META_SOURCE_STEP: {
+                meta_source_step_constant *mentry = ((meta_source_step_constant *) (module->constant + m));
+                output_meta_source_step_line(stream, pgm, mentry, "                ");
+            }
+            break;
+
             case META_FUNC: {
                 /* META function symbol - .meta "MAIN"="B" ".int" main() "" */
 
@@ -765,6 +795,12 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
                 get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->source);
                 fprintf(stream, "                .src %d:%d=%s\n", (int) mentry->line, (int) mentry->column,
                         line_buffer);
+            }
+            break;
+
+            case META_SOURCE_STEP: {
+                meta_source_step_constant *mentry = ((meta_source_step_constant *) (module->constant + m));
+                output_meta_source_step_line(stream, pgm, mentry, "                ");
             }
             break;
 
@@ -1031,6 +1067,26 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                             i, mentry->base.address,
                             (int) mentry->line, (int) mentry->column);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->source);
+                    fprintf(stream, "%s\n", line_buffer);
+                }
+                    break;
+
+                case META_SOURCE_STEP:
+                {
+                    meta_source_step_constant *mentry = (meta_source_step_constant *) entry;
+                    fprintf(stream,
+                            "* 0x%.6lx META-SOURCE-STEP @0x%.6lx step=%u clause=%u flags=%u %u:%u-%u ",
+                            i,
+                            mentry->base.address,
+                            mentry->step_id,
+                            mentry->clause_id,
+                            mentry->flags,
+                            mentry->line,
+                            mentry->active_start_column,
+                            mentry->active_end_column);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->file);
+                    fprintf(stream, "%s ", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->source_line);
                     fprintf(stream, "%s\n", line_buffer);
                 }
                     break;
