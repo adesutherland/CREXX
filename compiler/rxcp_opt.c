@@ -89,6 +89,38 @@ static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int val
 static void rewrite_to_binary_constant(ASTNode* node, Payload* payload, char* string, size_t length);
 static int strict_string_compare_operand(ASTNode *node);
 
+static int semantic_context_is_internal_operand(ASTNode *node) {
+    return ast_semantic_context_kind(node) == AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND;
+}
+
+static int folded_concat_is_internal_operand(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    if (semantic_context_is_internal_operand(node)) return 1;
+    if (node->node_type != OP_CONCAT && node->node_type != OP_SCONCAT) return 0;
+
+    child = node->child;
+    if (!child) return 0;
+    while (child) {
+        if (!folded_concat_is_internal_operand(child)) return 0;
+        child = child->sibling;
+    }
+    return 1;
+}
+
+static void preserve_folded_semantic_context(ASTNode *node, Payload *payload) {
+    if (!node || !payload || !payload->context) return;
+    if (!folded_concat_is_internal_operand(node)) return;
+    if (semantic_context_is_internal_operand(node)) return;
+
+    ast_attach_semantic_context(node,
+                                ast_make_semantic_context(payload->context,
+                                                          AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND,
+                                                          node,
+                                                          "semantic-folded-key"));
+}
+
 /*
  * Create a number_context of a node
  * The returned context is a static parameter - do not free it or expect it to be thread safe, etc.
@@ -534,6 +566,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
     /* Note the string has to be malloced and memory management is then owned by the
      * node (ie. malloc string but DONT free it after the call */
     static void rewrite_to_string_constant(ASTNode* node, Payload* payload, char* string, size_t length) {
+        preserve_folded_semantic_context(node, payload);
         ast_prnc(node);
         node->value_type = TP_STRING;
         node->node_type = CONSTANT;

@@ -189,6 +189,14 @@ classic TRACE implementation:
   text. It uses `.traceevent` records emitted where the compiler still has a
   register or constant value to name. Optimised-away and folded values may be
   absent rather than recreated solely for TRACE.
+- Desugaring passes that erase source-level intent before emission should attach
+  an `AST_SEMANTIC_CONTEXT` sidecar to the lowered node. The sidecar is a
+  generic rxc-to-emitter/exits note, not TRACE-specific execution syntax. TRACE
+  currently consumes it for stem/property/index sugar so lowered `get`/`set`
+  member calls can still produce source-level compound, read, and assignment
+  events while suppressing compiler-created receiver/key-building operations.
+  Optimiser folding preserves this internal marker for synthetic property-tail
+  keys instead of reintroducing literal TRACE noise.
 - `.srcstep` metadata is self-contained exact instruction/source-step metadata:
   pooled file name, whole source line, active range, step id, clause id, and
   provenance flags. It is valuable for debugger stepping and `TRACE LLM`, while

@@ -469,6 +469,104 @@ static ASTRewriteTemplate *stem_tail_key_template(ASTNode *index) {
     return key_tmpl;
 }
 
+static int stem_tail_node_is_dotted(ASTNode *node) {
+    const char *source_start;
+
+    if (!node || !node->token || !node->token->token_string) return 0;
+    source_start = node->context ? node->context->buff_start : 0;
+    if (!source_start || node->token->token_string <= source_start) return 0;
+    return node->token->token_string[-1] == '.';
+}
+
+static ASTSemanticContextKind stem_semantic_context_kind(ASTNode *index, int is_set) {
+    int dotted;
+
+    dotted = stem_tail_node_is_dotted(index);
+    if (is_set) return dotted ? AST_SEMANTIC_CONTEXT_PROPERTY_SET : AST_SEMANTIC_CONTEXT_INDEX_SET;
+    return dotted ? AST_SEMANTIC_CONTEXT_PROPERTY_GET : AST_SEMANTIC_CONTEXT_INDEX_GET;
+}
+
+static void attach_semantic_context(Context *context,
+                                    ASTNode *node,
+                                    ASTSemanticContextKind kind,
+                                    ASTNode *source_node,
+                                    const char *label) {
+    if (!node) return;
+    ast_attach_semantic_context(node,
+                                ast_make_semantic_context(context,
+                                                          kind,
+                                                          source_node,
+                                                          label));
+}
+
+static void mark_semantic_internal_operand(Context *context,
+                                           ASTNode *node,
+                                           ASTNode *source_node,
+                                           const char *label) {
+    attach_semantic_context(context,
+                            node,
+                            AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND,
+                            source_node,
+                            label);
+}
+
+static void mark_static_tail_operands(Context *context, ASTNode *node, ASTNode *source_node) {
+    ASTNode *child;
+
+    if (!node) return;
+    if (node->node_type == STRING ||
+        node->node_type == INTEGER ||
+        node->node_type == NOVAL) {
+        mark_semantic_internal_operand(context, node, source_node, "semantic-key");
+    }
+
+    child = node->child;
+    while (child) {
+        mark_static_tail_operands(context, child, source_node);
+        child = child->sibling;
+    }
+}
+
+static void mark_synthetic_property_tail_ops(Context *context, ASTNode *node, ASTNode *source_node) {
+    ASTNode *child;
+
+    if (!node) return;
+    if (node->node_type == OP_CONCAT || node->node_type == OP_SCONCAT) {
+        mark_semantic_internal_operand(context, node, source_node, "semantic-key-op");
+    }
+
+    child = node->child;
+    while (child) {
+        mark_synthetic_property_tail_ops(context, child, source_node);
+        child = child->sibling;
+    }
+}
+
+static void attach_stem_semantic_context(Context *context,
+                                         ASTNode *rewritten_root,
+                                         ASTNode *source_node,
+                                         ASTSemanticContextKind kind,
+                                         const char *label) {
+    ASTNode *member_call;
+    ASTNode *receiver;
+    ASTNode *key;
+
+    if (!rewritten_root) return;
+    member_call = rewritten_root->node_type == CALL ? rewritten_root->child : rewritten_root;
+    if (!member_call || member_call->node_type != MEMBER_CALL) return;
+
+    attach_semantic_context(context, member_call, kind, source_node, label);
+
+    receiver = member_call->child;
+    key = receiver ? receiver->sibling : 0;
+    mark_semantic_internal_operand(context, receiver, source_node, "semantic-receiver");
+    mark_static_tail_operands(context, key, source_node);
+    if (kind == AST_SEMANTIC_CONTEXT_PROPERTY_GET ||
+        kind == AST_SEMANTIC_CONTEXT_PROPERTY_SET) {
+        mark_synthetic_property_tail_ops(context, key, source_node);
+    }
+}
+
 walker_result syntax_sugar_walker(walker_direction direction,
                                   ASTNode* node, void *payload) {
     Context *context = (Context *) payload;
@@ -537,6 +635,8 @@ walker_result syntax_sugar_walker(walker_direction direction,
 
                     if (method_exists) {
                         ASTNode *val = target->sibling;
+                        ASTSemanticContextKind semantic_kind = stem_semantic_context_kind(index, 1);
+                        ASTNode *rewritten_root;
 
                         /* Template: CALL -> MEMBER_CALL("set") -> [obj_stem, index, val] */
                         ASTRewriteTemplate *call_tmpl = ast_rw_new(CALL, NULL);
@@ -553,7 +653,12 @@ walker_result syntax_sugar_walker(walker_direction direction,
 
                         ast_rw_add(call_tmpl, member_call_tmpl);
 
-                        ast_execute_rewrite(context, node, call_tmpl);
+                        rewritten_root = ast_execute_rewrite(context, node, call_tmpl);
+                        attach_stem_semantic_context(context,
+                                                     rewritten_root,
+                                                     node,
+                                                     semantic_kind,
+                                                     "stem-set");
                         context->changed_flags |= FLAG_VAL_TRANS;
                         return result_normal;
                     }
@@ -599,6 +704,9 @@ walker_result syntax_sugar_walker(walker_direction direction,
                 }
 
                 if (method_exists) {
+                    ASTSemanticContextKind semantic_kind = stem_semantic_context_kind(index, 0);
+                    ASTNode *rewritten_root;
+
                     /* Template: MEMBER_CALL("get") -> [obj_stem, index] */
                     ASTRewriteTemplate *member_call_tmpl = ast_rw_new(MEMBER_CALL, "get");
 
@@ -610,7 +718,12 @@ walker_result syntax_sugar_walker(walker_direction direction,
                     /* 2. Argument */
                     ast_rw_add(member_call_tmpl, stem_tail_key_template(index));
 
-                    ast_execute_rewrite(context, node, member_call_tmpl);
+                    rewritten_root = ast_execute_rewrite(context, node, member_call_tmpl);
+                    attach_stem_semantic_context(context,
+                                                 rewritten_root,
+                                                 node,
+                                                 semantic_kind,
+                                                 "stem-get");
                     context->changed_flags |= FLAG_VAL_TRANS;
                     return result_normal;
                 }

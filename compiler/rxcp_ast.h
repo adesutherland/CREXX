@@ -88,6 +88,7 @@ struct ASTNode {
     size_t reporting_source_capacity;
     ASTNode *parent, *child, *sibling;
     ASTNode *association; /* E.g. for LEAVE / ITERATE relevant DO node or LEAVE_WITH relevant BLOCK_EXPR */
+    ASTNode *semantic_context; /* AST_SEMANTIC_CONTEXT sidecar note for emitters and exits */
     Token *token;
     Scope *scope;
     char *node_string;
@@ -138,6 +139,12 @@ void ast_copy_source_anchor(ASTNode *node, ASTNode *source_node, ASTSourceProven
 void ast_enable_primary_reporting_anchor(ASTNode *node);
 int ast_add_reporting_source_node(ASTNode *node, SourceNode *source_node);
 void ast_clear_reporting_source_nodes(ASTNode *node);
+ASTNode *ast_make_semantic_context(Context *context,
+                                   ASTSemanticContextKind kind,
+                                   ASTNode *source_node,
+                                   const char *label);
+void ast_attach_semantic_context(ASTNode *node, ASTNode *semantic_context);
+ASTSemanticContextKind ast_semantic_context_kind(ASTNode *node);
 /* Find first node of a certain type in a tree */
 ASTNode *ast_fndn(Context* ctx, ASTNode* node, NodeType type);
 /* Graft a Rexx source fragment into the AST replacing target_node */

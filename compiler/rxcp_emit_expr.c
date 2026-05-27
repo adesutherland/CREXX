@@ -106,6 +106,89 @@ static int is_builtin_object_contract_name(const char *name) {
             strcmp(name, ".object") == 0);
 }
 
+static int semantic_context_is_sugar_get(ASTSemanticContextKind kind) {
+    return kind == AST_SEMANTIC_CONTEXT_PROPERTY_GET ||
+           kind == AST_SEMANTIC_CONTEXT_INDEX_GET;
+}
+
+static int semantic_context_is_sugar_set(ASTSemanticContextKind kind) {
+    return kind == AST_SEMANTIC_CONTEXT_PROPERTY_SET ||
+           kind == AST_SEMANTIC_CONTEXT_INDEX_SET;
+}
+
+static int semantic_context_is_sugar_access(ASTSemanticContextKind kind) {
+    return semantic_context_is_sugar_get(kind) ||
+           semantic_context_is_sugar_set(kind);
+}
+
+static int semantic_context_is_internal_operand(ASTSemanticContextKind kind) {
+    return kind == AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND;
+}
+
+static void append_semantic_compound_trace_event(OutputFragment *output,
+                                                 ASTNode *receiver_node,
+                                                 ASTNode *tail_node) {
+    char *symbol_name;
+
+    if (!output || !tail_node || tail_node->register_num < 0) return;
+    symbol_name = trace_symbol_name_malloc(receiver_node);
+    output_append_trace_event_register(output,
+                                       RXBIN_TRACE_KIND_COMPOUND,
+                                       RXBIN_TRACE_MODE_I,
+                                       tail_node,
+                                       0,
+                                       0,
+                                       symbol_name,
+                                       "");
+    if (symbol_name) free(symbol_name);
+}
+
+static void append_semantic_access_value_trace_event(OutputFragment *output,
+                                                     ASTSemanticContextKind kind,
+                                                     ASTNode *receiver_node,
+                                                     ASTNode *result_node,
+                                                     ASTNode *value_node) {
+    char *symbol_name;
+
+    if (!output) return;
+    symbol_name = trace_symbol_name_malloc(receiver_node);
+    if (semantic_context_is_sugar_set(kind)) {
+        output_append_trace_event_register(output,
+                                           RXBIN_TRACE_KIND_ASSIGNMENT,
+                                           RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
+                                           value_node,
+                                           0,
+                                           0,
+                                           symbol_name,
+                                           "");
+    } else if (semantic_context_is_sugar_get(kind)) {
+        output_append_trace_event_register(output,
+                                           RXBIN_TRACE_KIND_VARIABLE,
+                                           RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
+                                           result_node,
+                                           0,
+                                           0,
+                                           symbol_name,
+                                           "");
+    }
+    if (symbol_name) free(symbol_name);
+}
+
+static void append_semantic_operation_trace_event(OutputFragment *output,
+                                                  int trace_kind,
+                                                  ASTSemanticContextKind semantic_kind,
+                                                  ASTNode *node) {
+    if (semantic_context_is_internal_operand(semantic_kind)) return;
+    output_append_trace_event_register(output,
+                                       trace_kind,
+                                       RXBIN_TRACE_MODE_I,
+                                       node,
+                                       0,
+                                       0,
+                                       "",
+                                       "");
+}
+
 static ValueType operand_type_from_prefix(char *tp_prefix, ASTNode *node) {
     if (tp_prefix) {
         switch (*tp_prefix) {
@@ -156,6 +239,7 @@ void emit_expression(ASTNode *node, void *payload) {
     ASTNode *child1 = node->child;
     ASTNode *child2 = node->child ? node->child->sibling : 0;
     ASTNode *child3 = node->child && node->child->sibling ? node->child->sibling->sibling : 0;
+    ASTSemanticContextKind semantic_kind = ast_semantic_context_kind(node);
 
     switch (node->node_type) {
 
@@ -183,6 +267,11 @@ void emit_expression(ASTNode *node, void *payload) {
             n = child1;
             while (n) {
                 if (n->output) output_concat(node->output, n->output);
+                if (node->node_type == MEMBER_CALL &&
+                    semantic_context_is_sugar_access(semantic_kind) &&
+                    n == child2) {
+                    append_semantic_compound_trace_event(node->output, child1, child2);
+                }
                 n = n->sibling;
             }
 
@@ -357,7 +446,13 @@ void emit_expression(ASTNode *node, void *payload) {
 	            }
 
 	            type_promotion(node);
-	            {
+	            if (semantic_context_is_sugar_access(semantic_kind)) {
+	                append_semantic_access_value_trace_event(node->output,
+	                                                         semantic_kind,
+	                                                         child1,
+	                                                         node,
+	                                                         child3);
+	            } else {
 	                char *symbol_name = trace_symbol_name_malloc(node);
 	                output_append_trace_event_register(node->output,
 	                                                   RXBIN_TRACE_KIND_FUNCTION,
@@ -391,14 +486,10 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (child2->cleanup) output_concat(node->output, child2->cleanup);
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
 	            type_promotion(node);
-	            output_append_trace_event_register(node->output,
-	                                               RXBIN_TRACE_KIND_BINARY_OP,
-	                                               RXBIN_TRACE_MODE_I,
-	                                               node,
-	                                               0,
-	                                               0,
-	                                               "",
-	                                               "");
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_BINARY_OP,
+	                                                  semantic_kind,
+	                                                  node);
 	            break;
             }
             /* One or other of the operands may be a constant */
@@ -455,14 +546,10 @@ void emit_expression(ASTNode *node, void *payload) {
             }
 
 	            type_promotion(node);
-	            output_append_trace_event_register(node->output,
-	                                               RXBIN_TRACE_KIND_BINARY_OP,
-	                                               RXBIN_TRACE_MODE_I,
-	                                               node,
-	                                               0,
-	                                               0,
-	                                               "",
-	                                               "");
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_BINARY_OP,
+	                                                  semantic_kind,
+	                                                  node);
 	            break;
 
         case OP_XOR:
@@ -507,14 +594,10 @@ void emit_expression(ASTNode *node, void *payload) {
             if (child2->cleanup) output_concat(node->output, child2->cleanup);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
 	            type_promotion(node);
-	            output_append_trace_event_register(node->output,
-	                                               RXBIN_TRACE_KIND_BINARY_OP,
-	                                               RXBIN_TRACE_MODE_I,
-	                                               node,
-	                                               0,
-	                                               0,
-	                                               "",
-	                                               "");
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_BINARY_OP,
+	                                                  semantic_kind,
+	                                                  node);
 	            break;
 
         /* These operators have a prefix type of that of the first child */
@@ -626,14 +709,10 @@ void emit_expression(ASTNode *node, void *payload) {
             }
 
 	            type_promotion(node);
-	            output_append_trace_event_register(node->output,
-	                                               RXBIN_TRACE_KIND_BINARY_OP,
-	                                               RXBIN_TRACE_MODE_I,
-	                                               node,
-	                                               0,
-	                                               0,
-	                                               "",
-	                                               "");
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_BINARY_OP,
+	                                                  semantic_kind,
+	                                                  node);
 	            break;
 
         case OP_AND:
@@ -730,14 +809,10 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (child2->cleanup) output_concat(node->output, child2->cleanup);
             }
 	            type_promotion(node);
-	            output_append_trace_event_register(node->output,
-	                                               RXBIN_TRACE_KIND_BINARY_OP,
-	                                               RXBIN_TRACE_MODE_I,
-	                                               node,
-	                                               0,
-	                                               0,
-	                                               "",
-	                                               "");
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_BINARY_OP,
+	                                                  semantic_kind,
+	                                                  node);
 	            break;
 
         case OP_OR:
@@ -835,14 +910,10 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (child2->cleanup) output_concat(node->output, child2->cleanup);
             }
             type_promotion(node);
-            output_append_trace_event_register(node->output,
-                                               RXBIN_TRACE_KIND_BINARY_OP,
-                                               RXBIN_TRACE_MODE_I,
-                                               node,
-                                               0,
-                                               0,
-                                               "",
-                                               "");
+            append_semantic_operation_trace_event(node->output,
+                                                  RXBIN_TRACE_KIND_BINARY_OP,
+                                                  semantic_kind,
+                                                  node);
             break;
 
         case OP_NOT:
@@ -858,14 +929,10 @@ void emit_expression(ASTNode *node, void *payload) {
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
 
 	            type_promotion(node);
-	            output_append_trace_event_register(node->output,
-	                                               RXBIN_TRACE_KIND_PREFIX_OP,
-	                                               RXBIN_TRACE_MODE_I,
-	                                               node,
-	                                               0,
-	                                               0,
-	                                               "",
-	                                               "");
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_PREFIX_OP,
+	                                                  semantic_kind,
+	                                                  node);
 	            break;
 
         case OP_NEG:
@@ -897,14 +964,10 @@ void emit_expression(ASTNode *node, void *payload) {
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
 
 	            type_promotion(node);
-	            output_append_trace_event_register(node->output,
-	                                               RXBIN_TRACE_KIND_PREFIX_OP,
-	                                               RXBIN_TRACE_MODE_I,
-	                                               node,
-	                                               0,
-	                                               0,
-	                                               "",
-	                                               "");
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_PREFIX_OP,
+	                                                  semantic_kind,
+	                                                  node);
 	            break;
 
         case OP_PLUS:
@@ -932,14 +995,10 @@ void emit_expression(ASTNode *node, void *payload) {
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
 
             type_promotion(node);
-            output_append_trace_event_register(node->output,
-                                               RXBIN_TRACE_KIND_PREFIX_OP,
-                                               RXBIN_TRACE_MODE_I,
-                                               node,
-                                               0,
-                                               0,
-                                               "",
-                                               "");
+            append_semantic_operation_trace_event(node->output,
+                                                  RXBIN_TRACE_KIND_PREFIX_OP,
+                                                  semantic_kind,
+                                                  node);
             break;
 
         case OP_TYPE_CAST:
@@ -1099,14 +1158,16 @@ void emit_expression(ASTNode *node, void *payload) {
 
                 /* Do any type promotion */
 	                if (!skip_promotion) type_promotion(node);
-	                output_append_trace_event_register(node->output,
-	                                                   RXBIN_TRACE_KIND_LITERAL,
-	                                                   RXBIN_TRACE_MODE_I,
-	                                                   node,
-	                                                   0,
-	                                                   0,
-	                                                   "",
-	                                                   "");
+	                if (ast_semantic_context_kind(node) != AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND) {
+	                    output_append_trace_event_register(node->output,
+	                                                       RXBIN_TRACE_KIND_LITERAL,
+	                                                       RXBIN_TRACE_MODE_I,
+	                                                       node,
+	                                                       0,
+	                                                       0,
+	                                                       "",
+	                                                       "");
+	                }
 	            }
             break;
 

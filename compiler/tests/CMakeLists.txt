@@ -2977,6 +2977,17 @@ add_test(NAME trace_event_metadata
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_trace_event_metadata.cmake)
 set_tests_properties(trace_event_metadata PROPERTIES LABELS "compiler;stage4")
 
+add_test(NAME trace_stem_sugar
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXVM=$<TARGET_FILE:rxvm>
+        -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+        -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library
+        -DWORK=${CMAKE_CURRENT_BINARY_DIR}/trace_stem_sugar
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_trace_stem_sugar.cmake)
+set_tests_properties(trace_stem_sugar PROPERTIES LABELS "compiler;stage4")
+
 if (ENABLE_PARSER_MODE)
     add_test(NAME highlight_cache COMMAND test_highlight_cache)
     set_tests_properties(highlight_cache PROPERTIES

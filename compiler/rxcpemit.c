@@ -62,6 +62,7 @@ static void append_symbol_trace_event(OutputFragment *output,
                                       unsigned int clause_id) {
     char *symbol_name;
 
+    if (ast_semantic_context_kind(symbol_node) == AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND) return;
     symbol_name = trace_symbol_name_malloc(symbol_node);
     output_append_trace_event_register(output,
                                        kind,

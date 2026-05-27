@@ -256,6 +256,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->child = 0;
     node->sibling = 0;
     node->association = 0;
+    node->semantic_context = 0;
     node->token = 0;
     node->symbolNode = 0;
     node->scope = 0;
@@ -446,8 +447,37 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->line = node->line;
     new_node->column = node->column;
     new_node->file_name = node->file_name;
+    if (node->semantic_context) {
+        new_node->semantic_context = ast_dup_subtree(new_context, node->semantic_context);
+    }
 
     return new_node;
+}
+
+ASTNode *ast_make_semantic_context(Context *context,
+                                   ASTSemanticContextKind kind,
+                                   ASTNode *source_node,
+                                   const char *label) {
+    ASTNode *semantic_context;
+
+    semantic_context = ast_ft(context, AST_SEMANTIC_CONTEXT);
+    semantic_context->int_value = (rxinteger)kind;
+    if (label) ast_sstr(semantic_context, strdup(label), strlen(label));
+    if (source_node) ast_copy_source_anchor(semantic_context, source_node, AST_SOURCE_EXACT);
+    return semantic_context;
+}
+
+void ast_attach_semantic_context(ASTNode *node, ASTNode *semantic_context) {
+    if (!node) return;
+    node->semantic_context = semantic_context;
+}
+
+ASTSemanticContextKind ast_semantic_context_kind(ASTNode *node) {
+    if (!node || !node->semantic_context ||
+        node->semantic_context->node_type != AST_SEMANTIC_CONTEXT) {
+        return AST_SEMANTIC_CONTEXT_NONE;
+    }
+    return (ASTSemanticContextKind)node->semantic_context->int_value;
 }
 
 void ast_mark_compiler_generated_block(ASTNode *node) {
@@ -1398,6 +1428,8 @@ const char *ast_ndtp(NodeType type) {
             return "SIGNAL_NAMES";
         case SIGNAL_NAME:
             return "SIGNAL_NAME";
+        case AST_SEMANTIC_CONTEXT:
+            return "AST_SEMANTIC_CONTEXT";
         case LEVELC_ADDRESS:
             return "LEVELC_ADDRESS";
         case LEVELC_ARG:

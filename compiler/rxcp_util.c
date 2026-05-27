@@ -1174,6 +1174,7 @@ const char* node_type_to_string(NodeType type) {
         case SIGNAL_HANDLER: return "SIGNAL_HANDLER";
         case SIGNAL_NAMES: return "SIGNAL_NAMES";
         case SIGNAL_NAME: return "SIGNAL_NAME";
+        case AST_SEMANTIC_CONTEXT: return "AST_SEMANTIC_CONTEXT";
         case LEVELC_ADDRESS: return "LEVELC_ADDRESS";
         case LEVELC_ARG: return "LEVELC_ARG";
         case LEVELC_DROP: return "LEVELC_DROP";
