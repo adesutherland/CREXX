@@ -158,7 +158,7 @@ fail_istype_class:
 
 §interface_factory_tiebreak.car.§factory.from_name() .locals=4
    .meta "interface_factory_tiebreak.car.§factory.from_name"="b" ".vehicle" §interface_factory_tiebreak.car.§factory.from_name() "name=.string"
-   .src 1:1="from_name"
+   .srcstep 1 1 17 "tests_interfaces.rxas" 1 1 9 "from_name"
    setattrs r1,2
    setobjtype r1,"interface_factory_tiebreak.car"
    setnumdgts 18
@@ -222,7 +222,7 @@ fail_istype_class:
 
 §interface_factory_tiebreak.truck.§factory.from_name() .locals=4
    .meta "interface_factory_tiebreak.truck.§factory.from_name"="b" ".vehicle" §interface_factory_tiebreak.truck.§factory.from_name() "name=.string"
-   .src 1:1="from_name"
+   .srcstep 2 2 17 "tests_interfaces.rxas" 1 1 9 "from_name"
    setattrs r1,2
    setobjtype r1,"interface_factory_tiebreak.truck"
    setnumdgts 18

@@ -1418,10 +1418,6 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
         case INLINE_META:
             rxasmeil(context, item->instrToken, item->operand1Token, item->operand2Token);
             break;
-        case SRC_LINE:
-            /* Queue Source Line */
-            rxasmesr(context, item->instrToken, item->operand1Token, item->operand2Token);
-            break;
         case SRC_STEP:
             /* Queue Source Step */
             rxasmestp(context, item->instrToken, item->operand1Token, item->operand2Token,
@@ -1434,10 +1430,6 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
                      item->operand3Token, item->operand4Token, item->operand5Token,
                      item->operand6Token, item->operand7Token, item->operand8Token,
                      item->operand9Token, item->operand10Token);
-            break;
-        case SRC_FILE:
-            /* Source File */
-            rxasmefl(context, item->instrToken);
             break;
         default:;
     }
@@ -1558,22 +1550,6 @@ void rxasqlbl(Assembler_Context *context, Assembler_Token *labelToken) {
         queue_instruction(context, ASM_LABEL, labelToken, 0, 0, 0, 0, 0);
     }
     else rxaslabl(context, labelToken);
-}
-
-/* Queue Source filename */
-void rxasqmfl(Assembler_Context *context, Assembler_Token *file) {
-    if (context->optimise) {
-        queue_instruction(context, SRC_FILE, file, 0, 0, 0, 0, 0);
-    }
-    else rxasmefl(context, file);
-}
-
-/* Queue Source Line */
-void rxasqmsr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source) {
-    if (context->optimise) {
-        queue_instruction(context, SRC_LINE, line, column, source, 0, 0, 0);
-    }
-    else rxasmesr(context, line, column, source);
 }
 
 /* Queue Source Step */

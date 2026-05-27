@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : opt_numeric_safety.crexx
- * BUILT                  : 2026-04-29 14:21:08
+ * BUILT                  : 2026-05-27 17:53:02
  */
 
-.srcfile="opt_numeric_safety.crexx"
 .globals=0
 
 main() .locals=4
@@ -14,35 +12,41 @@ main() .locals=4
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:1="call ScenarioA"
-   .src 16:5="say 1.0d/3"
+   .srcstep 2 2 17 "opt_numeric_safety.crexx" 4 1 15 "call ScenarioA"
+   .srcstep 1 1 17 "opt_numeric_safety.crexx" 16 5 15 "    say 1.0d/3"
    say "0.33333"
-   .src 5:1="call ScenarioB"
-   .src 22:5="say 1.0d/3"
+   .srcstep 4 4 17 "opt_numeric_safety.crexx" 5 1 15 "call ScenarioB"
+   .srcstep 3 3 17 "opt_numeric_safety.crexx" 22 5 15 "    say 1.0d/3"
    load r1,3
    itod r1
+   .traceevent "L" 4 "R" "D" "r" 1 3 3 0 "" ""
    ddiv r1,1.0d,r1
    dtos r1
+   .traceevent "O" 4 "R" "S" "r" 1 3 3 0 "" ""
    say r1
-   .src 6:1="call ScenarioC"
-   .src 30:5="say 5 % 2"
+   .srcstep 6 6 17 "opt_numeric_safety.crexx" 6 1 15 "call ScenarioC"
+   .srcstep 5 5 17 "opt_numeric_safety.crexx" 30 5 14 "    say 5 % 2"
    load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 5 5 0 "" ""
    imod r2,5,r2
    itos r2
+   .traceevent "O" 4 "R" "S" "r" 2 5 5 0 "" ""
    say r2
-   .src 7:1="call ScenarioD"
-   .src 38:4="if 1.000000001 = 1.0"
+   .srcstep 12 12 17 "opt_numeric_safety.crexx" 7 1 15 "call ScenarioD"
+   .srcstep 9 9 17 "opt_numeric_safety.crexx" 38 5 25 "    if 1.000000001 = 1.0 then say \"Equal\""
    load r3,1.0
+   .traceevent "L" 4 "R" "F" "r" 3 9 9 0 "" ""
    feq r3,r3,1.0
+   .traceevent "O" 4 "R" "B" "r" 3 9 9 0 "" ""
    brf l109iffalse,r3
-   .src 38:26="then"
-   .src 38:31="say \"Equal\""
+   .srcstep 10 10 17 "opt_numeric_safety.crexx" 38 26 30 "    if 1.000000001 = 1.0 then say \"Equal\""
+   .srcstep 7 7 17 "opt_numeric_safety.crexx" 38 31 42 "    if 1.000000001 = 1.0 then say \"Equal\""
    say "Equal"
    br l109ifend
-   .src 39:5="else"
+   .srcstep 11 11 17 "opt_numeric_safety.crexx" 39 5 9 "    else say \"Unequal\""
 l109iffalse:
-   .src 39:10="say \"Unequal\""
+   .srcstep 8 8 17 "opt_numeric_safety.crexx" 39 10 23 "    else say \"Unequal\""
    say "Unequal"
 l109ifend:
-   .src 8:1="return"
+   .srcstep 13 13 17 "opt_numeric_safety.crexx" 8 1 7 "return"
    ret

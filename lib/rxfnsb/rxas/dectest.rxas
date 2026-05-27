@@ -1,4 +1,3 @@
-.srcfile="dectest.rxas"
 .globals=0
 
 main() .locals=5

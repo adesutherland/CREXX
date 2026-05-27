@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 01_assign.crexx
- * BUILT                  : 2026-03-18 11:58:52
+ * BUILT                  : 2026-05-27 17:52:38
  */
 
-.srcfile="01_assign.crexx"
 .globals=0
 
 main() .locals=1
@@ -14,12 +12,15 @@ main() .locals=1
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 3:1="a = 10"
+   .srcstep 1 1 17 "01_assign.crexx" 3 1 7 "a = 10"
    .meta "01_assign.main.a"="b" ".int" r0
    load r0,10
-   .src 4:1="say a"
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "a" ""
+   .srcstep 2 2 17 "01_assign.crexx" 4 1 6 "say a"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 2 2 0 "a" ""
    say r0
-   .src 4:6=""
+   .srcstep 3 3 1 "01_assign.crexx" 4 6 6 "say a"
    ret
    .meta "01_assign.main.a"

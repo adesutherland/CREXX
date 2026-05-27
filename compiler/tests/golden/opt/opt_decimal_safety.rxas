@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : opt_decimal_safety.crexx
- * BUILT                  : 2026-04-29 14:21:08
+ * BUILT                  : 2026-05-27 17:53:01
  */
 
-.srcfile="opt_decimal_safety.crexx"
 .globals=0
 
 main() .locals=4
@@ -14,17 +12,17 @@ main() .locals=4
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:1="call Case1"
-   .src 12:5="say 1.0d/3"
+   .srcstep 2 2 17 "opt_decimal_safety.crexx" 4 1 11 "call Case1"
+   .srcstep 1 1 17 "opt_decimal_safety.crexx" 12 5 15 "    say 1.0d/3"
    say "0.33333"
-   .src 5:1="call Case2"
-   .src 17:5="say 1.0d/3"
+   .srcstep 4 4 17 "opt_decimal_safety.crexx" 5 1 11 "call Case2"
+   .srcstep 3 3 17 "opt_decimal_safety.crexx" 17 5 15 "    say 1.0d/3"
    say "0.333333333"
-   .src 6:1="call Case3"
-   .src 24:10="say \"Not Equal\""
+   .srcstep 6 6 17 "opt_decimal_safety.crexx" 6 1 11 "call Case3"
+   .srcstep 5 5 17 "opt_decimal_safety.crexx" 24 10 25 "    else say \"Not Equal\""
    say "Not Equal"
-   .src 7:1="call TestInherited"
-   .src 30:5="say 1.0d/3"
+   .srcstep 8 8 17 "opt_decimal_safety.crexx" 7 1 19 "call TestInherited"
+   .srcstep 7 7 17 "opt_decimal_safety.crexx" 30 5 15 "    say 1.0d/3"
    say "0.333333333333333333"
-   .src 8:1="return"
+   .srcstep 9 9 17 "opt_decimal_safety.crexx" 8 1 7 "return"
    ret

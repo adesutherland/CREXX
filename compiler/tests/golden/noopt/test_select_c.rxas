@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : test_select_c.crexx
- * BUILT                  : 2026-03-18 17:38:40
+ * BUILT                  : 2026-05-27 17:52:50
  */
 
-.srcfile="test_select_c.crexx"
 .globals=0
 
 main() .locals=13
@@ -15,151 +13,184 @@ main() .locals=13
    setnumcas 1
    setnumstd 1
    .meta "test_select_c.main.scope_var"="b" ".int" r2
-   .src 54:5="scope_var = .int"
+   .srcstep 1 1 17 "test_select_c.crexx" 54 5 21 "    scope_var = .int"
    null r2
-   .src 4:1="a = 10"
+   .srcstep 2 2 17 "test_select_c.crexx" 4 1 7 "a = 10"
    .meta "test_select_c.main.a"="b" ".int" r0
    load r0,10
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "a" ""
    .meta "test_select_c.main.select_tmp"="b" ".int" r3
-   .src 5:1="select a\n  when 5 then say \"Five\"\n  when 10 then do\n    say \"Ten\"\n  end\n  otherwise\n    say \"Other\""
+   .srcstep 3 3 6 "test_select_c.crexx" 5 1 9 "select a"
    null r3
-   .src 5:1="select a\n  when 5 then say \"Five\"\n  when 10 then do\n    say \"Ten\"\n  end\n  otherwise\n    say \"Other\""
+   .srcstep 4 4 6 "test_select_c.crexx" 5 1 9 "select a"
+   .traceevent "V" 6 "R" "I" "r" 0 4 4 0 "a" ""
    icopy r3,r0
-   .src 5:0="select a\n  when 5 then say \"Five\"\n  when 10 then do\n    say \"Ten\"\n  end\n  otherwise\n    say \"Other\""
+   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "select_tmp" ""
+   .srcstep 10 10 6 "test_select_c.crexx" 5 1 9 "select a"
    ieq r11,r3,5
+   .traceevent "O" 4 "R" "B" "r" 11 10 10 0 "" ""
    brf l123iffalse,r11
-   .src 6:15="say \"Five\""
+   .srcstep 5 5 17 "test_select_c.crexx" 6 15 25 "  when 5 then say \"Five\""
    say "Five"
    br l123ifend
-   .src 7:3="when"
+   .srcstep 11 11 17 "test_select_c.crexx" 7 3 7 "  when 10 then do"
 l123iffalse:
-   .src 5:0="select a\n  when 5 then say \"Five\"\n  when 10 then do\n    say \"Ten\"\n  end\n  otherwise\n    say \"Other\""
+   .srcstep 8 8 6 "test_select_c.crexx" 5 1 9 "select a"
    ieq r12,r3,10
+   .traceevent "O" 4 "R" "B" "r" 12 8 8 0 "" ""
    brf l126iffalse,r12
-   .src 8:5="say \"Ten\""
+   .srcstep 6 6 17 "test_select_c.crexx" 8 5 14 "    say \"Ten\""
    say "Ten"
    br l126ifend
-   .src 9:3="end"
+   .srcstep 9 9 17 "test_select_c.crexx" 9 3 6 "  end"
 l126iffalse:
-   .src 11:5="say \"Other\""
+   .srcstep 7 7 17 "test_select_c.crexx" 11 5 16 "    say \"Other\""
    say "Other"
 l126ifend:
 l123ifend:
    .meta "test_select_c.main.select_tmp"="b" ".int" r4
-   .src 14:1="select a\n  when 1 then say \"One\"\n  otherwise say \"Other Same Line\""
+   .srcstep 12 12 6 "test_select_c.crexx" 14 1 9 "select a"
    null r4
-   .src 14:1="select a\n  when 1 then say \"One\"\n  otherwise say \"Other Same Line\""
+   .srcstep 13 13 6 "test_select_c.crexx" 14 1 9 "select a"
+   .traceevent "V" 6 "R" "I" "r" 0 13 13 0 "a" ""
    icopy r4,r0
-   .src 14:0="select a\n  when 1 then say \"One\"\n  otherwise say \"Other Same Line\""
+   .traceevent "A" 6 "R" "I" "r" 4 13 13 0 "select_tmp" ""
+   .srcstep 16 16 6 "test_select_c.crexx" 14 1 9 "select a"
    ieq r12,r4,1
+   .traceevent "O" 4 "R" "B" "r" 12 16 16 0 "" ""
    brf l135iffalse,r12
-   .src 15:15="say \"One\""
+   .srcstep 14 14 17 "test_select_c.crexx" 15 15 24 "  when 1 then say \"One\""
    say "One"
    br l135ifend
-   .src 16:3="otherwise"
+   .srcstep 17 17 17 "test_select_c.crexx" 16 3 12 "  otherwise say \"Other Same Line\""
 l135iffalse:
-   .src 16:13="say \"Other Same Line\""
+   .srcstep 15 15 17 "test_select_c.crexx" 16 13 34 "  otherwise say \"Other Same Line\""
    say "Other Same Line"
 l135ifend:
    .meta "test_select_c.main.select_tmp"="b" ".int" r5
-   .src 19:1="select a\n  when 2 then say \"Two\"\n  otherwise\n    say \"Other1\"\n    say \"Other2\""
+   .srcstep 18 18 6 "test_select_c.crexx" 19 1 9 "select a"
    null r5
-   .src 19:1="select a\n  when 2 then say \"Two\"\n  otherwise\n    say \"Other1\"\n    say \"Other2\""
+   .srcstep 19 19 6 "test_select_c.crexx" 19 1 9 "select a"
+   .traceevent "V" 6 "R" "I" "r" 0 19 19 0 "a" ""
    icopy r5,r0
-   .src 19:0="select a\n  when 2 then say \"Two\"\n  otherwise\n    say \"Other1\"\n    say \"Other2\""
+   .traceevent "A" 6 "R" "I" "r" 5 19 19 0 "select_tmp" ""
+   .srcstep 23 23 6 "test_select_c.crexx" 19 1 9 "select a"
    ieq r12,r5,2
+   .traceevent "O" 4 "R" "B" "r" 12 23 23 0 "" ""
    brf l144iffalse,r12
-   .src 20:15="say \"Two\""
+   .srcstep 20 20 17 "test_select_c.crexx" 20 15 24 "  when 2 then say \"Two\""
    say "Two"
    br l144ifend
-   .src 21:3="otherwise"
+   .srcstep 24 24 17 "test_select_c.crexx" 21 3 12 "  otherwise"
 l144iffalse:
-   .src 22:5="say \"Other1\""
+   .srcstep 21 21 17 "test_select_c.crexx" 22 5 17 "    say \"Other1\""
    say "Other1"
-   .src 23:5="say \"Other2\""
+   .srcstep 22 22 17 "test_select_c.crexx" 23 5 17 "    say \"Other2\""
    say "Other2"
 l144ifend:
    .meta "test_select_c.main.select_tmp"="b" ".int" r6
-   .src 26:1="select a\n  when 3 then say \"Three\"\n  otherwise do\n    say \"Other in Do\""
+   .srcstep 25 25 6 "test_select_c.crexx" 26 1 9 "select a"
    null r6
-   .src 26:1="select a\n  when 3 then say \"Three\"\n  otherwise do\n    say \"Other in Do\""
+   .srcstep 26 26 6 "test_select_c.crexx" 26 1 9 "select a"
+   .traceevent "V" 6 "R" "I" "r" 0 26 26 0 "a" ""
    icopy r6,r0
-   .src 26:0="select a\n  when 3 then say \"Three\"\n  otherwise do\n    say \"Other in Do\""
+   .traceevent "A" 6 "R" "I" "r" 6 26 26 0 "select_tmp" ""
+   .srcstep 29 29 6 "test_select_c.crexx" 26 1 9 "select a"
    ieq r12,r6,3
+   .traceevent "O" 4 "R" "B" "r" 12 29 29 0 "" ""
    brf l153iffalse,r12
-   .src 27:15="say \"Three\""
+   .srcstep 27 27 17 "test_select_c.crexx" 27 15 26 "  when 3 then say \"Three\""
    say "Three"
    br l153ifend
-   .src 28:3="otherwise"
+   .srcstep 30 30 17 "test_select_c.crexx" 28 3 12 "  otherwise do"
 l153iffalse:
-   .src 29:5="say \"Other in Do\""
+   .srcstep 28 28 17 "test_select_c.crexx" 29 5 22 "    say \"Other in Do\""
    say "Other in Do"
 l153ifend:
    .meta "test_select_c.main.select_tmp"="b" ".int" r7
-   .src 35:1="select a\n  when 999 then say \"Should not print\""
+   .srcstep 31 31 6 "test_select_c.crexx" 35 1 9 "select a"
    null r7
-   .src 35:1="select a\n  when 999 then say \"Should not print\""
+   .srcstep 32 32 6 "test_select_c.crexx" 35 1 9 "select a"
+   .traceevent "V" 6 "R" "I" "r" 0 32 32 0 "a" ""
    icopy r7,r0
-   .src 35:0="select a\n  when 999 then say \"Should not print\""
+   .traceevent "A" 6 "R" "I" "r" 7 32 32 0 "select_tmp" ""
+   .srcstep 34 34 6 "test_select_c.crexx" 35 1 9 "select a"
    ieq r12,r7,999
+   .traceevent "O" 4 "R" "B" "r" 12 34 34 0 "" ""
    brf l162iffalse,r12
-   .src 36:17="say \"Should not print\""
+   .srcstep 33 33 17 "test_select_c.crexx" 36 17 39 "  when 999 then say \"Should not print\""
    say "Should not print"
 l162iffalse:
-   .src 40:1="b = 5"
+   .srcstep 35 35 17 "test_select_c.crexx" 40 1 6 "b = 5"
    .meta "test_select_c.main.b"="b" ".int" r1
    load r1,5
+   .traceevent "L" 4 "R" "I" "r" 1 35 35 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 35 35 0 "b" ""
    .meta "test_select_c.main.select_tmp"="b" ".int" r8
-   .src 41:1="select a\n  when 10 then do\n    select b\n      when 5 then say \"Nested 5\"\n      otherwise say \"Nested Other\"\n    end\n  end\n  otherwise say \"Outer Other\""
+   .srcstep 36 36 6 "test_select_c.crexx" 41 1 9 "select a"
    null r8
-   .src 41:1="select a\n  when 10 then do\n    select b\n      when 5 then say \"Nested 5\"\n      otherwise say \"Nested Other\"\n    end\n  end\n  otherwise say \"Outer Other\""
+   .srcstep 37 37 6 "test_select_c.crexx" 41 1 9 "select a"
+   .traceevent "V" 6 "R" "I" "r" 0 37 37 0 "a" ""
    icopy r8,r0
-   .src 41:0="select a\n  when 10 then do\n    select b\n      when 5 then say \"Nested 5\"\n      otherwise say \"Nested Other\"\n    end\n  end\n  otherwise say \"Outer Other\""
+   .traceevent "A" 6 "R" "I" "r" 8 37 37 0 "select_tmp" ""
+   .srcstep 45 45 6 "test_select_c.crexx" 41 1 9 "select a"
    ieq r12,r8,10
+   .traceevent "O" 4 "R" "B" "r" 12 45 45 0 "" ""
    brf l180iffalse,r12
    .meta "test_select_c.main.select_tmp"="b" ".int" r9
-   .src 43:5="select b\n      when 5 then say \"Nested 5\"\n      otherwise say \"Nested Other\""
+   .srcstep 38 38 6 "test_select_c.crexx" 43 5 13 "    select b"
    null r9
-   .src 43:5="select b\n      when 5 then say \"Nested 5\"\n      otherwise say \"Nested Other\""
+   .srcstep 39 39 6 "test_select_c.crexx" 43 5 13 "    select b"
+   .traceevent "V" 6 "R" "I" "r" 1 39 39 0 "b" ""
    icopy r9,r1
-   .src 43:4="select b\n      when 5 then say \"Nested 5\"\n      otherwise say \"Nested Other\""
+   .traceevent "A" 6 "R" "I" "r" 9 39 39 0 "select_tmp" ""
+   .srcstep 42 42 6 "test_select_c.crexx" 43 5 13 "    select b"
    ieq r11,r9,5
+   .traceevent "O" 4 "R" "B" "r" 11 42 42 0 "" ""
    brf l171iffalse,r11
-   .src 44:19="say \"Nested 5\""
+   .srcstep 40 40 17 "test_select_c.crexx" 44 19 33 "      when 5 then say \"Nested 5\""
    say "Nested 5"
    br l171ifend
-   .src 45:7="otherwise"
+   .srcstep 43 43 17 "test_select_c.crexx" 45 7 16 "      otherwise say \"Nested Other\""
 l171iffalse:
-   .src 45:17="say \"Nested Other\""
+   .srcstep 41 41 17 "test_select_c.crexx" 45 17 35 "      otherwise say \"Nested Other\""
    say "Nested Other"
 l171ifend:
    br l180ifend
-   .src 46:5="end"
+   .srcstep 46 46 17 "test_select_c.crexx" 46 5 8 "    end"
 l180iffalse:
-   .src 48:13="say \"Outer Other\""
+   .srcstep 44 44 17 "test_select_c.crexx" 48 13 30 "  otherwise say \"Outer Other\""
    say "Outer Other"
 l180ifend:
    .meta "test_select_c.main.select_tmp"="b" ".int" r10
-   .src 52:1="select a\n  when 10 then do\n    scope_var = .int\n    scope_var = 42\n    say \"Scope: \" scope_var\n  end\n  otherwise say \"Other\""
+   .srcstep 47 47 6 "test_select_c.crexx" 52 1 9 "select a"
    null r10
-   .src 52:1="select a\n  when 10 then do\n    scope_var = .int\n    scope_var = 42\n    say \"Scope: \" scope_var\n  end\n  otherwise say \"Other\""
+   .srcstep 48 48 6 "test_select_c.crexx" 52 1 9 "select a"
+   .traceevent "V" 6 "R" "I" "r" 0 48 48 0 "a" ""
    icopy r10,r0
-   .src 52:0="select a\n  when 10 then do\n    scope_var = .int\n    scope_var = 42\n    say \"Scope: \" scope_var\n  end\n  otherwise say \"Other\""
+   .traceevent "A" 6 "R" "I" "r" 10 48 48 0 "select_tmp" ""
+   .srcstep 52 52 6 "test_select_c.crexx" 52 1 9 "select a"
    ieq r12,r10,10
+   .traceevent "O" 4 "R" "B" "r" 12 52 52 0 "" ""
    brf l189iffalse,r12
-   .src 55:5="scope_var = 42"
+   .srcstep 49 49 17 "test_select_c.crexx" 55 5 19 "    scope_var = 42"
    load r2,42
-   .src 56:5="say \"Scope: \" scope_var"
+   .traceevent "L" 4 "R" "I" "r" 2 49 49 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 49 49 0 "scope_var" ""
+   .srcstep 50 50 17 "test_select_c.crexx" 56 5 28 "    say \"Scope: \" scope_var"
    itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 50 50 0 "scope_var" ""
    sconcat r11,"Scope: ",r2
+   .traceevent "O" 4 "R" "S" "r" 11 50 50 0 "" ""
    say r11
    br l189ifend
-   .src 57:3="end"
+   .srcstep 53 53 17 "test_select_c.crexx" 57 3 6 "  end"
 l189iffalse:
-   .src 58:13="say \"Other\""
+   .srcstep 51 51 17 "test_select_c.crexx" 58 13 24 "  otherwise say \"Other\""
    say "Other"
 l189ifend:
-   .src 52:125=""
+   .srcstep 54 54 1 "test_select_c.crexx" 52 24 24 "  otherwise say \"Other\""
    ret
    .meta "test_select_c.main.a"
    .meta "test_select_c.main.b"

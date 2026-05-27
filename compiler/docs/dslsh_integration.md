@@ -54,8 +54,8 @@ The mutable work tree carries explicit links back to source-owned state:
 - `source_provenance` records whether that mapping is exact, inherited,
   synthetic, or composite,
 - transformed output paths can preserve additional reporting anchors where a
-  removed authored construct still needs to appear in diagnostics or `.src`
-  metadata.
+  removed authored construct still needs to appear in diagnostics or
+  source-step metadata.
 
 User-visible state lives on the source tree:
 

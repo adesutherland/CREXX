@@ -41,7 +41,7 @@
 #include "platform.h"
 #include "rxdefs.h"
 
-#define BIN_VERSION "004"
+#define BIN_VERSION "005"
 
 #define BIN_HEADER "cReXx" /* Do not change */
 
@@ -80,7 +80,7 @@ struct bin_space {
 
 enum const_pool_type {
     STRING_CONST, BINARY_CONST, DECIMAL_CONST, FLOAT_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
-    META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR,
+    META_FUNC, META_REG, META_CONST, META_CLEAR,
     META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE, META_SOURCE_STEP,
     META_TRACE_EVENT
 };
@@ -148,20 +148,6 @@ typedef struct meta_entry {
     int next;
     size_t address;
 } meta_entry;
-
-/* cREXX Meta Source entry in the constant pool */
-typedef struct meta_src_constant {
-    meta_entry base;
-    size_t line;
-    size_t column;
-    size_t source;
-} meta_src_constant;
-
-/* cREXX Meta File entry in the constant pool */
-typedef struct meta_file_constant {
-    meta_entry base;
-    size_t file;
-} meta_file_constant;
 
 #define RXBIN_SOURCE_AUTHORED   0x00000001u
 #define RXBIN_SOURCE_GENERATED  0x00000002u

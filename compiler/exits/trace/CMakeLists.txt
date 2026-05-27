@@ -29,7 +29,7 @@ crexx_add_compiler_exit_runtime_test(
 crexx_add_compiler_exit_runtime_test(
         test_trace_results
         test_trace_results.crexx
-        PASS_REGULAR_EXPRESSION ">>>[ ]+\"42\""
+        PASS_REGULAR_EXPRESSION ">=>[ ]+\"42\""
         RUN_SUFFIX ${LIBRPATH}
 )
 
@@ -186,7 +186,7 @@ crexx_add_trace_capture_test(
         ENV_CREXX_TRACE "results"
         ENV_CREXX_TRACE_TO "stderr"
         EXPECT_STDOUT_REGEX "TRACE ENV DONE 42"
-        EXPECT_STDERR_REGEX ">>>[ ]+\"42\""
+        EXPECT_STDERR_REGEX ">=>[ ]+\"42\""
         REJECT_STDOUT_REGEX "\\*-\\*"
 )
 
@@ -197,7 +197,7 @@ crexx_add_trace_capture_test(
         ENV_CREXX_TRACE_TO "stderr"
         EXPECT_STDOUT_REGEX "TRACE ENV DONE 42"
         EXPECT_STDERR_REGEX "\\+\\+\\+[ ]+TRACE ENV invalid CREXX_TRACE value.*ras"
-        REJECT_STDERR_REGEX ">>>"
+        REJECT_STDERR_REGEX ">>>|>=>"
 )
 
 crexx_add_trace_capture_test(
@@ -206,7 +206,7 @@ crexx_add_trace_capture_test(
         ENV_CREXX_TRACE "results"
         ENV_CREXX_TRACE_TO "stderr"
         EXPECT_STDOUT_REGEX "TRACE ENV IGNORED 42"
-        REJECT_STDERR_REGEX ">>>"
+        REJECT_STDERR_REGEX ">>>|>=>"
 )
 
 set(TRACE_COMPILE_FAIL_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/trace_compile_fail.cmake")

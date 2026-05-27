@@ -254,8 +254,8 @@ add_test(
         -DOUTPUT_RXAS=${CMAKE_CURRENT_BINARY_DIR}/tests_linked_stripped.rxas
         "-DEXPECT_TEXT_1=helper() .expose=linktest.helper"
         "-DEXPECT_TEXT_2=call r0,helper(),r1"
-        "-DEXPECT_ABSENT_1=.srcfile="
-        "-DEXPECT_ABSENT_2=                .src "
+        "-DEXPECT_ABSENT_1=                .srcstep "
+        "-DEXPECT_ABSENT_2=.srcstep "
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxdas_contains.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

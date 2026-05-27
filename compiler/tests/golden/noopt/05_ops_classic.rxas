@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 05_ops_classic.crexx
- * BUILT                  : 2026-03-18 11:58:54
+ * BUILT                  : 2026-05-27 17:52:42
  */
 
-.srcfile="05_ops_classic.crexx"
 .globals=0
 
 main() .locals=4
@@ -14,22 +12,33 @@ main() .locals=4
    setnumfrm 1
    setnumcas 1
    setnumstd 2
-   .src 3:1="res1 = -3**2"
+   .srcstep 1 1 17 "05_ops_classic.crexx" 3 1 13 "res1 = -3**2"
    .meta "05_ops_classic.main.res1"="b" ".int" r0
    load r2,3
+   .traceevent "L" 4 "R" "I" "r" 2 1 1 0 "" ""
    isub r3,0,r2
+   .traceevent "P" 4 "R" "I" "r" 3 1 1 0 "" ""
    ipow r0,r3,2
-   .src 6:1="res2 = 2**2**3"
+   .traceevent "O" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "res1" ""
+   .srcstep 2 2 17 "05_ops_classic.crexx" 6 1 15 "res2 = 2**2**3"
    .meta "05_ops_classic.main.res2"="b" ".int" r1
    load r3,2
+   .traceevent "L" 4 "R" "I" "r" 3 2 2 0 "" ""
    ipow r3,2,r3
+   .traceevent "O" 4 "R" "I" "r" 3 2 2 0 "" ""
    ipow r1,r3,3
-   .src 8:1="say res1 res2"
+   .traceevent "O" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "res2" ""
+   .srcstep 3 3 17 "05_ops_classic.crexx" 8 1 14 "say res1 res2"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 3 3 0 "res1" ""
    itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 3 3 0 "res2" ""
    sconcat r3,r0,r1
+   .traceevent "O" 4 "R" "S" "r" 3 3 3 0 "" ""
    say r3
-   .src 8:14=""
+   .srcstep 4 4 1 "05_ops_classic.crexx" 8 14 14 "say res1 res2"
    ret
    .meta "05_ops_classic.main.res1"
    .meta "05_ops_classic.main.res2"

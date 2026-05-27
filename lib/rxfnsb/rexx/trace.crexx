@@ -25,7 +25,7 @@
 /* REXX Level B trace runtime internals */
 options levelb
 
-namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_from_env _trace_set_format _trace_set_output _trace_current_mode _trace_mode_from_option _trace_needs_breakpoints _trace_pending_parent_register _trace_supply_parent_value _trace_command_before _trace_command_after _trace_handler
+namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_from_env _trace_set_format _trace_set_output _trace_current_mode _trace_current_format _trace_mode_from_option _trace_needs_breakpoints _trace_context_from_raw _trace_should_trace_context _trace_should_emit_key _trace_capture_result_target _trace_pending_parent_register _trace_supply_parent_value _trace_pending_result _trace_pending_module _trace_pending_prefix _trace_pending_has_const _trace_pending_const _trace_supplied_result _trace_supplied_value _trace_clear_pending_result _trace_escape_text _trace_write_line _trace_command_before _trace_command_after
 
 trace_interrupt_raw: class
   _code = .int with register.1.int
@@ -126,6 +126,7 @@ tracecontroller: class
   _include_runtime = .int
   _pending_result = .int
   _pending_module = .int
+  _pending_prefix = .string
   _pending_type = .string
   _pending_register = .int
   _pending_const = .string
@@ -140,6 +141,7 @@ tracecontroller: class
     _include_runtime = 0
     _pending_result = 0
     _pending_module = 0
+    _pending_prefix = ">>>"
     _pending_type = ""
     _pending_register = -1
     _pending_const = ""
@@ -302,6 +304,7 @@ tracecontroller: class
   clear_pending_result: method = .void
     _pending_result = 0
     _pending_module = 0
+    _pending_prefix = ">>>"
     _pending_type = ""
     _pending_register = -1
     _pending_const = ""
@@ -311,45 +314,38 @@ tracecontroller: class
     return
 
   capture_result_target: method = .void
-    arg module = .int, addr = .int, source = .string
+    arg module = .int, addr = .int
     meta_array = 0
     meta_entry = ""
-    symbol = ""
-    type = ""
+    kind = 0
+    mode_mask = 0
+    value_source = 0
+    value_type = 0
+    register_type = 0
     reg = 0
-    value = ""
-    lhs = _trace_assignment_lhs(source)
 
     call clear_pending_result()
-    if lhs = "" then return
 
     assembler metaloaddata meta_array, module, addr
     do i = 1 to meta_array
       assembler linkattr1 meta_entry, meta_array, i
-      if meta_entry = ".meta_const" then do
-        assembler linkattr1 symbol, meta_entry, 1
-        if _trace_symbol_matches_lhs(symbol, lhs) <> 0 then do
-          assembler linkattr1 type, meta_entry, 3
-          assembler linkattr1 value, meta_entry, 4
-          _pending_type = type
-          _pending_const = value
-          _pending_has_const = 1
-          _pending_module = module
-          _pending_result = 1
-          return
-        end
-      end
-      else if meta_entry = ".meta_reg" then do
-        assembler linkattr1 symbol, meta_entry, 1
-        if _trace_symbol_matches_lhs(symbol, lhs) <> 0 then do
-          assembler linkattr1 type, meta_entry, 3
-          assembler linkattr1 reg, meta_entry, 4
-          _pending_type = type
-          _pending_register = reg
-          _pending_has_const = 0
-          _pending_module = module
-          _pending_result = 1
-          return
+      if meta_entry = ".meta_trace_event" then do
+        assembler linkattr1 kind, meta_entry, 1
+        assembler linkattr1 mode_mask, meta_entry, 2
+        if _trace_event_visible_in_mode(mode_mask, _mode) <> 0 then do
+          assembler linkattr1 value_source, meta_entry, 3
+          assembler linkattr1 value_type, meta_entry, 4
+          assembler linkattr1 register_type, meta_entry, 5
+          assembler linkattr1 reg, meta_entry, 6
+          if value_source = 82 & reg >= 0 then do
+            _pending_prefix = _trace_prefix_from_kind(kind)
+            _pending_type = _trace_type_name_from_codes(value_type, register_type)
+            _pending_register = reg
+            _pending_has_const = 0
+            _pending_module = module
+            _pending_result = 1
+            return
+          end
         end
       end
     end
@@ -360,6 +356,9 @@ tracecontroller: class
 
   pending_module: method = .int
     return _pending_module
+
+  pending_prefix: method = .string
+    return _pending_prefix
 
   pending_type: method = .string
     return _pending_type
@@ -466,54 +465,26 @@ _trace_current_mode: procedure = .string expose _trace_runtime_ready _trace_cont
   if _trace_active = 0 then return "OFF"
   return _trace_controller.mode()
 
-_trace_handler: procedure = .int expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format _trace_output_target _trace_active
+_trace_current_format: procedure = .string expose _trace_runtime_ready _trace_format
+  call _trace_ensure_runtime
+  return _trace_format
+
+_trace_context_from_raw: procedure = .tracecontext expose _trace_runtime_ready _trace_controller
   arg expose raw = .trace_interrupt_raw
   call _trace_ensure_runtime
-  if _trace_active = 0 then return 0
+  return _trace_controller.context_from_interrupt(raw)
 
-  event = .tracecontext
-  event = _trace_controller.context_from_interrupt(raw)
-  if _trace_controller.should_trace(event) = 0 then return 0
+_trace_should_trace_context: procedure = .int expose _trace_runtime_ready _trace_controller
+  arg event = .tracecontext
+  call _trace_ensure_runtime
+  return _trace_controller.should_trace(event)
 
-  line = ""
-  key = ""
-  mode = _trace_controller.mode()
-  if _trace_needs_breakpoints(mode) = 0 then return 0
-  if _trace_controller.mode() = "ASM" then do
-    if event.asm_line() = "" then return 0
-    key = "ASM|" || event.module() || "|" || event.address() || "|" || event.asm_line()
-    if _trace_format = "LLM" then line = _trace_format_llm(event)
-    else line = _trace_format_text(event)
-  end
-  else do
-    if event.has_source() = 0 then return 0
-    key = "SRC|" || event.module() || "|" || event.line() || "|" || event.column() || "|" || event.source()
-    if _trace_format = "LLM" then line = _trace_format_llm(event)
-    else line = _trace_format_text(event)
-  end
-
-  if line = "" then return 0
+_trace_should_emit_key: procedure = .int expose _trace_runtime_ready _trace_last_line
+  arg key = .string
+  call _trace_ensure_runtime
   if key = _trace_last_line then return 0
-  if _trace_format <> "LLM" & (mode = "R" | mode = "I") & _trace_controller.pending_result() <> 0 & event.module() = _trace_controller.pending_module() then do
-    pending_value = ""
-    pending_ready = 0
-    if _trace_controller.pending_has_const() <> 0 then do
-      pending_value = _trace_controller.pending_const()
-      pending_ready = 1
-    end
-    else if _trace_controller.supplied_result() <> 0 then do
-      pending_value = _trace_controller.supplied_value()
-      pending_ready = 1
-    end
-    if pending_ready <> 0 then call _trace_write_line(_trace_format_result(pending_value))
-    call _trace_controller.clear_pending_result()
-  end
   _trace_last_line = key
-  call _trace_write_line(line)
-  if _trace_format <> "LLM" & (mode = "R" | mode = "I") then do
-    call _trace_controller.capture_result_target(event.module(), event.address(), event.source())
-  end
-  return 0
+  return 1
 
 _trace_ensure_runtime: procedure expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format _trace_output_target _trace_active
   if _trace_runtime_ready = 1 then return
@@ -593,26 +564,9 @@ _trace_is_signed_integer: procedure = .int
   end
   return 1
 
-_trace_format_text: procedure = .string
-  arg event = .tracecontext
-  if event.mode() = "ASM" then return event.asm_line()
-  if event.has_source() <> 0 then do
-    return _trace_source_prefix(event.line()) || " *-* " || _trace_escape_text(event.source())
-  end
-  return event.asm_line()
-
-_trace_format_result: procedure = .string
-  arg value = .string
-  return "       >>>   " || _trace_quote_result(value)
-
 _trace_format_message: procedure = .string
   arg text = .string
   return "       +++   " || _trace_escape_text(text)
-
-_trace_source_prefix: procedure = .string
-  arg line = .int
-  if line > 99999 then return "?" || right(line, 5, "0")
-  return right(line, 6, " ")
 
 _trace_quote_result: procedure = .string
   arg value = .string
@@ -664,33 +618,43 @@ _trace_should_report_command: procedure = .int
   end
   return 0
 
-_trace_format_llm: procedure = .string
-  arg event = .tracecontext
-  return "{" || ,
-         _trace_json_pair("event", "trace") || "," || ,
-         _trace_json_pair("format", "llm") || "," || ,
-         _trace_json_pair("mode", event.mode()) || "," || ,
-         _trace_json_pair("module", event.module()) || "," || ,
-         _trace_json_pair("address", event.address()) || "," || ,
-         _trace_json_pair("procedure", event.procedure()) || "," || ,
-         _trace_json_pair("line", event.line()) || "," || ,
-         _trace_json_pair("column", event.column()) || "," || ,
-         _trace_json_pair("source", event.source()) || "," || ,
-         _trace_json_pair("asm", event.asm_line()) || ,
-         "}"
-
-_trace_json_pair: procedure = .string
-  arg name = .string, value = .string
-  return _trace_json_string(name) || ":" || _trace_json_string(value)
-
-_trace_json_string: procedure = .string
-  arg value = .string
-  return '"' || _trace_escape_text(value) || '"'
-
 _trace_capture_result_target: procedure = .void expose _trace_runtime_ready _trace_controller
-  arg module = .int, addr = .int, source = .string
+  arg module = .int, addr = .int
   call _trace_ensure_runtime
-  call _trace_controller.capture_result_target(module, addr, source)
+  call _trace_controller.capture_result_target(module, addr)
+  return
+
+_trace_pending_result: procedure = .int expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.pending_result()
+
+_trace_pending_module: procedure = .int expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.pending_module()
+
+_trace_pending_prefix: procedure = .string expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.pending_prefix()
+
+_trace_pending_has_const: procedure = .int expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.pending_has_const()
+
+_trace_pending_const: procedure = .string expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.pending_const()
+
+_trace_supplied_result: procedure = .int expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.supplied_result()
+
+_trace_supplied_value: procedure = .string expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.supplied_value()
+
+_trace_clear_pending_result: procedure = .void expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  call _trace_controller.clear_pending_result()
   return
 
 _trace_pending_parent_register: procedure = .int expose _trace_runtime_ready _trace_controller
@@ -713,24 +677,75 @@ _trace_supply_parent_value: procedure = .void expose _trace_runtime_ready _trace
   call _trace_controller.supply_parent_value(value)
   return
 
-_trace_assignment_lhs: procedure = .string
-  arg source = .string
-  p = pos("=", source)
-  if p <= 1 then return ""
-  if p > 1 & substr(source, p - 1, 1) = "\" then return ""
-  lhs = strip(substr(source, 1, p - 1))
-  if lhs = "" then return ""
-  if pos(" ", lhs) > 0 then return ""
-  if pos("(", lhs) > 0 then return ""
-  if pos("[", lhs) > 0 then return ""
-  return lower(lhs)
-
-_trace_symbol_matches_lhs: procedure = .int
-  arg symbol = .string, lhs = .string
-  symbol = lower(symbol) || "@"
-  lhs = "." || lower(lhs) || "@"
-  if pos(lhs, symbol) > 0 then return 1
+_trace_event_visible_in_mode: procedure = .int
+  arg mode_mask = .int, mode = .string
+  mode = upper(strip(mode))
+  if mode = "A" then return 1
+  if mode = "I" then do
+    if _trace_mask_has(mode_mask, 4) <> 0 then return 1
+    return 0
+  end
+  if mode = "R" then do
+    if _trace_mask_has(mode_mask, 2) <> 0 then return 1
+    return 0
+  end
+  if mode = "C" then do
+    if _trace_mask_has(mode_mask, 8) <> 0 then return 1
+    return 0
+  end
+  if mode = "E" then do
+    if _trace_mask_has(mode_mask, 16) <> 0 then return 1
+    return 0
+  end
+  if mode = "F" then do
+    if _trace_mask_has(mode_mask, 32) <> 0 then return 1
+    return 0
+  end
+  if mode = "L" then do
+    if _trace_mask_has(mode_mask, 64) <> 0 then return 1
+    return 0
+  end
+  if mode = "ASM" then do
+    if _trace_mask_has(mode_mask, 128) <> 0 then return 1
+    return 0
+  end
+  if mode = "LLM" then do
+    if _trace_mask_has(mode_mask, 256) <> 0 then return 1
+    return 0
+  end
   return 0
+
+_trace_mask_has: procedure = .int
+  arg mask = .int, bit = .int
+  if bit <= 0 then return 0
+  period = bit * 2
+  do while mask >= period
+    mask = mask - period
+  end
+  if mask >= bit then return 1
+  return 0
+
+_trace_type_name_from_codes: procedure = .string
+  arg value_type = .int, register_type = .int
+  if register_type = 105 | register_type = 73 then return ".int"
+  if register_type = 102 | register_type = 70 then return ".float"
+  if register_type = 115 | register_type = 83 then return ".string"
+  if value_type = 73 then return ".int"
+  if value_type = 70 then return ".float"
+  if value_type = 66 then return ".int"
+  return ".string"
+
+_trace_prefix_from_kind: procedure = .string
+  arg kind = .int
+  if kind = 65 then return ">=>"
+  if kind = 67 then return ">C>"
+  if kind = 70 then return ">F>"
+  if kind = 76 then return ">L>"
+  if kind = 79 then return ">O>"
+  if kind = 80 then return ">P>"
+  if kind = 86 then return ">V>"
+  if kind = 77 then return "+++"
+  return ">>>"
 
 _trace_escape_text: procedure = .string
   arg text = .string
@@ -799,16 +814,6 @@ _trace_exact_source: procedure = .int
       assembler linkattr1 line_value, meta_entry, 5
       assembler linkattr1 column_value, meta_entry, 6
       assembler linkattr1 source_value, meta_entry, 8
-      line = line_value
-      column = column_value
-      source = source_value
-      result = result || "(" || line_value || ":" || column_value || ") '" || source_value || "'; "
-      found = 1
-    end
-    else if meta_entry = ".meta_src" then do
-      assembler linkattr1 line_value, meta_entry, 1
-      assembler linkattr1 column_value, meta_entry, 2
-      assembler linkattr1 source_value, meta_entry, 3
       line = line_value
       column = column_value
       source = source_value

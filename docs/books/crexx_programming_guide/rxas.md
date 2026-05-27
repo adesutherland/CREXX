@@ -93,9 +93,16 @@ loop:
   source program). This number needs to be 1 greater than the highest
   used register number.
 \item[.expose=\{ID\}]Any global register marked as exposed is available to any file which also has the corresponding exposed index/name.
-\item[.src] Used to document source lines. This is an optional
-  directive that is added for every source line processed by the
-  \code{rxc} compiler. It is used for TRACE and SOURCELINE.
+\item[.srcstep] Used to document source-step metadata. This optional
+  directive records a self-contained source anchor: module-local step id,
+  clause id, provenance flags, source file, source line number, active column
+  range, and the whole source line. It is used by TRACE, SOURCELINE,
+  panic reporting, and debuggers.
+\item[.traceevent] Used to document semantic TRACE events. This optional
+  directive records compact event/value codes, mode visibility, value source,
+  value type, source-step id, clause id, and optional symbol or resolved
+  compound names. TRACE handlers use these records instead of guessing values
+  from source text.
 \item[.proc] A procedure is a scope delimiting mechanism for the access of
   registers. The registers of a procedure are independent of the
   caller's registers. The VM maps its registers to the registers in
@@ -137,7 +144,9 @@ In this example, the compiler generates the following assembler source:
 \lstinputlisting[language=rxas,label=ipow_rxas_example,caption=ipow
 rxas example.]{examples/pow.rxas}
 
-The \code{.src} directives (intended for trace and sourceline) indicate where the work is done. The
+The \code{.srcstep} directives (intended for trace, sourceline, panic reports,
+and debuggers) indicate where the work is done. Related \code{.traceevent}
+directives identify values that are actually available for TRACE display. The
 variables are assigned, as integers, to the registers \code{r1} and
 \code{r2}. The line \code{ipow, number, power} becomes \code{ipow
   r3,r1,r2}, and the display on the terminal is handled by the
@@ -171,4 +180,3 @@ set breakpoints and/or step through the code; here the registers can
 be traced so variables in your program can be followed and the
 comparisons and branches can be checked. For more information about the
 debugger, see page \pageref{debugger}.
-

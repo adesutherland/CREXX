@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : repro_expand_until.crexx
- * BUILT                  : 2026-03-18 11:58:59
+ * BUILT                  : 2026-05-27 17:53:05
  */
 
-.srcfile="repro_expand_until.crexx"
 .globals=0
 
 main() .locals=4
@@ -14,38 +12,59 @@ main() .locals=4
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 2:1="line = \"A\""
+   .srcstep 1 1 17 "repro_expand_until.crexx" 2 1 11 "line = \"A\""
    .meta "repro_expand_until.main.line"="b" ".string" r1
    load r1,"A"
-   .src 3:1="old = \"\""
+   .traceevent "L" 4 "R" "S" "r" 1 1 1 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 1 1 0 "line" ""
+   .srcstep 2 2 17 "repro_expand_until.crexx" 3 1 9 "old = \"\""
    .meta "repro_expand_until.main.old"="b" ".string" r2
    load r2,""
-   .src 4:1="count = 0"
+   .traceevent "L" 4 "R" "S" "r" 2 2 2 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 2 2 2 0 "old" ""
+   .srcstep 3 3 17 "repro_expand_until.crexx" 4 1 10 "count = 0"
    .meta "repro_expand_until.main.count"="b" ".int" r0
    load r0,0
-   .src 5:1="do"
+   .traceevent "L" 4 "R" "I" "r" 0 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "count" ""
+   .srcstep 8 8 17 "repro_expand_until.crexx" 5 1 3 "do until old = line | line = ''"
 l13dostart:
-   .src 6:3="count = count + 1"
+   .srcstep 5 5 17 "repro_expand_until.crexx" 6 3 20 "  count = count + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "count" ""
    iadd r0,r0,1
-   .src 7:3="old = line"
+   .traceevent "O" 4 "R" "I" "r" 0 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "count" ""
+   .srcstep 6 6 17 "repro_expand_until.crexx" 7 3 13 "  old = line"
+   .traceevent "V" 6 "R" "S" "r" 1 6 6 0 "line" ""
    scopy r2,r1
-   .src 8:3="line = ''"
+   .traceevent "A" 6 "R" "S" "r" 2 6 6 0 "old" ""
+   .srcstep 7 7 17 "repro_expand_until.crexx" 8 3 12 "  line = ''"
    load r1,""
+   .traceevent "L" 4 "R" "S" "r" 1 7 7 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 7 7 0 "line" ""
 l13doinc:
-   .src 5:4="until old = line | line = ''"
+   .srcstep 4 4 17 "repro_expand_until.crexx" 5 4 32 "do until old = line | line = ''"
+   .traceevent "V" 6 "R" "S" "r" 2 0 0 0 "old" ""
+   .traceevent "V" 6 "R" "S" "r" 1 0 0 0 "line" ""
    seq r3,r2,r1
+   .traceevent "O" 4 "R" "B" "r" 3 0 0 0 "" ""
    brt l20orend,r3
+   .traceevent "V" 6 "R" "S" "r" 1 0 0 0 "line" ""
    seq r3,r1,""
+   .traceevent "O" 4 "R" "B" "r" 3 0 0 0 "" ""
 l20orend:
+   .traceevent "O" 4 "R" "B" "r" 3 0 0 0 "" ""
    brt l13doend,r3
-   .src 9:1="end"
+   .srcstep 9 9 17 "repro_expand_until.crexx" 9 1 4 "end"
    br l13dostart
 l13doend:
-   .src 10:1="say \"Count: \" || count"
+   .srcstep 10 10 17 "repro_expand_until.crexx" 10 1 23 "say \"Count: \" || count"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 10 10 0 "count" ""
    concat r3,"Count: ",r0
+   .traceevent "O" 4 "R" "S" "r" 3 10 10 0 "" ""
    say r3
-   .src 11:1="return 0"
+   .srcstep 11 11 17 "repro_expand_until.crexx" 11 1 9 "return 0"
    ret 0
    .meta "repro_expand_until.main.count"
    .meta "repro_expand_until.main.line"

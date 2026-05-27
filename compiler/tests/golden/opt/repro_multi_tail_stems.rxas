@@ -1,9 +1,8 @@
 /*
  * SOURCE                 : repro_multi_tail_stems.crexx
- * BUILT                  : 2026-05-23 20:46:05
+ * BUILT                  : 2026-05-27 17:52:56
  */
 
-.srcfile="repro_multi_tail_stems.crexx"
 .globals=0
 
 main() .locals=13
@@ -13,18 +12,25 @@ main() .locals=13
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:1="errors = 0"
+   .srcstep 1 1 17 "repro_multi_tail_stems.crexx" 4 1 11 "errors = 0"
    .meta "repro_multi_tail_stems.main.errors"="b" ".int" r0
    load r0,0
-   .src 5:1="root = .stem"
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "errors" ""
+   .srcstep 2 2 17 "repro_multi_tail_stems.crexx" 5 1 13 "root = .stem()"
    .meta "repro_multi_tail_stems.main.root"="b" ".stem" r1
    load r2,0
    call r1,§rxfnsb.stem.§factory(),r2
-   .src 7:1="root.tail1.tail2 = \"Jenny\""
+   .traceevent "F" 4 "R" "O" "r" 1 2 2 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 2 2 0 "root" ""
+   .srcstep 3 3 6 "repro_multi_tail_stems.crexx" 7 1 27 "root.tail1.tail2 = \"Jenny\""
    .meta "repro_multi_tail_stems.main.tail1"="b" ".string" "tail1"
    .meta "repro_multi_tail_stems.main.tail2"="b" ".string" "tail2"
+   .traceevent "V" 6 "R" "O" "r" 1 3 3 0 "root" ""
    load r4,"tail1.tail2"
+   .traceevent "L" 4 "R" "S" "r" 4 3 3 0 "" ""
    load r5,"Jenny"
+   .traceevent "L" 4 "R" "S" "r" 5 3 3 0 "" ""
    load r2,3
    settp r1,256
    swap r3,r1
@@ -32,57 +38,83 @@ main() .locals=13
    settp r5,768
    call r6,§rxfnsb.stem.set(),r2
    swap r1,r3
-   .src 8:0="if root.tail1.tail2 \\= \"Jenny\""
+   .traceevent "F" 4 "R" "V" "r" 6 3 3 0 "set" ""
+   .srcstep 6 6 17 "repro_multi_tail_stems.crexx" 8 1 31 "if root.tail1.tail2 \\= \"Jenny\" then do"
+   .traceevent "V" 6 "R" "O" "r" 1 6 6 0 "root" ""
    load r5,"tail1.tail2"
+   .traceevent "L" 4 "R" "S" "r" 5 6 6 0 "" ""
    load r3,2
    settp r1,256
    swap r4,r1
    settp r5,768
    call r2,§rxfnsb.stem.get(),r3
    swap r1,r4
+   .traceevent "F" 4 "R" "S" "r" 2 6 6 0 "get" ""
    sne r5,r2,"Jenny"
+   .traceevent "O" 4 "R" "B" "r" 5 6 6 0 "" ""
    brf l35iffalse,r5
-   .src 8:32="then"
-   .src 9:3="errors = errors + 1"
+   .srcstep 7 7 17 "repro_multi_tail_stems.crexx" 8 32 36 "if root.tail1.tail2 \\= \"Jenny\" then do"
+   .srcstep 4 4 17 "repro_multi_tail_stems.crexx" 9 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 4 4 0 "errors" ""
    iadd r0,r0,1
-   .src 10:3="say \"Literal multi-tail lookup mismatch:\" root.tail1.tail2"
+   .traceevent "O" 4 "R" "I" "r" 0 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "errors" ""
+   .srcstep 5 5 17 "repro_multi_tail_stems.crexx" 10 3 61 "  say \"Literal multi-tail lookup mismatch:\" root.tail1.tail2"
+   .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "root" ""
    load r4,"tail1.tail2"
+   .traceevent "L" 4 "R" "S" "r" 4 5 5 0 "" ""
    load r2,2
    settp r1,256
    swap r3,r1
    settp r4,768
    call r7,§rxfnsb.stem.get(),r2
    swap r1,r3
+   .traceevent "F" 4 "R" "S" "r" 7 5 5 0 "get" ""
    sconcat r7,"Literal multi-tail lookup mismatch:",r7
+   .traceevent "O" 4 "R" "S" "r" 7 5 5 0 "" ""
    say r7
 l35iffalse:
-   .src 12:0="if root.get(\"tail1.tail2\") \\= \"Jenny\""
+   .srcstep 10 10 17 "repro_multi_tail_stems.crexx" 12 1 38 "if root.get(\"tail1.tail2\") \\= \"Jenny\" then do"
+   .traceevent "V" 6 "R" "O" "r" 1 10 10 0 "root" ""
    load r9,"tail1.tail2"
+   .traceevent "L" 4 "R" "S" "r" 9 10 10 0 "" ""
    load r7,2
    settp r1,256
    swap r8,r1
    settp r9,768
    call r5,§rxfnsb.stem.get(),r7
    swap r1,r8
+   .traceevent "F" 4 "R" "S" "r" 5 10 10 0 "get" ""
    sne r9,r5,"Jenny"
+   .traceevent "O" 4 "R" "B" "r" 9 10 10 0 "" ""
    brf l55iffalse,r9
-   .src 12:39="then"
-   .src 13:3="errors = errors + 1"
+   .srcstep 11 11 17 "repro_multi_tail_stems.crexx" 12 39 43 "if root.get(\"tail1.tail2\") \\= \"Jenny\" then do"
+   .srcstep 8 8 17 "repro_multi_tail_stems.crexx" 13 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "errors" ""
    iadd r0,r0,1
-   .src 14:3="say \"Literal multi-tail key mismatch:\" root.get(\"tail1.tail2\")"
+   .traceevent "O" 4 "R" "I" "r" 0 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 8 8 0 "errors" ""
+   .srcstep 9 9 17 "repro_multi_tail_stems.crexx" 14 3 65 "  say \"Literal multi-tail key mismatch:\" root.get(\"tail1.tail2\")"
+   .traceevent "V" 6 "R" "O" "r" 1 9 9 0 "root" ""
    load r12,"tail1.tail2"
+   .traceevent "L" 4 "R" "S" "r" 12 9 9 0 "" ""
    load r10,2
    settp r1,256
    swap r11,r1
    settp r12,768
    call r8,§rxfnsb.stem.get(),r10
    swap r1,r11
+   .traceevent "F" 4 "R" "S" "r" 8 9 9 0 "get" ""
    sconcat r12,"Literal multi-tail key mismatch:",r8
+   .traceevent "O" 4 "R" "S" "r" 12 9 9 0 "" ""
    say r12
 l55iffalse:
-   .src 17:1="root.123.45 = \"numeric-left\""
+   .srcstep 12 12 6 "repro_multi_tail_stems.crexx" 17 1 29 "root.123.45 = \"numeric-left\""
+   .traceevent "V" 6 "R" "O" "r" 1 12 12 0 "root" ""
    load r11,"123.45"
+   .traceevent "L" 4 "R" "S" "r" 11 12 12 0 "" ""
    load r12,"numeric-left"
+   .traceevent "L" 4 "R" "S" "r" 12 12 12 0 "" ""
    load r9,3
    settp r1,256
    swap r10,r1
@@ -90,9 +122,13 @@ l55iffalse:
    settp r12,768
    call r8,§rxfnsb.stem.set(),r9
    swap r1,r10
-   .src 18:1="root.12.345 = \"numeric-right\""
+   .traceevent "F" 4 "R" "V" "r" 8 12 12 0 "set" ""
+   .srcstep 13 13 6 "repro_multi_tail_stems.crexx" 18 1 30 "root.12.345 = \"numeric-right\""
+   .traceevent "V" 6 "R" "O" "r" 1 13 13 0 "root" ""
    load r11,"12.345"
+   .traceevent "L" 4 "R" "S" "r" 11 13 13 0 "" ""
    load r12,"numeric-right"
+   .traceevent "L" 4 "R" "S" "r" 12 13 13 0 "" ""
    load r9,3
    settp r1,256
    swap r10,r1
@@ -100,86 +136,123 @@ l55iffalse:
    settp r12,768
    call r7,§rxfnsb.stem.set(),r9
    swap r1,r10
-   .src 19:0="if root.123.45 \\= \"numeric-left\""
+   .traceevent "F" 4 "R" "V" "r" 7 13 13 0 "set" ""
+   .srcstep 16 16 17 "repro_multi_tail_stems.crexx" 19 1 33 "if root.123.45 \\= \"numeric-left\" then do"
+   .traceevent "V" 6 "R" "O" "r" 1 16 16 0 "root" ""
    load r12,"123.45"
+   .traceevent "L" 4 "R" "S" "r" 12 16 16 0 "" ""
    load r10,2
    settp r1,256
    swap r11,r1
    settp r12,768
    call r9,§rxfnsb.stem.get(),r10
    swap r1,r11
+   .traceevent "F" 4 "R" "S" "r" 9 16 16 0 "get" ""
    sne r12,r9,"numeric-left"
+   .traceevent "O" 4 "R" "B" "r" 12 16 16 0 "" ""
    brf l83iffalse,r12
-   .src 19:34="then"
-   .src 20:3="errors = errors + 1"
+   .srcstep 17 17 17 "repro_multi_tail_stems.crexx" 19 34 38 "if root.123.45 \\= \"numeric-left\" then do"
+   .srcstep 14 14 17 "repro_multi_tail_stems.crexx" 20 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 14 14 0 "errors" ""
    iadd r0,r0,1
-   .src 21:3="say \"Numeric multi-tail lookup mismatch:\" root.123.45"
+   .traceevent "O" 4 "R" "I" "r" 0 14 14 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 14 14 0 "errors" ""
+   .srcstep 15 15 17 "repro_multi_tail_stems.crexx" 21 3 56 "  say \"Numeric multi-tail lookup mismatch:\" root.123.45"
+   .traceevent "V" 6 "R" "O" "r" 1 15 15 0 "root" ""
    load r11,"123.45"
+   .traceevent "L" 4 "R" "S" "r" 11 15 15 0 "" ""
    load r9,2
    settp r1,256
    swap r10,r1
    settp r11,768
    call r5,§rxfnsb.stem.get(),r9
    swap r1,r10
+   .traceevent "F" 4 "R" "S" "r" 5 15 15 0 "get" ""
    sconcat r11,"Numeric multi-tail lookup mismatch:",r5
+   .traceevent "O" 4 "R" "S" "r" 11 15 15 0 "" ""
    say r11
 l83iffalse:
-   .src 23:0="if root.get(\"123.45\") \\= \"numeric-left\""
+   .srcstep 20 20 17 "repro_multi_tail_stems.crexx" 23 1 40 "if root.get(\"123.45\") \\= \"numeric-left\" then do"
+   .traceevent "V" 6 "R" "O" "r" 1 20 20 0 "root" ""
    load r12,"123.45"
+   .traceevent "L" 4 "R" "S" "r" 12 20 20 0 "" ""
    load r10,2
    settp r1,256
    swap r11,r1
    settp r12,768
    call r9,§rxfnsb.stem.get(),r10
    swap r1,r11
+   .traceevent "F" 4 "R" "S" "r" 9 20 20 0 "get" ""
    sne r12,r9,"numeric-left"
+   .traceevent "O" 4 "R" "B" "r" 12 20 20 0 "" ""
    brf l103iffalse,r12
-   .src 23:41="then"
-   .src 24:3="errors = errors + 1"
+   .srcstep 21 21 17 "repro_multi_tail_stems.crexx" 23 41 45 "if root.get(\"123.45\") \\= \"numeric-left\" then do"
+   .srcstep 18 18 17 "repro_multi_tail_stems.crexx" 24 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 18 18 0 "errors" ""
    iadd r0,r0,1
-   .src 25:3="say \"Numeric separator key mismatch:\" root.get(\"123.45\")"
+   .traceevent "O" 4 "R" "I" "r" 0 18 18 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 18 18 0 "errors" ""
+   .srcstep 19 19 17 "repro_multi_tail_stems.crexx" 25 3 59 "  say \"Numeric separator key mismatch:\" root.get(\"123.45\")"
+   .traceevent "V" 6 "R" "O" "r" 1 19 19 0 "root" ""
    load r11,"123.45"
+   .traceevent "L" 4 "R" "S" "r" 11 19 19 0 "" ""
    load r9,2
    settp r1,256
    swap r10,r1
    settp r11,768
    call r5,§rxfnsb.stem.get(),r9
    swap r1,r10
+   .traceevent "F" 4 "R" "S" "r" 5 19 19 0 "get" ""
    sconcat r11,"Numeric separator key mismatch:",r5
+   .traceevent "O" 4 "R" "S" "r" 11 19 19 0 "" ""
    say r11
 l103iffalse:
-   .src 27:0="if root.get(\"12.345\") \\= \"numeric-right\""
+   .srcstep 24 24 17 "repro_multi_tail_stems.crexx" 27 1 41 "if root.get(\"12.345\") \\= \"numeric-right\" then do"
+   .traceevent "V" 6 "R" "O" "r" 1 24 24 0 "root" ""
    load r12,"12.345"
+   .traceevent "L" 4 "R" "S" "r" 12 24 24 0 "" ""
    load r10,2
    settp r1,256
    swap r11,r1
    settp r12,768
    call r9,§rxfnsb.stem.get(),r10
    swap r1,r11
+   .traceevent "F" 4 "R" "S" "r" 9 24 24 0 "get" ""
    sne r12,r9,"numeric-right"
+   .traceevent "O" 4 "R" "B" "r" 12 24 24 0 "" ""
    brf l123iffalse,r12
-   .src 27:42="then"
-   .src 28:3="errors = errors + 1"
+   .srcstep 25 25 17 "repro_multi_tail_stems.crexx" 27 42 46 "if root.get(\"12.345\") \\= \"numeric-right\" then do"
+   .srcstep 22 22 17 "repro_multi_tail_stems.crexx" 28 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 22 22 0 "errors" ""
    iadd r0,r0,1
-   .src 29:3="say \"Numeric adjacent key mismatch:\" root.get(\"12.345\")"
+   .traceevent "O" 4 "R" "I" "r" 0 22 22 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 22 22 0 "errors" ""
+   .srcstep 23 23 17 "repro_multi_tail_stems.crexx" 29 3 58 "  say \"Numeric adjacent key mismatch:\" root.get(\"12.345\")"
+   .traceevent "V" 6 "R" "O" "r" 1 23 23 0 "root" ""
    load r11,"12.345"
+   .traceevent "L" 4 "R" "S" "r" 11 23 23 0 "" ""
    load r9,2
    settp r1,256
    swap r10,r1
    settp r11,768
    call r5,§rxfnsb.stem.get(),r9
    swap r1,r10
+   .traceevent "F" 4 "R" "S" "r" 5 23 23 0 "get" ""
    sconcat r11,"Numeric adjacent key mismatch:",r5
+   .traceevent "O" 4 "R" "S" "r" 11 23 23 0 "" ""
    say r11
 l123iffalse:
-   .src 35:1="root.customer.invoice.field = \"149.95\""
+   .srcstep 26 26 6 "repro_multi_tail_stems.crexx" 35 1 39 "root.customer.invoice.field = \"149.95\""
    .meta "repro_multi_tail_stems.main.us"="b" ".string" "us"
    .meta "repro_multi_tail_stems.main.address"="b" ".string" "address"
    .meta "repro_multi_tail_stems.main.customer"="b" ".string" "acme"
    .meta "repro_multi_tail_stems.main.field"="b" ".string" "total"
    .meta "repro_multi_tail_stems.main.invoice"="b" ".string" "2026.05"
+   .traceevent "V" 6 "R" "O" "r" 1 26 26 0 "root" ""
    load r11,"acme.2026.05.total"
+   .traceevent "L" 4 "R" "S" "r" 11 26 26 0 "" ""
    load r12,"149.95"
+   .traceevent "L" 4 "R" "S" "r" 12 26 26 0 "" ""
    load r9,3
    settp r1,256
    swap r10,r1
@@ -187,52 +260,74 @@ l123iffalse:
    settp r12,768
    call r5,§rxfnsb.stem.set(),r9
    swap r1,r10
-   .src 36:0="if root.get(\"acme.2026.05.total\") \\= \"149.95\""
+   .traceevent "F" 4 "R" "V" "r" 5 26 26 0 "set" ""
+   .srcstep 29 29 17 "repro_multi_tail_stems.crexx" 36 1 46 "if root.get(\"acme.2026.05.total\") \\= \"149.95\" then do"
    .meta "repro_multi_tail_stems.main.ca"="b" ".string" "ca"
+   .traceevent "V" 6 "R" "O" "r" 1 29 29 0 "root" ""
    load r12,"acme.2026.05.total"
+   .traceevent "L" 4 "R" "S" "r" 12 29 29 0 "" ""
    load r10,2
    settp r1,256
    swap r11,r1
    settp r12,768
    call r9,§rxfnsb.stem.get(),r10
    swap r1,r11
+   .traceevent "F" 4 "R" "S" "r" 9 29 29 0 "get" ""
    sne r12,r9,"149.95"
+   .traceevent "O" 4 "R" "B" "r" 12 29 29 0 "" ""
    brf l158iffalse,r12
-   .src 36:47="then"
-   .src 37:3="errors = errors + 1"
+   .srcstep 30 30 17 "repro_multi_tail_stems.crexx" 36 47 51 "if root.get(\"acme.2026.05.total\") \\= \"149.95\" then do"
+   .srcstep 27 27 17 "repro_multi_tail_stems.crexx" 37 3 22 "  errors = errors + 1"
    .meta "repro_multi_tail_stems.main.a"="b" ".string" "a"
    .meta "repro_multi_tail_stems.main.usc"="b" ".string" "usc"
+   .traceevent "V" 6 "R" "I" "r" 0 27 27 0 "errors" ""
    iadd r0,r0,1
-   .src 38:3="say \"Variable multi-tail key mismatch:\" root.get(\"acme.2026.05.total\")"
+   .traceevent "O" 4 "R" "I" "r" 0 27 27 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 27 27 0 "errors" ""
+   .srcstep 28 28 17 "repro_multi_tail_stems.crexx" 38 3 73 "  say \"Variable multi-tail key mismatch:\" root.get(\"acme.2026.05.total\")"
+   .traceevent "V" 6 "R" "O" "r" 1 28 28 0 "root" ""
    load r11,"acme.2026.05.total"
+   .traceevent "L" 4 "R" "S" "r" 11 28 28 0 "" ""
    load r9,2
    settp r1,256
    swap r10,r1
    settp r11,768
    call r4,§rxfnsb.stem.get(),r9
    swap r1,r10
+   .traceevent "F" 4 "R" "S" "r" 4 28 28 0 "get" ""
    sconcat r11,"Variable multi-tail key mismatch:",r4
+   .traceevent "O" 4 "R" "S" "r" 11 28 28 0 "" ""
    say r11
 l158iffalse:
-   .src 40:0="if root.get(\"customer.invoice.field\") \\= \"\""
+   .srcstep 33 33 17 "repro_multi_tail_stems.crexx" 40 1 44 "if root.get(\"customer.invoice.field\") \\= \"\" then do"
+   .traceevent "V" 6 "R" "O" "r" 1 33 33 0 "root" ""
    load r12,"customer.invoice.field"
+   .traceevent "L" 4 "R" "S" "r" 12 33 33 0 "" ""
    load r10,2
    settp r1,256
    swap r11,r1
    settp r12,768
    call r9,§rxfnsb.stem.get(),r10
    swap r1,r11
+   .traceevent "F" 4 "R" "S" "r" 9 33 33 0 "get" ""
    sne r12,r9,""
+   .traceevent "O" 4 "R" "B" "r" 12 33 33 0 "" ""
    brf l173iffalse,r12
-   .src 40:45="then"
-   .src 41:3="errors = errors + 1"
+   .srcstep 34 34 17 "repro_multi_tail_stems.crexx" 40 45 49 "if root.get(\"customer.invoice.field\") \\= \"\" then do"
+   .srcstep 31 31 17 "repro_multi_tail_stems.crexx" 41 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 31 31 0 "errors" ""
    iadd r0,r0,1
-   .src 42:3="say \"Variable multi-tail used literal names\""
+   .traceevent "O" 4 "R" "I" "r" 0 31 31 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 31 31 0 "errors" ""
+   .srcstep 32 32 17 "repro_multi_tail_stems.crexx" 42 3 47 "  say \"Variable multi-tail used literal names\""
    say "Variable multi-tail used literal names"
 l173iffalse:
-   .src 45:1="root.address.us.ca = \"California\""
+   .srcstep 35 35 6 "repro_multi_tail_stems.crexx" 45 1 34 "root.address.us.ca = \"California\""
+   .traceevent "V" 6 "R" "O" "r" 1 35 35 0 "root" ""
    load r11,"address.us.ca"
+   .traceevent "L" 4 "R" "S" "r" 11 35 35 0 "" ""
    load r12,"California"
+   .traceevent "L" 4 "R" "S" "r" 12 35 35 0 "" ""
    load r9,3
    settp r1,256
    swap r10,r1
@@ -240,9 +335,13 @@ l173iffalse:
    settp r12,768
    call r4,§rxfnsb.stem.set(),r9
    swap r1,r10
-   .src 46:1="root.address.usc.a = \"University of Southern California\""
+   .traceevent "F" 4 "R" "V" "r" 4 35 35 0 "set" ""
+   .srcstep 36 36 6 "repro_multi_tail_stems.crexx" 46 1 57 "root.address.usc.a = \"University of Southern California\""
+   .traceevent "V" 6 "R" "O" "r" 1 36 36 0 "root" ""
    load r11,"address.usc.a"
+   .traceevent "L" 4 "R" "S" "r" 11 36 36 0 "" ""
    load r12,"University of Southern California"
+   .traceevent "L" 4 "R" "S" "r" 12 36 36 0 "" ""
    load r9,3
    settp r1,256
    swap r10,r1
@@ -250,80 +349,114 @@ l173iffalse:
    settp r12,768
    call r3,§rxfnsb.stem.set(),r9
    swap r1,r10
-   .src 47:0="if root.get(\"address.us.ca\") \\= \"California\""
+   .traceevent "F" 4 "R" "V" "r" 3 36 36 0 "set" ""
+   .srcstep 39 39 17 "repro_multi_tail_stems.crexx" 47 1 45 "if root.get(\"address.us.ca\") \\= \"California\" then do"
+   .traceevent "V" 6 "R" "O" "r" 1 39 39 0 "root" ""
    load r12,"address.us.ca"
+   .traceevent "L" 4 "R" "S" "r" 12 39 39 0 "" ""
    load r10,2
    settp r1,256
    swap r11,r1
    settp r12,768
    call r9,§rxfnsb.stem.get(),r10
    swap r1,r11
+   .traceevent "F" 4 "R" "S" "r" 9 39 39 0 "get" ""
    sne r12,r9,"California"
+   .traceevent "O" 4 "R" "B" "r" 12 39 39 0 "" ""
    brf l205iffalse,r12
-   .src 47:46="then"
-   .src 48:3="errors = errors + 1"
+   .srcstep 40 40 17 "repro_multi_tail_stems.crexx" 47 46 50 "if root.get(\"address.us.ca\") \\= \"California\" then do"
+   .srcstep 37 37 17 "repro_multi_tail_stems.crexx" 48 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 37 37 0 "errors" ""
    iadd r0,r0,1
-   .src 49:3="say \"Hierarchical key mismatch:\" root.get(\"address.us.ca\")"
+   .traceevent "O" 4 "R" "I" "r" 0 37 37 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 37 37 0 "errors" ""
+   .srcstep 38 38 17 "repro_multi_tail_stems.crexx" 49 3 61 "  say \"Hierarchical key mismatch:\" root.get(\"address.us.ca\")"
+   .traceevent "V" 6 "R" "O" "r" 1 38 38 0 "root" ""
    load r11,"address.us.ca"
+   .traceevent "L" 4 "R" "S" "r" 11 38 38 0 "" ""
    load r9,2
    settp r1,256
    swap r10,r1
    settp r11,768
    call r2,§rxfnsb.stem.get(),r9
    swap r1,r10
+   .traceevent "F" 4 "R" "S" "r" 2 38 38 0 "get" ""
    sconcat r11,"Hierarchical key mismatch:",r2
+   .traceevent "O" 4 "R" "S" "r" 11 38 38 0 "" ""
    say r11
 l205iffalse:
-   .src 51:0="if root.get(\"address.usc.a\") \\= \"University of Southern California\""
+   .srcstep 43 43 17 "repro_multi_tail_stems.crexx" 51 1 68 "if root.get(\"address.usc.a\") \\= \"University of Southern California\" then do"
+   .traceevent "V" 6 "R" "O" "r" 1 43 43 0 "root" ""
    load r12,"address.usc.a"
+   .traceevent "L" 4 "R" "S" "r" 12 43 43 0 "" ""
    load r10,2
    settp r1,256
    swap r11,r1
    settp r12,768
    call r9,§rxfnsb.stem.get(),r10
    swap r1,r11
+   .traceevent "F" 4 "R" "S" "r" 9 43 43 0 "get" ""
    sne r12,r9,"University of Southern California"
+   .traceevent "O" 4 "R" "B" "r" 12 43 43 0 "" ""
    brf l225iffalse,r12
-   .src 51:69="then"
-   .src 52:3="errors = errors + 1"
+   .srcstep 44 44 17 "repro_multi_tail_stems.crexx" 51 69 73 "if root.get(\"address.usc.a\") \\= \"University of Southern California\" then do"
+   .srcstep 41 41 17 "repro_multi_tail_stems.crexx" 52 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 41 41 0 "errors" ""
    iadd r0,r0,1
-   .src 53:3="say \"Hierarchical adjacent key mismatch:\" root.get(\"address.usc.a\")"
+   .traceevent "O" 4 "R" "I" "r" 0 41 41 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 41 41 0 "errors" ""
+   .srcstep 42 42 17 "repro_multi_tail_stems.crexx" 53 3 70 "  say \"Hierarchical adjacent key mismatch:\" root.get(\"address.usc.a\")"
+   .traceevent "V" 6 "R" "O" "r" 1 42 42 0 "root" ""
    load r11,"address.usc.a"
+   .traceevent "L" 4 "R" "S" "r" 11 42 42 0 "" ""
    load r9,2
    settp r1,256
    swap r10,r1
    settp r11,768
    call r2,§rxfnsb.stem.get(),r9
    swap r1,r10
+   .traceevent "F" 4 "R" "S" "r" 2 42 42 0 "get" ""
    sconcat r11,"Hierarchical adjacent key mismatch:",r2
+   .traceevent "O" 4 "R" "S" "r" 11 42 42 0 "" ""
    say r11
 l225iffalse:
-   .src 55:0="if root.get(\"address.usca\") \\= \"\""
+   .srcstep 47 47 17 "repro_multi_tail_stems.crexx" 55 1 34 "if root.get(\"address.usca\") \\= \"\" then do"
+   .traceevent "V" 6 "R" "O" "r" 1 47 47 0 "root" ""
    load r12,"address.usca"
+   .traceevent "L" 4 "R" "S" "r" 12 47 47 0 "" ""
    load r10,2
    settp r1,256
    swap r11,r1
    settp r12,768
    call r9,§rxfnsb.stem.get(),r10
    swap r1,r11
+   .traceevent "F" 4 "R" "S" "r" 9 47 47 0 "get" ""
    sne r12,r9,""
+   .traceevent "O" 4 "R" "B" "r" 12 47 47 0 "" ""
    brf l240iffalse,r12
-   .src 55:35="then"
-   .src 56:3="errors = errors + 1"
+   .srcstep 48 48 17 "repro_multi_tail_stems.crexx" 55 35 39 "if root.get(\"address.usca\") \\= \"\" then do"
+   .srcstep 45 45 17 "repro_multi_tail_stems.crexx" 56 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 45 45 0 "errors" ""
    iadd r0,r0,1
-   .src 57:3="say \"Hierarchical separators collapsed\""
+   .traceevent "O" 4 "R" "I" "r" 0 45 45 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 45 45 0 "errors" ""
+   .srcstep 46 46 17 "repro_multi_tail_stems.crexx" 57 3 42 "  say \"Hierarchical separators collapsed\""
    say "Hierarchical separators collapsed"
 l240iffalse:
-   .src 60:0="if errors = 0"
+   .srcstep 50 50 17 "repro_multi_tail_stems.crexx" 60 1 14 "if errors = 0 then say \"PASS: multi-tail stem object access\""
+   .traceevent "V" 6 "R" "I" "r" 0 50 50 0 "errors" ""
    ieq r12,r0,0
+   .traceevent "O" 4 "R" "B" "r" 12 50 50 0 "" ""
    brf l246iffalse,r12
-   .src 60:15="then"
-   .src 60:20="say \"PASS: multi-tail stem object access\""
+   .srcstep 51 51 17 "repro_multi_tail_stems.crexx" 60 15 19 "if errors = 0 then say \"PASS: multi-tail stem object access\""
+   .srcstep 49 49 17 "repro_multi_tail_stems.crexx" 60 20 61 "if errors = 0 then say \"PASS: multi-tail stem object access\""
    say "PASS: multi-tail stem object access"
 l246iffalse:
-   .src 61:1="return errors <> 0"
+   .srcstep 52 52 17 "repro_multi_tail_stems.crexx" 61 1 19 "return errors <> 0"
+   .traceevent "V" 6 "R" "I" "r" 0 52 52 0 "errors" ""
    ine r12,r0,0
    btoi r12
+   .traceevent "O" 4 "R" "I" "r" 12 52 52 0 "" ""
    ret r12
    .meta "repro_multi_tail_stems.main.a"
    .meta "repro_multi_tail_stems.main.address"

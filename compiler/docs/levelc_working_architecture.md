@@ -156,8 +156,8 @@ Candidate lowering rule:
 - Keep the Level C source tree as authored.
 - Convert the Level C work tree into canonical calls, control-flow nodes, and
   variable-pool operations.
-- Preserve source provenance so diagnostics and `.src` metadata still point at
-  authored Classic REXX clauses.
+- Preserve source provenance so diagnostics and source-step metadata still point
+  at authored Classic REXX clauses.
 
 ### 3.3 Milestone 3: Runtime semantics
 

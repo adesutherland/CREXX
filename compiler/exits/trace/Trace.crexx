@@ -30,10 +30,12 @@ import rxfnsb
 
 traceexit: class
     _id = .int
+    _helper_added = .int
 
     *: factory
         arg id = 0
         _id = id
+        _helper_added = 0
         return
 
     describe: method = .exitdescriptor
@@ -53,7 +55,10 @@ traceexit: class
             if to_index > 0 then limit = to_index - 1
             if upper(strip(tokens[start].get_text())) = "VALUE" then do
                 call plan.add_keyword(start, tokens[start].get_text(), "trace_option", "trace")
-                call plan.add_helper(makeTraceHelper())
+                if _helper_added = 0 then do
+                    call addTraceHelpers plan
+                    _helper_added = 1
+                end
             end
             else do
                 mode_end = 0
@@ -61,7 +66,10 @@ traceexit: class
                 mode = canonicalTraceMode(mode_text)
                 if mode <> "" then do
                     call plan.add_keyword(start, tokens[start].get_text(), "trace_option", "trace")
-                    call plan.add_helper(makeTraceHelper())
+                    if _helper_added = 0 then do
+                        call addTraceHelpers plan
+                        _helper_added = 1
+                    end
                 end
             end
         end
@@ -254,35 +262,96 @@ addTraceActivation: procedure = .void
     call result.add_replacement_line("end")
     return
 
+addTraceHelpers: procedure = .void
+    arg plan = .exitplan
+    call plan.add_helper(makeTraceHelper())
+    return
+
 makeTraceHelper: procedure = .helperplan
     helper = .helperplan("__rxtrace_handler", "file_tail", "__rxtrace_handler", "")
-    call helper.add_line("__rxtrace_handler: procedure = .int")
-    call helper.add_line("  arg expose __rxtrace_raw = .trace_interrupt_raw")
-    call helper.add_line("  __rxtrace_parent_type = """"")
-    call helper.add_line("  __rxtrace_parent_value = """"")
-    call helper.add_line("  __rxtrace_parent_register = _trace_pending_parent_register(__rxtrace_raw.module(), __rxtrace_parent_type, __rxtrace_parent_value)")
-    call helper.add_line("  if __rxtrace_parent_register = -2 then call _trace_supply_parent_value(__rxtrace_parent_value)")
-    call helper.add_line("  else if __rxtrace_parent_register >= 0 then do")
-    call helper.add_line("    if __rxtrace_parent_type = "".int"" then do")
-    call helper.add_line("      __rxtrace_i_value = 0")
-    call helper.add_line("      assembler metalinkpreg __rxtrace_i_value,__rxtrace_parent_register")
-    call helper.add_line("      call _trace_supply_parent_value(__rxtrace_i_value)")
-    call helper.add_line("      assembler unlink __rxtrace_i_value")
-    call helper.add_line("    end")
-    call helper.add_line("    else if __rxtrace_parent_type = "".float"" then do")
-    call helper.add_line("      __rxtrace_f_value = 0.0")
-    call helper.add_line("      assembler metalinkpreg __rxtrace_f_value,__rxtrace_parent_register")
-    call helper.add_line("      call _trace_supply_parent_value(__rxtrace_f_value)")
-    call helper.add_line("      assembler unlink __rxtrace_f_value")
-    call helper.add_line("    end")
-    call helper.add_line("    else do")
-    call helper.add_line("      __rxtrace_s_value = """"")
-    call helper.add_line("      assembler metalinkpreg __rxtrace_s_value,__rxtrace_parent_register")
-    call helper.add_line("      call _trace_supply_parent_value(__rxtrace_s_value)")
-    call helper.add_line("      assembler unlink __rxtrace_s_value")
-    call helper.add_line("    end")
-    call helper.add_line("  end")
-    call helper.add_line("  return _trace_handler(__rxtrace_raw)")
+    call helper.add_line('__rxtrace_handler: procedure = .int')
+    call helper.add_line('  arg expose __rxtrace_raw = .trace_interrupt_raw')
+    call helper.add_line('  if _trace_current_mode() = "OFF" then return 0')
+    call helper.add_line('  __rxtrace_event = .tracecontext')
+    call helper.add_line('  __rxtrace_event = _trace_context_from_raw(__rxtrace_raw)')
+    call helper.add_line('  if _trace_should_trace_context(__rxtrace_event) = 0 then return 0')
+    call helper.add_line('  __rxtrace_mode = _trace_current_mode()')
+    call helper.add_line('  if _trace_needs_breakpoints(__rxtrace_mode) = 0 then return 0')
+    call helper.add_line('  __rxtrace_format = _trace_current_format()')
+    call helper.add_line('  __rxtrace_line = ""')
+    call helper.add_line('  __rxtrace_key = ""')
+    call helper.add_line('  __rxtrace_emit_source = 0')
+    call helper.add_line('  __rxtrace_values_mode = 0')
+    call helper.add_line('  if __rxtrace_mode = "R" then __rxtrace_values_mode = 1')
+    call helper.add_line('  else if __rxtrace_mode = "I" then __rxtrace_values_mode = 1')
+    call helper.add_line('  if __rxtrace_mode = "ASM" then do')
+    call helper.add_line('    if __rxtrace_event.asm_line() <> "" then do')
+    call helper.add_line('      __rxtrace_key = "ASM|" || __rxtrace_event.module() || "|" || __rxtrace_event.address() || "|" || __rxtrace_event.asm_line()')
+    call helper.add_line('      __rxtrace_line = __rxtrace_event.asm_line()')
+    call helper.add_line('      __rxtrace_emit_source = 1')
+    call helper.add_line('    end')
+    call helper.add_line('  end')
+    call helper.add_line('  else do')
+    call helper.add_line('    if __rxtrace_event.has_source() <> 0 then do')
+    call helper.add_line('      __rxtrace_key = "SRC|" || __rxtrace_event.module() || "|" || __rxtrace_event.line() || "|" || __rxtrace_event.column() || "|" || __rxtrace_event.source()')
+    call helper.add_line('      if __rxtrace_event.line() > 99999 then __rxtrace_prefix = "?" || right(__rxtrace_event.line(), 5, "0")')
+    call helper.add_line('      else __rxtrace_prefix = right(__rxtrace_event.line(), 6, " " )')
+    call helper.add_line('      __rxtrace_line = __rxtrace_prefix || " *-* " || _trace_escape_text(__rxtrace_event.source())')
+    call helper.add_line('      __rxtrace_emit_source = 1')
+    call helper.add_line('    end')
+    call helper.add_line('  end')
+    call helper.add_line('  if __rxtrace_format = "LLM" & __rxtrace_emit_source <> 0 then do')
+    call helper.add_line("    __rxtrace_line = '{""event"":""trace"",""format"":""llm"",""mode"":""' || _trace_escape_text(__rxtrace_mode) || '"",""module"":""' || __rxtrace_event.module() || '"",""address"":""' || __rxtrace_event.address() || '"",""procedure"":""' || _trace_escape_text(__rxtrace_event.procedure()) || '"",""line"":""' || __rxtrace_event.line() || '"",""column"":""' || __rxtrace_event.column() || '"",""source"":""' || _trace_escape_text(__rxtrace_event.source()) || '"",""asm"":""' || _trace_escape_text(__rxtrace_event.asm_line()) || '""}'")
+    call helper.add_line('  end')
+    call helper.add_line('  if __rxtrace_format <> "LLM" then do')
+    call helper.add_line('    if __rxtrace_values_mode <> 0 then do')
+    call helper.add_line('      call _trace_capture_result_target(__rxtrace_event.module(), __rxtrace_event.address())')
+    call helper.add_line('      __rxtrace_parent_type = ""')
+    call helper.add_line('      __rxtrace_parent_value = ""')
+    call helper.add_line('      __rxtrace_parent_register = _trace_pending_parent_register(__rxtrace_event.module(), __rxtrace_parent_type, __rxtrace_parent_value)')
+    call helper.add_line('      if __rxtrace_parent_register = -2 then call _trace_supply_parent_value(__rxtrace_parent_value)')
+    call helper.add_line('      else if __rxtrace_parent_register >= 0 then do')
+    call helper.add_line('        if __rxtrace_parent_type = ".int" then do')
+    call helper.add_line('          __rxtrace_i_value = 0')
+    call helper.add_line('          assembler metalinkpreg __rxtrace_i_value,__rxtrace_parent_register')
+    call helper.add_line('          call _trace_supply_parent_value(__rxtrace_i_value)')
+    call helper.add_line('          assembler unlink __rxtrace_i_value')
+    call helper.add_line('        end')
+    call helper.add_line('        else if __rxtrace_parent_type = ".float" then do')
+    call helper.add_line('          __rxtrace_f_value = 0.0')
+    call helper.add_line('          assembler metalinkpreg __rxtrace_f_value,__rxtrace_parent_register')
+    call helper.add_line('          call _trace_supply_parent_value(__rxtrace_f_value)')
+    call helper.add_line('          assembler unlink __rxtrace_f_value')
+    call helper.add_line('        end')
+    call helper.add_line('        else do')
+    call helper.add_line('          __rxtrace_s_value = ""')
+    call helper.add_line('          assembler metalinkpreg __rxtrace_s_value,__rxtrace_parent_register')
+    call helper.add_line('          call _trace_supply_parent_value(__rxtrace_s_value)')
+    call helper.add_line('          assembler unlink __rxtrace_s_value')
+    call helper.add_line('        end')
+    call helper.add_line('      end')
+    call helper.add_line('      if _trace_pending_result() <> 0 then do')
+    call helper.add_line('        if __rxtrace_event.module() = _trace_pending_module() then do')
+    call helper.add_line('          __rxtrace_pending_value = ""')
+    call helper.add_line('          __rxtrace_pending_ready = 0')
+    call helper.add_line('          if _trace_pending_has_const() <> 0 then do')
+    call helper.add_line('            __rxtrace_pending_value = _trace_pending_const()')
+    call helper.add_line('            __rxtrace_pending_ready = 1')
+    call helper.add_line('          end')
+    call helper.add_line('          else if _trace_supplied_result() <> 0 then do')
+    call helper.add_line('            __rxtrace_pending_value = _trace_supplied_value()')
+    call helper.add_line('            __rxtrace_pending_ready = 1')
+    call helper.add_line('          end')
+    call helper.add_line("          if __rxtrace_pending_ready <> 0 then call _trace_write_line('       ' || _trace_pending_prefix() || '   ""' || _trace_escape_text(__rxtrace_pending_value) || '""')")
+    call helper.add_line('          call _trace_clear_pending_result()')
+    call helper.add_line('        end')
+    call helper.add_line('      end')
+    call helper.add_line('    end')
+    call helper.add_line('  end')
+    call helper.add_line('  if __rxtrace_emit_source <> 0 then do')
+    call helper.add_line('    if _trace_should_emit_key(__rxtrace_key) <> 0 then call _trace_write_line(__rxtrace_line)')
+    call helper.add_line('  end')
+    call helper.add_line('  return 0')
     return helper
 
 error_result: procedure = .exitresult

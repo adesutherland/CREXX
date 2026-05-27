@@ -5,36 +5,59 @@ compaction does not lose the agreed design. It records the current reviewed
 state, the approved direction, the compact-code adjustment, and the staged
 implementation plan.
 
-## Reviewed Baseline
+## Current Status After Step 5
 
-Current binary and metadata state:
+Step 5 removes the beta source-fragment compatibility path from the live
+toolchain. The canonical metadata is now:
+
+- `META_SOURCE_STEP`, emitted in RXAS as `.srcstep`, for self-contained source
+  anchors with file, line, whole source text, active range, step id, clause id,
+  and provenance flags.
+- `META_TRACE_EVENT`, emitted in RXAS as `.traceevent`, for compact semantic
+  TRACE hints with one-character event/value codes, mode masks, register or
+  constant value references, source-step id, clause id, and optional symbol or
+  resolved compound-name strings.
+
+`rxas`, `rxdas`, `rxlink`, `rxvm`, compiler source emission, generated TRACE
+handlers, signal source reporting, RXDB, and compiler goldens have been moved
+to this contract. Source stripping removes `META_SOURCE_STEP` and preserves
+`META_TRACE_EVENT`. The old source-fragment parser/disassembler/runtime
+fallbacks are gone rather than carried as compatibility debt.
+
+## Historical Reviewed Baseline
+
+The rest of this file preserves the decisions and transition plan that led to
+the current contract. References to legacy source-fragment metadata in this
+section describe the pre-cleanup beta state, not current behavior.
+
+Historical binary and metadata state:
 
 - `binutils/include/rxbin.h` currently uses `BIN_VERSION "003"`.
-- Current source metadata is split across sticky `META_FILE` and fragment
-  `META_SRC`.
-- `meta_src_constant` carries `line`, `column`, and a pooled source fragment.
-- `meta_file_constant` carries a pooled file name and remains sticky until the
-  next `.srcfile`.
+- Current source metadata is split across sticky `legacy source-file metadata` and fragment
+  `legacy source-fragment metadata`.
+- `legacy_meta_source_fragment_constant` carries `line`, `column`, and a pooled source fragment.
+- `legacy_meta_source_file_constant` carries a pooled file name and remains sticky until the
+  next `legacy source-file directive`.
 - `.meta_reg` records scope/register placement, not value changes. It must not
   be treated as an assignment or expression event stream.
 - `META_INLINE` currently transports compiler inline payload version `I4`.
 
-Current assembler/disassembler/linker/runtime state:
+Historical assembler/disassembler/linker/runtime state:
 
-- `rxas` accepts `.srcfile="file"` and `.src line:column="fragment"`.
-- `rxdas` round-trips `.srcfile` and `.src`.
-- `rxlink` rewrites metadata pool references and strips only `META_SRC` and
-  `META_FILE` for source stripping. It strips `META_INLINE` by default in
+- `rxas` accepts `legacy source-file directive="file"` and `legacy source-fragment directive line:column="fragment"`.
+- `rxdas` round-trips `legacy source-file directive` and `legacy source-fragment directive`.
+- `rxlink` rewrites metadata pool references and strips only `legacy source-fragment metadata` and
+  `legacy source-file metadata` for source stripping. It strips `META_INLINE` by default in
   linked images unless inline metadata is preserved.
 - `rxvm` panic/source lookup walks the metadata chain to the target address,
-  remembering sticky `META_FILE` and closest `META_SRC`.
-- `metaloaddata` exposes `.meta_src` as `[line, column, source]` and
-  `.meta_file` as `[file]`.
+  remembering sticky `legacy source-file metadata` and closest `legacy source-fragment metadata`.
+- `metaloaddata` exposes `.legacy_meta_source_fragment` as `[line, column, source]` and
+  `.legacy_meta_source_file` as `[file]`.
 
-Current compiler/source state:
+Historical compiler/source state:
 
-- `compiler/rxcp_emit_core.c` emits `.srcfile` when the file changes and emits
-  `.src` fragments for source anchors.
+- `compiler/rxcp_emit_core.c` emits `legacy source-file directive` when the file changes and emits
+  `legacy source-fragment directive` fragments for source anchors.
 - Source spans can be partial fragments, including generated loop pieces and
   bracket/index expressions whose span is not the whole authored line.
 - `compiler/rxcp_source_tree.*` preserves source nodes with file, token,
@@ -45,10 +68,10 @@ Current compiler/source state:
 - Inline import preserves callee file/provenance, so the new source-step
   emitter must retain original callee file and authored line for inlined code.
 
-Current TRACE/debug runtime state:
+Historical TRACE/debug runtime state:
 
 - `lib/rxfnsb/rexx/trace.crexx` currently owns too much formatting and also
-  guesses assignment results from `.src` text plus `.meta_reg`/`.meta_const`.
+  guesses assignment results from `legacy source-fragment directive` text plus `.meta_reg`/`.meta_const`.
 - `compiler/exits/trace/Trace.crexx` generates the signal handler and can
   safely read frame-local pending registers with `metalinkpreg`.
 - `debugger/rxdb.crexx` and `debugger/rxdb_gui.crexx` use shared trace context
@@ -56,9 +79,8 @@ Current TRACE/debug runtime state:
 
 ## Approved Direction
 
-The cleanup is allowed to break beta metadata compatibility. The binary format
-and inline metadata format may be bumped. Old `.srcfile`/`.src` may be kept as
-assembler/runtime fallback during transition, but new compiler output should
+The cleanup was allowed to break beta metadata compatibility. The binary format
+and inline metadata format could be bumped, and the new compiler output should
 move to the new contract.
 
 Important correction from the user: compact the trace structures and strings
@@ -80,7 +102,7 @@ Step 1 is complete in commit `de00363bd`:
 Step 2 is complete in the follow-up implementation:
 
 - New `rxc` output uses `.srcstep` whole source lines and no longer emits sticky
-  `.srcfile` for compiler-generated RXAS.
+  `legacy source-file directive` for compiler-generated RXAS.
 - Source-step active ranges remain available for sub-clause stepping, but the
   text payload is the whole authored/source line, including counted-loop,
   bracketed/indexed, and escaped-source cases.
@@ -90,7 +112,7 @@ Step 2 is complete in the follow-up implementation:
 - Inlined source emitted after binary or source import keeps the original callee
   file and source line when available.
 - `signal.crexx` and the transitional shared trace helper read
-  `.meta_source_step` before falling back to old `.meta_src`/`.meta_file`.
+  `.meta_source_step` before falling back to old `.legacy_meta_source_fragment`/`.legacy_meta_source_file`.
 - Codegen goldens treat source metadata as volatile; source metadata coverage is
   now carried by focused source provenance, inline, trace, linker, and native
   source-preservation tests.
@@ -111,7 +133,7 @@ Step 3 is complete in the follow-up implementation:
   strings and constant value references; RXVM `metaloaddata` exposes
   `.meta_trace_event`.
 - Source stripping preserves trace-event metadata. It only removes source
-  metadata (`META_SRC`, `META_FILE`, `META_SOURCE_STEP`).
+  metadata (`legacy source-fragment metadata`, `legacy source-file metadata`, `META_SOURCE_STEP`).
 - Focused round-trip, linker strip/preserve, and VM `metaloaddata` checks
   passed.
 - Full `cmake --build cmake-build-debug` passed.
@@ -120,11 +142,11 @@ Step 3 is complete in the follow-up implementation:
 
 Legacy removal timing:
 
-- New compiler output stopped emitting `.srcfile`/`.src` in step 2.
-- Old `.srcfile`/`.src` RXAS parsing, old `META_SRC`/`META_FILE`
-  disassembly/runtime fallback, and legacy inline `I4` import support should
-  remain until step 5, then be removed or quarantined after trace-event emission
-  and TRACE/RXDB consumers no longer need the compatibility paths.
+- New compiler output stopped emitting `legacy source-file directive`/`legacy source-fragment directive` in step 2.
+- Old source-fragment RXAS parsing, old source-fragment disassembly/runtime
+  fallback, and the compiler-golden volatility filter were removed in step 5
+  after trace-event emission and TRACE/RXDB consumers moved to the structured
+  metadata path.
 
 ## Binary Version
 
@@ -139,7 +161,7 @@ No released compatibility is required for the old beta metadata format.
 ## Source-Step Metadata
 
 Add a self-contained source-step metadata record. It supersedes sticky
-`META_FILE` plus fragment `META_SRC` for compiler-emitted source anchors.
+`legacy source-file metadata` plus fragment `legacy source-fragment metadata` for compiler-emitted source anchors.
 
 Proposed enum addition:
 
@@ -147,7 +169,7 @@ Proposed enum addition:
 enum const_pool_type {
     STRING_CONST, BINARY_CONST, DECIMAL_CONST, FLOAT_CONST, PROC_CONST,
     EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
-    META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR,
+    legacy source-fragment metadata, legacy source-file metadata, META_FUNC, META_REG, META_CONST, META_CLEAR,
     META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER,
     META_INLINE,
     META_SOURCE_STEP,
@@ -228,7 +250,7 @@ Example:
 
 In that example, flags `17` means `AUTHORED | EXACT`.
 
-Keep `.srcfile` and `.src` readable for now so handwritten or existing RXAS can
+Keep `legacy source-file directive` and `legacy source-fragment directive` readable for now so handwritten or existing RXAS can
 still assemble during the transition, but `rxc` should emit `.srcstep` for new
 source anchors.
 
@@ -244,7 +266,7 @@ Disassembler:
 
 - Round-trip `META_SOURCE_STEP` as `.srcstep` with decimal ids/flags and quoted
   pooled strings.
-- Keep old `.srcfile`/`.src` output for old metadata while fallback support
+- Keep old `legacy source-file directive`/`legacy source-fragment directive` output for old metadata while fallback support
   exists.
 
 Linker:
@@ -252,8 +274,8 @@ Linker:
 - Treat `META_SOURCE_STEP` as metadata.
 - Rewrite `file` and `source_line` offsets through the linked shared constant
   pool.
-- Include `META_SOURCE_STEP` in source stripping along with old `META_SRC` and
-  `META_FILE`.
+- Include `META_SOURCE_STEP` in source stripping along with old `legacy source-fragment metadata` and
+  `legacy source-file metadata`.
 - Preserve trace-event metadata under source stripping. If a future strip mode
   is needed for semantic TRACE metadata, add it explicitly rather than folding
   it into source stripping.
@@ -264,7 +286,7 @@ Runtime:
   the address.
 - Runtime panic reporting should show `file:line:active_start` and the whole
   source line from the source-step record.
-- Keep old `META_FILE`/`META_SRC` fallback while old RXAS remains accepted.
+- Keep old `legacy source-file metadata`/`legacy source-fragment metadata` fallback while old RXAS remains accepted.
 
 `metaloaddata` shape for source steps:
 
@@ -474,7 +496,7 @@ Step 1, source-step metadata plumbing:
 3. Add `rxdas` round-trip output.
 4. Add `rxlink` rewrite and source-strip handling.
 5. Add `rxvm` source lookup and `metaloaddata` exposure.
-6. Keep old `.srcfile`/`.src` as fallback during the transition.
+6. Keep old `legacy source-file directive`/`legacy source-fragment directive` as fallback during the transition.
 
 Focused checks:
 
@@ -485,7 +507,7 @@ Focused checks:
 Step 2, compiler source-step emission and inline provenance:
 
 1. Update `rxc` source emitter to emit whole-line self-contained source steps.
-2. Stop new compiler output from depending on sticky `.srcfile`.
+2. Stop new compiler output from depending on sticky `legacy source-file directive`.
 3. Update inline payload source anchors from `I4` to `I5`.
 4. Ensure imported/inlined source steps use original callee file and line.
 5. Add focused tests for simple clauses, counted loops, bracket/indexed

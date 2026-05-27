@@ -1391,27 +1391,6 @@ static size_t add_meta_entry(Assembler_Context *context, size_t entry_size, enum
     return entry_index;
 }
 
-/* Source filename */
-void rxasmefl(Assembler_Context *context, Assembler_Token *file) {
-    size_t entry = add_meta_entry(context,sizeof(meta_file_constant),META_FILE);
-    size_t sentry = add_string_to_pool(context, file, (char*)file->token_value.string);
-
-    /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    ((meta_file_constant*)(context->binary.const_pool + entry))->file = sentry;
-}
-
-/* Source Line */
-void rxasmesr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source) {
-    size_t entry = add_meta_entry(context,sizeof(meta_src_constant),META_SRC);
-    size_t sentry;
-
-    /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    ((meta_src_constant*)(context->binary.const_pool + entry))->line = line->token_value.integer;
-    ((meta_src_constant*)(context->binary.const_pool + entry))->column = column->token_value.integer;
-    sentry = add_string_to_pool(context, source, (char*)source->token_value.string);
-    ((meta_src_constant*)(context->binary.const_pool + entry))->source = sentry;
-}
-
 /* Source Step */
 void rxasmestp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
                Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,

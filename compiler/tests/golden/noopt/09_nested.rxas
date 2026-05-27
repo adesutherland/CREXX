@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 09_nested.crexx
- * BUILT                  : 2026-03-18 11:58:55
+ * BUILT                  : 2026-05-27 17:52:51
  */
 
-.srcfile="09_nested.crexx"
 .globals=0
 
 main() .locals=4
@@ -14,35 +12,43 @@ main() .locals=4
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 3:1="a = 10"
+   .srcstep 1 1 17 "09_nested.crexx" 3 1 7 "a = 10"
    .meta "09_nested.main.a"="b" ".int" r0
    load r0,10
-   .src 4:1="b = 20"
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "a" ""
+   .srcstep 2 2 17 "09_nested.crexx" 4 1 7 "b = 20"
    .meta "09_nested.main.b"="b" ".int" r1
    load r1,20
-   .src 5:0="if a > 5"
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "b" ""
+   .srcstep 9 9 17 "09_nested.crexx" 5 1 9 "if a > 5 then do"
+   .traceevent "V" 6 "R" "I" "r" 0 9 9 0 "a" ""
    igt r2,r0,5
+   .traceevent "O" 4 "R" "B" "r" 2 9 9 0 "" ""
    brf l24iffalse,r2
-   .src 5:10="then"
-   .src 6:4="if b < 30"
+   .srcstep 10 10 17 "09_nested.crexx" 5 10 14 "if a > 5 then do"
+   .srcstep 5 5 17 "09_nested.crexx" 6 5 14 "    if b < 30 then say \"A>5 B<30\""
+   .traceevent "V" 6 "R" "I" "r" 1 5 5 0 "b" ""
    ilt r3,r1,30
+   .traceevent "O" 4 "R" "B" "r" 3 5 5 0 "" ""
    brf l20iffalse,r3
-   .src 6:15="then"
-   .src 6:20="say \"A>5 B<30\""
+   .srcstep 6 6 17 "09_nested.crexx" 6 15 19 "    if b < 30 then say \"A>5 B<30\""
+   .srcstep 3 3 17 "09_nested.crexx" 6 20 34 "    if b < 30 then say \"A>5 B<30\""
    say "A>5 B<30"
    br l20ifend
-   .src 7:5="else"
+   .srcstep 7 7 17 "09_nested.crexx" 7 5 9 "    else say \"A>5 B>=30\""
 l20iffalse:
-   .src 7:10="say \"A>5 B>=30\""
+   .srcstep 4 4 17 "09_nested.crexx" 7 10 25 "    else say \"A>5 B>=30\""
    say "A>5 B>=30"
 l20ifend:
    br l24ifend
-   .src 8:1="end"
+   .srcstep 11 11 17 "09_nested.crexx" 8 1 4 "end"
 l24iffalse:
-   .src 9:6="say \"A<=5\""
+   .srcstep 8 8 17 "09_nested.crexx" 9 6 16 "else say \"A<=5\""
    say "A<=5"
 l24ifend:
-   .src 5:96=""
+   .srcstep 12 12 1 "09_nested.crexx" 5 16 16 "else say \"A<=5\""
    ret
    .meta "09_nested.main.a"
    .meta "09_nested.main.b"

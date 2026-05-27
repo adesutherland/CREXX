@@ -293,7 +293,6 @@ add_crexx_native_test(
 add_crexx_native_test(
         crexx_native_default_link_strip
         rexx_src/explicit_header.crexx
-        EXPECT_DAS_ABSENT ".srcfile="
         EXPECT_DAS_ABSENT ".srcstep"
 )
 add_crexx_native_test(

@@ -83,8 +83,11 @@ Current conservative strip support has two independent axes:
 
 `STRIP SOURCE` removes:
 
-- `META_SRC`
-- `META_FILE`
+- `META_SOURCE_STEP`
+
+`META_TRACE_EVENT` is preserved. It carries compact semantic event/value hints
+and may be useful even when the source file name and source-line text have been
+stripped from the linked image.
 
 Inline-body metadata is different from runtime contract metadata. It is useful
 to libraries consumed by `rxc`, but it is not needed once a final linked image
@@ -130,4 +133,6 @@ images in normal `ctest` coverage. For a focused rerun, use:
 - `ctest -L linked_opt --output-on-failure`
 - `cmake --build <build-dir> --target linked_opt_sweep`
 
-Be conservative with stripping. If a proposed change removes more than `META_SRC` / `META_FILE`, verify both runtime contract lookup and metadata introspection in `rxvm` before assuming it is safe.
+Be conservative with stripping. If a proposed change removes more than
+`META_SOURCE_STEP`, verify both runtime contract lookup and metadata
+introspection in `rxvm` before assuming it is safe.

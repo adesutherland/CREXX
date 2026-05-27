@@ -81,12 +81,9 @@ static CB_NodeType map_c_token_to_cb_type(Assembler_Token *t) {
         case KW_IMPLEMENTS:
         case KW_MEMBER:
         case KW_LOCALS:
-        case KW_SRCFILE:
         case KW_TRACEEVENT:
-        case KW_SRCSTEP:
-        case KW_SRC: return LEXER_PREPROCESSOR; // Directives -> Magenta
+        case KW_SRCSTEP: return LEXER_PREPROCESSOR; // Directives -> Magenta
         case EQUAL: return LEXER_OPERATOR_ASSIGN;
-        case COLON: return LEXER_OPERATOR;
         case COMMA: return LEXER_SEPARATOR;
         case INT:
         case FLOAT:
@@ -298,7 +295,7 @@ int rxas_parser_mode_main(int stdio_mode, int port, const char *file_name, int d
 
     const char *rxas_config = 
         "[.rxas]\n"
-        "keywords=.globals,.expose,.meta,.class,.attr,.locals,.srcfile,.src\n"
+        "keywords=.globals,.expose,.meta,.class,.attr,.interface,.implements,.member,.locals,.srcstep,.traceevent\n"
         "operators=:\n"
         "line_comment=*\n"
         "quotes=\"\n";

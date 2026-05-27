@@ -94,6 +94,24 @@ Source/debug metadata now has two separate identities:
 treat identity as module plus id because ids are only local to their original
 module.
 
+The RXAS spellings are:
+
+```rxas
+.srcstep <step-id> <clause-id> <flags> "<file>" <line> <start-col> <end-col> "<whole-source-line>"
+.traceevent "<kind>" <mode-mask> "<value-source>" "<value-type>" "<register-type>" <value-ref> <source-step-id> <clause-id> <flags> "<symbol>" "<resolved-name>"
+```
+
+TRACE event records deliberately store compact codes, not presentation strings.
+Current event kinds include `A` assignment, `V` variable read, `C` resolved
+compound name, `L` literal, `O` binary operation, `P` prefix operation, `F`
+function result, and `M` message. The TRACE exit handler maps those to classic
+prefixes such as `>=>`, `>V>`, `>C>`, `>L>`, `>O>`, `>P>`, `>F>`, and `+++`.
+The mode mask controls visibility in modes such as Results and Intermediates.
+`value-source` is `R` for a register, `K` for a constant-pool value, or `N`
+when no value is attached. Register-backed events must name an actual available
+register at that address; handlers must not infer values from source text or
+scope metadata.
+
 Metadata-only modules are valid. For example, an interface contract file may
 compile to `.rxas` containing `.meta` records and no function bodies; `rxas`
 must still emit a `.rxbin` so import and runtime factory resolution can load

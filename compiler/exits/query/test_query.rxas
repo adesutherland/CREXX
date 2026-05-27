@@ -3,26 +3,19 @@
  * SOURCE                 : test_query.crexx
  * BUILT                  : 2026-02-23 16:51:10
  */
-
-.srcfile="test_query.crexx"
 .globals=0
 
 main() .locals=5
    .meta "test_query.main"="b" ".void" main() ""
-   .src 4:1="main: procedure"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 5:1="say \"Testing query exit...\""
    say "Testing query exit..."
-   .src 2:13="="
    .meta "test_query.main._q_info"="b" ".string" r0
    load r0,""
-   .src 2:29="rxvers"
    rxvers r0
-   .src 2:45="say"
    load r1,2
    load r3,3
    settp r0,256
@@ -31,11 +24,8 @@ main() .locals=5
    swap r0,r2
    concat r4,"cREXX Version ",r4
    say r4
-   .src 2:13="="
    load r0,""
-   .src 2:29="rxvers"
    rxvers r0
-   .src 2:45="say"
    load r2,2
    load r4,1
    settp r0,256
@@ -44,7 +34,6 @@ main() .locals=5
    swap r0,r3
    concat r4,"OS: ",r1
    say r4
-   .src 10:1="return"
    ret
    .meta "test_query.main._q_info"
 

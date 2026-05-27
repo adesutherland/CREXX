@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : div_ops_classic.crexx
- * BUILT                  : 2026-03-24 16:14:55
+ * BUILT                  : 2026-05-27 17:52:46
  */
 
-.srcfile="div_ops_classic.crexx"
 .globals=0
 
 main() .locals=0
@@ -14,11 +12,11 @@ main() .locals=0
    setnumfrm 1
    setnumcas 1
    setnumstd 2
-   .src 5:1="say res"
+   .srcstep 1 1 17 "div_ops_classic.crexx" 5 1 8 "say res"
    .meta "div_ops_classic.main.gap"="b" ".int" "101"
    .meta "div_ops_classic.main.res"="b" ".float" "50.5"
    say "50.5"
-   .src 5:8=""
+   .srcstep 2 2 1 "div_ops_classic.crexx" 5 8 8 "say res"
    ret
    .meta "div_ops_classic.main.gap"
    .meta "div_ops_classic.main.res"

@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : test_select_classic.crexx
- * BUILT                  : 2026-03-18 17:38:40
+ * BUILT                  : 2026-05-27 17:52:50
  */
 
-.srcfile="test_select_classic.crexx"
 .globals=0
 
 main() .locals=0
@@ -14,24 +12,24 @@ main() .locals=0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 7:20="say \"Ten\""
+   .srcstep 1 1 17 "test_select_classic.crexx" 7 20 29 "  when a = 10 then say \"Ten\""
    .meta "test_select_classic.main.a"="b" ".int" "10"
    say "Ten"
-   .src 14:13="say \"Other Same Line\""
+   .srcstep 2 2 17 "test_select_classic.crexx" 14 13 34 "  otherwise say \"Other Same Line\""
    say "Other Same Line"
-   .src 20:5="say \"Other1\""
+   .srcstep 3 3 17 "test_select_classic.crexx" 20 5 17 "    say \"Other1\""
    say "Other1"
-   .src 21:5="say \"Other2\""
+   .srcstep 4 4 17 "test_select_classic.crexx" 21 5 17 "    say \"Other2\""
    say "Other2"
-   .src 27:5="say \"Other in Do\""
+   .srcstep 5 5 17 "test_select_classic.crexx" 27 5 22 "    say \"Other in Do\""
    say "Other in Do"
-   .src 42:23="say \"Nested 5\""
+   .srcstep 6 6 17 "test_select_classic.crexx" 42 23 37 "      when b = 5 then say \"Nested 5\""
    .meta "test_select_classic.main.b"="b" ".int" "5"
    say "Nested 5"
-   .src 54:5="say \"Scope: \" scope_var"
+   .srcstep 7 7 17 "test_select_classic.crexx" 54 5 28 "    say \"Scope: \" scope_var"
    .meta "test_select_classic.main.scope_var"="b" ".int" "42"
    say "Scope:  42"
-   .src 50:127=""
+   .srcstep 8 8 1 "test_select_classic.crexx" 50 24 24 "  otherwise say \"Other\""
    ret
    .meta "test_select_classic.main.a"
    .meta "test_select_classic.main.b"

@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 11_scope.crexx
- * BUILT                  : 2026-04-29 14:21:08
+ * BUILT                  : 2026-05-27 17:52:53
  */
 
-.srcfile="11_scope.crexx"
 .globals=0
 
 main() .locals=0
@@ -14,12 +12,12 @@ main() .locals=0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:1="call Inner"
-   .src 11:3="say \"Inner A is\" a"
+   .srcstep 2 2 17 "11_scope.crexx" 4 1 11 "call Inner"
+   .srcstep 1 1 17 "11_scope.crexx" 11 3 21 "  say \"Inner A is\" a"
    say "Inner A is 10"
-   .src 5:16="say \"Outer A Preserved\""
+   .srcstep 3 3 17 "11_scope.crexx" 5 16 39 "if a = 50 then say \"Outer A Preserved\""
    .meta "11_scope.main.a"="b" ".int" "50"
    say "Outer A Preserved"
-   .src 7:1="return"
+   .srcstep 4 4 17 "11_scope.crexx" 7 1 7 "return"
    ret
    .meta "11_scope.main.a"

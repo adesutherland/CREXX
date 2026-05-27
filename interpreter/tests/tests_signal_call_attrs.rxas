@@ -2,12 +2,11 @@
  * CREXX Interpreter test for SIGCALL interrupt argument attributes.
  */
 
-.srcfile="signal_attrs.rexx"
 .globals=0
 
 main() .locals=0
     sigcall attr_handler(),"OTHER"
-    .src 10:5="signal other"
+    .srcstep 1 1 17 "signal_attrs.rexx" 10 5 16 "signal other"
     signal "OTHER","attr payload"
     ret 0
 
@@ -28,7 +27,7 @@ attr_handler() .locals=8
 
     metaloaddata r5,r1,r2
     linkattr1 r6,r5,1
-    linkattr1 r7,r6,3
+    linkattr1 r7,r6,8
     sayx "attr-source: "
     say r7
     ret

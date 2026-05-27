@@ -1,117 +1,139 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_return_expr.crexx
- * BUILT                  : 2026-04-30 16:47:31
+ * BUILT                  : 2026-05-27 17:53:54
  */
 
-.srcfile="inline_test_array_return_expr.crexx"
 .globals=0
 
 main() .locals=20
    .meta "inline_test_array_return_expr.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 28 28 17 "inline_test_array_return_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting array return expr inline test...\""
+   .srcstep 1 1 17 "inline_test_array_return_expr.crexx" 4 3 50 "  say \"Starting array return expr inline test...\""
    say "Starting array return expr inline test..."
-   .src 5:3="say renderArray(buildArray(\"red\", \"blue\"))"
-   .src 5:7="renderArray"
+   .srcstep 13 13 17 "inline_test_array_return_expr.crexx" 5 3 45 "  say renderArray(buildArray(\"red\", \"blue\"))"
+   .srcstep 12 12 17 "inline_test_array_return_expr.crexx" 5 7 18 "  say renderArray(buildArray(\"red\", \"blue\"))"
    .meta "inline_test_array_return_expr.main.__inline_bind_73_0"="b" ".string[*]" r3
-   .src 5:19="buildArray"
+   .srcstep 2 2 33 "inline_test_array_return_expr.crexx" 5 19 29 "  say renderArray(buildArray(\"red\", \"blue\"))"
    null r3
-   .src 5:19="buildArray"
-   .src 5:19="buildArray"
+   .srcstep 8 8 33 "inline_test_array_return_expr.crexx" 5 19 29 "  say renderArray(buildArray(\"red\", \"blue\"))"
+   .srcstep 7 7 17 "inline_test_array_return_expr.crexx" 5 19 29 "  say renderArray(buildArray(\"red\", \"blue\"))"
    .meta "inline_test_array_return_expr.main.temp"="b" ".string[*]" r5
-   .src 12:3="temp = .string"
+   .srcstep 3 3 17 "inline_test_array_return_expr.crexx" 12 3 17 "  temp = .string[]"
    null r5
-   .src 13:3="temp[1] = left"
+   .srcstep 4 4 17 "inline_test_array_return_expr.crexx" 13 3 17 "  temp[1] = left"
    minattrs r5,1
    linkattr1 r12,r5,1
    load r13,"red"
+   .traceevent "L" 4 "R" "S" "r" 13 4 4 0 "" ""
    scopy r12,r13
+   .traceevent "A" 6 "R" "S" "r" 12 4 4 0 "temp" ""
    unlink r12
-   .src 14:3="temp[2] = right"
+   .srcstep 5 5 17 "inline_test_array_return_expr.crexx" 14 3 18 "  temp[2] = right"
    minattrs r5,2
    linkattr1 r12,r5,2
    load r14,"blue"
+   .traceevent "L" 4 "R" "S" "r" 14 5 5 0 "" ""
    scopy r12,r14
+   .traceevent "A" 6 "R" "S" "r" 12 5 5 0 "temp" ""
    unlink r12
-   .src 15:3="return temp"
+   .srcstep 6 6 17 "inline_test_array_return_expr.crexx" 15 3 14 "  return temp"
+   .traceevent "V" 6 "R" "S" "r" 5 8 8 0 "temp" ""
    copy r12,r5
    acopy r12,r5
    br l103bexprend
 l103bexprend:
    copy r3,r12
    acopy r3,r12
-   .src 18:7="value"
+   .traceevent "A" 6 "R" "S" "r" 3 8 8 0 "__inline_bind_73_0" ""
+   .srcstep 9 9 6 "inline_test_array_return_expr.crexx" 18 7 12 "  arg value = .string[]"
+   .traceevent "V" 6 "R" "S" "r" 3 13 13 0 "__inline_bind_73_0" ""
    copy r4,r3
-   .src 18:7="value"
+   .srcstep 10 10 6 "inline_test_array_return_expr.crexx" 18 7 12 "  arg value = .string[]"
+   .traceevent "V" 6 "R" "S" "r" 3 13 13 0 "__inline_bind_73_0" ""
    acopy r4,r3
-   .src 19:3="return value[1] || \":\" || value[2"
+   .srcstep 11 11 17 "inline_test_array_return_expr.crexx" 19 3 36 "  return value[1] || \":\" || value[2]"
    minattrs r4,1
    linkattr1 r12,r4,1
+   .traceevent "V" 6 "R" "S" "r" 12 13 13 0 "value" ""
    concat r15,r12,":"
    unlink r12
+   .traceevent "O" 4 "R" "S" "r" 15 13 13 0 "" ""
    minattrs r4,2
    linkattr1 r16,r4,2
+   .traceevent "V" 6 "R" "S" "r" 16 13 13 0 "value" ""
    concat r15,r15,r16
    unlink r16
+   .traceevent "O" 4 "R" "S" "r" 15 13 13 0 "" ""
    scopy r16,r15
    acopy r16,r15
    br l97bexprend
 l97bexprend:
    say r16
-   .src 6:3="say renderArray(buildArray(\"green\", \"gold\"))"
-   .src 6:7="renderArray"
+   .srcstep 25 25 17 "inline_test_array_return_expr.crexx" 6 3 47 "  say renderArray(buildArray(\"green\", \"gold\"))"
+   .srcstep 24 24 17 "inline_test_array_return_expr.crexx" 6 7 18 "  say renderArray(buildArray(\"green\", \"gold\"))"
    .meta "inline_test_array_return_expr.main.__inline_bind_142_0"="b" ".string[*]" r9
-   .src 6:19="buildArray"
+   .srcstep 14 14 33 "inline_test_array_return_expr.crexx" 6 19 29 "  say renderArray(buildArray(\"green\", \"gold\"))"
    null r9
-   .src 6:19="buildArray"
-   .src 6:19="buildArray"
+   .srcstep 20 20 33 "inline_test_array_return_expr.crexx" 6 19 29 "  say renderArray(buildArray(\"green\", \"gold\"))"
+   .srcstep 19 19 17 "inline_test_array_return_expr.crexx" 6 19 29 "  say renderArray(buildArray(\"green\", \"gold\"))"
    .meta "inline_test_array_return_expr.main.temp"="b" ".string[*]" r11
-   .src 12:3="temp = .string"
+   .srcstep 15 15 17 "inline_test_array_return_expr.crexx" 12 3 17 "  temp = .string[]"
    null r11
-   .src 13:3="temp[1] = left"
+   .srcstep 16 16 17 "inline_test_array_return_expr.crexx" 13 3 17 "  temp[1] = left"
    minattrs r11,1
    linkattr1 r16,r11,1
    load r12,"green"
+   .traceevent "L" 4 "R" "S" "r" 12 16 16 0 "" ""
    scopy r16,r12
+   .traceevent "A" 6 "R" "S" "r" 16 16 16 0 "temp" ""
    unlink r16
-   .src 14:3="temp[2] = right"
+   .srcstep 17 17 17 "inline_test_array_return_expr.crexx" 14 3 18 "  temp[2] = right"
    minattrs r11,2
    linkattr1 r16,r11,2
    load r17,"gold"
+   .traceevent "L" 4 "R" "S" "r" 17 17 17 0 "" ""
    scopy r16,r17
+   .traceevent "A" 6 "R" "S" "r" 16 17 17 0 "temp" ""
    unlink r16
-   .src 15:3="return temp"
+   .srcstep 18 18 17 "inline_test_array_return_expr.crexx" 15 3 14 "  return temp"
+   .traceevent "V" 6 "R" "S" "r" 11 20 20 0 "temp" ""
    copy r16,r11
    acopy r16,r11
    br l172bexprend
 l172bexprend:
    copy r9,r16
    acopy r9,r16
-   .src 18:7="value"
+   .traceevent "A" 6 "R" "S" "r" 9 20 20 0 "__inline_bind_142_0" ""
+   .srcstep 21 21 6 "inline_test_array_return_expr.crexx" 18 7 12 "  arg value = .string[]"
+   .traceevent "V" 6 "R" "S" "r" 9 25 25 0 "__inline_bind_142_0" ""
    copy r10,r9
-   .src 18:7="value"
+   .srcstep 22 22 6 "inline_test_array_return_expr.crexx" 18 7 12 "  arg value = .string[]"
+   .traceevent "V" 6 "R" "S" "r" 9 25 25 0 "__inline_bind_142_0" ""
    acopy r10,r9
-   .src 19:3="return value[1] || \":\" || value[2"
+   .srcstep 23 23 17 "inline_test_array_return_expr.crexx" 19 3 36 "  return value[1] || \":\" || value[2]"
    minattrs r10,1
    linkattr1 r16,r10,1
+   .traceevent "V" 6 "R" "S" "r" 16 25 25 0 "value" ""
    concat r18,r16,":"
    unlink r16
+   .traceevent "O" 4 "R" "S" "r" 18 25 25 0 "" ""
    minattrs r10,2
    linkattr1 r19,r10,2
+   .traceevent "V" 6 "R" "S" "r" 19 25 25 0 "value" ""
    concat r18,r18,r19
    unlink r19
+   .traceevent "O" 4 "R" "S" "r" 18 25 25 0 "" ""
    scopy r19,r18
    acopy r19,r18
    br l166bexprend
 l166bexprend:
    say r19
-   .src 7:3="say \"Array return expr inline test finished.\""
+   .srcstep 26 26 17 "inline_test_array_return_expr.crexx" 7 3 48 "  say \"Array return expr inline test finished.\""
    say "Array return expr inline test finished."
-   .src 8:3="return 0"
+   .srcstep 27 27 17 "inline_test_array_return_expr.crexx" 8 3 11 "  return 0"
    ret 0

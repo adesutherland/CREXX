@@ -1,39 +1,41 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_object_return_expr.crexx
- * BUILT                  : 2026-04-30 20:04:09
+ * BUILT                  : 2026-05-27 17:53:57
  */
 
 .meta "inline_test_object_return_expr.box"="b" ".unknown" .class
 .meta "inline_test_object_return_expr.box.name"="b" ".string" .attr 1
-.srcfile="inline_test_object_return_expr.crexx"
 .globals=0
 
 main() .locals=16
    .meta "inline_test_object_return_expr.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 20 20 17 "inline_test_object_return_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting object return expr inline test...\""
+   .srcstep 1 1 17 "inline_test_object_return_expr.crexx" 4 3 51 "  say \"Starting object return expr inline test...\""
    say "Starting object return expr inline test..."
-   .src 5:3="say describeBox(buildBox(\"seed\"))"
-   .src 5:19="buildBox"
-   .src 12:3="value = .Box(initial)"
-   .src 22:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   .srcstep 9 9 17 "inline_test_object_return_expr.crexx" 5 3 36 "  say describeBox(buildBox(\"seed\"))"
+   .srcstep 8 8 17 "inline_test_object_return_expr.crexx" 5 19 27 "  say describeBox(buildBox(\"seed\"))"
+   .srcstep 6 6 17 "inline_test_object_return_expr.crexx" 12 3 24 "  value = .Box(initial)"
+   .srcstep 2 2 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
    setattrs r1,2
-   .src 22:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   .srcstep 3 3 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
    setobjtype r1,"inline_test_object_return_expr.box"
-   .src 24:5="name = initial"
+   .srcstep 4 4 17 "inline_test_object_return_expr.crexx" 24 5 19 "    name = initial"
    load r13,"seed"
+   .traceevent "L" 4 "R" "S" "r" 13 4 4 0 "" ""
    linkattr1 r12,r1,1
    scopy r12,r13
    unlink r12
-   .src 25:5="return"
+   .srcstep 5 5 33 "inline_test_object_return_expr.crexx" 25 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "§factory" ""
    copy r0,r1
-   .src 13:3="return value"
+   .traceevent "A" 6 "R" "O" "r" 0 5 5 0 "value" ""
+   .srcstep 7 7 17 "inline_test_object_return_expr.crexx" 13 3 15 "  return value"
+   .traceevent "V" 6 "R" "O" "r" 0 9 9 0 "value" ""
    copy r12,r0
    acopy r12,r0
    br l73bexprend
@@ -43,22 +45,27 @@ l73bexprend:
    swap r11,r12
    call r14,describeBox(),r10
    swap r12,r11
+   .traceevent "F" 4 "R" "S" "r" 14 9 9 0 "describebox" ""
    say r14
-   .src 6:3="say describeBox(buildBox(\"temp\"))"
-   .src 6:19="buildBox"
-   .src 12:3="value = .Box(initial)"
-   .src 22:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   .srcstep 17 17 17 "inline_test_object_return_expr.crexx" 6 3 36 "  say describeBox(buildBox(\"temp\"))"
+   .srcstep 16 16 17 "inline_test_object_return_expr.crexx" 6 19 27 "  say describeBox(buildBox(\"temp\"))"
+   .srcstep 14 14 17 "inline_test_object_return_expr.crexx" 12 3 24 "  value = .Box(initial)"
+   .srcstep 10 10 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
    setattrs r4,2
-   .src 22:3="*: factory\n    arg initial = .string\n    name = initial\n    return"
+   .srcstep 11 11 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
    setobjtype r4,"inline_test_object_return_expr.box"
-   .src 24:5="name = initial"
+   .srcstep 12 12 17 "inline_test_object_return_expr.crexx" 24 5 19 "    name = initial"
    load r11,"temp"
+   .traceevent "L" 4 "R" "S" "r" 11 12 12 0 "" ""
    linkattr1 r12,r4,1
    scopy r12,r11
    unlink r12
-   .src 25:5="return"
+   .srcstep 13 13 33 "inline_test_object_return_expr.crexx" 25 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 4 13 13 0 "§factory" ""
    copy r3,r4
-   .src 13:3="return value"
+   .traceevent "A" 6 "R" "O" "r" 3 13 13 0 "value" ""
+   .srcstep 15 15 17 "inline_test_object_return_expr.crexx" 13 3 15 "  return value"
+   .traceevent "V" 6 "R" "O" "r" 3 17 17 0 "value" ""
    copy r12,r3
    acopy r12,r3
    br l86bexprend
@@ -68,28 +75,32 @@ l86bexprend:
    swap r15,r12
    call r10,describeBox(),r14
    swap r12,r15
+   .traceevent "F" 4 "R" "S" "r" 10 17 17 0 "describebox" ""
    say r10
-   .src 7:3="say \"Object return expr inline test finished.\""
+   .srcstep 18 18 17 "inline_test_object_return_expr.crexx" 7 3 49 "  say \"Object return expr inline test finished.\""
    say "Object return expr inline test finished."
-   .src 8:3="return 0"
+   .srcstep 19 19 17 "inline_test_object_return_expr.crexx" 8 3 11 "  return 0"
    ret 0
 
 describeBox() .locals=4
    .meta "inline_test_object_return_expr.describebox"="b" ".string" describeBox() "value=.box"
-   .src 15:1="describeBox: procedure = .string"
+   .srcstep 34 34 17 "inline_test_object_return_expr.crexx" 15 1 33 "describeBox: procedure = .string"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 16:7="value = .Box"
+   .srcstep 29 29 17 "inline_test_object_return_expr.crexx" 16 7 19 "  arg value = .Box"
    .meta "inline_test_object_return_expr.describebox.value"="b" ".box" a1
-   .src 17:3="return value.getName"
-   .src 17:10="value"
-   .src 17:10="value"
+   .srcstep 33 33 17 "inline_test_object_return_expr.crexx" 17 3 23 "  return value.getName()"
+   .srcstep 32 32 17 "inline_test_object_return_expr.crexx" 17 10 15 "  return value.getName()"
+   .srcstep 30 30 33 "inline_test_object_return_expr.crexx" 17 10 15 "  return value.getName()"
+   .traceevent "V" 6 "R" "O" "a" 1 30 30 0 "value" ""
    copy r1,a1
-   .src 28:5="return name"
+   .traceevent "A" 6 "R" "O" "r" 1 30 30 0 "§this" ""
+   .srcstep 31 31 17 "inline_test_object_return_expr.crexx" 28 5 16 "    return name"
    linkattr1 r2,r1,1
+   .traceevent "V" 6 "R" "S" "r" 2 33 33 0 "name" ""
    scopy r3,r2
    acopy r3,r2
    unlink r2
@@ -100,7 +111,7 @@ l115bexprend:
 
 §inline_test_object_return_expr.box.§factory() .locals=3
    .meta "inline_test_object_return_expr.box.§factory"="b" ".box" §inline_test_object_return_expr.box.§factory() "initial=.string"
-   .src 22:3="*: factory"
+   .srcstep 38 38 17 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_return_expr.box"
    setnumdgts 18
@@ -108,28 +119,31 @@ l115bexprend:
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 23:9="initial = .string"
+   .srcstep 35 35 17 "inline_test_object_return_expr.crexx" 23 9 26 "    arg initial = .string"
    .meta "inline_test_object_return_expr.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_object_return_expr.box.§factory.§factory"="b" ".box" r1
-   .src 24:5="name = initial"
+   .srcstep 36 36 17 "inline_test_object_return_expr.crexx" 24 5 19 "    name = initial"
+   .traceevent "V" 6 "R" "S" "a" 1 36 36 0 "initial" ""
    linkattr1 r2,r1,1
    scopy r2,a1
    unlink r2
-   .src 25:5="return"
+   .srcstep 37 37 17 "inline_test_object_return_expr.crexx" 25 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 37 37 0 "§factory" ""
    ret r1
    .meta "inline_test_object_return_expr.box.§factory.initial"
    .meta "inline_test_object_return_expr.box.§factory.§factory"
 
 §inline_test_object_return_expr.box.getname() .locals=2
    .meta "inline_test_object_return_expr.box.getname"="b" ".string" §inline_test_object_return_expr.box.getname() ""
-   .src 27:3="getName: method = .string"
+   .srcstep 40 40 17 "inline_test_object_return_expr.crexx" 27 3 28 "  getName: method = .string"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 28:5="return name"
+   .srcstep 39 39 17 "inline_test_object_return_expr.crexx" 28 5 16 "    return name"
    .meta "inline_test_object_return_expr.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1
+   .traceevent "V" 6 "R" "S" "r" 1 39 39 0 "name" ""
    ret r1
    .meta "inline_test_object_return_expr.box.getname.§this"

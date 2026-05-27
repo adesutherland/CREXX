@@ -1,30 +1,37 @@
 /*
- * cREXX COMPILER VERSION : cREXX F0044
  * SOURCE                 : hellodate.crexx
- * BUILT                  : 2023-03-05 00:29:57
+ * BUILT                  : 2026-05-27 18:03:17
  */
 
-.srcfile="hellodate.crexx"
 .globals=0
 
-main() .locals=8
-   .meta "hellodate.crexx.main"="b" ".int" main() ""
-   .src 4:1="say 'hello cRexx world!'"
+main() .locals=7
+   .meta "hellodate.main"="b" ".int" main() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 1 1 17 "hellodate.crexx" 4 1 25 "say 'hello cRexx world!'"
    say "hello cRexx world!"
-   .src 5:1="say 'today is a' date('w')"
-   load r1,5
-   load r2,"w"
-   settp r2,768
+   .srcstep 2 2 17 "hellodate.crexx" 5 1 27 "say 'today is a' date('w')"
+   load r1,"w"
+   .traceevent "L" 4 "R" "S" "r" 1 2 2 0 "" ""
+   load r0,5
+   settp r1,768
+   settp r2,512
    settp r3,512
    settp r4,512
    settp r5,512
-   settp r6,512
-   call r7,date(),r1
-   sconcat r7,"today is a",r7
-   say r7
-   .src 6:1="return 0"
+   call r6,rxfnsb.date(),r0
+   .traceevent "F" 4 "R" "S" "r" 6 2 2 0 "date" ""
+   sconcat r6,"today is a",r6
+   .traceevent "O" 4 "R" "S" "r" 6 2 2 0 "" ""
+   say r6
+   .srcstep 3 3 17 "hellodate.crexx" 6 1 9 "return 0"
    ret 0
 
-/* Imported Declaration from file: hellodate.crexx */
-date() .expose=rxfnsb.date
-   .meta "rxfnsb.date"="b" ".string" date() "oformat = \"\" , idate = \"\" , iformat = \"\" , osep = \"\" , isep = \"\""
+/* Imported Declaration from file: date@library.rxbin */
+
+rxfnsb.date() .expose=rxfnsb.date
+   .meta "rxfnsb.date"="b" ".string" rxfnsb.date() "?oformat=.string,?idate=.string,?iformat=.string,?osep=.string,?isep=.string"

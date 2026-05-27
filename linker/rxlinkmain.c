@@ -908,8 +908,6 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
 
 static int is_meta_constant_type(enum const_pool_type type) {
     switch (type) {
-        case META_SRC:
-        case META_FILE:
         case META_SOURCE_STEP:
         case META_TRACE_EVENT:
         case META_FUNC:
@@ -929,7 +927,7 @@ static int is_meta_constant_type(enum const_pool_type type) {
 }
 
 static int should_strip_meta_constant(const rxlink_build_context *context, enum const_pool_type type) {
-    if (context->strip_source_metadata && (type == META_SRC || type == META_FILE || type == META_SOURCE_STEP)) return 1;
+    if (context->strip_source_metadata && type == META_SOURCE_STEP) return 1;
     if (context->strip_inline_metadata && type == META_INLINE) return 1;
     return 0;
 }
@@ -938,24 +936,6 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
                                  module_file *input_module, chameleon_constant *entry,
                                  size_t new_offset, int prev_offset, int next_offset, int *ok) {
     switch (entry->type) {
-        case META_SRC: {
-            meta_src_constant *source = (meta_src_constant *)entry;
-            size_t source_offset = link_constant_offset(context, output_module, input_module, source->source, ok);
-            meta_src_constant *meta = (meta_src_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev_offset;
-            meta->base.next = next_offset;
-            meta->source = source_offset;
-            return *ok;
-        }
-        case META_FILE: {
-            meta_file_constant *source = (meta_file_constant *)entry;
-            size_t file_offset = link_constant_offset(context, output_module, input_module, source->file, ok);
-            meta_file_constant *meta = (meta_file_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev_offset;
-            meta->base.next = next_offset;
-            meta->file = file_offset;
-            return *ok;
-        }
         case META_SOURCE_STEP: {
             meta_source_step_constant *source = (meta_source_step_constant *)entry;
             size_t file_offset = link_constant_offset(context, output_module, input_module, source->file, ok);
@@ -1259,8 +1239,6 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
             proc->procedure = procedure;
             break;
         }
-        case META_SRC:
-        case META_FILE:
         case META_SOURCE_STEP:
         case META_TRACE_EVENT:
         case META_FUNC:

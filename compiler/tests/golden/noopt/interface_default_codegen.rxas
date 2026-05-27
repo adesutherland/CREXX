@@ -1,7 +1,6 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : interface_default_codegen.crexx
- * BUILT                  : 2026-04-30 20:04:05
+ * BUILT                  : 2026-05-27 17:54:58
  */
 
 .meta "interface_default_codegen.box"="b" ".unknown" .class
@@ -11,71 +10,78 @@
 .meta "interface_default_codegen.shape"="method final" "prefix" ".string" "" .member
 .meta "interface_default_codegen.shape"="method" "summary" ".string" "" .member
 .meta "interface_default_codegen.shape"="factory" "*" ".shape" "" .member
-.srcfile="interface_default_codegen.crexx"
 .globals=0
 
 main() .locals=3
    .meta "interface_default_codegen.main"="b" ".void" main() ""
-   .src 4:1="main: procedure"
+   .srcstep 3 3 17 "interface_default_codegen.crexx" 4 1 16 "main: procedure"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 5:3="say .box().describe"
+   .srcstep 1 1 17 "interface_default_codegen.crexx" 5 3 22 "  say .box().describe()"
    load r2,0
    call r1,§interface_default_codegen.box.§factory(),r2
+   .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "§factory" ""
    load r0,1
    settp r1,256
    srcmethod r2,r1,"describe"
    dcall r2,r2,r0
+   .traceevent "F" 4 "R" "S" "r" 2 1 1 0 "describe" ""
    say r2
-   .src 6:3="return"
+   .srcstep 2 2 17 "interface_default_codegen.crexx" 6 3 9 "  return"
    ret
 
 §interface_default_codegen.shape.describe() .locals=5
    .meta "interface_default_codegen.shape.describe"="b" ".string" §interface_default_codegen.shape.describe() ""
-   .src 10:3="describe: method = .string"
+   .srcstep 5 5 17 "interface_default_codegen.crexx" 10 3 29 "  describe: method = .string"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 11:5="return prefix() || \":\" || summary"
+   .srcstep 4 4 17 "interface_default_codegen.crexx" 11 5 38 "    return prefix() || \":\" || summary()"
    .meta "interface_default_codegen.shape.describe.§this"="b" ".shape" a1
+   .traceevent "V" 6 "R" "O" "a" 1 4 4 0 "§this" ""
    load r1,1
    settp a1,256
    swap r2,a1
    srcmethod r3,r2,"prefix"
    dcall r3,r3,r1
    swap a1,r2
+   .traceevent "F" 4 "R" "S" "r" 3 4 4 0 "prefix" ""
    concat r3,r3,":"
+   .traceevent "O" 4 "R" "S" "r" 3 4 4 0 "" ""
+   .traceevent "V" 6 "R" "O" "a" 1 4 4 0 "§this" ""
    load r1,1
    settp a1,256
    swap r2,a1
    srcmethod r4,r2,"summary"
    dcall r4,r4,r1
    swap a1,r2
+   .traceevent "F" 4 "R" "S" "r" 4 4 4 0 "summary" ""
    concat r4,r3,r4
+   .traceevent "O" 4 "R" "S" "r" 4 4 4 0 "" ""
    ret r4
    .meta "interface_default_codegen.shape.describe.§this"
 
 §interface_default_codegen.shape.prefix() .locals=1
    .meta "interface_default_codegen.shape.prefix"="b" ".string" §interface_default_codegen.shape.prefix() ""
-   .src 12:3="prefix: method = .string"
+   .srcstep 7 7 17 "interface_default_codegen.crexx" 12 3 27 "  prefix: method = .string"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 13:5="return \"iface\""
+   .srcstep 6 6 17 "interface_default_codegen.crexx" 13 5 19 "    return \"iface\""
    .meta "interface_default_codegen.shape.prefix.§this"="b" ".shape" a1
    ret "iface"
    .meta "interface_default_codegen.shape.prefix.§this"
 
 §interface_default_codegen.box.§factory() .locals=1
    .meta "interface_default_codegen.box.§factory"="b" ".box" §interface_default_codegen.box.§factory() ""
-   .src 17:3="*: factory"
+   .srcstep 9 9 17 "interface_default_codegen.crexx" 17 3 13 "  *: factory"
    setattrs r0,0
    setobjtype r0,"interface_default_codegen.box"
    setnumdgts 18
@@ -83,31 +89,32 @@ main() .locals=3
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 18:5="return"
+   .srcstep 8 8 17 "interface_default_codegen.crexx" 18 5 11 "    return"
    .meta "interface_default_codegen.box.§factory.§factory"="b" ".box" r0
+   .traceevent "V" 6 "R" "O" "r" 0 8 8 0 "§factory" ""
    ret r0
    .meta "interface_default_codegen.box.§factory.§factory"
 
 §interface_default_codegen.box.§match() .locals=0
    .meta "interface_default_codegen.box.§match"="b" ".int" §interface_default_codegen.box.§match() ""
-   .src 20:3="*: match"
+   .srcstep 11 11 17 "interface_default_codegen.crexx" 20 3 11 "  *: match"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 21:5="return 10"
+   .srcstep 10 10 17 "interface_default_codegen.crexx" 21 5 14 "    return 10"
    ret 10
 
 §interface_default_codegen.box.summary() .locals=1
    .meta "interface_default_codegen.box.summary"="b" ".string" §interface_default_codegen.box.summary() ""
-   .src 23:3="summary: method = .string"
+   .srcstep 13 13 17 "interface_default_codegen.crexx" 23 3 28 "  summary: method = .string"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 24:5="return \"box\""
+   .srcstep 12 12 17 "interface_default_codegen.crexx" 24 5 17 "    return \"box\""
    .meta "interface_default_codegen.box.summary.§this"="b" ".box" a1
    ret "box"
    .meta "interface_default_codegen.box.summary.§this"

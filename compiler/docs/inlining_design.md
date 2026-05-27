@@ -353,10 +353,10 @@ residual function calls, member/factory calls, class contracts, and any later
 debugging or tooling use.
 
 The constant pool is the right long-term carrier for this data. `rxas` already
-turns `.srcfile`, `.src`, and `.meta` directives into linked metadata records,
-and `rxlink` already rewrites, preserves, and strips those records by kind.
-Inline metadata extends that path rather than introducing a separate binary
-side channel. The RXAS source spelling is:
+turns `.srcstep`, `.traceevent`, and `.meta` directives into linked metadata
+records, and `rxlink` already rewrites, preserves, and strips those records by
+kind. Inline metadata extends that path rather than introducing a separate
+binary side channel. The RXAS source spelling is:
 
 ```rxas
 .meta "fully.qualified.callable"=".inline" "I4;..."
@@ -369,18 +369,18 @@ Any later binary packing layer must be justified by measured size, validation,
 or round-trip needs rather than by assumption.
 
 Existing source metadata can be leveraged, but not by reverse-mapping old
-instruction addresses. `META_SRC` and `META_FILE` are address-stamped after
-assembly; an imported inline body is re-emitted at new addresses in a different
-caller. The portable unit is therefore the AST source anchor:
+instruction addresses. `META_SOURCE_STEP` is address-stamped after assembly; an
+imported inline body is re-emitted at new addresses in a different caller. The
+portable unit is therefore the AST source anchor:
 
 - source file identity
-- line and column
-- source text/span used for the `.src` payload
+- line and active column range
+- whole source line used for the `.srcstep` payload
 - source provenance, such as exact, inherited, synthetic, composite, or stripped
 
 When an inline body is imported, the reader should restore those source anchors
-onto the reconstructed AST. Normal code emission can then emit fresh `.srcfile`
-and `.src` directives at the new instruction addresses, and `rxas` can continue
+onto the reconstructed AST. Normal code emission can then emit fresh
+`.srcstep` directives at the new instruction addresses, and `rxas` can continue
 to populate the constant pool through its existing metadata machinery. This
 keeps panic reports, tracing, and debugging tied to the original inlined source
 without treating old instruction addresses as stable.
@@ -458,7 +458,7 @@ means absent or zero-dimensional.
 ```text
 I4
 ;f,<file-id>,<hex-source-file-name>
-;u,<source-id>,<file-id|-1>,<line>,<column>,<SourceProvenance>,<hex-source-text>
+;u,<source-id>,<file-id|-1>,<line>,<active-start-column>,<active-end-column>,<SourceProvenance>,<hex-whole-source-line>
 ;q,<scope-id>,<parent-scope-id|-1>,<ScopeType>
 ;s,<symbol-id>,<scope-id>,<hex-name>,<SymbolKind>,<ValueType>,<dims>,<dim-base-list>,<dim-elements-list>,<hex-class>,<flags>,<register-type>,<register-number>
 ;d,<dependency-id>,<hex-fully-qualified-callable>,<hex-return-type>,<hex-arg-signature>
@@ -507,10 +507,10 @@ The source-anchor proof deliberately serializes only safe source spans: short
 text spans with a valid start/end order and no embedded NUL bytes. Unsafe or
 oversized spans are omitted from the inline payload and the reader treats the
 affected node as having no portable source anchor. The emitter also refuses to
-write invalid or pathological source spans as `.src` directives. This keeps the
-proof robust while still preserving the useful debugger/tracing case: ordinary
-callee source lines from imported inline bodies are re-emitted at the caller's
-new instruction addresses with the original `.srcfile`.
+write invalid or pathological source spans as `.srcstep` directives. This keeps
+the proof robust while still preserving the useful debugger/tracing case:
+ordinary callee source lines from imported inline bodies are re-emitted at the
+caller's new instruction addresses with the original source file.
 
 Member and factory dependencies still need richer proof data: owner class or
 interface identity, member kind, selector or `match` contract, receiver
@@ -605,14 +605,15 @@ Initial implementation status:
 1. `rxc` writes `I4` payloads through first-class `META_INLINE` records.
    `META_FUNC` remains the callable signature and procedure-reference record.
 2. The writer emits `f` and `u` source-anchor sections plus a per-node
-   `source-id` field. The reader restores `file_name`, line, column, source
-   provenance, and source text/span for imported inline templates.
-3. Emission handles source-file changes inside inlined code by emitting the
-   appropriate `.srcfile` before `.src` when an inlined node's source file
-   differs from the currently active emitted source file.
+   `source-id` field. The reader restores `file_name`, line, active column
+   range, source provenance, and whole source line for imported inline
+   templates.
+3. Emission preserves source-file identity inside inlined code by emitting
+   self-contained `.srcstep` records whose file field is the original callee
+   file.
 4. The focused cross-file fixture validates a non-aliasing assembler helper and
-   asserts that optimized caller RXAS contains meaningful callee `.src` text
-   rather than empty source markers.
+   asserts that optimized caller RXAS contains meaningful callee `.srcstep`
+   source text rather than empty source markers.
 5. The same fixture validates source import, RXAS assembly, RXDAS disassembly,
    reassembly, binary-only import, and runtime output. It covers plain
    procedures, nested local scopes, early returns, counted and conditional
@@ -638,7 +639,7 @@ between source, RXAS, and binary paths. The harness proves:
 - `rxdas` emits `META_INLINE` back into the same logical RXAS spelling
 - `rxc` can import the binary metadata and reconstruct the same inlining
   template used by source imports
-- source anchors survive import and are re-emitted as new `.srcfile` / `.src`
+- source anchors survive import and are re-emitted as new `.srcstep`
   directives at the caller's instruction addresses
 - unsupported nodes may be transported by the codec only when explicitly
   supported by the writer, and inlining still fails closed at reader/call-site

@@ -1,65 +1,68 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_loop_bound_expr.crexx
- * BUILT                  : 2026-04-29 14:16:42
+ * BUILT                  : 2026-05-27 17:53:30
  */
 
-.srcfile="inline_test_loop_bound_expr.crexx"
 .globals=0
 
 main() .locals=8
    .meta "inline_test_loop_bound_expr.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 22 22 17 "inline_test_loop_bound_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting loop bound inline test...\""
+   .srcstep 1 1 17 "inline_test_loop_bound_expr.crexx" 4 3 43 "  say \"Starting loop bound inline test...\""
    say "Starting loop bound inline test..."
-   .src 6:3="do"
-   .src 6:6="repeatCount(2)"
-   .src 6:6="repeatCount"
-   .src 19:3="return value"
+   .srcstep 6 6 17 "inline_test_loop_bound_expr.crexx" 6 3 5 "  do repeatCount(2)"
+   .srcstep 4 4 17 "inline_test_loop_bound_expr.crexx" 6 6 20 "  do repeatCount(2)"
+   .srcstep 3 3 17 "inline_test_loop_bound_expr.crexx" 6 6 17 "  do repeatCount(2)"
+   .srcstep 2 2 17 "inline_test_loop_bound_expr.crexx" 19 3 15 "  return value"
    load r1,2
+   .traceevent "L" 4 "R" "I" "r" 1 0 0 0 "" ""
    icopy r2,r1
    br l66bexprend
 l66bexprend:
 l8dostart:
-   .src 6:6="repeatCount(2)"
+   .srcstep 4 4 17 "inline_test_loop_bound_expr.crexx" 6 6 20 "  do repeatCount(2)"
    bcf l8doend,r2
-   .src 7:5="say \"for\""
+   .srcstep 5 5 17 "inline_test_loop_bound_expr.crexx" 7 5 14 "    say \"for\""
    say "for"
 l8doinc:
-   .src 8:3="end"
+   .srcstep 7 7 17 "inline_test_loop_bound_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   .src 10:3="do"
-   .src 10:6="i = startAt"
+   .srcstep 18 18 17 "inline_test_loop_bound_expr.crexx" 10 3 5 "  do i = startAt() to stopAt() by stepSize()"
+   .srcstep 10 10 17 "inline_test_loop_bound_expr.crexx" 10 6 17 "  do i = startAt() to stopAt() by stepSize()"
    .meta "inline_test_loop_bound_expr.main.i"="b" ".int" r0
-   .src 10:10="startAt"
-   .src 22:3="return 1"
+   .srcstep 9 9 17 "inline_test_loop_bound_expr.crexx" 10 10 17 "  do i = startAt() to stopAt() by stepSize()"
+   .srcstep 8 8 17 "inline_test_loop_bound_expr.crexx" 22 3 11 "  return 1"
    load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 10 10 0 "" ""
    icopy r3,r2
    br l73bexprend
 l73bexprend:
    icopy r0,r3
-   .src 10:20="to stopAt"
-   .src 10:23="stopAt"
-   .src 25:3="return 5"
+   .traceevent "A" 6 "R" "I" "r" 0 10 10 0 "i" ""
+   .srcstep 13 13 17 "inline_test_loop_bound_expr.crexx" 10 20 29 "  do i = startAt() to stopAt() by stepSize()"
+   .srcstep 12 12 17 "inline_test_loop_bound_expr.crexx" 10 23 29 "  do i = startAt() to stopAt() by stepSize()"
+   .srcstep 11 11 17 "inline_test_loop_bound_expr.crexx" 25 3 11 "  return 5"
    load r4,5
+   .traceevent "L" 4 "R" "I" "r" 4 0 0 0 "" ""
    icopy r3,r4
    br l77bexprend
 l77bexprend:
-   .src 10:32="by stepSize"
-   .src 10:35="stepSize"
-   .src 28:3="return 2"
+   .srcstep 16 16 17 "inline_test_loop_bound_expr.crexx" 10 32 43 "  do i = startAt() to stopAt() by stepSize()"
+   .srcstep 15 15 17 "inline_test_loop_bound_expr.crexx" 10 35 43 "  do i = startAt() to stopAt() by stepSize()"
+   .srcstep 14 14 17 "inline_test_loop_bound_expr.crexx" 28 3 11 "  return 2"
    load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 0 0 0 "" ""
    icopy r7,r6
    br l81bexprend
 l81bexprend:
 l16dostart:
-   .src 10:20="to stopAt"
+   .srcstep 13 13 17 "inline_test_loop_bound_expr.crexx" 10 20 29 "  do i = startAt() to stopAt() by stepSize()"
    ilt r5,r7,0
    brt l16doneg1,r5
    igt r5,r0,r3
@@ -68,16 +71,17 @@ l16doneg1:
    ilt r5,r0,r3
    brt l16doend,r5
 l16doneg2:
-   .src 11:5="say i"
+   .srcstep 17 17 17 "inline_test_loop_bound_expr.crexx" 11 5 10 "    say i"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 17 17 0 "i" ""
    say r0
 l16doinc:
-   .src 10:32="by stepSize"
+   .srcstep 16 16 17 "inline_test_loop_bound_expr.crexx" 10 32 43 "  do i = startAt() to stopAt() by stepSize()"
  iadd r0,r7,r0
-   .src 12:3="end"
+   .srcstep 19 19 17 "inline_test_loop_bound_expr.crexx" 12 3 6 "  end"
    br l16dostart
 l16doend:
-   .src 14:3="say \"Loop bound inline test finished.\""
+   .srcstep 20 20 17 "inline_test_loop_bound_expr.crexx" 14 3 41 "  say \"Loop bound inline test finished.\""
    say "Loop bound inline test finished."
-   .src 15:3="return 0"
+   .srcstep 21 21 17 "inline_test_loop_bound_expr.crexx" 15 3 11 "  return 0"
    ret 0

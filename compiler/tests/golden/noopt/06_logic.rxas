@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 06_logic.crexx
- * BUILT                  : 2026-03-18 11:58:54
+ * BUILT                  : 2026-05-27 17:52:47
  */
 
-.srcfile="06_logic.crexx"
 .globals=0
 
 main() .locals=3
@@ -14,35 +12,47 @@ main() .locals=3
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 2:1="t = 1"
+   .srcstep 1 1 17 "06_logic.crexx" 2 1 6 "t = 1"
    .meta "06_logic.main.t"="b" ".int" r1
    load r1,1
-   .src 3:1="f = 0"
+   .traceevent "L" 4 "R" "I" "r" 1 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 1 1 0 "t" ""
+   .srcstep 2 2 17 "06_logic.crexx" 3 1 6 "f = 0"
    .meta "06_logic.main.f"="b" ".int" r0
    load r0,0
-   .src 4:1="say t & f"
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "f" ""
+   .srcstep 3 3 17 "06_logic.crexx" 4 1 10 "say t & f   /* 0 */"
+   .traceevent "V" 6 "R" "B" "r" 1 3 3 0 "t" ""
    brf l12andfalse,r1
+   .traceevent "V" 6 "R" "B" "r" 0 3 3 0 "f" ""
    icopy r2,r0
    br l12andend
 l12andfalse:
    load r2,0
 l12andend:
    btos r2
+   .traceevent "O" 4 "R" "S" "r" 2 3 3 0 "" ""
    say r2
-   .src 5:1="say t | f"
+   .srcstep 4 4 17 "06_logic.crexx" 5 1 10 "say t | f   /* 1 */"
+   .traceevent "V" 6 "R" "B" "r" 1 4 4 0 "t" ""
    brt l16ortrue,r1
+   .traceevent "V" 6 "R" "B" "r" 0 4 4 0 "f" ""
    icopy r2,r0
    br l16orend
 l16ortrue:
    load r2,1
 l16orend:
    btos r2
+   .traceevent "O" 4 "R" "S" "r" 2 4 4 0 "" ""
    say r2
-   .src 6:1="say \\t"
+   .srcstep 5 5 17 "06_logic.crexx" 6 1 7 "say \\t      /* 0 */"
+   .traceevent "V" 6 "R" "B" "r" 1 5 5 0 "t" ""
    not r2,r1
    btos r2
+   .traceevent "P" 4 "R" "S" "r" 2 5 5 0 "" ""
    say r2
-   .src 6:7=""
+   .srcstep 6 6 1 "06_logic.crexx" 6 7 7 "say \\t      /* 0 */"
    ret
    .meta "06_logic.main.f"
    .meta "06_logic.main.t"

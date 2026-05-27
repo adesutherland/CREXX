@@ -1,7 +1,6 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_named_factory_selector.crexx
- * BUILT                  : 2026-04-30 20:04:01
+ * BUILT                  : 2026-05-27 17:53:32
  */
 
 .meta "inline_test_named_factory_selector.car"="b" ".unknown" .class
@@ -11,105 +10,122 @@
 .meta "inline_test_named_factory_selector.vehicle"="method" "describe" ".string" "" .member
 .meta "inline_test_named_factory_selector.vehicle"="factory" "*" ".vehicle" "name=.string" .member
 .meta "inline_test_named_factory_selector.vehicle"="factory" "from_name" ".vehicle" "name=.string" .member
-.srcfile="inline_test_named_factory_selector.crexx"
 .globals=0
 
 main() .locals=6
    .meta "inline_test_named_factory_selector.main"="b" ".int" main() ""
-   .src 4:1="main: procedure = .int"
+   .srcstep 8 8 17 "inline_test_named_factory_selector.crexx" 4 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 5:3="say directNamed().describe"
+   .srcstep 1 1 17 "inline_test_named_factory_selector.crexx" 5 3 29 "  say directNamed().describe()"
    load r3,0
    call r2,directNamed(),r3
+   .traceevent "F" 4 "R" "O" "r" 2 1 1 0 "directnamed" ""
    load r1,1
    settp r2,256
    srcmethod r3,r2,"describe"
    dcall r3,r3,r1
+   .traceevent "F" 4 "R" "S" "r" 3 1 1 0 "describe" ""
    say r3
-   .src 6:3="say assignedNamed(\"beta\").describe"
+   .srcstep 2 2 17 "inline_test_named_factory_selector.crexx" 6 3 37 "  say assignedNamed(\"beta\").describe()"
    load r5,"beta"
+   .traceevent "L" 4 "R" "S" "r" 5 2 2 0 "" ""
    load r4,1
    settp r5,768
    call r3,assignedNamed(),r4
+   .traceevent "F" 4 "R" "O" "r" 3 2 2 0 "assignednamed" ""
    load r2,1
    settp r3,256
    srcmethod r5,r3,"describe"
    dcall r5,r5,r2
+   .traceevent "F" 4 "R" "S" "r" 5 2 2 0 "describe" ""
    say r5
-   .src 7:3="say describedNamed(\"gamma\")"
-   .src 7:7="describedNamed"
-   .src 23:3="current = .vehicle.from_name(name)"
+   .srcstep 6 6 17 "inline_test_named_factory_selector.crexx" 7 3 30 "  say describedNamed(\"gamma\")"
+   .srcstep 5 5 17 "inline_test_named_factory_selector.crexx" 7 7 21 "  say describedNamed(\"gamma\")"
+   .srcstep 3 3 17 "inline_test_named_factory_selector.crexx" 23 3 37 "  current = .vehicle.from_name(name)"
    load r5,"gamma"
+   .traceevent "L" 4 "R" "S" "r" 5 3 3 0 "" ""
    load r4,1
    settp r5,256
    srcfproc r0,"inline_test_named_factory_selector.vehicle..from_name",r4
    dcall r0,r0,r4
-   .src 24:3="return current.describe"
+   .traceevent "F" 4 "R" "O" "r" 0 3 3 0 "§factory.from_name" ""
+   .traceevent "A" 6 "R" "O" "r" 0 3 3 0 "current" ""
+   .srcstep 4 4 17 "inline_test_named_factory_selector.crexx" 24 3 26 "  return current.describe()"
+   .traceevent "V" 6 "R" "O" "r" 0 6 6 0 "current" ""
    load r4,1
    settp r0,256
    swap r5,r0
    srcmethod r3,r5,"describe"
    dcall r3,r3,r4
    swap r0,r5
+   .traceevent "F" 4 "R" "S" "r" 3 6 6 0 "describe" ""
    scopy r5,r3
    acopy r5,r3
    br l137bexprend
 l137bexprend:
    say r5
-   .src 8:3="return 0"
+   .srcstep 7 7 17 "inline_test_named_factory_selector.crexx" 8 3 11 "  return 0"
    ret 0
 
 directNamed() .locals=3
    .meta "inline_test_named_factory_selector.directnamed"="b" ".vehicle" directNamed() ""
-   .src 10:1="directNamed: procedure = .vehicle"
+   .srcstep 10 10 17 "inline_test_named_factory_selector.crexx" 10 1 34 "directNamed: procedure = .vehicle"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 11:3="return .vehicle.from_name(\"alpha\")"
+   .srcstep 9 9 17 "inline_test_named_factory_selector.crexx" 11 3 37 "  return .vehicle.from_name(\"alpha\")"
    load r1,"alpha"
+   .traceevent "L" 4 "R" "S" "r" 1 9 9 0 "" ""
    load r0,1
    settp r1,768
    srcfproc r2,"inline_test_named_factory_selector.vehicle..from_name",r0
    dcall r2,r2,r0
+   .traceevent "F" 4 "R" "O" "r" 2 9 9 0 "§factory.from_name" ""
    ret r2
 
 assignedNamed() .locals=4
    .meta "inline_test_named_factory_selector.assignednamed"="b" ".vehicle" assignedNamed() "name=.string"
-   .src 13:1="assignedNamed: procedure = .vehicle"
+   .srcstep 16 16 17 "inline_test_named_factory_selector.crexx" 13 1 36 "assignedNamed: procedure = .vehicle"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 14:7="name = .string"
+   .srcstep 11 11 17 "inline_test_named_factory_selector.crexx" 14 7 21 "  arg name = .string"
    .meta "inline_test_named_factory_selector.assignednamed.name"="b" ".string" a1
-   .src 15:3="current = .vehicle.from_name(name)"
+   .srcstep 12 12 17 "inline_test_named_factory_selector.crexx" 15 3 37 "  current = .vehicle.from_name(name)"
    .meta "inline_test_named_factory_selector.assignednamed.current"="b" ".vehicle" r0
+   .traceevent "V" 6 "R" "S" "a" 1 12 12 0 "name" ""
    load r2,1
    settp a1,256
    swap r3,a1
    srcfproc r0,"inline_test_named_factory_selector.vehicle..from_name",r2
    dcall r0,r0,r2
    swap a1,r3
-   .src 16:2="if name = \"beta\""
+   .traceevent "F" 4 "R" "O" "r" 0 12 12 0 "§factory.from_name" ""
+   .traceevent "A" 6 "R" "O" "r" 0 12 12 0 "current" ""
+   .srcstep 13 13 17 "inline_test_named_factory_selector.crexx" 16 3 19 "  if name = \"beta\" then do"
+   .traceevent "V" 6 "R" "S" "a" 1 13 13 0 "name" ""
    seq r3,a1,"beta"
+   .traceevent "O" 4 "R" "B" "r" 3 13 13 0 "" ""
    brf l47iffalse,r3
-   .src 16:20="then"
+   .srcstep 14 14 17 "inline_test_named_factory_selector.crexx" 16 20 24 "  if name = \"beta\" then do"
 l47iffalse:
-   .src 19:3="return current"
+   .srcstep 15 15 17 "inline_test_named_factory_selector.crexx" 19 3 17 "  return current"
+   .traceevent "V" 6 "R" "O" "r" 0 15 15 0 "current" ""
    ret r0
    .meta "inline_test_named_factory_selector.assignednamed.current"
    .meta "inline_test_named_factory_selector.assignednamed.name"
 
 §inline_test_named_factory_selector.car.§factory() .locals=4
    .meta "inline_test_named_factory_selector.car.§factory"="b" ".car" §inline_test_named_factory_selector.car.§factory() "name=.string"
-   .src 36:3="*: factory"
+   .srcstep 25 25 17 "inline_test_named_factory_selector.crexx" 36 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_named_factory_selector.car"
    setnumdgts 18
@@ -117,22 +133,25 @@ l47iffalse:
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 37:9="name = .string"
+   .srcstep 22 22 17 "inline_test_named_factory_selector.crexx" 37 9 23 "    arg name = .string"
    .meta "inline_test_named_factory_selector.car.§factory.name"="b" ".string" a1
    .meta "inline_test_named_factory_selector.car.§factory.§factory"="b" ".car" r1
-   .src 38:5="_name = \"default:\" || name"
+   .srcstep 23 23 17 "inline_test_named_factory_selector.crexx" 38 5 31 "    _name = \"default:\" || name"
+   .traceevent "V" 6 "R" "S" "a" 1 23 23 0 "name" ""
    concat r3,"default:",a1
+   .traceevent "O" 4 "R" "S" "r" 3 23 23 0 "" ""
    linkattr1 r2,r1,1
    scopy r2,r3
    unlink r2
-   .src 39:5="return"
+   .srcstep 24 24 17 "inline_test_named_factory_selector.crexx" 39 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 24 24 0 "§factory" ""
    ret r1
    .meta "inline_test_named_factory_selector.car.§factory.name"
    .meta "inline_test_named_factory_selector.car.§factory.§factory"
 
 §inline_test_named_factory_selector.car.§factory.from_name() .locals=4
    .meta "inline_test_named_factory_selector.car.§factory.from_name"="b" ".car" §inline_test_named_factory_selector.car.§factory.from_name() "name=.string"
-   .src 41:3="from_name: factory"
+   .srcstep 29 29 17 "inline_test_named_factory_selector.crexx" 41 3 21 "  from_name: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_named_factory_selector.car"
    setnumdgts 18
@@ -140,29 +159,33 @@ l47iffalse:
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 42:9="name = .string"
+   .srcstep 26 26 17 "inline_test_named_factory_selector.crexx" 42 9 23 "    arg name = .string"
    .meta "inline_test_named_factory_selector.car.§factory.from_name.name"="b" ".string" a1
    .meta "inline_test_named_factory_selector.car.§factory.from_name.§factory"="b" ".car" r1
-   .src 43:5="_name = \"named:\" || name"
+   .srcstep 27 27 17 "inline_test_named_factory_selector.crexx" 43 5 29 "    _name = \"named:\" || name"
+   .traceevent "V" 6 "R" "S" "a" 1 27 27 0 "name" ""
    concat r3,"named:",a1
+   .traceevent "O" 4 "R" "S" "r" 3 27 27 0 "" ""
    linkattr1 r2,r1,1
    scopy r2,r3
    unlink r2
-   .src 44:5="return"
+   .srcstep 28 28 17 "inline_test_named_factory_selector.crexx" 44 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 28 28 0 "§factory" ""
    ret r1
    .meta "inline_test_named_factory_selector.car.§factory.from_name.name"
    .meta "inline_test_named_factory_selector.car.§factory.from_name.§factory"
 
 §inline_test_named_factory_selector.car.describe() .locals=2
    .meta "inline_test_named_factory_selector.car.describe"="b" ".string" §inline_test_named_factory_selector.car.describe() ""
-   .src 46:3="describe: method = .string"
+   .srcstep 31 31 17 "inline_test_named_factory_selector.crexx" 46 3 29 "  describe: method = .string"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 47:5="return _name"
+   .srcstep 30 30 17 "inline_test_named_factory_selector.crexx" 47 5 17 "    return _name"
    .meta "inline_test_named_factory_selector.car.describe.§this"="b" ".car" a1
    linkattr1 r1,a1,1
+   .traceevent "V" 6 "R" "S" "r" 1 30 30 0 "_name" ""
    ret r1
    .meta "inline_test_named_factory_selector.car.describe.§this"

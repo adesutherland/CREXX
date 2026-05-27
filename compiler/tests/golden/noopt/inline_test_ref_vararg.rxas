@@ -1,30 +1,37 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_ref_vararg.crexx
- * BUILT                  : 2026-04-30 20:04:11
+ * BUILT                  : 2026-05-27 17:53:36
  */
 
-.srcfile="inline_test_ref_vararg.crexx"
 .globals=0
 
 main() .locals=8
    .meta "inline_test_ref_vararg.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 13 13 17 "inline_test_ref_vararg.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="first = 10"
+   .srcstep 1 1 17 "inline_test_ref_vararg.crexx" 4 3 13 "  first = 10"
    .meta "inline_test_ref_vararg.main.first"="b" ".int" r0
    load r0,10
-   .src 5:3="second = 20"
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "first" ""
+   .srcstep 2 2 17 "inline_test_ref_vararg.crexx" 5 3 14 "  second = 20"
    .meta "inline_test_ref_vararg.main.second"="b" ".int" r1
    load r1,20
-   .src 6:3="third = 30"
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "second" ""
+   .srcstep 3 3 17 "inline_test_ref_vararg.crexx" 6 3 13 "  third = 30"
    .meta "inline_test_ref_vararg.main.third"="b" ".int" r2
    load r2,30
-   .src 8:3="say countTail(first, second, third)"
+   .traceevent "L" 4 "R" "I" "r" 2 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "third" ""
+   .srcstep 4 4 17 "inline_test_ref_vararg.crexx" 8 3 38 "  say countTail(first, second, third)"
+   .traceevent "V" 6 "R" "I" "r" 0 4 4 0 "first" ""
+   .traceevent "V" 6 "R" "I" "r" 1 4 4 0 "second" ""
+   .traceevent "V" 6 "R" "I" "r" 2 4 4 0 "third" ""
    load r3,3
    swap r4,r0
    swap r5,r1
@@ -34,8 +41,12 @@ main() .locals=8
    swap r1,r5
    swap r2,r6
    itos r7
+   .traceevent "F" 4 "R" "S" "r" 7 4 4 0 "counttail" ""
    say r7
-   .src 9:3="say pickSecond(first, second, third)"
+   .srcstep 5 5 17 "inline_test_ref_vararg.crexx" 9 3 39 "  say pickSecond(first, second, third)"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "first" ""
+   .traceevent "V" 6 "R" "I" "r" 1 5 5 0 "second" ""
+   .traceevent "V" 6 "R" "I" "r" 2 5 5 0 "third" ""
    load r4,3
    swap r5,r0
    swap r6,r1
@@ -45,8 +56,12 @@ main() .locals=8
    swap r1,r6
    swap r2,r7
    itos r3
+   .traceevent "F" 4 "R" "S" "r" 3 5 5 0 "picksecond" ""
    say r3
-   .src 10:3="say hasSecond(first, second, third)"
+   .srcstep 6 6 17 "inline_test_ref_vararg.crexx" 10 3 38 "  say hasSecond(first, second, third)"
+   .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "first" ""
+   .traceevent "V" 6 "R" "I" "r" 1 6 6 0 "second" ""
+   .traceevent "V" 6 "R" "I" "r" 2 6 6 0 "third" ""
    load r4,3
    swap r5,r0
    swap r6,r1
@@ -56,8 +71,12 @@ main() .locals=8
    swap r1,r6
    swap r2,r7
    itos r3
+   .traceevent "F" 4 "R" "S" "r" 3 6 6 0 "hassecond" ""
    say r3
-   .src 11:3="say hasFifth(first, second, third)"
+   .srcstep 7 7 17 "inline_test_ref_vararg.crexx" 11 3 37 "  say hasFifth(first, second, third)"
+   .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "first" ""
+   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "second" ""
+   .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "third" ""
    load r4,3
    swap r5,r0
    swap r6,r1
@@ -67,8 +86,12 @@ main() .locals=8
    swap r1,r6
    swap r2,r7
    itos r3
+   .traceevent "F" 4 "R" "S" "r" 3 7 7 0 "hasfifth" ""
    say r3
-   .src 12:3="say mutateSecond(first, second, third)"
+   .srcstep 8 8 17 "inline_test_ref_vararg.crexx" 12 3 41 "  say mutateSecond(first, second, third)"
+   .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "first" ""
+   .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "second" ""
+   .traceevent "V" 6 "R" "I" "r" 2 8 8 0 "third" ""
    load r4,3
    swap r5,r0
    swap r6,r1
@@ -78,17 +101,21 @@ main() .locals=8
    swap r1,r6
    swap r2,r7
    itos r3
+   .traceevent "F" 4 "R" "S" "r" 3 8 8 0 "mutatesecond" ""
    say r3
-   .src 13:3="say first"
+   .srcstep 9 9 17 "inline_test_ref_vararg.crexx" 13 3 12 "  say first"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 9 9 0 "first" ""
    say r0
-   .src 14:3="say second"
+   .srcstep 10 10 17 "inline_test_ref_vararg.crexx" 14 3 13 "  say second"
    itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 10 10 0 "second" ""
    say r1
-   .src 15:3="say third"
+   .srcstep 11 11 17 "inline_test_ref_vararg.crexx" 15 3 12 "  say third"
    itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 11 11 0 "third" ""
    say r2
-   .src 16:3="return 0"
+   .srcstep 12 12 17 "inline_test_ref_vararg.crexx" 16 3 11 "  return 0"
    ret 0
    .meta "inline_test_ref_vararg.main.first"
    .meta "inline_test_ref_vararg.main.second"
@@ -96,28 +123,28 @@ main() .locals=8
 
 countTail() .locals=1
    .meta "inline_test_ref_vararg.counttail"="b" ".int" countTail() "expose ...=.int"
-   .src 18:1="countTail: procedure = .int"
+   .srcstep 16 16 17 "inline_test_ref_vararg.crexx" 18 1 28 "countTail: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 19:14="... = .int"
-   .src 20:3="return arg"
+   .srcstep 14 14 17 "inline_test_ref_vararg.crexx" 19 14 24 "  arg expose ... = .int"
+   .srcstep 15 15 17 "inline_test_ref_vararg.crexx" 20 3 13 "  return arg[]"
    icopy r0,a0
    isub r0,r0,0
    ret r0
 
 pickSecond() .locals=1
    .meta "inline_test_ref_vararg.picksecond"="b" ".int" pickSecond() "expose ...=.int"
-   .src 22:1="pickSecond: procedure = .int"
+   .srcstep 19 19 17 "inline_test_ref_vararg.crexx" 22 1 29 "pickSecond: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 23:14="... = .int"
-   .src 24:3="return arg[2"
+   .srcstep 17 17 17 "inline_test_ref_vararg.crexx" 23 14 24 "  arg expose ... = .int"
+   .srcstep 18 18 17 "inline_test_ref_vararg.crexx" 24 3 15 "  return arg[2]"
    icopy r0,a0
    isub r0,r0,0
    ichkrng 2,1,r0
@@ -126,14 +153,14 @@ pickSecond() .locals=1
 
 hasSecond() .locals=1
    .meta "inline_test_ref_vararg.hassecond"="b" ".int" hasSecond() "expose ...=.int"
-   .src 26:1="hasSecond: procedure = .int"
+   .srcstep 22 22 17 "inline_test_ref_vararg.crexx" 26 1 28 "hasSecond: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 27:14="... = .int"
-   .src 28:3="return arg(2"
+   .srcstep 20 20 17 "inline_test_ref_vararg.crexx" 27 14 24 "  arg expose ... = .int"
+   .srcstep 21 21 17 "inline_test_ref_vararg.crexx" 28 3 15 "  return arg(2, \"E\")"
    icopy r0,a0
    ilte r0,2,r0
    btoi r0
@@ -141,14 +168,14 @@ hasSecond() .locals=1
 
 hasFifth() .locals=1
    .meta "inline_test_ref_vararg.hasfifth"="b" ".int" hasFifth() "expose ...=.int"
-   .src 30:1="hasFifth: procedure = .int"
+   .srcstep 25 25 17 "inline_test_ref_vararg.crexx" 30 1 27 "hasFifth: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 31:14="... = .int"
-   .src 32:3="return arg(5"
+   .srcstep 23 23 17 "inline_test_ref_vararg.crexx" 31 14 24 "  arg expose ... = .int"
+   .srcstep 24 24 17 "inline_test_ref_vararg.crexx" 32 3 15 "  return arg(5, \"E\")"
    icopy r0,a0
    ilte r0,5,r0
    btoi r0
@@ -156,30 +183,34 @@ hasFifth() .locals=1
 
 bumpOne() .locals=1
    .meta "inline_test_ref_vararg.bumpone"="b" ".int" bumpOne() "expose value=.int"
-   .src 34:1="bumpOne: procedure = .int"
+   .srcstep 29 29 17 "inline_test_ref_vararg.crexx" 34 1 26 "bumpOne: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 35:7="expose value = .int"
+   .srcstep 26 26 17 "inline_test_ref_vararg.crexx" 35 7 26 "  arg expose value = .int"
    .meta "inline_test_ref_vararg.bumpone.value"="b" ".int" a1
-   .src 36:3="value = value + 7"
+   .srcstep 27 27 17 "inline_test_ref_vararg.crexx" 36 3 20 "  value = value + 7"
+   .traceevent "V" 6 "R" "I" "a" 1 27 27 0 "value" ""
    iadd a1,a1,7
-   .src 37:3="return value"
+   .traceevent "O" 4 "R" "I" "a" 1 27 27 0 "" ""
+   .traceevent "A" 6 "R" "I" "a" 1 27 27 0 "value" ""
+   .srcstep 28 28 17 "inline_test_ref_vararg.crexx" 37 3 15 "  return value"
+   .traceevent "V" 6 "R" "I" "a" 1 28 28 0 "value" ""
    ret a1
    .meta "inline_test_ref_vararg.bumpone.value"
 
 mutateSecond() .locals=4
    .meta "inline_test_ref_vararg.mutatesecond"="b" ".int" mutateSecond() "expose ...=.int"
-   .src 39:1="mutateSecond: procedure = .int"
+   .srcstep 32 32 17 "inline_test_ref_vararg.crexx" 39 1 31 "mutateSecond: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 40:14="... = .int"
-   .src 41:3="return bumpOne(arg[2"
+   .srcstep 30 30 17 "inline_test_ref_vararg.crexx" 40 14 24 "  arg expose ... = .int"
+   .srcstep 31 31 17 "inline_test_ref_vararg.crexx" 41 3 23 "  return bumpOne(arg[2])"
    icopy r2,a0
    isub r2,r2,0
    ichkrng 2,1,r2
@@ -189,4 +220,5 @@ mutateSecond() .locals=4
    call r3,bumpOne(),r0
    swap r2,r1
    unlink r2
+   .traceevent "F" 4 "R" "I" "r" 3 31 31 0 "bumpone" ""
    ret r3

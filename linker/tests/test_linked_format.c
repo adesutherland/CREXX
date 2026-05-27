@@ -25,9 +25,7 @@ static int module_has_source_metadata(const module_file *module) {
 
     while (meta != -1) {
         const meta_entry *entry = (const meta_entry *)(module->constant + meta);
-        if (entry->base.type == META_SRC ||
-            entry->base.type == META_FILE ||
-            entry->base.type == META_SOURCE_STEP) return 1;
+        if (entry->base.type == META_SOURCE_STEP) return 1;
         meta = entry->next;
     }
 

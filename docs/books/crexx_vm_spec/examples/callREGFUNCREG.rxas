@@ -1,16 +1,15 @@
-.srcfile="words.rexx"
 .globals=0
 
 main() .locals=4
    .meta "words.main"="b" ".void" main() ""
-   .src 5:1="say words('The quick brown fox jumps over the lazy dog')"
+   .srcstep 1 1 17 "words.rexx" 5 1 57 "say words('The quick brown fox jumps over the lazy dog')"
    load r1,1
    load r2,"The quick brown fox jumps over the lazy dog"
    settp r2,512
    call r3,words(),r1
    itos r3
    say r3
-   .src 5:57=""
+   .srcstep 2 2 1 "words.rexx" 5 57 57 "say words('The quick brown fox jumps over the lazy dog')"
    ret
 
 words() .expose=rxfnsb.words

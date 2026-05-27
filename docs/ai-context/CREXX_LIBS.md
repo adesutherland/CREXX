@@ -89,7 +89,7 @@ by `rxdb` and by the `TRACE` certified compiler exit:
 
 - `.tracecontroller`: breakpoint enable/disable, module/procedure helpers,
   source/ASM lookup, default runtime/debugger filtering, and shared
-  trace-value metadata lookup for simple assignment results
+  structured trace-event metadata lookup
 - `.tracecontext`: immutable per-event module/address/source/ASM/procedure
   snapshot
 - `.trace_interrupt_raw`: internal register-mapped view of the VM interrupt
@@ -98,28 +98,31 @@ by `rxdb` and by the `TRACE` certified compiler exit:
   `_trace_set_format(format)`, `_trace_set_output(target)`,
   `_trace_current_mode()`, `_trace_mode_from_option(option)`,
   `_trace_needs_breakpoints(mode)`,
+  `_trace_context_from_raw(raw)`, `_trace_should_trace_context(event)`,
+  `_trace_should_emit_key(key)`, `_trace_capture_result_target(module, addr)`,
   `_trace_pending_parent_register(module, type, value)`,
-  `_trace_supply_parent_value(value)`, and `_trace_handler(raw)`: the
+  `_trace_supply_parent_value(value)`, `_trace_pending_result()`,
+  `_trace_pending_prefix()`, and `_trace_clear_pending_result()`: the
   compiler-exit-facing runtime surface for setting trace mode/format/output,
   normalizing dynamic `TRACE VALUE` options, applying explicit `TRACE ENV`
   `CREXX_TRACE` / `CREXX_TRACE_TO` environment settings, coordinating simple
-  `TRACE R` parent-frame value reads, and servicing `BREAKPOINT` events.
-  `.tracecontroller` owns the result-target metadata lookup and pending value
-  state so other trace/debug users can share the same interpretation. The exit
+  `TRACE R`/`TRACE I` parent-frame value reads, and servicing `BREAKPOINT`
+  events. `.tracecontroller` owns the trace-event metadata lookup and pending
+  value state so other trace/debug users can share the same interpretation. The
+  exit
   still emits caller-frame assembler to enable/disable breakpoints, install the
   handler, and perform the actual `metalinkpreg` read for a pending register,
-  because VM signal tables and `metalinkpreg` are frame-sensitive. This
-  simple-result path is beta-only: `.meta_reg` records scope/register placement,
-  not value changes, so complete `TRACE R`/`TRACE I` value reporting needs
-  trace-specific compiler hints rather than handler-side source parsing.
+  because VM signal tables and `metalinkpreg` are frame-sensitive. Register
+  reads are driven only by `.traceevent` metadata; `.meta_reg` remains
+  scope/register-placement metadata, not a value-change stream.
 - `_trace_command_before(environment, command)` and
   `_trace_command_after(environment, command, rc, condition)`: ADDRESS dispatch
   hooks used by `TRACE C`, `TRACE E`, `TRACE F`, and quiet/default `TRACE N`.
 
-Trace output is formatted in the runtime before being written. Text mode emits
-standard-style prefixed records such as `line *-* source`, `>>> "result"`, and
-`+++ RC=...`, while `LLM` format emits one JSON-lines-style record per event
-for source metadata validation and automation-friendly debugging.
+Classic text and LLM trace formatting belong to the generated TRACE exit
+handler. The shared runtime provides controller/filter helpers and output
+plumbing; RXDB and other debugger UIs should make their own presentation and
+stepping choices from the structured metadata.
 `_trace_set_output` accepts `stdout`, `stderr`, or a file path; file targets are
 opened in append mode per trace record.
 
@@ -199,9 +202,12 @@ Imported Rexx BIF calls inline only when the imported artifact carries
 `META_INLINE`. `rxlink` strips `META_INLINE` by default, so the standard-library
 link explicitly uses `PRESERVE INLINE`. Release linked libraries also use
 `STRIP SOURCE`, keeping inline bodies available to downstream optimisation while
-dropping `.src`/file metadata. Debug linked libraries keep both inline bodies
-and source metadata. Class-library hot paths that rely on this should inspect
-generated `.rxas` when changing import paths or link-strip policy.
+dropping `META_SOURCE_STEP` file/source-line metadata. Debug linked libraries
+keep both inline bodies and source metadata. Compact `META_TRACE_EVENT` records
+are preserved by source stripping because they describe semantic events and
+available values rather than carrying source text. Class-library hot paths that
+rely on this should inspect generated `.rxas` when changing import paths or
+link-strip policy.
 
 `lib/plugins/arrays` is deprecated and retained only as a legacy plugin smoke
 test. New Level B code should import `rxfnsb` and use the standard BIFs.

@@ -1,32 +1,46 @@
 /*
- * cREXX COMPILER VERSION : crexx-f0049
  * SOURCE                 : pow.crexx
- * BUILT                  : 2024-06-30 18:26:56
+ * BUILT                  : 2026-05-27 18:03:18
  */
 
-.srcfile="pow.crexx"
 .globals=0
 
-main() .locals=5
+main() .locals=4
    .meta "pow.main"="b" ".void" main() ""
-   .src 4:1="number = 10"
-   .meta "pow.main.number"="b" ".int" r1
-   load r1,10
-   .src 5:1="power = 2"
-   .meta "pow.main.power"="b" ".int" r2
-   load r2,2
-   .src 6:1="result = 0"
-   .meta "pow.main.result"="b" ".int" r3
-   load r3,0
-   .src 8:1="say 'test IPOW'"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 1 1 17 "pow.crexx" 4 1 12 "number = 10"
+   .meta "pow.main.number"="b" ".int" r0
+   load r0,10
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "number" ""
+   .srcstep 2 2 17 "pow.crexx" 5 1 10 "power = 2"
+   .meta "pow.main.power"="b" ".int" r1
+   load r1,2
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "power" ""
+   .srcstep 3 3 17 "pow.crexx" 6 1 11 "result = 0"
+   .meta "pow.main.result"="b" ".int" r2
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "result" ""
+   .srcstep 4 4 17 "pow.crexx" 8 1 16 "say 'test IPOW'"
    say "test IPOW"
-   .src 10:4="ipow result,number,power"
-   ipow  r3,r1,r2
-   .src 12:1="say \"result =\" result"
-   itos r3
-   sconcat r4,"result =",r3
-   say r4
-   .src 12:22=""
+   .srcstep 5 5 17 "pow.crexx" 10 4 28 "   ipow result,number,power"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 0 0 0 0 "number" ""
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "power" ""
+   ipow r2,r0,r1
+   .srcstep 6 6 17 "pow.crexx" 12 1 22 "say \"result =\" result /* The compiler converts integer to string */"
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 6 6 0 "result" ""
+   sconcat r3,"result =",r2
+   .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
+   say r3
+   .srcstep 7 7 1 "pow.crexx" 12 22 22 "say \"result =\" result /* The compiler converts integer to string */"
    ret
    .meta "pow.main.number"
    .meta "pow.main.power"

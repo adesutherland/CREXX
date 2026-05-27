@@ -1,78 +1,89 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_multi_return_expr.crexx
- * BUILT                  : 2026-03-26 17:40:39
+ * BUILT                  : 2026-05-27 17:53:49
  */
 
-.srcfile="inline_test_multi_return_expr.crexx"
 .globals=0
 
 main() .locals=7
    .meta "inline_test_multi_return_expr.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 10 10 17 "inline_test_multi_return_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting multi return expr inline test...\""
+   .srcstep 1 1 17 "inline_test_multi_return_expr.crexx" 4 3 50 "  say \"Starting multi return expr inline test...\""
    say "Starting multi return expr inline test..."
-   .src 5:3="do"
-   .src 5:6="i = -1"
+   .srcstep 6 6 17 "inline_test_multi_return_expr.crexx" 5 3 5 "  do i = -1 to 1"
+   .srcstep 2 2 17 "inline_test_multi_return_expr.crexx" 5 6 12 "  do i = -1 to 1"
    .meta "inline_test_multi_return_expr.main.i"="b" ".int" r0
    load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
    isub r0,0,r1
-   .src 5:13="to 1"
+   .traceevent "P" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
+   .srcstep 3 3 17 "inline_test_multi_return_expr.crexx" 5 13 17 "  do i = -1 to 1"
    load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
 l8dostart:
-   .src 5:13="to 1"
+   .srcstep 3 3 17 "inline_test_multi_return_expr.crexx" 5 13 17 "  do i = -1 to 1"
    igt r3,r0,r2
    brt l8doend,r3
-   .src 6:5="say 10 + classify(i)"
+   .srcstep 5 5 17 "inline_test_multi_return_expr.crexx" 6 5 25 "    say 10 + classify(i)"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    load r4,1
    swap r5,r0
    call r6,classify(),r4
    swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 6 5 5 0 "classify" ""
    iadd r6,r6,10
    itos r6
+   .traceevent "O" 4 "R" "S" "r" 6 5 5 0 "" ""
    say r6
 l8doinc:
-   .src 5:6="i"
+   .srcstep 4 4 17 "inline_test_multi_return_expr.crexx" 5 6 7 "  do i = -1 to 1"
    inc r0
-   .src 7:3="end"
+   .srcstep 7 7 17 "inline_test_multi_return_expr.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   .src 8:3="say \"Multi return expr inline test finished.\""
+   .srcstep 8 8 17 "inline_test_multi_return_expr.crexx" 8 3 48 "  say \"Multi return expr inline test finished.\""
    say "Multi return expr inline test finished."
-   .src 9:3="return 0"
+   .srcstep 9 9 17 "inline_test_multi_return_expr.crexx" 9 3 11 "  return 0"
    ret 0
 
 classify() .locals=4
    .meta "inline_test_multi_return_expr.classify"="b" ".int" classify() "val=.int"
-   .src 11:1="classify: procedure = .int"
+   .srcstep 19 19 17 "inline_test_multi_return_expr.crexx" 11 1 27 "classify: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 12:7="val = .int"
+   .srcstep 11 11 17 "inline_test_multi_return_expr.crexx" 12 7 17 "  arg val = .int"
    .meta "inline_test_multi_return_expr.classify.val"="b" ".int" a1
-   .src 13:2="if val < 0"
+   .srcstep 13 13 17 "inline_test_multi_return_expr.crexx" 13 3 13 "  if val < 0 then return -1"
+   .traceevent "V" 6 "R" "I" "a" 1 13 13 0 "val" ""
    ilt r1,a1,0
+   .traceevent "O" 4 "R" "B" "r" 1 13 13 0 "" ""
    brf l38iffalse,r1
-   .src 13:14="then"
-   .src 13:19="return -1"
+   .srcstep 14 14 17 "inline_test_multi_return_expr.crexx" 13 14 18 "  if val < 0 then return -1"
+   .srcstep 12 12 17 "inline_test_multi_return_expr.crexx" 13 19 28 "  if val < 0 then return -1"
    load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
    isub r3,0,r2
+   .traceevent "P" 4 "R" "I" "r" 3 12 12 0 "" ""
    ret r3
 l38iffalse:
-   .src 14:2="if val > 0"
+   .srcstep 16 16 17 "inline_test_multi_return_expr.crexx" 14 3 13 "  if val > 0 then return 1"
+   .traceevent "V" 6 "R" "I" "a" 1 16 16 0 "val" ""
    igt r3,a1,0
+   .traceevent "O" 4 "R" "B" "r" 3 16 16 0 "" ""
    brf l44iffalse,r3
-   .src 14:14="then"
-   .src 14:19="return 1"
+   .srcstep 17 17 17 "inline_test_multi_return_expr.crexx" 14 14 18 "  if val > 0 then return 1"
+   .srcstep 15 15 17 "inline_test_multi_return_expr.crexx" 14 19 27 "  if val > 0 then return 1"
    ret 1
 l44iffalse:
-   .src 15:3="return 0"
+   .srcstep 18 18 17 "inline_test_multi_return_expr.crexx" 15 3 11 "  return 0"
    ret 0
    .meta "inline_test_multi_return_expr.classify.val"

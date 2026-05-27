@@ -449,49 +449,47 @@ _S
 5 433 M
 (.globals=0) s
 5 422 M
-(.srcfile="sumLoop1000.crexx") s
-5 400 M
 (main\(\)          .locals=4) s
 5 389 M
-(                .meta "sumloop1000.rexx.main"="b" ".void" main\(\) "" ) s
+(                .meta "sumloop1000.main"="b" ".void" main\(\) "" ) s
 5 378 M
-(                .src 4:1="sum = 0") s
+(                .srcstep 1 1 17 "sumLoop1000.crexx" 4 1 8 "sum = 0") s
 5 367 M
-(                .meta "sumloop1000.rexx.main.sum"="b" ".int" r1) s
+(                .meta "sumloop1000.main.sum"="b" ".int" r1) s
 5 356 M
 (                load r1,0                                    * 0x000000:00c2 Load op1 with op2) s
 5 345 M
-(                .src 5:1="do") s
+(                .srcstep 6 6 17 "sumLoop1000.crexx" 5 1 3 "do i=1 to 100000") s
 5 334 M
-(                .src 5:4="i=1") s
+(                .srcstep 2 2 17 "sumLoop1000.crexx" 5 4 7 "do i=1 to 100000") s
 5 323 M
-(                .meta "sumloop1000.rexx.main.i"="b" ".int" r2) s
+(                .meta "sumloop1000.main.i"="b" ".int" r2) s
 5 312 M
 (                load r2,1                                    * 0x000003:00c2 Load op1 with op2) s
 5 301 M
-(                .src 5:8="to 100000") s
+(                .srcstep 3 3 17 "sumLoop1000.crexx" 5 8 17 "do i=1 to 100000") s
 5 290 M
 (                load r3,100000                               * 0x000006:00c2 Load op1 with op2) s
 5 279 M
-(                .src 5:8="to 100000") s
+(                .srcstep 3 3 17 "sumLoop1000.crexx" 5 8 17 "do i=1 to 100000") s
 5 268 M
 (lb_9:           igt r0,r2,r3                                 * 0x000009:0068 Int Greater than op1=\(op2>op3\)) s
 5 257 M
 (                brt lb_18,r0                                 * 0x00000d:00b4 Branch to op1 if op2 true) s
 5 246 M
-(                .src 6:4="sum = i+sum") s
+(                .srcstep 5 5 17 "sumLoop1000.crexx" 6 4 15 "   sum = i+sum") s
 5 235 M
 (                iadd r1,r2,r1                                * 0x000010:000f Integer Add \(op1=op2+op3\)) s
 5 224 M
-(                .src 5:4="i") s
+(                .srcstep 4 4 17 "sumLoop1000.crexx" 5 4 5 "do i=1 to 100000") s
 5 213 M
 (                inc r2                                       * 0x000014:0038 Increment Int \(op1++\)) s
 5 202 M
-(                .src 7:1="end") s
+(                .srcstep 7 7 17 "sumLoop1000.crexx" 7 1 4 "end") s
 5 191 M
 (                br lb_9                                      * 0x000016:00b3 Branch to op1) s
 5 180 M
-(                .src 8:1="say \\"the sum of the numbers 1 to 100000 is:\\" sum") s
+(                .srcstep 8 8 17 "sumLoop1000.crexx" 8 1 49 "say \\"the sum of the numbers 1 to 100000 is:\\" sum") s
 5 169 M
 (lb_18:          itos r1                                      * 0x000018:00d1 Set register string value from its int value) s
 5 158 M
@@ -501,13 +499,13 @@ _S
 5 136 M
 (                say r3                                       * 0x00001e:00c6 Say op1) s
 5 125 M
-(                .src 9:1="return") s
+(                .srcstep 9 9 17 "sumLoop1000.crexx" 9 1 7 "return") s
 5 114 M
 (                ret                                          * 0x000020:00ad Return VOID) s
 5 103 M
-(                .meta "sumloop1000.rexx.main.i") s
+(                .meta "sumloop1000.main.i") s
 5 92 M
-(                .meta "sumloop1000.rexx.main.sum") s
+(                .meta "sumloop1000.main.sum") s
 5 81 M
 (*******************************************************************************) s
 _R

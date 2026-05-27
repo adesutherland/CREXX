@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : basic_strings.crexx
- * BUILT                  : 2026-04-30 20:04:11
+ * BUILT                  : 2026-05-27 17:53:11
  */
 
-.srcfile="basic_strings.crexx"
 .globals=0
 
 main() .locals=10
@@ -14,34 +12,55 @@ main() .locals=10
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 3:1="a = \"Hello\""
+   .srcstep 1 1 17 "basic_strings.crexx" 3 1 12 "a = \"Hello\""
    .meta "basic_strings.main.a"="b" ".string" r0
    load r0,"Hello"
-   .src 4:1="b = \"World\""
+   .traceevent "L" 4 "R" "S" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 0 1 1 0 "a" ""
+   .srcstep 2 2 17 "basic_strings.crexx" 4 1 12 "b = \"World\""
    .meta "basic_strings.main.b"="b" ".string" r1
    load r1,"World"
-   .src 5:1="c = a || \" \" || b"
+   .traceevent "L" 4 "R" "S" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 2 2 0 "b" ""
+   .srcstep 3 3 17 "basic_strings.crexx" 5 1 18 "c = a || \" \" || b"
    .meta "basic_strings.main.c"="b" ".string" r2
+   .traceevent "V" 6 "R" "S" "r" 0 3 3 0 "a" ""
    concat r4,r0," "
+   .traceevent "O" 4 "R" "S" "r" 4 3 3 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 1 3 3 0 "b" ""
    concat r2,r4,r1
-   .src 6:1="say c"
+   .traceevent "O" 4 "R" "S" "r" 2 3 3 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 2 3 3 0 "c" ""
+   .srcstep 4 4 17 "basic_strings.crexx" 6 1 6 "say c"
+   .traceevent "V" 6 "R" "S" "r" 2 4 4 0 "c" ""
    say r2
-   .src 8:1="d = a \" \" b"
+   .srcstep 5 5 17 "basic_strings.crexx" 8 1 12 "d = a \" \" b"
    .meta "basic_strings.main.d"="b" ".string" r3
+   .traceevent "V" 6 "R" "S" "r" 0 5 5 0 "a" ""
    sconcat r4,r0," "
+   .traceevent "O" 4 "R" "S" "r" 4 5 5 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 1 5 5 0 "b" ""
    sconcat r3,r4,r1
-   .src 9:1="say d"
+   .traceevent "O" 4 "R" "S" "r" 3 5 5 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 5 5 0 "d" ""
+   .srcstep 6 6 17 "basic_strings.crexx" 9 1 6 "say d"
+   .traceevent "V" 6 "R" "S" "r" 3 6 6 0 "d" ""
    say r3
-   .src 11:1="say length(c)"
+   .srcstep 7 7 17 "basic_strings.crexx" 11 1 14 "say length(c)"
+   .traceevent "V" 6 "R" "S" "r" 2 7 7 0 "c" ""
    load r4,1
    swap r5,r2
    call r6,rxfnsb.length(),r4
    swap r2,r5
    itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 7 7 0 "length" ""
    say r6
-   .src 12:1="say substr(c, 1, 5)"
+   .srcstep 8 8 17 "basic_strings.crexx" 12 1 20 "say substr(c, 1, 5)"
+   .traceevent "V" 6 "R" "S" "r" 2 8 8 0 "c" ""
    load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 8 8 0 "" ""
    load r7,5
+   .traceevent "L" 4 "R" "I" "r" 7 8 8 0 "" ""
    load r4,4
    settp r2,256
    swap r5,r2
@@ -49,9 +68,12 @@ main() .locals=10
    settp r8,512
    call r9,rxfnsb.substr(),r4
    swap r2,r5
+   .traceevent "F" 4 "R" "S" "r" 9 8 8 0 "substr" ""
    say r9
-   .src 13:1="say pos(\"World\", c)"
+   .srcstep 9 9 17 "basic_strings.crexx" 13 1 20 "say pos(\"World\", c)"
    load r7,"World"
+   .traceevent "L" 4 "R" "S" "r" 7 9 9 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 2 9 9 0 "c" ""
    load r6,3
    settp r7,768
    settp r2,256
@@ -60,8 +82,9 @@ main() .locals=10
    call r5,rxfnsb.pos(),r6
    swap r2,r8
    itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 9 9 0 "pos" ""
    say r5
-   .src 14:1="return"
+   .srcstep 10 10 17 "basic_strings.crexx" 14 1 7 "return"
    ret
    .meta "basic_strings.main.a"
    .meta "basic_strings.main.b"

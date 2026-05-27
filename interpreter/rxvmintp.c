@@ -579,12 +579,6 @@ typedef struct rxvm_source_context {
 
 static void resolve_runtime_source_context(module *mod, size_t address, rxvm_source_context *source_context) {
     int meta_ix;
-    string_constant *fallback_file = 0;
-    string_constant *fallback_source = 0;
-    size_t fallback_line = 0;
-    size_t fallback_column = 0;
-    size_t fallback_address = SIZE_MAX;
-    size_t source_step_address = SIZE_MAX;
 
     source_context->file = 0;
     source_context->source = 0;
@@ -602,16 +596,7 @@ static void resolve_runtime_source_context(module *mod, size_t address, rxvm_sou
         meta_entry *meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
         if (meta->address > address) break;
 
-        if (meta->base.type == META_FILE) {
-            meta_file_constant *file_meta = (meta_file_constant *) meta;
-            fallback_file = get_runtime_string_constant(mod, file_meta->file);
-        } else if (meta->base.type == META_SRC) {
-            meta_src_constant *src_meta = (meta_src_constant *) meta;
-            fallback_line = src_meta->line;
-            fallback_column = src_meta->column;
-            fallback_source = get_runtime_string_constant(mod, src_meta->source);
-            fallback_address = meta->address;
-        } else if (meta->base.type == META_SOURCE_STEP) {
+        if (meta->base.type == META_SOURCE_STEP) {
             meta_source_step_constant *step_meta = (meta_source_step_constant *) meta;
             source_context->file = get_runtime_string_constant(mod, step_meta->file);
             source_context->source = get_runtime_string_constant(mod, step_meta->source_line);
@@ -621,21 +606,9 @@ static void resolve_runtime_source_context(module *mod, size_t address, rxvm_sou
             source_context->step_id = step_meta->step_id;
             source_context->clause_id = step_meta->clause_id;
             source_context->flags = step_meta->flags;
-            source_step_address = meta->address;
         }
 
         meta_ix = meta->next;
-    }
-
-    if (fallback_source && (source_step_address == SIZE_MAX || fallback_address > source_step_address)) {
-        source_context->file = fallback_file;
-        source_context->source = fallback_source;
-        source_context->line = fallback_line;
-        source_context->column = fallback_column;
-        source_context->active_end_column = fallback_column;
-        source_context->step_id = 0;
-        source_context->clause_id = 0;
-        source_context->flags = 0;
     }
 }
 
@@ -3008,23 +2981,6 @@ START_OF_INSTRUCTIONS
                 for (j = 0, i = start; j < size; j++, i = ((meta_entry *) (pool + i))->next) {
                     value_zero(op1R->attributes[j]);
                     switch (((meta_entry *) (pool + i))->base.type) {
-                        case META_SRC:
-                            /* TODO we are using the string to hold the object type - final approach tbc */
-                            set_null_string(op1R->attributes[j], ".meta_src");
-                            set_num_attributes(op1R->attributes[j], 3);
-                            op1R->attributes[j]->attributes[0]->int_value = (rxinteger) ((meta_src_constant *) (pool +
-                                                                                                                i))->line;
-                            op1R->attributes[j]->attributes[1]->int_value = (rxinteger) ((meta_src_constant *) (pool +
-                                                                                                                i))->column;
-                            x = (rxinteger) ((meta_src_constant *) (pool + i))->source;
-                            set_const_string(op1R->attributes[j]->attributes[2], (string_constant *) (pool + x));
-                            break;
-                        case META_FILE:
-                            set_null_string(op1R->attributes[j], ".meta_file");
-                            set_num_attributes(op1R->attributes[j], 1);
-                            x = (rxinteger) ((meta_file_constant *) (pool + i))->file;
-                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
-                            break;
                         case META_SOURCE_STEP:
                             set_null_string(op1R->attributes[j], ".meta_source_step");
                             set_num_attributes(op1R->attributes[j], 8);

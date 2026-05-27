@@ -1,92 +1,109 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_array_return_assign.crexx
- * BUILT                  : 2026-04-30 20:04:10
+ * BUILT                  : 2026-05-27 17:53:53
  */
 
-.srcfile="inline_test_array_return_assign.crexx"
 .globals=0
 
 main() .locals=5
    .meta "inline_test_array_return_assign.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 10 10 17 "inline_test_array_return_assign.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
    .meta "inline_test_array_return_assign.main.more"="b" ".string[*]" r0
-   .src 7:3="more = buildArray(\"green\", \"gold\")"
+   .srcstep 1 1 17 "inline_test_array_return_assign.crexx" 7 3 37 "  more = buildArray(\"green\", \"gold\")"
    null r0
    .meta "inline_test_array_return_assign.main.values"="b" ".string[*]" r1
-   .src 5:3="values = buildArray(\"red\", \"blue\")"
+   .srcstep 2 2 17 "inline_test_array_return_assign.crexx" 5 3 37 "  values = buildArray(\"red\", \"blue\")"
    null r1
-   .src 4:3="say \"Starting array return assign inline test...\""
+   .srcstep 3 3 17 "inline_test_array_return_assign.crexx" 4 3 52 "  say \"Starting array return assign inline test...\""
    say "Starting array return assign inline test..."
-   .src 5:3="values = buildArray(\"red\", \"blue\")"
+   .srcstep 4 4 17 "inline_test_array_return_assign.crexx" 5 3 37 "  values = buildArray(\"red\", \"blue\")"
    load r3,"red"
+   .traceevent "L" 4 "R" "S" "r" 3 4 4 0 "" ""
    load r4,"blue"
+   .traceevent "L" 4 "R" "S" "r" 4 4 4 0 "" ""
    load r2,2
    settp r3,768
    settp r4,768
    call r1,buildArray(),r2
-   .src 6:3="say values[1] || \":\" || values[2"
+   .traceevent "F" 4 "R" "S" "r" 1 4 4 0 "buildarray" ""
+   .traceevent "A" 6 "R" "S" "r" 1 4 4 0 "values" ""
+   .srcstep 5 5 17 "inline_test_array_return_assign.crexx" 6 3 35 "  say values[1] || \":\" || values[2]"
    minattrs r1,1
    linkattr1 r4,r1,1
+   .traceevent "V" 6 "R" "S" "r" 4 5 5 0 "values" ""
    concat r3,r4,":"
    unlink r4
+   .traceevent "O" 4 "R" "S" "r" 3 5 5 0 "" ""
    minattrs r1,2
    linkattr1 r2,r1,2
+   .traceevent "V" 6 "R" "S" "r" 2 5 5 0 "values" ""
    concat r3,r3,r2
    unlink r2
+   .traceevent "O" 4 "R" "S" "r" 3 5 5 0 "" ""
    say r3
-   .src 7:3="more = buildArray(\"green\", \"gold\")"
+   .srcstep 6 6 17 "inline_test_array_return_assign.crexx" 7 3 37 "  more = buildArray(\"green\", \"gold\")"
    load r3,"green"
+   .traceevent "L" 4 "R" "S" "r" 3 6 6 0 "" ""
    load r4,"gold"
+   .traceevent "L" 4 "R" "S" "r" 4 6 6 0 "" ""
    load r2,2
    settp r3,768
    settp r4,768
    call r0,buildArray(),r2
-   .src 8:3="say renderArray(more)"
+   .traceevent "F" 4 "R" "S" "r" 0 6 6 0 "buildarray" ""
+   .traceevent "A" 6 "R" "S" "r" 0 6 6 0 "more" ""
+   .srcstep 7 7 17 "inline_test_array_return_assign.crexx" 8 3 24 "  say renderArray(more)"
+   .traceevent "V" 6 "R" "S" "r" 0 7 7 0 "more" ""
    load r3,1
    settp r0,256
    swap r4,r0
    call r2,renderArray(),r3
    swap r0,r4
+   .traceevent "F" 4 "R" "S" "r" 2 7 7 0 "renderarray" ""
    say r2
-   .src 9:3="say \"Array return assign inline test finished.\""
+   .srcstep 8 8 17 "inline_test_array_return_assign.crexx" 9 3 50 "  say \"Array return assign inline test finished.\""
    say "Array return assign inline test finished."
-   .src 10:3="return 0"
+   .srcstep 9 9 17 "inline_test_array_return_assign.crexx" 10 3 11 "  return 0"
    ret 0
    .meta "inline_test_array_return_assign.main.more"
    .meta "inline_test_array_return_assign.main.values"
 
 buildArray() .locals=4
    .meta "inline_test_array_return_assign.buildarray"="b" ".string[*]" buildArray() "left=.string,right=.string"
-   .src 12:1="buildArray: procedure = .string[]"
+   .srcstep 17 17 17 "inline_test_array_return_assign.crexx" 12 1 34 "buildArray: procedure = .string[]"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 13:7="left = .string"
+   .srcstep 11 11 17 "inline_test_array_return_assign.crexx" 13 7 21 "  arg left = .string, right = .string"
    .meta "inline_test_array_return_assign.buildarray.left"="b" ".string" a1
-   .src 13:23="right = .string"
+   .srcstep 12 12 17 "inline_test_array_return_assign.crexx" 13 23 38 "  arg left = .string, right = .string"
    .meta "inline_test_array_return_assign.buildarray.right"="b" ".string" a2
    .meta "inline_test_array_return_assign.buildarray.temp"="b" ".string[*]" r2
-   .src 14:3="temp = .string"
+   .srcstep 13 13 17 "inline_test_array_return_assign.crexx" 14 3 17 "  temp = .string[]"
    null r2
-   .src 15:3="temp[1] = left"
+   .srcstep 14 14 17 "inline_test_array_return_assign.crexx" 15 3 17 "  temp[1] = left"
    minattrs r2,1
    linkattr1 r3,r2,1
+   .traceevent "V" 6 "R" "S" "a" 1 14 14 0 "left" ""
    scopy r3,a1
+   .traceevent "A" 6 "R" "S" "r" 3 14 14 0 "temp" ""
    unlink r3
-   .src 16:3="temp[2] = right"
+   .srcstep 15 15 17 "inline_test_array_return_assign.crexx" 16 3 18 "  temp[2] = right"
    minattrs r2,2
    linkattr1 r3,r2,2
+   .traceevent "V" 6 "R" "S" "a" 2 15 15 0 "right" ""
    scopy r3,a2
+   .traceevent "A" 6 "R" "S" "r" 3 15 15 0 "temp" ""
    unlink r3
-   .src 17:3="return temp"
+   .srcstep 16 16 17 "inline_test_array_return_assign.crexx" 17 3 14 "  return temp"
+   .traceevent "V" 6 "R" "S" "r" 2 16 16 0 "temp" ""
    ret r2
    .meta "inline_test_array_return_assign.buildarray.left"
    .meta "inline_test_array_return_assign.buildarray.right"
@@ -94,22 +111,26 @@ buildArray() .locals=4
 
 renderArray() .locals=4
    .meta "inline_test_array_return_assign.renderarray"="b" ".string" renderArray() "value=.string[*]"
-   .src 19:1="renderArray: procedure = .string"
+   .srcstep 20 20 17 "inline_test_array_return_assign.crexx" 19 1 33 "renderArray: procedure = .string"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 20:7="value = .string"
+   .srcstep 18 18 17 "inline_test_array_return_assign.crexx" 20 7 22 "  arg value = .string[]"
    .meta "inline_test_array_return_assign.renderarray.value"="b" ".string[*]" a1
-   .src 21:3="return value[1] || \":\" || value[2"
+   .srcstep 19 19 17 "inline_test_array_return_assign.crexx" 21 3 36 "  return value[1] || \":\" || value[2]"
    minattrs a1,1
    linkattr1 r1,a1,1
+   .traceevent "V" 6 "R" "S" "r" 1 19 19 0 "value" ""
    concat r2,r1,":"
    unlink r1
+   .traceevent "O" 4 "R" "S" "r" 2 19 19 0 "" ""
    minattrs a1,2
    linkattr1 r3,a1,2
+   .traceevent "V" 6 "R" "S" "r" 3 19 19 0 "value" ""
    concat r2,r2,r3
    unlink r3
+   .traceevent "O" 4 "R" "S" "r" 2 19 19 0 "" ""
    ret r2
    .meta "inline_test_array_return_assign.renderarray.value"

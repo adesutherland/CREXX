@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : repro_dotted_index.crexx
- * BUILT                  : 2026-03-18 11:58:59
+ * BUILT                  : 2026-05-27 17:53:04
  */
 
-.srcfile="repro_dotted_index.crexx"
 .globals=0
 
 main() .locals=4
@@ -15,44 +13,66 @@ main() .locals=4
    setnumcas 1
    setnumstd 1
    .meta "repro_dotted_index.main.outbuf"="b" ".string[10]" r1
-   .src 2:1="outbuf = .string[10"
+   .srcstep 1 1 17 "repro_dotted_index.crexx" 2 1 20 "outbuf = .string[10]"
    null r1
-   .src 3:1="lino = 0"
+   .srcstep 2 2 17 "repro_dotted_index.crexx" 3 1 9 "lino = 0"
    .meta "repro_dotted_index.main.lino"="b" ".int" r0
    load r0,0
-   .src 4:1="lino = lino + 1"
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "lino" ""
+   .srcstep 3 3 17 "repro_dotted_index.crexx" 4 1 16 "lino = lino + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "lino" ""
    iadd r0,r0,1
-   .src 5:1="outbuf.lino = \"Line A\""
+   .traceevent "O" 4 "R" "I" "r" 0 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "lino" ""
+   .srcstep 4 4 17 "repro_dotted_index.crexx" 5 1 23 "outbuf.lino = \"Line A\""
+   .traceevent "V" 6 "R" "I" "r" 0 4 4 0 "lino" ""
+   .traceevent "C" 4 "R" "I" "r" 0 4 4 0 "outbuf" ""
    setattrs r1,10
    linkattr1 r2,r1,r0
    load r3,"Line A"
+   .traceevent "L" 4 "R" "S" "r" 3 4 4 0 "" ""
    scopy r2,r3
+   .traceevent "A" 6 "R" "S" "r" 2 4 4 0 "outbuf" ""
    unlink r2
-   .src 6:1="lino = lino + 1"
+   .srcstep 5 5 17 "repro_dotted_index.crexx" 6 1 16 "lino = lino + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "lino" ""
    iadd r0,r0,1
-   .src 7:1="outbuf.lino = \"Line B\""
+   .traceevent "O" 4 "R" "I" "r" 0 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "lino" ""
+   .srcstep 6 6 17 "repro_dotted_index.crexx" 7 1 23 "outbuf.lino = \"Line B\""
+   .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "lino" ""
+   .traceevent "C" 4 "R" "I" "r" 0 6 6 0 "outbuf" ""
    setattrs r1,10
    linkattr1 r3,r1,r0
    load r2,"Line B"
+   .traceevent "L" 4 "R" "S" "r" 2 6 6 0 "" ""
    scopy r3,r2
+   .traceevent "A" 6 "R" "S" "r" 3 6 6 0 "outbuf" ""
    unlink r3
-   .src 8:1="say \"Count: \" || lino"
+   .srcstep 7 7 17 "repro_dotted_index.crexx" 8 1 22 "say \"Count: \" || lino"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 7 7 0 "lino" ""
    concat r3,"Count: ",r0
+   .traceevent "O" 4 "R" "S" "r" 3 7 7 0 "" ""
    say r3
-   .src 9:1="say \"Buf 1: \" || outbuf.1"
+   .srcstep 8 8 17 "repro_dotted_index.crexx" 9 1 26 "say \"Buf 1: \" || outbuf.1"
    setattrs r1,10
    linkattr1 r3,r1,1
+   .traceevent "V" 6 "R" "S" "r" 3 8 8 0 "outbuf" ""
    concat r2,"Buf 1: ",r3
    unlink r3
+   .traceevent "O" 4 "R" "S" "r" 2 8 8 0 "" ""
    say r2
-   .src 10:1="say \"Buf 2: \" || outbuf.2"
+   .srcstep 9 9 17 "repro_dotted_index.crexx" 10 1 26 "say \"Buf 2: \" || outbuf.2"
    setattrs r1,10
    linkattr1 r3,r1,2
+   .traceevent "V" 6 "R" "S" "r" 3 9 9 0 "outbuf" ""
    concat r2,"Buf 2: ",r3
    unlink r3
+   .traceevent "O" 4 "R" "S" "r" 2 9 9 0 "" ""
    say r2
-   .src 11:1="return 0"
+   .srcstep 10 10 17 "repro_dotted_index.crexx" 11 1 9 "return 0"
    ret 0
    .meta "repro_dotted_index.main.lino"
    .meta "repro_dotted_index.main.outbuf"

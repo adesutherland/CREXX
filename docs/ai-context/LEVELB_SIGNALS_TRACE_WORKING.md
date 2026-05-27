@@ -116,18 +116,18 @@ and the debugger-style breakpoint path keeps the next-instruction address.
 
 ### Source Metadata
 
-RXAS `.srcfile` and `.src` emit `META_FILE` and `META_SRC` records.
+RXAS `legacy source-file directive` and `legacy source-fragment directive` emit `legacy source-file metadata` and `legacy source-fragment metadata` records.
 `metaloaddata module,address` returns metadata exactly at an address.
 
 The prototype debugger has two useful patterns:
 
-- `next_rexx()` only reports source when `META_SRC` exists at the exact address
+- `next_rexx()` only reports source when `legacy source-fragment metadata` exists at the exact address
 - watch-variable lookup scans metadata backwards from `addr - 1` to find the
   most recent variable metadata
 
 For error reporting, the right rule is closest preceding source metadata. A
 fault may occur at a generated instruction inside a source clause, not only at
-the instruction where `.src` was emitted.
+the instruction where `legacy source-fragment directive` was emitted.
 
 For breakpoint stepping, exact-address source lookup is useful because stepping
 should stop at authored clause boundaries in REXX mode.
@@ -296,7 +296,7 @@ runtime_signal_raw: class
 The public runtime should wrap it as `.signal` / `runtime_signal` by:
 
 1. reading the five VM attributes
-2. resolving closest preceding `META_FILE` / `META_SRC` for module/address
+2. resolving closest preceding `legacy source-file metadata` / `legacy source-fragment metadata` for module/address
 3. exposing the message/payload through the friendly interface
 
 Decision:

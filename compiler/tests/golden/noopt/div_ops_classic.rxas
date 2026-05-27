@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : div_ops_classic.crexx
- * BUILT                  : 2026-03-24 16:14:55
+ * BUILT                  : 2026-05-27 17:52:46
  */
 
-.srcfile="div_ops_classic.crexx"
 .globals=0
 
 main() .locals=3
@@ -14,19 +12,26 @@ main() .locals=3
    setnumfrm 1
    setnumcas 1
    setnumstd 2
-   .src 3:1="gap = 101"
+   .srcstep 1 1 17 "div_ops_classic.crexx" 3 1 10 "gap = 101"
    .meta "div_ops_classic.main.gap"="b" ".int" r0
    load r0,101
-   .src 4:1="res = gap / 2"
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "gap" ""
+   .srcstep 2 2 17 "div_ops_classic.crexx" 4 1 14 "res = gap / 2"
    .meta "div_ops_classic.main.res"="b" ".float" r1
    itof r0
+   .traceevent "V" 6 "R" "F" "r" 0 2 2 0 "gap" ""
    load r2,2
    itof r2
+   .traceevent "L" 4 "R" "F" "r" 2 2 2 0 "" ""
    fdiv r1,r0,r2
-   .src 5:1="say res"
+   .traceevent "O" 4 "R" "F" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 1 2 2 0 "res" ""
+   .srcstep 3 3 17 "div_ops_classic.crexx" 5 1 8 "say res"
    ftos r1
+   .traceevent "V" 6 "R" "S" "r" 1 3 3 0 "res" ""
    say r1
-   .src 5:8=""
+   .srcstep 4 4 1 "div_ops_classic.crexx" 5 8 8 "say res"
    ret
    .meta "div_ops_classic.main.gap"
    .meta "div_ops_classic.main.res"

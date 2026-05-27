@@ -598,13 +598,6 @@ static void output_meta_pre_proc(FILE *stream, module_file *module, bin_space *p
     m  = get_first_meta_at(module, address);
     while (m != -1) {
         switch ( ((chameleon_constant*)(module->constant + m))->type ) {
-            case META_SRC: {
-                /* META Source */
-                meta_src_constant *mentry = ((meta_src_constant *) (module->constant + m));
-                (void)mentry;
-            }
-            break;
-
             case META_SOURCE_STEP: {
                 meta_source_step_constant *mentry = ((meta_source_step_constant *) (module->constant + m));
                 (void)mentry;
@@ -683,14 +676,6 @@ static void output_meta_pre_proc(FILE *stream, module_file *module, bin_space *p
             }
             break;
 
-            case META_FILE: {
-                /* META file - .srcfile="scratch" */
-                meta_file_constant *mentry = ((meta_file_constant *) (module->constant + m));
-                get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->file);
-                fprintf(stream, ".srcfile=%s\n", line_buffer);
-            }
-            break;
-
             case META_REG: {
                 /* META clear symbol */
                 meta_reg_constant *mentry = ((meta_reg_constant *) (module->constant + m));
@@ -728,15 +713,6 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
     m  = get_first_meta_at(module, address);
     while (m != -1) {
         switch ( ((chameleon_constant*)(module->constant + m))->type ) {
-            case META_SRC: {
-                /* META Source */
-                meta_src_constant *mentry = ((meta_src_constant *) (module->constant + m));
-                get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->source);
-                fprintf(stream, "                .src %d:%d=%s\n", (int) mentry->line, (int) mentry->column,
-                        line_buffer);
-            }
-            break;
-
             case META_SOURCE_STEP: {
                 meta_source_step_constant *mentry = ((meta_source_step_constant *) (module->constant + m));
                 output_meta_source_step_line(stream, pgm, mentry, "                ");
@@ -802,13 +778,6 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
             }
             break;
 
-            case META_FILE: {
-                /* META file - .srcfile="scratch" */
-                meta_file_constant *mentry = ((meta_file_constant *) (module->constant + m));
-                (void)mentry;
-            }
-            break;
-
             case META_REG: {
                 /* META clear symbol - .meta "PROC:I"="B" ".int" a1 */
                 meta_reg_constant *mentry = ((meta_reg_constant *) (module->constant + m));
@@ -859,15 +828,6 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
     m  = get_first_meta_at(module, address);
     while (m != -1) {
         switch ( ((chameleon_constant*)(module->constant + m))->type ) {
-            case META_SRC: {
-                /* META Source */
-                meta_src_constant *mentry = ((meta_src_constant *) (module->constant + m));
-                get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->source);
-                fprintf(stream, "                .src %d:%d=%s\n", (int) mentry->line, (int) mentry->column,
-                        line_buffer);
-            }
-            break;
-
             case META_SOURCE_STEP: {
                 meta_source_step_constant *mentry = ((meta_source_step_constant *) (module->constant + m));
                 output_meta_source_step_line(stream, pgm, mentry, "                ");
@@ -963,14 +923,6 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
                 fprintf(stream, " %s", line_buffer);
                 get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
                 fprintf(stream, " %s .member\n", line_buffer);
-            }
-            break;
-
-            case META_FILE: {
-                /* META file - .srcfile="scratch" */
-                meta_file_constant *mentry = ((meta_file_constant *) (module->constant + m));
-                get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->file);
-                fprintf(stream, "                .srcfile=%s\n", line_buffer);
             }
             break;
 
@@ -1136,17 +1088,6 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     }
                     break;
 
-                case META_SRC:
-                {
-                    meta_src_constant *mentry = (meta_src_constant *) entry;
-                    fprintf(stream, "* 0x%.6lx META-SRC @0x%.6lx %d:%d ",
-                            i, mentry->base.address,
-                            (int) mentry->line, (int) mentry->column);
-                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->source);
-                    fprintf(stream, "%s\n", line_buffer);
-                }
-                    break;
-
                 case META_SOURCE_STEP:
                 {
                     meta_source_step_constant *mentry = (meta_source_step_constant *) entry;
@@ -1236,15 +1177,6 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
                     fprintf(stream, " %s", line_buffer);
                     fprintf(stream, " %d\n", (int)mentry->reg);
-                }
-                    break;
-
-                case META_FILE:
-                {
-                    meta_file_constant *mentry = (meta_file_constant *)entry;
-                    fprintf(stream, "* 0x%.6lx META-FILE @0x%.6lx", i, mentry->base.address);
-                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->file);
-                    fprintf(stream, " %s\n", line_buffer);
                 }
                     break;
 

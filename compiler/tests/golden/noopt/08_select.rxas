@@ -1,9 +1,8 @@
 /*
  * SOURCE                 : 08_select.crexx
- * BUILT                  : 2026-05-02 16:17:39
+ * BUILT                  : 2026-05-27 17:52:48
  */
 
-.srcfile="08_select.crexx"
 .globals=0
 
 main() .locals=9
@@ -13,134 +12,203 @@ main() .locals=9
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 3:1="errors = 0"
+   .srcstep 1 1 17 "08_select.crexx" 3 1 11 "errors = 0"
    .meta "08_select.main.errors"="b" ".int" r3
    load r3,0
-   .src 4:1="choice = 2"
+   .traceevent "L" 4 "R" "I" "r" 3 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 1 1 0 "errors" ""
+   .srcstep 2 2 17 "08_select.crexx" 4 1 11 "choice = 2"
    .meta "08_select.main.choice"="b" ".int" r0
    load r0,2
-   .src 5:1="classic_seen = 0"
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "choice" ""
+   .srcstep 3 3 17 "08_select.crexx" 5 1 17 "classic_seen = 0"
    .meta "08_select.main.classic_seen"="b" ".int" r1
    load r1,0
-   .src 6:1="cstyle_seen = 0"
+   .traceevent "L" 4 "R" "I" "r" 1 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "classic_seen" ""
+   .srcstep 4 4 17 "08_select.crexx" 6 1 16 "cstyle_seen = 0"
    .meta "08_select.main.cstyle_seen"="b" ".int" r2
    load r2,0
-   .src 7:1="nested_seen = 0"
+   .traceevent "L" 4 "R" "I" "r" 2 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 4 4 0 "cstyle_seen" ""
+   .srcstep 5 5 17 "08_select.crexx" 7 1 16 "nested_seen = 0"
    .meta "08_select.main.nested_seen"="b" ".int" r4
    load r4,0
-   .src 9:0="select\n  when choice = 1"
+   .traceevent "L" 4 "R" "I" "r" 4 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "nested_seen" ""
+   .srcstep 12 12 6 "08_select.crexx" 9 1 7 "select"
+   .traceevent "V" 6 "R" "I" "r" 0 12 12 0 "choice" ""
    ieq r7,r0,1
+   .traceevent "O" 4 "R" "B" "r" 7 12 12 0 "" ""
    brf l151iffalse,r7
-   .src 10:19="then"
-   .src 10:24="errors = errors + 1"
+   .srcstep 13 13 17 "08_select.crexx" 10 19 23 "  when choice = 1 then errors = errors + 1"
+   .srcstep 6 6 17 "08_select.crexx" 10 24 43 "  when choice = 1 then errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 3 6 6 0 "errors" ""
    iadd r3,r3,1
+   .traceevent "O" 4 "R" "I" "r" 3 6 6 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "errors" ""
    br l151ifend
-   .src 11:3="when"
+   .srcstep 14 14 17 "08_select.crexx" 11 3 7 "  when choice = 2 then classic_seen = 1"
 l151iffalse:
-   .src 9:0="select\n  when choice = 1 then errors = errors + 1\n  when choice = 2"
+   .srcstep 9 9 6 "08_select.crexx" 9 1 7 "select"
+   .traceevent "V" 6 "R" "I" "r" 0 9 9 0 "choice" ""
    ieq r8,r0,2
+   .traceevent "O" 4 "R" "B" "r" 8 9 9 0 "" ""
    brf l152iffalse,r8
-   .src 11:19="then"
-   .src 11:24="classic_seen = 1"
+   .srcstep 10 10 17 "08_select.crexx" 11 19 23 "  when choice = 2 then classic_seen = 1"
+   .srcstep 7 7 17 "08_select.crexx" 11 24 40 "  when choice = 2 then classic_seen = 1"
    load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 7 7 0 "classic_seen" ""
    br l152ifend
-   .src 12:3="otherwise"
+   .srcstep 11 11 17 "08_select.crexx" 12 3 12 "  otherwise errors = errors + 1"
 l152iffalse:
-   .src 12:13="errors = errors + 1"
+   .srcstep 8 8 17 "08_select.crexx" 12 13 32 "  otherwise errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 3 8 8 0 "errors" ""
    iadd r3,r3,1
+   .traceevent "O" 4 "R" "I" "r" 3 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "errors" ""
 l152ifend:
 l151ifend:
    .meta "08_select.main.select_tmp"="b" ".int" r5
-   .src 15:1="select choice\n  when 1 then errors = errors + 1\n  when 2 then cstyle_seen = 1\n  otherwise errors = errors + 1"
+   .srcstep 15 15 6 "08_select.crexx" 15 1 14 "select choice"
    null r5
-   .src 15:1="select choice\n  when 1 then errors = errors + 1\n  when 2 then cstyle_seen = 1\n  otherwise errors = errors + 1"
+   .srcstep 16 16 6 "08_select.crexx" 15 1 14 "select choice"
+   .traceevent "V" 6 "R" "I" "r" 0 16 16 0 "choice" ""
    icopy r5,r0
-   .src 15:0="select choice\n  when 1 then errors = errors + 1\n  when 2 then cstyle_seen = 1\n  otherwise errors = errors + 1"
+   .traceevent "A" 6 "R" "I" "r" 5 16 16 0 "select_tmp" ""
+   .srcstep 22 22 6 "08_select.crexx" 15 1 14 "select choice"
    ieq r8,r5,1
+   .traceevent "O" 4 "R" "B" "r" 8 22 22 0 "" ""
    brf l159iffalse,r8
-   .src 16:15="errors = errors + 1"
+   .srcstep 17 17 17 "08_select.crexx" 16 15 34 "  when 1 then errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 3 17 17 0 "errors" ""
    iadd r3,r3,1
+   .traceevent "O" 4 "R" "I" "r" 3 17 17 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 17 17 0 "errors" ""
    br l159ifend
-   .src 17:3="when"
+   .srcstep 23 23 17 "08_select.crexx" 17 3 7 "  when 2 then cstyle_seen = 1"
 l159iffalse:
-   .src 15:0="select choice\n  when 1 then errors = errors + 1\n  when 2 then cstyle_seen = 1\n  otherwise errors = errors + 1"
+   .srcstep 20 20 6 "08_select.crexx" 15 1 14 "select choice"
    ieq r7,r5,2
+   .traceevent "O" 4 "R" "B" "r" 7 20 20 0 "" ""
    brf l162iffalse,r7
-   .src 17:15="cstyle_seen = 1"
+   .srcstep 18 18 17 "08_select.crexx" 17 15 30 "  when 2 then cstyle_seen = 1"
    load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 18 18 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 18 18 0 "cstyle_seen" ""
    br l162ifend
-   .src 18:3="otherwise"
+   .srcstep 21 21 17 "08_select.crexx" 18 3 12 "  otherwise errors = errors + 1"
 l162iffalse:
-   .src 18:13="errors = errors + 1"
+   .srcstep 19 19 17 "08_select.crexx" 18 13 32 "  otherwise errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 3 19 19 0 "errors" ""
    iadd r3,r3,1
+   .traceevent "O" 4 "R" "I" "r" 3 19 19 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 19 19 0 "errors" ""
 l162ifend:
 l159ifend:
-   .src 21:0="select\n  when classic_seen = 1 & cstyle_seen = 1"
+   .srcstep 31 31 6 "08_select.crexx" 21 1 7 "select"
+   .traceevent "V" 6 "R" "I" "r" 1 31 31 0 "classic_seen" ""
    ieq r8,r1,1
+   .traceevent "O" 4 "R" "B" "r" 8 31 31 0 "" ""
    brf l72andend,r8
+   .traceevent "V" 6 "R" "I" "r" 2 31 31 0 "cstyle_seen" ""
    ieq r8,r2,1
+   .traceevent "O" 4 "R" "B" "r" 8 31 31 0 "" ""
 l72andend:
+   .traceevent "O" 4 "R" "B" "r" 8 31 31 0 "" ""
    brf l174iffalse,r8
-   .src 22:43="then"
+   .srcstep 32 32 17 "08_select.crexx" 22 43 47 "  when classic_seen = 1 & cstyle_seen = 1 then do"
    .meta "08_select.main.select_tmp"="b" ".int" r6
-   .src 23:5="select choice\n      when 2 then nested_seen = 1\n      otherwise errors = errors + 1"
+   .srcstep 24 24 6 "08_select.crexx" 23 5 18 "    select choice"
    null r6
-   .src 23:5="select choice\n      when 2 then nested_seen = 1\n      otherwise errors = errors + 1"
+   .srcstep 25 25 6 "08_select.crexx" 23 5 18 "    select choice"
+   .traceevent "V" 6 "R" "I" "r" 0 25 25 0 "choice" ""
    icopy r6,r0
-   .src 23:4="select choice\n      when 2 then nested_seen = 1\n      otherwise errors = errors + 1"
+   .traceevent "A" 6 "R" "I" "r" 6 25 25 0 "select_tmp" ""
+   .srcstep 28 28 6 "08_select.crexx" 23 5 18 "    select choice"
    ieq r7,r6,2
+   .traceevent "O" 4 "R" "B" "r" 7 28 28 0 "" ""
    brf l171iffalse,r7
-   .src 24:19="nested_seen = 1"
+   .srcstep 26 26 17 "08_select.crexx" 24 19 34 "      when 2 then nested_seen = 1"
    load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 26 26 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 26 26 0 "nested_seen" ""
    br l171ifend
-   .src 25:7="otherwise"
+   .srcstep 29 29 17 "08_select.crexx" 25 7 16 "      otherwise errors = errors + 1"
 l171iffalse:
-   .src 25:17="errors = errors + 1"
+   .srcstep 27 27 17 "08_select.crexx" 25 17 36 "      otherwise errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 3 27 27 0 "errors" ""
    iadd r3,r3,1
+   .traceevent "O" 4 "R" "I" "r" 3 27 27 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 27 27 0 "errors" ""
 l171ifend:
    br l174ifend
-   .src 26:5="end"
+   .srcstep 33 33 17 "08_select.crexx" 26 5 8 "    end"
 l174iffalse:
-   .src 28:13="errors = errors + 1"
+   .srcstep 30 30 17 "08_select.crexx" 28 13 32 "  otherwise errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 3 30 30 0 "errors" ""
    iadd r3,r3,1
+   .traceevent "O" 4 "R" "I" "r" 3 30 30 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 30 30 0 "errors" ""
 l174ifend:
-   .src 31:0="if classic_seen \\= 1"
+   .srcstep 36 36 17 "08_select.crexx" 31 1 21 "if classic_seen \\= 1 then do"
+   .traceevent "V" 6 "R" "I" "r" 1 36 36 0 "classic_seen" ""
    ine r8,r1,1
+   .traceevent "O" 4 "R" "B" "r" 8 36 36 0 "" ""
    brf l110iffalse,r8
-   .src 31:22="then"
-   .src 32:3="errors = errors + 1"
+   .srcstep 37 37 17 "08_select.crexx" 31 22 26 "if classic_seen \\= 1 then do"
+   .srcstep 34 34 17 "08_select.crexx" 32 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 3 34 34 0 "errors" ""
    iadd r3,r3,1
-   .src 33:3="say \"Classic SELECT branch did not run\""
+   .traceevent "O" 4 "R" "I" "r" 3 34 34 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 34 34 0 "errors" ""
+   .srcstep 35 35 17 "08_select.crexx" 33 3 42 "  say \"Classic SELECT branch did not run\""
    say "Classic SELECT branch did not run"
 l110iffalse:
-   .src 36:0="if cstyle_seen \\= 1"
+   .srcstep 40 40 17 "08_select.crexx" 36 1 20 "if cstyle_seen \\= 1 then do"
+   .traceevent "V" 6 "R" "I" "r" 2 40 40 0 "cstyle_seen" ""
    ine r8,r2,1
+   .traceevent "O" 4 "R" "B" "r" 8 40 40 0 "" ""
    brf l122iffalse,r8
-   .src 36:21="then"
-   .src 37:3="errors = errors + 1"
+   .srcstep 41 41 17 "08_select.crexx" 36 21 25 "if cstyle_seen \\= 1 then do"
+   .srcstep 38 38 17 "08_select.crexx" 37 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 3 38 38 0 "errors" ""
    iadd r3,r3,1
-   .src 38:3="say \"C-style SELECT branch did not run\""
+   .traceevent "O" 4 "R" "I" "r" 3 38 38 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 38 38 0 "errors" ""
+   .srcstep 39 39 17 "08_select.crexx" 38 3 42 "  say \"C-style SELECT branch did not run\""
    say "C-style SELECT branch did not run"
 l122iffalse:
-   .src 41:0="if nested_seen \\= 1"
+   .srcstep 44 44 17 "08_select.crexx" 41 1 20 "if nested_seen \\= 1 then do"
+   .traceevent "V" 6 "R" "I" "r" 4 44 44 0 "nested_seen" ""
    ine r8,r4,1
+   .traceevent "O" 4 "R" "B" "r" 8 44 44 0 "" ""
    brf l134iffalse,r8
-   .src 41:21="then"
-   .src 42:3="errors = errors + 1"
+   .srcstep 45 45 17 "08_select.crexx" 41 21 25 "if nested_seen \\= 1 then do"
+   .srcstep 42 42 17 "08_select.crexx" 42 3 22 "  errors = errors + 1"
+   .traceevent "V" 6 "R" "I" "r" 3 42 42 0 "errors" ""
    iadd r3,r3,1
-   .src 43:3="say \"Nested SELECT branch did not run\""
+   .traceevent "O" 4 "R" "I" "r" 3 42 42 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 42 42 0 "errors" ""
+   .srcstep 43 43 17 "08_select.crexx" 43 3 41 "  say \"Nested SELECT branch did not run\""
    say "Nested SELECT branch did not run"
 l134iffalse:
-   .src 46:0="if errors = 0"
+   .srcstep 47 47 17 "08_select.crexx" 46 1 14 "if errors = 0 then say \"PASS: select\""
+   .traceevent "V" 6 "R" "I" "r" 3 47 47 0 "errors" ""
    ieq r8,r3,0
+   .traceevent "O" 4 "R" "B" "r" 8 47 47 0 "" ""
    brf l140iffalse,r8
-   .src 46:15="then"
-   .src 46:20="say \"PASS: select\""
+   .srcstep 48 48 17 "08_select.crexx" 46 15 19 "if errors = 0 then say \"PASS: select\""
+   .srcstep 46 46 17 "08_select.crexx" 46 20 38 "if errors = 0 then say \"PASS: select\""
    say "PASS: select"
 l140iffalse:
-   .src 47:1="return errors <> 0"
+   .srcstep 49 49 17 "08_select.crexx" 47 1 19 "return errors <> 0"
+   .traceevent "V" 6 "R" "I" "r" 3 49 49 0 "errors" ""
    ine r8,r3,0
    btoi r8
+   .traceevent "O" 4 "R" "I" "r" 8 49 49 0 "" ""
    ret r8
    .meta "08_select.main.choice"
    .meta "08_select.main.classic_seen"

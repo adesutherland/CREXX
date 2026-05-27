@@ -154,24 +154,16 @@ runtime_signal: class implements .signal
     return _raw.payload()
 
   file: method = .string
-    source_file = _signal_metadata_string(module(), address(), ".meta_source_step", 4)
-    if source_file <> "" then return source_file
-    return _signal_metadata_string(module(), address(), ".meta_file", 1)
+    return _signal_metadata_string(module(), address(), ".meta_source_step", 4)
 
   line: method = .int
-    source_line = _signal_metadata_int(module(), address(), ".meta_source_step", 5)
-    if source_line <> 0 then return source_line
-    return _signal_metadata_int(module(), address(), ".meta_src", 1)
+    return _signal_metadata_int(module(), address(), ".meta_source_step", 5)
 
   column: method = .int
-    source_column = _signal_metadata_int(module(), address(), ".meta_source_step", 6)
-    if source_column <> 0 then return source_column
-    return _signal_metadata_int(module(), address(), ".meta_src", 2)
+    return _signal_metadata_int(module(), address(), ".meta_source_step", 6)
 
   source: method = .string
-    source_line_text = _signal_metadata_string(module(), address(), ".meta_source_step", 8)
-    if source_line_text <> "" then return source_line_text
-    return _signal_metadata_string(module(), address(), ".meta_src", 3)
+    return _signal_metadata_string(module(), address(), ".meta_source_step", 8)
 
 signalaction: interface
   retry: factory

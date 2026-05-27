@@ -1,53 +1,60 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : inline_test_concat_expr.crexx
- * BUILT                  : 2026-04-30 16:45:19
+ * BUILT                  : 2026-05-27 17:53:20
  */
 
-.srcfile="inline_test_concat_expr.crexx"
 .globals=0
 
 main() .locals=6
    .meta "inline_test_concat_expr.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 14 14 17 "inline_test_concat_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting concat inline expr test...\""
+   .srcstep 1 1 17 "inline_test_concat_expr.crexx" 4 3 44 "  say \"Starting concat inline expr test...\""
    say "Starting concat inline expr test..."
-   .src 5:3="do"
-   .src 5:6="i = 1"
+   .srcstep 10 10 17 "inline_test_concat_expr.crexx" 5 3 5 "  do i = 1 to 3"
+   .srcstep 2 2 17 "inline_test_concat_expr.crexx" 5 6 11 "  do i = 1 to 3"
    .meta "inline_test_concat_expr.main.i"="b" ".int" r0
    load r0,1
-   .src 5:12="to 3"
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
+   .srcstep 3 3 17 "inline_test_concat_expr.crexx" 5 12 16 "  do i = 1 to 3"
    load r3,3
+   .traceevent "L" 4 "R" "I" "r" 3 0 0 0 "" ""
 l8dostart:
-   .src 5:12="to 3"
+   .srcstep 3 3 17 "inline_test_concat_expr.crexx" 5 12 16 "  do i = 1 to 3"
    igt r4,r0,r3
    brt l8doend,r4
-   .src 6:5="msg = \"Value=\" || asString(i)"
+   .srcstep 8 8 17 "inline_test_concat_expr.crexx" 6 5 34 "    msg = \"Value=\" || asString(i)"
    .meta "inline_test_concat_expr.main.msg"="b" ".string" r1
-   .src 6:23="asString"
-   .src 13:7="val"
+   .srcstep 7 7 17 "inline_test_concat_expr.crexx" 6 23 31 "    msg = \"Value=\" || asString(i)"
+   .srcstep 5 5 33 "inline_test_concat_expr.crexx" 13 7 10 "  arg val = .int"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    icopy r2,r0
-   .src 14:3="return val"
+   .traceevent "A" 6 "R" "I" "r" 2 5 5 0 "val" ""
+   .srcstep 6 6 17 "inline_test_concat_expr.crexx" 14 3 13 "  return val"
    itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 8 8 0 "val" ""
    scopy r5,r2
    acopy r5,r2
    br l42bexprend
 l42bexprend:
    concat r1,"Value=",r5
-   .src 7:5="say msg"
+   .traceevent "O" 4 "R" "S" "r" 1 8 8 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 8 8 0 "msg" ""
+   .srcstep 9 9 17 "inline_test_concat_expr.crexx" 7 5 12 "    say msg"
+   .traceevent "V" 6 "R" "S" "r" 1 9 9 0 "msg" ""
    say r1
 l8doinc:
-   .src 5:6="i"
+   .srcstep 4 4 17 "inline_test_concat_expr.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0
-   .src 8:3="end"
+   .srcstep 11 11 17 "inline_test_concat_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   .src 9:3="say \"Concat inline expr test finished.\""
+   .srcstep 12 12 17 "inline_test_concat_expr.crexx" 9 3 42 "  say \"Concat inline expr test finished.\""
    say "Concat inline expr test finished."
-   .src 10:3="return 0"
+   .srcstep 13 13 17 "inline_test_concat_expr.crexx" 10 3 11 "  return 0"
    ret 0

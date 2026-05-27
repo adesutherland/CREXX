@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : 14_strings.crexx
- * BUILT                  : 2026-03-18 11:58:56
+ * BUILT                  : 2026-05-27 17:52:56
  */
 
-.srcfile="14_strings.crexx"
 .globals=0
 
 main() .locals=1
@@ -14,17 +12,23 @@ main() .locals=1
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 3:1="say \"Hello\" || \"World\""
+   .srcstep 1 1 17 "14_strings.crexx" 3 1 23 "say \"Hello\" || \"World\"  /* Concatenation */"
    load r0,"World"
+   .traceevent "L" 4 "R" "S" "r" 0 1 1 0 "" ""
    concat r0,"Hello",r0
+   .traceevent "O" 4 "R" "S" "r" 0 1 1 0 "" ""
    say r0
-   .src 4:1="say \"Hello\" \"World\""
+   .srcstep 2 2 17 "14_strings.crexx" 4 1 20 "say \"Hello\" \"World\"     /* Abuttal (Space) */"
    load r0,"World"
+   .traceevent "L" 4 "R" "S" "r" 0 2 2 0 "" ""
    sconcat r0,"Hello",r0
+   .traceevent "O" 4 "R" "S" "r" 0 2 2 0 "" ""
    say r0
-   .src 6:1="say \"Hello\"'World'"
+   .srcstep 3 3 17 "14_strings.crexx" 6 1 19 "say \"Hello\"'World'"
    load r0,"World"
+   .traceevent "L" 4 "R" "S" "r" 0 3 3 0 "" ""
    concat r0,"Hello",r0
+   .traceevent "O" 4 "R" "S" "r" 0 3 3 0 "" ""
    say r0
-   .src 6:19=""
+   .srcstep 4 4 1 "14_strings.crexx" 6 19 19 "say \"Hello\"'World'"
    ret
