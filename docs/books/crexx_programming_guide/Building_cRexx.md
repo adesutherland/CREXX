@@ -117,6 +117,31 @@ you checked out if git is not a released version, there is a
 change that some test cases fail, but generally these should indicate
 success.
 
+## Build version and timestamp
+
+The project version is read from the top-level `VERSION` file. To change
+the cREXX version number, edit that file and use a semantic version such
+as `1.0.0`, `1.0.0-beta.1`, or `1.0.0-beta.1+build.7`.
+
+Local, non-release builds also include build metadata in the displayed
+version: the build channel, the short Git commit id when Git is
+available, and a `dirty` marker when the working tree has local changes.
+The commit id is the part of the local version string that identifies
+the source revision. After a `git pull`, the commit id is refreshed the
+next time CMake configures that build directory. If CMake does not
+reconfigure automatically, run the same `cmake -S ../CREXX -B .`
+configure command again before rebuilding.
+
+`CREXX_BUILD_TIMESTAMP` is recorded in `BUILDINFO` for package
+provenance, but it is not part of the displayed tool version. When it is
+not supplied, CMake creates a UTC timestamp during the first configure
+of a build directory and stores it in `CMakeCache.txt`. Release and CI
+builds should pass an explicit timestamp:
+
+\begin{verbatim}
+cmake -DCREXX_BUILD_TIMESTAMP=20260527T120000Z -S ../CREXX -B .
+\end{verbatim}
+
 ## Use of \crexx{} to build \crexx{}
 
 \crexx{} is used to build the library of built-in functions that are written in Rexx (and,
@@ -189,4 +214,3 @@ All executables and libraries are delivered in the `bin` directory of the distri
 Table: Optional plugin build  options. {#tbl:id}
 
 Some libraries, with dependencies on installed software products, are only produced when they are opted-in with CMake build options. The defaults for these options are \code{OFF}.
-

@@ -69,9 +69,9 @@ jobs:
           if [ "$channel" = "release" ]; then
             display_version="crexx-${version}"
           elif [ -n "$version_build_metadata" ]; then
-            display_version="crexx-${version_without_build}+${version_build_metadata}.${channel}.${timestamp}.g${short_sha}"
+            display_version="crexx-${version_without_build}+${version_build_metadata}.${channel}.g${short_sha}"
           else
-            display_version="crexx-${version_without_build}+${channel}.${timestamp}.g${short_sha}"
+            display_version="crexx-${version_without_build}+${channel}.g${short_sha}"
           fi
 
           echo "version=${version}" >> "$GITHUB_OUTPUT"

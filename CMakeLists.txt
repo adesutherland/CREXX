@@ -33,6 +33,9 @@ endif()
 
 if(NOT CREXX_BUILD_TIMESTAMP)
     string(TIMESTAMP CREXX_BUILD_TIMESTAMP "%Y%m%dT%H%M%SZ" UTC)
+    # Keep the auto-generated timestamp stable for this build tree. Otherwise
+    # every CMake reconfigure rewrites crexx_version.h and forces broad rebuilds.
+    set(CREXX_BUILD_TIMESTAMP "${CREXX_BUILD_TIMESTAMP}" CACHE STRING "UTC build timestamp for version metadata, formatted as YYYYMMDDTHHMMSSZ" FORCE)
 endif()
 if(NOT CREXX_BUILD_TIMESTAMP MATCHES "^[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]T[0-9][0-9][0-9][0-9][0-9][0-9]Z$")
     message(FATAL_ERROR "CREXX_BUILD_TIMESTAMP must be formatted as YYYYMMDDTHHMMSSZ")
@@ -83,7 +86,7 @@ endif()
 
 set(CREXX_VERSION_BUILD_METADATA_EXTRA "")
 if(NOT CREXX_BUILD_CHANNEL STREQUAL "release")
-    set(CREXX_VERSION_BUILD_METADATA_EXTRA "${CREXX_BUILD_CHANNEL}.${CREXX_BUILD_TIMESTAMP}")
+    set(CREXX_VERSION_BUILD_METADATA_EXTRA "${CREXX_BUILD_CHANNEL}")
     if(CREXX_BUILD_COMMIT_SHORT)
         string(APPEND CREXX_VERSION_BUILD_METADATA_EXTRA ".g${CREXX_BUILD_COMMIT_SHORT}")
     endif()
