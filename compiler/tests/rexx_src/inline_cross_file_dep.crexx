@@ -1,5 +1,5 @@
 options levelb
-namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength vargTotal vargPick residualFunctionDependency residualCallDependency residualCallTarget refVargDynamicBlocked residualCallBlocked memberCallBlocked aliasBlocked box
+namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength typeBump vargTotal vargPick residualFunctionDependency residualCallDependency residualCallTarget refVargDynamicBlocked residualCallBlocked memberCallBlocked aliasBlocked box
 
 inc: procedure = .int
   arg value = .int
@@ -70,6 +70,11 @@ safeLength: procedure = .int
   result = .int
   assembler strlen result,value
   return result
+
+typeBump: procedure = .int
+  arg expose value = .int
+  value = value + 1
+  return value
 
 aliasBlocked: procedure = .int
   value = .int

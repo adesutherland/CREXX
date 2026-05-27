@@ -2920,6 +2920,18 @@ static InlineExprContext inline_classify_expr_context(ASTNode *node) {
                    INLINE_EXPR_CONTEXT_SHORT_CIRCUIT_OPERATOR :
                    INLINE_EXPR_CONTEXT_NONE;
 
+        case OP_TYPE_CAST:
+        case OP_TYPE_IS:
+        case OP_TYPEOF:
+            /*
+             * Type operators are direct value consumers: the first child is
+             * evaluated before the cast/test/typeof operation, while any type
+             * descriptor child is metadata-only for register purposes.
+             */
+            return parent->child == node ?
+                   INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER :
+                   INLINE_EXPR_CONTEXT_NONE;
+
         default:
             if (inline_parent_is_eager_operator(parent)) {
                 return inline_eager_operator_context_is_safe(node) ?

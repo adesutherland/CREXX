@@ -72,8 +72,10 @@ More precisely:
 - The call may be a local plain-procedure `FUNCTION`, a local class `MEMBER_CALL`, or a local class `FACTORY_CALL`.
 - For assignment inlining, the call must be the entire RHS of the enclosing `ASSIGN`.
 - For standalone call inlining, the enclosing statement must be `CALL func(...)`.
-- For expression inlining, the call is rewritten to a `BLOCK_EXPR` when the parent bucket is supported. Supported buckets now include direct single-value consumers such as `SAY`, `RETURN`, `IF`, `WHILE`, `UNTIL`, and loop bounds, plus eager operators, comparisons, concatenation, short-circuit boolean operands, and function/factory/method argument positions. Dedicated statement rewrites still own standalone `CALL` statements and whole-RHS `ASSIGN` sites.
-- The callee body must be available in the current compilation unit. Imported callees remain a later milestone.
+- For expression inlining, the call is rewritten to a `BLOCK_EXPR` when the parent bucket is supported. Supported buckets now include direct single-value consumers such as `SAY`, `RETURN`, `IF`, `WHILE`, `UNTIL`, and loop bounds, plus eager operators, comparisons, concatenation, type casts/tests/`typeof`, short-circuit boolean operands, and function/factory/method argument positions. Dedicated statement rewrites still own standalone `CALL` statements and whole-RHS `ASSIGN` sites.
+- The callee body must be available either as a local AST body or as a
+  compatible imported `META_INLINE` template. Imported templates re-enter the
+  same clone/bind/rewrite machinery as local bodies.
 - Arguments and return values must stay within the currently implemented safe slice: scalars, object values, binary values, optional/default formals, and array-shaped formals/returns are now supported across local procedure and local class-call inlining.
 - The callee must satisfy the existing safety checks: small body, no recursion cycle, and no unsupported vararg indexing. Value-producing procedures still require a final `RETURN`; void statement-call sites may inline through bare-return and fallthrough shapes.
 - Procedure-level `expose` clauses are not inlineable yet. This is separate from `arg expose` / by-reference formals: a procedure-level expose changes global binding semantics and must stay as a real call until the clone/bind core models that environment explicitly.
@@ -95,7 +97,7 @@ The discriminator therefore keeps these sites out of the `BLOCK_EXPR` path:
 - mutating method expression sites that do not have a direct receiver copyback target
 - imported method expression sites whose receiver is not direct
 
-The current local proof is concrete rather than global: composed inline tests cover arithmetic, unary operators, comparisons, concatenation, nested call arguments, aggregate/object expression arguments, short-circuit side effects, and class-method sibling liveness. New composed buckets should get the same no-opt/opt runtime comparison before being opened.
+The current local proof is concrete rather than global: composed inline tests cover arithmetic, unary operators, comparisons, concatenation, type operators, nested call arguments, aggregate/object expression arguments, short-circuit side effects, and class-method sibling liveness. New composed buckets should get the same no-opt/opt runtime comparison before being opened.
 
 The statement-position cases rewrite the enclosing statement. The expression-position case rewrites the call node itself to `BLOCK_EXPR`.
 
@@ -222,7 +224,12 @@ rewrite the `FUNCTION` node into:
 Important details:
 
 - The `BLOCK_EXPR` must preserve the original call node's value and target typing.
-- The current implementation admits supported local calls as direct single-value consumers and as supported composed expression children. This includes ordinary operators, short-circuit boolean parents, and call/factory/method argument positions. Receiver-position member expressions remain excluded until receiver materialisation and copyback are modelled for that shape.
+- The current implementation admits supported calls as direct single-value
+  consumers and as supported composed expression children. This includes
+  ordinary operators, comparisons, concatenation, type casts/tests/`typeof`,
+  short-circuit boolean parents, and call/factory/method argument positions.
+  Receiver-position member expressions remain excluded until receiver
+  materialisation and copyback are modelled for that shape.
 - For call/factory/method argument positions, argument expression output is emitted before the caller's argument-count register is loaded and before argument marshalling starts. This is required because an inlined argument `BLOCK_EXPR` may legitimately use temporary registers in the caller's call frame before the final `swap`/`call` sequence is assembled.
 - Whole-RHS `ASSIGN` and standalone `CALL` sites still use dedicated statement-position rewrites instead of the expression path.
 
@@ -531,8 +538,9 @@ The first reader/writer subset is intentionally narrow:
 - by-value trailing varargs are transported for `arg[]`, constant `arg(n)`,
   and constant existence/value nodes that are already proven safe by the local
   inliner. Dynamic vararg indexing is transported by the codec but rejected by
-  the writer/reader eligibility gates until the generated expression-block
-  lowering is register-safe.
+  the writer/reader eligibility gates: `arg(ix)` must preserve call-time
+  OUT_OF_RANGE behaviour for zero or short vararg tails, and the current
+  materialised-tail array proof is not complete for that shape.
 - non-aliasing raw `ASSEMBLER` nodes are transported as ordinary AST nodes.
   The writer and reader still reject aliasing assembler such as `link`,
   `linkattr*`, `linktoattr*`, and `unlink`.
@@ -723,6 +731,9 @@ The implementation now covers:
   built on instructions such as `strlen` can export and inline
 - cross-file transport and inlining of by-value vararg plain procedures when
   the body only needs count or constant-index vararg access
+- expression inlining under type casts, type tests, and `typeof`, where the
+  type operator consumes the call result directly and has no live value sibling
+  that can clobber a `BLOCK_EXPR` result
 - RXAS/RXDAS round-trip preservation of class method inline metadata, with
   source-imported getter bodies and binary-imported scalar getter/setter
   method bodies consumable by the inliner
@@ -734,7 +745,9 @@ The implementation still excludes:
   factory-selection, and object-lifetime metadata is rich enough to prove them
 - procedures with procedure-level `expose` clauses
 - callables containing raw assembler aliasing statements
-- dynamic-index vararg access (`arg.i`, `arg(i)`, `arg(i, "E")`)
+- dynamic-index vararg access (`arg.i`, `arg(i)`, `arg(i, "E")`) until the
+  lowering proves both register liveness and exact OUT_OF_RANGE semantics for
+  every vararg tail length
 - mutating methods whose receiver is not a direct symbol copyback target
 - receiver-position inlining, such as `buildBox("seed").getName()` or
   `items[i].setName("x")`, pending a parent-expression liveness,
@@ -789,7 +802,7 @@ Stage 2: call-site capability selection
 - `inline_validate_call_site()` answers whether a particular call is safe for the current rewrite machinery
 - it applies recursion blocking, arity/varg checks, and the concrete binding rules for actual arguments
 - statement rewrites then decide whether the enclosing node shape is one of the implemented buckets
-- expression rewrites additionally pass through `inline_classify_expr_context()`, which currently admits only direct single-value consumers to the `BLOCK_EXPR` path and fails closed for composed expressions such as operators, call arguments, and receiver expressions
+- expression rewrites additionally pass through `inline_classify_expr_context()`, which admits the proven `BLOCK_EXPR` buckets: direct single-value consumers, eager operators with stable or captured left operands, comparisons, concatenation, type casts/tests/`typeof`, short-circuit boolean operands, and call-like argument positions. Receiver-position expressions and unproved mutating-method copyback shapes still fail closed.
 
 This split is the right shape for later milestones:
 
@@ -797,6 +810,14 @@ This split is the right shape for later milestones:
 - new parent-expression contexts should extend stage 2 without weakening structural safety checks
 
 That separation is what keeps the inliner opportunity-based instead of turning `is_inlinable` into an over-broad “inline everywhere” flag.
+
+Inlining is recursive in the ordinary fixed-point sense. `optimise()` runs up
+to eight inline passes; each pass first re-identifies inlineable bodies and then
+rewrites currently supported call sites. If `outer()` contains `inner()`, an
+early pass may inline `inner()` into `outer()` and a later pass may inline the
+now-rewritten `outer()` at its caller. This is intentionally different from
+unbounded recursive expansion: self-recursive and mutually recursive call
+cycles are detected by `inline_call_is_recursive()` and remain normal calls.
 
 ### Known fail-closed local cases
 
@@ -832,10 +853,10 @@ They should be tracked separately so that future work fixes the right layer:
   those instructions can create aliases that are not represented as ordinary
   variable or receiver writes in the AST. Non-aliasing assembler does not by
   itself block inlining.
-- Nested method calls inside an inlined method body: for example `prefix()`
-  can inline its outer method body while leaving `label()` as a normal call
-  when `label()` appears under a concatenation expression. This is expected
-  until composed expression parents are supported.
+- Residual member/factory dependencies in exported inline payloads: composed
+  expression parents are supported for local rewrites, but binary transport of
+  residual `MEMBER_CALL` and `FACTORY_CALL` dependencies still needs richer
+  receiver, class-layout, and factory proof data.
 
 The first implementation target should be chosen by semantic risk, not by how
 often a fail-closed debug line appears. In particular, a repeated
@@ -849,53 +870,32 @@ writer/export gates from caller/call-site gates because the fix is often at a
 different layer. A body can be locally inlineable but not exportable, and an
 exported body can still be rejected at a particular call site.
 
-The May 2026 inventory was gathered from the release compiler with `rxc -d2`,
-using each library's CMake-style import flags and counting only diagnostics
-whose source anchor was the file being compiled. The Level B BIF sweep uses the
-111 modules listed in `lib/rxfnsb/rexx/CMakeLists.txt`; four extra scratch or
-example `.rexx` files in that directory were excluded from the build-module
-counts. The class library sweep covers the 19 `.rexx` sources in
-`lib/classlib`, and the simple Level G sweep covers `lib/rxfnsg/rexx/llm.rexx`.
+The May 27, 2026 inventory was gathered from the release compiler and current
+release artifacts. The source-module counts use the CMake module lists:
+124 Level B BIF modules, 20 classlib modules, and one Level G `llm` module.
+The linked-artifact counts were verified with `rxdas` against
+`cmake-build-release/bin/library.rxbin`, `classlib.rxbin`, and `rxfnsg.rxbin`.
 
-`DEBUG_INLINE_FAILCLOSED` lines are raw visitor diagnostics. The fixed-point
-pass can revisit the same source site, so those counts are a shape signal, not
-a callable denominator.
+`DEBUG_INLINE_FAILCLOSED` and `DEBUG_INLINE_EXPORT` lines are raw visitor
+diagnostics. The fixed-point pass can revisit the same source site, so those
+counts are useful as a shape signal, not as a callable denominator. The stable
+progress denominator is the number of importable `.inline` records preserved in
+the final linked artifact.
 
-| Source set | Sources | Files with `.inline` | `.inline` records | Writer/export rejects | Caller fail-closed lines | Assessment |
+| Source set | Sources | Source callable defs | Source files with `.inline` | Source `.inline` records | Linked `.inline` records | Assessment |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| Level B BIFs (`rxfnsb`) | 111 | 75 | 185 | 208 | 583 | Coverage is materially better than the earlier 33-file/110-record baseline, and the 300-node cutoff admits five more BIF source files than the 200-node sweep. The remaining rejects are still concentrated in large BIFs, private helpers, procedure expose, address/trace/signal helpers, and wider class layouts. |
-| Class library (`classlib`) | 19 | 19 | 190 | 43 | 23 | Transport coverage is broad: every classlib source emits metadata. The remaining blockers are mostly collection/iterator class layout and factory semantics rather than missing metadata plumbing. |
-| Simple Level G (`rxfnsg`) | 1 | 1 | 7 | 5 | 18 | The `llm` module is represented and useful as a higher-level smoke case. Its residual gates are object-valued attributes, one member call in an exported body, and mutating method expression positions. |
-| Total | 131 | 95 | 382 | 256 | 624 | This is the release inventory for the 300-node cutoff and a good handover baseline for post-release inliner work. |
+| Level B BIFs (`rxfnsb`) | 124 | 614 | 59 | 209 | 209 | The core linked library already preserved inline metadata. Coverage is concentrated in address/trace/signal/socket/http helpers plus many one-record classic BIF wrappers; large BIFs, procedure-level expose, assembler aliasing, dynamic varargs, and some generated associations remain the main blockers. |
+| Class library (`classlib`) | 20 | 259 | 20 | 142 | 142 | Every classlib source now contributes inline metadata to the final linked artifact. The remaining blockers are mostly oversized collection methods, non-scalar class attribute layouts, generated `BLOCK_EXPR` associations, and factory dependency transport. |
+| Level G (`rxfnsg`) | 1 | 62 | 1 | 25 | 25 | The `llm` module contributes useful metadata after linked-artifact inline preservation. Remaining blockers are mostly object-valued/provider class state, residual member calls, generated `BLOCK_EXPR` associations, and one oversized generator. |
+| Total | 145 | 935 | 80 | 376 | 376 | This is the current linked-artifact baseline for tracking library inline coverage. |
 
-Writer/export reject counts:
+The same sweep's raw diagnostic shape was:
 
-| Gate shape | BIFs | classlib | Level G | Total | Assessment |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Unportable class attribute shape | 46 | 26 | 4 | 76 | Largest remaining class-related gate. Scalar attribute layouts are open; aggregate/object/binary attributes still need an explicit layout and copy/reference proof. |
-| Body exceeds `INLINE_MAX_NODES` | 32 | 0 | 0 | 32 | Pure profitability/size policy, mostly large BIFs. The release cutoff is 300 nodes; this drops the cutoff bucket from 50 to 32 compared with the 200-node sweep. |
-| Callable is not namespace-exposed | 32 | 1 | 0 | 33 | Mostly policy. Private helpers should usually inline into exposed wrappers locally, not be exported individually. |
-| Unsupported `BLOCK_EXPR` association | 21 | 9 | 0 | 30 | A transport/tree-shape gate, not the same as the caller-side expression rewrite. It often appears after local inlining creates richer payload structure. |
-| Unsupported `LEAVE` association | 20 | 0 | 0 | 20 | Loop/control-flow transport gate. Keep separate from simple expression inlining. |
-| Procedure-level `expose` | 16 | 0 | 0 | 16 | Environment-binding semantic gate. |
-| Assembler aliasing instruction | 13 | 0 | 0 | 13 | Correctly closed until aliasing effects can be represented per operand. |
-| Residual plain function dependency without proof data | 11 | 0 | 0 | 11 | Direct residual calls are supported when the target has importable proof data; these remaining cases are generated/private/procedure-expose helpers that still lack it. |
-| Unsupported `FACTORY_CALL` node | 1 | 7 | 0 | 8 | Material for classlib iterator factories; depends on factory/match semantics and object lifetime proof. |
-| Decimal/numeric-control nodes | 5 | 0 | 0 | 5 | Small codec expansion candidate. |
-| Inline metadata collection failed | 4 | 0 | 0 | 4 | Investigate individually; keep closed until the exact missing tree shape is known. |
-| Unsupported `ITERATE` association | 4 | 0 | 0 | 4 | Loop/control-flow transport singleton family after the 300-node sweep. |
-| Unsupported vararg access | 2 | 0 | 0 | 2 | Dynamic vararg access remains semantically risky. |
-| Unsupported `MEMBER_CALL` node | 1 | 0 | 1 | 2 | Receiver/dispatch proof is still missing for residual member dependencies. |
-
-Caller-side fail-closed counts:
-
-| Gate shape | BIFs | classlib | Level G | Total | Assessment |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Expression context belongs to a dedicated statement rewrite | 444 | 23 | 15 | 482 | Raw and pass-noisy, but still the top caller-side signal. Some contexts are already handled by dedicated rewrites; the remaining sites need to be reviewed by parent shape rather than opened as a blanket rule. |
-| `BLOCK_EXPR` expression needs a direct single-value consumer | 102 | 0 | 0 | 102 | Semantically valid only when the destination can be proven. The count rises with the 300-node cutoff because more near-threshold BIF bodies are analysed deeply enough to expose their next call-site blocker. |
-| Recursive inline cycle detected | 24 | 0 | 0 | 24 | Safety gate; keep closed. |
-| Failed to bind inline call arguments | 10 | 0 | 0 | 10 | Usually arity/default/vararg proof rather than an export problem. |
-| Mutating method multi-return assignment needs statement-position copyback | 3 | 0 | 3 | 6 | Receiver/copyback gate; important for Level G and future iterator-style APIs. |
+| Source set | Structural/export reject lines | Caller fail-closed lines | Dominant remaining signals |
+| --- | ---: | ---: | --- |
+| Level B BIFs (`rxfnsb`) | 1077 | 2846 | Body cutoff, procedure-level expose, assembler aliasing, argument binding, and dedicated-statement contexts. |
+| Class library (`classlib`) | 139 | 98 | Generated `BLOCK_EXPR` associations, body cutoff, non-scalar class attributes, factory transport, and dedicated-statement contexts. |
+| Level G (`rxfnsg`) | 26 | 103 | Non-scalar/provider class state, residual member calls, generated `BLOCK_EXPR` associations, body cutoff, and mutating-method copyback. |
 
 Current tests give good coverage for the open slice: 56 local `inline_test_*`
 compiler tests cover the supported statement/expression buckets, refs,
@@ -916,21 +916,21 @@ Reason classes:
 
 | ID | Layer | Gate | Reason class | BIF signal | Assessment | Next review |
 | --- | --- | --- | --- | --- | --- | --- |
-| `W1` | Writer/export | Residual callable nodes in payload: direct `FUNCTION` dependencies and statement `CALL` wrappers are supported when proof data exists; `MEMBER_CALL`, `FACTORY_CALL`, and generated associations such as `BLOCK_EXPR`, `LEAVE`, `ITERATE` remain closed | mixed: complete for direct calls with proof data, semantic dependency for the rest | Current export counts: residual function dependency 11/0/0, `BLOCK_EXPR` 21/9/0, `LEAVE` 20/0/0, `ITERATE` 4/0/0, `MEMBER_CALL` 1/0/1, `FACTORY_CALL` 1/7/0 for BIFs/classlib/Level G. | Direct residual procedure calls now use the `;d` dependency table and reader-side FQN/signature validation, so imported inline bodies can leave helper calls as normal calls after the outer body is inlined. | Keep member/factory dependencies and generated associations closed until their richer proof data exists. Treat each association family as its own gate. |
-| `W2` | Writer/export | Class attribute shape must be portable for method/factory payloads; scalar integer/boolean/float/string attributes are allowed and binary-imported method bodies can consume those layouts, aggregate/object/binary class attributes are not | mixed: complete for scalar method layouts, semantic dependency for wider layouts/factories | Current export counts: 46 BIF, 26 classlib, 4 Level G rejects. This is the largest remaining class-related gate and the main classlib/Level G blocker. | Scalar member metadata now carries explicit attribute register fields, and binary-imported method bodies attach payloads. Factory payload consumption remains source-contract-only for now because constructor semantics and match/provider selection need a wider proof. | Leave aggregate/object/binary attrs and binary factory payload consumption closed until class-layout and factory semantics are explicitly proved. |
-| `W3` | Writer/export policy | Callable must be namespace-exposed to carry `.inline` metadata | policy | Current export counts: 32 BIF, 1 classlib, 0 Level G private helper rejects. | Mostly deliberate. Private helpers should not be exported individually just to improve metadata counts. If an exposed procedure locally inlines a private helper, the helper's final AST is already folded into the exposed export. | Leave closed for standalone export. Revisit only with a dependency-table design or if tooling wants non-inline AST payloads distinct from inline-consumable bodies. |
-| `W4` | Structural/export | Body cutoff: `INLINE_MAX_NODES` is 300 for the release slice | profitability | Current export counts: 32 BIF, 0 classlib, 0 Level G cutoff rejects; the earlier 200-node sweep had 50 BIF rejects. | Valuable but not a semantic proof issue. The cutoff is intentionally a profitability/metadata-size policy, not a safety proof. Raising it admitted the near-threshold BIFs while leaving very large helpers closed. | For post-release work, consider call-site-sensitive profitability, loop-sensitive thresholds, or a library-only export threshold rather than treating 300 as semantically special. |
-| `W5` | Structural/export | Procedure-level `expose` clauses are not inlineable/exportable | semantic dependency | Current export counts: 16 BIF, 0 classlib, 0 Level G rejects, mostly runtime-state helpers. | Semantically real. `arg expose` is already modelled; procedure-level `expose` changes global/caller environment binding. | Leave closed until inline scope cloning explicitly models procedure expose. Good candidate for a design note before code. |
-| `W6` | Structural/export | Raw assembler aliasing through `link`, `linkattr*`, `linktoattr*`, `unlink`; non-aliasing stateful helpers rely on call-prologue-equivalent copy isolation | semantic dependency | Current export counts: 13 BIF, 0 classlib, 0 Level G aliasing rejects. Stateful string helpers are covered by `SCOPY` cursor reset and formal read/write binding tests. | Aliasing remains correctly closed because it creates storage identity not represented in normal AST symbol links. Stateful string helpers are no longer closed as a class: `setstrpos`, `substcut`, and `dropchar` may inline when their operands are ordinary formals/locals and no aliasing instruction is present. | Keep aliasing closed until assembler instruction effects can be modelled per operand and locally proved. |
-| `W7` | Writer/export codec | Decimal/numeric-control AST nodes such as `DEC_STANDARD`, `DEC_FUZZ`, `DEC_FORM`, `DEC_DIGITS`, `DEC_CASE` are not transported | codec/transport | Current export counts: 5 BIF, 0 classlib, 0 Level G rejects. | Likely low-risk codec work, but only useful for the few numeric-control helpers. | Candidate for a small later slice if numeric BIF coverage matters. Add focused transport tests first. |
-| `W8` | Writer/export codec | Unsupported scope/symbol/node families outside the current whitelist | codec/transport | Low in current BIF scan beyond the named gates | Keep whitelist-based. Expanding the codec is cheap only when the downstream imported template can still be validated and emitted. | Add one node family at a time with source/RXAS/RXDAS/binary tests. |
-| `C1` | Caller/call-site | Composed-expression `BLOCK_EXPR` inlining | mixed: complete for proven parent shapes, semantic dependency for the remaining expression parents | Current raw caller counts: expression-context gate 444/23/15 and direct-consumer `BLOCK_EXPR` gate 102/0/0 for BIFs/classlib/Level G. | Opened for the local proven slice: arithmetic, unary operators, comparisons, concatenation, short-circuit operands, and call-like argument positions. Raw residual counts must be reviewed by parent shape because fixed-point revisits inflate them and some contexts are intentionally handled by separate rewrites. Receiver-position expressions remain separate. | Keep covered through the composed-expression runtime tests; add one no-opt/opt runtime test for each new composed bucket. |
+| `W1` | Writer/export | Residual callable nodes in payload: direct `FUNCTION` dependencies and statement `CALL` wrappers are supported when proof data exists; `MEMBER_CALL`, `FACTORY_CALL`, and generated associations such as `BLOCK_EXPR`, `LEAVE`, `ITERATE` remain closed | mixed: complete for direct calls with proof data, semantic dependency for the rest | Current raw diagnostics still show residual function dependencies, generated associations, and member/factory nodes. Use the linked-artifact table above, not pass-noisy debug lines, as the progress denominator. | Direct residual procedure calls now use the `;d` dependency table and reader-side FQN/signature validation, so imported inline bodies can leave helper calls as normal calls after the outer body is inlined. | Keep member/factory dependencies and generated associations closed until their richer proof data exists. Treat each association family as its own gate. |
+| `W2` | Writer/export | Class attribute shape must be portable for method/factory payloads; scalar integer/boolean/float/string attributes are allowed and binary-imported method bodies can consume those layouts, aggregate/object/binary class attributes are not | mixed: complete for scalar method layouts, semantic dependency for wider layouts/factories | Still one of the dominant classlib and Level G blockers in the raw diagnostics. | Scalar member metadata now carries explicit attribute register fields, and binary-imported method bodies attach payloads. Factory payload consumption remains source-contract-only for now because constructor semantics and match/provider selection need a wider proof. | Leave aggregate/object/binary attrs and binary factory payload consumption closed until class-layout and factory semantics are explicitly proved. |
+| `W3` | Writer/export policy | Callable must be namespace-exposed to carry `.inline` metadata | policy | Still present, mostly in Level B helper-heavy modules. | Mostly deliberate. Private helpers should not be exported individually just to improve metadata counts. If an exposed procedure locally inlines a private helper, the helper's final AST is already folded into the exposed export. | Leave closed for standalone export. Revisit only with a dependency-table design or if tooling wants non-inline AST payloads distinct from inline-consumable bodies. |
+| `W4` | Structural/export | Body cutoff: `INLINE_MAX_NODES` is 300 for the release slice | profitability | Still the largest raw structural/export signal, especially in Level B and classlib. | Valuable but not a semantic proof issue. The cutoff is intentionally a profitability/metadata-size policy, not a safety proof. Raising it admitted the near-threshold BIFs while leaving very large helpers closed. | For post-release work, consider call-site-sensitive profitability, loop-sensitive thresholds, or a library-only export threshold rather than treating 300 as semantically special. |
+| `W5` | Structural/export | Procedure-level `expose` clauses are not inlineable/exportable | semantic dependency | Still concentrated in runtime-state helpers. | Semantically real. `arg expose` is already modelled; procedure-level `expose` changes global/caller environment binding. | Leave closed until inline scope cloning explicitly models procedure expose. Good candidate for a design note before code. |
+| `W6` | Structural/export | Raw assembler aliasing through `link`, `linkattr*`, `linktoattr*`, `unlink`; non-aliasing stateful helpers rely on call-prologue-equivalent copy isolation | semantic dependency | Still a major Level B structural signal. Stateful string helpers are covered by `SCOPY` cursor reset and formal read/write binding tests. | Aliasing remains correctly closed because it creates storage identity not represented in normal AST symbol links. Stateful string helpers are no longer closed as a class: `setstrpos`, `substcut`, and `dropchar` may inline when their operands are ordinary formals/locals and no aliasing instruction is present. | Keep aliasing closed until assembler instruction effects can be modelled per operand and locally proved. |
+| `W7` | Writer/export codec | Decimal/numeric-control AST nodes such as `DEC_STANDARD`, `DEC_FUZZ`, `DEC_FORM`, `DEC_DIGITS`, `DEC_CASE` are not transported | codec/transport | Low current signal. | Likely low-risk codec work, but only useful for the few numeric-control helpers. | Candidate for a small later slice if numeric BIF coverage matters. Add focused transport tests first. |
+| `W8` | Writer/export codec | Unsupported scope/symbol/node families outside the current whitelist | codec/transport | Low signal beyond the named gates. | Keep whitelist-based. Expanding the codec is cheap only when the downstream imported template can still be validated and emitted. | Add one node family at a time with source/RXAS/RXDAS/binary tests. |
+| `C1` | Caller/call-site | Composed-expression `BLOCK_EXPR` inlining | mixed: complete for proven parent shapes, semantic dependency for the remaining expression parents | Raw diagnostics still show dedicated-statement contexts and a smaller set of direct-consumer gaps. | Opened for the local proven slice: arithmetic, unary operators, comparisons, concatenation, type operators, short-circuit operands, and call-like argument positions. Raw residual counts must be reviewed by parent shape because fixed-point revisits inflate them and some contexts are intentionally handled by separate rewrites. Receiver-position expressions remain separate. | Keep covered through the composed-expression runtime tests; add one no-opt/opt runtime test for each new composed bucket. |
 | `C2` | Caller/call-site | Receiver-position inlining remains closed for general cases | semantic dependency | Covered by existing negative tests; BIF impact appears through `MEMBER_CALL` export rejects | A lowering such as `__receiver = items[i]; __receiver.setName("x"); items[i] = __receiver` is possible, but it performs two general object/attribute copies and needs locator capture so computed receivers are evaluated once. Keep closed until receiver references, move semantics, or a deliberate materialise/copyback protocol is designed. | Leave closed until receiver reference/move/materialisation semantics are agreed. Do not keep revisiting as a generic inliner gap. |
-| `C3` | Caller/call-site | Mutating method inline requires a direct receiver copyback target | semantic dependency | Current raw caller counts: 3 BIF, 0 classlib, 3 Level G copyback rejects. | Correctly conservative. Non-direct receivers need materialisation plus copyback semantics. | Leave closed until receiver materialisation/copyback is designed. |
-| `C4` | Import/call-site | Source-imported getter-style member templates and scalar binary-imported method templates are supported; binary-imported factories and non-scalar member layouts remain closed | mixed: complete for scalar methods, semantic dependency for the rest | Cross-file tests now prove RXAS/RXDAS round-trip plus binary import consumption for scalar getter/setter methods. All 19 classlib files emit inline metadata, but classlib still has 26 non-scalar layout rejects and 7 factory-call rejects. | This opens the class-library getter/setter path without pretending general receiver, factory, or aggregate layout semantics are solved. | Keep the remaining member/factory cases tied to their explicit W2/C2/C3 dependency notes. |
-| `C5` | Caller/call-site | Dynamic vararg indexing is closed for both by-value and `.ref` / `expose` varargs | semantic dependency | Current export counts: 2 BIF dynamic-vararg rejects; current raw caller counts include 10 BIF argument-binding rejects. | Semantically important. Reference varargs need locator arrays or per-index alias capture. By-value dynamic access currently lowers through generated expression blocks and captured arrays; the April 2026 regex regression showed that float comparison parents can alias a generated result register and change `max(1, len)` into an unsafe advance. | Leave closed until dynamic vararg access is lowered without BLOCK_EXPR register-alias risk, or until the expression/register allocator has a proof that parent result registers cannot clobber child values. |
-| `C6` | Safety | Recursive inline cycles are blocked | safety | Current raw caller counts: 24 BIF, 0 classlib, 0 Level G recursive-cycle rejects. | Must remain closed as a safety gate. | Keep. Only consider bounded/manual inline hints much later. |
-| `C7` | Validity/safety | Value-producing callees need valid return shape; arity must match; vararg required indexes must be provided | safety | Covered by existing positive/negative inline tests and the 10 current BIF argument-binding rejects. | These are language/semantic validity checks, not optimisation opportunities. | Keep. Improve diagnostics only if needed. |
+| `C3` | Caller/call-site | Mutating method inline requires a direct receiver copyback target | semantic dependency | Still visible in Level G and some Level B raw diagnostics. | Correctly conservative. Non-direct receivers need materialisation plus copyback semantics. | Leave closed until receiver materialisation/copyback is designed. |
+| `C4` | Import/call-site | Source-imported getter-style member templates and scalar binary-imported method templates are supported; binary-imported factories and non-scalar member layouts remain closed | mixed: complete for scalar methods, semantic dependency for the rest | Cross-file tests now prove RXAS/RXDAS round-trip plus binary import consumption for scalar getter/setter methods. All current classlib files emit inline metadata into the final linked artifact, but non-scalar layouts and factory-call transport still block wider consumption. | This opens the class-library getter/setter path without pretending general receiver, factory, or aggregate layout semantics are solved. | Keep the remaining member/factory cases tied to their explicit W2/C2/C3 dependency notes. |
+| `C5` | Caller/call-site | Dynamic vararg indexing is closed for both by-value and `.ref` / `expose` varargs | semantic dependency | Still appears as unsupported vararg access and argument-binding diagnostics in Level B. | Semantically important. Reference varargs need locator arrays or per-index alias capture. By-value dynamic access currently lowers through generated expression blocks and captured arrays; the April 2026 regex regression showed that float comparison parents can alias a generated result register and change `max(1, len)` into an unsafe advance. | Leave closed until dynamic vararg access is lowered without BLOCK_EXPR register-alias risk, or until the expression/register allocator has a proof that parent result registers cannot clobber child values. |
+| `C6` | Safety | Recursive inline cycles are blocked | safety | Still present in raw diagnostics where library helpers call through cycles. | Must remain closed as a safety gate. | Keep. Only consider bounded/manual inline hints much later. |
+| `C7` | Validity/safety | Value-producing callees need valid return shape; arity must match; vararg required indexes must be provided | safety | Covered by existing positive/negative inline tests and current argument-binding diagnostics. | These are language/semantic validity checks, not optimisation opportunities. | Keep. Improve diagnostics only if needed. |
 
 ### Plain-English gate guide
 

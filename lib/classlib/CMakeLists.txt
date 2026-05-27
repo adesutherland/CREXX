@@ -67,6 +67,7 @@ foreach(_selector IN LISTS CLASSLIB_SELECTORS)
   string(APPEND _classlib_control_text "INCLUDE ${_selector}\n")
 endforeach()
 string(APPEND _classlib_control_text
+  "PRESERVE INLINE\n"
   "$<$<NOT:$<CONFIG:Debug>>:STRIP SOURCE\n>"
   "OUTPUT ${CMAKE_BINARY_DIR}/bin/classlib\n")
 
@@ -86,5 +87,19 @@ add_custom_target(classlib ALL
 )
 
 add_dependencies(classlib library)
+
+add_test(
+  NAME classlib_rxdas_inline_preserve_smoke
+  COMMAND ${CMAKE_COMMAND}
+    -DRXDAS=$<TARGET_FILE:rxdas>
+    -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
+    -DINPUT_RXBIN=${CMAKE_BINARY_DIR}/bin/classlib.rxbin
+    -DOUTPUT_RXAS=${CMAKE_CURRENT_BINARY_DIR}/classlib_inline_check.rxas
+    "-DEXPECT_TEXT_1=.meta \"data_list.arraylist.init\"=\".inline\""
+    "-DEXPECT_TEXT_2=.meta \"data_hashmap.hashmap.put\"=\".inline\""
+    -P ${CMAKE_SOURCE_DIR}/linker/tests/check_rxdas_contains.cmake
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+set_tests_properties(classlib_rxdas_inline_preserve_smoke PROPERTIES LABELS "inline;library")
 
 add_subdirectory(tests_functional)

@@ -43,6 +43,7 @@ foreach(_selector IN LISTS RXFNSG_REXX_MODULES)
   string(APPEND _rxfnsg_control_text "INCLUDE ${_selector}\n")
 endforeach()
 string(APPEND _rxfnsg_control_text
+  "PRESERVE INLINE\n"
   "$<$<NOT:$<CONFIG:Debug>>:STRIP SOURCE\n>"
   "OUTPUT ${CMAKE_BINARY_DIR}/bin/rxfnsg\n")
 
@@ -62,3 +63,17 @@ add_custom_target(rxfnsg ALL
 )
 
 add_dependencies(rxfnsg library)
+
+add_test(
+  NAME rxfnsg_rxdas_inline_preserve_smoke
+  COMMAND ${CMAKE_COMMAND}
+    -DRXDAS=$<TARGET_FILE:rxdas>
+    -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
+    -DINPUT_RXBIN=${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin
+    -DOUTPUT_RXAS=${CMAKE_CURRENT_BINARY_DIR}/rxfnsg_inline_check.rxas
+    "-DEXPECT_TEXT_1=.meta \"rxfnsg.ollama.status\"=\".inline\""
+    "-DEXPECT_TEXT_2=.meta \"rxfnsg.openai.status\"=\".inline\""
+    -P ${CMAKE_SOURCE_DIR}/linker/tests/check_rxdas_contains.cmake
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+set_tests_properties(rxfnsg_rxdas_inline_preserve_smoke PROPERTIES LABELS "inline;library")

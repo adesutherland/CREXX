@@ -25,6 +25,13 @@ main: procedure
   say x
   say optAdd()
   say optAdd(3)
+  y = 20
+  say typeBump(y) as .string
+  say y
+  say typeBump(y) is .int
+  say y
+  say typeof(typeBump(y))
+  say y
   say safeLength("abcdef")
   say vargTotal(4, 5, 6)
   say vargPick(2, 7, 9, 11)
