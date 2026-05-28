@@ -58,7 +58,10 @@ command dispatch, redirects, sandboxes, function calls, and host-variable
 binding helpers.
 
 `trace.rexx` contains the runtime trace/debugger support used by `TRACE` and by
-the experimental debugger work.
+the experimental debugger work. User-facing traces suppress standard library,
+compiler-exit, runtime-support, and debugger namespaces by default, while
+`TRACE SUPPRESS NAMESPACE`, `TRACE UNSUPPRESS NAMESPACE`, and
+`TRACE RESET NAMESPACES` let a debugging session adjust that filter.
 
 `rxdb` remains experimental for Release 1 beta 1. Treat it as a smoke-tested
 debugging aid, not as a supported full debugger contract.

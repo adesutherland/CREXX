@@ -243,6 +243,11 @@ trace llm
 trace ll
 trace env
 trace value expr
+trace suppress namespace name
+trace unsuppress namespace name
+trace add suppressed namespace name
+trace remove suppressed namespace name
+trace reset namespaces
 trace results to stderr
 trace llm to file "trace.jsonl"
 ```
@@ -295,6 +300,31 @@ normalizes it using the same trace option rules.
 Trace output defaults to stdout. Add `TO STDERR`, `TO STDOUT`, `TO FILE expr`,
 or `TO expr` to choose a sink. `TO FILE` opens the selected file in append mode
 for each trace record.
+
+TRACE normally hides events from system library and debugger namespaces so a
+user trace follows the program being debugged instead of the machinery that
+implements tracing. The default suppressed namespaces are `rxfnsb`, `_rxsysb`,
+`rxfnsg`, `_rxsysg`, `rxfnsl`, `_rxsysl`, `rxfnsc`, `_rxsysc`, `rxcp`,
+`rxcpexits`, `rxcptest`, `rxdb`, `rxdbgui`, `runtime_signal`, `signalaction`,
+and `library`. The TRACE runtime internals themselves are always hidden.
+
+Use namespace controls when you need to include or exclude a library while
+debugging:
+
+```rexx
+trace results
+trace unsuppress namespace rxfnsg
+trace suppress namespace myframework
+trace reset namespaces
+```
+
+`TRACE SUPPRESS NAMESPACE name` and `TRACE ADD SUPPRESSED NAMESPACE name`
+suppress a namespace. `TRACE UNSUPPRESS NAMESPACE name` and
+`TRACE REMOVE SUPPRESSED NAMESPACE name` make that namespace visible again.
+`TRACE RESET NAMESPACES` restores the default suppression list and clears
+per-session changes. Namespace names may be bare identifiers or string
+literals; matching is by namespace or path component, not by arbitrary
+substring, so suppressing `rxfnsg` does not suppress `myrxfnsghelper`.
 
 `TRACE ENV` explicitly checks two environment variables at that point in the
 program. `CREXX_TRACE` supplies the mode using the same option rules as

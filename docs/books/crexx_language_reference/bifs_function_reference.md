@@ -1477,6 +1477,19 @@ were the corresponding Arabic numeral.
 
 ## TRACE(option)
 
+The SAA `TRACE(option)` built-in function name is reserved for compatibility.
+In the current beta, use the `TRACE` statement to set tracing:
+
+```rexx
+trace off
+trace normal
+trace results
+trace value option
+```
+
+`TRACE VALUE option` evaluates `option` at runtime and applies the same option
+rules as a static `TRACE` statement. See the `TRACE` statement reference for
+the supported modes, output targets, and namespace suppression controls.
 
 
 
