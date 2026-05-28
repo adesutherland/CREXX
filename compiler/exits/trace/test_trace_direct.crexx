@@ -315,7 +315,7 @@ test_pre_process_keywords: procedure = .int
   plan = tx.pre_process(tokens)
   if check_equal("trace pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
   if check_true("trace keyword claim", find_keyword(plan, "rexx") > 0, "missing trace option keyword") = 0 then failures = failures + 1
-  if check_equal("trace helper count", "1", plan.get_helper_count()) = 0 then failures = failures + 1
+  if check_equal("trace helper count", "2", plan.get_helper_count()) = 0 then failures = failures + 1
   if plan.get_helper_count() > 0 then do
     helper_text = ""
     do h = 1 to plan.get_helper_count()
@@ -327,6 +327,7 @@ test_pre_process_keywords: procedure = .int
     if check_contains("trace helper formats", helper_text, "_trace_context_from_raw(__rxtrace_raw)") = 0 then failures = failures + 1
     if check_contains("trace helper captures semantic events", helper_text, "_trace_capture_result_target") = 0 then failures = failures + 1
     if check_contains("trace helper prints semantic prefixes", helper_text, "_trace_pending_prefix()") = 0 then failures = failures + 1
+    if check_contains("trace helper resets display state", helper_text, "__rxtrace_reset_display_state") = 0 then failures = failures + 1
   end
 
   tokens = newtokens()

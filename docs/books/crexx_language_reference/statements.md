@@ -266,6 +266,7 @@ This is not yet full semantic compatibility, but the noninteractive output
 shape follows the standard prefix vocabulary for implemented events:
 
 ```
+       >  >   escaped-source-file
      5 *-* escaped-source
        >=>   "escaped-assignment-result"
        +++   RC=-3 ENVIRONMENT escaped-command
@@ -283,6 +284,19 @@ uses the same metadata path and adds intermediate-event visibility as coverage
 grows. `TRACE L` is accepted, but label-pass events are not emitted yet.
 `O`/`OFF` disables breakpoint tracing. `TRACE ASM` traces VM/RXAS instruction
 information and includes source text where metadata is available.
+
+When traced execution moves between source files, cREXX emits a source-file
+transition line:
+
+```text
+       >  >   helper.crexx
+```
+
+The first visible source file is not printed, so single-file traces keep their
+classic shape. Later file changes are printed before the next `*-*` source
+line, including when execution returns to the original file. This is a cREXX
+extension; classic Regina-style output does not provide an equivalent filename
+record.
 
 This TRACE implementation is still beta. Source reporting now uses
 self-contained source-step metadata, and text TRACE no longer guesses

@@ -179,6 +179,11 @@ payload. TRACE handlers map them to presentation prefixes later and may read
 frame-local registers only when `value_source` names a register and `value_ref`
 is non-negative.
 
+Linked images may strip source-step metadata while preserving trace-event
+metadata. `metaloaddata` must therefore treat optional trace-event strings such
+as `symbol` and `resolved_name` defensively: absent or invalid references are
+reported as empty strings rather than causing metadata inspection to fail.
+
 ### `value` (Dynamic Typing Representation)
 Classic REXX is a dynamically typed language where "everything is a string" conceptually, but performance dictates native type usage when possible. The `value` struct (from `interpreter/rxvalue.h`) is a polymorphic container storing a REXX variable's state. 
 

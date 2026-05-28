@@ -2943,12 +2943,14 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(METALOADDATA_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - METALOADDATA R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
-                unsigned char *pool = context->modules[op2R->int_value - 1]->segment.const_pool;
-                int i = context->modules[op2R->int_value - 1]->meta_head;
+                module *metadata_module = context->modules[op2R->int_value - 1];
+                unsigned char *pool = metadata_module->segment.const_pool;
+                int i = metadata_module->meta_head;
                 int j;
                 size_t x;
                 meta_entry *meta = 0;
                 int size = 0;
+                string_constant *string_entry;
 
                 /* Clear return object */
                 value_zero(op1R);
@@ -3025,10 +3027,18 @@ START_OF_INSTRUCTIONS
                                     (rxinteger) ((meta_trace_event_constant *) (pool + i))->flags;
                             x = (rxinteger) ((meta_trace_event_constant *) (pool + i))->symbol;
                             if ((size_t)x == RXBIN_TRACE_REF_NONE) set_null_string(op1R->attributes[j]->attributes[9], "");
-                            else set_const_string(op1R->attributes[j]->attributes[9], (string_constant *) (pool + x));
+                            else {
+                                string_entry = get_runtime_string_constant(metadata_module, x);
+                                if (string_entry) set_const_string(op1R->attributes[j]->attributes[9], string_entry);
+                                else set_null_string(op1R->attributes[j]->attributes[9], "");
+                            }
                             x = (rxinteger) ((meta_trace_event_constant *) (pool + i))->resolved_name;
                             if ((size_t)x == RXBIN_TRACE_REF_NONE) set_null_string(op1R->attributes[j]->attributes[10], "");
-                            else set_const_string(op1R->attributes[j]->attributes[10], (string_constant *) (pool + x));
+                            else {
+                                string_entry = get_runtime_string_constant(metadata_module, x);
+                                if (string_entry) set_const_string(op1R->attributes[j]->attributes[10], string_entry);
+                                else set_null_string(op1R->attributes[j]->attributes[10], "");
+                            }
                             break;
                         case META_FUNC:
                             set_null_string(op1R->attributes[j], ".meta_func");

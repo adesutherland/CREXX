@@ -36,7 +36,7 @@ crexx_add_compiler_exit_runtime_test(
 crexx_add_compiler_exit_runtime_test(
         test_trace_llm
         test_trace_llm.crexx
-        PASS_REGULAR_EXPRESSION "\"format\":\"llm\".*\"source\":\"[ ]*return"
+        PASS_REGULAR_EXPRESSION "\"format\":\"llm\".*\"file\":\"test_trace_llm\\.crexx\".*\"source\":\"[ ]*return"
         RUN_SUFFIX ${LIBRPATH}
 )
 
@@ -62,8 +62,13 @@ if(DEFINED ENV_CREXX_TRACE_TO AND NOT "${ENV_CREXX_TRACE_TO}" STREQUAL "")
     set(ENV{CREXX_TRACE_TO} "${ENV_CREXX_TRACE_TO}")
 endif()
 
+set(_extra_rxbin_list)
+if(DEFINED EXTRA_RXBINS AND NOT "${EXTRA_RXBINS}" STREQUAL "")
+    string(REPLACE "|" ";" _extra_rxbin_list "${EXTRA_RXBINS}")
+endif()
+
 execute_process(
-        COMMAND "${RXVM}" "${RXBIN}" "${LIBRPATH}"
+        COMMAND "${RXVM}" "${RXBIN}" ${_extra_rxbin_list} "${LIBRPATH}"
         WORKING_DIRECTORY "${WORKDIR}"
         RESULT_VARIABLE result
         OUTPUT_VARIABLE out
@@ -105,7 +110,8 @@ endif()
 function(crexx_add_trace_capture_test TARGET_NAME SOURCE_FILE)
     set(options)
     set(oneValueArgs EXPECT_STDOUT_REGEX REJECT_STDOUT_REGEX EXPECT_STDERR_REGEX REJECT_STDERR_REGEX TRACE_FILE EXPECT_FILE_REGEX ENV_CREXX_TRACE ENV_CREXX_TRACE_TO)
-    cmake_parse_arguments(TRACE_CAPTURE "${options}" "${oneValueArgs}" "" ${ARGN})
+    set(multiValueArgs EXTRA_DEPENDS EXTRA_SOURCE_FILES)
+    cmake_parse_arguments(TRACE_CAPTURE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     set(_outputs)
     foreach(_mode IN ITEMS noopt opt)
@@ -117,22 +123,43 @@ function(crexx_add_trace_capture_test TARGET_NAME SOURCE_FILE)
             list(APPEND _rxas_flags -n)
         endif()
 
+        set(_extra_rxbins)
+        set(_extra_outputs)
+        foreach(_extra_source IN LISTS TRACE_CAPTURE_EXTRA_SOURCE_FILES)
+            get_filename_component(_extra_name ${_extra_source} NAME_WE)
+            set(_extra_base ${TARGET_NAME}_${_extra_name}_${_mode})
+            set(_extra_output ${CMAKE_CURRENT_BINARY_DIR}/${_extra_base}.rxbin)
+            add_custom_command(
+                    OUTPUT ${_extra_output}
+                    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i ${CMAKE_BINARY_DIR}/bin ${_rxc_flags} -o ${_extra_base} ${CMAKE_CURRENT_SOURCE_DIR}/${_extra_source}
+                    COMMAND $<TARGET_FILE:rxas> ${_rxas_flags} -o ${_extra_base} ${_extra_base}
+                    DEPENDS rxc rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_extra_source}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                    COMMENT "Compiling ${_extra_source} (${_mode})"
+            )
+            list(APPEND _extra_rxbins ${_extra_output})
+            list(APPEND _extra_outputs ${_extra_output})
+        endforeach()
+        list(JOIN _extra_rxbins "|" _extra_rxbin_arg)
+
         set(_output ${CMAKE_CURRENT_BINARY_DIR}/${_base}.rxbin)
         add_custom_command(
                 OUTPUT ${_output}
                 COMMAND ${CMAKE_COMMAND} -E env RXCP_EXIT_MODULE=rxcexits $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin ${_rxc_flags} -o ${_base} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}
                 COMMAND $<TARGET_FILE:rxas> ${_rxas_flags} -o ${_base} ${_base}
-                DEPENDS rxc rxas ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}
+                DEPENDS rxc rxas ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE} ${TRACE_CAPTURE_EXTRA_DEPENDS} ${_extra_outputs}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 COMMENT "Compiling ${SOURCE_FILE} with exit (${_mode})"
         )
         list(APPEND _outputs ${_output})
+        list(APPEND _outputs ${_extra_outputs})
 
         add_test(
                 NAME ${TARGET_NAME}_${_mode}
                 COMMAND ${CMAKE_COMMAND}
                         -DRXVM=$<TARGET_FILE:rxvm>
                         -DRXBIN=${_output}
+                        -DEXTRA_RXBINS=${_extra_rxbin_arg}
                         -DLIBRPATH=${LIBRPATH}
                         -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/${_base}_work
                         -DENV_CREXX_TRACE=${TRACE_CAPTURE_ENV_CREXX_TRACE}
@@ -162,7 +189,7 @@ crexx_add_trace_capture_test(
         test_trace_file
         test_trace_file.crexx
         TRACE_FILE "trace-output.txt"
-        EXPECT_FILE_REGEX "\"format\":\"llm\".*\"source\":\"[ ]*return"
+        EXPECT_FILE_REGEX "\"format\":\"llm\".*\"file\":\"test_trace_file\\.crexx\".*\"source\":\"[ ]*return"
         REJECT_STDOUT_REGEX "return"
         REJECT_STDERR_REGEX "return"
 )
@@ -207,6 +234,14 @@ crexx_add_trace_capture_test(
         ENV_CREXX_TRACE_TO "stderr"
         EXPECT_STDOUT_REGEX "TRACE ENV IGNORED 42"
         REJECT_STDERR_REGEX ">>>|>=>"
+)
+
+crexx_add_trace_capture_test(
+        test_trace_source_jump
+        test_trace_source_jump.crexx
+        EXPECT_STDOUT_REGEX ">[ ][ ]>[ ]+test_trace_source_jump_helper\\.crexx"
+        REJECT_STDOUT_REGEX "^       >[ ][ ]>"
+        EXTRA_SOURCE_FILES test_trace_source_jump_helper.crexx
 )
 
 crexx_add_compiler_exit_runtime_test(

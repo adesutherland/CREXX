@@ -103,6 +103,7 @@ The standard prefix tags are:
 | --- | --- |
 | `*-*` | Source text of a single clause. |
 | `+++` | Trace message, command return code, interactive prompt, syntax traceback, or similar processor message. |
+| `>  >` | cREXX extension: source file transition marker. Emitted before the first source line after the source file changes. |
 | `>>>` | Result of an expression, parse assignment, or subroutine return value. |
 | `>=>` | Value assigned to a variable by an assignment clause. Observed in Regina-compatible output for `TRACE R`; cREXX should treat this as the assignment-result form unless the final compatibility target says otherwise. |
 | `>.>` | Value assigned to a PARSE placeholder period. |
@@ -120,6 +121,7 @@ Current cREXX text output uses the standard prefix vocabulary for implemented
 events:
 
 ```text
+       >  >   escaped-source-file
      5 *-* escaped-source
        >=>   "escaped-assignment-result"
        +++   RC=-3 ENVIRONMENT escaped-command
@@ -130,6 +132,13 @@ not yet add nesting indentation. Source, command, and result text is escaped so
 backslashes, quotes, newlines, and other control characters stay visible and a
 single trace event stays on a single output line. For example, source text
 containing a backslash is printed visibly as `return \\flag`.
+
+The `>  >` source-file marker is intentionally a cREXX extension. Local Regina
+probes show line-number changes when execution moves through an external
+source file, but no filename record. cREXX adopts the first visible source file
+silently for classic compatibility, then emits `       >  >   file` only when
+the visible source file changes, including when execution returns to the first
+file. The generated TRACE handler owns this presentation state.
 
 ## Output By Option
 
@@ -207,6 +216,10 @@ classic TRACE implementation:
   provenance flags. It is valuable for debugger stepping and `TRACE LLM`, while
   classic text TRACE can group by authored clause to suppress unhelpful
   generated fragments.
+- Text TRACE uses the `.srcstep` file name to emit cREXX `>  >` source-file
+  transition markers. The first visible file is not printed; later changes are
+  printed before the next `*-*` source line. `TRACE LLM` carries the same value
+  in its `file` field.
 - Compound/indexed TRACE is still partial. The compiler can emit value events
   for many register-backed reads and writes, but final resolved compound-name
   `>C>` coverage needs additional codegen metadata at the point the runtime
@@ -225,6 +238,10 @@ classic TRACE implementation:
 - Classic text formatting now belongs to the generated TRACE exit handler. The
   shared `rxfnsb.trace` layer still owns structured metadata lookup, controller
   state, output plumbing, and frame-read coordination helpers.
+- Metadata consumers must tolerate stripped linked images where
+  `META_SOURCE_STEP` records are absent but `META_TRACE_EVENT` records are
+  preserved. `metaloaddata` should expose absent optional trace-event strings
+  as empty strings rather than crashing on invalid or stripped references.
 
 The recommended beta stance is to describe `TRACE R` and `TRACE I` result
 records as partial, and to use `TRACE LLM` primarily for inspecting actual
@@ -243,6 +260,7 @@ compatibility.
   "module": "1",
   "address": "27",
   "procedure": "main",
+  "file": "example.crexx",
   "line": "6",
   "column": "3",
   "source": "return \\\\flag",

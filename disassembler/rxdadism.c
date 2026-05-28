@@ -304,12 +304,26 @@ static void trace_ref_string(size_t ref, char *buffer, size_t buffer_len) {
 }
 
 static void trace_optional_string(bin_space *pgm, size_t ref, char *buffer, size_t buffer_len) {
+    chameleon_constant *entry;
+
     if (!buffer || buffer_len == 0) return;
     if (ref == RXBIN_TRACE_REF_NONE) {
         snprintf(buffer, buffer_len, "\"\"");
-    } else {
-        get_const_string(pgm, buffer, buffer_len, ref);
+        return;
     }
+
+    if (!pgm || ref >= pgm->const_size) {
+        snprintf(buffer, buffer_len, "\"\"");
+        return;
+    }
+
+    entry = (chameleon_constant *)(pgm->const_pool + ref);
+    if (entry->type != STRING_CONST) {
+        snprintf(buffer, buffer_len, "\"\"");
+        return;
+    }
+
+    get_const_string(pgm, buffer, buffer_len, ref);
 }
 
 static void output_meta_trace_event_line(FILE *stream, bin_space *pgm, meta_trace_event_constant *mentry, const char *indent) {

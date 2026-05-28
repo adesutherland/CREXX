@@ -331,6 +331,7 @@ joinTokenText: procedure = .string
 addTraceActivation: procedure = .void
     arg result = .exitresult
     call result.add_replacement_line("__rxtrace_mode=_trace_current_mode()")
+    call result.add_replacement_line("call __rxtrace_reset_display_state()")
     call result.add_replacement_line("if __rxtrace_mode = ""OFF"" then assembler bpoff")
     call result.add_replacement_line("else if _trace_needs_breakpoints(__rxtrace_mode) = 0 then assembler bpoff")
     call result.add_replacement_line("else do")
@@ -342,11 +343,12 @@ addTraceActivation: procedure = .void
 addTraceHelpers: procedure = .void
     arg plan = .exitplan
     call plan.add_helper(makeTraceHelper())
+    call plan.add_helper(makeTraceResetHelper())
     return
 
 makeTraceHelper: procedure = .helperplan
     helper = .helperplan("__rxtrace_handler", "file_tail", "__rxtrace_handler", "")
-    call helper.add_line('__rxtrace_handler: procedure = .int expose __rxtrace_in_handler')
+    call helper.add_line('__rxtrace_handler: procedure = .int expose __rxtrace_in_handler __rxtrace_first_source_file __rxtrace_last_source_file')
     call helper.add_line('  arg expose __rxtrace_raw = .trace_interrupt_raw')
     call helper.add_line('  if __rxtrace_in_handler <> 0 then return 0')
     call helper.add_line('  __rxtrace_in_handler = 1')
@@ -393,7 +395,7 @@ makeTraceHelper: procedure = .helperplan
     call helper.add_line('    end')
     call helper.add_line('  end')
     call helper.add_line('  if __rxtrace_format = "LLM" & __rxtrace_emit_source <> 0 then do')
-    call helper.add_line("    __rxtrace_line = '{""event"":""trace"",""format"":""llm"",""mode"":""' || _trace_escape_text(__rxtrace_mode) || '"",""module"":""' || __rxtrace_event.module() || '"",""address"":""' || __rxtrace_event.address() || '"",""procedure"":""' || _trace_escape_text(__rxtrace_event.procedure()) || '"",""line"":""' || __rxtrace_event.line() || '"",""column"":""' || __rxtrace_event.column() || '"",""source"":""' || _trace_escape_text(__rxtrace_event.source()) || '"",""asm"":""' || _trace_escape_text(__rxtrace_event.asm_line()) || '""}'")
+    call helper.add_line("    __rxtrace_line = '{""event"":""trace"",""format"":""llm"",""mode"":""' || _trace_escape_text(__rxtrace_mode) || '"",""module"":""' || __rxtrace_event.module() || '"",""address"":""' || __rxtrace_event.address() || '"",""procedure"":""' || _trace_escape_text(__rxtrace_event.procedure()) || '"",""file"":""' || _trace_escape_text(__rxtrace_event.source_file()) || '"",""line"":""' || __rxtrace_event.line() || '"",""column"":""' || __rxtrace_event.column() || '"",""source"":""' || _trace_escape_text(__rxtrace_event.source()) || '"",""asm"":""' || _trace_escape_text(__rxtrace_event.asm_line()) || '""}'")
     call helper.add_line('  end')
     call helper.add_line('  if __rxtrace_format <> "LLM" then do')
     call helper.add_line('    if __rxtrace_values_mode <> 0 then do')
@@ -441,10 +443,33 @@ makeTraceHelper: procedure = .helperplan
     call helper.add_line('    end')
     call helper.add_line('  end')
     call helper.add_line('  if __rxtrace_emit_source <> 0 then do')
-    call helper.add_line('    if _trace_should_emit_key(__rxtrace_key) <> 0 then call _trace_write_line(__rxtrace_line)')
+    call helper.add_line('    if _trace_should_emit_key(__rxtrace_key) <> 0 then do')
+    call helper.add_line('      if __rxtrace_format <> "LLM" then do')
+    call helper.add_line('        __rxtrace_source_file = __rxtrace_event.source_file()')
+    call helper.add_line('        if __rxtrace_source_file <> "" then do')
+    call helper.add_line('          if __rxtrace_first_source_file = "" then do')
+    call helper.add_line('            __rxtrace_first_source_file = __rxtrace_source_file')
+    call helper.add_line('            __rxtrace_last_source_file = __rxtrace_source_file')
+    call helper.add_line('          end')
+    call helper.add_line('          else if __rxtrace_source_file <> __rxtrace_last_source_file then do')
+    call helper.add_line('            call _trace_write_line("       >  >   " || _trace_escape_text(__rxtrace_source_file))')
+    call helper.add_line('            __rxtrace_last_source_file = __rxtrace_source_file')
+    call helper.add_line('          end')
+    call helper.add_line('        end')
+    call helper.add_line('      end')
+    call helper.add_line('      call _trace_write_line(__rxtrace_line)')
+    call helper.add_line('    end')
     call helper.add_line('  end')
     call helper.add_line('  __rxtrace_in_handler = 0')
     call helper.add_line('  return 0')
+    return helper
+
+makeTraceResetHelper: procedure = .helperplan
+    helper = .helperplan("__rxtrace_reset_display_state", "file_tail", "__rxtrace_reset_display_state", "")
+    call helper.add_line('__rxtrace_reset_display_state: procedure = .void expose __rxtrace_first_source_file __rxtrace_last_source_file')
+    call helper.add_line('  __rxtrace_first_source_file = ""')
+    call helper.add_line('  __rxtrace_last_source_file = ""')
+    call helper.add_line('  return')
     return helper
 
 error_result: procedure = .exitresult

@@ -51,6 +51,7 @@ tracecontext: class
   _module = .int
   _address = .int
   _mode = .string
+  _source_file = .string
   _line = .int
   _column = .int
   _source = .string
@@ -67,6 +68,7 @@ tracecontext: class
     _mode = upper(mode)
     _signal_code = signal_code
     _signal_name = signal_name
+    _source_file = ""
     _line = 0
     _column = 0
     _source = ""
@@ -75,6 +77,7 @@ tracecontext: class
     _asm_line = ""
     _procedure = ""
     _has_source = _trace_exact_source(_module, _address, _line, _column, _source, _source_line)
+    if _has_source <> 0 then _source_file = _trace_exact_source_file(_module, _address)
     _closest_source_line = _trace_closest_source_line(_module, _address)
     _asm_line = _trace_asm_line(_module, _address)
     _procedure = _trace_procedure_name(_module, _address)
@@ -94,6 +97,9 @@ tracecontext: class
 
   mode: method = .string
     return _mode
+
+  source_file: method = .string
+    return _source_file
 
   line: method = .int
     return _line
@@ -991,6 +997,23 @@ _trace_exact_source: procedure = .int
   end
 
   return found
+
+_trace_exact_source_file: procedure = .string
+  arg module = .int, addr = .int
+  meta_array = 0
+  meta_entry = ""
+  result = ""
+
+  if module <= 0 then return ""
+  if addr < 0 then return ""
+
+  assembler metaloaddata meta_array, module, addr
+  do i = 1 to meta_array
+    assembler linkattr1 meta_entry, meta_array, i
+    if meta_entry = ".meta_source_step" then assembler linkattr1 result, meta_entry, 4
+  end
+
+  return result
 
 _trace_closest_source_line: procedure = .string
   arg module = .int, addr = .int
