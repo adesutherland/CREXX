@@ -30,7 +30,7 @@ single deployable linked image:
 - to reduce duplicated constant-pool data before `rxcpack`
 - to produce a tidier deployable artifact than a loose set of `.rxbin`
   files
-- to remove source/file metadata from a deployment image
+- to remove source/TRACE debug metadata from a deployment image
 
 The linker does not try to replace all runtime loading. It links the
 modules you give it, resolves what it can within that set, and leaves
@@ -110,7 +110,7 @@ OUTPUT build/app_linked
 ```
 
 This tells `rxlink` to start from module `app`, pull in the providers it
-needs from the given inputs, strip source/file metadata, and write
+needs from the given inputs, strip source/TRACE debug metadata, and write
 `build/app_linked.rxbin`.
 
 Run it with:
@@ -174,13 +174,16 @@ diagnostic or tooling builds. The equivalent control-file form is:
 PRESERVE INLINE
 ```
 
-`rxlink -s` strips source/file metadata from the linked output. The equivalent control-file form is:
+`rxlink -s` strips source/TRACE debug metadata from the linked output. The equivalent control-file form is:
 
 ```bash
 STRIP SOURCE
 ```
 
-This removes the serialized source/file metadata records while preserving runtime metadata such as exposed symbols and interface/class contract data.
+This removes the serialized source-step records and semantic TRACE event
+records while preserving runtime metadata such as exposed symbols and
+interface/class contract data. Keep the linked image unstripped when classic
+TRACE, `TRACE LLM`, or RXDB source-level debugging is needed.
 
 This option is intended for deployable `.rxbin` artifacts and for downstream `rxcpack` / wrapped images where source breadcrumbs are not needed.
 

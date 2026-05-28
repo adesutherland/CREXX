@@ -9,7 +9,7 @@ Use `rxlink` when you want to:
 - bundle a root module with the providers it needs
 - turn a loose module set into one deployable linked image
 - shrink downstream `rxcpack` / wrapped artifacts by removing duplicated pool entries
-- optionally strip source/file metadata from deployable images
+- optionally strip source/TRACE debug metadata from deployable images
 
 This is now the normal native-packaging route for the shipped drivers too:
 `crexx`, `crxc`, `rxpp`, and related wrapped tools link a deployable image
@@ -84,10 +84,13 @@ Current conservative strip support has two independent axes:
 `STRIP SOURCE` removes:
 
 - `META_SOURCE_STEP`
+- `META_TRACE_EVENT`
 
-`META_TRACE_EVENT` is preserved. It carries compact semantic event/value hints
-and may be useful even when the source file name and source-line text have been
-stripped from the linked image.
+Trace-event metadata is source-level debugging metadata. Without source-step
+anchors, classic `TRACE` value events are not coherent enough to keep in a
+deployable stripped image, and they may still expose variable names, compound
+names, constants, or live values. Keep the linked image unstripped when TRACE,
+RXDB source stepping, or source-level diagnostics are needed.
 
 Inline-body metadata is different from runtime contract metadata. It is useful
 to libraries consumed by `rxc`, but it is not needed once a final linked image
@@ -103,7 +106,7 @@ It intentionally does not remove runtime contract metadata such as:
 - `META_IMPLEMENTS`
 - `META_MEMBER`
 
-That keeps interface/class dispatch and metadata-aware tooling behaviour stable while still removing the source text/file path payload that most affects linked image size.
+That keeps interface/class dispatch and metadata-aware tooling behaviour stable while still removing source text/file path payloads and source-level TRACE value metadata.
 
 ## Control Files
 
@@ -133,6 +136,7 @@ images in normal `ctest` coverage. For a focused rerun, use:
 - `ctest -L linked_opt --output-on-failure`
 - `cmake --build <build-dir> --target linked_opt_sweep`
 
-Be conservative with stripping. If a proposed change removes more than
-`META_SOURCE_STEP`, verify both runtime contract lookup and metadata
-introspection in `rxvm` before assuming it is safe.
+Be conservative with stripping. If a proposed change removes anything beyond
+the current source-level debug set (`META_SOURCE_STEP` and `META_TRACE_EVENT`),
+verify both runtime contract lookup and metadata introspection in `rxvm` before
+assuming it is safe.

@@ -128,9 +128,10 @@ opened in append mode per trace record.
 
 The helpers rely on VM metadata instructions such as `metaloaddata`,
 `metaloadinst`, `metadecodeinst`, and `metaloadedmodules`, so deployable linked
-images that strip source metadata may still provide ASM/module data while
-source-line lookup returns empty. Debugger UI text and menu rendering belong to
-`debugger/rxdb_gui.crexx`, not the library trace internals.
+images that strip source/TRACE debug metadata may still provide ASM/module data
+while source-line and trace-event lookup return empty. Debugger UI text and
+menu rendering belong to `debugger/rxdb_gui.crexx`, not the library trace
+internals.
 
 `lib/rxfnsb/rexx/_address.crexx` owns the Rexx-side ADDRESS protocol. In
 addition to command dispatch, redirects, sandboxes, and function calls,
@@ -202,12 +203,11 @@ Imported Rexx BIF calls inline only when the imported artifact carries
 `META_INLINE`. `rxlink` strips `META_INLINE` by default, so the standard-library
 link explicitly uses `PRESERVE INLINE`. Release linked libraries also use
 `STRIP SOURCE`, keeping inline bodies available to downstream optimisation while
-dropping `META_SOURCE_STEP` file/source-line metadata. Debug linked libraries
-keep both inline bodies and source metadata. Compact `META_TRACE_EVENT` records
-are preserved by source stripping because they describe semantic events and
-available values rather than carrying source text. Class-library hot paths that
-rely on this should inspect generated `.rxas` when changing import paths or
-link-strip policy.
+dropping source-level debug metadata: `META_SOURCE_STEP` file/source-line
+records and `META_TRACE_EVENT` semantic TRACE value records. Debug linked
+libraries keep both inline bodies and source/TRACE metadata. Class-library hot
+paths that rely on this should inspect generated `.rxas` when changing import
+paths or link-strip policy.
 
 `lib/plugins/arrays` is deprecated and retained only as a legacy plugin smoke
 test. New Level B code should import `rxfnsb` and use the standard BIFs.

@@ -256,6 +256,7 @@ add_test(
         "-DEXPECT_TEXT_2=call r0,helper(),r1"
         "-DEXPECT_ABSENT_1=                .srcstep "
         "-DEXPECT_ABSENT_2=.srcstep "
+        "-DEXPECT_ABSENT_3=.traceevent "
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxdas_contains.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

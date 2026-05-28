@@ -206,11 +206,11 @@ static int check_stripped_format(void) {
     }
 
     if (module_has_source_metadata(module_a) || module_has_source_metadata(module_b)) {
-        fprintf(stderr, "Stripped linked image still contains source/file metadata\n");
+        fprintf(stderr, "Stripped linked image still contains source-step metadata\n");
         goto done;
     }
-    if (!module_has_trace_event_metadata(module_a)) {
-        fprintf(stderr, "Stripped linked image lost trace-event metadata\n");
+    if (module_has_trace_event_metadata(module_a) || module_has_trace_event_metadata(module_b)) {
+        fprintf(stderr, "Stripped linked image still contains trace-event metadata\n");
         goto done;
     }
 

@@ -43,9 +43,9 @@ direct VM instructions, but most application code should stay at Level B.
 constant pool. It preserves module boundaries while resolving imports and
 interface-provider relationships that are visible in the selected link set.
 
-The linker can strip source/file metadata for deployment while keeping the
-runtime metadata needed for modules, imports, classes, interfaces, methods, and
-factories.
+The linker can strip source/TRACE debug metadata for deployment while keeping
+the runtime metadata needed for modules, imports, classes, interfaces, methods,
+and factories.
 
 ## Virtual Machine
 

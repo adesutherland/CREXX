@@ -679,8 +679,8 @@ Linker/strip behaviour:
   selected output kind.
 - `STRIP INLINE` should remove inline-body payloads while preserving callable
   signatures.
-- `STRIP SOURCE` may remove source/file metadata without removing inline-body
-  metadata, unless a stronger deployable-strip mode is requested.
+- `STRIP SOURCE` may remove source/TRACE debug metadata without removing
+  inline-body metadata, unless a stronger deployable-strip mode is requested.
 - Stripping inline metadata should remove `META_INLINE` records while leaving
   `META_FUNC` callable signatures intact.
 

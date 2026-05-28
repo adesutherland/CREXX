@@ -77,7 +77,7 @@ Common options:
 - `-r root_member`: root module selector; repeatable
 - `-m map_file`: write a link map
 - `-l location`: working location
-- `-s`: strip source/file metadata
+- `-s`: strip source/TRACE debug metadata
 - `-i`: preserve inline-body metadata
 - `-d`: debug/verbose mode
 

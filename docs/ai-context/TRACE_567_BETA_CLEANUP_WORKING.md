@@ -132,8 +132,9 @@ Step 3 is complete in the follow-up implementation:
 - RXAS accepts `.traceevent`; RXDAS round-trips it; RXLINK rewrites optional
   strings and constant value references; RXVM `metaloaddata` exposes
   `.meta_trace_event`.
-- Source stripping preserves trace-event metadata. It only removes source
-  metadata (`legacy source-fragment metadata`, `legacy source-file metadata`, `META_SOURCE_STEP`).
+- Source stripping was later simplified to remove source-level debug metadata:
+  `META_SOURCE_STEP` and `META_TRACE_EVENT`. Runtime contract metadata remains
+  available in stripped linked images.
 - Focused round-trip, linker strip/preserve, and VM `metaloaddata` checks
   passed.
 - Full `cmake --build cmake-build-debug` passed.
@@ -276,9 +277,8 @@ Linker:
   pool.
 - Include `META_SOURCE_STEP` in source stripping along with old `legacy source-fragment metadata` and
   `legacy source-file metadata`.
-- Preserve trace-event metadata under source stripping. If a future strip mode
-  is needed for semantic TRACE metadata, add it explicitly rather than folding
-  it into source stripping.
+- Source stripping was later simplified to strip `META_TRACE_EVENT` too, so a
+  stripped linked image is not a partial source-level TRACE/debug image.
 
 Runtime:
 
@@ -525,15 +525,15 @@ Step 3, compact trace-event metadata plumbing:
 1. Add `META_TRACE_EVENT`, compact struct, codes, mode mask, RXAS spelling,
    assembler/disassembler/linker/runtime support.
 2. Add `metaloaddata` exposure for `.meta_trace_event`.
-3. Preserve trace-event metadata under source stripping.
+3. Preserve trace-event metadata in unstripped linked images.
 4. Keep semantic codes/masks in binary metadata; do not store presentation
    prefixes such as `>=>`.
 
 Focused checks:
 
 - Assemble/disassemble hand-written `.traceevent` records.
-- Link source-preserved and source-stripped images and verify trace events
-  survive both.
+- Link source-preserved and source-stripped images and verify trace events are
+  present only in the source-preserved image.
 - Verify `metaloaddata` exposes compact event fields.
 
 Step 4, compiler trace-event emission and TRACE regressions:

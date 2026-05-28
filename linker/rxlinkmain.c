@@ -928,6 +928,7 @@ static int is_meta_constant_type(enum const_pool_type type) {
 
 static int should_strip_meta_constant(const rxlink_build_context *context, enum const_pool_type type) {
     if (context->strip_source_metadata && type == META_SOURCE_STEP) return 1;
+    if (context->strip_source_metadata && type == META_TRACE_EVENT) return 1;
     if (context->strip_inline_metadata && type == META_INLINE) return 1;
     return 0;
 }
@@ -1444,7 +1445,7 @@ static void print_help(void) {
     printf("  -r root_member  Root module selector (may be repeated)\n");
     printf("  -m map_file     Write a simple link map\n");
     printf("  -l location     Working location for input/output resolution\n");
-    printf("  -s              Strip source/file metadata from linked output\n");
+    printf("  -s              Strip source/TRACE debug metadata from linked output\n");
     printf("  -i              Preserve inline-body metadata in linked output\n");
     printf("  -d              Debug mode\n");
     printf("  -h              Help\n");

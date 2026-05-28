@@ -624,7 +624,7 @@ say '-s[path]         -- additional source import root for the rxc phase'
 say '-i[path]         -- additional raw binary import root for the rxc phase'
 say '--import-rxas    -- allow the rxc phase to auto-import .rxas from binary roots'
 say '--linkmap path   -- write an rxlink map file when using -native'
-say '--link-keep-source -- keep source/file metadata in the linked native image'
+say '--link-keep-source -- keep source/TRACE debug metadata in the linked native image'
 say '--link-keep-inline -- keep inline-body metadata in the linked native image'
 say
 say 'Headerless top-level scripts are compiled with --level levelb --import rxfnsb.'

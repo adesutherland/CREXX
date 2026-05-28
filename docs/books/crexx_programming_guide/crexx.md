@@ -100,7 +100,7 @@ This keeps the direct interpreter path fast while still producing compact native
 : When using `-native`, ask `rxlink` to write a link map.
 
 `--link-keep-source`
-: When using `-native`, keep source/file metadata in the linked intermediate instead of using the default stripped output.
+: When using `-native`, keep source/TRACE debug metadata in the linked intermediate instead of using the default stripped output.
 
 `--link-keep-inline`
 : When using `-native`, keep inline-body metadata in the linked intermediate. The native link strips this metadata by default because it is only needed by later compiler imports and debugging/tooling checks.

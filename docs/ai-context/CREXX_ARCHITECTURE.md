@@ -66,7 +66,7 @@ The pipeline of transforming REXX source code into executable bytecode is struct
 6. **Linker (`rxlink`, optional)**
    - Combines one or more `.rxbin` modules into a single linked image with one shared constant-pool record and one shared-backed module record per selected module.
    - Resolves imports and interface-provider relationships up front, while preserving the module boundaries needed by the VM loader.
-   - Can strip source-step metadata (`META_SOURCE_STEP`) for smaller deployable artifacts without removing runtime contract metadata or semantic trace-event hints.
+   - Can strip source-level debug metadata (`META_SOURCE_STEP` and `META_TRACE_EVENT`) for smaller deployable artifacts without removing runtime contract metadata.
 
 7. **Interpreter (`rxvm`)**
    - `rxvm` reads and executes the `rxbin` bytecode.

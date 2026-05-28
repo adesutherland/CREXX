@@ -179,10 +179,12 @@ payload. TRACE handlers map them to presentation prefixes later and may read
 frame-local registers only when `value_source` names a register and `value_ref`
 is non-negative.
 
-Linked images may strip source-step metadata while preserving trace-event
-metadata. `metaloaddata` must therefore treat optional trace-event strings such
-as `symbol` and `resolved_name` defensively: absent or invalid references are
-reported as empty strings rather than causing metadata inspection to fail.
+Unstripped images may expose trace-event metadata. `metaloaddata` treats
+optional trace-event strings such as `symbol` and `resolved_name` defensively:
+absent or invalid references are reported as empty strings rather than causing
+metadata inspection to fail. Linked images built with `STRIP SOURCE` do not
+carry `META_SOURCE_STEP` or `META_TRACE_EVENT`; they are not source-level TRACE
+or RXDB debug artifacts.
 
 ### `value` (Dynamic Typing Representation)
 Classic REXX is a dynamically typed language where "everything is a string" conceptually, but performance dictates native type usage when possible. The `value` struct (from `interpreter/rxvalue.h`) is a polymorphic container storing a REXX variable's state. 
@@ -533,7 +535,7 @@ Instructions are executed via macro-driven blocks. For example, moving to the ne
 #define CALC_DISPATCH(n) { next_pc = pc + (n) + 1; next_inst = current_module->prepared_dispatch[next_pc - current_module->segment.binary]; }
 #define DISPATCH         { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; goto *next_inst; }
 ```
-`DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively. Internal signal-raising macros stamp `interrupted_pc` with the faulting instruction before dispatch advances `pc`; breakpoint and asynchronous interrupts leave it unset so their handlers continue to receive the next instruction/resume address. The default fallback panic report uses the stamped address when present to print the module/address and, when `META_SOURCE_STEP` metadata is present, the closest preceding REXX source line. Linked images built with source stripping may only have the module/address and compact trace-event hints.
+`DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively. Internal signal-raising macros stamp `interrupted_pc` with the faulting instruction before dispatch advances `pc`; breakpoint and asynchronous interrupts leave it unset so their handlers continue to receive the next instruction/resume address. The default fallback panic report uses the stamped address when present to print the module/address and, when `META_SOURCE_STEP` metadata is present, the closest preceding REXX source line. Linked images built with source stripping have only the module/address for this fallback context.
 
 ### Instruction Flow Example
 Inside the `run()` loop, implementations are declared using `START_INSTRUCTION`. The assembler passes operands inline sequentially in the binary array.

@@ -238,10 +238,11 @@ classic TRACE implementation:
 - Classic text formatting now belongs to the generated TRACE exit handler. The
   shared `rxfnsb.trace` layer still owns structured metadata lookup, controller
   state, output plumbing, and frame-read coordination helpers.
-- Metadata consumers must tolerate stripped linked images where
-  `META_SOURCE_STEP` records are absent but `META_TRACE_EVENT` records are
-  preserved. `metaloaddata` should expose absent optional trace-event strings
-  as empty strings rather than crashing on invalid or stripped references.
+- Source-stripped linked images are not source-level TRACE artifacts. `rxlink
+  -s` / `STRIP SOURCE` removes both `META_SOURCE_STEP` and `META_TRACE_EVENT`,
+  while preserving runtime contract metadata needed for execution. Keep linked
+  images unstripped when classic TRACE output, `TRACE LLM`, RXDB source
+  stepping, or source-level semantic value inspection is required.
 
 The recommended beta stance is to describe `TRACE R` and `TRACE I` result
 records as partial, and to use `TRACE LLM` primarily for inspecting actual

@@ -70,9 +70,9 @@ Multiple `.rxbin` modules can be loaded together by the VM. For deployable
 images, use `rxlink`. It combines selected modules into one linked image with a
 shared constant pool while preserving module boundaries and runtime metadata.
 
-`rxlink` can also strip source/file metadata for smaller deployable artifacts.
-Runtime contract metadata for imports, interfaces, implementations, members,
-and factories is preserved by the current linker.
+`rxlink` can also strip source/TRACE debug metadata for smaller deployable
+artifacts. Runtime contract metadata for imports, interfaces, implementations,
+members, and factories is preserved by the current linker.
 
 Simple bytecode concatenation can still be useful for development or archive
 experiments, but `rxlink` is the release path for compact deployable images.
