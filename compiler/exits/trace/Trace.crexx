@@ -53,7 +53,10 @@ traceexit: class
             to_index = findTraceOutputClause(tokens, start)
             limit = tokens.0
             if to_index > 0 then limit = to_index - 1
-            if upper(strip(tokens[start].get_text())) = "VALUE" then do
+            if isTraceNamespaceControl(tokens, start, limit) <> 0 then do
+                call plan.add_keyword(start, tokens[start].get_text(), "trace_option", "trace")
+            end
+            else if upper(strip(tokens[start].get_text())) = "VALUE" then do
                 call plan.add_keyword(start, tokens[start].get_text(), "trace_option", "trace")
                 if _helper_added = 0 then do
                     call addTraceHelpers plan
@@ -84,6 +87,11 @@ traceexit: class
         limit = tokens.0
         if to_index > 0 then limit = to_index - 1
 
+        if isTraceNamespaceControl(tokens, start, limit) <> 0 then do
+            if to_index > 0 then return error_result(to_index, "TRACE_NAMESPACE_CONTROL_HAS_NO_OUTPUT")
+            return traceNamespaceControl(tokens, start, limit)
+        end
+
         result = .exitresult("REPLACE")
         output_is_explicit = 0
         if to_index > 0 then do
@@ -110,6 +118,7 @@ traceexit: class
         mode = canonicalTraceMode(mode_text)
         if mode = "" then return error_result(start, "TRACE_UNKNOWN_OPTION")
 
+        if mode = "OFF" then call result.add_replacement_line("assembler bpoff")
         if mode = "ENV" then call result.add_replacement_line("call _trace_set_from_env(" || (1 - output_is_explicit) || ")")
         else call result.add_replacement_line("call _trace_set(""" || mode || """)")
         call addTraceActivation result
@@ -130,6 +139,74 @@ findTraceOutputClause: procedure = .int
         if upper(strip(tokens[i].get_text())) = "TO" then return i
     end
     return 0
+
+isTraceNamespaceControl: procedure = .int
+    arg tokens = .token[], start = .int, limit = .int
+    if start > limit then return 0
+    word = upper(strip(tokens[start].get_text()))
+    if word = "SUPPRESS" then return 1
+    if word = "UNSUPPRESS" then return 1
+    if word = "RESET" then return 1
+    if word = "ADD" then return 1
+    if word = "REMOVE" then return 1
+    return 0
+
+traceNamespaceControl: procedure = .exitresult
+    arg tokens = .token[], start = .int, limit = .int
+    result = .exitresult("REPLACE")
+    word = upper(strip(tokens[start].get_text()))
+
+    if word = "RESET" then do
+        if start + 1 > limit then return error_result(start, "TRACE_RESET_REQUIRES_NAMESPACES")
+        subject = upper(strip(tokens[start + 1].get_text()))
+        if subject \= "NAMESPACE" & subject \= "NAMESPACES" then return error_result(start + 1, "TRACE_RESET_REQUIRES_NAMESPACES")
+        if start + 1 \= limit then return error_result(start + 2, "TRACE_UNEXPECTED_OPERAND")
+        call result.add_replacement_line("call _trace_reset_namespace_filters()")
+        return result
+    end
+
+    if word = "SUPPRESS" then return traceNamespaceSet(result, tokens, start + 1, limit, "_trace_suppress_namespace", "TRACE_SUPPRESS_REQUIRES_NAMESPACE")
+    if word = "UNSUPPRESS" then return traceNamespaceSet(result, tokens, start + 1, limit, "_trace_unsuppress_namespace", "TRACE_UNSUPPRESS_REQUIRES_NAMESPACE")
+
+    if word = "ADD" then do
+        if start + 1 > limit then return error_result(start, "TRACE_ADD_REQUIRES_SUPPRESSED")
+        if upper(strip(tokens[start + 1].get_text())) \= "SUPPRESSED" then return error_result(start + 1, "TRACE_ADD_REQUIRES_SUPPRESSED")
+        return traceNamespaceSet(result, tokens, start + 2, limit, "_trace_suppress_namespace", "TRACE_SUPPRESS_REQUIRES_NAMESPACE")
+    end
+
+    if word = "REMOVE" then do
+        if start + 1 > limit then return error_result(start, "TRACE_REMOVE_REQUIRES_SUPPRESSED")
+        if upper(strip(tokens[start + 1].get_text())) \= "SUPPRESSED" then return error_result(start + 1, "TRACE_REMOVE_REQUIRES_SUPPRESSED")
+        return traceNamespaceSet(result, tokens, start + 2, limit, "_trace_unsuppress_namespace", "TRACE_UNSUPPRESS_REQUIRES_NAMESPACE")
+    end
+
+    return error_result(start, "TRACE_UNKNOWN_OPTION")
+
+traceNamespaceSet: procedure = .exitresult
+    arg result = .exitresult, tokens = .token[], namespace_token = .int, limit = .int, helper_name = .string, error_code = .string
+    if namespace_token > limit then return error_result(namespace_token - 1, error_code)
+    subject = upper(strip(tokens[namespace_token].get_text()))
+    if subject \= "NAMESPACE" & subject \= "NAMESPACES" then return error_result(namespace_token, error_code)
+    name_token = namespace_token + 1
+    if name_token > limit then return error_result(namespace_token, "TRACE_NAMESPACE_REQUIRES_NAME")
+    if name_token \= limit then return error_result(name_token + 1, "TRACE_UNEXPECTED_OPERAND")
+    call result.add_replacement_line("call " || helper_name || "(" || traceNamespaceArgument(tokens[name_token]) || ")")
+    return result
+
+traceNamespaceArgument: procedure = .string
+    arg tok = .token
+    if strip(tok.get_type()) = "string_literal" then return tok.get_text()
+    return quoteTraceString(tok.get_text())
+
+quoteTraceString: procedure = .string
+    arg raw = .string
+    quoted = "'"
+    do i = 1 to length(raw)
+        ch = substr(raw, i, 1)
+        if ch = "'" then quoted = quoted || "''"
+        else quoted = quoted || ch
+    end
+    return quoted || "'"
 
 staticTraceModeText: procedure = .string
     arg tokens = .token[], start = .int, limit = .int, expose mode_end = .int
@@ -269,14 +346,29 @@ addTraceHelpers: procedure = .void
 
 makeTraceHelper: procedure = .helperplan
     helper = .helperplan("__rxtrace_handler", "file_tail", "__rxtrace_handler", "")
-    call helper.add_line('__rxtrace_handler: procedure = .int')
+    call helper.add_line('__rxtrace_handler: procedure = .int expose __rxtrace_in_handler')
     call helper.add_line('  arg expose __rxtrace_raw = .trace_interrupt_raw')
-    call helper.add_line('  if _trace_current_mode() = "OFF" then return 0')
+    call helper.add_line('  if __rxtrace_in_handler <> 0 then return 0')
+    call helper.add_line('  __rxtrace_in_handler = 1')
+    call helper.add_line('  if _trace_current_mode() = "OFF" then do')
+    call helper.add_line('    __rxtrace_in_handler = 0')
+    call helper.add_line('    return 0')
+    call helper.add_line('  end')
+    call helper.add_line('  if _trace_should_trace_module(__rxtrace_raw.module()) = 0 then do')
+    call helper.add_line('    __rxtrace_in_handler = 0')
+    call helper.add_line('    return 0')
+    call helper.add_line('  end')
     call helper.add_line('  __rxtrace_event = .tracecontext')
     call helper.add_line('  __rxtrace_event = _trace_context_from_raw(__rxtrace_raw)')
-    call helper.add_line('  if _trace_should_trace_context(__rxtrace_event) = 0 then return 0')
+    call helper.add_line('  if _trace_should_trace_context(__rxtrace_event) = 0 then do')
+    call helper.add_line('    __rxtrace_in_handler = 0')
+    call helper.add_line('    return 0')
+    call helper.add_line('  end')
     call helper.add_line('  __rxtrace_mode = _trace_current_mode()')
-    call helper.add_line('  if _trace_needs_breakpoints(__rxtrace_mode) = 0 then return 0')
+    call helper.add_line('  if _trace_needs_breakpoints(__rxtrace_mode) = 0 then do')
+    call helper.add_line('    __rxtrace_in_handler = 0')
+    call helper.add_line('    return 0')
+    call helper.add_line('  end')
     call helper.add_line('  __rxtrace_format = _trace_current_format()')
     call helper.add_line('  __rxtrace_line = ""')
     call helper.add_line('  __rxtrace_key = ""')
@@ -351,6 +443,7 @@ makeTraceHelper: procedure = .helperplan
     call helper.add_line('  if __rxtrace_emit_source <> 0 then do')
     call helper.add_line('    if _trace_should_emit_key(__rxtrace_key) <> 0 then call _trace_write_line(__rxtrace_line)')
     call helper.add_line('  end')
+    call helper.add_line('  __rxtrace_in_handler = 0')
     call helper.add_line('  return 0')
     return helper
 

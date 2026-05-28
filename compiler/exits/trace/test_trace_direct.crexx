@@ -2,6 +2,7 @@ options levelb
 import rxcptest
 import rxcpexits
 import rxcp
+import rxfnsb
 
 main: procedure
   failures = .int
@@ -11,6 +12,8 @@ main: procedure
   failures = failures + test_modes()
   failures = failures + test_value_option()
   failures = failures + test_output_options()
+  failures = failures + test_namespace_filters()
+  failures = failures + test_namespace_controller()
   failures = failures + test_pre_process_keywords()
   failures = failures + test_errors()
 
@@ -203,6 +206,99 @@ test_output_options: procedure = .int
   replacement = join_result_lines(result)
   if check_contains("trace file output", replacement, "call _trace_set_output(trace_file)") = 0 then failures = failures + 1
   if check_contains("trace file llm", replacement, 'call _trace_set("LLM")') = 0 then failures = failures + 1
+
+  return failures
+
+test_namespace_filters: procedure = .int
+  failures = .int
+  tx = .traceexit(3006)
+  result = .exitresult
+  plan = .exitplan
+  failures = 0
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "SUPPRESS"
+  call pushidentifier tokens, "NAMESPACE"
+  call pushidentifier tokens, "rxfnsg"
+  result = tx.process(tokens)
+  if check_equal("trace suppress namespace process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace suppress namespace helper", replacement, "call _trace_suppress_namespace('rxfnsg')") = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "UNSUPPRESS"
+  call pushidentifier tokens, "NAMESPACE"
+  call pushidentifier tokens, "rxfnsb"
+  result = tx.process(tokens)
+  if check_equal("trace unsuppress namespace process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace unsuppress namespace helper", replacement, "call _trace_unsuppress_namespace('rxfnsb')") = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "ADD"
+  call pushidentifier tokens, "SUPPRESSED"
+  call pushidentifier tokens, "NAMESPACE"
+  call pushidentifier tokens, "_rxsysg"
+  result = tx.process(tokens)
+  if check_equal("trace add suppressed namespace process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace add suppressed namespace helper", replacement, "call _trace_suppress_namespace('_rxsysg')") = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "REMOVE"
+  call pushidentifier tokens, "SUPPRESSED"
+  call pushidentifier tokens, "NAMESPACE"
+  call pushidentifier tokens, "rxfnsl"
+  result = tx.process(tokens)
+  if check_equal("trace remove suppressed namespace process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace remove suppressed namespace helper", replacement, "call _trace_unsuppress_namespace('rxfnsl')") = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "RESET"
+  call pushidentifier tokens, "NAMESPACES"
+  result = tx.process(tokens)
+  if check_equal("trace reset namespaces process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  replacement = join_result_lines(result)
+  if check_contains("trace reset namespaces helper", replacement, "call _trace_reset_namespace_filters()") = 0 then failures = failures + 1
+
+  plan = tx.pre_process(tokens)
+  if check_equal("trace namespace pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+  if check_true("trace namespace keyword claim", find_keyword(plan, "RESET") > 0, "missing namespace control keyword") = 0 then failures = failures + 1
+  if check_equal("trace namespace helper count", "0", plan.get_helper_count()) = 0 then failures = failures + 1
+
+  return failures
+
+test_namespace_controller: procedure = .int
+  failures = .int
+  controller = .tracecontroller
+  failures = 0
+
+  controller = .tracecontroller()
+  call controller.reset_namespace_filters()
+
+  if check_true("trace default suppress rxfnsb", controller.namespace_is_suppressed("rxfnsb.trace") <> 0, "rxfnsb not suppressed") = 0 then failures = failures + 1
+  if check_true("trace default suppress rxfnsg", controller.namespace_is_suppressed("rxfnsg.llm") <> 0, "rxfnsg not suppressed") = 0 then failures = failures + 1
+  if check_true("trace default suppress rxfnsl", controller.namespace_is_suppressed("rxfnsl.example") <> 0, "rxfnsl not suppressed") = 0 then failures = failures + 1
+  if check_true("trace default suppress rxfnsc", controller.namespace_is_suppressed("rxfnsc.example") <> 0, "rxfnsc not suppressed") = 0 then failures = failures + 1
+  if check_true("trace default suppress _rxsysg", controller.namespace_is_suppressed("_rxsysg.helper") <> 0, "_rxsysg not suppressed") = 0 then failures = failures + 1
+  if check_true("trace default not substring", controller.namespace_is_suppressed("myrxfnsghelper") = 0, "substring matched unexpectedly") = 0 then failures = failures + 1
+  if check_true("trace directory is not a default namespace", controller.namespace_is_suppressed("/tmp/compiler/exits/trace/test_trace_exit") = 0, "trace directory matched unexpectedly") = 0 then failures = failures + 1
+
+  call controller.unsuppress_namespace("rxfnsg")
+  if check_true("trace unsuppress override", controller.namespace_is_suppressed("rxfnsg.llm") = 0, "rxfnsg still suppressed") = 0 then failures = failures + 1
+
+  call controller.suppress_namespace("demo")
+  if check_true("trace suppress user namespace", controller.namespace_is_suppressed("demo.worker") <> 0, "demo not suppressed") = 0 then failures = failures + 1
+
+  call controller.reset_namespace_filters()
+  if check_true("trace reset clears user namespace", controller.namespace_is_suppressed("demo.worker") = 0, "demo still suppressed") = 0 then failures = failures + 1
+  if check_true("trace reset restores rxfnsg", controller.namespace_is_suppressed("rxfnsg.llm") <> 0, "rxfnsg not restored") = 0 then failures = failures + 1
 
   return failures
 

@@ -25,7 +25,7 @@
 /* REXX Level B trace runtime internals */
 options levelb
 
-namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_from_env _trace_set_format _trace_set_output _trace_current_mode _trace_current_format _trace_mode_from_option _trace_needs_breakpoints _trace_context_from_raw _trace_should_trace_context _trace_should_emit_key _trace_capture_result_target _trace_pending_parent_register _trace_supply_parent_value _trace_pending_result _trace_pending_module _trace_pending_prefix _trace_pending_has_const _trace_pending_const _trace_supplied_result _trace_supplied_value _trace_clear_pending_result _trace_escape_text _trace_write_line _trace_command_before _trace_command_after
+namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_from_env _trace_set_format _trace_set_output _trace_suppress_namespace _trace_unsuppress_namespace _trace_reset_namespace_filters _trace_current_mode _trace_current_format _trace_mode_from_option _trace_needs_breakpoints _trace_context_from_raw _trace_should_trace_module _trace_should_trace_context _trace_should_emit_key _trace_capture_result_target _trace_pending_parent_register _trace_supply_parent_value _trace_pending_result _trace_pending_module _trace_pending_prefix _trace_pending_has_const _trace_pending_const _trace_supplied_result _trace_supplied_value _trace_clear_pending_result _trace_escape_text _trace_write_line _trace_command_before _trace_command_after
 
 trace_interrupt_raw: class
   _code = .int with register.1.int
@@ -124,6 +124,14 @@ tracecontroller: class
   _first_client_module = .int
   _latest_module_only = .int
   _include_runtime = .int
+  _suppressed_namespace_count = .int
+  _suppressed_namespaces = .string[]
+  _included_namespace_count = .int
+  _included_namespaces = .string[]
+  _suppression_cache_name_1 = .string
+  _suppression_cache_result_1 = .int
+  _suppression_cache_name_2 = .string
+  _suppression_cache_result_2 = .int
   _pending_result = .int
   _pending_module = .int
   _pending_prefix = .string
@@ -139,6 +147,12 @@ tracecontroller: class
     _first_client_module = 1
     _latest_module_only = 0
     _include_runtime = 0
+    _suppressed_namespace_count = 0
+    _included_namespace_count = 0
+    _suppression_cache_name_1 = ""
+    _suppression_cache_result_1 = 0
+    _suppression_cache_name_2 = ""
+    _suppression_cache_result_2 = 0
     _pending_result = 0
     _pending_module = 0
     _pending_prefix = ">>>"
@@ -192,6 +206,128 @@ tracecontroller: class
   include_runtime: method = .int
     return _include_runtime
 
+  reset_namespace_filters: method = .void
+    _suppressed_namespace_count = 0
+    _included_namespace_count = 0
+    call clear_namespace_cache()
+    call add_suppressed_namespace("rxfnsb")
+    call add_suppressed_namespace("_rxsysb")
+    call add_suppressed_namespace("rxfnsg")
+    call add_suppressed_namespace("_rxsysg")
+    call add_suppressed_namespace("rxfnsl")
+    call add_suppressed_namespace("_rxsysl")
+    call add_suppressed_namespace("rxfnsc")
+    call add_suppressed_namespace("_rxsysc")
+    call add_suppressed_namespace("rxcp")
+    call add_suppressed_namespace("rxcpexits")
+    call add_suppressed_namespace("rxcptest")
+    call add_suppressed_namespace("rxdb")
+    call add_suppressed_namespace("rxdbgui")
+    call add_suppressed_namespace("runtime_signal")
+    call add_suppressed_namespace("signalaction")
+    call add_suppressed_namespace("library")
+    return
+
+  suppress_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    call clear_namespace_cache()
+    call remove_included_namespace(normalized)
+    call add_suppressed_namespace(normalized)
+    return
+
+  unsuppress_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    call clear_namespace_cache()
+    call remove_suppressed_namespace(normalized)
+    call add_included_namespace(normalized)
+    return
+
+  namespace_is_suppressed: method = .int
+    arg name = .string
+    normalized = _trace_normalize_namespace(name)
+    if normalized = "" then return 0
+    if normalized = _suppression_cache_name_1 then return _suppression_cache_result_1
+    if normalized = _suppression_cache_name_2 then return _suppression_cache_result_2
+    result = 0
+    if namespace_list_matches(_included_namespaces, _included_namespace_count, normalized) <> 0 then result = 0
+    else result = namespace_list_matches(_suppressed_namespaces, _suppressed_namespace_count, normalized)
+    _suppression_cache_name_2 = _suppression_cache_name_1
+    _suppression_cache_result_2 = _suppression_cache_result_1
+    _suppression_cache_name_1 = normalized
+    _suppression_cache_result_1 = result
+    return result
+
+  clear_namespace_cache: method = .void
+    _suppression_cache_name_1 = ""
+    _suppression_cache_result_1 = 0
+    _suppression_cache_name_2 = ""
+    _suppression_cache_result_2 = 0
+    return
+
+  add_suppressed_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    if namespace_list_contains(_suppressed_namespaces, _suppressed_namespace_count, normalized) <> 0 then return
+    _suppressed_namespace_count = _suppressed_namespace_count + 1
+    _suppressed_namespaces[_suppressed_namespace_count] = normalized
+    return
+
+  add_included_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    if namespace_list_contains(_included_namespaces, _included_namespace_count, normalized) <> 0 then return
+    _included_namespace_count = _included_namespace_count + 1
+    _included_namespaces[_included_namespace_count] = normalized
+    return
+
+  remove_suppressed_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    out = 0
+    do i = 1 to _suppressed_namespace_count
+      if _suppressed_namespaces[i] \= normalized then do
+        out = out + 1
+        _suppressed_namespaces[out] = _suppressed_namespaces[i]
+      end
+    end
+    _suppressed_namespace_count = out
+    return
+
+  remove_included_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    out = 0
+    do i = 1 to _included_namespace_count
+      if _included_namespaces[i] \= normalized then do
+        out = out + 1
+        _included_namespaces[out] = _included_namespaces[i]
+      end
+    end
+    _included_namespace_count = out
+    return
+
+  namespace_list_contains: method = .int
+    arg namespaces = .string[], count = .int, namespace_name = .string
+    do i = 1 to count
+      if namespaces[i] = namespace_name then return 1
+    end
+    return 0
+
+  namespace_list_matches: method = .int
+    arg namespaces = .string[], count = .int, name = .string
+    do i = 1 to count
+      if _trace_namespace_matches(namespaces[i], name) <> 0 then return 1
+    end
+    return 0
+
   enable_breakpoints: method = .void
     assembler bpon
     return
@@ -212,6 +348,16 @@ tracecontroller: class
   should_trace: method = .int
     arg event = .tracecontext
     module = event.module()
+    if should_trace_module(module) = 0 then return 0
+    proc_name = event.procedure()
+    if _trace_is_trace_runtime(proc_name) <> 0 then return 0
+    if _include_runtime = 0 then do
+      if namespace_is_suppressed(proc_name) then return 0
+    end
+    return 1
+
+  should_trace_module: method = .int
+    arg module = .int
     if module < _first_client_module then return 0
     if _latest_module_only <> 0 then do
       modules = loaded_module_count()
@@ -219,8 +365,7 @@ tracecontroller: class
     end
     if _include_runtime = 0 then do
       mod_name = module_name(module)
-      if _trace_is_default_excluded(mod_name) then return 0
-      if _trace_is_default_excluded(event.procedure()) then return 0
+      if namespace_is_suppressed(mod_name) then return 0
     end
     return 1
 
@@ -447,6 +592,23 @@ _trace_set_output: procedure = .void expose _trace_runtime_ready _trace_output_t
   _trace_output_target = _trace_normalize_output_target(target)
   return
 
+_trace_suppress_namespace: procedure = .void expose _trace_runtime_ready _trace_controller
+  arg namespace_name = .string
+  call _trace_ensure_runtime
+  call _trace_controller.suppress_namespace(namespace_name)
+  return
+
+_trace_unsuppress_namespace: procedure = .void expose _trace_runtime_ready _trace_controller
+  arg namespace_name = .string
+  call _trace_ensure_runtime
+  call _trace_controller.unsuppress_namespace(namespace_name)
+  return
+
+_trace_reset_namespace_filters: procedure = .void expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  call _trace_controller.reset_namespace_filters()
+  return
+
 _trace_normalize_output_target: procedure = .string
   arg target = .string
   target = strip(target)
@@ -474,6 +636,11 @@ _trace_context_from_raw: procedure = .tracecontext expose _trace_runtime_ready _
   call _trace_ensure_runtime
   return _trace_controller.context_from_interrupt(raw)
 
+_trace_should_trace_module: procedure = .int expose _trace_runtime_ready _trace_controller
+  arg module = .int
+  call _trace_ensure_runtime
+  return _trace_controller.should_trace_module(module)
+
 _trace_should_trace_context: procedure = .int expose _trace_runtime_ready _trace_controller
   arg event = .tracecontext
   call _trace_ensure_runtime
@@ -489,6 +656,7 @@ _trace_should_emit_key: procedure = .int expose _trace_runtime_ready _trace_last
 _trace_ensure_runtime: procedure expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format _trace_output_target _trace_active
   if _trace_runtime_ready = 1 then return
   _trace_controller = .tracecontroller()
+  call _trace_controller.reset_namespace_filters()
   _trace_last_line = ""
   _trace_format = "TEXT"
   _trace_output_target = "stdout"
@@ -939,29 +1107,44 @@ _trace_module_name: procedure = .string
   assembler linkattr1 result, modules, module
   return result
 
-_trace_is_default_excluded: procedure = .int
+_trace_normalize_namespace: procedure = .string
   arg name = .string
-  n = lower(name)
+  n = lower(strip(name))
+  if n = "" then return ""
+  do while left(n, 1) = "."
+    n = substr(n, 2)
+  end
+  do while right(n, 1) = "."
+    n = left(n, length(n) - 1)
+  end
+  return n
+
+_trace_namespace_matches: procedure = .int
+  arg namespace_name = .string, candidate = .string
+  namespace_name = _trace_normalize_namespace(namespace_name)
+  candidate = _trace_normalize_namespace(candidate)
+  if namespace_name = "" then return 0
+  if candidate = "" then return 0
+  if candidate = namespace_name then return 1
+  if left(candidate, length(namespace_name) + 1) = namespace_name || "." then return 1
+  if right(candidate, length(namespace_name) + 1) = "." || namespace_name then return 1
+  if pos("." || namespace_name || ".", candidate) > 0 then return 1
+  if right(candidate, length(namespace_name) + 1) = "/" || namespace_name then return 1
+  if right(candidate, length(namespace_name) + 1) = '\' || namespace_name then return 1
+  if pos("/" || namespace_name || "/", candidate) > 0 then return 1
+  if pos('\' || namespace_name || '\', candidate) > 0 then return 1
+  return 0
+
+_trace_is_trace_runtime: procedure = .int
+  arg name = .string
+  n = _trace_normalize_namespace(name)
   if n = "" then return 0
-  if pos("rxdb", n) > 0 then return 1
-  if pos("tracecontroller", n) > 0 then return 1
-  if pos("tracecontext", n) > 0 then return 1
-  if left(n, 7) = "rxfnsb." then return 1
-  if left(n, 8) = "_rxsysb." then return 1
   if left(n, 7) = "_trace_" then return 1
   if pos("._trace_", n) > 0 then return 1
-  if pos("runtime_signal", n) > 0 then return 1
-  if pos("signalaction", n) > 0 then return 1
-  if pos("rxcptest", n) > 0 then return 1
-  if pos("rxcpexits", n) > 0 then return 1
-  if pos("rxcp", n) > 0 then return 1
-  if pos("_rxsysb", n) > 0 then return 1
-  if n = "trace" then return 1
-  if n = "library" then return 1
-  if right(n, 8) = "/library" then return 1
-  if right(n, 8) = "\library" then return 1
-  if pos("/rxfnsb/", n) > 0 then return 1
-  if pos("\\rxfnsb\\", n) > 0 then return 1
+  if pos("__rxtrace_handler", n) > 0 then return 1
+  if _trace_namespace_matches("tracecontroller", n) <> 0 then return 1
+  if _trace_namespace_matches("tracecontext", n) <> 0 then return 1
+  if _trace_namespace_matches("trace_interrupt_raw", n) <> 0 then return 1
   return 0
 
 _trace_find_proc: procedure = .int

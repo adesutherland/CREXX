@@ -209,6 +209,13 @@ crexx_add_trace_capture_test(
         REJECT_STDERR_REGEX ">>>|>=>"
 )
 
+crexx_add_compiler_exit_runtime_test(
+        test_trace_namespace_commands
+        test_trace_namespace_commands.crexx
+        PASS_REGULAR_EXPRESSION "TRACE NAMESPACE COMMANDS DONE"
+        RUN_SUFFIX ${LIBRPATH}
+)
+
 set(TRACE_COMPILE_FAIL_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/trace_compile_fail.cmake")
 file(WRITE "${TRACE_COMPILE_FAIL_SCRIPT}" [=[
 execute_process(

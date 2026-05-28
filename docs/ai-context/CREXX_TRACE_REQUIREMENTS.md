@@ -65,6 +65,11 @@ Current cREXX `TRACE` accepts these names for static options, and
 - Prefix/status forms: leading `?`, signed integer settings, and
   `TRACE VALUE expr`.
 - Output sinks: `TO STDOUT`, `TO STDERR`, `TO FILE expr`, and `TO expr`.
+- Namespace filters: `TRACE SUPPRESS NAMESPACE name`,
+  `TRACE UNSUPPRESS NAMESPACE name`, `TRACE ADD SUPPRESSED NAMESPACE name`,
+  `TRACE REMOVE SUPPRESSED NAMESPACE name`, and `TRACE RESET NAMESPACES`.
+  These cREXX extensions adjust which system or user namespaces are omitted
+  from TRACE output without changing the active trace mode.
 - Runtime environment override: `TRACE ENV` reads `CREXX_TRACE` and
   `CREXX_TRACE_TO` each time it executes. `CREXX_TRACE` uses the same mode
   normalization rules as `TRACE VALUE`; `CREXX_TRACE_TO` uses the same sink
@@ -206,10 +211,17 @@ classic TRACE implementation:
   for many register-backed reads and writes, but final resolved compound-name
   `>C>` coverage needs additional codegen metadata at the point the runtime
   tail value is available.
-- The default filtering of trace-runtime procedures is currently heuristic and
-  substring-based. It works for the initial exit/runtime split, but it is brittle
-  and should be replaced with explicit trace roles plus stack-frame/history
-  rules.
+- The trace controller owns namespace filtering. Its default suppressed set
+  covers the b/g/l/c runtime namespaces (`rxfnsb`, `rxfnsg`, `rxfnsl`,
+  `rxfnsc`) and their `_rxsys*` companions, plus compiler/debugger support
+  namespaces such as `rxcp`, `rxcpexits`, and `rxdb`. Matching is exact or by
+  component boundary (for example `rxfnsg.foo`), not arbitrary substring
+  matching. The generated TRACE command forms can suppress, unsuppress, or
+  reset these filters at runtime. A hard guard still prevents recursive tracing
+  of the TRACE handler/runtime internals themselves. Namespace filters are an
+  output/metadata policy, not a breakpoint-performance throttle; while tracing
+  remains active, the VM still delivers breakpoint interrupts before the handler
+  can decide to omit a filtered event.
 - Classic text formatting now belongs to the generated TRACE exit handler. The
   shared `rxfnsb.trace` layer still owns structured metadata lookup, controller
   state, output plumbing, and frame-read coordination helpers.
