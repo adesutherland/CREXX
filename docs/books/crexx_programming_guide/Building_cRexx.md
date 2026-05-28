@@ -117,6 +117,44 @@ you checked out if git is not a released version, there is a
 change that some test cases fail, but generally these should indicate
 success.
 
+## Useful System Test Subsets
+
+For routine system validation, run the full build and full test suite:
+
+```sh
+cmake --build cmake-build-debug
+ctest --test-dir cmake-build-debug --output-on-failure
+```
+
+For standard-library and BIF work, useful focused checks are:
+
+```sh
+cmake --build cmake-build-debug --target testbifs
+ctest --test-dir cmake-build-debug -R '^ts_.*_(noopt|opt)$' --output-on-failure
+```
+
+The `lib/rxfnsb/rexx` BIF build is a bootstrap build. It compiles most BIF
+source files with compiler exits disabled (`rxc -x`), so explicit certified
+exits such as `TRACE`, `PARSE`, and `ADDRESS` are not available inside those
+library source files during the BIF build. To debug a BIF, call it from a
+normal test fixture or scratch program compiled with exits enabled. Add
+`TRACE UNSUPPRESS NAMESPACE rxfnsb` when you need library frames in the trace.
+
+The native `system` plugin has its own smoke test:
+
+```sh
+ctest --test-dir cmake-build-debug -R '^test_system$' --output-on-failure
+```
+
+For TRACE/debug metadata work, combine focused TRACE and linker checks before
+the full suite:
+
+```sh
+ctest --test-dir cmake-build-debug \
+  -R '^(trace_event_metadata|test_trace_|ts_trace_|rxlink_format_check|rxlink_rxdas_strip_smoke)' \
+  --output-on-failure
+```
+
 ## Build version and timestamp
 
 The project version is read from the top-level `VERSION` file. To change

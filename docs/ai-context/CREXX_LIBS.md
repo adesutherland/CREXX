@@ -174,6 +174,37 @@ This approach minimizes the VM footprint and demonstrates the capability of the 
 For repo-native Level B authoring patterns, argument signature examples, and
 wayfinding to real `.crexx` examples, see `docs/ai-context/CREXX_LEVELB_AUTHORING.md`.
 
+### Build And Debugging Rules
+
+The Rexx BIF library build is a bootstrap build. `lib/rxfnsb/rexx/CMakeLists.txt`
+compiles most Rexx BIF modules with `rxc -x --import-rxas`, which disables
+certified compiler exits while building the library used by those exits. An
+explicit `TRACE`, `PARSE`, `ADDRESS`, or other certified-exit statement added
+directly to a BIF source file will fail with `#CERTIFIED_EXIT_DISABLED`.
+
+Do not debug BIFs by adding `TRACE RESULTS` inside `lib/rxfnsb/rexx/abs.crexx`
+or another library source file. Use one of these instead:
+
+- a normal scratch program or functional test that imports `rxfnsb` and calls
+  the BIF with compiler exits enabled;
+- `TRACE UNSUPPRESS NAMESPACE rxfnsb` (or `rxfnsg`, `rxfnsl`, `rxfnsc`) when
+  library frames should be visible despite the default system-namespace filter;
+- `TRACE ASM` or `TRACE LLM` from the caller for lower-level metadata checks;
+- `crexx -native --link-keep-source` or an unstripped `rxlink` image when
+  debugging native/linked output, because stripped linked images drop
+  `META_SOURCE_STEP` and `META_TRACE_EVENT`.
+
+Useful focused checks for this area:
+
+```sh
+cmake --build cmake-build-debug --target testbifs
+ctest --test-dir cmake-build-debug -R '^ts_.*_(noopt|opt)$' --output-on-failure
+ctest --test-dir cmake-build-debug -R '^test_system$' --output-on-failure
+ctest --test-dir cmake-build-debug \
+  -R '^(trace_event_metadata|test_trace_|ts_trace_|rxlink_format_check|rxlink_rxdas_strip_smoke)' \
+  --output-on-failure
+```
+
 The standard Level B array helpers live in `lib/rxfnsb/rexx` and are preferred
 over the legacy `lib/plugins/arrays` RXPA plugin. Current array BIFs include
 `arrayfind`, `arrayinsert`, `arraydelete`, `arraysort`, `arraycopy`,

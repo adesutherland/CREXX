@@ -23,7 +23,8 @@ Common options:
 - `--import-rxas`: allow `.rxas` import scanning in binary roots
 - `-o output_file`: RXAS output file
 - `-n`: disable optimisation
-- `-x`: disable compiler exits
+- `-x`: disable compiler exits; explicit certified-exit statements such as
+  `TRACE`, `PARSE`, and `ADDRESS` are rejected instead of rewritten
 - `--parser`: parser-mode service
 - `--port port`: parser-mode port
 

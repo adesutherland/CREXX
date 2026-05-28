@@ -36,6 +36,33 @@ attribute instructions for insert, delete, shrink, and clear operations, so
 common list-like operations can adjust the pointer array without a Rexx-level
 per-element copy loop.
 
+### Testing and Debugging Rexx BIFs
+
+The library build is a bootstrap build, not an ordinary application build. Most
+Rexx BIF source files in `lib/rxfnsb/rexx/` are compiled with compiler exits
+disabled (`rxc -x`). That means certified-exit statements such as `TRACE`,
+`PARSE`, and `ADDRESS` are rejected in those files during the BIF build with
+`#CERTIFIED_EXIT_DISABLED`.
+
+Do not add `TRACE RESULTS` directly to a BIF source file to debug it. Use one
+of these routes instead:
+
+- Write or extend a functional test under `lib/rxfnsb/tests_functional/` that
+  calls the BIF from normal Rexx code.
+- Build a small scratch program with exits enabled, import `rxfnsb`, and call
+  the BIF under `TRACE R`, `TRACE I`, `TRACE ASM`, or `TRACE LLM`.
+- If the trace needs to include standard-library frames, add
+  `TRACE UNSUPPRESS NAMESPACE rxfnsb` before the call. The default TRACE filter
+  hides `rxfnsb` and `_rxsysb` so ordinary user traces are not dominated by
+  runtime-library internals.
+- For native or linked-image debugging, keep source/TRACE debug metadata in the
+  linked image. The `crexx -native` driver strips that metadata by default; use
+  `--link-keep-source` for a debuggable linked intermediate.
+
+The functional BIF test target is `testbifs`, and the individual tests are
+named `ts_*_noopt` and `ts_*_opt`. The system plugin smoke test is named
+`test_system`.
+
 ## JSON, Sockets, and HTTP
 
 The Level B library includes small, stable building blocks for integration

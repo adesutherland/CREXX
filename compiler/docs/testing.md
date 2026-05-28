@@ -39,6 +39,36 @@ If you want the entire repository test suite instead of just compiler coverage:
 ctest --test-dir cmake-build-debug --output-on-failure
 ```
 
+For cREXX system work that touches libraries, BIFs, plugins, TRACE, or linked
+artifacts, use the focused system subsets before the full suite:
+
+```bash
+# Rexx BIF/library functional tests
+cmake --build cmake-build-debug --target testbifs
+ctest --test-dir cmake-build-debug -R '^ts_.*_(noopt|opt)$' --output-on-failure
+
+# Native system plugin smoke test
+ctest --test-dir cmake-build-debug -R '^test_system$' --output-on-failure
+
+# TRACE/debug metadata and source-stripped linker behavior
+ctest --test-dir cmake-build-debug \
+  -R '^(trace_event_metadata|test_trace_|ts_trace_|rxlink_format_check|rxlink_rxdas_strip_smoke)' \
+  --output-on-failure
+```
+
+The BIF build is intentionally different from a user program build. Most
+`lib/rxfnsb/rexx/*.crexx` files are compiled with `rxc -x`, which disables
+certified compiler exits to avoid bootstrap cycles while building the library
+that exits depend on. An explicit `TRACE`, `PARSE`, or `ADDRESS` statement in a
+BIF source file will therefore fail with `#CERTIFIED_EXIT_DISABLED`.
+
+To debug a Rexx BIF or standard-library helper, prefer a normal fixture or
+scratch program that imports `rxfnsb` and calls the BIF with exits enabled. If
+you need to see library frames, add `TRACE UNSUPPRESS NAMESPACE rxfnsb`; TRACE
+hides standard library and `_rxsys*` namespaces by default. For native or linked
+debugging, keep source/TRACE metadata with `crexx -native --link-keep-source`
+or an unstripped `rxlink` image.
+
 To run a specific test:
 
 ```bash

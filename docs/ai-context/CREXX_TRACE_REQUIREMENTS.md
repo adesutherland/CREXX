@@ -243,11 +243,48 @@ classic TRACE implementation:
   while preserving runtime contract metadata needed for execution. Keep linked
   images unstripped when classic TRACE output, `TRACE LLM`, RXDB source
   stepping, or source-level semantic value inspection is required.
+- The Rexx BIF/library build disables compiler exits (`rxc -x`) for bootstrap
+  safety. Explicit TRACE instructions inside `lib/rxfnsb/rexx/*.crexx` are
+  rejected with `#CERTIFIED_EXIT_DISABLED`. Debug library behavior from a
+  normal fixture that imports the library, and use
+  `TRACE UNSUPPRESS NAMESPACE rxfnsb`/`rxfnsg`/`rxfnsl`/`rxfnsc` only when
+  library frames should be visible.
 
 The recommended beta stance is to describe `TRACE R` and `TRACE I` result
 records as partial, and to use `TRACE LLM` primarily for inspecting actual
 `.srcstep`/instruction metadata rather than as proof of full classic TRACE
 compatibility.
+
+## System Test Wayfinding
+
+For TRACE and source/debug metadata changes, keep these focused checks close at
+hand before the full suite:
+
+```sh
+ctest --test-dir cmake-build-debug \
+  -R '^(trace_event_metadata|test_trace_|ts_trace_|rxlink_format_check|rxlink_rxdas_strip_smoke)' \
+  --output-on-failure
+```
+
+For standard-library and BIF changes, build and run the BIF matrix:
+
+```sh
+cmake --build cmake-build-debug --target testbifs
+ctest --test-dir cmake-build-debug -R '^ts_.*_(noopt|opt)$' --output-on-failure
+```
+
+For the native `system` plugin smoke test:
+
+```sh
+ctest --test-dir cmake-build-debug -R '^test_system$' --output-on-failure
+```
+
+The final gate for completed slices remains:
+
+```sh
+cmake --build cmake-build-debug
+ctest --test-dir cmake-build-debug --output-on-failure
+```
 
 ## cREXX LLM Output Format
 

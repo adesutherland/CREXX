@@ -353,6 +353,17 @@ TRACE is implemented as a certified compiler exit. It requires normal compiler
 exit loading; compiling with exits disabled rejects the statement rather than
 treating it as an implicit command.
 
+The cREXX standard-library/BIF build deliberately compiles most
+`lib/rxfnsb/rexx/*.crexx` files with compiler exits disabled (`rxc -x`) to avoid
+bootstrap and circular-dependency problems while building the library that the
+exits themselves use. Adding `TRACE RESULTS`, `TRACE R`, or another explicit
+TRACE instruction directly to a BIF source file such as `abs.crexx` therefore
+produces `#CERTIFIED_EXIT_DISABLED`. Debug BIF or library behavior from a
+normal test program instead: call the BIF from a fixture that compiles with
+exits enabled, use `TRACE UNSUPPRESS NAMESPACE rxfnsb` if you need to see
+library frames, and keep linked/native images unstripped with
+`--link-keep-source` when source-level TRACE metadata is needed.
+
 Implementation status and compatibility requirements are tracked in
 `docs/ai-context/CREXX_TRACE_REQUIREMENTS.md`.
 
