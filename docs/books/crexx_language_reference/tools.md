@@ -148,3 +148,37 @@ The driver wraps the usual compile, assemble, execute, link, and native package
 steps. Headerless top-level scripts are compiled with `--level levelb --import
 rxfnsb`; explicit modules should still declare their own `options` and
 imports.
+
+Common driver options:
+
+- `-help`: print driver help
+- `-version`: print version information
+- `-exec` / `-noexec`: enable or skip execution after building
+- `-native` / `-nonative`: generate or skip a native executable package
+- `-compile` / `-nocompile`: enable or skip compile/assemble work
+- `-optimize` / `-nooptimize`: enable or disable optimisation
+- `-keep` / `-nokeep`: keep or remove intermediate files
+- `-decimal` / `-nodecimal`: enable or disable decimal plugin support
+- `-s path` / `-source path`: add a source import root
+- `-i path`: add a binary import root
+- `-import-rxas`: allow RXAS import scanning in binary roots
+- `-linkmap path`: write a linker map
+- `-link-keep-source` / `-link-strip-source`: preserve or strip source and
+  TRACE debug metadata from linked images
+- `-link-keep-inline` / `-link-strip-inline`: preserve or strip inline-body
+  metadata from linked images
+- `-args`: stop driver option parsing; remaining arguments are passed to the
+  executed program
+
+If the input filename ends in `.rxpp`, the driver runs RXPP first and then
+compiles the generated `.crexx` source. `CREXX_HOME`, when set, is used as the
+root for locating the installed `bin` directory and standard library image;
+otherwise the driver derives that root from its load path.
+
+Native packaging links the program with the standard library image, runs
+`rxcpack`, and invokes a platform C compiler. The lower-level `crxc.rexx`
+helper exposes the same basic flow for explicit scripted builds:
+
+```bash
+crxc.rexx crexx_home execName[.ext]
+```

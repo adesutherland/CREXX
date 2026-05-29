@@ -60,6 +60,8 @@ designs.
 
 ## Project Direction
 
-The [GitHub wiki](https://github.com/adesutherland/CREXX/wiki) is retained for
-project vision, direction, and history. It is intentionally not the technical
-source of truth for the current release.
+- [Roadmap](ROADMAP.md): future direction, research themes, and non-commitment
+  planning notes
+- The [GitHub wiki](https://github.com/adesutherland/CREXX/wiki) is retained
+  for project vision, direction, and history. It is intentionally not the
+  technical source of truth for the current release.

@@ -12,7 +12,8 @@ For current implementation facts, trust sources in this order:
 2. `docs/ai-context`.
 3. Current release docs under `docs/books`.
 4. `compiler/docs` when the question is compiler-internal.
-5. The wiki only for vision, direction, and history.
+5. `docs/ROADMAP.md` for future direction that is not yet implemented.
+6. The wiki only for vision, direction, and history.
 
 If two documents disagree about implemented behaviour, verify against tests or
 code before editing user-facing docs.
@@ -23,6 +24,7 @@ code before editing user-facing docs.
 | --- | --- | --- | --- | --- |
 | `README.md` | GitHub front door | New visitors, contributors | What CREXX is, current baseline, build/run, links | Short and welcoming |
 | `docs/index.md` | GitHub Pages landing page | Users and contributors | Release documentation index | Clear and navigable |
+| `docs/ROADMAP.md` | Project roadmap | Maintainers, contributors, interested users | Future direction, research themes, and explicit non-commitment planning notes | Directional and conservative |
 | `docs/releases` | Release notes | Users, packagers, contributors | Milestone summaries, release scope, signing status, known beta limitations | Concise and release-focused |
 | `docs/packaging` | Distribution operations | Maintainers, release engineers | Signing, notarization, packaging setup, GitHub secret setup | Procedural and security-conscious |
 | `docs/books/crexx_language_reference` | Language reference | CREXX programmers | Syntax, types, statements, classes, libraries | Formal, as-implemented |
@@ -40,6 +42,9 @@ code before editing user-facing docs.
   `docs/index.md`.
 - Release milestone summaries belong in `docs/releases` and may be copied into
   GitHub Releases.
+- Future direction that should survive discussion cleanup belongs in
+  `docs/ROADMAP.md`. A roadmap entry is not a release promise; create an issue
+  only when the work is concrete enough to track.
 - Implementation facts needed by agents belong in `docs/ai-context`.
 - Deep compiler mechanisms belong in `compiler/docs`; promote summaries into
   public docs only when they help users or integrators.

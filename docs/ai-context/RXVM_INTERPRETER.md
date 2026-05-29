@@ -97,6 +97,14 @@ struct stack_frame {
 };
 ```
 
+Frame recycling is a performance feature, not a semantic shortcut. When a
+frame is reused, the VM relinks local register pointers back to their base
+storage, relinks globals, and resets the argument-count register. On frame
+exit, `clear_frame()` clears local storage, the argument-count slot, remaining
+signal-handler stack entries, and any VM plugin instance owned by that frame.
+The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero
+locals on reuse; the normal build relies on deterministic frame cleanup.
+
 ### Signal / Interrupt Handling
 The VM signal model is implemented directly in the interpreter loop. Each
 `stack_frame` owns an `interrupt_table[RXSIGNAL_MAX]` and an `is_interrupt`
@@ -282,6 +290,23 @@ materialization rather than user-visible assignment. The current VM does not
 maintain a validity flag for a cached string representation, so repeated
 conversions still perform the conversion work and the compiler does not rely on
 string-form reuse.
+
+### Decimal Plugin Runtime
+
+`.decimal` values are stored in the `value` decimal slot as plugin-owned byte
+content. The VM loads the default decimal plugin before executing the first
+frame, attaches it to the frame numeric context, and syncs that plugin whenever
+a child frame inherits a copied numeric context. A frame that loads its own
+decimal plugin marks `decimal_loaded_here`, so cleanup can free it when that
+frame exits.
+
+The decimal plugin interface is the boundary between VM instructions and the
+concrete decimal engine. The current `decplugin` API covers numeric-context
+sync, required string sizing, conversion to and from string, integer, and
+double values, coefficient/exponent extraction, arithmetic operations
+(`add`, `sub`, `mul`, `div`, `pow`, `neg`), comparisons, zero testing,
+truncate, and round. Decimal instructions in `rxvm` should go through that API
+rather than depending on one decimal backend's internal representation.
 
 ### Copy, Move, and Native Payloads
 

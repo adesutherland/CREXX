@@ -204,7 +204,51 @@ Macro bodies may span multiple lines using `\` as a continuation marker. This is
 
 ---
 
-####  3.1.9 Notes and guidelines
+####  3.1.9 Keyword parameters
+
+Macro definitions may declare keyword parameters after all positional
+parameters. A keyword parameter is written as `name=default`; the default may
+be empty.
+
+```rexx
+##define resize(width, height, quality=90, format='jpg') { \
+   w = width; h = height; q = quality; f = format \
+}
+```
+
+Calls may supply keywords as `name=value` after the positional arguments:
+
+```rexx
+resize(800, 600, quality=75, format='png')
+```
+
+Current RXPP also accepts TSO-style keyword calls such as `quality(75)`. The
+definition still uses `quality=default`.
+
+---
+
+####  3.1.10 Command-style macros
+
+Command-style macros are defined by using `cmd` or `command` as the first
+pseudo-parameter. They are invoked as statement-level commands with
+blank-separated arguments rather than function-style parentheses.
+
+```rexx
+##define cmd factorial(var num) { \
+   var = 1; do i = 2 to num; var = var * i; end \
+}
+
+factorial result 10
+say result
+```
+
+Command-style macros use the same textual substitution model as ordinary
+macros. They are intended for statement-like expansions, not for use inside an
+expression.
+
+---
+
+####  3.1.11 Notes and guidelines
 
 - RXPP macros are **textual expansions**, not syntax-tree transformations.
 - Macros should expand to valid Rexx when copied verbatim into surrounding code.
@@ -915,4 +959,3 @@ Practical debugging tip: if something goes wrong in the full pipeline, run the s
 - Output is valid CREXX levelb Rexx
 - No RXPP directives remain at runtime (except optional comment traces)
 - All transformations are explicit and readable in the generated file
-

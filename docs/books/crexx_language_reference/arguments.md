@@ -37,3 +37,33 @@ do i=1 to fn.0
 ```
 
 These two fragments illustrate how to handle command line arguments to a program; when there are no arguments, ```fn.0``` is 0 and we call a ```help``` function to explain about the usage of this program. If there are arguments, we loop over them and decide whether they are options (these start with a dash) or files (if they don't).
+
+## Procedure arguments and expose
+
+Named procedures use the same `ARG` statement to bind call arguments. Level B
+code normally gives each argument a type:
+
+```rexx
+worker: procedure = .int
+  arg value = .int, name = .string
+  return value
+```
+
+Plain `arg name = type` parameters are by value. If the procedure must update
+the caller's variable, declare that parameter with `expose`:
+
+```rexx
+bump: procedure = .void
+  arg expose value = .int
+  value = value + 1
+  return
+```
+
+The `procedure expose` clause is different: it exposes module-global storage to
+the procedure, while `arg expose` exposes a call argument by reference.
+
+Optional arguments can be tested with the `?name` form. A final `... = type`
+tail accepts a variable number of arguments; those values are available through
+the pseudo array `arg[]`/`arg.0` and the compatibility `arg()` operator. See
+`statements.md` for the complete procedure, argument, ellipsis, and `arg()`
+rules.

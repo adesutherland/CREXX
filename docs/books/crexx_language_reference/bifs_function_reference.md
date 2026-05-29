@@ -52,7 +52,7 @@ import rxfnsb
 | DATATYPE        | DATATYPE(s, type)                            |
 | RANDOM          | RANDOM(min, max, seed)                       |
 | TIME            | TIME(option)                                 |
-| DATE            | DATE(option)                                 |
+| DATE            | DATE(oformat, date, iformat, osep, isep)     |
 | SOURCELINE      | SOURCELINE(n)                                |
 | ARG             | ARG(n)                                       |
 | STORAGE         | STORAGE(address, length, newvalue)           |
@@ -113,16 +113,17 @@ Table: Non-SAA Functions. {#tbl:id}
 | QEXTRACTPAIR | QEXTRACTPAIR(open, close, text, start, mode=')   |
 | QPOS | QPOS(needle, text [, start]) |
 | QREMOVEALL | QREMOVEALL(open, close, text [, mode])   |
-| QSPLIT | QREMOVEALL(open, close, text [, mode]) |
+| QSPLIT | QSPLIT(text, sep) |
 | QSPLITSAFE | QSPLITSAFE(text, sep, start, pairs) |
 | QSTRIPCOMMENT | QSTRIPCOMMENT(open, close, text) |
 | QSUBWORD | QSUBWORD(string,wordnum)|
 | QWORD | QWORD(line, wanted) |
 | QWORDINDEX | QWORDINDEX(string,wordnum) |
-| QWORDLENGTH | QWORDLENTH(string,wordnum) |
+| QWORDLENGTH | QWORDLENGTH(string,wordnum) |
 | QWORDPOS | QWORDPOS(search, string [,start])  |
 | QWORDS | QWORDS(string) |
 | RERADIX | RERADIX(subject, fromradix, toradix) |
+| SEQUENCE | SEQUENCE(from, to) |
 | SPLICE | SPLICE(needle, haystack, at, len) |
 | VERSION | VERSION() |
 
@@ -195,6 +196,23 @@ Insert, delete, append, prepend, pop, shift, shrink, and clear operations use
 the VM array attribute instructions, so the pointer array can be adjusted
 without a Rexx-level per-element copy loop. Element values are still ordinary
 Rexx strings and keep the usual copy and lifetime rules.
+
+## Quote-aware helpers
+
+The `q*` helpers perform string operations while ignoring separators or words
+that appear inside quoted text. They are ordinary `rxfnsb` functions and follow
+the current implementation in `lib/rxfnsb/rexx`.
+
+`QPOS(needle, text [, start])` returns the 1-based position of `needle` outside
+single- or double-quoted regions, or `0` when it is not found. The current
+quote scan treats matching single and double quote characters as delimiters.
+
+`QSPLIT(text, sep)` splits `text` on `sep` only when the separator is outside
+quoted regions. It returns a `.string[]` array of parts.
+
+`QSPLITSAFE(text, sep, start, pairs)` is the nested-safe splitter. In addition
+to quote tracking, it tracks paired delimiters from the `pairs` string, such as
+the default `()`, and only splits at depth zero.
 
 
 ## ABS(x)
@@ -1447,17 +1465,63 @@ were the corresponding Arabic numeral.
 
 ## RANDOM(min, max, seed)
 
+Returns a pseudo-random integer in the inclusive range `min` through `max`.
+When omitted, `min` defaults to `0`, `max` defaults to `999`, and `seed`
+defaults to `-1`. The current implementation raises a syntax condition for a
+negative minimum or for `min > max`.
 
+`seed` is passed to the VM `irand` instruction. The default `-1` asks the
+instruction to choose its normal seed behavior.
 
 
 ## TIME(option)
 
+Returns time information. The option is case-insensitive and defaults to `N`.
+
+| Option | Result |
+|--------|--------|
+| `N` | Local time as `hh:mm:ss`. |
+| `L` | Local time as `hh:mm:ss.ffffff`. |
+| `H` | Hour since midnight. |
+| `M` | Minutes since midnight. |
+| `S` | Seconds since midnight. |
+| `US` | Microseconds since midnight. |
+| `E` | Elapsed seconds. |
+| `R` | Reset/read the elapsed timer. |
+| `C` | Civil-style time with `am` or `pm`. |
+| `UTC` | UTC time using the normal `hh:mm:ss` format. |
+| `ZD` | UTC offset in seconds. |
+| `T` | CPU ticks since program start. |
+| `TS` | Ticks per second. |
+| `ZN` | Time zone name. |
+
+An unsupported option currently returns the string `time invalid option`.
 
 
+## DATE(oformat, date, iformat, osep, isep)
 
-## DATE(option)
+Converts dates between supported date formats. With no `date` argument, it
+uses the current local date. Empty `oformat` or `iformat` values default to
+`NORMAL`; `osep` and `isep` can override the output or input separator.
+
+Input formats are matched by abbreviation and currently include `NORMAL`,
+`STANDARD`, `ORDERED`, `EUROPEAN`, `GERMAN`, `USA`, `INTERNATIONAL`,
+`QUALIFIED`, `JULIAN`, `BASE`, `UNIX`, and `EPOCH`.
+
+Output formats are also matched by abbreviation and currently include
+`NORMAL`, `XNORMAL`, `STANDARD`, `ORDERED`, `XORDERED`, `EUROPEAN`,
+`XEUROPEAN`, `GERMAN`, `XGERMAN`, `USA`, `XUSA`, `INTERNATIONAL`,
+`QUALIFIED`, `JULIAN`, `DAYS`, `WEEKDAY`, `MONTH`, `CENTURY`, `BASE`,
+`UNIX`, `JDN`, `EPOCH`, `DEC`, and `XDEC`.
 
 
+## SEQUENCE(from, to)
+
+Returns the sequence of characters from `from` through `to`, using Unicode
+codepoint values. It is the Unicode-capable replacement for byte-oriented
+`XRANGE`; unlike `XRANGE`, it does not wrap around when `from` is greater than
+`to`. The current implementation prints a diagnostic and returns `BAD` for a
+descending range.
 
 
 ## SOURCELINE(n)
@@ -1495,6 +1559,19 @@ the supported modes, output targets, and namespace suppression controls.
 
 ## VALUE(symbol, newvalue, selector)
 
+
+## VERSION()
+
+Returns a string with implementation and build information supplied by the VM
+`rxvers` instruction. The current string layout is:
+
+```text
+platform bits crexx-version build-date
+```
+
+`platform` is one of the VM's compiled platform names, such as `linux`,
+`windows`, `macOS`, `cms`, or `unknown`. `bits` is `32` or `64`. The function
+does not currently expose endianness as a separate field.
 
 
 

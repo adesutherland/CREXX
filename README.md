@@ -72,6 +72,8 @@ is searched for same-extension imports.
   signing status, and known limitations.
 - [Release documentation](docs/index.md) is the main entry point for current
   as-built user and technical documentation.
+- [Roadmap](docs/ROADMAP.md) collects future direction and non-release
+  commitments separately from current technical documentation.
 - [Documentation map](docs/DOCS_MAP.md) explains which documentation area to
   use and how much authority each area has.
 - [Language reference](docs/books/crexx_language_reference/about.md) covers the
