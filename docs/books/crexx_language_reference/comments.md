@@ -107,7 +107,7 @@ import rxfnsb
  * which has a special role in documenting code
  */
 say 'comment on comments'
-// this comment is enabled by option comments_clash
+// this comment is enabled by option comments_slash
 -- this comment is enabled by comments_dash
 say 'no further comment.'
 ```

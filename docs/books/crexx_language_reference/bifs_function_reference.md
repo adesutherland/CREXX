@@ -1565,7 +1565,7 @@ the supported modes, output targets, and namespace suppression controls.
 Returns a string with implementation and build information supplied by the VM
 `rxvers` instruction. The current string layout is:
 
-```text
+```bash
 platform bits crexx-version build-date
 ```
 

@@ -1,4 +1,4 @@
-# The crexx Tool
+# The crexx tool
 
 The `crexx` tool is the convenience driver for common \crexx{} workflows. It
 can compile, assemble, execute, link, and package programs without requiring
