@@ -134,7 +134,9 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
 	 if fn.i = '-nocolor'    then nocolor=1
 	 if fn.i = '-nocolour'   then nocolor=1
 	 if fn.i = '-optimize'   then optimize=1
+	 if fn.i = '-optimise'   then optimize=1
 	 if fn.i = '-nooptimize' then optimize=0
+	 if fn.i = '-nooptimise' then optimize=0
 	 if fn.i = '-keep'       then keep=1
 	 if fn.i = '-nokeep'     then keep=0
 	 if fn.i = '-nodecimal'  then decimal=0
@@ -604,32 +606,33 @@ say 'Arguments are: in_file_specification... [--option]...'
 say
 say 'The following options are available:'
 say
-say '-help            -- display (this) help info'
-say '-args            -- execute with command line args (as final option only)'
-say '-version         -- display the version number'
-say '-exec            -- execute the compiled rxbin (default)'
-say '-noexec          -- compile only; do not execute with rxvme'
-say '-compile         -- enable compilation to rxbin (default)'
-say '-nocompile       -- skip rxc/rxas and reuse an existing .rxbin'
-say '-native          -- package a native executable from the compiled program'
-say '-nonative        -- disable native packaging (default)'
-say '-verbose[0-4]    -- report on progress; default verbose0'
-say '-[no]colo[u]r    -- enable or disable colo[u]r output'
-say '-[no]optimize    -- enable or disable optimization'
-say '-keep            -- keep compile/link intermediates (default)'
-say '-nokeep          -- delete compile/link intermediates after the run'
-say '-decimal         -- use decimal arithmetic'
-say '-l[library path] -- packaged binary/runtime library relative to CREXX_HOME/bin'
-say '-s[path]         -- additional source import root for the rxc phase'
-say '-i[path]         -- additional raw binary import root for the rxc phase'
-say '--import-rxas    -- allow the rxc phase to auto-import .rxas from binary roots'
-say '--linkmap path   -- write an rxlink map file when using -native'
+say '-help              -- display (this) help info'
+say '-args              -- execute with command line args (as final option only)'
+say '-version           -- display the version number'
+say '-exec              -- execute the compiled rxbin (default)'
+say '-noexec            -- compile only; do not execute with rxvme'
+say '-compile           -- enable compilation to rxbin (default)'
+say '-nocompile         -- skip rxc/rxas and reuse an existing .rxbin'
+say '-native            -- package a native executable from the compiled program'
+say '-nonative          -- disable native packaging (default)'
+say '-verbose[0-4]      -- report on progress; default verbose0'
+say '-[no]colo[u]r      -- enable or disable colo[u]r output'
+say '-[no]optimi[s|z]e  -- enable or disable optimization'
+say '-keep              -- keep compile/link intermediates (default)'
+say '-nokeep            -- delete compile/link intermediates after the run'
+say '-decimal           -- use decimal arithmetic'
+say '-l[library path]   -- packaged binary/runtime library relative to CREXX_HOME/bin'
+say '-s[path]           -- additional source import root for the rxc phase'
+say '-i[path]           -- additional raw binary import root for the rxc phase'
+say '--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots'
+say '--linkmap path     -- write an rxlink map file when using -native'
 say '--link-keep-source -- keep source/TRACE debug metadata in the linked native image'
 say '--link-keep-inline -- keep inline-body metadata in the linked native image'
 say
 say 'Headerless top-level scripts are compiled with --level levelb --import rxfnsb.'
-say 'Options -s, -i and --import-rxas affect compilation only; runtime/native loading still uses -l.'
-say 'Native packaging uses rxlink before rxcpack; plugin/static libraries are linked natively with platform-appropriate linker flags.'
+say 'Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l.'
+say 'Native packaging uses rxlink before rxcpack; plugin/static libraries are linked natively'
+say 'with platform-appropriate linker flags.'
 say
 say 'all options can also be prefixed with --'
 return 'help done'

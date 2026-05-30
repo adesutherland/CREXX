@@ -288,7 +288,7 @@ information and includes source text where metadata is available.
 When traced execution moves between source files, cREXX emits a source-file
 transition line:
 
-```text
+```bash
        >  >   helper.crexx
 ```
 
