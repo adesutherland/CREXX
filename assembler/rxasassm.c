@@ -113,6 +113,7 @@ static int mnemonic_matches(const char *mnemonic, const char *table_name) {
 static const OpInfo* find_opcode(const char *mnemonic, OperandType t1, OperandType t2, OperandType t3) {
     int i;
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
+        if (!rxop_is_source_mnemonic(op_table[i].mnemonic)) continue;
         if (match_format(op_table[i].format, t1, t2, t3)) {
             if (mnemonic_matches(mnemonic, op_table[i].mnemonic)) {
                 return &op_table[i];
@@ -1020,6 +1021,7 @@ static const OpInfo *validate_instruction(Assembler_Context* context, Assembler_
     /* Make a useful error message */
     errorBuffer[0] = 0;
     for (j = 0; op_table[j].mnemonic != NULL; j++) {
+        if (!rxop_is_source_mnemonic(op_table[j].mnemonic)) continue;
         if (mnemonic_matches(mnemonic, op_table[j].mnemonic)) {
             if (first) {
                 strncpy(errorBuffer, "invalid operand, expecting ", MAX_ERROR_LENGTH - 1);

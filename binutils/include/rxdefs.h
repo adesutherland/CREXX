@@ -26,6 +26,7 @@
 #define RXDEFS_H
 
 #include <stdint.h>
+#include <string.h>
 
 /* Operand Formats */
 typedef enum {
@@ -129,6 +130,15 @@ typedef struct {
     int         flags;
     const char* description;
 } OpInfo;
+
+static inline int rxop_is_source_mnemonic(const char *mnemonic) {
+    if (!mnemonic) return 0;
+    if (strncmp(mnemonic, "RESERVED_", 9) == 0) return 0;
+    if (strcmp(mnemonic, "INULL") == 0) return 0;
+    if (strcmp(mnemonic, "INTERRUPT") == 0) return 0;
+    if (strcmp(mnemonic, "IUNKNOWN") == 0) return 0;
+    return 1;
+}
 
 extern const OpInfo op_table[];
 

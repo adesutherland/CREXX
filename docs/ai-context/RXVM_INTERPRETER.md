@@ -562,6 +562,12 @@ Instructions are executed via macro-driven blocks. For example, moving to the ne
 ```
 `DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively. Internal signal-raising macros stamp `interrupted_pc` with the faulting instruction before dispatch advances `pc`; breakpoint and asynchronous interrupts leave it unset so their handlers continue to receive the next instruction/resume address. The default fallback panic report uses the stamped address when present to print the module/address and, when `META_SOURCE_STEP` metadata is present, the closest preceding REXX source line. Linked images built with source stripping have only the module/address for this fallback context.
 
+`INTERRUPT` is the internal dispatch target used by this macro, not a source
+instruction. `INULL` and `IUNKNOWN` are runtime sentinel handlers that raise
+`UNKNOWN_INSTRUCTION`; `rxas` intentionally rejects all three names as source
+mnemonics. Opcode slots 514 and 515 are reserved after removal of the legacy DLL
+loader instructions, preserving later opcode numbers.
+
 ### Instruction Flow Example
 Inside the `run()` loop, implementations are declared using `START_INSTRUCTION`. The assembler passes operands inline sequentially in the binary array.
 ```c

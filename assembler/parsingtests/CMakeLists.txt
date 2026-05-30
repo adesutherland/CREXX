@@ -45,3 +45,9 @@ add_rxas_parser_test(test_rxas_04_errors
         "${CMAKE_CURRENT_SOURCE_DIR}/test_04_errors.rxas"
         "${CMAKE_CURRENT_SOURCE_DIR}/test_04_errors.golden"
         "${CMAKE_CURRENT_SOURCE_DIR}/test_04_errors.txt")
+
+add_test(NAME rxas_reject_non_source_mnemonics
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/reject_non_source_mnemonics.cmake)

@@ -92,6 +92,7 @@ void *src_inst(const char* name, OperandType op1, OperandType op2, OperandType o
     int i;
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
         OperandType types[3] = {OP_NONE, OP_NONE, OP_NONE};
+        if (!rxop_is_source_mnemonic(op_table[i].mnemonic)) continue;
         get_operand_types(op_table[i].format, types);
         if (mnemonic_matches(name, op_table[i].mnemonic) && 
             types[0] == op1 && types[1] == op2 && types[2] == op3) {

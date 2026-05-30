@@ -75,7 +75,6 @@
 0x0029 divf       {REG,FLOAT,REG}      Convert and Divide to Float (op1=op2/op3) (Deprecated)
 0x0011 divi       {REG,REG,REG}        Convert and Divide to Integer (op1=op2/op3) (Deprecated)
 0x0012 divi       {REG,REG,INT}        Convert and Divide to Integer (op1=op2/op3) (Deprecated)
-0x0111 dllparms   {REG,REG,REG}        fetches parms for DLL call 
 0x016c dlt        {REG,REG,REG}        Decimal Less than op1=(op2<op3)
 0x016d dlt        {REG,REG,DECIMAL}    Decimal Less than op1=(op2<op3)
 0x016e dlt        {REG,DECIMAL,REG}    Decimal Less than op1=(op2<op3)
@@ -285,7 +284,6 @@
 0x009a nsmap      {REG,STRING,STRING}  Map op1 to namespace op2 var name op3
 0x00c2 null       {REG}                Null op1
 0x0129 nullredir  {REG}                Redirect op1 = to/from null
-0x0110 opendll    {REG,REG,REG}        open DLL
 0x008d or         {REG,REG,REG}        Logical (int) or op1=(op2 || op3)
 0x00e8 padstr     {REG,REG,REG}        set op1=op2[repeated op3 times]
 0x0094 pmap       {REG,REG}            Map op1 to parent var name in op2
@@ -389,4 +387,3 @@
 0x00bf unlinkattr1 {INT,REG}            Unlink attribute op1 (1 base) of op2
 0x009c unmap      {REG}                Unmap op1
 0x0091 xtime      {REG,STRING}         put special time properties into op1
-
