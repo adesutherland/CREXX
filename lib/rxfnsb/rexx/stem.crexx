@@ -122,9 +122,3 @@ stem: class
   value: method = .string
     arg kv = .string
     return values[kv]
-
-  keylist: method = .string[]
-  return keys
-
-  vallist: method = .string[]
-    return values
