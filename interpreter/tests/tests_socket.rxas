@@ -200,6 +200,39 @@ send_server_pass:
 recv_client_pass:
     say "PASS: SOCKRECV client"
 
+    load r15, 0x0001ff
+    socksendb r9, r5, r15
+    ieq r0, r9, 3
+    brt sendb_client_pass, r0
+    sockerror r13, r5
+    say r13
+    say "FAIL: SOCKSENDB client"
+    ret 1
+sendb_client_pass:
+    say "PASS: SOCKSENDB client"
+
+    load r10, 3
+    sockrecvb r16, r7, r10
+    blen r17, r16
+    ieq r0, r17, 3
+    brf recvb_server_fail, r0
+    load r18, 0
+    getbyte r17, r16, r18
+    ieq r0, r17, 0
+    brf recvb_server_fail, r0
+    load r18, 2
+    getbyte r17, r16, r18
+    ieq r0, r17, 255
+    brf recvb_server_fail, r0
+    say "PASS: SOCKRECVB server"
+    br recvb_server_done
+recvb_server_fail:
+    sockerror r13, r7
+    say r13
+    say "FAIL: SOCKRECVB server"
+    ret 1
+recvb_server_done:
+
     load r8, 2
     sockshutdown r6, r5, r8
     ieq r0, r6, 0

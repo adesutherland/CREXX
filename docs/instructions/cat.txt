@@ -33,7 +33,6 @@ dcall                3
 dec2                 1
 dec1                 1
 divi                 1
-dllparms             3
 dropchar             9
 exit                 3
 fadd                 2
@@ -117,7 +116,6 @@ multi                1
 nsmap                7
 null                 4
 not                  3
-opendll              5
 or                   3
 padstr               9
 pmap                 7

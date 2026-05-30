@@ -59,6 +59,7 @@ static int is_mnemonic(const char *s) {
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
         const char *m = op_table[i].mnemonic;
         int j = 0;
+        if (!rxop_is_source_mnemonic(m)) continue;
         while (s[j] && m[j] && toupper((unsigned char)s[j]) == m[j]) j++;
         if (s[j] == 0 && (m[j] == 0 || m[j] == '_')) return 1;
     }

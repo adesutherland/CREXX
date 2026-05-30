@@ -602,6 +602,7 @@ static const OpInfo *find_optimiser_opcode(Assembler_Token *instrToken,
     if (operand3Token) actual_operands = 3;
 
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
+        if (!rxop_is_source_mnemonic(op_table[i].mnemonic)) continue;
         if (op_operands_match(op_table[i].format, t1, t2, t3, actual_operands) &&
             mnemonic_matches(mnemonic, op_table[i].mnemonic)) {
             return &op_table[i];

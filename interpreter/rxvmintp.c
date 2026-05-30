@@ -7710,93 +7710,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         op1R->int_value = hash;
      }
      DISPATCH
-/* ------------------------------------------------------------------------------------------
- *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
- *  -----------------------------------------------------------------------------------------
- */
-
-//    typedef char * (*strSubproc)(int arg1, int arg2, char str1[32]);   // for string
-    typedef int    (*intSubproc)(int arg1, int arg2, char str1[32]);
-
-START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
-     DEBUG("TRACE - OPENDLL R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1),(int)REG_IDX(3));
-#ifdef _WIN32
-     HINSTANCE hDLL;               // Handle to DLL
-//     strSubproc strProc;
-     intSubproc intProc;
-     HRESULT hrReturnVal;
-     rxinteger i1=-16;
-    // rxfuncadd(rexxname,module,sysname)
-    null_terminate_string_buffer(op2R);
-    null_terminate_string_buffer(op3R);
-    printf("Module %s\n",op3R->string_value);
-
-    hDLL = LoadLibrary(op2R->string_value);
-    printf("DLL ADDR %d %s %d %d\n",hDLL, op2R->string_value,op2R->string_length,hDLL);
-
-    if (hDLL==0 ) i1=-8;
-    else {
-         intProc = (intSubproc) GetProcAddress(hDLL, op3R->string_value);
-        printf("Module ADDR %d\n",intProc);
-        if (intProc==0 ) i1=-12 ;
-        else i1 = (rxinteger)intProc;
-      }
-    FreeLibrary(hDLL);
-    REG_RETURN_INT(i1);
-#endif
-#ifdef __APPLE__
-    void *dl_handle;
-    int (*func) (float);
-    char *error;
-    rxinteger i1=-16;
-    // rxfuncadd(rexxname,module,sysname)
-    null_terminate_string_buffer(op2R);
-    null_terminate_string_buffer(op3R);
-    printf("Module %s\n",op3R->string_value);
-    
-    /* Open the shared object */
-    dl_handle = dlopen( op2R->string_value, RTLD_LAZY );
-    if (dl_handle) i1=-8;
-    else {
-      func = dlsym( dl_handle, op3R->string_value );
-      if (func==0 ) i1=-12 ;
-      else i1= (rxinteger)func;
-      }
-    error = dlerror();
-    if (error != NULL) {
-      printf( "!!! %s\n", error );
-      rc = (int)i1;
-      goto interprt_finished;
-    }
-    /* Close the object */
-    dlclose( dl_handle );
-    REG_RETURN_INT(i1)
-#endif
-    DISPATCH
-
-    START_INSTRUCTION(DLLPARMS_REG_REG_REG) CALC_DISPATCH(3)
-
-        DEBUG("TRACE - DLLPARMS R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(2),(int)REG_IDX(3));
-       /* Arguments - complex lets never have to change this code! */
-        printf("Register containing number of Arguments %d\n",(int) REG_IDX(3));
-        printf("                    number of Arguments %d\n",(int)op3RI);
-   //     current_frame->locals[(pc + (3))->index];
-
-        size_t j =
-                current_frame->procedure->binarySpace->globals +
-                current_frame->procedure->locals + 1; /* Callee register index */
-        size_t k = (pc + 3)->index + 1; /* Caller register index */
-        size_t i;
-        printf("                    first data register %d\n",(int)k);
-        for ( i = 0;
-              i < op3RI;
-              i++, j++,k++) {
-              printf("                         Data register %d\n",(int)k);
-         //   printf("              Register contentLocal Variables %d\n",current_frame->procedure->locals->???);
-        }
-    REG_RETURN_INT(i)
-    DISPATCH
-
     /* Spawn - Spawn a process with io redirects - Spawn Process op1 = exec op2 redirect op3
      * reg 1 will be the return code of the process
      * reg 2 is the command (the path environment variable is used for search resolution)
@@ -8640,6 +8553,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         RESERVED_IMPL(RESERVED_447)
         RESERVED_IMPL(RESERVED_448)
         RESERVED_IMPL(RESERVED_449)
+        RESERVED_IMPL(RESERVED_514)
+        RESERVED_IMPL(RESERVED_515)
 
     END_OF_INSTRUCTIONS
 

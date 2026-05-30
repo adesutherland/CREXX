@@ -19,10 +19,12 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
    - Grammar defined in `assembler/rxasgrmr.y`.
    - Enforces the structural integrity of the `.rxas` file (headers, function definitions, variable declarations, and instruction sequences).
    - The parser actions invoke Builder API functions directly (e.g., `rxasgen*`, `rxaslabl`, `rxasproc`), translating syntax rules into buffered internal data structures.
-   - Instruction names are derived from `binutils/include/rxops.h`, so new VM
-     opcodes become assembler mnemonics through that shared table. Recent core
-     runtime additions include the object/interface instructions and the
-     `sock*` TCP socket instructions.
+   - Instruction names are derived from `binutils/include/rxops.h`, with a
+     public-source filter for bytecode/runtime-only entries. `RESERVED_*`,
+     `INULL`, `INTERRUPT`, and `IUNKNOWN` remain opcode-table entries but are
+     deliberately rejected as RXAS mnemonics. Recent core runtime additions
+     include the object/interface instructions and the `sock*` TCP socket
+     instructions.
 
 3. **In-Memory Buffering & Constant Pooling**:
    - Handled in `assembler/rxasassm.c`.

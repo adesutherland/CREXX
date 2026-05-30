@@ -659,6 +659,10 @@ add_custom_target(run_tests_stress ALL DEPENDS tests_stress.rxbin)
 
 crexx_add_vm_dual_test(NAME rxasstresstests RXVM_ARGS tests_stress)
 
+# Focused deterministic coverage for remaining RXAS instruction families
+crexx_add_rxas_vm_binary(tests_instruction_gaps "remaining deterministic instruction gaps")
+crexx_add_vm_dual_test(NAME rxasinstructiongaptests RXVM_ARGS tests_instruction_gaps PASS_REGULAR_EXPRESSION "PASS: RXAS Instruction Gap Coverage")
+
 # Re-entrancy Test
 add_custom_command(
         OUTPUT test_reentrancy.rxbin

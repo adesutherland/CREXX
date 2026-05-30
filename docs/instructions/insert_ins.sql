@@ -74,7 +74,6 @@ insert into instruction values('0x0028','divf',' {REG,REG,FLOAT}     ',' Convert
 insert into instruction values('0x0029','divf',' {REG,FLOAT,REG}     ',' Convert and Divide to Float (op1=op2/op3) (Deprecated)');
 insert into instruction values('0x0011','divi',' {REG,REG,REG}       ',' Convert and Divide to Integer (op1=op2/op3) (Deprecated)');
 insert into instruction values('0x0012','divi',' {REG,REG,INT}       ',' Convert and Divide to Integer (op1=op2/op3) (Deprecated)');
-insert into instruction values('0x0111','dllparms',' {REG,REG,REG}       ',' fetches parms for DLL call ');
 insert into instruction values('0x016c','dlt',' {REG,REG,REG}       ',' Decimal Less than op1=(op2<op3)');
 insert into instruction values('0x016d','dlt',' {REG,REG,DECIMAL}   ',' Decimal Less than op1=(op2<op3)');
 insert into instruction values('0x016e','dlt',' {REG,DECIMAL,REG}   ',' Decimal Less than op1=(op2<op3)');
@@ -286,7 +285,6 @@ insert into instruction values('0x009a','nsmap',' {REG,STRING,STRING} ',' Map op
 insert into instruction values('0x00c2','null',' {REG}               ',' Null op1');
 insert into instruction values('0x0129','nullredir',' {REG}               ',' Redirect op1 = to/from null');
 insert into instruction values('0x008e','not',' {REG,REG}           ',' Logical (int) not op1=!op2');
-insert into instruction values('0x0110','opendll',' {REG,REG,REG}       ',' open DLL');
 insert into instruction values('0x008d','or',' {REG,REG,REG}       ',' Logical (int) or op1=(op2 || op3)');
 insert into instruction values('0x0094','pmap',' {REG,REG}           ',' Map op1 to parent var name in op2');
 insert into instruction values('0x0095','pmap',' {REG,STRING}        ',' Map op1 to parent var name op2');

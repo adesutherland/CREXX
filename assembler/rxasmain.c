@@ -59,6 +59,7 @@ static void prt_ops_new() {
         char buffer[100];
         OperandType types[3];
         int num_ops = 0;
+        if (!rxop_is_source_mnemonic(op_table[i].mnemonic)) continue;
         switch (op_table[i].format) {
             case FMT_EMPTY: num_ops = 0; break;
             case FMT_B: types[0] = OP_BINARY; num_ops = 1; break;
