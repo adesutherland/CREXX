@@ -1012,10 +1012,12 @@ replaceFixArg: Procedure=.string
   xargs   = translate(xargs, , ',')
   wrds=words(xargs)
   if wrds\=callargcount then do    ## callargs.0 is may be not set properly
-     call writeline '## +++++ macro 'macname' call parameters do not match with template'
-     call writeline '## +++++ template 'quote(xargs)
-     say '+++++ macro 'macname' call parameters do not match with template'
-     say '+++++ template 'quote(xargs)
+     if pos(' strictmacrocheck',cflags)>0 then do
+        call writeline '## +++++ macro 'macname' call parameters do not match with template'
+        call writeline '## +++++ template 'quote(xargs)
+        say '+++++ macro 'macname' call parameters do not match with template'
+        say '+++++ template 'quote(xargs)
+     end
   end
  ## First take the positional parameters
   keypositional=0
@@ -1841,13 +1843,14 @@ rxppinit: procedure=.string
   rxmodule=translate(rexxname,,'/\')
   wrds=words(rxmodule)
   rxmodule=word(rxmodule,wrds)
+  say 111 rxmodule
   syspath=translate(maclib,,'/\')
   wrds=words(syspath)
   wlast=wordindex(syspath,wrds)
   syspath=substr(maclib,1,wlast-1)
   call setvar 'rxpp_rexx',rxmodule
   rxmodule=word(translate(rxmodule,,'.'),1)
-  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse '
+  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse strictmacrocheck '
   call setvar 'cflags',cflags
   printgen_flags='all'
   call setvar 'printgen',printgen_flags
