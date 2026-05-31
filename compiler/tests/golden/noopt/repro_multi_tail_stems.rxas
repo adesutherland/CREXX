@@ -518,25 +518,8 @@ l246iffalse:
 §rxfnsb.stem.§factory() .expose=rxfnsb.stem.§factory
    .meta "rxfnsb.stem.§factory"="b" ".stem" §rxfnsb.stem.§factory() ""
 
-§rxfnsb.stem.hash() .expose=rxfnsb.stem.hash
-   .meta "rxfnsb.stem.hash"="b" ".int" §rxfnsb.stem.hash() "key=.string"
-
 §rxfnsb.stem.get() .expose=rxfnsb.stem.get
    .meta "rxfnsb.stem.get"="b" ".string" §rxfnsb.stem.get() "key=.string"
 
 §rxfnsb.stem.set() .expose=rxfnsb.stem.set
    .meta "rxfnsb.stem.set"="b" ".void" §rxfnsb.stem.set() "key=.string,value=.string"
-
-§rxfnsb.stem.size() .expose=rxfnsb.stem.size
-   .meta "rxfnsb.stem.size"="b" ".int" §rxfnsb.stem.size() ""
-
-§rxfnsb.stem.key() .expose=rxfnsb.stem.key
-   .meta "rxfnsb.stem.key"="b" ".string" §rxfnsb.stem.key() "ix=.int"
-
-§rxfnsb.stem.value() .expose=rxfnsb.stem.value
-   .meta "rxfnsb.stem.value"="b" ".string" §rxfnsb.stem.value() "kv=.string"
-
-/* Imported Declaration from file: value@library.rxbin */
-
-rxfnsb.value() .expose=rxfnsb.value
-   .meta "rxfnsb.value"="b" ".string" rxfnsb.value() "inputstring=.string"

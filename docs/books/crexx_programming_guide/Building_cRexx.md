@@ -133,6 +133,29 @@ cmake --build cmake-build-debug --target testbifs
 ctest --test-dir cmake-build-debug -R '^ts_.*_(noopt|opt)$' --output-on-failure
 ```
 
+If a BIF source change under `lib/rxfnsb/rexx/` causes compiler RXAS
+golden tests to fail but the corresponding runtime tests still pass, rebuild
+the linked standard-library image before judging the golden diff:
+
+```sh
+cmake --build cmake-build-debug --target library
+cmake --build cmake-build-debug --target testbifs
+```
+
+Then rerun the focused compiler/runtime tests and review the generated RXAS:
+
+```sh
+ctest --test-dir cmake-build-debug/compiler/tests -R '13_stems' --output-on-failure
+ctest --test-dir cmake-build-debug -R '^ts_stem_(noopt|opt)$' --output-on-failure
+git diff -- compiler/tests/golden
+```
+
+Consumer RXAS import blocks are a snapshot of the callables needed for
+linking/runtime lookup, not a copy of the full provider API. If the diff only
+adds or removes unused imported declarations, update goldens only after
+confirming that the consumer still imports the callables it actually calls.
+The maintainer testing details are in `compiler/docs/testing.md`.
+
 The `lib/rxfnsb/rexx` BIF build is a bootstrap build. It compiles most BIF
 source files with compiler exits disabled (`rxc -x`), so explicit certified
 exits such as `TRACE`, `PARSE`, and `ADDRESS` are not available inside those

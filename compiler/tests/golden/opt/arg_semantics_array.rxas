@@ -281,8 +281,3 @@ l366bexprend:
    .srcstep 47 47 17 "arg_semantics_array.crexx" 15 3 11 "  return 0"
    ret 0
    .meta "arg_semantics_array.main.arr"
-
-/* Imported Declaration from file: upper@library.rxbin */
-
-rxfnsb.upper() .expose=rxfnsb.upper
-   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string"

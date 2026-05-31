@@ -153,11 +153,3 @@ l165bexprend:
    ret 0
    .meta "18_array_class_main.main.ary"
    .meta "18_array_class_main.main.it1"
-
-/* Imported Declaration from file: array_class_lib.crexx */
-
-§array_class_lib.item.§factory() .expose=array_class_lib.item.§factory
-   .meta "array_class_lib.item.§factory"="b" ".item" §array_class_lib.item.§factory() "v=.string"
-
-§array_class_lib.item.get_val() .expose=array_class_lib.item.get_val
-   .meta "array_class_lib.item.get_val"="b" ".string" §array_class_lib.item.get_val() ""

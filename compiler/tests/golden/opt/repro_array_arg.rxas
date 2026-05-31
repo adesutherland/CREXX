@@ -89,8 +89,3 @@ l46ifend:
    .meta "repro_array_arg.main.c"
    .meta "repro_array_arg.main.i"
    .meta "repro_array_arg.main.s"
-
-/* Imported Declaration from file: upper@library.rxbin */
-
-rxfnsb.upper() .expose=rxfnsb.upper
-   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string"

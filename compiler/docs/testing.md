@@ -106,6 +106,32 @@ ctest -R "_noopt|_opt" -VV | grep "crexx_test_driver" | sed 's/.*Test command: /
 
 **Warning:** Always verify that the changes in the golden files are actually what you expect before committing them. Use `git diff` to review the changes in `compiler/tests/golden/`.
 
+### BIF/library changes and import goldens
+
+Standard-library BIF changes can alter consumer `.rxas` import declarations even
+when the tests never call the new BIF entry point. If a change under
+`lib/rxfnsb/rexx/` makes compiler golden tests fail while the matching runtime
+tests still pass, first rebuild the linked library image so the compiler imports
+the current provider metadata:
+
+```bash
+cmake --build cmake-build-debug --target library
+cmake --build cmake-build-debug --target testbifs
+```
+
+Then rerun the focused compiler tests, inspect the generated/golden diff, and
+only update the goldens if the RXAS shape change is intentional:
+
+```bash
+ctest --test-dir cmake-build-debug/compiler/tests -R '13_stems' --output-on-failure
+ctest --test-dir cmake-build-debug -R '^ts_stem_(noopt|opt)$' --output-on-failure
+git diff -- compiler/tests/golden
+```
+
+When the diff is only an import snapshot change, prefer checking whether the
+consumer RXAS still imports exactly the callables it needs for link/runtime
+rather than treating every added provider method as a required golden update.
+
 ## 4. Adding New Tests
 
 1. Create a new Rexx source file in `compiler/tests/rexx_src/`.
