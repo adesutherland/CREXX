@@ -152,8 +152,3 @@ l216bexprend:
    ret 0
    .meta "arg_semantics_scalar.main.i"
    .meta "arg_semantics_scalar.main.text"
-
-/* Imported Declaration from file: upper@library.rxbin */
-
-rxfnsb.upper() .expose=rxfnsb.upper
-   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string"

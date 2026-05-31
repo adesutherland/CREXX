@@ -313,6 +313,14 @@ import candidate.
 Within a binary root, same-stem artifacts are collapsed to the freshest
 candidate. If timestamps tie, `.rxbin` is preferred over `.rxas`.
 
+Compiler-generated consumer `.rxas` treats imported declaration blocks as a
+runtime dependency snapshot, not as a copy of the provider's full public
+surface. The provider artifact's exports and metadata remain definitive. When
+`rxc` emits a consumer `.rxas`, it re-emits only imported callable declarations
+that the generated instruction stream still needs for linking or runtime
+lookup. If optimization or inlining removes every runtime reference to an
+imported file, the imported declaration block is suppressed entirely.
+
 ## Level B Classes and Interfaces
 
 Level B interface support is now implemented across the compiler, assembler

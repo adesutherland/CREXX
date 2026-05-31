@@ -38,6 +38,8 @@ import rxfnsb
 | X2D             | X2D(x)                                       |
 | CENTER          | CENTER(s, n, pad)                            |
 | CENTRE          | CENTRE(s, n, pad)                            |
+| CHARIN          | CHARIN(name, count)                          |
+| CHAROUT         | CHAROUT(name, string)                        |
 | COPIES          | COPIES(s, n)                                 |
 | DELSTR          | DELSTR(s, start, length)                     |
 | DELWORD         | DELWORD(s, start, n)                         |
@@ -45,6 +47,9 @@ import rxfnsb
 | JUSTIFY         | JUSTIFY(s, width, pad)                       |
 | LEFT            | LEFT(s, n, pad)                              |
 | LENGTH          | LENGTH(s)                                    |
+| LINEIN          | LINEIN(name)                                 |
+| LINEOUT         | LINEOUT(name, string)                        |
+| LINES           | LINES(name)                                  |
 | LOWER           | LOWER(s)                                     |
 | OVERLAY         | OVERLAY(s, target, position, length, pad)    |
 | POS             | POS(needle, haystack, start)                 |
@@ -86,6 +91,23 @@ Table: SAA Rexx Built-In-Functions. {#tbl:id}
 
 
 Table: Non-SAA Functions. {#tbl:id}
+
+## Level B text file I/O
+
+The sequential file BIFs in `rxfnsb` are Level B UTF text functions. They
+operate on `.string` values and validate text read from files according to the
+normal Level B UTF-8 contract. They are not byte-oriented binary I/O BIFs.
+
+| Function | Result | Notes |
+|----------|--------|-------|
+| `LINEIN(name)` | `.string` | Read one line from the named text stream, without the line terminator. |
+| `LINEOUT(name [, string])` | `.int` | With `string`, write the text followed by a newline. Without `string`, close the named stream. |
+| `CHARIN(name [, count])` | `.string` | Read up to `count` UTF codepoints from the named text stream; the default count is `1`. |
+| `CHAROUT(name [, string])` | `.int` | With `string`, write text without appending a newline. Without `string`, close the named stream. |
+| `LINES(name)` | `.int` | Return `1` when more text can be read from the stream, otherwise `0`. |
+
+Future binary file BIFs should use `.binary` values and the VM byte I/O path.
+Do not use these text BIFs for arbitrary byte payloads.
 
 ## Array helpers
 

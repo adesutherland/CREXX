@@ -322,18 +322,3 @@ l497bexprend:
    .meta "basic_strings.main.b"
    .meta "basic_strings.main.c"
    .meta "basic_strings.main.d"
-
-/* Imported Declaration from file: length@library.rxbin */
-
-rxfnsb.length() .expose=rxfnsb.length
-   .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "expose string1=.string"
-
-/* Imported Declaration from file: substr@library.rxbin */
-
-rxfnsb.substr() .expose=rxfnsb.substr
-   .meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string1=.string,start=.int,?len=.int,?pad=.string"
-
-/* Imported Declaration from file: pos@library.rxbin */
-
-rxfnsb.pos() .expose=rxfnsb.pos
-   .meta "rxfnsb.pos"="b" ".int" rxfnsb.pos() "needle=.string,haystack=.string,?start=.int"

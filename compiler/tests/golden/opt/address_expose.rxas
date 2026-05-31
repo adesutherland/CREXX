@@ -83,10 +83,5 @@ l97bexprend:
 
 /* Imported Declaration from file: _address@library.rxbin */
 
-_rxsysb._noredir() .expose=_rxsysb._noredir
-   .meta "_rxsysb._noredir"="b" ".binary" _rxsysb._noredir() ""
-
-/* Imported Declaration from file: _address@library.rxbin */
-
 _rxsysb._address() .expose=_rxsysb._address
    .meta "_rxsysb._address"="b" ".int" _rxsysb._address() "?env=.string,?command=.string,in=.binary,out=.binary,err=.binary,expose ...=.string"

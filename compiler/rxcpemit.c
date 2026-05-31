@@ -108,6 +108,14 @@ static int uses_implicit_main_args(ASTNode *node) {
     return symbol && symbol->is_implicit_main;
 }
 
+static int output_has_text(OutputFragment *fragment) {
+    while (fragment) {
+        if (fragment->output && fragment->output[0]) return 1;
+        fragment = fragment->after;
+    }
+    return 0;
+}
+
 static int visible_fixed_arg_count(ASTNode *node) {
     Symbol *symbol = current_procedure_symbol(node);
     int fixed_args;
@@ -291,18 +299,25 @@ static walker_result emit_walker(walker_direction direction,
 
             case IMPORTED_FILE:
             {
-                char *buf = mprintf("\n/* Imported Declaration from file: %s */\n",
-                                    node->file_name);
+                int has_imported_output = 0;
 
-                if (node->output) output_prepend_text(buf, node->output);
-                else node->output = output_fs(buf);
-                free(buf);
+                if (!node->output) node->output = output_f();
 
                 n = child1;
                 while (n) {
+                    if (output_has_text(n->output) || output_has_text(n->cleanup)) {
+                        has_imported_output = 1;
+                    }
                     if (n->output) output_concat(node->output, n->output);
                     if (n->cleanup) output_concat(node->output, n->cleanup);
                     n = n->sibling;
+                }
+
+                if (has_imported_output) {
+                    char *buf = mprintf("\n/* Imported Declaration from file: %s */\n",
+                                        node->file_name);
+                    output_prepend_text(buf, node->output);
+                    free(buf);
                 }
             }
             break;
