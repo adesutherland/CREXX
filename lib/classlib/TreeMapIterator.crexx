@@ -22,12 +22,13 @@
  * SOFTWARE.
  */
 
-options levelb
+options levelb comments_dash
 namespace data_TreeMap expose TreeMapIterator
+import data_Iterator
 import treemap
 
 /**
- * Class TreeMapIterator returns an iterator
+ * Class TreeMapIterator implements an iterator
  * for the key set of a TreeMap object.
  * It is a 'live' iterator, as opposed to a 'snapshot' one.
  * This implies that undefined behaviour is
@@ -35,7 +36,7 @@ import treemap
  * TreeMap is modified during its execution.
  */
 
-TreeMapIterator: class
+TreeMapIterator: class -- implements .Iterator
 token = .int
 closed = .int
 

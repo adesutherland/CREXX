@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
 
 set(CLSS
+  Iterable
+  Iterator
   StemList
   StemListIterator
   ArrayList
@@ -29,16 +31,21 @@ foreach(CLS IN LISTS CLSS)
 endforeach()
 
 set(CLASSLIB_SELECTORS ${CLSS})
+set(CLASS_DEPS_TreeMapIterator Iterator TreeMap)
+
 
 foreach(_binfile IN LISTS CLSBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
-
+  set(_class_deps)
+  foreach(_dep IN LISTS CLASS_DEPS_${_basename})
+    list(APPEND _class_deps "${CMAKE_CURRENT_BINARY_DIR}/${_dep}.rxbin")
+  endforeach()
   add_custom_command(
     OUTPUT "${_binfile}"
     COMMAND $<TARGET_FILE:rxc>
-            -i "${CMAKE_BINARY_DIR}/bin"
-            -o "${_basename}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+    -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
+    -o "${_basename}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
