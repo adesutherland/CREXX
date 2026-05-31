@@ -281,6 +281,35 @@ For the existing tree/hash containers, a later cleanup can move from integer
 tokens toward native payloads or reference cells with provider-specific retain,
 release, and validity hooks.
 
+### Release 1 Native Collection Positioning
+
+For release 1, native collection classes should be deprecated from the public
+container direction in favour of Rexx-first collection implementations with a
+consistent iterator interface.
+
+This is an architectural release decision, not a criticism of the native
+collection work. The native collections were valuable enabling work when cREXX
+was not yet capable enough to host practical collection implementations in
+Level B itself. They helped exercise the runtime, gave the project usable
+container behaviour earlier, and exposed the lifetime and iterator problems
+that this reference design is now trying to solve.
+
+The release-1 direction should now be:
+
+- public collection APIs are Rexx-first where possible;
+- native collection classes are treated as deprecated or experimental for the
+  release-1 surface;
+- native implementations remain useful as comparison points, migration aids,
+  performance baselines, and native interop tests;
+- any native-backed collection that remains visible should follow the same
+  iterator and reference semantics as the Rexx-first containers.
+
+The practical consequence is that references become more urgent, not less:
+without a safe way for a Rexx iterator to retain access to live collection
+state, Rexx-first collections are forced into snapshot/deep-copy iteration.
+That would make the preferred release-1 architecture inefficient and
+semantically weaker than the native bridge it is intended to replace.
+
 ## RXAS Surface
 
 RXAS should get an explicit reference surface before source syntax is finalized.
@@ -530,6 +559,9 @@ Before references are implemented:
 - pure Rexx containers should avoid claiming live iterator semantics;
 - native-backed iterators can remain live only when their provider validates
   lifetime explicitly.
+- native collection classes should be considered deprecated or experimental for
+  the release-1 public collection surface, because the release-1 goal is a
+  Rexx-first container model with one consistent iterator pattern.
 
 After references exist:
 
@@ -541,6 +573,8 @@ After references exist:
   live iterator.
 - A live iterator should probably carry an expected modification count once the
   collection API grows mutation tracking.
+- native-backed and Rexx-backed containers should converge on the same iterator
+  contract instead of presenting separate release-1 behaviours.
 
 Example design sketch:
 
