@@ -720,17 +720,19 @@ The definition must be placed at the very beginning of the source file, before a
 
 Use the following flags in `cflags` to control diagnostic output during the pre-compilation process:
 
-| Option       | Description                                                                                                                      |
-|--------------|----------------------------------------------------------------------------------------------------------------------------------|
-| **def**      | Displays all `##DEFINE` instructions present in the source file. Definitions from `maclib` are never shown.                      |
-| **set**      | Displays all `##SET` instructions. If not set, these instructions are suppressed from output.                                    |
-| **iflink**   | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                          |
-| **1buf**     | Displays the raw source input immediately after it is read from the file.                                                        |
-| **2buf**     | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured. |
-| **3buf**     | Displays the final source buffer just before it is passed to the preprocessor.                                                   |
-| **vars**     | Prints all defined variables, including internal variables and those set via `##SET`.                                            |
-| **maclist**  | Displays all loaded macro definitions, including those imported via `maclib`.                                                    |
-| **includes** | Lists all modules imported via `##INCLUDE` and `##USE` directives, including recursively nested dependencies.                    |
+| Option       | Description                                                                                                                                                 |
+|--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **def**      | Displays all `##DEFINE` instructions present in the source file. Definitions from `maclib` are never shown.                                                 |
+| **set**      | Displays all `##SET` instructions. If not set, these instructions are suppressed from output.                                                               |
+| **iflink**   | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                                                     |
+| **1buf**     | Displays the raw source input immediately after it is read from the file.                                                                                   |
+| **2buf**     | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured.                            |
+| **3buf**     | Displays the final source buffer just before it is passed to the preprocessor.                                                                              |
+| **vars**     | Prints all defined variables, including internal variables and those set via `##SET`.                                                                       |
+| **maclist**  | Displays all loaded macro definitions, including those imported via `maclib`.                                                                               |
+| **includes** | Lists all modules imported via `##INCLUDE` and `##USE` directives, including recursively nested dependencies.<br/>                                          |
+| **strictmacrocheck** | Prints warnings when a macro call does not satisfy all parameters defined by the macro template. Disable this option when using macros with optional parameters to suppress these warnings.<br/> |
+
 If a specific flag is not set, the corresponding option is disabled by default. Alternatively, you can explicitly disable an option by prefixing the flag with n (e.g., nset, n1buf, etc.)
 
 **Example:**

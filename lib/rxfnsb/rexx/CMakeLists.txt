@@ -126,6 +126,7 @@ set(BIFS
 		rxjson
 		rxsocket
 		rxhttp
+		wordrep
 )
 
 foreach (BIF ${BIFS})

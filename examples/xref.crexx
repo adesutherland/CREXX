@@ -1,0 +1,522 @@
+options levelb
+import rxfnsb
+namespace xref expose inFile proc_names proc_defined_line proc_call_lines var_names var_assigned_lines var_referenced_lines
+/*
+ * CrossReference experiment:
+ * tokenizer, masking, label detection, CALL detection, and variable tracking.
+ */
+inFile="C:\Users\PeterJ\CLionProjects\CREXX\Beta2.1\experiments\mini_interpret\test_mini_interpret.rexx"
+lines=cross_reference(inFile)
+rxmodule=translate(inFile,,'/\')
+wrds=words(rxmodule)
+rxmodule=word(rxmodule,wrds)
+ppi=pos(rxmodule,inFile)
+if ppi>1 then pathname=substr(inFile,1,ppi-1)
+else pathname=''
+
+say '   cREXX Cross Reference Listing'
+say ' '
+say '   SOURCE FILE . . . . . : 'rxmodule
+say '   PATHNAME    . . . . . : 'pathname
+say
+say '                                 P R O C E D U R E   X R E F'
+say '                                       '
+say '   Procedure Name         Type   Defn     References'
+say '   --------------------   ----   -----    --------------------------------------------'
+i=.int
+subinc=wordindex(lines[i+1],3)+9
+subinc2=wordindex(lines[i+1],2)-1
+do i = 1 to lines.0
+    line = lines.i
+    if lines[i]= '$$$ENDOFPROC$$$' then leave
+    do while words(line) > 18
+       wwi     = wordindex(line,19)
+       subline = substr(line,1,wwi-1)
+       say '   'subline
+       line = copies(' ',subinc-1) || subword(line,19)
+    end
+    say '   'line
+end
+
+say ' '
+say '                              V A R I A B L E   X R E F'
+say '                                       '
+say '   Variable Name          Type   References'
+say '   --------------------   -----  --------------------------------------------'
+subinc=wordindex(lines[i+1],3)
+oldfirst=''
+do i = i+1 to lines.0
+    line = lines.i
+    firstWord=word(line,1)
+    if firstword=oldfirst then line=wordrep(line,1,' ','PRESERVE')
+    if substr(firstword,1,1)='.' then do
+       line=wordrep(line,2,'defn','PRESERVE')
+       line=wordrep(line,1,lower(firstword),'PRESERVE')
+    end
+    do while words(line) > 20
+        wwi     = wordindex(line,21)
+        subline = substr(line,1,wwi-1)
+        say '   'subline
+        line = copies(' ',subinc-1) || subword(line,21)
+    end
+    oldfirst=firstword
+    say '   'line
+end
+
+say "PASS: CrossReference tokenizer/masking/labels/calls/variables"
+exit 0
+
+cross_reference: procedure = .string[]
+  arg file = .string
+  source=loadtext(file)
+  records = split_source(source)
+ ##  records=readlines(file)
+  masked = mask_source(source)
+
+  xref = build_cross_reference_report(records, masked)
+return xref
+
+split_source: procedure = .string[]
+  arg source = .string
+  records = .string[]
+  if source = "" then return records
+
+  start = 1
+  source_length = length(source)
+  record_count = 0
+
+  do forever
+    newline_pos = pos('0a'x, source, start)
+    if newline_pos = 0 then do
+      line = substr(source, start)
+      if right(line, 1) = '0d'x then
+        line = left(line, length(line) - 1)
+      record_count = record_count + 1
+      records[record_count] = line
+      leave
+    end
+
+    line = substr(source, start, newline_pos - start)
+    if right(line, 1) = '0d'x then       line = left(line, length(line) - 1)
+    record_count = record_count + 1
+    records[record_count] = line
+    start = newline_pos + 1
+    if start > source_length then leave
+  end
+return records
+
+mask_source: procedure = .string[]
+  arg source = .string
+  records = split_source(source)
+  masked = .string[]
+
+  do i = 1 to records[0]
+    masked[i] = mask_line(records[i])
+  end
+
+  return masked
+
+mask_line: procedure = .string
+  arg line = .string
+  masked = copies(' ', length(line))
+
+  if line = "" then return masked
+
+  in_single = 0
+  in_double = 0
+  in_comment = 0
+  i = 1
+  line_length = length(line)
+
+  do while i <= line_length
+    ch = substr(line, i, 1)
+    next = ""
+    if i < line_length then
+      next = substr(line, i + 1, 1)
+
+    if in_comment then do
+      if (ch = "*") & (next = "/") then do
+        in_comment = 0
+        i = i + 2
+        iterate
+      end
+      i = i + 1
+      iterate
+    end
+
+    if in_single then do
+      if ch = "'" then
+        in_single = 0
+      i = i + 1
+      iterate
+    end
+
+    if in_double then do
+      if ch = '"' then
+        in_double = 0
+      i = i + 1
+      iterate
+    end
+
+    if (ch = "/") & (next = "*") then do
+      in_comment = 1
+      i = i + 2
+      iterate
+    end
+
+    if ch = "'" then do
+      in_single = 1
+      i = i + 1
+      iterate
+    end
+
+    if ch = '"' then do
+      in_double = 1
+      i = i + 1
+      iterate
+    end
+
+    masked = overlay(ch, masked, i, 1)
+    i = i + 1
+  end
+
+return masked
+
+build_procedure_report: procedure = .string[]
+  arg records = .string[], masked = .string[]
+  proc_names = .string[]
+  proc_defined_line = .int[]
+  proc_call_lines = .string[]
+
+  do i = 1 to records[0]
+     call analyze_procedure_line masked[i], i
+  end
+
+  report = .string[]
+  report_count = 0
+
+  llen=20
+  do i = 1 to proc_names[0]
+     entry = left(proc_names[i],llen+2)
+
+     if proc_defined_line[i] > 0 then do
+        entry = entry format_line_clause("PROC ", right(proc_defined_line[i],5,'0'))
+        if proc_call_lines[i] <> "" then entry = entry format_line_clause(" ", proc_call_lines[i])
+     end
+     else entry=entry format_line_clause(left("BIF    ***",14), proc_call_lines[i])
+
+     report_count = report_count + 1
+     report[report_count] = entry
+  end
+  report_count = report_count + 1
+  report[report_count] = "$$$ENDOFPROC$$$"
+
+return report
+
+build_variable_report: procedure = .string[]
+  arg records = .string[], masked = .string[]
+  var_names = .string[]
+  var_assigned_lines = .string[]
+  var_referenced_lines = .string[]
+
+  do i = 1 to records[0]
+     call analyze_variable_line masked[i], i
+  end
+
+  report = .string[]
+  report[1] = " "
+  report_count = 1
+  setentry=""
+  usdentry=""
+  mlen=0
+
+  mlen = 20
+  do i = 1 to var_names[0]
+     setentry=''
+     usdentry=''
+     entry = var_names[i]
+     if var_assigned_lines[i] <> "" then   setentry = setentry format_line_clause("SET  ", var_assigned_lines[i])
+     if var_referenced_lines[i] <> "" then usdentry = usdentry format_line_clause("USED ", var_referenced_lines[i])
+     report[report[0]+1] = left(entry,mlen)'  'setentry
+     report[report[0]+1] = left(entry,mlen)'  'usdentry
+  end
+  return report
+
+build_cross_reference_report: procedure = .string[]
+  arg records = .string[], masked = .string[]
+  procedures = build_procedure_report(records, masked)
+  variables = build_variable_report(records, masked)
+  report = .string[]
+  report_count = 0
+
+  do i = 1 to procedures[0]
+     report_count = report_count + 1
+     report[report_count] = procedures[i]
+  end
+  call arraysort variables,,,0
+  do i = 1 to variables[0]
+     wwi=words(variables[i])
+     if wwi=0 then iterate
+     if wwi=1 then do
+        variables[i]=changestr('used   ',variables[i+1],'DEFN   ')
+        variables[i+1]=""
+     end
+     ppi=pos('refer',variables[i])
+     if ppi>0 then variables[i]=copies(' ',ppi-1)substr(variables[i],ppi)
+    report_count = report_count + 1
+    report[report_count] = variables[i]
+  end
+return report
+
+format_line_clause: procedure = .string
+  arg label = .string, line_list = .string
+  if line_list = "" then return ""
+return label"  "line_list
+
+
+analyze_procedure_line: procedure = .void
+  arg line = .string, line_no = .int
+  label = extract_label(line)
+  if label <> "" then call register_procedure_definition label, line_no
+
+  call scan_for_calls line, line_no
+  return
+
+register_procedure_definition: procedure = .void
+  arg name = .string, line_no = .int
+  idx = find_procedure_index(name)
+  if idx = 0 then do
+     idx = proc_names[0] + 1
+     proc_names[idx] = name
+     proc_defined_line[idx] = 0
+     proc_call_lines[idx] = ""
+  end
+  proc_defined_line[idx] = line_no
+  return
+
+register_procedure_call: procedure = .void
+  arg name = .string, line_no = .int
+  idx = find_procedure_index(name)
+  if idx = 0 then do
+    idx = proc_names[0] + 1
+    proc_names[idx] = name
+    proc_defined_line[idx] = 0
+    proc_call_lines[idx] = ""
+  end
+  if wordpos(proc_call_lines[idx],line_no) = 0 then do
+     if proc_call_lines[idx] = "" then proc_call_lines[idx] = right(line_no,5,'0')
+     else proc_call_lines[idx] = proc_call_lines[idx]' 'right(line_no,5,'0')
+  end
+  return
+
+register_variable_assignment: procedure = .void
+  arg name = .string, line_no = .int
+  idx = find_variable_index(name)
+  if idx = 0 then do
+     idx = var_names[0] + 1
+     var_names[idx] = name
+     var_assigned_lines[idx] = ""
+     var_referenced_lines[idx] = ""
+  end
+  if wordpos( var_assigned_lines[idx],line_no) = 0 then do
+    if var_assigned_lines[idx] = "" then var_assigned_lines[idx] = right(line_no,5,'0')
+    else var_assigned_lines[idx] = var_assigned_lines[idx] right(line_no,5,'0')
+  end
+  return
+
+register_variable_reference: procedure = .void
+  arg name = .string, line_no = .int
+  idx = find_variable_index(name)
+  if idx = 0 then do
+    idx = var_names[0] + 1
+    var_names[idx] = name
+    var_assigned_lines[idx] = ""
+    var_referenced_lines[idx] = ""
+  end
+  if wordpos(var_referenced_lines[idx],line_no) = 0 then do
+    if var_referenced_lines[idx] = "" then var_referenced_lines[idx] = right(line_no,5,'0')
+    else var_referenced_lines[idx] = var_referenced_lines[idx] right(line_no,5,'0')
+  end
+  return
+
+find_procedure_index: procedure = .int
+  arg name = .string
+  do i = 1 to proc_names[0]
+    if proc_names[i] = name then return i
+  end
+  return 0
+
+find_variable_index: procedure = .int
+  arg name = .string
+  do i = 1 to var_names[0]
+    if var_names[i] = name then return i
+  end
+  return 0
+
+scan_for_calls: procedure = .void
+  arg line = .string, line_no = .int
+  i = 1
+  line_length = length(line)
+
+  do while i <= line_length
+    ch = substr(line, i, 1)
+    if is_identifier_start(ch) then do
+       start = i
+       i = scan_identifier(line, i)
+       token = substr(line, start, i - start)
+       token_upper = translate(token)
+
+       if token_upper = "CALL" then do
+          j = skip_spaces(line, i)
+          if (j <= line_length) & is_identifier_start(substr(line, j, 1)) then do
+             call_start = j
+             j = scan_identifier(line, j)
+             call_name = translate(substr(line, call_start, j - call_start))
+             call register_procedure_call call_name, line_no
+             i = j
+             iterate
+          end
+       end
+       else if (i <= line_length) & (substr(line, i, 1) = "(") then do
+          call register_procedure_call token_upper, line_no
+       end
+    end
+
+    i = i + 1
+  end
+  return
+
+scan_for_variables: procedure = .void
+  arg line = .string, line_no = .int
+  call analyze_variable_line line, line_no
+  return
+
+skip_spaces: procedure = .int
+  arg line = .string, start_pos = .int
+  posn = start_pos
+  line_length = length(line)
+  do while posn <= line_length & substr(line, posn, 1) = " "
+    posn = posn + 1
+  end
+  return posn
+
+find_label_end: procedure = .int
+  arg line = .string
+  trimmed = strip(line)
+  if trimmed = "" then return 0
+
+  first_word = word(trimmed, 1)
+  if right(first_word, 1) <> ":" then return 0
+
+  label = left(first_word, length(first_word) - 1)
+  if is_identifier(label) = 0 then return 0
+
+  label_start = pos(first_word, line)
+  if label_start = 0 then return 0
+  return label_start + length(first_word) - 1
+
+is_variable_keyword: procedure = .int
+  arg token = .string,last_token=.string
+
+  if token='WHILE' & last_token='DO' then return 1
+  if token='FOR'   & last_token='DO' then return 1
+  if token='UNTIL' & last_token='DO' then return 1
+  keyword_list = "ADDRESS ARG OPTIONS CALL DO DROP ELSE END EXIT IF INTERPRET ITERATE LEAVE NOP TO BY NUMERIC OTHERWISE PARSE PROCEDURE PULL PUSH QUEUE RETURN SAY SELECT SIGNAL THEN TRACE WHEN"
+return (wordpos(token, keyword_list) <> 0)
+
+is_assignment_target: procedure = .int
+  arg line = .string, token_end = .int
+  j = skip_spaces(line, token_end)
+  return ((j <= length(line)) & (substr(line, j, 1) = "="))
+
+analyze_variable_line: procedure = .void
+  arg line = .string, line_no = .int
+  label_end = find_label_end(line)
+  if label_end > 0 then do
+    line = substr(line, label_end + 1)
+    line = strip(line, "L")
+  end
+
+  i = 1
+  line_length = length(line)
+  token_upper=''
+  ch=''
+  do while i <= line_length
+     last_token=token_upper
+     last_char =ch
+     ch = substr(line, i, 1)
+     if is_identifier_start(ch)  then do
+        start = i
+        if last_char='.' then start=i-1
+        i = scan_identifier(line, i)
+        token = substr(line, start, i - start)
+        token_upper = translate(token)
+
+        if token_upper = "CALL" then do
+           j = skip_spaces(line, i)
+           if (j <= line_length) & is_identifier_start(substr(line, j, 1)) then do
+              i = scan_identifier(line, j)
+              iterate
+           end
+        end
+
+        if is_variable_keyword(token_upper,last_token) then iterate
+
+        j = skip_spaces(line, i)
+        if (j <= line_length) & (substr(line, j, 1) = "(") then iterate
+
+        if is_assignment_target(line, i) then call register_variable_assignment token_upper, line_no
+        else call register_variable_reference token_upper, line_no
+     end
+     i = i + 1
+  end
+  return
+
+scan_identifier: procedure = .int
+  arg line = .string, start_pos = .int
+  posn = start_pos
+  line_length = length(line)
+  do while posn <= line_length
+     ch = substr(line, posn, 1)
+     if is_identifier_char(ch) = 0 then leave
+     posn = posn + 1
+  end
+  return posn
+
+is_identifier_start: procedure = .int
+  arg ch = .string
+  ch = translate(ch)
+  return (pos(ch, "ABCDEFGHIJKLMNOPQRSTUVWXYZ_") <> 0)
+
+is_identifier_char: procedure = .int
+  arg ch = .string
+  ch = translate(ch)
+  return (pos(ch, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_") <> 0)
+
+extract_label: procedure = .string
+  arg line = .string
+  trimmed = strip(line)
+  if trimmed = "" then return ""
+
+  first_word = word(trimmed, 1)
+  if right(first_word, 1) <> ":" then return ""
+  label = left(first_word, length(first_word) - 1)
+
+  if is_identifier(label) = 0 then return ""
+return translate(label)
+
+is_identifier: procedure = .int
+  arg name = .string
+  if name = "" then return 0
+
+  first = translate(left(name, 1))
+  if pos(first, "ABCDEFGHIJKLMNOPQRSTUVWXYZ_") = 0 then return 0
+
+  do i = 2 to length(name)
+    ch = translate(substr(name, i, 1))
+    if pos(ch, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_") = 0 then return 0
+  end
+
+  return 1
+
+

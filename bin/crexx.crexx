@@ -333,7 +333,7 @@ do i=1 to filenames[0]
   filename=filenames[i]
   sourceFile=filename
   if i=filenames[0] then lastfile=1
-    dotpos = pos('.',filename)
+    dotpos = lastpos('.',filename)
   if dotpos > 0 then do
     if right(filename,4) = 'rxpp'
     then do /* run the preprocessor */
