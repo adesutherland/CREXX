@@ -1,0 +1,63 @@
+/* rexx test UTF text character file BIFs */
+options levelb
+import rxfnsb
+
+errors = 0
+file = "ts_fileio_chars.tmp"
+
+call resetfile file
+call charout file, "A"
+call charout file, "c3a9"x
+call charout file, "B"
+call charout file
+
+first = charin(file)
+second = charin(file)
+third = charin(file)
+fourth = charin(file)
+errors = errors + check(first = "A", "charin first codepoint")
+errors = errors + check(second = "c3a9"x, "charin UTF-8 codepoint")
+errors = errors + check(third = "B", "charin third codepoint")
+errors = errors + check(fourth = "", "charin EOF")
+call charout file
+
+call resetfile file
+call charout file, "A"
+call charout file, "c3a9"x
+call charout file, "B"
+call charout file
+
+chunk = charin(file, 3)
+errors = errors + check(chunk = "A" || "c3a9"x || "B", "charin count reads codepoints")
+call charout file
+
+call resetfile file
+call charout file, "A"
+call charout file, "B"
+call charout file
+
+line = linein(file)
+errors = errors + check(line = "AB", "charout does not append newline")
+call charout file
+
+if errors = 0 then say "PASS: file character helpers"
+return errors <> 0
+
+check: procedure = .int
+  arg ok = .boolean, label = .string
+  if \ok then do
+    say "file character BIF failed:" label
+    return 1
+  end
+  return 0
+
+resetfile: procedure = .void
+  arg file = .string
+  fid = 0
+  mode = "w"
+  assembler fopen fid,file,mode
+  if fid <> 0 then do
+    rc = 0
+    assembler fclose rc,fid
+  end
+  return

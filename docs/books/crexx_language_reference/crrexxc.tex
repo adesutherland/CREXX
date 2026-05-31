@@ -235,12 +235,14 @@ v=.rexx('elephant'); v.changestr('','!!')    == 'elephant'
 %%  The  \textbf{countstr} method (see page \pageref{refcoustr})  can be used to
 %% count the number of changes that could be made to a string in this
 %% fashion.
-%% \section{charin(name, [start{]}, [length{]})} returns a string read from the stream named by the first
-%% argument, see page \pageref{refrexxstream} for Class \keyword{RexxStream} information.
-%% \section{charout(name,[char{]},[start{]})} returns the count of characters remaining after attempting to
-%% write the second argument to the stream named by the first argument,
-%% see page \pageref{refrexxstream} for Class \keyword{RexxStream}
-%% information.
+\section{charin(name, [count])} returns up to \emph{count} UTF text characters
+from the stream named by the first argument. The default count is 1. This is a
+Level B \texttt{.string} text function, not a binary byte input function.
+
+\section{charout(name,[string])} returns 0 after writing the supplied UTF text
+string to the stream named by the first argument. No newline is appended. When
+the second argument is omitted, the named stream is closed. This is a Level B
+\texttt{.string} text function, not a binary byte output function.
 %% \section{chars(name)} indicates whether there are characters remaining in the named
 %% stream. Optionally, it returns a count of the characters remaining and
 %% immediately available, see page \pageref{refrexxstream} for Class \keyword{RexxStream} information.
@@ -862,12 +864,15 @@ v=.rexx('abcdefgh'); v.length == 8
 w=.rexx(''); w.length         == 0
 \end{lstlisting}
 
-\section{linein(name,string)} reads a line from the stream named by the first argument,
-unless the third argument is zero, see page %% \pageref{refrexxstream}
-for Class \keyword{RexxStream} information.
+\section{linein(name)} reads a UTF text line from the stream named by the first
+argument and returns it without the line terminator. This is a Level B
+\texttt{.string} text function, not a binary byte input function.
 
-\section{lineout(name,string)} returns '1' or '0', indicating whether the second argument has been successfully written to the stream named by the first argument. A result of '1' means an unsuccessful write, see page %% \pageref{refrexxstream}
-for Class \keyword{RexxStream} information.
+\section{lineout(name,string)} returns 0 after writing the second argument as
+UTF text followed by a newline to the stream named by the first argument. When
+the second argument is omitted, the named stream is closed. This is a Level B
+\texttt{.string} text function, not a binary byte output function. Separate
+binary file BIFs are expected to use \texttt{.binary} values.
 
 \section{lower([n [,length{]}])}\label{reflower}
 \index{LOWER method,}

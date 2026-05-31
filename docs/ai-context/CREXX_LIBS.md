@@ -174,6 +174,15 @@ This approach minimizes the VM footprint and demonstrates the capability of the 
 For repo-native Level B authoring patterns, argument signature examples, and
 wayfinding to real `.crexx` examples, see `docs/ai-context/CREXX_LEVELB_AUTHORING.md`.
 
+`lib/rxfnsb/rexx/fileio.crexx` exposes the sequential Level B text file BIFs
+`linein`, `lineout`, `charin`, `charout`, and `lines`. These are UTF text
+functions over `.string`: `linein` reads one line without its line terminator,
+`lineout` writes text plus a newline, `charin` reads UTF-8 codepoints, and
+`charout` writes text without adding a newline. They are not the binary byte
+I/O surface. Future binary file BIFs should take and return `.binary` and use
+the VM byte instructions (`freadb`, `fwriteb`, `freadbyte`, or `fwritebyte`)
+rather than weakening the Level B `.string` UTF contract.
+
 ### Build And Debugging Rules
 
 The Rexx BIF library build is a bootstrap build. `lib/rxfnsb/rexx/CMakeLists.txt`
