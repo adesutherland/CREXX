@@ -27,10 +27,9 @@ namespace rxfnsb expose abs
 
 abs: procedure = .string
 arg number = .string
--- say 'in:' number
-strip(number,'b')
--- say 'stripped:' number
+number = space(number,0)
+number = strip(number,'b')
 if left(number,1) = '-' then number = substr(number,2)
--- say 'out:' number
+if left(number,1) = '+' then number = substr(number,2)
 return number
 
