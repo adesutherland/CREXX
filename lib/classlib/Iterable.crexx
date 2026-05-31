@@ -23,14 +23,15 @@
  */
 
 options levelb
-namespace data_Iterator expose Iterator
+namespace data_Iterable expose Iterable
 
 /**
- * Iterator is the interface which defines the contract
- * the implementing Iterator classes (SetIterator, MapIterator, ListIterator)
+ * Iterable is the interface which defines the contract
+ * the implementing Iterable classes (Set, Map, List)
  * should keep to.
  */
 
-Iterator: interface
-  next:    method = .string
-  hasNext: method = .int
+Iterable: interface
+  iterator: method = .iterator
+  forEach:  method = .boolean
+

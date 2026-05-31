@@ -22,11 +22,12 @@
  * SOFTWARE.
  */
 
-options levelb
+options levelb comments_dash
 namespace data_TreeMap expose TreeMap
 import treemap
 import TreeMapIterator
 import data_TreeSet
+import data_Iterable
 
 /** 
  * TreeMap: a Red-Black tree based map that stores key-value
@@ -38,7 +39,7 @@ import data_TreeSet
  * @author Peter Jacob
  */
 
-TreeMap: class
+TreeMap: class -- implements .Iterable
 val = .int
 
 /** method factory creates an instance of the TreeMap
