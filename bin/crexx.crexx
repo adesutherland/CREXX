@@ -764,7 +764,8 @@ return 0
  * and changes dots to underscores
  * if they are not the separator
  */
-chop_suffix: procedure = .string
+/*
+chop_suffix_old: procedure = .string
 arg fn = .string
 number_of_dots = countstr('.',fn)
 lp=lastpos('.',fn)
@@ -777,6 +778,22 @@ if lp >0 then
     return fn
   end
   return 'error in chop_suffix'
+ */
+
+chop_suffix: procedure = .string
+  arg fn = .string
+  path=''
+  name=fn
+  p1 = lastpos('/', fn)  /* find last path separator */
+  p2 = lastpos('\', fn)
+  p  = max(p1, p2)
+  if p > 0 then do
+     path = left(fn, p)
+     name = substr(fn, p + 1)
+  end
+  lp = lastpos('.', name)
+  if lp > 0 then name = left(name, lp - 1)
+return path || translate(name, '_', '.')
 
 appendSemicolonValue: procedure = .string
 arg current = .string, value = .string
