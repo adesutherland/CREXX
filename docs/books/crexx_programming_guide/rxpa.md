@@ -1,24 +1,24 @@
-# \crexx{}/PA \- Plugin Architecture
+# cRexx /PA \- Plugin Architecture
 
-This facility allows for the compilation, linking, and execution of additional functionality (developed in C) alongside \rexx{} code. It enables the decoupling of native modules (plugins), which can be developed and packaged either as separate entities or linked statically to the main \crexx{} core solution. 
+This facility allows for the compilation, linking, and execution of additional functionality (developed in C) alongside Rexx code. It enables the decoupling of native modules (plugins), which can be developed and packaged either as separate entities or linked statically to the main cRexx core solution. 
 
-The architecture is designed to completely decouple the plugins from the rest of \crexx{}, and the plugin client library only consists of a single header file (rexxpa.h)
+The architecture is designed to completely decouple the plugins from the rest of cRexx, and the plugin client library only consists of a single header file (rexxpa.h)
 
 Plugin developers have the flexibility to structure their code in a way that allows for both dynamic or static linking. While the source code can remain the same, it needs to be built differently based on the desired linking approach, as it relies on macro expansion.
 
-During the \rexx{} compilation process, the \rexx{} compiler inspects the plugin to determine the type and argument of any provided functions. This inspection helps ensure type safety. It is recommended for plugin developers to load or initialise dependencies only when an explicitly exposed initialisation \rexx{} function is called or when the first function is invoked (lazy initialisation) to avoid overhead during build (rather than run). In addition, for the static builds, there is macro definition **DECL\_ONLY** which allows definition / implementation code to be excluded from the static library designed to be linked to the compiler only.
+During the Rexx compilation process, the Rexx compiler inspects the plugin to determine the type and argument of any provided functions. This inspection helps ensure type safety. It is recommended for plugin developers to load or initialise dependencies only when an explicitly exposed initialisation Rexx function is called or when the first function is invoked (lazy initialisation) to avoid overhead during build (rather than run). In addition, for the static builds, there is macro definition **DECL\_ONLY** which allows definition / implementation code to be excluded from the static library designed to be linked to the compiler only.
 
-For dynamically packaged plugins (with the extension \*.rxplugin), the search process for these plugins mirrors how \crexx{} locates \rexx{} modules (extensions such as \*.rexx, \*.rxas, or \*.rxbin). In contrast, for static builds, the provided functions are loaded before the execution of the main() function in the core crexx solution, however these functions are placed at the end of the search order, meaning users can override static function definitions with local native or crexx modules.
+For dynamically packaged plugins (with the extension \*.rxplugin), the search process for these plugins mirrors how cRexx locates Rexx modules (extensions such as \*.rexx, \*.rxas, or \*.rxbin). In contrast, for static builds, the provided functions are loaded before the execution of the main() function in the core crexx solution, however these functions are placed at the end of the search order, meaning users can override static function definitions with local native or crexx modules.
 
 The Plugin Architecture offers a comprehensive set of resources for developers, including a header file, macros, and a cmake configuration. These tools aim to create a convenient and efficient development environment for plugin creation.
 
 ## Dynamic Plugins Recommended
 
-User-provided plugins are recommended to be provided as dynamic `.rxplugin` files. Dynamic plugins offer several advantages: easy site-wide distribution by placing them in the same directory as \crexx{} binaries, project-specific customization by locating them in the project \rexx{} files directory, and flexible placement in any desired location using "rxc" and "rxvm" options.
+User-provided plugins are recommended to be provided as dynamic `.rxplugin` files. Dynamic plugins offer several advantages: easy site-wide distribution by placing them in the same directory as cRexx binaries, project-specific customization by locating them in the project Rexx files directory, and flexible placement in any desired location using "rxc" and "rxvm" options.
 
-In contrast, static plugin packaging is more complex in terms of linking and is intended for core \crexx{} components that are part of every \crexx{} release. Static plugins are shipped within the \crexx{} binaries, ensuring their availability and consistency across distributions.
+In contrast, static plugin packaging is more complex in terms of linking and is intended for core cRexx components that are part of every cRexx release. Static plugins are shipped within the cRexx binaries, ensuring their availability and consistency across distributions.
 
-The choice between dynamic and static plugin packaging depends on the specific requirements and use cases: dynamic plugins provide flexibility and customization for users, while static plugins are designed to provide a robust solution for core \crexx{} components.
+The choice between dynamic and static plugin packaging depends on the specific requirements and use cases: dynamic plugins provide flexibility and customization for users, while static plugins are designed to provide a robust solution for core cRexx components.
 
 ## Example Plugin
 
@@ -26,7 +26,7 @@ The following code demonstrates a decryption plugin.
 
 - The PROCEDURE macro starts the function, and argument access is via macros like ARG().
 
-- Each argument is a \crexx{} register. This means it holds multiple types or values and these are accesses by macros like GETSTRING() and SETSTRING().
+- Each argument is a cRexx register. This means it holds multiple types or values and these are accesses by macros like GETSTRING() and SETSTRING().
 
 -  Errors are handled by defining and returning a SIGNAL via the RETURNSIGNAL macro.
 
@@ -120,7 +120,7 @@ ENDLOADFUNCS
 // End of file
 ```
 
-The following shows how the defined functions are published to \crexx{}.
+The following shows how the defined functions are published to cRexx.
 
 ```C
 // Functions to be provided to rexx \- these are loaded either when the*  
@@ -135,7 +135,7 @@ ADDPROC (RxDesEncrypt, "rxdes.encrypt",       "b",     ".string",
 ENDLOADFUNCS**
 ```
 
-The ADDPROC Macro published the function to \crexx{}. This has the namespace and name, options/level (should be b), the function return type (in level b format) and the arguments (again in level b format). This allows the Compiler and VM to search and “fix-up” procedure calls using the same search order and syntax as for procedures developed in \rexx{}.
+The ADDPROC Macro published the function to cRexx. This has the namespace and name, options/level (should be b), the function return type (in level b format) and the arguments (again in level b format). This allows the Compiler and VM to search and “fix-up” procedure calls using the same search order and syntax as for procedures developed in Rexx.
 
 ## Macros
 
@@ -144,9 +144,9 @@ The following MACROs are provided for plugin developers (defined in rexxpa.h)
 | Macro     | Purpose                                     |
 |-----------|---------------------------------------------|
 | LOADFUNCS | Starts and finishes the block of ADDFUNC()’s|
-| ADDFUNC() | Published a function to \crexx{}|
+| ADDFUNC() | Published a function to cRexx|
 | NUM\_ARGS | Is the number of arguments passed the the function|
-| ARG() | Returns the nth argument (which is an opaque pointer to the \crexx{} register)|
+| ARG() | Returns the nth argument (which is an opaque pointer to the cRexx register)|
 | RETURN | Returns the register used to pass the function’s returned value.|
 | GETSTRING() | Gets the String value of a register|
 | SETSTRING() | Sets the String value of a register|
@@ -199,13 +199,13 @@ This script builds a dynamic version of the plugin, and supports Windows (mingw 
 
 ## Static Builds
 
-The \crexx{} Cmake build configuration should be referenced for static build support. Building the static library is simple, but proper linking is crucial to guarantee that the linker recognizes the need to link in the plugin and that the plugin's initialization function is called at program load across various platforms.
+The cRexx Cmake build configuration should be referenced for static build support. Building the static library is simple, but proper linking is crucial to guarantee that the linker recognizes the need to link in the plugin and that the plugin's initialization function is called at program load across various platforms.
 
-## Execution from \rexx{}
+## Execution from Rexx
 
-The following is a \rexx{} Level B example using the plugin. 
+The following is a Rexx Level B example using the plugin. 
 
-Note that there is no manual loading of the dynamic or static plugin, instead \crexx{} loads the plugins using the same search rules as it uses for other \rexx{} modules. This means that the \rexx{} program (or programmer) does not need to be concerned about how the external function is provided \- \rexx{}, Native, Dynamic, Static \- it all has the same calling syntax. This is designed to meet the objective to simplify programming.
+Note that there is no manual loading of the dynamic or static plugin, instead cRexx loads the plugins using the same search rules as it uses for other Rexx modules. This means that the Rexx program (or programmer) does not need to be concerned about how the external function is provided \- Rexx, Native, Dynamic, Static \- it all has the same calling syntax. This is designed to meet the objective to simplify programming.
 ```rexx <!--execdes.rexx-->
 options levelb  /\* This is a rexx level b program \*/
 
@@ -219,7 +219,7 @@ key \=       "08192A3B4C5D6E7F"
                                         
 Ciphertext \= Encrypt(key,Plaintext)
 ```
-In line 4, the import statement loads the namespace meaning that any \rexx{} modules or native plugins in the rxdes namespace will be loaded as needed; the function call, encrypt(), follows \rexx{} syntax, and the compiler can check parameters and return types as normal.
+In line 4, the import statement loads the namespace meaning that any Rexx modules or native plugins in the rxdes namespace will be loaded as needed; the function call, encrypt(), follows Rexx syntax, and the compiler can check parameters and return types as normal.
 
 ## Future Changes
 

@@ -1,6 +1,6 @@
 # Assembler Programming Guide
 
-This chapter has general information about writing programs in assembly language using the `rxas` assembler programs. It discusses the assembler file format, linkage conventions, and other useful programming information, including the \crexx{} level B feature which allows including assembly language statements in Rexx programs.
+This chapter has general information about writing programs in assembly language using the `rxas` assembler programs. It discusses the assembler file format, linkage conventions, and other useful programming information, including the cRexx level B feature which allows including assembly language statements in Rexx programs.
 
 ## The options on the `rxas` command
 

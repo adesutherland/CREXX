@@ -52,7 +52,7 @@ say reply = "MAYBE" /* displays '0' - false */
 say reply = "YES"   /* displays '1' - true  */
 ```
 
-<!--splice--comparisons.rexx-->
+<!--splice--crexx comparisons.rexx-->
 
 ## Simple Branching
 
@@ -73,7 +73,7 @@ if reply = "YES" then say "OK!"
 /* program continues from here ...*/
 ```
 
-<!--splice--confirmation.rexx-->
+<!--splice--crexx confirmation.rexx-->
 
 The instruction `say "OK!"` is only executed if the variable `reply` has the value `YES`. 
 
@@ -123,7 +123,7 @@ then
   end
 ```
 
-<!--splice--wakeup.rexx-->
+<!--splice--crexx wakeup.rexx-->
 
 The flowchart diagram would look like this:
 

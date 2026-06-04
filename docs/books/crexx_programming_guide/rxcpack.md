@@ -1,10 +1,13 @@
-\chapter{rxcpack - the \crexx{} C Packer}
-The C Packer program converts the \emph{.rxbin} files into a C
+# rxcpack - the cRexx C Packer
+
+The C Packer program converts the `.rxbin` files into a C
 language structure which links together all needed modules, and a
 large part of the Virtual Machine infrastructure, which file then can
-be compiled and link edited by the C compiler. GCC and Clang are the
+be compiled and link edited by the C compiler. `gcc` and `clang` are the
 targeted compiler toolchains for Linux, macOS and Windows.
-\section{Command Line Options}
+
+## Command Line Options 
+
 \fontspec{IBM Plex Mono}
 \begin{shaded}
   \small

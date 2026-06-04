@@ -14,7 +14,7 @@ import rxfnsb
 say insert("abc","def",2,1)
 ```
 
-<!--splice--insertexample.rexx-->
+<!--splice--crexx insertexample.rexx-->
 
 This works this way because the built-in function <!--index-->insert (written in Rexx) defines the imported namespace:
 

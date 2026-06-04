@@ -10,7 +10,7 @@ options levelb
 say 'hello world!'
 ```
 
-<!--splice--hello.crexx-->
+<!--splice--crexx hello.crexx-->
 
 There is no need to include the starting comment, but by all means include it if you want to.[^1]
 
@@ -27,6 +27,6 @@ say 'hello world!'
 'date'
 ```
 
-<!--splice--helloaddress.rexx-->
+<!--splice--crexx helloaddress.rexx-->
 
 As ```system``` is the standard environment before we change it (by specifying something else on the \code{address} statement), this is sent to this environment, most of the time the shell under which your program executes. If this has a ```date``` command, the output of it will be returned. The I/O to the environment using the ```address``` statement can also be redirected using *stem variables*. In fact, sending commands to an environment is one of the examples of Object Orientation using Classic Rexx; the same message can be sent to different objects, as long as these are implemented in the environment, and will potentially yield different answers.

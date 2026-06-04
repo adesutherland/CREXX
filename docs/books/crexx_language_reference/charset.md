@@ -1,6 +1,6 @@
 # Character Set
 
-There are two character-set questions in cRexx:
+There are two character-set questions in cRexx :
 
 - the characters accepted in source programs
 - the character and byte data manipulated by running programs
