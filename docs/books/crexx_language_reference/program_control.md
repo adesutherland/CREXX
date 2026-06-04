@@ -12,7 +12,7 @@ Branching
 : Selecting one of several lists of instructions to process. The branching instructions are `IF` and `SELECT`.
 
 Looping
-: Repeating a list of instructions, either for a speficied number of times or as long as some condition is satisfied. The `LOOP` or `DO` instruction (when used with keywords like `UNTIL` and `WHILE` do the looping in \rexx{}.
+: Repeating a list of instructions, either for a speficied number of times or as long as some condition is satisfied. The `LOOP` or `DO` instruction (when used with keywords like `UNTIL` and `WHILE` do the looping in Rexx.
 
 Exiting
 : A program that is a single list ends when it reaches the last instruction. To explicity end a program, use the instructions `EXIT` and `RETURN`. 
@@ -30,7 +30,7 @@ DO
 END
 ```
 
-If the keyword `DO` is a clause by itself, the list of clauses that follows (up to the `END` keyword) is processed once (no loop is implied). This form of the `DO` instruction and the `END` keyword associated with it tell \rexx{} to treat the enclosed instructions as a single instruction.
+If the keyword `DO` is a clause by itself, the list of clauses that follows (up to the `END` keyword) is processed once (no loop is implied). This form of the `DO` instruction and the `END` keyword associated with it tell Rexx to treat the enclosed instructions as a single instruction.
 
 ## Testing Conditions
 
@@ -56,14 +56,14 @@ say reply = "YES"   /* displays '1' - true  */
 
 ## Simple Branching
 
-To tell \rexx{} how to make a decision about a single instruction, use:
+To tell Rexx how to make a decision about a single instruction, use:
 
 ```rexx <!--ifthen.rexx-->
 IF expression
 THEN instruction
 ```
 
-\rexx{} processes `instruction` only if `expression` is true.
+Rexx processes `instruction` only if `expression` is true.
 
 ```rexx <!--confirmation.rexx-->
 options levelb
@@ -104,7 +104,7 @@ instruction3
 END
 ```
 
-With the `DO` and `END` keywords bracketing the list, \rexx{} knows to treat the
+With the `DO` and `END` keywords bracketing the list, Rexx knows to treat the
 listed instructions as a unit to:
 
 - Process all of them if `expression` is true
@@ -187,7 +187,7 @@ The flowchart diagram would look like this:
 ## The SELECT instruction
 
 You are not limited to two choices. You can use the `SELECT` instruction to have a
-\rexx{} program select one of any number of branches. For example:
+Rexx program select one of any number of branches. For example:
 
 ```rexx <!--select.rexx-->
 SELECT
@@ -299,7 +299,7 @@ Because block expressions are ordinary expressions, they can be nested and used 
 
 ### Variable shadowing and Scoping (Level B)
 
-\crexx{} Level B introduces block-level scoping for certain control structures. It is important to distinguish between single-instruction branches and grouped instructions (DO blocks).
+cRexx Level B introduces block-level scoping for certain control structures. It is important to distinguish between single-instruction branches and grouped instructions (DO blocks).
 
 - **Single-instruction branches**: These execute in the current (procedure) scope.
 

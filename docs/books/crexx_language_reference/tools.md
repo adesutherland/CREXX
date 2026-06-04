@@ -1,6 +1,6 @@
 # Tools {#tools}
 
-The public \crexx{} toolchain is intentionally split into small tools. The
+The public cRexx toolchain is intentionally split into small tools. The
 Programming Guide contains workflow examples; this page is a compact reference.
 
 ## Compiler: `rxc`

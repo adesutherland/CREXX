@@ -91,7 +91,7 @@ for factory selection, `match`, casts, type tests, and default methods.
 
 ## External Libraries and Plugins
 
-An imported callable may be implemented in \crexx{}, in RXAS, or in native code
+An imported callable may be implemented in cRexx, in RXAS, or in native code
 through the plugin architecture. The source-level call form is the same:
 
 ```rexx

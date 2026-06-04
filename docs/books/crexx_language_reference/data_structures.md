@@ -26,12 +26,12 @@ say names.1
 For new Level B code, prefer `names[1]` because it is explicit and does not
 look like a hierarchical stem.
 
-CREXX hierarchical stems are currently a precompiler feature, not a separate VM
-storage type in the core language. Multi-dot names such as
-`Customer.IBM.name` are handled by RXPP/stem processing and mapped onto a
-key/value backing store. The optional `dotisstem` precompiler mode can treat
-single-dot names as stems, but that changes the meaning of classic `a.i`
-array-style code, so it should be chosen deliberately.
+<!-- cRexx hierarchical stems are currently a precompiler feature, not a separate VM -->
+<!-- storage type in the core language. Multi-dot names such as -->
+<!-- `Customer.IBM.name` are handled by RXPP/stem processing and mapped onto a -->
+<!-- key/value backing store. The optional `dotisstem` precompiler mode can treat -->
+<!-- single-dot names as stems, but that changes the meaning of classic `a.i` -->
+<!-- array-style code, so it should be chosen deliberately. -->
 
 Related references:
 
