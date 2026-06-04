@@ -60,19 +60,43 @@ int load_rxvmplugin(char* dir, char *name) {
 
     /* Create the filename by appending ".rxvmplugin" to the file name */
     file_name = malloc(strlen(name) + strlen(".rxvmplugin") + 1);
-    if (!file_name) return -1;
+    if (!file_name) {
+        RX_REPORT_OOM("malloc rxvmplugin file name",
+                      strlen(name) + strlen(".rxvmplugin") + 1, name);
+        return -1;
+    }
     sprintf(file_name, "%s.rxvmplugin", name);
 
     exe_dir = exepath();
     if (dir) {
         combined_dir = malloc(strlen(dir) + strlen(exe_dir) + 2);
+        if (!combined_dir) {
+            RX_REPORT_OOM("malloc rxvmplugin search path",
+                          strlen(dir) + strlen(exe_dir) + 2, name);
+            free(exe_dir);
+            free(file_name);
+            return -1;
+        }
         sprintf(combined_dir, "%s;%s", dir, exe_dir);
     } else {
         combined_dir = strdup(exe_dir);
+        if (!combined_dir) {
+            RX_REPORT_OOM("strdup rxvmplugin search path", strlen(exe_dir) + 1, name);
+            free(exe_dir);
+            free(file_name);
+            return -1;
+        }
     }
     free(exe_dir);
 
     dir_copy = strdup(combined_dir);
+    if (!dir_copy) {
+        RX_REPORT_OOM("strdup rxvmplugin directory iterator",
+                      strlen(combined_dir) + 1, name);
+        free(combined_dir);
+        free(file_name);
+        return -1;
+    }
     token = dir_copy;
     while (token) {
         next_token = strchr(token, ';');
@@ -80,6 +104,14 @@ int load_rxvmplugin(char* dir, char *name) {
 
         if (full_file_name) free(full_file_name);
         full_file_name = malloc(strlen(token) + strlen(file_name) + 2);
+        if (!full_file_name) {
+            RX_REPORT_OOM("malloc rxvmplugin full path",
+                          strlen(token) + strlen(file_name) + 2, name);
+            free(dir_copy);
+            free(combined_dir);
+            free(file_name);
+            return -1;
+        }
         if (full_file_name) {
 #ifdef _WIN32
             sprintf(full_file_name, "%s\\%s", token, file_name);
@@ -106,6 +138,9 @@ int load_rxvmplugin(char* dir, char *name) {
         /* Not found in any directory, try one last time with bare filename */
         if (full_file_name) free(full_file_name);
         full_file_name = strdup(file_name);
+        if (!full_file_name) {
+            RX_REPORT_OOM("strdup rxvmplugin fallback path", strlen(file_name) + 1, name);
+        }
     }
 
     if (!full_file_name) {
@@ -188,9 +223,8 @@ void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory) {
         }
     }
     else {
-        // out of memory - exit with a panic message as per crexx standard
-        fprintf(stderr, "PANIC: Out of memory in register_rxvmplugin()\n");
-        exit(1);
+        RX_PANIC_OOM("malloc rxvmplugin factory entry",
+                     sizeof(rxvmplugin_factory_entry), factory_name);
     }
 
 }
@@ -305,8 +339,7 @@ void number_to_simple_format(const char *input, char *output) {
     if (mantLen >= MANTISSA_BUFFER_LEN) {
         mantissa = (char *)malloc(mantLen + 1);
         if (!mantissa) {
-            perror("PANIC: Failed to allocate memory for deExponify");
-            exit(EXIT_FAILURE);
+            RX_PANIC_OOM("malloc rxvmplugin deExponify mantissa", mantLen + 1, p);
         }
     } else {
         mantissa = mantissa_buffer;
@@ -463,4 +496,3 @@ void number_to_simple_format(const char *input, char *output) {
         }
     }
 }
-

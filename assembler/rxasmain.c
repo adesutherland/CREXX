@@ -289,11 +289,20 @@ int main(int argc, char *argv[]) {
     /* Add current and executable path to location */
     exe_path = exepath();
     if (scanner.location) {
-        combined_location = malloc(strlen(scanner.location) + strlen(exe_path) + 5);
+        size_t combined_location_size = strlen(scanner.location) + strlen(exe_path) + 5;
+        combined_location = malloc(combined_location_size);
+        if (!combined_location) {
+            RX_PANIC_OOM("malloc rxas location list", combined_location_size,
+                         scanner.location);
+        }
         sprintf(combined_location, ".;%s;%s", scanner.location, exe_path);
         scanner.location = combined_location;
     } else {
-        combined_location = malloc(strlen(exe_path) + 5);
+        size_t combined_location_size = strlen(exe_path) + 5;
+        combined_location = malloc(combined_location_size);
+        if (!combined_location) {
+            RX_PANIC_OOM("malloc rxas location list", combined_location_size, exe_path);
+        }
         sprintf(combined_location, ".;%s", exe_path);
         scanner.location = combined_location;
     }

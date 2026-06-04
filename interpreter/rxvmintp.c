@@ -2091,8 +2091,9 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             if (!mod->prepared_dispatch && mod->segment.inst_size) {
                 mod->prepared_dispatch = malloc(sizeof(void *) * mod->segment.inst_size);
                 if (!mod->prepared_dispatch) {
-                    fprintf(stderr, "PANIC: Out of memory\n");
-                    exit(-1);
+                    RX_PANIC_OOM("malloc rxvm prepared dispatch table",
+                                 sizeof(void *) * mod->segment.inst_size,
+                                 mod->name);
                 }
             }
             while (i < context->modules[mod_index]->segment.inst_size) {
@@ -2733,8 +2734,9 @@ START_OF_INSTRUCTIONS
                         if (!loaded_module->prepared_dispatch && loaded_module->segment.inst_size) {
                             loaded_module->prepared_dispatch = malloc(sizeof(void *) * loaded_module->segment.inst_size);
                             if (!loaded_module->prepared_dispatch) {
-                                fprintf(stderr, "PANIC: Out of memory\n");
-                                exit(-1);
+                                RX_PANIC_OOM("malloc rxvm loaded-module prepared dispatch table",
+                                             sizeof(void *) * loaded_module->segment.inst_size,
+                                             loaded_module->name);
                             }
                         }
                         while (i < context->modules[mod]->segment.inst_size) {

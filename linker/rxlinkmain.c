@@ -138,12 +138,17 @@ static int string_list_append(string_list *list, const char *value) {
     char *copy;
 
     copy = strdup(value);
-    if (!copy) return 0;
+    if (!copy) {
+        RX_REPORT_OOM("strdup rxlink string list entry", strlen(value) + 1, value);
+        return 0;
+    }
 
     if (list->count == list->capacity) {
         new_capacity = list->capacity ? list->capacity * 2 : 8;
         new_items = realloc(list->items, sizeof(char *) * new_capacity);
         if (!new_items) {
+            RX_REPORT_OOM("realloc rxlink string list",
+                          sizeof(char *) * new_capacity, value);
             free(copy);
             return 0;
         }
@@ -167,7 +172,11 @@ static int module_list_append(module_list *list, link_module_info *item) {
     if (list->count == list->capacity) {
         new_capacity = list->capacity ? list->capacity * 2 : 16;
         new_items = realloc(list->items, sizeof(link_module_info) * new_capacity);
-        if (!new_items) return 0;
+        if (!new_items) {
+            RX_REPORT_OOM("realloc rxlink module list",
+                          sizeof(link_module_info) * new_capacity, 0);
+            return 0;
+        }
         list->items = new_items;
         list->capacity = new_capacity;
     }
@@ -204,7 +213,11 @@ static int output_list_append(rxlink_output_list *list, rxlink_output_module *it
     if (list->count == list->capacity) {
         new_capacity = list->capacity ? list->capacity * 2 : 8;
         new_items = realloc(list->items, sizeof(rxlink_output_module) * new_capacity);
-        if (!new_items) return 0;
+        if (!new_items) {
+            RX_REPORT_OOM("realloc rxlink output list",
+                          sizeof(rxlink_output_module) * new_capacity, 0);
+            return 0;
+        }
         list->items = new_items;
         list->capacity = new_capacity;
     }
@@ -303,7 +316,10 @@ static void free_link_config(link_config *config) {
 
 static int set_single_path(char **target, const char *value) {
     char *copy = strdup(value);
-    if (!copy) return 0;
+    if (!copy) {
+        RX_REPORT_OOM("strdup rxlink path", strlen(value) + 1, value);
+        return 0;
+    }
     if (*target) free(*target);
     *target = copy;
     return 1;
@@ -388,7 +404,7 @@ static int parse_control_file(link_config *config, const char *path) {
     return 1;
 
 oom:
-    fprintf(stderr, "PANIC: Out of memory while reading control file %s\n", path);
+    RX_REPORT_OOM("reading rxlink control file", RX_OOM_UNKNOWN_SIZE, path);
     fclose(fp);
     return 0;
 }
@@ -497,7 +513,11 @@ static int load_module_metadata(link_module_info *info) {
                     if (!interface_length) continue;
 
                     interface_name = malloc(interface_length + 1);
-                    if (!interface_name) return 0;
+                    if (!interface_name) {
+                        RX_REPORT_OOM("malloc rxlink interface reference name",
+                                      interface_length + 1, info->input_path);
+                        return 0;
+                    }
                     memcpy(interface_name, selector->string, interface_length);
                     interface_name[interface_length] = '\0';
                     ok = string_list_append_unique(&info->referenced_interfaces, interface_name);
@@ -542,6 +562,12 @@ static int load_input_modules(module_list *modules, const link_config *config) {
                 string_list_init(&info.unresolved_imports);
                 info.module = module;
                 info.input_path = strdup(input_path);
+                if (!info.input_path) {
+                    RX_REPORT_OOM("strdup rxlink input path", strlen(input_path) + 1, input_path);
+                    free_module(module);
+                    fclose(fp);
+                    return 0;
+                }
                 info.input_index = input_index;
                 info.member_index = member_index++;
                 info.selector_name = strip_rightmost_extension_if(filename(module->name), "rxas");
@@ -579,7 +605,11 @@ static int add_to_queue(size_t **queue_ref, size_t *queue_count, size_t *queue_c
     if (*queue_count == *queue_capacity) {
         new_capacity = *queue_capacity ? *queue_capacity * 2 : 16;
         new_queue = realloc(*queue_ref, sizeof(size_t) * new_capacity);
-        if (!new_queue) return 0;
+        if (!new_queue) {
+            RX_REPORT_OOM("realloc rxlink selection queue",
+                          sizeof(size_t) * new_capacity, 0);
+            return 0;
+        }
         *queue_ref = new_queue;
         *queue_capacity = new_capacity;
     }
@@ -826,7 +856,10 @@ static int reserve_pool_entry(rxlink_build_context *context, size_t size_in_pool
                               size_t *offset_out) {
     size_t offset = context->shared_pool.size;
 
-    if (!rxbin_byte_buffer_reserve(&context->shared_pool, size_in_pool)) return 0;
+    if (!rxbin_byte_buffer_reserve(&context->shared_pool, size_in_pool)) {
+        RX_REPORT_OOM("reserve rxlink shared constant pool", size_in_pool, 0);
+        return 0;
+    }
     memset(context->shared_pool.data + context->shared_pool.size, 0, size_in_pool);
     context->shared_pool.size += size_in_pool;
     ((chameleon_constant *)(context->shared_pool.data + offset))->size_in_pool = size_in_pool;
@@ -852,7 +885,11 @@ static int add_const_map(rxlink_output_module *module, size_t old_offset, size_t
     if (module->map_count == module->map_capacity) {
         new_capacity = module->map_capacity ? module->map_capacity * 2 : 32;
         new_entries = realloc(module->maps, sizeof(const_map_entry) * new_capacity);
-        if (!new_entries) return 0;
+        if (!new_entries) {
+            RX_REPORT_OOM("realloc rxlink constant map",
+                          sizeof(const_map_entry) * new_capacity, 0);
+            return 0;
+        }
         module->maps = new_entries;
         module->map_capacity = new_capacity;
     }
@@ -889,6 +926,8 @@ static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleo
         new_capacity = context->leaf_capacity ? context->leaf_capacity * 2 : 32;
         new_entries = realloc(context->leaf_entries, sizeof(leaf_dedupe_entry) * new_capacity);
         if (!new_entries) {
+            RX_REPORT_OOM("realloc rxlink leaf dedupe table",
+                          sizeof(leaf_dedupe_entry) * new_capacity, 0);
             *ok = 0;
             return 0;
         }
@@ -1276,13 +1315,28 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
     size_t index;
 
     output_module->module = malloc(sizeof(module_file));
-    if (!output_module->module) return 0;
+    if (!output_module->module) {
+        RX_REPORT_OOM("malloc rxlink output module", sizeof(module_file),
+                      input_info->input_path);
+        return 0;
+    }
     init_module(output_module->module);
     output_module->module->fromfile = 1;
     output_module->module->header.record_type = RXBIN_RECORD_MODULE_SHARED;
     output_module->module->name = strdup(input->name ? input->name : "");
     output_module->module->description = strdup(input->description ? input->description : "");
-    if (!output_module->module->name || !output_module->module->description) return 0;
+    if (!output_module->module->name) {
+        RX_REPORT_OOM("strdup rxlink output module name",
+                      strlen(input->name ? input->name : "") + 1,
+                      input_info->input_path);
+        return 0;
+    }
+    if (!output_module->module->description) {
+        RX_REPORT_OOM("strdup rxlink output module description",
+                      strlen(input->description ? input->description : "") + 1,
+                      input_info->input_path);
+        return 0;
+    }
     output_module->module->header.name_size = strlen(output_module->module->name) + 1;
     output_module->module->header.description_size = strlen(output_module->module->description) + 1;
     output_module->module->header.instruction_size = input->header.instruction_size;
@@ -1298,7 +1352,12 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
 
     if (input->header.instruction_size) {
         output_module->module->instructions = malloc(sizeof(bin_code) * input->header.instruction_size);
-        if (!output_module->module->instructions) return 0;
+        if (!output_module->module->instructions) {
+            RX_REPORT_OOM("malloc rxlink output instruction copy",
+                          sizeof(bin_code) * input->header.instruction_size,
+                          input_info->input_path);
+            return 0;
+        }
         memcpy(output_module->module->instructions, input->instructions, sizeof(bin_code) * input->header.instruction_size);
     }
 

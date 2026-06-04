@@ -31,6 +31,7 @@
 #define MAXFILEPATH 4096
 
 #include <stdio.h>
+#include <stddef.h>
 #include "crexx_license.h"
 
 #if defined(__clang__) || defined(__GNUC__)
@@ -78,6 +79,38 @@ typedef long long rxinteger;
 #endif
 #endif
 #endif //RXINTEGER_T
+
+#ifndef IS_RXINTEGER_32BIT
+#define IS_RXINTEGER_32BIT (sizeof(rxinteger) == 4)
+#endif
+
+#if defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
+#define RX_FUNCTION_NAME __FUNCTION__
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define RX_FUNCTION_NAME __func__
+#else
+#define RX_FUNCTION_NAME "unknown"
+#endif
+
+#define RX_OOM_UNKNOWN_SIZE ((size_t)-1)
+
+/*
+ * Standard allocation failure diagnostics. Use RX_REPORT_OOM when the caller
+ * can return an error, and RX_PANIC_OOM when the current code path already
+ * treats allocation failure as unrecoverable.
+ */
+void rx_report_out_of_memory(const char *operation, size_t requested_bytes,
+                             const char *detail, const char *source_file,
+                             int source_line, const char *function_name);
+void rx_panic_out_of_memory(const char *operation, size_t requested_bytes,
+                            const char *detail, const char *source_file,
+                            int source_line, const char *function_name);
+
+#define RX_REPORT_OOM(operation, requested_bytes, detail) \
+    rx_report_out_of_memory((operation), (requested_bytes), (detail), __FILE__, __LINE__, RX_FUNCTION_NAME)
+
+#define RX_PANIC_OOM(operation, requested_bytes, detail) \
+    rx_panic_out_of_memory((operation), (requested_bytes), (detail), __FILE__, __LINE__, RX_FUNCTION_NAME)
 
 /*
  * Read a file into a returned buffer

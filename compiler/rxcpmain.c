@@ -62,11 +62,16 @@ static void append_cli_import_name(char ***imports, size_t *count, const char *n
     if (!imports || !count || !name || !name[0]) return;
 
     new_imports = realloc(*imports, sizeof(char*) * (*count + 1));
-    if (!new_imports) error_and_exit(255, "Out of memory appending --import");
+    if (!new_imports) {
+        RX_PANIC_OOM("realloc rxc --import list",
+                     sizeof(char*) * (*count + 1), name);
+    }
 
     *imports = new_imports;
     (*imports)[*count] = strdup(name);
-    if (!(*imports)[*count]) error_and_exit(255, "Out of memory copying --import");
+    if (!(*imports)[*count]) {
+        RX_PANIC_OOM("strdup rxc --import entry", strlen(name) + 1, name);
+    }
     (*count)++;
 }
 
@@ -78,14 +83,19 @@ static void append_location_arg(char **locations, const char *value) {
     if (!locations || !value || !value[0]) return;
     if (!*locations) {
         *locations = strdup(value);
-        if (!*locations) error_and_exit(255, "Out of memory copying location list");
+        if (!*locations) {
+            RX_PANIC_OOM("strdup rxc location list", strlen(value) + 1, value);
+        }
         return;
     }
 
     old_len = strlen(*locations);
     value_len = strlen(value);
     combined = realloc(*locations, old_len + 1 + value_len + 1);
-    if (!combined) error_and_exit(255, "Out of memory extending location list");
+    if (!combined) {
+        RX_PANIC_OOM("realloc rxc location list",
+                     old_len + 1 + value_len + 1, value);
+    }
     combined[old_len] = ';';
     memcpy(combined + old_len + 1, value, value_len + 1);
     *locations = combined;
@@ -106,10 +116,15 @@ static char **split_location_list(const char *locations) {
     }
 
     result = calloc(count + 1, sizeof(char *));
-    if (!result) error_and_exit(255, "Out of memory splitting location list");
+    if (!result) {
+        RX_PANIC_OOM("calloc rxc split location list",
+                     (count + 1) * sizeof(char *), locations);
+    }
 
     copy = strdup(locations);
-    if (!copy) error_and_exit(255, "Out of memory copying location list");
+    if (!copy) {
+        RX_PANIC_OOM("strdup rxc split location list", strlen(locations) + 1, locations);
+    }
 
     index = 0;
     result[index++] = copy;
@@ -163,6 +178,7 @@ static void license() {
 Context *cntx_f() {
     Context *context;
     context = calloc(1, sizeof(Context)); /* Zero Contents */
+    if (!context) RX_PANIC_OOM("calloc rxc context", sizeof(Context), 0);
 
     context->level = UNKNOWN;
     context->cli_level_override = UNKNOWN;
@@ -484,11 +500,21 @@ int rxcmain(int argc, char *argv[]) {
     /* Add the executable-path binary import root. */
     exe_path = exepath();
     if (import_locations) {
-        combined_import_locations = malloc(strlen(import_locations) + strlen(exe_path) + 2);
+        size_t combined_import_locations_size = strlen(import_locations) + strlen(exe_path) + 2;
+        combined_import_locations = malloc(combined_import_locations_size);
+        if (!combined_import_locations) {
+            RX_PANIC_OOM("malloc rxc binary import locations",
+                         combined_import_locations_size, import_locations);
+        }
         sprintf(combined_import_locations, "%s;%s", import_locations, exe_path);
         import_locations = combined_import_locations;
     } else {
-        combined_import_locations = malloc(strlen(exe_path) + 1);
+        size_t combined_import_locations_size = strlen(exe_path) + 1;
+        combined_import_locations = malloc(combined_import_locations_size);
+        if (!combined_import_locations) {
+            RX_PANIC_OOM("malloc rxc binary import locations",
+                         combined_import_locations_size, exe_path);
+        }
         sprintf(combined_import_locations, "%s", exe_path);
         import_locations = combined_import_locations;
     }
@@ -498,11 +524,15 @@ int rxcmain(int argc, char *argv[]) {
 
     filename_extension = filenext(file_name);
     input_source_extension = rxcp_source_extension_copy(file_name);
-    if (!input_source_extension) error_and_exit(255, "Out of memory copying source extension");
+    if (!input_source_extension) {
+        RX_PANIC_OOM("malloc rxc source extension", RX_OOM_UNKNOWN_SIZE, file_name);
+    }
     if (!input_source_extension[0]) {
         free(input_source_extension);
         input_source_extension = strdup("crexx");
-        if (!input_source_extension) error_and_exit(255, "Out of memory copying source extension");
+        if (!input_source_extension) {
+            RX_PANIC_OOM("strdup rxc default source extension", strlen("crexx") + 1, file_name);
+        }
     }
 
     char *allocated_output_file_name = 0;
@@ -548,7 +578,14 @@ int rxcmain(int argc, char *argv[]) {
     context->master_context = context;
     context->loading_files_count = 1;
     context->loading_files = malloc(sizeof(char*));
+    if (!context->loading_files) {
+        RX_PANIC_OOM("malloc rxc loading file list", sizeof(char*), context->file_name);
+    }
     context->loading_files[0] = strdup(context->file_name);
+    if (!context->loading_files[0]) {
+        RX_PANIC_OOM("strdup rxc loading file name",
+                     strlen(context->file_name) + 1, context->file_name);
+    }
 
     /* Open trace file */
 #ifndef NDEBUG

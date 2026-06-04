@@ -129,6 +129,10 @@ void rxinimod(rxvm_context *context) {
     /* Support 128 modules initially - this grows automatically */
     context->module_buffer_size = 128;
     context->modules = malloc(sizeof(module*) * context->module_buffer_size);
+    if (!context->modules) {
+        RX_PANIC_OOM("malloc rxvm module table",
+                     sizeof(module*) * context->module_buffer_size, 0);
+    }
 }
 
 /* Free Module Context */
@@ -248,8 +252,9 @@ static void build_module_runtime_procedures(module *mod) {
     if (mod->proc_runtime_lookup_size) {
         seen = calloc(mod->proc_runtime_lookup_size, sizeof(unsigned char));
         if (!seen) {
-            fprintf(stderr, "PANIC: Out of memory\n");
-            exit(-1);
+            RX_PANIC_OOM("calloc rxvm procedure scan bitmap",
+                         mod->proc_runtime_lookup_size * sizeof(unsigned char),
+                         mod->name);
         }
     }
 
@@ -293,16 +298,18 @@ static void build_module_runtime_procedures(module *mod) {
     if (mod->procedure_count) {
         mod->procedures = calloc(mod->procedure_count, sizeof(proc_runtime));
         if (!mod->procedures) {
-            fprintf(stderr, "PANIC: Out of memory\n");
-            exit(-1);
+            RX_PANIC_OOM("calloc rxvm procedure runtime table",
+                         mod->procedure_count * sizeof(proc_runtime),
+                         mod->name);
         }
     }
 
     if (mod->proc_runtime_lookup_size) {
         mod->proc_runtime_lookup = calloc(mod->proc_runtime_lookup_size, sizeof(proc_runtime *));
         if (!mod->proc_runtime_lookup) {
-            fprintf(stderr, "PANIC: Out of memory\n");
-            exit(-1);
+            RX_PANIC_OOM("calloc rxvm procedure runtime lookup",
+                         mod->proc_runtime_lookup_size * sizeof(proc_runtime *),
+                         mod->name);
         }
         memset(seen, 0, mod->proc_runtime_lookup_size);
     }
@@ -493,12 +500,16 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
         context->module_buffer_size *= 2;
         new_buffer = realloc(context->modules, sizeof(module*) * context->module_buffer_size);
         if (!new_buffer) {
-            fprintf(stderr, "PANIC: Out of memory\n");
-            exit(-1);
+            RX_PANIC_OOM("realloc rxvm module table",
+                         sizeof(module*) * context->module_buffer_size,
+                         file_module_section->name);
         }
         context->modules = new_buffer;
     }
     context->modules[n] = malloc(sizeof(module));
+    if (!context->modules[n]) {
+        RX_PANIC_OOM("malloc rxvm module", sizeof(module), file_module_section->name);
+    }
     context->modules[n]->segment.globals = file_module_section->header.globals;
     context->modules[n]->segment.inst_size = file_module_section->header.instruction_size;
     context->modules[n]->segment.const_size = file_module_section->header.constant_size;
@@ -511,7 +522,17 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
     context->modules[n]->expose_head = file_module_section->header.expose_head;
     context->modules[n]->meta_head = file_module_section->header.meta_head;
     context->modules[n]->globals = calloc(context->modules[n]->segment.globals, sizeof(value*));
+    if (!context->modules[n]->globals && context->modules[n]->segment.globals) {
+        RX_PANIC_OOM("calloc rxvm module globals",
+                     (size_t)context->modules[n]->segment.globals * sizeof(value*),
+                     file_module_section->name);
+    }
     context->modules[n]->globals_dont_free = calloc(context->modules[n]->segment.globals, sizeof(char));
+    if (!context->modules[n]->globals_dont_free && context->modules[n]->segment.globals) {
+        RX_PANIC_OOM("calloc rxvm module globals ownership map",
+                     (size_t)context->modules[n]->segment.globals * sizeof(char),
+                     file_module_section->name);
+    }
     context->modules[n]->unresolved_symbols = 0;
     context->modules[n]->duplicated_symbols = 0;
     context->modules[n]->file = file_module_section;
@@ -820,6 +841,11 @@ static size_t reserve_in_const_pool(rxpa_context *context, size_t size, enum con
     if (!context->plugin_being_loaded->constant) {
         context->const_buffer_size = 1024;
         context->plugin_being_loaded->constant = malloc(context->const_buffer_size);
+        if (!context->plugin_being_loaded->constant) {
+            RX_PANIC_OOM("malloc rxpa plugin constant pool",
+                         context->const_buffer_size,
+                         context->plugin_being_loaded->name);
+        }
         context->plugin_being_loaded->header.constant_size = 0;
     }
 
@@ -828,8 +854,9 @@ static size_t reserve_in_const_pool(rxpa_context *context, size_t size, enum con
         new_size = context->const_buffer_size * 2;
         new_buffer = realloc(context->plugin_being_loaded->constant, new_size);
         if (!new_buffer) {
-            fprintf(stderr, "PANIC: Out of memory\n");
-            exit(-1);
+            RX_PANIC_OOM("realloc rxpa plugin constant pool",
+                         new_size,
+                         context->plugin_being_loaded->name);
         }
         context->plugin_being_loaded->constant = new_buffer;
         memset(context->plugin_being_loaded->constant + context->const_buffer_size, 0, context->const_buffer_size);

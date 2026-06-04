@@ -161,8 +161,44 @@ static int compare_float_node_value(const void *value,
     return 0;
 }
 
-static int add_float_node(struct avl_tree_node **root, uint64_t bits, size_t value) {
+static void rxas_panic_oom_at(Assembler_Context *context, const char *operation,
+                              size_t requested_bytes, const char *extra_detail,
+                              const char *source_file, int source_line,
+                              const char *function_name) {
+    char detail[512];
+
+    if (context) {
+        snprintf(detail, sizeof(detail),
+                 "input=%s; output=%s; source line=%d; inst_size=%llu; inst_buffer=%llu; const_size=%llu; const_buffer=%llu%s%s",
+                 context->file_name ? context->file_name : "(none)",
+                 context->output_file_name ? context->output_file_name : "(none)",
+                 context->line,
+                 (unsigned long long)context->binary.inst_size,
+                 (unsigned long long)context->inst_buffer_size,
+                 (unsigned long long)context->binary.const_size,
+                 (unsigned long long)context->const_buffer_size,
+                 extra_detail && extra_detail[0] ? "; " : "",
+                 extra_detail && extra_detail[0] ? extra_detail : "");
+    } else {
+        snprintf(detail, sizeof(detail), "%s",
+                 extra_detail && extra_detail[0] ? extra_detail : "");
+    }
+
+    rx_panic_out_of_memory(operation, requested_bytes, detail,
+                           source_file, source_line, function_name);
+}
+
+#define RXAS_PANIC_OOM(context, operation, requested_bytes, extra_detail) \
+    rxas_panic_oom_at((context), (operation), (requested_bytes), (extra_detail), \
+                      __FILE__, __LINE__, RX_FUNCTION_NAME)
+
+static int add_float_node(Assembler_Context *context, struct avl_tree_node **root,
+                          uint64_t bits, size_t value) {
     struct float_wrapper *entry = malloc(sizeof(struct float_wrapper));
+    if (!entry) {
+        RXAS_PANIC_OOM(context, "malloc rxas float constant tree node",
+                       sizeof(struct float_wrapper), 0);
+    }
     entry->bits = bits;
     entry->value = value;
     if (avl_tree_insert(root, &entry->index_node, compare_float_node_node)) {
@@ -428,15 +464,22 @@ static size_t reserve_in_const_pool(Assembler_Context *context, size_t size,
                                     enum const_pool_type type) {
     size_t index, new_size;
     chameleon_constant * entry;
+    void *new_pool;
+    char detail[128];
 
     /* Extend the buffer if we need to */
     while (size + 8 > context->const_buffer_size - context->binary.const_size) { // +8 for the 8 bit alignment
         new_size = context->const_buffer_size * 2;
-        context->binary.const_pool = realloc(context->binary.const_pool, new_size);
-        if (!context->binary.const_pool) {
-            fprintf(stderr, "PANIC: Out of memory\n");
-            exit(-1);
+        new_pool = realloc(context->binary.const_pool, new_size);
+        if (!new_pool) {
+            snprintf(detail, sizeof(detail),
+                     "entry_size=%llu; old_const_buffer=%llu; const_type=%d",
+                     (unsigned long long)size,
+                     (unsigned long long)context->const_buffer_size,
+                     (int)type);
+            RXAS_PANIC_OOM(context, "realloc rxas constant pool", new_size, detail);
         }
+        context->binary.const_pool = new_pool;
         memset(context->binary.const_pool + context->const_buffer_size, 0, context->const_buffer_size);
         context->const_buffer_size = new_size;
     }
@@ -492,6 +535,10 @@ void rxassetg(Assembler_Context *context, Assembler_Token *globalsToken) {
     else {
         context->binary.globals = (int) globalsToken->token_value.integer;
         context->extern_regs = calloc(context->binary.globals, sizeof(char));
+        if (!context->extern_regs && context->binary.globals) {
+            RXAS_PANIC_OOM(context, "calloc rxas extern register map",
+                           (size_t)context->binary.globals * sizeof(char), 0);
+        }
     }
 }
 
@@ -554,9 +601,15 @@ void rxasexre(Assembler_Context *context, Assembler_Token *registerToken,
 static void gen_instr(Assembler_Context *context, int opcode, int operands) {
     /* Extend the buffer if we need to */
     size_t new_size;
+    void *new_binary;
     if (context->inst_buffer_size <= context->binary.inst_size + 1) { /* +1 = Make room for the end null */
         new_size = context->inst_buffer_size * 2;
-        context->binary.binary = realloc(context->binary.binary, new_size * sizeof(bin_code));
+        new_binary = realloc(context->binary.binary, new_size * sizeof(bin_code));
+        if (!new_binary) {
+            RXAS_PANIC_OOM(context, "realloc rxas instruction buffer",
+                           new_size * sizeof(bin_code), 0);
+        }
+        context->binary.binary = new_binary;
         memset(context->binary.binary + context->inst_buffer_size, 0,
                context->inst_buffer_size * sizeof(bin_code));
         context->inst_buffer_size = new_size;
@@ -579,8 +632,7 @@ static size_t add_string_to_pool(Assembler_Context *context, Assembler_Token *to
         entry_size = sizeof(string_constant) + strlen(string);
         unescaped = malloc(entry_size);
         if (!unescaped) {
-            fprintf(stderr, "PANIC: Out of memory\n");
-            exit(-1);
+            RXAS_PANIC_OOM(context, "malloc rxas unescape buffer", entry_size, 0);
         }
         string_len = unescape_string(unescaped, string);
         unescaped[string_len] = 0; /* Add a null ... just for safety */
@@ -684,7 +736,7 @@ static size_t add_float_to_pool(Assembler_Context *context, double value) {
         entry_index = reserve_in_const_pool(context, sizeof(float_constant), FLOAT_CONST);
         entry = FLOAT_CONST_AT(context->binary.const_pool, entry_index);
         entry->double_value = value;
-        add_float_node(&context->float_constants_tree, bits, entry_index);
+        add_float_node(context, &context->float_constants_tree, bits, entry_index);
     }
 
     return entry_index;
@@ -753,6 +805,10 @@ static size_t add_func_to_pool(Assembler_Context *context, Assembler_Token* toke
         /* No - Create entry in the tree */
         proc_constant *centry;
         ref_header = malloc(sizeof(struct backpatching));
+        if (!ref_header) {
+            RXAS_PANIC_OOM(context, "malloc rxas procedure backpatch header",
+                           sizeof(struct backpatching), 0);
+        }
         add_node(&context->proc_constants_tree,
                  (char*)token->token_value.string,
                  (size_t) ref_header);
@@ -781,6 +837,10 @@ static size_t add_func_to_pool(Assembler_Context *context, Assembler_Token* toke
     if (ref_header->defined == 0) {
         /* keep references for error messages generated during backpatching */
         struct backpatching_references* ref = malloc(sizeof(struct backpatching_references));
+        if (!ref) {
+            RXAS_PANIC_OOM(context, "malloc rxas procedure backpatch reference",
+                           sizeof(struct backpatching_references), 0);
+        }
         ref->index = -1; /* No back-patching */
         ref->token = token;
         ref->link = ref_header->refs;
@@ -814,9 +874,15 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
     size_t s_index;
     /* Extend the buffer if we need to */
     size_t new_size;
+    void *new_binary;
     if (context->inst_buffer_size <= context->binary.inst_size + 1) { /* +1 = Make room for the end null */
         new_size = context->inst_buffer_size * 2;
-        context->binary.binary = realloc(context->binary.binary, new_size * sizeof(bin_code));
+        new_binary = realloc(context->binary.binary, new_size * sizeof(bin_code));
+        if (!new_binary) {
+            RXAS_PANIC_OOM(context, "realloc rxas instruction buffer for operand",
+                           new_size * sizeof(bin_code), 0);
+        }
+        context->binary.binary = new_binary;
         memset(context->binary.binary + context->inst_buffer_size, 0,
                context->inst_buffer_size * sizeof(bin_code));
         context->inst_buffer_size = new_size;
@@ -837,6 +903,10 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
             else {
                 /* No - Create entry in the tree */
                 ref_header = malloc(sizeof(struct backpatching));
+                if (!ref_header) {
+                    RXAS_PANIC_OOM(context, "malloc rxas label backpatch header",
+                                   sizeof(struct backpatching), 0);
+                }
                 add_node(&context->label_constants_tree,
                          (char*)operandToken->token_value.string,
                          (size_t) ref_header);
@@ -849,6 +919,10 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
 
             /* keep references for backpatching the above */
             struct backpatching_references* ref = malloc(sizeof(struct backpatching_references));
+            if (!ref) {
+                RXAS_PANIC_OOM(context, "malloc rxas label backpatch reference",
+                               sizeof(struct backpatching_references), 0);
+            }
             ref->index = context->binary.inst_size;
             ref->token = operandToken;
             ref->link = ref_header->refs;
@@ -1165,6 +1239,10 @@ static size_t define_proc(Assembler_Context *context, Assembler_Token *funcToken
     else {
         /* No - Create entry in the tree */
         ref_header = malloc(sizeof(struct backpatching));
+        if (!ref_header) {
+            RXAS_PANIC_OOM(context, "malloc rxas defined procedure backpatch header",
+                           sizeof(struct backpatching), 0);
+        }
         add_node(&context->proc_constants_tree,
                  (char*)funcToken->token_value.string,
                  (size_t)ref_header);
@@ -1246,6 +1324,10 @@ void rxaslabl(Assembler_Context *context, Assembler_Token *labelToken) {
     else {
         /* No - Create entry in the tree */
         ref_header = malloc(sizeof(struct backpatching));
+        if (!ref_header) {
+            RXAS_PANIC_OOM(context, "malloc rxas defined label backpatch header",
+                           sizeof(struct backpatching), 0);
+        }
         add_node(&context->label_constants_tree,
                  (char*)labelToken->token_value.string,
                  (size_t)ref_header);
