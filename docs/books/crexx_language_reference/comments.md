@@ -1,6 +1,6 @@
 # Comments
 
-Commentary is included in a \crexx{} program by means of comments. \crexx{} has single-line comments and multiline[^block] comments.
+Commentary is included in a cRexx program by means of comments. cRexx has single-line comments and multiline[^block] comments.
 
 [^block]: Also called block comments.
 
@@ -48,9 +48,9 @@ or even
 
 ## Doc (Documentation) Comments
 
-*Doc comments* are a special form of multiline comment which starts with `/**` and ends in `*/`. It is not processed by the \crexx{} compiler but can aid in the producing of documentation by external tools. In doc commments special tags as `@parm`, `@result` and `@author` can be used, purely for documentation purposes and with no consequence for the behaviour of the program.
+*Doc comments* are a special form of multiline comment which starts with `/**` and ends in `*/`. It is not processed by the cRexx compiler but can aid in the producing of documentation by external tools. In doc commments special tags as `@parm`, `@result` and `@author` can be used, purely for documentation purposes and with no consequence for the behaviour of the program.
 
-The doc comment style used in the \crexx{} class library is:
+The doc comment style used in the cRexx class library is:
 
 ```bash
       /**
@@ -70,7 +70,7 @@ for readability purposes.
 
 ## Single line comments
 
-For \crexx{} level B, the *octothorpe* (#), also know as poundsign or hashmark, is the default for single line comments. Other single line comment styles can be chosen by the ```option``` statements ```comments_dash``` and ```comments_slash``` which enable the SQL, \nr{} and Object \rexx{} ```--``` double dash style, and ```comments_slash``` which enable the C++ style ```//``` line comments.
+For cRexx level B, the *octothorpe* (#), also know as poundsign or hashmark, is the default for single line comments. Other single line comment styles can be chosen by the ```option``` statements ```comments_dash``` and ```comments_slash``` which enable the SQL, \nr{} and Object Rexx ```--``` double dash style, and ```comments_slash``` which enable the C++ style ```//``` line comments.
 
 ### Shebang
 

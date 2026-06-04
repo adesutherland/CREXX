@@ -1,12 +1,12 @@
 # Introduction
 
-\crexx{} is a \rexx{}-family language and toolchain that compiles source
+cRexx is a Rexx-family language and toolchain that compiles source
 programs to an open bytecode format, then executes that bytecode on the
-\crexx{} virtual machine or packages it into a native executable.
+cRexx virtual machine or packages it into a native executable.
 
 Release 1 beta 1 is centred on Level B. Level B is the implemented systems
 language used by the project itself: it is statically typed, module based, and
-close enough to \rexx{} to keep the language readable while giving the compiler
+close enough to Rexx to keep the language readable while giving the compiler
 and VM explicit type, module, and contract information.
 
 The public documentation should describe what the current toolchain can do.
@@ -30,7 +30,7 @@ The implemented Level B surface includes:
   and VM runtime support
 - Level B classes and interfaces, including default/final interface methods,
   factories, checked casts, type tests, and concrete type introspection
-- a standard library built largely in \crexx{} itself, with native support
+- a standard library built largely in cRexx itself, with native support
   where direct VM or platform access is required
 
 The main tools are:
@@ -44,8 +44,8 @@ The main tools are:
 
 ## Design Position
 
-\crexx{} keeps the \rexx{} emphasis on readability and directness, but Level B is
-not Classic \rexx{}. It is the typed foundation used to build libraries, tools,
+cRexx keeps the Rexx emphasis on readability and directness, but Level B is
+not Classic Rexx. It is the typed foundation used to build libraries, tools,
 and later language layers. That is why Level B source normally starts with:
 
 ```rexx

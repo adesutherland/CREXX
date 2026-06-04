@@ -1,6 +1,6 @@
 # Modules
 
-Each source file compiles to a module. New \crexx{} source normally uses `.crexx`
+Each source file compiles to a module. New cRexx source normally uses `.crexx`
 or `.crx`; `.rexx` remains the compatibility/classic extension. The compiler
 writes RXAS assembly (`.rxas`), and the assembler writes RXBIN bytecode
 (`.rxbin`).

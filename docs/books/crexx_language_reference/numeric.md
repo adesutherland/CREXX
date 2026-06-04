@@ -1,8 +1,8 @@
 # NUMERIC Instruction: Controlling Arithmetic Behaviour
 
-\rexx{} uses *arbitrary-precision decimal arithmetic*, which requires specific rules for computation. 
+Rexx uses *arbitrary-precision decimal arithmetic*, which requires specific rules for computation. 
 The `NUMERIC` instruction controls the *precision*, *rounding*, and *comparison* for all 
-numeric operations within a procedure. In \crexx{} Level B, its usage is slightly restricted to enable 
+numeric operations within a procedure. In cRexx Level B, its usage is slightly restricted to enable 
 performance optimizations.
 
 This section covers the `NUMERIC` instruction, including the new `STANDARD` sub-option. 
@@ -42,7 +42,7 @@ dynamically.
 
 Sets the number of significant digits for all calculations.
 
-* **Default**: 18 for \crexx{} Level B. Classic \rexx{} default is 9.
+* **Default**: 18 for cRexx Level B. Classic Rexx default is 9.
 * **Value**: Must be a positive whole number greater than `NUMERIC FUZZ`.
 * **Retrieval**: Use the `DIGITS()` built-in function.
 
@@ -80,7 +80,7 @@ Sets the case sensitivity for special numeric literals.
 
 Selects a predefined set of arithmetic semantic rules. This is a new option.
 
-* **CLASSIC**: Adheres to classic ANSI \rexx{} X3.274-1996 arithmetic rules where classic-compatible mode is selected.
+* **CLASSIC**: Adheres to classic ANSI Rexx X3.274-1996 arithmetic rules where classic-compatible mode is selected.
     * **Remainder (`//` or '%')**: The division is calculated at full (digits) division and truncated, then the remainder 
       is computed, ('a - (TRUNC(a / b) * b)'). 
     * **Integer Magnitude-Precision Constraint**: The integer quotient for `%` and `//` must fit within 
@@ -89,7 +89,7 @@ Selects a predefined set of arithmetic semantic rules. This is a new option.
     * **Integer Division (`%`)**: The numbers are divided at current precision (digits) and then truncated
       to an integer towards zero.
   
-* **COMMON**: Employs semantics closer to other C like languages. This is the default for \crexx{} 
+* **COMMON**: Employs semantics closer to other C like languages. This is the default for cRexx 
   Level B.
     * **Remainder (`%` or '//')**: The division is calculated at full (digits) division and truncated, then the remainder
       is computed, ('a - (TRUNC(a / b) * b)').
@@ -127,7 +127,7 @@ within procedures.
 
 ## Runtime Optimization Considerations
 
-\crexx{} benefits from knowing arithmetic rules at compile time. Declaring `NUMERIC` settings as constants at the start 
+cRexx benefits from knowing arithmetic rules at compile time. Declaring `NUMERIC` settings as constants at the start 
 of a procedure allows the compiler to:
 
 * Embed numeric context values directly into the bytecode.

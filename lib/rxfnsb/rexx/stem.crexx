@@ -122,3 +122,6 @@ stem: class
   value: method = .string
     arg kv = .string
     return values[kv]
+
+  tails: method = .string[]
+    return keys

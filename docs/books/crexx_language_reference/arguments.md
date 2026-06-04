@@ -1,6 +1,6 @@
 # Command line arguments
 
-Support for using command line arguments is built in the \rexx{} family of languages as fundamental and has its own statement, ```arg```, which picks up arguments to procedures as well as to the ```main()``` procedure, which is by convention the first procedure called by the operating system when a \crexx{} program is started.
+Support for using command line arguments is built in the Rexx family of languages as fundamental and has its own statement, ```arg```, which picks up arguments to procedures as well as to the ```main()``` procedure, which is by convention the first procedure called by the operating system when a cRexx program is started.
 
 As an example,
 
@@ -18,7 +18,7 @@ help: procedure
 say 'this program needs arguments'
 ```
 
-When there is program text before the first procedure, the ```main()``` procedure is automatically generated. In \crexx{} level B, the arguments to a procedure have a type, in the example this is a string array which is referenced in a variable of type ```.string[]```.
+When there is program text before the first procedure, the ```main()``` procedure is automatically generated. In cRexx level B, the arguments to a procedure have a type, in the example this is a string array which is referenced in a variable of type ```.string[]```.
 
 After this assignment by ```arg fn = .string[]``` (in line 3) the number of command line arguments to the program is contained in ```fn.0```, which can also be addressed as ```fn[0]```. We can now use these arguments in the program, for example by looping over the elements of the string array.
 

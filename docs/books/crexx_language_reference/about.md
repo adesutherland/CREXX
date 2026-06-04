@@ -1,11 +1,11 @@
 # About This Book
 
-This language reference documents the implemented \crexx{} language surface for
+This language reference documents the implemented cRexx language surface for
 Release 1 beta 1.
 
-The main release language is Level B: a typed REXX-family systems language
-compiled by `rxc`, assembled by `rxas`, and executed by the RXVM runtime.
-Level B is not a complete Classic REXX compatibility mode, and this reference
+The main release language is Level B: a typed Rexx-family systems language
+compiled by `rxc`, assembled by `rxas`, and executed by the `rxvm` runtime.
+Level B is not a complete Classic Rexx compatibility mode, and this reference
 does not describe planned future levels as current behaviour.
 
 ## Audience

@@ -9,13 +9,13 @@ depending on these APIs in a packaged release.
 
 The (multiplatform) GTK Plugin enables a straightforward way to implement portable Rexx programs with a graphical user interface.
 
-\crexx{} does not implement event loop multitasking or callbacks yet. At the moment, the inclusion of the GTK plugin is a build time option[^option]. 
+cRexx does not implement event loop multitasking or callbacks yet. At the moment, the inclusion of the GTK plugin is a build time option[^option]. 
 
 [^option]: `-DENABLE_GTK=ON`
 
 ## Overview
 
-This section provides an overview of a lightweight graphical user interface (GUI) plugin for \crexx{}, focusing on the most essential widgets. 
+This section provides an overview of a lightweight graphical user interface (GUI) plugin for cRexx, focusing on the most essential widgets. 
 <!-- It contains two files: `gui.c`, which implements the GUI functionality using GTK, and `gui_test.crexx`, which demonstrates how to use the procedures defined in `gui.c`. -->
 
 ## Quick Start Guide

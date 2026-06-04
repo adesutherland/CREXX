@@ -1,6 +1,6 @@
 # Standard Library
 
-The \crexx{} standard library is built from a mix of Level B source, rxas, and
+The cRexx standard library is built from a mix of Level B source, rxas, and
 native support. The release model is explicit: source imports name the
 namespace to use, and runtime images or linked artifacts provide the bytecode
 and native pieces needed by the VM.
@@ -29,7 +29,7 @@ say length("hello")
 The `crexx` driver imports `rxfnsb` automatically only for headerless
 top-level scripts.
 
-Many `rxfnsb` functions are written in \crexx{} itself under
+Many `rxfnsb` functions are written in cRexx itself under
 `lib/rxfnsb/rexx/`. Low-level functionality is provided through RXAS or native
 runtime support where needed. The mutating array helpers use VM array
 attribute instructions for insert, delete, shrink, and clear operations, so
@@ -113,5 +113,5 @@ loaded by the VM, and selected plugins can be statically linked into packaged
 executables depending on build configuration.
 
 From Level B source, calls look the same whether the implementation is written
-in \crexx{}, rxas, or native code. The import and runtime library path decide
+in cRexx, rxas, or native code. The import and runtime library path decide
 which module or plugin is available.

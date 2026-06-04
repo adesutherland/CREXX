@@ -164,8 +164,10 @@ END [;]
 
 The SELECT statement allows you to conditionally evaluate multiple expressions and execute corresponding instructions based on the first expression that evaluates to true (1).
 
-There are two styles of the SELECT statement in cREXX:
+There are two styles of the SELECT statement in cRexx:
+
 1. **Classic SELECT:** Does not include an initial `expression` after the `SELECT` keyword. Each `WHEN` expression is evaluated as a standalone boolean condition.
+
 2. **C-Style SELECT (SWITCH):** Includes an initial `expression` after the `SELECT` keyword. The `expression` is evaluated once, and its result is implicitly compared for equality (`=`) against each `WHEN` expression.
 
 If a `WHEN` condition is met, its associated `THEN` instruction is executed, and control exits the `SELECT` block. If no `WHEN` condition is met, the `OTHERWISE` block (if present) is executed. If no `WHEN` condition is met and an `OTHERWISE` block is absent, the `SELECT` statement acts as a `NOP` (null operation) and does nothing.
@@ -257,9 +259,9 @@ The standard Rexx option letters `A`, `C`, `E`, `F`, `I`, `L`, `N`, `O`, and
 Options use a minimum-abbreviation rule: the spelling must be a left-prefix of
 the full option word. For example, `TRACE R`, `TRACE RE`, `TRACE RES`,
 `TRACE RESULT`, and `TRACE RESULTS` all select Results, while `TRACE RAS` is
-invalid. The cREXX extensions use `AS` as the minimum abbreviation for `ASM`
-and `LL` as the minimum abbreviation for `LLM`; `ENV` is an exact cREXX
-extension spelling. `TRACE REXX` remains supported as an exact legacy cREXX
+invalid. The cRexx extensions use `AS` as the minimum abbreviation for `ASM`
+and `LL` as the minimum abbreviation for `LLM`; `ENV` is an exact cRexx
+extension spelling. `TRACE REXX` remains supported as an exact legacy cRexx
 source-trace spelling; it is not abbreviated because `R` and `RE...` belong to
 Results.
 This is not yet full semantic compatibility, but the noninteractive output
@@ -276,7 +278,7 @@ shape follows the standard prefix vocabulary for implemented events:
 emits `+++` only for failing ADDRESS commands. `TRACE C`, `TRACE E`, and
 `TRACE F` are ADDRESS-command driven. `TRACE A` traces source clauses.
 Classic `TRACE R` traces source clauses, variable substitutions, and assignment
-or expression results. cREXX emits source clauses from `.srcstep` metadata and
+or expression results. cRexx emits source clauses from `.srcstep` metadata and
 semantic value records from `.traceevent` metadata, including initial `>=>`
 assignment, `>V>` variable, `>L>` literal, and `>O>`/`>P>` operation coverage
 where the compiler can point at an available register or constant. `TRACE I`
@@ -285,7 +287,7 @@ grows. `TRACE L` is accepted, but label-pass events are not emitted yet.
 `O`/`OFF` disables breakpoint tracing. `TRACE ASM` traces VM/RXAS instruction
 information and includes source text where metadata is available.
 
-When traced execution moves between source files, cREXX emits a source-file
+When traced execution moves between source files, cRexx emits a source-file
 transition line:
 
 ```bash
@@ -294,7 +296,7 @@ transition line:
 
 The first visible source file is not printed, so single-file traces keep their
 classic shape. Later file changes are printed before the next `*-*` source
-line, including when execution returns to the original file. This is a cREXX
+line, including when execution returns to the original file. This is a cRexx
 extension; classic Regina-style output does not provide an equivalent filename
 record.
 
@@ -305,7 +307,7 @@ partial: optimized-away or folded values may have no trace event, and some
 compound-variable details such as final resolved-name reporting remain a
 compiler/runtime coverage task.
 
-`TRACE LLM` is a cREXX extension that emits one JSON-lines-style trace record
+`TRACE LLM` is a cRexx extension that emits one JSON-lines-style trace record
 per event. It is intended for debugger automation and for validating emitted
 `.srcstep` metadata; source text is escaped so control characters and
 backslashes remain visible. `TRACE VALUE expr` evaluates `expr` at runtime and
@@ -353,7 +355,7 @@ TRACE is implemented as a certified compiler exit. It requires normal compiler
 exit loading; compiling with exits disabled rejects the statement rather than
 treating it as an implicit command.
 
-The cREXX standard-library/BIF build deliberately compiles most
+The cRexx standard-library/BIF build deliberately compiles most
 `lib/rxfnsb/rexx/*.crexx` files with compiler exits disabled (`rxc -x`) to avoid
 bootstrap and circular-dependency problems while building the library that the
 exits themselves use. Adding `TRACE RESULTS`, `TRACE R`, or another explicit
@@ -473,7 +475,7 @@ The type of this Pseudo is the type of the '...' argument
 
 ## arg() Operator
 
-The compatibility arg() operator is designed to provide some compatibility with classic REXX; by example:
+The compatibility arg() operator is designed to provide some compatibility with Classic Rexx; by example:
 
 * arg() is equivalent to arg.0 etc. Type Integer.  
 * arg(1) is equivalent to arg.1 etc. The type of this operator is the same as the '...' argument and like arg.1 can signal OUTOFRANGE  
@@ -483,4 +485,4 @@ The compatibility arg() operator is designed to provide some compatibility with 
 
 ## Implicit Main Procedure
 
-In the event that a module file contains instructions preceding a PROCEDURE instruction, an implicit procedure named main() is automatically generated within the namespace of the module file. The arguments for this procedure can be accessed through the pseudo array arg or arg() operator. This implicit main() case is the compatibility bridge that maps classic `arg(n)` access onto command-line arguments when no explicit signature is present. The return type of the implicitly defined main() procedure is automatically set to either int or void.
+In the event that a module file contains instructions preceding a `PROCEDURE` instruction, an implicit procedure named main() is automatically generated within the namespace of the module file. The arguments for this procedure can be accessed through the pseudo array arg or arg() operator. This implicit main() case is the compatibility bridge that maps classic `arg(n)` access onto command-line arguments when no explicit signature is present. The return type of the implicitly defined main() procedure is automatically set to either int or void.

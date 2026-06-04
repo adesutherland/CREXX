@@ -18,10 +18,11 @@
  * ------------------------------------------------------------------
  */
 ##define cmd foreach(inkey inkw stem where=1) \
-        {__keys = stem.keylist(); \
+        {__keys = stem.tails(); \
          do current_index = 1 to __keys[0]; \
             inkey = __keys[current_index]; \
             if \(where) then iterate; }
+
 
 /* ................ Example code demonstrating the FOREACH statement ................ */
 parts = .stem()
