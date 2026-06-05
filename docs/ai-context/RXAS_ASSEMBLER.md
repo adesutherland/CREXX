@@ -230,6 +230,11 @@ As of format version `002` and later, float operands are no longer stored inline
 `double` payloads in operand slots. Instead, the operand slot carries an index
 to a deduplicated `FLOAT_CONST` record in the constant pool.
 
+`rxdas` emits float operands and `FLOAT_CONST` pool entries with enough
+significant digits to distinguish binary64 values that would otherwise share a
+six-decimal rendering, while keeping integer-looking values parseable as RXAS
+float tokens (for example, `-0.0` rather than `-0`).
+
 As of the current `003` layout, `rxas` still builds the normal in-memory
 `bin_code[]` and raw constant pool first. The section compaction step happens
 when `write_module()` serializes the module:

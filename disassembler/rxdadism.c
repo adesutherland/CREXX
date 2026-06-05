@@ -407,6 +407,29 @@ static size_t get_reg_string(bin_space *pgm, char* buffer, size_t buffer_len, in
     return out_len;
 }
 
+static size_t format_float_literal(char *buffer, size_t buffer_len, double value) {
+    char temp[64];
+    const char *scan;
+    int needs_float_marker;
+
+    snprintf(temp, sizeof(temp), "%.17g", value);
+
+    needs_float_marker = 1;
+    for (scan = temp; *scan; scan++) {
+        if (*scan == '.' || *scan == 'e' || *scan == 'E') {
+            needs_float_marker = 0;
+            break;
+        }
+    }
+
+    scan = temp;
+    if (*scan == '-' || *scan == '+') scan++;
+    if (!isdigit((unsigned char)*scan)) needs_float_marker = 0;
+
+    if (needs_float_marker) return snprintf(buffer, buffer_len, "%s.0", temp);
+    return snprintf(buffer, buffer_len, "%s", temp);
+}
+
 /* Disassemble an operand
  *
  * Returns the number of characters that would have been written assuming the
@@ -440,8 +463,8 @@ static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_le
 #endif
             break;
         case OP_FLOAT:
-            out_len = snprintf(buffer, buffer_len, "%f",
-                               FLOAT_CONST_VALUE(pgm->const_pool, pgm->binary[index].index));
+            out_len = format_float_literal(buffer, buffer_len,
+                                           FLOAT_CONST_VALUE(pgm->const_pool, pgm->binary[index].index));
             break;
         case OP_CHAR:
             out_len = snprintf(buffer, buffer_len, "\'%c\'", pgm->binary[index].cconst);
@@ -1045,7 +1068,8 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     fprintf(stream, "* 0x%.6lx DECIMAL %s\n", i, line_buffer);
                     break;
                 case FLOAT_CONST:
-                    fprintf(stream, "* 0x%.6lx FLOAT %f\n", i, ((float_constant *)entry)->double_value);
+                    format_float_literal(line_buffer, MAX_LINE_SIZE, ((float_constant *)entry)->double_value);
+                    fprintf(stream, "* 0x%.6lx FLOAT %s\n", i, line_buffer);
                     break;
                 case BINARY_CONST:
                 {

@@ -19,7 +19,7 @@ add_custom_target(rxdas_test_prereqs ALL
 
 function(crexx_add_rxdas_roundtrip)
     set(options)
-    set(oneValueArgs NAME SOURCE)
+    set(oneValueArgs NAME SOURCE EXPECT_DISASSEMBLY_TEXT_1 EXPECT_DISASSEMBLY_TEXT_2)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "" ${ARGN})
 
     if(NOT CREXX_NAME OR NOT CREXX_SOURCE)
@@ -51,6 +51,8 @@ function(crexx_add_rxdas_roundtrip)
             -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
             -DTEST_BASENAME=${CREXX_NAME}
             -DREQUIRE_NO_UNKNOWN=ON
+            -DEXPECT_DISASSEMBLY_TEXT_1=${CREXX_EXPECT_DISASSEMBLY_TEXT_1}
+            -DEXPECT_DISASSEMBLY_TEXT_2=${CREXX_EXPECT_DISASSEMBLY_TEXT_2}
             -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_roundtrip.cmake
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
@@ -64,6 +66,8 @@ crexx_add_rxdas_roundtrip(
 crexx_add_rxdas_roundtrip(
         NAME rxdas_roundtrip_float_pool
         SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_float_pool.rxas
+        EXPECT_DISASSEMBLY_TEXT_1 "3.1415926535897931"
+        EXPECT_DISASSEMBLY_TEXT_2 "3.1415929999999999"
 )
 
 crexx_add_rxdas_roundtrip(

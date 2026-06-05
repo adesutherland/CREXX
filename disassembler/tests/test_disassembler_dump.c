@@ -417,7 +417,7 @@ int main(void) {
 
     rc |= require_contains(output, "STRING \"hello\"");
     rc |= require_contains(output, "DECIMAL \"12.5\"");
-    rc |= require_contains(output, "FLOAT 1.500000");
+    rc |= require_contains(output, "FLOAT 1.5");
     rc |= require_contains(output, "BINARY 0x414243");
     rc |= require_contains(output, "EXPOSED-REG g0 <-> as synthetic.shared");
     rc |= require_contains(output, "EXPOSED-PROC word() <-- as rxfnsb.word");
