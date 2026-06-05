@@ -113,12 +113,23 @@ file(GENERATE OUTPUT "${CREXX_LICENSE_SMOKE_SCRIPT}" CONTENT "${CREXX_LICENSE_SM
 add_test(NAME crexx_license_summary_smoke
          COMMAND ${CMAKE_COMMAND} -P "${CREXX_LICENSE_SMOKE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME crexx_tool_output_path_policy
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXLINK=$<TARGET_FILE:rxlink>
+                 -DCREXX=$<TARGET_FILE:crexx>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/tool_output_path_policy.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_explicit_header_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_spaced_source_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_crxc_noargs_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_license_summary_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
+set_tests_properties(crexx_tool_output_path_policy PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 
 function(add_crexx_compile_only_import_test NAME MAIN_FILE DEP_FILE MODE)
     get_filename_component(MAIN_BASENAME "${MAIN_FILE}" NAME)

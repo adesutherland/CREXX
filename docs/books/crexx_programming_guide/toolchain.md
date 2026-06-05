@@ -26,7 +26,10 @@ steps for day-to-day use.
 
 Source files are UTF-8 text. New cRexx source normally uses `.crexx`, with
 `.crx` as a short alias. `.rexx` remains the compatibility/classic extension.
-The compiler output is RXAS assembly:
+The compiler also accepts an arbitrary non-reserved initial source extension for
+that compile. Toolchain artifacts are less flexible: RXAS assembly uses the
+fixed `.rxas` suffix and RXBIN bytecode uses the fixed `.rxbin` suffix. The
+compiler output is RXAS assembly:
 
 ```bash <!--rxc1.sh-->
 rxc hello.crexx
@@ -40,6 +43,11 @@ rxas hello.rxas
 
 RXBIN is the module format consumed by the VM, linker, disassembler, and
 packager.
+
+For `rxc`, `rxas`, and `rxlink`, `-o` names an output stem/path unless it
+already ends in the tool's fixed artifact suffix. For example, `rxas -o app`
+writes `app.rxbin`, `rxas -o app.rxbin` writes `app.rxbin`, and
+`rxas -o app.debug` writes `app.debug.rxbin`.
 
 ## Module Discovery
 

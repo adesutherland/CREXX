@@ -1645,9 +1645,7 @@ static int write_linked_image(const link_config *config, rxlink_build_context *c
     FILE *fp;
     module_file shared_pool_record;
     size_t i;
-    const char *type_bin = has_any_extension(config->output_path) ? "" : "rxbin";
-
-    fp = openfile(config->output_path, (char *)type_bin, config->location, "wb");
+    fp = openfile(config->output_path, "rxbin", config->location, "wb");
     if (!fp) {
         fprintf(stderr, "ERROR: opening output %s\n", config->output_path);
         return 0;
@@ -1688,7 +1686,7 @@ static void print_help(void) {
     printf("cREXX Linker\n");
     printf("Usage: rxlink [options] input_file [input_file ...]\n");
     printf("Options:\n");
-    printf("  -o output_file  Linked output file\n");
+    printf("  -o output_stem  Linked output stem or .rxbin file\n");
     printf("  -c control_file Control file with INPUT/ROOT/INCLUDE/OMIT/OUTPUT/MAP/STRIP\n");
     printf("  -r root_member  Root module selector (may be repeated)\n");
     printf("  -m map_file     Write a simple link map\n");

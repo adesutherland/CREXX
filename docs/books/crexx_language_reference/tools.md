@@ -21,7 +21,7 @@ Common options:
 - `--level level`: default source level when the source omits one
 - `--import ns`: inject a file-level import; repeatable
 - `--import-rxas`: allow `.rxas` import scanning in binary roots
-- `-o output_file`: RXAS output file
+- `-o output_stem`: RXAS output stem or `.rxas` file
 - `-n`: disable optimisation
 - `-x`: disable compiler exits; explicit certified-exit statements such as
   `TRACE`, `PARSE`, and `ADDRESS` are rejected instead of rewritten
@@ -44,6 +44,13 @@ The `.rxpp` preprocessor input extension is reserved for preprocessing and is
 not part of source-import discovery. The `crexx` driver writes preprocessed
 output as `.crexx` before invoking `rxc`.
 
+`rxc` output is always RXAS text. `-o` names an output stem/path; if the value
+already ends in `.rxas`, that path is used as-is, otherwise `.rxas` is appended.
+This means dotted stems such as `build/foo.debug` produce
+`build/foo.debug.rxas`. If the output name contains a directory separator it is
+written there directly; otherwise `-l location`, when supplied, provides the
+working output directory.
+
 ## Assembler: `rxas`
 
 ```bash
@@ -59,10 +66,12 @@ Common options:
 - `-i`: print instruction information
 - `-d`: debug/verbose mode
 - `-l location`: working location
-- `-o output_file`: RXBIN output file
+- `-o output_stem`: RXBIN output stem or `.rxbin` file
 - `-n`: disable optimisation
 
 The assembler reads RXAS text and writes RXBIN bytecode.
+`rxas -o` follows the same fixed-artifact rule as `rxc`: a value ending in
+`.rxbin` is used as-is, and any other stem/path gets `.rxbin` appended.
 
 ## Linker: `rxlink`
 
@@ -73,7 +82,7 @@ rxlink [options] input_file [input_file ...]
 Common options:
 
 - `-h`: help
-- `-o output_file`: linked RXBIN output
+- `-o output_stem`: linked RXBIN output stem or `.rxbin` file
 - `-c control_file`: linker control file
 - `-r root_member`: root module selector; repeatable
 - `-m map_file`: write a link map
@@ -84,6 +93,8 @@ Common options:
 
 `rxlink` combines modules into a linked image with one shared constant pool.
 Use it for deployable bytecode and native packaging.
+Linked output is also a fixed `.rxbin` artifact: `rxlink -o app` writes
+`app.rxbin`, while `rxlink -o app.rxbin` writes exactly `app.rxbin`.
 
 ## Virtual Machines
 
@@ -174,6 +185,10 @@ If the input filename ends in `.rxpp`, the driver runs RXPP first and then
 compiles the generated `.crexx` source. `CREXX_HOME`, when set, is used as the
 root for locating the installed `bin` directory and standard library image;
 otherwise the driver derives that root from its load path.
+
+The driver does not have its own `-o` option. It derives the compile and
+assemble output stem from each input path, preserving the input directory and
+turning dots in the basename into underscores after removing the source suffix.
 
 Native packaging links the program with the standard library image, runs
 `rxcpack`, and invokes a platform C compiler. The lower-level `crxc.rexx`

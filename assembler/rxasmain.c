@@ -144,7 +144,7 @@ static void help() {
         "  -i              Print Instructions\n"
         "  -d              Debug/Verbose Mode\n"
         "  -l location     Working Location (directory)\n"
-        "  -o output_file  Binary Output File\n"
+        "  -o output_stem  RXBIN output stem or .rxbin file\n"
         "  -n              No Optimising\n"
         "Notes   :\n"
         "- source_file : The source file to be assembled; filetype (rxas) is added to the name.\n";

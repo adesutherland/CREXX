@@ -155,7 +155,7 @@ static void help() {
             "  --level level   Default source level when OPTIONS omits one\n"
             "  --import ns     Inject a file-level IMPORT namespace (repeatable)\n"
             "  --import-rxas   Enable auto-import scanning of .rxas in binary roots\n"
-            "  -o output_file  REXX Assembler Output File\n"
+            "  -o output_stem  RXAS output stem or .rxas file\n"
             "  -n              No Optimising\n"
             "  -x              Disable compiler exits\n"
 #ifdef ENABLE_PARSER_MODE

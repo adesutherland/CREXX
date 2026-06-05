@@ -194,6 +194,9 @@ rxlink -o app linked_root.rxbin helpers.rxbin
 rxvm app
 ```
 
+`rxlink -o` names a linked-image stem unless the value already ends in
+`.rxbin`, so the first command writes `app.rxbin`.
+
 To produce a smaller deployable linked image:
 
 ```sh
