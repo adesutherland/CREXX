@@ -720,23 +720,39 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
     return 0;
 }
 
+static Symbol *sym_rfqv_in_scope(Scope *scope, const char *namespace_name, const char *short_name, const char *fqname) {
+    Symbol *result = 0;
+    size_t i;
+
+    if (!scope || !namespace_name || !short_name || !fqname) return 0;
+
+    if (scope->name && strcmp(scope->name, namespace_name) == 0) {
+        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), short_name);
+        if (result) {
+            char *resolved_name = sym_frnm(result);
+            int matches = resolved_name && strcmp(resolved_name, fqname) == 0;
+            if (resolved_name) free(resolved_name);
+            if (matches) return result;
+        }
+    }
+
+    for (i = 0; i < scp_noch(scope); i++) {
+        result = sym_rfqv_in_scope(scp_chd(scope, i), namespace_name, short_name, fqname);
+        if (result) return result;
+    }
+
+    return 0;
+}
+
 Symbol *sym_rfqv(ASTNode *root, const char* fqname) {
     char *namespace_name = 0;
     char *short_name = 0;
     Symbol *result = 0;
-    size_t i;
 
     if (!root || !root->scope || !fqname) return 0;
     if (!rxcp_split_internal_symbol_name(fqname, &namespace_name, &short_name)) return 0;
 
-    for (i = 0; i < scp_noch(root->scope); i++) {
-        Scope *scope = scp_chd(root->scope, i);
-        if (!scope || !scope->name) continue;
-        if (strcmp(scope->name, namespace_name) != 0) continue;
-
-        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), short_name);
-        break;
-    }
+    result = sym_rfqv_in_scope(root->scope, namespace_name, short_name, fqname);
 
     if (namespace_name) free(namespace_name);
     if (short_name) free(short_name);

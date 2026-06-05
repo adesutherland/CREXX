@@ -236,6 +236,63 @@ static int same_value_type(ASTNode *left, ASTNode *right) {
     return left->value_class == 0 && right->value_class == 0;
 }
 
+static Symbol *resolve_contract_class_name(Context *context, const char *class_name) {
+    Symbol *symbol = 0;
+
+    if (!context || !context->ast || !class_name || !*class_name) return 0;
+
+    if (strchr(class_name, '.')) symbol = sym_rfqv(context->ast, class_name);
+    else symbol = sym_rvfn(context->ast, (char *)class_name);
+
+    if (!symbol) {
+        ensure_class_imported(context, class_name, strlen(class_name));
+        if (strchr(class_name, '.')) symbol = sym_rfqv(context->ast, class_name);
+        else symbol = sym_rvfn(context->ast, (char *)class_name);
+    }
+
+    if (!symbol || symbol->symbol_type != CLASS_SYMBOL) return 0;
+    return symbol;
+}
+
+static void canonicalize_contract_class_name(Context *context, ASTNode *type_node, char **class_name) {
+    Symbol *symbol = 0;
+    char *fqname;
+
+    if (!class_name || !*class_name) return;
+
+    if (context && context->ast && type_node && type_node->node_type == CLASS &&
+        type_node->node_string &&
+        rxcp_source_symbol_is_qualified(type_node->node_string, type_node->node_string_length)) {
+        char *qualified_name = rxcp_normalize_source_symbol_name(type_node->node_string,
+                                                                 type_node->node_string_length,
+                                                                 1,
+                                                                 1);
+        symbol = resolve_contract_class_name(context, qualified_name);
+        if (qualified_name) free(qualified_name);
+    }
+
+    if (!symbol && strchr(*class_name, '.')) {
+        symbol = resolve_contract_class_name(context, *class_name);
+    }
+
+    if (!symbol && context && context->ast && type_node && type_node->node_type == CLASS) {
+        symbol = sym_rvfc(context->ast, type_node);
+        if (!symbol) {
+            ensure_class_imported(context, type_node->node_string, type_node->node_string_length);
+            symbol = sym_rvfc(context->ast, type_node);
+        }
+    }
+
+    if (!symbol) symbol = resolve_contract_class_name(context, *class_name);
+    if (!symbol || symbol->symbol_type != CLASS_SYMBOL) return;
+
+    fqname = sym_frnm(symbol);
+    if (!fqname) return;
+
+    free(*class_name);
+    *class_name = fqname;
+}
+
 static int same_contract_type_node(Context *context, ASTNode *left, ASTNode *right) {
     size_t left_dims = 0, right_dims = 0;
     int *left_base = 0, *left_elems = 0, *right_base = 0, *right_elems = 0;
@@ -246,6 +303,8 @@ static int same_contract_type_node(Context *context, ASTNode *left, ASTNode *rig
 
     left_type = node_to_type(context, left, &left_dims, &left_base, &left_elems, &left_class);
     right_type = node_to_type(context, right, &right_dims, &right_base, &right_elems, &right_class);
+    canonicalize_contract_class_name(context, left, &left_class);
+    canonicalize_contract_class_name(context, right, &right_class);
 
     if (left_type == right_type && left_dims == right_dims) {
         size_t i;
@@ -320,7 +379,12 @@ static ValueType contract_member_return_type(Context *context,
         }
     }
 
-    return node_to_type(context, return_node ? return_node : member, dims, dim_base, dim_elements, class_name);
+    {
+        ASTNode *type_node = return_node ? return_node : member;
+        ValueType type = node_to_type(context, type_node, dims, dim_base, dim_elements, class_name);
+        canonicalize_contract_class_name(context, type_node, class_name);
+        return type;
+    }
 }
 
 static int same_contract_return_signature(Context *context, ASTNode *iface_member, ASTNode *class_member) {

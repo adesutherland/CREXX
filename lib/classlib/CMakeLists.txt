@@ -31,7 +31,12 @@ foreach(CLS IN LISTS CLSS)
 endforeach()
 
 set(CLASSLIB_SELECTORS ${CLSS})
-set(CLASS_DEPS_TreeMapIterator Iterator TreeMap)
+set(CLASS_DEPS_Iterable Iterator)
+set(CLASS_DEPS_HashMap TreeSet)
+set(CLASS_DEPS_StemListIterator StemList)
+set(CLASS_DEPS_TreeMap Iterable TreeMapIterator TreeSet)
+set(CLASS_DEPS_TreeMapIterator Iterator)
+set(CLASS_DEPS_TreeSet TreeSetIterator)
 
 
 foreach(_binfile IN LISTS CLSBINS)
@@ -42,6 +47,9 @@ foreach(_binfile IN LISTS CLSBINS)
   endforeach()
   add_custom_command(
     OUTPUT "${_binfile}"
+    # Do not let classlib members import the previous consolidated classlib image
+    # while regenerating the member artifacts that will replace it.
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
     COMMAND $<TARGET_FILE:rxc>
     -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
     -o "${_basename}"
@@ -49,6 +57,7 @@ foreach(_binfile IN LISTS CLSBINS)
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+      ${_class_deps}
       rxc
       rxas
       library

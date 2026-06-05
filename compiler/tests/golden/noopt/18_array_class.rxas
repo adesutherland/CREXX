@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : 18_array_class_main.crexx
- * BUILT                  : 2026-05-27 17:52:58
+ * BUILT                  : 2026-06-05 19:41:21
  */
 
 .globals=0
@@ -159,7 +159,7 @@ l70doend:
 /* Imported Declaration from file: array_class_lib.crexx */
 
 §array_class_lib.item.§factory() .expose=array_class_lib.item.§factory
-   .meta "array_class_lib.item.§factory"="b" ".item" §array_class_lib.item.§factory() "v=.string"
+   .meta "array_class_lib.item.§factory"="b" ".array_class_lib..item" §array_class_lib.item.§factory() "v=.string"
 
 §array_class_lib.item.get_val() .expose=array_class_lib.item.get_val
    .meta "array_class_lib.item.get_val"="b" ".string" §array_class_lib.item.get_val() ""

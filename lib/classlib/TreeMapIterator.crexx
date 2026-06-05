@@ -36,7 +36,7 @@ import treemap
  * TreeMap is modified during its execution.
  */
 
-TreeMapIterator: class -- implements .Iterator
+TreeMapIterator: class implements .Iterator
 token = .int
 closed = .int
 

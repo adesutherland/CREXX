@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : arg_semantics_object.crexx
- * BUILT                  : 2026-05-27 17:53:09
+ * BUILT                  : 2026-06-05 19:41:35
  */
 
 .meta "arg_semantics_object.box"="b" ".unknown" .class
@@ -173,7 +173,7 @@ replaceBoxRef() .locals=3
    .meta "arg_semantics_object.replaceboxref.value"
 
 §arg_semantics_object.box.§factory() .locals=3
-   .meta "arg_semantics_object.box.§factory"="b" ".box" §arg_semantics_object.box.§factory() "initial=.string"
+   .meta "arg_semantics_object.box.§factory"="b" ".arg_semantics_object..box" §arg_semantics_object.box.§factory() "initial=.string"
    .srcstep 24 24 17 "arg_semantics_object.crexx" 30 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"arg_semantics_object.box"

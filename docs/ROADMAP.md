@@ -46,6 +46,7 @@ until they are narrowed.
 | Classic compatibility BIFs | #129 | `BITAND`, `BITOR`, and `BITXOR` belong with broader Classic/Level C compatibility planning, not as isolated Level B promises. |
 | Rexx-style loose comparison | #233 and closed issue #150 | Keep under future compatibility review. Current Level B comparison policy should remain explicit in the language reference. |
 | Argument count and optional parameters | #219 | Current `arg()`, `arg[]`, `...`, and `?name` behaviour is documented. Reopen only if a concrete unsupported case appears. |
+| Iterable loop sugar and callbacks | #591 | Level B should keep the minimal collection contract as `Iterable.iterator()` returning an `Iterator` with `hasNext()` / `next()`. A no-argument `forEach()` method is not useful without callable/reference support, so richer Java-style callback iteration belongs with future Level G facilities. Possible Level B syntax sugar such as `loop item over collection` should lower to the current iterator loop and validate against the `Iterable` / `Iterator` interface contracts. |
 | Compile-time build metadata | #454 | A `_build_date()`-style virtual function is a possible convenience, but it needs a naming and semantics decision before issue tracking. |
 | Unused imports | #467 and closed issue #441 | Already tracked previously. Reopen only if the compiler policy is still wanted and not implemented. |
 

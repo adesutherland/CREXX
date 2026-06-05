@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : 13_stems.crexx
- * BUILT                  : 2026-05-27 21:00:55
+ * BUILT                  : 2026-06-05 19:41:19
  */
 
 .globals=0
@@ -234,7 +234,7 @@ l98iffalse:
 /* Imported Declaration from file: stem@library.rxbin */
 
 §rxfnsb.stem.§factory() .expose=rxfnsb.stem.§factory
-   .meta "rxfnsb.stem.§factory"="b" ".stem" §rxfnsb.stem.§factory() ""
+   .meta "rxfnsb.stem.§factory"="b" ".rxfnsb..stem" §rxfnsb.stem.§factory() ""
 
 §rxfnsb.stem.get() .expose=rxfnsb.stem.get
    .meta "rxfnsb.stem.get"="b" ".string" §rxfnsb.stem.get() "key=.string"

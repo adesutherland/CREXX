@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_object_return_assign.crexx
- * BUILT                  : 2026-05-27 17:53:56
+ * BUILT                  : 2026-06-05 19:42:05
  */
 
 .meta "inline_test_object_return_assign.box"="b" ".unknown" .class
@@ -77,7 +77,7 @@ main() .locals=6
    .meta "inline_test_object_return_assign.main.other"
 
 buildBox() .locals=4
-   .meta "inline_test_object_return_assign.buildbox"="b" ".box" buildBox() "initial=.string"
+   .meta "inline_test_object_return_assign.buildbox"="b" ".inline_test_object_return_assign..box" buildBox() "initial=.string"
    .srcstep 14 14 17 "inline_test_object_return_assign.crexx" 14 1 27 "buildBox: procedure = .Box"
    setnumdgts 18
    setnumfuz 0
@@ -146,7 +146,7 @@ replaceBoxRef() .locals=3
    .meta "inline_test_object_return_assign.replaceboxref.value"
 
 §inline_test_object_return_assign.box.§factory() .locals=3
-   .meta "inline_test_object_return_assign.box.§factory"="b" ".box" §inline_test_object_return_assign.box.§factory() "initial=.string"
+   .meta "inline_test_object_return_assign.box.§factory"="b" ".inline_test_object_return_assign..box" §inline_test_object_return_assign.box.§factory() "initial=.string"
    .srcstep 25 25 17 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_return_assign.box"

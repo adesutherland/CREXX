@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : class_import_main.crexx
- * BUILT                  : 2026-05-27 17:53:03
+ * BUILT                  : 2026-06-05 19:41:24
  */
 
 .globals=0
@@ -43,7 +43,7 @@ main() .locals=5
 /* Imported Declaration from file: class_import_lib.crexx */
 
 §class_import_lib.counter.§factory() .expose=class_import_lib.counter.§factory
-   .meta "class_import_lib.counter.§factory"="b" ".counter" §class_import_lib.counter.§factory() ""
+   .meta "class_import_lib.counter.§factory"="b" ".class_import_lib..counter" §class_import_lib.counter.§factory() ""
 
 §class_import_lib.counter.inc() .expose=class_import_lib.counter.inc
    .meta "class_import_lib.counter.inc"="b" ".void" §class_import_lib.counter.inc() ""

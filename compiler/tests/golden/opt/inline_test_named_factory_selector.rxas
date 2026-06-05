@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_named_factory_selector.crexx
- * BUILT                  : 2026-05-27 17:53:32
+ * BUILT                  : 2026-06-05 19:41:50
  */
 
 .meta "inline_test_named_factory_selector.car"="b" ".unknown" .class
@@ -8,8 +8,8 @@
 .meta "inline_test_named_factory_selector.car._name"="b" ".string" .attr 1
 .meta "inline_test_named_factory_selector.vehicle"="b" ".unknown" .interface
 .meta "inline_test_named_factory_selector.vehicle"="method" "describe" ".string" "" .member
-.meta "inline_test_named_factory_selector.vehicle"="factory" "*" ".vehicle" "name=.string" .member
-.meta "inline_test_named_factory_selector.vehicle"="factory" "from_name" ".vehicle" "name=.string" .member
+.meta "inline_test_named_factory_selector.vehicle"="factory" "*" ".inline_test_named_factory_selector..vehicle" "name=.string" .member
+.meta "inline_test_named_factory_selector.vehicle"="factory" "from_name" ".inline_test_named_factory_selector..vehicle" "name=.string" .member
 .globals=0
 
 main() .locals=6
@@ -72,7 +72,7 @@ l137bexprend:
    ret 0
 
 directNamed() .locals=3
-   .meta "inline_test_named_factory_selector.directnamed"="b" ".vehicle" directNamed() ""
+   .meta "inline_test_named_factory_selector.directnamed"="b" ".inline_test_named_factory_selector..vehicle" directNamed() ""
    .srcstep 10 10 17 "inline_test_named_factory_selector.crexx" 10 1 34 "directNamed: procedure = .vehicle"
    setnumdgts 18
    setnumfuz 0
@@ -90,7 +90,7 @@ directNamed() .locals=3
    ret r2
 
 assignedNamed() .locals=4
-   .meta "inline_test_named_factory_selector.assignednamed"="b" ".vehicle" assignedNamed() "name=.string"
+   .meta "inline_test_named_factory_selector.assignednamed"="b" ".inline_test_named_factory_selector..vehicle" assignedNamed() "name=.string"
    .srcstep 16 16 17 "inline_test_named_factory_selector.crexx" 13 1 36 "assignedNamed: procedure = .vehicle"
    setnumdgts 18
    setnumfuz 0
@@ -124,7 +124,7 @@ l47iffalse:
    .meta "inline_test_named_factory_selector.assignednamed.name"
 
 §inline_test_named_factory_selector.car.§factory() .locals=4
-   .meta "inline_test_named_factory_selector.car.§factory"="b" ".car" §inline_test_named_factory_selector.car.§factory() "name=.string"
+   .meta "inline_test_named_factory_selector.car.§factory"="b" ".inline_test_named_factory_selector..car" §inline_test_named_factory_selector.car.§factory() "name=.string"
    .srcstep 25 25 17 "inline_test_named_factory_selector.crexx" 36 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_named_factory_selector.car"
@@ -150,7 +150,7 @@ l47iffalse:
    .meta "inline_test_named_factory_selector.car.§factory.§factory"
 
 §inline_test_named_factory_selector.car.§factory.from_name() .locals=4
-   .meta "inline_test_named_factory_selector.car.§factory.from_name"="b" ".car" §inline_test_named_factory_selector.car.§factory.from_name() "name=.string"
+   .meta "inline_test_named_factory_selector.car.§factory.from_name"="b" ".inline_test_named_factory_selector..car" §inline_test_named_factory_selector.car.§factory.from_name() "name=.string"
    .srcstep 29 29 17 "inline_test_named_factory_selector.crexx" 41 3 21 "  from_name: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_named_factory_selector.car"

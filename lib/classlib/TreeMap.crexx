@@ -39,7 +39,7 @@ import data_Iterable
  * @author Peter Jacob
  */
 
-TreeMap: class -- implements .Iterable
+TreeMap: class implements .Iterable
 val = .int
 
 /** method factory creates an instance of the TreeMap

@@ -24,6 +24,7 @@
 
 options levelb
 namespace data_Iterable expose Iterable
+import data_Iterator
 
 /**
  * Iterable is the interface which defines the contract
@@ -32,6 +33,4 @@ namespace data_Iterable expose Iterable
  */
 
 Iterable: interface
-  iterator: method = .iterator
-  forEach:  method = .boolean
-
+  iterator: method = .Iterator

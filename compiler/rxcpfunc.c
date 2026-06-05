@@ -165,6 +165,22 @@ static int src_class(Context *context, char* fqname, struct imported_class **cls
     else return 0;
 }
 
+static int imported_class_metadata_implements(Context *context, const char *class_fqname, const char *interface_fqname) {
+    struct imported_class *cls = 0;
+    size_t i;
+
+    if (!context || !context->master_context || !class_fqname || !interface_fqname) return 0;
+    if (!src_class(context, (char *)class_fqname, &cls) || !cls) return 0;
+
+    for (i = 0; i < cls->implements_count; i++) {
+        if (cls->implements_fqnames[i] && strcmp(cls->implements_fqnames[i], interface_fqname) == 0) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 // Search for a class from namespace and name in the master context
 // Returns 1 if found and sets value
 // Returns 0 if not found
@@ -240,13 +256,8 @@ static int src_fqcl(Context *context, char* name, struct imported_class **cls) {
 
     if (rxcp_split_internal_symbol_name(name, &namespace, 0)) {
         int found = 0;
-        char *short_name = 0;
-        rxcp_split_internal_symbol_name(name, 0, &short_name);
-        if (short_name && find_visible_namespace_scope(context, 0, namespace)) {
-            found = src_nscl(context, namespace, short_name, cls);
-        }
+        found = src_class(context, name, cls);
         free(namespace);
-        if (short_name) free(short_name);
         return found;
     }
 
@@ -308,6 +319,7 @@ static int loaded_class_implements_interface(Context *context, Symbol *class_sym
     ASTNode *class_node;
     ASTNode *implements_node;
     ASTNode *iface_ref;
+    char *class_fqname = 0;
     char *interface_fqname = 0;
     int matched = 0;
 
@@ -318,10 +330,16 @@ static int loaded_class_implements_interface(Context *context, Symbol *class_sym
     class_node = class_symbol->defines_scope->defining_node;
     if (!class_node) return 0;
 
-    implements_node = ast_chld(class_node, IMPLEMENTS, 0);
-    if (!implements_node) return 0;
-
+    class_fqname = sym_frnm(class_symbol);
     interface_fqname = sym_frnm(interface_symbol);
+    if (class_fqname && interface_fqname &&
+        imported_class_metadata_implements(context, class_fqname, interface_fqname)) {
+        matched = 1;
+        goto done;
+    }
+
+    implements_node = ast_chld(class_node, IMPLEMENTS, 0);
+    if (!implements_node) goto done;
 
     iface_ref = implements_node->child;
     while (iface_ref) {
@@ -348,6 +366,8 @@ static int loaded_class_implements_interface(Context *context, Symbol *class_sym
         iface_ref = iface_ref->sibling;
     }
 
+done:
+    if (class_fqname) free(class_fqname);
     if (interface_fqname) free(interface_fqname);
     return matched;
 }
@@ -359,6 +379,7 @@ int symbol_name_assignable_to(Context *context, const char *from_name, const cha
     if (!from_name || !to_name) return 0;
     if (symbol_names_equivalent(context, from_name, to_name)) return 1;
     if (!context) return 0;
+    if (imported_class_metadata_implements(context, from_name, to_name)) return 1;
 
     from_symbol = resolve_contract_symbol(context, from_name);
     to_symbol = resolve_contract_symbol(context, to_name);
@@ -796,7 +817,7 @@ static Symbol *load_imported_contract(Context *context, struct imported_class *f
         return 0;
     }
 
-    found_symbol = sym_rfqn(context->ast, found_cls->fqname);
+    found_symbol = sym_rfqv(context->ast, found_cls->fqname);
     if (found_symbol) return found_symbol;
 
     ASTNode *new_stub = add_dast(context->ast, found_cls->context->ast->child);
@@ -809,7 +830,7 @@ static Symbol *load_imported_contract(Context *context, struct imported_class *f
         context->current_scope = old_scope;
     }
 
-    found_symbol = sym_rfqn(context->ast, found_cls->fqname);
+    found_symbol = sym_rfqv(context->ast, found_cls->fqname);
     if (found_symbol) {
         found_symbol->exposed = 1;
         found_symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
@@ -1708,29 +1729,11 @@ static void import_class_meta_aggs(Context *context, char *full_file_name, class
             char *stub_source;
             if (a->contract_type == INTERFACE_DEF) {
                 stub_source = mprintf("options levelb\nnamespace %s\n%s: interface\n%s",
-                                      a->ns, a->name, a->methods ? a->methods : "");
-            } else if (a->implements_count) {
-                size_t j;
-                stub_source = mprintf("options levelb\nnamespace %s\n%s: class", a->ns, a->name);
-                for (j = 0; j < a->implements_count; j++) {
-                    char *iface_name = rxcp_internal_name_to_source_qualified(a->implements_fqnames[j], 1);
-                    char *tmp = mprintf("%s%s %s",
-                                        stub_source,
-                                        j == 0 ? " implements" : "",
-                                        iface_name);
-                    free(iface_name);
-                    free(stub_source);
-                    stub_source = tmp;
-                }
-                {
-                    char *tmp = mprintf("%s\n%s%s",
-                                        stub_source,
-                                        a->attributes ? a->attributes : "",
-                                        a->methods ? a->methods : "");
-                    free(stub_source);
-                    stub_source = tmp;
-                }
+                                      a->ns,
+                                      a->name,
+                                      a->methods ? a->methods : "");
             } else {
+                /* Implements metadata is kept as FQNs on imported_class; source stubs only provide members. */
                 stub_source = mprintf("options levelb\nnamespace %s\n%s: class\n%s%s",
                                       a->ns,
                                       a->name,
