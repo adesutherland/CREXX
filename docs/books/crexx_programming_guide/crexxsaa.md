@@ -1,22 +1,22 @@
 # crexxsaa host integration
 
-`crexxsaa` is the initial \crexx{} compatibility API for C hosts that want a
+`crexxsaa` is the initial cRexx compatibility API for C hosts that want a
 REXXSAA-shaped entry point without taking on the full historical REXXSAA ABI.
-It is deliberately small: the API is a stable facade over the current \crexx{}
+It is deliberately small: the API is a stable facade over the current cRexx
 `rxvml`, `ADDRESS`, sandbox, and exposed-variable contracts.
 
 The first supported host model is command-environment execution:
 
 - host C code creates a `crexxsaa_context`
 - the host registers one or more `ADDRESS` callback environments
-- the host configures the \crexx{} compiler, assembler, import directory, and
+- the host configures the cRexx compiler, assembler, import directory, and
   optional cache directory
 - the host runs either an existing `.rxbin` or a source file that `crexxsaa`
   compiles and caches
 
 This is not a full `RexxStart()` or `RexxVariablePool()` clone. Future adapter
 entry points may be added where real integrations need them, but the internal
-runtime model remains the modern \crexx{} `ADDRESS` model.
+runtime model remains the modern cRexx `ADDRESS` model.
 
 ## Writing hosted source
 
@@ -55,14 +55,14 @@ cache bucket accidentally.
 ## ADDRESS callbacks
 
 A host registers an environment with
-`crexxsaa_register_address_environment()`. When \crexx{} executes a command in
+`crexxsaa_register_address_environment()`. When cRexx executes a command in
 that environment, the callback receives a `crexxsaa_address_request` containing
 the environment name, command text, and active context.
 
 The callback fills a `crexxsaa_address_response`:
 
 - `rc`: command return code
-- `condition_name`: optional \crexx{} condition name
+- `condition_name`: optional cRexx condition name
 - `diagnostic`: optional diagnostic text
 
 The callback should return zero for a successfully handled dispatch. Non-zero
@@ -84,13 +84,13 @@ resolve variables in this order:
 3. The active `ADDRESS ... SANDBOX pool` object.
 4. The request's standard sandbox fallback.
 
-The host gets one API, while the \crexx{} script chooses whether a command uses
+The host gets one API, while the cRexx script chooses whether a command uses
 direct exposure or sandbox storage.
 
 Compound names such as `FILENAME.1` are mapped to exposed stems by splitting at
 the first dot and using the remaining text as the stem key. Names are matched
 case-insensitively at this facade layer to fit legacy host expectations. The
-standard \crexx{} sandbox already normalises keys internally.
+standard cRexx sandbox already normalises keys internally.
 
 For compatibility with command processors that treat a scalar result as a
 one-item stem, an exposed scalar also has a limited compound view:
@@ -104,12 +104,12 @@ This rule is applied only when no exposed stem with the same base name exists.
 Real `EXPOSE name[]` stems keep their normal stem semantics.
 
 The variable facade is not a general variable-pool enumerator and does not
-provide arbitrary access to unexposed \crexx{} locals.
+provide arbitrary access to unexposed cRexx locals.
 
 ## Source cache
 
 `crexxsaa_run_source()` compiles source through `rxc` and `rxas`, then stores the
-resulting `.rxbin` in a disposable cache. Normal source edits, \crexx{} rebuilds,
+resulting `.rxbin` in a disposable cache. Normal source edits, cRexx rebuilds,
 compiler path changes, and library rebuilds cause a recompile without manual
 cache clearing.
 
@@ -143,7 +143,7 @@ Compiler path controls:
 
 ## Cache maintenance tool
 
-The \crexx{} build/install includes a `crexxsaa` maintenance binary in the normal
+The cRexx build/install includes a `crexxsaa` maintenance binary in the normal
 `bin` directory. It is a troubleshooting tool for the compiled-script cache,
 not a script runner.
 

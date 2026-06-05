@@ -1,4 +1,4 @@
-# rxc - the \crexx{} Compiler
+# rxc - the cRexx Compiler
 
 ## Command Line Options
 
@@ -13,21 +13,21 @@
 
 `rxc` now separates automatic import discovery into two root classes:
 
-- source roots, searched for \crexx{} source files
+- source roots, searched for cRexx source files
 - binary roots, searched for `.rxbin`, optional `.rxas`, and `.rxplugin`
 
 The recommended source extensions are:
 
-- `.crexx`: canonical \crexx{} source, defaulting to Level G when no
+- `.crexx`: canonical cRexx source, defaulting to Level G when no
   `options level...` clause is present
-- `.crx`: short \crexx{} source alias, also defaulting to Level G
+- `.crx`: short cRexx source alias, also defaulting to Level G
 - `.rexx`: compatibility/classic source, defaulting to Level C
 
 An initial source file may also use another extension, such as `.the` for an
 editor macro integration. That extension is added to source-root discovery for
 that compile and defaults to Level G unless the source states another level
 explicitly. This supports host-specific source names without making every
-possible extension a recommended \crexx{} extension.
+possible extension a recommended cRexx extension.
 
 `.rxpp` remains the preprocessor-oriented source extension for existing RXPP
 workflows. Longer term, preprocessing may become idempotent and better
@@ -82,7 +82,7 @@ timestamps tie, `.rxbin` wins over `.rxas`.
 
  \section{Inline Assembler}
  On page \pageref{inlineAssembly} the inline assembler function of
- the \crexx{} compiler is discussed. This enables the incorporation
+ the cRexx compiler is discussed. This enables the incorporation
  of \code{rxas} assembler instructions into a \textsc{Rexx} source
  file.
 

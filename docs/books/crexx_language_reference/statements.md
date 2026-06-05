@@ -355,7 +355,7 @@ TRACE is implemented as a certified compiler exit. It requires normal compiler
 exit loading; compiling with exits disabled rejects the statement rather than
 treating it as an implicit command.
 
-The cRexx standard-library/BIF build deliberately compiles most
+The cRexx standard-library/BIF build deliberately compiles most  
 `lib/rxfnsb/rexx/*.crexx` files with compiler exits disabled (`rxc -x`) to avoid
 bootstrap and circular-dependency problems while building the library that the
 exits themselves use. Adding `TRACE RESULTS`, `TRACE R`, or another explicit

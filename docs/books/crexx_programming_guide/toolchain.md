@@ -1,6 +1,6 @@
 # Overview of the Toolchain
 
-\crexx{} is built as a small set of separate tools with visible boundaries.
+cRexx is built as a small set of separate tools with visible boundaries.
 That is deliberate: users can inspect the generated assembly, assemble it
 directly, link modules, disassemble bytecode, or package a program for native
 deployment.
@@ -24,7 +24,7 @@ steps for day-to-day use.
 
 ## Source, Assembly, and Bytecode
 
-Source files are UTF-8 text. New \crexx{} source normally uses `.crexx`, with
+Source files are UTF-8 text. New cRexx source normally uses `.crexx`, with
 `.crx` as a short alias. `.rexx` remains the compatibility/classic extension.
 The compiler output is RXAS assembly:
 

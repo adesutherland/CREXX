@@ -1,6 +1,6 @@
-# Running \crexx{} on Linux, macOS, and Windows
+# Running cRexx on Linux, macOS, and Windows
 
-\crexx{} programs are compiled before they run. The compiler emits RXAS
+cRexx programs are compiled before they run. The compiler emits RXAS
 assembly, the assembler emits RXBIN bytecode, and a VM executable runs the
 bytecode.
 

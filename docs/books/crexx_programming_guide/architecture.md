@@ -1,6 +1,6 @@
 # Architecture Overview
 
-\crexx{} is a compiler toolchain and runtime rather than a single monolithic
+cRexx is a compiler toolchain and runtime rather than a single monolithic
 interpreter. The main flow is:
 
 ```bash
@@ -58,7 +58,7 @@ builds the registries used for class/interface method and factory dispatch.
 
 ## Libraries and Plugins
 
-The standard library is mostly ordinary \crexx{} code compiled to RXBIN, with
+The standard library is mostly ordinary cRexx code compiled to RXBIN, with
 native support where the runtime needs platform access. The plugin architecture
 lets native code expose callable functions without Level B source needing a
 different call form.

@@ -1,4 +1,4 @@
-# rxlink - the \crexx{} Linker
+# rxlink - the cRexx Linker
 
 `rxlink` combines one or more `.rxbin` modules into a linked image with a shared constant pool. The result is still a normal `003` format record stream and can be loaded by `rxvm`, `rxbvm`, or passed on to `rxcpack`.
 

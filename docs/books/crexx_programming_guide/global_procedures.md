@@ -17,7 +17,7 @@ When compiling a program, the compiler looks for procedures that are called but 
    has no directory.
 2. Additional source roots specified with `rxc -s`: source files.
 3. Binary roots specified with `rxc -i`: `.rxbin` files, optional `.rxas` files
-   when `--import-rxas` is enabled, and CREXX/C native function libraries
+   when `--import-rxas` is enabled, andCREXXC native function libraries
    (plugins).
 4. The directory where the compiler executable (`rxc`) is located: deployed
    `.rxbin` files, optional `.rxas` files when `--import-rxas` is enabled, and
@@ -30,8 +30,7 @@ files being imported by accident.
 
 Source roots search `.crexx`, `.crx`, and `.rexx`. If the initial source file
 uses another extension, such as `.the`, that extension is searched for this
-compile too. Files without an explicit `options level...` default to Level G for
-`.crexx`, `.crx`, and arbitrary initial extensions, and Level C for `.rexx`.
+compile too. Files without an explicit `options level...` default to Level G forcRexxcrx`, and arbitrary initial extensions, and Level C for `.rexx`.
 
 The compiler only uses external procedures that are in the same namespace as the module being compiled or for namespaces listed in the "import" instruction. 
 
@@ -41,7 +40,7 @@ import rxfnsb mynamespace anothernamespace
 
 Metadata encoded with the procedures allows the compiler to determine the type and argument types of imported procedures.
 
-The \crexx{} level b standard library namespace is `rxfnsb`, to access these procedures programs should import this namespace.
+The cRexx level b standard library namespace is `rxfnsb`, to access these procedures programs should import this namespace.
 
 ```rexx
 import rxfnsb
