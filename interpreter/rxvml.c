@@ -1422,7 +1422,7 @@ static proc_runtime* rxvml_find_last_module_procedure(rxvm_context* vm, const ch
         while (i != -1) {
             proc_constant* definition = (proc_constant*)(mod->segment.const_pool + i);
             if (definition->base.type == PROC_CONST && strcmp(definition->name, name) == 0) {
-                return mod->proc_runtime_lookup[(size_t)i >> 3];
+                return rxvm_get_module_runtime_procedure(mod, (size_t)i);
             }
             i = definition->next;
         }

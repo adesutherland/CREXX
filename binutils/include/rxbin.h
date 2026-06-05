@@ -363,6 +363,65 @@ typedef struct rxbin_var_reader {
 #define RXBIN_LZSS_MIN_MATCH 3u
 #define RXBIN_LZSS_MAX_MATCH 18u
 #define RXBIN_LZSS_MAX_CHAIN 64u
+#define RXBIN_LZSS_PREV_SIZE (RXBIN_LZSS_WINDOW + 1u)
+#define RXBIN_MAX_HEADER_TEXT_SIZE ((size_t)16u * 1024u * 1024u)
+
+static int rxbin_size_mul_overflow(size_t left, size_t right, size_t *result) {
+    if (left && right > SIZE_MAX / left) return 1;
+    *result = left * right;
+    return 0;
+}
+
+static int rxbin_packed_instruction_size_plausible(size_t stored_size, size_t instruction_size) {
+    if (!instruction_size) return stored_size == 0;
+    if (!stored_size) return 0;
+    if (stored_size > SIZE_MAX / 2u) return 1;
+    return instruction_size <= stored_size * 2u;
+}
+
+static int rxbin_packed_constant_size_plausible(size_t stored_size, size_t constant_size) {
+    if (!constant_size) return stored_size == 0;
+    if (!stored_size) return 0;
+    if (stored_size > SIZE_MAX / RXBIN_LZSS_MAX_MATCH) return 1;
+    return constant_size <= stored_size * RXBIN_LZSS_MAX_MATCH;
+}
+
+static int rxbin_header_section_sizes_valid(const module_header *header) {
+    size_t expanded_instruction_bytes;
+
+    if (header->name_size > RXBIN_MAX_HEADER_TEXT_SIZE ||
+        header->description_size > RXBIN_MAX_HEADER_TEXT_SIZE) {
+        return 0;
+    }
+
+    if (header->record_type != RXBIN_RECORD_POOL_SHARED) {
+        if (rxbin_size_mul_overflow(header->instruction_size, sizeof(bin_code),
+                                    &expanded_instruction_bytes)) {
+            return 0;
+        }
+        if (header->section_flags & RXBIN_SECTION_INST_PACKED) {
+            if (!rxbin_packed_instruction_size_plausible(header->instruction_stored_size,
+                                                        header->instruction_size)) {
+                return 0;
+            }
+        } else if (header->instruction_stored_size != expanded_instruction_bytes) {
+            return 0;
+        }
+    }
+
+    if (header->record_type != RXBIN_RECORD_MODULE_SHARED) {
+        if (header->section_flags & RXBIN_SECTION_CONST_PACKED) {
+            if (!rxbin_packed_constant_size_plausible(header->constant_stored_size,
+                                                     header->constant_size)) {
+                return 0;
+            }
+        } else if (header->constant_stored_size != header->constant_size) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
 
 /* Sets Header Version and initialises the header */
 static void init_module(module_file *module) {
@@ -390,6 +449,7 @@ static int check_header_version(module_header *header) {
         if (header->constant_size || header->constant_stored_size) return 2;
         if (header->section_flags & RXBIN_SECTION_CONST_PACKED) return 2;
     }
+    if (!rxbin_header_section_sizes_valid(header)) return 2;
     return 0;
 }
 
@@ -849,14 +909,15 @@ static int rxbin_lzss_match_length(const unsigned char *input, size_t input_size
 static void rxbin_lzss_index_position(const unsigned char *input, size_t input_size, size_t position,
                                       size_t *last_positions, size_t *prev_positions) {
     unsigned int hash;
+    size_t slot = position % RXBIN_LZSS_PREV_SIZE;
 
     if (position + RXBIN_LZSS_MIN_MATCH > input_size) {
-        prev_positions[position] = SIZE_MAX;
+        prev_positions[slot] = SIZE_MAX;
         return;
     }
 
     hash = rxbin_lzss_hash(input + position);
-    prev_positions[position] = last_positions[hash];
+    prev_positions[slot] = last_positions[hash];
     last_positions[hash] = position;
 }
 
@@ -872,10 +933,11 @@ static int rxbin_compress_constant_pool(const unsigned char *input, size_t input
 
     if (!input_size) return 1;
 
-    prev_positions = malloc(sizeof(size_t) * input_size);
+    prev_positions = malloc(sizeof(size_t) * RXBIN_LZSS_PREV_SIZE);
     if (!prev_positions) return 0;
 
     for (i = 0; i < RXBIN_LZSS_HASH_SIZE; i++) last_positions[i] = SIZE_MAX;
+    for (i = 0; i < RXBIN_LZSS_PREV_SIZE; i++) prev_positions[i] = SIZE_MAX;
 
     while (position < input_size) {
         size_t best_length = 0;
@@ -905,7 +967,7 @@ static int rxbin_compress_constant_pool(const unsigned char *input, size_t input
                     best_distance = position - candidate;
                     if (best_length == RXBIN_LZSS_MAX_MATCH) break;
                 }
-                candidate = prev_positions[candidate];
+                candidate = prev_positions[candidate % RXBIN_LZSS_PREV_SIZE];
                 chain++;
             }
         }
@@ -1038,11 +1100,12 @@ static void rxbin_shared_pool_release(rxbin_shared_constant_pool **pool_ref) {
 }
 
 static int rxbin_decode_instruction_section(module_file *module, const unsigned char *stored_data) {
-    size_t expanded_size = module->header.instruction_size * sizeof(bin_code);
+    size_t expanded_size;
 
     module->instructions = 0;
 
     if (!module->header.instruction_size) return 1;
+    if (rxbin_size_mul_overflow(module->header.instruction_size, sizeof(bin_code), &expanded_size)) return 0;
 
     module->instructions = malloc(expanded_size);
     if (!module->instructions) return 0;
@@ -1123,11 +1186,14 @@ static int rxbin_prepare_header_for_write(module_file *module, rxbin_byte_buffer
                                           rxbin_byte_buffer *constant_section) {
     rxbin_byte_buffer packed_instructions;
     rxbin_byte_buffer packed_constants;
-    size_t raw_instruction_bytes = module->header.instruction_size * sizeof(bin_code);
+    size_t raw_instruction_bytes;
     unsigned int section_flags = 0;
 
     rxbin_byte_buffer_init(&packed_instructions);
     rxbin_byte_buffer_init(&packed_constants);
+    if (rxbin_size_mul_overflow(module->header.instruction_size, sizeof(bin_code), &raw_instruction_bytes)) {
+        return 0;
+    }
 
     if (module->header.record_type != RXBIN_RECORD_POOL_SHARED &&
         module->header.instruction_size &&

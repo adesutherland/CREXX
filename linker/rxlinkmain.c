@@ -83,6 +83,8 @@ typedef struct rxlink_output_module {
     const_map_entry *maps;
     size_t map_count;
     size_t map_capacity;
+    size_t *map_hash_slots;
+    size_t map_hash_capacity;
 } rxlink_output_module;
 
 typedef struct rxlink_output_list {
@@ -95,6 +97,7 @@ typedef struct leaf_dedupe_entry {
     enum const_pool_type type;
     size_t size_in_pool;
     size_t output_offset;
+    size_t hash;
 } leaf_dedupe_entry;
 
 typedef struct rxlink_build_context {
@@ -102,6 +105,8 @@ typedef struct rxlink_build_context {
     leaf_dedupe_entry *leaf_entries;
     size_t leaf_count;
     size_t leaf_capacity;
+    size_t *leaf_hash_slots;
+    size_t leaf_hash_capacity;
     int strip_source_metadata;
     int strip_inline_metadata;
 } rxlink_build_context;
@@ -233,6 +238,7 @@ static void output_list_free(rxlink_output_list *list) {
     for (i = 0; i < list->count; i++) {
         if (list->items[i].module) free_module(list->items[i].module);
         free(list->items[i].maps);
+        free(list->items[i].map_hash_slots);
     }
     free(list->items);
     list->items = 0;
@@ -245,6 +251,8 @@ static void build_context_init(rxlink_build_context *context) {
     context->leaf_entries = 0;
     context->leaf_count = 0;
     context->leaf_capacity = 0;
+    context->leaf_hash_slots = 0;
+    context->leaf_hash_capacity = 0;
     context->strip_source_metadata = 0;
     context->strip_inline_metadata = 1;
 }
@@ -252,9 +260,12 @@ static void build_context_init(rxlink_build_context *context) {
 static void build_context_free(rxlink_build_context *context) {
     rxbin_byte_buffer_free(&context->shared_pool);
     free(context->leaf_entries);
+    free(context->leaf_hash_slots);
     context->leaf_entries = 0;
     context->leaf_count = 0;
     context->leaf_capacity = 0;
+    context->leaf_hash_slots = 0;
+    context->leaf_hash_capacity = 0;
 }
 
 static int keyword_equals(const char *left, const char *right) {
@@ -868,8 +879,106 @@ static int reserve_pool_entry(rxlink_build_context *context, size_t size_in_pool
     return 1;
 }
 
+static size_t rxlink_next_hash_capacity(size_t needed) {
+    size_t capacity = 16;
+    size_t target;
+
+    if (needed > SIZE_MAX / 2) return 0;
+    target = needed * 2;
+    while (capacity < target) {
+        if (capacity > SIZE_MAX / 2) return 0;
+        capacity *= 2;
+    }
+    return capacity;
+}
+
+static size_t rxlink_hash_size_value(size_t value) {
+    value ^= value >> 16;
+    value *= (size_t)0x7feb352dU;
+    value ^= value >> 15;
+    value *= (size_t)0x846ca68bU;
+    value ^= value >> 16;
+    return value;
+}
+
+static size_t rxlink_hash_bytes(const void *data, size_t size) {
+    const unsigned char *bytes = (const unsigned char *)data;
+    size_t hash;
+    size_t i;
+
+#if SIZE_MAX > UINT32_MAX
+    hash = (size_t)1469598103934665603ULL;
+    for (i = 0; i < size; i++) {
+        hash ^= (size_t)bytes[i];
+        hash *= (size_t)1099511628211ULL;
+    }
+#else
+    hash = (size_t)2166136261UL;
+    for (i = 0; i < size; i++) {
+        hash ^= (size_t)bytes[i];
+        hash *= (size_t)16777619UL;
+    }
+#endif
+
+    return hash ? hash : 1;
+}
+
+static void insert_const_map_hash_slot(rxlink_output_module *module, size_t map_index) {
+    size_t mask = module->map_hash_capacity - 1;
+    size_t slot = rxlink_hash_size_value(module->maps[map_index].old_offset >> 3) & mask;
+
+    while (module->map_hash_slots[slot]) {
+        slot = (slot + 1) & mask;
+    }
+    module->map_hash_slots[slot] = map_index + 1;
+}
+
+static int rebuild_const_map_hash(rxlink_output_module *module, size_t new_capacity) {
+    size_t *new_slots;
+    size_t i;
+
+    new_slots = calloc(new_capacity, sizeof(size_t));
+    if (!new_slots) {
+        RX_REPORT_OOM("calloc rxlink constant map hash",
+                      sizeof(size_t) * new_capacity, 0);
+        return 0;
+    }
+
+    free(module->map_hash_slots);
+    module->map_hash_slots = new_slots;
+    module->map_hash_capacity = new_capacity;
+    for (i = 0; i < module->map_count; i++) {
+        insert_const_map_hash_slot(module, i);
+    }
+    return 1;
+}
+
+static int ensure_const_map_hash_capacity(rxlink_output_module *module, size_t needed) {
+    size_t new_capacity;
+
+    if (module->map_hash_capacity && needed <= module->map_hash_capacity / 2) return 1;
+    new_capacity = rxlink_next_hash_capacity(needed);
+    if (!new_capacity) {
+        RX_REPORT_OOM("grow rxlink constant map hash", RX_OOM_UNKNOWN_SIZE, 0);
+        return 0;
+    }
+    return rebuild_const_map_hash(module, new_capacity);
+}
+
 static const_map_entry *find_const_map(rxlink_output_module *module, size_t old_offset) {
     size_t i;
+
+    if (module->map_hash_slots && module->map_hash_capacity) {
+        size_t mask = module->map_hash_capacity - 1;
+        size_t slot = rxlink_hash_size_value(old_offset >> 3) & mask;
+        while (module->map_hash_slots[slot]) {
+            const_map_entry *entry = &module->maps[module->map_hash_slots[slot] - 1];
+            if (entry->old_offset == old_offset) return entry;
+            slot = (slot + 1) & mask;
+        }
+        return 0;
+    }
+
     for (i = 0; i < module->map_count; i++) {
         if (module->maps[i].old_offset == old_offset) return &module->maps[i];
     }
@@ -894,26 +1003,99 @@ static int add_const_map(rxlink_output_module *module, size_t old_offset, size_t
         module->map_capacity = new_capacity;
     }
 
+    if (!ensure_const_map_hash_capacity(module, module->map_count + 1)) return 0;
     module->maps[module->map_count].old_offset = old_offset;
     module->maps[module->map_count].new_offset = new_offset;
+    insert_const_map_hash_slot(module, module->map_count);
     module->map_count++;
     return 1;
 }
 
-static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleon_constant *entry, int *ok) {
+static void insert_leaf_hash_slot(rxlink_build_context *context, size_t leaf_index) {
+    size_t mask = context->leaf_hash_capacity - 1;
+    size_t slot = context->leaf_entries[leaf_index].hash & mask;
+
+    while (context->leaf_hash_slots[slot]) {
+        slot = (slot + 1) & mask;
+    }
+    context->leaf_hash_slots[slot] = leaf_index + 1;
+}
+
+static int rebuild_leaf_hash(rxlink_build_context *context, size_t new_capacity) {
+    size_t *new_slots;
     size_t i;
-    size_t offset;
-    leaf_dedupe_entry *new_entries;
+
+    new_slots = calloc(new_capacity, sizeof(size_t));
+    if (!new_slots) {
+        RX_REPORT_OOM("calloc rxlink leaf dedupe hash",
+                      sizeof(size_t) * new_capacity, 0);
+        return 0;
+    }
+
+    free(context->leaf_hash_slots);
+    context->leaf_hash_slots = new_slots;
+    context->leaf_hash_capacity = new_capacity;
+    for (i = 0; i < context->leaf_count; i++) {
+        insert_leaf_hash_slot(context, i);
+    }
+    return 1;
+}
+
+static int ensure_leaf_hash_capacity(rxlink_build_context *context, size_t needed) {
     size_t new_capacity;
+
+    if (context->leaf_hash_capacity && needed <= context->leaf_hash_capacity / 2) return 1;
+    new_capacity = rxlink_next_hash_capacity(needed);
+    if (!new_capacity) {
+        RX_REPORT_OOM("grow rxlink leaf dedupe hash", RX_OOM_UNKNOWN_SIZE, 0);
+        return 0;
+    }
+    return rebuild_leaf_hash(context, new_capacity);
+}
+
+static leaf_dedupe_entry *find_leaf_dedupe(rxlink_build_context *context,
+                                           const chameleon_constant *entry,
+                                           size_t hash) {
+    size_t i;
+
+    if (context->leaf_hash_slots && context->leaf_hash_capacity) {
+        size_t mask = context->leaf_hash_capacity - 1;
+        size_t slot = hash & mask;
+        while (context->leaf_hash_slots[slot]) {
+            leaf_dedupe_entry *candidate = &context->leaf_entries[context->leaf_hash_slots[slot] - 1];
+            if (candidate->hash == hash &&
+                candidate->type == entry->type &&
+                candidate->size_in_pool == entry->size_in_pool &&
+                memcmp(context->shared_pool.data + candidate->output_offset,
+                       entry, entry->size_in_pool) == 0) {
+                return candidate;
+            }
+            slot = (slot + 1) & mask;
+        }
+        return 0;
+    }
 
     for (i = 0; i < context->leaf_count; i++) {
         if (context->leaf_entries[i].type == entry->type &&
             context->leaf_entries[i].size_in_pool == entry->size_in_pool &&
             memcmp(context->shared_pool.data + context->leaf_entries[i].output_offset,
                    entry, entry->size_in_pool) == 0) {
-            return context->leaf_entries[i].output_offset;
+            return &context->leaf_entries[i];
         }
     }
+    return 0;
+}
+
+static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleon_constant *entry, int *ok) {
+    size_t offset;
+    size_t hash;
+    leaf_dedupe_entry *existing;
+    leaf_dedupe_entry *new_entries;
+    size_t new_capacity;
+
+    hash = rxlink_hash_bytes(entry, entry->size_in_pool);
+    existing = find_leaf_dedupe(context, entry, hash);
+    if (existing) return existing->output_offset;
 
     if (!reserve_pool_entry(context, entry->size_in_pool, entry->type, &offset)) {
         *ok = 0;
@@ -935,9 +1117,15 @@ static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleo
         context->leaf_capacity = new_capacity;
     }
 
+    if (!ensure_leaf_hash_capacity(context, context->leaf_count + 1)) {
+        *ok = 0;
+        return 0;
+    }
     context->leaf_entries[context->leaf_count].type = entry->type;
     context->leaf_entries[context->leaf_count].size_in_pool = entry->size_in_pool;
     context->leaf_entries[context->leaf_count].output_offset = offset;
+    context->leaf_entries[context->leaf_count].hash = hash;
+    insert_leaf_hash_slot(context, context->leaf_count);
     context->leaf_count++;
     return offset;
 }
@@ -1415,6 +1603,7 @@ static int build_linked_modules(rxlink_build_context *context, module_list *modu
             !output_list_append(outputs, &output_module)) {
             if (output_module.module) free_module(output_module.module);
             free(output_module.maps);
+            free(output_module.map_hash_slots);
             return 0;
         }
     }

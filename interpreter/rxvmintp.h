@@ -45,6 +45,11 @@ typedef struct proc_runtime {
     char *name;
 } proc_runtime;
 
+typedef struct proc_runtime_lookup_entry {
+    size_t offset;
+    proc_runtime *runtime;
+} proc_runtime_lookup_entry;
+
 /* Module Structure */
 struct module {
     bin_space segment;         /* Binary and Constant Pool */
@@ -63,10 +68,29 @@ struct module {
     rxvm_mod_state state;      /* Module lifecycle state */
     proc_runtime *procedures;  /* Runtime procedure state */
     size_t procedure_count;    /* Number of runtime procedures */
-    proc_runtime **proc_runtime_lookup; /* Constant pool offset -> runtime procedure */
+    proc_runtime_lookup_entry *proc_runtime_lookup; /* Sorted constant pool offsets -> runtime procedures */
     size_t proc_runtime_lookup_size;
     void **prepared_dispatch;  /* Prepared opcode dispatch table */
 };
+
+static inline proc_runtime *rxvm_get_module_runtime_procedure(module *mod, size_t proc_offset) {
+    size_t left;
+    size_t right;
+
+    if (!mod || proc_offset >= mod->segment.const_size || !mod->proc_runtime_lookup) return 0;
+
+    left = 0;
+    right = mod->proc_runtime_lookup_size;
+    while (left < right) {
+        size_t mid = left + ((right - left) >> 1);
+        size_t offset = mod->proc_runtime_lookup[mid].offset;
+        if (offset == proc_offset) return mod->proc_runtime_lookup[mid].runtime;
+        if (offset < proc_offset) left = mid + 1;
+        else right = mid;
+    }
+
+    return 0;
+}
 
 /* Interrupt Response Codes */
 typedef enum interrupt_response {
@@ -179,7 +203,7 @@ struct stack_frame {
 #define FLOAT_OP(n)                  FLOAT_CONST_VALUE(current_frame->procedure->binarySpace->const_pool, (pc+(n))->index)
 
 #define CONSTSTRING_OP(n)            ((string_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))
-#define PROC_OP(n)                   (current_frame->procedure->binarySpace->module->proc_runtime_lookup[((pc+(n))->index) >> 3])
+#define PROC_OP(n)                   rxvm_get_module_runtime_procedure(current_frame->procedure->binarySpace->module, (pc+(n))->index)
 #define INT_VAL(vx)                  vx->int_value
 #define FLOAT_VAL(vx)                vx->float_value
 

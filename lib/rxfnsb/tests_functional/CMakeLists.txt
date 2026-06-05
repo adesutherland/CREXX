@@ -107,6 +107,10 @@ foreach(_binfile ${REXXBINS})
     if("${_basename}" STREQUAL "ts_address")
         set(_rxc_flags)
     endif()
+    set(_pass_test_name_argument)
+    if("${_basename}" STREQUAL "ts_fileio_chars")
+        set(_pass_test_name_argument PASS_TEST_NAME_ARGUMENT)
+    endif()
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
             SOURCE ${_rexx_file}
@@ -115,6 +119,7 @@ foreach(_binfile ${REXXBINS})
             RXC_FLAGS ${_rxc_flags}
             DEPENDS library ${_rexx_dep} ${_prev_target}
             RUNTIME_ARGS ${LIBRPATH}
+            ${_pass_test_name_argument}
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()

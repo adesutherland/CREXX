@@ -3,7 +3,10 @@ options levelb
 import rxfnsb
 
 errors = 0
-file = "ts_fileio_chars.tmp"
+arg test_args = .string[]
+
+if test_args.0 > 0 then file = "ts_fileio_chars." || test_args.1 || ".tmp"
+else file = "ts_fileio_chars.tmp"
 
 call resetfile file
 call charout file, "A"

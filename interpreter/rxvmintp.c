@@ -190,7 +190,7 @@ static proc_runtime *resolve_runtime_procedure(rxvm_context *context, const char
                 if (symbol_name->base.type == STRING_CONST &&
                     symbol_name->string_len == proc_name_length &&
                     memcmp(symbol_name->string, proc_name, proc_name_length) == 0) {
-                    return mod->proc_runtime_lookup[meta_func->func >> 3];
+                    return rxvm_get_module_runtime_procedure(mod, meta_func->func);
                 }
             }
 
@@ -2127,7 +2127,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                                            i);
                 if (definition->base.type == PROC_CONST &&
                     strcmp(definition->name, "main") == 0) {
-                    procedure = context->modules[mod_index]->proc_runtime_lookup[i >> 3];
+                    procedure = rxvm_get_module_runtime_procedure(context->modules[mod_index], (size_t)i);
                     break;
                 }
                 i = definition->next;
@@ -2822,7 +2822,8 @@ START_OF_INSTRUCTIONS
                             set_num_attributes(entry, 2);
                             set_null_string(entry->attributes[0], e_entry->index);
                             entry->attributes[1]->int_value =
-                                    (rxinteger) context->modules[mod]->proc_runtime_lookup[e_entry->procedure >> 3];
+                                    (rxinteger) rxvm_get_module_runtime_procedure(context->modules[mod],
+                                                                                  e_entry->procedure);
 
                             entries++;
                         }
@@ -2875,7 +2876,7 @@ START_OF_INSTRUCTIONS
                         set_num_attributes(entry, 2);
                         set_null_string(entry->attributes[0], p_entry->name);
                         entry->attributes[1]->int_value =
-                                (rxinteger) context->modules[mod]->proc_runtime_lookup[i >> 3];
+                                (rxinteger) rxvm_get_module_runtime_procedure(context->modules[mod], (size_t)i);
                         entries++;
                     }
                     i = p_entry->next;

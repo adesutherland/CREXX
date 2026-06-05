@@ -100,7 +100,6 @@ static void free_rxpa_context(rxpa_context *context);
 static void free_interface_factory_registry(rxvm_context *context);
 static void free_interface_method_registry(rxvm_context *context);
 static void build_module_runtime_procedures(module *mod);
-static proc_runtime *get_module_runtime_procedure(module *mod, size_t proc_offset);
 
 // End of RXPA Declarations for this file
 
@@ -238,25 +237,78 @@ static void free_interface_method_registry(rxvm_context *context) {
     context->interface_method_capacity = 0;
 }
 
+static int compare_proc_runtime_lookup_entries(const void *left, const void *right) {
+    const proc_runtime_lookup_entry *left_entry = (const proc_runtime_lookup_entry *)left;
+    const proc_runtime_lookup_entry *right_entry = (const proc_runtime_lookup_entry *)right;
+
+    if (left_entry->offset < right_entry->offset) return -1;
+    if (left_entry->offset > right_entry->offset) return 1;
+    return 0;
+}
+
+static int module_runtime_procedure_seen(const proc_runtime_lookup_entry *lookup, size_t count, size_t offset) {
+    size_t i;
+
+    for (i = 0; i < count; i++) {
+        if (lookup[i].offset == offset) return 1;
+    }
+    return 0;
+}
+
+static void add_module_runtime_procedure_offset(module *mod, proc_runtime_lookup_entry **lookup,
+                                                size_t *count, size_t *capacity, size_t offset) {
+    proc_runtime_lookup_entry *new_lookup;
+    size_t new_capacity;
+
+    if (offset >= mod->segment.const_size) {
+        fprintf(stderr, "PANIC: Procedure offset outside constant pool in module %s\n", mod->name);
+        exit(-1);
+    }
+    if (((chameleon_constant *)(mod->segment.const_pool + offset))->type != PROC_CONST) {
+        fprintf(stderr, "PANIC: Invalid runtime procedure in module %s\n", mod->name);
+        exit(-1);
+    }
+    if (module_runtime_procedure_seen(*lookup, *count, offset)) return;
+
+    if (*count == *capacity) {
+        new_capacity = *capacity ? *capacity * 2 : 8;
+        new_lookup = realloc(*lookup, sizeof(proc_runtime_lookup_entry) * new_capacity);
+        if (!new_lookup) {
+            RX_PANIC_OOM("realloc rxvm procedure runtime lookup",
+                         sizeof(proc_runtime_lookup_entry) * new_capacity,
+                         mod->name);
+        }
+        *lookup = new_lookup;
+        *capacity = new_capacity;
+    }
+
+    (*lookup)[*count].offset = offset;
+    (*lookup)[*count].runtime = 0;
+    (*count)++;
+}
+
+static void init_module_runtime_procedure(module *mod, proc_runtime *runtime, size_t offset) {
+    proc_constant *definition = (proc_constant *)(mod->segment.const_pool + offset);
+
+    runtime->definition = definition;
+    runtime->locals = definition->locals;
+    runtime->binarySpace = (!mod->native && definition->start != SIZE_MAX) ? &mod->segment : 0;
+    runtime->frame_free_list_head = 0;
+    runtime->frame_free_list = &runtime->frame_free_list_head;
+    runtime->start = definition->start;
+    runtime->name = definition->name;
+}
+
 static void build_module_runtime_procedures(module *mod) {
     int i;
     size_t proc_index;
-    unsigned char *seen;
+    size_t lookup_capacity;
 
     mod->procedures = 0;
     mod->procedure_count = 0;
     mod->proc_runtime_lookup = 0;
-    mod->proc_runtime_lookup_size = (mod->segment.const_size + (size_t)7) >> 3;
-    seen = 0;
-
-    if (mod->proc_runtime_lookup_size) {
-        seen = calloc(mod->proc_runtime_lookup_size, sizeof(unsigned char));
-        if (!seen) {
-            RX_PANIC_OOM("calloc rxvm procedure scan bitmap",
-                         mod->proc_runtime_lookup_size * sizeof(unsigned char),
-                         mod->name);
-        }
-    }
+    mod->proc_runtime_lookup_size = 0;
+    lookup_capacity = 0;
 
     i = mod->proc_head;
     while (i != -1) {
@@ -265,10 +317,9 @@ static void build_module_runtime_procedures(module *mod) {
             fprintf(stderr, "PANIC: Invalid procedure chain in module %s\n", mod->name);
             exit(-1);
         }
-        if (!seen[(size_t)i >> 3]) {
-            seen[(size_t)i >> 3] = 1;
-            mod->procedure_count++;
-        }
+        add_module_runtime_procedure_offset(mod, &mod->proc_runtime_lookup,
+                                            &mod->proc_runtime_lookup_size,
+                                            &lookup_capacity, (size_t)i);
         i = definition->next;
     }
 
@@ -282,10 +333,9 @@ static void build_module_runtime_procedures(module *mod) {
                 fprintf(stderr, "PANIC: Invalid exposed procedure in module %s\n", mod->name);
                 exit(-1);
             }
-            if (!seen[exposed->procedure >> 3]) {
-                seen[exposed->procedure >> 3] = 1;
-                mod->procedure_count++;
-            }
+            add_module_runtime_procedure_offset(mod, &mod->proc_runtime_lookup,
+                                                &mod->proc_runtime_lookup_size,
+                                                &lookup_capacity, exposed->procedure);
             i = exposed->next;
         } else if (entry->type == EXPOSE_REG_CONST) {
             i = ((expose_reg_constant *)entry)->next;
@@ -295,6 +345,7 @@ static void build_module_runtime_procedures(module *mod) {
         }
     }
 
+    mod->procedure_count = mod->proc_runtime_lookup_size;
     if (mod->procedure_count) {
         mod->procedures = calloc(mod->procedure_count, sizeof(proc_runtime));
         if (!mod->procedures) {
@@ -304,67 +355,16 @@ static void build_module_runtime_procedures(module *mod) {
         }
     }
 
-    if (mod->proc_runtime_lookup_size) {
-        mod->proc_runtime_lookup = calloc(mod->proc_runtime_lookup_size, sizeof(proc_runtime *));
-        if (!mod->proc_runtime_lookup) {
-            RX_PANIC_OOM("calloc rxvm procedure runtime lookup",
-                         mod->proc_runtime_lookup_size * sizeof(proc_runtime *),
-                         mod->name);
-        }
-        memset(seen, 0, mod->proc_runtime_lookup_size);
+    for (proc_index = 0; proc_index < mod->procedure_count; proc_index++) {
+        proc_runtime *runtime = &mod->procedures[proc_index];
+        init_module_runtime_procedure(mod, runtime, mod->proc_runtime_lookup[proc_index].offset);
+        mod->proc_runtime_lookup[proc_index].runtime = runtime;
     }
 
-    i = mod->proc_head;
-    proc_index = 0;
-    while (i != -1) {
-        proc_constant *definition = (proc_constant *)(mod->segment.const_pool + (size_t)i);
-        if (!seen[(size_t)i >> 3]) {
-            proc_runtime *runtime = &mod->procedures[proc_index++];
-
-            runtime->definition = definition;
-            runtime->locals = definition->locals;
-            runtime->binarySpace = (!mod->native && definition->start != SIZE_MAX) ? &mod->segment : 0;
-            runtime->frame_free_list_head = 0;
-            runtime->frame_free_list = &runtime->frame_free_list_head;
-            runtime->start = definition->start;
-            runtime->name = definition->name;
-            mod->proc_runtime_lookup[(size_t)i >> 3] = runtime;
-            seen[(size_t)i >> 3] = 1;
-        }
-        i = definition->next;
+    if (mod->proc_runtime_lookup_size > 1) {
+        qsort(mod->proc_runtime_lookup, mod->proc_runtime_lookup_size,
+              sizeof(proc_runtime_lookup_entry), compare_proc_runtime_lookup_entries);
     }
-
-    i = mod->expose_head;
-    while (i != -1) {
-        chameleon_constant *entry = (chameleon_constant *)(mod->segment.const_pool + (size_t)i);
-        if (entry->type == EXPOSE_PROC_CONST) {
-            expose_proc_constant *exposed = (expose_proc_constant *)entry;
-            if (!seen[exposed->procedure >> 3]) {
-                proc_constant *definition = (proc_constant *)(mod->segment.const_pool + exposed->procedure);
-                proc_runtime *runtime = &mod->procedures[proc_index++];
-
-                runtime->definition = definition;
-                runtime->locals = definition->locals;
-                runtime->binarySpace = (!mod->native && definition->start != SIZE_MAX) ? &mod->segment : 0;
-                runtime->frame_free_list_head = 0;
-                runtime->frame_free_list = &runtime->frame_free_list_head;
-                runtime->start = definition->start;
-                runtime->name = definition->name;
-                mod->proc_runtime_lookup[exposed->procedure >> 3] = runtime;
-                seen[exposed->procedure >> 3] = 1;
-            }
-            i = exposed->next;
-        } else {
-            i = ((expose_reg_constant *)entry)->next;
-        }
-    }
-
-    if (seen) free(seen);
-}
-
-static proc_runtime *get_module_runtime_procedure(module *mod, size_t proc_offset) {
-    if (!mod || proc_offset >= mod->segment.const_size || !mod->proc_runtime_lookup) return 0;
-    return mod->proc_runtime_lookup[proc_offset >> 3];
 }
 
 /* Link a loaded module */
@@ -409,7 +409,7 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
 
             case EXPOSE_PROC_CONST:
                 /* Exposed Procedure */
-                p_entry = get_module_runtime_procedure(
+                p_entry = rxvm_get_module_runtime_procedure(
                         context->modules[mod_index],
                         ((expose_proc_constant *) c_entry)->procedure);
 
@@ -450,7 +450,7 @@ void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
                                      (size_t *) &p_entry_linked)) {
 
                             /* Patch the procedure entry with the linked one */
-                            p_entry = get_module_runtime_procedure(
+                            p_entry = rxvm_get_module_runtime_procedure(
                                     context->modules[mod_index],
                                     ((expose_proc_constant *) c_entry)->procedure);
                             if (p_entry->start == SIZE_MAX ) { /* If not already linked up */

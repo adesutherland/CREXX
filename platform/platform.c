@@ -40,6 +40,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <psapi.h>
 #endif
 
 #ifndef _MSC_VER // Windows Visual Studio
@@ -69,15 +70,43 @@ static unsigned long rx_process_id(void) {
 #endif
 }
 
+#ifdef _WIN32
+static void rx_print_windows_commit_status(FILE *out, const MEMORYSTATUSEX *status) {
+    PERFORMANCE_INFORMATION performance;
+    unsigned long long commit_total;
+    unsigned long long commit_limit;
+
+    rx_print_bytes(out, "commit available to this process", (unsigned long long)status->ullAvailPageFile);
+
+    memset(&performance, 0, sizeof(performance));
+    performance.cb = sizeof(performance);
+    if (GetPerformanceInfo(&performance, (DWORD)sizeof(performance))) {
+        commit_total = (unsigned long long)performance.CommitTotal * (unsigned long long)performance.PageSize;
+        commit_limit = (unsigned long long)performance.CommitLimit * (unsigned long long)performance.PageSize;
+        rx_print_bytes(out, "system commit total", commit_total);
+        rx_print_bytes(out, "system commit limit", commit_limit);
+        if (commit_limit >= commit_total) {
+            rx_print_bytes(out, "system commit available", commit_limit - commit_total);
+        } else {
+            fprintf(out, "  system commit available: unavailable (total exceeds limit)\n");
+        }
+    } else {
+        fprintf(out, "  system commit total: unavailable (GetPerformanceInfo failed)\n");
+        fprintf(out, "  system commit limit: unavailable (GetPerformanceInfo failed)\n");
+        fprintf(out, "  system commit available: unavailable (GetPerformanceInfo failed)\n");
+    }
+}
+#endif
+
 static void rx_print_memory_status(FILE *out) {
 #ifdef _WIN32
     MEMORYSTATUSEX status;
     status.dwLength = sizeof(status);
     if (GlobalMemoryStatusEx(&status)) {
         fprintf(out, "  system memory load: %lu%%\n", (unsigned long)status.dwMemoryLoad);
+        rx_print_windows_commit_status(out, &status);
         rx_print_bytes(out, "physical memory available", (unsigned long long)status.ullAvailPhys);
         rx_print_bytes(out, "physical memory total", (unsigned long long)status.ullTotalPhys);
-        rx_print_bytes(out, "page file available", (unsigned long long)status.ullAvailPageFile);
         rx_print_bytes(out, "page file total", (unsigned long long)status.ullTotalPageFile);
         rx_print_bytes(out, "virtual memory available", (unsigned long long)status.ullAvailVirtual);
         rx_print_bytes(out, "virtual memory total", (unsigned long long)status.ullTotalVirtual);
