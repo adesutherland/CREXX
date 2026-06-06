@@ -4,12 +4,13 @@
 
 ## Command Line Options
 
+
 \fontspec{IBM Plex Mono}
-\begin{shaded}
-  \small
-  \obeylines \splice{rxlink -h | sed 's/\&/\\\&/g'}
- \end{shaded}
- \fontspec{TeX Gyre Pagella}
+\begin{terminaloutput}
+\small
+\obeylines \splice{rxlink -h | sed 's/\&/\\\&/g'}
+\end{terminaloutput}
+\fontspec{TeX Gyre Pagella}
 
 ## What It Produces
 
@@ -81,13 +82,17 @@ ignored, and lines beginning with `*` or `#` are treated as comments.
 
 The supported directives are:
 
-- `INPUT path`
-- `ROOT selector`
-- `INCLUDE selector`
-- `OMIT selector`
-- `OUTPUT path`
-- `MAP path`
-- `STRIP SOURCE`
+|Parm | Arg  |
+|-----|------|
+|INPUT| path |
+|ROOT| selector|
+|INCLUDE| selector|
+|OMIT| selector|
+|OUTPUT| path|
+|MAP| path|
+|STRIP| SOURCE|
+
+Table: Linker Directives. {#tbl:id}
 
 Selectors can use a module name, basename, stem, or `input_path::member` form.
 

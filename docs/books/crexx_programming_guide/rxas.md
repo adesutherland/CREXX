@@ -39,11 +39,11 @@ variables. Here the whole of Unicode can be used.
 When the command line argument -h is specified the options are shown:
 
 \fontspec{IBM Plex Mono}
-\begin{shaded}
-  \small
-  \obeylines \splice{rxas -h | sed 's/\&/\\\&/g'}
- \end{shaded}
- \fontspec{TeX Gyre Pagella}
+\begin{terminaloutput}
+\small
+\obeylines \splice{rxas -h | sed 's/\&/\\\&/g'}
+\end{terminaloutput}
+\fontspec{TeX Gyre Pagella}
 
 ## Optimizer
 
@@ -159,7 +159,12 @@ implemented; it can be skipped without consequences.
 
 In this example, the compiler generates the following assembler source:
 
-\input{examples/pow.rxas}
+\lstinputlisting[
+  language=rxas,
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible
+]{examples/pow.rxas}
 
 The `.srcstep` directives (intended for trace, sourceline, panic reports,
 and debuggers) indicate where the work is done. Related `.traceevent`
@@ -190,7 +195,7 @@ a number of different strategies can be followed.
 
 It is easy to add `say` statements to your program. Unlike
 Rexx, there is no trace statement for assembler programs. It
-is possible to disassemble (see page \pageref{disassembler} an `.rxbin` module, and reassemble it
+is possible to disassemble (see page \pageref{rxdas---the-crexx-disassembler} an `.rxbin` module, and reassemble it
 with added statements.
 
 ### Using the debugger
@@ -199,4 +204,4 @@ The `rxdb` debugger has a mode for assembler. This can be used to
 set breakpoints and/or step through the code; here the registers can
 be traced so variables in your program can be followed and the
 comparisons and branches can be checked. For more information about the
-debugger, see page \pageref{debugger}.
+debugger, see page \pageref{rxdb---the-crexx-debugger}.

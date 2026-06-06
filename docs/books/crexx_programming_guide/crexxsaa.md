@@ -1,9 +1,15 @@
-# crexxsaa host integration
+# Crexxsaa host integration
 
 `crexxsaa` is the initial cRexx compatibility API for C hosts that want a
 REXXSAA-shaped entry point without taking on the full historical REXXSAA ABI.
 It is deliberately small: the API is a stable facade over the current cRexx
 `rxvml`, `ADDRESS`, sandbox, and exposed-variable contracts.
+
+This enables the use of cRexx as an integrated part of applications or operating environments; it enables cRexx to function as a universal macro language. Supplied examples show how cRexx functions as an edit macro language[^xedit] or to enable the use of embedded SQL[^sqlite] in a cRexx program.
+
+[^xedit]: In the THE editor, a faithful reproduction of the VM system editor by Mark Hessling.
+[^sqlite]: For sqlite, the universally used in-process SQL engine.
+
 
 The first supported host model is command-environment execution:
 

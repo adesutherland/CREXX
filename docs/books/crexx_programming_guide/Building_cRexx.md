@@ -23,20 +23,21 @@ You need one of those and:
 |---|---|---|---|---|
 |git   | Source code versioning  |   |   |   |
 |CMake   |Build Tool   |   |   |   |
-|Rexx   |(temporarily)   |   |   |   |
-|gcc   |C compiler, install g++   |   |   |   |
+|gcc[^clang]   |C compiler, install g++   |   |   |   |
 |Make   |conventional build tool, or   |   |   |   |
 |Ninja   |fast build tool   |   |   |   |
 
 Table: Required tools. {#tbl:id}
 
+[^clang]: clang is a working equivalent and the default on macOS.
+
 ## Platform specific info
 
 On Linux and macOS, this instruction is identical. For macOS, Xcode
 batch tools need to be installed, which will provide you with git, make
-and the compiler. Brew will give easy access to regina[^regina] and Ninja-build.
+and the compiler. Brew will give easy access to Cmake and Ninja-build[^regina].
 
-[^regina]: ooRexx and brexx will also work, one of those needs to be on the path. For Linux, you will need to install git (which will be there on most distributions), cmake and gcc or clang.}
+[^regina]: For Linux, you will need to install git (which will be there on most distributions), cmake and gcc or clang.}
 
 On Windows, you will need a compatibility layer like
 \href{https://www.msys2.org}{msys} - installing this has the additional
@@ -97,7 +98,7 @@ probably also will do).
 
 After CMake has successfully validated the build environment, it will
 generate a build script (a Makefile in the case of Make and a
-build.ninja file in the case of Ninja). This is specified after the -G
+`build.ninja` file in the case of Ninja). This is specified after the -G
 flag. The -DCMAKE\_BUILD\_TYPE=Release flag makes sure we do an
 optimized build, which means we specify an -O3 flag to the C compiler,
 which then will spend some time optimizing the executable modules, which
@@ -106,8 +107,8 @@ which will yield slower executables, but with more debugging information
 in them.
 
 The two ampersands (\&\&) mean we do the next part only if the previous
-step was successful. This is a `ninja' statement, which will build
-everything in the build.ninja specification file. These are a lot of
+step was successful. This is a `ninja` statement, which will build
+everything in the `build.ninja` specification file. These are a lot of
 parts, and the good news is, when they are built once, only the changed
 source will be built, which will be fast.
 

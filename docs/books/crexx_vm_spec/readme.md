@@ -1,12 +1,24 @@
-# Composing the cRexx VM Reference 
+# CREXX Documentation Sources
 
-This publication is mostly generated from different sources. Until the process has been automated, this howto serves to remember how to put the different parts together.
+This directory is the root of the public GitHub Pages documentation site.
 
-## The SVG images of the instruction frames
+For current release documentation, start with [docs/index.md](index.md). For
+the intended purpose of each documentation area, see
+[DOCS_MAP.md](DOCS_MAP.md).
 
-## The Examples and their output
+## Maintained Areas
 
-These are to be found in the 'examples' subdirectory. The instruction chapter is generated. There is no point in editing it. There is an exec called instruction_doc.rexx which puts this file together from the 'instructions.sqb' database in the 'doc/instructions' directory. The exec needs to be run, for now, with nrc -exec instruction_doc.rexx; it will be eating crexx dogfood soon.
+- `books/crexx_language_reference`: implemented Level B language reference
+- `books/crexx_programming_guide`: build, run, tools, and integration guide
+- `books/crexx_vm_spec`: VM, RXAS, RXBIN, and instruction reference
+- `ai-context`: implementation facts for agents and maintainers
 
-The explanations of what the instructions do is are the 'operation' subdirectory. Both are keyed by the signature of the instructions, i.e. their names and the type of their arguments.
+## Generated and Historical Material
 
+Some files under `docs/` and `docs/books/` are generated output, old source
+material, or third-party reference material. Those files are retained when they
+are useful to maintainers, but they are not automatically authoritative for the
+current release.
+
+When public docs disagree with code, tests, or `docs/ai-context`, verify the
+implementation and update the maintained release docs.

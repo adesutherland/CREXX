@@ -195,7 +195,7 @@ include(${CMAKE\_SOURCE\_DIR}/rxpa/RXPluginFunction.cmake)
 *\# Create module*  
 add\_dynamic\_plugin\_target(des rxdes.c desbase.c desbase.h)
 
-This script builds a dynamic version of the plugin, and supports Windows (mingw and VS), OSX and Linux.
+This script builds a dynamic version of the plugin, and supports Windows (mingw and VS), macOS and Linux.
 
 ## Static Builds
 
@@ -207,23 +207,22 @@ The following is a Rexx Level B example using the plugin.
 
 Note that there is no manual loading of the dynamic or static plugin, instead cRexx loads the plugins using the same search rules as it uses for other Rexx modules. This means that the Rexx program (or programmer) does not need to be concerned about how the external function is provided \- Rexx, Native, Dynamic, Static \- it all has the same calling syntax. This is designed to meet the objective to simplify programming.
 ```rexx <!--execdes.rexx-->
-options levelb  /\* This is a rexx level b program \*/
+options levelb 
+import rxfnsb
+import rxdes    /* Import the rxdes plugin functions */
 
-import rxfnsb   /\* Import the crexx level B functions \*/  
-**import rxdes**    /\* Import the rxdes plugin functions  \*/
-
-/\* Note that the input and output to the des functions are in hex strings \*/
-
-Plaintext \= "0000000000000000"  
-key \=       "08192A3B4C5D6E7F"  
+/* Note that the input and output to the des functions are in hex strings */
+Plaintext = "0000000000000000"  
+key =       "08192A3B4C5D6E7F"  
                                         
-Ciphertext \= Encrypt(key,Plaintext)
+Ciphertext = Encrypt(key,Plaintext)
 ```
+
 In line 4, the import statement loads the namespace meaning that any Rexx modules or native plugins in the rxdes namespace will be loaded as needed; the function call, encrypt(), follows Rexx syntax, and the compiler can check parameters and return types as normal.
 
-## Future Changes
+<!-- ## Future Changes -->
 
-* Extending the Architecture to support Address environments and variable “pool” access  
-* JSON Remote Plugin Support implementation (aka CREXXSAA)  
-* Additional Core Plugins (e.g.NCurses, SQLite, Curl, etc)  
-* Object and Decimal Support
+<!-- * Extending the Architecture to support Address environments and variable “pool” access   -->
+<!-- * JSON Remote Plugin Support implementation (aka CREXXSAA)   -->
+<!-- * Additional Core Plugins (e.g.NCurses, SQLite, Curl, etc)   -->
+<!-- * Object and Decimal Support -->

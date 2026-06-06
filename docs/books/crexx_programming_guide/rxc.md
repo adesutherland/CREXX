@@ -3,11 +3,11 @@
 ## Command Line Options
 
 \fontspec{IBM Plex Mono}
-\begin{shaded}
-  \small
-  \obeylines \splice{rxc -h | sed 's/\&/\\\&/g'}
- \end{shaded}
- \fontspec{TeX Gyre Pagella}
+\begin{terminaloutput}
+\small
+\obeylines \splice{rxc -h | sed 's/\&/\\\&/g'}
+\end{terminaloutput}
+\fontspec{TeX Gyre Pagella}
 
 ## Import Search Roots
 

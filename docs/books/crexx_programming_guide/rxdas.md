@@ -28,12 +28,13 @@ and the interface/class metadata directives
 ## Command Line Arguments
 
 When the command line argument -h is specified the options are shown:\\
+
 \fontspec{IBM Plex Mono}
-\begin{shaded}
-  \small
-  \obeylines \splice{rxdas -h | sed 's/\&/\\\&/g'}
- \end{shaded}
- \fontspec{TeX Gyre Pagella}
+\begin{terminaloutput}
+\small
+\obeylines \splice{rxdas -h | sed 's/\&/\\\&/g'}
+\end{terminaloutput}
+\fontspec{TeX Gyre Pagella}
 
 ## Example
 
