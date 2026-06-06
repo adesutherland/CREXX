@@ -181,6 +181,135 @@ static int imported_class_metadata_implements(Context *context, const char *clas
     return 0;
 }
 
+int rxcp_import_namespace_has_interface_provider(Context *context,
+                                                 const char *namespace_name,
+                                                 const char *interface_fqname) {
+    struct class_tree_wrapper *it;
+
+    if (!context || !context->master_context || !namespace_name || !interface_fqname) return 0;
+    if (!context->master_context->importable_class_tree) return 0;
+
+    avl_tree_for_each_in_order(it,
+                               context->master_context->importable_class_tree,
+                               struct class_tree_wrapper,
+                               index_node) {
+        struct imported_class *candidate = it->cls;
+        size_t i;
+
+        if (!candidate || candidate->contract_type != CLASS_DEF) continue;
+        if (!candidate->namespace || strcmp(candidate->namespace, namespace_name) != 0) continue;
+
+        for (i = 0; i < candidate->implements_count; i++) {
+            if (candidate->implements_fqnames[i] &&
+                strcmp(candidate->implements_fqnames[i], interface_fqname) == 0) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static int imported_file_stem_matches_import_name(const char *file_name, const char *import_name) {
+    const char *base_name;
+    const char *module_separator;
+    size_t stem_len;
+    char *normalized_stem;
+    int result;
+
+    if (!file_name || !import_name || !import_name[0]) return 0;
+
+    base_name = filename(file_name);
+    stem_len = module_stem_length(base_name);
+    normalized_stem = rxcp_normalize_source_symbol_name(base_name, stem_len, 0, 0);
+    if (!normalized_stem) return 0;
+
+    result = strcmp(normalized_stem, import_name) == 0;
+    free(normalized_stem);
+    if (result) return 1;
+
+    module_separator = strrchr(file_name, '@');
+    if (!module_separator || !module_separator[1]) return 0;
+
+    base_name = filename(module_separator + 1);
+    stem_len = module_stem_length(base_name);
+    normalized_stem = rxcp_normalize_source_symbol_name(base_name, stem_len, 0, 0);
+    if (!normalized_stem) return 0;
+
+    result = strcmp(normalized_stem, import_name) == 0;
+    free(normalized_stem);
+    return result;
+}
+
+int rxcp_import_name_may_load_namespace(Context *context,
+                                        const char *import_name,
+                                        const char *namespace_name) {
+    struct tree_wrapper *fit;
+    struct class_tree_wrapper *cit;
+
+    if (!context || !context->master_context || !import_name || !namespace_name) return 0;
+    if (strcmp(import_name, namespace_name) == 0) return 1;
+
+    if (context->master_context->importable_function_tree) {
+        avl_tree_for_each_in_order(fit,
+                                   context->master_context->importable_function_tree,
+                                   struct tree_wrapper,
+                                   index_node) {
+            imported_func *func = fit->func;
+            if (func && func->namespace &&
+                strcmp(func->namespace, namespace_name) == 0 &&
+                imported_file_stem_matches_import_name(func->file_name, import_name)) {
+                return 1;
+            }
+        }
+    }
+
+    if (context->master_context->importable_class_tree) {
+        avl_tree_for_each_in_order(cit,
+                                   context->master_context->importable_class_tree,
+                                   struct class_tree_wrapper,
+                                   index_node) {
+            struct imported_class *cls = cit->cls;
+            if (cls && cls->namespace &&
+                strcmp(cls->namespace, namespace_name) == 0 &&
+                imported_file_stem_matches_import_name(cls->file_name, import_name)) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+int rxcp_import_name_has_interface_provider(Context *context,
+                                            const char *import_name,
+                                            const char *interface_fqname) {
+    struct class_tree_wrapper *it;
+
+    if (!context || !context->master_context || !import_name || !interface_fqname) return 0;
+    if (!context->master_context->importable_class_tree) return 0;
+
+    avl_tree_for_each_in_order(it,
+                               context->master_context->importable_class_tree,
+                               struct class_tree_wrapper,
+                               index_node) {
+        struct imported_class *candidate = it->cls;
+        size_t i;
+
+        if (!candidate || candidate->contract_type != CLASS_DEF || !candidate->namespace) continue;
+        if (!rxcp_import_name_may_load_namespace(context, import_name, candidate->namespace)) continue;
+
+        for (i = 0; i < candidate->implements_count; i++) {
+            if (candidate->implements_fqnames[i] &&
+                strcmp(candidate->implements_fqnames[i], interface_fqname) == 0) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
 // Search for a class from namespace and name in the master context
 // Returns 1 if found and sets value
 // Returns 0 if not found

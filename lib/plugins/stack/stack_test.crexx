@@ -1,7 +1,6 @@
 /* Stack Plugin Test */
 options levelb
 import stack
-import rxfnsb
 ll1.1='first'
 say "Create " createll(ll1,"123")
 call listitems ll1

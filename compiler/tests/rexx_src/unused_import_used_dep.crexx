@@ -1,0 +1,9 @@
+options levelb
+namespace unused_import_used_dep expose depvalue thing
+
+depvalue: procedure = .int
+  return 42
+
+thing: class
+  *: factory
+    return

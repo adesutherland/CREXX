@@ -1,5 +1,4 @@
 options levelb
-import rxfnsb
 
 main: procedure = .int
   errors = 0

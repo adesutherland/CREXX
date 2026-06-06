@@ -24,7 +24,6 @@
 
 options levelb comments_dash
 namespace data_List expose StemListIterator
-import StemList
 import rxfnsb
 
 /**

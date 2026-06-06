@@ -1,7 +1,6 @@
 /* REXX Llistkey plugin */
 options levelb
 import keyaccess
-import rxfnsb
 /* Test script for fileio plugin */
 
 /* openkey database */

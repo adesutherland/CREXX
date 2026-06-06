@@ -1,6 +1,5 @@
 options levelb
 namespace address_cms_host expose address_cms_host
-import rxfnsb
 
 address_cms_host: procedure = .int
   errors = 0

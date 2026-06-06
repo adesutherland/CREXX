@@ -1,0 +1,6 @@
+options levelb
+import unused_warning_dep
+
+main: procedure
+  say "no import use"
+  return

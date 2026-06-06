@@ -32,7 +32,6 @@ options levelb
 namespace rxdb expose stephandler
 import rxfnsb
 import rxdbgui
-import globals
 
 main: procedure = .int expose controller gui next_instruction last_instruction mode watch auto_steps_remaining
     arg cmd_line = .string[]

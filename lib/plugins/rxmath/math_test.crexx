@@ -1,7 +1,6 @@
 /* GETPI Plugin Test */
 options levelb
 import rxmath
-import rxfnsb
 
 say "UUID "uuid()
 say inlineC("123")

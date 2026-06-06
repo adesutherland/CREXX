@@ -1,6 +1,5 @@
 options levelb
 namespace sqlite_address_demo expose main
-import rxfnsb
 
 main: procedure = .int
   rows = .string[]

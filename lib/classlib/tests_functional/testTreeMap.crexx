@@ -1,6 +1,5 @@
 options levelb comments_dash
 import data_TreeMap
-import data_TreeSet
 
 errors = 0
 
@@ -105,4 +104,3 @@ say a.remove('zzy')
 
 b = .TreeMap()
 say 'the new treemap size is: ' b.size()
-

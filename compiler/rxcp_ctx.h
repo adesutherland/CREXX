@@ -284,6 +284,15 @@ int sym_is_class_contract_symbol(Symbol *symbol);
 int symbol_names_equivalent(Context *context, const char *left_name, const char *right_name);
 int symbol_name_assignable_to(Context *context, const char *from_name, const char *to_name);
 Symbol *find_unique_implementing_class(Context *context, Symbol *interface_symbol, int *candidate_count);
+int rxcp_import_name_may_load_namespace(Context *context,
+                                        const char *import_name,
+                                        const char *namespace_name);
+int rxcp_import_name_has_interface_provider(Context *context,
+                                            const char *import_name,
+                                            const char *interface_fqname);
+int rxcp_import_namespace_has_interface_provider(Context *context,
+                                                 const char *namespace_name,
+                                                 const char *interface_fqname);
 
 /* Set the type of a symbol from imported modules */
 void sym_imva(Context *context, Symbol *symbol);

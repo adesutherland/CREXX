@@ -987,6 +987,376 @@ static walker_result disjoint_scope_warning_walker(walker_direction direction,
     return result_normal;
 }
 
+typedef struct unused_import_entry {
+    ASTNode *name_node;
+    char *namespace_name;
+    int used;
+} unused_import_entry;
+
+typedef struct unused_import_payload {
+    Context *context;
+    dpa *entries;
+} unused_import_payload;
+
+static int unused_import_node_is_inside_imported_file(ASTNode *node) {
+    while (node) {
+        if (node->node_type == IMPORTED_FILE) return 1;
+        if (node->node_type == PROGRAM_FILE) return 0;
+        node = node->parent;
+    }
+    return 0;
+}
+
+static int unused_import_node_is_inside_import(ASTNode *node) {
+    while (node) {
+        if (node->node_type == IMPORT) return 1;
+        if (node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE) return 0;
+        node = node->parent;
+    }
+    return 0;
+}
+
+static int unused_import_node_has_source(ASTNode *node) {
+    return node &&
+           (node->source_start ||
+            node->source_node ||
+            node->source_provenance != AST_SOURCE_NONE ||
+            (node->line >= 0 && node->column >= 0));
+}
+
+static ASTNode *unused_import_primary_program_file(Context *context) {
+    ASTNode *child;
+
+    if (!context || !context->ast) return 0;
+
+    child = context->ast->child;
+    while (child) {
+        if (child->node_type == PROGRAM_FILE) return child;
+        child = child->sibling;
+    }
+
+    return 0;
+}
+
+static int unused_import_internal_name_uses_entry(unused_import_payload *payload,
+                                                  const char *name,
+                                                  unused_import_entry *entry) {
+    char *actual_namespace;
+    int result;
+
+    if (!payload || !entry || !name || !entry->namespace_name) return 0;
+
+    actual_namespace = 0;
+    if (!rxcp_split_internal_symbol_name(name, &actual_namespace, 0)) return 0;
+
+    result = actual_namespace &&
+             rxcp_import_name_may_load_namespace(payload->context,
+                                                 entry->namespace_name,
+                                                 actual_namespace);
+    if (actual_namespace) free(actual_namespace);
+    return result;
+}
+
+static void unused_import_mark_name(unused_import_payload *payload, const char *internal_name) {
+    size_t i;
+
+    if (!payload || !payload->entries || !internal_name) return;
+
+    for (i = 0; i < payload->entries->size; i++) {
+        unused_import_entry *entry = (unused_import_entry *)payload->entries->pointers[i];
+        if (entry && !entry->used &&
+            unused_import_internal_name_uses_entry(payload, internal_name, entry)) {
+            entry->used = 1;
+        }
+    }
+}
+
+static void unused_import_mark_symbol(unused_import_payload *payload, Symbol *symbol) {
+    char *fqn;
+
+    if (!payload || !symbol) return;
+
+    fqn = sym_frnm(symbol);
+    unused_import_mark_name(payload, fqn);
+    free(fqn);
+
+    unused_import_mark_name(payload, symbol->value_class);
+}
+
+static int unused_import_node_type_can_be_qualified(ASTNode *node) {
+    if (!node) return 0;
+
+    switch (node->node_type) {
+        case CLASS:
+        case CONST_SYMBOL:
+        case FACTORY_CALL:
+        case FUNC_SYMBOL:
+        case FUNCTION:
+        case MEMBER_CALL:
+        case VAR_REFERENCE:
+        case VAR_SYMBOL:
+        case VAR_TARGET:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static void unused_import_mark_qualified_source(unused_import_payload *payload, ASTNode *node) {
+    char *internal_name;
+
+    if (!payload || !node || !node->node_string || !node->node_string_length) return;
+    if (!unused_import_node_type_can_be_qualified(node)) return;
+    if (!rxcp_source_symbol_is_qualified(node->node_string, node->node_string_length)) return;
+
+    internal_name = rxcp_normalize_source_symbol_name(node->node_string,
+                                                     node->node_string_length,
+                                                     1,
+                                                     0);
+    unused_import_mark_name(payload, internal_name);
+    free(internal_name);
+}
+
+static void unused_import_mark_unqualified_class_symbol(unused_import_payload *payload, ASTNode *node) {
+    Symbol *symbol;
+
+    if (!payload || !payload->context || !payload->context->ast || !node) return;
+    if (node->node_type != CLASS || !node->node_string || !node->node_string_length) return;
+    if (rxcp_source_symbol_is_qualified(node->node_string, node->node_string_length)) return;
+
+    symbol = sym_rvfc(payload->context->ast, node);
+    if (symbol && symbol->symbol_type == CLASS_SYMBOL) {
+        unused_import_mark_symbol(payload, symbol);
+    }
+}
+
+static void unused_import_mark_unqualified_import_reference(unused_import_payload *payload, ASTNode *node) {
+    char *name;
+    size_t i;
+
+    if (!payload || !payload->entries || !node || !node->node_string || !node->node_string_length) return;
+    if (node->node_type != CLASS && node->node_type != FACTORY_CALL) return;
+    if (rxcp_source_symbol_is_qualified(node->node_string, node->node_string_length)) return;
+
+    name = rxcp_normalize_source_symbol_name(node->node_string,
+                                             node->node_string_length,
+                                             1,
+                                             1);
+    if (!name) return;
+
+    for (i = 0; i < payload->entries->size; i++) {
+        unused_import_entry *entry = (unused_import_entry *)payload->entries->pointers[i];
+        if (entry && !entry->used && strcmp(name, entry->namespace_name) == 0) {
+            entry->used = 1;
+        }
+    }
+
+    free(name);
+}
+
+static ASTNode *unused_import_find_factory_definition(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol) return 0;
+
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *sn = sym_trnd(symbol, i);
+        ASTNode *node = sn ? sn->node : 0;
+        if (node && node->node_type == FACTORY) return node;
+    }
+
+    return 0;
+}
+
+static void unused_import_mark_interface_factory_providers(unused_import_payload *payload, ASTNode *node) {
+    ASTNode *factory_def;
+    Symbol *interface_symbol;
+    char *interface_fqname;
+    char *interface_namespace;
+    size_t i;
+    int matched_provider;
+
+    if (!payload || !payload->context || !payload->entries || !node) return;
+    if (node->node_type != FACTORY_CALL || !node->symbolNode || !node->symbolNode->symbol) return;
+
+    factory_def = unused_import_find_factory_definition(node->symbolNode->symbol);
+    if (!factory_def || !factory_def->parent || factory_def->parent->node_type != INTERFACE_DEF) return;
+    if (!factory_def->parent->symbolNode || !factory_def->parent->symbolNode->symbol) return;
+
+    interface_symbol = factory_def->parent->symbolNode->symbol;
+    interface_fqname = sym_frnm(interface_symbol);
+    if (!interface_fqname) return;
+
+    interface_namespace = 0;
+    rxcp_split_internal_symbol_name(interface_fqname, &interface_namespace, 0);
+    matched_provider = 0;
+
+    for (i = 0; i < payload->entries->size; i++) {
+        unused_import_entry *entry = (unused_import_entry *)payload->entries->pointers[i];
+        if (entry && !entry->used &&
+            rxcp_import_name_has_interface_provider(payload->context,
+                                                    entry->namespace_name,
+                                                    interface_fqname)) {
+            entry->used = 1;
+            matched_provider = 1;
+        }
+    }
+
+    if (!matched_provider) {
+        /* Binary provider imports may not have class metadata loaded in rxc even
+         * though the linked VM image can use them through srcfproc. Avoid
+         * warning on remaining non-contract imports in that shape. */
+        for (i = 0; i < payload->entries->size; i++) {
+            unused_import_entry *entry = (unused_import_entry *)payload->entries->pointers[i];
+            if (entry && !entry->used &&
+                (!interface_namespace ||
+                 !rxcp_import_name_may_load_namespace(payload->context,
+                                                      entry->namespace_name,
+                                                      interface_namespace))) {
+                entry->used = 1;
+            }
+        }
+    }
+
+    if (interface_namespace) free(interface_namespace);
+    free(interface_fqname);
+}
+
+static walker_result unused_import_usage_walker(walker_direction direction,
+                                                ASTNode* node,
+                                                void *payload) {
+    unused_import_payload *pl = (unused_import_payload *)payload;
+
+    if (direction != in || !node || !pl) return result_normal;
+
+    if (node->node_type == IMPORTED_FILE) return request_skip;
+    if (node->node_type == IMPORT) return request_skip;
+    if (unused_import_node_is_inside_imported_file(node)) return result_normal;
+    if (unused_import_node_is_inside_import(node)) return result_normal;
+    if (!unused_import_node_has_source(node)) return result_normal;
+
+    if (node->symbolNode) unused_import_mark_symbol(pl, node->symbolNode->symbol);
+    unused_import_mark_name(pl, node->value_class);
+    unused_import_mark_name(pl, node->target_class);
+    unused_import_mark_qualified_source(pl, node);
+    unused_import_mark_unqualified_class_symbol(pl, node);
+    unused_import_mark_unqualified_import_reference(pl, node);
+    unused_import_mark_interface_factory_providers(pl, node);
+
+    return result_normal;
+}
+
+static void unused_import_add_entry(dpa *entries, ASTNode *import_node) {
+    unused_import_entry *entry;
+    char *namespace_name;
+
+    if (!entries || !import_node || import_node->node_type != IMPORT ||
+        !import_node->child || !unused_import_node_has_source(import_node->child)) {
+        return;
+    }
+
+    namespace_name = rxcp_normalize_source_symbol_name(import_node->child->node_string,
+                                                       import_node->child->node_string_length,
+                                                       0,
+                                                       1);
+    if (!namespace_name || !namespace_name[0]) {
+        if (namespace_name) free(namespace_name);
+        return;
+    }
+
+    entry = malloc(sizeof(unused_import_entry));
+    if (!entry) {
+        free(namespace_name);
+        return;
+    }
+
+    entry->name_node = import_node->child;
+    entry->namespace_name = namespace_name;
+    entry->used = 0;
+    dpa_add(entries, entry);
+}
+
+static walker_result unused_import_collect_walker(walker_direction direction,
+                                                  ASTNode* node,
+                                                  void *payload) {
+    if (direction != in || !node) return result_normal;
+    if (node->node_type == IMPORTED_FILE) return request_skip;
+    if (node->node_type == IMPORT) {
+        unused_import_add_entry((dpa *)payload, node);
+        return request_skip;
+    }
+    return result_normal;
+}
+
+static void unused_import_collect_entries(Context *context, dpa *entries) {
+    ASTNode *program_file;
+
+    if (!context || !entries) return;
+
+    program_file = unused_import_primary_program_file(context);
+    if (!program_file) return;
+
+    ast_wlkr(program_file, unused_import_collect_walker, entries);
+}
+
+static int unused_import_context_is_rxpp_generated(Context *context) {
+    char *p;
+
+    if (!context || !context->buff_start) return 0;
+
+    p = context->buff_start;
+    while (p < context->buff_end && isspace((unsigned char)*p)) p++;
+    return p + 10 <= context->buff_end && strncmp(p, "/* RXPP */", 10) == 0;
+}
+
+static void unused_import_mark_rxpp_generated_imports(Context *context, dpa *entries) {
+    size_t i;
+
+    if (!unused_import_context_is_rxpp_generated(context) || !entries) return;
+
+    for (i = 0; i < entries->size; i++) {
+        unused_import_entry *entry = (unused_import_entry *)entries->pointers[i];
+        if (entry && strcmp(entry->namespace_name, "rxfnsb") == 0) {
+            entry->used = 1;
+        }
+    }
+}
+
+static void add_unused_import_warnings(Context *context) {
+    dpa *entries;
+    unused_import_payload payload;
+    size_t i;
+
+    if (!context || !context->ast) return;
+
+    entries = dpa_f();
+    if (!entries) return;
+
+    unused_import_collect_entries(context, entries);
+    if (entries->size) {
+        payload.context = context;
+        payload.entries = entries;
+        ast_wlkr(unused_import_primary_program_file(context), unused_import_usage_walker, (void *)&payload);
+        unused_import_mark_rxpp_generated_imports(context, entries);
+
+        for (i = 0; i < entries->size; i++) {
+            unused_import_entry *entry = (unused_import_entry *)entries->pointers[i];
+            if (entry && !entry->used) {
+                mknd_war(entry->name_node, "UNUSED_IMPORT");
+            }
+        }
+    }
+
+    for (i = 0; i < entries->size; i++) {
+        unused_import_entry *entry = (unused_import_entry *)entries->pointers[i];
+        if (entry) {
+            free(entry->namespace_name);
+            free(entry);
+        }
+    }
+    free_dpa(entries);
+}
+
 struct seen_warning {
     char *msg;
     int line;
@@ -1333,6 +1703,9 @@ void validate_ast(Context *context) {
     /* Add disjoint scope warnings */
     context->current_scope = 0;
     ast_wlkr(context->ast, disjoint_scope_warning_walker, (void *)context);
+
+    /* Add unused import warnings before optimisation/inlining can remove references */
+    add_unused_import_warnings(context);
 
     /* Deduplicate warnings */
     {
