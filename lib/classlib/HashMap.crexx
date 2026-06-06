@@ -26,6 +26,8 @@ options levelb
 namespace data_HashMap expose HashMap
 import treemap
 import data_TreeSet
+import data_Iterable
+import data_HashMapIterator
 
 /** 
  * class HashMap offers a Map implementation backed by a hashed stem plugin
@@ -34,7 +36,7 @@ import data_TreeSet
  * @author René Vincent Jansen
  * @author Peter Jacob
  */
-HashMap: class
+HashMap: class implements .Iterable
 val = .int
 
 /** 

@@ -32,11 +32,12 @@ endforeach()
 
 set(CLASSLIB_SELECTORS ${CLSS})
 set(CLASS_DEPS_Iterable Iterator)
+set(CLASS_DEPS_TreeSet Iterable Iterator TreeSetIterator)
 set(CLASS_DEPS_HashMap TreeSet)
 set(CLASS_DEPS_StemListIterator StemList)
 set(CLASS_DEPS_TreeMap Iterable TreeMapIterator TreeSet)
 set(CLASS_DEPS_TreeMapIterator Iterator)
-set(CLASS_DEPS_TreeSet TreeSetIterator)
+
 
 
 foreach(_binfile IN LISTS CLSBINS)

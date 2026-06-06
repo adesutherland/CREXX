@@ -22,9 +22,10 @@
  * SOFTWARE.
  */
 
-options levelb
-namespace data_HashMap expose HashMapIterator
-import treemap
+options levelb comments_dash
+namespace data_HashMapIterator expose HashMapIterator
+import treemap -- the plugin
+import data_Iterator
 
 /**
  * Class HashMapIterator returns an iterator
@@ -36,7 +37,7 @@ import treemap
  * HashMap is modified during its execution.
  */
 
-HashMapIterator: class
+HashMapIterator: class implements .Iterator
 token = .int
 closed = .int
 
@@ -53,7 +54,7 @@ closed = .int
   hasNext: method = .int
     if closed then return 0
     return stemiterhasnext(token)
-
+    
     /**
      * method next() returns the next item
      * available from this iterator
