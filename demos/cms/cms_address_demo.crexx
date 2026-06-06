@@ -1,6 +1,5 @@
 options levelb
 namespace cms_address_demo expose main
-import rxfnsb
 
 main: procedure = .int
   buffer_out = .string[]

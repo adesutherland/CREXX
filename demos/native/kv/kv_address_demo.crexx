@@ -1,6 +1,5 @@
 options levelb
 namespace kv_address_demo expose main
-import rxfnsb
 
 main: procedure = .int
   count_out = .string[]

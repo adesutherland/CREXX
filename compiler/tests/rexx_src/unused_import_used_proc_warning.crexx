@@ -1,0 +1,6 @@
+options levelb
+import unused_import_used_dep
+
+main: procedure
+  say depvalue()
+  return

@@ -1,7 +1,6 @@
 /* REXX LList plugin */
 options levelb
 import llist
-import rxfnsb
 
 do i=1 to 10
    call push  0,"Record Push  "i

@@ -596,6 +596,28 @@ add_crexx_compiler_fail_test(err_parse_missing_arguments rexx_src/err_parse_miss
 # Warning tests
 add_crexx_compiler_warning_test(loop rexx_src/loop.crexx loop.txt)
 add_crexx_compiler_warning_test(procedure_expose_no_duplicate rexx_src/procedure_expose_no_duplicate_warning.crexx procedure_expose_no_duplicate.txt)
+add_crexx_compiler_warning_test(unused_import rexx_src/unused_import_warning.crexx unused_import.txt)
+
+add_test(NAME unused_import_used_proc_warn
+         COMMAND crexx_test_driver --warnings
+         --copy ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/unused_import_used_dep.crexx
+         ${CMAKE_CURRENT_SOURCE_DIR}/golden/warnings/unused_import_used_proc.txt
+         ${CMAKE_CURRENT_BINARY_DIR}/unused_import_used_proc_warn.txt
+         $<TARGET_FILE:rxc> ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/unused_import_used_proc_warning.crexx)
+
+add_test(NAME unused_import_used_type_warn
+         COMMAND crexx_test_driver --warnings
+         --copy ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/unused_import_used_dep.crexx
+         ${CMAKE_CURRENT_SOURCE_DIR}/golden/warnings/unused_import_used_type.txt
+         ${CMAKE_CURRENT_BINARY_DIR}/unused_import_used_type_warn.txt
+         $<TARGET_FILE:rxc> ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/unused_import_used_type_warning.crexx)
+
+add_test(NAME unused_import_inline_used_warn
+         COMMAND crexx_test_driver --warnings
+         --copy ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_cross_file_dep.crexx
+         ${CMAKE_CURRENT_SOURCE_DIR}/golden/warnings/unused_import_inline_used.txt
+         ${CMAKE_CURRENT_BINARY_DIR}/unused_import_inline_used_warn.txt
+         $<TARGET_FILE:rxc> ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/unused_import_inline_used_warning.crexx)
 
 # Regression tests for rxpp issue
 add_crexx_compiler_test(repro_dotted_index rexx_src/repro_dotted_index.crexx)

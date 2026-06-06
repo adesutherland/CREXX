@@ -1,5 +1,4 @@
 options levelb
-import rxfnsb
 
 main: procedure
   /* Outer variable */

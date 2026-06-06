@@ -1,0 +1,2 @@
+Warning in unused_import_warning.crexx @ 2:8 - #UNUSED_IMPORT, "unused_warning_dep"
+1 warning(s) in source file

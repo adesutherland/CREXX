@@ -26,7 +26,6 @@
 options levelb
 
 namespace rxfnsb expose sequence
-import _rxsysb
 
 /* Built-in function Sequence is a modern day equivalent of XRANGE,
  * that can deal with Unicode. First turned up in NetRexx.

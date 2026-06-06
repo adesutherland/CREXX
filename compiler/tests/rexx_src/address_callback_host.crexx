@@ -1,6 +1,5 @@
 options levelb
 namespace address_callback_host expose address_callback_host
-import rxfnsb
 
 address_callback_host: procedure = .int
   buffer = "example-value"
