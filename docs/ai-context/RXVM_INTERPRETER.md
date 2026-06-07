@@ -99,11 +99,16 @@ struct stack_frame {
 
 Frame recycling is a performance feature, not a semantic shortcut. When a
 frame is reused, the VM relinks local register pointers back to their base
-storage, relinks globals, and resets the argument-count register. On frame
-exit, `clear_frame()` clears local storage, the argument-count slot, remaining
-signal-handler stack entries, and any VM plugin instance owned by that frame.
+storage, relinks globals, and resets the argument-count register. Ordinary
+return places the frame on the procedure recycler; full value teardown happens
+when recycled frames are drained. Because references are rare, frames carry a
+small flag that is set when reference cells are created. Only flagged frames run
+the reference-lifetime cleanup on return, invalidating frame-owned local and
+`a0` storage plus nested attribute storage without freeing reusable buffers.
+`clear_frame()` performs full storage cleanup, remaining signal-handler stack
+cleanup, and any VM plugin instance cleanup when a frame is finally destroyed.
 The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero
-locals on reuse; the normal build relies on deterministic frame cleanup.
+locals on reuse.
 
 ### Signal / Interrupt Handling
 The VM signal model is implemented directly in the interpreter loop. Each
@@ -127,7 +132,9 @@ error condition.
 `REFERENCE_INVALID` is the dedicated signal for a reference value whose target
 storage has been destroyed or invalidated. It defaults to halt, participates in
 normal signal handling, and can be probed without raising through the RXAS
-`refvalid` instruction.
+`refvalid` instruction. Raising operations include `deref`, `linkref`, and
+`setref`; using a non-reference value with those operations is treated as an
+invalid reference.
 
 `sigcalla` installs an action-aware call handler. It receives the same raw
 five-attribute interrupt object as `sigcall`, but the handler's return string
@@ -232,7 +239,13 @@ struct value {
     char small_string_buffer[SMALLEST_STRING_BUFFER_LENGTH]; 
 };
 ```
-Variables (`locals` arrays) consist of arrays of `value*` pointers managed strictly by the VM frames. There is no automated background Garbage Collector (GC). Instead, frame-bound variables are deterministically cleared (`clear_value`) and memory released when a `stack_frame` dies and exits scope.
+Variables (`locals` arrays) consist of arrays of `value*` pointers managed
+strictly by the VM frames. There is no automated background Garbage Collector
+(GC). Frame-bound variables are either recycled for later calls or
+deterministically cleared (`clear_value`) when a `stack_frame` is finally
+destroyed. Reference identities for frame-owned storage are invalidated on
+ordinary frame exit for frames that created references, so recycled stack
+storage cannot keep an escaped weak reference valid.
 
 Attribute arrays use two parallel pointer arrays:
 

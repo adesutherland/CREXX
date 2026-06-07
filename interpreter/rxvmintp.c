@@ -177,6 +177,26 @@ static rxvm_reference_cell *rxvm_reference_payload_cell(value *reference_value) 
     return reference_value->reference_payload;
 }
 
+static void rxvm_release_frame_reference_lifetimes(stack_frame *frame) {
+    size_t i;
+    size_t globals;
+    size_t a0_index;
+
+    if (!frame || !frame->procedure || !frame->has_reference_lifetimes) return;
+
+    for (i = 0; i < (size_t)frame->procedure->locals; i++) {
+        release_value_reference_lifetime(frame->baselocals[i]);
+    }
+
+    globals = frame->procedure->binarySpace ? (size_t)frame->procedure->binarySpace->globals : 0;
+    a0_index = (size_t)frame->procedure->locals + globals;
+    if (a0_index < frame->number_locals) {
+        release_value_reference_lifetime(frame->baselocals[a0_index]);
+    }
+
+    frame->has_reference_lifetimes = 0;
+}
+
 /* This defines the expected max number of args - if a call has more args than
  * this then an oversized block will be malloced
  * In terms of memory usage / waste each one is only 2 x pointer size */
@@ -1744,6 +1764,7 @@ RX_INLINE stack_frame *frame_f(
     this->number_args = no_args;
     this->return_reg = return_reg;
     this->procedure = procedure;
+    this->has_reference_lifetimes = 0;
     this->is_interrupt_action = 0;
 
     return this;
@@ -1773,6 +1794,7 @@ RX_INLINE void clear_frame(stack_frame *frame) {
 /* Free Stack Frame */
 RX_INLINE void free_frame(stack_frame *frame) {
     rxsignal_clear_handler_stack(frame);
+    rxvm_release_frame_reference_lifetimes(frame);
     /* Add to free list */
     frame->prev_free = *(frame->procedure->frame_free_list);
     *(frame->procedure->frame_free_list) = frame;
@@ -4716,6 +4738,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     DISPATCH
                 }
 
+                current_frame->has_reference_lifetimes = 1;
                 clear_value_contents(op1R);
                 rxvm_reference_value_set_payload(op1R, cell);
             }

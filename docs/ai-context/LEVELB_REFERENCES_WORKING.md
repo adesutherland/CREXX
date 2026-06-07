@@ -290,7 +290,8 @@ is valid.
 
 When a frame exits:
 
-- references to locals that were not moved to a live destination become invalid;
+- references to frame-owned locals and nested frame-owned attribute storage
+  become invalid on the reference cleanup rare path;
 - references to arguments linked to caller storage remain governed by the
   ultimate caller storage, not by the callee's temporary local alias;
 - references to callee-local aliases created by `link` or `linkattr*` should
@@ -692,8 +693,9 @@ proven in hand-written RXAS and small container tests:
    about reference identity and reference payloads.
 4. Add RXAS instructions: `mkref`, `deref`, `linkref`, `setref`, `refvalid`,
    and `unref`.
-5. Add VM/RXAS tests covering copies, moves, frame exit, attribute references,
-   invalid dereference, and `linkref`/`unlink`.
+5. Add VM/RXAS tests covering copies, snapshots, frame exit, attribute
+   references, invalid `deref`/`linkref`/`setref`, non-reference operands, and
+   `linkref`/`unlink`.
 6. Use references internally in a small compiler-generated case before exposing
    source syntax.
 7. Revisit source syntax with examples from containers, ADDRESS objects, and

@@ -568,6 +568,12 @@ void test_reference_payload_copy_and_clear() {
     CHECK_POINTER_EQUAL(copy.reference_payload, 0, "payload released by clear_value");
     CHECK_SIZE_EQUAL(cell->retain_count, 1, "retain_count after clearing payload copy");
 
+    rxvm_reference_value_set_payload(&ref, cell);
+    CHECK_SIZE_EQUAL(cell->retain_count, 2, "retain_count after resetting payload");
+    set_null_string(&ref, "plain-value");
+    CHECK_POINTER_EQUAL(ref.reference_payload, 0, "string assignment releases reference payload");
+    CHECK_SIZE_EQUAL(cell->retain_count, 1, "retain_count after scalar assignment");
+
     rxvm_reference_cell_retain(cell);
     clear_value(&target);
     CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(cell), 0, "target identity invalidated by clear_value");
@@ -743,6 +749,48 @@ void test_reference_attribute_trim_policy() {
     printf("--- Reference Attribute Trim Policy Tests Finished ---\n");
 }
 
+void test_reference_lifetime_release_helper() {
+    value root;
+    value target;
+    rxvm_reference_cell *root_cell;
+    rxvm_reference_cell *attr_cell;
+    rxvm_reference_cell *payload_cell;
+
+    printf("\n--- Running Reference Lifetime Release Helper Tests ---\n");
+
+    value_init(&root);
+    value_init(&target);
+    set_num_attributes(&root, 1);
+
+    root_cell = rxvm_reference_identity_for(&root, RXVM_REF_LOCAL, 0, 80, "lifetime-root");
+    attr_cell = rxvm_reference_identity_for(root.attributes[0], RXVM_REF_ATTRIBUTE, &root, 80, "lifetime-attr");
+    payload_cell = rxvm_reference_identity_for(&target, RXVM_REF_LOCAL, 0, 80, "lifetime-payload");
+
+    rxvm_reference_cell_retain(root_cell);
+    rxvm_reference_cell_retain(attr_cell);
+    rxvm_reference_cell_retain(payload_cell);
+    rxvm_reference_value_set_payload(root.attributes[0], payload_cell);
+
+    CHECK_SIZE_EQUAL(payload_cell->retain_count, 3, "payload retain before lifetime release");
+    release_value_reference_lifetime(&root);
+
+    CHECK_POINTER_EQUAL(root.reference_identity, 0, "root identity released by lifetime release");
+    CHECK_POINTER_EQUAL(root.attributes[0]->reference_identity, 0, "attribute identity released by lifetime release");
+    CHECK_POINTER_EQUAL(root.attributes[0]->reference_payload, 0, "attribute payload released by lifetime release");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(root_cell), 0, "root cell invalid after lifetime release");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(attr_cell), 0, "attribute cell invalid after lifetime release");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(payload_cell), 1, "payload target remains valid after lifetime release");
+    CHECK_SIZE_EQUAL(payload_cell->retain_count, 2, "payload retain after lifetime release");
+
+    clear_value(&root);
+    clear_value(&target);
+    rxvm_reference_cell_release(root_cell);
+    rxvm_reference_cell_release(attr_cell);
+    rxvm_reference_cell_release(payload_cell);
+
+    printf("--- Reference Lifetime Release Helper Tests Finished ---\n");
+}
+
 int main() {
     test_string_positioning();
     test_boundary_conditions();
@@ -757,6 +805,7 @@ int main() {
     test_reference_move_transfers_identity_and_payload();
     test_reference_attribute_storage_lifecycle();
     test_reference_attribute_trim_policy();
+    test_reference_lifetime_release_helper();
     // Add more tests with other strings (empty, all-ASCII, all-multibyte, etc.)
 
     printf("\nAll tests completed.\n");

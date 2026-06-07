@@ -51,6 +51,7 @@ RX_MOSTLYINLINE void clear_value_contents(value* v);
 RX_MOSTLYINLINE void reset_value_storage_for_reuse(value* v);
 RX_MOSTLYINLINE void destroy_value_storage(value* v);
 RX_MOSTLYINLINE void clear_value(value* v);
+RX_MOSTLYINLINE void release_value_reference_lifetime(value* v);
 RX_INLINE void move_value(value *dest, value *source);
 RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v);
 
@@ -336,6 +337,7 @@ RX_INLINE int prep_binary_buffer(value *v, size_t length) {
 }
 
 RX_INLINE int set_binary(value *v, const void *data, size_t length) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (prep_binary_buffer(v, length) != 0) return -1;
     if (length && data) memcpy(v->binary_value, data, length);
     else if (length) memset(v->binary_value, 0, length);
@@ -345,6 +347,7 @@ RX_INLINE int set_binary(value *v, const void *data, size_t length) {
 }
 
 RX_INLINE int set_buffer_binary(value *v, char *buffer, size_t length, size_t buffer_length) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     if (v->binary_value) free(v->binary_value);
     v->binary_value = buffer;
@@ -460,6 +463,23 @@ RX_INLINE void null_terminate_string_buffer(value *v) {
 
     /* Add the null */
     v->string_value[v->string_length] = 0;
+}
+
+/* Releases reference identities/payload retains for storage whose lifetime ended.
+ * Reusable buffers and ordinary value contents are intentionally left intact.
+ */
+RX_MOSTLYINLINE void release_value_reference_lifetime(value* v) {
+    size_t i;
+
+    if (!v) return;
+    if (v->reference_identity) rxvm_reference_identity_release(v);
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
+
+    if (v->unlinked_attributes) {
+        for (i = 0; i < v->max_num_attributes; i++) {
+            release_value_reference_lifetime(v->unlinked_attributes[i]);
+        }
+    }
 }
 
 /* Clears a value's contents while preserving its own storage reference identity. */
@@ -687,15 +707,18 @@ RX_INLINE void unset_type(value *v) {
 */
 
 RX_INLINE void set_int(value *v, rxinteger value) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     v->int_value = value;
 }
 RX_INLINE void set_float(value *v, double value) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     v->float_value = value;
 }
 
 RX_INLINE void set_string(value *v, char *value, size_t length) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v,length);
     memcpy(v->string_value, value, v->string_length);
@@ -710,6 +733,7 @@ RX_INLINE void set_string(value *v, char *value, size_t length) {
 
 /* set value string from null string value */
 RX_INLINE void set_null_string(value *v, const char *from) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     if (v->string_value == from) return;
     prep_string_buffer(v, strlen(from));
@@ -744,6 +768,7 @@ RX_INLINE int set_null_string_validated(value *v, const char *from) {
 }
 
 RX_INLINE void set_const_string(value *v, string_constant *from) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v,from->string_len);
     memcpy(v->string_value, from->string, v->string_length);
@@ -759,6 +784,7 @@ RX_INLINE void set_const_string(value *v, string_constant *from) {
 
 RX_INLINE void set_value_string(value *v, value *from) {
     if (v == from) return;
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v, from->string_length);
     memcpy(v->string_value, from->string_value, v->string_length);
@@ -781,6 +807,7 @@ RX_INLINE void set_buffer_string(
         , size_t string_chars
 #endif
 ) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     if (v->string_value != v->small_string_buffer) free(v->string_value);
     v->string_value = buffer;
@@ -801,6 +828,7 @@ RX_INLINE int set_native_payload(value *v,
                                  unsigned int flags) {
     if (!v) return -1;
 
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     clear_binary_payload(v);
     if (length) {
         if (set_binary(v, payload, length) != 0) return -1;

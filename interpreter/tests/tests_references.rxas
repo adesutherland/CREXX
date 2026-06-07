@@ -2,9 +2,9 @@
  * CREXX Interpreter tests for VM/RXAS reference instructions.
  */
 
-.globals=0
+.globals=1
 
-main() .locals=20
+main() .locals=32
     say "Test Suite: Reference RXAS Operations"
 
     load r1, "alpha"
@@ -19,6 +19,8 @@ main() .locals=20
     brf fail_initial_deref, r0
 
     load r1, "beta"
+    seq r0, r4, "alpha"
+    brf fail_scalar_snapshot, r0
     deref r4, r2
     seq r0, r4, "beta"
     brf fail_overwrite_visible, r0
@@ -39,6 +41,26 @@ main() .locals=20
     ieq r0, r3, 0
     brf fail_unref, r0
 
+    mkref r2, r1
+    load r2, "plain-ref-register"
+    refvalid r3, r2
+    ieq r0, r3, 0
+    brf fail_load_clears_reference_value, r0
+
+    setattrs r7, 1
+    linkattr r8, r7, 0
+    load r8, "obj-a"
+    unlink r8
+    mkref r9, r7
+    deref r10, r9
+    linkattr r8, r7, 0
+    load r8, "obj-b"
+    unlink r8
+    linkattr r8, r10, 0
+    seq r0, r8, "obj-a"
+    unlink r8
+    brf fail_object_snapshot, r0
+
     setattrs r7, 2
     linkattr r8, r7, 0
     load r8, "slot-a"
@@ -54,12 +76,93 @@ main() .locals=20
     ieq r0, r10, 0
     brf fail_deleted_attribute_valid, r0
 
-    sigbr invalid_reference_caught, "REFERENCE_INVALID"
-    deref r11, r9
-    br fail_invalid_signal_missing
+    setattrs r12, 1
+    linkattr r13, r12, 0
+    load r13, "parent-slot"
+    mkref r14, r13
+    unlink r13
+    setattrs r12, 0
+    refvalid r15, r14
+    ieq r0, r15, 0
+    brf fail_parent_clear_valid, r0
 
-invalid_reference_caught:
-    say "caught-reference-invalid"
+    setattrs r12, 128
+    linkattr r13, r12, 0
+    load r13, "trim-active"
+    mkref r14, r13
+    unlink r13
+    linkattr r13, r12, 64
+    load r13, "trim-removed"
+    mkref r15, r13
+    unlink r13
+    setattrs r12, 4
+    refvalid r16, r14
+    ieq r0, r16, 1
+    brf fail_trim_active_valid, r0
+    deref r17, r14
+    seq r0, r17, "trim-active"
+    brf fail_trim_active_value, r0
+    refvalid r16, r15
+    ieq r0, r16, 0
+    brf fail_trim_removed_valid, r0
+
+    load g0, "global-a"
+    mkref r18, g0
+    load g0, "global-b"
+    deref r19, r18
+    seq r0, r19, "global-b"
+    brf fail_global_ref, r0
+
+    load r21, "arg-a"
+    load r20, 1
+    call r22, arg_ref(), r20
+    refvalid r23, r22
+    ieq r0, r23, 1
+    brf fail_argument_ref_valid, r0
+    load r21, "arg-b"
+    deref r24, r22
+    seq r0, r24, "arg-b"
+    brf fail_argument_ref_value, r0
+
+    call r25, local_ref()
+    refvalid r26, r25
+    ieq r0, r26, 0
+    brf fail_local_ref_valid, r0
+
+    call r25, local_attr_ref()
+    refvalid r26, r25
+    ieq r0, r26, 0
+    brf fail_local_attr_ref_valid, r0
+
+    refvalid r26, r1
+    ieq r0, r26, 0
+    brf fail_nonref_refvalid, r0
+
+    sigbr invalid_deref_caught, "REFERENCE_INVALID"
+    deref r27, r9
+    br fail_invalid_deref_signal
+
+invalid_deref_caught:
+    say "caught-reference-invalid-deref"
+    sigbr invalid_linkref_caught, "REFERENCE_INVALID"
+    linkref r27, r9
+    br fail_invalid_linkref_signal
+
+invalid_linkref_caught:
+    say "caught-reference-invalid-linkref"
+    load r27, "new-value"
+    sigbr invalid_setref_caught, "REFERENCE_INVALID"
+    setref r9, r27
+    br fail_invalid_setref_signal
+
+invalid_setref_caught:
+    say "caught-reference-invalid-setref"
+    sigbr invalid_nonref_caught, "REFERENCE_INVALID"
+    deref r27, r1
+    br fail_nonref_signal
+
+invalid_nonref_caught:
+    say "caught-reference-invalid-nonref"
     say "PASS: Reference RXAS Ops"
     ret 0
 
@@ -68,6 +171,9 @@ fail_initial_refvalid:
     ret 1
 fail_initial_deref:
     say "FAIL: initial deref"
+    ret 1
+fail_scalar_snapshot:
+    say "FAIL: scalar snapshot"
     ret 1
 fail_overwrite_visible:
     say "FAIL: overwrite visibility"
@@ -81,9 +187,71 @@ fail_linkref_write:
 fail_unref:
     say "FAIL: unref"
     ret 1
+fail_load_clears_reference_value:
+    say "FAIL: load clears reference value"
+    ret 1
+fail_object_snapshot:
+    say "FAIL: object snapshot"
+    ret 1
 fail_deleted_attribute_valid:
     say "FAIL: deleted attribute refvalid"
     ret 1
-fail_invalid_signal_missing:
-    say "FAIL: invalid reference signal missing"
+fail_parent_clear_valid:
+    say "FAIL: parent clear refvalid"
     ret 1
+fail_trim_active_valid:
+    say "FAIL: trim active refvalid"
+    ret 1
+fail_trim_active_value:
+    say "FAIL: trim active value"
+    ret 1
+fail_trim_removed_valid:
+    say "FAIL: trim removed refvalid"
+    ret 1
+fail_global_ref:
+    say "FAIL: global ref"
+    ret 1
+fail_argument_ref_valid:
+    say "FAIL: argument refvalid"
+    ret 1
+fail_argument_ref_value:
+    say "FAIL: argument ref value"
+    ret 1
+fail_local_ref_valid:
+    say "FAIL: local refvalid after return"
+    ret 1
+fail_local_attr_ref_valid:
+    say "FAIL: local attribute refvalid after return"
+    ret 1
+fail_nonref_refvalid:
+    say "FAIL: non-reference refvalid"
+    ret 1
+fail_invalid_deref_signal:
+    say "FAIL: invalid deref signal missing"
+    ret 1
+fail_invalid_linkref_signal:
+    say "FAIL: invalid linkref signal missing"
+    ret 1
+fail_invalid_setref_signal:
+    say "FAIL: invalid setref signal missing"
+    ret 1
+fail_nonref_signal:
+    say "FAIL: non-reference signal missing"
+    ret 1
+
+arg_ref() .locals=1
+    mkref r0, a1
+    ret r0
+
+local_ref() .locals=2
+    load r1, "dead-local"
+    mkref r0, r1
+    ret r0
+
+local_attr_ref() .locals=3
+    setattrs r1, 1
+    linkattr r2, r1, 0
+    load r2, "dead-attr"
+    mkref r0, r2
+    unlink r2
+    ret r0

@@ -148,6 +148,7 @@ struct stack_frame {
     size_t number_locals;
     size_t nominal_number_locals;
     size_t number_args;
+    unsigned char has_reference_lifetimes; /* Frame-owned storage has reference cells to release on exit */
     unsigned char is_interrupt;  /* Set to the interrupt number that the frame is handling (or zero) */
     unsigned char is_interrupt_action; /* Set when an interrupt handler return value is action-aware */
     interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Interrupt Table */

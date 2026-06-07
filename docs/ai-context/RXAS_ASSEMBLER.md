@@ -185,7 +185,8 @@ finalized:
 - `mkref rRef,rSource` creates a reference value to the storage currently named
   by `rSource`, after existing local links have resolved to their target
   storage.
-- `deref rDest,rRef` copies the current referenced value into `rDest`.
+- `deref rDest,rRef` copies the current referenced value into `rDest`. This is
+  a snapshot copy, including nested attributes, not a live alias.
 - `linkref rLocal,rRef` links a local register to the referenced storage until
   the existing `unlink rLocal` restores its base storage.
 - `setref rRef,rSource` copies `rSource` into the referenced storage.
@@ -194,8 +195,13 @@ finalized:
 - `unref rRef` clears a reference value and releases its reference-cell retain.
 
 Invalid reference use raises `REFERENCE_INVALID`; `refvalid` is the non-raising
-probe. These instructions are optimiser barriers until reference alias effects
-are modelled more deeply.
+probe. A reference becomes invalid when its target storage lifetime ends, such
+as deleted/shrunk attribute storage or frame-owned local storage after return.
+Plain overwrite of still-live storage keeps the reference valid. These
+instructions are optimiser barriers until reference alias effects are modelled
+more deeply. Assigning a scalar value into the register that holds a reference
+value clears that register's reference payload; it does not invalidate the
+referenced target storage.
 
 In UTF builds, RXAS string constants are text, not byte containers. Hand-written
 string operands are unescaped and validated before entering the constant pool;
