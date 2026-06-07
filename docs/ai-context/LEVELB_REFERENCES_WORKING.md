@@ -74,6 +74,12 @@ Rexx source surface is finalized:
   copies via `deref`, invalid backing/parent detection, and checksum-only
   performance smoke coverage. The fixtures run through optimized and
   non-optimized assembly under both `rxvm` and `rxbvm`.
+- The first compiler-shaped contract slice is implemented in the working tree:
+  `reference_generated_contract.rxas` models `ArrayList`/iterator helper code
+  that creates references from receiver arguments and backing attributes, uses
+  `deref` for explicit snapshots, checks validity before use, and handles
+  invalid references through `REFERENCE_INVALID`, still without choosing a
+  public Rexx syntax.
 
 ## Problem
 
@@ -168,6 +174,44 @@ or libraries could eventually emit:
 The performance fixture is intentionally a smoke test rather than a benchmark
 gate. It prints elapsed times and asserts checksums so regressions in semantics
 are caught without making CI depend on local machine speed.
+
+## Internal Generated-Code Contract
+
+Until public Rexx syntax is approved, compiler and library experiments should
+target the following RXAS-level operation contract:
+
+- **Create a reference**: expose or link the desired storage location, then emit
+  `mkref` into the destination value. For object or array attributes, generated
+  code must use `linkattr*` first so the reference targets the physical child
+  storage, not a temporary copy. The VM marks the frame that owns the target
+  storage for lifetime cleanup, which may be a caller frame when a generated
+  helper creates a reference from a receiver argument.
+- **Store iterator state**: store the reference value in an iterator attribute
+  and store cursor/count state as ordinary scalar attributes. Copying the
+  iterator object copies the reference value, not the referenced target.
+- **Live access**: when the iterator needs the target, link the iterator's
+  reference attribute, emit `linkref`, perform normal attribute access through
+  the linked target, copy the result into a return register, then unlink in the
+  reverse order.
+- **Snapshot access**: emit `deref` only when generated code deliberately wants
+  a deep copy of the current referenced target. A snapshot must not observe later
+  mutations.
+- **Validity check**: emit `refvalid` on the stored reference value when client
+  code wants to test whether a weak reference can still be used.
+- **Invalid reference handling**: generated code may either preflight with
+  `refvalid` or rely on a catchable `REFERENCE_INVALID` signal around `deref`,
+  `linkref`, or `setref`. Silent stale-reference reads are not part of the
+  contract.
+
+For method-shaped code, a reference created from a receiver argument (`a1`) is
+a reference to the caller-owned receiver storage while that storage remains
+alive. Returning an iterator that references a callee local is allowed by the VM
+but the reference must become invalid when that frame is released; tests should
+continue to cover this as the negative lifetime case.
+
+This contract is intentionally spelling-free. The eventual Rexx surface can map
+to these operations, but the operation set above is the compatibility target for
+compiler and library experiments.
 
 ## Terms
 

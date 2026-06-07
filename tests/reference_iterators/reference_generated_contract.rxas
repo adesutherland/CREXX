@@ -1,0 +1,276 @@
+/*
+ * Compiler-shaped reference contract coverage.
+ *
+ * This fixture models the RXAS shape a pure Rexx ArrayList/Iterator
+ * implementation can emit before public reference syntax is chosen.
+ */
+
+.globals=0
+
+main() .locals=64
+    say "Test Suite: Reference Generated Contract"
+
+    call r1, arraylist_new()
+
+    load r0, 2
+    load r2, 10
+    call r40, arraylist_add(), r0
+    load r0, 2
+    load r2, 20
+    call r40, arraylist_add(), r0
+    load r0, 2
+    load r2, 30
+    call r40, arraylist_add(), r0
+
+    load r0, 1
+    call r10, arraylist_iterator_parent(), r0
+
+    load r9, 1
+    call r12, arraylist_iterator_next_parent(), r9
+    ieq r0, r12, 10
+    brf fail_parent_first, r0
+
+    load r0, 3
+    load r2, 1
+    load r3, 25
+    call r40, arraylist_set_at(), r0
+
+    load r9, 1
+    call r12, arraylist_iterator_next_parent(), r9
+    ieq r0, r12, 25
+    brf fail_parent_live_update, r0
+
+    load r9, 1
+    call r12, arraylist_iterator_next_parent(), r9
+    ieq r0, r12, 30
+    brf fail_parent_third, r0
+
+    load r0, 3
+    load r2, 1
+    load r3, 20
+    call r40, arraylist_set_at(), r0
+
+    load r0, 1
+    call r20, arraylist_iterator_backing(), r0
+
+    load r19, 1
+    call r24, arraylist_iterator_snapshot_target(), r19
+
+    load r0, 3
+    load r2, 0
+    load r3, 11
+    call r40, arraylist_set_at(), r0
+
+    linkattr r25, r24, 0
+    ieq r0, r25, 10
+    unlink r25
+    brf fail_snapshot_old_value, r0
+
+    load r19, 1
+    call r22, arraylist_iterator_next_backing(), r19
+    ieq r0, r22, 11
+    brf fail_backing_first, r0
+
+    load r0, 3
+    load r2, 1
+    load r3, 44
+    call r40, arraylist_set_at(), r0
+
+    load r19, 1
+    call r22, arraylist_iterator_next_backing(), r19
+    ieq r0, r22, 44
+    brf fail_backing_live_update, r0
+
+    load r19, 1
+    call r26, arraylist_iterator_valid(), r19
+    ieq r0, r26, 1
+    brf fail_backing_valid_before_drop, r0
+
+    load r0, 1
+    call r40, arraylist_drop_backing(), r0
+
+    load r19, 1
+    call r26, arraylist_iterator_valid(), r19
+    ieq r0, r26, 0
+    brf fail_backing_invalid_after_drop, r0
+
+    load r19, 1
+    call r27, expect_backing_next_invalid(), r19
+    ieq r0, r27, 1
+    brf fail_backing_invalid_signal, r0
+
+    call r30, make_dead_arraylist_parent_iterator()
+    load r29, 1
+    call r31, arraylist_iterator_valid(), r29
+    ieq r0, r31, 0
+    brf fail_dead_parent_invalid, r0
+
+    load r29, 1
+    call r32, expect_parent_next_invalid(), r29
+    ieq r0, r32, 1
+    brf fail_dead_parent_signal, r0
+
+    say "PASS: Reference Generated Contract"
+    ret 0
+
+fail_parent_first:
+    say "FAIL: generated parent iterator first element"
+    ret 1
+fail_parent_live_update:
+    say "FAIL: generated parent iterator live update"
+    ret 1
+fail_parent_third:
+    say "FAIL: generated parent iterator third element"
+    ret 1
+fail_snapshot_old_value:
+    say "FAIL: generated deref snapshot value"
+    ret 1
+fail_backing_first:
+    say "FAIL: generated backing iterator first element"
+    ret 1
+fail_backing_live_update:
+    say "FAIL: generated backing iterator live update"
+    ret 1
+fail_backing_valid_before_drop:
+    say "FAIL: generated backing valid before drop"
+    ret 1
+fail_backing_invalid_after_drop:
+    say "FAIL: generated backing invalid after drop"
+    ret 1
+fail_backing_invalid_signal:
+    say "FAIL: generated backing invalid signal"
+    ret 1
+fail_dead_parent_invalid:
+    say "FAIL: generated dead parent refvalid"
+    ret 1
+fail_dead_parent_signal:
+    say "FAIL: generated dead parent invalid signal"
+    ret 1
+
+arraylist_new() .locals=4
+    setattrs r0, 2
+    linkattr r1, r0, 0
+    load r1, 0
+    unlink r1
+    linkattr r1, r0, 1
+    setattrs r1, 0
+    unlink r1
+    ret r0
+
+arraylist_add() .locals=6
+    linkattr r0, a1, 0
+    linkattr r1, a1, 1
+    copy r3, r0
+    inc r3
+    setattrs r1, r3
+    linkattr r2, r1, r0
+    copy r2, a2
+    copy r0, r3
+    unlink r2
+    unlink r1
+    unlink r0
+    ret r3
+
+arraylist_set_at() .locals=4
+    linkattr r0, a1, 1
+    linkattr r1, r0, a2
+    copy r1, a3
+    unlink r1
+    unlink r0
+    ret 0
+
+arraylist_drop_backing() .locals=1
+    setattrs a1, 1
+    ret 0
+
+arraylist_iterator_parent() .locals=4
+    setattrs r0, 2
+    linkattr r1, r0, 0
+    mkref r1, a1
+    unlink r1
+    linkattr r1, r0, 1
+    load r1, 0
+    unlink r1
+    ret r0
+
+arraylist_iterator_backing() .locals=5
+    setattrs r0, 2
+    linkattr r1, a1, 1
+    linkattr r2, r0, 0
+    mkref r2, r1
+    unlink r2
+    unlink r1
+    linkattr r2, r0, 1
+    load r2, 0
+    unlink r2
+    ret r0
+
+arraylist_iterator_valid() .locals=3
+    linkattr r0, a1, 0
+    refvalid r1, r0
+    unlink r0
+    ret r1
+
+arraylist_iterator_snapshot_target() .locals=4
+    linkattr r0, a1, 0
+    deref r1, r0
+    unlink r0
+    ret r1
+
+arraylist_iterator_next_parent() .locals=8
+    linkattr r0, a1, 0
+    linkattr r1, a1, 1
+    linkref r2, r0
+    linkattr r3, r2, 1
+    linkattr r4, r3, r1
+    copy r5, r4
+    inc r1
+    unlink r4
+    unlink r3
+    unlink r2
+    unlink r1
+    unlink r0
+    ret r5
+
+arraylist_iterator_next_backing() .locals=7
+    linkattr r0, a1, 0
+    linkattr r1, a1, 1
+    linkref r2, r0
+    linkattr r3, r2, r1
+    copy r4, r3
+    inc r1
+    unlink r3
+    unlink r2
+    unlink r1
+    unlink r0
+    ret r4
+
+expect_parent_next_invalid() .locals=4
+    sigbr parent_reference_invalid_caught, "REFERENCE_INVALID"
+    load a0, 1
+    call r0, arraylist_iterator_next_parent(), a0
+    ret 0
+
+parent_reference_invalid_caught:
+    ret 1
+
+expect_backing_next_invalid() .locals=4
+    sigbr backing_reference_invalid_caught, "REFERENCE_INVALID"
+    load a0, 1
+    call r0, arraylist_iterator_next_backing(), a0
+    ret 0
+
+backing_reference_invalid_caught:
+    ret 1
+
+make_dead_arraylist_parent_iterator() .locals=8
+    call r1, arraylist_new()
+    load r0, 2
+    load r2, 7
+    call r5, arraylist_add(), r0
+    load r0, 2
+    load r2, 8
+    call r5, arraylist_add(), r0
+    load r0, 1
+    call r4, arraylist_iterator_parent(), r0
+    ret r4

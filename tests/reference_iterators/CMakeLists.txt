@@ -37,3 +37,21 @@ foreach(_crexx_runner IN ITEMS rxvm rxbvm)
         )
     endforeach()
 endforeach()
+
+add_custom_target(reference_generated_contract ALL)
+foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rxas_opt_matrix(
+            NAME reference_generated_contract_${_crexx_runner}
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/reference_generated_contract
+            TARGET_GROUP reference_generated_contract
+            RUNNER ${_crexx_runner}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/reference_generated_contract.rxas rxas ${_crexx_runner} rxlink
+            TEST_LABELS "reference;system;rxas"
+    )
+    foreach(_crexx_mode IN ITEMS noopt opt)
+        set_tests_properties(reference_generated_contract_${_crexx_runner}_${_crexx_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: Reference Generated Contract"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()

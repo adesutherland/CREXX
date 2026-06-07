@@ -81,6 +81,7 @@ struct stack_frame {
     proc_runtime *procedure;         /* Executing runtime procedure state */
     bin_code *return_pc;             /* Program Counter to return to */
     value *return_reg;               /* Target register for return values */
+    unsigned char has_reference_lifetimes; /* Frame-owned storage has references */
     size_t number_locals;            /* Number of local registers */
     size_t nominal_number_locals;    /* Procedure-declared local count */
     size_t number_args;              /* Argument count for the frame */
@@ -102,9 +103,12 @@ frame is reused, the VM relinks local register pointers back to their base
 storage, relinks globals, and resets the argument-count register. Ordinary
 return places the frame on the procedure recycler; full value teardown happens
 when recycled frames are drained. Because references are rare, frames carry a
-small flag that is set when reference cells are created. Only flagged frames run
-the reference-lifetime cleanup on return, invalidating frame-owned local and
-`a0` storage plus nested attribute storage without freeing reusable buffers.
+small flag that is set on the frame that owns referenced storage. A helper may
+execute `MKREF` against caller-owned receiver storage, so the VM finds and marks
+the owner frame rather than assuming the current frame owns the target. Only
+flagged frames run the reference-lifetime cleanup on return, invalidating
+frame-owned local and `a0` storage plus nested attribute storage without freeing
+reusable buffers.
 `clear_frame()` performs full storage cleanup, remaining signal-handler stack
 cleanup, and any VM plugin instance cleanup when a frame is finally destroyed.
 The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero
@@ -244,8 +248,9 @@ strictly by the VM frames. There is no automated background Garbage Collector
 (GC). Frame-bound variables are either recycled for later calls or
 deterministically cleared (`clear_value`) when a `stack_frame` is finally
 destroyed. Reference identities for frame-owned storage are invalidated on
-ordinary frame exit for frames that created references, so recycled stack
-storage cannot keep an escaped weak reference valid.
+ordinary frame exit for frames that own referenced storage, even if the
+reference was created by a callee helper. Recycled stack storage therefore
+cannot keep an escaped weak reference valid.
 
 Attribute arrays use two parallel pointer arrays:
 

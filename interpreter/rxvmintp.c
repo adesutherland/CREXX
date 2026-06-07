@@ -134,6 +134,57 @@ static int rxvm_delete_attributes1_checked(value *array, rxinteger index, rxinte
     return rxvm_delete_attributes_checked(array, index - 1, count);
 }
 
+static int rxvm_reference_storage_in_value_tree(value *root, value *storage) {
+    size_t i;
+
+    if (!root || !storage) return 0;
+    if (root == storage) return 1;
+
+    if (root->unlinked_attributes) {
+        for (i = 0; i < root->max_num_attributes; i++) {
+            if (rxvm_reference_storage_in_value_tree(root->unlinked_attributes[i], storage)) return 1;
+        }
+    }
+
+    return 0;
+}
+
+static stack_frame *rxvm_reference_lifetime_owner_frame(stack_frame *frame,
+                                                        value *storage) {
+    size_t i;
+
+    while (frame) {
+        if (frame->procedure) {
+            size_t locals = (size_t)frame->procedure->locals;
+            size_t globals = frame->procedure->binarySpace
+                             ? (size_t)frame->procedure->binarySpace->globals
+                             : 0;
+            size_t a0_index = locals + globals;
+
+            if (locals > frame->number_locals) locals = frame->number_locals;
+            for (i = 0; i < locals; i++) {
+                if (rxvm_reference_storage_in_value_tree(frame->baselocals[i], storage)) return frame;
+            }
+
+            if (a0_index < frame->number_locals &&
+                rxvm_reference_storage_in_value_tree(frame->baselocals[a0_index], storage)) {
+                return frame;
+            }
+        }
+
+        frame = frame->parent;
+    }
+
+    return 0;
+}
+
+static void rxvm_mark_reference_lifetime_owner(stack_frame *current_frame,
+                                               value *storage) {
+    stack_frame *owner_frame = rxvm_reference_lifetime_owner_frame(current_frame,
+                                                                   storage);
+    if (owner_frame) owner_frame->has_reference_lifetimes = 1;
+}
+
 static rxvm_ref_owner_kind rxvm_reference_owner_kind_for_storage(stack_frame *frame,
                                                                  size_t register_index,
                                                                  value *storage,
@@ -4738,7 +4789,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     DISPATCH
                 }
 
-                current_frame->has_reference_lifetimes = 1;
+                rxvm_mark_reference_lifetime_owner(current_frame, op2R);
                 clear_value_contents(op1R);
                 rxvm_reference_value_set_payload(op1R, cell);
             }
