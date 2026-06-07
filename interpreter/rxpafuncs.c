@@ -212,6 +212,8 @@ char* rxvm_getsignaltext(rxsignal signal) {
              return "FUNCTION_NOT_FOUND";
          case SIGNAL_OUT_OF_RANGE:
              return "OUT_OF_RANGE";
+         case SIGNAL_REFERENCE_INVALID:
+             return "REFERENCE_INVALID";
          case SIGNAL_FAILURE:
              return "FAILURE";
          case SIGNAL_HALT:
@@ -243,6 +245,8 @@ char* rxvm_getsignaltext(rxsignal signal) {
             return SIGNAL_FUNCTION_NOT_FOUND;
         } else if (strcmp(signalText, "OUT_OF_RANGE") == 0) {
             return SIGNAL_OUT_OF_RANGE;
+        } else if (strcmp(signalText, "REFERENCE_INVALID") == 0) {
+            return SIGNAL_REFERENCE_INVALID;
         } else if (strcmp(signalText, "FAILURE") == 0) {
             return SIGNAL_FAILURE;
         } else if (strcmp(signalText, "HALT") == 0) {

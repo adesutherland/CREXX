@@ -134,6 +134,49 @@ static int rxvm_delete_attributes1_checked(value *array, rxinteger index, rxinte
     return rxvm_delete_attributes_checked(array, index - 1, count);
 }
 
+static rxvm_ref_owner_kind rxvm_reference_owner_kind_for_storage(stack_frame *frame,
+                                                                 size_t register_index,
+                                                                 value *storage,
+                                                                 void **owner) {
+    size_t i;
+    size_t locals;
+    size_t globals;
+    int found_base_storage = 0;
+
+    if (owner) *owner = frame;
+    if (!frame || !storage || !frame->procedure) return RXVM_REF_OWNER_NONE;
+
+    locals = (size_t)frame->procedure->locals;
+    globals = frame->procedure->binarySpace ? (size_t)frame->procedure->binarySpace->globals : 0;
+
+    for (i = 0; i < frame->number_locals; i++) {
+        if (frame->baselocals[i] == storage) {
+            register_index = i;
+            found_base_storage = 1;
+            break;
+        }
+    }
+
+    if (!found_base_storage) {
+        if (owner) *owner = 0;
+        return RXVM_REF_ATTRIBUTE;
+    }
+
+    if (register_index < locals) return RXVM_REF_LOCAL;
+    if (register_index < locals + globals) {
+        if (owner) *owner = frame->procedure->binarySpace ? frame->procedure->binarySpace->module : 0;
+        return RXVM_REF_GLOBAL;
+    }
+    if (register_index < frame->number_locals) return RXVM_REF_ARGUMENT;
+
+    return RXVM_REF_ATTRIBUTE;
+}
+
+static rxvm_reference_cell *rxvm_reference_payload_cell(value *reference_value) {
+    if (!reference_value) return 0;
+    return reference_value->reference_payload;
+}
+
 /* This defines the expected max number of args - if a call has more args than
  * this then an oversized block will be malloced
  * In terms of memory usage / waste each one is only 2 x pointer size */
@@ -1394,6 +1437,8 @@ const char *interrupt_to_string(unsigned char interrupt) {
             return "NOT_IMPLEMENTED";
         case RXSIGNAL_INVALID_SIGNAL_CODE:
             return "INVALID_SIGNAL_CODE";
+        case RXSIGNAL_REFERENCE_INVALID:
+            return "REFERENCE_INVALID";
         case RXSIGNAL_OUT_OF_RANGE:
             return "OUT_OF_RANGE";
         case RXSIGNAL_FAILURE:
@@ -1439,6 +1484,7 @@ unsigned char string_to_interrupt(const char *interrupt) {
     if (strcmp(interrupt, "FUNCTION_NOT_FOUND") == 0) return RXSIGNAL_FUNCTION_NOT_FOUND;
     if (strcmp(interrupt, "NOT_IMPLEMENTED") == 0) return RXSIGNAL_NOT_IMPLEMENTED;
     if (strcmp(interrupt, "INVALID_SIGNAL_CODE") == 0) return RXSIGNAL_INVALID_SIGNAL_CODE;
+    if (strcmp(interrupt, "REFERENCE_INVALID") == 0) return RXSIGNAL_REFERENCE_INVALID;
     if (strcmp(interrupt, "OUT_OF_RANGE") == 0) return RXSIGNAL_OUT_OF_RANGE;
     if (strcmp(interrupt, "FAILURE") == 0) return RXSIGNAL_FAILURE;
     if (strcmp(interrupt, "QUIT") == 0) return RXSIGNAL_QUIT;
@@ -1661,6 +1707,7 @@ RX_INLINE stack_frame *frame_f(
         this->interrupt_table[RXSIGNAL_UNKNOWN_INSTRUCTION-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_NOT_IMPLEMENTED-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_FUNCTION_NOT_FOUND-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_REFERENCE_INVALID-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_OUT_OF_RANGE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_QUIT-1].response = RXSIGNAL_RESPONSE_HALT;
@@ -4645,6 +4692,86 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 op1R = op2R;
                 op2R = v_temp;
             }
+            DISPATCH
+
+        START_INSTRUCTION(MKREF_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - MKREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                void *owner = 0;
+                rxvm_ref_owner_kind owner_kind;
+                rxvm_reference_cell *cell;
+
+                owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
+                                                                   REG_IDX(2),
+                                                                   op2R,
+                                                                   &owner);
+                cell = rxvm_reference_identity_for_context(&context->references,
+                                                           op2R,
+                                                           owner_kind,
+                                                           owner,
+                                                           REG_IDX(2),
+                                                           0);
+                if (!cell) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+                    DISPATCH
+                }
+
+                clear_value_contents(op1R);
+                rxvm_reference_value_set_payload(op1R, cell);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DEREF_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - DEREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                rxvm_reference_cell *cell = rxvm_reference_payload_cell(op2R);
+                value *target = rxvm_reference_cell_target(cell);
+                if (!target) {
+                    SET_SIGNAL_MSG(RXSIGNAL_REFERENCE_INVALID, "Reference is invalid");
+                    DISPATCH
+                }
+                copy_value(op1R, target);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(LINKREF_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - LINKREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                rxvm_reference_cell *cell = rxvm_reference_payload_cell(op2R);
+                value *target = rxvm_reference_cell_target(cell);
+                if (!target) {
+                    SET_SIGNAL_MSG(RXSIGNAL_REFERENCE_INVALID, "Reference is invalid");
+                    DISPATCH
+                }
+                op1R = target;
+            }
+            DISPATCH
+
+        START_INSTRUCTION(SETREF_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SETREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                rxvm_reference_cell *cell = rxvm_reference_payload_cell(op1R);
+                value *target = rxvm_reference_cell_target(cell);
+                if (!target) {
+                    SET_SIGNAL_MSG(RXSIGNAL_REFERENCE_INVALID, "Reference is invalid");
+                    DISPATCH
+                }
+                copy_value(target, op2R);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(REFVALID_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - REFVALID R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                int valid = rxvm_reference_cell_is_valid(rxvm_reference_payload_cell(op2R));
+                value_zero(op1R);
+                op1R->int_value = valid ? 1 : 0;
+            }
+            DISPATCH
+
+        START_INSTRUCTION(UNREF_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - UNREF R%lu\n", REG_IDX(1));
+            clear_value_contents(op1R);
             DISPATCH
 
         /* Link attribute op3 of op2 to op1 */
@@ -8464,12 +8591,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         RESERVED_IMPL(RESERVED_097)
         RESERVED_IMPL(RESERVED_098)
         RESERVED_IMPL(RESERVED_099)
-        RESERVED_IMPL(RESERVED_194)
-        RESERVED_IMPL(RESERVED_195)
-        RESERVED_IMPL(RESERVED_196)
-        RESERVED_IMPL(RESERVED_197)
-        RESERVED_IMPL(RESERVED_198)
-        RESERVED_IMPL(RESERVED_199)
         RESERVED_IMPL(RESERVED_263)
         RESERVED_IMPL(RESERVED_264)
         RESERVED_IMPL(RESERVED_265)

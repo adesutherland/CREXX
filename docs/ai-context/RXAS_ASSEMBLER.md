@@ -177,6 +177,26 @@ inserts before that position. Bulk delete is strict: the requested range must
 fit inside the current attributes. Passing a count of zero is a no-op, but the
 index still must be in range. Invalid ranges raise `OUT_OF_RANGE`.
 
+### Reference Helpers
+
+RXAS exposes the VM-first reference surface before any Rexx source syntax is
+finalized:
+
+- `mkref rRef,rSource` creates a reference value to the storage currently named
+  by `rSource`, after existing local links have resolved to their target
+  storage.
+- `deref rDest,rRef` copies the current referenced value into `rDest`.
+- `linkref rLocal,rRef` links a local register to the referenced storage until
+  the existing `unlink rLocal` restores its base storage.
+- `setref rRef,rSource` copies `rSource` into the referenced storage.
+- `refvalid rOut,rRef` stores `1` when the reference is still valid and `0`
+  otherwise.
+- `unref rRef` clears a reference value and releases its reference-cell retain.
+
+Invalid reference use raises `REFERENCE_INVALID`; `refvalid` is the non-raising
+probe. These instructions are optimiser barriers until reference alias effects
+are modelled more deeply.
+
 In UTF builds, RXAS string constants are text, not byte containers. Hand-written
 string operands are unescaped and validated before entering the constant pool;
 invalid UTF-8 is an assembly error with guidance to use `0x...` binary

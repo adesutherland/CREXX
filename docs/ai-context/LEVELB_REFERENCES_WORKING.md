@@ -64,8 +64,10 @@ Rexx source surface is finalized:
   shrink can compact and reclaim attribute storage, and reference cells can be
   allocated from context-local root buckets with a bounded free-list and
   context-local ids.
-- RXAS opcodes, invalid-reference signals, and public Rexx syntax are still not
-  implemented.
+- Step 3 is implemented in the working tree: RXAS can create and use reference
+  values with `mkref`, `deref`, `linkref`, `setref`, `refvalid`, and `unref`.
+  Invalid reference use raises the dedicated, catchable `REFERENCE_INVALID`
+  signal. Public Rexx syntax is still not implemented.
 
 ## Problem
 

@@ -1,0 +1,89 @@
+/*
+ * CREXX Interpreter tests for VM/RXAS reference instructions.
+ */
+
+.globals=0
+
+main() .locals=20
+    say "Test Suite: Reference RXAS Operations"
+
+    load r1, "alpha"
+    mkref r2, r1
+
+    refvalid r3, r2
+    ieq r0, r3, 1
+    brf fail_initial_refvalid, r0
+
+    deref r4, r2
+    seq r0, r4, "alpha"
+    brf fail_initial_deref, r0
+
+    load r1, "beta"
+    deref r4, r2
+    seq r0, r4, "beta"
+    brf fail_overwrite_visible, r0
+
+    load r5, "gamma"
+    setref r2, r5
+    seq r0, r1, "gamma"
+    brf fail_setref, r0
+
+    linkref r6, r2
+    load r6, "delta"
+    unlink r6
+    seq r0, r1, "delta"
+    brf fail_linkref_write, r0
+
+    unref r2
+    refvalid r3, r2
+    ieq r0, r3, 0
+    brf fail_unref, r0
+
+    setattrs r7, 2
+    linkattr r8, r7, 0
+    load r8, "slot-a"
+    mkref r9, r8
+    unlink r8
+
+    linkattr r8, r7, 1
+    load r8, "slot-b"
+    unlink r8
+
+    delattrs r7, 0, 1
+    refvalid r10, r9
+    ieq r0, r10, 0
+    brf fail_deleted_attribute_valid, r0
+
+    sigbr invalid_reference_caught, "REFERENCE_INVALID"
+    deref r11, r9
+    br fail_invalid_signal_missing
+
+invalid_reference_caught:
+    say "caught-reference-invalid"
+    say "PASS: Reference RXAS Ops"
+    ret 0
+
+fail_initial_refvalid:
+    say "FAIL: initial refvalid"
+    ret 1
+fail_initial_deref:
+    say "FAIL: initial deref"
+    ret 1
+fail_overwrite_visible:
+    say "FAIL: overwrite visibility"
+    ret 1
+fail_setref:
+    say "FAIL: setref"
+    ret 1
+fail_linkref_write:
+    say "FAIL: linkref write"
+    ret 1
+fail_unref:
+    say "FAIL: unref"
+    ret 1
+fail_deleted_attribute_valid:
+    say "FAIL: deleted attribute refvalid"
+    ret 1
+fail_invalid_signal_missing:
+    say "FAIL: invalid reference signal missing"
+    ret 1

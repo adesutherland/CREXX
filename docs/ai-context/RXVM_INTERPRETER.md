@@ -124,6 +124,11 @@ and `CALL_BRANCH`, exposed in RXAS as `sigignore`, `sighalt`, `sigshalt`,
 halt-only. `BREAKPOINT` is the debugger/trace signal rather than an ordinary
 error condition.
 
+`REFERENCE_INVALID` is the dedicated signal for a reference value whose target
+storage has been destroyed or invalidated. It defaults to halt, participates in
+normal signal handling, and can be probed without raising through the RXAS
+`refvalid` instruction.
+
 `sigcalla` installs an action-aware call handler. It receives the same raw
 five-attribute interrupt object as `sigcall`, but the handler's return string
 is interpreted as a VM action marker:
