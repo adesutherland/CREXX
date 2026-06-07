@@ -10,6 +10,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_subdirectory(native_signals)
 add_subdirectory(levelb)
 add_subdirectory(performance)
+add_subdirectory(reference_iterators)
 add_subdirectory(rxpa)
 
 set(CMAKE_C_STANDARD 90)

@@ -1,0 +1,194 @@
+/*
+ * Performance smoke for reference-backed iterator foundations.
+ *
+ * The checksum assertions keep this deterministic. The timing output is
+ * observational only; CTest must not fail on local machine speed.
+ */
+
+.globals=0
+
+main() .locals=56
+    say "Test Suite: Reference Iterator Performance Smoke"
+
+    setattrs r1, 2
+    linkattr r2, r1, 0
+    load r2, 3
+    unlink r2
+    linkattr r2, r1, 1
+    setattrs r2, 3
+    linkattr r3, r2, 0
+    load r3, 1
+    unlink r3
+    linkattr r3, r2, 1
+    load r3, 2
+    unlink r3
+    linkattr r3, r2, 2
+    load r3, 3
+    unlink r3
+    unlink r2
+
+    setattrs r19, 3
+    linkattr r3, r19, 0
+    load r3, 1
+    unlink r3
+    linkattr r3, r19, 1
+    load r3, 2
+    unlink r3
+    linkattr r3, r19, 2
+    load r3, 3
+    unlink r3
+
+    load r20, 0
+    load r22, 0
+    load r23, 12000
+    time r24
+direct_loop:
+    ieq r0, r23, 0
+    brt direct_done, r0
+    load r18, 2
+    call r21, direct_next_wrapped(), r18
+    iadd r22, r22, r21
+    dec r23
+    br direct_loop
+
+direct_done:
+    time r25
+    isub r25, r25, r24
+    ieq r0, r22, 24000
+    brf fail_direct_checksum, r0
+    say "reference_iterator_perf direct checksum"
+    itos r22
+    say r22
+    say "reference_iterator_perf direct elapsed"
+    itos r25
+    say r25
+
+    setattrs r10, 2
+    linkattr r11, r10, 0
+    mkref r11, r1
+    unlink r11
+    linkattr r11, r10, 1
+    load r11, 0
+    unlink r11
+
+    load r20, 0
+    load r23, 12000
+    time r24
+parent_loop:
+    ieq r0, r23, 0
+    brt parent_done, r0
+    load r9, 1
+    call r12, parent_next_wrapped(), r9
+    iadd r20, r20, r12
+    dec r23
+    br parent_loop
+
+parent_done:
+    time r25
+    isub r25, r25, r24
+    ieq r0, r20, 24000
+    brf fail_parent_checksum, r0
+    say "reference_iterator_perf parent checksum"
+    itos r20
+    say r20
+    say "reference_iterator_perf parent elapsed"
+    itos r25
+    say r25
+
+    setattrs r30, 2
+    linkattr r2, r1, 1
+    linkattr r31, r30, 0
+    mkref r31, r2
+    unlink r31
+    unlink r2
+    linkattr r31, r30, 1
+    load r31, 0
+    unlink r31
+
+    load r20, 0
+    load r23, 12000
+    time r24
+backing_loop:
+    ieq r0, r23, 0
+    brt backing_done, r0
+    load r29, 1
+    call r32, backing_next_wrapped(), r29
+    iadd r20, r20, r32
+    dec r23
+    br backing_loop
+
+backing_done:
+    time r25
+    isub r25, r25, r24
+    ieq r0, r20, 24000
+    brf fail_backing_checksum, r0
+    say "reference_iterator_perf backing checksum"
+    itos r20
+    say r20
+    say "reference_iterator_perf backing elapsed"
+    itos r25
+    say r25
+
+    say "PASS: Reference Iterator Performance Smoke"
+    ret 0
+
+fail_direct_checksum:
+    say "FAIL: direct iterator checksum"
+    ret 1
+fail_parent_checksum:
+    say "FAIL: parent reference iterator checksum"
+    ret 1
+fail_backing_checksum:
+    say "FAIL: backing reference iterator checksum"
+    ret 1
+
+direct_next_wrapped() .locals=8
+    getattrs r0, a1
+    ieq r1, a2, r0
+    brf direct_no_reset, r1
+    load a2, 0
+direct_no_reset:
+    linkattr r2, a1, a2
+    copy r3, r2
+    inc a2
+    unlink r2
+    ret r3
+
+parent_next_wrapped() .locals=12
+    linkattr r0, a1, 0
+    linkattr r1, a1, 1
+    linkref r2, r0
+    linkattr r3, r2, 0
+    ieq r6, r1, r3
+    brf parent_no_reset, r6
+    load r1, 0
+parent_no_reset:
+    linkattr r4, r2, 1
+    linkattr r5, r4, r1
+    copy r7, r5
+    inc r1
+    unlink r5
+    unlink r4
+    unlink r3
+    unlink r2
+    unlink r1
+    unlink r0
+    ret r7
+
+backing_next_wrapped() .locals=10
+    linkattr r0, a1, 0
+    linkattr r1, a1, 1
+    linkref r2, r0
+    getattrs r3, r2
+    ieq r6, r1, r3
+    brf backing_no_reset, r6
+    load r1, 0
+backing_no_reset:
+    linkattr r4, r2, r1
+    copy r5, r4
+    inc r1
+    unlink r4
+    unlink r2
+    unlink r1
+    unlink r0
+    ret r5

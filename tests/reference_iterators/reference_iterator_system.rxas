@@ -1,0 +1,223 @@
+/*
+ * System-shaped coverage for reference-backed iterator state.
+ */
+
+.globals=0
+
+main() .locals=48
+    say "Test Suite: Reference Iterator Fixtures"
+
+    setattrs r1, 2
+    linkattr r2, r1, 0
+    load r2, 3
+    unlink r2
+    linkattr r2, r1, 1
+    setattrs r2, 3
+    linkattr r3, r2, 0
+    load r3, 10
+    unlink r3
+    linkattr r3, r2, 1
+    load r3, 20
+    unlink r3
+    linkattr r3, r2, 2
+    load r3, 30
+    unlink r3
+    unlink r2
+
+    setattrs r10, 2
+    linkattr r11, r10, 0
+    mkref r11, r1
+    unlink r11
+    linkattr r11, r10, 1
+    load r11, 0
+    unlink r11
+
+    load r9, 1
+    call r12, parent_next(), r9
+    ieq r0, r12, 10
+    brf fail_parent_first, r0
+
+    linkattr r2, r1, 1
+    linkattr r3, r2, 1
+    load r3, 22
+    unlink r3
+    unlink r2
+
+    load r9, 1
+    call r12, parent_next(), r9
+    ieq r0, r12, 22
+    brf fail_parent_live_update, r0
+
+    load r9, 1
+    call r12, parent_next(), r9
+    ieq r0, r12, 30
+    brf fail_parent_third, r0
+
+    setattrs r20, 2
+    linkattr r2, r1, 1
+    linkattr r21, r20, 0
+    mkref r21, r2
+    unlink r21
+    unlink r2
+    linkattr r21, r20, 1
+    load r21, 0
+    unlink r21
+
+    linkattr r2, r1, 1
+    mkref r23, r2
+    deref r24, r23
+    linkattr r3, r2, 0
+    load r3, 11
+    unlink r3
+    unlink r2
+
+    linkattr r25, r24, 0
+    ieq r0, r25, 10
+    unlink r25
+    brf fail_snapshot_copy, r0
+
+    load r19, 1
+    call r22, backing_next(), r19
+    ieq r0, r22, 11
+    brf fail_backing_live_first, r0
+
+    linkattr r2, r1, 1
+    linkattr r3, r2, 1
+    load r3, 44
+    unlink r3
+    unlink r2
+
+    load r19, 1
+    call r22, backing_next(), r19
+    ieq r0, r22, 44
+    brf fail_backing_live_second, r0
+
+    linkattr r21, r20, 0
+    refvalid r26, r21
+    unlink r21
+    ieq r0, r26, 1
+    brf fail_backing_refvalid_before_delete, r0
+
+    setattrs r1, 1
+    linkattr r21, r20, 0
+    refvalid r26, r21
+    copy r32, r21
+    unlink r21
+    ieq r0, r26, 0
+    brf fail_backing_refvalid_after_delete, r0
+
+    load r31, 1
+    call r33, expect_reference_invalid(), r31
+    ieq r0, r33, 1
+    brf fail_backing_invalid_signal, r0
+
+    call r30, make_dead_parent_iterator()
+    linkattr r31, r30, 0
+    refvalid r32, r31
+    copy r34, r31
+    unlink r31
+    ieq r0, r32, 0
+    brf fail_dead_parent_refvalid, r0
+
+    load r33, 1
+    call r35, expect_reference_invalid(), r33
+    ieq r0, r35, 1
+    brf fail_dead_parent_signal, r0
+
+    say "PASS: Reference Iterator Fixtures"
+    ret 0
+
+fail_parent_first:
+    say "FAIL: parent iterator first element"
+    ret 1
+fail_parent_live_update:
+    say "FAIL: parent iterator live update"
+    ret 1
+fail_parent_third:
+    say "FAIL: parent iterator third element"
+    ret 1
+fail_snapshot_copy:
+    say "FAIL: deref snapshot copy"
+    ret 1
+fail_backing_live_first:
+    say "FAIL: backing iterator first live element"
+    ret 1
+fail_backing_live_second:
+    say "FAIL: backing iterator second live element"
+    ret 1
+fail_backing_refvalid_before_delete:
+    say "FAIL: backing iterator refvalid before delete"
+    ret 1
+fail_backing_refvalid_after_delete:
+    say "FAIL: backing iterator refvalid after delete"
+    ret 1
+fail_backing_invalid_signal:
+    say "FAIL: backing iterator invalid signal"
+    ret 1
+fail_dead_parent_refvalid:
+    say "FAIL: dead parent iterator refvalid"
+    ret 1
+fail_dead_parent_signal:
+    say "FAIL: dead parent iterator invalid signal"
+    ret 1
+
+parent_next() .locals=8
+    linkattr r0, a1, 0
+    linkattr r1, a1, 1
+    linkref r2, r0
+    linkattr r3, r2, 1
+    linkattr r4, r3, r1
+    copy r5, r4
+    inc r1
+    unlink r4
+    unlink r3
+    unlink r2
+    unlink r1
+    unlink r0
+    ret r5
+
+backing_next() .locals=7
+    linkattr r0, a1, 0
+    linkattr r1, a1, 1
+    linkref r2, r0
+    linkattr r3, r2, r1
+    copy r4, r3
+    inc r1
+    unlink r3
+    unlink r2
+    unlink r1
+    unlink r0
+    ret r4
+
+expect_reference_invalid() .locals=3
+    sigbr reference_invalid_caught, "REFERENCE_INVALID"
+    linkref r0, a1
+    unlink r0
+    ret 0
+
+reference_invalid_caught:
+    ret 1
+
+make_dead_parent_iterator() .locals=16
+    setattrs r1, 2
+    linkattr r2, r1, 0
+    load r2, 2
+    unlink r2
+    linkattr r2, r1, 1
+    setattrs r2, 2
+    linkattr r3, r2, 0
+    load r3, 7
+    unlink r3
+    linkattr r3, r2, 1
+    load r3, 8
+    unlink r3
+    unlink r2
+
+    setattrs r4, 2
+    linkattr r5, r4, 0
+    mkref r5, r1
+    unlink r5
+    linkattr r5, r4, 1
+    load r5, 0
+    unlink r5
+    ret r4

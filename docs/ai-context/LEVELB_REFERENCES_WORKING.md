@@ -68,6 +68,12 @@ Rexx source surface is finalized:
   values with `mkref`, `deref`, `linkref`, `setref`, `refvalid`, and `unref`.
   Invalid reference use raises the dedicated, catchable `REFERENCE_INVALID`
   signal. Public Rexx syntax is still not implemented.
+- The first container-shaped regression slice is implemented in the working
+  tree under `tests/reference_iterators`: RXAS fixtures model parent-backed and
+  backing-array-backed iterator state with live references, explicit snapshot
+  copies via `deref`, invalid backing/parent detection, and checksum-only
+  performance smoke coverage. The fixtures run through optimized and
+  non-optimized assembly under both `rxvm` and `rxbvm`.
 
 ## Problem
 
@@ -142,6 +148,26 @@ References should satisfy these constraints:
   live container without copying the container body.
 - Native interop: native-backed containers should be able to use reference-like
   lifecycle validation rather than unchecked integer handles.
+
+## Container Iterator Proof Fixtures
+
+The current proof point remains below the Rexx source surface. The
+`tests/reference_iterators` fixtures are intended to look like code the compiler
+or libraries could eventually emit:
+
+- a parent iterator stores a reference to the container object plus a cursor;
+- a backing iterator stores a reference to the array/object attribute that holds
+  the backing storage plus a cursor;
+- `linkref` is used only at the point of access, so ordinary copies still
+  snapshot values unless `deref` is deliberately used for a deep snapshot;
+- `refvalid` gives client code a cheap preflight check, and invalid use remains
+  catchable through `REFERENCE_INVALID`;
+- both optimized and non-optimized RXAS output are exercised by both VM
+  implementations (`rxvm` and `rxbvm`).
+
+The performance fixture is intentionally a smoke test rather than a benchmark
+gate. It prints elapsed times and asserts checksums so regressions in semantics
+are caught without making CI depend on local machine speed.
 
 ## Terms
 
