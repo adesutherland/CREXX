@@ -98,6 +98,31 @@ typedef struct numeric_context {
 } numeric_context;
 
 typedef struct value value;
+typedef struct rxvm_reference_cell rxvm_reference_cell;
+
+typedef enum rxvm_ref_state {
+    RXVM_REF_INVALID = 0,
+    RXVM_REF_VALID = 1
+} rxvm_ref_state;
+
+typedef enum rxvm_ref_owner_kind {
+    RXVM_REF_OWNER_NONE = 0,
+    RXVM_REF_LOCAL,
+    RXVM_REF_ARGUMENT,
+    RXVM_REF_GLOBAL,
+    RXVM_REF_ATTRIBUTE
+} rxvm_ref_owner_kind;
+
+struct rxvm_reference_cell {
+    uint64_t id;
+    unsigned int retain_count;
+    rxvm_ref_state state;
+    rxvm_ref_owner_kind owner_kind;
+    value *target;
+    void *owner;
+    uint64_t owner_generation;
+    const char *debug_name;
+};
 
 #ifndef RXVM_NATIVE_PAYLOAD_OPS_DEFINED
 #define RXVM_NATIVE_PAYLOAD_OPS_DEFINED
@@ -139,6 +164,8 @@ struct value {
     size_t binary_buffer_length; // binary_value buffer length
     const rxvm_native_payload_ops *native_payload_ops; // Shared native payload operations, or NULL
     unsigned int native_payload_flags;
+    rxvm_reference_cell *reference_identity; // This value is a reference target
+    rxvm_reference_cell *reference_payload; // This value is itself a reference
     const char *object_type_name; // Runtime concrete class name, may point into a module constant pool
     size_t object_type_name_length;
     value **attributes;

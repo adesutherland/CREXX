@@ -7,6 +7,7 @@
 #include "rxbin.h"
 #include "rxvalue.h"
 #include "rxvmvars.h" // Value functions to be tested
+#include "rxvmref.h"
 #include "utf.h"      // Your utf8 helper header
 
 /*
@@ -80,6 +81,36 @@ void check_size_equal(size_t actual, size_t expected, const char* message, const
 }
 
 #define CHECK_SIZE_EQUAL(actual, expected, message) check_size_equal((actual), (expected), (message), __FILE__, __LINE__)
+
+void check_int_equal(int actual, int expected, const char* message, const char* file, int line) {
+    if (actual != expected) {
+        fprintf(stderr, "VERIFY FAIL (%s:%d): %s is %d but should be %d\n",
+                file, line, message, actual, expected);
+        exit(1);
+    }
+}
+
+#define CHECK_INT_EQUAL(actual, expected, message) check_int_equal((actual), (expected), (message), __FILE__, __LINE__)
+
+void check_pointer_equal(const void* actual, const void* expected, const char* message, const char* file, int line) {
+    if (actual != expected) {
+        fprintf(stderr, "VERIFY FAIL (%s:%d): %s is %p but should be %p\n",
+                file, line, message, actual, expected);
+        exit(1);
+    }
+}
+
+#define CHECK_POINTER_EQUAL(actual, expected, message) check_pointer_equal((actual), (expected), (message), __FILE__, __LINE__)
+
+void check_pointer_not_null(const void* actual, const char* message, const char* file, int line) {
+    if (!actual) {
+        fprintf(stderr, "VERIFY FAIL (%s:%d): %s is null\n",
+                file, line, message);
+        exit(1);
+    }
+}
+
+#define CHECK_POINTER_NOT_NULL(actual, message) check_pointer_not_null((actual), (message), __FILE__, __LINE__)
 
 void check_binary_bytes(value* v, const unsigned char* expected, size_t length, const char* file, int line) {
     if (v->binary_length != length) {
@@ -359,12 +390,108 @@ void test_binary_buffers() {
     printf("--- Binary Buffer Tests Finished ---\n");
 }
 
+void test_reference_cells() {
+    value local;
+    value attribute;
+    rxvm_reference_cell *cell;
+
+    printf("\n--- Running Reference Cell Tests ---\n");
+
+    value_init(&local);
+    value_init(&attribute);
+    CHECK_POINTER_EQUAL(local.reference_identity, 0, "new value reference_identity");
+    CHECK_POINTER_EQUAL(local.reference_payload, 0, "new value reference_payload");
+
+    cell = rxvm_reference_cell_create(RXVM_REF_LOCAL, &local, 0, 1, "local");
+    CHECK_POINTER_NOT_NULL(cell, "created reference cell");
+    CHECK_SIZE_EQUAL(cell->retain_count, 1, "initial retain_count");
+    CHECK_INT_EQUAL(cell->state, RXVM_REF_VALID, "initial reference state");
+    CHECK_INT_EQUAL(cell->owner_kind, RXVM_REF_LOCAL, "initial owner kind");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(cell), &local, "initial reference target");
+    CHECK_SIZE_EQUAL(cell->owner_generation, 1, "initial owner generation");
+
+    rxvm_reference_cell_retain(cell);
+    CHECK_SIZE_EQUAL(cell->retain_count, 2, "retain_count after retain");
+
+    rxvm_reference_cell_invalidate(cell);
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(cell), 0, "invalidated reference validity");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(cell), 0, "invalidated reference target");
+    CHECK_SIZE_EQUAL(cell->retain_count, 2, "retain_count after invalidate");
+
+    rxvm_reference_cell_retarget(cell, RXVM_REF_ATTRIBUTE, &attribute, &local, 2, "attr");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(cell), 1, "retargeted reference validity");
+    CHECK_INT_EQUAL(cell->owner_kind, RXVM_REF_ATTRIBUTE, "retargeted owner kind");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(cell), &attribute, "retargeted reference target");
+    CHECK_POINTER_EQUAL(cell->owner, &local, "retargeted owner");
+    CHECK_SIZE_EQUAL(cell->owner_generation, 2, "retargeted owner generation");
+
+    rxvm_reference_cell_release(cell);
+    CHECK_SIZE_EQUAL(cell->retain_count, 1, "retain_count after release");
+    rxvm_reference_cell_release(cell);
+
+    clear_value(&local);
+    clear_value(&attribute);
+    printf("--- Reference Cell Tests Finished ---\n");
+}
+
+void test_reference_identity_helpers() {
+    value target;
+    value other;
+    rxvm_reference_cell *cell;
+    rxvm_reference_cell *same_cell;
+    uint64_t original_id;
+
+    printf("\n--- Running Reference Identity Helper Tests ---\n");
+
+    value_init(&target);
+    value_init(&other);
+
+    cell = rxvm_reference_identity_for(&target, RXVM_REF_ARGUMENT, 0, 10, "arg");
+    CHECK_POINTER_NOT_NULL(cell, "created identity cell");
+    CHECK_POINTER_EQUAL(target.reference_identity, cell, "target identity pointer");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(cell), &target, "identity target");
+    CHECK_SIZE_EQUAL(cell->retain_count, 1, "identity retain_count");
+    CHECK_INT_EQUAL(cell->owner_kind, RXVM_REF_ARGUMENT, "identity owner kind");
+    original_id = cell->id;
+
+    same_cell = rxvm_reference_identity_for(&target, RXVM_REF_GLOBAL, &other, 11, "global");
+    CHECK_POINTER_EQUAL(same_cell, cell, "canonical identity cell");
+    CHECK_SIZE_EQUAL(cell->id, original_id, "canonical identity id");
+    CHECK_INT_EQUAL(cell->owner_kind, RXVM_REF_GLOBAL, "retargeted identity owner kind");
+    CHECK_POINTER_EQUAL(cell->owner, &other, "retargeted identity owner");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(cell), &target, "retargeted identity target");
+
+    rxvm_reference_cell_retain(cell);
+    CHECK_SIZE_EQUAL(cell->retain_count, 2, "identity retain_count after payload retain");
+
+    rxvm_reference_identity_invalidate(&target);
+    CHECK_POINTER_EQUAL(target.reference_identity, cell, "identity pointer after invalidate");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(cell), 0, "identity validity after invalidate");
+
+    same_cell = rxvm_reference_identity_for(&target, RXVM_REF_LOCAL, 0, 12, "local");
+    CHECK_POINTER_EQUAL(same_cell, cell, "reused identity cell after invalidate");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(cell), 1, "identity validity after reuse");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(cell), &target, "identity target after reuse");
+
+    rxvm_reference_identity_release(&target);
+    CHECK_POINTER_EQUAL(target.reference_identity, 0, "identity pointer after release");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(cell), 0, "identity validity after release");
+    CHECK_SIZE_EQUAL(cell->retain_count, 1, "identity retain_count after storage release");
+    rxvm_reference_cell_release(cell);
+
+    clear_value(&target);
+    clear_value(&other);
+    printf("--- Reference Identity Helper Tests Finished ---\n");
+}
+
 int main() {
     test_string_positioning();
     test_boundary_conditions();
     test_flawed_optimization_trigger();
     test_utf_status_flags();
     test_binary_buffers();
+    test_reference_cells();
+    test_reference_identity_helpers();
     // Add more tests with other strings (empty, all-ASCII, all-multibyte, etc.)
 
     printf("\nAll tests completed.\n");

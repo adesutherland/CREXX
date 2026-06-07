@@ -6,6 +6,50 @@ This note captures the current direction for durable references in Level B. It
 is deliberately design-space documentation: names, syntax, signal names, and
 exact opcode spellings are placeholders until reviewed.
 
+## Agreed Direction
+
+The following decisions are agreed for the VM/RXAS reference work before any
+Rexx source surface is finalized:
+
+- References are weak. A reference does not keep stack, object, array, or global
+  storage alive. When target storage dies, the reference becomes invalid. This is
+  the intended end-state model, not just a prototype simplification.
+- The first useful implementation should support references to locals,
+  arguments, globals, and object/array attributes. Native storage references are
+  out of scope for the reference work.
+- A reference to an array element follows the physical child storage value when
+  attribute slots move, rather than continuing to mean the old numeric index.
+- Overwriting a live referenced storage location keeps the reference valid; the
+  reference observes the new contents.
+- Destroying or deleting referenced storage invalidates the reference. Later use
+  raises a dedicated invalid-reference signal.
+- Invalid-reference signals should participate in normal signal handling and be
+  catchable, with the default action still expected to halt.
+- The first post-reference pure Rexx container direction is unsynchronized live
+  iteration. The broader Release 1 iterator policy, including snapshot or
+  synchronized variants, remains part of the later Rexx surface/API discussion.
+- The public return type of `Iterator.next()` is out of scope for the reference
+  work and remains to be decided with the collection API.
+- Native collection classes are deprecated for the Release 1 public collection
+  direction. Native handle/reference migration is therefore not a blocker for
+  this reference feature.
+- Rexx source syntax is deferred until VM/RXAS semantics are proven. The likely
+  direction is a word-form `reference` spelling, but it is not part of the first
+  implementation decision.
+- Reference variance and casts are deferred. Level B and Level G may choose
+  different policies.
+
+## Implementation Progress
+
+- Step 1 is implemented: `rxvm_reference_cell` is now part of the VM value
+  model, `value` has `reference_identity` and `reference_payload` slots, and
+  `rxvmref.c` provides allocation, retain/release, invalidation, retargeting,
+  and storage identity helpers.
+- Focused helper coverage lives in `interpreter/tests/ts_regvalue_tester.c`.
+- The reference helpers are not yet wired into `copy_value()`, `move_value()`,
+  frame teardown, attribute deletion, or RXAS opcodes. That is the next
+  implementation slice.
+
 ## Problem
 
 Level B object values currently have clear copy and move behaviour, but there is
@@ -598,22 +642,27 @@ linkref rObj,rListRef
 unlink rObj
 ```
 
-## Open Design Choices
+## Remaining Design Choices
 
-1. Should references be weak by default, invalidating when target storage dies,
-   or should some references keep heap-backed targets alive?
-2. Should the first implementation allow references to attribute slots, or only
-   top-level registers/globals?
-3. If an array element is referenced and array attributes are reordered, should
-   the reference follow the physical child value or the logical index? This note
-   recommends following the physical child value.
-4. Should `.reference(.T)` be assignable only to another `.reference(.T)`, or
+The core VM/RXAS reference direction is now narrowed by the agreed direction
+above. The remaining choices should be deferred until the reference machinery is
+proven in hand-written RXAS and small container tests:
+
+1. What exact invalid-reference signal name should be used?
+2. Should `.reference(.T)` be assignable only to another `.reference(.T)`, or
    should checked casts between compatible reference types be allowed?
-5. How should interface references work? A reference to `.Shape` can refer to a
+3. How should interface references work? A reference to `.Shape` can refer to a
    `.Box`, but dereferencing must preserve normal `istype`/`asserttype`
-   behaviour.
-6. Should invalid dereference be recoverable through the normal signal
-   mechanism?
+   behaviour. Level B and Level G may choose different policies.
+4. What should the public Rexx source syntax be once VM/RXAS semantics are
+   tested? The likely direction is a word-form `reference` spelling, but this is
+   deliberately outside the first implementation slice.
+5. What should the Release 1 collection API promise for snapshot/live/fail-fast
+   or synchronized iteration variants? The first reference-backed Rexx container
+   experiment should use unsynchronized live iteration, but the wider public API
+   decision remains separate.
+6. What should `Iterator.next()` return in the public collection contract? This
+   is collection API work, not reference machinery.
 
 ## Proposed Programme
 

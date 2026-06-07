@@ -164,6 +164,7 @@ function(crexx_enable_core_sockets target_name)
 endfunction()
 
 foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
+    target_sources(${_rxvm_core_target} PRIVATE rxvmref.c rxvmref.h)
     crexx_enable_core_sockets(${_rxvm_core_target})
 endforeach()
 
@@ -221,7 +222,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Value test executable
-add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h)
+add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h rxvmref.c rxvmref.h)
 target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
 target_link_libraries(ts_regvalue_tester m)
 

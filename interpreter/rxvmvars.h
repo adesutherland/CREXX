@@ -167,6 +167,8 @@ RX_INLINE void value_init(value *v) {
     v->binary_buffer_length = 0;
     v->native_payload_ops = 0;
     v->native_payload_flags = 0;
+    v->reference_identity = 0;
+    v->reference_payload = 0;
     v->decimal_value = 0;
     v->decimal_value_length = 0;
     v->decimal_buffer_length = 0;
