@@ -33,6 +33,7 @@
 #include "utf.h"
 #endif
 #include "../binutils/include/rxflags.h"
+#include "rxvmref.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -46,6 +47,12 @@
 static void extract_double_decimal(numeric_context* num_context, value *coefficient, value *exponent, double value);
 static void extract_integer_decimal(numeric_context* num_context, value *coefficient, value *exponent, rxinteger value);
 static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_value, value *exponent_value, value *formatted_output_value);
+RX_MOSTLYINLINE void clear_value_contents(value* v);
+RX_MOSTLYINLINE void reset_value_storage_for_reuse(value* v);
+RX_MOSTLYINLINE void destroy_value_storage(value* v);
+RX_MOSTLYINLINE void clear_value(value* v);
+RX_INLINE void move_value(value *dest, value *source);
+RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v);
 
 RX_INLINE void clear_vm_private_flags(value *v) {
     v->status.all_type_flags &= ~RXFLAG_VM_PRIVATE_MASK;
@@ -129,6 +136,21 @@ RX_INLINE void clear_binary_payload(value *v) {
 
 /* Zeros a register value */
 RX_INLINE void value_zero(value *v) {
+    size_t i;
+
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
+
+    if (v->num_attributes) {
+        for (i = 0; i < v->num_attributes; i++) {
+            value *attribute = v->unlinked_attributes ? v->unlinked_attributes[i] :
+                               (v->attributes ? v->attributes[i] : 0);
+            if (attribute) reset_value_storage_for_reuse(attribute);
+            if (v->attributes && v->unlinked_attributes) {
+                v->attributes[i] = v->unlinked_attributes[i];
+            }
+        }
+    }
+
     if (v->native_payload_ops) {
         clear_binary_payload(v);
     }
@@ -162,6 +184,7 @@ RX_INLINE void value_init(value *v) {
     v->attribute_buffers = 0;
     v->num_attribute_buffers = 0;
     v->max_num_attributes = 0;
+    v->num_attributes = 0;
     v->binary_value = 0;
     v->binary_pos = 0;
     v->binary_buffer_length = 0;
@@ -209,8 +232,13 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
     value *a;
 
     if (num <= v->num_attributes) {
-        /* Reducing the number of attributes is easy */
+        /* Reducing invalidates removed child storage but keeps it reusable. */
+        for (i = num; i < v->num_attributes; i++) {
+            v->attributes[i] = v->unlinked_attributes[i];
+            reset_value_storage_for_reuse(v->attributes[i]);
+        }
         v->num_attributes = num;
+        maybe_trim_attribute_storage(v);
         return;
     }
 
@@ -218,7 +246,7 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
         /* Just need to reset the recycled attributes */
         for (i = v->num_attributes; i < num; i++) {
             v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
-            value_zero(v->attributes[i]);
+            clear_value_contents(v->attributes[i]);
         }
         v->num_attributes = num;
         return;
@@ -229,7 +257,7 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
     /* We first need to recycle any unused attributes */
     for (i = v->num_attributes; i < v->max_num_attributes; i++) {
         v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
-        value_zero(v->attributes[i]);
+        clear_value_contents(v->attributes[i]);
     }
 
     /* Calculate the new maximum number of attributes using bit-twiddling */
@@ -434,15 +462,15 @@ RX_INLINE void null_terminate_string_buffer(value *v) {
     v->string_value[v->string_length] = 0;
 }
 
-/* Clears a value of all its children and other malloced buffers */
-RX_MOSTLYINLINE void clear_value(value* v) {
+/* Clears a value's contents while preserving its own storage reference identity. */
+RX_MOSTLYINLINE void clear_value_contents(value* v) {
     int i;
 
     /* Clear attribute values */
     if (v->unlinked_attributes) {
         for (i = 0; i < v->max_num_attributes; i++) {
             if (v->unlinked_attributes[i]) {
-                clear_value(v->unlinked_attributes[i]);
+                destroy_value_storage(v->unlinked_attributes[i]);
             }
         }
         free(v->unlinked_attributes);
@@ -492,6 +520,24 @@ RX_MOSTLYINLINE void clear_value(value* v) {
     value_zero(v);
 }
 
+/* Resets a storage location for later reuse without freeing reusable buffers. */
+RX_MOSTLYINLINE void reset_value_storage_for_reuse(value* v) {
+    if (!v) return;
+    if (v->reference_identity) rxvm_reference_identity_release(v);
+    value_zero(v);
+}
+
+/* Destroys a storage location, invalidating references to that location. */
+RX_MOSTLYINLINE void destroy_value_storage(value* v) {
+    if (v && v->reference_identity) rxvm_reference_identity_release(v);
+    clear_value_contents(v);
+}
+
+/* Backward-compatible storage teardown helper. */
+RX_MOSTLYINLINE void clear_value(value* v) {
+    destroy_value_storage(v);
+}
+
 RX_INLINE void reverse_attribute_pointers(value **items, size_t start, size_t count) {
     size_t left;
     size_t right;
@@ -534,7 +580,7 @@ RX_INLINE void insert_attributes(value *v, size_t index, size_t count) {
 
     for (i = index; i < index + count; i++) {
         v->attributes[i] = v->unlinked_attributes[i];
-        clear_value(v->attributes[i]);
+        reset_value_storage_for_reuse(v->attributes[i]);
     }
 }
 
@@ -557,9 +603,10 @@ RX_INLINE void delete_attributes(value *v, size_t index, size_t count) {
     new_num = old_num - count;
     for (i = new_num; i < old_num; i++) {
         v->attributes[i] = v->unlinked_attributes[i];
-        clear_value(v->attributes[i]);
+        reset_value_storage_for_reuse(v->attributes[i]);
     }
     v->num_attributes = new_num;
+    maybe_trim_attribute_storage(v);
 }
 
 /* Int Flag */
@@ -779,6 +826,10 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
 
     if (dest == source) return;
 
+    if (dest->reference_payload || source->reference_payload) {
+        rxvm_reference_value_copy_payload(dest, source);
+    }
+
     if (dest->native_payload_ops || source->native_payload_ops) {
         clear_binary_payload(dest);
     }
@@ -851,7 +902,7 @@ RX_INLINE void move_value(value *dest, value *source) {
     if (dest == source) return;
 
     /* Clear out destination - including string / attributes */
-    clear_value(dest);
+    destroy_value_storage(dest);
     value_init(dest);
 
     /* Copy basic values */
@@ -928,8 +979,128 @@ RX_INLINE void move_value(value *dest, value *source) {
     dest->num_attributes = source->num_attributes;
     dest->num_attribute_buffers = source->num_attribute_buffers;
 
+    if (dest->reference_identity || source->reference_identity) {
+        rxvm_reference_identity_move(dest, source);
+    }
+    if (dest->reference_payload || source->reference_payload) {
+        rxvm_reference_value_move_payload(dest, source);
+    }
+
     /* Reset / fixup source */
     value_init(source);
+}
+
+RX_INLINE value *map_trimmed_attribute_pointer(value *old_attribute,
+                                               value **old_unlinked_attributes,
+                                               value *new_storage,
+                                               size_t active_count) {
+    size_t i;
+
+    for (i = 0; i < active_count; i++) {
+        if (old_attribute == old_unlinked_attributes[i]) return &new_storage[i];
+    }
+    return old_attribute;
+}
+
+RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v) {
+    value **old_attributes;
+    value **old_unlinked_attributes;
+    value **old_attribute_buffers;
+    value **new_attributes;
+    value **new_unlinked_attributes;
+    value **new_attribute_buffers;
+    value *new_storage;
+    size_t old_max;
+    size_t old_buffer_count;
+    size_t new_max;
+    size_t i;
+
+    if (!v || v->max_num_attributes < 64) return;
+    if (v->num_attributes &&
+        v->max_num_attributes <= v->num_attributes * 4) return;
+
+    old_max = v->max_num_attributes;
+    old_attributes = v->attributes;
+    old_unlinked_attributes = v->unlinked_attributes;
+    old_attribute_buffers = v->attribute_buffers;
+    old_buffer_count = v->num_attribute_buffers;
+
+    if (v->num_attributes == 0) {
+        if (old_unlinked_attributes) {
+            for (i = 0; i < old_max; i++) {
+                if (old_unlinked_attributes[i]) clear_value_contents(old_unlinked_attributes[i]);
+            }
+        }
+        if (old_attribute_buffers) {
+            for (i = 0; i < old_buffer_count; i++) {
+                if (old_attribute_buffers[i]) free(old_attribute_buffers[i]);
+            }
+            free(old_attribute_buffers);
+        }
+        if (old_attributes) free(old_attributes);
+        if (old_unlinked_attributes) free(old_unlinked_attributes);
+        v->attributes = 0;
+        v->unlinked_attributes = 0;
+        v->attribute_buffers = 0;
+        v->num_attribute_buffers = 0;
+        v->max_num_attributes = 0;
+        return;
+    }
+
+    new_max = power_of_two_size(v->num_attributes);
+    if (new_max >= old_max) return;
+
+    new_attributes = malloc(sizeof(value*) * new_max);
+    new_unlinked_attributes = malloc(sizeof(value*) * new_max);
+    new_attribute_buffers = malloc(sizeof(value*));
+    new_storage = malloc(sizeof(value) * new_max);
+    if (!new_attributes || !new_unlinked_attributes || !new_attribute_buffers || !new_storage) {
+        if (new_attributes) free(new_attributes);
+        if (new_unlinked_attributes) free(new_unlinked_attributes);
+        if (new_attribute_buffers) free(new_attribute_buffers);
+        if (new_storage) free(new_storage);
+        return;
+    }
+
+    for (i = 0; i < new_max; i++) {
+        value_init(&new_storage[i]);
+        new_unlinked_attributes[i] = &new_storage[i];
+    }
+
+    for (i = 0; i < v->num_attributes; i++) {
+        move_value(&new_storage[i], old_unlinked_attributes[i]);
+    }
+
+    for (i = 0; i < v->num_attributes; i++) {
+        new_attributes[i] = map_trimmed_attribute_pointer(old_attributes[i],
+                                                          old_unlinked_attributes,
+                                                          new_storage,
+                                                          v->num_attributes);
+    }
+    for (i = v->num_attributes; i < new_max; i++) {
+        new_attributes[i] = new_unlinked_attributes[i];
+    }
+
+    if (old_unlinked_attributes) {
+        for (i = 0; i < old_max; i++) {
+            if (old_unlinked_attributes[i]) clear_value_contents(old_unlinked_attributes[i]);
+        }
+    }
+    if (old_attribute_buffers) {
+        for (i = 0; i < old_buffer_count; i++) {
+            if (old_attribute_buffers[i]) free(old_attribute_buffers[i]);
+        }
+        free(old_attribute_buffers);
+    }
+    if (old_attributes) free(old_attributes);
+    if (old_unlinked_attributes) free(old_unlinked_attributes);
+
+    new_attribute_buffers[0] = new_storage;
+    v->attributes = new_attributes;
+    v->unlinked_attributes = new_unlinked_attributes;
+    v->attribute_buffers = new_attribute_buffers;
+    v->num_attribute_buffers = 1;
+    v->max_num_attributes = new_max;
 }
 
 /* Copy string value */

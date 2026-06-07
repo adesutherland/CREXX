@@ -121,6 +121,7 @@ void rxinimod(rxvm_context *context) {
     context->num_interface_methods = 0;
     context->interface_method_capacity = 0;
     context->socket_registry = 0;
+    rxvm_reference_context_init(&context->references);
     context->link_dirty = 0;
     context->interface_method_registry_dirty = 0;
     context->interface_factory_registry_dirty = 0;
@@ -189,6 +190,7 @@ void rxfremod(rxvm_context *context) {
         free(context->modules[j]);
     }
     free(context->modules);
+    rxvm_reference_context_free(&context->references);
     if (context->location) free(context->location);
 }
 

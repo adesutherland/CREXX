@@ -99,6 +99,10 @@ typedef struct numeric_context {
 
 typedef struct value value;
 typedef struct rxvm_reference_cell rxvm_reference_cell;
+typedef struct rxvm_reference_context rxvm_reference_context;
+
+#define RXVM_REFERENCE_ROOT_BUCKETS 64
+#define RXVM_REFERENCE_FREE_LIST_SOFT_LIMIT 1024
 
 typedef enum rxvm_ref_state {
     RXVM_REF_INVALID = 0,
@@ -122,6 +126,17 @@ struct rxvm_reference_cell {
     void *owner;
     uint64_t owner_generation;
     const char *debug_name;
+    rxvm_reference_context *context;
+    rxvm_reference_cell *next_active;
+    rxvm_reference_cell *next_free;
+};
+
+struct rxvm_reference_context {
+    uint64_t next_reference_id;
+    rxvm_reference_cell *active_buckets[RXVM_REFERENCE_ROOT_BUCKETS];
+    rxvm_reference_cell *free_list;
+    size_t active_count;
+    size_t free_count;
 };
 
 #ifndef RXVM_NATIVE_PAYLOAD_OPS_DEFINED

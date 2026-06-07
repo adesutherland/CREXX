@@ -76,6 +76,8 @@ add_executable(testvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvmref.c
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvmref.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c)
 # Set the performance properties
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
@@ -177,6 +179,8 @@ add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvmref.c
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvmref.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c
 )
 # Set the performance properties

@@ -484,6 +484,265 @@ void test_reference_identity_helpers() {
     printf("--- Reference Identity Helper Tests Finished ---\n");
 }
 
+void test_reference_context_allocator() {
+    rxvm_reference_context refs;
+    value target;
+    value other;
+    rxvm_reference_cell *cell;
+    rxvm_reference_cell *reused_cell;
+    uint64_t first_id;
+
+    printf("\n--- Running Reference Context Allocator Tests ---\n");
+
+    rxvm_reference_context_init(&refs);
+    value_init(&target);
+    value_init(&other);
+
+    cell = rxvm_reference_identity_for_context(&refs, &target, RXVM_REF_LOCAL, 0, 60, "ctx-target");
+    CHECK_POINTER_NOT_NULL(cell, "context identity cell");
+    CHECK_SIZE_EQUAL(cell->id, 1, "first context reference id");
+    CHECK_POINTER_EQUAL(cell->context, &refs, "reference context pointer");
+    CHECK_SIZE_EQUAL(refs.active_count, 1, "active count after context create");
+    CHECK_SIZE_EQUAL(refs.free_count, 0, "free count after context create");
+    CHECK_POINTER_EQUAL(rxvm_reference_context_find(&refs, cell->id), cell, "context root lookup");
+    first_id = cell->id;
+
+    rxvm_reference_cell_retain(cell);
+    rxvm_reference_identity_release(&target);
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(cell), 0, "context cell invalid after identity release");
+    CHECK_SIZE_EQUAL(refs.active_count, 1, "retained invalid cell remains active");
+    CHECK_SIZE_EQUAL(refs.free_count, 0, "retained invalid cell not on free list");
+
+    rxvm_reference_cell_release(cell);
+    CHECK_SIZE_EQUAL(refs.active_count, 0, "active count after last release");
+    CHECK_SIZE_EQUAL(refs.free_count, 1, "free count after last release");
+    CHECK_POINTER_EQUAL(rxvm_reference_context_find(&refs, first_id), 0, "released cell removed from root lookup");
+
+    reused_cell = rxvm_reference_identity_for_context(&refs, &other, RXVM_REF_GLOBAL, 0, 61, "ctx-other");
+    CHECK_POINTER_EQUAL(reused_cell, cell, "context free-list cell reused");
+    CHECK_SIZE_EQUAL(reused_cell->id, 2, "reused cell gets fresh context id");
+    CHECK_SIZE_EQUAL(refs.active_count, 1, "active count after reuse");
+    CHECK_SIZE_EQUAL(refs.free_count, 0, "free count after reuse");
+
+    clear_value(&other);
+    CHECK_SIZE_EQUAL(refs.active_count, 0, "active count after clearing reused target");
+    CHECK_SIZE_EQUAL(refs.free_count, 1, "free count after clearing reused target");
+
+    rxvm_reference_context_free(&refs);
+    CHECK_SIZE_EQUAL(refs.active_count, 0, "active count after context free");
+    CHECK_SIZE_EQUAL(refs.free_count, 0, "free count after context free");
+
+    clear_value(&target);
+    printf("--- Reference Context Allocator Tests Finished ---\n");
+}
+
+void test_reference_payload_copy_and_clear() {
+    value target;
+    value ref;
+    value copy;
+    rxvm_reference_cell *cell;
+
+    printf("\n--- Running Reference Payload Copy/Clear Tests ---\n");
+
+    value_init(&target);
+    value_init(&ref);
+    value_init(&copy);
+
+    cell = rxvm_reference_identity_for(&target, RXVM_REF_LOCAL, 0, 20, "payload-target");
+    CHECK_POINTER_NOT_NULL(cell, "payload target identity");
+    rxvm_reference_value_set_payload(&ref, cell);
+    CHECK_POINTER_EQUAL(ref.reference_payload, cell, "reference payload pointer");
+    CHECK_SIZE_EQUAL(cell->retain_count, 2, "retain_count after setting payload");
+
+    copy_value(&copy, &ref);
+    CHECK_POINTER_EQUAL(copy.reference_payload, cell, "copied reference payload pointer");
+    CHECK_POINTER_EQUAL(copy.reference_identity, 0, "copy does not inherit source identity");
+    CHECK_SIZE_EQUAL(cell->retain_count, 3, "retain_count after copying payload");
+
+    value_zero(&ref);
+    CHECK_POINTER_EQUAL(ref.reference_payload, 0, "payload released by value_zero");
+    CHECK_SIZE_EQUAL(cell->retain_count, 2, "retain_count after zeroing payload value");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(cell), 1, "target still valid after payload zero");
+
+    clear_value(&copy);
+    CHECK_POINTER_EQUAL(copy.reference_payload, 0, "payload released by clear_value");
+    CHECK_SIZE_EQUAL(cell->retain_count, 1, "retain_count after clearing payload copy");
+
+    rxvm_reference_cell_retain(cell);
+    clear_value(&target);
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(cell), 0, "target identity invalidated by clear_value");
+    CHECK_SIZE_EQUAL(cell->retain_count, 1, "retain_count after clearing target storage");
+    rxvm_reference_cell_release(cell);
+
+    clear_value(&ref);
+    printf("--- Reference Payload Copy/Clear Tests Finished ---\n");
+}
+
+void test_reference_copy_preserves_destination_identity() {
+    value source;
+    value dest;
+    rxvm_reference_cell *source_identity;
+    rxvm_reference_cell *dest_identity;
+
+    printf("\n--- Running Reference Copy Destination Identity Tests ---\n");
+
+    value_init(&source);
+    value_init(&dest);
+
+    set_null_string(&source, "source");
+    source_identity = rxvm_reference_identity_for(&source, RXVM_REF_LOCAL, 0, 30, "source");
+    dest_identity = rxvm_reference_identity_for(&dest, RXVM_REF_LOCAL, 0, 31, "dest");
+
+    CHECK_POINTER_NOT_NULL(source_identity, "source identity");
+    CHECK_POINTER_NOT_NULL(dest_identity, "dest identity");
+    CHECK_POINTER_EQUAL(dest.reference_identity, dest_identity, "destination identity before copy");
+
+    copy_value(&dest, &source);
+    CHECK_POINTER_EQUAL(dest.reference_identity, dest_identity, "destination identity preserved by copy");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(dest_identity), &dest, "destination identity target after copy");
+    CHECK_POINTER_EQUAL(source.reference_identity, source_identity, "source identity preserved by copy");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(source_identity), &source, "source identity target after copy");
+    CHECK_POINTER_EQUAL(dest.reference_payload, source.reference_payload, "ordinary copy has no reference payload");
+    CHECK_SIZE_EQUAL(dest.string_length, source.string_length, "copied string length");
+
+    clear_value(&source);
+    clear_value(&dest);
+    printf("--- Reference Copy Destination Identity Tests Finished ---\n");
+}
+
+void test_reference_move_transfers_identity_and_payload() {
+    value target;
+    value source;
+    value dest;
+    rxvm_reference_cell *payload_cell;
+    rxvm_reference_cell *source_identity;
+    rxvm_reference_cell *dest_identity;
+
+    printf("\n--- Running Reference Move Identity/Payload Tests ---\n");
+
+    value_init(&target);
+    value_init(&source);
+    value_init(&dest);
+
+    payload_cell = rxvm_reference_identity_for(&target, RXVM_REF_GLOBAL, 0, 40, "payload");
+    source_identity = rxvm_reference_identity_for(&source, RXVM_REF_LOCAL, 0, 41, "source");
+    dest_identity = rxvm_reference_identity_for(&dest, RXVM_REF_LOCAL, 0, 42, "dest");
+    rxvm_reference_cell_retain(dest_identity);
+    rxvm_reference_value_set_payload(&source, payload_cell);
+
+    CHECK_SIZE_EQUAL(payload_cell->retain_count, 2, "payload retain_count before move");
+    CHECK_POINTER_EQUAL(source.reference_identity, source_identity, "source identity before move");
+    CHECK_POINTER_EQUAL(dest.reference_identity, dest_identity, "dest identity before move");
+
+    move_value(&dest, &source);
+    CHECK_POINTER_EQUAL(source.reference_identity, 0, "source identity cleared by move");
+    CHECK_POINTER_EQUAL(source.reference_payload, 0, "source payload cleared by move");
+    CHECK_POINTER_EQUAL(dest.reference_identity, source_identity, "source identity transferred to dest");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(source_identity), &dest, "transferred identity retargeted to dest");
+    CHECK_POINTER_EQUAL(dest.reference_payload, payload_cell, "payload moved to dest");
+    CHECK_SIZE_EQUAL(payload_cell->retain_count, 2, "payload retain_count unchanged by move");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(dest_identity), 0, "old dest identity invalidated by move");
+    CHECK_SIZE_EQUAL(dest_identity->retain_count, 1, "old dest identity retained only by test");
+    rxvm_reference_cell_release(dest_identity);
+
+    clear_value(&dest);
+    CHECK_SIZE_EQUAL(payload_cell->retain_count, 1, "payload retain_count after clearing moved dest");
+    clear_value(&target);
+    clear_value(&source);
+    printf("--- Reference Move Identity/Payload Tests Finished ---\n");
+}
+
+void test_reference_attribute_storage_lifecycle() {
+    value array;
+    value *first;
+    value *second;
+    value *third;
+    rxvm_reference_cell *first_cell;
+    rxvm_reference_cell *second_cell;
+    rxvm_reference_cell *third_cell;
+
+    printf("\n--- Running Reference Attribute Storage Lifecycle Tests ---\n");
+
+    value_init(&array);
+    set_num_attributes(&array, 3);
+    first = array.attributes[0];
+    second = array.attributes[1];
+    third = array.attributes[2];
+
+    first_cell = rxvm_reference_identity_for(first, RXVM_REF_ATTRIBUTE, &array, 50, "first");
+    second_cell = rxvm_reference_identity_for(second, RXVM_REF_ATTRIBUTE, &array, 50, "second");
+    third_cell = rxvm_reference_identity_for(third, RXVM_REF_ATTRIBUTE, &array, 50, "third");
+    rxvm_reference_cell_retain(first_cell);
+    rxvm_reference_cell_retain(second_cell);
+    rxvm_reference_cell_retain(third_cell);
+
+    delete_attributes(&array, 0, 1);
+    CHECK_SIZE_EQUAL(array.num_attributes, 2, "attribute count after delete");
+    CHECK_POINTER_EQUAL(array.attributes[0], second, "second physical storage moved to first logical slot");
+    CHECK_POINTER_EQUAL(array.attributes[1], third, "third physical storage moved to second logical slot");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(first_cell), 0, "deleted first storage invalidated");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(second_cell), 1, "second storage remains valid after delete");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(third_cell), 1, "third storage remains valid after delete");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(second_cell), second, "second reference follows physical storage");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(third_cell), third, "third reference follows physical storage");
+
+    set_num_attributes(&array, 1);
+    CHECK_SIZE_EQUAL(array.num_attributes, 1, "attribute count after shrink");
+    CHECK_POINTER_EQUAL(array.attributes[0], second, "remaining physical storage after shrink");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(second_cell), 1, "remaining storage stays valid after shrink");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(third_cell), 0, "shrunk-away storage invalidated");
+
+    clear_value(&array);
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(second_cell), 0, "remaining storage invalidated by parent clear");
+    CHECK_SIZE_EQUAL(first_cell->retain_count, 1, "first test retain after parent clear");
+    CHECK_SIZE_EQUAL(second_cell->retain_count, 1, "second test retain after parent clear");
+    CHECK_SIZE_EQUAL(third_cell->retain_count, 1, "third test retain after parent clear");
+    rxvm_reference_cell_release(first_cell);
+    rxvm_reference_cell_release(second_cell);
+    rxvm_reference_cell_release(third_cell);
+
+    printf("--- Reference Attribute Storage Lifecycle Tests Finished ---\n");
+}
+
+void test_reference_attribute_trim_policy() {
+    value array;
+    value *old_first;
+    value *old_removed;
+    rxvm_reference_cell *first_cell;
+    rxvm_reference_cell *removed_cell;
+    size_t large_capacity;
+
+    printf("\n--- Running Reference Attribute Trim Policy Tests ---\n");
+
+    value_init(&array);
+    set_num_attributes(&array, 128);
+    large_capacity = array.max_num_attributes;
+    old_first = array.attributes[0];
+    old_removed = array.attributes[64];
+
+    first_cell = rxvm_reference_identity_for(old_first, RXVM_REF_ATTRIBUTE, &array, 70, "trim-first");
+    removed_cell = rxvm_reference_identity_for(old_removed, RXVM_REF_ATTRIBUTE, &array, 70, "trim-removed");
+    rxvm_reference_cell_retain(first_cell);
+    rxvm_reference_cell_retain(removed_cell);
+
+    set_num_attributes(&array, 4);
+    CHECK_SIZE_EQUAL(array.num_attributes, 4, "trimmed attribute count");
+    CHECK_INT_EQUAL(array.max_num_attributes < large_capacity, 1, "extreme shrink trims capacity");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(first_cell), 1, "active storage remains valid after trim");
+    CHECK_POINTER_EQUAL(rxvm_reference_cell_target(first_cell), array.attributes[0], "active reference retargeted after trim");
+    CHECK_INT_EQUAL(rxvm_reference_cell_target(first_cell) != old_first, 1, "active reference moved to compacted storage");
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(removed_cell), 0, "removed storage invalidated by shrink");
+
+    clear_value(&array);
+    CHECK_INT_EQUAL(rxvm_reference_cell_is_valid(first_cell), 0, "trimmed active storage invalidated by clear");
+    CHECK_SIZE_EQUAL(first_cell->retain_count, 1, "first trim test retain after clear");
+    CHECK_SIZE_EQUAL(removed_cell->retain_count, 1, "removed trim test retain after clear");
+    rxvm_reference_cell_release(first_cell);
+    rxvm_reference_cell_release(removed_cell);
+
+    printf("--- Reference Attribute Trim Policy Tests Finished ---\n");
+}
+
 int main() {
     test_string_positioning();
     test_boundary_conditions();
@@ -492,6 +751,12 @@ int main() {
     test_binary_buffers();
     test_reference_cells();
     test_reference_identity_helpers();
+    test_reference_context_allocator();
+    test_reference_payload_copy_and_clear();
+    test_reference_copy_preserves_destination_identity();
+    test_reference_move_transfers_identity_and_payload();
+    test_reference_attribute_storage_lifecycle();
+    test_reference_attribute_trim_policy();
     // Add more tests with other strings (empty, all-ASCII, all-multibyte, etc.)
 
     printf("\nAll tests completed.\n");

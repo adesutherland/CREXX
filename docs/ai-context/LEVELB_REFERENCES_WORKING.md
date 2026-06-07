@@ -45,10 +45,27 @@ Rexx source surface is finalized:
   model, `value` has `reference_identity` and `reference_payload` slots, and
   `rxvmref.c` provides allocation, retain/release, invalidation, retargeting,
   and storage identity helpers.
+- Step 2 is implemented in the working tree: VM value transfer now distinguishes
+  live content replacement from storage destruction. `value_zero()` releases
+  reference payloads and invalidates active child-attribute storage while
+  preserving the current value's own reference identity; `clear_value_contents()`
+  clears contents without invalidating that identity; `destroy_value_storage()`
+  and the existing `clear_value()` teardown path invalidate it. `copy_value()`
+  retains copied reference payloads while preserving destination identity, and
+  `move_value()` transfers source identity/payload to the destination after
+  invalidating any old destination identity.
 - Focused helper coverage lives in `interpreter/tests/ts_regvalue_tester.c`.
-- The reference helpers are not yet wired into `copy_value()`, `move_value()`,
-  frame teardown, attribute deletion, or RXAS opcodes. That is the next
-  implementation slice.
+- Focused lifecycle coverage now exercises reference payload copy/clear,
+  destination identity preservation on copy, identity/payload transfer on move,
+  and physical child-storage invalidation for attribute deletion/shrink.
+- The first performance foundation pass is implemented in the working tree:
+  reference hot paths use direct null guards plus header-local cheap helpers,
+  attribute shrink/delete now lazily resets removed storage for reuse, extreme
+  shrink can compact and reclaim attribute storage, and reference cells can be
+  allocated from context-local root buckets with a bounded free-list and
+  context-local ids.
+- RXAS opcodes, invalid-reference signals, and public Rexx syntax are still not
+  implemented.
 
 ## Problem
 

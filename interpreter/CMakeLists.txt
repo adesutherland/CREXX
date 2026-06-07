@@ -226,7 +226,7 @@ add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.
 target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
 target_link_libraries(ts_regvalue_tester m)
 
-add_executable(test_rxpa_utf_validation tests/test_rxpa_utf_validation.c rxpafuncs.c rxvalue.h rxvmvars.h)
+add_executable(test_rxpa_utf_validation tests/test_rxpa_utf_validation.c rxpafuncs.c rxvalue.h rxvmvars.h rxvmref.c rxvmref.h)
 target_include_directories(test_rxpa_utf_validation PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         .
