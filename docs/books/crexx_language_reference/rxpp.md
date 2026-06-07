@@ -1,6 +1,6 @@
 # The Preprocessor
 
-`rxpp` is a precompiler for Rexx scripts designed to run within the cRexx environment. It provides a lightweight macro system that allows developers to define and expand code snippets before the script is interpreted.
+`rxpp` is a preprocessor for Rexx scripts designed to run within the cRexx environment. It provides a lightweight macro system that allows developers to define and expand code snippets before the script is interpreted.
 
 
 
@@ -27,7 +27,7 @@ Or, without arguments:
 ##define MACRONAME {macro body}
 ```
 
-* Macros must be defined **before** they're used as the pre-compiler is a one-pass compiler
+* Macros must be defined *before* they arere used as the pre-compiler is a one-pass compiler
 * Multiple Rexx statements within a macro must be separated by a semicolon (`;`)
 * The macro body is enclosed in `{}` and treated as replacement text
 * RXPP supports multi-line macro definitions using C-style line continuation syntax!
@@ -155,8 +155,6 @@ This will repeat the macro body as many times as there are variadic arguments.
 * Final expanded code lines are stored in `outbuf.` and written to the output file
 * Original macro lines are commented out to preserve source readability and prevent reprocessing
 
-
-
 ## Example
 
 ### Input:
@@ -173,8 +171,6 @@ say DOUBLE(4)
 say 2*4
 ```
 
-
-
 ##  Benefits
 
 * Lightweight and fast preprocessing
@@ -182,16 +178,12 @@ say 2*4
 * Supports complex patterns like loops and variadic templates
 * Plays well with standard cRexx tooling
 
-
-
 ## Common Use Cases
 
 * **Debug macros** (`debug(expr)`)
 * **Loop templates** (`foreach(stem, index)`)
 * **Inline math expressions** (`SQUARE(x)`, `DOUBLE(x)`)
 * **Data initialization** (`stemlist(name, ...)`)
-
-
 
 ## Invocation Syntax
 
@@ -243,7 +235,7 @@ This is particularly useful for appending utility code, subroutines, or deferred
 ##USE myfooter.rexx
 ```
 
-**Behavior:**
+**Behaviour:**
 
 - Contents of `myfooter.rexx` are read during preprocessing.
 - The code is **appended** at the **end** of the final output file.
@@ -271,7 +263,7 @@ cherry
 ##end
 ```
 
-**Behavior:**
+**Behaviour:**
 
 - Populates the stem `fruits.` as follows:
 
@@ -312,7 +304,7 @@ param2
 param3
 ##end
 
-Behavior:
+Behaviour:
 
 Creates a stem SYSIN. with each line as an entry:
 
@@ -360,15 +352,15 @@ Use the following flags in `cflags` to control diagnostic output during the pre-
 
 | Option       | Description                                                                                                                      |
 |--------------|----------------------------------------------------------------------------------------------------------------------------------|
-| **def**      | Displays all `##DEFINE` instructions present in the source file. Definitions from `maclib` are never shown.                      |
-| **set**      | Displays all `##SET` instructions. If not set, these instructions are suppressed from output.                                    |
-| **iflink**   | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                          |
-| **1buf**     | Displays the raw source input immediately after it is read from the file.                                                        |
-| **2buf**     | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured. |
-| **3buf**     | Displays the final source buffer just before it is passed to the pre-compiler.                                                   |
-| **vars**     | Prints all defined variables, including internal variables and those set via `##SET`.                                            |
-| **maclist**  | Displays all loaded macro definitions, including those imported via `maclib`.                                                    |
-| **includes** | Lists all modules imported via `##INCLUDE` and `##USE` directives, including recursively nested dependencies.                    |
+| def      | Displays all `##DEFINE` instructions present in the source file. Definitions from `maclib` are never shown.                      |
+| set      | Displays all `##SET` instructions. If not set, these instructions are suppressed from output.                                    |
+| iflink   | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                          |
+| 1buf     | Displays the raw source input immediately after it is read from the file.                                                        |
+| 2buf     | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured. |
+| 3buf     | Displays the final source buffer just before it is passed to the pre-compiler.                                                   |
+| vars     | Prints all defined variables, including internal variables and those set via `##SET`.                                            |
+| maclist  | Displays all loaded macro definitions, including those imported via `maclib`.                                                    |
+| includes | Lists all modules imported via `##INCLUDE` and `##USE` directives, including recursively nested dependencies.                    |
 If a specific flag is not set, the corresponding option is disabled by default. Alternatively, you can explicitly disable an option by prefixing the flag with n (e.g., nset, n1buf, etc.)
 
 **Example:**
@@ -562,11 +554,11 @@ Closes the nearest open `##IF` or `##IFN` block.
 
 
 
-## Behavior Notes
+## Behaviour Notes
 
 | Feature                        | Description                                                          |
 | ------------------------------ | -------------------------------------------------------------------- |
-| **Nested `##IF`/`##IFN` blocks** | Fully supported, including combinations (e.g., `##IF` inside `##IFN`) |
+| Nested `##IF`/`##IFN` blocks | Fully supported, including combinations (e.g., `##IF` inside `##IFN`) |
 | Case                        | Variable names are case-insensitive                                  |
 | Variable scope              | All variables are global to the precompiler pass                     |
 | Processing stages           | All `##IF`/`##IFN` are evaluated before macro expansion              |
