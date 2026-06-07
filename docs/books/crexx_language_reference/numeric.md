@@ -95,11 +95,13 @@ Selects a predefined set of arithmetic semantic rules. This is a new option.
       is computed, ('a - (TRUNC(a / b) * b)').
     * **Integer Magnitude-Precision Constraint**: Ignored. Quotients can exceed `NUMERIC DIGITS` and use exponential form.
     * **Rounding**: Uses "round-half-even."
-    * **Division (`/`)**: Where the operands and target are all integers, the result is
-      converted to an integer, raising a signal if the result is not an integer. Otherwise, normal float/decimal 
-      division is performed.
-    * **Integer Division ('%')**: The numbers are converted to integers, divided and truncated to an integer 
-      towards zero.
+    * **Division (`/`)**: When both operands are integers, integer division is performed and any fractional
+      part is truncated towards zero. No signal is raised for a non-integral quotient. If either operand is a
+      float or decimal value, normal float/decimal division is performed.
+
+      > **Warning:** In `NUMERIC STANDARD COMMON`, `5 / 2` evaluates to `2`, not `2.5`, and
+      > `180945931154 / 100` evaluates to `1809459311`. Use an explicit decimal or float operand
+      > (`5d / 2`, `180945931154d / 100`, `.decimal("5") / 2`, etc.) when fractional division is intended.
 
 * **INHERITED**: The procedure inherits arithmetic semantics from the caller's context.
 
