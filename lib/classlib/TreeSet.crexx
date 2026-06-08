@@ -26,8 +26,6 @@ options levelb comments_dash
 namespace data_TreeSet expose TreeSet
 import treemap -- the plugin, not the class
 import data_Iterable
-import data_Iterator
-import data_TreeSetIterator
 
 /**
  * class TreeSet implements a Set, backed by a treemap instance. 
