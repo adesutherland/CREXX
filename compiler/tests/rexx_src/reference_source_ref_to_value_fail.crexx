@@ -1,0 +1,10 @@
+options levelb
+namespace reference_source_ref_to_value_fail
+
+main: procedure = .int
+  value = .int
+  value = 1
+  ref = reference value
+  copy = .int
+  copy = ref
+  return 0

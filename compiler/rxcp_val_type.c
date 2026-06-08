@@ -150,21 +150,23 @@ void validate_node_promotion_for_ref(Context *context, ASTNode* node) {
  */
 
 /* Type promotion matrix for numeric operators */
-static const ValueType promotion[9][9] = {
-/*                   TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_STRING,  TP_BINARY,   TP_OBJECT */
-/* TP_UNKNOWN */ {TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_UNKNOWN},
-/* TP_VOID    */ {TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_BINARY,   TP_OBJECT},
-/* TP_BOOLEAN */ {TP_UNKNOWN, TP_BOOLEAN, TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT},
-/* TP_INTEGER */ {TP_UNKNOWN, TP_INTEGER, TP_INTEGER, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT},
-/* TP_FLOAT   */ {TP_UNKNOWN, TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT},
-/* TP_DECIMAL */ {TP_UNKNOWN, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_UNKNOWN,  TP_OBJECT},
-/* TP_STRING  */ {TP_UNKNOWN, TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT},
-/* TP_BINARY  */ {TP_UNKNOWN, TP_BINARY,  TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_OBJECT},
-/* TP_OBJECT  */ {TP_UNKNOWN, TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,   TP_OBJECT},
+static const ValueType promotion[10][10] = {
+/*                   TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_STRING,  TP_BINARY,   TP_OBJECT,  TP_REFERENCE */
+/* TP_UNKNOWN  */ {TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_UNKNOWN, TP_UNKNOWN},
+/* TP_VOID     */ {TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_BINARY,   TP_OBJECT,  TP_UNKNOWN},
+/* TP_BOOLEAN  */ {TP_UNKNOWN, TP_BOOLEAN, TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT,  TP_UNKNOWN},
+/* TP_INTEGER  */ {TP_UNKNOWN, TP_INTEGER, TP_INTEGER, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT,  TP_UNKNOWN},
+/* TP_FLOAT    */ {TP_UNKNOWN, TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT,  TP_UNKNOWN},
+/* TP_DECIMAL  */ {TP_UNKNOWN, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_UNKNOWN,  TP_OBJECT,  TP_UNKNOWN},
+/* TP_STRING   */ {TP_UNKNOWN, TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT,  TP_UNKNOWN},
+/* TP_BINARY   */ {TP_UNKNOWN, TP_BINARY,  TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_OBJECT,  TP_UNKNOWN},
+/* TP_OBJECT   */ {TP_UNKNOWN, TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,   TP_OBJECT,  TP_UNKNOWN},
+/* TP_REFERENCE*/ {TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_UNKNOWN, TP_REFERENCE},
 };
 
 /* Returns the value_type of a node - arrays changes to TP_OBJECT */
 static ValueType node_type(ASTNode* node) {
+    if (node->value_type == TP_REFERENCE) return TP_REFERENCE;
     if (node->value_dims) return TP_OBJECT;
     if (node->value_type != TP_UNKNOWN) return node->value_type;
     if (node->node_type == INTEGER || node->node_type == OP_ARGS) return TP_INTEGER;
@@ -217,6 +219,8 @@ static void copy_value_type(__attribute__((unused)) Context *context, ASTNode *d
                        src->value_dim_base, src->value_dim_elements, src->value_class);
     ast_set_target_type(0, dest, src->value_type, src->value_dims,
                         src->value_dim_base, src->value_dim_elements, src->value_class);
+    ast_copy_value_reference_type_from_value(dest, src);
+    ast_copy_target_reference_type_from_value(dest, src);
 }
 
 static int same_value_type(ASTNode *left, ASTNode *right) {
@@ -230,10 +234,28 @@ static int same_value_type(ASTNode *left, ASTNode *right) {
     }
 
     if (left->value_class && right->value_class) {
-        return strcmp(left->value_class, right->value_class) == 0;
+        if (strcmp(left->value_class, right->value_class) != 0) return 0;
+    } else if (left->value_class || right->value_class) {
+        return 0;
     }
 
-    return left->value_class == 0 && right->value_class == 0;
+    if (left->value_type == TP_REFERENCE) {
+        return rxcp_same_reference_value_type(left, right);
+    }
+
+    return 1;
+}
+
+static int reference_target_is_storage(ASTNode *node) {
+    if (!node) return 0;
+    switch (node->node_type) {
+        case VAR_SYMBOL:
+        case VAR_TARGET:
+        case VAR_REFERENCE:
+            return node->symbolNode && node->symbolNode->symbol;
+        default:
+            return 0;
+    }
 }
 
 static Symbol *resolve_contract_class_name(Context *context, const char *class_name) {
@@ -430,6 +452,7 @@ static int type_node_is_runtime_type_target(ASTNode *type_node) {
     if (!type_node) return 0;
     if (type_node->target_dims != 0) return 0;
     if (type_node->target_type == TP_VOID) return 0;
+    if (type_node->target_type == TP_REFERENCE) return 0;
     return 1;
 }
 
@@ -523,6 +546,7 @@ static void infer_text_type_for_binary_literal(Symbol *symbol) {
 
     symbol->type = TP_STRING;
     symbol->value_dims = 0;
+    sym_clear_reference_type(symbol);
 }
 
 static int target_is_first_untyped_symbol_assignment(ASTNode *target) {
@@ -718,7 +742,7 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
 
                 if (class_match_symbol && class_match_symbol->symbol_type == FUNCTION_SYMBOL) {
                     ASTNode *class_match_node = sym_trnd(class_match_symbol, 0)->node;
-                    ASTNode *match_ret = ast_chld(class_match_node, CLASS, VOID);
+                    ASTNode *match_ret = ast_type_child(class_match_node);
                     size_t match_dims = 0;
                     int *match_base = 0;
                     int *match_elems = 0;
@@ -886,6 +910,7 @@ walker_result clear_node_types_walker(walker_direction direction,
         if (node->node_type != INTEGER && node->node_type != FLOAT &&
             node->node_type != STRING && node->node_type != DECIMAL &&
             node->node_type != CONSTANT && node->node_type != CLASS &&
+            node->node_type != TYPE_REFERENCE &&
             node->node_type != OP_ARGS && node->node_type != VOID &&
             node->node_type != PROGRAM_FILE && node->node_type != PROCEDURE &&
             node->node_type != CLASS_DEF && node->node_type != METHOD) {
@@ -894,6 +919,8 @@ walker_result clear_node_types_walker(walker_direction direction,
             node->target_type = TP_UNKNOWN;
             if (node->value_class) { free(node->value_class); node->value_class = 0; }
             if (node->target_class) { free(node->target_class); node->target_class = 0; }
+            ast_clear_value_reference_type(node);
+            ast_clear_target_reference_type(node);
             node->value_dims = 0;
             node->target_dims = 0;
         }
@@ -1386,6 +1413,7 @@ walker_result set_node_types_walker(walker_direction direction,
                         child1->symbolNode->symbol->value_dims = 0;
                         if (child1->symbolNode->symbol->value_class) free(child1->symbolNode->symbol->value_class);
                         child1->symbolNode->symbol->value_class = 0;
+                        sym_clear_reference_type(child1->symbolNode->symbol);
                         child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
                         if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
                             /* context->changed_flags |= FLAG_VAL_TYPE; */ ast_svtp(child1, child1->symbolNode->symbol);
@@ -1400,6 +1428,7 @@ walker_result set_node_types_walker(walker_direction direction,
                                                  &(child1->symbolNode->symbol->dim_base),
                                                  &(child1->symbolNode->symbol->dim_elements),
                                                  &(child1->symbolNode->symbol->value_class));
+                            rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
 
                             if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
                                 node_to_dims(context, child1, &(child1->symbolNode->symbol->value_dims),
@@ -1473,6 +1502,22 @@ walker_result set_node_types_walker(walker_direction direction,
                 }
                 break;
 
+            case TYPE_REFERENCE:
+                if (node->value_type == TP_UNKNOWN) {
+                    size_t dims = 0;
+                    int *dim_base = 0;
+                    int *dim_elements = 0;
+                    char *class_name = 0;
+                    ValueType nt = node_to_type(context, node, &dims, &dim_base,
+                                                &dim_elements, &class_name);
+                    ast_set_value_type(0, node, nt, dims, dim_base, dim_elements, class_name);
+                    ast_set_target_type(0, node, nt, dims, dim_base, dim_elements, class_name);
+                    if (dim_base) free(dim_base);
+                    if (dim_elements) free(dim_elements);
+                    if (class_name) free(class_name);
+                }
+                break;
+
             case DEFINE:
                 if (node->value_type == TP_UNKNOWN) {
                     set_node_type(node, TP_VOID);
@@ -1486,6 +1531,7 @@ walker_result set_node_types_walker(walker_direction direction,
                                          &(child1->symbolNode->symbol->dim_base),
                                          &(child1->symbolNode->symbol->dim_elements),
                                          &(child1->symbolNode->symbol->value_class));
+                    rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
                     if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
                         /* context->changed_flags |= FLAG_VAL_TYPE; */ ast_svtp(child1, child1->symbolNode->symbol);
                     }
@@ -1501,6 +1547,7 @@ walker_result set_node_types_walker(walker_direction direction,
                                                           &(child1->value_dim_base),
                                                           &(child1->value_dim_elements),
                                                           &(child1->value_class));
+                        rxcp_set_node_value_reference_type_from_node(child1, child2);
                         ast_rttp(child1);
                         ast_svtn(node, child1);
                     }
@@ -1514,6 +1561,7 @@ walker_result set_node_types_walker(walker_direction direction,
                                                                                 &(child1->symbolNode->symbol->dim_base),
                                                                                 &(child1->symbolNode->symbol->dim_elements),
                                                                                 &(child1->symbolNode->symbol->value_class));
+                                rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
                             }
                             ast_svtp(child1, child1->symbolNode->symbol);
                             ast_svtn(node, child1);
@@ -1554,6 +1602,40 @@ walker_result set_node_types_walker(walker_direction direction,
             case OP_TYPEOF:
                 if (node->value_type == TP_UNKNOWN) {
                     set_node_type(node, TP_STRING);
+                }
+                break;
+
+            case OP_REFERENCE:
+                if (node->value_type == TP_UNKNOWN && child1 && child1->value_type != TP_UNKNOWN) {
+                    ast_set_value_type(0, node, TP_REFERENCE, 0, 0, 0, 0);
+                    ast_set_target_type(0, node, TP_REFERENCE, 0, 0, 0, 0);
+                    ast_set_value_reference_type(node, child1->value_type, child1->value_dims,
+                                                 child1->value_dim_base, child1->value_dim_elements,
+                                                 child1->value_class);
+                    ast_set_target_reference_type(node, child1->value_type, child1->value_dims,
+                                                  child1->value_dim_base, child1->value_dim_elements,
+                                                  child1->value_class);
+                }
+                break;
+
+            case OP_DEREFERENCE:
+                if (node->value_type == TP_UNKNOWN && child1 && child1->value_type == TP_REFERENCE) {
+                    ast_set_value_type(0, node, child1->value_reference_type,
+                                       child1->value_reference_dims,
+                                       child1->value_reference_dim_base,
+                                       child1->value_reference_dim_elements,
+                                       child1->value_reference_class);
+                    ast_set_target_type(0, node, child1->value_reference_type,
+                                        child1->value_reference_dims,
+                                        child1->value_reference_dim_base,
+                                        child1->value_reference_dim_elements,
+                                        child1->value_reference_class);
+                }
+                break;
+
+            case OP_REFVALID:
+                if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_BOOLEAN);
                 }
                 break;
 
@@ -1601,7 +1683,7 @@ walker_result type_safety_walker(walker_direction direction,
                     /* Validate main() return values */
                     if (node->value_type != TP_VOID && node->value_type != TP_INTEGER) {
                         /* Must be an string array */
-                        ASTNode *cls = ast_chld(node, CLASS, 0);
+                        ASTNode *cls = ast_type_child(node);
                         if (cls) mknd_err(cls, "MAIN_RETURNS_INTEGER");
                         else mknd_err(node, "MAIN_RETURNS_INTEGER");
                     }
@@ -1633,6 +1715,32 @@ walker_result type_safety_walker(walker_direction direction,
             case OP_COMPARE_S_LTE:
                 set_node_target_type(context, child1, TP_STRING);
                 set_node_target_type(context, child2, TP_STRING);
+                break;
+
+            case TYPE_REFERENCE:
+                if (!child1 || child1->value_type == TP_REFERENCE) {
+                    mknd_err(node, "TYPE_MISMATCH");
+                }
+                break;
+
+            case OP_REFERENCE:
+                if (!reference_target_is_storage(child1)) {
+                    mknd_err(node, "REFERENCE_TARGET_NOT_STORAGE");
+                } else if (child1->value_type == TP_REFERENCE) {
+                    mknd_err(node, "TYPE_MISMATCH");
+                }
+                break;
+
+            case OP_DEREFERENCE:
+                if (!child1 || child1->value_type != TP_REFERENCE) {
+                    mknd_err(node, "TYPE_MISMATCH");
+                }
+                break;
+
+            case OP_REFVALID:
+                if (!child1 || child1->value_type != TP_REFERENCE) {
+                    mknd_err(node, "TYPE_MISMATCH");
+                }
                 break;
 
             case OP_TYPE_IS:
@@ -1850,6 +1958,7 @@ walker_result type_safety_walker(walker_direction direction,
                                          &(child1->symbolNode->symbol->dim_base),
                                          &(child1->symbolNode->symbol->dim_elements),
                                          &(child1->symbolNode->symbol->value_class));
+                    rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
                     ast_svtp(child1, child1->symbolNode->symbol);
 
                     if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
@@ -1896,6 +2005,7 @@ walker_result type_safety_walker(walker_direction direction,
                                                  &(child1->symbolNode->symbol->dim_base),
                                                  &(child1->symbolNode->symbol->dim_elements),
                                                  &(child1->symbolNode->symbol->value_class));
+                            rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
 
                             if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
                                 node_to_dims(context, child1, &(child1->symbolNode->symbol->value_dims),
@@ -2035,6 +2145,7 @@ walker_result type_safety_walker(walker_direction direction,
                                          &(child1->symbolNode->symbol->dim_base),
                                          &(child1->symbolNode->symbol->dim_elements),
                                          &(child1->symbolNode->symbol->value_class));
+                    rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
                 }
                 if (child1->symbolNode) ast_svtp(child1, child1->symbolNode->symbol);
 

@@ -144,6 +144,25 @@ static char *metadata_type_string(Context *context,
     return result;
 }
 
+static char *metadata_reference_type_string(Context *context,
+                                            ValueType reference_type,
+                                            size_t reference_dims,
+                                            int *reference_dim_base,
+                                            int *reference_dim_elements,
+                                            const char *reference_class) {
+    char *referent = metadata_type_string(context,
+                                          reference_type,
+                                          reference_dims,
+                                          reference_dim_base,
+                                          reference_dim_elements,
+                                          reference_class);
+    char *result = malloc(strlen("reference ") + strlen(referent) + 1);
+    strcpy(result, "reference ");
+    strcat(result, referent);
+    free(referent);
+    return result;
+}
+
 char *callable_effective_return_type(ASTNode *node) {
     ASTNode *return_node;
     Context *context;
@@ -156,6 +175,7 @@ char *callable_effective_return_type(ASTNode *node) {
          node->symbolNode->symbol->value_class ||
          node->symbolNode->symbol->value_dims)) {
         Symbol *symbol = node->symbolNode->symbol;
+        if (symbol->type == TP_REFERENCE) return sym_2tp(symbol);
         return metadata_type_string(context,
                                     symbol->type,
                                     symbol->value_dims,
@@ -164,7 +184,7 @@ char *callable_effective_return_type(ASTNode *node) {
                                     symbol->value_class);
     }
 
-    return_node = ast_chld(node, CLASS, VOID);
+    return_node = ast_type_child(node);
     if (!return_node) return strdup(".void");
     if (node->node_type == FACTORY && return_node && return_node->node_type == VOID) {
         ASTNode *owner = node->parent;
@@ -203,7 +223,17 @@ char *callable_effective_return_type(ASTNode *node) {
         int *dim_elements = 0;
         char *class_name = 0;
         ValueType type = node_to_type(context, return_node, &dims, &dim_base, &dim_elements, &class_name);
-        char *result = metadata_type_string(context, type, dims, dim_base, dim_elements, class_name);
+        char *result;
+        if (type == TP_REFERENCE) {
+            result = metadata_reference_type_string(context,
+                                                    return_node->value_reference_type,
+                                                    return_node->value_reference_dims,
+                                                    return_node->value_reference_dim_base,
+                                                    return_node->value_reference_dim_elements,
+                                                    return_node->value_reference_class);
+        } else {
+            result = metadata_type_string(context, type, dims, dim_base, dim_elements, class_name);
+        }
 
         if (dim_base) free(dim_base);
         if (dim_elements) free(dim_elements);
@@ -417,11 +447,13 @@ void meta_set_global_symbol(Symbol *symbol, void *payload) {
         /* Is the global used in the procedure? */
         if ( symislnk(ast_chld(node, INSTRUCTIONS, NOP), symbol) ) {
             symbol_fqn = sym_frnm(symbol);
+            char *type = sym_2tp(symbol);
             buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
                              symbol_fqn,
-                             type_nm(symbol->type),
+                             type,
                              symbol->register_type, symbol->register_num
             );
+            free(type);
             free(symbol_fqn);
 
             /* Add the metadata to the output fragment */
@@ -653,11 +685,12 @@ void add_class_symbol(Symbol *symbol, void *payload) {
                                     reg_index = (int)strtol(nr->child->token->token_string, NULL, 10);
                                 }
                                 char *attr_fqn = sym_frnm(s);
-                                char *type_str = type_nm(s->type);
+                                char *type_str = sym_2tp(s);
                                 char *buf2 = mprintf(".meta \"%s\"=\"b\" \"%s\" .attr %d\n",
                                                      attr_fqn, type_str, reg_index);
                                 output_append_text(output, buf2);
                                 free(buf2);
+                                free(type_str);
                                 free(attr_fqn);
                                 break; /* Found it */
                             }

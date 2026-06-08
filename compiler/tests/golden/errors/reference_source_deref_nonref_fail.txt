@@ -1,0 +1,2 @@
+Error in reference_source_deref_nonref_fail.crexx @ 6:10 - #TYPE_MISMATCH, "dereference value"
+1 error(s) in source file

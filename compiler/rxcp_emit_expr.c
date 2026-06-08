@@ -299,7 +299,8 @@ void emit_expression(ASTNode *node, void *payload) {
                  * set (2) means that it is not a symbol so its value does not need
                  * preserving */
                 if (!n->is_ref_arg &&
-                    (n->value_dims || n->target_type == TP_STRING || n->target_type == TP_OBJECT || n->target_type == TP_BINARY)) {
+                    (n->value_dims || n->target_type == TP_STRING || n->target_type == TP_OBJECT ||
+                     n->target_type == TP_BINARY || n->target_type == TP_REFERENCE)) {
                     k = 1; /* This means we will settp */
                     if (!n->symbolNode) j |= REGTP_NOTSYM; /* Mark it as not a symbol */
                 }
@@ -1001,6 +1002,48 @@ void emit_expression(ASTNode *node, void *payload) {
                                                   node);
             break;
 
+        case OP_REFERENCE:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            temp1 = mprintf("   mkref %c%d,%c%d\n",
+                            node->register_type,
+                            node->register_num,
+                            child1->register_type,
+                            child1->register_num);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            type_promotion(node);
+            break;
+
+        case OP_DEREFERENCE:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            temp1 = mprintf("   deref %c%d,%c%d\n",
+                            node->register_type,
+                            node->register_num,
+                            child1->register_type,
+                            child1->register_num);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            type_promotion(node);
+            break;
+
+        case OP_REFVALID:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            temp1 = mprintf("   refvalid %c%d,%c%d\n",
+                            node->register_type,
+                            node->register_num,
+                            child1->register_type,
+                            child1->register_num);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            type_promotion(node);
+            break;
+
         case OP_TYPE_CAST:
             temp2 = 0;
             if (!node->output) node->output = output_f();
@@ -1105,7 +1148,8 @@ void emit_expression(ASTNode *node, void *payload) {
                 output_append_text(node->output, temp1);
                 free(temp1);
             } else {
-                temp2 = build_source_type_name(child1 ? child1->value_type : TP_UNKNOWN, 0);
+                if (child1 && child1->value_type == TP_REFERENCE) temp2 = ast_n2tp(child1);
+                else temp2 = build_source_type_name(child1 ? child1->value_type : TP_UNKNOWN, 0);
                 if (!temp2) break;
                 temp1 = mprintf("   load %c%d,\"%s\"\n",
                                 node->register_type,

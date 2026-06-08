@@ -272,11 +272,21 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->value_dim_base = 0;
     node->value_dim_elements = 0;
     node->value_class = 0;
+    node->value_reference_type = TP_UNKNOWN;
+    node->value_reference_dims = 0;
+    node->value_reference_dim_base = 0;
+    node->value_reference_dim_elements = 0;
+    node->value_reference_class = 0;
     node->target_type = TP_UNKNOWN;
     node->target_dims = 0;
     node->target_dim_base = 0;
     node->target_dim_elements = 0;
     node->target_class = 0;
+    node->target_reference_type = TP_UNKNOWN;
+    node->target_reference_dims = 0;
+    node->target_reference_dim_base = 0;
+    node->target_reference_dim_elements = 0;
+    node->target_reference_class = 0;
     node->node_string = "";
     node->node_string_length = 0;
     node->free_node_string = 0;
@@ -378,6 +388,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
         new_node->value_class = malloc(strlen(node->value_class) + 1);
         strcpy(new_node->value_class, node->value_class);
     }
+    ast_copy_value_reference_type_from_value(new_node, node);
 
     new_node->target_type = node->target_type;
     new_node->target_dims = node->target_dims;
@@ -393,6 +404,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
         new_node->target_class = malloc(strlen(node->target_class) + 1);
         strcpy(new_node->target_class, node->target_class);
     }
+    ast_copy_target_reference_type_from_target(new_node, node);
 
     new_node->register_num = node->register_num;
     new_node->register_type = node->register_type;
@@ -1322,6 +1334,12 @@ const char *ast_ndtp(NodeType type) {
             return "OP_TYPE_CAST";
         case OP_TYPEOF:
             return "OP_TYPEOF";
+        case OP_REFERENCE:
+            return "OP_REFERENCE";
+        case OP_DEREFERENCE:
+            return "OP_DEREFERENCE";
+        case OP_REFVALID:
+            return "OP_REFVALID";
         case OP_SCONCAT:
             return "OP_SCONCAT";
         case OPTIONS:
@@ -1430,6 +1448,8 @@ const char *ast_ndtp(NodeType type) {
             return "SIGNAL_NAME";
         case AST_SEMANTIC_CONTEXT:
             return "AST_SEMANTIC_CONTEXT";
+        case TYPE_REFERENCE:
+            return "TYPE_REFERENCE";
         case LEVELC_ADDRESS:
             return "LEVELC_ADDRESS";
         case LEVELC_ARG:
@@ -1640,9 +1660,15 @@ void free_ast(Context *context) {
         if (t->value_dim_base) free(t->value_dim_base);
         if (t->value_dim_elements) free(t->value_dim_elements);
         if (t->value_class) free(t->value_class);
+        if (t->value_reference_dim_base) free(t->value_reference_dim_base);
+        if (t->value_reference_dim_elements) free(t->value_reference_dim_elements);
+        if (t->value_reference_class) free(t->value_reference_class);
         if (t->target_dim_base) free(t->target_dim_base);
         if (t->target_dim_elements) free(t->target_dim_elements);
         if (t->target_class) free(t->target_class);
+        if (t->target_reference_dim_base) free(t->target_reference_dim_base);
+        if (t->target_reference_dim_elements) free(t->target_reference_dim_elements);
+        if (t->target_reference_class) free(t->target_reference_class);
         if (t->reporting_source_nodes) free(t->reporting_source_nodes);
         if (t->output) f_output(t->output);
         if (t->cleanup) f_output(t->cleanup);
@@ -1714,6 +1740,44 @@ char* ast_n2tp(ASTNode *node) {
             dim_base = s->dim_base;
             dim_elements = s->dim_elements;
         }
+    }
+
+    if (type == TP_REFERENCE) {
+        ValueType ref_type = node->value_reference_type;
+        size_t ref_dims = node->value_reference_dims;
+        int *ref_dim_base = node->value_reference_dim_base;
+        int *ref_dim_elements = node->value_reference_dim_elements;
+        const char *ref_class = node->value_reference_class;
+        char *ref_base;
+        char *ref_array;
+        int free_ref_base = 0;
+
+        if (node->symbolNode && node->symbolNode->symbol &&
+            node->symbolNode->symbol->type == TP_REFERENCE &&
+            ref_type == TP_UNKNOWN) {
+            Symbol *s = node->symbolNode->symbol;
+            ref_type = s->reference_type;
+            ref_dims = s->reference_dims;
+            ref_dim_base = s->reference_dim_base;
+            ref_dim_elements = s->reference_dim_elements;
+            ref_class = s->reference_class;
+        }
+
+        if (ref_class) {
+            ref_base = rxcp_internal_name_to_source_qualified(ref_class, 1);
+            free_ref_base = 1;
+        } else {
+            ref_base = type_nm(ref_type);
+        }
+
+        ref_array = ast_astr(ref_dims, ref_dim_base, ref_dim_elements);
+        result = malloc(strlen("reference ") + strlen(ref_base) + strlen(ref_array) + 1);
+        strcpy(result, "reference ");
+        strcat(result, ref_base);
+        strcat(result, ref_array);
+        if (free_ref_base) free(ref_base);
+        free(ref_array);
+        return result;
     }
 
     if (type == TP_OBJECT) {
@@ -1821,6 +1885,18 @@ ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2) {
     return 0;
 }
 
+/* Get a child node that represents a type definition (or null) */
+ASTNode * ast_type_child(ASTNode *parent) {
+    ASTNode *n = parent ? parent->child : 0;
+    while (n) {
+        if (n->node_type == CLASS ||
+            n->node_type == VOID ||
+            n->node_type == TYPE_REFERENCE) return n;
+        n = n->sibling;
+    }
+    return 0;
+}
+
 /* Returns 1 if the node is an error or warning node, or has any descendant error or warning node */
 int ast_hase(ASTNode *node) {
     if (node->node_type == ERROR || node->node_type == WARNING) return 1;
@@ -1881,6 +1957,132 @@ int nodeis(ASTNode *node, const char* value) {
     return 0;
 }
 
+static void ast_set_reference_type_fields(ValueType *type,
+                                          size_t *dims,
+                                          int **dim_base,
+                                          int **dim_elements,
+                                          char **class_name,
+                                          ValueType new_type,
+                                          size_t new_dims,
+                                          const int *new_dim_base,
+                                          const int *new_dim_elements,
+                                          const char *new_class_name) {
+    size_t i;
+
+    if (*dim_base) {
+        free(*dim_base);
+        *dim_base = 0;
+    }
+    if (*dim_elements) {
+        free(*dim_elements);
+        *dim_elements = 0;
+    }
+    if (*class_name) {
+        free(*class_name);
+        *class_name = 0;
+    }
+
+    *type = new_type;
+    *dims = new_dims;
+
+    if (new_dims > 0) {
+        *dim_base = malloc(sizeof(int) * new_dims);
+        *dim_elements = malloc(sizeof(int) * new_dims);
+        for (i = 0; i < new_dims; i++) {
+            (*dim_base)[i] = new_dim_base ? new_dim_base[i] : 1;
+            (*dim_elements)[i] = new_dim_elements ? new_dim_elements[i] : 0;
+        }
+    }
+
+    if (new_class_name) *class_name = strdup(new_class_name);
+}
+
+void ast_clear_value_reference_type(ASTNode *node) {
+    if (!node) return;
+    ast_set_reference_type_fields(&node->value_reference_type,
+                                  &node->value_reference_dims,
+                                  &node->value_reference_dim_base,
+                                  &node->value_reference_dim_elements,
+                                  &node->value_reference_class,
+                                  TP_UNKNOWN, 0, 0, 0, 0);
+}
+
+void ast_clear_target_reference_type(ASTNode *node) {
+    if (!node) return;
+    ast_set_reference_type_fields(&node->target_reference_type,
+                                  &node->target_reference_dims,
+                                  &node->target_reference_dim_base,
+                                  &node->target_reference_dim_elements,
+                                  &node->target_reference_class,
+                                  TP_UNKNOWN, 0, 0, 0, 0);
+}
+
+void ast_set_value_reference_type(ASTNode *node, ValueType type, size_t dims,
+                                  const int *dim_base, const int *dim_elements,
+                                  const char *class_name) {
+    if (!node) return;
+    ast_set_reference_type_fields(&node->value_reference_type,
+                                  &node->value_reference_dims,
+                                  &node->value_reference_dim_base,
+                                  &node->value_reference_dim_elements,
+                                  &node->value_reference_class,
+                                  type, dims, dim_base, dim_elements, class_name);
+}
+
+void ast_set_target_reference_type(ASTNode *node, ValueType type, size_t dims,
+                                   const int *dim_base, const int *dim_elements,
+                                   const char *class_name) {
+    if (!node) return;
+    ast_set_reference_type_fields(&node->target_reference_type,
+                                  &node->target_reference_dims,
+                                  &node->target_reference_dim_base,
+                                  &node->target_reference_dim_elements,
+                                  &node->target_reference_class,
+                                  type, dims, dim_base, dim_elements, class_name);
+}
+
+void ast_copy_value_reference_type_from_symbol(ASTNode *node, const Symbol *symbol) {
+    if (!node || !symbol) return;
+    ast_set_value_reference_type(node, symbol->reference_type, symbol->reference_dims,
+                                 symbol->reference_dim_base, symbol->reference_dim_elements,
+                                 symbol->reference_class);
+}
+
+void ast_copy_target_reference_type_from_symbol(ASTNode *node, const Symbol *symbol) {
+    if (!node || !symbol) return;
+    ast_set_target_reference_type(node, symbol->reference_type, symbol->reference_dims,
+                                  symbol->reference_dim_base, symbol->reference_dim_elements,
+                                  symbol->reference_class);
+}
+
+void ast_copy_value_reference_type_from_value(ASTNode *node, const ASTNode *from_node) {
+    if (!node || !from_node) return;
+    ast_set_value_reference_type(node, from_node->value_reference_type, from_node->value_reference_dims,
+                                 from_node->value_reference_dim_base, from_node->value_reference_dim_elements,
+                                 from_node->value_reference_class);
+}
+
+void ast_copy_value_reference_type_from_target(ASTNode *node, const ASTNode *from_node) {
+    if (!node || !from_node) return;
+    ast_set_value_reference_type(node, from_node->target_reference_type, from_node->target_reference_dims,
+                                 from_node->target_reference_dim_base, from_node->target_reference_dim_elements,
+                                 from_node->target_reference_class);
+}
+
+void ast_copy_target_reference_type_from_value(ASTNode *node, const ASTNode *from_node) {
+    if (!node || !from_node) return;
+    ast_set_target_reference_type(node, from_node->value_reference_type, from_node->value_reference_dims,
+                                  from_node->value_reference_dim_base, from_node->value_reference_dim_elements,
+                                  from_node->value_reference_class);
+}
+
+void ast_copy_target_reference_type_from_target(ASTNode *node, const ASTNode *from_node) {
+    if (!node || !from_node) return;
+    ast_set_target_reference_type(node, from_node->target_reference_type, from_node->target_reference_dims,
+                                  from_node->target_reference_dim_base, from_node->target_reference_dim_elements,
+                                  from_node->target_reference_class);
+}
+
 /* Set Node Value and Target Type from Symbol */
 void ast_svtp(ASTNode* node, Symbol* symbol) {
     node->value_type = symbol->type;
@@ -1926,6 +2128,9 @@ void ast_svtp(ASTNode* node, Symbol* symbol) {
         node->target_class = malloc(strlen(symbol->value_class) + 1);
         strcpy(node->target_class, symbol->value_class);
     } else node->target_class = 0;
+
+    ast_copy_value_reference_type_from_symbol(node, symbol);
+    ast_copy_target_reference_type_from_symbol(node, symbol);
 }
 
 /* Set Node Target Value Type from Symbol */
@@ -1953,6 +2158,8 @@ void ast_sttp(ASTNode* node, Symbol* symbol) {
         node->target_class = malloc(strlen(symbol->value_class) + 1);
         strcpy(node->target_class, symbol->value_class);
     } else node->target_class = 0;
+
+    ast_copy_target_reference_type_from_symbol(node, symbol);
 }
 
 /* Set Node Target Value Type from Target Type of from_node */
@@ -1980,6 +2187,8 @@ void ast_sttn(ASTNode* node, ASTNode* from_node) {
         node->target_class = malloc(strlen(from_node->target_class) + 1);
         strcpy(node->target_class, from_node->target_class);
     } else node->target_class = 0;
+
+    ast_copy_target_reference_type_from_target(node, from_node);
 }
 
 /* Set Node Value (and Target) Type from the from_node target type */
@@ -2027,6 +2236,9 @@ void ast_svtn(ASTNode* node, ASTNode* from_node) {
         node->value_class = 0;
         node->target_class = 0;
     }
+
+    ast_copy_value_reference_type_from_target(node, from_node);
+    ast_copy_target_reference_type_from_target(node, from_node);
 }
 
 /* Reset Node Target Type to be the same as the node value type */
@@ -2053,6 +2265,8 @@ void ast_rttp(ASTNode* node) {
         node->target_class = malloc(strlen(node->value_class) + 1);
         strcpy(node->target_class, node->value_class);
     } else node->target_class = 0;
+
+    ast_copy_target_reference_type_from_value(node, node);
 }
 
 /* Returns the index number of a child of its parent (or -1 on error) */

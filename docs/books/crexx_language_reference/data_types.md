@@ -69,6 +69,39 @@ main: procedure = .int
   arg args = .string[]
 ```
 
+## References
+
+Reference values are explicit weak aliases to storage. A reference does not keep
+its target alive; if the target storage is destroyed, later use raises
+`REFERENCE_INVALID`. Use `reference` as a type modifier anywhere a Level B type
+is accepted:
+
+```rexx
+count_ref = reference .int
+items_ref = reference .string[]
+
+read_count: procedure = .int
+  arg r = reference .int
+```
+
+Use `reference target` to create a reference to aliasable storage, and
+`dereference ref` when an explicit snapshot copy is required:
+
+```rexx
+count = 1
+count_ref = reference count
+copy = dereference count_ref
+```
+
+Reference values are not assignment-compatible with their target type. Passing a
+`.T` where `reference .T` is expected is an error, and passing `reference .T`
+where `.T` is expected is also an error; spell either `reference target` or
+`dereference ref` at the boundary.
+
+Nested reference containers, reference casts, reference type tests, and
+implicit member/index access through a reference are not part of the current
+Level B source surface.
+
 ## Numeric Values
 
 Level B supports integer, float, and decimal arithmetic. The file-level

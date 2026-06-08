@@ -567,6 +567,13 @@ add_crexx_compiler_fail_test(interface_default_redefine rexx_src/interface_defau
 add_crexx_compiler_fail_test(interface_factory_return_type rexx_src/interface_factory_return_type.crexx interface_factory_return_type.txt)
 add_crexx_compiler_fail_test(qualified_namespace_missing_import rexx_src/qualified_namespace_missing_import.crexx qualified_namespace_missing_import.txt)
 add_crexx_compiler_fail_test(type_ops_reserved_keyword rexx_src/type_ops_reserved_keyword.crexx type_ops_reserved_keyword.txt)
+add_crexx_compiler_fail_test(reference_source_value_to_ref rexx_src/reference_source_value_to_ref_fail.crexx reference_source_value_to_ref_fail.txt)
+add_crexx_compiler_fail_test(reference_source_ref_to_value rexx_src/reference_source_ref_to_value_fail.crexx reference_source_ref_to_value_fail.txt)
+add_crexx_compiler_fail_test(reference_source_non_storage rexx_src/reference_source_non_storage_fail.crexx reference_source_non_storage_fail.txt)
+add_crexx_compiler_fail_test(reference_source_ref_target rexx_src/reference_source_ref_target_fail.crexx reference_source_ref_target_fail.txt)
+add_crexx_compiler_fail_test(reference_source_nested_type rexx_src/reference_source_nested_type_fail.crexx reference_source_nested_type_fail.txt)
+add_crexx_compiler_fail_test(reference_source_deref_nonref rexx_src/reference_source_deref_nonref_fail.crexx reference_source_deref_nonref_fail.txt)
+add_crexx_compiler_fail_test(reference_source_refvalid_nonref rexx_src/reference_source_refvalid_nonref_fail.crexx reference_source_refvalid_nonref_fail.txt)
 add_test(NAME err_address_exit_disabled_fail
          COMMAND crexx_test_driver --expect-fail
          ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_address_exit_disabled.txt
@@ -761,6 +768,75 @@ macro(add_crexx_run_test NAME SOURCE_FILE)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${NAME}_run_opt PROPERTIES LABELS "linked_opt")
 endmacro()
+
+function(add_crexx_reference_source_test RUNNER MODE)
+    set(NAME "reference_source_explicit_${RUNNER}_${MODE}")
+    set(BASE "${NAME}")
+    set(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(RXC_FLAGS "")
+    set(RXAS_FLAGS "")
+    set(LABELS "reference;compiler;source")
+
+    if(MODE STREQUAL "noopt")
+        set(RXC_FLAGS "-n")
+        set(RXAS_FLAGS "-n")
+    else()
+        set(LABELS "reference;compiler;source;linked_opt")
+    endif()
+
+    if(MODE STREQUAL "opt")
+        set(LINK_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/${NAME}_linked.cmake")
+        crexx_write_linked_runtime_script(
+                OUTPUT "${LINK_SCRIPT}"
+                NAME "${NAME}"
+                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+                RUNNER "$<TARGET_FILE:${RUNNER}>"
+                RXLINK "$<TARGET_FILE:rxlink>"
+                PROGRAM "${BASE}.rxbin"
+                EXTRA_ARGS "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+        )
+    endif()
+
+    set(CONTENT "set(full_out \"\")\n")
+    string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS} -o \"${BASE}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/reference_source_explicit.crexx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
+    string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed: \${out}\")\nendif()\n")
+    string(APPEND CONTENT "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/${BASE}.rxas\" rxas)\n")
+    string(APPEND CONTENT "foreach(op IN ITEMS mkref deref refvalid)\n")
+    string(APPEND CONTENT "  string(FIND \"\${rxas}\" \"\${op} \" op_pos)\n")
+    string(APPEND CONTENT "  if(op_pos EQUAL -1)\n")
+    string(APPEND CONTENT "    message(FATAL_ERROR \"Expected \${op} in generated reference source RXAS\")\n")
+    string(APPEND CONTENT "  endif()\n")
+    string(APPEND CONTENT "endforeach()\n")
+    string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS} -o \"${BASE}.rxbin\" \"${BASE}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
+    string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
+    if(MODE STREQUAL "opt")
+        string(APPEND CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"${LINK_SCRIPT}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+        string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
+        string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"linked ${RUNNER} failed: \${out}\")\nendif()\n")
+    else()
+        string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:${RUNNER}>\" \"${BASE}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+        string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
+        string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"${RUNNER} failed: \${out}\")\nendif()\n")
+    endif()
+    string(APPEND CONTENT "file(READ \"${CMAKE_CURRENT_SOURCE_DIR}/golden/run/reference_source_explicit.out\" golden_out)\n")
+    string(APPEND CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"\${full_out}\")\n")
+    string(APPEND CONTENT "string(REPLACE \"\\r\\n\" \"\\n\" golden_out \"\${golden_out}\")\n")
+    string(APPEND CONTENT "if(NOT full_out STREQUAL golden_out)\n  message(FATAL_ERROR \"Output mismatch: \\nExpected:\\n\${golden_out}\\nGot:\\n\${full_out}\")\nendif()\n")
+    file(GENERATE OUTPUT "${SCRIPT}" CONTENT "${CONTENT}")
+
+    add_test(NAME ${NAME}
+             COMMAND ${CMAKE_COMMAND} -P "${SCRIPT}"
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME} PROPERTIES LABELS "${LABELS}")
+endfunction()
+
+foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+    foreach(_crexx_mode IN ITEMS noopt opt)
+        add_crexx_reference_source_test(${_crexx_runner} ${_crexx_mode})
+    endforeach()
+endforeach()
 
 function(add_crexx_interface_import_run_test NAME MAIN_FILE DEP_FILE MODE)
     get_filename_component(MAIN_BASENAME "${MAIN_FILE}" NAME)
@@ -1223,6 +1299,7 @@ add_crexx_isolated_run_test(type_ops_showcase rexx_src/type_ops_showcase.crexx)
 add_crexx_isolated_run_test(interface_match_same_module rexx_src/interface_match_same_module.crexx)
 add_crexx_isolated_run_fail_test(interface_match_reject_single rexx_src/interface_match_reject_single.crexx)
 add_crexx_isolated_run_fail_test(type_ops_fail rexx_src/type_ops_fail.crexx)
+
 add_crexx_isolated_run_test(interface_named_factory_same_module rexx_src/interface_named_factory_same_module.crexx)
 add_crexx_isolated_run_test(interface_named_factory_tiebreak rexx_src/interface_named_factory_tiebreak.crexx)
 add_crexx_isolated_run_fail_test(interface_named_factory_no_impl rexx_src/interface_named_factory_no_impl.crexx)

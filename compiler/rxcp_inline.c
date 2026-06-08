@@ -72,6 +72,8 @@ typedef struct {
     int has_unsupported_varg_access;
     int has_unsupported_assembler_alias;
     int has_unsupported_assembler_effect;
+    int has_unsupported_reference;
+    int has_class_attribute_write;
     int has_unportable_class_attribute_shape;
     size_t max_required_varg_index;
     int ref_varg_mode;
@@ -163,6 +165,7 @@ static int inline_analyse_varg_usage(ASTNode *proc_def, int *unsupported_out, si
 static int inline_call_is_recursive(ASTNode *call_node, Symbol *proc_sym);
 static int inline_analyse_return_shape(ASTNode *proc_def, InlineReturnShape *shape_out);
 static int inline_method_writes_class_attribute(ASTNode *proc_def);
+static int inline_symbol_writes_class_attribute(Symbol *symbol);
 static int inline_subtree_reads_class_attribute(ASTNode *node);
 static int inline_sibling_list_reads_class_attribute(ASTNode *node);
 static int inline_assembler_has_unsupported_aliasing(ASTNode *node);
@@ -507,8 +510,9 @@ static int inline_symbol_is_class_attribute(Symbol *symbol) {
     return symbol &&
            symbol->symbol_type == VARIABLE_SYMBOL &&
            symbol->scope &&
-           symbol->scope->defining_node &&
-           symbol->scope->defining_node->node_type == CLASS_DEF;
+           (symbol->scope->type == SCOPE_CLASS ||
+            (symbol->scope->defining_node &&
+             symbol->scope->defining_node->node_type == CLASS_DEF));
 }
 
 static int inline_class_attribute_shape_is_portable(Symbol *symbol) {
@@ -705,14 +709,17 @@ static int inline_node_needs_attr_copy(ASTNode *node) {
 
     return node->value_type == TP_OBJECT ||
            node->value_type == TP_BINARY ||
+           node->value_type == TP_REFERENCE ||
            node->target_type == TP_OBJECT ||
-           node->target_type == TP_BINARY;
+           node->target_type == TP_BINARY ||
+           node->target_type == TP_REFERENCE;
 }
 
 static int inline_formal_needs_isolated_copy(ASTNode *formal_target, ASTNode *param_arg) {
     if (!formal_target) return 0;
     if (inline_node_has_array_shape(formal_target)) return 1;
-    if (formal_target->value_type == TP_BINARY || formal_target->target_type == TP_BINARY) return 1;
+    if (formal_target->value_type == TP_BINARY || formal_target->target_type == TP_BINARY ||
+        formal_target->value_type == TP_REFERENCE || formal_target->target_type == TP_REFERENCE) return 1;
 
     return inline_node_is_plain_object(formal_target) && !(param_arg && param_arg->is_const_arg);
 }
@@ -3137,19 +3144,25 @@ static int inline_callable_writes_class_attribute(Symbol *start,
 }
 
 static int inline_method_writes_class_attribute(ASTNode *proc_def) {
-    Symbol **visited;
-    size_t visited_count;
     Symbol *proc_symbol;
-    int result;
 
     if (!proc_def || proc_def->node_type != METHOD) return 0;
 
     proc_symbol = inline_symbol_from_proc_def(proc_def);
     if (!proc_symbol) return 0;
 
+    return inline_symbol_writes_class_attribute(proc_symbol);
+}
+
+static int inline_symbol_writes_class_attribute(Symbol *symbol) {
+    Symbol **visited;
+    size_t visited_count;
+    int result;
+
+    if (!symbol) return 0;
     visited = NULL;
     visited_count = 0;
-    result = inline_callable_writes_class_attribute(proc_symbol, &visited, &visited_count);
+    result = inline_callable_writes_class_attribute(symbol, &visited, &visited_count);
     free(visited);
     return result;
 }
@@ -4174,6 +4187,24 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
             check->has_unsupported_assembler_effect = 1;
         }
 
+        if (node->node_type == OP_REFERENCE ||
+            node->node_type == OP_DEREFERENCE ||
+            node->node_type == OP_REFVALID ||
+            node->node_type == TYPE_REFERENCE ||
+            node->value_type == TP_REFERENCE ||
+            node->target_type == TP_REFERENCE ||
+            (node->symbolNode && node->symbolNode->symbol &&
+             node->symbolNode->symbol->type == TP_REFERENCE)) {
+            check->has_unsupported_reference = 1;
+        }
+
+        if (node->symbolNode &&
+            node->symbolNode->symbol &&
+            (node->node_type == VAR_TARGET || node->node_type == VAR_REFERENCE) &&
+            inline_symbol_is_class_attribute(node->symbolNode->symbol)) {
+            check->has_class_attribute_write = 1;
+        }
+
         if (node->symbolNode &&
             node->symbolNode->symbol &&
             !inline_class_attribute_shape_is_portable(node->symbolNode->symbol)) {
@@ -4298,14 +4329,17 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
             check.return_count != return_shape.return_count ||
             check.has_unsupported_assembler_alias ||
             check.has_unsupported_assembler_effect ||
+            check.has_unsupported_reference ||
             check.has_unsupported_varg_access) {
             inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: nodes=%d returns=%d final_return=%d assembler_alias=%d assembler_effect=%d unsupported_varg=%d cutoff=%d",
+                             "reject: nodes=%d returns=%d final_return=%d assembler_alias=%d assembler_effect=%d unsupported_reference=%d class_attribute_write=%d unsupported_varg=%d cutoff=%d",
                              check.node_count,
                              check.return_count,
                              return_shape.final_is_return,
                              check.has_unsupported_assembler_alias,
                              check.has_unsupported_assembler_effect,
+                             check.has_unsupported_reference,
+                             check.has_class_attribute_write,
                              check.has_unsupported_varg_access,
                              INLINE_MAX_NODES);
             sym->is_inlinable = 0;
@@ -5922,6 +5956,10 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
         inline_export_debug_reject(context, callable, symbol, "assembler stateful instruction");
         return strdup("");
     }
+    if (check.has_unsupported_reference) {
+        inline_export_debug_reject(context, callable, symbol, "reference operation or type");
+        return strdup("");
+    }
     if (check.has_unsupported_varg_access) {
         inline_export_debug_reject(context, callable, symbol, "unsupported vararg access");
         return strdup("");
@@ -6928,11 +6966,30 @@ static int inline_meta_finish_template(ASTNode *proc,
     return 1;
 }
 
+static char *inline_meta_next_record(char **cursor) {
+    char *record;
+    char *separator;
+
+    if (!cursor || !*cursor) return NULL;
+
+    record = *cursor;
+    separator = strchr(record, ';');
+    if (separator) {
+        *separator = '\0';
+        *cursor = separator + 1;
+    } else {
+        *cursor = NULL;
+    }
+
+    return record;
+}
+
 static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const char *payload) {
     InlineMetaImport meta;
     ASTNode *template_proc;
     Scope *template_scope;
     char *copy;
+    char *cursor;
     char *record;
 
     if (!context || !rxcp_inline_payload_is_supported(payload)) return 0;
@@ -6944,7 +7001,8 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     copy = strdup(payload);
     if (!copy) return 0;
 
-    record = strtok(copy, ";");
+    cursor = copy;
+    record = inline_meta_next_record(&cursor);
     if (!record) {
         free(copy);
         return 0;
@@ -6975,7 +7033,7 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     }
     meta.scopes[0] = meta.scope;
 
-    while ((record = strtok(NULL, ";")) != NULL) {
+    while ((record = inline_meta_next_record(&cursor)) != NULL) {
         if (strcmp(record, "<") == 0) {
             if (!meta.stack_count) {
                 meta.ok = 0;

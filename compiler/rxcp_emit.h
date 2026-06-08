@@ -49,7 +49,7 @@ struct OutputFragment {
     char *output;
 };
 
-extern const char* emit_promotion[9][9];
+extern const char* emit_promotion[10][10];
 
 OutputFragment *output_f();
 OutputFragment *output_fs(char* text);

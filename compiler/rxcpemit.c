@@ -48,9 +48,11 @@ static int is_large_value(ASTNode *node) {
     return node->value_type == TP_STRING ||
            node->value_type == TP_OBJECT ||
            node->value_type == TP_BINARY ||
+           node->value_type == TP_REFERENCE ||
            node->target_type == TP_STRING ||
            node->target_type == TP_OBJECT ||
-           node->target_type == TP_BINARY;
+           node->target_type == TP_BINARY ||
+           node->target_type == TP_REFERENCE;
 }
 
 static void append_symbol_trace_event(OutputFragment *output,
@@ -762,6 +764,9 @@ static walker_result emit_walker(walker_direction direction,
             case OP_NOT:
             case OP_NEG:
             case OP_PLUS:
+            case OP_REFERENCE:
+            case OP_DEREFERENCE:
+            case OP_REFVALID:
             case OP_TYPE_CAST:
             case OP_TYPE_IS:
             case OP_TYPEOF:
@@ -1207,7 +1212,9 @@ static walker_result emit_walker(walker_direction direction,
                             (child1->value_dims > 0 || child1->target_dims > 0 ||
                              child2->value_dims > 0 || child2->target_dims > 0 ||
                              child1->value_type == TP_BINARY || child1->target_type == TP_BINARY ||
-                             child2->value_type == TP_BINARY || child2->target_type == TP_BINARY);
+                             child2->value_type == TP_BINARY || child2->target_type == TP_BINARY ||
+                             child1->value_type == TP_REFERENCE || child1->target_type == TP_REFERENCE ||
+                             child2->value_type == TP_REFERENCE || child2->target_type == TP_REFERENCE);
 
                     if (aggregate_assign) {
                         temp1 = mprintf("   copy %c%d,%c%d\n"

@@ -425,9 +425,57 @@ char* type_nm(ValueType type) {
         case TP_STRING: return ".string";
         case TP_BINARY: return ".binary";
         case TP_OBJECT: return ".object";
+        case TP_REFERENCE: return "reference .unknown";
         case TP_VOID: return ".void";
         default: return ".unknown";
     }
+}
+
+void sym_clear_reference_type(Symbol *symbol) {
+    if (!symbol) return;
+    if (symbol->reference_dim_base) {
+        free(symbol->reference_dim_base);
+        symbol->reference_dim_base = 0;
+    }
+    if (symbol->reference_dim_elements) {
+        free(symbol->reference_dim_elements);
+        symbol->reference_dim_elements = 0;
+    }
+    if (symbol->reference_class) {
+        free(symbol->reference_class);
+        symbol->reference_class = 0;
+    }
+    symbol->reference_type = TP_UNKNOWN;
+    symbol->reference_dims = 0;
+}
+
+void sym_set_reference_type(Symbol *symbol, ValueType type, size_t dims,
+                            const int *dim_base, const int *dim_elements,
+                            const char *class_name) {
+    size_t i;
+    if (!symbol) return;
+
+    sym_clear_reference_type(symbol);
+    symbol->reference_type = type;
+    symbol->reference_dims = dims;
+
+    if (dims > 0) {
+        symbol->reference_dim_base = malloc(sizeof(int) * dims);
+        symbol->reference_dim_elements = malloc(sizeof(int) * dims);
+        for (i = 0; i < dims; i++) {
+            symbol->reference_dim_base[i] = dim_base ? dim_base[i] : 1;
+            symbol->reference_dim_elements[i] = dim_elements ? dim_elements[i] : 0;
+        }
+    }
+
+    if (class_name) symbol->reference_class = strdup(class_name);
+}
+
+void sym_copy_reference_type(Symbol *dest, const Symbol *src) {
+    if (!dest || !src) return;
+    sym_set_reference_type(dest, src->reference_type, src->reference_dims,
+                           src->reference_dim_base, src->reference_dim_elements,
+                           src->reference_class);
 }
 
 
@@ -437,6 +485,29 @@ char* sym_2tp(Symbol *symbol) {
     char *array;
     char *result;
     int free_buffer = 0;
+
+    if (symbol->type == TP_REFERENCE) {
+        char *ref_base;
+        int free_ref_base = 0;
+
+        if (symbol->reference_class) {
+            ref_base = rxcp_internal_name_to_source_qualified(symbol->reference_class, 1);
+            free_ref_base = 1;
+        } else {
+            ref_base = type_nm(symbol->reference_type);
+        }
+
+        array = ast_astr(symbol->reference_dims,
+                         symbol->reference_dim_base,
+                         symbol->reference_dim_elements);
+        result = malloc(strlen("reference ") + strlen(ref_base) + strlen(array) + 1);
+        strcpy(result, "reference ");
+        strcat(result, ref_base);
+        strcat(result, array);
+        free(array);
+        if (free_ref_base) free(ref_base);
+        return result;
+    }
 
     if (symbol->value_class) {
         buffer = rxcp_internal_name_to_source_qualified(symbol->value_class, 1);
@@ -495,6 +566,11 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->dim_base = 0;
     symbol->dim_elements = 0;
     symbol->value_class = 0;
+    symbol->reference_type = TP_UNKNOWN;
+    symbol->reference_dims = 0;
+    symbol->reference_dim_base = 0;
+    symbol->reference_dim_elements = 0;
+    symbol->reference_class = 0;
     symbol->needs_default_initiation = 0;
     symbol->register_num = -1;
     symbol->name = (char*)malloc(name_length + 1);
@@ -977,6 +1053,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
             memcpy(new_symbol->dim_elements, symbol->dim_elements, sizeof(int) * symbol->value_dims);
         }
         if (symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
+        sym_copy_reference_type(new_symbol, symbol);
     } else {
         /* Merge status and type if the incoming symbol has more info */
         if (new_symbol->status == SYM_STATUS_UNRESOLVED) new_symbol->status = symbol->status;
@@ -992,6 +1069,9 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
                 memcpy(new_symbol->dim_elements, symbol->dim_elements, sizeof(int) * symbol->value_dims);
             }
             if (symbol->value_class && !new_symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
+            if (symbol->type == TP_REFERENCE && new_symbol->reference_type == TP_UNKNOWN) {
+                sym_copy_reference_type(new_symbol, symbol);
+            }
         }
     }
 
@@ -1007,6 +1087,10 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
 
     /* Delete the old symbol */
     free(symbol->name);
+    if (symbol->value_class) free(symbol->value_class);
+    if (symbol->dim_base) free(symbol->dim_base);
+    if (symbol->dim_elements) free(symbol->dim_elements);
+    sym_clear_reference_type(symbol);
     free_dpa(symbol->ast_node_array);
     free(symbol);
 
@@ -1058,6 +1142,7 @@ Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
         memcpy(new_symbol->dim_elements, symbol->dim_elements, sizeof(int) * symbol->value_dims);
     }
     if (symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
+    sym_copy_reference_type(new_symbol, symbol);
     new_symbol->register_num = symbol->register_num;
     new_symbol->register_type = symbol->register_type;
     new_symbol->fixed_args = symbol->fixed_args;
@@ -1114,6 +1199,7 @@ void free_sym(Symbol *symbol) {
     if (symbol->value_class) free(symbol->value_class);
     if (symbol->dim_base) free(symbol->dim_base);
     if (symbol->dim_elements) free(symbol->dim_elements);
+    sym_clear_reference_type(symbol);
 
     /* Free SymbolNode Connectors */
     for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {

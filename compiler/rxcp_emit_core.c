@@ -37,18 +37,19 @@
 #include "rxbin.h"
 
 /* Type promotion matrix for numeric operators */
-const char* emit_promotion[9][9] = {
-/*                  TP_UNKNOWN,TP_VOID,TP_BOOLEAN,TP_INTEGER,TP_FLOAT, TP_DECIMAL, TP_STRING,TP_BINARY,TP_OBJECT */
+const char* emit_promotion[10][10] = {
+/*                  TP_UNKNOWN,TP_VOID,TP_BOOLEAN,TP_INTEGER,TP_FLOAT, TP_DECIMAL, TP_STRING,TP_BINARY,TP_OBJECT,TP_REFERENCE */
 
-/* TP_UNKNOWN */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
-/* TP_VOID    */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
-/* TP_BOOLEAN */   {0,         0,      0,         "btoi",    "btof", "btod",    "btos",   0,        0},
-/* TP_INTEGER */   {0,         0,      0,         0,         "itof", "itod",    "itos",   0,        0},
-/* TP_FLOAT   */   {0,         0,      "ftob",    "ftoi",    0,      "ftod",    "ftos",   0,        0},
-/* TP_DECIMAL */   {0,         0,      "dtob",    "dtoi",    "dtof", 0,         "dtos",   0,        0},
-/* TP_STRING  */   {0,         0,      "stoi",    "stoi",    "stof", "stod",    0,        "stobin", 0},
-/* TP_BINARY  */   {0,         0,      0,         0,         0,      0,         "bintos", 0,        0},
-/* TP_OBJECT  */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
+/* TP_UNKNOWN  */  {0,         0,      0,         0,         0,      0,         0,        0,        0,        0},
+/* TP_VOID     */  {0,         0,      0,         0,         0,      0,         0,        0,        0,        0},
+/* TP_BOOLEAN  */  {0,         0,      0,         "btoi",    "btof", "btod",    "btos",   0,        0,        0},
+/* TP_INTEGER  */  {0,         0,      0,         0,         "itof", "itod",    "itos",   0,        0,        0},
+/* TP_FLOAT    */  {0,         0,      "ftob",    "ftoi",    0,      "ftod",    "ftos",   0,        0,        0},
+/* TP_DECIMAL  */  {0,         0,      "dtob",    "dtoi",    "dtof", 0,         "dtos",   0,        0,        0},
+/* TP_STRING   */  {0,         0,      "stoi",    "stoi",    "stof", "stod",    0,        "stobin", 0,        0},
+/* TP_BINARY   */  {0,         0,      0,         0,         0,      0,         "bintos", 0,        0,        0},
+/* TP_OBJECT   */  {0,         0,      0,         0,         0,      0,         0,        0,        0,        0},
+/* TP_REFERENCE*/  {0,         0,      0,         0,         0,      0,         0,        0,        0,        0},
 };
 
 static unsigned int next_source_step_id = 1;
@@ -85,6 +86,7 @@ static char trace_value_type_code(ValueType type) {
         case TP_STRING: return 'S';
         case TP_BINARY: return 'X';
         case TP_OBJECT: return 'O';
+        case TP_REFERENCE: return 'R';
         case TP_VOID: return 'V';
         case TP_UNKNOWN:
         default:

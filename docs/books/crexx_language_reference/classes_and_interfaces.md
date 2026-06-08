@@ -23,7 +23,7 @@ Interfaces define callable contracts. Classes implement those contracts.
 Factory declarations do not carry an explicit return type. The return contract
 is implied by the owner: an interface factory returns that interface contract,
 and a class factory returns that concrete class. In a class factory, bare
-`return` returns the constructed object; there is no source-level `this` value
+`return` returns the constructed object; there is no source-level `self` value
 to return explicitly.
 
 ```rexx
@@ -148,6 +148,20 @@ through hand-written assembler. It is valid for VM-integration classes to define
 more than one typed view over the same physical slot, as shown for a signal
 payload/message slot above. Ordinary application classes should not use explicit
 register mappings unless they are matching a fixed VM or native object layout.
+
+## Receiver Storage
+
+Inside a method, `self` names the receiver storage. It is mainly useful when a
+method needs to pass or return a live reference to its receiver:
+
+```rexx
+iterator: method = .Iterator
+  return .ArrayListIterator(reference self)
+```
+
+Bare `self` is not an implicit reference. Use `reference self` when a formal
+requires `reference .Class`, and use an ordinary method call for normal receiver
+access.
 
 ## Factory Selection with `match`
 

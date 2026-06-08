@@ -1,0 +1,2 @@
+Error in reference_source_nested_type_fail.crexx @ 5:12 - #TYPE_MISMATCH, "reference reference .int"
+1 error(s) in source file

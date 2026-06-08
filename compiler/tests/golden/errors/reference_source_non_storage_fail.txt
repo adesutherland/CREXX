@@ -1,0 +1,2 @@
+Error in reference_source_non_storage_fail.crexx @ 6:9 - #REFERENCE_TARGET_NOT_STORAGE, "reference (value + 1)"
+1 error(s) in source file

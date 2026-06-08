@@ -1,10 +1,10 @@
 /*
  * SOURCE                 : object_reference_regression.crexx
- * BUILT                  : 2026-06-05 19:41:36
+ * BUILT                  : 2026-06-08 20:45:46
  */
 
 .meta "object_reference_regression.largepayload"="b" ".unknown" .class
-.meta "object_reference_regression.largepayload.child"="b" ".object" .attr 1
+.meta "object_reference_regression.largepayload.child"="b" ".smallpayload" .attr 1
 .meta "object_reference_regression.largepayload.marker1"="b" ".string" .attr 2
 .meta "object_reference_regression.largepayload.marker2"="b" ".string" .attr 3
 .meta "object_reference_regression.largepayload.marker3"="b" ".string" .attr 4
@@ -14,7 +14,7 @@
 .meta "object_reference_regression.largepayload.marker7"="b" ".string" .attr 8
 .meta "object_reference_regression.largepayload.marker8"="b" ".string" .attr 9
 .meta "object_reference_regression.largepayload.name"="b" ".string" .attr 10
-.meta "object_reference_regression.largepayload.values"="b" ".string" .attr 11
+.meta "object_reference_regression.largepayload.values"="b" ".string[*]" .attr 11
 .meta "object_reference_regression.smallpayload"="b" ".unknown" .class
 .meta "object_reference_regression.smallpayload.name"="b" ".string" .attr 1
 .globals=0

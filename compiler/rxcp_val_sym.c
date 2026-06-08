@@ -206,7 +206,7 @@ walker_result structure_symbols_walker(walker_direction direction,
             normalize_symbol_label(node);
 
             /* Set the return value node value_type */
-            n = ast_chld(node, CLASS, VOID);
+            n = ast_type_child(node);
             if (n) {
                 size_t dims = 0;
                 int *db = 0, *de = 0;
@@ -1365,10 +1365,11 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                     }
                     ast_svtp(defining_node_link->node, symbol);
                 } else {
-                    p_type = ast_chld(defining_node_link->node, CLASS, VOID);
+                    p_type = ast_type_child(defining_node_link->node);
                     symbol->type = node_to_type(context, p_type,
                                                 &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                                 &(symbol->value_class));
+                    rxcp_set_symbol_reference_type_from_node(symbol, p_type);
 
                     ast_svtp(defining_node_link->node, symbol);
                     ast_svtp(p_type, symbol);
@@ -1380,6 +1381,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                             &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                             &(symbol->value_class));
+                rxcp_set_symbol_reference_type_from_node(symbol, defining_node_link->node->sibling);
                 ast_svtp(defining_node_link->node, symbol);
                 ast_svtn(defining_node_link->node->parent, defining_node_link->node);
                 break;
@@ -1389,6 +1391,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                             &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                             &(symbol->value_class));
+                rxcp_set_symbol_reference_type_from_node(symbol, defining_node_link->node->sibling);
 
                 /* The dimensions can be defined on the left-hand side (lhs) or rhs but not both and not if the rhs is a class */
                 /* node_to_type(context, ) above has checked the rhs - so now we look at the lhs */
@@ -1429,10 +1432,11 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 }
                 ast_svtp(defining_node_link->node, symbol);
                 } else {
-                p_type = ast_chld(defining_node_link->node, CLASS, VOID);
+                p_type = ast_type_child(defining_node_link->node);
                 symbol->type = node_to_type(context, p_type,
                                             &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                             &(symbol->value_class));
+                rxcp_set_symbol_reference_type_from_node(symbol, p_type);
 
                 ast_svtp(defining_node_link->node, symbol);
                 ast_svtp(p_type, symbol);
@@ -1445,6 +1449,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                         &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                         &(symbol->value_class));
+            rxcp_set_symbol_reference_type_from_node(symbol, defining_node_link->node->sibling);
             ast_svtp(defining_node_link->node, symbol);
             ast_svtn(defining_node_link->node->parent, defining_node_link->node);
             
@@ -1455,6 +1460,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                         &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                         &(symbol->value_class));
+            rxcp_set_symbol_reference_type_from_node(symbol, defining_node_link->node->sibling);
 
             /* The dimensions can be defined on the left-hand side (lhs) or rhs but not both and not if the rhs is a class */
             /* node_to_type(context, ) above has checked the rhs - so now we look at the lhs */

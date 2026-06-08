@@ -39,9 +39,11 @@ static int flow_needs_attr_copy(ASTNode *node) {
     return node->value_type == TP_STRING ||
            node->value_type == TP_OBJECT ||
            node->value_type == TP_BINARY ||
+           node->value_type == TP_REFERENCE ||
            node->target_type == TP_STRING ||
            node->target_type == TP_OBJECT ||
-           node->target_type == TP_BINARY;
+           node->target_type == TP_BINARY ||
+           node->target_type == TP_REFERENCE;
 }
 
 static const char *signal_block_catch_all_names[] = {

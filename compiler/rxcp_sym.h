@@ -66,6 +66,11 @@ struct Symbol {
     int *dim_base;        /* Array of starting element number for array dimension - malloced or zero */
     int *dim_elements;    /* Array of max number of elements for array dimension (0=infinite) - malloced or zero */
     char* value_class;    /* Value class name - malloced or zero */
+    ValueType reference_type;    /* Referenced value type for TP_REFERENCE symbols */
+    size_t reference_dims;       /* Referenced value dimensions */
+    int *reference_dim_base;     /* Referenced array base metadata - malloced or zero */
+    int *reference_dim_elements; /* Referenced array size metadata - malloced or zero */
+    char* reference_class;       /* Referenced class name - malloced or zero */
     SymbolType symbol_type;
     SymbolStatus status;
     int register_num;
@@ -98,6 +103,12 @@ char* type_nm(ValueType type);
 
 /* Returns string name of a SymbolValue type */
 char* stype_nm(SymbolType type);
+
+void sym_clear_reference_type(Symbol *symbol);
+void sym_set_reference_type(Symbol *symbol, ValueType type, size_t dims,
+                            const int *dim_base, const int *dim_elements,
+                            const char *class_name);
+void sym_copy_reference_type(Symbol *dest, const Symbol *src);
 
 /* Scope Factory */
 Scope *scp_f(Context *context, Scope *parent, ASTNode *node, Symbol* symbol, ScopeType type);

@@ -189,6 +189,21 @@ Table: Logical Operators {#tbl:id}
 
 Table: Term Operators {#tbl:id}
 
+## Reference Expressions
+
+Level B reference operations use word-form expressions:
+
+| Form | Description |
+|:-----|:------------|
+| `reference target` | Create a weak reference to aliasable storage. |
+| `dereference ref` | Make an explicit snapshot copy of the current reference target. |
+| `refvalid(ref)` | Return whether the weak reference currently has a valid target. |
+
+The operand of `reference` must be storage such as a local, exposed argument or
+global, method `self`, an object/array attribute, or an array element. It must
+not be a temporary expression. `dereference` raises `REFERENCE_INVALID` if the
+target has expired.
+
 ## Operator Precedence
 
 The order of priority of the operators (from highest to lowest). Note that the `OPTIONS` instruction affects the precedence and associativity of certain operators.

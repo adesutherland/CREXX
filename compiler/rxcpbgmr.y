@@ -164,6 +164,8 @@ class(C)                 ::= TK_CLASS_TYPE(T).
                              { C = ast_f(context, CLASS, T); }
 type_def(A)              ::= class(S).
                              { A = S; }
+type_def(A)              ::= TK_REFERENCE(R) type_def(T).
+                             { A = ast_f(context, TYPE_REFERENCE, R); add_ast(A,T); }
 type_def(A)              ::= class(S) array_def_parameters(P).
                              { A = S; if (P) add_ast(A,P); }
 type_def(A)              ::= TK_CLASS_STEM(S) stem_def_parts(P).
@@ -1320,6 +1322,8 @@ function_parameters(P) ::= TK_OPEN_BRACKET expression_list(E) TK_CLOSE_BRACKET. 
                            { P = E; }
 term(A)                ::= var_symbol(B). [TK_VAR_SYMBOL]
                          { A = B; }
+term(A)                ::= TK_SELF(S).
+                         { A = ast_f(context, VAR_SYMBOL, S); ast_sstr(A, strdup("\xc2\xa7" "this"), 6); }
 term(A)                ::= TK_FLOAT(S).
                          { A = ast_f(context, FLOAT,S); }
 term(A)                ::= TK_DECIMAL(S).
@@ -1366,6 +1370,14 @@ term(F)                ::= TK_TYPEOF TK_OPEN_BRACKET(A) error TK_CLOSE_BRACKET.
                            { F = ast_err(context, "INVALID_TYPEOF_SYNTAX", A); }
 term(F)                ::= TK_TYPEOF TK_OPEN_BRACKET ANYTHING(A).
                            { F = ast_err(context, "INVALID_TYPEOF_SYNTAX", A); }
+
+/* Reference intrinsics */
+term(F)                ::= TK_REFVALID(A) TK_OPEN_BRACKET expression(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           { F = ast_f(context, OP_REFVALID, A); add_ast(F, E); }
+term(F)                ::= TK_REFVALID TK_OPEN_BRACKET(A) error TK_CLOSE_BRACKET.
+                           { F = ast_err(context, "INVALID_REFVALID_SYNTAX", A); }
+term(F)                ::= TK_REFVALID TK_OPEN_BRACKET ANYTHING(A).
+                           { F = ast_err(context, "INVALID_REFVALID_SYNTAX", A); }
 
 /* Special Operator - ? */
 term(F)                ::= TK_OPTIONAL TK_VAR_SYMBOL(S). [TK_VAR_SYMBOL]
@@ -1468,6 +1480,10 @@ command_prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 command_prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
+command_prefix_expression(A) ::= TK_REFERENCE(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
+command_prefix_expression(A) ::= TK_DEREFERENCE(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_DEREFERENCE, O); add_ast(A,C); }
 command_power_expression_L(A) ::= command_power_expression_L(B) TK_POWER_L(O) prefix_expression(C).
                           { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
 command_power_expression_L(P) ::= command_prefix_expression(E).  { P = E; }
@@ -1565,6 +1581,10 @@ prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
+prefix_expression(A) ::= TK_REFERENCE(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
+prefix_expression(A) ::= TK_DEREFERENCE(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_DEREFERENCE, O); add_ast(A,C); }
 /*
  * power_expression contains rules for both left and right-associative power operators.
  * The lexer ensures only one of TK_POWER_L or TK_POWER_R is present in the
@@ -1623,6 +1643,10 @@ prefix_expression_c(P) ::= postfix_c(B). [ANYTHING] { P = B; }
 
 prefix_expression_c(A) ::= TK_NOT(O) prefix_expression_c(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
+prefix_expression_c(A) ::= TK_REFERENCE(O) prefix_expression_c(C). [TK_NOT]
+                         { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
+prefix_expression_c(A) ::= TK_DEREFERENCE(O) prefix_expression_c(C). [TK_NOT]
+                         { A = ast_f(context, OP_DEREFERENCE, O); add_ast(A,C); }
 
 // Rule for the Left-associative power operator - NUMERIC_CLASSIC
 power_expression_L_c(A) ::= power_expression_L_c(B) TK_POWER_L(O) prefix_expression_c(C).

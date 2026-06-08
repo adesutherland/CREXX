@@ -163,6 +163,10 @@ int rexbscan(Context* s) {
     'AS' ob ":" { RET(TK_RESERVED_LABEL); }
     'IS' ob ":" { RET(TK_RESERVED_LABEL); }
     'TYPEOF' ob ":" { RET(TK_RESERVED_LABEL); }
+    'REFERENCE' ob ":" { RET(TK_RESERVED_LABEL); }
+    'DEREFERENCE' ob ":" { RET(TK_RESERVED_LABEL); }
+    'REFVALID' ob ":" { RET(TK_RESERVED_LABEL); }
+    'SELF' ob ":" { RET(TK_RESERVED_LABEL); }
     'ASSEMBLER' { RET(TK_ASSEMBLER); }
     'ARG' { RET(TK_ARG); }
     'AS' { RET(TK_AS); }
@@ -202,6 +206,10 @@ int rexbscan(Context* s) {
       RET(TK_REGISTER);
     }
     'REGISTER' { RET(TK_REGISTER); }
+    'REFERENCE' { RET(TK_REFERENCE); }
+    'DEREFERENCE' { RET(TK_DEREFERENCE); }
+    'REFVALID' { RET(TK_REFVALID); }
+    'SELF' { RET(TK_SELF); }
   //  'PULL' { RET(TK_PULL); }
   //  'PUSH' { RET(TK_PUSH); }
   //  'QUEUE' { RET(TK_QUEUE); }

@@ -292,6 +292,85 @@ static int type_specificity(ValueType type) {
     }
 }
 
+void rxcp_set_symbol_reference_type_from_node(Symbol *symbol, ASTNode *type_node) {
+    if (!symbol) return;
+    if (symbol->type == TP_REFERENCE && type_node) {
+        sym_set_reference_type(symbol,
+                               type_node->value_reference_type,
+                               type_node->value_reference_dims,
+                               type_node->value_reference_dim_base,
+                               type_node->value_reference_dim_elements,
+                               type_node->value_reference_class);
+    } else {
+        sym_clear_reference_type(symbol);
+    }
+}
+
+void rxcp_set_node_value_reference_type_from_node(ASTNode *node, ASTNode *type_node) {
+    if (!node) return;
+    if (node->value_type == TP_REFERENCE && type_node) {
+        ast_set_value_reference_type(node,
+                                     type_node->value_reference_type,
+                                     type_node->value_reference_dims,
+                                     type_node->value_reference_dim_base,
+                                     type_node->value_reference_dim_elements,
+                                     type_node->value_reference_class);
+    } else {
+        ast_clear_value_reference_type(node);
+    }
+}
+
+static int same_reference_type(ValueType left_type,
+                               size_t left_dims,
+                               const int *left_base,
+                               const int *left_elements,
+                               const char *left_class,
+                               ValueType right_type,
+                               size_t right_dims,
+                               const int *right_base,
+                               const int *right_elements,
+                               const char *right_class) {
+    size_t i;
+
+    if (left_type != right_type || left_dims != right_dims) return 0;
+    for (i = 0; i < left_dims; i++) {
+        if (!left_base || !right_base || !left_elements || !right_elements) return 0;
+        if (left_base[i] != right_base[i]) return 0;
+        if (left_elements[i] != right_elements[i]) return 0;
+    }
+
+    if (left_class && right_class) return strcmp(left_class, right_class) == 0;
+    return left_class == 0 && right_class == 0;
+}
+
+int rxcp_same_reference_value_and_target_type(ASTNode *node) {
+    if (!node) return 0;
+    return same_reference_type(node->value_reference_type,
+                               node->value_reference_dims,
+                               node->value_reference_dim_base,
+                               node->value_reference_dim_elements,
+                               node->value_reference_class,
+                               node->target_reference_type,
+                               node->target_reference_dims,
+                               node->target_reference_dim_base,
+                               node->target_reference_dim_elements,
+                               node->target_reference_class);
+}
+
+int rxcp_same_reference_value_type(ASTNode *left, ASTNode *right) {
+    if (!left || !right) return 0;
+    return same_reference_type(left->value_reference_type,
+                               left->value_reference_dims,
+                               left->value_reference_dim_base,
+                               left->value_reference_dim_elements,
+                               left->value_reference_class,
+                               right->value_reference_type,
+                               right->value_reference_dims,
+                               right->value_reference_dim_base,
+                               right->value_reference_dim_elements,
+                               right->value_reference_class);
+}
+
 /* Monotonic Gatekeepers */
 
 void sym_promote_type(Context *context, Symbol *sym, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
@@ -327,6 +406,7 @@ void sym_promote_type(Context *context, Symbol *sym, ValueType type, size_t dims
             if (sym->value_class) free(sym->value_class);
             sym->value_class = strdup(class_name);
         }
+        if (type != TP_REFERENCE) sym_clear_reference_type(sym);
         context->changed_flags |= FLAG_VAL_TYPE;
     }
 }
@@ -400,6 +480,7 @@ void ast_promote_type(Context *context, ASTNode *node, ValueType type, size_t di
             if (node->value_class) free(node->value_class);
             node->value_class = strdup(class_name);
         }
+        if (type != TP_REFERENCE) ast_clear_value_reference_type(node);
         context->changed_flags |= FLAG_VAL_TYPE;
     }
 }
@@ -444,6 +525,7 @@ void ast_set_value_type(Context *context, ASTNode *node, ValueType type, size_t 
     if (class_name) {
         node->value_class = strdup(class_name);
     }
+    if (type != TP_REFERENCE) ast_clear_value_reference_type(node);
 }
 
 void ast_set_target_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
@@ -484,6 +566,7 @@ void ast_set_target_type(Context *context, ASTNode *node, ValueType type, size_t
     if (class_name) {
         node->target_class = strdup(class_name);
     }
+    if (type != TP_REFERENCE) ast_clear_target_reference_type(node);
 }
 
 void ast_promote_target_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
@@ -519,6 +602,7 @@ void ast_promote_target_type(Context *context, ASTNode *node, ValueType type, si
             if (node->target_class) free(node->target_class);
             node->target_class = strdup(class_name);
         }
+        if (type != TP_REFERENCE) ast_clear_target_reference_type(node);
         context->changed_flags |= FLAG_VAL_TYPE;
     }
 }
@@ -587,6 +671,33 @@ ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_
             result = s->type;
             goto exit;
         }
+    }
+
+    /* If we don't let's see if we can determine it now */
+    if (node->node_type == TYPE_REFERENCE) {
+        ASTNode *referent = ast_chdn(node, 0);
+        size_t ref_dims = 0;
+        int *ref_dim_base = 0;
+        int *ref_dim_elements = 0;
+        char *ref_class_name = 0;
+        ValueType ref_type = node_to_type(context, referent, &ref_dims,
+                                          &ref_dim_base, &ref_dim_elements,
+                                          &ref_class_name);
+
+        ast_set_value_reference_type(node, ref_type, ref_dims,
+                                     ref_dim_base, ref_dim_elements,
+                                     ref_class_name);
+        ast_set_target_reference_type(node, ref_type, ref_dims,
+                                      ref_dim_base, ref_dim_elements,
+                                      ref_class_name);
+
+        if (ref_dim_base) free(ref_dim_base);
+        if (ref_dim_elements) free(ref_dim_elements);
+        if (ref_class_name) free(ref_class_name);
+
+        local_dims = 0;
+        result = TP_REFERENCE;
+        goto exit;
     }
 
     /* If we don't let's see if we can determine it now */
@@ -749,6 +860,16 @@ void promote_symbol_from_target(Context *context, ASTNode *node) {
                     if (s->value_class) free(s->value_class);
                     s->value_class = node->target_class ? strdup(node->target_class) : 0;
                 }
+                if (node->target_type == TP_REFERENCE) {
+                    sym_set_reference_type(s,
+                                           node->target_reference_type,
+                                           node->target_reference_dims,
+                                           node->target_reference_dim_base,
+                                           node->target_reference_dim_elements,
+                                           node->target_reference_class);
+                } else {
+                    sym_clear_reference_type(s);
+                }
                 if (context) {
                     context->changed_flags |= FLAG_VAL_TYPE;
                 }
@@ -825,6 +946,17 @@ void validate_node_promotion(Context *context, ASTNode* node) {
         node->target_type != TP_BINARY) mknd_err(node, "CANNOT_CAST_BINARY");
 
     if (node->value_type != TP_VOID && node->target_type == TP_VOID) mknd_err(node, "UNEXPECTED_VALUE");
+
+    if (node->value_type == TP_REFERENCE || node->target_type == TP_REFERENCE) {
+        if (node->value_type != node->target_type) {
+            mknd_err(node, "TYPE_MISMATCH");
+            return;
+        }
+        if (!rxcp_same_reference_value_and_target_type(node)) {
+            mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+            return;
+        }
+    }
 
     /* Taken constant check: If target is numeric (TP_INTEGER, TP_FLOAT, TP_DECIMAL)
      * and source is a TAKEN CONSTANT (CONSTANT_SYMBOL), it's a compile-time failure.

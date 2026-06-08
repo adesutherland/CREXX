@@ -1292,7 +1292,7 @@ static void append_class_attribute_stub_lines(ASTNode *contract_node, char **buf
 
         if (m->node_type != DEFINE) continue;
         target = ast_chld(m, VAR_TARGET, 0);
-        type_node = ast_chld(m, CLASS, 0);
+        type_node = ast_type_child(m);
         if (!target || !target->node_string || !target->node_string_length || !type_node) continue;
 
         type = ast_n2tp(type_node);
@@ -1415,7 +1415,7 @@ static char* generate_contract_stub_source(ASTNode *contract_node) {
             mname[m->node_string_length] = 0;
 
             /* Return type (default .void added by grammar) */
-            ASTNode *ret = ast_chld(m, CLASS, VOID);
+            ASTNode *ret = ast_type_child(m);
             char *rtype = ast_n2tp(ret);
 
             char *tmp = mprintf("%s  %s: method = %s\n", buffer, mname, rtype);
@@ -1546,7 +1546,7 @@ static walker_result procedure_signature_walker(walker_direction direction,
     if (direction == out) {
         /* OUT - BOTTOM UP */
         if (node->node_type == PROCEDURE) {
-            type_node = ast_chld(node, CLASS, VOID);
+            type_node = ast_type_child(node);
             args_node = ast_chld(node, ARGS, 0);
             impl_node = ast_chld(node, INSTRUCTIONS, NOP);
             fqname = sym_frnm(node->symbolNode->symbol);
@@ -2895,6 +2895,7 @@ static int load_another_file(Context *context) {
 
 static ValueType type_from_string(char* type) {
     if (!type) return TP_UNKNOWN;
+    if (strncmp(type, "reference ", 10) == 0) return TP_REFERENCE;
     if (strcmp(type, ".int") == 0) return TP_INTEGER;
     if (strcmp(type, ".float") == 0) return TP_FLOAT;
     if (strcmp(type, ".decimal") == 0) return TP_DECIMAL;

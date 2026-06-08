@@ -31,15 +31,21 @@
 #include "rxcpmain.h"
 #include "rxcp_emit.h"
 
+static int symbol_is_class_attribute(Symbol *symbol) {
+    return symbol &&
+           symbol->scope &&
+           (symbol->scope->type == SCOPE_CLASS ||
+            (symbol->scope->defining_node &&
+             symbol->scope->defining_node->node_type == CLASS_DEF));
+}
+
 /* Tests if a node uses a symbol register */
 static int use_symbol_reg(ASTNode* node) {
     if (    node->symbolNode                 // It's a symbol
             && node->symbolNode->symbol->symbol_type != FUNCTION_SYMBOL   // It's not a function
             && node->node_type != OP_ARG_EXISTS // If it's not OP_ARG_EXISTS (if this list becomes long we need a better way ...)
             && !(node->child)           // It's not an array element
-            && !(node->symbolNode->symbol->scope &&
-                 node->symbolNode->symbol->scope->defining_node &&
-                 node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) // It's not an attribute
+            && !symbol_is_class_attribute(node->symbolNode->symbol) // It's not an attribute
         ) return 1;
     else return 0;
 }
@@ -147,9 +153,7 @@ static int defer_reg_return(ASTNode* node) {
     {
         case VAR_SYMBOL:
             if (node->child && node->child->node_type != NOVAL) return 1;
-            if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->scope &&
-                node->symbolNode->symbol->scope->defining_node &&
-                node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) return 1;
+            if (node->symbolNode && symbol_is_class_attribute(node->symbolNode->symbol)) return 1;
             break;
 
         case VAR_TARGET:
@@ -191,7 +195,7 @@ walker_result register_walker(walker_direction direction,
             case METHOD:
             case PROCEDURE:
                 /* Return Type */
-                c = ast_chld(node, CLASS, VOID);
+                c = ast_type_child(node);
                 if (c) c->register_num = DONT_ASSIGN_REGISTER;
 
                 /* Pre-assign registers for all locals in this procedure, including nested SCOPE_LOCAL blocks */
@@ -423,9 +427,7 @@ walker_result register_walker(walker_direction direction,
                     Symbol *symbol = node->symbolNode->symbol;
                     if (symbol->register_num == UNSET_REGISTER && symbol->register_type != 'a') {
                         /* Check if it's an attribute */
-                        if (!(symbol->scope &&
-                              symbol->scope->defining_node &&
-                              symbol->scope->defining_node->node_type == CLASS_DEF)) {
+                        if (!symbol_is_class_attribute(symbol)) {
                             if (symbol->exposed) {
                                 symbol->register_num = payload->globals++;
                                 symbol->register_type = 'g';
@@ -535,6 +537,9 @@ walker_result register_walker(walker_direction direction,
             case OP_NOT:
             case OP_NEG:
             case OP_PLUS:
+            case OP_REFERENCE:
+            case OP_DEREFERENCE:
+            case OP_REFVALID:
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later */
@@ -603,10 +608,7 @@ walker_result register_walker(walker_direction direction,
                     }
 
                     char needs_prop_reg = 0;
-                    if (node->symbolNode && node->symbolNode->symbol &&
-                        node->symbolNode->symbol->scope &&
-                        node->symbolNode->symbol->scope->defining_node &&
-                        node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
+                    if (node->symbolNode && symbol_is_class_attribute(node->symbolNode->symbol)) {
                         needs_prop_reg = 1;
                     }
 
@@ -628,10 +630,7 @@ walker_result register_walker(walker_direction direction,
                 }
                 else {
                     /* The node uses the symbol register number */
-                    if (node->symbolNode && node->symbolNode->symbol &&
-                        node->symbolNode->symbol->scope &&
-                        node->symbolNode->symbol->scope->defining_node &&
-                        node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
+                    if (node->symbolNode && symbol_is_class_attribute(node->symbolNode->symbol)) {
                         /* Attribute - needs a temporary register */
                         node->register_num = get_reg(node->scope);
                         node->register_type = 'r';

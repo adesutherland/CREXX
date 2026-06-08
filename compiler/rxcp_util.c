@@ -1119,6 +1119,9 @@ const char* node_type_to_string(NodeType type) {
         case OP_TYPE_IS: return "OP_TYPE_IS";
         case OP_TYPE_CAST: return "OP_TYPE_CAST";
         case OP_TYPEOF: return "OP_TYPEOF";
+        case OP_REFERENCE: return "OP_REFERENCE";
+        case OP_DEREFERENCE: return "OP_DEREFERENCE";
+        case OP_REFVALID: return "OP_REFVALID";
         case OP_SCONCAT: return "OP_SCONCAT";
         case OPTIONS: return "OPTIONS";
         case PARSE: return "PARSE";
@@ -1175,6 +1178,7 @@ const char* node_type_to_string(NodeType type) {
         case SIGNAL_NAMES: return "SIGNAL_NAMES";
         case SIGNAL_NAME: return "SIGNAL_NAME";
         case AST_SEMANTIC_CONTEXT: return "AST_SEMANTIC_CONTEXT";
+        case TYPE_REFERENCE: return "TYPE_REFERENCE";
         case LEVELC_ADDRESS: return "LEVELC_ADDRESS";
         case LEVELC_ARG: return "LEVELC_ARG";
         case LEVELC_DROP: return "LEVELC_DROP";

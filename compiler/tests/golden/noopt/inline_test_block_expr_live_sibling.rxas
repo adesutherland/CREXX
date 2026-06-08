@@ -6,7 +6,7 @@
 .meta "inline_test_block_expr_live_sibling.child"="b" ".unknown" .class
 .meta "inline_test_block_expr_live_sibling.child.name"="b" ".string" .attr 1
 .meta "inline_test_block_expr_live_sibling.holder"="b" ".unknown" .class
-.meta "inline_test_block_expr_live_sibling.holder.child"="b" ".object" .attr 1
+.meta "inline_test_block_expr_live_sibling.holder.child"="b" ".child" .attr 1
 .meta "inline_test_block_expr_live_sibling.holder.left"="b" ".string" .attr 2
 .meta "inline_test_block_expr_live_sibling.holder.name"="b" ".string" .attr 3
 .meta "inline_test_block_expr_live_sibling.holder.right"="b" ".string" .attr 4
