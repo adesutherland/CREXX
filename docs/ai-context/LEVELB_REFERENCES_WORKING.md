@@ -3,13 +3,14 @@
 Status: working design note, not an approved language specification.
 
 This note captures the current direction for durable references in Level B. It
-is deliberately design-space documentation: names, syntax, signal names, and
-exact opcode spellings are placeholders until reviewed.
+is deliberately design-space documentation: the first source spelling is agreed,
+but it remains unimplemented until the next compiler slice. Deferred syntax,
+variance, and wider collection API choices remain design topics.
 
 ## Agreed Direction
 
-The following decisions are agreed for the VM/RXAS reference work before any
-Rexx source surface is finalized:
+The following decisions are agreed for the VM/RXAS reference work and the first
+Rexx source surface:
 
 - References are weak. A reference does not keep stack, object, array, or global
   storage alive. When target storage dies, the reference becomes invalid. This is
@@ -33,9 +34,10 @@ Rexx source surface is finalized:
 - Native collection classes are deprecated for the Release 1 public collection
   direction. Native handle/reference migration is therefore not a blocker for
   this reference feature.
-- Rexx source syntax is deferred until VM/RXAS semantics are proven. The likely
-  direction is a word-form `reference` spelling, but it is not part of the first
-  implementation decision.
+- Rexx source syntax direction is now agreed for the first source surface:
+  word-form `reference` and `dereference` expressions, and `reference .T` as the
+  reference type modifier. Compiler implementation still follows the VM/RXAS
+  and generated-code contract slices.
 - Reference variance and casts are deferred. Level B and Level G may choose
   different policies.
 
@@ -67,7 +69,8 @@ Rexx source surface is finalized:
 - Step 3 is implemented in the working tree: RXAS can create and use reference
   values with `mkref`, `deref`, `linkref`, `setref`, `refvalid`, and `unref`.
   Invalid reference use raises the dedicated, catchable `REFERENCE_INVALID`
-  signal. Public Rexx syntax is still not implemented.
+  signal. Public Rexx syntax is still not implemented; the approved spelling is
+  documented below.
 - The first container-shaped regression slice is implemented in the working
   tree under `tests/reference_iterators`: RXAS fixtures model parent-backed and
   backing-array-backed iterator state with live references, explicit snapshot
@@ -78,8 +81,8 @@ Rexx source surface is finalized:
   `reference_generated_contract.rxas` models `ArrayList`/iterator helper code
   that creates references from receiver arguments and backing attributes, uses
   `deref` for explicit snapshots, checks validity before use, and handles
-  invalid references through `REFERENCE_INVALID`, still without choosing a
-  public Rexx syntax.
+  invalid references through `REFERENCE_INVALID`, before implementing the
+  approved public Rexx syntax.
 
 ## Problem
 
@@ -110,7 +113,8 @@ safely.
 - Do not expose raw C pointers as stable Level B values.
 - Do not rely on integer-sized pointer tricks as the semantic model.
 - Do not require every existing opcode to implicitly chase references.
-- Do not settle the final source syntax in this note.
+- Do not use the first source spelling to settle deferred variance, casts,
+  arrays-of-references, or public collection API policy.
 
 ## Current Baseline
 
@@ -148,8 +152,8 @@ References should satisfy these constraints:
   that is still part of the live semantic value.
 - Child storage: references must have a clear story for object/array attributes
   reached through `linkattr*`.
-- RXAS first: the VM and assembler can support references before Level B source
-  syntax is finalized.
+- RXAS first: the VM and assembler support references before the Level B source
+  syntax is implemented.
 - Container usability: pure Rexx iterators should be able to retain access to a
   live container without copying the container body.
 - Native interop: native-backed containers should be able to use reference-like
@@ -177,8 +181,8 @@ are caught without making CI depend on local machine speed.
 
 ## Internal Generated-Code Contract
 
-Until public Rexx syntax is approved, compiler and library experiments should
-target the following RXAS-level operation contract:
+Until public Rexx syntax is implemented, compiler and library experiments should
+continue to target the following RXAS-level operation contract:
 
 - **Create a reference**: expose or link the desired storage location, then emit
   `mkref` into the destination value. For object or array attributes, generated
@@ -446,10 +450,9 @@ semantically weaker than the native bridge it is intended to replace.
 
 ## RXAS Surface
 
-RXAS should get an explicit reference surface before source syntax is finalized.
-The exact mnemonic names are open.
+RXAS has an explicit reference surface that the source compiler should target.
 
-### Candidate Instructions
+### Implemented Instructions
 
 - `mkref rRef,rSource`
   Create a reference value in `rRef` to the storage location currently named by
@@ -607,83 +610,156 @@ instruction set should be enough to express safe aliasing first. Once alias
 effects are represented in tests, the assembler/compiler can add fused
 reference-plus-attribute operations where profiling shows a real win.
 
-## Source Syntax Candidates
+## Approved Source Syntax Direction
 
-No final syntax is proposed here. The source language should wait until the VM
-and RXAS semantics are proven.
+The public source surface should use word-form reference syntax rather than
+constructor-like or symbolic forms. This keeps the location semantics visible:
+creating a reference is not an ordinary value construction.
 
-### Candidate A: Word Form
+### Reference Types
+
+Use `reference` as a type modifier anywhere a Level B type is accepted:
+
+```rexx
+list_ = reference .ArrayList
+items_ = reference .string[]
+
+*: factory
+  arg list = reference .ArrayList
+```
+
+The first implementation should support references to ordinary scalar, object,
+interface, and array types. `reference .string[]` means a reference to a string
+array.
+
+Precedence is:
+
+```text
+array suffix binds to the type immediately before it;
+reference applies to the complete type that follows it;
+parentheses disambiguate nested reference and array-of-reference cases.
+```
+
+So the intended meanings are:
+
+```rexx
+reference .string        /* reference to string */
+reference .string[]      /* reference to string array */
+(reference .string)[]    /* array of references to string: deferred */
+reference (reference .string)[]  /* reference to array of references: deferred */
+```
+
+### Reference Expressions
+
+Use `reference target` to create a durable weak reference value:
 
 ```rexx
 countRef = reference count
-listRef = reference items
+listRef = reference list
+iter = .ArrayListIterator(reference self)
 ```
 
-Typed declaration sketch:
+The operand must be an aliasable storage expression: local storage, exposed
+argument or global storage, `self`, an object/array attribute, or an array
+element. It must not be an arbitrary value expression.
+
+Use `dereference ref` for an explicit snapshot copy of the current target:
 
 ```rexx
-countRef = .reference(.int)
-listRef = .reference(.ArrayList)
+snapshot = dereference listRef
 ```
 
-This is the most REXX-like candidate: readable, word-oriented, and explicit.
-The operand must be an aliasable storage location, not an arbitrary value
-expression.
+The snapshot operation raises `REFERENCE_INVALID` when the reference target has
+expired.
 
-### Candidate B: Constructor-Like Form
+Use `refvalid(ref)` to test whether a weak reference can currently be used:
 
 ```rexx
-countRef = .ref(count)
-listRef = .ref(items)
+if \refvalid(listRef) then return 0
 ```
 
-This fits existing type-constructor spelling, but it looks like an ordinary
-function call even though it needs location semantics. That may hide the most
-important part of the feature.
-
-### Candidate C: Bracket Form
+Reference values may be used as the base of object/array access and method calls
+without spelling `dereference`; the compiler should emit a scoped `linkref` /
+`unlink` pair for the operation:
 
 ```rexx
-countRef = [count]
-countRef = [.int]
+value = itemsRef[i]
+itemsRef[i] = value
+listRef.add(value)
 ```
 
-This is compact but too symbolic for the likely Level B style. It also sits
-close to array indexing and could make parser and reader expectations worse.
-Keep it as a discussion option, not the first recommendation.
+This live access rule must not become implicit copying. Assigning or passing a
+reference where a plain `.T` is required is an error; use `dereference ref` for
+an explicit copy. Passing a plain `.T` where `reference .T` is required is also
+an error; use `reference target` explicitly.
 
-### Candidate D: Parameter-Only First Step
+### Receiver References
 
-Extend existing call-time aliasing before adding durable reference values:
+`self` should be a normal receiver storage expression, not an intrinsic
+reference value. Parent-backed iterators should create a reference explicitly:
 
 ```rexx
-arg reference items = .ArrayList
+iterator: method = .Iterator
+  return .ArrayListIterator(reference self)
 ```
 
-This is safer as a language increment, but it does not solve iterators that need
-to store a reference. It is useful only as a stepping stone.
+This preserves ordinary receiver access while making escaping aliases visible in
+source.
 
-### Recommended Syntax Direction
+### Copy Warnings
 
-Prefer a word-form operator and an explicit reference type:
+The compiler should warn on obvious by-value container/receiver copies when a
+reference is likely intended, especially for `self`, arrays, and object
+attributes passed to plain `.T` formals. Reference boundary mistakes should be
+hard type errors:
 
 ```rexx
-iter = .ArrayListIterator(reference list)
-ref = reference count
+.ArrayListIterator(self)              /* error: expected reference .ArrayList */
+helper(listRef)                       /* error if helper expects .ArrayList */
+helper(dereference listRef)           /* explicit snapshot copy */
+.ArrayListIterator(reference self)    /* explicit live reference */
+```
+
+### Deferred Syntax
+
+These forms are reserved by the grammar direction but are not part of the first
+compiler slice:
+
+```rexx
+(reference .T)[]            /* array of references */
+reference (reference .T)[]  /* reference to an array of references */
+ref as reference .U         /* reference casts / variance */
+ref is reference .T         /* reference type tests */
+```
+
+Reference variance, casts, and nested reference containers remain design work.
+Level B and Level G may choose different policies.
+
+### Rejected Syntax
+
+These forms are rejected, not deferred:
+
+```rexx
 holder = .reference(.int)
-```
-
-The exact type spelling is open: `.reference(.int)` is clear but long;
-`.ref(.int)` is shorter but less self-explanatory.
-
-The compiler should reject:
-
-```rexx
+holder = .ref(.int)
+holder = .ref(value)
+countRef = [count]
+typeRef = [.int]
+arg reference items = .ArrayList
 ref = reference (a + b)
 ref = reference makeObject()
+iter = .ArrayListIterator(self)  /* when the formal is reference .ArrayList */
 ```
 
-because those are values, not storage locations.
+Reasons:
+
+- `.reference(.T)`, `.ref(.T)`, and `.ref(value)` look like ordinary
+  constructor/function calls but require storage-location semantics.
+- Bracket forms are too close to array syntax.
+- `arg reference items = .ArrayList` does not generalize to stored durable
+  references; use `arg items = reference .ArrayList`.
+- `reference` must target storage, not temporary expression results.
+- Bare `self` must not mean "reference to self"; use `reference self`.
 
 ## Container Impact
 
@@ -714,11 +790,11 @@ Example design sketch:
 
 ```rexx
 ArrayListIterator: class
-  list_ = .reference(.ArrayList)
+  list_ = reference .ArrayList
   index_ = .int
 
   *: factory
-    arg list = .reference(.ArrayList)
+    arg list = reference .ArrayList
     list_ = list
     index_ = 0
     return
@@ -734,24 +810,20 @@ unlink rObj
 
 ## Remaining Design Choices
 
-The core VM/RXAS reference direction is now narrowed by the agreed direction
-above. The remaining choices should be deferred until the reference machinery is
-proven in hand-written RXAS and small container tests:
+The core VM/RXAS reference direction and first source spelling are now narrowed
+by the agreed direction above. The remaining choices should be handled after the
+first Rexx source slice:
 
-1. What exact invalid-reference signal name should be used?
-2. Should `.reference(.T)` be assignable only to another `.reference(.T)`, or
+1. Should `reference .T` be assignable only to another exact `reference .T`, or
    should checked casts between compatible reference types be allowed?
-3. How should interface references work? A reference to `.Shape` can refer to a
+2. How should interface references work? A reference to `.Shape` can refer to a
    `.Box`, but dereferencing must preserve normal `istype`/`asserttype`
    behaviour. Level B and Level G may choose different policies.
-4. What should the public Rexx source syntax be once VM/RXAS semantics are
-   tested? The likely direction is a word-form `reference` spelling, but this is
-   deliberately outside the first implementation slice.
-5. What should the Release 1 collection API promise for snapshot/live/fail-fast
+3. What should the Release 1 collection API promise for snapshot/live/fail-fast
    or synchronized iteration variants? The first reference-backed Rexx container
    experiment should use unsynchronized live iteration, but the wider public API
    decision remains separate.
-6. What should `Iterator.next()` return in the public collection contract? This
+4. What should `Iterator.next()` return in the public collection contract? This
    is collection API work, not reference machinery.
 
 ## Proposed Programme
@@ -768,7 +840,7 @@ proven in hand-written RXAS and small container tests:
    `linkref`/`unlink`.
 6. Use references internally in a small compiler-generated case before exposing
    source syntax.
-7. Revisit source syntax with examples from containers, ADDRESS objects, and
-   native-backed handles.
+7. Implement the approved source syntax with examples from containers, ADDRESS
+   objects, and native-backed handles.
 8. Convert `ArrayListIterator` or a minimal new test container to live
    reference-backed iteration.
