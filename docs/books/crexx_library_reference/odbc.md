@@ -1,11 +1,5 @@
 # ODBC Programming
 
-Release status: this page documents optional ODBC plugin work. Treat it as
-plugin reference material rather than as part of the Release 1 beta baseline
-language contract. Verify the plugin build and target ODBC drivers before
-depending on these APIs.
-
-
 ## Overview
 The ODBC plugin provides a bridge between CREXX and database systems through ODBC (Open Database Connectivity). It supports both SQL databases and CSV files.
 

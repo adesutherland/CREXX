@@ -25,6 +25,7 @@
 options levelb
 namespace data_TreeSet expose TreeSetIterator
 import treemap
+import data_Iterator
 
 /**
  * Class TreeSetIterator returns an iterator
@@ -35,7 +36,7 @@ import treemap
  * HashSet is modified during its execution.
  */
 
-TreeSetIterator: class
+TreeSetIterator: class implements .Iterator
 token = .int
 
 /**

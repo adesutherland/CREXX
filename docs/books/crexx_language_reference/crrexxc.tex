@@ -6,21 +6,18 @@ manipulation. These methods implement the traditional \emph{built-in
 functions}, and include character manipulation, word manipulation,
 conversion, and arithmetic functions.
  
-Implementations will also provide other functions for the \keyword{R\textsc{exx}}
-class (for example, to implement the \crexx{} operators or to provide
-constructors with primitive arguments), but these are not part of the
-\crexx{} language.
+Use of these methods needs import of the \code{rexx} package:
 
-Use of these functions needs import of the \code{rexx} package:
 \code{import rexx}
+
 \rexx{} strings must be constructed with a \code{var =
   .rexx('astring')} factory constructor.
 
-\textbf{General notes on the built-in functions:}
+\textbf{General notes on the built-in methods:}
 \begin{enumerate}
-\item All functions work on a \crexx{} string of type \keyword{R\textsc{exx}}; this
+\item All methods work on a \crexx{} string of type \keyword{R\textsc{exx}}; this
 is referred to by the name \emph{string} in the descriptions of the
-functions.  For example, if the \textbf{word} method were invoked using
+methods.  For example, if the \textbf{word} method were invoked using
 the term:
 \begin{lstlisting}
 v=.rexx("Three word phrase"); v.word(2)
@@ -29,7 +26,7 @@ then in the description of \textbf{word} the name
 \emph{string} refers to the string "\textbf{Three word
 phrase}", and the name \emph{n} refers to the string
 "\textbf{2}".
-\item All method arguments are of type \keyword{R\textsc{exx}} and all functions
+\item All method arguments are of type \keyword{R\textsc{exx}} and all methods
 return a string of type \keyword{R\textsc{exx}}; if a number is returned, it
 will be formatted as though 0 had been added with no rounding.
 \item 
