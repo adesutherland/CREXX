@@ -8,9 +8,9 @@ main: procedure
 /* ----- add here a rexx program with rexxDOC content -----
                     v
                     v                  */
-   rexx="C:\Users\PeterJ\CLionProjects\CREXX\260401\lib\classlib\TreeMap.rexx"
+   rexx="/Users/rvjansen/apps/crexx-develop/lib/classlib/TreeMap.crexx"
 /* extract documentation */
-   call rexxDoc(rexx,'dump')    /* format either DUMP or HTML */
+   call rexxDoc(rexx,'html')    /* format either DUMP or HTML */
 return
 
 /* ------------------------------------------------------------------

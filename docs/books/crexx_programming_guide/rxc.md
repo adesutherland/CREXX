@@ -11,7 +11,7 @@
 
 ## Import Search Roots
 
-`rxc` now separates automatic import discovery into two root classes:
+`rxc` separates automatic import discovery into two root classes:
 
 - source roots, searched for cRexx source files
 - binary roots, searched for `.rxbin`, optional `.rxas`, and `.rxplugin`
@@ -62,7 +62,7 @@ left beside edited source files from silently satisfying imports.
 
 ## Import Discovery Notes
 
-Automatic `.rxas` import scanning is now disabled by default. It can be
+Automatic `.rxas` import scanning is disabled by default. It can be
 re-enabled with `--import-rxas` for workflows that intentionally use
 assembler modules as import sources.
 
@@ -93,17 +93,15 @@ timestamps tie, `.rxbin` wins over `.rxas`.
  operation can be done at compile time, to avoid instruction scheduling and execution at
  runtime:
  
-\lstinputlisting[language=rexx,label=fpow_example]{examples/fpowtest.crexx}
-\fontspec{IBM Plex Mono}
-\splice{rxc examples/fpowtest}
-\splice{rxas examples/fpowtest}
-\begin{shaded}
-  \small
-\obeylines \splice{rxvm examples/fpowtest}
-\end{shaded}
-\lstinputlisting[language=rxas,label=fpow_example_rxas,caption=optimization]{examples/fpowtest.rxas}
-\fontspec{TeX Gyre Pagella}
- 
+```rexx <!--fpowtest.crexx-->
+options levelb
+say 0.5**2 'should be 0.25'
+```
+
+<!--splice--crexx fpowtest -->
+
+\lstinputlisting[language=rxas,label=fpow_example]{fpowtest.rxas}
+
  This works because, for a large number of operations, the \code{rxc} compiler can assume the result is never going to be different, and will determine that result during compile time. In the same vein, results from operations that are not displayed or handled further in the program, will lead to the operation being skipped entirely.
 
 ## Debugging and Validation
