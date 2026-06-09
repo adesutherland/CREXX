@@ -94,6 +94,12 @@ Rexx source surface:
   and negative fixtures cover value/reference boundary errors, non-storage
   targets, reference-to-reference targets, nested reference types, and non-ref
   operands to `snapshot`/`refvalid`.
+- The source iterator fixture now covers both intended iterator shapes:
+  snapshot iterators copy the parent/backing storage once in the factory, while
+  dynamic iterators store weak references and use `dereference` into local
+  scoped links at each access. The tests prove snapshot stability after later
+  mutation, dynamic visibility of later mutation/append, and dead-provider
+  behaviour for both parent and backing references.
 
 ## Problem
 
@@ -189,6 +195,11 @@ or libraries could eventually emit:
 The performance fixture is intentionally a smoke test rather than a benchmark
 gate. It prints elapsed times and asserts checksums so regressions in semantics
 are caught without making CI depend on local machine speed.
+
+The source-level performance smoke under `tests/performance` mirrors the same
+direct, snapshot-parent, snapshot-backing, dynamic-parent, and dynamic-backing
+shapes. It records factory and iteration timings for opt/noopt runs on both VM
+modes; the timing output is observational, while checksums remain enforced.
 
 ## Internal Generated-Code Contract
 

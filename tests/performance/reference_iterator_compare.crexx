@@ -1,0 +1,241 @@
+/* Observational source-level comparison for reference-backed iterator shapes. */
+options levelb
+import rxfnsb
+namespace reference_iterator_compare
+
+iterations = 12000
+expected = iterations * 2
+
+list = .PerfList()
+call list.add(1)
+call list.add(2)
+call list.add(3)
+
+start = time("us")
+direct = list.directIterator()
+direct_factory_elapsed = time("us") - start
+
+start = time("us")
+snapshot_parent = list.snapshotParentIterator()
+snapshot_parent_factory_elapsed = time("us") - start
+
+start = time("us")
+snapshot_backing = list.snapshotBackingIterator()
+snapshot_backing_factory_elapsed = time("us") - start
+
+start = time("us")
+dynamic_parent = list.dynamicParentIterator()
+dynamic_parent_factory_elapsed = time("us") - start
+
+start = time("us")
+dynamic_backing = list.dynamicBackingIterator()
+dynamic_backing_factory_elapsed = time("us") - start
+
+start = time("us")
+direct_checksum = runDirect(direct, iterations)
+direct_elapsed = time("us") - start
+
+start = time("us")
+snapshot_parent_checksum = runSnapshotParent(snapshot_parent, iterations)
+snapshot_parent_elapsed = time("us") - start
+
+start = time("us")
+snapshot_backing_checksum = runSnapshotBacking(snapshot_backing, iterations)
+snapshot_backing_elapsed = time("us") - start
+
+start = time("us")
+dynamic_parent_checksum = runDynamicParent(dynamic_parent, iterations)
+dynamic_parent_elapsed = time("us") - start
+
+start = time("us")
+dynamic_backing_checksum = runDynamicBacking(dynamic_backing, iterations)
+dynamic_backing_elapsed = time("us") - start
+
+if direct_checksum <> expected then return fail("direct checksum")
+if snapshot_parent_checksum <> expected then return fail("snapshot parent checksum")
+if snapshot_backing_checksum <> expected then return fail("snapshot backing checksum")
+if dynamic_parent_checksum <> expected then return fail("dynamic parent checksum")
+if dynamic_backing_checksum <> expected then return fail("dynamic backing checksum")
+
+say "benchmark=reference_iterator_compare"
+say "iterations="iterations
+say "direct_factory_us="direct_factory_elapsed
+say "snapshot_parent_factory_us="snapshot_parent_factory_elapsed
+say "snapshot_backing_factory_us="snapshot_backing_factory_elapsed
+say "dynamic_parent_factory_us="dynamic_parent_factory_elapsed
+say "dynamic_backing_factory_us="dynamic_backing_factory_elapsed
+say "direct_elapsed_us="direct_elapsed
+say "snapshot_parent_elapsed_us="snapshot_parent_elapsed
+say "snapshot_backing_elapsed_us="snapshot_backing_elapsed
+say "dynamic_parent_elapsed_us="dynamic_parent_elapsed
+say "dynamic_backing_elapsed_us="dynamic_backing_elapsed
+say "checksum="dynamic_backing_checksum
+say "PASS: Reference Iterator Source Performance Smoke"
+return 0
+
+runDirect: procedure = .int
+  arg iterator = .DirectIterator, limit = .int
+  checksum = 0
+  do i = 1 to limit
+    checksum = checksum + iterator.nextWrapped()
+  end
+  return checksum
+
+runSnapshotParent: procedure = .int
+  arg iterator = .SnapshotParentIterator, limit = .int
+  checksum = 0
+  do i = 1 to limit
+    checksum = checksum + iterator.nextWrapped()
+  end
+  return checksum
+
+runSnapshotBacking: procedure = .int
+  arg iterator = .SnapshotBackingIterator, limit = .int
+  checksum = 0
+  do i = 1 to limit
+    checksum = checksum + iterator.nextWrapped()
+  end
+  return checksum
+
+runDynamicParent: procedure = .int
+  arg iterator = .DynamicParentIterator, limit = .int
+  checksum = 0
+  do i = 1 to limit
+    checksum = checksum + iterator.nextWrapped()
+  end
+  return checksum
+
+runDynamicBacking: procedure = .int
+  arg iterator = .DynamicBackingIterator, limit = .int
+  checksum = 0
+  do i = 1 to limit
+    checksum = checksum + iterator.nextWrapped()
+  end
+  return checksum
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1
+
+PerfList: class
+  values = .int[]
+  count = .int
+
+  *: factory
+    initial = .int[]
+    values = initial
+    count = 0
+    return
+
+  add: method = .void
+    arg value = .int
+    count = count + 1
+    values[count] = value
+    return
+
+  get: method = .int
+    arg index = .int
+    return values[index]
+
+  size: method = .int
+    return count
+
+  directIterator: method = .DirectIterator
+    return .DirectIterator(values, count)
+
+  snapshotParentIterator: method = .SnapshotParentIterator
+    return .SnapshotParentIterator(reference self)
+
+  snapshotBackingIterator: method = .SnapshotBackingIterator
+    return .SnapshotBackingIterator(reference values, reference count)
+
+  dynamicParentIterator: method = .DynamicParentIterator
+    return .DynamicParentIterator(reference self)
+
+  dynamicBackingIterator: method = .DynamicBackingIterator
+    return .DynamicBackingIterator(reference values, reference count)
+
+DirectIterator: class
+  values = .int[]
+  count = .int
+  index = .int
+
+  *: factory
+    arg items = .int[], item_count = .int
+    values = items
+    count = item_count
+    index = 0
+    return
+
+  nextWrapped: method = .int
+    if index = count then index = 0
+    index = index + 1
+    return values[index]
+
+SnapshotParentIterator: class
+  list_copy = .PerfList
+  index = .int
+
+  *: factory
+    arg list = reference .PerfList
+    list_copy = snapshot list
+    index = 0
+    return
+
+  nextWrapped: method = .int
+    if index = list_copy.size() then index = 0
+    index = index + 1
+    return list_copy.get(index)
+
+SnapshotBackingIterator: class
+  values_copy = .int[]
+  count_copy = .int
+  index = .int
+
+  *: factory
+    arg values = reference .int[], count = reference .int
+    values_copy = snapshot values
+    count_copy = snapshot count
+    index = 0
+    return
+
+  nextWrapped: method = .int
+    if index = count_copy then index = 0
+    index = index + 1
+    return values_copy[index]
+
+DynamicParentIterator: class
+  list_ref = reference .PerfList
+  index = .int
+
+  *: factory
+    arg list = reference .PerfList
+    list_ref = list
+    index = 0
+    return
+
+  nextWrapped: method = .int
+    list = dereference list_ref
+    if index = list.size() then index = 0
+    index = index + 1
+    return list.get(index)
+
+DynamicBackingIterator: class
+  values_ref = reference .int[]
+  count_ref = reference .int
+  index = .int
+
+  *: factory
+    arg values = reference .int[], count = reference .int
+    values_ref = values
+    count_ref = count
+    index = 0
+    return
+
+  nextWrapped: method = .int
+    count = dereference count_ref
+    if index = count then index = 0
+    values = dereference values_ref
+    index = index + 1
+    return values[index]
