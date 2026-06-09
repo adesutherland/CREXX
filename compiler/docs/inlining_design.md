@@ -86,6 +86,11 @@ More precisely:
 - `expose`/by-reference formals are supported when the actual argument is an aliasable variable-like target, including indexed and stem-style forms.
 - For nontrivial by-reference actuals, the inline rewrite captures the locator expressions once into inline-scope temps so the callee still sees call-time binding semantics.
 - Optional formals now inline through the same rewrite path as other supported local plain-procedure calls, with omitted-actual/default-formal semantics preserved during binding.
+- Reference operations and reference-bearing return classes remain deliberately
+  fail-closed. The `reference_source_inline_lifetime` fixture is the canary:
+  opt/noopt must agree that an object returned with a reference to a callee
+  local contains an invalid reference, while an explicit factory-time snapshot
+  remains valid.
 
 Expression rewriting is still bucketed, but the `BLOCK_EXPR` bucket now covers composed expression parents whose evaluation order is already modelled by the emitter. The register allocator must not return a child register when the parent expression has adopted that same register as its own result; otherwise a later sibling, especially a nested `BLOCK_EXPR`, can reuse and clobber the value before the parent expression emits.
 

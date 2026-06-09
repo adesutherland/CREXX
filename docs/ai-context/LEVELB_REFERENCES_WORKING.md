@@ -201,6 +201,10 @@ direct, snapshot-parent, snapshot-backing, dynamic-parent, and dynamic-backing
 shapes. It records factory and iteration timings for opt/noopt runs on both VM
 modes; the timing output is observational, while checksums remain enforced.
 
+The classlib performance smoke adds the public `ArrayList` surface to that
+coverage: direct `get()`, live `iterator()`, and `snapshotIterator()` are timed
+with enforced checksums under opt/noopt and both VM modes.
+
 ## Internal Generated-Code Contract
 
 Compiler and library experiments should continue to target the following
@@ -819,12 +823,17 @@ Before references are implemented:
 
 After references exist:
 
-- `ArrayList.iterator()` can construct an iterator with a reference to the list
-  object or directly to the backing `val` attribute.
+- `ArrayList.iterator()` is the minimal Release 1 live iterator surface for
+  this slice. It should construct an unsynchronized live iterator with a
+  reference to the list object.
+- `ArrayList.snapshotIterator()` is the explicit snapshot variant. It should
+  copy the collection once in the iterator factory, not on each `hasNext()` or
+  `next()` call.
 - Referencing the parent object is cleaner for future mutation counters and
   bounds checks.
 - Referencing the backing array is cheaper and may be sufficient for the first
-  live iterator.
+  live iterator, but it is not the public first choice because it loses the
+  parent object needed for future iterator policy.
 - A live iterator should probably carry an expected modification count once the
   collection API grows mutation tracking.
 - native-backed and Rexx-backed containers should converge on the same iterator

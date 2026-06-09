@@ -232,6 +232,9 @@ Container naming is intentionally split by shape:
   OO code should expose the same semantics through `ArrayList`/`LinkedList`
   methods such as `add`/`append`, `insert`, `remove`, `get`, `set`, `size`,
   `clear`, `contains`, and `indexOf`.
+  The Release 1 Rexx-first iterator direction is explicit: `iterator()` returns
+  an unsynchronized live iterator over the current collection, while
+  `snapshotIterator()` returns an iterator over a factory-time snapshot.
 - Maps/stems are keyed containers. Do not overload `array*` for keyed lookup;
   use `stem*` or `map*` BIF names and class methods such as `put`, `get`,
   `containsKey`, `remove`, `keys`, and `values`.

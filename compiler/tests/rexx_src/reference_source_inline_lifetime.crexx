@@ -1,0 +1,65 @@
+options levelb
+namespace reference_source_inline_lifetime
+
+main: procedure = .int
+  holder = makeRefHolder()
+  if holder.isLive() <> 0 then return fail("returned local reference is still live")
+  if holder.invalidReadCaught() <> 1 then return fail("returned local reference is not catchably invalid")
+
+  snapshot_holder = makeSnapshotHolder()
+  if snapshot_holder.isLive() <> 1 then return fail("snapshot holder live")
+  if snapshot_holder.value() <> 42 then return fail("snapshot holder value")
+
+  say "PASS: Reference Source Inline Lifetime"
+  return 0
+
+makeRefHolder: procedure = .RefHolder
+  value = .int
+  value = 41
+  return .RefHolder(reference value)
+
+makeSnapshotHolder: procedure = .SnapshotHolder
+  value = .int
+  value = 42
+  return .SnapshotHolder(reference value)
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1
+
+RefHolder: class
+  value_ref = reference .int
+
+  *: factory
+    arg value = reference .int
+    value_ref = value
+    return
+
+  isLive: method = .int
+    if refvalid(value_ref) then return 1
+    return 0
+
+  invalidReadCaught: method = .int
+    caught = 0
+    do
+      linked = dereference value_ref
+      linked = linked + 1
+    on signal reference_invalid
+      caught = 1
+    end
+    return caught
+
+SnapshotHolder: class
+  value_copy = .int
+
+  *: factory
+    arg value = reference .int
+    value_copy = snapshot value
+    return
+
+  isLive: method = .int
+    return 1
+
+  value: method = .int
+    return value_copy

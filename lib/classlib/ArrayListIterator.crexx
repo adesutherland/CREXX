@@ -44,7 +44,9 @@ namespace data_List expose ArrayListIterator
  */
 ArrayListIterator: class
 
-list_  = .string[]
+list_ref_ = reference .ArrayList
+list_copy_ = .ArrayList
+snapshot_ = .int
 index_ = .int
 
 
@@ -52,10 +54,15 @@ index_ = .int
  * Factory method.
  *
  * @param list  The List to iterate over.
+ * @param snapshot_flag  1 to copy the list once in the factory, 0 for a live iterator.
  */
   *: factory
-    arg s = .string[]
-    list_  = s
+    arg list = reference .ArrayList, snapshot_flag = 0
+    snapshot_ = snapshot_flag
+    if snapshot_ = 1 then
+      list_copy_ = snapshot list
+    else
+      list_ref_ = list
     index_ = 0
     return
     
@@ -66,7 +73,11 @@ index_ = .int
      * @return 1 if there is a next element, 0 otherwise.
      */
   hasNext: method = .int
-    return index_ < list_.0
+    if snapshot_ = 1 then
+      return index_ < list_copy_.size()
+
+    list = dereference list_ref_
+    return index_ < list.size()
     
     
     /**
@@ -77,11 +88,20 @@ index_ = .int
      * @return The next element, or 0 if none available.
      */
   next: method = .string
-    if index_ >= list_.0 then
-      return 'error'  -- TODO exception
-      
+    if snapshot_ = 1 then do
+      if index_ >= list_copy_.size() then
+        return 'error'  -- TODO exception
+
       index_ = index_ + 1
-      return list_.index_
+      return list_copy_.get(index_)
+    end
+
+    list = dereference list_ref_
+    if index_ >= list.size() then
+      return 'error'  -- TODO exception
+
+    index_ = index_ + 1
+    return list.get(index_)
       
       
     /**
@@ -99,4 +119,9 @@ index_ = .int
   reset: method = .void
     index_ = 0
     return
+
+  isLive: method = .int
+    if snapshot_ = 1 then return 1
+    if refvalid(list_ref_) then return 1
+    return 0
     

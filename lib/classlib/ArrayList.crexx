@@ -193,8 +193,11 @@ ArrayList: class
      *
      * @return A ListIterator.
      */
-  iterator: method = .string[]
-    return val
+  iterator: method = .ArrayListIterator
+    return .ArrayListIterator(reference self, 0)
+
+  snapshotIterator: method = .ArrayListIterator
+    return .ArrayListIterator(reference self, 1)
     
     /**
      * Removes all elements from the list.

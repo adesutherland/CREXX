@@ -163,6 +163,11 @@ Bare `self` is not an implicit reference. Use `reference self` when a formal
 requires `reference .Class`, and use an ordinary method call for normal receiver
 access.
 
+The standard class-library collection direction uses that explicit receiver
+reference for live iterators: `iterator()` returns an unsynchronized live
+iterator, and `snapshotIterator()` names the explicit factory-time snapshot
+variant.
+
 ## Factory Selection with `match`
 
 Factory members are declared on the interface and implemented by the class using

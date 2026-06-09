@@ -3,6 +3,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
+set(CLASSLIBRPATH ${CMAKE_BINARY_DIR}/bin/classlib)
 
 # These benchmarks are smoke-run under CTest so opt/noopt timing stays visible,
 # but they do not assert performance thresholds because those vary by machine.
@@ -31,6 +32,26 @@ foreach(_crexx_runner IN ITEMS rxvm rxbvm)
     foreach(_crexx_mode IN ITEMS noopt opt)
         set_tests_properties(reference_iterator_compare_${_crexx_runner}_${_crexx_mode} PROPERTIES
                 PASS_REGULAR_EXPRESSION "PASS: Reference Iterator Source Performance Smoke"
+                FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        )
+    endforeach()
+endforeach()
+
+add_custom_target(performance_classlib_iterator ALL)
+foreach(_crexx_runner IN ITEMS rxvm rxbvm)
+    crexx_add_rexx_opt_matrix(
+            NAME arraylist_iterator_compare_${_crexx_runner}
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/arraylist_iterator_compare.crexx
+            TARGET_GROUP performance_classlib_iterator
+            RUNNER ${_crexx_runner}
+            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+            DEPENDS library classlib compiler_exit_bin
+            RUNTIME_ARGS ${LIBRPATH} ${CLASSLIBRPATH}
+            TEST_LABELS "performance;reference;classlib"
+    )
+    foreach(_crexx_mode IN ITEMS noopt opt)
+        set_tests_properties(arraylist_iterator_compare_${_crexx_runner}_${_crexx_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: ArrayList Iterator Performance Smoke"
                 FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
         )
     endforeach()

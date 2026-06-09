@@ -32,6 +32,7 @@ endforeach()
 
 set(CLASSLIB_SELECTORS ${CLSS})
 set(CLASS_DEPS_Iterable Iterator)
+set(CLASS_DEPS_ArrayListIterator ArrayList)
 set(CLASS_DEPS_TreeSet Iterable Iterator TreeSetIterator)
 set(CLASS_DEPS_HashMap TreeSet)
 set(CLASS_DEPS_StemListIterator StemList)
