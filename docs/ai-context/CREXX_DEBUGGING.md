@@ -157,6 +157,9 @@ Reference source-syntax lessons:
   should not be blanket-disabled just because they write class attributes; rely
   on the inliner's receiver, copyback, and portable-attribute-shape checks so
   existing object/member optimisations and compiler exits keep working.
+  Shared semantic eligibility rules belong in `inline_analyse_callable_eligibility()`;
+  keep local-inlining gates and metadata-export gates as thin callers around
+  that helper so the safety scan does not drift.
 * Inlining can accidentally extend stack/local lifetime. A callable that returns
   an object containing reference attributes can hide a weak reference to one of
   its own locals; inlining that callable into the caller can make the local

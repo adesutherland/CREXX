@@ -92,6 +92,32 @@ typedef struct {
 } InlineReturnShape;
 
 typedef enum {
+    INLINE_ELIGIBILITY_OK = 0,
+    INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS,
+    INLINE_ELIGIBILITY_MISSING_INSTRS,
+    INLINE_ELIGIBILITY_RETURN_REFERENCE_CLASS,
+    INLINE_ELIGIBILITY_VARG_FORMAL_FOLLOWED,
+    INLINE_ELIGIBILITY_RETURN_SHAPE_FAILED,
+    INLINE_ELIGIBILITY_VALUE_NOT_FINAL_RETURN,
+    INLINE_ELIGIBILITY_VALUE_NO_RETURN,
+    INLINE_ELIGIBILITY_NODE_CUTOFF,
+    INLINE_ELIGIBILITY_RETURN_COUNT_MISMATCH,
+    INLINE_ELIGIBILITY_ASSEMBLER_ALIAS,
+    INLINE_ELIGIBILITY_ASSEMBLER_EFFECT,
+    INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE,
+    INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS,
+    INLINE_ELIGIBILITY_UNPORTABLE_CLASS_ATTRIBUTE_SHAPE
+} InlineEligibilityReject;
+
+typedef struct {
+    ASTNode *args;
+    ASTNode *instrs;
+    InlineReturnShape return_shape;
+    InlinableCheck check;
+    InlineEligibilityReject reject;
+} InlineEligibility;
+
+typedef enum {
     INLINE_EXPR_CONTEXT_NONE = 0,
     INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER,
     INLINE_EXPR_CONTEXT_EAGER_OPERATOR,
@@ -4294,6 +4320,226 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
     return result_normal;
 }
 
+static InlineEligibilityReject inline_analyse_callable_eligibility(Context *context,
+                                                                   ASTNode *callable,
+                                                                   Symbol *symbol,
+                                                                   int require_args,
+                                                                   int reject_unportable_class_attribute_shape,
+                                                                   InlineEligibility *eligibility) {
+    ASTNode *arg;
+    ASTNode *varg_arg;
+
+    if (!eligibility) return INLINE_ELIGIBILITY_MISSING_INSTRS;
+
+    memset(eligibility, 0, sizeof(*eligibility));
+    eligibility->reject = INLINE_ELIGIBILITY_OK;
+
+    eligibility->args = ast_chld(callable, ARGS, 0);
+    eligibility->instrs = ast_chld(callable, INSTRUCTIONS, 0);
+    if (require_args && !eligibility->args) {
+        eligibility->reject = INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS;
+        return eligibility->reject;
+    }
+    if (!eligibility->instrs) {
+        eligibility->reject = require_args ?
+                              INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS :
+                              INLINE_ELIGIBILITY_MISSING_INSTRS;
+        return eligibility->reject;
+    }
+
+    if (symbol &&
+        symbol->type == TP_OBJECT &&
+        inline_class_has_reference_attribute(context, symbol->scope, symbol->value_class)) {
+        eligibility->reject = INLINE_ELIGIBILITY_RETURN_REFERENCE_CLASS;
+        return eligibility->reject;
+    }
+
+    if (eligibility->args) {
+        arg = eligibility->args->child;
+        while (arg) {
+            if (arg->is_varg && arg->sibling) {
+                eligibility->reject = INLINE_ELIGIBILITY_VARG_FORMAL_FOLLOWED;
+                return eligibility->reject;
+            }
+            arg = arg->sibling;
+        }
+    }
+
+    if (!inline_analyse_return_shape(callable, &eligibility->return_shape)) {
+        eligibility->reject = INLINE_ELIGIBILITY_RETURN_SHAPE_FAILED;
+        return eligibility->reject;
+    }
+    if (symbol &&
+        !eligibility->return_shape.final_is_return &&
+        symbol->type != TP_VOID) {
+        eligibility->reject = INLINE_ELIGIBILITY_VALUE_NOT_FINAL_RETURN;
+        return eligibility->reject;
+    }
+    if (symbol &&
+        symbol->type != TP_VOID &&
+        eligibility->return_shape.return_count == 0) {
+        eligibility->reject = INLINE_ELIGIBILITY_VALUE_NO_RETURN;
+        return eligibility->reject;
+    }
+
+    memset(&eligibility->check, 0, sizeof(eligibility->check));
+    eligibility->check.root_proc = callable;
+    eligibility->check.context = context;
+    varg_arg = inline_find_varg_arg(callable);
+    eligibility->check.ref_varg_mode = eligibility->args && varg_arg && varg_arg->is_ref_arg;
+    ast_wlkr(callable, inlinable_check_walker, &eligibility->check);
+
+    if (eligibility->check.node_count > INLINE_MAX_NODES) {
+        eligibility->reject = INLINE_ELIGIBILITY_NODE_CUTOFF;
+    } else if (eligibility->check.return_count != eligibility->return_shape.return_count) {
+        eligibility->reject = INLINE_ELIGIBILITY_RETURN_COUNT_MISMATCH;
+    } else if (eligibility->check.has_unsupported_assembler_alias) {
+        eligibility->reject = INLINE_ELIGIBILITY_ASSEMBLER_ALIAS;
+    } else if (eligibility->check.has_unsupported_assembler_effect) {
+        eligibility->reject = INLINE_ELIGIBILITY_ASSEMBLER_EFFECT;
+    } else if (eligibility->check.has_unsupported_reference) {
+        eligibility->reject = INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE;
+    } else if (eligibility->check.has_unsupported_varg_access) {
+        eligibility->reject = INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS;
+    } else if (reject_unportable_class_attribute_shape &&
+               (callable->node_type == METHOD || callable->node_type == FACTORY) &&
+               eligibility->check.has_unportable_class_attribute_shape) {
+        eligibility->reject = INLINE_ELIGIBILITY_UNPORTABLE_CLASS_ATTRIBUTE_SHAPE;
+    }
+
+    return eligibility->reject;
+}
+
+static int inline_eligibility_reject_is_scan_summary(InlineEligibilityReject reject) {
+    return reject == INLINE_ELIGIBILITY_NODE_CUTOFF ||
+           reject == INLINE_ELIGIBILITY_RETURN_COUNT_MISMATCH ||
+           reject == INLINE_ELIGIBILITY_ASSEMBLER_ALIAS ||
+           reject == INLINE_ELIGIBILITY_ASSEMBLER_EFFECT ||
+           reject == INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE ||
+           reject == INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS;
+}
+
+static void inline_debug_log_eligibility_reject(Context *context,
+                                               ASTNode *callable,
+                                               Symbol *symbol,
+                                               const InlineEligibility *eligibility) {
+    if (!eligibility) {
+        inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                         "reject: inline eligibility analysis failed");
+        return;
+    }
+
+    switch (eligibility->reject) {
+        case INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS:
+        case INLINE_ELIGIBILITY_MISSING_INSTRS:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: procedure has no instruction list");
+            return;
+        case INLINE_ELIGIBILITY_RETURN_REFERENCE_CLASS:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: returns reference-bearing class");
+            return;
+        case INLINE_ELIGIBILITY_VARG_FORMAL_FOLLOWED:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: vararg formal is followed by additional formals");
+            return;
+        case INLINE_ELIGIBILITY_RETURN_SHAPE_FAILED:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: failed to analyse return shape");
+            return;
+        case INLINE_ELIGIBILITY_VALUE_NOT_FINAL_RETURN:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: value-returning procedure does not end in RETURN");
+            return;
+        case INLINE_ELIGIBILITY_VALUE_NO_RETURN:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: value-returning procedure has no RETURN");
+            return;
+        default:
+            break;
+    }
+
+    if (inline_eligibility_reject_is_scan_summary(eligibility->reject)) {
+        inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                         "reject: nodes=%d returns=%d final_return=%d assembler_alias=%d assembler_effect=%d unsupported_reference=%d class_attribute_write=%d unsupported_varg=%d cutoff=%d",
+                         eligibility->check.node_count,
+                         eligibility->check.return_count,
+                         eligibility->return_shape.final_is_return,
+                         eligibility->check.has_unsupported_assembler_alias,
+                         eligibility->check.has_unsupported_assembler_effect,
+                         eligibility->check.has_unsupported_reference,
+                         eligibility->check.has_class_attribute_write,
+                         eligibility->check.has_unsupported_varg_access,
+                         INLINE_MAX_NODES);
+        return;
+    }
+
+    inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                     "reject: inline eligibility analysis failed");
+}
+
+static void inline_export_debug_eligibility_reject(Context *context,
+                                                  ASTNode *callable,
+                                                  Symbol *symbol,
+                                                  const InlineEligibility *eligibility) {
+    if (!eligibility) {
+        inline_export_debug_reject(context, callable, symbol, "inline eligibility analysis failed");
+        return;
+    }
+
+    switch (eligibility->reject) {
+        case INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS:
+        case INLINE_ELIGIBILITY_MISSING_INSTRS:
+            inline_export_debug_reject(context, callable, symbol, "missing args or instruction list");
+            return;
+        case INLINE_ELIGIBILITY_RETURN_REFERENCE_CLASS:
+            inline_export_debug_reject(context, callable, symbol, "returns reference-bearing class");
+            return;
+        case INLINE_ELIGIBILITY_VARG_FORMAL_FOLLOWED:
+            inline_export_debug_reject(context, callable, symbol, "unsupported vararg formal shape");
+            return;
+        case INLINE_ELIGIBILITY_RETURN_SHAPE_FAILED:
+            inline_export_debug_reject(context, callable, symbol, "failed to analyse return shape");
+            return;
+        case INLINE_ELIGIBILITY_VALUE_NOT_FINAL_RETURN:
+            inline_export_debug_reject(context, callable, symbol, "value procedure lacks final RETURN");
+            return;
+        case INLINE_ELIGIBILITY_VALUE_NO_RETURN:
+            inline_export_debug_reject(context, callable, symbol, "value procedure has no RETURN");
+            return;
+        case INLINE_ELIGIBILITY_NODE_CUTOFF:
+            inline_export_debug_reject(context,
+                                       callable,
+                                       symbol,
+                                       "node count %d exceeds cutoff %d",
+                                       eligibility->check.node_count,
+                                       INLINE_MAX_NODES);
+            return;
+        case INLINE_ELIGIBILITY_RETURN_COUNT_MISMATCH:
+            inline_export_debug_reject(context, callable, symbol, "return-shape mismatch");
+            return;
+        case INLINE_ELIGIBILITY_ASSEMBLER_ALIAS:
+            inline_export_debug_reject(context, callable, symbol, "assembler aliasing instruction");
+            return;
+        case INLINE_ELIGIBILITY_ASSEMBLER_EFFECT:
+            inline_export_debug_reject(context, callable, symbol, "assembler stateful instruction");
+            return;
+        case INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE:
+            inline_export_debug_reject(context, callable, symbol, "reference operation or type");
+            return;
+        case INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS:
+            inline_export_debug_reject(context, callable, symbol, "unsupported vararg access");
+            return;
+        case INLINE_ELIGIBILITY_UNPORTABLE_CLASS_ATTRIBUTE_SHAPE:
+            inline_export_debug_reject(context, callable, symbol, "unportable class attribute shape");
+            return;
+        case INLINE_ELIGIBILITY_OK:
+            break;
+    }
+
+    inline_export_debug_reject(context, callable, symbol, "inline eligibility analysis failed");
+}
+
 /* Walker to identify inlinable procedures */
 walker_result identify_inlinable_walker(walker_direction direction, ASTNode *node, void *payload) {
     Context *context = (Context *)payload;
@@ -4304,13 +4550,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         node->node_type == METHOD ||
         node->node_type == FACTORY) {
         Symbol *sym;
-        ASTNode *args;
-        ASTNode *arg;
-        ASTNode *formal_target;
-        Symbol *formal_symbol;
-        ASTNode *instrs;
-        InlineReturnShape return_shape;
-        InlinableCheck check;
+        InlineEligibility eligibility;
 
         sym = node->symbolNode ? node->symbolNode->symbol : NULL;
         if (sym && sym->is_inlinable && inline_symbol_has_callable_template(sym) &&
@@ -4333,95 +4573,17 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
             return result_normal;
         }
 
-        if (sym->type == TP_OBJECT &&
-            inline_class_has_reference_attribute(context, sym->scope, sym->value_class)) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: returns reference-bearing class");
-            sym->is_inlinable = 0;
-            return result_normal;
-        }
-
-        args = ast_chld(node, ARGS, 0);
-        if (args) {
-            arg = args->child;
-            while (arg) {
-                if (arg->is_varg) {
-                    if (arg->sibling) {
-                        inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                                         "reject: vararg formal is followed by additional formals");
-                        sym->is_inlinable = 0;
-                        return result_normal;
-                    }
-                }
-
-                formal_target = ast_chdn(arg, 0);
-                if (arg->is_varg) {
-                    formal_target = arg->sibling;
-                }
-
-                formal_symbol = formal_target && formal_target->symbolNode ? formal_target->symbolNode->symbol : NULL;
-                (void)formal_symbol;
-                arg = arg->sibling;
-            }
-        }
-
-        instrs = ast_chld(node, INSTRUCTIONS, 0);
-        if (!instrs) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE", "reject: procedure has no instruction list");
-            sym->is_inlinable = 0;
-            return result_normal;
-        }
-
-        if (!inline_analyse_return_shape(node, &return_shape)) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE", "reject: failed to analyse return shape");
-            sym->is_inlinable = 0;
-            return result_normal;
-        }
-        if (!return_shape.final_is_return && sym->type != TP_VOID) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: value-returning procedure does not end in RETURN");
-            sym->is_inlinable = 0;
-            return result_normal;
-        }
-        if (sym->type != TP_VOID && return_shape.return_count == 0) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: value-returning procedure has no RETURN");
-            sym->is_inlinable = 0;
-            return result_normal;
-        }
-
-        memset(&check, 0, sizeof(check));
-        check.root_proc = node;
-        check.context = context;
-        check.ref_varg_mode = args && inline_find_varg_arg(node) && inline_find_varg_arg(node)->is_ref_arg;
-        ast_wlkr(node, inlinable_check_walker, &check);
-
-        if (check.node_count > INLINE_MAX_NODES ||
-            check.return_count != return_shape.return_count ||
-            check.has_unsupported_assembler_alias ||
-            check.has_unsupported_assembler_effect ||
-            check.has_unsupported_reference ||
-            check.has_unsupported_varg_access) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: nodes=%d returns=%d final_return=%d assembler_alias=%d assembler_effect=%d unsupported_reference=%d class_attribute_write=%d unsupported_varg=%d cutoff=%d",
-                             check.node_count,
-                             check.return_count,
-                             return_shape.final_is_return,
-                             check.has_unsupported_assembler_alias,
-                             check.has_unsupported_assembler_effect,
-                             check.has_unsupported_reference,
-                             check.has_class_attribute_write,
-                             check.has_unsupported_varg_access,
-                             INLINE_MAX_NODES);
+        if (inline_analyse_callable_eligibility(context, node, sym, 0, 0, &eligibility) != INLINE_ELIGIBILITY_OK) {
+            inline_debug_log_eligibility_reject(context, node, sym, &eligibility);
             sym->is_inlinable = 0;
             return result_normal;
         }
 
         inline_debug_log(context, node, sym, "DEBUG_INLINE",
                          "accept: nodes=%d returns=%d final_return=%d cutoff=%d",
-                         check.node_count,
-                         check.return_count,
-                         return_shape.final_is_return,
+                         eligibility.check.node_count,
+                         eligibility.check.return_count,
+                         eligibility.return_shape.final_is_return,
                          INLINE_MAX_NODES);
         sym->is_inlinable = 1;
         sym->ast_template = node;
@@ -5954,10 +6116,7 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
 
 char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
     Symbol *symbol;
-    ASTNode *args;
-    ASTNode *instrs;
-    InlineReturnShape return_shape;
-    InlinableCheck check;
+    InlineEligibility eligibility;
     InlineMetaExport meta;
     InlineMetaText text;
 
@@ -5982,63 +6141,8 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
         return strdup("");
     }
 
-    args = ast_chld(callable, ARGS, 0);
-    instrs = ast_chld(callable, INSTRUCTIONS, 0);
-    if (!args || !instrs) {
-        inline_export_debug_reject(context, callable, symbol, "missing args or instruction list");
-        return strdup("");
-    }
-
-    if (!inline_analyse_return_shape(callable, &return_shape)) {
-        inline_export_debug_reject(context, callable, symbol, "failed to analyse return shape");
-        return strdup("");
-    }
-    if (!return_shape.final_is_return && symbol->type != TP_VOID) {
-        inline_export_debug_reject(context, callable, symbol, "value procedure lacks final RETURN");
-        return strdup("");
-    }
-    if (symbol->type != TP_VOID && return_shape.return_count == 0) {
-        inline_export_debug_reject(context, callable, symbol, "value procedure has no RETURN");
-        return strdup("");
-    }
-
-    memset(&check, 0, sizeof(check));
-    check.root_proc = callable;
-    check.context = context;
-    check.ref_varg_mode = args && inline_find_varg_arg(callable) && inline_find_varg_arg(callable)->is_ref_arg;
-    ast_wlkr(callable, inlinable_check_walker, &check);
-    if (check.node_count > INLINE_MAX_NODES) {
-        inline_export_debug_reject(context,
-                                   callable,
-                                   symbol,
-                                   "node count %d exceeds cutoff %d",
-                                   check.node_count,
-                                   INLINE_MAX_NODES);
-        return strdup("");
-    }
-    if (check.return_count != return_shape.return_count) {
-        inline_export_debug_reject(context, callable, symbol, "return-shape mismatch");
-        return strdup("");
-    }
-    if (check.has_unsupported_assembler_alias) {
-        inline_export_debug_reject(context, callable, symbol, "assembler aliasing instruction");
-        return strdup("");
-    }
-    if (check.has_unsupported_assembler_effect) {
-        inline_export_debug_reject(context, callable, symbol, "assembler stateful instruction");
-        return strdup("");
-    }
-    if (check.has_unsupported_reference) {
-        inline_export_debug_reject(context, callable, symbol, "reference operation or type");
-        return strdup("");
-    }
-    if (check.has_unsupported_varg_access) {
-        inline_export_debug_reject(context, callable, symbol, "unsupported vararg access");
-        return strdup("");
-    }
-    if ((callable->node_type == METHOD || callable->node_type == FACTORY) &&
-        check.has_unportable_class_attribute_shape) {
-        inline_export_debug_reject(context, callable, symbol, "unportable class attribute shape");
+    if (inline_analyse_callable_eligibility(context, callable, symbol, 1, 1, &eligibility) != INLINE_ELIGIBILITY_OK) {
+        inline_export_debug_eligibility_reject(context, callable, symbol, &eligibility);
         return strdup("");
     }
 
@@ -6049,9 +6153,9 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
         free(meta.scopes);
         return strdup("");
     }
-    if (!inline_meta_collect(args, &meta) ||
-        !inline_meta_collect(instrs, &meta)) {
-        inline_meta_debug_collect_failure(context, callable, symbol, &meta, args, instrs);
+    if (!inline_meta_collect(eligibility.args, &meta) ||
+        !inline_meta_collect(eligibility.instrs, &meta)) {
+        inline_meta_debug_collect_failure(context, callable, symbol, &meta, eligibility.args, eligibility.instrs);
         free(meta.scopes);
         free(meta.symbols);
         free(meta.files);
@@ -6069,9 +6173,9 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
         !inline_meta_emit_symbols(&text, &meta) ||
         !inline_meta_emit_dependencies(&text, &meta) ||
         !inline_meta_text_append(&text, ";a") ||
-        !inline_meta_emit_node(&text, &meta, args) ||
+        !inline_meta_emit_node(&text, &meta, eligibility.args) ||
         !inline_meta_text_append(&text, ";b") ||
-        !inline_meta_emit_node(&text, &meta, instrs)) {
+        !inline_meta_emit_node(&text, &meta, eligibility.instrs)) {
         inline_export_debug_reject(context, callable, symbol, "failed to emit inline metadata");
         free(meta.scopes);
         free(meta.symbols);
