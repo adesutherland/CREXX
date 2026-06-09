@@ -496,7 +496,7 @@ _execute_statement: procedure = .int expose env_names env_keys env_values env_ty
   if _is_identifier(name) = 0 then return _set_error("invalid_assignment", "invalid assignment target", stmtno, 1)
   if expr = "" then return _set_error("missing_expression", "missing assignment expression", stmtno, eq + 1)
   if _eval_expression(expr, stmtno) = 0 then return 0
-  call _set_var(name, eval_value, eval_type)
+  call _set_var(name, eval_value || "", eval_type)
   return 1
 
 _is_label_statement: procedure = .int
@@ -681,7 +681,12 @@ _is_integer_text: procedure = .int
   arg text = .string
   text = strip(text)
   if text = "" then return 0
-  do i = 1 to length(text)
+  start = 1
+  if substr(text, 1, 1) = "-" then do
+    if length(text) = 1 then return 0
+    start = 2
+  end
+  do i = start to length(text)
     if pos(substr(text, i, 1), "0123456789") = 0 then return 0
   end
   return 1
@@ -760,7 +765,9 @@ _eval_condition: procedure = .int expose expr_text expr_pos eval_value eval_type
   return 1
 
 _eval_expression: procedure = .int expose expr_text expr_pos eval_value eval_type
+
   arg expression = .string, stmtno = .int
+
   expr_text = expression
   expr_pos = 1
   if _read_term(stmtno) = 0 then return 0
@@ -830,6 +837,15 @@ _read_term: procedure = .int expose expr_text expr_pos eval_value eval_type
   if expr_pos > length(expr_text) then return _set_error("missing_expression", "missing expression term", stmtno, expr_pos)
 
   ch = substr(expr_text, expr_pos, 1)
+  if ch = "-" then do
+    expr_pos = expr_pos + 1
+    if _read_term(stmtno) = 0 then return 0
+    if eval_type <> "int" then return _set_error("type_mismatch", "arithmetic requires integers", stmtno, expr_pos)
+    eval_value = 0 - (eval_value + 0)
+    eval_value = eval_value || ""
+    eval_type = "int"
+    return 1
+  end
   if ch = "'" | ch = '"' then do
     quote = ch
     start = expr_pos + 1
@@ -870,7 +886,7 @@ _read_term: procedure = .int expose expr_text expr_pos eval_value eval_type
     index = _find_var(name)
     if index = 0 then return _set_error("undefined_variable", "undefined variable " || name, stmtno, start)
     eval_value = _env_value(index)
-    eval_type = "string"
+    eval_type = _env_type(index)
     return 1
   end
 
@@ -893,7 +909,7 @@ _set_var: procedure = .void expose env_names env_keys env_values env_types env_c
   env_names[index] = name
   env_keys[index] = key
   env_values[index] = value || ""
-  env_types[index] = "string"
+  env_types[index] = value_type
   return
 
 _find_var: procedure = .int expose env_keys env_count
@@ -940,36 +956,6 @@ _read_builtin: procedure = .int expose expr_text expr_pos eval_value eval_type f
     expr_pos = expr_pos + 1
   end
   return _set_error("syntax_error", "missing )", stmtno, start)
-
-_eval_builtin: procedure = .int expose eval_value eval_type fn_arg1 fn_arg2 fn_arg3 fn_arg_count
-  arg name = .string, args = .string, stmtno = .int
-  upper_name = translate(strip(name))
-  if upper_name = "LENGTH" then do
-    if _split_args(args) <> 1 then return _set_error("syntax_error", "length() expects one argument", stmtno, 1)
-    if _eval_expression(fn_arg1, stmtno) = 0 then return 0
-    eval_value = length(eval_value) || ""
-    eval_type = "int"
-    return 1
-  end
-
-  if upper_name = "SUBSTR" then do
-    if _split_args(args) < 2 | fn_arg_count > 3 then return _set_error("syntax_error", "substr() expects two or three arguments", stmtno, 1)
-    if _eval_expression(fn_arg1, stmtno) = 0 then return 0
-    _src_value = eval_value || ""
-    if _eval_expression(fn_arg2, stmtno) = 0 then return 0
-    _start_value = eval_value + 0
-    if _start_value < 1 then _start_value = 1
-    if fn_arg_count = 3 then do
-      if _eval_expression(fn_arg3, stmtno) = 0 then return 0
-      if eval_value + 0 < 0 then eval_value = ""
-      else eval_value = substr(_src_value, _start_value, eval_value + 0)
-    end
-    else eval_value = substr(_src_value, _start_value)
-    eval_type = "string"
-    return 1
-  end
-
-  return _set_error("undefined_function", "undefined function " || name, stmtno, 1)
 
 _split_args: procedure = .int expose fn_arg1 fn_arg2 fn_arg3 fn_arg_count
   arg args = .string
@@ -1051,4 +1037,184 @@ _set_error: procedure = .int expose error_code error_message error_statement err
   error_message = message
   error_statement = stmtno
   error_column = column
-  return 0
+return 0
+/* --------------------------------------------------------------------
+ * Intrinsic Function Dispatcher
+ *
+ * Resolves evaluator intrinsic functions and dispatches to the matching
+ * builtin handler. These are evaluator intrinsics, not general REXX
+ * function calls.
+ * -------------------------------------------------------------------- */
+_eval_builtin: procedure = .int expose eval_value eval_type fn_arg1 fn_arg2 fn_arg3 fn_arg_count
+  arg name = .string, args = .string, stmtno = .int
+  upper_name = translate(strip(name))
+  argc = _split_args(args)
+
+  select
+    when upper_name = "LENGTH" then do
+      if argc <> 1 then return _set_error("syntax_error", "length() expects one argument", stmtno, 1)
+      return _builtin_length(stmtno)
+    end
+    when upper_name = "SUBSTR" then do
+      if argc < 2 | argc > 3 then return _set_error("syntax_error", "substr() expects two or three arguments", stmtno, 1)
+      return _builtin_substr(stmtno)
+    end
+    when upper_name = "STRIP" then do
+      if argc <> 1 then return _set_error("syntax_error", "strip() expects one argument", stmtno, 1)
+      return _builtin_strip(stmtno)
+    end
+    when upper_name = "LEFT" then do
+      if argc <> 2 then return _set_error("syntax_error", "left() expects two arguments", stmtno, 1)
+      return _builtin_left(stmtno)
+    end
+    when upper_name = "RIGHT" then do
+      if argc <> 2 then return _set_error("syntax_error", "right() expects two arguments", stmtno, 1)
+      return _builtin_right(stmtno)
+    end
+    when upper_name = "POS" then do
+      if argc <> 2 then return _set_error("syntax_error", "POS() expects two arguments", stmtno, 1)
+      return _builtin_pos(stmtno)
+    end
+    when upper_name = "UPPER" then do
+      if argc <> 1 then return _set_error("syntax_error", "UPPER() expects one argument", stmtno, 1)
+      return _builtin_upper(stmtno)
+    end
+    when upper_name = "LOWER" then do
+      if argc <> 1 then return _set_error("syntax_error", "LOWER() expects one argument", stmtno, 1)
+      return _builtin_lower(stmtno)
+    end
+    when upper_name = "WORDS" then do
+      if argc <> 1 then return _set_error("syntax_error", "WORDS() expects one argument", stmtno, 1)
+      return _builtin_words(stmtno)
+    end
+    when upper_name = "WORD" then do
+      if argc <> 2 then return _set_error("syntax_error", "WORD() expects two arguments", stmtno, 1)
+      return _builtin_word(stmtno)
+    end
+    when upper_name = "ABS" then do
+      if argc <> 1 then return _set_error("syntax_error", "ABS() expects one argument", stmtno, 1)
+      return _builtin_abs(stmtno)
+    end
+    otherwise return _set_error("undefined_function", "undefined function " || name, stmtno, 1)
+  end
+return 0
+
+/* LENGTH(string): return character length as integer text. */
+_builtin_length: procedure = .int expose eval_value eval_type fn_arg1
+  arg stmtno = .int
+  if _eval_expression(fn_arg1, stmtno) = 0 then return 0
+  eval_value = length(eval_value) || ""
+  eval_type = "int"
+return 1
+
+/* SUBSTR(string,start[,length]): 1-based substring extraction. */
+_builtin_substr: procedure = .int expose eval_value eval_type fn_arg1 fn_arg2 fn_arg3 fn_arg_count
+  arg stmtno = .int
+  if _eval_expression(fn_arg1, stmtno) = 0 then return 0
+  source = eval_value
+  if _eval_expression(fn_arg2, stmtno) = 0 then return 0
+  startpos = eval_value + 0
+  if startpos < 1 then startpos = 1
+  if fn_arg_count = 3 then do
+    if _eval_expression(fn_arg3, stmtno) = 0 then return 0
+    len = eval_value + 0
+    if len < 0 then eval_value = ""
+    else eval_value = substr(source, startpos, len)
+  end
+  else eval_value = substr(source, startpos)
+  eval_type = "string"
+return 1
+
+/* LEFT(string,width): left-align string and blank-pad if needed. */
+_builtin_left: procedure = .int expose eval_value eval_type fn_arg1 fn_arg2
+  arg stmtno = .int
+  if _eval_expression(fn_arg1, stmtno) = 0 then return 0
+  source = eval_value || ""
+  if _eval_expression(fn_arg2, stmtno) = 0 then return 0
+  width = eval_value + 0
+  if width < 0 then width = 0
+  select
+    when width = 0 then eval_value = ""
+    when width <= length(source) then eval_value = substr(source, 1, width)
+    otherwise eval_value = source || copies(" ", width - length(source))
+  end
+  eval_type = "string"
+return 1
+
+/* RIGHT(string,width): right-align string and blank-pad if needed. */
+_builtin_right: procedure = .int expose eval_value eval_type fn_arg1 fn_arg2
+  arg stmtno = .int
+  if _eval_expression(fn_arg1, stmtno) = 0 then return 0
+  source = eval_value || ""
+  if _eval_expression(fn_arg2, stmtno) = 0 then return 0
+  width = eval_value + 0
+  if width < 0 then width = 0
+  select
+    when width = 0 then eval_value = ""
+    when width <= length(source) then eval_value = substr(source, length(source) - width + 1, width)
+    otherwise eval_value = copies(" ", width - length(source)) || source
+  end
+  eval_type = "string"
+return 1
+
+/* STRIP(string): remove leading and trailing blanks. */
+_builtin_strip: procedure = .int expose eval_value eval_type fn_arg1
+  arg stmtno = .int
+  if _eval_expression(fn_arg1, stmtno) = 0 then return 0
+  eval_value = strip(eval_value)
+  eval_type = "string"
+return 1
+
+/* UPPER(string): convert string to uppercase. */
+_builtin_upper: procedure = .int expose eval_value eval_type fn_arg1
+  arg stmtno = .int
+  if _eval_expression(fn_arg1, stmtno) = 0 then return 0
+  eval_value = upper(eval_value)
+  eval_type = "string"
+return 1
+
+/* LOWER(string): convert string to lowercase. */
+_builtin_lower: procedure = .int expose eval_value eval_type fn_arg1
+  arg stmtno = .int
+  if _eval_expression(fn_arg1, stmtno) = 0 then return 0
+  eval_value = lower(eval_value)
+  eval_type = "string"
+return 1
+
+/* POS(needle,haystack): return 1-based match position, or 0. */
+_builtin_pos: procedure = .int expose eval_value eval_type fn_arg1 fn_arg2
+  arg stmtno = .int
+  if _eval_expression(fn_arg1, stmtno) = 0 then return 0
+  needle = eval_value
+  if _eval_expression(fn_arg2, stmtno) = 0 then return 0
+  haystack = eval_value
+  eval_value = pos(needle, haystack) || ""
+  eval_type = "int"
+return 1
+
+/* WORDS(string): return number of blank-delimited words. */
+_builtin_words: procedure = .int expose eval_value eval_type fn_arg1
+  arg stmtno = .int
+  if _eval_expression(fn_arg1, stmtno) = 0 then return 0
+  eval_value = words(eval_value) || ""
+  eval_type = "int"
+return 1
+
+/* WORD(string,index): return the selected 1-based word. */
+_builtin_word: procedure = .int expose eval_value eval_type fn_arg1 fn_arg2
+  arg stmtno = .int
+  if _eval_expression(fn_arg1, stmtno) = 0 then return 0
+  source = eval_value
+  if _eval_expression(fn_arg2, stmtno) = 0 then return 0
+  wnum = eval_value + 0
+  eval_value = word(source, wnum)
+  eval_type = "string"
+return 1
+
+/* ABS(number): return absolute integer value. */
+_builtin_abs: procedure = .int expose eval_value eval_type fn_arg1
+  arg stmtno = .int
+  if _eval_expression(fn_arg1, stmtno) = 0 then return 0
+  eval_value = abs(eval_value + 0) || ""
+  eval_type = "int"
+return 1

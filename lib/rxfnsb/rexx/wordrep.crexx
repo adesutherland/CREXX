@@ -25,43 +25,36 @@
 options levelb
 namespace rxfnsb expose wordrep
 
-/* ------------------------------------------------------------------
- * WORDREP
+/**
+ * Replaces a word within a string.
  *
- * Replace a word within a string.
+ * <p>Syntax:</p>
  *
- * Syntax:
+ * <pre>
+ * WORDREP(string, wordnum, newword [, mode])
+ * </pre>
  *
- *   WORDREP(string, wordnum, newword [, mode])
+ * @param string  source string
+ * @param wordnum word number to replace, 1-based
+ * @param newword replacement word
+ * @param mode    replacement mode:
+ *                <ul>
+ *                  <li>{@code N} normal replacement, default; replacement may
+ *                      change string length and subsequent words may shift</li>
+ *                  <li>{@code P} preserve original word width; replacement
+ *                      occurs in-place, shorter replacements are blank padded,
+ *                      longer replacements are truncated, and subsequent
+ *                      columns remain aligned</li>
+ *                </ul>
  *
- * Parameters:
+ * @return modified string; if {@code wordnum} does not exist, the original
+ *         string is returned unchanged
  *
- *   string    Source string.
- *
- *   wordnum   Word number to replace (1-based).
- *
- *   newword   Replacement word.
- *
- *   mode      Replacement mode:
- *               N  Normal replacement (default)
- *                  - replacement may change string length
- *                  - subsequent words may shift position
- *
- *               P  Preserve original word width
- *                  - replacement occurs in-place
- *                  - shorter replacements are blank padded
- *                  - longer replacements are truncated
- *                  - subsequent columns remain aligned
- *
- * Returns:
- *   Modified string. If wordnum does not exist, the original string
- *   is returned unchanged.
- *
- * Examples:
- *   WORDREP(line,3,'BIF')
- *   WORDREP(line,3,'BUILTIN','N')
- *   WORDREP(line,3,'BIF','P')
- * ------------------------------------------------------------------
+ * @example
+ * WORDREP(line,3,'BIF')
+ * WORDREP(line,3,'BUILTIN','N')
+ * WORDREP(line,3,'BIF','P')
+ * @author Peter Jacob
  */
 wordrep: procedure=.string
   arg string=.string, wordnum=.int, newword=.string, mode='NOPRESERVE'
