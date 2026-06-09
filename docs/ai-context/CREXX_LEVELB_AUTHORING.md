@@ -194,12 +194,28 @@ Do not reason about them as loose classic stem variables only.
 Patterns used in-tree:
 
 - `items = .string[]`
-- `items[0]` for count
+- `items[0]` for count/cardinality reads only
 - `items[1]` for first element
 - `items.1` is also used in older code
 - both bracket and dot indexing appear in the repo, so preserve the local style
 - BIFs or helpers that resize/mutate a caller-owned array must use
   `arg expose items = .type[]`; otherwise they work on a local value copy
+
+Do not initialise or resize an array by assigning to index `0`. The cardinality
+slot is read-only source syntax, and writes such as `items[0] = "3"` are
+rejected with `OUT_OF_RANGE`. Use ordinary element assignment or the standard
+array helpers instead:
+
+```rexx
+items = .string[]
+call arrayappend items, "alpha"
+call arrayappend items, "beta"
+say items[0]
+```
+
+When a test needs delete/insert semantics, prefer library helpers such as
+`arraydelete`, `arrayinsert`, and `arrayappend` over assembler unless the test
+is specifically about RXAS.
 
 References:
 - `tests/demo/countlines.crexx`

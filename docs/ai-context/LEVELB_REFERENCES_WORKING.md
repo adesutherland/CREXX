@@ -3,9 +3,11 @@
 Status: working design note, not an approved language specification.
 
 This note captures the current direction for durable references in Level B. It
-is deliberately design-space documentation: the explicit source spelling is now
-implemented, while live member/index syntax through references, variance, and
-wider collection API choices remain design topics.
+is deliberately design-space documentation: the explicit Level B source spelling
+is now implemented, while live member/index convenience syntax through
+references, variance, and richer collection API choices remain later language
+work. The convenience forms are treated as Level G candidates unless a future
+Level B requirement proves they are essential.
 
 ## Agreed Direction
 
@@ -34,10 +36,11 @@ Rexx source surface:
 - Native collection classes are deprecated for the Release 1 public collection
   direction. Native handle/reference migration is therefore not a blocker for
   this reference feature.
-- Rexx source syntax direction is now agreed for the first source surface:
-  word-form `reference` and `dereference` expressions, and `reference .T` as the
-  reference type modifier. Compiler implementation still follows the VM/RXAS
-  and generated-code contract slices.
+- Rexx source syntax direction is now agreed for the Level B essential source
+  surface: word-form `reference` and `dereference` expressions, `refvalid(ref)`,
+  and `reference .T` as the reference type modifier. Convenience live-access
+  syntax such as `itemsRef[i]`, `itemsRef[i] = value`, and `listRef.add(value)`
+  is not required for Level B and is deferred as a Level G feature candidate.
 - Reference variance and casts are deferred. Level B and Level G may choose
   different policies.
 
@@ -688,7 +691,7 @@ Use `refvalid(ref)` to test whether a weak reference can currently be used:
 if \refvalid(listRef) then return 0
 ```
 
-Future live-access syntax may allow reference values to be used as the base of
+Level G convenience syntax may allow reference values to be used as the base of
 object/array access and method calls without spelling `dereference`; the
 compiler would emit a scoped `linkref` / `unlink` pair for the operation:
 
@@ -698,11 +701,11 @@ itemsRef[i] = value
 listRef.add(value)
 ```
 
-This live access rule is not part of the first source slice. The implemented
-slice keeps the boundary explicit: assigning or passing a reference where a
-plain `.T` is required is an error; use `dereference ref` for an explicit copy.
-Passing a plain `.T` where `reference .T` is required is also an error; use
-`reference target` explicitly.
+This live access rule is not part of the Level B source surface. Level B keeps
+the boundary explicit: assigning or passing a reference where a plain `.T` is
+required is an error; use `dereference ref` for an explicit copy. Passing a
+plain `.T` where `reference .T` is required is also an error; use `reference
+target` explicitly.
 
 ### Receiver References
 
@@ -733,18 +736,23 @@ helper(dereference listRef)           /* explicit snapshot copy */
 
 ### Deferred Syntax
 
-These forms are reserved by the grammar direction but are not part of the first
-compiler slice:
+These forms are not part of the Level B essential surface. They remain Level G
+feature candidates unless a later Level B need is established:
 
 ```rexx
 (reference .T)[]            /* array of references */
 reference (reference .T)[]  /* reference to an array of references */
 ref as reference .U         /* reference casts / variance */
 ref is reference .T         /* reference type tests */
+itemsRef[i]                 /* live index access through a reference */
+itemsRef[i] = value         /* live indexed assignment through a reference */
+listRef.add(value)          /* live method call through a reference */
 ```
 
-Reference variance, casts, and nested reference containers remain design work.
-Level B and Level G may choose different policies.
+Reference variance, casts, nested reference containers, and implicit live access
+remain design work. Level B and Level G may choose different policies, but the
+current Release 1 Level B direction is to avoid these conveniences and require
+explicit reference boundaries.
 
 ### Rejected Syntax
 

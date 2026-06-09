@@ -16,6 +16,7 @@ function(crexx_add_compiler_exit_runtime_test TARGET_NAME SOURCE_FILE)
         set(_pass_regex "${CREXX_PASS_REGULAR_EXPRESSION}")
     endif()
 
+    set(_fixture ${TARGET_NAME}_runtime_artifacts)
     set(_outputs)
     foreach(_mode IN ITEMS noopt opt)
         set(_base ${TARGET_NAME}_${_mode})
@@ -46,11 +47,21 @@ function(crexx_add_compiler_exit_runtime_test TARGET_NAME SOURCE_FILE)
         set_tests_properties(${TARGET_NAME}_${_mode} PROPERTIES
                 PASS_REGULAR_EXPRESSION "${_pass_regex}"
                 FAIL_REGULAR_EXPRESSION "^ERROR ;ERROR reading module file;#FUNCTION_NOT_FOUND;#UNKNOWN_TYPE;#UNKNOWN_VARIABLE;#BAD_CONVERSION"
+                FIXTURES_REQUIRED ${_fixture}
         )
     endforeach()
 
     add_custom_target(${TARGET_NAME}_bin ALL DEPENDS ${_outputs})
     add_dependencies(${TARGET_NAME}_bin compiler_exit_bin rxvm)
+
+    add_test(
+            NAME ${TARGET_NAME}_bin_build
+            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${TARGET_NAME}_bin
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    set_tests_properties(${TARGET_NAME}_bin_build PROPERTIES
+            FIXTURES_SETUP ${_fixture}
+            RUN_SERIAL TRUE)
 
 endfunction()
 

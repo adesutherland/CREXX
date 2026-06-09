@@ -67,6 +67,7 @@ typedef struct {
 
 typedef struct {
     ASTNode *root_proc;
+    Context *context;
     int node_count;
     int return_count;
     int has_unsupported_varg_access;
@@ -513,6 +514,59 @@ static int inline_symbol_is_class_attribute(Symbol *symbol) {
            (symbol->scope->type == SCOPE_CLASS ||
             (symbol->scope->defining_node &&
              symbol->scope->defining_node->node_type == CLASS_DEF));
+}
+
+static Symbol *inline_resolve_class_symbol(Context *context, Scope *scope, const char *class_name) {
+    Symbol *class_symbol;
+    const char *lookup_name;
+    Scope *namespace_scope;
+    char *fq_name;
+
+    if (!context || !context->ast || !class_name || !*class_name) return NULL;
+
+    lookup_name = class_name;
+    while (*lookup_name == '.') lookup_name++;
+
+    class_symbol = sym_rfqn(context->ast, lookup_name);
+    if (class_symbol) return class_symbol;
+
+    if (strchr(lookup_name, '.')) return NULL;
+
+    namespace_scope = scope;
+    while (namespace_scope && namespace_scope->type != SCOPE_NAMESPACE) {
+        namespace_scope = namespace_scope->parent;
+    }
+    if (!namespace_scope || !namespace_scope->name || !*namespace_scope->name) return NULL;
+
+    fq_name = mprintf("%s.%s", namespace_scope->name, lookup_name);
+    if (!fq_name) return NULL;
+    class_symbol = sym_rfqn(context->ast, fq_name);
+    free(fq_name);
+    return class_symbol;
+}
+
+static int inline_class_has_reference_attribute(Context *context, Scope *scope, const char *class_name) {
+    Symbol *class_symbol;
+    Symbol **symbols;
+    size_t i;
+    int result = 0;
+
+    class_symbol = inline_resolve_class_symbol(context, scope, class_name);
+    if (!class_symbol || !class_symbol->defines_scope) return 0;
+
+    symbols = scp_syms(class_symbol->defines_scope);
+    if (!symbols) return 0;
+
+    for (i = 0; symbols[i]; i++) {
+        if (inline_symbol_is_class_attribute(symbols[i]) &&
+            symbols[i]->type == TP_REFERENCE) {
+            result = 1;
+            break;
+        }
+    }
+
+    free(symbols);
+    return result;
 }
 
 static int inline_class_attribute_shape_is_portable(Symbol *symbol) {
@@ -4193,8 +4247,16 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
             node->node_type == TYPE_REFERENCE ||
             node->value_type == TP_REFERENCE ||
             node->target_type == TP_REFERENCE ||
+            (node->value_type == TP_OBJECT &&
+             inline_class_has_reference_attribute(check->context, node->scope, node->value_class)) ||
+            (node->target_type == TP_OBJECT &&
+             inline_class_has_reference_attribute(check->context, node->scope, node->target_class)) ||
             (node->symbolNode && node->symbolNode->symbol &&
-             node->symbolNode->symbol->type == TP_REFERENCE)) {
+             (node->symbolNode->symbol->type == TP_REFERENCE ||
+              (node->symbolNode->symbol->type == TP_OBJECT &&
+               inline_class_has_reference_attribute(check->context,
+                                                    node->symbolNode->symbol->scope,
+                                                    node->symbolNode->symbol->value_class))))) {
             check->has_unsupported_reference = 1;
         }
 
@@ -4271,6 +4333,14 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
             return result_normal;
         }
 
+        if (sym->type == TP_OBJECT &&
+            inline_class_has_reference_attribute(context, sym->scope, sym->value_class)) {
+            inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                             "reject: returns reference-bearing class");
+            sym->is_inlinable = 0;
+            return result_normal;
+        }
+
         args = ast_chld(node, ARGS, 0);
         if (args) {
             arg = args->child;
@@ -4322,6 +4392,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
 
         memset(&check, 0, sizeof(check));
         check.root_proc = node;
+        check.context = context;
         check.ref_varg_mode = args && inline_find_varg_arg(node) && inline_find_varg_arg(node)->is_ref_arg;
         ast_wlkr(node, inlinable_check_walker, &check);
 
@@ -5933,6 +6004,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 
     memset(&check, 0, sizeof(check));
     check.root_proc = callable;
+    check.context = context;
     check.ref_varg_mode = args && inline_find_varg_arg(callable) && inline_find_varg_arg(callable)->is_ref_arg;
     ast_wlkr(callable, inlinable_check_walker, &check);
     if (check.node_count > INLINE_MAX_NODES) {

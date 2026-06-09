@@ -204,6 +204,12 @@ global, method `self`, an object/array attribute, or an array element. It must
 not be a temporary expression. `dereference` raises `REFERENCE_INVALID` if the
 target has expired.
 
+Level B does not implicitly treat a reference value as the referenced target for
+member calls or index operations. Code must write an explicit snapshot with
+`dereference ref`, or pass a `reference .T` value to code that expects a
+reference. Convenience forms such as `itemsRef[i]`, `itemsRef[i] = value`, and
+`listRef.add(value)` are reserved for possible Level G live-access syntax.
+
 ## Operator Precedence
 
 The order of priority of the operators (from highest to lowest). Note that the `OPTIONS` instruction affects the precedence and associativity of certain operators.

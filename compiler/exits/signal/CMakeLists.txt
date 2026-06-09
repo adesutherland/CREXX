@@ -31,6 +31,13 @@ crexx_add_compiler_exit_runtime_test(
         RUN_SUFFIX ${LIBRPATH}
 )
 
+crexx_add_compiler_exit_runtime_test(
+        reference_source_invalid_signal
+        reference_source_invalid_signal.crexx
+        PASS_REGULAR_EXPRESSION "PASS: Reference Source Invalid Signal"
+        RUN_SUFFIX ${LIBRPATH}
+)
+
 set(SIGNAL_COMPILE_FAIL_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/signal_compile_fail.cmake")
 file(WRITE "${SIGNAL_COMPILE_FAIL_SCRIPT}" [=[
 execute_process(

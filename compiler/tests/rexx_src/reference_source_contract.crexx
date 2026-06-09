@@ -1,0 +1,126 @@
+options levelb
+import rxfnsb
+namespace reference_source_contract expose global_count
+
+main: procedure = .int
+  global_count = .int
+  global_count = 100
+  global_ref = reference .int
+  global_ref = reference global_count
+  call setGlobalCount(101)
+  if readInt(global_ref) <> 101 then return fail("global reference live")
+
+  local_value = .int
+  local_value = 7
+  local_ref = reference .int
+  local_ref = reference local_value
+  if dereference local_ref <> 7 then return fail("local reference initial")
+  local_snapshot = dereference local_ref
+  local_value = 8
+  if local_snapshot <> 7 then return fail("local snapshot stable")
+  if readInt(local_ref) <> 8 then return fail("local reference live")
+
+  words = .string[]
+  call arrayappend words, "alpha"
+  call arrayappend words, "beta"
+  call arrayappend words, "gamma"
+  first_ref = reference .string
+  second_ref = reference .string
+  first_ref = reference words[1]
+  second_ref = reference words[2]
+  call arrayappend words, "delta"
+  if readString(first_ref) <> "alpha" then return fail("element reference after growth")
+  words[2] = "BETA"
+  if readString(second_ref) <> "BETA" then return fail("element reference live write")
+  call arraydelete words, 1, 1
+  if refvalid(first_ref) then return fail("deleted element reference invalidation")
+  if \refvalid(second_ref) then return fail("shifted element reference validity")
+  if readString(second_ref) <> "BETA" then return fail("shifted element reference value")
+  if words[1] <> "BETA" then return fail("shifted array value")
+
+  box = .Box(4)
+  box_ref = reference .Box
+  box_ref = box.selfRef()
+  value_ref = reference .int
+  value_ref = box.valueRef()
+  call box.setValue(9)
+  if readBoxValue(box_ref) <> 9 then return fail("self reference live")
+  if readInt(value_ref) <> 9 then return fail("attribute reference live")
+  box_snapshot = dereference box_ref
+  call box.setValue(12)
+  if box_snapshot.getValue() <> 9 then return fail("object snapshot stable")
+  if readInt(value_ref) <> 12 then return fail("attribute reference after snapshot")
+
+  dead_scalar_ref = reference .int
+  dead_scalar_ref = makeDeadScalarRef()
+  if refvalid(dead_scalar_ref) then return fail("dead scalar reference invalid")
+
+  dead_box_ref = reference .Box
+  dead_box_ref = makeDeadBoxRef()
+  if refvalid(dead_box_ref) then return fail("dead object reference invalid")
+
+  dead_element_ref = reference .string
+  dead_element_ref = makeDeadElementRef()
+  if refvalid(dead_element_ref) then return fail("dead element reference invalid")
+
+  say "PASS: Reference Source Contract"
+  return 0
+
+readInt: procedure = .int
+  arg r = reference .int
+  return dereference r
+
+readString: procedure = .string
+  arg r = reference .string
+  return dereference r
+
+readBoxValue: procedure = .int
+  arg r = reference .Box
+  box = dereference r
+  return box.getValue()
+
+setGlobalCount: procedure = .void
+  arg next = .int
+  global_count = next
+  return
+
+makeDeadScalarRef: procedure = reference .int
+  value = .int
+  value = 42
+  return reference value
+
+makeDeadBoxRef: procedure = reference .Box
+  box = .Box(77)
+  return reference box
+
+makeDeadElementRef: procedure = reference .string
+  values = .string[]
+  values[1] = "stale"
+  return reference values[1]
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1
+
+Box: class
+  value = .int
+
+  *: factory
+    arg seed = .int
+    value = seed
+    return
+
+  selfRef: method = reference .Box
+    return reference self
+
+  valueRef: method = reference .int
+    return reference value
+
+  setValue: method = .void
+    arg next = .int
+    value = next
+    return
+
+  getValue: method = .int
+    return value

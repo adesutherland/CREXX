@@ -100,7 +100,9 @@ where `.T` is expected is also an error; spell either `reference target` or
 
 Nested reference containers, reference casts, reference type tests, and
 implicit member/index access through a reference are not part of the current
-Level B source surface.
+Level B source surface. These are reserved for possible Level G convenience
+features. Level B code should keep reference boundaries explicit with
+`reference`, `dereference`, and `refvalid`.
 
 ## Numeric Values
 

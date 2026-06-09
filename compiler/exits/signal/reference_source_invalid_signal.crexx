@@ -1,0 +1,79 @@
+options levelb
+import rxfnsb
+
+main: procedure = .int
+  dead_scalar_ref = reference .int
+  dead_scalar_ref = makeDeadScalarRef()
+  if expectInvalidInt(dead_scalar_ref) <> 1 then return fail("dead scalar signal")
+
+  words = .string[]
+  call arrayappend words, "gone"
+  deleted_ref = reference .string
+  deleted_ref = reference words[1]
+  call arraydelete words, 1, 1
+  if expectInvalidString(deleted_ref) <> 1 then return fail("deleted element signal")
+
+  dead_box_ref = reference .Box
+  dead_box_ref = makeDeadBoxRef()
+  if expectInvalidBox(dead_box_ref) <> 1 then return fail("dead object signal")
+
+  say "PASS: Reference Source Invalid Signal"
+  return 0
+
+makeDeadScalarRef: procedure = reference .int
+  value = .int
+  value = 17
+  return reference value
+
+makeDeadBoxRef: procedure = reference .Box
+  box = .Box("stale")
+  return reference box
+
+expectInvalidInt: procedure = .int
+  arg r = reference .int
+  caught = 0
+  do
+    value = dereference r
+    if value = 17 then caught = 0
+  on signal reference_invalid as problem
+    if problem.name() = "REFERENCE_INVALID" then caught = 1
+  end
+  return caught
+
+expectInvalidString: procedure = .int
+  arg r = reference .string
+  caught = 0
+  do
+    value = dereference r
+    if value = "gone" then caught = 0
+  on signal reference_invalid as problem
+    if problem.name() = "REFERENCE_INVALID" then caught = 1
+  end
+  return caught
+
+expectInvalidBox: procedure = .int
+  arg r = reference .Box
+  caught = 0
+  do
+    box = dereference r
+    if box.getName() = "stale" then caught = 0
+  on signal reference_invalid as problem
+    if problem.name() = "REFERENCE_INVALID" then caught = 1
+  end
+  return caught
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1
+
+Box: class
+  name = .string
+
+  *: factory
+    arg initial = .string
+    name = initial
+    return
+
+  getName: method = .string
+    return name

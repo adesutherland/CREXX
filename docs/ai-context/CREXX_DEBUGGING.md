@@ -157,6 +157,12 @@ Reference source-syntax lessons:
   should not be blanket-disabled just because they write class attributes; rely
   on the inliner's receiver, copyback, and portable-attribute-shape checks so
   existing object/member optimisations and compiler exits keep working.
+* Inlining can accidentally extend stack/local lifetime. A callable that returns
+  an object containing reference attributes can hide a weak reference to one of
+  its own locals; inlining that callable into the caller can make the local
+  survive long enough that `refvalid()` disagrees between opt and noopt. Reject
+  reference-bearing return classes for now and keep opt/noopt iterator lifetime
+  tests paired.
 * Top-level executable assignments synthesize implicit `main`. In a file with
   an explicit `main: procedure`, initialize namespace-exposed globals inside
   `main` or another procedure rather than adding executable top-level
@@ -165,9 +171,9 @@ Reference source-syntax lessons:
 Useful focused commands from the reference source slice:
 
 ```sh
-cmake --build cmake-build-debug --target rxc rxas rxvm rxbvm library
+cmake --build cmake-build-debug --target rxc rxas rxvm rxbvm library compiler_exit_bin crexx_test_driver
 ctest --test-dir cmake-build-debug -R 'reference_source_' --output-on-failure
-ctest --test-dir cmake-build-debug -R 'reference_(iterator|generated|source)|type_ops|arg_semantics_(scalar|array|object)|object_reference_regression|inline_test_ref_|inline_ref_array_count' --output-on-failure
+ctest --test-dir cmake-build-debug -R 'reference_(iterator|generated|source)|type_ops|arg_semantics_(scalar|array|object)|object_reference_regression|inline_test_ref_|inline_ref_array_count|inline_test_block_expr_live_sibling' --output-on-failure
 cmake --build cmake-build-asan --target rxc rxas rxvm rxbvm library crexx_test_driver
 ctest --test-dir cmake-build-asan -R 'reference_source_|reference_(iterator|generated)' --output-on-failure
 ```
