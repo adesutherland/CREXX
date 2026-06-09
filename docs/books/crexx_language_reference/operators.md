@@ -196,19 +196,26 @@ Level B reference operations use word-form expressions:
 | Form | Description |
 |:-----|:------------|
 | `reference target` | Create a weak reference to aliasable storage. |
-| `dereference ref` | Make an explicit snapshot copy of the current reference target. |
+| `local = dereference ref` | Link a current-scope local variable to the current reference target until scope exit. |
+| `snapshot ref` | Make an explicit deep copy of the current reference target. |
 | `refvalid(ref)` | Return whether the weak reference currently has a valid target. |
 
 The operand of `reference` must be storage such as a local, exposed argument or
 global, method `self`, an object/array attribute, or an array element. It must
-not be a temporary expression. `dereference` raises `REFERENCE_INVALID` if the
-target has expired.
+not be a temporary expression. `dereference` and `snapshot` raise
+`REFERENCE_INVALID` if the target has expired.
+
+`dereference` must be used as the right side of an assignment to a local
+variable in the current procedure or block scope. It cannot assign through an
+attribute, array element, exposed global, argument, or expression. Use
+`snapshot ref` when a value copy is needed.
 
 Level B does not implicitly treat a reference value as the referenced target for
-member calls or index operations. Code must write an explicit snapshot with
-`dereference ref`, or pass a `reference .T` value to code that expects a
-reference. Convenience forms such as `itemsRef[i]`, `itemsRef[i] = value`, and
-`listRef.add(value)` are reserved for possible Level G live-access syntax.
+member calls or index operations. Code must write `local = dereference ref` for
+a scoped live link, `snapshot ref` for a deep copy, or pass a `reference .T`
+value to code that expects a reference. Convenience forms such as
+`itemsRef[i]`, `itemsRef[i] = value`, and `listRef.add(value)` are reserved for
+possible Level G live-access syntax.
 
 ## Operator Precedence
 

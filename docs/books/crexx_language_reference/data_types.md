@@ -84,25 +84,33 @@ read_count: procedure = .int
   arg r = reference .int
 ```
 
-Use `reference target` to create a reference to aliasable storage, and
-`dereference ref` when an explicit snapshot copy is required:
+Use `reference target` to create a reference to aliasable storage,
+`local = dereference ref` when a local should become a scoped live link to the
+referenced target, and `snapshot ref` when an explicit deep copy is required:
 
 ```rexx
 count = 1
 count_ref = reference count
-copy = dereference count_ref
+linked = dereference count_ref
+copy = snapshot count_ref
 ```
+
+`dereference` is only valid as the right side of an assignment to a local
+variable in the current procedure or block scope. Assigning a dereference into
+an object/class attribute, array element, global, exposed argument, or arbitrary
+expression is a compile-time error. The compiler emits `unlink` when the
+local's scope exits, and the VM also resets linked locals when a frame exits.
 
 Reference values are not assignment-compatible with their target type. Passing a
 `.T` where `reference .T` is expected is an error, and passing `reference .T`
-where `.T` is expected is also an error; spell either `reference target` or
-`dereference ref` at the boundary.
+where `.T` is expected is also an error; spell `reference target`,
+`local = dereference ref`, or `snapshot ref` at the boundary.
 
 Nested reference containers, reference casts, reference type tests, and
 implicit member/index access through a reference are not part of the current
 Level B source surface. These are reserved for possible Level G convenience
 features. Level B code should keep reference boundaries explicit with
-`reference`, `dereference`, and `refvalid`.
+`reference`, `dereference`, `snapshot`, and `refvalid`.
 
 ## Numeric Values
 

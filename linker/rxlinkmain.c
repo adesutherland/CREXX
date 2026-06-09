@@ -47,6 +47,8 @@ typedef struct link_module_info {
     string_list defined_interfaces;
     string_list implemented_interfaces;
     string_list referenced_interfaces;
+    string_list provided_methods;
+    string_list referenced_methods;
     string_list unresolved_imports;
     int has_main;
     int selected;
@@ -190,6 +192,27 @@ static int module_list_append(module_list *list, link_module_info *item) {
     return 1;
 }
 
+static const char *module_string_constant(module_file *module, size_t offset) {
+    string_constant *value;
+
+    if (!module || offset >= module->header.constant_size) return 0;
+    value = (string_constant *)((unsigned char *)module->constant + offset);
+    if (value->base.type != STRING_CONST) return 0;
+    return value->string;
+}
+
+static int append_method_name_from_symbol(string_list *list, const char *symbol) {
+    const char *last_dot;
+    const char *method_name;
+
+    if (!list || !symbol) return 1;
+    last_dot = strrchr(symbol, '.');
+    if (!last_dot || !last_dot[1]) return 1;
+    method_name = last_dot + 1;
+    if (strcmp(method_name, "\xC2\xA7" "factory") == 0) return 1;
+    return string_list_append_unique(list, method_name);
+}
+
 static void module_list_free(module_list *list) {
     size_t i;
 
@@ -203,6 +226,8 @@ static void module_list_free(module_list *list) {
         string_list_free(&list->items[i].defined_interfaces);
         string_list_free(&list->items[i].implemented_interfaces);
         string_list_free(&list->items[i].referenced_interfaces);
+        string_list_free(&list->items[i].provided_methods);
+        string_list_free(&list->items[i].referenced_methods);
         string_list_free(&list->items[i].unresolved_imports);
     }
     free(list->items);
@@ -464,6 +489,7 @@ static int load_module_metadata(link_module_info *info) {
                 if (!string_list_append_unique(&info->imports, exposed->index)) return 0;
             } else {
                 if (!string_list_append_unique(&info->exports, exposed->index)) return 0;
+                if (!append_method_name_from_symbol(&info->provided_methods, exposed->index)) return 0;
             }
             ix = exposed->next;
         } else if (entry->type == EXPOSE_REG_CONST) {
@@ -477,6 +503,12 @@ static int load_module_metadata(link_module_info *info) {
     while (ix != -1) {
         meta_entry *entry = (meta_entry *)((unsigned char *)module->constant + (size_t)ix);
         switch (entry->base.type) {
+            case META_FUNC: {
+                meta_func_constant *func = (meta_func_constant *)entry;
+                const char *symbol_name = module_string_constant(module, func->symbol);
+                if (!append_method_name_from_symbol(&info->provided_methods, symbol_name)) return 0;
+                break;
+            }
             case META_INTERFACE: {
                 meta_interface_constant *iface = (meta_interface_constant *)entry;
                 string_constant *symbol = (string_constant *)((unsigned char *)module->constant + iface->symbol);
@@ -487,6 +519,16 @@ static int load_module_metadata(link_module_info *info) {
                 meta_implements_constant *impl = (meta_implements_constant *)entry;
                 string_constant *iface = (string_constant *)((unsigned char *)module->constant + impl->interface_symbol);
                 if (!string_list_append_unique(&info->implemented_interfaces, iface->string)) return 0;
+                break;
+            }
+            case META_MEMBER: {
+                meta_member_constant *member = (meta_member_constant *)entry;
+                const char *member_name = module_string_constant(module, member->member);
+                if (member_name &&
+                    strcmp(member_name, "*") != 0 &&
+                    !string_list_append_unique(&info->provided_methods, member_name)) {
+                    return 0;
+                }
                 break;
             }
             default:
@@ -536,6 +578,20 @@ static int load_module_metadata(link_module_info *info) {
                     if (!ok) return 0;
                 }
             }
+        } else if (opcode == OP_SRCMETHOD_REG_REG_STRING) {
+            for (operand_index = 0; operand_index < operand_count; operand_index++) {
+                if (types[operand_index] == OP_STRING) {
+                    size_t member_offset;
+                    const char *member_name;
+
+                    member_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
+                    member_name = module_string_constant(module, member_offset);
+                    if (member_name &&
+                        !string_list_append_unique(&info->referenced_methods, member_name)) {
+                        return 0;
+                    }
+                }
+            }
         }
         code_index += (size_t)operand_count + 1;
     }
@@ -570,6 +626,8 @@ static int load_input_modules(module_list *modules, const link_config *config) {
                 string_list_init(&info.defined_interfaces);
                 string_list_init(&info.implemented_interfaces);
                 string_list_init(&info.referenced_interfaces);
+                string_list_init(&info.provided_methods);
+                string_list_init(&info.referenced_methods);
                 string_list_init(&info.unresolved_imports);
                 info.module = module;
                 info.input_path = strdup(input_path);
@@ -592,6 +650,8 @@ static int load_input_modules(module_list *modules, const link_config *config) {
                     string_list_free(&info.defined_interfaces);
                     string_list_free(&info.implemented_interfaces);
                     string_list_free(&info.referenced_interfaces);
+                    string_list_free(&info.provided_methods);
+                    string_list_free(&info.referenced_methods);
                     string_list_free(&info.unresolved_imports);
                     fclose(fp);
                     return 0;
@@ -764,6 +824,7 @@ static int select_modules(module_list *modules, const link_config *config) {
         link_module_info *module = &modules->items[queue[queue_pos++]];
         size_t import_index;
         size_t iface_index;
+        size_t method_index;
 
         for (import_index = 0; import_index < module->imports.count; import_index++) {
             size_t provider_index = 0;
@@ -831,6 +892,20 @@ static int select_modules(module_list *modules, const link_config *config) {
                 if (modules->items[candidate].omitted) continue;
                 if (string_list_contains(&modules->items[candidate].implemented_interfaces,
                                          module->defined_interfaces.items[iface_index])) {
+                    if (!select_module_by_index(modules, &queue, &queue_count, &queue_capacity, candidate)) {
+                        free(queue);
+                        return 0;
+                    }
+                }
+            }
+        }
+
+        for (method_index = 0; method_index < module->referenced_methods.count; method_index++) {
+            size_t candidate;
+            for (candidate = 0; candidate < modules->count; candidate++) {
+                if (modules->items[candidate].omitted) continue;
+                if (string_list_contains(&modules->items[candidate].provided_methods,
+                                         module->referenced_methods.items[method_index])) {
                     if (!select_module_by_index(modules, &queue, &queue_count, &queue_capacity, candidate)) {
                         free(queue);
                         return 0;

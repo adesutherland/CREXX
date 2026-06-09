@@ -766,6 +766,7 @@ static walker_result emit_walker(walker_direction direction,
             case OP_PLUS:
             case OP_REFERENCE:
             case OP_DEREFERENCE:
+            case OP_SNAPSHOT:
             case OP_REFVALID:
             case OP_TYPE_CAST:
             case OP_TYPE_IS:

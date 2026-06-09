@@ -539,6 +539,7 @@ walker_result register_walker(walker_direction direction,
             case OP_PLUS:
             case OP_REFERENCE:
             case OP_DEREFERENCE:
+            case OP_SNAPSHOT:
             case OP_REFVALID:
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)

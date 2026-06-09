@@ -43,6 +43,7 @@ struct Scope {
     size_t num_registers;
     void *free_registers_array;
     void *deferred_registers_array;
+    void *dereference_symbols_array;
     size_t temp_flag;
     struct Scope *reg_scope;
 };
@@ -92,6 +93,7 @@ struct Symbol {
     char is_shadowing; /* Set if this symbol is incorrectly shadowing a global variable */
     struct Symbol *shadowed_symbol; /* Pointer to the symbol being shadowed */
     char is_global_var; /* Set if this symbol is an exposed global variable */
+    char has_reference_target; /* Storage was the target of a reference expression */
     char is_inlinable;  /* Set if this procedure is inlinable */
     ASTNode *ast_template; /* AST template for inlining */
     int creation_ordinal; /* Ordinal value when the symbol was first created */
@@ -118,6 +120,11 @@ void scp_4all(Scope *scope, symbol_worker worker, void *payload);
 
 /* Returns all the symbols in a scope as a null terminated malloced array (must be freed) */
 Symbol **scp_syms(Scope *scope);
+
+/* Tracks locals linked by source dereference assignments for scope-exit unlink emission. */
+void scp_add_dereference_symbol(Scope *scope, Symbol *symbol);
+size_t scp_dereference_symbol_count(Scope *scope);
+Symbol *scp_dereference_symbol_at(Scope *scope, size_t index);
 
 /* Get the index sub-scope */
 Scope* scp_chd(Scope *scope, size_t index);

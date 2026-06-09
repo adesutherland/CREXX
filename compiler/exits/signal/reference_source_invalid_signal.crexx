@@ -33,7 +33,7 @@ expectInvalidInt: procedure = .int
   arg r = reference .int
   caught = 0
   do
-    value = dereference r
+    value = snapshot r
     if value = 17 then caught = 0
   on signal reference_invalid as problem
     if problem.name() = "REFERENCE_INVALID" then caught = 1
@@ -44,7 +44,7 @@ expectInvalidString: procedure = .int
   arg r = reference .string
   caught = 0
   do
-    value = dereference r
+    value = snapshot r
     if value = "gone" then caught = 0
   on signal reference_invalid as problem
     if problem.name() = "REFERENCE_INVALID" then caught = 1
@@ -55,7 +55,7 @@ expectInvalidBox: procedure = .int
   arg r = reference .Box
   caught = 0
   do
-    box = dereference r
+    box = snapshot r
     if box.getName() = "stale" then caught = 0
   on signal reference_invalid as problem
     if problem.name() = "REFERENCE_INVALID" then caught = 1

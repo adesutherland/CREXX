@@ -258,6 +258,33 @@ static int reference_target_is_storage(ASTNode *node) {
     }
 }
 
+static int symbol_is_class_attribute_typecheck(Symbol *symbol) {
+    return symbol &&
+           symbol->scope &&
+           (symbol->scope->type == SCOPE_CLASS ||
+            (symbol->scope->defining_node &&
+             symbol->scope->defining_node->node_type == CLASS_DEF));
+}
+
+static int dereference_destination_is_current_local(ASTNode *node) {
+    ASTNode *assign;
+    ASTNode *target;
+    Symbol *symbol;
+
+    if (!node || !node->parent || node->parent->node_type != ASSIGN) return 0;
+    assign = node->parent;
+    target = ast_chdn(assign, 0);
+    if (!target || target->child || !target->symbolNode) return 0;
+
+    symbol = target->symbolNode->symbol;
+    if (!symbol) return 0;
+    if (symbol_is_class_attribute_typecheck(symbol)) return 0;
+    if (symbol->is_global_var || symbol->is_arg) return 0;
+    if (symbol->register_type != 'r') return 0;
+
+    return symbol->scope == assign->scope;
+}
+
 static Symbol *resolve_contract_class_name(Context *context, const char *class_name) {
     Symbol *symbol = 0;
 
@@ -1629,6 +1656,21 @@ walker_result set_node_types_walker(walker_direction direction,
                                         child1->value_reference_dims,
                                         child1->value_reference_dim_base,
                                         child1->value_reference_dim_elements,
+                                                  child1->value_reference_class);
+                }
+                break;
+
+            case OP_SNAPSHOT:
+                if (node->value_type == TP_UNKNOWN && child1 && child1->value_type == TP_REFERENCE) {
+                    ast_set_value_type(0, node, child1->value_reference_type,
+                                       child1->value_reference_dims,
+                                       child1->value_reference_dim_base,
+                                       child1->value_reference_dim_elements,
+                                       child1->value_reference_class);
+                    ast_set_target_type(0, node, child1->value_reference_type,
+                                        child1->value_reference_dims,
+                                        child1->value_reference_dim_base,
+                                        child1->value_reference_dim_elements,
                                         child1->value_reference_class);
                 }
                 break;
@@ -1728,10 +1770,22 @@ walker_result type_safety_walker(walker_direction direction,
                     mknd_err(node, "REFERENCE_TARGET_NOT_STORAGE");
                 } else if (child1->value_type == TP_REFERENCE) {
                     mknd_err(node, "TYPE_MISMATCH");
+                } else if (child1->symbolNode && child1->symbolNode->symbol) {
+                    child1->symbolNode->symbol->has_reference_target = 1;
                 }
                 break;
 
             case OP_DEREFERENCE:
+                if (!child1 || child1->value_type != TP_REFERENCE) {
+                    mknd_err(node, "TYPE_MISMATCH");
+                } else if (!node->parent || node->parent->node_type != ASSIGN) {
+                    mknd_err(node, "DEREFERENCE_REQUIRES_ASSIGNMENT");
+                } else if (!dereference_destination_is_current_local(node)) {
+                    mknd_err(node, "DEREFERENCE_TARGET_NOT_LOCAL");
+                }
+                break;
+
+            case OP_SNAPSHOT:
                 if (!child1 || child1->value_type != TP_REFERENCE) {
                     mknd_err(node, "TYPE_MISMATCH");
                 }

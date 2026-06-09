@@ -1,0 +1,2 @@
+Error in reference_source_deref_global_fail.crexx @ 8:18 - #DEREFERENCE_TARGET_NOT_LOCAL, "dereference r"
+1 error(s) in source file

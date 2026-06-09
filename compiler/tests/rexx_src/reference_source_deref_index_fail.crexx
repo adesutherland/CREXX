@@ -1,0 +1,10 @@
+options levelb
+namespace reference_source_deref_index_fail
+
+main: procedure = .int
+  values = .int[]
+  target = .int
+  target = 7
+  r = reference target
+  values[1] = dereference r
+  return 0

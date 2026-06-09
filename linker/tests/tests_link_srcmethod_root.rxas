@@ -1,0 +1,24 @@
+/*
+ * linker/tests/tests_link_srcmethod_root.rxas
+ */
+
+.globals=0
+
+main() .locals=6
+   null r0
+   setobjtype r0,"link_dyn.box"
+   load r1,1
+   settp r0,256
+   swap r2,r0
+   srcmethod r3,r2,"describe"
+   dcall r3,r3,r1
+   swap r0,r2
+   seq r4,r3,"dynamic-box"
+   brf fail,r4
+   say "PASS: SRCMETHOD Linked"
+   ret 0
+
+fail:
+   say "FAIL: SRCMETHOD Linked"
+   say r3
+   ret 0

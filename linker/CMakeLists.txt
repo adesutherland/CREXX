@@ -64,6 +64,8 @@ crexx_add_rxas_fixture(tests_link_interface_root ${CMAKE_CURRENT_SOURCE_DIR}/tes
 crexx_add_rxas_fixture(tests_link_interface_impl ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_interface_impl.rxas)
 crexx_add_rxas_fixture(tests_link_srcfproc_root ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_srcfproc_root.rxas)
 crexx_add_rxas_fixture(tests_link_srcfproc_contract ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_srcfproc_contract.rxas)
+crexx_add_rxas_fixture(tests_link_srcmethod_root ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_srcmethod_root.rxas)
+crexx_add_rxas_fixture(tests_link_srcmethod_provider ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_srcmethod_provider.rxas)
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_success.rxbin
@@ -122,6 +124,15 @@ add_custom_command(
 add_custom_target(tests_linked_srcfproc_artifact ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_srcfproc.rxbin)
 
 add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_srcmethod.rxbin
+        COMMAND $<TARGET_FILE:rxlink> -o tests_linked_srcmethod tests_link_srcmethod_root.rxbin tests_link_srcmethod_provider.rxbin
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_link_srcmethod_root.rxbin ${CMAKE_CURRENT_BINARY_DIR}/tests_link_srcmethod_provider.rxbin rxlink
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "cREXX RXLINK srcmethod fixture ..."
+)
+add_custom_target(tests_linked_srcmethod_artifact ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_srcmethod.rxbin)
+
+add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tests_record_stream_combo.rxbin
         COMMAND $<TARGET_FILE:rxlink_concat_files>
                 tests_record_stream_combo.rxbin
@@ -167,6 +178,12 @@ crexx_add_vm_dual_test(
         NAME rxlink_srcfproc_run
         RXVM_ARGS tests_linked_srcfproc
         PASS_REGULAR_EXPRESSION "PASS: SRCFPROC Linked"
+)
+
+crexx_add_vm_dual_test(
+        NAME rxlink_srcmethod_run
+        RXVM_ARGS tests_linked_srcmethod
+        PASS_REGULAR_EXPRESSION "PASS: SRCMETHOD Linked"
 )
 
 add_executable(test_linked_format tests/test_linked_format.c)

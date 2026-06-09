@@ -37,7 +37,7 @@ Rexx source surface:
   direction. Native handle/reference migration is therefore not a blocker for
   this reference feature.
 - Rexx source syntax direction is now agreed for the Level B essential source
-  surface: word-form `reference` and `dereference` expressions, `refvalid(ref)`,
+  surface: word-form `reference`, `dereference`, and `snapshot` expressions, `refvalid(ref)`,
   and `reference .T` as the reference type modifier. Convenience live-access
   syntax such as `itemsRef[i]`, `itemsRef[i] = value`, and `listRef.add(value)`
   is not required for Level B and is deferred as a Level G feature candidate.
@@ -88,12 +88,12 @@ Rexx source surface:
   canary beneath the public Rexx syntax.
 - The first explicit Rexx source slice is implemented in the working tree:
   `reference .T` declares reference values, `reference target` creates a weak
-  reference to aliasable storage, `dereference ref` makes an explicit snapshot
+  reference to aliasable storage, `snapshot ref` makes an explicit snapshot
   copy, `refvalid(ref)` checks validity, and method `self` can be referenced
   explicitly. The source fixture runs noopt/opt through both `rxvm` and `rxbvm`
   and negative fixtures cover value/reference boundary errors, non-storage
   targets, reference-to-reference targets, nested reference types, and non-ref
-  operands to `dereference`/`refvalid`.
+  operands to `snapshot`/`refvalid`.
 
 ## Problem
 
@@ -676,14 +676,28 @@ The operand must be an aliasable storage expression: local storage, exposed
 argument or global storage, `self`, an object/array attribute, or an array
 element. It must not be an arbitrary value expression.
 
-Use `dereference ref` for an explicit snapshot copy of the current target:
+Use `snapshot ref` for an explicit snapshot copy of the current target:
 
 ```rexx
-snapshot = dereference listRef
+copy = snapshot listRef
 ```
 
 The snapshot operation raises `REFERENCE_INVALID` when the reference target has
 expired.
+
+Use `local = dereference ref` for a scoped live link to the current target:
+
+```rexx
+do
+  list = dereference listRef
+  call list.add("next")
+end
+```
+
+The destination must be a local variable in the current procedure or block
+scope. Attribute, array-element, argument, global, and expression destinations
+are rejected. The compiler emits `unlink` when that local scope exits; frame
+exit also resets linked locals.
 
 Use `refvalid(ref)` to test whether a weak reference can currently be used:
 
@@ -701,11 +715,11 @@ itemsRef[i] = value
 listRef.add(value)
 ```
 
-This live access rule is not part of the Level B source surface. Level B keeps
+This convenience rule is not part of the Level B source surface. Level B keeps
 the boundary explicit: assigning or passing a reference where a plain `.T` is
-required is an error; use `dereference ref` for an explicit copy. Passing a
-plain `.T` where `reference .T` is required is also an error; use `reference
-target` explicitly.
+required is an error; use `local = dereference ref` for a scoped live link or
+`snapshot ref` for an explicit copy. Passing a plain `.T` where `reference .T`
+is required is also an error; use `reference target` explicitly.
 
 ### Receiver References
 
@@ -730,7 +744,7 @@ formals. Reference boundary mistakes are hard type errors:
 ```rexx
 .ArrayListIterator(self)              /* error: expected reference .ArrayList */
 helper(listRef)                       /* error if helper expects .ArrayList */
-helper(dereference listRef)           /* explicit snapshot copy */
+helper(snapshot listRef)              /* explicit snapshot copy */
 .ArrayListIterator(reference self)    /* explicit live reference */
 ```
 

@@ -1484,6 +1484,8 @@ command_prefix_expression(A) ::= TK_REFERENCE(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
 command_prefix_expression(A) ::= TK_DEREFERENCE(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_DEREFERENCE, O); add_ast(A,C); }
+command_prefix_expression(A) ::= TK_SNAPSHOT(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_SNAPSHOT, O); add_ast(A,C); }
 command_power_expression_L(A) ::= command_power_expression_L(B) TK_POWER_L(O) prefix_expression(C).
                           { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
 command_power_expression_L(P) ::= command_prefix_expression(E).  { P = E; }
@@ -1585,6 +1587,8 @@ prefix_expression(A) ::= TK_REFERENCE(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_DEREFERENCE(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_DEREFERENCE, O); add_ast(A,C); }
+prefix_expression(A) ::= TK_SNAPSHOT(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_SNAPSHOT, O); add_ast(A,C); }
 /*
  * power_expression contains rules for both left and right-associative power operators.
  * The lexer ensures only one of TK_POWER_L or TK_POWER_R is present in the
@@ -1647,6 +1651,8 @@ prefix_expression_c(A) ::= TK_REFERENCE(O) prefix_expression_c(C). [TK_NOT]
                          { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
 prefix_expression_c(A) ::= TK_DEREFERENCE(O) prefix_expression_c(C). [TK_NOT]
                          { A = ast_f(context, OP_DEREFERENCE, O); add_ast(A,C); }
+prefix_expression_c(A) ::= TK_SNAPSHOT(O) prefix_expression_c(C). [TK_NOT]
+                         { A = ast_f(context, OP_SNAPSHOT, O); add_ast(A,C); }
 
 // Rule for the Left-associative power operator - NUMERIC_CLASSIC
 power_expression_L_c(A) ::= power_expression_L_c(B) TK_POWER_L(O) prefix_expression_c(C).

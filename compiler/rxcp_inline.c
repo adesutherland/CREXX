@@ -4269,6 +4269,7 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
 
         if (node->node_type == OP_REFERENCE ||
             node->node_type == OP_DEREFERENCE ||
+            node->node_type == OP_SNAPSHOT ||
             node->node_type == OP_REFVALID ||
             node->node_type == TYPE_REFERENCE ||
             node->value_type == TP_REFERENCE ||

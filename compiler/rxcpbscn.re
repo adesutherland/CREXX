@@ -208,6 +208,7 @@ int rexbscan(Context* s) {
     'REGISTER' { RET(TK_REGISTER); }
     'REFERENCE' { RET(TK_REFERENCE); }
     'DEREFERENCE' { RET(TK_DEREFERENCE); }
+    'SNAPSHOT' { RET(TK_SNAPSHOT); }
     'REFVALID' { RET(TK_REFVALID); }
     'SELF' { RET(TK_SELF); }
   //  'PULL' { RET(TK_PULL); }

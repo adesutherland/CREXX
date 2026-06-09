@@ -131,6 +131,7 @@ Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol, Sco
     scope->num_registers = 0; /* Changed from 1 - r0 is no longer a hardcoded temp register */
     scope->free_registers_array = dpa_f();
     scope->deferred_registers_array = dpa_f();
+    scope->dereference_symbols_array = dpa_f();
     scope->child_array  = dpa_f();
     scope->temp_flag = 0;
     if (parent) dpa_add((dpa*)(parent->child_array), scope);
@@ -215,7 +216,38 @@ void scp_free(Scope *scope) {
     free_dpa(scope->child_array);
     free_dpa(scope->free_registers_array);
     free_dpa(scope->deferred_registers_array);
+    free_dpa(scope->dereference_symbols_array);
     free(scope);
+}
+
+void scp_add_dereference_symbol(Scope *scope, Symbol *symbol) {
+    size_t i;
+    dpa *symbols;
+
+    if (!scope || !symbol) return;
+    symbols = (dpa *)scope->dereference_symbols_array;
+    if (!symbols) return;
+    for (i = 0; i < symbols->size; i++) {
+        if (symbols->pointers[i] == symbol) return;
+    }
+    dpa_add(symbols, symbol);
+}
+
+size_t scp_dereference_symbol_count(Scope *scope) {
+    dpa *symbols;
+
+    if (!scope || !scope->dereference_symbols_array) return 0;
+    symbols = (dpa *)scope->dereference_symbols_array;
+    return symbols->size;
+}
+
+Symbol *scp_dereference_symbol_at(Scope *scope, size_t index) {
+    dpa *symbols;
+
+    if (!scope || !scope->dereference_symbols_array) return 0;
+    symbols = (dpa *)scope->dereference_symbols_array;
+    if (index >= symbols->size) return 0;
+    return (Symbol *)symbols->pointers[index];
 }
 
 /* Removes a Symbol from a scope - does not free symbol, see free_sym() */
@@ -596,6 +628,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->is_shadowing = 0;
     symbol->shadowed_symbol = 0;
     symbol->is_global_var = 0;
+    symbol->has_reference_target = 0;
     symbol->is_inlinable = 0;
     symbol->ast_template = 0;
     symbol->creation_ordinal = -1;
@@ -1054,6 +1087,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
         }
         if (symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
         sym_copy_reference_type(new_symbol, symbol);
+        new_symbol->has_reference_target = symbol->has_reference_target;
     } else {
         /* Merge status and type if the incoming symbol has more info */
         if (new_symbol->status == SYM_STATUS_UNRESOLVED) new_symbol->status = symbol->status;
@@ -1073,6 +1107,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
                 sym_copy_reference_type(new_symbol, symbol);
             }
         }
+        if (symbol->has_reference_target) new_symbol->has_reference_target = 1;
     }
 
     /* Move all the node/symbol connectors */
@@ -1157,6 +1192,7 @@ Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
     new_symbol->is_rc = symbol->is_rc;
     new_symbol->is_this = symbol->is_this;
     new_symbol->is_factory = symbol->is_factory;
+    new_symbol->has_reference_target = symbol->has_reference_target;
     new_symbol->is_inlinable = symbol->is_inlinable;
     new_symbol->ast_template = symbol->ast_template;
 

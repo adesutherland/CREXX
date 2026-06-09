@@ -1659,6 +1659,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
 
     if (symbol->symbol_type == CONSTANT_SYMBOL) return; /* already done */
     if (symbol->scope && symbol->scope->type == SCOPE_CLASS) return; /* Attributes must not be optimized away */
+    if (symbol->has_reference_target) return; /* Referenced storage is alias-observable */
     if (symbol->value_dims) return; /* Arrays are never constants */
     if (symbol->type == TP_BINARY || symbol->type == TP_OBJECT || symbol->type == TP_REFERENCE) return; /* Binary, objects and references are never constants */
     if (!sym_nond(symbol)) return; /* No nodes - weird - return */

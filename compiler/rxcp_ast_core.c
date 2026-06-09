@@ -583,6 +583,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
                 new_symbol->is_ref_arg = symbol->is_ref_arg;
                 new_symbol->is_const_arg = symbol->is_const_arg;
                 new_symbol->is_opt_arg = symbol->is_opt_arg;
+                new_symbol->has_reference_target = symbol->has_reference_target;
 
                 sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
             } else {
@@ -1338,6 +1339,8 @@ const char *ast_ndtp(NodeType type) {
             return "OP_REFERENCE";
         case OP_DEREFERENCE:
             return "OP_DEREFERENCE";
+        case OP_SNAPSHOT:
+            return "OP_SNAPSHOT";
         case OP_REFVALID:
             return "OP_REFVALID";
         case OP_SCONCAT:

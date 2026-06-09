@@ -52,7 +52,11 @@ Selectors match by:
 - `proc_head` is used to find procedures and detect `main`
 - `expose_head` is used to discover imports and exports
 - `meta_head` is scanned for `META_INTERFACE` and `META_IMPLEMENTS` so interface definitions and implementations pull each other in
-- the instruction stream is scanned for `srcfproc` selector strings so modules referenced only through runtime interface-factory lookup are still retained
+- the instruction stream is scanned for `srcfproc` selector strings so modules
+  referenced only through runtime interface-factory lookup are still retained
+- the instruction stream is scanned for `srcmethod` member names. Because the
+  receiver's concrete class can be known only at runtime, modules that expose
+  or declare a matching member name are selected conservatively.
 
 The linker preserves the metadata chain in output because the VM and tooling still consume it at runtime.
 

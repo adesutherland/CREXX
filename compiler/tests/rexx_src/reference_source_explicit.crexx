@@ -8,21 +8,21 @@ main: procedure = .int
   scalar = 7
   scalar_ref = reference scalar
   if \refvalid(scalar_ref) then return fail("scalar ref invalid")
-  if dereference scalar_ref <> 7 then return fail("scalar deref initial")
+  if snapshot scalar_ref <> 7 then return fail("scalar deref initial")
 
   scalar = 11
   if readInt(scalar_ref) <> 11 then return fail("scalar arg live")
 
-  scalar_snapshot = dereference scalar_ref
+  scalar_snapshot = snapshot scalar_ref
   scalar = 17
   if scalar_snapshot <> 11 then return fail("scalar snapshot")
-  if dereference scalar_ref <> 17 then return fail("scalar live after snapshot")
+  if snapshot scalar_ref <> 17 then return fail("scalar live after snapshot")
 
   global_counter = .int
   global_counter = 3
   global_ref = reference .int
   global_ref = reference global_counter
-  if dereference global_ref <> 3 then return fail("global ref initial")
+  if snapshot global_ref <> 3 then return fail("global ref initial")
   call setGlobal(19)
   if readInt(global_ref) <> 19 then return fail("global ref live")
 
@@ -33,7 +33,7 @@ main: procedure = .int
   items_ref = reference items
   if \refvalid(items_ref) then return fail("array ref invalid")
 
-  items_snapshot = dereference items_ref
+  items_snapshot = snapshot items_ref
   items[1] = 30
   if items_snapshot[1] <> 10 then return fail("array snapshot")
   if firstFromArrayRef(items_ref) <> 30 then return fail("array live arg")
@@ -41,13 +41,13 @@ main: procedure = .int
   box = .Box(4)
   box_ref = box.selfRef()
   if \refvalid(box_ref) then return fail("self ref invalid")
-  box_snapshot = dereference box_ref
+  box_snapshot = snapshot box_ref
   call box.setValue(9)
   if box_snapshot.getValue() <> 4 then return fail("self snapshot")
   if readBox(box_ref) <> 9 then return fail("self live")
 
   attr_ref = box.valueRef()
-  if dereference attr_ref <> 9 then return fail("attr ref initial")
+  if snapshot attr_ref <> 9 then return fail("attr ref initial")
   call box.setValue(12)
   if readInt(attr_ref) <> 12 then return fail("attr ref live")
 
@@ -56,16 +56,16 @@ main: procedure = .int
 
 readInt: procedure = .int
   arg r = reference .int
-  return dereference r
+  return snapshot r
 
 firstFromArrayRef: procedure = .int
   arg r = reference .int[]
-  values = dereference r
+  values = snapshot r
   return values[1]
 
 readBox: procedure = .int
   arg r = reference .Box
-  box = dereference r
+  box = snapshot r
   return box.getValue()
 
 setGlobal: procedure = .void

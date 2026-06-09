@@ -82,6 +82,25 @@ static void signal_emit_names_free(signal_emit_names *names) {
     names->capacity = 0;
 }
 
+static int flow_scope_owns_cleanup(ASTNode *node) {
+    return node && node->scope && node->scope->defining_node == node;
+}
+
+static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *scope) {
+    size_t i;
+
+    if (!output || !scope) return;
+    for (i = scp_dereference_symbol_count(scope); i > 0; i--) {
+        Symbol *symbol = scp_dereference_symbol_at(scope, i - 1);
+        char *line;
+
+        if (!symbol || symbol->register_num < 0 || symbol->register_type != 'r') continue;
+        line = mprintf("   unlink %c%d\n", symbol->register_type, symbol->register_num);
+        output_append_text(output, line);
+        free(line);
+    }
+}
+
 static char *signal_emit_canonical_name(ASTNode *node) {
     char *name;
     size_t i;
@@ -187,6 +206,9 @@ void emit_flow(ASTNode *node, void *pl) {
                 if (n->cleanup) output_concat(node->output, n->cleanup);
                 n = ast_nsib(n);
             }
+            if (flow_scope_owns_cleanup(node)) {
+                flow_emit_scope_dereference_unlinks(node->output, node->scope);
+            }
             comment_meta = get_reporting_metalines(node);
             if (comment_meta[0]) output_prepend_text(comment_meta, node->output);
             free(comment_meta);
@@ -277,6 +299,9 @@ void emit_flow(ASTNode *node, void *pl) {
             temp1 = mprintf("l%dsignalend:\n", node->node_number);
             output_append_text(node->output, temp1);
             free(temp1);
+            if (flow_scope_owns_cleanup(node)) {
+                flow_emit_scope_dereference_unlinks(node->output, node->scope);
+            }
             signal_emit_names_free(&installed);
             break;
         }
@@ -451,6 +476,9 @@ void emit_flow(ASTNode *node, void *pl) {
                             node->node_number, node->node_number);
             output_append_text(node->output, temp1);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            if (flow_scope_owns_cleanup(node)) {
+                flow_emit_scope_dereference_unlinks(node->output, node->scope);
+            }
             free(temp1);
             free(comment_meta);
             break;

@@ -101,17 +101,17 @@ ParentIterator: class
     return 0
 
   hasNext: method = .int
-    list = dereference list_ref
+    list = snapshot list_ref
     if index < list.size() then return 1
     return 0
 
   next: method = .string
-    list = dereference list_ref
+    list = snapshot list_ref
     index = index + 1
     return list.get(index)
 
   snapshotList: method = .LiveList
-    return dereference list_ref
+    return snapshot list_ref
 
 BackingIterator: class
   values_ref = reference .string[]
@@ -130,11 +130,11 @@ BackingIterator: class
     return 0
 
   hasNext: method = .int
-    count = dereference count_ref
+    count = snapshot count_ref
     if index < count then return 1
     return 0
 
   next: method = .string
-    values = dereference values_ref
+    values = snapshot values_ref
     index = index + 1
     return values[index]

@@ -32,6 +32,17 @@
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
 
+static Symbol *dereference_assignment_target(ASTNode *node) {
+    ASTNode *assign;
+    ASTNode *target;
+
+    if (!node || !node->parent || node->parent->node_type != ASSIGN) return 0;
+    assign = node->parent;
+    target = ast_chdn(assign, 0);
+    if (!target || !target->symbolNode) return 0;
+    return target->symbolNode->symbol;
+}
+
 static int is_interface_member_call(ASTNode *node) {
     Symbol *fsym;
     SymbolNode *defsn;
@@ -1019,6 +1030,24 @@ void emit_expression(ASTNode *node, void *payload) {
         case OP_DEREFERENCE:
             if (!node->output) node->output = output_f();
             if (child1->output) output_concat(node->output, child1->output);
+            temp1 = mprintf("   unlink %c%d\n"
+                            "   linkref %c%d,%c%d\n",
+                            node->register_type,
+                            node->register_num,
+                            node->register_type,
+                            node->register_num,
+                            child1->register_type,
+                            child1->register_num);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            scp_add_dereference_symbol(node->scope, dereference_assignment_target(node));
+            type_promotion(node);
+            break;
+
+        case OP_SNAPSHOT:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
             temp1 = mprintf("   deref %c%d,%c%d\n",
                             node->register_type,
                             node->register_num,
@@ -1226,6 +1255,17 @@ void emit_expression(ASTNode *node, void *payload) {
             temp1 = mprintf("l%dbexprend:\n", node->node_number);
             output_append_text(node->output, temp1);
             free(temp1);
+
+            if (node->scope && node->scope->defining_node == node) {
+                size_t i;
+                for (i = scp_dereference_symbol_count(node->scope); i > 0; i--) {
+                    Symbol *symbol = scp_dereference_symbol_at(node->scope, i - 1);
+                    if (!symbol || symbol->register_num < 0 || symbol->register_type != 'r') continue;
+                    temp1 = mprintf("   unlink %c%d\n", symbol->register_type, symbol->register_num);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                }
+            }
 
             type_promotion(node);
             break;

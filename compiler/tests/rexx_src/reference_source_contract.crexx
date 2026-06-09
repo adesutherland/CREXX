@@ -14,8 +14,8 @@ main: procedure = .int
   local_value = 7
   local_ref = reference .int
   local_ref = reference local_value
-  if dereference local_ref <> 7 then return fail("local reference initial")
-  local_snapshot = dereference local_ref
+  if snapshot local_ref <> 7 then return fail("local reference initial")
+  local_snapshot = snapshot local_ref
   local_value = 8
   if local_snapshot <> 7 then return fail("local snapshot stable")
   if readInt(local_ref) <> 8 then return fail("local reference live")
@@ -46,7 +46,7 @@ main: procedure = .int
   call box.setValue(9)
   if readBoxValue(box_ref) <> 9 then return fail("self reference live")
   if readInt(value_ref) <> 9 then return fail("attribute reference live")
-  box_snapshot = dereference box_ref
+  box_snapshot = snapshot box_ref
   call box.setValue(12)
   if box_snapshot.getValue() <> 9 then return fail("object snapshot stable")
   if readInt(value_ref) <> 12 then return fail("attribute reference after snapshot")
@@ -68,15 +68,15 @@ main: procedure = .int
 
 readInt: procedure = .int
   arg r = reference .int
-  return dereference r
+  return snapshot r
 
 readString: procedure = .string
   arg r = reference .string
-  return dereference r
+  return snapshot r
 
 readBoxValue: procedure = .int
   arg r = reference .Box
-  box = dereference r
+  box = snapshot r
   return box.getValue()
 
 setGlobalCount: procedure = .void

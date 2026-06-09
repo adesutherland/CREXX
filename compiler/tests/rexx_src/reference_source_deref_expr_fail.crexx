@@ -1,0 +1,8 @@
+options levelb
+namespace reference_source_deref_expr_fail
+
+main: procedure = .int
+  value = 1
+  r = reference value
+  if dereference r = 1 then return 0
+  return 1

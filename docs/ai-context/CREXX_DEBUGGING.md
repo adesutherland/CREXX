@@ -95,7 +95,7 @@ Process lessons:
 
 * Start with the smallest semantic slice that is executable end to end. For the
   reference work, RXAS/VM operations and generated-code contracts came before
-  public Rexx syntax; explicit `reference` / `dereference` syntax came before
+  public Rexx syntax; explicit `reference` / `dereference` / `snapshot` syntax came before
   live member/index sugar through references.
 * Keep deferred language surface explicit in docs and tests. If `itemsRef[i]`
   or `listRef.add()` is not implemented yet, say so in the working design and
@@ -131,7 +131,7 @@ Process lessons:
 Reference source-syntax lessons:
 
 * The grammar has several expression spines. Prefix syntax such as
-  `reference target` and `dereference ref` must be added to normal, command,
+  `reference target`, `local = dereference ref`, and `snapshot ref` must be added to normal, command,
   and concatenation expression paths as appropriate, not only one convenient
   rule.
 * Adding keyword trap productions can create large Lemon conflict spikes. Prefer
@@ -140,9 +140,12 @@ Reference source-syntax lessons:
 * `reference target` must validate that the operand is aliasable storage, not a
   temporary value expression. It must also reject references-to-references until
   nested reference policy is deliberately designed.
-* `dereference ref` is a snapshot operation. It should preserve ordinary value
-  copy semantics and should be the required spelling when passing a reference
-  where a plain `.T` is expected.
+* Source `snapshot ref` is the deep-copy operation. It should preserve ordinary
+  value copy semantics and should be the required spelling when passing a
+  reference where a plain `.T` is expected. Source `local = dereference ref` is
+  a scoped live link; it should emit `linkref` plus compiler-managed `unlink`
+  at scope exit. Do not confuse source `snapshot` with the RXAS `deref`
+  mnemonic, which remains the VM deep-copy instruction.
 * `refvalid(ref)` is only a validity preflight. Invalid use must still raise the
   VM's catchable `REFERENCE_INVALID` signal through operations such as `deref`,
   `linkref`, and `setref`.
