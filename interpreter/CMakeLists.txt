@@ -703,6 +703,7 @@ add_custom_command(
                 $<TARGET_FILE:rxvml>
                 $<TARGET_FILE:rxpashim>
                 $<TARGET_FILE:rxvmplugin>
+                $<TARGET_FILE:rxvmref>
                 $<TARGET_FILE:platform>
                 $<TARGET_FILE:decnumber>
                 $<TARGET_FILE:avl_tree>
@@ -715,6 +716,7 @@ add_custom_command(
                 rxvml
                 rxpashim
                 rxvmplugin
+                rxvmref
                 platform
                 decnumber
                 avl_tree

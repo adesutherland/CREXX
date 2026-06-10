@@ -536,7 +536,7 @@ do i=1 to filenames[0]
     cc_command = cc_command || ' ' || quoteCommandArg(outputStem'.c', platformUpper)
     cc_command = cc_command || ' ' || quoteCommandArg('-L' || rxpath || 'bin', platformUpper)
     if isMacPlatform(platformUpper) then do
-      cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lplatform'
+      cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lrxvmref -lplatform'
       cc_command = appendCommandArg(cc_command, decstat, platformUpper)
       cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm' || socketLibs
       if staticFlags <> '' then cc_command = cc_command staticFlags
@@ -544,7 +544,7 @@ do i=1 to filenames[0]
     else do
       cc_command = cc_command ' -Wl,--start-group'
       if staticFlags <> '' then cc_command = cc_command staticFlags
-      cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lplatform'
+      cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lrxvmref -lplatform'
       cc_command = appendCommandArg(cc_command, decstat, platformUpper)
       cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm' || socketLibs
       cc_command = cc_command ' -Wl,--end-group'
