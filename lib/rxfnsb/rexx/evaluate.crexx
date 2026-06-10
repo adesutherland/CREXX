@@ -1221,12 +1221,12 @@ header: procedure
   arg statements=.string
   stmts=.string[]
   say
-  say copies('=',50)
+  say copies('=',72)
   say 'Evaluate Code'
-  say copies('=',50)
+  say copies('=',72)
   say
   say 'Source'
-  say copies('-',50)
+  say copies('-',72)
   say statements
   say
   do i=1
@@ -1239,7 +1239,7 @@ header: procedure
   end
   if strip(statements) \='' then stmts[stmts[0]+1]=statements
   say 'Parsed Statements ('stmts[0]')'
-  say copies('-',50)
+  say copies('-',72)
   inc=0
   do i=1 to stmts[0]
      lstmt=lower(stmts[i])
@@ -1248,5 +1248,5 @@ header: procedure
      if word(lstmt,1)='do' | word(lstmt,words(lsttmt))='do' then inc=inc+3
   end
   say
-  say copies('=',50)
+  say copies('=',72)
 return
