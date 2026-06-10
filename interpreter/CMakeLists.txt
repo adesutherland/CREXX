@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.24)
 
-add_subdirectory(rxvmplugin)
-
 project(Interpreter C)
 
 set(CMAKE_C_STANDARD 99) # enables inline keyword
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice
+
+add_library(rxvmref STATIC rxvmref.c rxvmref.h)
+target_include_directories(rxvmref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_subdirectory(rxvmplugin)
 
 set(CREXX_SOCKET_TARGET_LIBS)
 set(CREXX_SOCKET_MANUAL_LINK_LIBS)
@@ -164,13 +167,13 @@ function(crexx_enable_core_sockets target_name)
 endfunction()
 
 foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
-    target_sources(${_rxvm_core_target} PRIVATE rxvmref.c rxvmref.h)
+    target_link_libraries(${_rxvm_core_target} rxvmref)
     crexx_enable_core_sockets(${_rxvm_core_target})
 endforeach()
 
 # libcrexxsaa is intentionally thin and shared. On ELF platforms, every static
 # archive pulled into it must be compiled as PIC.
-foreach(_crexxsaa_static_dep rxvml rxvmplugin mc_decimal_manual avl_tree rxpa platform decnumber)
+foreach(_crexxsaa_static_dep rxvml rxvmref rxvmplugin mc_decimal_manual avl_tree rxpa platform decnumber)
     if(TARGET ${_crexxsaa_static_dep})
         set_target_properties(${_crexxsaa_static_dep} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     endif()
@@ -222,11 +225,11 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Value test executable
-add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h rxvmref.c rxvmref.h)
+add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h)
 target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
-target_link_libraries(ts_regvalue_tester m)
+target_link_libraries(ts_regvalue_tester rxvmref m)
 
-add_executable(test_rxpa_utf_validation tests/test_rxpa_utf_validation.c rxpafuncs.c rxvalue.h rxvmvars.h rxvmref.c rxvmref.h)
+add_executable(test_rxpa_utf_validation tests/test_rxpa_utf_validation.c rxpafuncs.c rxvalue.h rxvmvars.h)
 target_include_directories(test_rxpa_utf_validation PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         .
@@ -237,7 +240,7 @@ target_include_directories(test_rxpa_utf_validation PRIVATE
         ../avl_tree
         ../utf8
         ../inc)
-target_link_libraries(test_rxpa_utf_validation m)
+target_link_libraries(test_rxpa_utf_validation rxvmref m)
 
 # Enable testing
 enable_testing()

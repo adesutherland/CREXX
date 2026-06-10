@@ -76,8 +76,6 @@ add_executable(testvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvmref.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvmref.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c)
 # Set the performance properties
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
@@ -88,7 +86,7 @@ configure_linker_for_static_lib(testvm _rxpalink)
 enable_test_vm_core_sockets(testvm)
 # Add the dependencies and link libraries
 add_dependencies(testvm avl_tree rxpa platform _rxpalink_static)
-target_link_libraries(testvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim _rxpalink_static)
+target_link_libraries(testvm rxvmplugin rxvmref mc_decimal_manual avl_tree rxpa rxpashim _rxpalink_static)
 target_include_directories(testvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -179,8 +177,6 @@ add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvmref.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvmref.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c
 )
 # Set the performance properties
@@ -192,7 +188,7 @@ configure_linker_for_static_lib(funcvm _testfuncs)
 enable_test_vm_core_sockets(funcvm)
 # Add the dependencies and link libraries
 add_dependencies(funcvm avl_tree rxpa platform _testfuncs_static)
-target_link_libraries(funcvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim _testfuncs_static)
+target_link_libraries(funcvm rxvmplugin rxvmref mc_decimal_manual avl_tree rxpa rxpashim _testfuncs_static)
 target_include_directories(funcvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
