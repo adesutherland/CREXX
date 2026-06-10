@@ -1,5 +1,6 @@
 options levelb comments_dash
 import data_StringList
+import data_StringIterable
 
 failures = 0
 
@@ -52,6 +53,7 @@ failures = failures + check_string("live iterator third", live.next(), "C")
 failures = failures + check_int("live iterator sees append", live.hasNext(), 1)
 failures = failures + check_string("live iterator appended", live.next(), "E")
 failures = failures + check_int("live iterator end", live.hasNext(), 0)
+failures = failures + check_int("string iterable interface count", count_string_iterable(l), 4)
 
 call l.clear()
 failures = failures + check_int("clear size", l.size(), 0)
@@ -82,3 +84,14 @@ check_string: procedure=.int
     return 1
   end
 return 0
+
+count_string_iterable: procedure=.int
+  arg collection=.StringIterable
+
+  it = collection.iterator()
+  count = 0
+  loop while it.hasNext()
+    value = it.next()
+    count = count + 1
+  end
+return count

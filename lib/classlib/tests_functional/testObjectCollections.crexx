@@ -2,6 +2,7 @@ options levelb comments_dash
 import data_ObjectList
 import data_ObjectStack
 import data_ObjectLinkedList
+import data_ObjectIterable
 
 failures = 0
 
@@ -47,6 +48,7 @@ failures = failures + check_box("object live third", live.next(), "C")
 failures = failures + check_int("object live sees append", live.hasNext(), 1)
 failures = failures + check_box("object live appended", live.next(), "E")
 failures = failures + check_int("object live end", live.hasNext(), 0)
+failures = failures + check_int("object iterable interface count", count_object_iterable(l), 4)
 
 call l.clear()
 failures = failures + check_int("object clear size", l.size(), 0)
@@ -108,6 +110,17 @@ check_box: procedure=.int
     return 1
   end
 return 0
+
+count_object_iterable: procedure=.int
+  arg collection=.ObjectIterable
+
+  it = collection.iterator()
+  count = 0
+  loop while it.hasNext()
+    item = it.next()
+    count = count + 1
+  end
+return count
 
 box: class
   name_ = .string

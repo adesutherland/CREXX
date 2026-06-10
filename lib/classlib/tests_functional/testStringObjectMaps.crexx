@@ -1,6 +1,7 @@
 options levelb comments_dash
 import data_StringObjectHashMap
 import data_StringObjectTreeMap
+import data_StringIterable
 
 failures = 0
 
@@ -30,6 +31,21 @@ loop while it.hasNext()
   end
 end
 failures = failures + check_int("hash iterator count", seen, 2)
+
+hash_next_value = h.iterator()
+first_hash_key = hash_next_value.next()
+first_hash_value = hash_next_value.nextValue() as .box
+if first_hash_key = "a" then do
+  failures = failures + check_string("hash nextValue a", first_hash_value.name(), "aye")
+end
+if first_hash_key = "b" then do
+  failures = failures + check_string("hash nextValue b", first_hash_value.name(), "BEE")
+end
+if first_hash_key <> "a" & first_hash_key <> "b" then do
+  say "hash nextValue unexpected key:" first_hash_key
+  failures = failures + 1
+end
+failures = failures + check_int("hash iterable interface count", count_string_iterable(h), 2)
 
 values = .object[]
 values = h.valueArray()
@@ -69,6 +85,12 @@ failures = failures + check_string("tree iterator third key", tree_it.next(), "c
 failures = failures + check_box("tree iterator third value", tree_it.value(), "see")
 failures = failures + check_int("tree iterator end", tree_it.hasNext(), 0)
 
+tree_next_value = t.iterator()
+failures = failures + check_box("tree nextValue advances first value", tree_next_value.nextValue(), "aye")
+failures = failures + check_string("tree nextValue current key", tree_next_value.nextKey(), "b")
+failures = failures + check_box("tree nextValue current value", tree_next_value.nextValue(), "bee")
+failures = failures + check_int("tree iterable interface count", count_string_iterable(t), 3)
+
 if failures <> 0 then do
   say "String object map failures:" failures
   exit 1
@@ -100,6 +122,17 @@ check_box: procedure=.int
 
   item = actual as .box
   return check_string(label, item.name(), expected)
+
+count_string_iterable: procedure=.int
+  arg collection=.StringIterable
+
+  it = collection.iterator()
+  count = 0
+  loop while it.hasNext()
+    key = it.next()
+    count = count + 1
+  end
+return count
 
 box: class
   name_ = .string

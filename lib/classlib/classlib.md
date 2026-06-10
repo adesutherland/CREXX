@@ -6,6 +6,11 @@ object values, and `StringObject...` maps string keys to object values. Bare
 collection names are reserved for future Level G generic or generic-like
 surfaces.
 
+The concrete class source files and `CMakeLists.txt` entries are the source of
+truth for currently built exports. The planning tables below are retained as an
+export checklist and may still contain legacy namespace labels from the
+pre-generic naming pass.
+
 | NS               | CLASS      | TODO   | ITEM             | KIND      | RETURNTYPE | SIG                        |
 |---------------- |---------- |------ |---------------- |--------- |---------- |-------------------------- |
 |                  |            |        | Class library    |           |            |                            |

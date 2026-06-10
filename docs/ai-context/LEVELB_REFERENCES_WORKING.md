@@ -111,9 +111,12 @@ that the VM does not currently model.
 
 The immediate container pressure is:
 
-- `StringArrayList.iterator()` currently returns the backing `.string[]`, which is
-  copied when returned from a linked object attribute.
-- `StringArrayListIterator` then copies that array into its own attribute.
+- `StringArrayList.iterator()` returns a live iterator linked to the parent list,
+  while `StringArrayList.snapshotIterator()` copies the backing array once in the
+  iterator factory for stable traversal.
+- `StringArrayListIterator` stores either the weak parent reference for live
+  traversal or the factory-time snapshot array. The public contract no longer
+  exposes the backing `.string[]` as the iterator value.
 - The retired classlib `StemListIterator` experiment had the same problem at
   object scale because `.stem` contains array-backed state. Stem iteration now
   belongs on the `rxfnsb.stem` map class itself, not on an ordered-list wrapper.
