@@ -27,11 +27,13 @@ options levelb
 
 namespace rxfnsb expose fmtmask
 /* ============================================================================
- * Function:  fmtmask
+ * Function:  fmtmask is used by compiler exit MSAY
  * ----------------------------------------------------------------------------
  * Purpose
- *   Formats a line using a simple picture-mask syntax and a positional list
- *   of values.
+ *   Formats a line using a simple COBOL-inspired picture-mask syntax and a
+ *   positional list of values. The function is used directly as fmtmask(), and
+ *   indirectly by the compiler-exit command MSAY, which expands formatted output
+ *   into an equivalent SAY-style operation.
  *
  *   fmtmask is inspired by classic report-writer and COBOL-style picture layouts,
  *   but intentionally implements only a small, practical subset suitable for
@@ -46,7 +48,36 @@ namespace rxfnsb expose fmtmask
  *
  * Result
  *   Name: Fred        Price:   $64.31  Qty:  12
+ * ----------------------------------------------------------------------------
+ * Compiler Exit Command: MSAY
+ * ----------------------------------------------------------------------------
+ * The compiler exit command MSAY provides statement-level access to fmtmask.
  *
+ * Syntax:
+ *   MSAY mask, value-1, value-2, ...
+ *
+ * Semantics:
+ *   MSAY formats its operands by calling:
+ *
+ *     fmtmask(mask, value-1, value-2, ...)
+ *
+ *   and emits the resulting string as a SAY line.
+ *
+ * Example:
+ *   MSAY "Name: XXXXXXXXXX  Price: $$$$9.99  Qty: 999", "Fred", 64.31, 12
+ *
+ * Equivalent to:
+ *   SAY fmtmask("Name: XXXXXXXXXX  Price: $$$$9.99  Qty: 999", ,
+ *               "Fred", 64.31, 12)
+ *
+ * Result:
+ *   Name: Fred        Price:   $64.31  Qty:  12
+ *
+ * Notes:
+ *   - MSAY is a compiler-exit convenience syntax.
+ *   - fmtmask remains the runtime formatting function.
+ *   - The mask and value-consumption rules are identical for fmtmask and MSAY.
+ *   - Each field in the mask consumes one value argument, left to right.
  * ----------------------------------------------------------------------------
  * Mask Model
  * ----------------------------------------------------------------------------
