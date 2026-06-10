@@ -217,6 +217,11 @@ When a test needs delete/insert semantics, prefer library helpers such as
 `arraydelete`, `arrayinsert`, and `arrayappend` over assembler unless the test
 is specifically about RXAS.
 
+Use the `objectarray*` helper family for mutating `.object[]` arrays:
+`objectarrayinsert`, `objectarraydelete`, `objectarrayappend`,
+`objectarrayprepend`, `objectarraydrop`, and `objectarraymove`. Store concrete
+class instances with an explicit `as .object` upcast.
+
 References:
 - `tests/demo/countlines.crexx`
 - `compiler/exits/ExitTestSupport.crexx`

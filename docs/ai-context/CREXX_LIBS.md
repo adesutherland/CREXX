@@ -220,7 +220,11 @@ over the legacy `lib/plugins/arrays` RXPA plugin. Current array BIFs include
 `arraydrop`, `arrayhi`, `arraymove`, `arraydump`, `arrayformat`,
 `arrayappend`, `arrayprepend`, `arraypop`, `arrayshift`, `arrayget`,
 `arrayset`, `arraycontains`, `arrayindexof`, `arrayreverse`, and `arrayjoin`.
-Insertion, deletion, movement, append, prepend, pop, shift, and gap-growing set
+Object-shaped mutating helpers are exposed separately as `objectarrayinsert`,
+`objectarraydelete`, `objectarrayappend`, `objectarrayprepend`, and
+`objectarraydrop`, plus `objectarraymove` for block moves. Insertion, deletion,
+movement, append, prepend, pop, shift, gap-growing set, and the object-array
+insert/delete/append/prepend/drop/move helpers
 use VM bulk attribute instructions so the logical array pointer list can be
 shifted without a Rexx-level per-element copy loop. Mutating array BIFs must
 declare the array with `arg expose`.
@@ -229,7 +233,7 @@ Container naming is intentionally split by shape:
 
 - Arrays/lists are ordered, one-based, duplicate-preserving sequences using
   `array[0]` as the high water mark. Classic code should use the `array*` BIFs;
-  OO code should expose the same semantics through `ArrayList`/`LinkedList`
+  OO code should expose the same semantics through `StringArrayList`/`StringLinkedList`
   methods such as `add`/`append`, `insert`, `remove`, `get`, `set`, `size`,
   `clear`, `contains`, and `indexOf`.
   The Release 1 Rexx-first iterator direction is explicit: `iterator()` returns
@@ -241,6 +245,27 @@ Container naming is intentionally split by shape:
 - Sets are uniqueness containers. Use `add`, `contains`, `remove`, `size`,
   `clear`, and `toArray`/`fromArray` semantics consistently across classic and
   class-shaped APIs.
+
+Level B classlib collection names carry their value contract because the
+language does not yet have generics. Current public classlib containers and
+iterator interfaces are therefore explicitly tagged:
+
+- `String...` classes store string values, for example `StringIterator`,
+  `StringIterable`, `StringArrayList`, `StringHashMap`, `StringTreeMap`,
+  `StringStack`, and related iterator/set/list classes.
+- `Object...` classes store object values where no key contract is involved,
+  for example `ObjectIterator`, `ObjectIterable`, `ObjectArrayList`,
+  `ObjectLinkedList`, and `ObjectStack`. Callers explicitly upcast concrete
+  class instances with `as .object` when storing them.
+- `StringObject...` map classes use string keys and object values, for example
+  `StringObjectHashMap` and `StringObjectTreeMap`. The native stem/treemap
+  storage is used only as a string-key index; object values remain in Rexx
+  object arrays.
+
+Bare collection names such as `Iterator`, `Iterable`, `ArrayList`, `HashMap`,
+`TreeMap`, and `Stack` are intentionally left free for future Level G generic
+or generic-like surfaces. Object-key maps and object sets are also deferred
+until the language has a clear object equality/hash/ordering contract.
 
 Imported Rexx BIF calls inline only when the imported artifact carries
 `META_INLINE`. `rxlink` strips `META_INLINE` by default, so the standard-library

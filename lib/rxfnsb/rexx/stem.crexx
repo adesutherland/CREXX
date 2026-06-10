@@ -25,7 +25,7 @@
 /* rexx */
 options levelb comments_dash
 
-namespace rxfnsb expose stem
+namespace rxfnsb expose stem stemIterator
 
 /* ------------------------------------------------------------------
  *  stem
@@ -39,7 +39,7 @@ stem: class
   num_buckets = .int
   buckets = .int[256]
   keys = .string[]
-  values = .string[]
+  vals = .string[]
   next = .int[]
   count = .int
 
@@ -72,7 +72,7 @@ stem: class
     idx = buckets[b]
     
     do while idx > 0
-      if keys[idx] = key then return values[idx]
+      if keys[idx] = key then return vals[idx]
       idx = next[idx]
     end
     
@@ -88,7 +88,7 @@ stem: class
     /* Update existing if found */
     do while idx > 0
       if keys[idx] = key then do
-        values[idx] = value
+        vals[idx] = value
         return
       end
       last_idx = idx
@@ -100,7 +100,7 @@ stem: class
     
     /* Insert at end of chain */
     keys[count] = key
-    values[count] = value
+    vals[count] = value
     next[count] = 0
     
     if last_idx > 0 then do
@@ -121,7 +121,97 @@ stem: class
 
   value: method = .string
     arg kv = .string
-    return values[kv]
+    return vals[kv]
+
+  valueAt: method = .string
+    arg ix = .int
+    return vals[ix]
 
   tails: method = .string[]
-    return keys
+    result = .string[]
+    do i = 1 to count
+      result[i] = keys[i]
+    end
+    return result
+
+  values: method = .string[]
+    result = .string[]
+    do i = 1 to count
+      result[i] = vals[i]
+    end
+    return result
+
+  iterator: method = .stemIterator
+    return .stemIterator(reference self, 0)
+
+  snapshotIterator: method = .stemIterator
+    return .stemIterator(reference self, 1)
+
+stemIterator: class
+  stem_ref = reference .stem
+  keys_copy = .string[]
+  values_copy = .string[]
+  snapshot_ = .int
+  index_ = .int
+  current_tail_ = .string
+
+  *: factory
+    arg source = reference .stem, snapshot_flag = 0
+    snapshot_ = snapshot_flag
+    index_ = 0
+    current_tail_ = ""
+
+    if snapshot_ = 1 then do
+      stem_copy = snapshot source
+      keys_copy = stem_copy.tails()
+      values_copy = stem_copy.values()
+    end
+    else do
+      stem_ref = source
+    end
+    return
+
+  hasNext: method = .int
+    if snapshot_ = 1 then
+      return index_ < keys_copy[0]
+
+    stem = dereference stem_ref
+    return index_ < stem.size()
+
+  next: method = .string
+    if snapshot_ = 1 then do
+      if index_ >= keys_copy[0] then return ""
+      index_ = index_ + 1
+      current_tail_ = keys_copy[index_]
+      return current_tail_
+    end
+
+    stem = dereference stem_ref
+    if index_ >= stem.size() then return ""
+    index_ = index_ + 1
+    current_tail_ = stem.key(index_)
+    return current_tail_
+
+  value: method = .string
+    if index_ < 1 then return ""
+
+    if snapshot_ = 1 then do
+      if index_ > values_copy[0] then return ""
+      return values_copy[index_]
+    end
+
+    stem = dereference stem_ref
+    return stem.get(current_tail_)
+
+  index: method = .int
+    return index_
+
+  reset: method = .void
+    index_ = 0
+    current_tail_ = ""
+    return
+
+  isLive: method = .int
+    if snapshot_ = 1 then return 0
+    if refvalid(stem_ref) then return 1
+    return 0

@@ -40,8 +40,8 @@ endforeach()
 add_custom_target(performance_classlib_iterator ALL)
 foreach(_crexx_runner IN ITEMS rxvm rxbvm)
     crexx_add_rexx_opt_matrix(
-            NAME arraylist_iterator_compare_${_crexx_runner}
-            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/arraylist_iterator_compare.crexx
+            NAME stringarraylist_iterator_compare_${_crexx_runner}
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stringarraylist_iterator_compare.crexx
             TARGET_GROUP performance_classlib_iterator
             RUNNER ${_crexx_runner}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
@@ -50,8 +50,8 @@ foreach(_crexx_runner IN ITEMS rxvm rxbvm)
             TEST_LABELS "performance;reference;classlib"
     )
     foreach(_crexx_mode IN ITEMS noopt opt)
-        set_tests_properties(arraylist_iterator_compare_${_crexx_runner}_${_crexx_mode} PROPERTIES
-                PASS_REGULAR_EXPRESSION "PASS: ArrayList Iterator Performance Smoke"
+        set_tests_properties(stringarraylist_iterator_compare_${_crexx_runner}_${_crexx_mode} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: StringArrayList StringIterator Performance Smoke"
                 FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
         )
     endforeach()

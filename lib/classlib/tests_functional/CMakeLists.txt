@@ -9,13 +9,16 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 set(REXXBINS
   testid
   testOS
-  testArrayList
-  testHashMap
-  testHashSet
-  testTreeMap
-  testTreeSet
-  testStack
-  ts_TreeMap
+  testStringArrayList
+  testStringHashMap
+  testStringHashSet
+  testStringLinkedList
+  testStringTreeMap
+  testStringTreeSet
+  testStringStack
+  testObjectCollections
+  testStringObjectMaps
+  ts_StringTreeMap
   testQfind
   testTokenise
   testJSON

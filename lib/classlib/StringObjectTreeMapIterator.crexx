@@ -1,0 +1,87 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash
+namespace data_StringObjectTreeMap expose StringObjectTreeMapIterator
+import treemap
+import data_StringIterator
+
+/**
+ * String iterator over the ordered keys of a StringObjectTreeMap.
+ */
+StringObjectTreeMapIterator: class implements .StringIterator
+map_token_ = .int
+values_ = .object[]
+token_ = .int
+closed_ = .int
+current_key_ = .string
+current_slot_ = .int
+
+  *: factory
+    arg mapToken = .int, values = .object[]
+    map_token_ = mapToken
+    values_ = values
+    token_ = tmitercreate(map_token_)
+    closed_ = 0
+    current_key_ = ""
+    current_slot_ = 0
+    return
+
+  hasNext: method = .int
+    if closed_ then return 0
+    return tmiterhasnext(token_)
+
+  next: method = .string
+    if closed_ then return ""
+    current_key_ = tmiternext(token_)
+    current_slot_ = tmget(map_token_, current_key_)
+    return current_key_
+
+  nextKey: method = .string
+    return next()
+
+  value: method = .object
+    if current_key_ = "" then do
+      none = .object
+      return none
+    end
+    return values_[current_slot_]
+
+  nextValue: method = .object
+    if current_key_ = "" then do
+      key = next()
+      if key = "" then do
+        none = .object
+        return none
+      end
+    end
+    return value()
+
+  close: method = .int
+    if \closed_ then do
+      call tmiterfree(token_)
+      closed_ = 1
+      token_ = 0
+    end
+    return 0

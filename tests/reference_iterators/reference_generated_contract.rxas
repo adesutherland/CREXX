@@ -1,7 +1,7 @@
 /*
  * Compiler-shaped reference contract coverage.
  *
- * This fixture models the RXAS shape a pure Rexx ArrayList/Iterator
+ * This fixture models the RXAS shape a pure Rexx string-list iterator
  * implementation can emit before public reference syntax is chosen.
  */
 

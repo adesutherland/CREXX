@@ -1,0 +1,113 @@
+options levelb comments_dash
+import data_StringObjectHashMap
+import data_StringObjectTreeMap
+
+failures = 0
+
+h = .StringObjectHashMap()
+rc = h.put("b", .box("bee") as .object)
+rc = h.put("a", .box("aye") as .object)
+failures = failures + check_int("hash object map size", h.size(), 2)
+failures = failures + check_int("hash object map contains", h.containsKey("b"), 1)
+failures = failures + check_box("hash object map get", h.get("b"), "bee")
+
+rc = h.put("b", .box("BEE") as .object)
+failures = failures + check_int("hash object map update size", h.size(), 2)
+failures = failures + check_box("hash object map update", h.get("b"), "BEE")
+
+it = h.iterator()
+seen = 0
+loop while it.hasNext()
+  key = it.next()
+  item = it.value() as .box
+  if key = "a" then do
+    failures = failures + check_string("hash iterator a", item.name(), "aye")
+    seen = seen + 1
+  end
+  if key = "b" then do
+    failures = failures + check_string("hash iterator b", item.name(), "BEE")
+    seen = seen + 1
+  end
+end
+failures = failures + check_int("hash iterator count", seen, 2)
+
+values = .object[]
+values = h.valueArray()
+failures = failures + check_int("hash values count", values[0], 2)
+rc = h.remove("a")
+failures = failures + check_int("hash remove size", h.size(), 1)
+failures = failures + check_int("hash remove contains", h.containsKey("a"), 0)
+
+t = .StringObjectTreeMap()
+rc = t.put("b", .box("bee") as .object)
+rc = t.put("a", .box("aye") as .object)
+rc = t.put("c", .box("see") as .object)
+failures = failures + check_int("tree object map size", t.size(), 3)
+failures = failures + check_string("tree first key", t.firstKey(), "a")
+failures = failures + check_string("tree last key", t.lastKey(), "c")
+failures = failures + check_box("tree object map get", t.get("c"), "see")
+
+keys = .string[]
+keys = t.keyArray()
+failures = failures + check_int("tree key count", keys[0], 3)
+failures = failures + check_string("tree key first", keys[1], "a")
+failures = failures + check_string("tree key second", keys[2], "b")
+failures = failures + check_string("tree key third", keys[3], "c")
+
+vals = .object[]
+vals = t.valueArray()
+failures = failures + check_box("tree value first", vals[1], "aye")
+failures = failures + check_box("tree value second", vals[2], "bee")
+failures = failures + check_box("tree value third", vals[3], "see")
+
+tree_it = t.iterator()
+failures = failures + check_string("tree iterator first key", tree_it.next(), "a")
+failures = failures + check_box("tree iterator first value", tree_it.value(), "aye")
+failures = failures + check_string("tree iterator second key", tree_it.next(), "b")
+failures = failures + check_box("tree iterator second value", tree_it.value(), "bee")
+failures = failures + check_string("tree iterator third key", tree_it.next(), "c")
+failures = failures + check_box("tree iterator third value", tree_it.value(), "see")
+failures = failures + check_int("tree iterator end", tree_it.hasNext(), 0)
+
+if failures <> 0 then do
+  say "String object map failures:" failures
+  exit 1
+end
+
+say "PASS: StringObjectMaps"
+exit 0
+
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0
+
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0
+
+check_box: procedure=.int
+  arg label=.string, actual=.object, expected=.string
+
+  item = actual as .box
+  return check_string(label, item.name(), expected)
+
+box: class
+  name_ = .string
+
+  *: factory
+    arg name = .string
+    name_ = name
+    return
+
+  name: method = .string
+    return name_

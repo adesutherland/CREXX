@@ -10,7 +10,7 @@ The implementation uses parallel arrays to manage a 256-bucket hash map with lin
 
 *   `buckets`: An array of 256 integers pointing to the head of a chain.
 *   `keys`: A flat array storing string keys.
-*   `values`: A flat array storing string values.
+*   `vals`: A flat array storing string values.
 *   `next`: An integer array storing the index of the next item in the chain.
 
 ## Usage
@@ -35,6 +35,41 @@ s["my-key"] = "value2"
 call s.set("other_key", "value3")
 val = s.get("other_key")
 ```
+
+## Iteration
+
+Stems are keyed containers, so iteration is over tails/keys rather than list
+positions. Iteration order is unspecified. The current Rexx implementation
+stores keys in insertion order, but callers must not depend on that ordering.
+
+```rexx
+s = .stem()
+s.name = "Ada"
+s.lang = "Rexx"
+
+it = s.iterator()
+loop while it.hasNext()
+  tail = it.next()
+  say tail "=" it.value()
+end
+```
+
+`iterator()` returns an unsynchronized live iterator. It observes the current
+stem through a weak reference; value updates after iterator creation are visible,
+and newly added tails may be observed by the current implementation.
+
+`snapshotIterator()` copies the stem's tails and values once in the iterator
+factory. Use it when callers need stable factory-time contents while the stem
+may be mutated.
+
+The iterator API is:
+
+* `hasNext() = .int`
+* `next() = .string`, returning the next tail/key
+* `value() = .string`, returning the value for the current tail
+* `index() = .int`
+* `reset() = .void`
+* `isLive() = .int`
 
 ## Architecture & Future Optimizations
 This Rexx implementation of the `stem` class is an **interim solution**.

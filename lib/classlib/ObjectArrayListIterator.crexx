@@ -1,0 +1,86 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash
+namespace data_ObjectList expose ObjectArrayListIterator
+import data_ObjectIterator
+
+/**
+ * ObjectIterator for ObjectArrayList.
+ */
+ObjectArrayListIterator: class implements .ObjectIterator
+
+list_ref_ = reference .ObjectArrayList
+list_copy_ = .ObjectArrayList
+snapshot_ = .int
+index_ = .int
+
+  *: factory
+    arg list = reference .ObjectArrayList, snapshot_flag = 0
+    snapshot_ = snapshot_flag
+    if snapshot_ = 1 then
+      list_copy_ = snapshot list
+    else
+      list_ref_ = list
+    index_ = 0
+    return
+
+  hasNext: method = .int
+    if snapshot_ = 1 then
+      return index_ < list_copy_.size()
+
+    list = dereference list_ref_
+    return index_ < list.size()
+
+  next: method = .object
+    if snapshot_ = 1 then do
+      if index_ >= list_copy_.size() then do
+        none = .object
+        return none
+      end
+
+      index_ = index_ + 1
+      return list_copy_.get(index_)
+    end
+
+    list = dereference list_ref_
+    if index_ >= list.size() then do
+      none = .object
+      return none
+    end
+
+    index_ = index_ + 1
+    return list.get(index_)
+
+  index: method = .int
+    return index_
+
+  reset: method = .void
+    index_ = 0
+    return
+
+  isLive: method = .int
+    if snapshot_ = 1 then return 1
+    if refvalid(list_ref_) then return 1
+    return 0

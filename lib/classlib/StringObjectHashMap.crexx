@@ -1,0 +1,112 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb
+namespace data_StringObjectHashMap expose StringObjectHashMap
+import treemap
+import data_StringTreeSet
+import data_StringIterable
+
+/**
+ * StringObjectHashMap maps string keys to object values.
+ *
+ * The native stem backend is used only as a string-key index. Object values are
+ * stored in a Rexx object array and are addressed by slot id.
+ */
+StringObjectHashMap: class implements .StringIterable
+index_ = .int
+values_ = .object[]
+next_slot_ = .int
+
+  *: factory
+    arg expected = 1024
+    index_ = stemcreate(expected, 'stringobjecthashmap')
+    next_slot_ = 0
+    return
+
+  put: method = .int
+    arg key = .string, value = .object
+    if stemcontainskey(index_, key) then do
+      slot = stemget(index_, key)
+      values_[slot] = value
+      return 0
+    end
+    next_slot_ = next_slot_ + 1
+    values_[next_slot_] = value
+    return stemput(index_, key, next_slot_)
+
+  get: method = .object
+    arg key = .string
+    if \stemcontainskey(index_, key) then do
+      none = .object
+      return none
+    end
+    slot = stemget(index_, key)
+    return values_[slot]
+
+  containsKey: method = .int
+    arg key = .string
+    return stemcontainskey(index_, key)
+
+  remove: method = .int
+    arg key = .string
+    return stemremove(index_, key)
+
+  size: method = .int
+    return stemsize(index_)
+
+  keyArray: method = .string[]
+    keys = .string[]
+    slots = .string[]
+    n = stemiterate(index_, keys, slots)
+    return keys
+
+  valueArray: method = .object[]
+    keys = keyArray()
+    vals = .object[]
+    loop i = 1 to keys[0]
+      vals[i] = get(keys[i])
+    end
+    return vals
+
+  keySet: method = .StringTreeSet
+    ts = .StringTreeSet()
+    rc = ts.fromArray(keyArray())
+    return ts
+
+  iterator: method = .StringObjectHashMapIterator
+    return .StringObjectHashMapIterator(index_, values_)
+
+  _indexToken: method = .int
+    return index_
+
+  free: method = .int
+    rc = stemfree(index_)
+    index_ = 0
+    none = .object
+    do i = 1 to next_slot_
+      values_[i] = none
+    end
+    next_slot_ = 0
+    return rc

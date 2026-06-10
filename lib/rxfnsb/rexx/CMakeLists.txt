@@ -103,6 +103,12 @@ set(BIFS
 		arraydelete
 		arrayappend
 		arrayprepend
+		objectarrayinsert
+		objectarraydelete
+		objectarrayappend
+		objectarrayprepend
+		objectarraydrop
+		objectarraymove
 		arraypop
 		arrayshift
 		arrayget

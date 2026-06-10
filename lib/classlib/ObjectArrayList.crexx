@@ -1,0 +1,120 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash
+namespace data_ObjectList expose ObjectArrayList
+import rxfnsb
+import data_ObjectIterable
+
+/**
+ * A dynamic, ordered collection backed by an object array.
+ *
+ * This class stores object values and deliberately does not provide
+ * equality-based helpers such as contains/indexOf. Those need an object
+ * equality contract before they can be specified cleanly.
+ */
+ObjectArrayList: class implements .ObjectIterable
+size_ = .int
+val = .object[]
+
+  *: factory
+    size_ = 0
+    return
+
+  init: method = .int
+    size_ = 0
+    return 1
+
+  add: method = .int
+    arg item = .object
+    size_ = objectarrayappend(val, item)
+    return 1
+
+  append: method = .int
+    arg item = .object
+    size_ = objectarrayappend(val, item)
+    return 1
+
+  prepend: method = .int
+    arg item = .object
+    size_ = objectarrayprepend(val, item)
+    return 1
+
+  get: method = .object
+    arg index = .int
+    if index < 1 then do
+      none = .object
+      return none
+    end
+    if index > size_ then do
+      none = .object
+      return none
+    end
+    return val.index
+
+  set: method = .int
+    arg index = .int, item = .object
+    if index >= 1 then if index <= size_ then do
+      val.index = item
+      return 1
+    end
+    return 0
+
+  insert: method = .int
+    arg index = .int, item = .object
+
+    if index < 1 then index = 1
+    if index > size_ + 1 then index = size_ + 1
+
+    size_ = objectarrayinsert(val, index, 1, item)
+    return 1
+
+  remove: method = .object
+    arg index = .int
+
+    if index < 1 | index > size_ then do
+      none = .object
+      return none
+    end
+
+    item = val.index
+    size_ = objectarraydelete(val, index, 1)
+    return item
+
+  size: method = .int
+    return size_
+
+  isEmpty: method = .int
+    return size_ = 0
+
+  iterator: method = .ObjectArrayListIterator
+    return .ObjectArrayListIterator(reference self, 0)
+
+  snapshotIterator: method = .ObjectArrayListIterator
+    return .ObjectArrayListIterator(reference self, 1)
+
+  clear: method = .void
+    call objectarraydrop val
+    size_ = 0
+    return

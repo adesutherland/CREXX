@@ -31,7 +31,7 @@ Rexx source surface:
 - The first post-reference pure Rexx container direction is unsynchronized live
   iteration. The broader Release 1 iterator policy, including snapshot or
   synchronized variants, remains part of the later Rexx surface/API discussion.
-- The public return type of `Iterator.next()` is out of scope for the reference
+- The public return type of `StringIterator.next()` is out of scope for the reference
   work and remains to be decided with the collection API.
 - Native collection classes are deprecated for the Release 1 public collection
   direction. Native handle/reference migration is therefore not a blocker for
@@ -81,7 +81,7 @@ Rexx source surface:
   performance smoke coverage. The fixtures run through optimized and
   non-optimized assembly under both `rxvm` and `rxbvm`.
 - The first compiler-shaped contract slice is implemented in the working tree:
-  `reference_generated_contract.rxas` models `ArrayList`/iterator helper code
+  `reference_generated_contract.rxas` models `StringArrayList`/iterator helper code
   that creates references from receiver arguments and backing attributes, uses
   `deref` for explicit snapshots, checks validity before use, and handles
   invalid references through `REFERENCE_INVALID`. It remains the generated-code
@@ -111,11 +111,12 @@ that the VM does not currently model.
 
 The immediate container pressure is:
 
-- `ArrayList.iterator()` currently returns the backing `.string[]`, which is
+- `StringArrayList.iterator()` currently returns the backing `.string[]`, which is
   copied when returned from a linked object attribute.
-- `ArrayListIterator` then copies that array into its own attribute.
-- `StemListIterator` has the same problem at object scale because `.stem`
-  contains array-backed state.
+- `StringArrayListIterator` then copies that array into its own attribute.
+- The retired classlib `StemListIterator` experiment had the same problem at
+  object scale because `.stem` contains array-backed state. Stem iteration now
+  belongs on the `rxfnsb.stem` map class itself, not on an ordered-list wrapper.
 - Native-backed containers avoid the big copy by carrying integer tokens, but
   those tokens have weak ownership and lifetime semantics.
 
@@ -176,7 +177,7 @@ References should satisfy these constraints:
 - Native interop: native-backed containers should be able to use reference-like
   lifecycle validation rather than unchecked integer handles.
 
-## Container Iterator Proof Fixtures
+## Container StringIterator Proof Fixtures
 
 The container proof point remains at the RXAS/generated-code level. The
 `tests/reference_iterators` fixtures are intended to look like code the compiler
@@ -201,7 +202,7 @@ direct, snapshot-parent, snapshot-backing, dynamic-parent, and dynamic-backing
 shapes. It records factory and iteration timings for opt/noopt runs on both VM
 modes; the timing output is observational, while checksums remain enforced.
 
-The classlib performance smoke adds the public `ArrayList` surface to that
+The classlib performance smoke adds the public `StringArrayList` surface to that
 coverage: direct `get()`, live `iterator()`, and `snapshotIterator()` are timed
 with enforced checksums under opt/noopt and both VM modes.
 
@@ -385,7 +386,7 @@ between "slot still exists" and "slot lifetime ended".
 
 ## Lifetime Rules
 
-### Stack Frame Locals And Arguments
+### StringStack Frame Locals And Arguments
 
 References to frame-owned local storage are valid only while the frame storage
 is valid.
@@ -649,11 +650,11 @@ creating a reference is not an ordinary value construction.
 Use `reference` as a type modifier anywhere a Level B type is accepted:
 
 ```rexx
-list_ = reference .ArrayList
+list_ = reference .StringArrayList
 items_ = reference .string[]
 
 *: factory
-  arg list = reference .ArrayList
+  arg list = reference .StringArrayList
 ```
 
 The first implementation should support references to ordinary scalar, object,
@@ -684,7 +685,7 @@ Use `reference target` to create a durable weak reference value:
 ```rexx
 countRef = reference count
 listRef = reference list
-iter = .ArrayListIterator(reference self)
+iter = .StringArrayListIterator(reference self)
 ```
 
 The operand must be an aliasable storage expression: local storage, exposed
@@ -742,8 +743,8 @@ is required is also an error; use `reference target` explicitly.
 reference value. Parent-backed iterators should create a reference explicitly:
 
 ```rexx
-iterator: method = .Iterator
-  return .ArrayListIterator(reference self)
+iterator: method = .StringIterator
+  return .StringArrayListIterator(reference self)
 ```
 
 This preserves ordinary receiver access while making escaping aliases visible in
@@ -757,10 +758,10 @@ especially for `self`, arrays, and object attributes passed to plain `.T`
 formals. Reference boundary mistakes are hard type errors:
 
 ```rexx
-.ArrayListIterator(self)              /* error: expected reference .ArrayList */
-helper(listRef)                       /* error if helper expects .ArrayList */
+.StringArrayListIterator(self)              /* error: expected reference .StringArrayList */
+helper(listRef)                       /* error if helper expects .StringArrayList */
 helper(snapshot listRef)              /* explicit snapshot copy */
-.ArrayListIterator(reference self)    /* explicit live reference */
+.StringArrayListIterator(reference self)    /* explicit live reference */
 ```
 
 ### Deferred Syntax
@@ -793,10 +794,10 @@ holder = .ref(.int)
 holder = .ref(value)
 countRef = [count]
 typeRef = [.int]
-arg reference items = .ArrayList
+arg reference items = .StringArrayList
 ref = reference (a + b)
 ref = reference makeObject()
-iter = .ArrayListIterator(self)  /* when the formal is reference .ArrayList */
+iter = .StringArrayListIterator(self)  /* when the formal is reference .StringArrayList */
 ```
 
 Reasons:
@@ -804,8 +805,8 @@ Reasons:
 - `.reference(.T)`, `.ref(.T)`, and `.ref(value)` look like ordinary
   constructor/function calls but require storage-location semantics.
 - Bracket forms are too close to array syntax.
-- `arg reference items = .ArrayList` does not generalize to stored durable
-  references; use `arg items = reference .ArrayList`.
+- `arg reference items = .StringArrayList` does not generalize to stored durable
+  references; use `arg items = reference .StringArrayList`.
 - `reference` must target storage, not temporary expression results.
 - Bare `self` must not mean "reference to self"; use `reference self`.
 
@@ -823,10 +824,10 @@ Before references are implemented:
 
 After references exist:
 
-- `ArrayList.iterator()` is the minimal Release 1 live iterator surface for
+- `StringArrayList.iterator()` is the minimal Release 1 live iterator surface for
   this slice. It should construct an unsynchronized live iterator with a
   reference to the list object.
-- `ArrayList.snapshotIterator()` is the explicit snapshot variant. It should
+- `StringArrayList.snapshotIterator()` is the explicit snapshot variant. It should
   copy the collection once in the iterator factory, not on each `hasNext()` or
   `next()` call.
 - Referencing the parent object is cleaner for future mutation counters and
@@ -842,12 +843,12 @@ After references exist:
 Example design sketch:
 
 ```rexx
-ArrayListIterator: class
-  list_ = reference .ArrayList
+StringArrayListIterator: class
+  list_ = reference .StringArrayList
   index_ = .int
 
   *: factory
-    arg list = reference .ArrayList
+    arg list = reference .StringArrayList
     list_ = list
     index_ = 0
     return
@@ -876,7 +877,7 @@ first Rexx source slice:
    or synchronized iteration variants? The first reference-backed Rexx container
    experiment should use unsynchronized live iteration, but the wider public API
    decision remains separate.
-4. What should `Iterator.next()` return in the public collection contract? This
+4. What should `StringIterator.next()` return in the public collection contract? This
    is collection API work, not reference machinery.
 
 ## Proposed Programme
@@ -895,5 +896,5 @@ first Rexx source slice:
    source syntax.
 7. Implement the approved explicit source syntax with examples from containers,
    ADDRESS objects, and native-backed handles.
-8. Convert `ArrayListIterator` or a minimal new test container to live
+8. Convert `StringArrayListIterator` or a minimal new test container to live
    reference-backed iteration.

@@ -155,8 +155,8 @@ Inside a method, `self` names the receiver storage. It is mainly useful when a
 method needs to pass or return a live reference to its receiver:
 
 ```rexx
-iterator: method = .Iterator
-  return .ArrayListIterator(reference self)
+iterator: method = .StringIterator
+  return .StringArrayListIterator(reference self)
 ```
 
 Bare `self` is not an implicit reference. Use `reference self` when a formal

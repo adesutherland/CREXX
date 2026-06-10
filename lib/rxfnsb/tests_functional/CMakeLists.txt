@@ -71,6 +71,7 @@ set(REXXBINS
         ts_numeric.rxbin
         ts_splice.rxbin
         ts_arraydelete.rxbin
+        ts_objectarray.rxbin
         ts_stem.rxbin
         ts_rxjson.rxbin
         ts_rxsocket.rxbin

@@ -64,4 +64,100 @@ if s.key_with_Ü \= "value_Ü" then do
   say 'STEM failed in test 10 expected value_Ü for key_with_Ü, got: ' s.key_with_Ü
 end
 
+iterstem = .stem()
+iterstem.alpha = "one"
+iterstem.beta = "two"
+
+snap = iterstem.snapshotIterator()
+live = iterstem.iterator()
+
+iterstem.beta = "TWO"
+iterstem.gamma = "three"
+
+if snap.isLive() <> 0 then do
+  errors = errors + 1
+  say 'STEM failed in test 11 expected snapshot iterator not live'
+end
+
+snap_count = 0
+snap_beta = 0
+snap_gamma = 0
+loop while snap.hasNext()
+  tail = snap.next()
+  val = snap.value()
+  snap_count = snap_count + 1
+
+  select
+    when tail = "alpha" then do
+      if val <> "one" then do
+        errors = errors + 1
+        say 'STEM failed in test 12 expected snapshot alpha=one, got:' val
+      end
+    end
+    when tail = "beta" then do
+      snap_beta = 1
+      if val <> "two" then do
+        errors = errors + 1
+        say 'STEM failed in test 13 expected snapshot beta=two, got:' val
+      end
+    end
+    when tail = "gamma" then snap_gamma = 1
+    otherwise do
+      errors = errors + 1
+      say 'STEM failed in test 14 unexpected snapshot tail:' tail
+    end
+  end
+end
+
+if snap_count <> 2 | snap_beta <> 1 | snap_gamma <> 0 then do
+  errors = errors + 1
+  say 'STEM failed in test 15 snapshot iterator did not preserve factory-time contents'
+end
+
+if live.isLive() <> 1 then do
+  errors = errors + 1
+  say 'STEM failed in test 16 expected live iterator to be live'
+end
+
+live_count = 0
+live_beta = 0
+live_gamma = 0
+loop while live.hasNext()
+  tail = live.next()
+  val = live.value()
+  live_count = live_count + 1
+
+  select
+    when tail = "alpha" then do
+      if val <> "one" then do
+        errors = errors + 1
+        say 'STEM failed in test 17 expected live alpha=one, got:' val
+      end
+    end
+    when tail = "beta" then do
+      live_beta = 1
+      if val <> "TWO" then do
+        errors = errors + 1
+        say 'STEM failed in test 18 expected live beta=TWO, got:' val
+      end
+    end
+    when tail = "gamma" then do
+      live_gamma = 1
+      if val <> "three" then do
+        errors = errors + 1
+        say 'STEM failed in test 19 expected live gamma=three, got:' val
+      end
+    end
+    otherwise do
+      errors = errors + 1
+      say 'STEM failed in test 20 unexpected live tail:' tail
+    end
+  end
+end
+
+if live_count <> 3 | live_beta <> 1 | live_gamma <> 1 then do
+  errors = errors + 1
+  say 'STEM failed in test 21 live iterator did not observe later mutation/append'
+end
+
 return errors<>0

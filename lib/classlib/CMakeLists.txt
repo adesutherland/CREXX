@@ -1,25 +1,33 @@
 cmake_minimum_required(VERSION 3.24)
 
 set(CLSS
-  Iterable
-  Iterator
-  StemList
-  StemListIterator
-  ArrayList
-  ArrayListIterator
-  HashMap
-  HashMapIterator
-  HashSet
-  HashSetIterator
+  StringIterable
+  StringIterator
+  ObjectIterable
+  ObjectIterator
+  StringArrayList
+  StringArrayListIterator
+  ObjectArrayList
+  ObjectArrayListIterator
+  StringHashMap
+  StringHashMapIterator
+  StringObjectHashMap
+  StringObjectHashMapIterator
+  StringHashSet
+  StringHashSetIterator
   Id
   KeyDB
-  LinkedList
+  StringLinkedList
+  ObjectLinkedList
   Rexx
-  Stack
-  TreeMap
-  TreeMapIterator
-  TreeSet
-  TreeSetIterator
+  StringStack
+  ObjectStack
+  StringTreeMap
+  StringTreeMapIterator
+  StringObjectTreeMap
+  StringObjectTreeMapIterator
+  StringTreeSet
+  StringTreeSetIterator
   Os
   Qfind
   Scanlex
@@ -31,13 +39,24 @@ foreach(CLS IN LISTS CLSS)
 endforeach()
 
 set(CLASSLIB_SELECTORS ${CLSS})
-set(CLASS_DEPS_Iterable Iterator)
-set(CLASS_DEPS_ArrayListIterator ArrayList)
-set(CLASS_DEPS_TreeSet Iterable Iterator TreeSetIterator)
-set(CLASS_DEPS_HashMap TreeSet)
-set(CLASS_DEPS_StemListIterator StemList)
-set(CLASS_DEPS_TreeMap Iterable TreeMapIterator TreeSet)
-set(CLASS_DEPS_TreeMapIterator Iterator)
+set(CLASS_DEPS_StringIterable StringIterator)
+set(CLASS_DEPS_ObjectIterable ObjectIterator)
+set(CLASS_DEPS_StringArrayList StringIterable)
+set(CLASS_DEPS_StringArrayListIterator StringArrayList StringIterator)
+set(CLASS_DEPS_ObjectArrayList ObjectIterable)
+set(CLASS_DEPS_ObjectArrayListIterator ObjectArrayList ObjectIterator)
+set(CLASS_DEPS_StringHashMap StringTreeSet StringHashMapIterator StringIterable)
+set(CLASS_DEPS_StringHashMapIterator StringIterator)
+set(CLASS_DEPS_StringObjectHashMap StringTreeSet StringObjectHashMapIterator StringIterator StringIterable)
+set(CLASS_DEPS_StringObjectHashMapIterator StringIterator)
+set(CLASS_DEPS_StringHashSet StringHashSetIterator)
+set(CLASS_DEPS_StringHashSetIterator StringIterator)
+set(CLASS_DEPS_StringTreeMap StringIterable StringTreeMapIterator StringTreeSet)
+set(CLASS_DEPS_StringTreeMapIterator StringIterator)
+set(CLASS_DEPS_StringObjectTreeMap StringTreeSet StringObjectTreeMapIterator StringIterator StringIterable)
+set(CLASS_DEPS_StringObjectTreeMapIterator StringIterator)
+set(CLASS_DEPS_StringTreeSet StringIterable StringIterator StringTreeSetIterator)
+set(CLASS_DEPS_StringTreeSetIterator StringIterator)
 
 
 
@@ -113,8 +132,8 @@ add_test(
     -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
     -DINPUT_RXBIN=${CMAKE_BINARY_DIR}/bin/classlib.rxbin
     -DOUTPUT_RXAS=${CMAKE_CURRENT_BINARY_DIR}/classlib_inline_check.rxas
-    "-DEXPECT_TEXT_1=.meta \"data_list.arraylist.init\"=\".inline\""
-    "-DEXPECT_TEXT_2=.meta \"data_hashmap.hashmap.put\"=\".inline\""
+    "-DEXPECT_TEXT_1=.meta \"data_stringlist.stringarraylist.init\"=\".inline\""
+    "-DEXPECT_TEXT_2=.meta \"data_stringhashmap.stringhashmap.put\"=\".inline\""
     -P ${CMAKE_SOURCE_DIR}/linker/tests/check_rxdas_contains.cmake
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
