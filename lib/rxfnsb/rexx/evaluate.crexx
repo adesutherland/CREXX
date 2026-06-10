@@ -28,16 +28,14 @@ options levelb
 namespace rxfnsb expose evaluate
 
 evaluate: procedure = .string[] expose env_names env_keys env_values env_types env_count output_lines output_count export_variables export_contents export_count error_code error_message error_statement error_column forced_return expr_text expr_pos eval_value eval_type label_names label_targets label_count jump_target statement_texts statement_numbers statement_count block_kinds block_do_pcs block_end_pcs block_conditions block_names block_limits block_steps block_count
-  arg statements = .string
+  arg statements = .string, debug=1
   env_names = .string[]
   env_keys = .string[]
   env_values = .string[]
   env_types = .string[]
   env_count = 0
-  say
-  say copies('=',72)
-  say statements
-  say copies('=',72)
+  if debug then call header statements
+
   export_variables = .string[]
   export_contents = .string[]
   export_count = 0
@@ -1218,3 +1216,37 @@ _builtin_abs: procedure = .int expose eval_value eval_type fn_arg1
   eval_value = abs(eval_value + 0) || ""
   eval_type = "int"
 return 1
+
+header: procedure
+  arg statements=.string
+  stmts=.string[]
+  say
+  say copies('=',50)
+  say 'Evaluate Code'
+  say copies('=',50)
+  say
+  say 'Source'
+  say copies('-',50)
+  say statements
+  say
+  do i=1
+     ipi=pos(';',statements)
+     if ipi<=1 then leave
+     stmt=strip(substr(statements,1,ipi-1))
+     statements=substr(statements,ipi+1)
+     if stmt='' then iterate
+     stmts[stmts[0]+1]=stmt
+  end
+  if strip(statements) \='' then stmts[stmts[0]+1]=statements
+  say 'Parsed Statements ('stmts[0]')'
+  say copies('-',50)
+  inc=0
+  do i=1 to stmts[0]
+     lstmt=lower(stmts[i])
+     if word(lstmt,1)='end' then inc=inc-3
+     say right(i,4,'0')copies(' ',inc) stmts[i]
+     if word(lstmt,1)='do' | word(lstmt,words(lsttmt))='do' then inc=inc+3
+  end
+  say
+  say copies('=',50)
+return
