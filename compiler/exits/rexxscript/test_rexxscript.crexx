@@ -1,0 +1,41 @@
+options levelb
+import rxfnsb
+
+main: procedure
+  failures = .int
+  out = .string[]
+  raw = .string[]
+  a = .string
+  message = .string
+  failures = 0
+
+  a = "1"
+  message = ""
+
+  REXXSCRIPT "say 'script starting'; say a; a = a + 4; message = 'done ' || a" EXPOSE a, message OUTPUT out RESULT raw
+  if raw[1] <> "OK" then do
+    failures = failures + 1
+    say "bad first status" raw[1]
+  end
+  if a <> "5" | message <> "done 5" then do
+    failures = failures + 1
+    say "bad first expose" a message
+  end
+  if out[0] <> 2 | out[1] <> "script starting" | out[2] <> "1" then do
+    failures = failures + 1
+    say "bad first output" out[0] out[1] out[2]
+  end
+
+  REXXSCRIPT "if 0 then do; say 'bad'; end; say 'good'" OUTPUT out RESULT raw
+  if raw[1] <> "OK" then do
+    failures = failures + 1
+    say "bad second status" raw[1]
+  end
+  if out[0] <> 1 | out[1] <> "good" then do
+    failures = failures + 1
+    say "bad second output" out[0] out[1]
+  end
+
+  if failures = 0 then say "SUCCESS"
+  else say "FAILURES" failures
+  return

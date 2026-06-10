@@ -1,0 +1,181 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb
+namespace rxcpexits expose rexxscriptexit
+
+import rxcp
+import rxfnsb
+
+rexxscriptexit: class
+    _node_id = .int
+
+    *: factory
+        arg nid = .int
+        _node_id = nid
+
+    describe: method = .exitdescriptor
+        desc = .exitdescriptor
+        desc = .exitdescriptor("REXXSCRIPT")
+        call desc.add_import("rxfnsb", "descriptor", "")
+        return desc
+
+    pre_process: method = .exitplan
+        arg tokens = .token[]
+        return .exitplan("READY")
+
+    process: method = .exitresult
+        arg tokens = .token[]
+
+        result = .exitresult("EMPTY")
+        script_start = .int
+        script_end = .int
+        output_name = .string
+        result_name = .string
+        expose_names = .string[]
+        expose_seen = .int
+        expect_name = .int
+        keyword = .string
+        name = .string
+        script_expr = .string
+
+        if tokens.0 < 2 then return error_result(1, "REXXSCRIPT requires a script expression")
+
+        script_start = 2
+        script_end = tokens.0
+        output_name = ""
+        result_name = ""
+        expose_names = .string[]
+        expose_seen = 0
+
+        i = 2
+        do while i <= tokens.0
+            keyword = upper(strip(tokens[i].get_text()))
+            if isClauseKeyword(keyword) = 1 then do
+                script_end = i - 1
+                leave
+            end
+            i = i + 1
+        end
+
+        if script_end < script_start then return error_result(1, "REXXSCRIPT requires a script expression")
+
+        do while i <= tokens.0
+            keyword = upper(strip(tokens[i].get_text()))
+            if isClauseKeyword(keyword) <> 1 then return error_result(i, "REXXSCRIPT expected EXPOSE, OUTPUT, or RESULT clause")
+
+            if keyword = "EXPOSE" then do
+                if expose_seen = 1 then return error_result(i, "REXXSCRIPT EXPOSE clause repeated")
+                expose_seen = 1
+                i = i + 1
+                expect_name = 1
+                do while i <= tokens.0
+                    keyword = upper(strip(tokens[i].get_text()))
+                    if isClauseKeyword(keyword) = 1 then leave
+                    if expect_name = 1 then do
+                        if strip(tokens[i].get_type()) <> "identifier" then return error_result(i, "REXXSCRIPT EXPOSE only accepts variable names")
+                        expose_names[expose_names[0] + 1] = strip(tokens[i].get_text())
+                        expect_name = 0
+                    end
+                    else do
+                        if strip(tokens[i].get_type()) <> "comma" then return error_result(i, "REXXSCRIPT EXPOSE names must be separated by commas")
+                        expect_name = 1
+                    end
+                    i = i + 1
+                end
+                if expect_name = 1 then return error_result(i - 1, "REXXSCRIPT EXPOSE clause requires a variable name")
+                iterate
+            end
+
+            if i = tokens.0 then return error_result(i, "REXXSCRIPT " || keyword || " clause requires a target")
+            if strip(tokens[i + 1].get_type()) <> "identifier" then return error_result(i + 1, "REXXSCRIPT " || keyword || " target must be a variable name")
+
+            if keyword = "OUTPUT" then do
+                if output_name <> "" then return error_result(i, "REXXSCRIPT OUTPUT clause repeated")
+                output_name = strip(tokens[i + 1].get_text())
+            end
+            else do
+                if result_name <> "" then return error_result(i, "REXXSCRIPT RESULT clause repeated")
+                result_name = strip(tokens[i + 1].get_text())
+            end
+
+            i = i + 2
+        end
+
+        script_expr = emitTokenRange(tokens, script_start, script_end)
+        if script_expr = "" then return error_result(1, "REXXSCRIPT requires a script expression")
+
+        call result.set_status("REPLACE")
+        if expose_names[0] > 0 then do
+            call result.add_replacement_line("__rexxscript_names = .string[]")
+            call result.add_replacement_line("__rexxscript_values = .string[]")
+            do i = 1 to expose_names[0]
+                name = expose_names[i]
+                call result.add_replacement_line("__rexxscript_names[" || i || "] = '" || name || "'")
+                call result.add_replacement_line("__rexxscript_values[" || i || "] = " || name)
+            end
+            call result.add_replacement_line("__rexxscript_result = evaluate_exposed(" || script_expr || ", __rexxscript_names, __rexxscript_values, 0)")
+            do i = 1 to expose_names[0]
+                name = expose_names[i]
+                call result.add_replacement_line(name || " = rexxscript_value('" || name || "')")
+            end
+        end
+        else call result.add_replacement_line("__rexxscript_result = evaluate(" || script_expr || ", 0)")
+        if output_name <> "" then call result.add_replacement_line(output_name || " = rexxscript_output()")
+        if result_name <> "" then call result.add_replacement_line(result_name || " = __rexxscript_result")
+        return result
+
+isClauseKeyword: procedure = .int
+    arg text = .string
+    if text = "EXPOSE" | text = "OUTPUT" | text = "RESULT" then return 1
+    return 0
+
+emitTokenRange: procedure = .string
+    arg tokens = .token[], start_index = .int, end_index = .int
+    expr = .string
+    previous = .string
+    join_before = .string
+    expr = ""
+    previous = ""
+    if start_index = 0 | end_index < start_index then return ""
+    do i = start_index to end_index
+        text = strip(tokens[i].get_text())
+        join_before = upper(strip(tokens[i].get_join_before()))
+        if text = "" then iterate
+        if expr = "" then expr = text
+        else if join_before = "CONCAT" then expr = expr || text
+        else if join_before = "SCONCAT" then expr = expr || " " || text
+        else if text = ")" | text = "]" | text = "," | text = "." then expr = expr || text
+        else if previous = "(" | previous = "[" | previous = "." then expr = expr || text
+        else if text = "(" | text = "[" then expr = expr || text
+        else expr = expr || " " || text
+        previous = text
+    end
+    return expr
+
+error_result: procedure = .exitresult
+    arg token_index = .int, message = .string
+    result = .exitresult("ERROR")
+    call result.set_error(token_index, message)
+    return result

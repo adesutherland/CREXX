@@ -25,10 +25,34 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb expose evaluate
+namespace rxfnsb expose evaluate evaluate_exposed rexxscriptevaluator rexxscript_output rexxscript_value
 
-evaluate: procedure = .string[] expose env_names env_keys env_values env_types env_count output_lines output_count export_variables export_contents export_count error_code error_message error_statement error_column forced_return expr_text expr_pos eval_value eval_type label_names label_targets label_count jump_target statement_texts statement_numbers statement_count block_kinds block_do_pcs block_end_pcs block_conditions block_names block_limits block_steps block_count
-  arg statements = .string, debug=1
+rexxscriptevaluator: class
+  *: factory
+    return
+
+  evaluate: method = .string[]
+    arg statements = .string, debug = 0
+    names = .string[]
+    values = .string[]
+    return _evaluate_impl(statements, debug, names, values)
+
+  evaluate_exposed: method = .string[]
+    arg statements = .string, names = .string[], values = .string[], debug = 0
+    return _evaluate_impl(statements, debug, names, values)
+
+evaluate: procedure = .string[]
+  arg statements = .string, debug = 0
+  evaluator = .rexxscriptevaluator()
+  return evaluator.evaluate(statements, debug)
+
+evaluate_exposed: procedure = .string[]
+  arg statements = .string, names = .string[], values = .string[], debug = 0
+  evaluator = .rexxscriptevaluator()
+  return evaluator.evaluate_exposed(statements, names, values, debug)
+
+_evaluate_impl: procedure = .string[] expose env_names env_keys env_values env_types env_count output_lines output_count export_variables export_contents export_count error_code error_message error_statement error_column forced_return expr_text expr_pos eval_value eval_type label_names label_targets label_count jump_target statement_texts statement_numbers statement_count block_kinds block_do_pcs block_end_pcs block_conditions block_names block_limits block_steps block_count
+  arg statements = .string, debug = 0, seed_names = .string[], seed_values = .string[]
   env_names = .string[]
   env_keys = .string[]
   env_values = .string[]
@@ -48,14 +72,15 @@ evaluate: procedure = .string[] expose env_names env_keys env_values env_types e
 
   expr_text = ""
   expr_pos = 1
-eval_value = ""
-eval_type = ""
-fn_arg1 = ""
-fn_arg2 = ""
-fn_arg3 = ""
-fn_arg_count = 0
+  eval_value = ""
+  eval_type = ""
+  fn_arg1 = ""
+  fn_arg2 = ""
+  fn_arg3 = ""
+  fn_arg_count = 0
 
   call _reset()
+  call _seed_vars(seed_names, seed_values)
 
   label_names = .string[]
   label_targets = .string[]
@@ -140,7 +165,20 @@ eval_export_content: procedure = .string expose export_contents
   arg index = .int
   return export_contents[index]
 
-_build_result: procedure = .string[]
+rexxscript_output: procedure = .string[] expose output_lines output_count
+  result = .string[]
+  do i = 1 to output_count
+    result[i] = output_lines[i]
+  end
+  return result
+
+rexxscript_value: procedure = .string expose env_keys env_values env_count
+  arg name = .string
+  index = _find_var(name)
+  if index = 0 then return ""
+  return env_values[index]
+
+_build_result: procedure = .string[] expose export_count export_variables export_contents output_count output_lines
   arg status = .string
   result = .string[]
   result[1] = status
@@ -289,7 +327,6 @@ _execute_statement: procedure = .int expose env_names env_keys env_values env_ty
       if translate(action) = "DO" then do
         end_pc = _find_matching_end(pc + 1)
         if end_pc = 0 then return _set_error("syntax_error", "missing END for DO block", stmtno, then_pos + 4)
-        call _push_block("block", pc, end_pc, "")
         jump_target = end_pc + 1
         return 1
       end
@@ -896,6 +933,15 @@ _skip_spaces: procedure = .void expose expr_text expr_pos
   end
   return
 
+_seed_vars: procedure = .void
+  arg names = .string[], values = .string[]
+  do i = 1 to names[0]
+    value = ""
+    if i <= values[0] then value = values[i]
+    call _set_var(names[i], value, "string")
+  end
+  return
+
 _set_var: procedure = .void expose env_names env_keys env_values env_types env_count
   arg name = .string, value = .string, value_type = .string
   key = translate(name)
@@ -1245,7 +1291,7 @@ header: procedure
      lstmt=lower(stmts[i])
      if word(lstmt,1)='end' then inc=inc-3
      say right(i,4,'0')copies(' ',inc) stmts[i]
-     if word(lstmt,1)='do' | word(lstmt,words(lsttmt))='do' then inc=inc+3
+     if word(lstmt,1)='do' | word(lstmt,words(lstmt))='do' then inc=inc+3
   end
   say
   say copies('=',72)

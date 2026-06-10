@@ -23,6 +23,7 @@ set(REXXBINS
         ts_date2.rxbin
         ts_delstr.rxbin
         ts_delword.rxbin
+        ts_evaluate.rxbin
         ts_fileio_chars.rxbin
         ts_format.rxbin
         ts_insert.rxbin
@@ -139,6 +140,8 @@ set_tests_properties(ts_version_noopt ts_version_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: version helper")
 set_tests_properties(ts_binary_noopt ts_binary_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: binary helpers")
+set_tests_properties(ts_evaluate_noopt ts_evaluate_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: evaluate helpers")
 set_tests_properties(ts_fileio_chars_noopt ts_fileio_chars_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: file character helpers" RUN_SERIAL TRUE)
 set_tests_properties(ts_arraydelete_noopt ts_arraydelete_opt

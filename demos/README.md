@@ -15,3 +15,5 @@ pure regression coverage over time.
   small driver table so later database providers can share the same shape.
 - `llm/`: a Rexx-implemented LLM ADDRESS environment and live demo that route
   model-shaped ADDRESS names to the Level G LLM providers.
+- `rexxscript/`: a small `REXXSCRIPT` compiler-exit playground showing exposed
+  variables and captured script output.

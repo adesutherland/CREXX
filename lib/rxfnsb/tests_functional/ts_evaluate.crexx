@@ -1,0 +1,68 @@
+/* rexx */
+options levelb
+
+import rxfnsb
+
+errors = 0
+
+result = evaluate("a = 1; say 'starting'; say a; a = a + 2", 0)
+out = rexxscript_output()
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "EVALUATE status failed:" result[1]
+end
+
+if result[2] <> "a" | result[3] <> "3" then do
+  errors = errors + 1
+  say "EVALUATE export failed:" result[2] result[3]
+end
+
+if out[0] <> 2 | out[1] <> "starting" | out[2] <> "1" then do
+  errors = errors + 1
+  say "EVALUATE output failed:" out[0] out[1] out[2]
+end
+
+names = .string[]
+values = .string[]
+names[1] = "a"
+values[1] = "7"
+names[2] = "message"
+values[2] = ""
+
+result = evaluate_exposed("say a; a = a + 3; message = 'total ' || a", names, values, 0)
+out = rexxscript_output()
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "EVALUATE_EXPOSED status failed:" result[1]
+end
+
+if rexxscript_value("a") <> "10" | rexxscript_value("message") <> "total 10" then do
+  errors = errors + 1
+  say "EVALUATE_EXPOSED value failed:" rexxscript_value("a") rexxscript_value("message")
+end
+
+if out[0] <> 1 | out[1] <> "7" then do
+  errors = errors + 1
+  say "EVALUATE_EXPOSED output failed:" out[0] out[1]
+end
+
+runner = .rexxscriptevaluator()
+result = runner.evaluate("if 0 then do; say 'bad'; end; say 'good'", 0)
+out = rexxscript_output()
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPTEVALUATOR status failed:" result[1]
+end
+
+if out[0] <> 1 | out[1] <> "good" then do
+  errors = errors + 1
+  say "REXXSCRIPTEVALUATOR skipped block failed:" out[0] out[1]
+end
+
+if errors = 0 then say "PASS: evaluate helpers"
+else say "FAIL: evaluate helpers" errors
+
+return errors <> 0

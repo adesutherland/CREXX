@@ -29,6 +29,35 @@ intended host contexts:
 
 The working name in this document is **RexxScript**.
 
+## Current Prototype Harness
+
+The current repository playground keeps Peter's evaluator mostly intact, wraps
+it behind `rxfnsb..rexxscriptevaluator`, and preserves the public
+`rxfnsb..evaluate(script, debug)` facade. `debug` defaults to `0` for library
+use. `rxfnsb..rexxscript_output()` returns the captured `SAY` output from the
+last evaluation, and `rxfnsb..rexxscript_value(name)` reads a variable from the
+last RexxScript environment. `rxfnsb..evaluate_exposed(script, names, values,
+debug)` seeds simple string variables before evaluation.
+
+A non-certified compiler exit provides an experimental instruction syntax:
+
+```rexx
+a = "1"
+status = ""
+REXXSCRIPT "a = a + 4; status = 'done'" EXPOSE a, status OUTPUT out RESULT raw
+```
+
+With no `EXPOSE` clause, the exit lowers to `evaluate(<script>, 0)`. With
+`EXPOSE`, it lowers to `evaluate_exposed(...)` and copies each exposed variable
+back from `rexxscript_value(name)` after evaluation. `OUTPUT` receives captured
+`SAY` lines as a `.string[]`; `RESULT` receives the raw evaluator result array.
+For now, `EXPOSE` is a simple read/write string bridge. Tagged policies such as
+`in`, `out`, or `required` remain future design space.
+
+This is only a harness for exploring the implementation. It is not the final
+RexxScript language design, and it does not add `ADDRESS`, command execution,
+or host dispatch to RexxScript.
+
 ## Recommendation
 
 Build one shared RexxScript core with two host adapters, not two separate
