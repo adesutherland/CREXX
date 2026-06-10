@@ -41,6 +41,7 @@
 #include "rxas.h"
 #include "rxpa.h"
 #include "rxcp_val.h"
+#include "rxcp_util.h"
 #ifndef NUTF8
 #include "utf.h"
 #endif
@@ -1230,7 +1231,13 @@ static char **collect_implemented_interface_fqnames(Context *context, ASTNode *c
     for (iface_ref = implements_node->child; iface_ref; iface_ref = iface_ref->sibling) {
         Symbol *iface_symbol = iface_ref->symbolNode ? iface_ref->symbolNode->symbol : 0;
         char *fqname;
-        if (!iface_symbol) iface_symbol = sym_rvfc(context->ast, iface_ref);
+        if (!iface_symbol) {
+            iface_symbol = sym_rvfc(context->ast, iface_ref);
+            if (!iface_symbol) {
+                ensure_class_imported(context, iface_ref->node_string, iface_ref->node_string_length);
+                iface_symbol = sym_rvfc(context->ast, iface_ref);
+            }
+        }
         if (!iface_symbol) continue;
         fqname = sym_frnm(iface_symbol);
         if (!fqname) continue;
@@ -1324,7 +1331,9 @@ static void append_class_attribute_stub_lines(ASTNode *contract_node, char **buf
 }
 
 /* Build a minimal contract stub source for an exposed class or interface */
-static char* generate_contract_stub_source(ASTNode *contract_node) {
+static char* generate_contract_stub_source(ASTNode *contract_node,
+                                           char **implements_fqnames,
+                                           size_t implements_count) {
     Symbol *cls_sym;
     char *fq = 0;
     char *ns = 0;
@@ -1357,31 +1366,37 @@ static char* generate_contract_stub_source(ASTNode *contract_node) {
     const char *cls_name = fq + dot + 1;
 
     /* Start stub source */
+    buffer = mprintf("options levelb\nnamespace %s\n", ns);
     if (contract_node->node_type == CLASS_DEF) {
-        ASTNode *implements_node = ast_chld(contract_node, IMPLEMENTS, 0);
-        if (implements_node && implements_node->child) {
-            ASTNode *iface_ref = implements_node->child;
-            buffer = mprintf("options levelb\nnamespace %s\n%s: class", ns, cls_name);
-            while (iface_ref) {
-                char *tmp = mprintf("%s%s %.*s",
-                                    buffer,
-                                    iface_ref == implements_node->child ? " implements" : "",
-                                    (int)iface_ref->node_string_length,
-                                    iface_ref->node_string);
+        if (implements_count) {
+            size_t i;
+            char *tmp = mprintf("%s%s: class", buffer, cls_name);
+            free(buffer);
+            buffer = tmp;
+            for (i = 0; i < implements_count; i++) {
+                char *iface_source;
+                if (!implements_fqnames[i]) continue;
+                iface_source = rxcp_internal_name_to_source_qualified(implements_fqnames[i], 1);
+                tmp = mprintf("%s%s %s",
+                              buffer,
+                              i == 0 ? " implements" : "",
+                              iface_source ? iface_source : implements_fqnames[i]);
                 free(buffer);
                 buffer = tmp;
-                iface_ref = iface_ref->sibling;
+                if (iface_source) free(iface_source);
             }
-            {
-                char *tmp = mprintf("%s\n", buffer);
-                free(buffer);
-                buffer = tmp;
-            }
+            tmp = mprintf("%s\n", buffer);
+            free(buffer);
+            buffer = tmp;
         } else {
-            buffer = mprintf("options levelb\nnamespace %s\n%s: class\n", ns, cls_name);
+            char *tmp = mprintf("%s%s: class\n", buffer, cls_name);
+            free(buffer);
+            buffer = tmp;
         }
     } else {
-        buffer = mprintf("options levelb\nnamespace %s\n%s: interface\n", ns, cls_name);
+        char *tmp = mprintf("%s%s: interface\n", buffer, cls_name);
+        free(buffer);
+        buffer = tmp;
     }
 
     append_class_attribute_stub_lines(contract_node, &buffer);
@@ -1494,7 +1509,7 @@ static walker_result class_signature_walker(walker_direction direction,
             if (fqname) {
                 size_t implements_count = 0;
                 char **implements_fqnames = collect_implemented_interface_fqnames(p->import_context, node, &implements_count);
-                char *stub_source = generate_contract_stub_source(node);
+                char *stub_source = generate_contract_stub_source(node, implements_fqnames, implements_count);
                 register_source_import_member_inline_payloads(p->import_context, node);
                 if (stub_source) {
                     Context *stub_ctx = parseRexx(p->parent_context, p->import_context->location, p->import_context->file_name,

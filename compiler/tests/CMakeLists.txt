@@ -1560,6 +1560,41 @@ add_test(NAME source_import_dotted_floats_decimal_opt
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(source_import_dotted_floats_decimal_opt PROPERTIES LABELS "compiler;imports;linked_opt")
 
+set(SOURCE_IMPORT_CONTRACT_STUB_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_import_contract_stub_implements.cmake")
+set(SOURCE_IMPORT_CONTRACT_STUB_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_import_contract_stub_implements_ws\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/iface.crexx\" \"options levelb\\nnamespace contract_stub_iface expose contractiface\\ncontractiface: interface\\n  value: method = .int\\n\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/provider.crexx\" \"options levelb\\nnamespace contract_stub_provider expose contractbox\\nimport contract_stub_iface\\ncontractbox: class implements .contractiface\\n  *: factory\\n    return\\n  value: method = .int\\n    return 7\\n\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/main.crexx\" \"options levelb\\nnamespace contract_stub_consumer\\nimport contract_stub_provider\\nmain: procedure = .int\\n  box = .contractbox()\\n  if box.value() <> 7 then return 1\\n  return 0\\n\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"main\" \"\${work}/main.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on source-import contract stub implements test: \${out}\")\nendif()\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CONTENT "if(NOT EXISTS \"\${work}/main.rxas\")\n  message(FATAL_ERROR \"Expected main.rxas was not produced\")\nendif()\n")
+file(GENERATE OUTPUT "${SOURCE_IMPORT_CONTRACT_STUB_SCRIPT}" CONTENT "${SOURCE_IMPORT_CONTRACT_STUB_CONTENT}")
+
+add_test(NAME source_import_contract_stub_implements
+         COMMAND ${CMAKE_COMMAND} -P "${SOURCE_IMPORT_CONTRACT_STUB_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(source_import_contract_stub_implements PROPERTIES LABELS "compiler;imports")
+
+set(SOURCE_IMPORT_CONTRACT_STUB_CYCLE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_import_contract_stub_covariant_cycle.cmake")
+set(SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_import_contract_stub_covariant_cycle_ws\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "file(WRITE \"\${work}/iface.crexx\" \"options levelb\\nnamespace contract_stub_cycle_iface expose cycleiterator cycleiterable\\ncycleiterator: interface\\n  next: method = .int\\ncycleiterable: interface\\n  iterator: method = .cycleiterator\\n\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "file(WRITE \"\${work}/list.crexx\" \"options levelb\\nnamespace contract_stub_cycle_provider expose cyclelist\\nimport contract_stub_cycle_iface\\ncyclelist: class implements .cycleiterable\\n  *: factory\\n    return\\n  iterator: method = .cyclelistiterator\\n    return .cyclelistiterator(reference self)\\n\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "file(WRITE \"\${work}/iterator.crexx\" \"options levelb\\nnamespace contract_stub_cycle_provider expose cyclelistiterator\\nimport contract_stub_cycle_iface\\ncyclelistiterator: class implements .cycleiterator\\n  owner = reference .cyclelist\\n  *: factory\\n    arg source = reference .cyclelist\\n    owner = source\\n    return\\n  next: method = .int\\n    return 7\\n\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "file(WRITE \"\${work}/main.crexx\" \"options levelb\\nnamespace contract_stub_cycle_main\\nimport contract_stub_cycle_provider\\nmain: procedure = .int\\n  list = .cyclelist()\\n  iterator = list.iterator()\\n  if iterator.next() <> 7 then return 1\\n  return 0\\n\")\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"main\" \"\${work}/main.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on recursive source-import covariant contract stub test: \${out}\")\nendif()\n")
+string(APPEND SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "if(NOT EXISTS \"\${work}/main.rxas\")\n  message(FATAL_ERROR \"Expected main.rxas was not produced\")\nendif()\n")
+file(GENERATE OUTPUT "${SOURCE_IMPORT_CONTRACT_STUB_CYCLE_SCRIPT}" CONTENT "${SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT}")
+
+add_test(NAME source_import_contract_stub_covariant_cycle
+         COMMAND ${CMAKE_COMMAND} -P "${SOURCE_IMPORT_CONTRACT_STUB_CYCLE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(source_import_contract_stub_covariant_cycle PROPERTIES LABELS "compiler;imports")
+
 set(SOURCE_EXTENSION_DIRECT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_extension_direct_defaults.cmake")
 set(SOURCE_EXTENSION_DIRECT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_extension_direct_defaults_ws\")\n")
 string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
