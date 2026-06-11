@@ -65,12 +65,16 @@ jobs:
     #- run: |
     #   make bootstrap
     #   make release
-    - name: Run CMAKE
-      uses: lukka/run-cmake@v10.9
-      with:
-        # Select the build configuration, typically Debug or Release.
-        cmakeBuildType: Debug # optional, default is Debug
-        buildDirectory: "${{ runner.temp }}/build"
+    - name: Configure CMake
+      shell: bash
+      run: |
+        cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
+          -DCMAKE_BUILD_TYPE=Debug
+
+    - name: Build
+      shell: bash
+      run: |
+        cmake --build "${{ runner.temp }}/build" --parallel 2
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
