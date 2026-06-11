@@ -174,8 +174,8 @@ char *trace_event_metaline(char kind,
     if (!register_type) value_ref = -1;
     if (value_ref < 0) value_source = RXBIN_TRACE_VALUE_NONE;
 
-    encoded_symbol = encode_line_source_malloc(symbol ? symbol : "", symbol ? strlen(symbol) : 0);
-    encoded_resolved_name = encode_line_source_malloc(resolved_name ? resolved_name : "",
+    encoded_symbol = encode_line_source_buffer(symbol ? symbol : "", symbol ? strlen(symbol) : 0);
+    encoded_resolved_name = encode_line_source_buffer(resolved_name ? resolved_name : "",
                                                       resolved_name ? strlen(resolved_name) : 0);
     if (!encoded_symbol || !encoded_resolved_name) {
         if (encoded_symbol) free(encoded_symbol);
@@ -371,8 +371,8 @@ static char *source_step_metaline(Context *context,
     if (active_start_column < 1) active_start_column = 1;
     if (active_start_column > (int)line_length + 1) active_start_column = (int)line_length + 1;
 
-    encoded_file = encode_line_source_malloc(file_name ? file_name : "", file_name ? strlen(file_name) : 0);
-    encoded_line = encode_line_source_malloc(line_start, (int)line_length);
+    encoded_file = encode_line_source_buffer(file_name ? file_name : "", file_name ? strlen(file_name) : 0);
+    encoded_line = encode_line_source_buffer(line_start, line_length);
     if (!encoded_file || !encoded_line) {
         if (encoded_file) free(encoded_file);
         if (encoded_line) free(encoded_line);

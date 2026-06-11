@@ -299,10 +299,12 @@ void Adfa::find_base_state(const opt_t* opts) {
                     uint32_t span_count = merge(span, s, to, opts);
 
                     if (span_count < s->go.span_count) {
-                        operator delete(s->go.span);
+                        Span* old_span = s->go.span;
+                        Span* new_span = allocate<Span>(span_count);
+                        memcpy(new_span, span, span_count * sizeof(Span));
                         s->go.span_count = span_count;
-                        s->go.span = allocate<Span>(span_count);
-                        memcpy(s->go.span, span, span_count * sizeof(Span));
+                        s->go.span = new_span;
+                        operator delete(old_span);
                         break;
                     }
                 }
@@ -613,4 +615,3 @@ void Adfa::hoist_tags_and_skip(const opt_t* opts) {
 }
 
 } // namespace re2c
-

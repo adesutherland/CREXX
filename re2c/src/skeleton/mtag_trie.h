@@ -44,7 +44,7 @@ inline uint32_t mtag_trie_next(mtag_trie_t& trie) {
     if (trie.next == trie.size) {
         mtag_t* head = new mtag_t[2 * trie.size];
         memcpy(head, trie.head, trie.size * sizeof(mtag_t));
-        free(trie.head);
+        delete[] trie.head;
         trie.head = head;
         trie.size *= 2;
     }

@@ -587,11 +587,13 @@ THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
 
 /* Appends record to an array and returns the new record */
 value* add_new_element(value* array) {
+    size_t index;
     size_t num;
 
     if (!array || array->num_attributes == (size_t)-1) return 0;
 
-    num = array->num_attributes + 1;
+    index = array->num_attributes;
+    num = index + 1;
 
     if (num > array->max_num_attributes) {
         if (num > ((size_t)-1) / 2) return 0;
@@ -603,7 +605,7 @@ value* add_new_element(value* array) {
     set_num_attributes(array, num);
 
     if (!array->attributes || array->num_attributes < num) return 0;
-    return array->attributes[num - 1];
+    return array->attributes[index];
 }
 
 /* Create a redirect pipe from a string */
@@ -1205,7 +1207,7 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
     }
 
     // Is there any command at all
-    if (!*file || !(*file)[0]) {
+    if (!(*file)[0]) {
         free(*command);
         *command = 0;
         *file = 0;
@@ -1258,14 +1260,14 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
     if (*argv == NULL) {
         free(*command);
         *command = 0;
-        file = 0;
+        *file = 0;
         *argv = 0;
         return -1;
     }
     if (((*argv)[0] = strrchr(*file, '/')) != NULL)
         (*argv)[0]++;
     else
-        *argv[0] = *file;
+        (*argv)[0] = *file;
 
     // Null Terminator
     (*argv)[args] = 0;

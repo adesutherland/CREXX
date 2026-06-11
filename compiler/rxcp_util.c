@@ -421,7 +421,7 @@ static size_t encoded_line_source_length(const char* string, size_t length, int 
     return out_len;
 }
 
-char* encode_line_source_malloc(const char* string, size_t length) {
+char* encode_line_source_buffer(const char* string, size_t length) {
     char *buffer;
     size_t buffer_len;
     size_t encoded_len;
