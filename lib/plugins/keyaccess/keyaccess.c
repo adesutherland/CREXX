@@ -504,12 +504,24 @@ PROCEDURE(compact_database) {
             continue;
         }
 
-        fseek(handle->dataFile, record.offset, SEEK_SET);
-        fread(value, 1, record.length, handle->dataFile);
+        if (fseek(handle->dataFile, record.offset, SEEK_SET) != 0 ||
+            fread(value, 1, record.length, handle->dataFile) != record.length) {
+            log_error("compact_database", KA_ERROR_IO, "Failed to read record during compaction");
+            free(value);
+            fclose(newData);
+            fclose(newIndex);
+            RETURNINTX(KA_ERROR_IO);
+        }
 
         record.offset = newOffset;
-        fwrite(value, 1, record.length, newData);
-        fwrite(&record, sizeof(record), 1, newIndex);
+        if (fwrite(value, 1, record.length, newData) != record.length ||
+            fwrite(&record, sizeof(record), 1, newIndex) != 1) {
+            log_error("compact_database", KA_ERROR_IO, "Failed to write record during compaction");
+            free(value);
+            fclose(newData);
+            fclose(newIndex);
+            RETURNINTX(KA_ERROR_IO);
+        }
 
         newOffset += record.length;
         free(value);

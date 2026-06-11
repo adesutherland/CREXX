@@ -406,7 +406,9 @@ int main(void) {
                      "Exit reuse should preserve registered exit count")) goto fail;
 
     rxcp_highlight_controller_reset_cache();
-    rxcp_test_chdir(original_cwd);
+    if (rxcp_test_chdir(original_cwd) != 0) {
+        fprintf(stderr, "Failed to return to original working directory during cleanup\n");
+    }
     cleanup_test_paths(main_a, dep_a, dir_a);
     cleanup_test_paths(main_b, dep_b, dir_b);
     rxcp_test_rmdir(sandbox);
@@ -421,7 +423,9 @@ int main(void) {
 
 fail:
     rxcp_highlight_controller_reset_cache();
-    rxcp_test_chdir(original_cwd);
+    if (rxcp_test_chdir(original_cwd) != 0) {
+        fprintf(stderr, "Failed to return to original working directory during cleanup\n");
+    }
     cleanup_test_paths(main_a, dep_a, dir_a);
     cleanup_test_paths(main_b, dep_b, dir_b);
     rxcp_test_rmdir(sandbox);
