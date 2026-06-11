@@ -60,6 +60,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h>
@@ -114,6 +115,18 @@ static size_t rxvm_format_append_literal(char *buffer, size_t buffer_len, size_t
         }
     }
     return used + text_len;
+}
+
+static int rxvm_checked_size_add(size_t left, size_t right, size_t *result) {
+    if (left > (size_t)-1 - right) return 0;
+    *result = left + right;
+    return 1;
+}
+
+static int rxvm_checked_size_mul(size_t left, size_t right, size_t *result) {
+    if (left != 0 && right > (size_t)-1 / left) return 0;
+    *result = left * right;
+    return 1;
 }
 
 static int rxvm_format_parse_field_number(const char **cursor, const char *end, int *present, int *value) {
@@ -1858,19 +1871,36 @@ RX_INLINE stack_frame *frame_f(
                     bin_code *return_pc,
                     value *return_reg) {
     stack_frame *this;
-    int num_locals;
-    int nominal_num_locals;
+    size_t num_locals;
+    size_t nominal_num_locals;
+    size_t local_count;
+    size_t global_count = 0;
+    size_t arg_count;
+    size_t pointer_count;
+    size_t pointer_bytes;
+    size_t value_count;
+    size_t value_bytes;
     int i, j;
     size_t frame_size;
     value *value_buffer;
 
-    if (procedure->binarySpace == 0) {
-        num_locals = procedure->locals + no_args + 1;
-        nominal_num_locals = procedure->locals + NOMINAL_NUM_ARGS + 1;
-    } else {
-        num_locals = procedure->locals + procedure->binarySpace->globals + no_args + 1;
-        nominal_num_locals = procedure->locals + procedure->binarySpace->globals + NOMINAL_NUM_ARGS + 1;
+    if (!procedure || procedure->locals < 0 || no_args < 0) return 0;
+    if (procedure->binarySpace && procedure->binarySpace->globals < 0) return 0;
+
+    local_count = (size_t)procedure->locals;
+    arg_count = (size_t)no_args;
+    if (procedure->binarySpace) global_count = (size_t)procedure->binarySpace->globals;
+
+    if (!rxvm_checked_size_add(local_count, global_count, &num_locals) ||
+        !rxvm_checked_size_add(num_locals, arg_count, &num_locals) ||
+        !rxvm_checked_size_add(num_locals, 1, &num_locals) ||
+        !rxvm_checked_size_add(local_count, global_count, &nominal_num_locals) ||
+        !rxvm_checked_size_add(nominal_num_locals, NOMINAL_NUM_ARGS, &nominal_num_locals) ||
+        !rxvm_checked_size_add(nominal_num_locals, 1, &nominal_num_locals)) {
+        return 0;
     }
+
+    if (num_locals > (size_t)INT_MAX || nominal_num_locals > (size_t)INT_MAX) return 0;
 
     /* Do we need an oversized block */
     if (num_locals > nominal_num_locals) nominal_num_locals = num_locals;
@@ -1903,11 +1933,17 @@ RX_INLINE stack_frame *frame_f(
     }
     else {
         /* Need a new stack frame - allocate all the memory in one go */
-        frame_size = sizeof(stack_frame) +
-                     ( sizeof(value*) * nominal_num_locals * 2 ) +
-                     ( sizeof(value) * (procedure->locals + 1)); /* +1 is for a0 */
+        if (!rxvm_checked_size_mul(nominal_num_locals, 2, &pointer_count) ||
+            !rxvm_checked_size_mul(sizeof(value*), pointer_count, &pointer_bytes) ||
+            !rxvm_checked_size_add(local_count, 1, &value_count) ||
+            !rxvm_checked_size_mul(sizeof(value), value_count, &value_bytes) ||
+            !rxvm_checked_size_add(sizeof(stack_frame), pointer_bytes, &frame_size) ||
+            !rxvm_checked_size_add(frame_size, value_bytes, &frame_size)) {
+            return 0;
+        }
 
         this = (stack_frame *) malloc( frame_size );
+        if (!this) return 0;
         this->prev_free = 0;
 
         this->baselocals = (value**)(this + 1);
@@ -2459,6 +2495,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     DEBUG("Create first Stack Frame\n");
     if (context->ext_proc) {
         current_frame = frame_f(procedure, context->ext_argc, 0, 0, context->ext_ret);
+        if (!current_frame) {
+            fprintf(stderr, "PANIC - Unable to allocate stack frame\n");
+            rc = RXSIGNAL_FAILURE;
+            goto interprt_finished;
+        }
         /* Arguments (passed as individual objects) */
         {
             int i;
@@ -2471,6 +2512,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
         }
     } else {
         current_frame = frame_f(procedure, 1, 0, 0, 0);
+        if (!current_frame) {
+            fprintf(stderr, "PANIC - Unable to allocate stack frame\n");
+            rc = RXSIGNAL_FAILURE;
+            goto interprt_finished;
+        }
         /* Arguments (passed in an array) */
         /* a0 is already set by frame_f() */
         /* a1 is the array  */
@@ -2643,7 +2689,12 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             } else {
                 /* A CREXX Procedure */
                 if (action_aware) value_zero(interrupt_action_value);
-                current_frame = frame_f(intr_function, 1, current_frame, pc, action_aware ? interrupt_action_value : 0);
+                temp_frame = frame_f(intr_function, 1, current_frame, pc, action_aware ? interrupt_action_value : 0);
+                if (!temp_frame) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
+                    DISPATCH
+                }
+                current_frame = temp_frame;
 
                 /* Prepare dispatch to procedure as early as possible */
 #ifndef NTHREADED
@@ -4508,7 +4559,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
-                    current_frame = frame_f(called_function, 0, current_frame, next_pc, 0);
+                    temp_frame = frame_f(called_function, 0, current_frame, next_pc, 0);
+                    if (!temp_frame) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
+                        DISPATCH
+                    }
+                    current_frame = temp_frame;
                     /* Prepare dispatch to procedure as early as possible */
 #ifndef NTHREADED
                     current_module = current_frame->procedure->binarySpace->module;
@@ -4540,7 +4596,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 } else {
                     /* This is a CREXX Procedure */
                     /* New stackframe - grabbing a procedure object from the caller frame */
-                    current_frame = frame_f(called_function, 0, current_frame, next_pc, op1R);
+                    temp_frame = frame_f(called_function, 0, current_frame, next_pc, op1R);
+                    if (!temp_frame) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
+                        DISPATCH
+                    }
+                    current_frame = temp_frame;
 
                     /* Prepare dispatch to procedure as early as possible */
 #ifndef NTHREADED
@@ -4570,7 +4631,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 } else {
                     /* This is a CREXX Procedure */
                     /* New stackframe - grabbing a procedure object from the caller frame */
-                    current_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
+                    temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
+                    if (!temp_frame) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
+                        DISPATCH
+                    }
+                    current_frame = temp_frame;
                     /* Prepare dispatch to procedure as early as possible */
 #ifndef NTHREADED
                     current_module = current_frame->procedure->binarySpace->module;
@@ -4610,7 +4676,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
-                    current_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
+                    temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
+                    if (!temp_frame) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
+                        DISPATCH
+                    }
+                    current_frame = temp_frame;
 
                     /* Prepare dispatch to procedure as early as possible */
 #ifndef NTHREADED
@@ -5582,11 +5653,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(TRIMR_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - TRIMR (DEPRECATED) R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             {
-                int i = op1R->string_length - 1;
-                while (i >= 0 && op1R->string_value[i] == ' ') {
+                size_t i = op1R->string_length;
+                while (i > 0 && op1R->string_value[i - 1] == ' ') {
                     i--;
                 }
-                op1R->string_length = i + 1;
+                op1R->string_length = i;
                 null_terminate_string_buffer(op1R);
             }
             DISPATCH
@@ -5599,11 +5670,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DEBUG("TRACE - TRIML (DEPRECATED) R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             /* TODO - UTF etc */
             {
-                int j = op1R->string_length - 1;
-                int i = 0;
-                while (i <= j && op1R->string_value[i] == ' ') i++;
+                size_t i = 0;
+                while (i < op1R->string_length && op1R->string_value[i] == ' ') i++;
 
-                if (i >= j) {
+                if (i >= op1R->string_length) {
                     op1R->string_length = 0;
                     null_terminate_string_buffer(op1R);
                 } else {
@@ -8527,13 +8597,15 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(TRIMR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - TRIMR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
-                rxinteger i;
                 if (op1R != op2R) set_value_string(op1R, op2R);
-                i = op1R->string_length - 1;
-                while (i >= 0 && op1R->string_value[i] == op3R->string_value[0]) {
-                    i--;
+                if (op3R->string_length > 0) {
+                    char trim_char = op3R->string_value[0];
+                    size_t i = op1R->string_length;
+                    while (i > 0 && op1R->string_value[i - 1] == trim_char) {
+                        i--;
+                    }
+                    op1R->string_length = i;
                 }
-                op1R->string_length = i + 1;
                 null_terminate_string_buffer(op1R);
             }
             DISPATCH
@@ -8545,13 +8617,14 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(TRIML_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - TRIML R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
-                rxinteger i = 0;
-                rxinteger j;
+                size_t i = 0;
                 if (op1R != op2R) set_value_string(op1R, op2R);
-                j = op1R->string_length - 1;
-                while (i <= j && op1R->string_value[i] == op3R->string_value[0]) i++;
+                if (op3R->string_length > 0) {
+                    char trim_char = op3R->string_value[0];
+                    while (i < op1R->string_length && op1R->string_value[i] == trim_char) i++;
+                }
 
-                if (i > j) {
+                if (i >= op1R->string_length) {
                     op1R->string_length = 0;
                 } else {
                     op1R->string_length = op1R->string_length - i;

@@ -550,6 +550,10 @@ THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
             if (lpBuffer[i] == '\n') {
 //                lpBuffer[i] = 0;
                 if (!buffer) buffer = add_new_element(context->reg);
+                if (!buffer) {
+                    context->errorCode = 1;
+                    return 0;
+                }
 #ifdef _WIN32
                 /* Remove the \r if it is there */
                 if (i > 0 && lpBuffer[i - 1] == '\r') {
@@ -570,6 +574,10 @@ THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
         }
         if (start < nBytesRead) {
             if (!buffer) buffer = add_new_element(context->reg);
+            if (!buffer) {
+                context->errorCode = 1;
+                return 0;
+            }
             string_append_chars(buffer, lpBuffer + start, nBytesRead - start);
         }
     }
@@ -579,9 +587,14 @@ THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
 
 /* Appends record to an array and returns the new record */
 value* add_new_element(value* array) {
-    size_t num = array->num_attributes + 1;
+    size_t num;
+
+    if (!array || array->num_attributes == (size_t)-1) return 0;
+
+    num = array->num_attributes + 1;
 
     if (num > array->max_num_attributes) {
+        if (num > ((size_t)-1) / 2) return 0;
         /* We need to increase the size of the buffer */
         /* Make the buffer double sized by setting the number of attributes */
         set_num_attributes(array, num * 2);
@@ -589,6 +602,7 @@ value* add_new_element(value* array) {
     /* Set the number of attributes to the requested number */
     set_num_attributes(array, num);
 
+    if (!array->attributes || array->num_attributes < num) return 0;
     return array->attributes[num - 1];
 }
 
@@ -1173,7 +1187,7 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
     *command = malloc(sizeof(char) * (strlen(command_string) + 1));
     if (*command == NULL) {
         *command = 0;
-        file = 0;
+        *file = 0;
         *argv = 0;
         return -1;
     }
@@ -1191,10 +1205,10 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
     }
 
     // Is there any command at all
-    if (!file[0]) {
+    if (!*file || !(*file)[0]) {
         free(*command);
         *command = 0;
-        file = 0;
+        *file = 0;
         *argv = 0;
         return -1;
     }

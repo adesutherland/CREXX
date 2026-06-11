@@ -613,7 +613,10 @@ RX_INLINE void delete_attributes(value *v, size_t index, size_t count) {
     if (!v || count == 0) return;
 
     old_num = v->num_attributes;
-    tail_count = old_num - index - count;
+    if (index > old_num) return;
+    tail_count = old_num - index;
+    if (count > tail_count) return;
+    tail_count -= count;
 
     if (tail_count > 0) {
         rotate_attribute_pointer_blocks(v->attributes, index, count, tail_count);
@@ -1203,7 +1206,7 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
         for (i = 0; i < actual_chars; ++i) {
             end_pos += utf8codepointcalcsize(source->string_value + end_pos);
         }
-        byte_length = end_pos - byte_pos;
+        byte_length = end_pos >= byte_pos ? end_pos - byte_pos : 0;
     }
 
     if (dest == source) {
@@ -1282,7 +1285,10 @@ RX_INLINE int string_cmp(char *value1, size_t length1, char *value2, size_t leng
     int ret;
 
     ret = memcmp(value1, value2, MIN(length1, length2));
-    if (!ret) ret = length1 - length2;
+    if (!ret) {
+        if (length1 > length2) ret = 1;
+        else if (length1 < length2) ret = -1;
+    }
     ret = ret > 0 ? 1 : (ret < 0 ? -1 : 0);
 
     return ret;
