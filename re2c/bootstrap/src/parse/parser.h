@@ -1,14 +1,14 @@
-/* A Bison parser, made by GNU Bison 2.3.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
-/* Skeleton interface for Bison's Yacc-like parsers in C
+/* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
-   Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
+   Inc.
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -33,65 +31,96 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/* Tokens.  */
-#ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-      know about them.  */
-   enum yytokentype {
-     TOKEN_CJUMP = 258,
-     TOKEN_CNEXT = 259,
-     TOKEN_CLIST = 260,
-     TOKEN_CSETUP = 261,
-     TOKEN_CZERO = 262,
-     TOKEN_CLOSESIZE = 263,
-     TOKEN_CODE = 264,
-     TOKEN_CONF = 265,
-     TOKEN_ID = 266,
-     TOKEN_FID = 267,
-     TOKEN_FID_END = 268,
-     TOKEN_LINE_INFO = 269,
-     TOKEN_REGEXP = 270,
-     TOKEN_BLOCK = 271
-   };
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with YY_ or yy_.  They are
+   private implementation details that can be changed or removed.  */
+
+#ifndef YY_RE2C_SRC_PARSE_PARSER_H_INCLUDED
+# define YY_RE2C_SRC_PARSE_PARSER_H_INCLUDED
+/* Debug traces.  */
+#ifndef RE2C_DEBUG
+# if defined YYDEBUG
+#if YYDEBUG
+#   define RE2C_DEBUG 1
+#  else
+#   define RE2C_DEBUG 0
+#  endif
+# else /* ! defined YYDEBUG */
+#  define RE2C_DEBUG 0
+# endif /* ! defined YYDEBUG */
+#endif  /* ! defined RE2C_DEBUG */
+#if RE2C_DEBUG
+extern int re2c_debug;
 #endif
-/* Tokens.  */
-#define TOKEN_CJUMP 258
-#define TOKEN_CNEXT 259
-#define TOKEN_CLIST 260
-#define TOKEN_CSETUP 261
-#define TOKEN_CZERO 262
-#define TOKEN_CLOSESIZE 263
-#define TOKEN_CODE 264
-#define TOKEN_CONF 265
-#define TOKEN_ID 266
-#define TOKEN_FID 267
-#define TOKEN_FID_END 268
-#define TOKEN_LINE_INFO 269
-#define TOKEN_REGEXP 270
-#define TOKEN_BLOCK 271
+/* "%code requires" blocks.  */
+#line 1 "../src/parse/parser.ypp"
 
-
-
-
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE
-#line 33 "../../crexx-develop/re2c/src/parse/parser.ypp"
-{
-    const re2c::AST *regexp;
-    re2c::SemAct    *semact;
-    char             op;
-    re2c::ASTBounds  bounds;
-    std::string     *str;
-    re2c::CondList  *clist;
+/* pull in types to populate YYSTYPE: */
+#include "src/parse/ast.h"
+namespace re2c {
+    struct AstNode;
+    struct SemAct;
 }
-/* Line 1529 of yacc.c.  */
-#line 90 "src/parse/parser.h"
-	YYSTYPE;
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
-# define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
+
+#line 66 "src/parse/parser.h"
+
+/* Token kinds.  */
+#ifndef RE2C_TOKENTYPE
+# define RE2C_TOKENTYPE
+  enum re2c_tokentype
+  {
+    RE2C_EMPTY = -2,
+    RE2C_EOF = 0,                  /* "end of file"  */
+    RE2C_error = 256,              /* error  */
+    RE2C_UNDEF = 257,              /* "invalid token"  */
+    TOKEN_CJUMP = 258,             /* TOKEN_CJUMP  */
+    TOKEN_CNEXT = 259,             /* TOKEN_CNEXT  */
+    TOKEN_CLIST = 260,             /* TOKEN_CLIST  */
+    TOKEN_CPRE_RULE = 261,         /* TOKEN_CPRE_RULE  */
+    TOKEN_CZERO = 262,             /* TOKEN_CZERO  */
+    TOKEN_CLOSESIZE = 263,         /* TOKEN_CLOSESIZE  */
+    TOKEN_CODE = 264,              /* TOKEN_CODE  */
+    TOKEN_CONF = 265,              /* TOKEN_CONF  */
+    TOKEN_ID = 266,                /* TOKEN_ID  */
+    TOKEN_FID = 267,               /* TOKEN_FID  */
+    TOKEN_FID_END = 268,           /* TOKEN_FID_END  */
+    TOKEN_LINE_INFO = 269,         /* TOKEN_LINE_INFO  */
+    TOKEN_REGEXP = 270,            /* TOKEN_REGEXP  */
+    TOKEN_BLOCK = 271,             /* TOKEN_BLOCK  */
+    TOKEN_ENTRY = 272,             /* TOKEN_ENTRY  */
+    TOKEN_PRE_RULE = 273,          /* TOKEN_PRE_RULE  */
+    TOKEN_POST_RULE = 274,         /* TOKEN_POST_RULE  */
+    TOKEN_LPAREN_NEG = 275,        /* TOKEN_LPAREN_NEG  */
+    TOKEN_ERROR = 276              /* TOKEN_ERROR  */
+  };
+  typedef enum re2c_tokentype re2c_token_kind_t;
 #endif
 
-extern YYSTYPE yylval;
+/* Value type.  */
+#if ! defined RE2C_STYPE && ! defined RE2C_STYPE_IS_DECLARED
+union RE2C_STYPE
+{
+#line 43 "../src/parse/parser.ypp"
 
+    const re2c::AstNode* regexp;
+    const re2c::SemAct* semact;
+    char op;
+    re2c::AstBounds bounds;
+    const char* cstr;
+    std::string* str;
+
+#line 113 "src/parse/parser.h"
+
+};
+typedef union RE2C_STYPE RE2C_STYPE;
+# define RE2C_STYPE_IS_TRIVIAL 1
+# define RE2C_STYPE_IS_DECLARED 1
+#endif
+
+
+
+
+int re2c_parse (re2c::Input& input, re2c::Ast& ast, re2c::Opt& opts, re2c::AstGrams& grams);
+
+
+#endif /* !YY_RE2C_SRC_PARSE_PARSER_H_INCLUDED  */

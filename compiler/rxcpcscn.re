@@ -147,7 +147,7 @@ regular:
       goto regular;
     }
     "." { RET(TK_DOT); }
-    any { RET(TK_UNKNOWN); }
+    * { RET(TK_UNKNOWN); }
 */
 
 comment:
@@ -191,6 +191,6 @@ comment:
       s->cursor = s->top + 2;
       RET(TK_BADCOMMENT);
   }
-  any { goto comment; }
+  * { goto comment; }
 */
 }

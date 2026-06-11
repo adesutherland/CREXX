@@ -58,7 +58,7 @@ int opt_scan(Context* s) {
     any = [^] \ eof ;
     digit = [0-9];
     symchr = letter|digit|[._];
-    symbol = symchr*;
+    symbol = symchr+;
 */
 
 /*!re2c
@@ -111,7 +111,7 @@ int opt_scan(Context* s) {
         s->linestart = s->cursor+1;
         return(TK_EOC);
     }
-    any { return TK_UNKNOWN; }
+    * { return TK_UNKNOWN; }
 */
 
     comment:
@@ -139,7 +139,7 @@ int opt_scan(Context* s) {
     }
     eof { return(TK_EOS); }
     $ { return(TK_EOS); }
-    any { goto comment; }
+    * { goto comment; }
 */
 
 skip_line_comment:
@@ -160,7 +160,7 @@ skip_line_comment:
   }
   eof { return(TK_EOS); }
   $ { return(TK_EOS); }
-  any {
+  * {
     goto skip_line_comment;
   }
 */

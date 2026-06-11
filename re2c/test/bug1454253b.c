@@ -25,7 +25,7 @@ size_t scan(const char *s, int l, char *r)
 	YYCTYPE yych;
 	if ((YYLIMIT - YYCURSOR) < 2) YYFILL(2);
 	yych = *YYCURSOR;
-	if (yych == '?') goto yy4;
+	if (yych == '?') goto yy1;
 	++YYCURSOR;
 #line 34 "bug1454253b.re"
 	{
@@ -34,52 +34,52 @@ size_t scan(const char *s, int l, char *r)
 		return p - s;
 	}
 #line 37 "bug1454253b.c"
-yy4:
+yy1:
 	yych = *++YYCURSOR;
 	if (yych <= '9') {
-		if (yych == '!') goto yy6;
-		if (yych >= '0') goto yy9;
+		if (yych == '!') goto yy3;
+		if (yych >= '0') goto yy5;
 	} else {
 		if (yych <= 'Z') {
-			if (yych >= 'A') goto yy9;
+			if (yych >= 'A') goto yy5;
 		} else {
-			if (yych <= '`') goto yy5;
-			if (yych <= 'z') goto yy9;
+			if (yych <= '`') goto yy2;
+			if (yych <= 'z') goto yy5;
 		}
 	}
-yy5:
-yy6:
+yy2:
+yy3:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	if (yych <= '@') {
-		if (yych <= '/') goto yy8;
-		if (yych <= '9') goto yy6;
+		if (yych <= '/') goto yy4;
+		if (yych <= '9') goto yy3;
 	} else {
-		if (yych <= 'Z') goto yy6;
-		if (yych <= '`') goto yy8;
-		if (yych <= 'z') goto yy6;
+		if (yych <= 'Z') goto yy3;
+		if (yych <= '`') goto yy4;
+		if (yych <= 'z') goto yy3;
 	}
-yy8:
+yy4:
 #line 24 "bug1454253b.re"
 	{
 		*r++ = '1';
 		continue;
 	}
 #line 70 "bug1454253b.c"
-yy9:
+yy5:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	if (yych <= '@') {
-		if (yych <= '/') goto yy11;
-		if (yych <= '9') goto yy9;
+		if (yych <= '/') goto yy6;
+		if (yych <= '9') goto yy5;
 	} else {
-		if (yych <= 'Z') goto yy9;
-		if (yych <= '`') goto yy11;
-		if (yych <= 'z') goto yy9;
+		if (yych <= 'Z') goto yy5;
+		if (yych <= '`') goto yy6;
+		if (yych <= 'z') goto yy5;
 	}
-yy11:
+yy6:
 #line 29 "bug1454253b.re"
 	{
 		*r++ = '2';
@@ -128,4 +128,4 @@ main()
 	do_scan("?1?123?45??", 11, "2220");
 	do_scan("?1?123?45?!", 12, "22210");
 }
-bug1454253b.re:39:2: warning: control flow is undefined for strings that match '\x3F [\x0-\x20\x22-\x2F\x3A-\x40\x5B-\x60\x7B-\xFF]', use default rule '*' [-Wundefined-control-flow]
+bug1454253b.re:20:0: warning: control flow is undefined for strings that match '\x3F [\x0-\x20\x22-\x2F\x3A-\x40\x5B-\x60\x7B-\xFF]', use default rule '*' [-Wundefined-control-flow]

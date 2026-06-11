@@ -1,0 +1,2 @@
+Here is an example of using m-tags to parse a version with a variable number of
+components. Tag variables are stored in a trie.

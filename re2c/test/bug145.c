@@ -4,7 +4,7 @@
 
 enum YYCONDTYPE {
 	yycinit,
-	yycC2,
+	yycC2
 };
 
 
@@ -19,22 +19,20 @@ int test(const char* str)
 {
 	unsigned char yych;
 	switch (c) {
-	case yycinit:
-		goto yyc_init;
-	case yycC2:
-		goto yyc_C2;
+		case yycinit: goto yyc_init;
+		case yycC2: goto yyc_C2;
 	}
 /* *********************************** */
 yyc_init:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'A':	goto yy4;
-	default:	goto yy2;
+		case 'A': goto yy2;
+		default: goto yy1;
 	}
-yy2:
+yy1:
 	++YYCURSOR;
 	{ return 0; }
-yy4:
+yy2:
 	++YYCURSOR;
 	c = yycC2;
 	goto yyc_C2;
@@ -42,13 +40,13 @@ yy4:
 yyc_C2:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'B':	goto yy10;
-	default:	goto yy8;
+		case 'B': goto yy5;
+		default: goto yy4;
 	}
-yy8:
+yy4:
 	++YYCURSOR;
 	{ return 0; }
-yy10:
+yy5:
 	++YYCURSOR;
 	{ return 1; }
 }

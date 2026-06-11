@@ -1,7 +1,7 @@
 DESCRIPTION
 -----------
 
-re2c is a free and open-source lexer generator for C, C++ and Go.
+re2c is a free and open-source lexer generator for C/C++, Go and Rust.
 
 Its main goal is generating fast lexers: at least as fast as their reasonably
 optimized hand-coded counterparts. Instead of using traditional table-driven
@@ -40,15 +40,14 @@ CONTRIBUTING
 ------------
 
 re2c is an Open Source, community-driven project. See
-[CONTRIBUTING.md](https://github.com/skvadrik/re2c/blob/master/CONTRIBUTING.md) for
-details about contributions to this repository.
+[CONTRIBUTING.md](https://github.com/skvadrik/re2c/blob/master/CONTRIBUTING.md)
+for details about contributions to this repository.
 
 
 BUILD
 -----
 
-re2c has two build systems: Autotools and CMake. Both are maintained and tested
-on Travis CI. See [the documentation](http://re2c.org/install/install.html) for
+See BUILD.md or the [online docs](https://re2c.org/build/build.html) for
 instructions how to build re2c.
 
 
@@ -64,15 +63,17 @@ Mailing lists:
 - re2c-general@lists.sourceforge.net
 - re2c-devel@lists.sourceforge.net
 
-IRC channel:
+IRC channels:
 
-- freenode/#re2c
+- irc.oftc.net/#re2c
+- irc.libera.chat/#re2c
 
 You are welcome to ask for help or share your thoughts and ideas.
 
 
 AUTHORS
 -------
-Re2c was originally written by Peter Bumbulis <peter@csg.uwaterloo.ca>.
-Since then many people contributed to the project. The current maintainer is
+
+re2c was originally written by Peter Bumbulis <peter@csg.uwaterloo.ca>. Since
+then many volunteers have contributed to the project. The current maintainer is
 Ulya Trofimovich <skvadrik@gmail.com>.

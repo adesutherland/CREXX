@@ -125,8 +125,6 @@ Process lessons:
   `linked_opt_runtime_artifacts_build`, check whether CTest is building a
   prerequisite rather than hanging. Under ASAN that setup can take much longer
   than the actual focused tests.
-* Do not stage generated `re2c/bootstrap/src/parse/parser.cc` or `.h` churn
-  unless the task is specifically about those files.
 
 Reference source-syntax lessons:
 

@@ -8,30 +8,30 @@
 	if ((YYLIMIT - YYCURSOR) < 3) YYFILL(3);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'b':	goto yy3;
-	default:	goto yy2;
+		case 'b': goto yy2;
+		default: goto yy1;
 	}
+yy1:
 yy2:
+	yych = *++YYCURSOR;
+	switch (yych) {
+		case 'l': goto yy3;
+		default: goto yy1;
+	}
 yy3:
 	yych = *++YYCURSOR;
 	switch (yych) {
-	case 'l':	goto yy4;
-	default:	goto yy2;
+		case 'a': goto yy4;
+		default: goto yy1;
 	}
 yy4:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case 'a':	goto yy5;
-	default:	goto yy2;
-	}
-yy5:
 	++YYCURSOR;
 #line 5 "overflow-4.re"
 	{ return "bla"; }
 #line 32 "overflow-4.c"
 }
 #line 7 "overflow-4.re"
-overflow-4.re:7:2: warning: control flow is undefined for strings that match 
+overflow-4.re:2:0: warning: control flow is undefined for strings that match 
 	'[\x0-\x61\x63-\xFF]'
 	'\x62 [\x0-\x6B\x6D-\xFF]'
 	'\x62 \x6C [\x0-\x60\x62-\xFF]'

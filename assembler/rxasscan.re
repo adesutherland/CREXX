@@ -53,7 +53,7 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     any = [^] \ eof ;
 
     slit = ["] ( (any\["\n\r]) | ( [\\]["] ) )* ["];
-    clit = (['] (any\['\n\r]) [']) | ("\'\\" (any\[\n\r]) [']);
+    clit = (['] (any\['\n\r]) [']) | ("'\\" (any\[\n\r]) [']);
 
     // floating literals
     fsig = digit* "." digit+ | digit+ ".";
@@ -84,7 +84,7 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
        return(NEWLINE);
     }
 
-    "*" [^\r\n]* { goto regular; }
+    "*" (any\[\r\n])* { goto regular; }
 
     float "d" {return(DECIMAL);}
     float {return(FLOAT);}

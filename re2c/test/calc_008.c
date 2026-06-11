@@ -66,108 +66,102 @@ int scan(char *p)
 #line 67 "calc_008.c"
 		{
 			unsigned char curr;
-			static const unsigned char yybm[] = {
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,  64,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				 64,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				128, 128, 128, 128, 128, 128, 128, 128, 
-				128, 128,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
-				  0,   0,   0,   0,   0,   0,   0,   0, 
+			static const unsigned char yybm[256] = {
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,  64,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				 64,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				128, 128, 128, 128, 128, 128, 128, 128,
+				128, 128,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0,
+				  0,   0,   0,   0,   0,   0,   0,   0
 			};
 			curr = (unsigned char)*p;
-			if (yybm[0+curr] & 64) {
-				goto scan6;
-			}
+			if (yybm[0+curr] & 64) goto scan3;
 			if (curr <= ',') {
-				if (curr <= 0x00) goto scan2;
-				if (curr == '+') goto scan9;
-				goto scan4;
+				if (curr <= 0x00) goto scan1;
+				if (curr == '+') goto scan4;
+				goto scan2;
 			} else {
 				if (curr <= '/') {
-					if (curr <= '-') goto scan11;
-					goto scan4;
+					if (curr <= '-') goto scan5;
+					goto scan2;
 				} else {
-					if (curr <= '0') goto scan13;
-					if (curr <= '9') goto scan15;
-					goto scan4;
+					if (curr <= '0') goto scan6;
+					if (curr <= '9') goto scan8;
+					goto scan2;
 				}
 			}
-scan2:
+scan1:
 			++p;
 #line 109 "calc_008.re"
 			{ res = depth == 1 ? 0 : 2;	break; }
-#line 126 "calc_008.c"
-scan4:
+#line 124 "calc_008.c"
+scan2:
 			++p;
 #line 110 "calc_008.re"
 			{ res = 1; 					continue; }
-#line 131 "calc_008.c"
-scan6:
+#line 129 "calc_008.c"
+scan3:
 			curr = (unsigned char)*++p;
-			if (yybm[0+curr] & 64) {
-				goto scan6;
-			}
+			if (yybm[0+curr] & 64) goto scan3;
 #line 104 "calc_008.re"
 			{ continue; }
-#line 139 "calc_008.c"
-scan9:
+#line 135 "calc_008.c"
+scan4:
 			++p;
 #line 107 "calc_008.re"
 			{ res = stack_add();		continue; }
-#line 144 "calc_008.c"
-scan11:
+#line 140 "calc_008.c"
+scan5:
 			++p;
 #line 108 "calc_008.re"
 			{ res = stack_sub();		continue; }
-#line 149 "calc_008.c"
-scan13:
+#line 145 "calc_008.c"
+scan6:
 			curr = (unsigned char)*++p;
-			if (curr <= '/') goto scan14;
-			if (curr <= '9') goto scan17;
-scan14:
+			if (curr <= '/') goto scan7;
+			if (curr <= '9') goto scan9;
+scan7:
 #line 106 "calc_008.re"
 			{ res = push_num(t, p, 10); continue; }
-#line 157 "calc_008.c"
-scan15:
+#line 153 "calc_008.c"
+scan8:
 			curr = (unsigned char)*++p;
-			if (yybm[0+curr] & 128) {
-				goto scan15;
-			}
-			goto scan14;
-scan17:
+			if (yybm[0+curr] & 128) goto scan8;
+			goto scan7;
+scan9:
 			curr = (unsigned char)*++p;
-			if (curr <= '/') goto scan19;
-			if (curr <= '9') goto scan17;
-scan19:
+			if (curr <= '/') goto scan10;
+			if (curr <= '9') goto scan9;
+scan10:
 #line 105 "calc_008.re"
 			{ res = push_num(t, p, 8);	continue; }
-#line 171 "calc_008.c"
+#line 165 "calc_008.c"
 		}
 #line 111 "calc_008.re"
 

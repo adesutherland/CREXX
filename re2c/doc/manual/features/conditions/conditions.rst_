@@ -1,0 +1,83 @@
+Start conditions are enabled with ``--start-conditions`` option. They provide a
+way to encode multiple interrelated automata within the same |re2c| block.
+
+Each condition corresponds to a single automaton and has a unique name specified
+by the user and a unique internal number defined by |re2c|. The numbers are used
+to switch between conditions: the generated code uses ``YYGETCOND`` and
+``YYSETCOND`` primitives to get the current condition or set it to the
+given number. Use ``conditions`` block, ``--header`` option or ``re2c:header``
+configuration to generate numeric condition identifiers. Configuration
+``re2c:cond:enumprefix`` specifies the generated identifier prefix.
+
+In condition mode every rule must be prefixed with a list of comma-separated
+condition names in angle brackets, or a wildcard ``<*>`` to denote all
+conditions. The rule syntax is extended as follows:
+
+    ``< condition-list > regular-expression code``
+        A rule that is merged to every condition on the ``condition-list``.
+        It matches ``regular-expression`` and executes the associated ``code``.
+
+    ``< condition-list > regular-expression => condition code``
+        A rule that is merged to every condition on the ``condition-list``.
+        It matches ``regular-expression``, sets the current condition to
+        ``condition`` and executes the associated ``code``.
+
+    ``< condition-list > regular-expression :=> condition``
+        A rule that is merged to every condition on the ``condition-list``.
+        It matches ``regular-expression`` and immediately transitions to
+        ``condition`` (there is no semantic action).
+
+    ``< condition-list > !action code``
+        A rule that binds ``code`` to the place defined by ``action`` in every
+        condition on the ``condition-list`` (see the `actions`_ section for
+        various types of actions).
+
+    ``<! condition-list > code``
+        A rule that prepends ``code`` to semantic actions of all rules for every
+        condition on the ``condition-list``. This syntax is deprecated and the
+        ``!pre_rule`` action should be used instead (it does exactly the same).
+
+    ``< > code``
+        A rule that creates a special entry condition with number zero and name
+        ``"0"`` that executes ``code`` before jumping to other conditions.
+        This syntax is deprecated, and the ``!entry`` action should be used
+        instead (it provides a more fine-grained control, as the code can be
+        specified on a per-condition basis, and one can jump directly to
+        condition start without going through condition dispatch).
+
+    ``< > => condition code``
+        Same as the previous rule, except that it sets the next ``condition``.
+
+    ``< > :=> condition``
+        Same as the previous rule, except that it has no associated code and
+        immediately jumps to ``condition``.
+
+
+The code |re2c| generates for conditions depends on whether |re2c| uses
+goto/label approach or loop/switch approach to encode the automata.
+
+In languages that have ``goto`` statement (such as C/C++ and Go) conditions are
+naturally implemented as blocks of code prefixed with labels of the form
+``yyc_<cond>``, where ``cond`` is a condition name (label prefix can be changed
+with ``re2c:cond:prefix``). Transitions between conditions are implemented using
+``goto`` and condition labels. Before all conditions |re2c| generates an initial
+switch on ``YYGETSTATE`` that jumps to the start state of the current condition.
+The shortcut rules ``:=>`` bypass the initial switch and jump directly to the
+specified condition (``re2c:cond:goto`` can be used to change the default
+behavior). The rules with semantic actions do not automatically jump to the next
+condition; this should be done by the user-defined action code.
+
+In languages that do not have ``goto`` (such as Rust) |re2c| reuses the
+``yystate`` variable to store condition numbers. Each condition gets a numeric
+identifier equal to the number of its start state, and a switch between
+conditions is no different than a switch between DFA states of a single
+condition. There is no need for a separate initial condition switch.
+(Since the same approach is used to implement storable states,
+``YYGETCOND``/``YYSETCOND`` are redundant if both storable states and
+conditions are used).
+
+The program below uses start conditions to parse binary, octal, decimal and
+hexadecimal numbers. There is a single block where each base has its own
+condition, and the initial condition is connected to all of them. User-defined
+variable ``cond`` stores the current condition number; it is initialized to the
+number of the initial condition generated with ``conditions`` block.

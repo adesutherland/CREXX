@@ -46,62 +46,60 @@ std:
 #line 47 "config/config9.c"
 {
 	unsigned char curr;
-	static const unsigned char yybm[] = {
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		128, 128, 128, 128, 128, 128, 128, 128, 
-		128, 128,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
+	static const unsigned char yybm[256] = {
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		128, 128, 128, 128, 128, 128, 128, 128,
+		128, 128,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0
 	};
 	if ((s.lim - s.cur) < 3) fill(3);
 	curr = (unsigned char)*s.cur;
-	if (yybm[0+curr] & 128) {
-		goto xx6;
-	}
+	if (yybm[0+curr] & 128) goto xx4;
 	if (curr <= 0x1F) {
-		if (curr <= 0x08) goto xx2;
-		if (curr <= '\n') goto xx4;
+		if (curr <= 0x08) goto xx1;
+		if (curr <= '\n') goto xx3;
 	} else {
-		if (curr <= ' ') goto xx4;
-		if (curr <= '`') goto xx2;
-		if (curr <= 'b') goto xx9;
+		if (curr <= ' ') goto xx3;
+		if (curr <= '`') goto xx1;
+		if (curr <= 'b') goto xx5;
 	}
-xx2:
+xx1:
 	++s.cur;
-xx3:
+xx2:
 #line 69 "config/config9.re"
 	{
 		return UNEXPECTED;
 	}
-#line 104 "config/config9.c"
-xx4:
+#line 102 "config/config9.c"
+xx3:
 	++s.cur;
 #line 62 "config/config9.re"
 	{
@@ -110,46 +108,44 @@ xx4:
 		cursor = s.cur;
 		goto std;
 	}
-#line 114 "config/config9.c"
+#line 112 "config/config9.c"
+xx4:
+	++s.cur;
+	if (s.lim <= s.cur) fill(1);
+	curr = (unsigned char)*s.cur;
+	if (yybm[0+curr] & 128) goto xx4;
+#line 59 "config/config9.re"
+	{ return NUMBER;  }
+#line 120 "config/config9.c"
+xx5:
+	curr = (unsigned char)*++s.cur;
+	if (curr <= '/') goto xx2;
+	if (curr == '1') {
+		s.ctx = s.cur;
+		goto xx8;
+	}
+	if (curr >= ':') goto xx2;
+	s.ctx = s.cur;
 xx6:
 	++s.cur;
 	if (s.lim <= s.cur) fill(1);
 	curr = (unsigned char)*s.cur;
-	if (yybm[0+curr] & 128) {
-		goto xx6;
-	}
-#line 59 "config/config9.re"
-	{ return NUMBER;  }
-#line 124 "config/config9.c"
-xx9:
-	curr = (unsigned char)*++s.cur;
-	if (curr <= '/') goto xx3;
-	if (curr == '1') {
-		s.ctx = s.cur;
-		goto xx13;
-	}
-	if (curr >= ':') goto xx3;
-	s.ctx = s.cur;
-xx10:
-	++s.cur;
-	if (s.lim <= s.cur) fill(1);
-	curr = (unsigned char)*s.cur;
-	if (curr <= '/') goto xx12;
-	if (curr <= '9') goto xx10;
-xx12:
+	if (curr <= '/') goto xx7;
+	if (curr <= '9') goto xx6;
+xx7:
 	s.cur = s.ctx;
 #line 58 "config/config9.re"
 	{ return KEYWORD; }
-#line 144 "config/config9.c"
-xx13:
+#line 140 "config/config9.c"
+xx8:
 	curr = (unsigned char)*++s.cur;
-	if (curr <= '/') goto xx14;
-	if (curr <= '9') goto xx10;
-xx14:
+	if (curr <= '/') goto xx9;
+	if (curr <= '9') goto xx6;
+xx9:
 	s.cur -= 1;
 #line 57 "config/config9.re"
 	{ return KEYWORD; }
-#line 153 "config/config9.c"
+#line 149 "config/config9.c"
 }
 #line 72 "config/config9.re"
 

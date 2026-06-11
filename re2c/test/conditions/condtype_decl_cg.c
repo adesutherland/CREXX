@@ -4,7 +4,7 @@
 #line 5 "conditions/condtype_decl_cg.c"
 enum YYCONDTYPE {
 	yyca,
-	yycb,
+	yycb
 };
 #line 2 "conditions/condtype_decl_cg.re"
 
@@ -18,16 +18,16 @@ int main ()
 #line 19 "conditions/condtype_decl_cg.c"
 {
 	unsigned char yych;
-	static void *yyctable[2] = {
+	static const void* yyctable[2] = {
 		&&yyc_a,
-		&&yyc_b,
+		&&yyc_b
 	};
 	goto *yyctable[YYGETCONDITION()];
 /* *********************************** */
 yyc_a:
 	yych = *YYCURSOR;
-	if (yych == 'a') goto yy3;
-yy3:
+	if (yych == 'a') goto yy1;
+yy1:
 	++YYCURSOR;
 #line 12 "conditions/condtype_decl_cg.re"
 	{}
@@ -35,8 +35,8 @@ yy3:
 /* *********************************** */
 yyc_b:
 	yych = *YYCURSOR;
-	if (yych == 'b') goto yy8;
-yy8:
+	if (yych == 'b') goto yy3;
+yy3:
 	++YYCURSOR;
 #line 13 "conditions/condtype_decl_cg.re"
 	{}
@@ -46,5 +46,5 @@ yy8:
 
 	return 0;
 }
-conditions/condtype_decl_cg.re:14:2: warning: control flow in condition 'a' is undefined for strings that match '[\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]
-conditions/condtype_decl_cg.re:14:2: warning: control flow in condition 'b' is undefined for strings that match '[\x0-\x61\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]
+conditions/condtype_decl_cg.re:9:0: warning: control flow in condition 'a' is undefined for strings that match '[\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]
+conditions/condtype_decl_cg.re:9:0: warning: control flow in condition 'b' is undefined for strings that match '[\x0-\x61\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]

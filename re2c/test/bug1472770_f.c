@@ -27,42 +27,43 @@ int scan(char *p)
 start:
 
 #line 30 "bug1472770_f.c"
-
 	switch (YYGETSTATE()) {
-	default:
-		goto yy0;
-	case 0:
-		goto yyFillLabel0;
+		case 0: goto yyFillLabel0;
+		default: goto yy0;
 	}
 yy0:
 	goto yy1;
 yy2:
 	++YYCURSOR;
 yy1:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(0);
+		YYFILL(1);
+	}
 yyFillLabel0:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 0x00:	goto yy4;
-	case '\n':	goto yy6;
-	default:	goto yy2;
+		case 0x00: goto yy3;
+		case '\n': goto yy4;
+		default: goto yy2;
 	}
-yy4:
+yy3:
 	++YYCURSOR;
+	YYSETSTATE(-1);
 #line 33 "bug1472770_f.re"
 	{
 		return n;
 	}
 #line 58 "bug1472770_f.c"
-yy6:
+yy4:
 	++YYCURSOR;
+	YYSETSTATE(-1);
 #line 28 "bug1472770_f.re"
 	{
 		++n;
 		goto start;
 	}
-#line 66 "bug1472770_f.c"
+#line 67 "bug1472770_f.c"
 #line 36 "bug1472770_f.re"
 
 }

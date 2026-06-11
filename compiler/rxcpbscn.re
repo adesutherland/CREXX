@@ -286,7 +286,7 @@ int rexbscan(Context* s) {
        RET(TK_EOL);
     }
     "." { RET(TK_DOT); }
-    any {
+    * {
       RET(TK_UNKNOWN);
     }
   */
@@ -334,6 +334,10 @@ int rexbscan(Context* s) {
        RET(TK_STEMNOVAL);
     }
     $ { RET(TK_EOS); }
+    * {
+       s->lexer_stem_mode = 0;
+       RET(TK_UNKNOWN);
+    }
 */
     comment:
 /*!re2c
@@ -376,7 +380,7 @@ int rexbscan(Context* s) {
       s->cursor = s->top + 2; /* To get the '/ *' */
       RET(TK_BADCOMMENT);
   }
-  any { goto comment; }
+  * { goto comment; }
 */
 
 skip_line_comment:
@@ -397,7 +401,7 @@ skip_line_comment:
   }
   eof { RET(TK_EOS); }
   $ { RET(TK_EOS); }
-  any {
+  * {
     goto skip_line_comment;
   }
 */

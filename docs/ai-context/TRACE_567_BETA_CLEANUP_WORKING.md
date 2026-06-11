@@ -615,8 +615,6 @@ Focused checks:
 - Run full `cmake --build cmake-build-debug`.
 - Run full `ctest --test-dir cmake-build-debug --output-on-failure`.
 - Commit after each implementation stage.
-- Never stage `re2c/bootstrap/src/parse/parser.cc` or
-  `re2c/bootstrap/src/parse/parser.h` unless explicitly requested.
 
 ## Open Safety Notes
 

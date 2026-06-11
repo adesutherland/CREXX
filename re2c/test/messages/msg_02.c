@@ -11,20 +11,20 @@
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'Z':
-	case '[':
-	case '\\':
-	case ']':
-	case '^':
-	case '_':
-	case '`':
-	case 'a':	goto yy4;
-	default:	goto yy2;
+		case 'Z':
+		case '[':
+		case '\\':
+		case ']':
+		case '^':
+		case '_':
+		case '`':
+		case 'a': goto yy2;
+		default: goto yy1;
 	}
-yy2:
+yy1:
 	++YYCURSOR;
 	{}
-yy4:
+yy2:
 	++YYCURSOR;
 	{}
 }
@@ -36,16 +36,16 @@ yy4:
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 0x07:
-	case 'h':	goto yy9;
-	default:	goto yy8;
+		case 0x07:
+		case 'h': goto yy5;
+		default: goto yy4;
 	}
-yy8:
-yy9:
+yy4:
+yy5:
 	++YYCURSOR;
 	{}
 }
 
 messages/nested/msg_02.re.inc(2,9): warning: range lower bound (0x61) is greater than upper bound (0x5A), swapping [-Wswapped-range]
 messages/nested/msg_02.re.inc(6,11): warning: escape has no effect: '\h' [-Wuseless-escape]
-messages/msg_02.re(11,2): warning: control flow is undefined for strings that match '[\x0-\x6\x8-\x67\x69-\xFF]', use default rule '*' [-Wundefined-control-flow]
+messages/msg_02.re(9,0): warning: control flow is undefined for strings that match '[\x0-\x6\x8-\x67\x69-\xFF]', use default rule '*' [-Wundefined-control-flow]

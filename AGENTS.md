@@ -39,7 +39,6 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 - For complex bugs or crashes, start with a minimal reproducer in cREXX where practical before changing core C code.
 - Run focused tests frequently during compiler work. If a change causes regressions, stop, report them clearly, and distinguish expected from unintended fallout.
 - Keep documentation in sync with code. If you uncover important undocumented behaviour or architecture, update the relevant docs as part of the change.
-- `re2c/bootstrap/src/parse/parser.cc` and `re2c/bootstrap/src/parse/parser.h` may show irritating rebuild side effects from the maintainer's manual smoke-test workflow. Never stage these files unless the user explicitly asks. If they make the tree messy and are unrelated to the task, they may be rolled back.
 
 ## Debugging Output Discipline
 

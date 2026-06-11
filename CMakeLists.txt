@@ -209,6 +209,11 @@ endif()
 
 include(CTest)
 
+# CREXX only uses re2c itself for scanner generation; do not build the
+# language alias binaries by default.
+foreach(re2c_alias IN ITEMS D GO HS JAVA JS OCAML PY RUST SWIFT V ZIG)
+    set(RE2C_BUILD_RE2${re2c_alias} OFF CACHE BOOL "Build re2c language alias" FORCE)
+endforeach()
 add_subdirectory(re2c)
 add_subdirectory(lemon)
 

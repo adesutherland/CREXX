@@ -8,17 +8,17 @@
 	if ((YYLIMIT - YYCURSOR) < 2) YYFILL(2);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 0xD0:	goto yy3;
-	default:	goto yy2;
+		case 0xD0: goto yy2;
+		default: goto yy1;
 	}
+yy1:
 yy2:
-yy3:
 	yych = *++YYCURSOR;
 	switch (yych) {
-	case 0xB0:	goto yy4;
-	default:	goto yy2;
+		case 0xB0: goto yy3;
+		default: goto yy1;
 	}
-yy4:
+yy3:
 	++YYCURSOR;
 #line 3 "encodings/utf8-range_single_symbol.re"
 	{ return 0; }
@@ -26,7 +26,7 @@ yy4:
 }
 #line 4 "encodings/utf8-range_single_symbol.re"
 
-encodings/utf8-range_single_symbol.re:4:2: warning: control flow is undefined for strings that match 
+encodings/utf8-range_single_symbol.re:2:0: warning: control flow is undefined for strings that match 
 	'[\x0-\xCF\xD1-\xFF]'
 	'\xD0 [\x0-\xAF\xB1-\xFF]'
 , use default rule '*' [-Wundefined-control-flow]

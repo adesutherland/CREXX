@@ -8,11 +8,11 @@
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 0x25:	goto yy2;
-	default:	goto yy3;
+		case 0x25: goto yy1;
+		default: goto yy2;
 	}
+yy1:
 yy2:
-yy3:
 	++YYCURSOR;
 #line 3 "encodings/range_dot_e.re"
 	{return 0;}
@@ -20,4 +20,4 @@ yy3:
 }
 #line 4 "encodings/range_dot_e.re"
 
-encodings/range_dot_e.re:4:2: warning: control flow is undefined for strings that match '\x25', use default rule '*' [-Wundefined-control-flow]
+encodings/range_dot_e.re:2:0: warning: control flow is undefined for strings that match '\x25', use default rule '*' [-Wundefined-control-flow]
