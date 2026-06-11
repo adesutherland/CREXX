@@ -390,23 +390,52 @@ static size_t encode_line_source(char* buffer, size_t buffer_len, const char* st
     return out_len;
 }
 
+static size_t encoded_line_source_length(const char* string, size_t length, int *ok) {
+    size_t out_len = 0;
+    size_t add;
+
+    *ok = 1;
+    while (length) {
+        switch (*string) {
+            case '\n':
+            case '\"':
+            case '\\':
+            case '\t':
+            case '\f':
+            case '\r':
+            case 0:
+                add = 2;
+                break;
+            default:
+                add = 1;
+                break;
+        }
+        if (out_len > (size_t)-1 - add) {
+            *ok = 0;
+            return 0;
+        }
+        out_len += add;
+        string++;
+        length--;
+    }
+    return out_len;
+}
+
 char* encode_line_source_malloc(const char* string, size_t length) {
     char *buffer;
     size_t buffer_len;
-    size_t needed_len;
+    size_t encoded_len;
+    int ok;
 
-    /* Guess a length which is likely to be big enough */
-    buffer_len = (length * 2) + 1;
+    if (!string && length) return 0;
+    encoded_len = encoded_line_source_length(string ? string : "", length, &ok);
+    if (!ok || encoded_len == (size_t)-1) return 0;
+
+    buffer_len = encoded_len + 1;
     buffer = malloc(buffer_len);
+    if (!buffer) return 0;
 
-    needed_len = encode_line_source(buffer, buffer_len, string, length) + 1;
-    if (needed_len > buffer_len) {
-        /* Buffer not big enough - do it again */
-        buffer_len = needed_len;
-        free(buffer);
-        buffer = malloc(buffer_len);
-        encode_line_source(buffer, buffer_len, string, length);
-    }
+    encode_line_source(buffer, buffer_len, string ? string : "", length);
     return buffer;
 }
 
