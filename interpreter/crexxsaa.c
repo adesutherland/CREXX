@@ -43,6 +43,8 @@
 # define CREXXSAA_GETPID() _getpid()
 # define CREXXSAA_STAT_STRUCT struct _stat
 # define CREXXSAA_STAT(path, st) _stat((path), (st))
+# define CREXXSAA_FSTAT(fd, st) _fstat((fd), (st))
+# define CREXXSAA_FILENO(file) _fileno(file)
 #else
 # include <dirent.h>
 # include <limits.h>
@@ -54,6 +56,8 @@
 # define CREXXSAA_GETPID() getpid()
 # define CREXXSAA_STAT_STRUCT struct stat
 # define CREXXSAA_STAT(path, st) stat((path), (st))
+# define CREXXSAA_FSTAT(fd, st) fstat((fd), (st))
+# define CREXXSAA_FILENO(file) fileno(file)
 #endif
 
 #ifndef PATH_MAX
@@ -600,14 +604,14 @@ static int crexxsaa_file_digest_read(
         crexxsaa_set_error(ctx, "Invalid source digest arguments");
         return -1;
     }
-    if (CREXXSAA_STAT(path, &st) != 0) {
-        crexxsaa_set_errorf(ctx, "Unable to stat CREXX source '%s': %s", path, strerror(errno));
-        return -1;
-    }
-
     file = fopen(path, "rb");
     if (!file) {
         crexxsaa_set_errorf(ctx, "Unable to read CREXX source '%s': %s", path, strerror(errno));
+        return -1;
+    }
+    if (CREXXSAA_FSTAT(CREXXSAA_FILENO(file), &st) != 0) {
+        crexxsaa_set_errorf(ctx, "Unable to stat CREXX source '%s': %s", path, strerror(errno));
+        fclose(file);
         return -1;
     }
 

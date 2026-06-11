@@ -38,6 +38,14 @@
 #define MAX_LINE_SIZE 5000
 #include "../binutils/include/opdata.c"
 
+static size_t line_buffer_offset(size_t used) {
+    return used < MAX_LINE_SIZE ? used : MAX_LINE_SIZE - 1;
+}
+
+static size_t line_buffer_remaining(size_t used) {
+    return used < MAX_LINE_SIZE ? MAX_LINE_SIZE - used : 0;
+}
+
 static int get_operand_types(OpFormat format, OperandType *types) {
     switch (format) {
         case FMT_EMPTY: return 0;
@@ -1407,9 +1415,9 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
             int k;
             for (k = 0; k < num_ops; k++) {
                 if (k > 0) {
-                    line_len += snprintf(line_buffer + line_len, MAX_LINE_SIZE - line_len, ",");
+                    line_len += snprintf(line_buffer + line_buffer_offset(line_len), line_buffer_remaining(line_len), ",");
                 }
-                line_len += disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE - line_len, types[k], i++, globals, locals);
+                line_len += disassemble_operand(pgm, line_buffer + line_buffer_offset(line_len), line_buffer_remaining(line_len), types[k], i++, globals, locals);
             }
         }
         fprintf(stream, "%-45s * 0x%.6lx:%.4x %s\n", line_buffer, j, source[j].op->opcode, source[j].comment);

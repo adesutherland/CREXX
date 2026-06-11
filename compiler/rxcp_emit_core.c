@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_source_tree.h"
@@ -53,6 +54,10 @@ const char* emit_promotion[10][10] = {
 };
 
 static unsigned int next_source_step_id = 1;
+
+static int printf_string_precision(size_t length) {
+    return length > (size_t)INT_MAX ? INT_MAX : (int)length;
+}
 
 void reset_metaline_source_file(const char *file_name) {
     (void)file_name;
@@ -1065,7 +1070,7 @@ char* format_constant(ValueType type, ASTNode* node) {
 
     if (type == TP_STRING) {
         buffer = mprintf("\"%.*s\"",
-                         node->node_string_length,
+                         printf_string_precision(node->node_string_length),
                          node->node_string);
     }
     else if (type == TP_FLOAT) {
@@ -1080,22 +1085,22 @@ char* format_constant(ValueType type, ASTNode* node) {
         }
         if (flag)
             buffer = mprintf("%.*s.0",
-                             node->node_string_length,
+                             printf_string_precision(node->node_string_length),
                              node->node_string);
         else
             buffer = mprintf("%.*s",
-                             node->node_string_length,
+                             printf_string_precision(node->node_string_length),
                              node->node_string);
     }
     else if (type == TP_DECIMAL) {
         buffer = mprintf("%.*sd",
-                        node->node_string_length,
+                        printf_string_precision(node->node_string_length),
                         node->node_string);
     }
     else if (type == TP_BINARY) {
         if (node->node_type == BINARY || node->value_type == TP_BINARY) {
             buffer = mprintf("%.*s",
-                             node->node_string_length,
+                             printf_string_precision(node->node_string_length),
                              node->node_string);
         }
         else {
@@ -1105,7 +1110,7 @@ char* format_constant(ValueType type, ASTNode* node) {
     else {
         /* Integer */
         buffer = mprintf("%.*s",
-                         node->node_string_length,
+                         printf_string_precision(node->node_string_length),
                          node->node_string);
     }
     return buffer;

@@ -90,6 +90,200 @@
 
 int rxvm_link(rxvm_context *ctx);
 
+#define RXVM_FFORMAT_MAX_FIELD 1000
+
+static char *rxvm_format_buffer_at(char *buffer, size_t buffer_len, size_t used) {
+    if (buffer_len == 0) return buffer;
+    return buffer + (used < buffer_len ? used : buffer_len - 1);
+}
+
+static size_t rxvm_format_buffer_remaining(size_t buffer_len, size_t used) {
+    return used < buffer_len ? buffer_len - used : 0;
+}
+
+static size_t rxvm_format_append_literal(char *buffer, size_t buffer_len, size_t used, const char *text, size_t text_len) {
+    if (buffer_len > 0) {
+        size_t offset = used < buffer_len ? used : buffer_len - 1;
+        size_t writable = buffer_len - offset;
+        if (writable > 0) {
+            size_t copy_len;
+            writable--;
+            copy_len = text_len < writable ? text_len : writable;
+            if (copy_len > 0) memcpy(buffer + offset, text, copy_len);
+            buffer[offset + copy_len] = 0;
+        }
+    }
+    return used + text_len;
+}
+
+static int rxvm_format_parse_field_number(const char **cursor, const char *end, int *present, int *value) {
+    const char *p = *cursor;
+    int parsed_value = 0;
+
+    *present = 0;
+    while (p < end && *p >= '0' && *p <= '9') {
+        int digit = *p - '0';
+        *present = 1;
+        if (parsed_value <= (RXVM_FFORMAT_MAX_FIELD - digit) / 10) {
+            parsed_value = parsed_value * 10 + digit;
+        }
+        else {
+            parsed_value = RXVM_FFORMAT_MAX_FIELD;
+        }
+        p++;
+    }
+    *value = parsed_value;
+    *cursor = p;
+    return 1;
+}
+
+static int rxvm_format_is_float_conversion(char ch) {
+    return ch == 'a' || ch == 'A' ||
+           ch == 'e' || ch == 'E' ||
+           ch == 'f' || ch == 'F' ||
+           ch == 'g' || ch == 'G';
+}
+
+static int rxvm_format_parse_float_conversion(const char *format,
+                                              size_t format_len,
+                                              size_t percent_index,
+                                              size_t *next_index,
+                                              int *width_present,
+                                              int *width,
+                                              int *precision_present,
+                                              int *precision,
+                                              char *conversion) {
+    const char *p = format + percent_index + 1;
+    const char *end = format + format_len;
+
+    if (p >= end) return 0;
+    if (*p == '*') return 0;
+
+    rxvm_format_parse_field_number(&p, end, width_present, width);
+
+    if (p < end && *p == '.') {
+        p++;
+        *precision_present = 1;
+        *precision = 0;
+        if (p < end && *p == '*') return 0;
+        rxvm_format_parse_field_number(&p, end, precision_present, precision);
+        *precision_present = 1;
+    }
+    else {
+        *precision_present = 0;
+        *precision = 0;
+    }
+
+    if (p >= end || !rxvm_format_is_float_conversion(*p)) return 0;
+    *conversion = *p++;
+    *next_index = (size_t)(p - format);
+    return 1;
+}
+
+static size_t rxvm_format_append_double(char *buffer,
+                                        size_t buffer_len,
+                                        size_t used,
+                                        int width_present,
+                                        int width,
+                                        int precision_present,
+                                        int precision,
+                                        char conversion,
+                                        double value) {
+    char *out = rxvm_format_buffer_at(buffer, buffer_len, used);
+    size_t remaining = rxvm_format_buffer_remaining(buffer_len, used);
+    int written = -1;
+
+#define RXVM_APPEND_DOUBLE_CASE(ch, no_width, with_width, with_precision, with_width_precision) \
+    case ch: \
+        if (width_present && precision_present) written = snprintf(out, remaining, with_width_precision, width, precision, value); \
+        else if (width_present) written = snprintf(out, remaining, with_width, width, value); \
+        else if (precision_present) written = snprintf(out, remaining, with_precision, precision, value); \
+        else written = snprintf(out, remaining, no_width, value); \
+        break
+
+    switch (conversion) {
+        RXVM_APPEND_DOUBLE_CASE('a', "%a", "%*a", "%.*a", "%*.*a");
+        RXVM_APPEND_DOUBLE_CASE('A', "%A", "%*A", "%.*A", "%*.*A");
+        RXVM_APPEND_DOUBLE_CASE('e', "%e", "%*e", "%.*e", "%*.*e");
+        RXVM_APPEND_DOUBLE_CASE('E', "%E", "%*E", "%.*E", "%*.*E");
+        RXVM_APPEND_DOUBLE_CASE('f', "%f", "%*f", "%.*f", "%*.*f");
+        RXVM_APPEND_DOUBLE_CASE('F', "%F", "%*F", "%.*F", "%*.*F");
+        RXVM_APPEND_DOUBLE_CASE('g', "%g", "%*g", "%.*g", "%*.*g");
+        RXVM_APPEND_DOUBLE_CASE('G', "%G", "%*G", "%.*G", "%*.*G");
+        default:
+            break;
+    }
+
+#undef RXVM_APPEND_DOUBLE_CASE
+
+    return written < 0 ? used : used + (size_t)written;
+}
+
+static size_t rxvm_format_float_with_checked_format(char *buffer,
+                                                    size_t buffer_len,
+                                                    const char *format,
+                                                    double value) {
+    size_t format_len;
+    size_t i = 0;
+    size_t used = 0;
+    int converted = 0;
+
+    if (buffer_len > 0) buffer[0] = 0;
+    if (!format) return 0;
+
+    format_len = strlen(format);
+    while (i < format_len) {
+        if (format[i] != '%') {
+            used = rxvm_format_append_literal(buffer, buffer_len, used, format + i, 1);
+            i++;
+            continue;
+        }
+
+        if (i + 1 < format_len && format[i + 1] == '%') {
+            used = rxvm_format_append_literal(buffer, buffer_len, used, "%", 1);
+            i += 2;
+            continue;
+        }
+
+        if (!converted) {
+            size_t next_index;
+            int width_present;
+            int width;
+            int precision_present;
+            int precision;
+            char conversion;
+
+            if (rxvm_format_parse_float_conversion(format,
+                                                   format_len,
+                                                   i,
+                                                   &next_index,
+                                                   &width_present,
+                                                   &width,
+                                                   &precision_present,
+                                                   &precision,
+                                                   &conversion)) {
+                used = rxvm_format_append_double(buffer,
+                                                 buffer_len,
+                                                 used,
+                                                 width_present,
+                                                 width,
+                                                 precision_present,
+                                                 precision,
+                                                 conversion,
+                                                 value);
+                converted = 1;
+                i = next_index;
+                continue;
+            }
+        }
+
+        used = rxvm_format_append_literal(buffer, buffer_len, used, format + i, format_len - i);
+        break;
+    }
+
+    return used;
+}
+
 static int rxvm_insert_attributes_checked(value *array, rxinteger index, rxinteger count) {
     size_t insert_index;
     size_t insert_count;
@@ -6745,7 +6939,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - FFORMAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             prep_string_buffer(op1R,SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
             null_terminate_string_buffer(op3R);    // terminate format string explicitly, rexx vars aren't!
-            op1R->string_length = snprintf(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value);
+            op1R->string_length = rxvm_format_float_with_checked_format(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value);
             op1R->string_pos = 0;
   #ifndef NUTF8
             op1R->string_char_pos = 0;

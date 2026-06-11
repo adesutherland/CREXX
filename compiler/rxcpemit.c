@@ -32,6 +32,7 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <limits.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
@@ -39,6 +40,10 @@
 
 #define UNSET_REGISTER (-1)
 #define DONT_ASSIGN_REGISTER (-2)
+
+static int printf_string_precision(size_t length) {
+    return length > (size_t)INT_MAX ? INT_MAX : (int)length;
+}
 
 static int is_large_value(ASTNode *node) {
     if (!node) return 0;
@@ -1082,7 +1087,7 @@ static walker_result emit_walker(walker_direction direction,
                 /* We will build the assembler instruction */
                 /* First the command */
                 char* inst = mprintf("   %.*s",
-                                     node->node_string_length, node->node_string);
+                                     printf_string_precision(node->node_string_length), node->node_string);
 
                 /* Lower case the instruction */
                 int l;
@@ -1093,7 +1098,7 @@ static walker_result emit_walker(walker_direction direction,
                 /* Argument 1 */
                 if (child1) {
                     if (child1->node_type == FUNC_SYMBOL) {
-                        arg1 = mprintf("%.*s()", child1->node_string_length, child1->node_string);
+                        arg1 = mprintf("%.*s()", printf_string_precision(child1->node_string_length), child1->node_string);
                     }
                     else if (child1->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
                         arg1 = format_constant(child1->target_type, child1);
@@ -1108,7 +1113,7 @@ static walker_result emit_walker(walker_direction direction,
                 /* Argument 2 */
                 if (child2) {
                     if (child2->node_type == FUNC_SYMBOL) {
-                        arg2 = mprintf("%.*s()", child2->node_string_length, child2->node_string);
+                        arg2 = mprintf("%.*s()", printf_string_precision(child2->node_string_length), child2->node_string);
                     }
                     else if (child2->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
                         arg2 = format_constant(child2->target_type, child2);
@@ -1123,7 +1128,7 @@ static walker_result emit_walker(walker_direction direction,
                 /* Argument 3 */
                 if (child3) {
                     if (child3->node_type == FUNC_SYMBOL) {
-                        arg3 = mprintf("%.*s()", child3->node_string_length, child3->node_string);
+                        arg3 = mprintf("%.*s()", printf_string_precision(child3->node_string_length), child3->node_string);
                     }
                     else if (child3->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
                         arg3 = format_constant(child3->target_type, child3);

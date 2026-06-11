@@ -18,7 +18,7 @@ permissions:
 jobs:
   version:
     name: Determine Version Metadata
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.metadata.outputs.version }}
       channel: ${{ steps.metadata.outputs.channel }}
@@ -93,17 +93,17 @@ jobs:
       matrix:
         include:
           - name: Linux x64
-            os: ubuntu-latest
+            os: ubuntu-24.04
             platform: linux
             artifact_name: CREXX-linux-x64
             cmake_args: ""
           - name: Windows x64
-            os: windows-latest
+            os: windows-2025
             platform: windows
             artifact_name: CREXX-windows-x64
             cmake_args: "-DCREXX_FORCE_SYSTEM_OPENSSL=ON"
           - name: macOS arm64
-            os: macos-latest
+            os: macos-15
             platform: macos
             artifact_name: CREXX-macos-arm64
             cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
@@ -442,7 +442,7 @@ jobs:
 
       - name: Upload packaged asset
         if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact_name }}-release-asset
           path: ${{ runner.temp }}/release-assets/CREXX-*
@@ -459,7 +459,7 @@ jobs:
 
   release:
     name: Create GitHub Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - build
       - version
@@ -475,7 +475,7 @@ jobs:
           fetch-depth: 1
 
       - name: Download release assets
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           path: ${{ runner.temp }}/downloaded-release-assets
 
@@ -552,7 +552,7 @@ jobs:
 
   dev-snapshot:
     name: Publish Dev Snapshot
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - build
       - version
@@ -588,7 +588,7 @@ jobs:
 
       - name: Download packaged assets
         if: steps.publish_target.outputs.should_publish == 'true'
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           path: ${{ runner.temp }}/downloaded-dev-snapshot-assets
 
