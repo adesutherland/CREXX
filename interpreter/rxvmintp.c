@@ -129,6 +129,62 @@ static int rxvm_checked_size_mul(size_t left, size_t right, size_t *result) {
     return 1;
 }
 
+#if defined(__has_builtin)
+#if __has_builtin(__builtin_mul_overflow)
+#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 1
+#endif
+#elif defined(__GNUC__)
+#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 1
+#endif
+#ifndef RXVM_HAS_BUILTIN_MUL_OVERFLOW
+#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 0
+#endif
+
+#if !RXVM_HAS_BUILTIN_MUL_OVERFLOW
+static uintmax_t rxvm_rxinteger_positive_limit(void) {
+    uintmax_t bits = UINTMAX_MAX;
+    size_t rxinteger_bits = sizeof(rxinteger) * CHAR_BIT;
+    size_t uintmax_bits = sizeof(uintmax_t) * CHAR_BIT;
+
+    if (rxinteger_bits < uintmax_bits) bits >>= uintmax_bits - rxinteger_bits;
+    return bits >> 1;
+}
+
+static uintmax_t rxvm_rxinteger_magnitude(rxinteger value) {
+    if (value >= 0) return (uintmax_t)value;
+    return (uintmax_t)(-(value + 1)) + 1;
+}
+#endif
+
+static int rxvm_checked_rxinteger_mul(rxinteger left, rxinteger right, rxinteger *result) {
+#if RXVM_HAS_BUILTIN_MUL_OVERFLOW
+    return !__builtin_mul_overflow(left, right, result);
+#else
+    uintmax_t left_mag = rxvm_rxinteger_magnitude(left);
+    uintmax_t right_mag = rxvm_rxinteger_magnitude(right);
+    int negative = (left < 0) != (right < 0);
+    uintmax_t limit = rxvm_rxinteger_positive_limit() + (negative ? 1 : 0);
+    uintmax_t product;
+
+    if (left_mag == 0 || right_mag == 0) {
+        *result = 0;
+        return 1;
+    }
+
+    if (right_mag > limit / left_mag) return 0;
+    product = left_mag * right_mag;
+
+    if (negative) {
+        *result = -(rxinteger)(product - 1) - 1;
+    }
+    else {
+        *result = (rxinteger)product;
+    }
+
+    return 1;
+#endif
+}
+
 static int rxvm_format_parse_field_number(const char **cursor, const char *end, int *present, int *value) {
     const char *p = *cursor;
     int parsed_value = 0;
@@ -1601,99 +1657,41 @@ const char compile_date[8+1] =
                 '\0'
         };
 
-/* Fast integer pow calculation - loop unwound - based / from https://gist.github.com/orlp/3551590
- * by Orson Peters / orlp / Leiden, Netherlands / orsonpeters@gmail.com
- * Returns the result or 0 for overflow / underflow
- * todo can overflow on 32 bit (update the table) */
-RX_INLINE rxinteger ipow(rxinteger base, rxinteger exp_int) {
-    static const uint8_t highest_bit_set[] = {
-            0, 1, 2, 2, 3, 3, 3, 3,
-            4, 4, 4, 4, 4, 4, 4, 4,
-            5, 5, 5, 5, 5, 5, 5, 5,
-            5, 5, 5, 5, 5, 5, 5, 5,
-            6, 6, 6, 6, 6, 6, 6, 6,
-            6, 6, 6, 6, 6, 6, 6, 6,
-            6, 6, 6, 6, 6, 6, 6, 6,
-            6, 6, 6, 6, 6, 6, 6, 255, // anything past 63 is a guaranteed overflow with base > 1
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-    };
+RX_INLINE int ipow(rxinteger base, rxinteger exp_int, rxinteger *result_out) {
+    rxinteger result = 1;
 
-    /* Adrian added this bit to check for negative / oversize exp
-     * the original used uint8 for exp so not needed */
-    if (exp_int > 255 || exp_int < 0) {
+    if (exp_int < 0) {
         if (base == 1) {
+            *result_out = 1;
             return 1;
         }
 
         if (base == -1) {
-            return 1 - 2 * (exp_int & 1);
+            *result_out = (exp_int & 1) ? -1 : 1;
+            return 1;
         }
 
-        return 0; /* Overflow / underflow */
+        *result_out = 0;
+        return 0;
     }
 
-    rxinteger result = 1;
-    uint8_t exp = (uint8_t) exp_int;
-
-    switch (highest_bit_set[exp]) {
-        case 255: // we use 255 as an overflow marker and return 0 on overflow/underflow
-            if (base == 1) {
-                return 1;
+    while (exp_int > 0) {
+        if (exp_int & 1) {
+            if (!rxvm_checked_rxinteger_mul(result, base, &result)) {
+                *result_out = 0;
+                return 0;
             }
+        }
 
-            if (base == -1) {
-                return 1 - 2 * (exp & 1);
-            }
-
-            return 0; /* Overflow / underflow */
-        case 6:
-            if (exp & 1) result *= base;
-            exp >>= 1;
-            base *= base;
-        case 5:
-            if (exp & 1) result *= base;
-            exp >>= 1;
-            base *= base;
-        case 4:
-            if (exp & 1) result *= base;
-            exp >>= 1;
-            base *= base;
-        case 3:
-            if (exp & 1) result *= base;
-            exp >>= 1;
-            base *= base;
-        case 2:
-            if (exp & 1) result *= base;
-            exp >>= 1;
-            base *= base;
-        case 1:
-            if (exp & 1) result *= base;
-        default:
-            return result;
+        exp_int >>= 1;
+        if (exp_int > 0 && !rxvm_checked_rxinteger_mul(base, base, &base)) {
+            *result_out = 0;
+            return 0;
+        }
     }
+
+    *result_out = result;
+    return 1;
 }
 
 /* Function to convert an interrupt to a string: interrupt_entry -> Code Description Massage */
@@ -6836,8 +6834,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
 
-        op1R->int_value = ipow(op2R->int_value, op3R->int_value);
-        if (!op1R->int_value) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!ipow(op2R->int_value, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6847,8 +6844,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
 
-        op1R->int_value = ipow(op2R->int_value, op3I);
-        if (!op1R->int_value) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!ipow(op2R->int_value, op3I, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6858,8 +6854,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_INT_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
 
-        op1R->int_value = ipow(op2I, op3R->int_value);
-        if (!op1R->int_value) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!ipow(op2I, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
