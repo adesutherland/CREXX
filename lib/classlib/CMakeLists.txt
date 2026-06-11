@@ -34,9 +34,33 @@ set(CLSS
 )
 
 set(CLSBINS)
+set(CLSSOURCES)
 foreach(CLS IN LISTS CLSS)
   list(APPEND CLSBINS "${CMAKE_CURRENT_BINARY_DIR}/${CLS}.rxbin")
+  list(APPEND CLSSOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${CLS}.crexx")
 endforeach()
+
+set(CLASSLIB_MEMBER_BUILD_DEPS
+  rxc
+  rxas
+  library
+  compiler_exit_bin
+  lib/plugins/_system
+  lib/plugins/_treemap
+  lib/plugins/_llist
+  lib/plugins/_keyaccess
+  lib/plugins/_id
+)
+
+set(_classlib_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/classlib_member_clean.stamp")
+add_custom_command(
+  OUTPUT "${_classlib_member_clean_stamp}"
+  COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib.rxbin" ${CLSBINS}
+  COMMAND ${CMAKE_COMMAND} -E touch "${_classlib_member_clean_stamp}"
+  DEPENDS ${CLSSOURCES} ${CLASSLIB_MEMBER_BUILD_DEPS}
+  COMMENT "Clearing stale class library member images ..."
+  VERBATIM
+)
 
 set(CLASSLIB_SELECTORS ${CLSS})
 set(CLASS_DEPS_StringIterable StringIterator)
@@ -78,16 +102,9 @@ foreach(_binfile IN LISTS CLSBINS)
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+      "${_classlib_member_clean_stamp}"
       ${_class_deps}
-      rxc
-      rxas
-      library
-      compiler_exit_bin
-      lib/plugins/_system
-      lib/plugins/_treemap
-      lib/plugins/_llist
-      lib/plugins/_keyaccess
-      lib/plugins/_id
+      ${CLASSLIB_MEMBER_BUILD_DEPS}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "cREXX compile and assemble ${_basename} ..."
     VERBATIM
