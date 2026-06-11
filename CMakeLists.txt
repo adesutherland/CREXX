@@ -161,9 +161,14 @@ endif()
 option(ENABLE_ODBC "Enable ODBC support" OFF)
 option(ENABLE_GTK  "Enable GTK support"  OFF)
 option(CREXX_BUILD_SQLITE_ADDRESS_DEMO "Build the native SQLite ADDRESS demo; downloads the pinned SQLite amalgamation" ON)
-set(CREXX_SQLITE_AMALGAMATION_YEAR "2026" CACHE STRING "SQLite amalgamation download year")
-set(CREXX_SQLITE_AMALGAMATION_VERSION "3530000" CACHE STRING "SQLite amalgamation version code")
-set(CREXX_SQLITE_AMALGAMATION_SHA3_256 "c2325c53b3b41761469f91cfb078e96882ac5d85bac10c11b0bd8f253b031e5b" CACHE STRING "SQLite amalgamation SHA3-256")
+# These are source-controlled dependency pins, not user build options. Remove
+# stale cache entries left by earlier builds where they were CACHE variables.
+unset(CREXX_SQLITE_AMALGAMATION_YEAR CACHE)
+unset(CREXX_SQLITE_AMALGAMATION_VERSION CACHE)
+unset(CREXX_SQLITE_AMALGAMATION_SHA3_256 CACHE)
+set(CREXX_SQLITE_AMALGAMATION_YEAR "2026")
+set(CREXX_SQLITE_AMALGAMATION_VERSION "3530200")
+set(CREXX_SQLITE_AMALGAMATION_SHA3_256 "81142986038e18f96c4a54e1a72562ae17e502a916f2a7701eff43388cbf1a40")
 option(ENABLE_PARSER_MODE "Enable Parser Mode (requires DSL-Syntax-Highlighter)" ON)
 set(DSLSH_LOCAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../DSL-Syntax-Highlighter"
         CACHE PATH "Path to a local DSL-Syntax-Highlighter checkout")
