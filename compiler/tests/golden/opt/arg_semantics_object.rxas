@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : arg_semantics_object.crexx
- * BUILT                  : 2026-06-08 20:45:45
+ * BUILT                  : 2026-06-12 20:25:41
  */
 
 .meta "arg_semantics_object.box"="b" ".unknown" .class
@@ -231,6 +231,7 @@ l303bexprend:
 §arg_semantics_object.box.getname() .locals=2
    .meta "arg_semantics_object.box.getname"="b" ".string" §arg_semantics_object.box.getname() ""
    .srcstep 81 81 17 "arg_semantics_object.crexx" 35 3 28 "  getName: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

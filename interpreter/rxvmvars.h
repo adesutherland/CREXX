@@ -68,6 +68,21 @@ RX_INLINE void copy_vm_private_flags(value *dest, const value *source) {
     set_vm_private_flags(dest, source->status.all_type_flags);
 }
 
+RX_INLINE int value_is_uninitialized_object(const value *v) {
+    return v &&
+           (v->status.all_type_flags & RXFLAG_VM_OBJECT_UNINITIALIZED) != 0;
+}
+
+RX_INLINE void mark_value_uninitialized_object(value *v) {
+    if (!v) return;
+    set_vm_private_flags(v, v->status.all_type_flags | RXFLAG_VM_OBJECT_UNINITIALIZED);
+}
+
+RX_INLINE void clear_value_uninitialized_object(value *v) {
+    if (!v) return;
+    set_vm_private_flags(v, v->status.all_type_flags & ~RXFLAG_VM_OBJECT_UNINITIALIZED);
+}
+
 #ifndef NUTF8
 RX_INLINE int has_utf8_valid_count(const value *v) {
     return (v->status.all_type_flags & (RXFLAG_VM_UTF8_VALID | RXFLAG_VM_UTF8_COUNT_VALID)) ==

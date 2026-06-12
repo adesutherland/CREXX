@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : arg_semantics_object.crexx
- * BUILT                  : 2026-06-05 19:41:35
+ * BUILT                  : 2026-06-12 20:25:41
  */
 
 .meta "arg_semantics_object.box"="b" ".unknown" .class
@@ -199,6 +199,7 @@ replaceBoxRef() .locals=3
 §arg_semantics_object.box.getname() .locals=2
    .meta "arg_semantics_object.box.getname"="b" ".string" §arg_semantics_object.box.getname() ""
    .srcstep 26 26 17 "arg_semantics_object.crexx" 35 3 28 "  getName: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

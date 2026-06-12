@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test2.crexx
- * BUILT                  : 2026-06-05 19:41:40
+ * BUILT                  : 2026-06-12 20:25:45
  */
 
 .meta "inline_test2.myclass"="b" ".unknown" .class
@@ -179,6 +179,7 @@ helper() .locals=2
 §inline_test2.myclass.mymethod() .locals=3
    .meta "inline_test2.myclass.mymethod"="b" ".int" §inline_test2.myclass.mymethod() "v=.int"
    .srcstep 60 60 17 "inline_test2.crexx" 50 3 26 "  myMethod: method = .int"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

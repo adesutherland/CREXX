@@ -109,6 +109,13 @@ concrete class value to an implemented interface. In practice that means a
 statement such as `iface = .widget(...)` is supported, while interface-to-interface
 assignment should not be relied on.
 
+The factory call brackets are semantically significant. `.widget()` calls the
+default factory and returns an initialized object. Bare `.widget` is the typed
+default object value for that class and is not initialized. It can still satisfy
+type-contract checks such as `value is .object`, but using it as a receiver
+raises the catchable `OBJECT_NOT_INITIALIZED` signal. Use `initialized(value)`
+when code needs to distinguish these states explicitly.
+
 ## Class State
 
 Class attributes are declared in the class block:

@@ -43,6 +43,22 @@
 #include <ctype.h>
 #include <string.h>
 #include "rxcpmain.h"
+
+static int token_text_equals_ci(Token *token, const char *text) {
+    size_t i;
+    size_t length;
+
+    if (!token || !token->token_string || !text) return 0;
+    length = strlen(text);
+    if (token->length != length) return 0;
+    for (i = 0; i < length; i++) {
+        if (tolower((unsigned char) token->token_string[i]) !=
+            tolower((unsigned char) text[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
 }
 
 %token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL.
@@ -1270,7 +1286,15 @@ expression_list(L)     ::= expression_list(L1) TK_COMMA.
 
 /* Expression terminal nodes */
 term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
-                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+                           {
+                               F = ast_f(context, token_text_equals_ci(S, "initialized") ? OP_INITIALIZED : FUNCTION, S);
+                               if (P) add_ast(F,P);
+                           }
+term(F)                ::= TK_VAR_SYMBOL(S) TK_OPEN_BRACKET TK_CLASS_TYPE(C) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           {
+                               F = ast_f(context, token_text_equals_ci(S, "initialized") ? OP_INITIALIZED : FUNCTION, S);
+                               add_ast(F, ast_f(context, CLASS, C));
+                           }
 term(F)                ::= TK_QUALIFIED_SYMBOL(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 term(F)                ::= TK_STEM(S) stemparts(P) function_parameters(PP).

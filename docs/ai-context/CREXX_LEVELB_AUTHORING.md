@@ -235,6 +235,12 @@ returns that interface and a class factory returns that concrete class. In a
 class factory, bare `return` returns the constructed object, so there is no
 source-level `this` value to mention.
 
+When creating an object value, include the factory call brackets. `.SomeClass()`
+returns an initialized instance. Bare `.SomeClass` is a typed default object
+value and is intentionally uninitialized; it is useful for type defaults and
+can be probed with `initialized(value)`, but calling methods on it raises
+`OBJECT_NOT_INITIALIZED`.
+
 ```rexx
 vehicle: interface
   *: factory

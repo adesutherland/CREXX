@@ -5,6 +5,20 @@ import data_StringIterable
 
 failures = 0
 
+call_h = .StringObjectHashMap()
+call call_h.put("x", .box("ex") as .object)
+call call_h.put("y", .box("why") as .object)
+failures = failures + check_int("call hash object map size", call_h.size(), 2)
+failures = failures + check_box("call hash object map x", call_h.get("x"), "ex")
+failures = failures + check_box("call hash object map y", call_h.get("y"), "why")
+call_h_it = call_h.iterator()
+call_h_seen = 0
+loop while call_h_it.hasNext()
+  call_h_key = call_h_it.next()
+  if call_h_key = "x" | call_h_key = "y" then call_h_seen = call_h_seen + 1
+end
+failures = failures + check_int("call hash iterator count", call_h_seen, 2)
+
 h = .StringObjectHashMap()
 rc = h.put("b", .box("bee") as .object)
 rc = h.put("a", .box("aye") as .object)
@@ -90,6 +104,17 @@ failures = failures + check_box("tree nextValue advances first value", tree_next
 failures = failures + check_string("tree nextValue current key", tree_next_value.nextKey(), "b")
 failures = failures + check_box("tree nextValue current value", tree_next_value.nextValue(), "bee")
 failures = failures + check_int("tree iterable interface count", count_string_iterable(t), 3)
+
+call_t = .StringObjectTreeMap()
+call call_t.put("a", .box("aye") as .object)
+call call_t.put("b", .box("bee") as .object)
+failures = failures + check_int("call tree object map size", call_t.size(), 2)
+call_t_it = call_t.iterator()
+failures = failures + check_string("call tree iterator first key", call_t_it.next(), "a")
+failures = failures + check_box("call tree iterator first value", call_t_it.value(), "aye")
+failures = failures + check_string("call tree iterator second key", call_t_it.next(), "b")
+failures = failures + check_box("call tree iterator second value", call_t_it.value(), "bee")
+failures = failures + check_int("call tree iterator end", call_t_it.hasNext(), 0)
 
 if failures <> 0 then do
   say "String object map failures:" failures

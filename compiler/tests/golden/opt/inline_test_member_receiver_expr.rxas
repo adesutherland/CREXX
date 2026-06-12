@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_member_receiver_expr.crexx
- * BUILT                  : 2026-06-05 19:41:50
+ * BUILT                  : 2026-06-12 20:25:52
  */
 
 .meta "inline_test_member_receiver_expr.box"="b" ".unknown" .class
@@ -111,6 +111,7 @@ l71bexprend:
 §inline_test_member_receiver_expr.box.getname() .locals=2
    .meta "inline_test_member_receiver_expr.box.getname"="b" ".string" §inline_test_member_receiver_expr.box.getname() ""
    .srcstep 38 38 17 "inline_test_member_receiver_expr.crexx" 23 3 28 "  getName: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

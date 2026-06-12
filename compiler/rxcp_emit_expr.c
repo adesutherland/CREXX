@@ -112,9 +112,17 @@ static char *build_source_type_name(ValueType type, const char *internal_class_n
 }
 
 static int is_builtin_object_contract_name(const char *name) {
-    return name &&
-           (strcmp(name, "object") == 0 ||
-            strcmp(name, ".object") == 0);
+    static const char object_name[] = "object";
+    size_t i;
+    size_t start;
+
+    if (!name) return 0;
+    start = name[0] == '.' ? 1 : 0;
+    if (strlen(name + start) != sizeof(object_name) - 1) return 0;
+    for (i = 0; i < sizeof(object_name) - 1; i++) {
+        if (tolower((unsigned char) name[start + i]) != object_name[i]) return 0;
+    }
+    return 1;
 }
 
 static int semantic_context_is_sugar_get(ASTSemanticContextKind kind) {
@@ -1063,6 +1071,20 @@ void emit_expression(ASTNode *node, void *payload) {
             if (!node->output) node->output = output_f();
             if (child1->output) output_concat(node->output, child1->output);
             temp1 = mprintf("   refvalid %c%d,%c%d\n",
+                            node->register_type,
+                            node->register_num,
+                            child1->register_type,
+                            child1->register_num);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            type_promotion(node);
+            break;
+
+        case OP_INITIALIZED:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            temp1 = mprintf("   isinitialized %c%d,%c%d\n",
                             node->register_type,
                             node->register_num,
                             child1->register_type,

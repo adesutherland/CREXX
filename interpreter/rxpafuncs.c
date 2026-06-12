@@ -214,6 +214,8 @@ char* rxvm_getsignaltext(rxsignal signal) {
              return "OUT_OF_RANGE";
          case SIGNAL_REFERENCE_INVALID:
              return "REFERENCE_INVALID";
+         case SIGNAL_OBJECT_NOT_INITIALIZED:
+             return "OBJECT_NOT_INITIALIZED";
          case SIGNAL_FAILURE:
              return "FAILURE";
          case SIGNAL_HALT:

@@ -37,6 +37,7 @@
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
 #include "rxcp_val.h"
+#include "rxcp_util.h"
 
 #define UNSET_REGISTER (-1)
 #define DONT_ASSIGN_REGISTER (-2)
@@ -773,6 +774,7 @@ static walker_result emit_walker(walker_direction direction,
             case OP_DEREFERENCE:
             case OP_SNAPSHOT:
             case OP_REFVALID:
+            case OP_INITIALIZED:
             case OP_TYPE_CAST:
             case OP_TYPE_IS:
             case OP_TYPEOF:
@@ -1053,10 +1055,42 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case CLASS:
-                /* A class literal (e.g. .int) used as a value - this represents the default value
-                 * of that class. For Level B this is always null / zero */
+                /* A scalar object class literal is a typed but uninitialized object.
+                 * Scalar built-ins and arrays keep the historical null/default value. */
                 if (!node->output) node->output = output_f();
-                temp1 = mprintf("   null %c%d\n", node->register_type, node->register_num);
+                ret_type = node->register_type;
+                ret_num = node->register_num;
+                if (ret_num < 0 &&
+                    node->parent &&
+                    (node->parent->node_type == DEFINE ||
+                     node->parent->node_type == ASSIGN ||
+                     node->parent->node_type == ARG)) {
+                    ASTNode *target_node = ast_chdn(node->parent, 0);
+                    if (target_node) {
+                        ret_type = target_node->register_type;
+                        ret_num = target_node->register_num;
+                        if (ret_num < 0 &&
+                            target_node->symbolNode &&
+                            target_node->symbolNode->symbol) {
+                            ret_type = target_node->symbolNode->symbol->register_type;
+                            ret_num = target_node->symbolNode->symbol->register_num;
+                        }
+                    }
+                }
+                if (node->value_type == TP_OBJECT && node->value_dims == 0) {
+                    char *class_name = node->value_class ? strdup(node->value_class) :
+                            rxcp_normalize_source_symbol_name(node->node_string,
+                                                              node->node_string_length,
+                                                              1,
+                                                              0);
+                    temp1 = mprintf("   setobjuninit %c%d,\"%s\"\n",
+                                    ret_type,
+                                    ret_num,
+                                    class_name ? class_name : "");
+                    if (class_name) free(class_name);
+                } else {
+                    temp1 = mprintf("   null %c%d\n", ret_type, ret_num);
+                }
                 output_append_text(node->output, temp1);
                 free(temp1);
                 break;
@@ -1161,6 +1195,33 @@ static walker_result emit_walker(walker_direction direction,
                 if (arg3) free(arg3);
             }
             break;
+
+            case DEFINE:
+                if (node->scope &&
+                    node->scope->type != SCOPE_CLASS &&
+                    child1 &&
+                    child2 &&
+                    child2->node_type == CLASS &&
+                    child2->value_type == TP_OBJECT &&
+                    child2->value_dims == 0) {
+                    char *class_name;
+                    if (!node->output) node->output = output_f();
+                    class_name = child2->value_class ? strdup(child2->value_class) :
+                            rxcp_normalize_source_symbol_name(child2->node_string,
+                                                              child2->node_string_length,
+                                                              1,
+                                                              0);
+                    temp1 = mprintf("   setobjuninit %c%d,\"%s\"\n",
+                                    child1->register_num < 0 && child1->symbolNode && child1->symbolNode->symbol ?
+                                            child1->symbolNode->symbol->register_type : child1->register_type,
+                                    child1->register_num < 0 && child1->symbolNode && child1->symbolNode->symbol ?
+                                            child1->symbolNode->symbol->register_num : child1->register_num,
+                                    class_name ? class_name : "");
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    if (class_name) free(class_name);
+                }
+                break;
 
 	            case ASSIGN: {
 	                int trace_assignment_event = 1;

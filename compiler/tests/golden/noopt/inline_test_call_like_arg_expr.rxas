@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_call_like_arg_expr.crexx
- * BUILT                  : 2026-06-05 19:41:46
+ * BUILT                  : 2026-06-12 20:25:50
  */
 
 .meta "inline_test_call_like_arg_expr.box"="b" ".unknown" .class
@@ -113,6 +113,7 @@ addOne() .locals=2
 §inline_test_call_like_arg_expr.box.bump() .locals=4
    .meta "inline_test_call_like_arg_expr.box.bump"="b" ".int" §inline_test_call_like_arg_expr.box.bump() "amount=.int"
    .srcstep 21 21 17 "inline_test_call_like_arg_expr.crexx" 24 3 22 "  bump: method = .int"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

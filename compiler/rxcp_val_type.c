@@ -1676,6 +1676,7 @@ walker_result set_node_types_walker(walker_direction direction,
                 break;
 
             case OP_REFVALID:
+            case OP_INITIALIZED:
                 if (node->value_type == TP_UNKNOWN) {
                     set_node_type(node, TP_BOOLEAN);
                 }
@@ -1794,6 +1795,14 @@ walker_result type_safety_walker(walker_direction direction,
             case OP_REFVALID:
                 if (!child1 || child1->value_type != TP_REFERENCE) {
                     mknd_err(node, "TYPE_MISMATCH");
+                }
+                break;
+
+            case OP_INITIALIZED:
+                if (!child1 || child1->node_type == NOVAL) {
+                    mknd_err(node, "ARGUMENT_REQUIRED, 1, \"value\"");
+                } else if (child1->sibling) {
+                    mknd_err(child1->sibling, "UNEXPECTED_ARGUMENT, 2");
                 }
                 break;
 
@@ -2206,20 +2215,6 @@ walker_result type_safety_walker(walker_direction direction,
                 ast_svtn(node, child1);
                 ast_rttp(node);
 
-                {
-                    n1 = ast_proc(node);
-                    ASTNode *inst = n1 ? ast_chld(n1, INSTRUCTIONS, NOP) : NULL;
-                    if (inst && inst->node_type == INSTRUCTIONS) {
-                        /* In a function implementation - in this case the optional flag '?' is invalid for a class type as a
-                         * definition needs to know the default value that can only be defined by the expression on the
-                         * right-hand-side */
-                        if (child2->node_type == CLASS && node->is_opt_arg && !node->value_dims) {
-                            /* Optional but the CLASS doesn't give the needed default value */
-                            /* NOTE Arrays are an exception - their default value is a "blank" array */
-                            mknd_err(node, "NO_DEFAULT_VALUE");
-                        }
-                    }
-                }
                 break;
 
             case OP_ARG_VALUE:

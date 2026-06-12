@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : object_reference_regression.crexx
- * BUILT                  : 2026-06-08 20:14:24
+ * BUILT                  : 2026-06-12 20:25:41
  */
 
 .meta "object_reference_regression.largepayload"="b" ".unknown" .class
@@ -256,6 +256,7 @@ l95d:
 §object_reference_regression.smallpayload.getname() .locals=2
    .meta "object_reference_regression.smallpayload.getname"="b" ".string" §object_reference_regression.smallpayload.getname() ""
    .srcstep 33 33 17 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -271,6 +272,7 @@ l95d:
 §object_reference_regression.smallpayload.setname() .locals=3
    .meta "object_reference_regression.smallpayload.setname"="b" ".void" §object_reference_regression.smallpayload.setname() "label=.string"
    .srcstep 37 37 17 "object_reference_regression.crexx" 47 3 26 "  setName: method = .void"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -426,6 +428,7 @@ l191doend:
 §object_reference_regression.largepayload.rename() .locals=8
    .meta "object_reference_regression.largepayload.rename"="b" ".void" §object_reference_regression.largepayload.rename() "label=.string"
    .srcstep 69 69 17 "object_reference_regression.crexx" 84 3 25 "  rename: method = .void"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -502,6 +505,7 @@ l191doend:
 §object_reference_regression.largepayload.summary() .locals=8
    .meta "object_reference_regression.largepayload.summary"="b" ".string" §object_reference_regression.largepayload.summary() ""
    .srcstep 72 72 17 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -561,6 +565,7 @@ l191doend:
 §object_reference_regression.largepayload.check() .locals=4
    .meta "object_reference_regression.largepayload.check"="b" ".string" §object_reference_regression.largepayload.check() ""
    .srcstep 83 83 17 "object_reference_regression.crexx" 99 3 26 "  check: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

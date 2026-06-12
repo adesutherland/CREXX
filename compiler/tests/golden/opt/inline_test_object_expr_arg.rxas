@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_object_expr_arg.crexx
- * BUILT                  : 2026-06-05 19:42:08
+ * BUILT                  : 2026-06-12 20:26:07
  */
 
 .meta "inline_test_object_expr_arg.box"="b" ".unknown" .class
@@ -119,6 +119,7 @@ l140bexprend:
 §inline_test_object_expr_arg.box.setname() .locals=3
    .meta "inline_test_object_expr_arg.box.setname"="b" ".void" §inline_test_object_expr_arg.box.setname() "value=.string"
    .srcstep 35 35 17 "inline_test_object_expr_arg.crexx" 24 3 18 "  setName: method"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -140,6 +141,7 @@ l140bexprend:
 §inline_test_object_expr_arg.box.getname() .locals=2
    .meta "inline_test_object_expr_arg.box.getname"="b" ".string" §inline_test_object_expr_arg.box.getname() ""
    .srcstep 37 37 17 "inline_test_object_expr_arg.crexx" 29 3 28 "  getName: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

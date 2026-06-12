@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_object_return_expr.crexx
- * BUILT                  : 2026-06-05 19:42:05
+ * BUILT                  : 2026-06-12 20:26:05
  */
 
 .meta "inline_test_object_return_expr.box"="b" ".unknown" .class
@@ -136,6 +136,7 @@ l115bexprend:
 §inline_test_object_return_expr.box.getname() .locals=2
    .meta "inline_test_object_return_expr.box.getname"="b" ".string" §inline_test_object_return_expr.box.getname() ""
    .srcstep 40 40 17 "inline_test_object_return_expr.crexx" 27 3 28 "  getName: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

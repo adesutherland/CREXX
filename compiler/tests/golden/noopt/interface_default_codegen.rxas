@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : interface_default_codegen.crexx
- * BUILT                  : 2026-06-05 19:42:42
+ * BUILT                  : 2026-06-12 20:26:41
  */
 
 .meta "interface_default_codegen.box"="b" ".unknown" .class
@@ -36,6 +36,7 @@ main() .locals=3
 §interface_default_codegen.shape.describe() .locals=5
    .meta "interface_default_codegen.shape.describe"="b" ".string" §interface_default_codegen.shape.describe() ""
    .srcstep 5 5 17 "interface_default_codegen.crexx" 10 3 29 "  describe: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -69,6 +70,7 @@ main() .locals=3
 §interface_default_codegen.shape.prefix() .locals=1
    .meta "interface_default_codegen.shape.prefix"="b" ".string" §interface_default_codegen.shape.prefix() ""
    .srcstep 7 7 17 "interface_default_codegen.crexx" 12 3 27 "  prefix: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -109,6 +111,7 @@ main() .locals=3
 §interface_default_codegen.box.summary() .locals=1
    .meta "interface_default_codegen.box.summary"="b" ".string" §interface_default_codegen.box.summary() ""
    .srcstep 13 13 17 "interface_default_codegen.crexx" 23 3 28 "  summary: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

@@ -1343,6 +1343,8 @@ const char *ast_ndtp(NodeType type) {
             return "OP_SNAPSHOT";
         case OP_REFVALID:
             return "OP_REFVALID";
+        case OP_INITIALIZED:
+            return "OP_INITIALIZED";
         case OP_SCONCAT:
             return "OP_SCONCAT";
         case OPTIONS:

@@ -404,6 +404,11 @@ crexx_add_rxas_vm_binary(tests_references "reference value instructions")
 crexx_add_vm_dual_test(NAME rxasreferencetests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "PASS: Reference RXAS Ops")
 crexx_add_vm_dual_test(NAME rxasreferencecatchtests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "caught-reference-invalid")
 
+# Instruction Sanity Tests - object initialization lifecycle
+crexx_add_rxas_vm_binary(tests_object_initialization "object initialization lifecycle instructions")
+crexx_add_vm_dual_test(NAME rxasobjectinitializationtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "PASS: Object Initialization RXAS Ops")
+crexx_add_vm_dual_test(NAME rxasobjectinitializationcatchtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "caught-object-not-initialized")
+
 # Instruction Sanity Tests - focused signal handler mode coverage
 crexx_add_rxas_vm_binary(tests_signal_call_attrs "signal call argument attributes")
 crexx_add_vm_dual_test(NAME rxassignalattrcodetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-code: 30")

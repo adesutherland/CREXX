@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_named_factory_selector.crexx
- * BUILT                  : 2026-06-05 19:41:50
+ * BUILT                  : 2026-06-12 20:25:53
  */
 
 .meta "inline_test_named_factory_selector.car"="b" ".unknown" .class
@@ -200,6 +200,7 @@ describedNamed() .locals=5
 §inline_test_named_factory_selector.car.describe() .locals=2
    .meta "inline_test_named_factory_selector.car.describe"="b" ".string" §inline_test_named_factory_selector.car.describe() ""
    .srcstep 30 30 17 "inline_test_named_factory_selector.crexx" 46 3 29 "  describe: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

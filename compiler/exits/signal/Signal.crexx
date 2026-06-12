@@ -320,6 +320,7 @@ isKnownSignal: procedure = .int
     if name = "OUT_OF_RANGE" then return 1
     if name = "UNICODE_ERROR" then return 1
     if name = "REFERENCE_INVALID" then return 1
+    if name = "OBJECT_NOT_INITIALIZED" then return 1
     if name = "UNKNOWN_INSTRUCTION" then return 1
     if name = "FUNCTION_NOT_FOUND" then return 1
     if name = "NOT_IMPLEMENTED" then return 1

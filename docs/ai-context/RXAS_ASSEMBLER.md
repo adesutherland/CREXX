@@ -276,7 +276,15 @@ The current interface runtime slice relies on three assembler-visible opcodes
 and the metadata records above:
 
 - `setobjtype rX,"fully.qualified.class"` stamps a newly created object value
-  with its concrete runtime class identity
+  with its concrete runtime class identity and clears any uninitialized-object
+  marker
+- `setobjuninit rX,"fully.qualified.class"` writes a typed object placeholder
+  and marks it uninitialized; the compiler uses this for bare object class
+  defaults such as `.SomeClass`
+- `assertinitialized rX` raises `OBJECT_NOT_INITIALIZED` if `rX` is a typed
+  uninitialized object value
+- `isinitialized rOut,rX` stores `0` for a typed uninitialized object and `1`
+  otherwise
 - `srcmethod rProc,rObj,"member"` resolves a concrete procedure from an object
   value plus a member name
 - `srcfproc rProc,"fully.qualified.interface",rArgs` resolves the default `*`
@@ -288,6 +296,10 @@ and the metadata records above:
   class, or `.object`
 - `asserttype rObj,"type"` raises `CONVERSION_ERROR` if the object value does
   not match the requested interface, class, or `.object`
+
+`istype` and `asserttype` check only object/class/interface compatibility.
+Initialization is a separate lifecycle check. `assertinitialized` is the
+raising check; `isinitialized` is the non-raising probe.
 
 `srcfproc` now supports both the default `*` surface and named factory
 selectors. Provider selection is a VM concern: the assembler simply emits the

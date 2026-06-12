@@ -1,0 +1,7 @@
+* assertinitialized can signal, so it is an optimiser barrier.
+
+main() .locals=3
+    swap r1,r2
+    assertinitialized r0
+    swap r1,r2
+    ret

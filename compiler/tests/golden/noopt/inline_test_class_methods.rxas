@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_class_methods.crexx
- * BUILT                  : 2026-06-05 19:42:10
+ * BUILT                  : 2026-06-12 20:26:09
  */
 
 .meta "inline_test_class_methods.box"="b" ".unknown" .class
@@ -207,6 +207,7 @@ update() .locals=6
 §inline_test_class_methods.box.label() .locals=2
    .meta "inline_test_class_methods.box.label"="b" ".string" §inline_test_class_methods.box.label() ""
    .srcstep 26 26 17 "inline_test_class_methods.crexx" 33 3 26 "  label: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -222,6 +223,7 @@ update() .locals=6
 §inline_test_class_methods.box.setlabel() .locals=3
    .meta "inline_test_class_methods.box.setlabel"="b" ".void" §inline_test_class_methods.box.setlabel() "next=.string"
    .srcstep 30 30 17 "inline_test_class_methods.crexx" 36 3 27 "  setLabel: method = .void"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -243,6 +245,7 @@ update() .locals=6
 §inline_test_class_methods.box.prefix() .locals=6
    .meta "inline_test_class_methods.box.prefix"="b" ".string" §inline_test_class_methods.box.prefix() "tag=.string"
    .srcstep 33 33 17 "inline_test_class_methods.crexx" 41 3 27 "  prefix: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -271,6 +274,7 @@ update() .locals=6
 §inline_test_class_methods.box.setandreport() .locals=3
    .meta "inline_test_class_methods.box.setandreport"="b" ".string" §inline_test_class_methods.box.setandreport() "next=.string"
    .srcstep 37 37 17 "inline_test_class_methods.crexx" 45 3 33 "  setAndReport: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

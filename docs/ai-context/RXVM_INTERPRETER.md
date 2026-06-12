@@ -140,6 +140,12 @@ normal signal handling, and can be probed without raising through the RXAS
 `setref`; using a non-reference value with those operations is treated as an
 invalid reference.
 
+`OBJECT_NOT_INITIALIZED` is the dedicated signal for a typed object value that
+has not completed factory initialization. It defaults to halt and participates
+in normal signal handling. The raising check is `assertinitialized`; the
+non-raising probe is `isinitialized`. Type compatibility remains separate:
+`istype` and `asserttype` can succeed for a typed uninitialized object.
+
 `sigcalla` installs an action-aware call handler. It receives the same raw
 five-attribute interrupt object as `sigcall`, but the handler's return string
 is interpreted as a VM action marker:
@@ -301,6 +307,11 @@ developer migration/debugging; normal builds should leave it enabled.
 The two `object_type_name` fields are the current Level B hook for interface
 dispatch. Class factories stamp object values with `setobjtype`, and later VM
 lookups use that concrete class identity when resolving interface member calls.
+Bare object class defaults are represented as ordinary object type metadata plus
+the VM-private `RXFLAG_VM_OBJECT_UNINITIALIZED` flag. `setobjuninit` creates
+that state, while `setobjtype` clears it when a factory has produced an
+initialized object. The VM-private flag partition keeps this lifecycle marker
+out of public register flag writes such as `settp`.
 In UTF builds, `string_length` is the byte length while `string_chars` is the
 codepoint count. Any instruction that synthesizes or truncates a string must
 keep both in sync and reset `string_pos` / `string_char_pos` to the start of

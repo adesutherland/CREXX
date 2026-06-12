@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_object_const_arg_mutation.crexx
- * BUILT                  : 2026-06-05 19:42:06
+ * BUILT                  : 2026-06-12 20:26:06
  */
 
 .meta "inline_test_object_const_arg_mutation.box"="b" ".unknown" .class
@@ -99,6 +99,7 @@ l127bexprend:
 §inline_test_object_const_arg_mutation.box.setname() .locals=3
    .meta "inline_test_object_const_arg_mutation.box.setname"="b" ".void" §inline_test_object_const_arg_mutation.box.setname() "next=.string"
    .srcstep 34 34 17 "inline_test_object_const_arg_mutation.crexx" 24 3 26 "  setName: method = .void"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -120,6 +121,7 @@ l127bexprend:
 §inline_test_object_const_arg_mutation.box.getname() .locals=2
    .meta "inline_test_object_const_arg_mutation.box.getname"="b" ".string" §inline_test_object_const_arg_mutation.box.getname() ""
    .srcstep 36 36 17 "inline_test_object_const_arg_mutation.crexx" 29 3 28 "  getName: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

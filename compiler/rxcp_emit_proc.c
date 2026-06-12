@@ -345,7 +345,10 @@ void emit_proc(ASTNode *node, void *pl) {
                         free(class_fq);
                     }
                 } else if (node->node_type == METHOD) {
-                    /* Associated in register_walker */
+                    /* Methods require an initialized receiver in a1. */
+                    temp1 = mprintf("   assertinitialized a1\n");
+                    output_append_text(node->output, temp1);
+                    free(temp1);
                 }
 
                 /* If numeric options have non-inherited values, set them */

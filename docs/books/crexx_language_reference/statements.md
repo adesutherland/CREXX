@@ -427,8 +427,11 @@ ARG a1 \= 0, a2 \= .int, expose a3 \= .aclass, ?a4 \= .aclass, a5 \= .string\[\]
 * Arg a1 is an optional integer (and 0 if not specified in the call)  
 * Arg a2 is a mandatory integer (pass by value)  
 * Arg a3 is a mandatory class aclass pass by reference  
-* Arg a4 is a optional class aclass pass by value, value from the default factory if not specified in the call  
+* Arg a4 is an optional class aclass pass by value; the default expression is the bare typed class value `.aclass`, not a factory call
 * Arg a5 is an array of strings and is one way to allow an arbitrary number of strings to be passed to the procedure (see also Ellipsis later)
+
+Optional defaults evaluate exactly as written. Use `?x = .SomeClass` for the
+bare typed class value and `?x = .SomeClass()` to call the default factory.
 
 Examples:
 

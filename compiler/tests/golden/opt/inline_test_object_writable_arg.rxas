@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_object_writable_arg.crexx
- * BUILT                  : 2026-06-05 19:42:07
+ * BUILT                  : 2026-06-12 20:26:06
  */
 
 .meta "inline_test_object_writable_arg.box"="b" ".unknown" .class
@@ -117,6 +117,7 @@ l130bexprend:
 §inline_test_object_writable_arg.box.getname() .locals=2
    .meta "inline_test_object_writable_arg.box.getname"="b" ".string" §inline_test_object_writable_arg.box.getname() ""
    .srcstep 39 39 17 "inline_test_object_writable_arg.crexx" 24 3 28 "  getName: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1

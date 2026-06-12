@@ -40,6 +40,20 @@ item = .cacheentry("abc")
 asset = .asset("log.txt")
 ```
 
+Without the call brackets, a class name denotes the typed default value for that
+class. For object classes this is a typed but uninitialized object value; it can
+be tested or cast for object/class/interface compatibility, but method calls or
+attribute access require an initialized instance and raise
+`OBJECT_NOT_INITIALIZED` otherwise. Use the factory form when an initialized
+object is wanted:
+
+```rexx
+pending = .cacheentry       /* typed, not initialized */
+ready = .cacheentry("abc")  /* initialized by the factory */
+say initialized(pending)    /* 0 */
+say initialized(ready)      /* 1 */
+```
+
 Namespace-qualified contracts use a double dot:
 
 ```rexx
@@ -232,6 +246,8 @@ Level B supports:
 - `expr is .type` for boolean type tests
 - `expr as .type` for checked casts
 - `typeof(expr)` for concrete type introspection
+- `initialized(expr)` for testing whether an object value has completed factory
+  initialization; non-object values are considered initialized
 
 Objects can also carry native payloads when exposed through the plugin API, but
 ordinary Level B code should interact with objects through factories, methods,

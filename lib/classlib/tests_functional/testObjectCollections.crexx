@@ -1,4 +1,5 @@
 options levelb comments_dash
+import rexx
 import data_ObjectList
 import data_ObjectStack
 import data_ObjectLinkedList
@@ -9,6 +10,57 @@ failures = 0
 l = .ObjectArrayList()
 failures = failures + check_int("new object list size", l.size(), 0)
 failures = failures + check_int("new object list empty", l.isEmpty(), 1)
+failures = failures + check_int("bare class expression initialized", initialized(.ObjectArrayList), 0)
+failures = failures + check_int("factory expression initialized", initialized(.ObjectArrayList()), 1)
+failures = failures + check_int("int is not object", 42 is .object, 0)
+
+bare = .ObjectArrayList
+failures = failures + check_int("bare object list initialized", initialized(bare), 0)
+failures = failures + check_int("bare object list is object", bare is .object, 1)
+bare_signal = 0
+do
+  rc = bare.add(.box("unused") as .object)
+on signal object_not_initialized as problem
+  if problem.name() = "OBJECT_NOT_INITIALIZED" then bare_signal = 1
+end
+failures = failures + check_int("bare object list signal", bare_signal, 1)
+
+dups = .ObjectArrayList()
+same = .box("dup")
+rc = dups.add(same as .object)
+rc = dups.add(same as .Object)
+rc = dups.add(.box("second") as .object)
+failures = failures + check_int("duplicate object list size", dups.size(), 3)
+dups_it = dups.iterator()
+failures = failures + check_box("duplicate object first", dups_it.next(), "dup")
+failures = failures + check_box("duplicate object second", dups_it.next(), "dup")
+failures = failures + check_box("duplicate object third", dups_it.next(), "second")
+failures = failures + check_int("duplicate object iterator end", dups_it.hasNext(), 0)
+
+strings = .ObjectArrayList()
+rx = .rexx("a rexx string")
+rc = strings.add(rx as .object)
+rc = strings.add(rx as .Object)
+rc = strings.add(.rexx("a second rexx string") as .object)
+strings_it = strings.iterator()
+failures = failures + check_string("rexx string first", (strings_it.next() as .rexx).toString(), "a rexx string")
+failures = failures + check_string("rexx string duplicate", (strings_it.next() as .rexx).toString(), "a rexx string")
+failures = failures + check_string("rexx string second", (strings_it.next() as .rexx).toString(), "a second rexx string")
+failures = failures + check_int("rexx string iterator end", strings_it.hasNext(), 0)
+
+call_strings = .ObjectArrayList()
+call_rx = .rexx("call rexx string")
+call call_strings.add(call_rx as .object)
+call call_strings.add(call_rx as .Object)
+call call_strings.add(.rexx("call second rexx string") as .object)
+failures = failures + check_int("call rexx string size", call_strings.size(), 3)
+call_strings_it = call_strings.iterator()
+failures = failures + check_string("call rexx string first", (call_strings_it.next() as .rexx).toString(), "call rexx string")
+failures = failures + check_string("call rexx string duplicate", (call_strings_it.next() as .rexx).toString(), "call rexx string")
+failures = failures + check_string("call rexx string second", (call_strings_it.next() as .rexx).toString(), "call second rexx string")
+failures = failures + check_int("call rexx string iterator end", call_strings_it.hasNext(), 0)
+failures = failures + check_int("optional bare class default", default_bare(), 0)
+failures = failures + check_int("optional factory default", default_factory(), 1)
 
 rc = l.add(.box("B") as .object)
 rc = l.append(.box("C") as .object)
@@ -111,6 +163,15 @@ check_box: procedure=.int
   end
 return 0
 
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0
+
 count_object_iterable: procedure=.int
   arg collection=.ObjectIterable
 
@@ -132,3 +193,11 @@ box: class
 
   name: method = .string
     return name_
+
+default_bare: procedure = .int
+  arg ?item = .box
+  return initialized(item)
+
+default_factory: procedure = .int
+  arg ?item = .box("default")
+  return initialized(item)

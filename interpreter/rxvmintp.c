@@ -60,6 +60,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <limits.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -641,6 +642,17 @@ static int runtime_type_name_is_builtin(const char *type_name, size_t type_name_
     return 0;
 }
 
+static int runtime_type_name_is_object_contract(const char *type_name, size_t type_name_length) {
+    static const char object_name[] = ".object";
+    size_t i;
+
+    if (!type_name || type_name_length != sizeof(object_name) - 1) return 0;
+    for (i = 0; i < sizeof(object_name) - 1; i++) {
+        if (tolower((unsigned char)type_name[i]) != object_name[i]) return 0;
+    }
+    return 1;
+}
+
 static char *runtime_normalize_type_name(const char *type_name, size_t type_name_length) {
     size_t i;
     size_t out_length;
@@ -649,6 +661,9 @@ static char *runtime_normalize_type_name(const char *type_name, size_t type_name
     size_t start;
 
     if (!type_name) return 0;
+    if (runtime_type_name_is_object_contract(type_name, type_name_length)) {
+        return strdup(".object");
+    }
     if (runtime_type_name_is_builtin(type_name, type_name_length)) {
         return dup_runtime_name(type_name, type_name_length);
     }
@@ -805,7 +820,7 @@ static int runtime_value_matches_object_type(rxvm_context *context,
     normalized_type_name = runtime_normalize_type_name(type_name, type_name_length);
     if (!normalized_type_name) return 0;
 
-    if (strcmp(normalized_type_name, ".object") == 0) {
+    if (runtime_type_name_is_object_contract(normalized_type_name, strlen(normalized_type_name))) {
         free(normalized_type_name);
         return object_value->object_type_name && object_value->object_type_name_length > 0;
     }
@@ -865,6 +880,28 @@ static char *build_runtime_cast_error(value *object_value,
     }
     free(source_type_name);
     free(target_source_name);
+    return buffer;
+}
+
+static char *build_runtime_uninitialized_object_error(value *object_value) {
+    char *source_type_name;
+    char *buffer;
+    size_t buffer_length;
+
+    if (object_value && object_value->object_type_name && object_value->object_type_name_length > 0) {
+        source_type_name = runtime_internal_type_to_source_name(object_value->object_type_name,
+                                                                object_value->object_type_name_length);
+    } else {
+        source_type_name = strdup(".object");
+    }
+    if (!source_type_name) return 0;
+
+    buffer_length = strlen("Object ") + strlen(source_type_name) + strlen(" is not initialized") + 1;
+    buffer = malloc(buffer_length);
+    if (buffer) {
+        snprintf(buffer, buffer_length, "Object %s is not initialized", source_type_name);
+    }
+    free(source_type_name);
     return buffer;
 }
 
@@ -1715,6 +1752,8 @@ const char *interrupt_to_string(unsigned char interrupt) {
             return "INVALID_SIGNAL_CODE";
         case RXSIGNAL_REFERENCE_INVALID:
             return "REFERENCE_INVALID";
+        case RXSIGNAL_OBJECT_NOT_INITIALIZED:
+            return "OBJECT_NOT_INITIALIZED";
         case RXSIGNAL_OUT_OF_RANGE:
             return "OUT_OF_RANGE";
         case RXSIGNAL_FAILURE:
@@ -1761,6 +1800,7 @@ unsigned char string_to_interrupt(const char *interrupt) {
     if (strcmp(interrupt, "NOT_IMPLEMENTED") == 0) return RXSIGNAL_NOT_IMPLEMENTED;
     if (strcmp(interrupt, "INVALID_SIGNAL_CODE") == 0) return RXSIGNAL_INVALID_SIGNAL_CODE;
     if (strcmp(interrupt, "REFERENCE_INVALID") == 0) return RXSIGNAL_REFERENCE_INVALID;
+    if (strcmp(interrupt, "OBJECT_NOT_INITIALIZED") == 0) return RXSIGNAL_OBJECT_NOT_INITIALIZED;
     if (strcmp(interrupt, "OUT_OF_RANGE") == 0) return RXSIGNAL_OUT_OF_RANGE;
     if (strcmp(interrupt, "FAILURE") == 0) return RXSIGNAL_FAILURE;
     if (strcmp(interrupt, "QUIT") == 0) return RXSIGNAL_QUIT;
@@ -2007,6 +2047,7 @@ RX_INLINE stack_frame *frame_f(
         this->interrupt_table[RXSIGNAL_NOT_IMPLEMENTED-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_FUNCTION_NOT_FOUND-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_REFERENCE_INVALID-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_OBJECT_NOT_INITIALIZED-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_OUT_OF_RANGE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_QUIT-1].response = RXSIGNAL_RESPONSE_HALT;
@@ -8680,6 +8721,35 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SETOBJTYPE R%lu,\"%.*s\"\n", REG_IDX(1), (int) op2S->string_len, op2S->string);
             op1R->object_type_name = op2S->string;
             op1R->object_type_name_length = op2S->string_len;
+            clear_value_uninitialized_object(op1R);
+            DISPATCH
+
+        START_INSTRUCTION(SETOBJUNINIT_REG_STRING) CALC_DISPATCH(2)
+            DEBUG("TRACE - SETOBJUNINIT R%lu,\"%.*s\"\n", REG_IDX(1), (int) op2S->string_len, op2S->string);
+            value_zero(op1R);
+            op1R->object_type_name = op2S->string;
+            op1R->object_type_name_length = op2S->string_len;
+            mark_value_uninitialized_object(op1R);
+            DISPATCH
+
+        START_INSTRUCTION(ASSERTINITIALIZED_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - ASSERTINITIALIZED R%lu\n", REG_IDX(1));
+            if (value_is_uninitialized_object(op1R)) {
+                char *error_message = build_runtime_uninitialized_object_error(op1R);
+                if (error_message) {
+                    SET_SIGNAL_MSG(RXSIGNAL_OBJECT_NOT_INITIALIZED, error_message);
+                    free(error_message);
+                } else {
+                    SET_SIGNAL(RXSIGNAL_OBJECT_NOT_INITIALIZED);
+                }
+                DISPATCH
+            }
+            DISPATCH
+
+        START_INSTRUCTION(ISINITIALIZED_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - ISINITIALIZED R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            value_zero(op1R);
+            set_int(op1R, value_is_uninitialized_object(op2R) ? 0 : 1);
             DISPATCH
 
         START_INSTRUCTION(SRCMETHOD_REG_REG_STRING) CALC_DISPATCH(3)
@@ -8690,6 +8760,17 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
                 DEBUG("TRACE - SRCMETHOD R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
                       (int) op3S->string_len, op3S->string);
+
+                if (value_is_uninitialized_object(op2R)) {
+                    char *error_message = build_runtime_uninitialized_object_error(op2R);
+                    if (error_message) {
+                        SET_SIGNAL_MSG(RXSIGNAL_OBJECT_NOT_INITIALIZED, error_message);
+                        free(error_message);
+                    } else {
+                        SET_SIGNAL(RXSIGNAL_OBJECT_NOT_INITIALIZED);
+                    }
+                    DISPATCH
+                }
 
                 class_name = op2R->object_type_name;
                 class_name_length = op2R->object_type_name_length;
@@ -8921,9 +9002,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             rxvm_socket_connect_tls(context, op1R->int_value, op2R, op3R->int_value);
             DISPATCH
 
-        RESERVED_IMPL(RESERVED_084)
-        RESERVED_IMPL(RESERVED_085)
-        RESERVED_IMPL(RESERVED_086)
         RESERVED_IMPL(RESERVED_087)
         RESERVED_IMPL(RESERVED_088)
         RESERVED_IMPL(RESERVED_089)

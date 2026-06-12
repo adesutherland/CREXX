@@ -972,6 +972,47 @@ static ExitEntry *rxcp_find_implicit_command_exit(Context *ctx) {
     return NULL;
 }
 
+static int rxcp_token_is_dispatch_candidate(Token *token) {
+    if (!token || !token->token_string || token->length <= 0) return 0;
+    return token->token_type != TK_EOC &&
+           token->token_type != TK_EOS &&
+           token->token_type != TK_EOL &&
+           token->token_type != TK_BADCOMMENT;
+}
+
+static Token *rxcp_earlier_token(Token *current, Token *candidate) {
+    if (!rxcp_token_is_dispatch_candidate(candidate)) return current;
+    if (!current) return candidate;
+
+    if (candidate->token_number > 0 && current->token_number > 0 &&
+        candidate->token_number != current->token_number) {
+        return candidate->token_number < current->token_number ? candidate : current;
+    }
+
+    if (candidate->line != current->line) {
+        return candidate->line < current->line ? candidate : current;
+    }
+    if (candidate->column != current->column) {
+        return candidate->column < current->column ? candidate : current;
+    }
+    return current;
+}
+
+static Token *rxcp_first_source_token(ASTNode *node) {
+    ASTNode *child;
+    Token *first;
+
+    if (!node || node->node_type == ERROR || node->node_type == WARNING) return NULL;
+
+    first = rxcp_token_is_dispatch_candidate(node->token) ? node->token : NULL;
+    child = node->child;
+    while (child) {
+        first = rxcp_earlier_token(first, rxcp_first_source_token(child));
+        child = child->sibling;
+    }
+    return first;
+}
+
 static ExitEntry *rxcp_resolve_exit_entry(Context *ctx,
                                           ASTNode *node,
                                           ASTNode **node_map,
@@ -982,6 +1023,7 @@ static ExitEntry *rxcp_resolve_exit_entry(Context *ctx,
     size_t dispatch_keyword_len;
     ExitEntry *entry;
     ASTNode *first_node;
+    Token *first_token;
 
     dispatch_keyword = NULL;
     dispatch_keyword_len = 0;
@@ -992,12 +1034,19 @@ static ExitEntry *rxcp_resolve_exit_entry(Context *ctx,
         dispatch_keyword_len = node->token->length;
         entry = rxcp_find_exit_entry(ctx, dispatch_keyword, dispatch_keyword_len);
     } else if (node->node_type == IMPLICIT_CMD && num_tokens > 0 && node_map) {
-        first_node = node_map[0];
-        if (first_node) {
-            dispatch_keyword = first_node->token ? first_node->token->token_string : first_node->node_string;
-            dispatch_keyword_len = first_node->token ? first_node->token->length : first_node->node_string_length;
-            if (dispatch_keyword && dispatch_keyword_len > 0) {
-                entry = rxcp_find_exit_entry(ctx, dispatch_keyword, dispatch_keyword_len);
+        first_token = rxcp_first_source_token(node->child);
+        if (first_token) {
+            dispatch_keyword = first_token->token_string;
+            dispatch_keyword_len = first_token->length;
+            entry = rxcp_find_exit_entry(ctx, dispatch_keyword, dispatch_keyword_len);
+        } else {
+            first_node = node_map[0];
+            if (first_node) {
+                dispatch_keyword = first_node->token ? first_node->token->token_string : first_node->node_string;
+                dispatch_keyword_len = first_node->token ? first_node->token->length : first_node->node_string_length;
+                if (dispatch_keyword && dispatch_keyword_len > 0) {
+                    entry = rxcp_find_exit_entry(ctx, dispatch_keyword, dispatch_keyword_len);
+                }
             }
         }
 
@@ -2322,6 +2371,53 @@ static int rxcp_exit_handle_response(Context* ctx,
     return diag_rc;
 }
 
+static int rxcp_exit_invoke_entry(Context *ctx,
+                                  ASTNode *node,
+                                  rxvml_context *vctx,
+                                  ExitEntry *entry,
+                                  rxvml_value *tok_array,
+                                  ASTNode **node_map,
+                                  size_t num_tokens,
+                                  int retain_exit_object) {
+    rxvml_value* nid_val;
+    rxvml_value* obj;
+    rxvml_value* response;
+    int release_obj;
+    int handled;
+
+    if (!ctx || !node || !vctx || !entry || !tok_array) return 0;
+
+    nid_val = rxvml_value_new(vctx);
+    obj = NULL;
+    response = NULL;
+    release_obj = 1;
+    handled = 0;
+
+    rxvml_set_int(nid_val, node->node_number);
+    if (rxvml_call_factory(vctx, entry->class_name, 1, &nid_val, &obj) == 0 && obj) {
+        if (rxvml_call_method(vctx, obj, entry->class_name, "process", 1, &tok_array, &response) == 0 && response) {
+            handled = rxcp_exit_handle_response(ctx, node, vctx, entry, response, node_map, num_tokens);
+            if (retain_exit_object && handled > 0) {
+                node->exit_obj_reg = rxvml_reg_alloc(vctx, obj, entry->class_name);
+                release_obj = 0;
+            }
+        } else {
+            if (response) rxvml_value_free(response);
+            response = NULL;
+            handled = rxcp_report_bridge_method_failure(node,
+                                                       vctx,
+                                                       "EXIT_BRIDGE_PROCESS_FAILED",
+                                                       entry->class_name,
+                                                       "process");
+        }
+        if (response) rxvml_value_free(response);
+        response = NULL;
+        if (release_obj) rxvml_value_free(obj);
+    }
+    rxvml_value_free(nid_val);
+    return handled;
+}
+
 int rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node) {
     rxvml_context* vctx;
     rxvml_value* tok_array;
@@ -2387,36 +2483,16 @@ int rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node) {
     }
 
     if (!handled && entry) {
-        rxvml_value* nid_val;
-        rxvml_value* obj;
-        int release_obj;
+        handled = rxcp_exit_invoke_entry(ctx, node, vctx, entry, tok_array, node_map, num_tokens, 1);
+    }
 
-        nid_val = rxvml_value_new(vctx);
-        obj = NULL;
-        release_obj = 1;
+    if (!handled && entry && !(entry->flags & RXCP_EXIT_FLAG_IMPLICIT_COMMAND)) {
+        ExitEntry *implicit_entry;
 
-        rxvml_set_int(nid_val, node->node_number);
-        if (rxvml_call_factory(vctx, entry->class_name, 1, &nid_val, &obj) == 0 && obj) {
-            if (rxvml_call_method(vctx, obj, entry->class_name, "process", 1, &tok_array, &response) == 0 && response) {
-                handled = rxcp_exit_handle_response(ctx, node, vctx, entry, response, node_map, num_tokens);
-                if (handled > 0) {
-                    node->exit_obj_reg = rxvml_reg_alloc(vctx, obj, entry->class_name);
-                    release_obj = 0;
-                }
-            } else {
-                if (response) rxvml_value_free(response);
-                response = NULL;
-                handled = rxcp_report_bridge_method_failure(node,
-                                                           vctx,
-                                                           "EXIT_BRIDGE_PROCESS_FAILED",
-                                                           entry->class_name,
-                                                           "process");
-            }
-            if (response) rxvml_value_free(response);
-            response = NULL;
-            if (release_obj) rxvml_value_free(obj);
+        implicit_entry = rxcp_find_implicit_command_exit(ctx);
+        if (implicit_entry && implicit_entry != entry) {
+            handled = rxcp_exit_invoke_entry(ctx, node, vctx, implicit_entry, tok_array, node_map, num_tokens, 0);
         }
-        rxvml_value_free(nid_val);
     }
 
     if (!handled && node->node_type == EXIT_EXTENDED) {

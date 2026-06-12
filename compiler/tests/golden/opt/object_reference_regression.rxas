@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : object_reference_regression.crexx
- * BUILT                  : 2026-06-08 20:45:46
+ * BUILT                  : 2026-06-12 20:25:42
  */
 
 .meta "object_reference_regression.largepayload"="b" ".unknown" .class
@@ -870,6 +870,7 @@ l1254bexprend:
 §object_reference_regression.smallpayload.getname() .locals=2
    .meta "object_reference_regression.smallpayload.getname"="b" ".string" §object_reference_regression.smallpayload.getname() ""
    .srcstep 236 236 17 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -885,6 +886,7 @@ l1254bexprend:
 §object_reference_regression.smallpayload.setname() .locals=3
    .meta "object_reference_regression.smallpayload.setname"="b" ".void" §object_reference_regression.smallpayload.setname() "label=.string"
    .srcstep 240 240 17 "object_reference_regression.crexx" 47 3 26 "  setName: method = .void"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -1049,6 +1051,7 @@ l191doend:
 §object_reference_regression.largepayload.rename() .locals=8
    .meta "object_reference_regression.largepayload.rename"="b" ".void" §object_reference_regression.largepayload.rename() "label=.string"
    .srcstep 277 277 17 "object_reference_regression.crexx" 84 3 25 "  rename: method = .void"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -1125,6 +1128,7 @@ l191doend:
 §object_reference_regression.largepayload.summary() .locals=8
    .meta "object_reference_regression.largepayload.summary"="b" ".string" §object_reference_regression.largepayload.summary() ""
    .srcstep 282 282 17 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -1186,6 +1190,7 @@ l191doend:
 §object_reference_regression.largepayload.check() .locals=4
    .meta "object_reference_regression.largepayload.check"="b" ".string" §object_reference_regression.largepayload.check() ""
    .srcstep 293 293 17 "object_reference_regression.crexx" 99 3 26 "  check: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
