@@ -144,7 +144,7 @@ rexxscriptexit: class
                 call result.add_replacement_line(name || " = rexxscript_value('" || name || "')")
             end
         end
-        else call result.add_replacement_line("__rexxscript_result = evaluate(" || script_expr || ",0 )")
+        else call result.add_replacement_line("__rexxscript_result = evaluate(" || script_expr || ", 0)")
         if output_name <> "" then call result.add_replacement_line(output_name || " = rexxscript_output()")
         if result_name <> "" then call result.add_replacement_line(result_name || " = __rexxscript_result")
         call result.add_replacement_line("script_status=__rexxscript_result[1]")
