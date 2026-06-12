@@ -41,6 +41,28 @@ add_test(NAME crexx_explicit_header_smoke
          COMMAND ${CMAKE_COMMAND} -P "${CREXX_EXPLICIT_SMOKE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(CREXX_STATUS_DIAGNOSTICS_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_status_diagnostics.cmake")
+set(CREXX_STATUS_DIAGNOSTICS_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/status_diagnostics_ws\")\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "file(WRITE \"\${work}/exit7.crexx\" \"options levelb\\nexit 7\\n\")\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"exit7.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "if(NOT res EQUAL 7)\n  message(FATAL_ERROR \"crexx exit 7 returned \${res}.\\nstdout:\\n\${out}\\nstderr:\\n\${err}\")\nendif()\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "file(WRITE \"\${work}/return9.crexx\" \"options levelb\\nmain: procedure = .int\\n  return 9\\n\")\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"return9.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "if(NOT res EQUAL 9)\n  message(FATAL_ERROR \"crexx return 9 returned \${res}.\\nstdout:\\n\${out}\\nstderr:\\n\${err}\")\nendif()\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "file(WRITE \"\${work}/bad.crexx\" \"options levelb\\nthis is invalid\\n\")\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"bad.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "if(res EQUAL 0)\n  message(FATAL_ERROR \"crexx bad syntax unexpectedly returned 0\")\nendif()\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "if(NOT out STREQUAL \"\")\n  message(FATAL_ERROR \"crexx bad syntax wrote diagnostics to stdout:\\n\${out}\")\nendif()\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "string(FIND \"\${err}\" \"rxc error: Error in bad.crexx\" pos)\n")
+string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "if(pos EQUAL -1)\n  message(FATAL_ERROR \"crexx bad syntax missing stderr diagnostic. stderr:\\n\${err}\")\nendif()\n")
+file(GENERATE OUTPUT "${CREXX_STATUS_DIAGNOSTICS_SCRIPT}" CONTENT "${CREXX_STATUS_DIAGNOSTICS_CONTENT}")
+
+add_test(NAME crexx_status_diagnostics
+         COMMAND ${CMAKE_COMMAND} -P "${CREXX_STATUS_DIAGNOSTICS_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 set(CREXX_SPACED_SOURCE_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_spaced_source_smoke.cmake")
 set(CREXX_SPACED_SOURCE_SMOKE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/spaced_source_ws\")\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
@@ -79,7 +101,7 @@ add_test(NAME crexx_spaced_source_smoke
 
 set(CREXX_CRXC_NOARGS_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_crxc_noargs_smoke.cmake")
 set(CREXX_CRXC_NOARGS_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"${CMAKE_CURRENT_BINARY_DIR}/crxc.rexx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
-string(APPEND CREXX_CRXC_NOARGS_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx crxc noargs expected rc 0, got \${res}. Output: \\n\${out}\")\nendif()\n")
+string(APPEND CREXX_CRXC_NOARGS_SMOKE_CONTENT "if(NOT res EQUAL 99)\n  message(FATAL_ERROR \"crexx crxc noargs expected rc 99, got \${res}. Output: \\n\${out}\")\nendif()\n")
 string(APPEND CREXX_CRXC_NOARGS_SMOKE_CONTENT "if(NOT out STREQUAL \"usage: crxc.rexx crexx_home execName[.ext]\\n\")\n  message(FATAL_ERROR \"Unexpected crxc noargs output. Got: \\n\${out}\")\nendif()\n")
 file(GENERATE OUTPUT "${CREXX_CRXC_NOARGS_SMOKE_SCRIPT}" CONTENT "${CREXX_CRXC_NOARGS_SMOKE_CONTENT}")
 
@@ -126,6 +148,7 @@ add_test(NAME crexx_tool_output_path_policy
 set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_explicit_header_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
+set_tests_properties(crexx_status_diagnostics PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_spaced_source_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_crxc_noargs_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_license_summary_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})

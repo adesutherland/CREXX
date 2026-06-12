@@ -8359,12 +8359,22 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             while ((ch = fgetc((FILE*)op2R->int_value)) != EOF) {
 
                 /* End of line detection (LF) */
-                if (ch == '\n') break;
+                if (ch == '\n') {
+                    ch = fgetc((FILE*)op2R->int_value);
+                    if (ch != EOF) ungetc(ch, (FILE*)op2R->int_value);
+                    else if (op1R->string_length == 0) clearerr((FILE*)op2R->int_value);
+                    break;
+                }
 
                 /* End of line detection (CR LF, or CR (old macs) */
                 if (ch == '\r') {
-                    ch = fgetc((FILE*)op2R->int_value);\
-                    if (ch != '\n') ungetc(ch, (FILE*)op2R->int_value);
+                    ch = fgetc((FILE*)op2R->int_value);
+                    if (ch == '\n') {
+                        ch = fgetc((FILE*)op2R->int_value);
+                        if (ch != EOF) ungetc(ch, (FILE*)op2R->int_value);
+                        else if (op1R->string_length == 0) clearerr((FILE*)op2R->int_value);
+                    }
+                    else if (ch != EOF) ungetc(ch, (FILE*)op2R->int_value);
                     break;
                 }
 

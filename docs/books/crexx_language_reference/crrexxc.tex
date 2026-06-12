@@ -862,8 +862,12 @@ w=.rexx(''); w.length         == 0
 \end{lstlisting}
 
 \section{linein(name)} reads a UTF text line from the stream named by the first
-argument and returns it without the line terminator. This is a Level B
-\texttt{.string} text function, not a binary byte input function.
+argument and returns it without the line terminator. A final line terminator at
+physical end-of-file does not create an extra empty record, although physical
+blank lines are preserved. This is a Level B \texttt{.string} text function,
+not a binary byte input function. The companion \texttt{lines(name)} predicate
+returns \texttt{-1} when the stream cannot be opened, \texttt{0} at end of file,
+and \texttt{1} when a record can be read.
 
 \section{lineout(name,string)} returns 0 after writing the second argument as
 UTF text followed by a newline to the stream named by the first argument. When

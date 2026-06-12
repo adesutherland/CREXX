@@ -87,10 +87,13 @@ next_slot_ = .int
     return keys
 
   valueArray: method = .object[]
-    keys = keyArray()
+    keys = .string[]
+    slots = .string[]
     vals = .object[]
-    loop i = 1 to keys[0]
-      vals[i] = get(keys[i])
+    n = tmdump(index_, keys, slots)
+    loop i = 1 to n
+      slot = slots[i]
+      vals[i] = values_[slot]
     end
     return vals
 

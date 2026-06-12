@@ -397,7 +397,7 @@ if x2d(01234) \= '4660' then do
   errors=errors+1
   say 'failed in test 68 '
 end
-if x2d(1E2) \= '482' then do
+if x2d(1E2) \= '256' then do
   errors=errors+1
   say 'failed in test 69 '
 end

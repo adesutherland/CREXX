@@ -161,12 +161,13 @@ int TreeMap_put(TreeMap *map, const char *key, const char *value) {
         y = x;
         int cmp = strcmp(z->key, x->key);
         if (cmp == 0) {
+            int same_value = strcmp(x->value, value) == 0;
             free(x->value);
             x->value = strdup(value);
             free(z->key);
             free(z->value);
             free(z);
-            return 4;
+            return same_value ? 4 : 0;
         }
         x = (cmp < 0) ? x->left : x->right;
     }

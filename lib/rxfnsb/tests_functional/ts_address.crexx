@@ -1,5 +1,6 @@
 /* rexx test address bif */
 options levelb
+import rxfnsb
 
 errors=0
 
@@ -7,6 +8,11 @@ out = .string[]
 err = .string[]
 cmd_out = .string[]
 path_out = .string[]
+rexx_version = .string
+platform = .string
+
+assembler rxvers rexx_version
+platform = translate(word(rexx_version, 1))
 
 address command 'echo #42'  output out error err
 if out.1 <> '#42' then errors=errors+1
@@ -30,5 +36,9 @@ if rc <> 0 then errors=errors+1
 address command
 'echo COMMAND_AFTER_COMMAND'
 if rc <> 0 then errors=errors+1
+
+if platform = "WINDOWS" then address command "cmd /c exit 3"
+else address command "sh -c 'exit 3'"
+if rc <> 3 then errors=errors+1
 
 return errors<>0

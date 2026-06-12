@@ -180,7 +180,11 @@ wayfinding to real `.crexx` examples, see `docs/ai-context/CREXX_LEVELB_AUTHORIN
 functions over `.string`: `linein` reads one line without its line terminator,
 `lineout` writes text plus a newline, `charin` reads UTF-8 codepoints, and
 `charout` writes text without adding a newline. They are not the binary byte
-I/O surface. Future binary file BIFs should take and return `.binary` and use
+I/O surface. A trailing line terminator at physical EOF does not create a
+synthetic empty `linein` record; physical blank lines are still preserved.
+`lines(name)` returns `-1` when the named stream cannot be opened so callers can
+distinguish missing/unreadable input from an empty file. Future binary file
+BIFs should take and return `.binary` and use
 the VM byte instructions (`freadb`, `fwriteb`, `freadbyte`, or `fwritebyte`)
 rather than weakening the Level B `.string` UTF contract.
 

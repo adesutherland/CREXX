@@ -43,6 +43,24 @@ line = linein(file)
 errors = errors + check(line = "AB", "charout does not append newline")
 call charout file
 
+call resetfile file
+call lineout file, "one"
+call lineout file, "two"
+call lineout file
+count = countLines(file)
+errors = errors + check(count = 2, "linein ignores terminal newline")
+
+call resetfile file
+call lineout file, "one"
+call lineout file, "two"
+call lineout file, ""
+call lineout file
+count = countLines(file)
+errors = errors + check(count = 3, "linein preserves physical trailing blank line")
+
+missing = file || ".missing"
+errors = errors + check(lines(missing) = -1, "lines distinguishes missing file")
+
 if errors = 0 then say "PASS: file character helpers"
 return errors <> 0
 
@@ -64,3 +82,13 @@ resetfile: procedure = .void
     assembler fclose rc,fid
   end
   return
+
+countLines: procedure = .int
+  arg file = .string
+  count = 0
+  do while lines(file) > 0
+    call linein file
+    count = count + 1
+  end
+  call lineout file
+  return count

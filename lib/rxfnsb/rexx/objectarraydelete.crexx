@@ -40,4 +40,4 @@ objectarraydelete: procedure=.int
   if from + count - 1 > hi then count = hi - from + 1
 
   assembler DELATTRS1 array,from,count
-return array[0]
+return hi - count

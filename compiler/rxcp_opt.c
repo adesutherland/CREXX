@@ -87,6 +87,7 @@ static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* v
 static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteger value);
 static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int value);
 static void rewrite_to_binary_constant(ASTNode* node, Payload* payload, char* string, size_t length);
+static void rewrite_to_parsed_literal_constant(ASTNode* node, Payload* payload, ASTNode* literal, ValueType literal_type);
 static int strict_string_compare_operand(ASTNode *node);
 
 static int semantic_context_is_internal_operand(ASTNode *node) {
@@ -499,6 +500,9 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                 return;
 
             case TP_STRING:
+                if (node->value_type != TP_STRING) {
+                    update_string(node);
+                }
                 node->value_type = TP_STRING;
                 node->target_type = TP_STRING;
                 return;
@@ -581,6 +585,71 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
         node->node_type = CONSTANT;
         ast_sstr(node, string, length);
         binary_to_type(node, node->target_type);
+        payload->changed = 1;
+    }
+
+    static int literal_node_value_type(NodeType node_type, ValueType *value_type) {
+        if (!value_type) return 0;
+
+        switch (node_type) {
+            case FLOAT:
+                *value_type = TP_FLOAT;
+                return 1;
+
+            case DECIMAL:
+                *value_type = TP_DECIMAL;
+                return 1;
+
+            case INTEGER:
+                *value_type = TP_INTEGER;
+                return 1;
+
+            default:
+                return 0;
+        }
+    }
+
+    static char *copy_literal_string(ASTNode *literal, size_t *length) {
+        char *buffer;
+        size_t literal_length;
+
+        literal_length = (literal && literal->node_string) ? literal->node_string_length : 0;
+        buffer = malloc(literal_length ? literal_length : 1);
+        if (!buffer) return NULL;
+        if (literal_length) memcpy(buffer, literal->node_string, literal_length);
+        else buffer[0] = 0;
+        if (length) *length = literal_length;
+        return buffer;
+    }
+
+    static void parse_literal_string_value(ASTNode *node, NodeType literal_node_type) {
+        ValueType literal_type;
+
+        if (!literal_node_value_type(literal_node_type, &literal_type)) return;
+        string_to_type(node, literal_type);
+    }
+
+    static void rewrite_to_parsed_literal_constant(ASTNode* node,
+                                                   Payload* payload,
+                                                   ASTNode* literal,
+                                                   ValueType literal_type) {
+        char *buffer;
+        size_t length;
+        ValueType target_type;
+
+        buffer = copy_literal_string(literal, &length);
+        if (!buffer) {
+            mknd_err(node, "BAD_CONVERSION");
+            return;
+        }
+
+        target_type = node->target_type;
+        ast_prnc(node);
+        node->value_type = TP_STRING;
+        node->node_type = CONSTANT;
+        ast_sstr(node, buffer, length);
+        string_to_type(node, literal_type);
+        string_to_type(node, target_type);
         payload->changed = 1;
     }
 
@@ -1081,18 +1150,27 @@ static walker_result opt1_walker(walker_direction direction,
                                     break;
 
                                 case TP_FLOAT:
-                                    rewrite_to_float_constant(node, payload, child1->float_value);
+                                    if (child1->node_type == FLOAT)
+                                        rewrite_to_parsed_literal_constant(node, payload, child1, TP_FLOAT);
+                                    else
+                                        rewrite_to_float_constant(node, payload, child1->float_value);
                                     break;
 
                                 case TP_DECIMAL:
-                                    if (child1->decimal_value) {
+                                    if (child1->node_type == DECIMAL) {
+                                        rewrite_to_parsed_literal_constant(node, payload, child1, TP_DECIMAL);
+                                    }
+                                    else if (child1->decimal_value) {
                                         rewrite_to_decimal_constant(node, payload, child1->decimal_value);
                                     }
                                     break;
 
                                 case TP_BOOLEAN:
                                 case TP_INTEGER:
-                                    rewrite_to_integer_constant(node, payload, child1->int_value);
+                                    if (child1->node_type == INTEGER)
+                                        rewrite_to_parsed_literal_constant(node, payload, child1, TP_INTEGER);
+                                    else
+                                        rewrite_to_integer_constant(node, payload, child1->int_value);
                                     break;
 
                                 default:
@@ -1594,8 +1672,14 @@ static walker_result opt1_walker(walker_direction direction,
                             else string_to_type(node, literal_type);
                         }
                         else {
-                            if (node->value_type == TP_BINARY) binary_to_type(node, node->target_type);
-                            else string_to_type(node, node->target_type);
+                            ValueType target_type = node->target_type;
+
+                            if (target_type == TP_STRING) {
+                                parse_literal_string_value(node, literal_node_type);
+                            }
+
+                            if (node->value_type == TP_BINARY) binary_to_type(node, target_type);
+                            else string_to_type(node, target_type);
                         }
                         update_string(node);
                         payload->changed = 1;

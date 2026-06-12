@@ -28,7 +28,7 @@ options levelb
 namespace rxfnsb expose qwordpos
 
 qwordpos: procedure = .int
-  arg expose search = .string, string = .string, start = 1
+  arg search = .string, string = .string, start = 1
 
   tlen=0
   assembler strlen tlen,string

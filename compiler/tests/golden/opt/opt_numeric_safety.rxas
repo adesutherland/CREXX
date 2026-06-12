@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : opt_numeric_safety.crexx
- * BUILT                  : 2026-05-27 17:53:02
+ * BUILT                  : 2026-06-12 15:50:25
  */
 
 .globals=0
@@ -12,41 +12,81 @@ main() .locals=4
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .srcstep 2 2 17 "opt_numeric_safety.crexx" 4 1 15 "call ScenarioA"
-   .srcstep 1 1 17 "opt_numeric_safety.crexx" 16 5 15 "    say 1.0d/3"
+   .srcstep 1 1 17 "opt_numeric_safety.crexx" 4 1 15 "call ScenarioA"
+   load r0,0
+   call r1,ScenarioA(),r0
+   .traceevent "F" 4 "R" "V" "r" 1 1 1 0 "scenarioa" ""
+   .srcstep 3 3 17 "opt_numeric_safety.crexx" 5 1 15 "call ScenarioB"
+   .srcstep 2 2 17 "opt_numeric_safety.crexx" 22 5 15 "    say 1.0d/3"
+   load r0,3
+   itod r0
+   .traceevent "L" 4 "R" "D" "r" 0 2 2 0 "" ""
+   ddiv r0,1.0d,r0
+   dtos r0
+   .traceevent "O" 4 "R" "S" "r" 0 2 2 0 "" ""
+   say r0
+   .srcstep 4 4 17 "opt_numeric_safety.crexx" 6 1 15 "call ScenarioC"
+   load r0,0
+   call r2,ScenarioC(),r0
+   .traceevent "F" 4 "R" "V" "r" 2 4 4 0 "scenarioc" ""
+   .srcstep 5 5 17 "opt_numeric_safety.crexx" 7 1 15 "call ScenarioD"
+   load r0,0
+   call r3,ScenarioD(),r0
+   .traceevent "F" 4 "R" "V" "r" 3 5 5 0 "scenariod" ""
+   .srcstep 6 6 17 "opt_numeric_safety.crexx" 8 1 7 "return"
+   ret
+
+ScenarioA() .locals=1
+   .meta "opt_numeric_safety.scenarioa"="b" ".void" ScenarioA() ""
+   .srcstep 9 9 17 "opt_numeric_safety.crexx" 10 1 21 "ScenarioA: procedure"
+   setnumdgts 5
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 2
+   setnumstd 1
+   .srcstep 7 7 17 "opt_numeric_safety.crexx" 16 5 15 "    say 1.0d/3"
    say "0.33333"
-   .srcstep 4 4 17 "opt_numeric_safety.crexx" 5 1 15 "call ScenarioB"
-   .srcstep 3 3 17 "opt_numeric_safety.crexx" 22 5 15 "    say 1.0d/3"
-   load r1,3
-   itod r1
-   .traceevent "L" 4 "R" "D" "r" 1 3 3 0 "" ""
-   ddiv r1,1.0d,r1
-   dtos r1
-   .traceevent "O" 4 "R" "S" "r" 1 3 3 0 "" ""
+   .srcstep 8 8 17 "opt_numeric_safety.crexx" 17 5 11 "    return"
+   ret
+
+ScenarioC() .locals=2
+   .meta "opt_numeric_safety.scenarioc"="b" ".void" ScenarioC() ""
+   .srcstep 14 14 17 "opt_numeric_safety.crexx" 25 1 21 "ScenarioC: procedure"
+   setnumdgts 9
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   .srcstep 12 12 17 "opt_numeric_safety.crexx" 30 5 14 "    say 5 % 2"
+   load r1,2
+   .traceevent "L" 4 "R" "I" "r" 1 12 12 0 "" ""
+   imod r1,5,r1
+   itos r1
+   .traceevent "O" 4 "R" "S" "r" 1 12 12 0 "" ""
    say r1
-   .srcstep 6 6 17 "opt_numeric_safety.crexx" 6 1 15 "call ScenarioC"
-   .srcstep 5 5 17 "opt_numeric_safety.crexx" 30 5 14 "    say 5 % 2"
-   load r2,2
-   .traceevent "L" 4 "R" "I" "r" 2 5 5 0 "" ""
-   imod r2,5,r2
-   itos r2
-   .traceevent "O" 4 "R" "S" "r" 2 5 5 0 "" ""
-   say r2
-   .srcstep 12 12 17 "opt_numeric_safety.crexx" 7 1 15 "call ScenarioD"
-   .srcstep 9 9 17 "opt_numeric_safety.crexx" 38 5 25 "    if 1.000000001 = 1.0 then say \"Equal\""
-   load r3,1.0
-   .traceevent "L" 4 "R" "F" "r" 3 9 9 0 "" ""
-   feq r3,r3,1.0
-   .traceevent "O" 4 "R" "B" "r" 3 9 9 0 "" ""
-   brf l109iffalse,r3
-   .srcstep 10 10 17 "opt_numeric_safety.crexx" 38 26 30 "    if 1.000000001 = 1.0 then say \"Equal\""
-   .srcstep 7 7 17 "opt_numeric_safety.crexx" 38 31 42 "    if 1.000000001 = 1.0 then say \"Equal\""
+   .srcstep 13 13 17 "opt_numeric_safety.crexx" 31 5 11 "    return"
+   ret
+
+ScenarioD() .locals=2
+   .meta "opt_numeric_safety.scenariod"="b" ".void" ScenarioD() ""
+   .srcstep 21 21 17 "opt_numeric_safety.crexx" 33 1 21 "ScenarioD: procedure"
+   setnumdgts 9
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 17 17 17 "opt_numeric_safety.crexx" 38 5 25 "    if 1.000000001 = 1.0 then say \"Equal\""
+   load r1,1.0
+   .traceevent "L" 4 "R" "F" "r" 1 17 17 0 "" ""
+   feq r1,r1,1.0
+   .traceevent "O" 4 "R" "B" "r" 1 17 17 0 "" ""
+   brf l62iffalse,r1
+   .srcstep 18 18 17 "opt_numeric_safety.crexx" 38 26 30 "    if 1.000000001 = 1.0 then say \"Equal\""
+   .srcstep 15 15 17 "opt_numeric_safety.crexx" 38 31 42 "    if 1.000000001 = 1.0 then say \"Equal\""
    say "Equal"
-   br l109ifend
-   .srcstep 11 11 17 "opt_numeric_safety.crexx" 39 5 9 "    else say \"Unequal\""
-l109iffalse:
-   .srcstep 8 8 17 "opt_numeric_safety.crexx" 39 10 23 "    else say \"Unequal\""
+   br l62ifend
+   .srcstep 19 19 17 "opt_numeric_safety.crexx" 39 5 9 "    else say \"Unequal\""
+l62iffalse:
+   .srcstep 16 16 17 "opt_numeric_safety.crexx" 39 10 23 "    else say \"Unequal\""
    say "Unequal"
-l109ifend:
-   .srcstep 13 13 17 "opt_numeric_safety.crexx" 8 1 7 "return"
+l62ifend:
+   .srcstep 20 20 17 "opt_numeric_safety.crexx" 40 5 11 "    return"
    ret

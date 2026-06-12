@@ -25,6 +25,17 @@ set(REXXBINS
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
+set(LIBRPATH_RXBIN ${LIBRPATH}.rxbin)
+set(CLASSLIB_RXBIN ${CMAKE_BINARY_DIR}/bin/classlib.rxbin)
+set(CLASSLIB_RUNTIMES
+  rx_id
+  rx_system
+  rx_treemap
+  rx_llist
+  rx_keyaccess
+  ${LIBRPATH}
+  ${CMAKE_BINARY_DIR}/bin/classlib
+)
 
 add_custom_target(testclasses ALL)
 
@@ -45,8 +56,8 @@ foreach(_binfile ${REXXBINS})
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             RXC_FLAGS ${_rxc_flags}
-            DEPENDS library classlib ${_rexx_dep} ${_prev_target}
-            RUNTIME_ARGS ${LIBRPATH}
+            DEPENDS library classlib ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} _id _system _treemap _llist _keyaccess ${_rexx_dep} ${_prev_target}
+            RUNTIME_ARGS ${CLASSLIB_RUNTIMES}
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()

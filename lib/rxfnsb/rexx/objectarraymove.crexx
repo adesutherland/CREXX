@@ -60,4 +60,4 @@ objectarraymove: procedure=.int
      array[tto + i] = tmp[i + 1]
   end
 
-return array[0]
+return hi

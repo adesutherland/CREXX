@@ -190,6 +190,7 @@ static ASTNode *inline_call_receiver(ASTNode *call_node);
 static int inline_call_arity_matches(ASTNode *call_node, Symbol *proc_sym, size_t *varg_count_out);
 static int inline_analyse_varg_usage(ASTNode *proc_def, int *unsupported_out, size_t *max_required_index_out);
 static int inline_call_is_recursive(ASTNode *call_node, Symbol *proc_sym);
+static int inline_numeric_context_compatible(const numeric_context *caller, const numeric_context *callee);
 static int inline_analyse_return_shape(ASTNode *proc_def, InlineReturnShape *shape_out);
 static int inline_method_writes_class_attribute(ASTNode *proc_def);
 static int inline_symbol_writes_class_attribute(Symbol *symbol);
@@ -3172,6 +3173,21 @@ static int inline_call_is_recursive(ASTNode *call_node, Symbol *proc_sym) {
     return is_recursive;
 }
 
+static int inline_numeric_setting_compatible(int caller_value, int callee_value, int inherited_value) {
+    if (callee_value == inherited_value) return 1;
+    return caller_value == callee_value;
+}
+
+static int inline_numeric_context_compatible(const numeric_context *caller, const numeric_context *callee) {
+    if (!caller || !callee) return 0;
+
+    return inline_numeric_setting_compatible(caller->digits, callee->digits, -1) &&
+           inline_numeric_setting_compatible(caller->fuzz, callee->fuzz, -1) &&
+           inline_numeric_setting_compatible(caller->form, callee->form, NUMERIC_FORM_INHERIT) &&
+           inline_numeric_setting_compatible(caller->casetype, callee->casetype, CASE_INHERIT) &&
+           inline_numeric_setting_compatible(caller->standard, callee->standard, NUMERIC_STANDARD_INHERIT);
+}
+
 static int inline_callable_writes_class_attribute(Symbol *start,
                                                   Symbol ***visited,
                                                   size_t *visited_count);
@@ -3262,6 +3278,12 @@ static int inline_validate_call_site(Context *context,
     }
     if (!inline_call_arity_matches(call_node, proc_sym, &varg_count)) {
         inline_debug_fail_closed(context, call_node, proc_sym, "call arity does not match formal arguments");
+        return 0;
+    }
+    if (!call_node->scope ||
+        !proc_def->scope ||
+        !inline_numeric_context_compatible(&call_node->scope->num_context, &proc_def->scope->num_context)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "callee numeric context differs from caller context");
         return 0;
     }
     if (!proc_sym->has_vargs) return 1;

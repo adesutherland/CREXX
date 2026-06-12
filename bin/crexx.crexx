@@ -354,7 +354,7 @@ do i=1 to filenames[0]
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
 	if compile then say '[ 'res' ] rxpp     - Preprocessed   ' esc||ANSI_BLUE||filename'.rxpp'||esc||ANSI_RESET
       end
-      if RC>0 then exit RC
+      if RC\=0 then return RC
     end
   end
   /* if all is well, we now have a .crexx ready for compilation    */
@@ -414,14 +414,14 @@ do i=1 to filenames[0]
     say '> rxc output:' rxcOut.j
   end
   do j = 1 to rxcErr.0
-    say '> rxc error: ' rxcErr.j
+    call emitRxcDiagnostic rxcErr.j
   end
   if verbose then do
     if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
     else res = esc||ANSI_RED||RC||esc||ANSI_RESET
     if compile then say '[ 'res' ] rxc      - Compiled       ' esc||ANSI_BLUE||sourceFile||esc||ANSI_RESET
     end
-  if RC>0 then exit RC
+  if RC\=0 then return RC
 
 
   -- binfile = chop_suffix(filename)
@@ -446,13 +446,13 @@ do i=1 to filenames[0]
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
       say '[ 'res' ] rxas     - Assembled      ' esc||ANSI_BLUE||binfile'.rxas'||esc||ANSI_RESET
     end
-    if RC>0 then exit RC
+    if RC\=0 then return RC
   end
   else do
     existingRxbin = binfile'.rxbin'
     if \fileExists(existingRxbin) then do
       say 'missing existing bytecode for -nocompile:' existingRxbin
-      exit 2
+      return 2
     end
     if verbose>1 then say esc||ANSI_GREEN'using existing rxbin:'esc||ANSI_RESET existingRxbin
   end
@@ -508,7 +508,7 @@ do i=1 to filenames[0]
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
       say '[ 'res' ] rxlink   - Linked         ' esc||ANSI_BLUE||linkedOutput'.rxbin'||esc||ANSI_RESET
     end
-    if RC>0 then exit RC
+    if RC\=0 then return RC
 
     pack_cmd = rxpath || 'bin' || dirsep || 'rxcpack'
     pack_cmd = pack_cmd || ' -o ' || quoteCommandArg(outputStem, platformUpper)
@@ -523,7 +523,7 @@ do i=1 to filenames[0]
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
       say '[ 'res' ] rxcpack  - C-Packed ' esc||ANSI_BLUE||outputStem||esc||ANSI_RESET
     end
-    if RC>0 then exit RC
+    if RC\=0 then return RC
 
     cc_command = 'gcc -O3 -DNDEBUG'
     socketLibs = ''
@@ -563,7 +563,7 @@ do i=1 to filenames[0]
 	else res = esc||ANSI_RED||RC||esc||ANSI_RESET
 	say '[ 'res' ] gcc       - C-Compiled' esc||ANSI_BLUE||outputStem||esc||ANSI_RESET
 	end
-    if RC>0 then exit RC  
+    if RC\=0 then return RC  
     if \keep then do
       nativeCleanupFiles = .string[]
       if compile then do
@@ -588,7 +588,10 @@ do i=1 to filenames[0]
       if execute then say 'crexx executes:' ex_command
       if execute=0 then say 'crexx does not execute because of --noexec'
     end
-    if lastfile=1 then if execute then address system ex_command
+    if lastfile=1 then if execute then do
+      address system ex_command
+      if RC\=0 then return RC
+    end
   end
 end   -- do i
 
@@ -596,6 +599,37 @@ end   -- do i
   if \keep & native=0 then delrc = deleteFiles(cleanupFiles,verbose)
   
 return 0
+
+emitStderr: procedure
+arg message = .string
+fileid = .int
+target = .string
+mode = .string
+nl = .string
+fileid = 0
+target = "stderr"
+mode = "w"
+nl = '0a'x
+assembler fopen fileid,target,mode
+if fileid = 0 then return
+assembler fwrite fileid,message
+assembler fwrite fileid,nl
+return
+
+emitRxcDiagnostic: procedure
+arg line = .string
+diag = .string
+diag = strip(line)
+if left(diag, 10) = "Warning in" | pos("warning(s)", diag) > 0 then do
+  call emitStderr "> rxc warning: " || line
+  return
+end
+if left(diag, 8) = "Error in" | pos("error(s)", diag) > 0 then do
+  call emitStderr "> rxc error: " || line
+  return
+end
+call emitStderr "> rxc: " || line
+return
 
 /*----------------------------------------------------------------------*/
 help: procedure = .string

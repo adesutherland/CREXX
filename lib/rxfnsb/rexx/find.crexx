@@ -31,6 +31,6 @@ options levelb
 namespace rxfnsb expose find
 
 find: procedure = .int
-  arg expose needle = .string, haystack = .string, start = 1
+  arg needle = .string, haystack = .string, start = 1
 
-return wordpos(needle,haystack)
+return wordpos(needle,haystack,start)

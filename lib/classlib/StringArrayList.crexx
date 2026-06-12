@@ -195,10 +195,10 @@ StringArrayList: class implements .StringIterable
      * @return A ListIterator.
      */
   iterator: method = .StringArrayListIterator
-    return .StringArrayListIterator(reference self, 0)
+    return .StringArrayListIterator(reference val, reference size_, 0)
 
   snapshotIterator: method = .StringArrayListIterator
-    return .StringArrayListIterator(reference self, 1)
+    return .StringArrayListIterator(reference val, reference size_, 1)
     
     /**
      * Removes all elements from the list.

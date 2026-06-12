@@ -163,8 +163,12 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
         ctx->ext_args = NULL;
     }
 
-    /* If it has an integer value, use it as rc */
-    rc = (int)ret_val->int_value;
+    /*
+     * Normal RETURN from main leaves the integer result in ext_ret. EXIT and
+     * unhandled runtime signals finish the interpreter with a non-zero rc
+     * without updating ext_ret, so preserve that failure status.
+     */
+    if (rc == 0 || ret_val->int_value != 0) rc = (int)ret_val->int_value;
 
     clear_value(ret_val);
     free(ret_val);

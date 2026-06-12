@@ -45,8 +45,10 @@ import data_StringIterator
  */
 StringArrayListIterator: class implements .StringIterator
 
-list_ref_ = reference .StringArrayList
-list_copy_ = .StringArrayList
+values_ref_ = reference .string[]
+count_ref_ = reference .int
+values_copy_ = .string[]
+count_copy_ = .int
 snapshot_ = .int
 index_ = .int
 
@@ -58,12 +60,16 @@ index_ = .int
  * @param snapshot_flag  1 to copy the list once in the factory, 0 for a live iterator.
  */
   *: factory
-    arg list = reference .StringArrayList, snapshot_flag = 0
+    arg values = reference .string[], count = reference .int, snapshot_flag = .int
     snapshot_ = snapshot_flag
-    if snapshot_ = 1 then
-      list_copy_ = snapshot list
-    else
-      list_ref_ = list
+    if snapshot_ = 1 then do
+      values_copy_ = snapshot values
+      count_copy_ = snapshot count
+    end
+    else do
+      values_ref_ = values
+      count_ref_ = count
+    end
     index_ = 0
     return
     
@@ -75,10 +81,10 @@ index_ = .int
      */
   hasNext: method = .int
     if snapshot_ = 1 then
-      return index_ < list_copy_.size()
+      return index_ < count_copy_
 
-    list = dereference list_ref_
-    return index_ < list.size()
+    count = dereference count_ref_
+    return index_ < count
     
     
     /**
@@ -90,19 +96,20 @@ index_ = .int
      */
   next: method = .string
     if snapshot_ = 1 then do
-      if index_ >= list_copy_.size() then
+      if index_ >= count_copy_ then
         return 'error'  -- TODO exception
 
       index_ = index_ + 1
-      return list_copy_.get(index_)
+      return values_copy_[index_]
     end
 
-    list = dereference list_ref_
-    if index_ >= list.size() then
+    count = dereference count_ref_
+    if index_ >= count then
       return 'error'  -- TODO exception
 
+    values = dereference values_ref_
     index_ = index_ + 1
-    return list.get(index_)
+    return values[index_]
       
       
     /**
@@ -123,6 +130,6 @@ index_ = .int
 
   isLive: method = .int
     if snapshot_ = 1 then return 1
-    if refvalid(list_ref_) then return 1
+    if refvalid(values_ref_) & refvalid(count_ref_) then return 1
     return 0
     

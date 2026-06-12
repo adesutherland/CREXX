@@ -109,10 +109,10 @@ val = .object[]
     return size_ = 0
 
   iterator: method = .ObjectArrayListIterator
-    return .ObjectArrayListIterator(reference self, 0)
+    return .ObjectArrayListIterator(reference val, reference size_, 0)
 
   snapshotIterator: method = .ObjectArrayListIterator
-    return .ObjectArrayListIterator(reference self, 1)
+    return .ObjectArrayListIterator(reference val, reference size_, 1)
 
   clear: method = .void
     call objectarraydrop val

@@ -151,6 +151,7 @@ stemIterator: class
   stem_ref = reference .stem
   keys_copy = .string[]
   values_copy = .string[]
+  count_copy = .int
   snapshot_ = .int
   index_ = .int
   current_tail_ = .string
@@ -162,9 +163,10 @@ stemIterator: class
     current_tail_ = ""
 
     if snapshot_ = 1 then do
-      stem_copy = snapshot source
-      keys_copy = stem_copy.tails()
-      values_copy = stem_copy.values()
+      stem = dereference source
+      keys_copy = stem.tails()
+      values_copy = stem.values()
+      count_copy = stem.size()
     end
     else do
       stem_ref = source
@@ -173,14 +175,14 @@ stemIterator: class
 
   hasNext: method = .int
     if snapshot_ = 1 then
-      return index_ < keys_copy[0]
+      return index_ < count_copy
 
     stem = dereference stem_ref
     return index_ < stem.size()
 
   next: method = .string
     if snapshot_ = 1 then do
-      if index_ >= keys_copy[0] then return ""
+      if index_ >= count_copy then return ""
       index_ = index_ + 1
       current_tail_ = keys_copy[index_]
       return current_tail_
@@ -196,7 +198,7 @@ stemIterator: class
     if index_ < 1 then return ""
 
     if snapshot_ = 1 then do
-      if index_ > values_copy[0] then return ""
+      if index_ > count_copy then return ""
       return values_copy[index_]
     end
 
