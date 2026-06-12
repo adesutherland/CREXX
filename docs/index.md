@@ -60,6 +60,8 @@ designs.
 
 ## Project Direction
 
+- [Release 1 plan](release-1-plan.md): fixed-date path to Release 1, scope
+  tiers, gates, provisional owners, and issue candidates
 - [Roadmap](ROADMAP.md): future direction, research themes, and non-commitment
   planning notes
 - The [GitHub wiki](https://github.com/adesutherland/CREXX/wiki) is retained

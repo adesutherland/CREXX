@@ -90,8 +90,8 @@ compiler-exit, runtime-support, and debugger namespaces by default, while
 `TRACE SUPPRESS NAMESPACE`, `TRACE UNSUPPRESS NAMESPACE`, and
 `TRACE RESET NAMESPACES` let a debugging session adjust that filter.
 
-`rxdb` remains experimental for Release 1 beta 1. Treat it as a smoke-tested
-debugging aid, not as a supported full debugger contract.
+`rxdb` remains experimental for the Release 1 beta line. Treat it as a
+smoke-tested debugging aid, not as a supported full debugger contract.
 
 ## Class Library
 
@@ -104,7 +104,7 @@ than broad promises.
 
 `rxfnsg` contains early Level G class-shaped library work, including the LLM
 client modules used by demos. This is useful and real, but Level G itself is
-not the baseline user language for Release 1 beta 1.
+not the baseline user language for the Release 1 beta line.
 
 ## Native Plugins
 

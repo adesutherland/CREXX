@@ -11,6 +11,18 @@
 3. `rxlink`: linker for combining one or more `rxbin` modules into a shared-pool linked image
 4. `rxvm`: interpreter for register-based `rxbin` bytecode
 
+## Release Branch Status
+
+Do not infer released status from `develop` alone. During the Release 1 beta
+line, `develop` may be staged for the next beta release before the tag exists;
+after a beta tag is cut, `develop` should be described as work in progress for
+the following beta, for example beta 3 WIP after `v1.0.0-beta.2`.
+
+When making release-status claims, check release tags, `docs/releases/`, and
+the current README/release notes together. If they disagree, say so explicitly
+and avoid calling staged `develop` content "released" until the tag/release
+exists.
+
 ## Core Knowledge Sources
 
 Before changing compiler logic or making claims about syntax, AST shape, validation, or runtime behaviour, consult the relevant project docs instead of guessing:

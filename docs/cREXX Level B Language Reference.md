@@ -1,6 +1,6 @@
 # cREXX Level B Language Reference
 
-This generated snapshot has been retired for Release 1 beta 1 because it
+This generated snapshot has been retired for the Release 1 beta line because it
 contained stale roadmap and implementation facts.
 
 Use the maintained release reference instead:

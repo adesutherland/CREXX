@@ -1,11 +1,11 @@
 # About This Book
 
-This programming guide explains how to use the cRexx Release 1 beta 1
+This programming guide explains how to use the cRexx Release 1 beta line
 toolchain in practice.
 
 It focuses on the tools and workflows around Level B source:
 
-- compiling `.rexx` with `rxc` or `crexx`
+- compiling `.crexx` with `rxc` or `crexx`
 - assembling `.rxas` with `rxas`
 - running `.rxbin` with the crexx virtual machine executables `rxvm` and `rxvme`
 - linking modules with `rxlink`

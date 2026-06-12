@@ -1,7 +1,7 @@
 # About This Book
 
 This language reference documents the implemented cRexx language surface for
-Release 1 beta 1.
+the Release 1 beta line.
 
 The main release language is Level B: a typed Rexx-family systems language
 compiled by `rxc`, assembled by `rxas`, and executed by the `rxvm` runtime.

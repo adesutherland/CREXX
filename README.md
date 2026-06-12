@@ -70,6 +70,8 @@ is searched for same-extension imports.
 
 - [Release notes](docs/releases/v1.0.0-beta.2.md) summarize the beta 2 scope,
   signing status, and known limitations.
+- [Release 1 plan](docs/release-1-plan.md) tracks the fixed-date path to
+  Release 1, including scope tiers, gates, and provisional issue owners.
 - [Release documentation](docs/index.md) is the main entry point for current
   as-built user and technical documentation.
 - [Roadmap](docs/ROADMAP.md) collects future direction and non-release

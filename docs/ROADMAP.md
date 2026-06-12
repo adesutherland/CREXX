@@ -13,6 +13,13 @@ Use this rule of thumb:
 * Roadmap entries track direction, research, and possible future work.
 * Release notes describe what has actually landed.
 
+## Release 1 Plan
+
+The fixed-date path to Release 1 is tracked in
+[`release-1-plan.md`](release-1-plan.md). That plan carries the current
+Release 1 gates, scope tiers, provisional owners, and issue candidates. This
+roadmap remains the home for broader future direction and research themes.
+
 ## Release 1 / Level B Quality Issues
 
 These items are specific enough to track as GitHub issues because they affect

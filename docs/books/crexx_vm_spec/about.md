@@ -1,7 +1,7 @@
 # About This Book
 
 This book documents the \crexx{} virtual machine, RXAS assembly language, and
-RXBIN bytecode format used by Release 1 beta 1.
+RXBIN bytecode format used by the Release 1 beta line.
 
 The programming guide describes how to build and run programs. This book is
 for readers who need the lower-level model: RXAS authors, compiler and linker

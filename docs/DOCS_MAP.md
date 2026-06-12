@@ -24,6 +24,7 @@ code before editing user-facing docs.
 | --- | --- | --- | --- | --- |
 | `README.md` | GitHub front door | New visitors, contributors | What CREXX is, current baseline, build/run, links | Short and welcoming |
 | `docs/index.md` | GitHub Pages landing page | Users and contributors | Release documentation index | Clear and navigable |
+| `docs/release-1-plan.md` | Release 1 plan | Maintainers, contributors | Fixed-date Release 1 gates, scope tiers, owners, and issue candidates | Planning-oriented and explicit |
 | `docs/ROADMAP.md` | Project roadmap | Maintainers, contributors, interested users | Future direction, research themes, and explicit non-commitment planning notes | Directional and conservative |
 | `docs/releases` | Release notes | Users, packagers, contributors | Milestone summaries, release scope, signing status, known beta limitations | Concise and release-focused |
 | `docs/packaging` | Distribution operations | Maintainers, release engineers | Signing, notarization, packaging setup, GitHub secret setup | Procedural and security-conscious |
@@ -42,6 +43,9 @@ code before editing user-facing docs.
   `docs/index.md`.
 - Release milestone summaries belong in `docs/releases` and may be copied into
   GitHub Releases.
+- Fixed-date release plans that are not yet shipped facts belong in
+  `docs/release-1-plan.md`. Once the plan is approved, track concrete work as
+  GitHub issues rather than expanding the plan indefinitely.
 - Future direction that should survive discussion cleanup belongs in
   `docs/ROADMAP.md`. A roadmap entry is not a release promise; create an issue
   only when the work is concrete enough to track.

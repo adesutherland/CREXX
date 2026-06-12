@@ -4,7 +4,7 @@ cRexx is a Rexx-family language and toolchain that compiles source
 programs to an open bytecode format, then executes that bytecode on the
 cRexx virtual machine or packages it into a native executable.
 
-Release 1 beta 1 is centred on Level B. Level B is the implemented systems
+The Release 1 beta line is centred on Level B. Level B is the implemented systems
 language used by the project itself: it is statically typed, module based, and
 close enough to Rexx to keep the language readable while giving the compiler
 and VM explicit type, module, and contract information.
@@ -14,11 +14,11 @@ Ideas for future levels remain part of the project direction, but they are not
 release facts. In this book, unless a section says otherwise, syntax and
 behaviour refer to the current Level B implementation.
 
-## What Release 1 beta 1 contains
+## What The Release 1 Beta Line Contains
 
 The implemented Level B surface includes:
 
-- source modules compiled from `.rexx` to `.rxas` assembly and then to
+- source modules compiled from `.crexx` to `.rxas` assembly and then to
   `.rxbin` bytecode
 - namespaces, imports, exposed procedures, global values, and class/interface
   metadata
