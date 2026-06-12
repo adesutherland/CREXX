@@ -57,21 +57,18 @@ which clarifies its behaviour and purpose.
 
 ### Comparison Operator Categories
 
-cRexx provides a comprehensive set of comparison operators that fall into four categories based on two distinctions: **loose vs. string** and **case-sensitive vs. case-insensitive**.
+cRexx provides comparison operators that fall into two main categories:
+**loose** and **string**.
 
 * **Loose** operators (like `=`) perform padding to make strings of unequal length comparable and can be numeric-aware.
 * **String** operators (like `==`) require strings to be identical in length and always operate on the string representation of terms.
-* **Case-Sensitive** operators distinguish between uppercase and lowercase letters.
-* **Case-Insensitive** operators (`~~`, `~~~`) treat uppercase and lowercase letters as equivalent.
 
 The complete set of equality operators is summarised below:
 
-| Operator  | Type       | Case-Sensitive?   | Padding?   | Description                                        |
-|:----------|:-----------|:------------------|:-----------|:---------------------------------------------------|
-| `=`       | Loose      | Yes               | **Yes**    | Standard Rexx equality (numeric or padded string). |
-| `==`      | **String** | Yes               | No         | **String** character-for-character equality.       |
-| `~~`      | **Loose**  | **No**            | **Yes**    | **Case-insensitive, padded string equality.**      |
-| `~~~`     | **String** | **No**            | No         | **String, case-insensitive equality.**             |
+| Operator  | Type       | Padding?   | Description                                        |
+|:----------|:-----------|:-----------|:---------------------------------------------------|
+| `=`       | Loose      | **Yes**    | Standard Rexx equality (numeric or padded string). |
+| `==`      | **String** | No         | **String** character-for-character equality.       |
 
 Table: Comparison Operator Categories {#tbl:id}
 
@@ -131,33 +128,6 @@ Numeric literals are compared by their numeric value after stringification, not 
 | `<<=`               | String less than or equal          |
 
 Table: String Comparison Operators {#tbl:id}
-
-### Approximate Comparison (Case-Insensitive, Loose) `~~`
-
-The `~~` operator is the case-insensitive equivalent of the standard `=` operator. It performs a **loose** comparison.
-
-1.  Both strings undergo a full Unicode case-fold.
-2.  The shorter of the two resulting strings is padded on the right with blanks to match the length of the longer string.
-3.  The strings are then compared.
-
-<!-- end list -->
-
-* `'Hello' ~~ 'hello '` -\> **true** (After case-folding, `'hello'` is padded to match.)
-* The negated forms are `¬~~` and `/~~`.
-
-### String Approximate Comparison (Case-Insensitive) `~~~`
-
-The `~~~` operator is the case-insensitive version of the string comparison operator `==`. Like `==`, it 
-first **promotes both operands to their string representation**.
-
-1.  Both strings undergo a full Unicode case-fold.
-2.  The strings are then compared directly with **no padding**. They must be identical in content and length after case-folding.
-
-<!-- end list -->
-
-* `'Hello' ~~~ 'hello'` -\> **true**
-* `'Hello' ~~~ 'hello '` -\> **false** (Lengths are different.)
-* The negated forms are `¬~~~` and `/~~~`.
 
 ## String Concatenation
 
@@ -229,7 +199,7 @@ The order of priority of the operators (from highest to lowest). Note that the `
 | 4         | `*` `/` `%` `//`               | Multiply and divide                 | [^4]   |
 | 5         | `+` `-`                        | Add and subtract                    |        |
 | 6         | `||` (space, abuttal)          | Concatenation                       |        |
-| 7         | `=` `>` `<` `==` `~~` `~~~`... | All comparison operators            |        |
+| 7         | `=` `>` `<` `==`...            | All comparison operators            |        |
 | 8         | `&`                            | Logical AND                         |        |
 | 9         | `|` `&&`                       | Logical OR and exclusive OR         |        |
 

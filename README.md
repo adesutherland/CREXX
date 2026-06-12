@@ -78,6 +78,8 @@ is searched for same-extension imports.
   commitments separately from current technical documentation.
 - [Documentation map](docs/DOCS_MAP.md) explains which documentation area to
   use and how much authority each area has.
+- [Level B tutorial](docs/books/crexx_programming_guide/levelb_tutorial.md)
+  teaches practical Level B for Rexx programmers with tested examples.
 - [Language reference](docs/books/crexx_language_reference/about.md) covers the
   implemented language surface.
 - [Programming guide](docs/books/crexx_programming_guide/about.md) covers tools,

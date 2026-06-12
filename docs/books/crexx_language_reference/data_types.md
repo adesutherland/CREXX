@@ -69,6 +69,20 @@ main: procedure = .int
   arg args = .string[]
 ```
 
+Array elements can be accessed with bracket notation or Rexx-style dotted
+notation:
+
+```rexx
+items[1] = "alpha"
+items.2 = "beta"
+```
+
+Simple growable arrays are often used with one-based element indexes, but Level
+B arrays are not inherently limited to one-based indexing; explicit bounds such
+as `.int[0 to 10]` and `.int[-2 to *]` are part of the current source surface.
+For classic Rexx compound-variable style keyed string data, use the Level B
+`.stem` class from `rxfnsb`.
+
 ## References
 
 Reference values are explicit weak aliases to storage. A reference does not keep

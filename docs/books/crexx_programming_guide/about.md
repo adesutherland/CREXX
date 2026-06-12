@@ -6,6 +6,8 @@ toolchain in practice.
 It focuses on the tools and workflows around Level B source:
 
 - compiling `.crexx` with `rxc` or `crexx`
+- learning practical Level B syntax, modules, classes, interfaces, and tested
+  examples through the [Level B tutorial](levelb_tutorial.md)
 - assembling `.rxas` with `rxas`
 - running `.rxbin` with the crexx virtual machine executables `rxvm` and `rxvme`
 - linking modules with `rxlink`

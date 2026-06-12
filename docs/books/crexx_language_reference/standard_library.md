@@ -16,6 +16,10 @@ surface: `arrayinsert`, `arraydelete`, `arrayappend`, `arrayprepend`,
 format, dump, find, high-water, and drop helpers. New code should prefer these
 standard BIFs over the deprecated native arrays plugin.
 
+`rxfnsb` also exposes the `.stem` class for classic Rexx compound-variable
+style string-to-string keyed data. Stems support dotted tails and bracket keys,
+for example `s.name` and `s["customer.id"]`.
+
 Use it explicitly in reusable Level B source:
 
 ```rexx

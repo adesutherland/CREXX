@@ -13,12 +13,14 @@ designs.
 - [Documentation map](DOCS_MAP.md): where each kind of information belongs
 - [Building CREXX](books/crexx_programming_guide/Building_cRexx.md)
 - [Running CREXX](books/crexx_programming_guide/running.md)
+- [Level B tutorial](books/crexx_programming_guide/levelb_tutorial.md)
 - [Toolchain overview](books/crexx_programming_guide/toolchain.md)
 - [Architecture overview](books/crexx_programming_guide/architecture.md)
 
 ## Language
 
 - [Language reference](books/crexx_language_reference/about.md)
+- [Level B tutorial](books/crexx_programming_guide/levelb_tutorial.md)
 - [Language levels](books/crexx_language_reference/crexx_levels.md)
 - [Data types](books/crexx_language_reference/data_types.md)
 - [Statements](books/crexx_language_reference/statements.md)
