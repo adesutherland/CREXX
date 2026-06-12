@@ -9,14 +9,17 @@ main: procedure
   message = .string
   failures = 0
 
-  a = "1"
+  a = 1
+  b = "11"
   message = ""
 
-  REXXSCRIPT "say 'script starting'; say a; a = a + 4; message = 'done ' || a" EXPOSE a, message OUTPUT out RESULT raw
+  REXXSCRIPT "say 'script starting'; say a; a = a + 4;b='Alpha'; message = 'done ' || a" EXPOSE a,b, message OUTPUT out RESULT raw
+  say "Status of executed script "script_status
   if raw[1] <> "OK" then do
     failures = failures + 1
     say "bad first status" raw[1]
   end
+
   if a <> "5" | message <> "done 5" then do
     failures = failures + 1
     say "bad first expose" a message
@@ -26,10 +29,19 @@ main: procedure
     say "bad first output" out[0] out[1] out[2]
   end
 
+  do i=1 to out[0]
+     say 'OUT : 'i out[i]
+  end
+
+  do i=1 to raw[0]
+       say 'RAW : 'i raw[i]
+    end
+
   REXXSCRIPT "if 0 then do; say 'bad'; end; say 'good'" OUTPUT out RESULT raw
+  say "Status of executed script "script_status
   if raw[1] <> "OK" then do
-    failures = failures + 1
-    say "bad second status" raw[1]
+     failures = failures + 1
+     say "bad second status" raw[1]
   end
   if out[0] <> 1 | out[1] <> "good" then do
     failures = failures + 1
@@ -38,4 +50,8 @@ main: procedure
 
   if failures = 0 then say "SUCCESS"
   else say "FAILURES" failures
-  return
+
+ status='undefined'
+ REXXSCRIPT "status='is OK'; if 0 then do; say 'is bad'; status='is BAD'; end; say status" expose status output out
+  say "Status of executed script "script_status
+   return

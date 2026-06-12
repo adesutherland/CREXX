@@ -43,7 +43,11 @@ rexxscriptexit: class
 
     pre_process: method = .exitplan
         arg tokens = .token[]
-        return .exitplan("READY")
+        plan = .exitplan("READY")
+    /*  emitting a new variable into the code
+     *                              -> variable-name     -> type       -> exit-name_variable <- just for documentation purposes */
+        call plan.add_binding("var", "script_status", "", ".string", 0, "rexxscript_status", "")
+         return plan
 
     process: method = .exitresult
         arg tokens = .token[]
@@ -107,7 +111,6 @@ rexxscriptexit: class
                 if expect_name = 1 then return error_result(i - 1, "REXXSCRIPT EXPOSE clause requires a variable name")
                 iterate
             end
-
             if i = tokens.0 then return error_result(i, "REXXSCRIPT " || keyword || " clause requires a target")
             if strip(tokens[i + 1].get_type()) <> "identifier" then return error_result(i + 1, "REXXSCRIPT " || keyword || " target must be a variable name")
 
@@ -141,9 +144,10 @@ rexxscriptexit: class
                 call result.add_replacement_line(name || " = rexxscript_value('" || name || "')")
             end
         end
-        else call result.add_replacement_line("__rexxscript_result = evaluate(" || script_expr || ", 0)")
+        else call result.add_replacement_line("__rexxscript_result = evaluate(" || script_expr || ",0 )")
         if output_name <> "" then call result.add_replacement_line(output_name || " = rexxscript_output()")
         if result_name <> "" then call result.add_replacement_line(result_name || " = __rexxscript_result")
+        call result.add_replacement_line("script_status=__rexxscript_result[1]")
         return result
 
 isClauseKeyword: procedure = .int
