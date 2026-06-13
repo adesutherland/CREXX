@@ -9,7 +9,7 @@ main: procedure = .int
   out = .string[]
   err = .string[]
 
-  address command "mktemp /tmp/crexx-lineout-flush-visible.XXXXXX" output tmp error tmperr
+  address command "mktemp crexx-lineout-flush-visible.XXXXXX" output tmp error tmperr
   if rc \= 0 | tmp[0] = 0 then return 1
   path = tmp[1]
 

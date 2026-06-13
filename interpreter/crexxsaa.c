@@ -399,6 +399,15 @@ static const char* crexxsaa_env_value(const char* name) {
     return (value && *value) ? value : NULL;
 }
 
+#ifdef _WIN32
+static int crexxsaa_is_windows_native_path(const char* path) {
+    if (!path || !*path) return 0;
+    if (isalpha((unsigned char)path[0]) && path[1] == ':') return 1;
+    if (path[0] == '\\' && path[1] == '\\') return 1;
+    return path[0] != '/';
+}
+#endif
+
 static const char* crexxsaa_rxc_path(crexxsaa_context* ctx) {
     const char* value = crexxsaa_env_value("CREXXSAA_RXC");
     if (value) return value;
@@ -703,15 +712,21 @@ static char* crexxsaa_canonical_path(const char* path) {
 
 static char* crexxsaa_temp_dir(void) {
     const char* value;
+#ifdef _WIN32
+    value = crexxsaa_env_value("TEMP");
+    if (crexxsaa_is_windows_native_path(value)) return crexxsaa_strdup(value);
+    value = crexxsaa_env_value("TMP");
+    if (crexxsaa_is_windows_native_path(value)) return crexxsaa_strdup(value);
+    value = crexxsaa_env_value("TMPDIR");
+    if (crexxsaa_is_windows_native_path(value)) return crexxsaa_strdup(value);
+    return crexxsaa_strdup(".");
+#else
     value = crexxsaa_env_value("TMPDIR");
     if (value) return crexxsaa_strdup(value);
     value = crexxsaa_env_value("TEMP");
     if (value) return crexxsaa_strdup(value);
     value = crexxsaa_env_value("TMP");
     if (value) return crexxsaa_strdup(value);
-#ifdef _WIN32
-    return crexxsaa_strdup(".");
-#else
     return crexxsaa_strdup("/tmp");
 #endif
 }
