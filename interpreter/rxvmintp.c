@@ -94,6 +94,63 @@ int rxvm_link(rxvm_context *ctx);
 
 #define RXVM_FFORMAT_MAX_FIELD 1000
 
+static int rxvm_padded_string_compare(const char *left, size_t left_len, const char *right, size_t right_len) {
+    size_t max_len = left_len > right_len ? left_len : right_len;
+    size_t i;
+
+    for (i = 0; i < max_len; i++) {
+        unsigned char left_ch = i < left_len ? (unsigned char) left[i] : (unsigned char) ' ';
+        unsigned char right_ch = i < right_len ? (unsigned char) right[i] : (unsigned char) ' ';
+        if (left_ch != right_ch) return left_ch > right_ch ? 1 : -1;
+    }
+
+    return 0;
+}
+
+static int rxvm_trimmed_space_equal(const char *left, size_t left_len, const char *right, size_t right_len) {
+    while (left_len > 0 && left[left_len - 1] == ' ') left_len--;
+    while (right_len > 0 && right[right_len - 1] == ' ') right_len--;
+    while (left_len > 0 && *left == ' ') {
+        left++;
+        left_len--;
+    }
+    while (right_len > 0 && *right == ' ') {
+        right++;
+        right_len--;
+    }
+    return left_len == right_len && memcmp(left, right, left_len) == 0;
+}
+
+static int rxvm_loose_compare_text(const char *left, size_t left_len, const char *right, size_t right_len) {
+    double left_number;
+    double right_number;
+    int left_numeric = string2float(&left_number, (char *) left, left_len) == 0;
+    int right_numeric = string2float(&right_number, (char *) right, right_len) == 0;
+
+    if (left_numeric && right_numeric) {
+        if (left_number > right_number) return 1;
+        if (left_number < right_number) return -1;
+        return 0;
+    }
+
+    return rxvm_padded_string_compare(left, left_len, right, right_len);
+}
+
+static int rxvm_loose_compare_values(value *left, value *right) {
+    return rxvm_loose_compare_text(left->string_value, left->string_length,
+                                   right->string_value, right->string_length);
+}
+
+static int rxvm_loose_compare_value_const(value *left, string_constant *right) {
+    return rxvm_loose_compare_text(left->string_value, left->string_length,
+                                   right->string, right->string_len);
+}
+
+static int rxvm_loose_compare_const_value(string_constant *left, value *right) {
+    return rxvm_loose_compare_text(left->string, left->string_len,
+                                   right->string_value, right->string_length);
+}
+
 static char *rxvm_format_buffer_at(char *buffer, size_t buffer_len, size_t used) {
     if (buffer_len == 0) return buffer;
     return buffer + (used < buffer_len ? used : buffer_len - 1);
@@ -6173,56 +6230,21 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  *  -----------------------------------------------------------------------------------
 */
         START_INSTRUCTION(RSEQ_REG_REG_REG) CALC_DISPATCH(3)
-        {
             DEBUG("TRACE - RSEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            int ch;
-            int p1, p2;
-            int len1, len2;
-
-            REQUIRE_VALID_UTF8_REGISTER(op2R);
-            REQUIRE_VALID_UTF8_REGISTER(op3R);
-            GETSTRLEN(len1, op2R)
-            GETSTRLEN(len2, op3R)
-
-            // step 1 find last not blank character
-            for (p1 = len1 - 1; p1 >= 0; p1--, len1--) {
-                GETSTRCHAR(ch, op2R, p1)
-                if (ch != ' ') break;
-            }
-            for (p2 = len2 - 1; p2 >= 0; p2--, len2--) {
-                GETSTRCHAR(ch, op3R, p2)
-                if (ch != ' ') break;
-            }
-
-            // step 2 find first non blank
-            for (p1 = 0; p1 < len1; p1++) {
-                GETSTRCHAR(ch, op2R, p1)
-                if (ch != ' ') break;
-            }
-            for (p2 = 0; p2 < len2; p2++) {
-                GETSTRCHAR(ch, op3R, p2)
-                if (ch != ' ') break;
-            }
-            if (len1 - p1 != len2 - p2) REG_RETURN_INT(0)
-            else {
-                if (string_cmp(op2R->string_value + p1, len1 - p1,
-                           op3R->string_value + p2, len2 - p2) == 0)
-                    REG_RETURN_INT(1)
-                else REG_RETURN_INT(0)
-            }
-        }
-        DISPATCH
+            REG_RETURN_INT(rxvm_trimmed_space_equal(op2R->string_value, op2R->string_length,
+                                                    op3R->string_value, op3R->string_length))
+            DISPATCH
 
 /* ------------------------------------------------------------------------------------
  *  RSEQ_REG_REG_STRING String Equals op1=(op2=op3)  non strict REXX comparison
- *  TODO !!! not yet implemented !!!
  *  -----------------------------------------------------------------------------------
 */
         START_INSTRUCTION(RSEQ_REG_REG_STRING) CALC_DISPATCH(3)
             DEBUG("TRACE - RSEQ R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                   REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                   (CONSTSTRING_OP(3))->string);
-            REG_RETURN_INT(0)
+            REG_RETURN_INT(rxvm_trimmed_space_equal(op2R->string_value, op2R->string_length,
+                                                    op3S->string, op3S->string_len))
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6372,6 +6394,33 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 (CONSTSTRING_OP(2))->string, REG_IDX(3));
             REG_RETURN_INT(string_cmp_const(op3R, op2S) >= 0)
             DISPATCH
+
+#define RXVM_LOOSE_COMPARE_INSTRUCTIONS(name, cmpop) \
+        START_INSTRUCTION(name##_REG_REG_REG) CALC_DISPATCH(3) \
+            DEBUG("TRACE - " #name " R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3)); \
+            REG_RETURN_INT(rxvm_loose_compare_values(op2R, op3R) cmpop 0) \
+            DISPATCH \
+        START_INSTRUCTION(name##_REG_REG_STRING) CALC_DISPATCH(3) \
+            DEBUG("TRACE - " #name " R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), \
+                REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len, \
+                (CONSTSTRING_OP(3))->string); \
+            REG_RETURN_INT(rxvm_loose_compare_value_const(op2R, op3S) cmpop 0) \
+            DISPATCH \
+        START_INSTRUCTION(name##_REG_STRING_REG) CALC_DISPATCH(3) \
+            DEBUG("TRACE - " #name " R%lu,\"%.*s\",R%lu\n", REG_IDX(1), \
+                (int) (CONSTSTRING_OP(2))->string_len, \
+                (CONSTSTRING_OP(2))->string, REG_IDX(3)); \
+            REG_RETURN_INT(rxvm_loose_compare_const_value(op2S, op3R) cmpop 0) \
+            DISPATCH
+
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(REQ, ==)
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(RNE, !=)
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(RGT, >)
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(RGTE, >=)
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(RLT, <)
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(RLTE, <=)
+
+#undef RXVM_LOOSE_COMPARE_INSTRUCTIONS
 
 /* ------------------------------------------------------------------------------------
  *  COPY_REG_REG  Copy op2 to op1
@@ -8357,7 +8406,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     /* fflush - op1 rc(int) = fflush op2 file*(int) */
     START_INSTRUCTION(FFLUSH_REG_REG) CALC_DISPATCH(2)
         DEBUG("TRACE - FFLUSH R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        op1R->int_value = fflush((FILE*)op1R->int_value);
+        op1R->int_value = fflush((FILE*)op2R->int_value);
         DISPATCH
 
     /* freadb - op1(binary) = fread op2 file*(int) op3 bytes(int) */

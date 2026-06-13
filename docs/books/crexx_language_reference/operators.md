@@ -74,8 +74,9 @@ Table: Comparison Operator Categories {#tbl:id}
 
 ### Standard Comparison (Case-Sensitive, Loose)
 
-These operators perform a numeric comparison if either operand is a numeric type (causing a runtime error if conversion fails).
-Otherwise, they perform a character comparison where the shorter string is padded with blanks.
+These operators perform a numeric comparison only when both operands are numeric by value after any required type conversion.
+If either operand is not numeric, they fall back to a character comparison where the shorter string is padded with blanks.
+For example, `"09" = 9` is true numerically, while `"a" > 1` is a padded string comparison and does not raise a numeric conversion error.
 
 * The numeric comparison is affected by the **`NUMERIC FUZZ`** setting.
 

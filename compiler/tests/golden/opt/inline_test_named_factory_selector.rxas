@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_named_factory_selector.crexx
- * BUILT                  : 2026-06-12 20:25:53
+ * BUILT                  : 2026-06-13 15:11:36
  */
 
 .meta "inline_test_named_factory_selector.car"="b" ".unknown" .class
@@ -112,7 +112,7 @@ assignedNamed() .locals=4
    .traceevent "A" 6 "R" "O" "r" 0 12 12 0 "current" ""
    .srcstep 13 13 17 "inline_test_named_factory_selector.crexx" 16 3 19 "  if name = \"beta\" then do"
    .traceevent "V" 6 "R" "S" "a" 1 13 13 0 "name" ""
-   seq r3,a1,"beta"
+   req r3,a1,"beta"
    .traceevent "O" 4 "R" "B" "r" 3 13 13 0 "" ""
    brf l47iffalse,r3
    .srcstep 14 14 17 "inline_test_named_factory_selector.crexx" 16 20 24 "  if name = \"beta\" then do"

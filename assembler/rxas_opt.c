@@ -439,9 +439,9 @@ rule rules[] =
                                 OP_CODE, "igtbr", 'b', 3, 'r', 1, 'r', 2},
             {END_OF_RULE},
 
-            /* replace fgt/brf by igtbr instruction:     fgt r0,r3,r4; brf label,r0 => fgtbr label,r3,r4  */
+            /* replace fgt/brt by fgtbr instruction:     fgt r0,r3,r4; brt label,r0 => fgtbr label,r3,r4  */
             {ANY_GAP,   OP_CODE, "fgt",   'r', 4, 'r', 1, 'r', 2},
-            {NO_GAP,   OP_CODE, "brf",   'b', 3, 'r', 4,  0,  0,
+            {NO_GAP,   OP_CODE, "brt",   'b', 3, 'r', 4,  0,  0,
                     OP_CODE, "fgtbr", 'b', 3, 'r', 1, 'r', 2},
             {END_OF_RULE},
 

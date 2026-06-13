@@ -38,9 +38,16 @@ lineout: procedure = .int
         /* line specified - open file */
         nl = '0a'x
         fileid = _open(fname, "w")
-        if fileid = 0 then say "ERROR lineout() file" fname "could not open"
+        if fileid = 0 then do
+            say "ERROR lineout() file" fname "could not open"
+            return 1
+        end
         assembler fwrite fileid,line
         assembler fwrite fileid,nl
+        assembler fflush rc,fileid
+        if rc <> 0 then return rc
+        assembler ferror rc,fileid
+        if rc <> 0 then return rc
     end
     
     else do

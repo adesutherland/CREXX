@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : repro_multi_tail_stems.crexx
- * BUILT                  : 2026-06-05 19:41:20
+ * BUILT                  : 2026-06-13 15:11:36
  */
 
 .globals=0
@@ -52,7 +52,7 @@ main() .locals=11
    call r6,§rxfnsb.stem.get(),r7
    swap r4,r8
    .traceevent "V" 6 "R" "S" "r" 6 6 6 0 "root" ""
-   sne r9,r6,"Jenny"
+   rne r9,r6,"Jenny"
    .traceevent "O" 4 "R" "B" "r" 9 6 6 0 "" ""
    brf l35iffalse,r9
    .srcstep 7 7 17 "repro_multi_tail_stems.crexx" 8 32 36 "if root.tail1.tail2 \\= \"Jenny\" then do"
@@ -88,7 +88,7 @@ l35iffalse:
    call r6,§rxfnsb.stem.get(),r7
    swap r4,r8
    .traceevent "F" 4 "R" "S" "r" 6 10 10 0 "get" ""
-   sne r9,r6,"Jenny"
+   rne r9,r6,"Jenny"
    .traceevent "O" 4 "R" "B" "r" 9 10 10 0 "" ""
    brf l55iffalse,r9
    .srcstep 11 11 17 "repro_multi_tail_stems.crexx" 12 39 43 "if root.get(\"tail1.tail2\") \\= \"Jenny\" then do"
@@ -163,7 +163,7 @@ l55iffalse:
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    .traceevent "V" 6 "R" "S" "r" 7 16 16 0 "root" ""
-   sne r10,r7,"numeric-left"
+   rne r10,r7,"numeric-left"
    .traceevent "O" 4 "R" "B" "r" 10 16 16 0 "" ""
    brf l83iffalse,r10
    .srcstep 17 17 17 "repro_multi_tail_stems.crexx" 19 34 38 "if root.123.45 \\= \"numeric-left\" then do"
@@ -202,7 +202,7 @@ l83iffalse:
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    .traceevent "F" 4 "R" "S" "r" 7 20 20 0 "get" ""
-   sne r10,r7,"numeric-left"
+   rne r10,r7,"numeric-left"
    .traceevent "O" 4 "R" "B" "r" 10 20 20 0 "" ""
    brf l103iffalse,r10
    .srcstep 21 21 17 "repro_multi_tail_stems.crexx" 23 41 45 "if root.get(\"123.45\") \\= \"numeric-left\" then do"
@@ -237,7 +237,7 @@ l103iffalse:
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    .traceevent "F" 4 "R" "S" "r" 7 24 24 0 "get" ""
-   sne r10,r7,"numeric-right"
+   rne r10,r7,"numeric-right"
    .traceevent "O" 4 "R" "B" "r" 10 24 24 0 "" ""
    brf l123iffalse,r10
    .srcstep 25 25 17 "repro_multi_tail_stems.crexx" 27 42 46 "if root.get(\"12.345\") \\= \"numeric-right\" then do"
@@ -309,7 +309,7 @@ l123iffalse:
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    .traceevent "F" 4 "R" "S" "r" 7 32 32 0 "get" ""
-   sne r10,r7,"149.95"
+   rne r10,r7,"149.95"
    .traceevent "O" 4 "R" "B" "r" 10 32 32 0 "" ""
    brf l158iffalse,r10
    .srcstep 33 33 17 "repro_multi_tail_stems.crexx" 36 47 51 "if root.get(\"acme.2026.05.total\") \\= \"149.95\" then do"
@@ -346,7 +346,7 @@ l158iffalse:
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    .traceevent "F" 4 "R" "S" "r" 7 36 36 0 "get" ""
-   sne r10,r7,""
+   rne r10,r7,""
    .traceevent "O" 4 "R" "B" "r" 10 36 36 0 "" ""
    brf l173iffalse,r10
    .srcstep 37 37 17 "repro_multi_tail_stems.crexx" 40 45 49 "if root.get(\"customer.invoice.field\") \\= \"\" then do"
@@ -403,7 +403,7 @@ l173iffalse:
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    .traceevent "F" 4 "R" "S" "r" 7 42 42 0 "get" ""
-   sne r10,r7,"California"
+   rne r10,r7,"California"
    .traceevent "O" 4 "R" "B" "r" 10 42 42 0 "" ""
    brf l205iffalse,r10
    .srcstep 43 43 17 "repro_multi_tail_stems.crexx" 47 46 50 "if root.get(\"address.us.ca\") \\= \"California\" then do"
@@ -438,7 +438,7 @@ l205iffalse:
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    .traceevent "F" 4 "R" "S" "r" 7 46 46 0 "get" ""
-   sne r10,r7,"University of Southern California"
+   rne r10,r7,"University of Southern California"
    .traceevent "O" 4 "R" "B" "r" 10 46 46 0 "" ""
    brf l225iffalse,r10
    .srcstep 47 47 17 "repro_multi_tail_stems.crexx" 51 69 73 "if root.get(\"address.usc.a\") \\= \"University of Southern California\" then do"
@@ -473,7 +473,7 @@ l225iffalse:
    call r7,§rxfnsb.stem.get(),r8
    swap r4,r9
    .traceevent "F" 4 "R" "S" "r" 7 50 50 0 "get" ""
-   sne r10,r7,""
+   rne r10,r7,""
    .traceevent "O" 4 "R" "B" "r" 10 50 50 0 "" ""
    brf l240iffalse,r10
    .srcstep 51 51 17 "repro_multi_tail_stems.crexx" 55 35 39 "if root.get(\"address.usca\") \\= \"\" then do"

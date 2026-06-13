@@ -1,0 +1,4 @@
+out=stdout
+err=stderr
+msg=message
+meta=7

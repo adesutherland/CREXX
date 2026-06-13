@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : 13_stems.crexx
- * BUILT                  : 2026-06-05 19:41:19
+ * BUILT                  : 2026-06-13 15:11:36
  */
 
 .globals=0
@@ -34,7 +34,7 @@ main() .locals=15
    call r5,§rxfnsb.stem.get(),r2
    swap r1,r3
    .traceevent "V" 6 "R" "S" "r" 5 5 5 0 "s" ""
-   sne r5,r5,""
+   rne r5,r5,""
    .traceevent "O" 4 "R" "B" "r" 5 5 5 0 "" ""
    brf l28iffalse,r5
    .srcstep 6 6 17 "13_stems.crexx" 7 20 24 "if s.missing \\= \"\" then do"
@@ -108,7 +108,7 @@ l28iffalse:
    call r3,§rxfnsb.stem.get(),r4
    swap r1,r5
    .traceevent "V" 6 "R" "S" "r" 3 12 12 0 "s" ""
-   sne r6,r3,"one"
+   rne r6,r3,"one"
    .traceevent "O" 4 "R" "B" "r" 6 12 12 0 "" ""
    brf l56iffalse,r6
    .srcstep 13 13 17 "13_stems.crexx" 16 21 25 "if s.alpha \\= \"one\" then do"
@@ -141,7 +141,7 @@ l56iffalse:
    call r6,§rxfnsb.stem.get(),r9
    swap r1,r10
    .traceevent "V" 6 "R" "S" "r" 6 16 16 0 "s" ""
-   sne r11,r6,"two"
+   rne r11,r6,"two"
    .traceevent "O" 4 "R" "B" "r" 11 16 16 0 "" ""
    brf l72iffalse,r11
    .srcstep 17 17 17 "13_stems.crexx" 21 23 27 "if s[\"beta\"] \\= \"two\" then do"
@@ -187,7 +187,7 @@ l72iffalse:
    call r11,§rxfnsb.stem.get(),r12
    swap r1,r13
    .traceevent "V" 6 "R" "S" "r" 11 21 21 0 "s" ""
-   sne r14,r11,"updated"
+   rne r14,r11,"updated"
    .traceevent "O" 4 "R" "B" "r" 14 21 21 0 "" ""
    brf l92iffalse,r14
    .srcstep 22 22 17 "13_stems.crexx" 27 25 29 "if s.alpha \\= \"updated\" then do"

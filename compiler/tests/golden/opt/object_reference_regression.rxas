@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : object_reference_regression.crexx
- * BUILT                  : 2026-06-12 20:25:42
+ * BUILT                  : 2026-06-13 15:11:36
  */
 
 .meta "object_reference_regression.largepayload"="b" ".unknown" .class
@@ -221,7 +221,7 @@ l752bexprend:
    concat r37,r39,":17"
    unlink r39
    .traceevent "O" 4 "R" "S" "r" 37 36 36 0 "" ""
-   sne r37,r40,r37
+   rne r37,r40,r37
    unlink r40
    .traceevent "O" 4 "R" "B" "r" 37 36 36 0 "" ""
    brf l789iffalse,r37
@@ -241,7 +241,7 @@ l789iffalse:
    concat r37,r39,":m1"
    unlink r39
    .traceevent "O" 4 "R" "S" "r" 37 39 39 0 "" ""
-   sne r37,r40,r37
+   rne r37,r40,r37
    unlink r40
    .traceevent "O" 4 "R" "B" "r" 37 39 39 0 "" ""
    brf l798iffalse,r37
@@ -261,7 +261,7 @@ l798iffalse:
    concat r37,r39,":m8"
    unlink r39
    .traceevent "O" 4 "R" "S" "r" 37 42 42 0 "" ""
-   sne r37,r40,r37
+   rne r37,r40,r37
    unlink r40
    .traceevent "O" 4 "R" "B" "r" 37 42 42 0 "" ""
    brf l806iffalse,r37
@@ -1206,7 +1206,7 @@ l191doend:
    concat r3,r2,":17"
    unlink r2
    .traceevent "O" 4 "R" "S" "r" 3 284 284 0 "" ""
-   sne r3,r1,r3
+   rne r3,r1,r3
    unlink r1
    .traceevent "O" 4 "R" "B" "r" 3 284 284 0 "" ""
    brf l335iffalse,r3
@@ -1223,7 +1223,7 @@ l335iffalse:
    concat r1,r2,":m1"
    unlink r2
    .traceevent "O" 4 "R" "S" "r" 1 287 287 0 "" ""
-   sne r1,r3,r1
+   rne r1,r3,r1
    unlink r3
    .traceevent "O" 4 "R" "B" "r" 1 287 287 0 "" ""
    brf l343iffalse,r1
@@ -1239,7 +1239,7 @@ l343iffalse:
    concat r1,r2,":m8"
    unlink r2
    .traceevent "O" 4 "R" "S" "r" 1 290 290 0 "" ""
-   sne r1,r3,r1
+   rne r1,r3,r1
    unlink r3
    .traceevent "O" 4 "R" "B" "r" 1 290 290 0 "" ""
    brf l351iffalse,r1

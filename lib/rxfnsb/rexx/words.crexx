@@ -32,7 +32,6 @@ words: procedure=.int
   len = length(string)
   offset = 0
   count = 0
-  if wordnum<1 then return 0
   if len<1 then return 0
 
 do while offset < len

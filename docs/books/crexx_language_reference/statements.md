@@ -18,6 +18,17 @@ address command "echo #42" output out error err
 say out
 ```
 
+The built-in `COMMAND`/`CMD`/`SYSTEM`/`SHELL` and `PATH` environments execute a
+program with parsed arguments; they are not an interactive shell parser. Simple
+quoted arguments are supported, but complex nested shell quoting should be
+passed to an explicit shell through stdin:
+
+```rexx
+command_lines = .string[]
+command_lines[1] = "printf '%s\n' alpha beta"
+address command "sh" input command_lines output out error err
+```
+
 ADDRESS host-variable anchors such as `:name` and `${name}` are compiler
 auto-expose syntax. Their command meaning belongs to the selected environment
 handler; the VM carries binding values and write-back updates.

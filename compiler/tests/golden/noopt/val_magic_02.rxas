@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : val_magic_02.crexx
- * BUILT                  : 2026-05-27 17:53:00
+ * BUILT                  : 2026-06-13 15:11:36
  */
 
 .globals=0
@@ -28,7 +28,7 @@ main() .locals=4
    say r3
    .srcstep 6 6 17 "val_magic_02.crexx" 15 1 21 "if a \\= 'HelloWorld' then do"
    .traceevent "V" 6 "R" "S" "r" 0 6 6 0 "a" ""
-   sne r3,r0,"HelloWorld"
+   rne r3,r0,"HelloWorld"
    .traceevent "O" 4 "R" "B" "r" 3 6 6 0 "" ""
    brf l23iffalse,r3
    .srcstep 7 7 17 "val_magic_02.crexx" 15 22 26 "if a \\= 'HelloWorld' then do"
@@ -51,7 +51,7 @@ l23iffalse:
    say r3
    .srcstep 12 12 17 "val_magic_02.crexx" 22 1 22 "if b \\= 'Hello World' then do"
    .traceevent "V" 6 "R" "S" "r" 1 12 12 0 "b" ""
-   sne r3,r1,"Hello World"
+   rne r3,r1,"Hello World"
    .traceevent "O" 4 "R" "B" "r" 3 12 12 0 "" ""
    brf l41iffalse,r3
    .srcstep 13 13 17 "val_magic_02.crexx" 22 23 27 "if b \\= 'Hello World' then do"
@@ -78,7 +78,7 @@ l41iffalse:
    say r3
    .srcstep 18 18 17 "val_magic_02.crexx" 32 1 21 "if c \\= 'HelloWorld' then do"
    .traceevent "V" 6 "R" "S" "r" 2 18 18 0 "c" ""
-   sne r3,r2,"HelloWorld"
+   rne r3,r2,"HelloWorld"
    .traceevent "O" 4 "R" "B" "r" 3 18 18 0 "" ""
    brf l61iffalse,r3
    .srcstep 19 19 17 "val_magic_02.crexx" 32 22 26 "if c \\= 'HelloWorld' then do"

@@ -48,7 +48,7 @@ __REGEXMATCH: PROCEDURE=.int
   rxlite_len   = 0
   rxlite_end   = 0
   rxlite_ci = 0
-  if left(p,4) = '(?i)' then do
+  if left(p,4) == '(?i)' then do
       rxlite_ci = 1
       p = substr(p,5)
   end
@@ -59,7 +59,7 @@ __REGEXMATCH: PROCEDURE=.int
      do a = 1 to alt.0
         q = alt.a
         /* anchored alt? */
-        if left(q,1) = '^' then do
+        if left(q,1) == '^' then do
            if __matchHere(s, 1, q, 2) then do
               rxlite_start = 1
               return 1
@@ -77,7 +77,7 @@ __REGEXMATCH: PROCEDURE=.int
      return 0
   end
   /* anchored-at-start? */
-  if left(p,1) = '^' then do
+  if left(p,1) == '^' then do
     if __matchHere(s, 1, p, 2)=0 then return 0
     rxlite_start = 1
     return 1
@@ -100,14 +100,14 @@ REGEXFIND: PROCEDURE=.int
   a = 0
   q = ""
 
-  if fromPos = '' then fromPos = 1
+  if fromPos == '' then fromPos = 1
 
   rxlite_start = 0
   rxlite_len   = 0
   rxlite_end   = 0
-  if p \= '' then do
+  if p \== '' then do
      rxlite_ci = 0
-     if left(p,4) = '(?i)' then do
+     if left(p,4) == '(?i)' then do
         rxlite_ci = 1
         p = substr(p,5)
      end
@@ -122,7 +122,7 @@ REGEXFIND: PROCEDURE=.int
        do i = fromPos to length(s) + 1
           do a = 1 to alt.0
              q = alt.a
-             if left(q,1) = '^' then do
+             if left(q,1) == '^' then do
                 if i \= 1 then iterate
                 if __matchHere(s, 1, q, 2) then do
                    rxlite_start = 1
@@ -146,7 +146,7 @@ REGEXFIND: PROCEDURE=.int
     /* === END: TOP-LEVEL ALTERNATION === */
 
   /* anchored ^ only valid at pos 1 */
-  if left(p,1) = '^' then do
+  if left(p,1) == '^' then do
      if fromPos \= 1 then return 0
      if __matchHere(s, 1, p, 2) then do
         rxlite_start = 1
@@ -157,7 +157,7 @@ REGEXFIND: PROCEDURE=.int
      return 0
   end
 /* ---- FAST-PATH for a single character class with no anchors/quantifiers ---- */
-  if left(p,1)='[' & right(p,1)=']' then do
+  if left(p,1)=='[' & right(p,1)==']' then do
   /* ensure it’s exactly one class atom (no trailing tokens) */
   /* PARSE value __readClass(p,1) with spec type plen */
      _pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */
@@ -165,7 +165,11 @@ REGEXFIND: PROCEDURE=.int
         _parsetemplate='spec type plen'
         call parse _string2parse,_parsetemplate,_pass_variable,_pass_variable_content,0,0
      ## ---------- set parse variables ----------
-     if type = 'CLASS' & plen = length(p) then do
+        spec=_pass_variable_content.1
+        type=_pass_variable_content.2
+        plen=_pass_variable_content.3
+     ## ---------- parse variables set ----------
+     if type == 'CLASS' & plen = length(p) then do
         do i = fromPos to length(s)
            if __classHas(spec, substr(s,i,1)) then do
               rxlite_start = i
@@ -203,7 +207,7 @@ REGEXSPLIT: PROCEDURE=.string[]
   doTrim    = 0
   expand    = 0
   outstem=.string[]
-  if opts \= '' then do
+  if opts \== '' then do
      u = translate(opts)
      if pos('T', u) > 0 then doTrim = 1
      if pos('D', u) > 0 then keepEmpty = 0
@@ -221,7 +225,7 @@ REGEXSPLIT: PROCEDURE=.string[]
      if limit > 0 & count = limit - 1 then do
         piece = substr(s, prev)
         if doTrim then piece = strip(piece)
-        if keepEmpty | piece \= '' then do
+        if keepEmpty | piece \== '' then do
            count = count + 1
            outStem.count = piece
         end
@@ -230,7 +234,7 @@ REGEXSPLIT: PROCEDURE=.string[]
  /* piece before the delimiter */
     piece = substr(s, prev, rxlite_start - prev)
     if doTrim then piece = strip(piece)
-    if keepEmpty | piece \= '' then do
+    if keepEmpty | piece \== '' then do
        count = count + 1
        outStem.count = piece
     end
@@ -251,7 +255,7 @@ REGEXSPLIT: PROCEDURE=.string[]
   /* tail after last delimiter (possibly empty) */
   piece = substr(s, prev)
   if doTrim then piece = strip(piece)
-  if keepEmpty | piece \= '' then do
+  if keepEmpty | piece \== '' then do
      count = count + 1
      outStem.count = piece
   end
@@ -433,14 +437,14 @@ __expandRepl: PROCEDURE=.string
   i = 1
   do while i <= length(repl)
     c = substr(repl, i, 1)
-    if c = '$' then do
+    if c == '$' then do
       d = substr(repl, i+1, 1)
-      if d = '0' | d = '&' then do
+      if d == '0' | d == '&' then do
         out = out || m
         i = i + 2
         iterate
       end
-      if d = '$' then do
+      if d == '$' then do
         out = out || '$'
         i = i + 2
         iterate
@@ -469,7 +473,7 @@ __matchHere: PROCEDURE=.int
      return 1
   end
   /* 2) $ anchor (only at end) */
-  if substr(p, j, 1) = '$' & j = length(p) then do
+  if substr(p, j, 1) == '$' & j = length(p) then do
      if i > length(s) then do
         call __set_last_end i
         return 1
@@ -479,7 +483,7 @@ __matchHere: PROCEDURE=.int
   /* 3) Read next atom */
   atomLen = 0
   c = substr(p, j, 1)
-  if c = '\' then do
+  if c == '\' then do
 /* PARSE value __readEscape(p,j) with atom type atomLen */
    _pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */
    _string2Parse=__readEscape(p,j)
@@ -492,7 +496,7 @@ type=_pass_variable_content.2
 atomLen=_pass_variable_content.3
 ## ---------- parse variables set ----------
   end
-  else if c = '[' then do
+  else if c == '[' then do
 /* PARSE value __readClass(p,j) with atom type atomLen */
 _pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */
    _string2Parse=__readClass(p,j)
@@ -503,7 +507,7 @@ atom=_pass_variable_content.1
 type=_pass_variable_content.2
 atomLen=_pass_variable_content.3
 ## ---------- parse variables set ----------
-     if atom = 'ERROR' then return 0
+     if atom == 'ERROR' then return 0
   end
   else do
      atom    = c
@@ -514,18 +518,18 @@ atomLen=_pass_variable_content.3
   q = substr(p, j + atomLen, 1)
   qnext = substr(p, j + atomLen + 1, 1)
     /* * and + (greedy / lazy) */
-    if q = '*' then do
-       if qnext = '?' then return __matchStarLazy(s, i, p, j, atomLen)
+    if q == '*' then do
+       if qnext == '?' then return __matchStarLazy(s, i, p, j, atomLen)
        else               return __matchStar(s,      i, p, j, atomLen)
     end
-    else if q = '+' then do
+    else if q == '+' then do
        if __matchOne(s, i, atom, type) then do
-          if qnext = '?' then return __matchStarLazy(s, i+1, p, j, atomLen)
+          if qnext == '?' then return __matchStarLazy(s, i+1, p, j, atomLen)
           else                return __matchStar(s,      i+1, p, j, atomLen)
       end
       return 0
     end
-    else if q = '?' then do
+    else if q == '?' then do
       /* 0 repetitions */
     if __matchHere(s, i, p, j + atomLen + 1) then return 1
     /* 1 repetition */
@@ -550,7 +554,7 @@ __matchStar: PROCEDURE=.int
 
   /* Re-read the atom */
   c = substr(p, j, 1)
-  if c = '\' then do
+  if c == '\' then do
 /* PARSE value __readEscape(p,j) with atom type . */
 _pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */
    _string2Parse=__readEscape(p,j)
@@ -561,7 +565,7 @@ atom=_pass_variable_content.1
 type=_pass_variable_content.2
 ## ---------- parse variables set ----------
   end
-  else if c = '[' then do
+  else if c == '[' then do
 /* PARSE value __readClass(p,j) with atom type . */
 _pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */
    _string2Parse=__readClass(p,j)
@@ -571,7 +575,7 @@ _parsetemplate='atom type .'
 atom=_pass_variable_content.1
 type=_pass_variable_content.2
 ## ---------- parse variables set ----------
-     if atom = 'ERROR' then return 0
+     if atom == 'ERROR' then return 0
   end
   else do
      atom = c
@@ -597,18 +601,18 @@ __matchOne: PROCEDURE=.int
   ch = ""
   L = length(s)
   if i > L then return 0
-  if type = 'CLASS' then do
+  if type == 'CLASS' then do
      ch = substr(s, i, 1)
      return __classHas(atom, ch)
   end
 
   ch = substr(s, i, 1)
-  if atom = '.' then return 1
-  if left(atom,1) = '#' then return __escapePredicate(atom, ch)  /* \d \w \s etc. */
+  if atom == '.' then return 1
+  if left(atom,1) == '#' then return __escapePredicate(atom, ch)  /* \d \w \s etc. */
 
   /* literal */
-  if rxlite_ci then return (translate(ch) = translate(atom))
-return (ch = atom)
+  if rxlite_ci then return (translate(ch) == translate(atom))
+return (ch == atom)
 /* ----------------------------------------------------------------------------
  * READESCAPE
  * ----------------------------------------------------------------------------
@@ -616,12 +620,12 @@ return (ch = atom)
 __readEscape: PROCEDURE=.string
   arg p=.string, j=.int
   e = substr(p, j+1, 1)
-  if e='d' then return '#d' 'ATOM' 2
-  else if e='D' then return '#D' 'ATOM' 2
-  else if e='w' then return '#w' 'ATOM' 2
-  else if e='W' then return '#W' 'ATOM' 2
-  else if e='s' then return '#s' 'ATOM' 2
-  else if e='S' then return '#S' 'ATOM' 2
+  if e=='d' then return '#d' 'ATOM' 2
+  else if e=='D' then return '#D' 'ATOM' 2
+  else if e=='w' then return '#w' 'ATOM' 2
+  else if e=='W' then return '#W' 'ATOM' 2
+  else if e=='s' then return '#s' 'ATOM' 2
+  else if e=='S' then return '#S' 'ATOM' 2
 return e 'ATOM' 2          /* escaped literal */
 /* ----------------------------------------------------------------------------
  * __ESCAPEPREDICT
@@ -630,15 +634,15 @@ return e 'ATOM' 2          /* escaped literal */
 __escapePredicate: PROCEDURE=.int
   arg code=.string, ch=.string
 
-  if code = '#d' then return (pos(ch,'0123456789')>0)
-  else if code = '#D' then return \(__escapePredicate('#d',ch))
-  else if  code = '#w' then return (datatype(ch,'A')=1 | datatype(ch,'N')=1 | ch='_')
-  else if  code = '#W' then return \(__escapePredicate('#w',ch))
-  else if  code = '#s' then do
+  if code == '#d' then return (pos(ch,'0123456789')>0)
+  else if code == '#D' then return \(__escapePredicate('#d',ch))
+  else if  code == '#w' then return (datatype(ch,'A')=1 | datatype(ch,'N')=1 | ch == '_')
+  else if  code == '#W' then return \(__escapePredicate('#w',ch))
+  else if  code == '#s' then do
      ws = ' '||d2c(9)||d2c(10)||d2c(13)||d2c(12)   /* space, \t, \n, \r, \f */
      return (pos(ch, ws) > 0)
   end
-  else if code = '#S' then return \(__escapePredicate('#s',ch))
+  else if code == '#S' then return \(__escapePredicate('#s',ch))
 return 0
 /* ----------------------------------------------------------------------------
  * __READCLASS
@@ -649,7 +653,7 @@ __readClass: PROCEDURE=.string
   arg p=.string, j=.int
   k = j + 1
   neg = 0
-  if substr(p, k, 1) = '^' then do
+  if substr(p, k, 1) == '^' then do
      neg = 1
      k = k + 1
   end
@@ -658,13 +662,13 @@ __readClass: PROCEDURE=.string
   seen = 0
   do while k <= length(p)
      c = substr(p, k, 1)
-     if c = ']' & seen = 1 then do
+     if c == ']' & seen = 1 then do
        classLen = k - j + 1
        return neg'|'pairs 'CLASS' classLen
     end
 
     /* read one char, honoring escapes */
-    if c = '\' then do
+    if c == '\' then do
        c = __classEsc(substr(p, k+1, 1))
        k = k + 2
     end
@@ -673,9 +677,9 @@ __readClass: PROCEDURE=.string
     end
 
     /* range like a-z */
-    if k <= length(p)-1 & substr(p, k, 1) = '-' & substr(p, k+1, 1) \= ']' then do
+    if k <= length(p)-1 & substr(p, k, 1) == '-' & substr(p, k+1, 1) \== ']' then do
        r2 = substr(p, k+1, 1)
-       if r2 = '\' then do
+       if r2 == '\' then do
           r2 = __classEsc(substr(p, k+2, 1))
           k  = k + 3
        end
@@ -696,9 +700,9 @@ return 'ERROR' 'CLASS' 0                  /* unterminated class */
 __classEsc: PROCEDURE=.string
   arg e=.string
 
-  if e='n' then return d2c(10)
-  else if e='r' then return d2c(13)
-  else if  e='t' then return d2c(9)
+  if e == 'n' then return d2c(10)
+  else if e == 'r' then return d2c(13)
+  else if  e == 't' then return d2c(9)
 return e
 /* ----------------------------------------------------------------------------
  * __CLASSHAS
@@ -732,7 +736,7 @@ __classHas: PROCEDURE=.int
        if ch >= lo & ch <= hi then do; hit = 1; leave; end
     end
   end
-  if neg = '1' then return \hit
+  if neg == '1' then return \hit
 return hit
 /* ----------------------------------------------------------------------------
  * __matchStarLAZY Lazy star: prefer the shortest match that allows the rest to match
@@ -747,7 +751,7 @@ __matchStarLazy: PROCEDURE=.int
 
   /* re-read the atom (same as in __matchStar) */
   c = substr(p, j, 1)
-  if c = '\' then do
+  if c == '\' then do
 /* PARSE value __readEscape(p,j) with atom type . */
 _pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */
    _string2Parse=__readEscape(p,j)
@@ -758,7 +762,7 @@ atom=_pass_variable_content.1
 type=_pass_variable_content.2
 ## ---------- parse variables set ----------
   end
-  else if c = '[' then do
+  else if c == '[' then do
 /* PARSE value __readClass(p,j) with atom type . */
 _pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */
    _string2Parse=__readClass(p,j)
@@ -768,7 +772,7 @@ _parsetemplate='atom type .'
 atom=_pass_variable_content.1
 type=_pass_variable_content.2
 ## ---------- parse variables set ----------
-     if atom = 'ERROR' then return 0
+     if atom == 'ERROR' then return 0
   end
   else do
      atom = c
@@ -822,23 +826,23 @@ __altSplit: PROCEDURE=.string[]
   do while i <= L
      c = substr(p, i, 1)
   /* handle escapes everywhere: skip next char */
-     if c = '\' then do
+     if c == '\' then do
         i = i + 2
         iterate
      end
   /* enter/exit character class */
-     if c = '[' then do
+     if c == '[' then do
         inClass = 1
         i = i + 1
         iterate
      end
-     if c = ']' then do
+     if c == ']' then do
         inClass = 0
         i = i + 1
         iterate
      end
   /* top-level alternation split */
-    if c = '|' & inClass = 0 then do
+    if c == '|' & inClass = 0 then do
        altmax=altmax+1
        alts[altmax] = substr(p, segStart, i - segStart)
        segStart = i + 1

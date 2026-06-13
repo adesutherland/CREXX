@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : repro_expand_until.crexx
- * BUILT                  : 2026-05-27 17:53:05
+ * BUILT                  : 2026-06-13 15:11:36
  */
 
 .globals=0
@@ -46,11 +46,11 @@ l13doinc:
    .srcstep 4 4 17 "repro_expand_until.crexx" 5 4 32 "do until old = line | line = ''"
    .traceevent "V" 6 "R" "S" "r" 2 0 0 0 "old" ""
    .traceevent "V" 6 "R" "S" "r" 1 0 0 0 "line" ""
-   seq r3,r2,r1
+   req r3,r2,r1
    .traceevent "O" 4 "R" "B" "r" 3 0 0 0 "" ""
    brt l20orend,r3
    .traceevent "V" 6 "R" "S" "r" 1 0 0 0 "line" ""
-   seq r3,r1,""
+   req r3,r1,""
    .traceevent "O" 4 "R" "B" "r" 3 0 0 0 "" ""
 l20orend:
    .traceevent "O" 4 "R" "B" "r" 3 0 0 0 "" ""

@@ -555,6 +555,13 @@ host variable return a normal `var` updated binding, so the existing ADDRESS
 write-back path handles both explicit `EXPOSE` variables and auto-exposed
 anchors.
 
+The built-in system-like environments (`COMMAND`, `CMD`, `SYSTEM`, `SHELL`,
+and `PATH`) route through the VM spawn helper, which parses the command into an
+argv vector before executing the program. This is not a full shell-quoting
+contract. For nested shell quoting, here-doc-like content, or multiple shell
+statements, invoke an explicit shell such as `address command "sh" input lines`
+and pass the script through the ADDRESS input redirect.
+
 `demos/native/sqlite/` shows the database-oriented form of the native provider
 model. The provider routes by the ADDRESS environment name carried in the
 request (`SQLITE` initially), looks up a driver table, and then treats SQL

@@ -274,6 +274,16 @@ address command "echo #42" output out error err
 if rc <> 0 then say "command failed"
 ```
 
+`address command` is argv-parsed by the built-in provider; it is not a full
+shell-quoting contract. For multi-line shell scripts or nested quoting, send
+the script to an explicit shell through an input array:
+
+```rexx
+script = .string[]
+script[1] = "printf '%s\n' alpha beta"
+address command "sh" input script output out error err
+```
+
 References:
 - `compiler/exits/address/test_address.crexx`
 - `bin/crexx.crexx`

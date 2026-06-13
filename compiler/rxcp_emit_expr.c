@@ -253,6 +253,7 @@ void emit_expression(ASTNode *node, void *payload) {
     char *comment_meta;
     ASTNode *n;
     int i, j, k;
+    int loose_string_compare = 0;
     char ret_type;
     int ret_num;
     ASTNode *child1 = node->child;
@@ -622,16 +623,22 @@ void emit_expression(ASTNode *node, void *payload) {
 
         /* These operators have a prefix type of that of the first child */
         case OP_COMPARE_EQUAL:
+            loose_string_compare = 1;
             if (!op) op="eq";
         case OP_COMPARE_NEQ:
+            loose_string_compare = 1;
             if (!op) op="ne";
         case OP_COMPARE_GT:
+            loose_string_compare = 1;
             if (!op) op="gt";
         case OP_COMPARE_LT:
+            loose_string_compare = 1;
             if (!op) op="lt";
         case OP_COMPARE_GTE:
+            loose_string_compare = 1;
             if (!op) op="gte";
         case OP_COMPARE_LTE:
+            loose_string_compare = 1;
             if (!op) op="lte";
         case OP_COMPARE_S_EQ:
             if (!op) op="eq";
@@ -647,6 +654,7 @@ void emit_expression(ASTNode *node, void *payload) {
             if (!op) op="lte";
 
             tp_prefix = type_to_prefix(child1->target_type);
+            if (loose_string_compare && child1->target_type == TP_STRING) tp_prefix = "r";
 
         /* These operators use the type prefix already set (i.e. of their type) */
         case OP_ADD:

@@ -1,0 +1,28 @@
+options levelb
+
+main: procedure = .int
+  out = .string[]
+  err = .string[]
+  msg = .string[]
+  meta = .string[]
+
+  call outer(out, err, msg, meta)
+
+  say "out=" || out[1]
+  say "err=" || err[1]
+  say "msg=" || msg[1]
+  say "meta=" || meta[1]
+  return 0
+
+outer: procedure = .void
+  arg expose out = .string[], expose err = .string[], expose msg = .string[], expose meta = .string[]
+  call direct(out, err, msg, meta)
+  return
+
+direct: procedure = .void
+  arg expose out = .string[], expose err = .string[], expose msg = .string[], expose meta = .string[]
+  out[1] = "stdout"
+  err[1] = "stderr"
+  msg[1] = "message"
+  meta[1] = "7"
+  return

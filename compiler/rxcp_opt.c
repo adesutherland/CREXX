@@ -696,8 +696,9 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
         payload->changed = 1;
     }
 
-/* Compares two nodes returns -1, 0, 1 as appropriate */
 #define MIN(a,b) (((a)<(b))?(a):(b))
+
+/* Compares two typed numeric/string nodes returns -1, 0, 1 as appropriate. */
 static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
     double fdiff;
     rxinteger idiff;
@@ -727,7 +728,7 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
         value* val2 = value_f();
         decplugin->decimalFromString(decplugin, val1, node1->decimal_value);
         decplugin->decimalFromString(decplugin, val2, node2->decimal_value);
-        int cmp = decplugin->decimalCompare(decplugin, val1, val2);
+        cmp = decplugin->decimalCompare(decplugin, val1, val2);
         clear_value(val1);
         free(val1);
         clear_value(val2);
@@ -871,6 +872,61 @@ static int compare_effective_strings(ASTNode *node1, ASTNode *node2) {
     if (left_length > right_length) return 1;
     if (left_length < right_length) return -1;
     return 0;
+}
+
+static int compare_padded_strings(const char *left, size_t left_length, const char *right, size_t right_length) {
+    size_t max_length = left_length > right_length ? left_length : right_length;
+    size_t i;
+
+    for (i = 0; i < max_length; i++) {
+        unsigned char left_ch = i < left_length ? (unsigned char) left[i] : (unsigned char) ' ';
+        unsigned char right_ch = i < right_length ? (unsigned char) right[i] : (unsigned char) ' ';
+        if (left_ch != right_ch) return left_ch > right_ch ? 1 : -1;
+    }
+
+    return 0;
+}
+
+static int compare_loose_effective_strings(ASTNode *node1, ASTNode *node2) {
+    char *left;
+    char *right;
+    size_t left_length;
+    size_t right_length;
+    double left_number;
+    double right_number;
+    int left_numeric;
+    int right_numeric;
+    int cmp;
+
+    left = constant_node_to_effective_string(node1, &left_length);
+    right = constant_node_to_effective_string(node2, &right_length);
+    if (!left || !right) {
+        if (left) free(left);
+        if (right) free(right);
+        return 0;
+    }
+
+    left_numeric = string2float(&left_number, left, left_length) == 0;
+    right_numeric = string2float(&right_number, right, right_length) == 0;
+
+    if (left_numeric && right_numeric) {
+        if (left_number > right_number) cmp = 1;
+        else if (left_number < right_number) cmp = -1;
+        else cmp = 0;
+    } else {
+        cmp = compare_padded_strings(left, left_length, right, right_length);
+    }
+
+    free(left);
+    free(right);
+    return cmp;
+}
+
+static int compare_standard_constants(ASTNode *node, ASTNode *child1, ASTNode *child2) {
+    if (child1->target_type == TP_STRING || child2->target_type == TP_STRING) {
+        return compare_loose_effective_strings(child1, child2);
+    }
+    return compare_nodes(child1, child2, node->scope);
 }
 
 static int strict_string_compare_operand(ASTNode *node) {
@@ -1180,35 +1236,35 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_COMPARE_EQUAL:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare == 0);
                         break;
 
                     case OP_COMPARE_NEQ:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare != 0);
                         break;
 
                     case OP_COMPARE_GT:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload, compare > 0);
                         break;
 
                     case OP_COMPARE_LT:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload, compare < 0);
                         break;
 
                     case OP_COMPARE_GTE:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare >= 0);
                         break;
 
                     case OP_COMPARE_LTE:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare <= 0);
                         break;

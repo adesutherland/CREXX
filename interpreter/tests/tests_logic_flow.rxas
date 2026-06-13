@@ -75,6 +75,59 @@ sgt_pass:
     say "PASS: SGT"
 sgt_end:
 
+    /* --- Loose REXX Comparisons --- */
+    load r1, "09"
+    req r0, r1, "9"
+    brt req_pass, r0
+    say "FAIL: REQ numeric text"
+    br req_end
+req_pass:
+    say "PASS: REQ numeric text"
+req_end:
+
+    rne r0, r1, "10"
+    brt rne_pass, r0
+    say "FAIL: RNE numeric text"
+    br rne_end
+rne_pass:
+    say "PASS: RNE numeric text"
+rne_end:
+
+    rgte r0, r1, "9"
+    brt rgte_pass, r0
+    say "FAIL: RGTE numeric text"
+    br rgte_end
+rgte_pass:
+    say "PASS: RGTE numeric text"
+rgte_end:
+
+    load r1, "a"
+    load r2, "1"
+    rgt r0, r1, r2
+    brt rgt_pass, r0
+    say "FAIL: RGT string fallback"
+    br rgt_end
+rgt_pass:
+    say "PASS: RGT string fallback"
+rgt_end:
+
+    rlt r0, "1", r1
+    brt rlt_pass, r0
+    say "FAIL: RLT const string fallback"
+    br rlt_end
+rlt_pass:
+    say "PASS: RLT const string fallback"
+rlt_end:
+
+    load r1, "09"
+    rlte r0, "9", r1
+    brt rlte_pass, r0
+    say "FAIL: RLTE const numeric text"
+    br rlte_end
+rlte_pass:
+    say "PASS: RLTE const numeric text"
+rlte_end:
+
     /* --- Float Comparisons --- */
     /* FEQ */
     load r1, 3.14
@@ -105,6 +158,19 @@ brt_pass:
     say "FAIL: BRF"
 brf_pass:
     say "PASS: BRF"
+
+    /* --- Optimizer must not rewrite FGT + BRF as a true branch --- */
+    load r1, "9"
+    stof r1
+    load r2, 10
+    itof r2
+    fgt r0, r1, r2
+    brf fgt_brf_pass, r0
+    say "FAIL: FGT+BRF"
+    br fgt_brf_end
+fgt_brf_pass:
+    say "PASS: FGT+BRF"
+fgt_brf_end:
 
     /* --- Fused Integer Branching --- */
     /* BEQ */

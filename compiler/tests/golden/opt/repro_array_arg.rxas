@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : repro_array_arg.crexx
- * BUILT                  : 2026-05-27 17:53:06
+ * BUILT                  : 2026-06-13 15:11:36
  */
 
 .globals=0
@@ -71,7 +71,7 @@ main() .locals=7
    minattrs r1,1
    linkattr1 r6,r1,1
    .traceevent "V" 6 "R" "S" "r" 6 11 11 0 "s" ""
-   sne r4,r6,"first"
+   rne r4,r6,"first"
    unlink r6
    .traceevent "O" 4 "R" "B" "r" 4 11 11 0 "" ""
    brf l46iffalse,r4
