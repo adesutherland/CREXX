@@ -711,11 +711,93 @@ static const char *rxcp_node_token_type_string(ASTNode *node) {
 
 static int rxcp_token_value_dims(ASTNode *node) {
     if (!node) return 0;
+    if ((node->node_type == VAR_SYMBOL ||
+         node->node_type == VAR_TARGET ||
+         node->node_type == VAR_REFERENCE) &&
+        node->child) {
+        return 0;
+    }
     if (node->value_dims > 0) return (int)node->value_dims;
     if (node->symbolNode && node->symbolNode->symbol) {
         return node->symbolNode->symbol->value_dims;
     }
     return 0;
+}
+
+static int rxcp_should_marshal_source_slice(ASTNode *node) {
+    return node &&
+           (node->node_type == VAR_SYMBOL ||
+            node->node_type == VAR_TARGET ||
+            node->node_type == VAR_REFERENCE) &&
+           node->child;
+}
+
+static char *rxcp_exit_node_source(ASTNode *node);
+
+static char *rxcp_indexed_symbol_source(ASTNode *node) {
+    const char *base;
+    size_t base_len;
+    size_t length;
+    size_t pos;
+    size_t child_count;
+    ASTNode *child;
+    char *child_source;
+    char *result;
+
+    if (!node) return strdup("");
+
+    base = node->token ? node->token->token_string : node->node_string;
+    base_len = node->token ? (size_t)node->token->length : node->node_string_length;
+    if (!base) {
+        base = "";
+        base_len = 0;
+    }
+
+    length = base_len + 3;
+    child_count = 0;
+    child = node->child;
+    while (child) {
+        child_source = child->node_type == NOVAL ? strdup("") : rxcp_exit_node_source(child);
+        if (!child_source) return NULL;
+        length += strlen(child_source);
+        if (child_count > 0) length++;
+        child_count++;
+        free(child_source);
+        child = child->sibling;
+    }
+
+    result = malloc(length);
+    if (!result) return NULL;
+
+    pos = 0;
+    memcpy(result + pos, base, base_len);
+    pos += base_len;
+    result[pos++] = '[';
+
+    child_count = 0;
+    child = node->child;
+    while (child) {
+        child_source = child->node_type == NOVAL ? strdup("") : rxcp_exit_node_source(child);
+        if (!child_source) {
+            free(result);
+            return NULL;
+        }
+        if (child_count > 0) result[pos++] = ',';
+        memcpy(result + pos, child_source, strlen(child_source));
+        pos += strlen(child_source);
+        child_count++;
+        free(child_source);
+        child = child->sibling;
+    }
+
+    result[pos++] = ']';
+    result[pos] = '\0';
+    return result;
+}
+
+static char *rxcp_exit_node_source(ASTNode *node) {
+    if (rxcp_should_marshal_source_slice(node)) return rxcp_indexed_symbol_source(node);
+    return ast_nsrc(node);
 }
 
 
@@ -817,19 +899,31 @@ static void marshal_single_token(rxvml_context *ctx,
     rxvml_value* args[12];
     int i;
     const char *join_text;
+    const char *token_text;
+    size_t token_text_len;
+    char *source_text;
     args[0] = rxvml_value_new(ctx);
     int t_type = node->token ? node->token->token_type : 0;
     rxvml_set_int(args[0], t_type);
     args[1] = rxvml_value_new(ctx);
     rxvml_set_int(args[1], 0); /* subtype */
     args[2] = rxvml_value_new(ctx);
-    rxvml_set_str(args[2], node->token ? node->token->token_string : node->node_string, node->token ? node->token->length : node->node_string_length);
+    source_text = NULL;
+    if (rxcp_should_marshal_source_slice(node)) {
+        source_text = rxcp_exit_node_source(node);
+        token_text = source_text ? source_text : "";
+        token_text_len = source_text ? strlen(source_text) : 0;
+    } else {
+        token_text = node->token ? node->token->token_string : node->node_string;
+        token_text_len = node->token ? (size_t)node->token->length : node->node_string_length;
+    }
+    rxvml_set_str(args[2], token_text ? token_text : "", token_text_len);
     args[3] = rxvml_value_new(ctx);
     rxvml_set_int(args[3], node->line);
     args[4] = rxvml_value_new(ctx);
     rxvml_set_int(args[4], node->column);
     args[5] = rxvml_value_new(ctx);
-    rxvml_set_int(args[5], node->token ? node->token->length : node->node_string_length);
+    rxvml_set_int(args[5], (int)token_text_len);
     args[6] = rxvml_value_new(ctx);
     rxvml_set_str(args[6], "", 0); /* file */
     args[7] = rxvml_value_new(ctx);
@@ -860,6 +954,7 @@ static void marshal_single_token(rxvml_context *ctx,
     for (i = 0; i < 12; i++) {
         rxvml_value_free(args[i]);
     }
+    free(source_text);
 }
 
 static void collect_tokens(rxvml_context *ctx,

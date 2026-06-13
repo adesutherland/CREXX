@@ -1293,6 +1293,7 @@ add_crexx_run_test(repro_rexx_compare_method rexx_src/repro_rexx_compare_method.
 add_crexx_run_test(repro_rexx_format_sign_gap rexx_src/repro_rexx_format_sign_gap.crexx "${CMAKE_BINARY_DIR}/bin/classlib.rxbin")
 add_crexx_run_test(numeric_mixed_compare rexx_src/numeric_mixed_compare.crexx)
 add_crexx_run_test(repro_implicit_address_abuttal rexx_src/repro_implicit_address_abuttal.crexx)
+add_crexx_run_test(implicit_address_indexed_stem rexx_src/implicit_address_indexed_stem.crexx)
 add_crexx_run_test(test_explicit_address rexx_src/test_explicit_address.crexx)
 add_crexx_run_test(test_address_redirect rexx_src/test_address_redirect.crexx)
 add_crexx_run_test(lineout_flush_visible rexx_src/lineout_flush_visible.crexx)
