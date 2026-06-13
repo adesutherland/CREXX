@@ -54,6 +54,11 @@ crexxsaa_run_source(ctx, profile_path, "THE", 0, argc, argv, &program_rc);
 crexxsaa_destroy(ctx);
 ```
 
+`crexxsaa_run_source()` and `crexxsaa_run_rxbin()` return zero when the host
+API successfully compiled, loaded, and ran the program. The Rexx program status
+is returned separately through `program_rc`: an integer `main` return value and
+a top-level `exit n` both set `program_rc` to `n`.
+
 The cache namespace argument, `"THE"` in this example, is part of the cache
 identity. Different hosts can compile the same source path without sharing a
 cache bucket accidentally.
@@ -245,4 +250,3 @@ program semantics. The current implementation uses atomic file replacement for
 compiled objects and manifests, but it is not a full cross-process locking
 protocol. For troubleshooting, clear the cache while the host application is
 idle.
-

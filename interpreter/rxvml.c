@@ -159,14 +159,17 @@ static int rxvml_invoke_external_proc(
     size_t argc,
     rxvml_value** args,
     const char* dummy_argv0,
-    rxvml_value** response_out) {
+    rxvml_value** response_out,
+    int* run_status_out) {
 
     rxvml_external_call_state saved_state;
     rxvml_context* previous_active_context;
     value** call_args = NULL;
     value* call_ret;
     char* dummy_argv[1];
+    int run_status;
 
+    if (run_status_out) *run_status_out = 0;
     if (!ctx || !proc) return -1;
     if (argc > (size_t)INT_MAX) {
         ctx->last_error = "Too many rxvml call arguments";
@@ -216,8 +219,9 @@ static int rxvml_invoke_external_proc(
     rxvml_active_context = ctx;
     rxvm_prepare(&ctx->vm);
     dummy_argv[0] = (char*)(dummy_argv0 ? dummy_argv0 : "rxvml_call");
-    run(&ctx->vm, 0, dummy_argv);
+    run_status = run(&ctx->vm, 0, dummy_argv);
     rxvml_active_context = previous_active_context;
+    if (run_status_out) *run_status_out = run_status;
 
     if (response_out) {
         *response_out = (rxvml_value*)call_ret;
@@ -1409,7 +1413,7 @@ int rxvml_call_procedure(
         return -1;
     }
 
-    return rxvml_invoke_external_proc(ctx, p, argc, args, "rxc_bridge_proc", response_out);
+    return rxvml_invoke_external_proc(ctx, p, argc, args, "rxc_bridge_proc", response_out, NULL);
 }
 
 static proc_runtime* rxvml_find_last_module_procedure(rxvm_context* vm, const char* name) {
@@ -1443,6 +1447,7 @@ int rxvml_run(
     rxinteger int_result = 0;
     int i;
     int rc = -1;
+    int run_status = 0;
 
     if (program_rc) *program_rc = 0;
     if (!ctx || argc < 0) return -1;
@@ -1485,12 +1490,16 @@ int rxvml_run(
     }
 
     arg_values[0] = arg_array;
-    if (rxvml_invoke_external_proc(ctx, main_proc, 1, arg_values, "rxvml_run", &result) != 0) {
+    if (rxvml_invoke_external_proc(ctx, main_proc, 1, arg_values, "rxvml_run", &result, &run_status) != 0) {
         goto cleanup;
     }
 
-    if (result && rxvml_to_int(ctx, result, &int_result) == 0 && program_rc) {
-        *program_rc = (int)int_result;
+    if (program_rc) {
+        if (run_status != 0) {
+            *program_rc = run_status;
+        } else if (result && rxvml_to_int(ctx, result, &int_result) == 0) {
+            *program_rc = (int)int_result;
+        }
     }
     rc = 0;
 
@@ -1552,7 +1561,8 @@ int rxvml_call_method(
             argc + 1,
             method_args,
             "rxc_plugin_method",
-            response_out);
+            response_out,
+            NULL);
 
         free(method_args);
         return rc;

@@ -3013,6 +3013,19 @@ target_compile_definitions(test_crexxsaa_variables PRIVATE
         CREXX_TEST_CREXXSAA_VARIABLE_MODULE="${CMAKE_CURRENT_BINARY_DIR}/crexxsaa_variables_host.rxbin")
 add_dependencies(test_crexxsaa_variables crexxsaa_variables_host_bin library crexxsaa)
 
+add_executable(test_crexxsaa_status src/test_crexxsaa_status.c)
+target_link_libraries(test_crexxsaa_status PRIVATE crexxsaa)
+target_include_directories(test_crexxsaa_status PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
+target_compile_definitions(test_crexxsaa_status PRIVATE
+        CREXX_TEST_LOCATION="${CMAKE_BINARY_DIR}/bin"
+        CREXX_TEST_LIBRARY_RXBIN="${CMAKE_BINARY_DIR}/bin/library.rxbin"
+        CREXX_TEST_RXC="$<TARGET_FILE:rxc>"
+        CREXX_TEST_RXAS="$<TARGET_FILE:rxas>"
+        CREXX_TEST_IMPORT_DIR="${CMAKE_BINARY_DIR}/bin"
+        CREXX_TEST_CREXXSAA_EXIT7_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_exit7_hosted.crexx"
+        CREXX_TEST_CREXXSAA_RETURN7_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_return7_hosted.crexx")
+add_dependencies(test_crexxsaa_status library crexxsaa rxc rxas compiler_exit_bin)
+
 add_executable(test_source_provenance src/test_source_provenance.c)
 target_link_libraries(test_source_provenance PRIVATE rxclib)
 target_include_directories(test_source_provenance PRIVATE
@@ -3119,6 +3132,10 @@ add_test(NAME dynamic_load COMMAND test_dynamic_load)
 set_tests_properties(dynamic_load PROPERTIES LABELS "compiler;stage3")
 add_test(NAME crexxsaa_variables COMMAND test_crexxsaa_variables)
 set_tests_properties(crexxsaa_variables PROPERTIES
+        LABELS "compiler;stage3"
+        ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${CMAKE_BINARY_DIR}/bin")
+add_test(NAME crexxsaa_status COMMAND test_crexxsaa_status)
+set_tests_properties(crexxsaa_status PROPERTIES
         LABELS "compiler;stage3"
         ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${CMAKE_BINARY_DIR}/bin")
 add_test(NAME source_provenance COMMAND test_source_provenance)

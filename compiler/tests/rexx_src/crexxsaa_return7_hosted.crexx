@@ -1,0 +1,4 @@
+options levelb
+
+main: procedure = .int
+  return 7

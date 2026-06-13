@@ -1,0 +1,6 @@
+options levelb
+import rxfnsb
+
+address the 'qquit'
+call lineout "stderr", "EXIT7"
+exit 7
