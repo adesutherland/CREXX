@@ -57,20 +57,23 @@ dependency metadata before enabling `.deb` artifacts for tagged releases.
 
 The package helper is `scripts/package-linux-deb.sh`.
 
-## Future Packages
+## macOS And Future Packages
 
-macOS should add `.pkg` packages after the Linux `.deb` path is stable. The
-package should use the already signed Mach-O payload, then be signed with a
-Developer ID Installer identity, notarized, and stapled. Keep the ZIP assets
-alongside `.pkg` assets. Maintainer setup instructions for Apple certificates,
-notarization credentials, and GitHub secrets live in
-`docs/packaging/macos-signing-notarization.md`.
+The macOS workflow publishes ZIP assets as portable developer archives. When
+Developer ID Installer and notarization secrets are configured, it also builds
+`.pkg` packages from the already signed Mach-O payload, signs them with a
+Developer ID Installer identity, notarizes them, staples them, verifies them
+with `spctl --assess --type install`, and uploads them alongside the ZIPs. ZIPs
+can be signed and submitted to notarization, but ZIPs are not the no-network
+install solution for CREXX's standalone command-line tools. Maintainer setup
+instructions for Apple certificates, notarization credentials, and GitHub
+secrets live in `docs/packaging/macos-signing-notarization.md`.
 
 Forks and repositories without Apple signing secrets should still build and
 upload unsigned macOS ZIP assets. The workflow should log the skipped
 signing/notarization state rather than failing on missing secrets. No macOS
-`.pkg` asset should be produced until the package-signing workflow and
-Developer ID Installer secrets are in place.
+`.pkg` asset should be uploaded unless package signing, notarization, stapling,
+and installer assessment all succeed.
 
 Windows should add an MSI after the ZIP signing flow. Preferred flow:
 

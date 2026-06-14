@@ -225,6 +225,9 @@ jobs:
           APPLE_DEVELOPER_ID_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_BASE64 }}
           APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
           APPLE_DEVELOPER_ID_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_IDENTITY }}
+          APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64 }}
+          APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD }}
+          APPLE_DEVELOPER_ID_INSTALLER_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_IDENTITY }}
         run: |
           set -euo pipefail
 
@@ -241,6 +244,7 @@ jobs:
 
           if [ "${#missing[@]}" -gt 0 ]; then
             echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "pkg_enabled=false" >> "$GITHUB_OUTPUT"
             echo "Skipping macOS code signing because Apple Developer ID Application secrets are not configured: ${missing[*]}"
             {
               echo "### macOS signing skipped"
@@ -253,19 +257,52 @@ jobs:
             exit 0
           fi
 
-          certificate_path="${RUNNER_TEMP}/developer-id-application.p12"
+          application_certificate_path="${RUNNER_TEMP}/developer-id-application.p12"
+          installer_certificate_path="${RUNNER_TEMP}/developer-id-installer.p12"
           keychain_path="${RUNNER_TEMP}/crexx-signing.keychain-db"
           keychain_password="$(uuidgen)"
 
-          printf '%s' "$APPLE_DEVELOPER_ID_CERTIFICATE_BASE64" | base64 -D > "$certificate_path"
+          printf '%s' "$APPLE_DEVELOPER_ID_CERTIFICATE_BASE64" | base64 -D > "$application_certificate_path"
 
           security create-keychain -p "$keychain_password" "$keychain_path"
           security set-keychain-settings -lut 21600 "$keychain_path"
           security unlock-keychain -p "$keychain_password" "$keychain_path"
-          security import "$certificate_path" \
+          security import "$application_certificate_path" \
             -k "$keychain_path" \
             -P "$APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD" \
             -T /usr/bin/codesign
+
+          installer_missing=()
+          if [ -z "${APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64:-}" ]; then
+            installer_missing+=(APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64)
+          fi
+          if [ -z "${APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD:-}" ]; then
+            installer_missing+=(APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD)
+          fi
+          if [ -z "${APPLE_DEVELOPER_ID_INSTALLER_IDENTITY:-}" ]; then
+            installer_missing+=(APPLE_DEVELOPER_ID_INSTALLER_IDENTITY)
+          fi
+
+          if [ "${#installer_missing[@]}" -eq 0 ]; then
+            printf '%s' "$APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64" | base64 -D > "$installer_certificate_path"
+            security import "$installer_certificate_path" \
+              -k "$keychain_path" \
+              -P "$APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD" \
+              -T /usr/bin/pkgbuild \
+              -T /usr/bin/productbuild \
+              -T /usr/bin/productsign
+            echo "pkg_enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pkg_enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping macOS .pkg packaging because Apple Developer ID Installer secrets are not configured: ${installer_missing[*]}"
+            {
+              echo "### macOS .pkg packaging skipped"
+              echo
+              echo "Apple Developer ID Installer secrets are not configured for this repository or fork:"
+              printf -- "- \`%s\`\n" "${installer_missing[@]}"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
           security list-keychains -d user -s "$keychain_path"
           security default-keychain -s "$keychain_path"
           security set-key-partition-list -S apple-tool:,apple: -s \
@@ -357,6 +394,44 @@ jobs:
           fi
           echo "CREXX_RELEASE_ASSET=$asset_dir/$asset" >> "$GITHUB_ENV"
 
+      - name: Package macOS installer
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
+        shell: bash
+        env:
+          APPLE_DEVELOPER_ID_INSTALLER_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_IDENTITY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${APPLE_DEVELOPER_ID_INSTALLER_IDENTITY:-}" ]; then
+            echo "APPLE_DEVELOPER_ID_INSTALLER_IDENTITY is not set" >&2
+            exit 1
+          fi
+          if [ -z "${APPLE_SIGNING_KEYCHAIN:-}" ]; then
+            echo "APPLE_SIGNING_KEYCHAIN is not set" >&2
+            exit 1
+          fi
+
+          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
+            package_id="dev-snapshot"
+          else
+            package_id="${GITHUB_REF_NAME}"
+          fi
+
+          payload="${{ matrix.artifact_name }}"
+          suffix="${payload#CREXX-}"
+          pkg_asset_dir="${{ runner.temp }}/macos-pkg-assets"
+          pkg_asset="$pkg_asset_dir/CREXX-${package_id}-${suffix}.pkg"
+
+          scripts/package-macos-pkg.sh \
+            --payload-dir "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" \
+            --output "$pkg_asset" \
+            --package-version "${{ needs.version.outputs.display_version }}" \
+            --sign-identity "$APPLE_DEVELOPER_ID_INSTALLER_IDENTITY" \
+            --keychain "$APPLE_SIGNING_KEYCHAIN"
+
+          pkgutil --check-signature "$pkg_asset"
+          echo "CREXX_MACOS_PKG_ASSET=$pkg_asset" >> "$GITHUB_ENV"
+
       - name: Package Linux Debian dev snapshot
         if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && matrix.platform == 'linux'
         shell: bash
@@ -398,11 +473,15 @@ jobs:
           {
             echo "### macOS package status"
             echo
-            echo "This workflow currently publishes the macOS ZIP asset only."
-            echo "The future .pkg asset will remain disabled until Developer ID Installer signing is added."
+            echo "This workflow publishes the macOS ZIP asset as a portable archive."
+            if [ "${{ steps.macos_signing.outputs.pkg_enabled }}" = "true" ]; then
+              echo "A signed .pkg installer was built and will be uploaded after notarization and stapling succeed."
+            else
+              echo "No macOS .pkg asset is produced because Developer ID Installer signing is not configured."
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Notarize macOS release asset
+      - name: Notarize macOS ZIP asset
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         env:
@@ -439,6 +518,56 @@ jobs:
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             --wait
+
+      - name: Notarize and staple macOS installer
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+
+          missing=()
+          if [ -z "${APPLE_ID:-}" ]; then
+            missing+=(APPLE_ID)
+          fi
+          if [ -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]; then
+            missing+=(APPLE_APP_SPECIFIC_PASSWORD)
+          fi
+          if [ -z "${APPLE_TEAM_ID:-}" ]; then
+            missing+=(APPLE_TEAM_ID)
+          fi
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Skipping macOS .pkg notarization because Apple notarization secrets are not configured: ${missing[*]}"
+            {
+              echo "### macOS .pkg notarization skipped"
+              echo
+              echo "The macOS .pkg was signed, but it will not be uploaded because notarization secrets are not configured:"
+              printf -- "- \`%s\`\n" "${missing[@]}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ -z "${CREXX_MACOS_PKG_ASSET:-}" ]; then
+            echo "CREXX_MACOS_PKG_ASSET is not set" >&2
+            exit 1
+          fi
+
+          xcrun notarytool submit "$CREXX_MACOS_PKG_ASSET" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+          xcrun stapler staple "$CREXX_MACOS_PKG_ASSET"
+          xcrun stapler validate "$CREXX_MACOS_PKG_ASSET"
+          spctl --assess --type install --verbose=4 "$CREXX_MACOS_PKG_ASSET"
+
+          mkdir -p "${{ runner.temp }}/release-assets"
+          cp "$CREXX_MACOS_PKG_ASSET" "${{ runner.temp }}/release-assets/"
 
       - name: Upload packaged asset
         if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
@@ -488,11 +617,19 @@ jobs:
           asset_dir="${{ runner.temp }}/release-assets"
           mkdir -p "$asset_dir"
 
-          find "$download_dir" -name 'CREXX-*.zip' -type f -exec cp {} "$asset_dir/" \;
+          find "$download_dir" \
+            \( -name 'CREXX-*.zip' -o -name 'CREXX-*.pkg' \) \
+            -type f -exec cp {} "$asset_dir/" \;
 
-          asset_count="$(find "$asset_dir" -name 'CREXX-*.zip' -type f | wc -l | tr -d ' ')"
-          if [ "$asset_count" != "4" ]; then
-            echo "Expected 4 release assets, found $asset_count" >&2
+          zip_count="$(find "$asset_dir" -name 'CREXX-*.zip' -type f | wc -l | tr -d ' ')"
+          if [ "$zip_count" != "4" ]; then
+            echo "Expected 4 release ZIP assets, found $zip_count" >&2
+            exit 1
+          fi
+
+          pkg_count="$(find "$asset_dir" -name 'CREXX-*.pkg' -type f | wc -l | tr -d ' ')"
+          if [ "$pkg_count" != "0" ] && [ "$pkg_count" != "2" ]; then
+            echo "Expected 0 or 2 release PKG assets, found $pkg_count" >&2
             exit 1
           fi
 
@@ -548,7 +685,7 @@ jobs:
           prerelease: ${{ env.PRERELEASE }}
           body_path: ${{ env.RELEASE_NOTES_PATH }}
           fail_on_unmatched_files: true
-          files: ${{ runner.temp }}/release-assets/*.zip
+          files: ${{ runner.temp }}/release-assets/CREXX-*
 
   dev-snapshot:
     name: Publish Dev Snapshot
@@ -603,7 +740,7 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' \) \
+            \( -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' \) \
             -type f -exec cp {} "$asset_dir/" \;
 
           expected_assets=(
@@ -613,6 +750,18 @@ jobs:
             CREXX-dev-snapshot-macos-arm64.zip
             CREXX-dev-snapshot-macos-x86_64.zip
           )
+
+          pkg_count="$(find "$asset_dir" -maxdepth 1 -name 'CREXX-dev-snapshot-macos-*.pkg' -type f | wc -l | tr -d ' ')"
+          if [ "$pkg_count" = "2" ]; then
+            expected_assets+=(
+              CREXX-dev-snapshot-macos-arm64.pkg
+              CREXX-dev-snapshot-macos-x86_64.pkg
+            )
+          elif [ "$pkg_count" != "0" ]; then
+            echo "Expected 0 or 2 dev snapshot macOS PKG assets, found $pkg_count" >&2
+            find "$asset_dir" -maxdepth 1 -type f -print >&2
+            exit 1
+          fi
 
           for asset in "${expected_assets[@]}"; do
             if [ ! -f "$asset_dir/$asset" ]; then
@@ -651,6 +800,7 @@ jobs:
             echo "- Built: \`${{ needs.version.outputs.timestamp }}\`"
             echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo
+            echo "macOS .pkg assets, when present, are signed, notarized, stapled installers. macOS ZIP assets remain portable archives."
             echo "Windows signing is completed separately. Prefer the \`CREXX-dev-snapshot-windows-x64-signed.zip\` asset when it is present and matches commit \`${short_sha}\` in this note."
           } > "$notes_file"
 
@@ -710,7 +860,7 @@ jobs:
               gh release view "$SNAPSHOT_TAG" \
                 -R "$GITHUB_REPOSITORY" \
                 --json assets \
-                --jq '.assets[] | select(.name | startswith("CREXX-dev-snapshot-") and (endswith(".tmp.zip") or endswith(".tmp.deb"))) | .apiUrl' |
+                --jq '.assets[] | select(.name | startswith("CREXX-dev-snapshot-") and (endswith(".tmp.zip") or endswith(".tmp.deb") or endswith(".tmp.pkg"))) | .apiUrl' |
                 sed 's#^https://api.github.com/##'
             )
           }
@@ -724,19 +874,34 @@ jobs:
               *.deb)
                 echo "${asset%.deb}-${GITHUB_RUN_ID}.tmp.deb"
                 ;;
+              *.pkg)
+                echo "${asset%.pkg}-${GITHUB_RUN_ID}.tmp.pkg"
+                ;;
               *)
                 echo "${asset}-${GITHUB_RUN_ID}.tmp"
                 ;;
             esac
           }
 
-          expected_assets=(
-            CREXX-dev-snapshot-linux-x64.zip
-            CREXX-dev-snapshot-linux-x64.deb
-            CREXX-dev-snapshot-windows-x64.zip
-            CREXX-dev-snapshot-macos-arm64.zip
-            CREXX-dev-snapshot-macos-x86_64.zip
+          mapfile -t expected_assets < <(
+            find "$asset_dir" -maxdepth 1 -name 'CREXX-dev-snapshot-*' -type f -exec basename {} \; |
+              sort
           )
+          if [ "${#expected_assets[@]}" -eq 0 ]; then
+            echo "No dev snapshot assets collected for upload" >&2
+            exit 1
+          fi
+
+          asset_is_expected() {
+            local needle="$1"
+            local expected
+            for expected in "${expected_assets[@]}"; do
+              if [ "$expected" = "$needle" ]; then
+                return 0
+              fi
+            done
+            return 1
+          }
 
           delete_stale_temp_assets
 
@@ -769,6 +934,17 @@ jobs:
           if [ -n "$signed_asset_api_path" ]; then
             gh api -X DELETE "$signed_asset_api_path"
           fi
+
+          for stale_optional_asset in \
+            CREXX-dev-snapshot-macos-arm64.pkg \
+            CREXX-dev-snapshot-macos-x86_64.pkg; do
+            if ! asset_is_expected "$stale_optional_asset"; then
+              stale_optional_api_path="$(asset_api_path "$stale_optional_asset" || true)"
+              if [ -n "$stale_optional_api_path" ]; then
+                gh api -X DELETE "$stale_optional_api_path"
+              fi
+            fi
+          done
 
           for asset in "${expected_assets[@]}"; do
             final_api_path="$(asset_api_path "$asset")"

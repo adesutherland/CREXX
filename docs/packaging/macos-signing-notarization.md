@@ -7,12 +7,18 @@ This document describes the Apple Developer credentials and GitHub Actions
 secrets needed to sign and notarize CREXX macOS release assets.
 
 When the required secrets are present, the current workflow signs Mach-O files
-in the macOS ZIP payloads, then submits the ZIPs to Apple notarization. When
-the secrets are absent, for example in a fork, the workflow logs the missing
-setup, skips signing/notarization, and still uploads the unsigned ZIP asset.
-The future `.pkg` workflow will additionally need a Developer ID Installer
-certificate so the installer package itself can be signed, notarized, and
-stapled.
+in the macOS ZIP payloads, submits the ZIPs to Apple notarization, then builds a
+signed `.pkg` installer from the same signed payload, submits the `.pkg` to
+Apple notarization, staples the ticket, verifies the installer, and uploads it
+alongside the ZIP. The ZIP notarization is useful provenance for portable
+archives, but the stapled `.pkg` is the normal no-network installation artifact
+for CREXX.
+
+For a macOS install that Gatekeeper can validate without contacting Apple during
+installation, use the signed, notarized, and stapled `.pkg` built from the
+signed Mach-O payload. When secrets are absent, for example in a fork, the
+workflow logs the missing setup, skips the affected signing/notarization work,
+and still uploads the ZIP asset. It does not upload an unstapled `.pkg`.
 
 ## Required Apple Account Access
 
@@ -38,12 +44,11 @@ CREXX uses two Apple certificate types:
 
 - `Developer ID Application`: signs command-line executables, shared libraries,
   and plugins.
-- `Developer ID Installer`: signs macOS installer packages. This is not used by
-  the current ZIP-only workflow, but is required before adding `.pkg` assets.
+- `Developer ID Installer`: signs macOS installer packages.
 
 Apple allows separate Developer ID Application and Developer ID Installer
-certificates. Create both while setting up distribution so the `.pkg` work can
-be added without another account/certificate round trip.
+certificates. Create both while setting up distribution so ZIP and `.pkg`
+assets can be produced by the same workflow run.
 
 ## Create A Certificate Signing Request
 
@@ -137,33 +142,60 @@ xcrun notarytool history --keychain-profile CREXX_NOTARY_TEST
 
 ## Current GitHub Secrets
 
-The current ZIP signing/notarization workflow uses these repository secrets when
-they are available:
+The current ZIP and `.pkg` signing/notarization workflow uses these repository
+secrets when they are available:
 
 | Secret | Purpose |
 | --- | --- |
 | `APPLE_DEVELOPER_ID_CERTIFICATE_BASE64` | Base64 text for `DeveloperIDApplication.p12` |
 | `APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD` | Export password for `DeveloperIDApplication.p12` |
 | `APPLE_DEVELOPER_ID_IDENTITY` | Exact Developer ID Application identity name |
+| `APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64` | Base64 text for `DeveloperIDInstaller.p12` |
+| `APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD` | Export password for `DeveloperIDInstaller.p12` |
+| `APPLE_DEVELOPER_ID_INSTALLER_IDENTITY` | Exact Developer ID Installer identity name |
 | `APPLE_ID` | Apple ID email used for notarization |
 | `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password for notarization |
 | `APPLE_TEAM_ID` | Apple Developer Team ID |
 
 Missing Application signing secrets cause the macOS signing and notarization
 steps to be skipped. The build still succeeds and uploads an unsigned ZIP.
-Missing notarization secrets after a successful signing step cause only
-notarization to be skipped.
+Missing Installer secrets cause `.pkg` creation to be skipped. Missing
+notarization secrets after a successful signing step cause ZIP notarization to
+be skipped and prevent `.pkg` upload, because the workflow only publishes a
+package after notarization, stapling, and `spctl --type install` verification
+succeed.
 
-The future `.pkg` workflow should add these secrets:
+## Recommended CREXX Distribution Flow
 
-| Secret | Purpose |
-| --- | --- |
-| `APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64` | Base64 text for `DeveloperIDInstaller.p12` |
-| `APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD` | Export password for `DeveloperIDInstaller.p12` |
-| `APPLE_DEVELOPER_ID_INSTALLER_IDENTITY` | Exact Developer ID Installer identity name |
+CREXX is a set of command-line executables, shared libraries, and native plugin
+modules rather than a single `.app` bundle. Apple's `stapler` tool works on
+supported distribution formats such as UDIF disk images, signed flat installer
+packages, and code-signed executable bundles; it does not make a ZIP of bare
+CLI tools into an offline-verifiable installer. The recommended macOS
+distribution flow is therefore:
 
-Until those Installer secrets are configured and the `.pkg` workflow is added,
-the build should clearly report that no macOS `.pkg` asset is produced.
+1. Build the payload directory for each architecture.
+2. Sign every Mach-O executable, dynamic library, and plugin with the Developer
+   ID Application identity, using hardened runtime and a timestamp.
+3. Apply `com.apple.security.cs.disable-library-validation` only to host tools
+   that must load CREXX native plugins outside the host's own signature context.
+4. Verify every payload signature with `codesign --verify --strict`.
+5. Build a flat installer package with `pkgbuild` or `productbuild`.
+6. Sign the package with the Developer ID Installer identity.
+7. Submit the signed package with `xcrun notarytool submit --wait`.
+8. Staple the returned ticket to the package with `xcrun stapler staple`.
+9. Validate the finished artifact with:
+
+```sh
+pkgutil --check-signature CREXX-<version>-macos-<arch>.pkg
+xcrun stapler validate CREXX-<version>-macos-<arch>.pkg
+spctl --assess --type install --verbose=4 CREXX-<version>-macos-<arch>.pkg
+```
+
+Keep the ZIP assets as portable developer artifacts, but treat the `.pkg` as the
+normal end-user macOS installer. A notarized ZIP can still require online ticket
+lookup or quarantine workarounds because the ZIP itself is not the stapled
+installer container CREXX needs for offline Gatekeeper assessment.
 
 ## Add Secrets With GitHub CLI
 
@@ -221,17 +253,16 @@ security delete-keychain "$keychain"
 rm -rf "$tmpdir"
 ```
 
-Repeat with the Installer `.p12` when adding `.pkg` support. Use
-`productbuild` or `productsign` as the trusted tool when importing the
-Installer identity.
+Repeat with the Installer `.p12`. Use `pkgbuild`, `productbuild`, or
+`productsign` as the trusted tool when importing the Installer identity.
 
-## Future `.pkg` Workflow Shape
+## Current `.pkg` Workflow Shape
 
-The `.pkg` workflow should:
+The `.pkg` workflow implements the recommended flow above:
 
 1. Build the current macOS payload.
 2. Sign Mach-O files with `Developer ID Application`.
-3. Build a package with `pkgbuild`/`productbuild`.
+3. Build a package with `scripts/package-macos-pkg.sh`, which wraps `pkgbuild`.
 4. Sign the package with `Developer ID Installer`.
 5. Submit the package to notarization with `xcrun notarytool submit --wait`.
 6. Staple the notarization ticket with `xcrun stapler staple`.
@@ -248,6 +279,10 @@ Keep ZIP assets even after `.pkg` assets exist.
   https://developer.apple.com/developer-id/
 - Apple `notarytool` credential guidance:
   https://developer.apple.com/documentation/technotes/tn3147-migrating-to-the-latest-notarization-tool
+- Apple notarization workflow guidance:
+  https://developer.apple.com/documentation/security/customizing-the-notarization-workflow
+- Apple Mac software packaging guidance:
+  https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution
 - GitHub Actions secrets:
   https://docs.github.com/en/actions/security-for-github-actions/security-guides/about-secrets
 - GitHub CLI secret setup:

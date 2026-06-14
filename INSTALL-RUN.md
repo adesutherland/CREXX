@@ -81,18 +81,57 @@ Choose the package for your Mac:
 - Apple Silicon: `macos-arm64`
 - Intel: `macos-x86_64`
 
-Unpack the ZIP with Finder or with `ditto`:
+### Recommended `.pkg` Install
+
+When a `.pkg` asset is available, prefer it for normal installation. The `.pkg`
+is signed, notarized, and stapled so Gatekeeper can validate it locally after
+download. It installs CREXX under `/usr/local/crexx` and creates command
+symlinks in `/usr/local/bin`.
+
+Optional checks before installing:
+
+```sh
+pkgutil --check-signature CREXX-v1.0.0-beta.2-macos-arm64.pkg
+spctl --assess --type install --verbose=4 CREXX-v1.0.0-beta.2-macos-arm64.pkg
+```
+
+Install it:
+
+```sh
+sudo installer -pkg CREXX-v1.0.0-beta.2-macos-arm64.pkg -target /
+```
+
+Use the matching `macos-x86_64.pkg` filename on Intel Macs.
+
+After installation, run the included hello world example:
+
+```sh
+crexx /usr/local/crexx/examples/hello.crexx
+```
+
+Remove the installed files manually if needed:
+
+```sh
+sudo find /usr/local/bin -type l -lname '/usr/local/crexx/bin/*' -exec rm -f {} +
+sudo rm -rf /usr/local/crexx
+sudo pkgutil --forget org.crexx.crexx
+```
+
+### Portable ZIP Install
+
+The ZIP remains available as a portable archive for CI, testing, and users who
+do not want a system install. Unpack it with Finder or with `ditto`:
 
 ```sh
 ditto -x -k CREXX-v1.0.0-beta.2-macos-arm64.zip "$HOME/CREXX"
 cd "$HOME/CREXX/CREXX-macos-arm64"
 ```
 
-The beta 2 macOS packages are Developer ID signed and notarized during the
-release workflow. You should not need to remove quarantine attributes as a
-normal installation step.
+The macOS ZIP packages are Developer ID signed and submitted to Apple
+notarization during the release workflow. They are still portable ZIP archives,
+not stapled installer packages.
 
-To verify the signature and signing identity:
+To verify the ZIP payload signature and signing identity:
 
 ```sh
 codesign --verify --strict --verbose=2 bin/crexx
