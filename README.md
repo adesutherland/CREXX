@@ -5,7 +5,7 @@ compiler-to-bytecode toolchain. Source programs are compiled to cREXX assembler,
 assembled into `rxbin` bytecode, optionally linked into a deployable image, and
 run by the CREXX virtual machine.
 
-Current baseline: `crexx-1.0.0-beta.2`.
+Current documentation baseline: `crexx-1.0.0-beta.2`.
 
 ## What Is Included
 
