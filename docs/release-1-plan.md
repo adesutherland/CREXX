@@ -100,6 +100,13 @@ Must-ship items are part of the Release 1 contract or release process.
     Ship curated Level B, Level G, Level L, and Level C demos with expected
     commands and outputs. Complete final docs in the last sprint.
 
+11. Packaging status discipline
+
+    During the beta 2 feature freeze, package only the formats already in the
+    release close-out path and document their status clearly. Treat new
+    installer formats, especially the Windows click-through installer, as beta 3
+    work unless they are needed to fix a release-blocking packaging defect.
+
 ## Should Ship
 
 Should-ship items are important but have explicit fallback paths.
@@ -132,6 +139,19 @@ Should-ship items are important but have explicit fallback paths.
 
    Clean enough that users can tell core from optional. Fallback: docs and
    CMake options clarify status even if all source directories are not moved.
+
+6. Windows installer user experience after beta 2
+
+   Add a signed NSIS `setup.exe` from the signed Windows payload for beta 3 if
+   the local signing flow can build, sign, and upload it reliably. Fallback:
+   keep the signed Windows ZIP as the supported Windows asset and document
+   manual PATH setup.
+
+7. Linux package hardening
+
+   Keep the `.deb` path, but add install/uninstall smoke testing and dependency
+   metadata review before treating it as more than a prototype. Fallback: ZIP
+   remains the portable Linux asset and `.deb` remains dev-snapshot-only.
 
 ## Experimental Only
 

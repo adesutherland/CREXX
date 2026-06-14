@@ -20,6 +20,25 @@ The fixed-date path to Release 1 is tracked in
 Release 1 gates, scope tiers, provisional owners, and issue candidates. This
 roadmap remains the home for broader future direction and research themes.
 
+## Packaging Roadmap
+
+Beta 2 is in feature freeze. Do not add new installer formats to beta 2 unless
+they are already part of the release close-out path. The beta 2 packaging goal is
+to verify and document the assets that exist, not to expand platform scope.
+
+For beta 3, improve the end-user install experience while keeping portable ZIP
+assets available for CI, testing, and users who do not want a system install:
+
+| Platform | Direction |
+|----------|-----------|
+| macOS | Treat the signed, notarized, stapled `.pkg` as the preferred user install. Keep ZIPs as portable developer/CI archives. |
+| Linux | Keep the `.deb` as adequate for Debian/Ubuntu-style users, but harden it before promoting it from prototype: install/uninstall smoke tests, dependency review, and later `.rpm` packaging. |
+| Windows | Add a signed NSIS `setup.exe` after beta 2, targeting beta 3. It should be built from the signed Windows payload, install CREXX into a normal Windows location, add the tools to PATH, register an uninstaller, and keep the signed ZIP available for portable use. |
+
+Longer-term Windows packaging may include WiX/MSI and `winget` publication, but
+the simple click-through NSIS installer is the next practical user-experience
+step.
+
 ## Release 1 / Level B Quality Issues
 
 These items are specific enough to track as GitHub issues because they affect

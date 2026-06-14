@@ -6,8 +6,9 @@ Versioned releases are stable distribution points. The `CREXX Dev Snapshot`
 pre-release is a moving interim build from the `develop` branch; its assets are
 replaced by the next successful `develop` build.
 
-Each package expands to a platform directory such as `CREXX-linux-x64`,
-`CREXX-windows-x64`, `CREXX-macos-arm64`, or `CREXX-macos-x86_64`.
+ZIP packages expand to a platform directory such as `CREXX-linux-x64`,
+`CREXX-windows-x64`, `CREXX-macos-arm64`, or `CREXX-macos-x86_64`. macOS
+`.pkg` packages use the standard macOS Installer flow instead.
 
 The main tools and runtime files are in `bin/`. The release package also
 contains `README.md`, `LICENSE`, `SECURITY.md`, `VERSION`, `BUILDINFO`, this
@@ -88,6 +89,15 @@ is signed, notarized, and stapled so Gatekeeper can validate it locally after
 download. It installs CREXX under `/usr/local/crexx` and creates command
 symlinks in `/usr/local/bin`.
 
+Install with Finder:
+
+1. Download the matching `.pkg` file.
+2. Double-click it.
+3. Follow the macOS Installer prompts. macOS may ask for an administrator
+   password because the package installs into `/usr/local`.
+
+This is the expected graphical install path for end users.
+
 Optional checks before installing:
 
 ```sh
@@ -95,7 +105,7 @@ pkgutil --check-signature CREXX-v1.0.0-beta.2-macos-arm64.pkg
 spctl --assess --type install --verbose=4 CREXX-v1.0.0-beta.2-macos-arm64.pkg
 ```
 
-Install it:
+For scripted installs, use Terminal:
 
 ```sh
 sudo installer -pkg CREXX-v1.0.0-beta.2-macos-arm64.pkg -target /

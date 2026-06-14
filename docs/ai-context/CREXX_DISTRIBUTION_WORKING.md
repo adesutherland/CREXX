@@ -31,9 +31,14 @@ Current dev snapshot assets include:
 
 - `CREXX-dev-snapshot-linux-x64.zip`
 - `CREXX-dev-snapshot-linux-x64.deb`
-- `CREXX-dev-snapshot-windows-x64.zip`
+- `CREXX-dev-snapshot-windows-x64-signed.zip` after the local Windows signing
+  script has completed
 - `CREXX-dev-snapshot-macos-arm64.zip`
+- `CREXX-dev-snapshot-macos-arm64.pkg` when Apple signing and notarization are
+  configured
 - `CREXX-dev-snapshot-macos-x86_64.zip`
+- `CREXX-dev-snapshot-macos-x86_64.pkg` when Apple signing and notarization are
+  configured
 
 ## Linux Debian Package
 
@@ -55,9 +60,17 @@ installation layout, symlink behaviour, and dev-snapshot replacement. It does
 not yet run a full Debian dependency harvest with `dpkg-shlibdeps`; revisit
 dependency metadata before enabling `.deb` artifacts for tagged releases.
 
-The package helper is `scripts/package-linux-deb.sh`.
+The package helper is `scripts/package-linux-deb.sh`. Next hardening work before
+promoting this beyond prototype status:
 
-## macOS And Future Packages
+- install and uninstall the generated `.deb` in CI;
+- run `crexx /opt/crexx/examples/hello.crexx` from the installed package;
+- review shared-library dependency metadata, for example with
+  `dpkg-shlibdeps`;
+- add an `.rpm` package after the `.deb` install layout and asset replacement
+  behaviour are stable.
+
+## macOS Packages
 
 The macOS workflow publishes ZIP assets as portable developer archives. When
 Developer ID Installer and notarization secrets are configured, it also builds
@@ -75,18 +88,37 @@ signing/notarization state rather than failing on missing secrets. No macOS
 `.pkg` asset should be uploaded unless package signing, notarization, stapling,
 and installer assessment all succeed.
 
-Windows should add an MSI after the ZIP signing flow. Preferred flow:
+The signed, notarized, stapled `.pkg` is now the best end-user install
+experience and should be the recommended macOS download. It supports the normal
+Finder double-click Installer flow, installs under `/usr/local/crexx`, and
+creates command symlinks in `/usr/local/bin`.
+
+## Windows Packages
+
+Beta 2 is in feature freeze, so do not add a new Windows installer format to
+that release. Target the first Windows click-through installer for beta 3.
+
+Preferred simple beta 3 flow: add a signed NSIS `setup.exe` after the ZIP
+signing flow.
 
 1. GitHub builds and publishes the unsigned Windows ZIP.
 2. The local signing script downloads the ZIP.
 3. The local signing script signs the Windows binaries/plugins.
 4. The signed payload is repacked as a signed ZIP.
-5. The MSI is built from the signed payload.
-6. The MSI itself is signed and uploaded.
+5. The NSIS installer is built from the signed payload.
+6. The installer `.exe` itself is signed and uploaded.
 7. The unsigned ZIP is removed after signed assets are visible.
 
-Avoid building an MSI in GitHub, decomposing it locally, signing internals, and
-recomposing it unless there is no practical alternative.
+The installer should:
 
-Linux `.rpm` should follow the `.deb` package once the installation layout and
-asset replacement behaviour are proven.
+- install CREXX into a normal Windows location, preferably per-user first to
+  avoid unnecessary elevation;
+- add the installed `bin` directory to PATH;
+- register a normal Windows uninstaller;
+- optionally create Start Menu shortcuts for a CREXX command prompt,
+  documentation, and uninstall;
+- keep the signed ZIP as the portable/CI asset.
+
+WiX/MSI and `winget` remain good later targets, especially for enterprise-style
+installation, but NSIS is the simplest next step that fits the current local
+Certum/PKCS#11 signing model.
