@@ -63,6 +63,9 @@
 #ifndef PATH_MAX
 # define PATH_MAX 4096
 #endif
+#if !defined(S_IFDIR) && defined(_S_IFDIR)
+# define S_IFDIR _S_IFDIR
+#endif
 
 #include "crexxsaa.h"
 #include "rxvml.h"
@@ -400,11 +403,12 @@ static const char* crexxsaa_env_value(const char* name) {
 }
 
 #ifdef _WIN32
-static int crexxsaa_is_windows_native_path(const char* path) {
+static int crexxsaa_is_windows_native_temp_dir(const char* path) {
+    CREXXSAA_STAT_STRUCT st;
     if (!path || !*path) return 0;
-    if (isalpha((unsigned char)path[0]) && path[1] == ':') return 1;
-    if (path[0] == '\\' && path[1] == '\\') return 1;
-    return path[0] != '/';
+    if (path[0] == '/') return 0;
+    if (CREXXSAA_STAT(path, &st) != 0) return 0;
+    return (st.st_mode & S_IFDIR) != 0;
 }
 #endif
 
@@ -714,11 +718,11 @@ static char* crexxsaa_temp_dir(void) {
     const char* value;
 #ifdef _WIN32
     value = crexxsaa_env_value("TEMP");
-    if (crexxsaa_is_windows_native_path(value)) return crexxsaa_strdup(value);
+    if (crexxsaa_is_windows_native_temp_dir(value)) return crexxsaa_strdup(value);
     value = crexxsaa_env_value("TMP");
-    if (crexxsaa_is_windows_native_path(value)) return crexxsaa_strdup(value);
+    if (crexxsaa_is_windows_native_temp_dir(value)) return crexxsaa_strdup(value);
     value = crexxsaa_env_value("TMPDIR");
-    if (crexxsaa_is_windows_native_path(value)) return crexxsaa_strdup(value);
+    if (crexxsaa_is_windows_native_temp_dir(value)) return crexxsaa_strdup(value);
     return crexxsaa_strdup(".");
 #else
     value = crexxsaa_env_value("TMPDIR");
@@ -913,28 +917,41 @@ static int crexxsaa_write_manifest(
     return rc;
 }
 
+#ifdef _WIN32
+static int crexxsaa_run_tool_argv(
+    crexxsaa_context* ctx,
+    const char* label,
+    const char* executable,
+    const char* const argv[]) {
+
+    intptr_t rc;
+    if (!executable || !*executable || !argv) {
+        crexxsaa_set_error(ctx, "Invalid CREXX compiler command");
+        return -1;
+    }
+
+    rc = _spawnvp(_P_WAIT, executable, argv);
+    if (rc == -1) {
+        crexxsaa_set_errorf(ctx, "%s launch failed: %s", label, strerror(errno));
+        return -1;
+    }
+    if (rc != 0) {
+        crexxsaa_set_errorf(ctx, "%s failed with status %ld", label, (long)rc);
+        return -1;
+    }
+    return 0;
+}
+#else
 static size_t crexxsaa_shell_quote_length(const char* value) {
     size_t len = 2;
     while (value && *value) {
-#ifdef _WIN32
-        len += (*value == '"') ? 2 : 1;
-#else
         len += (*value == '\'') ? 4 : 1;
-#endif
         value++;
     }
     return len;
 }
 
 static char* crexxsaa_append_shell_quoted(char* target, const char* value) {
-#ifdef _WIN32
-    *target++ = '"';
-    while (value && *value) {
-        if (*value == '"') *target++ = '\\';
-        *target++ = *value++;
-    }
-    *target++ = '"';
-#else
     *target++ = '\'';
     while (value && *value) {
         if (*value == '\'') {
@@ -949,7 +966,6 @@ static char* crexxsaa_append_shell_quoted(char* target, const char* value) {
         value++;
     }
     *target++ = '\'';
-#endif
     *target = '\0';
     return target;
 }
@@ -1023,6 +1039,7 @@ static int crexxsaa_run_tool(crexxsaa_context* ctx, const char* label, char* com
     free(command);
     return 0;
 }
+#endif
 
 static int crexxsaa_compile_source(
     crexxsaa_context* ctx,
@@ -1046,24 +1063,41 @@ static int crexxsaa_compile_source(
         return -1;
     }
 
-    if (crexxsaa_run_tool(
-            ctx,
-            "rxc",
-            crexxsaa_build_rxc_command(ctx, source_path, output_base)) != 0) {
+#ifdef _WIN32
+    {
+        const char* rxc = crexxsaa_rxc_path(ctx);
+        const char* rxas = crexxsaa_rxas_path(ctx);
+        const char* import_dir = crexxsaa_import_dir(ctx);
+        const char* const rxc_argv[] = { rxc, "-i", import_dir, "-o", output_base, source_path, NULL };
+        const char* const rxas_argv[] = { rxas, "-o", output_base, rxas_path, NULL };
+
+        if (crexxsaa_run_tool_argv(ctx, "rxc", rxc, rxc_argv) != 0) {
+            free(rxas_path);
+            free(rxbin_path);
+            return -1;
+        }
+
+        if (crexxsaa_run_tool_argv(ctx, "rxas", rxas, rxas_argv) != 0) {
+            CREXXSAA_UNLINK(rxas_path);
+            free(rxas_path);
+            free(rxbin_path);
+            return -1;
+        }
+    }
+#else
+    if (crexxsaa_run_tool(ctx, "rxc", crexxsaa_build_rxc_command(ctx, source_path, output_base)) != 0) {
         free(rxas_path);
         free(rxbin_path);
         return -1;
     }
 
-    if (crexxsaa_run_tool(
-            ctx,
-            "rxas",
-            crexxsaa_build_rxas_command(ctx, rxas_path, output_base)) != 0) {
+    if (crexxsaa_run_tool(ctx, "rxas", crexxsaa_build_rxas_command(ctx, rxas_path, output_base)) != 0) {
         CREXXSAA_UNLINK(rxas_path);
         free(rxas_path);
         free(rxbin_path);
         return -1;
     }
+#endif
 
     if (rxas_path_out) *rxas_path_out = rxas_path;
     else free(rxas_path);
