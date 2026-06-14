@@ -262,7 +262,44 @@ jobs:
           keychain_path="${RUNNER_TEMP}/crexx-signing.keychain-db"
           keychain_password="$(uuidgen)"
 
+          summarize_p12_certificate() {
+            local label="$1"
+            local certificate_path="$2"
+            local certificate_password="$3"
+
+            echo "${label} public certificate metadata:"
+            if ! P12_PASSWORD="$certificate_password" openssl pkcs12 \
+              -in "$certificate_path" \
+              -passin env:P12_PASSWORD \
+              -clcerts \
+              -nokeys 2>/dev/null | openssl x509 -noout -subject -issuer -serial -fingerprint -sha256; then
+              echo "::warning::Could not read ${label} public certificate metadata from the .p12 file."
+            fi
+          }
+
+          detect_installer_identity() {
+            local keychain="$1"
+            security find-identity -v -p basic "$keychain" |
+              awk -F\" '/Developer ID Installer:/ { print $2; exit }' ||
+              true
+          }
+
+          normalize_identity() {
+            local value="$1"
+            value="${value//$'\r'/}"
+            value="${value//$'\n'/}"
+            value="$(printf '%s' "$value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            if [[ "$value" == \"*\" && "$value" == *\" && ${#value} -ge 2 ]]; then
+              value="${value:1:${#value}-2}"
+              value="$(printf '%s' "$value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            fi
+            printf '%s' "$value"
+          }
+
           printf '%s' "$APPLE_DEVELOPER_ID_CERTIFICATE_BASE64" | base64 -D > "$application_certificate_path"
+          summarize_p12_certificate "Developer ID Application" \
+            "$application_certificate_path" \
+            "$APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD"
 
           security create-keychain -p "$keychain_password" "$keychain_path"
           security set-keychain-settings -lut 21600 "$keychain_path"
@@ -279,12 +316,12 @@ jobs:
           if [ -z "${APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD:-}" ]; then
             installer_missing+=(APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD)
           fi
-          if [ -z "${APPLE_DEVELOPER_ID_INSTALLER_IDENTITY:-}" ]; then
-            installer_missing+=(APPLE_DEVELOPER_ID_INSTALLER_IDENTITY)
-          fi
 
           if [ "${#installer_missing[@]}" -eq 0 ]; then
             printf '%s' "$APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64" | base64 -D > "$installer_certificate_path"
+            summarize_p12_certificate "Developer ID Installer" \
+              "$installer_certificate_path" \
+              "$APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD"
             security import "$installer_certificate_path" \
               -k "$keychain_path" \
               -P "$APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD" \
@@ -307,6 +344,35 @@ jobs:
           security default-keychain -s "$keychain_path"
           security set-key-partition-list -S apple-tool:,apple: -s \
             -k "$keychain_password" "$keychain_path"
+
+          echo "Valid basic identities in Apple signing keychain:"
+          security find-identity -v -p basic "$keychain_path" || true
+          echo "Valid code-signing identities in Apple signing keychain:"
+          security find-identity -v -p codesigning "$keychain_path" || true
+
+          if [ "${#installer_missing[@]}" -eq 0 ]; then
+            installer_identity="$(detect_installer_identity "$keychain_path")"
+            if [ -z "$installer_identity" ]; then
+              echo "::error::No Developer ID Installer identity was found in the imported Installer .p12. Check APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64 contains the Developer ID Installer .p12, not the Developer ID Application .p12 or a .cer file."
+              exit 1
+            fi
+
+            if [ -n "${APPLE_DEVELOPER_ID_INSTALLER_IDENTITY:-}" ]; then
+              configured_installer_identity="$(normalize_identity "$APPLE_DEVELOPER_ID_INSTALLER_IDENTITY")"
+              if [ "$configured_installer_identity" != "$APPLE_DEVELOPER_ID_INSTALLER_IDENTITY" ]; then
+                echo "::warning::APPLE_DEVELOPER_ID_INSTALLER_IDENTITY contains surrounding quotes or whitespace; the workflow is using the imported certificate Common Name instead."
+              fi
+              if [ "$configured_installer_identity" != "$installer_identity" ]; then
+                echo "::warning::APPLE_DEVELOPER_ID_INSTALLER_IDENTITY does not match the imported Developer ID Installer certificate Common Name; the workflow is using the imported certificate Common Name instead."
+              fi
+            fi
+
+            {
+              echo "APPLE_DEVELOPER_ID_INSTALLER_IDENTITY_DETECTED<<__CREXX_INSTALLER_IDENTITY__"
+              printf '%s\n' "$installer_identity"
+              echo "__CREXX_INSTALLER_IDENTITY__"
+            } >> "$GITHUB_ENV"
+          fi
 
           echo "enabled=true" >> "$GITHUB_OUTPUT"
           echo "APPLE_SIGNING_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
@@ -397,13 +463,11 @@ jobs:
       - name: Package macOS installer
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
         shell: bash
-        env:
-          APPLE_DEVELOPER_ID_INSTALLER_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_IDENTITY }}
         run: |
           set -euo pipefail
 
-          if [ -z "${APPLE_DEVELOPER_ID_INSTALLER_IDENTITY:-}" ]; then
-            echo "APPLE_DEVELOPER_ID_INSTALLER_IDENTITY is not set" >&2
+          if [ -z "${APPLE_DEVELOPER_ID_INSTALLER_IDENTITY_DETECTED:-}" ]; then
+            echo "APPLE_DEVELOPER_ID_INSTALLER_IDENTITY_DETECTED is not set" >&2
             exit 1
           fi
           if [ -z "${APPLE_SIGNING_KEYCHAIN:-}" ]; then
@@ -426,7 +490,7 @@ jobs:
             --payload-dir "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" \
             --output "$pkg_asset" \
             --package-version "${{ needs.version.outputs.display_version }}" \
-            --sign-identity "$APPLE_DEVELOPER_ID_INSTALLER_IDENTITY" \
+            --sign-identity "$APPLE_DEVELOPER_ID_INSTALLER_IDENTITY_DETECTED" \
             --keychain "$APPLE_SIGNING_KEYCHAIN"
 
           pkgutil --check-signature "$pkg_asset"

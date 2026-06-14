@@ -79,7 +79,8 @@ In the Apple Developer account:
 In Keychain Access, both certificates should appear under **My Certificates**
 with private-key disclosure triangles.
 
-Check identities locally:
+Check identities locally. For `pkgbuild`, the identity name is the certificate
+Common Name, not the Apple certificate ID, serial number, or portal identifier:
 
 ```sh
 security find-identity -v | grep 'Developer ID'
@@ -117,6 +118,14 @@ base64 < DeveloperIDInstaller.p12 | tr -d '\n' > DeveloperIDInstaller.p12.base64
 The workflow decodes with macOS `base64 -D`, so keep the encoded secret as
 plain base64 text with no surrounding quotes.
 
+To inspect the public certificate metadata from an exported Installer `.p12`
+without exposing the private key:
+
+```sh
+openssl pkcs12 -in DeveloperIDInstaller.p12 -clcerts -nokeys \
+  | openssl x509 -noout -subject -issuer -serial -fingerprint -sha256
+```
+
 ## Notarization Credentials
 
 The current workflow uses Apple ID app-specific password authentication for
@@ -152,7 +161,7 @@ secrets when they are available:
 | `APPLE_DEVELOPER_ID_IDENTITY` | Exact Developer ID Application identity name |
 | `APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64` | Base64 text for `DeveloperIDInstaller.p12` |
 | `APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD` | Export password for `DeveloperIDInstaller.p12` |
-| `APPLE_DEVELOPER_ID_INSTALLER_IDENTITY` | Exact Developer ID Installer identity name |
+| `APPLE_DEVELOPER_ID_INSTALLER_IDENTITY` | Optional Developer ID Installer identity name used for diagnostics; package signing derives the actual identity from the imported `.p12` |
 | `APPLE_ID` | Apple ID email used for notarization |
 | `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password for notarization |
 | `APPLE_TEAM_ID` | Apple Developer Team ID |
@@ -216,6 +225,11 @@ gh secret set APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64 < DeveloperIDInsta
 printf '%s' "$APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD" | gh secret set APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD
 printf '%s' "$APPLE_DEVELOPER_ID_INSTALLER_IDENTITY" | gh secret set APPLE_DEVELOPER_ID_INSTALLER_IDENTITY
 ```
+
+`APPLE_DEVELOPER_ID_INSTALLER_IDENTITY` is optional. When present, it must not
+include shell quotes. The workflow prints a warning if it does not match the
+Common Name extracted from the Installer `.p12`, then uses the extracted Common
+Name for `pkgbuild --sign`.
 
 List configured secret names without revealing values:
 
