@@ -26,7 +26,7 @@
  * CREXX LEVEL B - FILE IO Functions
  */
 options levelb
-namespace rxfnsb expose lineout linein lines charin charout _execio readlines loadtext
+namespace rxfnsb expose lineout linein lines charin charout _execio readlines loadtext erasefile
 import _rxsysb
 
 /* Level B UTF text lineout BIF. Writes one line and appends a newline. */
@@ -301,6 +301,41 @@ loadtext: procedure = .string
   assembler fclose rc,fileid
   if rc\=0 then call raise "error", "40.27", "cannot close "fname
 return stream
+
+/* --------------------------------------------------------------------
+ * eraseFile()
+ *
+ * Truncate a file to zero length while keeping the file itself.
+ *
+ * Behaviour:
+ *   - Closes the file first if it is currently open in the CREXX
+ *     file cache.
+ *   - Opens the file in write ("w") mode which causes the underlying
+ *     C runtime to truncate the file to length zero.
+ *   - Immediately closes the file again.
+ *
+ * Returns:
+ *   0   Success
+ *  -1   Unable to open/create the file
+ *
+ * Notes:
+ *   - The file is not deleted.
+ *   - If the file does not exist, an empty file is created.
+ *   - Equivalent to "OPEN WRITE REPLACE" in many classic REXX stream
+ *     implementations.
+ * -------------------------------------------------------------------- */
+eraseFile: procedure = .int
+  arg fname = .string
+  /* Close any cached/open instance of the file first */
+  call _close fname, 1     /* suppress "not open" diagnostics */
+  /* Open in write mode: C runtime truncates the file */
+  omode  = 'w'
+  fileid = 0
+  assembler fopen fileid, fname, omode
+  if fileid = 0 then return -1
+  /* Close immediately - truncation has already occurred */
+  assembler fclose fileid, fileid
+return 0
 
 write_stderr: procedure = .void
   arg message = .string

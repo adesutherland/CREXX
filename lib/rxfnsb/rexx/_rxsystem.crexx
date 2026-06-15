@@ -82,7 +82,7 @@ _open: procedure = .int expose _open_file_names _open_file_ids _open_file_modes
 
 /* Close a file */
 _close: procedure = .void expose _open_file_names _open_file_ids _open_file_modes
-    arg name = .string
+    arg name = .string, nomsg=0
 
     found_slot = 0
 
@@ -96,8 +96,8 @@ _close: procedure = .void expose _open_file_names _open_file_ids _open_file_mode
         _open_file_ids.found_slot = 0
         _open_file_names.found_slot = ""
         _open_file_modes.found_slot = ""
-        if rc <> 0 then say "ERROR _close() - rc =" rc
+        if rc <> 0 then if nomsg=0 then say "ERROR _close() - rc =" rc
     end
-    else say "ERROR _close() - file not opened"
+    else if nomsg=0 then say "ERROR _close() - file not opened"
 
     return
