@@ -12,8 +12,9 @@ main: procedure
   a = 1
   b = "11"
   message = ""
-
-  REXXSCRIPT "say 'script starting'; say a; a = a + 4;b='Alpha'; message = 'done ' || a" EXPOSE a,b, message OUTPUT out RESULT raw
+  say "Sample 1"
+  say "--------"
+  REXXSCRIPT "say 'script starting'; say a; a = a + 4;b='Alpha'; message = 'done ' || a" EXPOSE a,b, message OUTPUT out RESULT raw DEBUG
   say "Status of executed script "script_status
   if raw[1] <> "OK" then do
     failures = failures + 1
@@ -36,8 +37,10 @@ main: procedure
   do i=1 to raw[0]
        say 'RAW : 'i raw[i]
     end
-
-  REXXSCRIPT "if 0 then do; say 'bad'; end; say 'good'" OUTPUT out RESULT raw
+  say
+  say "Sample 2"
+  say "--------"
+  REXXSCRIPT "if 0 then do; say 'bad'; end; say 'good'" OUTPUT out RESULT raw debug
   say "Status of executed script "script_status
   if raw[1] <> "OK" then do
      failures = failures + 1
@@ -52,6 +55,9 @@ main: procedure
   else say "FAILURES" failures
 
  status='undefined'
- REXXSCRIPT "status='is OK'; if 0 then do; say 'is bad'; status='is BAD'; end; say status" expose status output out
+ say
+ say "Sample 3"
+ say "--------"
+ REXXSCRIPT "status='is OK'; if 0 then do; say 'is bad'; status='is BAD'; end; say status" expose status output out debug
   say "Status of executed script "script_status
    return
