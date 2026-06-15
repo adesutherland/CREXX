@@ -358,6 +358,12 @@ do i=1 to filenames[0]
     end
   end
   /* if all is well, we now have a .crexx ready for compilation    */
+
+  if \hasSourceHeader(filename) then do
+    compat_flags = ' --level levelb --import rxfnsb'
+    if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
+  end
+
   /* if file has .crexx extension, chop it off */
   if lower(right(filename,6))='.crexx' then filename=substr(filename,1,length(filename)-6)
   /* if file has .rexx extension, chop it off */
@@ -366,10 +372,6 @@ do i=1 to filenames[0]
   if lower(right(filename,7))='.bcrexx' then filename=substr(filename,1,length(filename)-7) 
   compat_flags = ''
 
-  if \hasSourceHeader(sourceFile) then do
-    compat_flags = ' --level levelb --import rxfnsb'
-    if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
-  end
   # note that the next commented out sequence currently fails tests 1074 & 1076
   -- if \hasSourceHeader(filename'.ccrexx') then do
   --   compat_flags = ' --level levelc --import rxfnsb'
@@ -422,10 +424,6 @@ do i=1 to filenames[0]
     if compile then say '[ 'res' ] rxc      - Compiled       ' esc||ANSI_BLUE||sourceFile||esc||ANSI_RESET
     end
   if RC\=0 then return RC
-
-
-  -- binfile = chop_suffix(filename)
-  -- binfiles = binfiles binfile
 
   if compile then do
 /* print the file when verbose ibm style output is requested */
@@ -699,6 +697,12 @@ text = .string
 firstWord = .string
 inBlockComment = 0
 
+/* 
+ * if we do not have a filename extension, it is allowable to
+ * have a .crexx file - add it.
+ */
+if pos('.',sourceFile) = 0 then sourceFile=sourceFile'.crexx'
+
 do while lines(sourceFile) > 0
   line = linein(sourceFile)
   text = strip(line)
@@ -797,21 +801,6 @@ return 0
  * chop_suffix gets rid of file extensions
  * and changes dots to underscores
  * if they are not the separator
- */
-/*
-chop_suffix_old: procedure = .string
-arg fn = .string
-number_of_dots = countstr('.',fn)
-lp=lastpos('.',fn)
-if number_of_dots > 1 then fn=translate(fn,'_','.')
-if lp >0 then
-  do
-    return left(fn,lp-1)
-  end
-  else do
-    return fn
-  end
-  return 'error in chop_suffix'
  */
 
 chop_suffix: procedure = .string
