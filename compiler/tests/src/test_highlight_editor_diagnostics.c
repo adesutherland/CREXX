@@ -56,6 +56,15 @@ static void expect_true(int condition, const char *message) {
     failures = 1;
 }
 
+static void free_code_buffer_with_ep_rules(CodeBuffer *cb) {
+    if (!cb) return;
+    if (cb->ep_rules) {
+        cb_free_ep_rules(cb->ep_rules);
+        cb->ep_rules = NULL;
+    }
+    free_code_buffer(cb);
+}
+
 typedef struct TreeDiagnosticMatch {
     char severity;
     const char *message_substring;
@@ -126,7 +135,7 @@ static CodeBuffer *load_document_in_editor(const char *document_id,
     load = create_initial_load(document_id, source);
     expect_true(load != 0, "initial load should be created");
     if (!load) {
-        free_code_buffer(cb);
+        free_code_buffer_with_ep_rules(cb);
         free_stdio_communication_functions(comm);
         return 0;
     }
@@ -147,7 +156,7 @@ static CodeBuffer *load_document_in_editor(const char *document_id,
 
 static void free_editor_parse(CodeBuffer *cb, CommunicationFunctions *comm) {
     if (editor_is_parsing_thread_active()) join_parser_thread();
-    if (cb) free_code_buffer(cb);
+    free_code_buffer_with_ep_rules(cb);
     if (comm) free_stdio_communication_functions(comm);
 }
 

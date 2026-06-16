@@ -53,6 +53,15 @@
 
 extern const OpInfo op_table[];
 
+static void rxas_free_code_buffer(CodeBuffer *cb) {
+    if (!cb) return;
+    if (cb->ep_rules) {
+        cb_free_ep_rules(cb->ep_rules);
+        cb->ep_rules = NULL;
+    }
+    free_code_buffer(cb);
+}
+
 static int is_mnemonic(const char *s) {
     int i;
     if (!s) return 0;
@@ -316,7 +325,7 @@ int rxas_parser_mode_main(int stdio_mode, int port, const char *file_name, int d
         cb_start_server(cb, "127.0.0.1", port);
     }
 
-    free_code_buffer(cb);
+    rxas_free_code_buffer(cb);
     if (debug_mode) cb_log_close();
 
     return 0;

@@ -42,6 +42,15 @@ static int expect_true(int condition, const char *message) {
     return 0;
 }
 
+static void free_code_buffer_with_ep_rules(CodeBuffer *cb) {
+    if (!cb) return;
+    if (cb->ep_rules) {
+        cb_free_ep_rules(cb->ep_rules);
+        cb->ep_rules = NULL;
+    }
+    free_code_buffer(cb);
+}
+
 static const char *external_function_source =
         "options levelb\n"
         "import rxfnsb\n"
@@ -182,13 +191,13 @@ static int parse_document(const char *document_path, const char *content) {
 
     load = create_initial_load(document_path, content);
     if (!load) {
-        free_code_buffer(cb);
+        free_code_buffer_with_ep_rules(cb);
         return 0;
     }
 
     base_load_initial_content(cb, load);
     ok = cb->parse_tree && cb->parse_tree->root && cb->parse_tree->root->type == PARSE_TREE_FILE;
-    free_code_buffer(cb);
+    free_code_buffer_with_ep_rules(cb);
     return ok;
 }
 

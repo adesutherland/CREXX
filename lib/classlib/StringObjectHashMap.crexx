@@ -102,6 +102,7 @@ next_slot_ = .int
     return index_
 
   free: method = .int
+    if index_ = 0 then return 0
     rc = stemfree(index_)
     index_ = 0
     none = .object

@@ -172,6 +172,8 @@ int main(int argc, char *argv[]) {
     Assembler_Context scanner;
     char *combined_location = 0;
     char *exe_path = 0;
+    FILE *trace_file = 0;
+    int assemble_rc;
     int i;
 #ifdef ENABLE_PARSER_MODE
     int parser_mode = 0;
@@ -183,6 +185,8 @@ int main(int argc, char *argv[]) {
 
     /* Load Instruction Database */
     /* init_ops(); - NO LONGER NEEDED */
+
+    memset(&scanner, 0, sizeof(scanner));
 
     /* scanner context parameter */
     scanner.debug_mode = 0;
@@ -319,17 +323,21 @@ int main(int argc, char *argv[]) {
         scanner.traceFile = openfile("trace", "out", scanner.location, "w");
         if (scanner.traceFile == NULL) {
             fprintf(stderr, "Can't open trace file\n");
-            exit(-1);
+            free(combined_location);
+            return -1;
         }
+        trace_file = scanner.traceFile;
     }
 
     /* Assemble */
-    if (rxasmble(&scanner)) exit(-1);
+    assemble_rc = rxasmble(&scanner);
 
     /* Free Instruction Database */
     /* init_ops() / free_ops() - NO LONGER NEEDED */
 
-    if (scanner.traceFile) fclose(scanner.traceFile);
+    if (trace_file) fclose(trace_file);
+    free(combined_location);
 
-    return(scanner.severity);
+    if (assemble_rc) return -1;
+    return 0;
 }

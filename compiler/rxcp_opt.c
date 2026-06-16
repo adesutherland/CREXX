@@ -456,6 +456,10 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
             case TP_DECIMAL:
                 node->value_type = TP_DECIMAL;
                 node->target_type = TP_DECIMAL;
+                if (node->decimal_value) {
+                    free(node->decimal_value);
+                    node->decimal_value = 0;
+                }
                 if (stringtodecimal(&node->decimal_value,node->node_string,node->node_string_length)) {
                     mknd_err(node, "BAD_CONVERSION");
                 }
@@ -668,6 +672,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
         ast_prnc(node);
         node->value_type = TP_DECIMAL;
         node->node_type = CONSTANT;
+        if (node->decimal_value) free(node->decimal_value);
         node->decimal_value = malloc(length + 1); // +1 for null terminator
         strcpy(node->decimal_value, value);
         update_string(node);

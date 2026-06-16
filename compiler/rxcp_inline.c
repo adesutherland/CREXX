@@ -2218,9 +2218,7 @@ static ASTNode *inline_build_dynamic_varg_value(Context *context,
     block_expr = ast_dup(context, node);
     if (!block_expr) return NULL;
     block_expr->node_type = BLOCK_EXPR;
-    block_expr->node_string = "do";
-    block_expr->node_string_length = 2;
-    block_expr->free_node_string = 0;
+    ast_str(block_expr, "do");
 
     inline_scope = scp_f(context, current_scope, block_expr, NULL, SCOPE_LOCAL);
     if (!inline_scope) return NULL;
@@ -2301,9 +2299,7 @@ static ASTNode *inline_build_dynamic_varg_exists(Context *context,
     block_expr = ast_dup(context, node);
     if (!block_expr) return NULL;
     block_expr->node_type = BLOCK_EXPR;
-    block_expr->node_string = "do";
-    block_expr->node_string_length = 2;
-    block_expr->free_node_string = 0;
+    ast_str(block_expr, "do");
 
     inline_scope = scp_f(context, current_scope, block_expr, NULL, SCOPE_LOCAL);
     if (!inline_scope) return NULL;
@@ -3471,9 +3467,7 @@ static int inline_rewrite_return_nodes(Context *context,
     }
 
     node->node_type = LEAVE_WITH;
-    node->node_string = "leave";
-    node->node_string_length = 5;
-    node->free_node_string = 0;
+    ast_str(node, "leave");
     node->association = block_expr;
     node->value_type = node->child ? node->child->value_type : TP_VOID;
     node->target_type = node->child ? node->child->target_type : TP_VOID;
@@ -3527,9 +3521,7 @@ static ASTNode *inline_build_block_expr(Context *context,
     }
 
     block_expr->node_type = BLOCK_EXPR;
-    block_expr->node_string = "do";
-    block_expr->node_string_length = 2;
-    block_expr->free_node_string = 0;
+    ast_str(block_expr, "do");
     block_expr->association = proc_def;
 
     if (allow_dummy_return && proc_sym->type == TP_VOID) {
@@ -4087,9 +4079,7 @@ static int ast_inline_rhs_eager_operator(Context *context,
         return 0;
     }
     block_expr->node_type = BLOCK_EXPR;
-    block_expr->node_string = "do";
-    block_expr->node_string_length = 2;
-    block_expr->free_node_string = 0;
+    ast_str(block_expr, "do");
 
     inline_scope = scp_f(context, parent_scope, block_expr, NULL, SCOPE_LOCAL);
     if (!inline_scope) {
@@ -7125,6 +7115,7 @@ static ASTNode *inline_meta_create_template_proc(Context *context,
                            NULL,
                            SCOPE_PROCEDURE);
     if (!template_scope) return NULL;
+    if (!template_scope->parent && !scp_track_detached(context, template_scope)) return NULL;
     if (proc->node_type == METHOD || proc->node_type == FACTORY) template_proc->parent = proc->parent;
     if (proc->scope->name) template_scope->name = strdup(proc->scope->name);
     inline_copy_numeric_context(template_scope, proc->scope);

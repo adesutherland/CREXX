@@ -10,6 +10,8 @@
 
 typedef struct Entry Entry;
 typedef struct Stem Stem;
+typedef struct StemIterator StemIterator;
+typedef struct PtrRegistry PtrRegistry;
 // Internal helper function declarations
 static TreeNode *new_node(const char *key, const char *value);
 static void left_rotate(TreeMap *map, TreeNode *x);
@@ -27,6 +29,72 @@ static char *TreeMap_toString(TreeMap *map);
 TreeMapRegistry* is_valid_map(long long map);
 static int stem_contains_key(Stem *s, const char *key);
 static int stem_remove_key(Stem *s, const char *key);
+static void stem_free(Stem *s);
+
+static TreeMapRegistry *registry_head = NULL;
+static PtrRegistry *stem_registry_head = NULL;
+static PtrRegistry *stem_iterator_registry_head = NULL;
+static PtrRegistry *tree_iterator_registry_head = NULL;
+
+struct PtrRegistry {
+    void *ptr;
+    PtrRegistry *next;
+};
+
+static int register_ptr(PtrRegistry **head, void *ptr) {
+    PtrRegistry *entry;
+
+    if (!ptr) return 0;
+
+    entry = malloc(sizeof(PtrRegistry));
+    if (!entry) return 0;
+
+    entry->ptr = ptr;
+    entry->next = *head;
+    *head = entry;
+    return 1;
+}
+
+static int unregister_ptr(PtrRegistry **head, void *ptr) {
+    PtrRegistry *curr = *head;
+    PtrRegistry *prev = NULL;
+
+    while (curr) {
+        if (curr->ptr == ptr) {
+            if (prev) {
+                prev->next = curr->next;
+            } else {
+                *head = curr->next;
+            }
+            free(curr);
+            return 1;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+    return 0;
+}
+
+static int unregister_map(long long map, int destroy_map) {
+    TreeMapRegistry *curr = registry_head;
+    TreeMapRegistry *prev = NULL;
+
+    while (curr) {
+        if (curr->map == map) {
+            if (prev) {
+                prev->next = curr->next;
+            } else {
+                registry_head = curr->next;
+            }
+            if (destroy_map) TreeMap_destroy((TreeMap *) curr->map);
+            free(curr);
+            return 1;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+    return 0;
+}
 
 static void append_text(char **buf, size_t *cap, size_t *len, const char *text) {
     size_t add = strlen(text);
@@ -285,8 +353,9 @@ PROCEDURE(tmap_tostring) {
     if (treeCB == 0) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
 
     result = TreeMap_toString(map);
-    RETURNSTRX(result);
+    RETURNSTR(result);
     free(result);
+    PROCRETURN
 ENDPROC
 }
 
@@ -398,6 +467,7 @@ static void delete_fixup(TreeMap *map, TreeNode *x) {
 }
 
 void TreeMap_destroy(TreeMap *map) {
+    if (!map) return;
     free_tree(map->root);
     free(map);
 }
@@ -426,7 +496,7 @@ const char * TreeMap_containsValue(TreeMap *map, const char *value) {
     while (TreeMapIterator_hasNext(it)) {
         TreeNode *n = TreeMapIterator_next(it);
         if (strcmp(n->value, value) == 0) {
-            char* hasKey=strdup(n->key);
+            const char *hasKey = n->key;
             TreeMapIterator_destroy(it);
             return hasKey;
         }
@@ -476,13 +546,15 @@ void TreeMapIterator_destroy(TreeMapIterator *it) {
     free(it);
 }
 
-void register_map(long long mapi, char * name) {
+int register_map(long long mapi, char * name) {
     TreeMapRegistry *entry = malloc(sizeof(TreeMapRegistry));
+    if (!entry) return 0;
     entry->map = mapi;
     entry->next = registry_head;
     entry->name = simple_hash64(name);
     entry->entries = 0;
     registry_head = entry;
+    return 1;
 }
 TreeMapRegistry* is_valid_map(long long map) {
     TreeMapRegistry *curr = registry_head;
@@ -523,12 +595,12 @@ struct Stem {
     int collisionW;      // write collisions took place
 };
 
-typedef struct StemIterator {
+struct StemIterator {
     Stem   *stem;
     size_t  bucket_index;
     Entry  *current;
     Entry  *last_returned;
-} StemIterator;
+};
 
 Stem *create_stem(size_t table_size,char *root) {
     Stem *s = malloc(sizeof(Stem));
@@ -653,7 +725,8 @@ char *get_stem(Stem *s, const char *key) {
     return "";  // Not found
 }
 
-void stem_free(Stem *s) {
+static void stem_free(Stem *s) {
+    if (!s) return;
     for (size_t i = 0; i < s->table_size; ++i) {
         Entry *e = s->buckets[i];
         while (e) {
@@ -736,7 +809,10 @@ PROCEDURE(tmap_create) {
     char* name=GETSTRING(ARG0);
     if(strlen(name)==0) strcpy(name,"UNNAMED");
     else str2upper(name);
-    register_map(mapi,name);
+    if (!register_map(mapi, name)) {
+        TreeMap_destroy(map);
+        RETURNINTX(0)
+    }
     RETURNINTX(mapi)
 ENDPROC
 }
@@ -915,12 +991,7 @@ ENDPROC
 
 PROCEDURE(tmap_free) {
     long long mapi = GETINT(ARG0);
-    TreeMap *map = (TreeMap *) mapi;
-    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
-    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
-
-    char * key= GETSTRING(ARG1);
-    TreeMap_destroy(map);             // There is no valid return code available
+    if (!unregister_map(mapi, 1)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
     RETURNINTX(0);                    // always return 0
 ENDPROC
 }
@@ -972,6 +1043,10 @@ PROCEDURE(stem_create) {
     size=size+512;
     size= find_nearest_prime(size);
     Stem * token = create_stem(size,GETSTRING(ARG1));
+    if (token && !register_ptr(&stem_registry_head, token)) {
+        stem_free(token);
+        token = NULL;
+    }
     RETURNINTX((long long) token);
     ENDPROC
 }
@@ -1029,6 +1104,10 @@ PROCEDURE(stem_itercreate) {
     Stem *token = (Stem *) tokeni;
     StemIterator *it = stem_iterator_create(token);
 
+    if (it && !register_ptr(&stem_iterator_registry_head, it)) {
+        stem_iterator_destroy(it);
+        it = NULL;
+    }
     RETURNINTX((long long) it);
 ENDPROC
 }
@@ -1064,7 +1143,7 @@ PROCEDURE(stem_iterfree) {
     long long tokeni = GETINT(ARG0);
     StemIterator *it = (StemIterator *) tokeni;
 
-    if (it) stem_iterator_destroy(it);
+    if (it && unregister_ptr(&stem_iterator_registry_head, it)) stem_iterator_destroy(it);
     RETURNINTX(0);
 ENDPROC
 }
@@ -1076,6 +1155,10 @@ PROCEDURE(tmap_itercreate) {
     if (treeCB == 0) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
 
     TreeMapIterator *it = TreeMapIterator_create(map);
+    if (it && !register_ptr(&tree_iterator_registry_head, it)) {
+        TreeMapIterator_destroy(it);
+        it = NULL;
+    }
     RETURNINTX((long long) it)
 ENDPROC
 }
@@ -1105,7 +1188,7 @@ PROCEDURE(tmap_iterfree) {
     long long tokeni = GETINT(ARG0);
     TreeMapIterator *it = (TreeMapIterator *) tokeni;
 
-    if (it) TreeMapIterator_destroy(it);
+    if (it && unregister_ptr(&tree_iterator_registry_head, it)) TreeMapIterator_destroy(it);
     RETURNINTX(0)
 ENDPROC
 }
@@ -1130,9 +1213,43 @@ PROCEDURE(stem_destroy) {
     long long tokeni = GETINT(ARG0);
     Stem *token = (Stem *) tokeni;
 
-    if (token) stem_free(token);
+    if (token && unregister_ptr(&stem_registry_head, token)) stem_free(token);
     RETURNINTX(0);
 ENDPROC
+}
+
+static void treemap_finalize(void) {
+    while (tree_iterator_registry_head) {
+        PtrRegistry *entry = tree_iterator_registry_head;
+        tree_iterator_registry_head = entry->next;
+        TreeMapIterator_destroy((TreeMapIterator *) entry->ptr);
+        free(entry);
+    }
+
+    while (stem_iterator_registry_head) {
+        PtrRegistry *entry = stem_iterator_registry_head;
+        stem_iterator_registry_head = entry->next;
+        stem_iterator_destroy((StemIterator *) entry->ptr);
+        free(entry);
+    }
+
+    while (stem_registry_head) {
+        PtrRegistry *entry = stem_registry_head;
+        stem_registry_head = entry->next;
+        stem_free((Stem *) entry->ptr);
+        free(entry);
+    }
+
+    while (registry_head) {
+        TreeMapRegistry *entry = registry_head;
+        registry_head = entry->next;
+        TreeMap_destroy((TreeMap *) entry->map);
+        free(entry);
+    }
+}
+
+FINALIZER(treemap_fin)
+    treemap_finalize();
 }
 
 

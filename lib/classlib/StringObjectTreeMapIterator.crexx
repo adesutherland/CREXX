@@ -50,7 +50,13 @@ current_slot_ = .int
 
   hasNext: method = .int
     if closed_ then return 0
-    return tmiterhasnext(token_)
+    has_next = tmiterhasnext(token_)
+    if \has_next then do
+      call tmiterfree(token_)
+      closed_ = 1
+      token_ = 0
+    end
+    return has_next
 
   next: method = .string
     if closed_ then return ""

@@ -37,6 +37,7 @@ Before changing compiler logic or making claims about syntax, AST shape, validat
 - `docs/ai-context/RXLINK_LINKER.md`
 - `docs/ai-context/RXVM_INTERPRETER.md`
 - `docs/ai-context/CREXX_LIBS.md`
+- `docs/ai-context/CREXX_ASAN_TESTING.md`
 
 Read only what is needed for the task, but do not rely on memory for cREXX syntax or compiler internals when the docs cover it.
 
@@ -54,6 +55,18 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 
 ## Debugging Output Discipline
 
+- For ASan/LSan builds or ctests, use `tools/asan-run.sh` and consult
+  `docs/ai-context/CREXX_ASAN_TESTING.md`. Do not hand-run broad sanitizer
+  commands unless the runner is broken or the task is specifically to debug the
+  runner.
+- After a sanitizer-related fix, validate the same focused build/test command
+  against the normal Debug build when it is available, then rerun the same
+  focused command against `cmake-build-debugasan` with the relevant sanitizer
+  options. This separates ordinary command/test breakage from sanitizer-only
+  findings.
+- For unattended sanitizer sessions, request or reuse a saved approval for the
+  `tools/asan-run.sh` command prefix, then keep build/test/status/kill actions
+  inside that runner so the session does not stall on permission prompts.
 - When debugging anything that can emit large or unbounded output, redirect both stdout and stderr to a temp log file created with `mktemp`, then inspect that file with focused reads such as `tail`, `sed`, or `grep`.
 - Apply the temp-log workflow to verbose builds, parser-mode sessions, tracing, fixed-point loops, and any command that might otherwise flood the terminal or crash the agent session.
 - Treat `rxc -d*`, parser traces, fixed-point validation traces, and syntax-highlighting debug runs as mandatory temp-log cases: do not stream their raw output directly to the terminal.

@@ -50,7 +50,13 @@ current_slot_ = .int
 
   hasNext: method = .int
     if closed_ then return 0
-    return stemiterhasnext(token_)
+    has_next = stemiterhasnext(token_)
+    if \has_next then do
+      call stemiterfree(token_)
+      token_ = 0
+      closed_ = 1
+    end
+    return has_next
 
   next: method = .string
     if closed_ then return ""

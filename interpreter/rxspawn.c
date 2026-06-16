@@ -176,9 +176,9 @@ int getEnvVal(char **value, char *name, size_t name_length) {
 #else
 
     *value = getenv(nulled_name);
+    free(nulled_name);
     if (!(*value)) {
         *value = "";
-        free(nulled_name);
     }
     return 0;
 

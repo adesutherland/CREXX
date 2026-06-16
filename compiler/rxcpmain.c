@@ -247,6 +247,7 @@ void fre_cntx(Context *context)  {
 
     /* Deallocate Scope and Symbols */
     if (context->ast &&  context->ast->scope) scp_free(context->ast->scope);
+    scp_free_detached(context);
 
     /* Deallocate AST */
     free_ast(context);
@@ -500,13 +501,15 @@ int rxcmain(int argc, char *argv[]) {
     /* Add the executable-path binary import root. */
     exe_path = exepath();
     if (import_locations) {
+        char *user_import_locations = import_locations;
         size_t combined_import_locations_size = strlen(import_locations) + strlen(exe_path) + 2;
         combined_import_locations = malloc(combined_import_locations_size);
         if (!combined_import_locations) {
             RX_PANIC_OOM("malloc rxc binary import locations",
                          combined_import_locations_size, import_locations);
         }
-        sprintf(combined_import_locations, "%s;%s", import_locations, exe_path);
+        sprintf(combined_import_locations, "%s;%s", user_import_locations, exe_path);
+        free(user_import_locations);
         import_locations = combined_import_locations;
     } else {
         size_t combined_import_locations_size = strlen(exe_path) + 1;

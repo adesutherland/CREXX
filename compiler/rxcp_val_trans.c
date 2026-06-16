@@ -322,11 +322,12 @@ walker_result rewrite_constructor_walker(walker_direction direction,
                     }
 
                     /* Using AST Rewrite Utility */
-                    ASTRewriteTemplate *class_node_tmpl = ast_rw_new(CLASS, mprintf(".%s", type_name));
+                    char class_name[16];
+                    snprintf(class_name, sizeof(class_name), ".%s", type_name);
+                    ASTRewriteTemplate *class_node_tmpl = ast_rw_new(CLASS, class_name);
 
                     if (in_do_loop) {
                         char *target_str = rx_strndup(target->node_string, target->node_string_length);
-                        char *do_str = rx_strndup(do_node->node_string, do_node->node_string_length);
                         /* do i = .int(1) to 3 -> do; i = .int; do i = 1 to 3; ... ; end; end */
                         ASTRewriteTemplate *define_tmpl = ast_rw_add(ast_rw_add(
                             ast_rw_loc(ast_rw_new(DEFINE, "="), target),

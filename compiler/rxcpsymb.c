@@ -145,6 +145,18 @@ Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol, Sco
     return scope;
 }
 
+int scp_track_detached(Context *context, Scope *scope) {
+    if (!context || !scope) return 0;
+
+    if (!context->detached_scope_array) {
+        context->detached_scope_array = dpa_f();
+        if (!context->detached_scope_array) return 0;
+    }
+
+    dpa_add((dpa *)context->detached_scope_array, scope);
+    return 1;
+}
+
 /* Calls the handler for each symbol in scope */
 void scp_4all(Scope *scope, symbol_worker worker, void *payload) {
     struct symbol_wrapper *i;
@@ -218,6 +230,20 @@ void scp_free(Scope *scope) {
     free_dpa(scope->deferred_registers_array);
     free_dpa(scope->dereference_symbols_array);
     free(scope);
+}
+
+void scp_free_detached(Context *context) {
+    dpa *scopes;
+    size_t i;
+
+    if (!context || !context->detached_scope_array) return;
+
+    scopes = (dpa *)context->detached_scope_array;
+    for (i = 0; i < scopes->size; i++) {
+        scp_free((Scope *)scopes->pointers[i]);
+    }
+    free_dpa(scopes);
+    context->detached_scope_array = 0;
 }
 
 void scp_add_dereference_symbol(Scope *scope, Symbol *symbol) {

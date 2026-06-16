@@ -107,3 +107,14 @@ next_slot_ = .int
 
   _indexToken: method = .int
     return index_
+
+  free: method = .int
+    if index_ = 0 then return 0
+    rc = tmfree(index_)
+    index_ = 0
+    none = .object
+    do i = 1 to next_slot_
+      values_[i] = none
+    end
+    next_slot_ = 0
+    return rc

@@ -114,6 +114,8 @@ void sym_copy_reference_type(Symbol *dest, const Symbol *src);
 
 /* Scope Factory */
 Scope *scp_f(Context *context, Scope *parent, ASTNode *node, Symbol* symbol, ScopeType type);
+int scp_track_detached(Context *context, Scope *scope);
+void scp_free_detached(Context *context);
 
 /* Calls the handler for each symbol in scope */
 void scp_4all(Scope *scope, symbol_worker worker, void *payload);

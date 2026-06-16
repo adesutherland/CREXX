@@ -1264,6 +1264,18 @@ static char *format_ast_diagnostic_message(ASTNode *diag) {
     return message;
 }
 
+static void free_transient_cb_node_strings(CB_Node *node) {
+    if (!node) return;
+    if (node->message_code) {
+        free(node->message_code);
+        node->message_code = 0;
+    }
+    if (node->message) {
+        free(node->message);
+        node->message = 0;
+    }
+}
+
 typedef struct HighlightDiagnosticSelection {
     SourceDiagnostic *source_diag;
     ASTNode *ast_diag;
@@ -1397,6 +1409,7 @@ static void emit_diagnostics_from_source_state(CB_ParseTree *tb, Context *contex
             diag_node.message = format_source_diagnostic_message(diag);
             cb_set_current_parent_to_root_node(tb);
             cb_add_child_node(tb, diag_node);
+            free_transient_cb_node_strings(&diag_node);
         }
         diag = diag->next_in_context;
     }
@@ -1415,6 +1428,7 @@ static void emit_diagnostics_from_detached_ast(CB_ParseTree *tb, Context *contex
             diag_node.message = format_ast_diagnostic_message(diag);
             cb_set_current_parent_to_root_node(tb);
             cb_add_child_node(tb, diag_node);
+            free_transient_cb_node_strings(&diag_node);
         }
         diag = diag->sibling;
     }

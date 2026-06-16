@@ -141,7 +141,7 @@ val = .int
      * @return int
      */
   free: method = .int
+    if val = 0 then return 0
     rc = stemfree(val)
     val = 0
     return rc
-

@@ -124,6 +124,15 @@ static int output_has_text(OutputFragment *fragment) {
     return 0;
 }
 
+static void node_cleanup_replace_text(ASTNode *node, char *text) {
+    if (!node || !text) return;
+    if (node->cleanup) {
+        f_output(node->cleanup);
+        node->cleanup = 0;
+    }
+    node->cleanup = output_fs(text);
+}
+
 static int visible_fixed_arg_count(ASTNode *node) {
     Symbol *symbol = current_procedure_symbol(node);
     int fixed_args;
@@ -680,7 +689,7 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* Set cleanup action */
                 temp1 = mprintf("   unlink r%d\n", node->register_num);
-                node->cleanup = output_fs(temp1);
+                node_cleanup_replace_text(node, temp1);
                 free(temp1);
                 break;
 
@@ -816,7 +825,7 @@ static walker_result emit_walker(walker_direction direction,
 
                     /* Cleanup */
                     temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
-	                    node->cleanup = output_fs(temp1);
+	                    node_cleanup_replace_text(node, temp1);
 	                    free(temp1);
 
 	                    type_promotion(node);
@@ -867,7 +876,7 @@ static walker_result emit_walker(walker_direction direction,
 
                         /* Add cleanup to unlink this property reference */
                         temp1 = mprintf("   unlink r%d\n", node->additional_registers);
-                        node->cleanup = output_fs(temp1);
+                        node_cleanup_replace_text(node, temp1);
                         free(temp1);
 
                         from_reg_type = 'r';
@@ -1028,7 +1037,7 @@ static walker_result emit_walker(walker_direction direction,
                     /* Set cleanup action */
                     if (unlink_needed) {
                         temp1 = mprintf("   unlink r%d\n", node->register_num);
-                        node->cleanup = output_fs(temp1);
+                        node_cleanup_replace_text(node, temp1);
                         free(temp1);
                     }
                 }

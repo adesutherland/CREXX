@@ -167,3 +167,8 @@ val = .int
   toString: method = .string
     return tmtostring(val)
 
+  free: method = .int
+    if val = 0 then return 0
+    rc = tmfree(val)
+    val = 0
+    return rc

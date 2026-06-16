@@ -2177,6 +2177,23 @@ RX_INLINE void free_frame(stack_frame *frame) {
     *(frame->procedure->frame_free_list) = frame;
 }
 
+static void free_external_entry_arguments(stack_frame *frame) {
+    size_t i;
+    size_t j;
+
+    if (!frame || frame->parent || !frame->procedure || !frame->procedure->binarySpace) return;
+
+    j = (size_t)frame->procedure->binarySpace->globals + (size_t)frame->procedure->locals + 1;
+    for (i = 0; i < frame->number_args; i++, j++) {
+        value *arg = frame->baselocals[j];
+        if (!arg) continue;
+        clear_value(arg);
+        free(arg);
+        frame->baselocals[j] = 0;
+        frame->locals[j] = 0;
+    }
+}
+
 static stack_frame *rxsignal_unwind_to_frame(stack_frame *current, stack_frame *target) {
     stack_frame *discard;
 
@@ -9163,6 +9180,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     /* Unwind any stack frames */
     while (current_frame) {
         temp_frame = current_frame->parent;
+        if (context->ext_proc && !current_frame->parent) {
+            free_external_entry_arguments(current_frame);
+        }
         free_frame(current_frame);
         current_frame = temp_frame;
     }

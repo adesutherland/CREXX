@@ -38,6 +38,7 @@ import data_StringIterator
 
 StringTreeSetIterator: class implements .StringIterator
 token = .int
+closed = .int
 
 /**
  * factory method returns an instance of this class
@@ -45,6 +46,7 @@ token = .int
   *: factory
     arg mapToken = .int
     token = tmitercreate(mapToken)
+    closed = 0
     return
 
     /** method hasNext() returns 1 (true)
@@ -52,13 +54,21 @@ token = .int
      * to be returned by this iterator
      */
   hasNext: method = .int
-    return tmiterhasnext(token)
+    if closed then return 0
+    has_next = tmiterhasnext(token)
+    if \has_next then do
+      call tmiterfree(token)
+      closed = 1
+      token = 0
+    end
+    return has_next
     
     /**
      * method next() returns the next item
      * available from this iterator
      */
   next: method = .string
+    if closed then return ''
     return tmiternext(token)
     
     /**
@@ -66,7 +76,11 @@ token = .int
      * iterator. After this, hasNext()
      * returns 0
      */
-  close: method
-    call tmiterfree(token)
-    return
+  close: method = .int
+    if \closed then do
+      call tmiterfree(token)
+      closed = 1
+      token = 0
+    end
+    return 0
     

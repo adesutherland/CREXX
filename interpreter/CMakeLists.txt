@@ -5,6 +5,22 @@ project(Interpreter C)
 set(CMAKE_C_STANDARD 99) # enables inline keyword
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice
 
+set(_rxvmintp_sanitizer_flags
+        "${CMAKE_C_FLAGS} ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
+if(CMAKE_BUILD_TYPE)
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" _rxvmintp_build_type)
+    string(APPEND _rxvmintp_sanitizer_flags
+            " ${CMAKE_C_FLAGS_${_rxvmintp_build_type}}"
+            " ${CMAKE_EXE_LINKER_FLAGS_${_rxvmintp_build_type}}"
+            " ${CMAKE_SHARED_LINKER_FLAGS_${_rxvmintp_build_type}}")
+endif()
+string(FIND "${_rxvmintp_sanitizer_flags}" "-fsanitize=address" _rxvmintp_asan_flag)
+if(NOT _rxvmintp_asan_flag EQUAL -1
+        AND (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
+    # GCC 11 spends tens of minutes compiling this translation unit at -O2 with ASan.
+    set_source_files_properties(rxvmintp.c PROPERTIES COMPILE_OPTIONS "-O1")
+endif()
+
 add_library(rxvmref STATIC rxvmref.c rxvmref.h)
 target_include_directories(rxvmref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -696,9 +712,19 @@ add_dependencies(test_reentrancy test_reentrancy_bin)
 add_test(NAME reentrancy_check COMMAND test_reentrancy WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Archive-link regression test for manual db_decimal packaging.
+set(_crexx_archive_link_c_flags_text "${CMAKE_C_FLAGS}")
+set(_crexx_archive_link_exe_flags_text "${CMAKE_EXE_LINKER_FLAGS}")
+if(CMAKE_BUILD_TYPE)
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" _crexx_archive_link_build_type)
+    string(APPEND _crexx_archive_link_c_flags_text " ${CMAKE_C_FLAGS_${_crexx_archive_link_build_type}}")
+    string(APPEND _crexx_archive_link_exe_flags_text " ${CMAKE_EXE_LINKER_FLAGS_${_crexx_archive_link_build_type}}")
+endif()
+separate_arguments(_crexx_archive_link_c_flags NATIVE_COMMAND "${_crexx_archive_link_c_flags_text}")
+separate_arguments(_crexx_archive_link_exe_flags NATIVE_COMMAND "${_crexx_archive_link_exe_flags_text}")
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link
         COMMAND ${CMAKE_C_COMPILER}
+                ${_crexx_archive_link_c_flags}
                 -O0
                 -I${CMAKE_CURRENT_SOURCE_DIR}
                 -I${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
@@ -713,6 +739,7 @@ add_custom_command(
                 $<TARGET_FILE:decnumber>
                 $<TARGET_FILE:avl_tree>
                 $<TARGET_FILE:rxpa>
+                ${_crexx_archive_link_exe_flags}
                 -lm
                 $<TARGET_FILE:db_decimal_manual>
                 ${CREXX_SOCKET_MANUAL_LINK_LIBS}

@@ -55,7 +55,13 @@ closed = .int
      */
   hasNext: method = .int
     if closed then return 0
-    return tmiterhasnext(token)
+    has_next = tmiterhasnext(token)
+    if \has_next then do
+      call tmiterfree(token)
+      closed = 1
+      token = 0
+    end
+    return has_next
 
     /**
      * method next() returns the next item

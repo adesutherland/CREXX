@@ -64,7 +64,10 @@ int rxasmble(Assembler_Context *scanner) {
     rxasperr(scanner);
 
     /* Output rxbin */
-    if (rxasoutf(scanner)) return -1;
+    if (rxasoutf(scanner)) {
+        rxasclrc(scanner);
+        return -1;
+    }
 
     /* That's it */
     if (scanner->debug_mode) printf("Assembling complete\n");

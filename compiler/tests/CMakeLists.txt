@@ -3148,6 +3148,22 @@ add_test(NAME trace_event_metadata
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_trace_event_metadata.cmake)
 set_tests_properties(trace_event_metadata PROPERTIES LABELS "compiler;stage4")
 
+set(TRACE_STEM_SUGAR_RXVM_TIMEOUT 10)
+set(_trace_stem_sugar_sanitizer_flags
+        "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
+if(CMAKE_BUILD_TYPE)
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" _trace_stem_sugar_build_type)
+    string(APPEND _trace_stem_sugar_sanitizer_flags
+            " ${CMAKE_C_FLAGS_${_trace_stem_sugar_build_type}}"
+            " ${CMAKE_CXX_FLAGS_${_trace_stem_sugar_build_type}}"
+            " ${CMAKE_EXE_LINKER_FLAGS_${_trace_stem_sugar_build_type}}"
+            " ${CMAKE_SHARED_LINKER_FLAGS_${_trace_stem_sugar_build_type}}")
+endif()
+string(FIND "${_trace_stem_sugar_sanitizer_flags}" "-fsanitize=address" _trace_stem_sugar_asan_flag)
+if(NOT _trace_stem_sugar_asan_flag EQUAL -1)
+    set(TRACE_STEM_SUGAR_RXVM_TIMEOUT 60)
+endif()
+
 add_test(NAME trace_stem_sugar
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>
@@ -3156,6 +3172,7 @@ add_test(NAME trace_stem_sugar
         -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
         -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library
         -DWORK=${CMAKE_CURRENT_BINARY_DIR}/trace_stem_sugar
+        -DRXVM_TIMEOUT=${TRACE_STEM_SUGAR_RXVM_TIMEOUT}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_trace_stem_sugar.cmake)
 set_tests_properties(trace_stem_sugar PROPERTIES LABELS "compiler;stage4")
 

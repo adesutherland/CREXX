@@ -452,9 +452,10 @@ static int module_selector_matches(const link_module_info *module, const char *s
         size_t input_len = (size_t)(separator - selector);
         const char *member = separator + 2;
         const char *module_basename = filename(module->module->name);
+        size_t module_input_len = strlen(module->input_path);
 
-        if (module->input_path[input_len] != '\0') return 0;
-        if (strncmp(selector, module->input_path, input_len) != 0) return 0;
+        if (module_input_len != input_len) return 0;
+        if (memcmp(selector, module->input_path, input_len) != 0) return 0;
         if (!*member) return 0;
 
         return strcmp(member, module->module->name) == 0 ||

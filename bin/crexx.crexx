@@ -526,10 +526,14 @@ do i=1 to filenames[0]
     if RC\=0 then return RC
 
     cc_command = 'gcc -O3 -DNDEBUG'
+    nativeCFlags = readNativeCompileFlags(rxpath, dirsep)
+    if nativeCFlags <> '' then cc_command = cc_command || ' ' || nativeCFlags
     socketLibs = ''
     if isWindowsPlatform(platformUpper) then socketLibs = ' -lws2_32'
     nativeRuntimeLibs = readNativeRuntimeLinkLibs(rxpath, dirsep)
     if nativeRuntimeLibs <> '' then socketLibs = socketLibs || ' ' || nativeRuntimeLibs
+    nativeLinkFlags = readNativeLinkFlags(rxpath, dirsep)
+    if nativeLinkFlags <> '' then socketLibs = socketLibs || ' ' || nativeLinkFlags
     if isMacPlatform(platformUpper) then
       cc_command = cc_command ' -Wl,-search_paths_first -Wl,-headerpad_max_install_names'
     cc_command = cc_command || ' -o ' || quoteCommandArg(outputStem, platformUpper)
@@ -914,7 +918,19 @@ return 0
 
 readNativeRuntimeLinkLibs: procedure = .string
 arg rxpath = .string, dirsep = .string
-configFile = rxpath || 'bin' || dirsep || 'crexx_native_libs'
+return readNativeConfigLine(rxpath, dirsep, 'crexx_native_libs')
+
+readNativeCompileFlags: procedure = .string
+arg rxpath = .string, dirsep = .string
+return readNativeConfigLine(rxpath, dirsep, 'crexx_native_cflags')
+
+readNativeLinkFlags: procedure = .string
+arg rxpath = .string, dirsep = .string
+return readNativeConfigLine(rxpath, dirsep, 'crexx_native_ldflags')
+
+readNativeConfigLine: procedure = .string
+arg rxpath = .string, dirsep = .string, fileName = .string
+configFile = rxpath || 'bin' || dirsep || fileName
 if \fileExists(configFile) then return ''
 line = linein(configFile)
 call lineout configFile

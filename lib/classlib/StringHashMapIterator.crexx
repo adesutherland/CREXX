@@ -53,7 +53,13 @@ closed = .int
      */
   hasNext: method = .int
     if closed then return 0
-    return stemiterhasnext(token)
+    has_next = stemiterhasnext(token)
+    if \has_next then do
+      call stemiterfree(token)
+      token = 0
+      closed = 1
+    end
+    return has_next
     
     /**
      * method next() returns the next item

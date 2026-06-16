@@ -84,6 +84,7 @@ struct Context {
     ASTNode* namespace;
     ASTNode* temp_node; /* Temporary node store to pass node between functions */
     Scope *current_scope;
+    void *detached_scope_array; /* Context-owned scopes not reachable from the source scope tree */
     void* importable_function_tree;
     void* importable_class_tree;
     size_t importable_function_count;

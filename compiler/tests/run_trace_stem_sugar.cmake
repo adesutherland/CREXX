@@ -22,6 +22,10 @@ if(NOT DEFINED WORK)
     message(FATAL_ERROR "WORK is required")
 endif()
 
+if(NOT DEFINED RXVM_TIMEOUT)
+    set(RXVM_TIMEOUT 10)
+endif()
+
 file(MAKE_DIRECTORY "${WORK}")
 
 function(run_stem_trace_case NAME TRACE_MODE EXPECTED)
@@ -56,7 +60,7 @@ function(run_stem_trace_case NAME TRACE_MODE EXPECTED)
     execute_process(
         COMMAND "${RXVM}" "${LIBRARY}" "${RXBIN}"
         WORKING_DIRECTORY "${WORK}"
-        TIMEOUT 10
+        TIMEOUT "${RXVM_TIMEOUT}"
         RESULT_VARIABLE RXVM_RESULT
         OUTPUT_VARIABLE RXVM_OUT
         ERROR_VARIABLE RXVM_ERR)
