@@ -68,7 +68,7 @@ reference with `namespace..`:
 import qifa
 import qifb
 
-left = .qifa..vehicle("one")
+left  = .qifa..vehicle("one")
 right = .qifb..vehicle.from_name("two")
 ```
 

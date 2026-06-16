@@ -44,7 +44,7 @@ That trade is worth leaning into. Do not write vague Classic Rexx and hope the
 compiler guesses your intent. Write a small amount of explicit Level B so the
 compiler and VM can help you.
 
-## 2. First Program And Workflow
+## 2. First Program and Workflow
 
 The usual source extension for new cRexx code is `.crexx`. For reusable code,
 start with `options levelb` and import the Level B standard library when you
@@ -66,7 +66,7 @@ crexx hello.crexx
 
 Expected output:
 
-```text
+```bash
 Hello Level B
 length=4
 ```
@@ -139,7 +139,7 @@ crexx args.crexx -args alpha beta
 
 Expected output:
 
-```text
+```bash
 count=2
 1:alpha
 2:beta
@@ -203,7 +203,7 @@ say people["grace.hopper"]
 
 Expected output:
 
-```text
+```bash
 Level B:2
 .float
 .boolean
@@ -229,7 +229,7 @@ Practical notes:
   and bracket keys such as `people["grace.hopper"]`.
 - `.string` is valid UTF-8 text in normal builds. Use `.binary` for bytes.
 
-## 5. Procedures, Arguments, Returns, And Varargs
+## 5. Procedures, Arguments, Returns, and Varargs
 
 A Level B procedure can declare its return type after `=`, and it binds call
 arguments with `arg`.
@@ -262,7 +262,7 @@ bump: procedure = .void
 
 Expected output:
 
-```text
+```bash
 total=10
 x=11
 ```
@@ -280,7 +280,7 @@ The important habits are:
 storage into a procedure. Prefer explicit arguments and return values until you
 really need shared module state.
 
-## 6. Expressions, Assignment, Casts, And Comparisons
+## 6. Expressions, Assignment, Casts, and Comparisons
 
 Level B keeps Rexx operators, but type checking happens before bytecode is
 emitted.
@@ -350,7 +350,7 @@ crexx control_flow.crexx -args alpha skip beta stop gamma
 
 Expected output:
 
-```text
+```bash
 word=alpha
 word=beta
 summary=many
@@ -393,7 +393,7 @@ main: procedure
 
 Expected output:
 
-```text
+```bash
 Lovelace:1815
 address=#42
 OTHER:from block
@@ -402,7 +402,7 @@ OTHER:from block
 Trace is useful but intentionally noisy. These are reference-only forms, not a
 runnable tutorial example:
 
-```text
+```bash
 trace results
 trace asm
 trace llm to file "trace.jsonl"
@@ -414,7 +414,7 @@ Do not add `TRACE`, `PARSE`, or `ADDRESS` directly to `lib/rxfnsb/rexx/`
 library sources while debugging the library build. Those files are built with
 compiler exits disabled. Write a small caller program instead.
 
-## 9. Modules And Libraries
+## 9. Modules and Libraries
 
 Each source file is a module. Public module identity comes from `namespace`,
 not from the filename alone. A module exposes selected symbols; another module
@@ -458,7 +458,7 @@ crexx modules_main.crexx -s/path/to/examples
 
 Expected output:
 
-```text
+```bash
 Hello, Ada
 names=2
 ```
@@ -568,7 +568,7 @@ cacheasset: class implements .asset
 
 Expected output:
 
-```text
+```bash
 file:log.txt
 cache:memo
 file selected
@@ -599,7 +599,7 @@ call it explicitly.
 Level B also does not currently implement interface inheritance, interface
 attributes, overloads, singleton declarations, or destructor/finalizer syntax.
 
-## 13. Collections And Iteration
+## 13. Collections and Iteration
 
 Current Level B collection patterns are explicit:
 
@@ -718,7 +718,7 @@ SnapshotCounter: class
 
 Expected output:
 
-```text
+```bash
 live=3
 snapshot=2
 ```
@@ -807,7 +807,7 @@ rxvm "$CREXX_BIN/library.rxbin" ledger.rxbin main.rxbin
 
 Expected output:
 
-```text
+```bash
 coffee=-3
 book=-12
 gift=20

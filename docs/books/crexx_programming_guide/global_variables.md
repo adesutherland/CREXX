@@ -38,7 +38,7 @@ Unlike exposed functions, which can be called across imported modules, **exposed
 **Typing and Shadowing of Global Variables:**
 Global variables are typed based on their first use or declaration. All modules exposing the variable must agree on this type.
 
-- **Top-Level Declarations:** In the top-level scope of a procedure (i.e. directly inside `procedure`), a typed declaration like `x = .int` does NOT create a local shadow variable. Instead, it asserts and binds the type to the global variable `x`.
+- **Top-Level Declarations:** In the top-level scope of a procedure (i.e. directly inside `procedure`), a typed declaration like `x = .int` does *not* create a local shadow variable. Instead, it asserts and binds the type to the global variable `x`.
 
 - **Sub-Scope Declarations (Shadowing):** In sub-scopes (e.g. inside a `do...end` block or an `if ... do` block), a typed declaration like `x = .int` **creates a shadow local variable** that hides the global variable for the duration of that block.
 
