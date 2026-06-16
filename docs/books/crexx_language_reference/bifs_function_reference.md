@@ -1546,17 +1546,17 @@ codepoint values. It is the Unicode-capable replacement for byte-oriented
 descending range.
 
 
-## SOURCELINE(n)
+<!-- ## SOURCELINE(n) -->
 
 
 
 
-## ARG(n)
+<!-- ## ARG(n) -->
 
 
 
 
-## STORAGE(address, length, newvalue)
+<!-- ## STORAGE(address, length, newvalue) -->
 
 
 
@@ -1579,7 +1579,7 @@ the supported modes, output targets, and namespace suppression controls.
 
 
 
-## VALUE(symbol, newvalue, selector)
+<!-- ## VALUE(symbol, newvalue, selector) -->
 
 
 ## VERSION()
@@ -1634,29 +1634,29 @@ select  /* keyword1 is to be the default */
 
 
 
-## ADDRESS()
+<!-- ## ADDRESS() -->
 
 
 
 
-## CONDITION([info])
+<!-- ## CONDITION([info]) -->
 
 
 
 
-## DIGITS()
+<!-- ## DIGITS() -->
 
 
 
 
-## FORM()
+<!-- ## FORM() -->
 
 
 
 
-## FUZZ()
+<!-- ## FUZZ() -->
 
 
 
 
-## QUEUED()
+<!-- ## QUEUED() -->
