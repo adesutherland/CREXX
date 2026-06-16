@@ -108,8 +108,27 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
      do /* it is not a flag but a filename */
        if left(fn.i,2) = './' then fn.i=substr(fn.i,3) -- make shebangs work
        filename=fn.i
+       /* check for extensionless files and .exe extensions */
+       if right(upper(filename),4) = '.EXE' then do
+	 say 'Error: compilation of .exe files is not supported'
+	 exit(99)
+       end
+       if pos('.',filename) = 0 then do
+	 /* look whether a .crexx file exists, else fail         */
+	 /* this complexity only because we allow default .crexx */
+	 select
+	   when testfile(filename'.crexx') = 0 then filename = filename'.crexx'
+           when testfile(filename'.CREXX') = 0 then filename = filename'.CREXX'
+	 otherwise
+	   if pos('.',filename) = 0 then do
+	     say 'Error: compilation of extensionless files is not supported.'
+	     say '(and no' filename'.crexx was found)'
+	     exit(99)
+	   end
+	 end
+       end
        call appendArrayValue filenames, filename
-     end
+       end
      else
        do
 	 /* allow for single- and double dash options */
