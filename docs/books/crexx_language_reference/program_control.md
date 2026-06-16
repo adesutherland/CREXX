@@ -12,7 +12,7 @@ Branching
 : Selecting one of several lists of instructions to process. The branching instructions are `IF` and `SELECT`.
 
 Looping
-: Repeating a list of instructions, either for a speficied number of times or as long as some condition is satisfied. The `LOOP` or `DO` instruction (when used with keywords like `UNTIL` and `WHILE` do the looping in Rexx.
+: Repeating a list of instructions, either for a speficied number of times or as long as some condition is satisfied. The `LOOP` or `DO` instruction (when used with keywords like `UNTIL` and `WHILE`) do the looping in Rexx.
 
 Exiting
 : A program that is a single list ends when it reaches the last instruction. To explicity end a program, use the instructions `EXIT` and `RETURN`. 
@@ -221,6 +221,8 @@ The `DO` instruction also controls iteration. There are three common forms:
 - Counted `DO` (with a control variable and optional `TO`/`BY`/`FOR`)
 - Conditional `DO WHILE` / `DO UNTIL`
 
+Like in other Rexx variants the keyword `loop` can be used instead of `do` for the purpose of iteration; this will emphasize a loop to distinguish it from the other uses of `do`. 
+
 ### Simple DO (grouping only)
 ```rexx <!--simpledo.rexx-->
 options levelb
@@ -363,6 +365,8 @@ This difference in behavior between single-instruction branches and `DO` blocks 
     /* i is still 100 here (outer one wasn't modified) */
 ```
 
-Note: This syntax candy (`do i = .int(1) to 3`) desugars into a wrapped block (`do; i = .int; do i = 1 to 3; ...; end; end`). It is only supported for fundamental types (`.int`, `.string`, `.float`, `.boolean`, `.decimal`). Attempting to instantiate a non-fundamental class in a loop initialization (e.g. `do i = a_class(5) to 10`) will result in a `#LOOP_CLASSES_NOT_SUPPORTED` compilation error.
+Note: This syntax candy `do i = .int(1) to 3` desugars into a wrapped block `do; i = .int; do i = 1 to 3; ...; end; end`.
+
+It is only supported for fundamental types (`.int`, `.string`, `.float`, `.boolean`, `.decimal`). Attempting to instantiate a non-fundamental class in a loop initialization (e.g. `do i = a_class(5) to 10`) will result in a `\#LOOP_CLASSES_NOT_SUPPORTED` compilation error.
 
 Rationale: typed declarations always define intent and should introduce a new local; untyped uses favour existing bindings to reduce surprises, while remaining safe by creating a loop-local when none exists.
