@@ -26,6 +26,9 @@ Beta 3 is the next Release 1 foundation milestone after the tagged beta 2
 baseline. It is work in progress on `develop` until `v1.0.0-beta.3` exists.
 The beta 3 planning note is
 [`releases/v1.0.0-beta.3.md`](releases/v1.0.0-beta.3.md).
+Candidate issues and working team guidance are tracked in
+[`planning/beta-3/issue-candidates.md`](planning/beta-3/issue-candidates.md)
+until GitHub issues are created.
 
 | Date | Milestone | Direction |
 |------|-----------|-----------|
@@ -85,6 +88,12 @@ until they are narrowed.
 | Theme | Source discussions | Direction |
 |-------|--------------------|-----------|
 | Classic compatibility BIFs | #129 | `BITAND`, `BITOR`, and `BITXOR` belong with broader Classic/Level C compatibility planning, not as isolated Level B promises. |
+| RexxScript positioning | Beta 3 planning | Treat RexxScript as a modern interpreted-only Rexx-family surface that primarily uses strings. It is not the Level C compiler path, though it may later migrate toward a light Classic Rexx subset and should share BIF implementations where that is clean. |
+| Level C canonical AST lowering | Beta 3 planning, `compiler/docs/levelc_working_architecture.md` | Level C is compiled Classic Rexx. The intended implementation path is to transform the Level C parse/AST shape into the canonical compiler AST shape, then use the normal validation, optimization, and emission pipeline where possible. |
+| Source provenance through generated code | Beta 3 planning | Preprocessor output, RexxScript integration, parser-mode diagnostics, Level C lowering, TRACE, and debug metadata need a shared source-line/provenance strategy so errors map to the user source rather than generated text. |
+| Classic Rexx value model | Beta 3 planning | Create a dedicated Classic Rexx value class with canonical string storage and cached derived forms such as integer or numeric values. This supports Level C and shared BIFs without leaking Level B typed semantics. |
+| Classic Rexx variable pool | Beta 3 planning, #424 | Create a variable-pool abstraction for Classic Rexx lookup, assignment, stems, host-variable access, SAA, and ADDRESS integration. BIFs and Level C work should use this instead of ad hoc maps. |
+| Shared Rexx BIF surface | Beta 3 planning, #129 | Curate BIFs that can serve RexxScript string-first use and later Level C Classic value/pool use. Prefer shared implementation strategy over per-BIF conversion islands. |
 | Rexx-style loose comparison | #233 and closed issue #150 | Keep under future compatibility review. Current Level B comparison policy should remain explicit in the language reference. |
 | Argument count and optional parameters | #219 | Current `arg()`, `arg[]`, `...`, and `?name` behaviour is documented. Reopen only if a concrete unsupported case appears. |
 | StringIterable loop sugar and callbacks | #591 | Level B should keep the minimal collection contract as `StringIterable.iterator()` returning a `StringIterator` with `hasNext()` / `next()`. Object-valued collections use the same explicit tagging style through `ObjectIterator` / `ObjectIterable`; string-key object maps use `StringObject...` names. A no-argument `forEach()` method is not useful without callable/reference support, so richer Java-style callback iteration belongs with future Level G facilities. Possible Level B syntax sugar such as `loop item over collection` should lower to the current iterator loop and validate against the relevant iterator interface contract. Bare collection names remain reserved for future Level G generic or generic-like surfaces. Object-key collections stay deferred until object equality/hash/ordering semantics are defined. |

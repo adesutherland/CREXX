@@ -11,6 +11,10 @@ a release contract. After the GitHub discussion is approved, create the issue
 candidates below as GitHub issues with owners, labels, acceptance criteria, and
 fallback decisions.
 
+Beta 3 issue candidates and working team guidance are captured in
+[`planning/beta-3/issue-candidates.md`](planning/beta-3/issue-candidates.md)
+before they are turned into GitHub issues.
+
 The release date is fixed. Scope is managed by tiering.
 
 ## Release Principle
@@ -30,7 +34,7 @@ complete by 2026-08-14 unless it is fixing a must-ship release defect.
 | --- | --- | --- |
 | 2026-06-17 | Beta 3 opens | Beta 2 has a tag, beta 1 to beta 2 delta is documented, `develop` is labelled beta 3 WIP, and the beta 3 planning note exists. |
 | 2026-07-03 | Design lock | Level B/G split, plugin policy, UTF ownership, Level C MVP, GPU/threading scope, and issue owners/labels are approved. |
-| 2026-07-31 | Beta 3 foundation target | High-risk VM/compiler foundations either landed with tests or moved out; large constants, perfect-hash select, Level C execution proof, and beta 3 package shape have explicit go/no-go decisions. |
+| 2026-07-31 | Beta 3 foundation target | High-risk VM/compiler foundations either landed with tests or moved out; large constants, perfect-hash select, Level C canonical-AST lowering proof, and beta 3 package shape have explicit go/no-go decisions. |
 | 2026-08-14 | Feature complete | User-facing surface is frozen; demos and tutorials are ready for manual testing; known limitations are drafted. |
 | 2026-08-31 | Release 1 | Release 1 is shipped, or a release candidate is ready with explicit residual risks. |
 
@@ -125,12 +129,14 @@ Should-ship items are important but have explicit fallback paths.
    Unicode helpers. Fallback: ship LLM plus docs/tutorial and mark Unicode as
    planned.
 
-3. Initial Level C execution proof
+3. Initial Level C canonical-AST lowering proof
 
-   Try for a small executable lowering slice: variables, `SAY`, `IF`, simple
-   `DO`, `ARG`, and string-literal `ADDRESS`. Fallback: ship DSLSH/highlighter
-   as the Release 1 Level C milestone and publish the lowering plan as the next
-   phase.
+   Try for a small compiled Classic Rexx lowering slice by transforming the
+   Level C parse/AST shape into the canonical compiler AST shape. Candidate
+   source forms include variables, `SAY`, `IF`, simple `DO`, `ARG`, and
+   string-literal `ADDRESS`, but the approved beta 3 slice should be smaller if
+   needed. Fallback: ship DSLSH/highlighter as the Release 1 Level C milestone
+   and publish the lowering plan as the next phase.
 
 4. Level L lexer/parser demo
 
@@ -182,7 +188,8 @@ Adrian:
 Peter:
 
 - own PARSE-related compatibility and examples;
-- own RexxScript positioning relative to Level C/G where relevant;
+- own RexxScript demos and integration where relevant, while keeping
+  RexxScript distinct from compiled Level C;
 - help inventory plugins and classify plugin/demos;
 - implement or update plugin demos and non-core plugin docs;
 - contribute Level C and Level G demos where domain knowledge matters.
@@ -237,21 +244,23 @@ common `rel1` label plus the tier and area labels shown here.
 | 26 | Add Level L lexer/parser library demo | Peter | `rel1`, `should`, `level-l`, `demos` | Ship a smaller demo using current arrays/tables. |
 | 27 | Define Level G first library baseline | Rene | `rel1`, `should`, `level-g`, `library` | Document the existing LLM surface as the first baseline and move extra APIs post-release. |
 | 28 | Add Level G tutorial and demos | Rene | `rel1`, `should`, `level-g`, `docs` | Ship one tutorial plus known limitations if the broader demo set is not ready. |
-| 29 | Define initial Level C Release 1 milestone | Adrian | `rel1`, `should`, `level-c`, `planning` | Ship parser/highlighter milestone plus lowering plan. |
-| 30 | Implement first Level C lowering/execution proof if approved | Adrian | `rel1`, `should`, `level-c`, `compiler` | Keep normal Level C compilation unsupported and document the next phase. |
+| 29 | Define initial Level C Release 1 milestone | Adrian | `rel1`, `should`, `level-c`, `planning` | Ship parser/highlighter milestone plus canonical-AST lowering plan. |
+| 30 | Implement first Level C canonical-AST lowering proof if approved | Adrian | `rel1`, `should`, `level-c`, `compiler` | Keep normal Level C compilation unsupported and document the next phase. |
 | 31 | Decide whether to create `lib/rxfnsc` for initial Level C | Adrian | `rel1`, `should`, `level-c`, `library` | Reserve the namespace in docs without creating a library directory. |
 | 32 | Add Level C demo and known-limits documentation | Peter | `rel1`, `should`, `level-c`, `docs` | Ship DSLSH/highlighter demo with explicit no-compile limitation. |
-| 33 | Add RXAS peephole optimizer improvements from measured cases | Rene | `rel1`, `should`, `rxas`, `performance` | Keep baseline optimizer and publish benchmark results. |
-| 34 | Add rxc optimizer/inlining improvements from current fail-closed gates | Rene | `rel1`, `should`, `compiler`, `performance` | Keep gates fail-closed and document deferred cases. |
-| 35 | Clean up plugin demos and separate core from non-core examples | Peter | `rel1`, `should`, `plugins`, `demos` | Clarify status in docs/CMake even if directories are not moved. |
+| 33 | Define RexxScript beta 3 integration slice | Adrian | `rel1`, `should`, `rexxscript`, `planning` | RexxScript is documented as an interpreted strings-only modern Rexx surface, not the Level C compiler path. |
+| 34 | Curate shared Rexx BIF surface for RexxScript and Level C | Rene | `rel1`, `should`, `bifs`, `level-c`, `rexxscript` | First BIF list separates string-first RexxScript use from Classic value/pool needs. |
+| 35 | Add RXAS peephole optimizer improvements from measured cases | Rene | `rel1`, `should`, `rxas`, `performance` | Keep baseline optimizer and publish benchmark results. |
+| 36 | Add rxc optimizer/inlining improvements from current fail-closed gates | Rene | `rel1`, `should`, `compiler`, `performance` | Keep gates fail-closed and document deferred cases. |
+| 37 | Clean up plugin demos and separate core from non-core examples | Peter | `rel1`, `should`, `plugins`, `demos` | Clarify status in docs/CMake even if directories are not moved. |
 
 ### Experimental Or Post-Release Candidates
 
 | # | Candidate issue | Owner | Labels | Fallback |
 | --- | --- | --- | --- | --- |
-| 36 | Add Level L syntax-sugar demo if syntax is approved | Adrian | `rel1`, `experimental`, `level-l` | Keep Level L demo library-only for Release 1. |
-| 37 | Add GPU VM plugin proof of concept behind experimental status | Adrian | `rel1`, `experimental`, `vm`, `plugins` | Publish design notes or keep the work out of the release branch. |
-| 38 | Define VM multithreading/subtask design and Release 1 scope | Adrian | `rel1`, `experimental`, `vm` | Ship design-only; keep shared-memory subtasks post-Release 1. |
+| 38 | Add Level L syntax-sugar demo if syntax is approved | Adrian | `rel1`, `experimental`, `level-l` | Keep Level L demo library-only for Release 1. |
+| 39 | Add GPU VM plugin proof of concept behind experimental status | Adrian | `rel1`, `experimental`, `vm`, `plugins` | Publish design notes or keep the work out of the release branch. |
+| 40 | Define VM multithreading/subtask design and Release 1 scope | Adrian | `rel1`, `experimental`, `vm` | Ship design-only; keep shared-memory subtasks post-Release 1. |
 
 ## Dependency Map
 
@@ -261,8 +270,12 @@ Decisions needed before implementation:
 - Plugin category policy and default build policy.
 - UTF ownership: VM codepoint baseline, Level G rich Unicode, and retirement of
   compiler-owned Unicode plugin semantics.
-- Level C MVP and whether it includes execution or only DSLSH plus a lowering
-  proof.
+- Level C MVP and whether it includes execution or only DSLSH plus a
+  canonical-AST lowering proof.
+- RexxScript beta 3 scope as an interpreted strings-only modern Rexx surface,
+  separate from compiled Level C.
+- Shared BIF strategy for RexxScript string-first use and Level C Classic
+  value/pool use.
 - VM multithreading and GPU scope: stable, experimental, or design-only.
 - Large constant data representation and any source/RXAS syntax.
 - `select` perfect-hash semantics, fallback behaviour, and supported types.
@@ -275,8 +288,12 @@ Technical dependencies:
   emission, VM/RXAS lookup support or branch-sequence generation, and fallback.
 - Level L demos depend on large constant structures and lexer/parser library
   APIs.
-- Level C execution depends on canonical lowering, variable-pool model, PARSE
-  helpers, command/ADDRESS lowering, source provenance, and runtime tests.
+- Level C execution depends on canonical AST lowering, variable-pool model,
+  PARSE helpers, command/ADDRESS lowering, source provenance, and runtime tests.
+- RexxScript integration depends on its interpreter/evaluator boundary, shared
+  string-first BIF entry points, source provenance, and status/error reporting.
+- Shared Rexx BIF work depends on choosing the first BIF slice and separating
+  string-first RexxScript behavior from Classic value/pool behavior.
 - Level G Unicode depends on vendoring/build/licensing decision for `utf8proc`
   or a Rexx-first alternative.
 - Plugin split depends on inventory, CMake defaults, packaging impact, and docs.
