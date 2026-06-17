@@ -21,6 +21,65 @@ if(NOT _rxvmintp_asan_flag EQUAL -1
     set_source_files_properties(rxvmintp.c PROPERTIES COMPILE_OPTIONS "-O1")
 endif()
 
+set(RXVM_CORE_OBJECT_SOURCES
+        rxvmintp.h
+        rxvmintp.c
+        rxvmload.c
+        interrupt.c
+        ../avl_tree/rxastree.h
+        rxsignal.h
+        ../utf8/utf.h
+        ../binutils/include/rxbin.h
+        rxspawn.c
+        exitfunc.c
+        rxpafuncs.c
+        rxvml/rxvm_run.c)
+
+function(crexx_add_rxvm_core_objects target_name)
+    add_library(${target_name} OBJECT ${RXVM_CORE_OBJECT_SOURCES})
+    target_include_directories(${target_name} PRIVATE
+            .
+            ./rxvmplugin
+            ../assembler
+            ../binutils/include
+            ${CMAKE_SOURCE_DIR}/rxpa
+            ../platform
+            ../avl_tree
+            ../utf8
+            ../inc
+            rxvmplugin/rxvmplugins/mc_decimal/decnumber)
+    # These objects are also archived into rxvml, which is linked into
+    # libcrexxsaa.so on ELF platforms.
+    set_target_properties(${target_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endfunction()
+
+set(RXVM_PLATFORM_OBJECT_SOURCES
+        rxvmsock.c
+        rxvmsock.h)
+
+function(crexx_add_rxvm_platform_objects target_name)
+    add_library(${target_name} OBJECT ${RXVM_PLATFORM_OBJECT_SOURCES})
+    target_include_directories(${target_name} PRIVATE
+            .
+            ./rxvmplugin
+            ../assembler
+            ../binutils/include
+            ${CMAKE_SOURCE_DIR}/rxpa
+            ../platform
+            ../avl_tree
+            ../utf8
+            ../inc
+            rxvmplugin/rxvmplugins/mc_decimal/decnumber)
+    # These objects are also archived into rxvml, which is linked into
+    # libcrexxsaa.so on ELF platforms.
+    set_target_properties(${target_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endfunction()
+
+crexx_add_rxvm_core_objects(rxvm_core_objects)
+crexx_add_rxvm_core_objects(rxbvm_core_objects)
+target_compile_definitions(rxbvm_core_objects PRIVATE NTHREADED=1)
+crexx_add_rxvm_platform_objects(rxvm_platform_notls_objects)
+
 add_library(rxvmref STATIC rxvmref.c rxvmref.h)
 target_include_directories(rxvmref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -90,11 +149,20 @@ set(CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT "${CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT
         CACHE INTERNAL "Native executable link flags required by the configured VM runtime" FORCE)
 message(STATUS "cREXX VM core socket TLS backend: ${CREXX_ENABLE_TLS_NORMALIZED}")
 
+crexx_add_rxvm_platform_objects(rxvm_platform_objects)
+if(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "OPENSSL")
+    target_compile_definitions(rxvm_platform_objects PRIVATE CREXX_TLS_OPENSSL=1)
+elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "NETWORK")
+    target_compile_definitions(rxvm_platform_objects PRIVATE CREXX_TLS_NETWORK=1)
+    target_compile_options(rxvm_platform_objects PRIVATE -fblocks)
+elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "SCHANNEL")
+    target_compile_definitions(rxvm_platform_objects PRIVATE CREXX_TLS_SCHANNEL=1)
+endif()
+
 ##########################################
 # Bare Interpreter
 # Threaded Version
-add_executable(rxvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-        ../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c rxvml/rxvm_run.c)
+add_executable(rxvm rxvmmain.c $<TARGET_OBJECTS:rxvm_core_objects>)
 # set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
@@ -103,8 +171,7 @@ target_include_directories(rxvm PRIVATE . ./rxvmplugin
         ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 
 # Bytecode Version
-add_executable(rxbvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-        ../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c rxvml/rxvm_run.c)
+add_executable(rxbvm rxvmmain.c $<TARGET_OBJECTS:rxbvm_core_objects>)
 target_link_libraries(rxbvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
 target_include_directories(rxbvm PRIVATE . ./rxvmplugin
         ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
@@ -124,9 +191,7 @@ add_custom_command(
 add_custom_target(packed_library ALL DEPENDS library.c)
 
 # Threaded Version
-add_executable(rxvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-		../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c
-		${CMAKE_CURRENT_BINARY_DIR}/library.c rxvml/rxvm_run.c)
+add_executable(rxvme rxvmmain.c ${CMAKE_CURRENT_BINARY_DIR}/library.c $<TARGET_OBJECTS:rxvm_core_objects>)
 target_compile_definitions(rxvme PRIVATE LINK_CREXX_LIB=1)
 # set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -137,9 +202,7 @@ target_include_directories(rxvme PRIVATE . ./rxvmplugin
 add_dependencies(rxvme packed_library)
 
 # Bytecode Version
-add_executable(rxbvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-		../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c
-		${CMAKE_CURRENT_BINARY_DIR}/library.c rxvml/rxvm_run.c)
+add_executable(rxbvme rxvmmain.c ${CMAKE_CURRENT_BINARY_DIR}/library.c $<TARGET_OBJECTS:rxbvm_core_objects>)
 target_compile_definitions(rxbvme PRIVATE NTHREADED=1 LINK_CREXX_LIB=1)
 target_link_libraries(rxbvme rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
 target_include_directories(rxbvme PRIVATE . ./rxvmplugin
@@ -150,8 +213,7 @@ add_dependencies(rxbvme packed_library)
 # C Library Interpreter -  to be linked to make a standalone CREXX exe
 
 # Threaded Version
-add_library(rxvml STATIC rxvmlib.c rxvml.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-        ../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c rxvml/rxvm_run.c)
+add_library(rxvml STATIC rxvmlib.c rxvml.c $<TARGET_OBJECTS:rxvm_core_objects>)
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
@@ -160,23 +222,14 @@ target_include_directories(rxvml PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 
 # Bytecode Version
-add_library(rxbvml STATIC rxvmlib.c rxvml.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-		../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c rxvml/rxvm_run.c)
+add_library(rxbvml STATIC rxvmlib.c rxvml.c $<TARGET_OBJECTS:rxbvm_core_objects>)
 target_link_libraries(rxbvml rxvmplugin mc_decimal_manual avl_tree rxpa)
 target_include_directories(rxbvml PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 
-function(crexx_enable_core_sockets target_name)
-    target_sources(${target_name} PRIVATE rxvmsock.c rxvmsock.h)
-    if(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "OPENSSL")
-        target_compile_definitions(${target_name} PRIVATE CREXX_TLS_OPENSSL=1)
-    elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "NETWORK")
-        target_compile_definitions(${target_name} PRIVATE CREXX_TLS_NETWORK=1)
-        target_compile_options(${target_name} PRIVATE -fblocks)
-    elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "SCHANNEL")
-        target_compile_definitions(${target_name} PRIVATE CREXX_TLS_SCHANNEL=1)
-    endif()
+function(crexx_enable_vm_platform target_name)
+    target_sources(${target_name} PRIVATE $<TARGET_OBJECTS:rxvm_platform_objects>)
     if(CREXX_SOCKET_TARGET_LIBS)
         target_link_libraries(${target_name} ${CREXX_SOCKET_TARGET_LIBS})
     endif()
@@ -184,7 +237,7 @@ endfunction()
 
 foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
     target_link_libraries(${_rxvm_core_target} rxvmref)
-    crexx_enable_core_sockets(${_rxvm_core_target})
+    crexx_enable_vm_platform(${_rxvm_core_target})
 endforeach()
 
 # libcrexxsaa is intentionally thin and shared. On ELF platforms, every static
