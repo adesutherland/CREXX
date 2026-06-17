@@ -5,7 +5,9 @@ compiler-to-bytecode toolchain. Source programs are compiled to cREXX assembler,
 assembled into `rxbin` bytecode, optionally linked into a deployable image, and
 run by the CREXX virtual machine.
 
-Current documentation baseline: `crexx-1.0.0-beta.2`.
+Current documentation baseline: `crexx-1.0.0-beta.3` on `develop`.
+This is beta 3 work in progress until the `v1.0.0-beta.3` tag and release
+assets exist. The latest completed beta baseline is `v1.0.0-beta.2`.
 
 ## What Is Included
 
@@ -68,8 +70,10 @@ is searched for same-extension imports.
 
 ## Documentation
 
-- [Release notes](docs/releases/v1.0.0-beta.2.md) summarize the beta 2 scope,
-  signing status, and known limitations.
+- [Beta 3 release notes](docs/releases/v1.0.0-beta.3.md) track the current
+  beta 3 WIP scope, timetable, and known limitations.
+- [Beta 2 release notes](docs/releases/v1.0.0-beta.2.md) summarize the latest
+  completed beta scope, signing status, and known limitations.
 - [Release 1 plan](docs/release-1-plan.md) tracks the fixed-date path to
   Release 1, including scope tiers, gates, and provisional issue owners.
 - [Release documentation](docs/index.md) is the main entry point for current

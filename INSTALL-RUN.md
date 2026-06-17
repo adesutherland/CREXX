@@ -101,14 +101,14 @@ This is the expected graphical install path for end users.
 Optional checks before installing:
 
 ```sh
-pkgutil --check-signature CREXX-v1.0.0-beta.2-macos-arm64.pkg
-spctl --assess --type install --verbose=4 CREXX-v1.0.0-beta.2-macos-arm64.pkg
+pkgutil --check-signature CREXX-v1.0.0-beta.3-macos-arm64.pkg
+spctl --assess --type install --verbose=4 CREXX-v1.0.0-beta.3-macos-arm64.pkg
 ```
 
 For scripted installs, use Terminal:
 
 ```sh
-sudo installer -pkg CREXX-v1.0.0-beta.2-macos-arm64.pkg -target /
+sudo installer -pkg CREXX-v1.0.0-beta.3-macos-arm64.pkg -target /
 ```
 
 Use the matching `macos-x86_64.pkg` filename on Intel Macs.
@@ -133,7 +133,7 @@ The ZIP remains available as a portable archive for CI, testing, and users who
 do not want a system install. Unpack it with Finder or with `ditto`:
 
 ```sh
-ditto -x -k CREXX-v1.0.0-beta.2-macos-arm64.zip "$HOME/CREXX"
+ditto -x -k CREXX-v1.0.0-beta.3-macos-arm64.zip "$HOME/CREXX"
 cd "$HOME/CREXX/CREXX-macos-arm64"
 ```
 

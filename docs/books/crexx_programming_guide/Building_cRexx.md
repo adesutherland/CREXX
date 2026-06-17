@@ -183,7 +183,7 @@ ctest --test-dir cmake-build-debug \
 
 The project version is read from the top-level `VERSION` file. To change
 the cREXX version number, edit that file and use a semantic version such
-as `1.0.0`, `1.0.0-beta.2`, or `1.0.0-beta.2+build.7`.
+as `1.0.0`, `1.0.0-beta.3`, or `1.0.0-beta.3+build.7`.
 
 Local, non-release builds also include build metadata in the displayed
 version: the build channel, the short Git commit id when Git is

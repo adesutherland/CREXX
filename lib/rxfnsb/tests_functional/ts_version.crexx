@@ -3,8 +3,8 @@ options levelb
 import rxfnsb
 
 v = version()
-if pos("crexx-1.0.0-beta.2", v) = 0 then do
-  say "version() did not contain crexx-1.0.0-beta.2:" v
+if pos("crexx-1.0.0-beta.3", v) = 0 then do
+  say "version() did not contain crexx-1.0.0-beta.3:" v
   return 1
 end
 

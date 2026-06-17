@@ -1,6 +1,6 @@
 # CREXX Examples
 
-Release 1 beta 2 includes a small examples set for smoke testing and first
+Release 1 beta 3 includes a small examples set for smoke testing and first
 experiments with the packaged toolchain. The examples cover hello world,
 arithmetic, strings, stems/preprocessing, simple algorithms, date/time, system
 calls, and an object-oriented bank sketch.

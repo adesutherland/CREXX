@@ -1,7 +1,7 @@
 # Level B Tutorial For Rexx Programmers
 
 This tutorial is for experienced Rexx programmers who want to write practical
-cRexx Level B programs in the Release 1 beta 2 documentation line. It assumes
+cRexx Level B programs in the Release 1 beta 3 documentation line. It assumes
 you know Rexx ideas such as `say`, `parse`, `do`, `arg`, and built-in
 functions, but it does not assume you have used cRexx's typed compiler,
 modules, classes, or interfaces before.
@@ -863,14 +863,14 @@ Level B habit:
 : Define an interface, implement it with classes, and use checked casts and
   type tests at boundaries.
 
-## 17. Known Beta 2 Boundaries
+## 17. Known Beta 3 Boundaries
 
 Level B is the main implemented Release 1 beta language, but this is still a
 beta line. Current boundaries that matter to tutorial code:
 
 - Level B is not Classic Rexx compatibility mode. Level C is where Classic
-  compatibility work belongs, and normal Level C compilation is not a beta 2
-  contract.
+  compatibility work belongs, and normal Level C compilation is not a beta 3
+  contract unless the beta 3 release notes explicitly say otherwise.
 - Level G has real early library work, including `rxfnsg`, but it is not the
   baseline user language for this release line.
 - Interface default methods are final.

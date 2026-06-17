@@ -1,6 +1,6 @@
 # CREXX Documentation
 
-_Release documentation for `crexx-1.0.0-beta.2`._
+_Release documentation for `crexx-1.0.0-beta.3` on `develop`._
 
 This site is the public entry point for current CREXX documentation. It should
 describe what is implemented in the release branch, not old plans or speculative
@@ -9,7 +9,10 @@ designs.
 ## Start Here
 
 - [README](https://github.com/adesutherland/CREXX/blob/develop/README.md): short project overview, build commands, and first run
-- [Release notes](releases/v1.0.0-beta.2.md): what is included in CREXX 1.0.0 beta 2
+- [Beta 3 release notes](releases/v1.0.0-beta.3.md): current beta 3 WIP scope,
+  timetable, and limitations
+- [Beta 2 release notes](releases/v1.0.0-beta.2.md): what is included in the
+  latest completed CREXX 1.0.0 beta 2 baseline
 - [Documentation map](DOCS_MAP.md): where each kind of information belongs
 - [Building CREXX](books/crexx_programming_guide/Building_cRexx.md)
 - [Running CREXX](books/crexx_programming_guide/running.md)

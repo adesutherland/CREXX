@@ -20,13 +20,26 @@ The fixed-date path to Release 1 is tracked in
 Release 1 gates, scope tiers, provisional owners, and issue candidates. This
 roadmap remains the home for broader future direction and research themes.
 
+## Beta 3 Milestone
+
+Beta 3 is the next Release 1 foundation milestone after the tagged beta 2
+baseline. It is work in progress on `develop` until `v1.0.0-beta.3` exists.
+The beta 3 planning note is
+[`releases/v1.0.0-beta.3.md`](releases/v1.0.0-beta.3.md).
+
+| Date | Milestone | Direction |
+|------|-----------|-----------|
+| 2026-06-17 | Beta 3 opens | Move live branch docs and version strings to beta 3 WIP while preserving beta 2 release notes as the latest completed beta baseline. |
+| 2026-07-03 | Design lock | Approve Level B/G split, plugin policy, UTF ownership, Level C MVP, GPU/threading scope, and issue ownership. |
+| 2026-07-31 | Beta 3 foundation target | Land or defer high-risk VM/compiler foundations, decide beta 3 package shape, and make the release note match actual tag assets before publication. |
+| 2026-08-14 | Feature complete after beta 3 | Freeze user-facing Release 1 surface except for release defects, documentation, QA, examples, packaging, and measured performance work. |
+
 ## Packaging Roadmap
 
-Beta 2 keeps the package formats that were already in the release close-out
+Beta 2 shipped the package formats that were already in the release close-out
 path: portable ZIPs, signed Windows ZIPs through the maintainer signing flow,
 macOS `.pkg` installers when Apple signing and notarization are configured, and
-prototype Linux `.deb` packaging through the moving dev snapshot. New installer
-formats belong after beta 2 unless they fix a release-blocking packaging defect.
+prototype Linux `.deb` packaging through the moving dev snapshot.
 
 For beta 3, improve the end-user install experience while keeping portable ZIP
 assets available for CI, testing, and users who do not want a system install:
@@ -35,7 +48,7 @@ assets available for CI, testing, and users who do not want a system install:
 |----------|-----------|
 | macOS | Treat the signed, notarized, stapled `.pkg` as the preferred user install. Keep ZIPs as portable developer/CI archives. |
 | Linux | Keep the `.deb` as adequate for Debian/Ubuntu-style users, but harden it before promoting it from prototype: install/uninstall smoke tests, dependency review, and later `.rpm` packaging. |
-| Windows | Add a signed NSIS `setup.exe` after beta 2, targeting beta 3. It should be built from the signed Windows payload, install CREXX into a normal Windows location, add the tools to PATH, register an uninstaller, and keep the signed ZIP available for portable use. |
+| Windows | Add a signed NSIS `setup.exe` for beta 3 if the signing and upload flow is reliable. It should be built from the signed Windows payload, install CREXX into a normal Windows location, add the tools to PATH, register an uninstaller, and keep the signed ZIP available for portable use. |
 
 Longer-term Windows packaging may include WiX/MSI and `winget` publication, but
 the simple click-through NSIS installer is the next practical user-experience

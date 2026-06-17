@@ -1,14 +1,15 @@
 # CREXX Release 1 Plan
 
 Status: draft plan for maintainer review and GitHub discussion, updated after
-beta 2 release-note alignment.
+the beta 2 tag and beta 3 branch baseline.
 Date: 2026-06-17.
 Target release: end of August 2026.
 
-This plan describes the intended path from the `v1.0.0-beta.2` release baseline
-to Release 1. It is not itself a release contract. After the GitHub discussion
-is approved, create the issue candidates below as GitHub issues with owners,
-labels, acceptance criteria, and fallback decisions.
+This plan describes the intended path from the tagged `v1.0.0-beta.2` release
+baseline through the beta 3 foundation milestone to Release 1. It is not itself
+a release contract. After the GitHub discussion is approved, create the issue
+candidates below as GitHub issues with owners, labels, acceptance criteria, and
+fallback decisions.
 
 The release date is fixed. Scope is managed by tiering.
 
@@ -27,9 +28,9 @@ complete by 2026-08-14 unless it is fixing a must-ship release defect.
 
 | Date | Gate | Exit condition |
 | --- | --- | --- |
-| 2026-06-15 | Beta 2 close | Beta 2 release note is finalized, tag/package status is explicit, beta 1 to beta 2 delta is documented, and post-tag `develop` is labelled beta 3 WIP. |
+| 2026-06-17 | Beta 3 opens | Beta 2 has a tag, beta 1 to beta 2 delta is documented, `develop` is labelled beta 3 WIP, and the beta 3 planning note exists. |
 | 2026-07-03 | Design lock | Level B/G split, plugin policy, UTF ownership, Level C MVP, GPU/threading scope, and issue owners/labels are approved. |
-| 2026-07-31 | Foundation go/no-go | High-risk VM/compiler foundations either landed with tests or moved out; large constants, perfect-hash select, and Level C execution proof have explicit go/no-go decisions. |
+| 2026-07-31 | Beta 3 foundation target | High-risk VM/compiler foundations either landed with tests or moved out; large constants, perfect-hash select, Level C execution proof, and beta 3 package shape have explicit go/no-go decisions. |
 | 2026-08-14 | Feature complete | User-facing surface is frozen; demos and tutorials are ready for manual testing; known limitations are drafted. |
 | 2026-08-31 | Release 1 | Release 1 is shipped, or a release candidate is ready with explicit residual risks. |
 
@@ -37,12 +38,12 @@ complete by 2026-08-14 unless it is fixing a must-ship release defect.
 
 Must-ship items are part of the Release 1 contract or release process.
 
-1. Beta 2 closure
+1. Beta 3 branch baseline
 
-   Keep `v1.0.0-beta.2` release notes aligned with the beta 1 to beta 2 delta,
-   including the final ASan, build, packaging, and regression fixes. Confirm
-   whether beta 2 is tagged before making shipped-release claims. After the beta
-   2 tag, describe `develop` as beta 3 WIP.
+   Keep `v1.0.0-beta.2` release notes as the historical beta 2 baseline, point
+   current `develop` documentation at `v1.0.0-beta.3` WIP, and keep the beta 3
+   planning note aligned with this timetable. Do not call beta 3 released until
+   the `v1.0.0-beta.3` tag and assets exist.
 
 2. Release 1 governance
 
@@ -104,10 +105,9 @@ Must-ship items are part of the Release 1 contract or release process.
 
 11. Packaging status discipline
 
-    For the beta 2 release line, package only the formats already in the release
-    close-out path and document their status clearly. Treat new installer
-    formats, especially the Windows click-through installer, as beta 3 work
-    unless they are needed to fix a release-blocking packaging defect.
+    For beta 3, package only formats whose build, signing, upload, and smoke
+    checks are reliable by the beta 3 foundation target. Keep portable ZIPs as
+    the fallback for every platform and document any installer gaps clearly.
 
 ## Should Ship
 
@@ -142,12 +142,12 @@ Should-ship items are important but have explicit fallback paths.
    Clean enough that users can tell core from optional. Fallback: docs and
    CMake options clarify status even if all source directories are not moved.
 
-6. Windows installer user experience after beta 2
+6. Windows installer user experience for beta 3
 
-   Add a signed NSIS `setup.exe` from the signed Windows payload for beta 3 if
-   the local signing flow can build, sign, and upload it reliably. Fallback:
-   keep the signed Windows ZIP as the supported Windows asset and document
-   manual PATH setup.
+   Add a signed NSIS `setup.exe` from the signed Windows payload if the local
+   signing flow can build, sign, upload, and verify it reliably before the beta
+   3 tag. Fallback: keep the signed Windows ZIP as the supported Windows asset
+   and document manual PATH setup.
 
 7. Linux package hardening
 
@@ -204,8 +204,8 @@ common `rel1` label plus the tier and area labels shown here.
 
 | # | Candidate issue | Owner | Labels | Acceptance signal |
 | --- | --- | --- | --- | --- |
-| 1 | Finalize beta 2 release notes from beta 1 to beta 2 git delta | Rene | `rel1`, `must`, `docs`, `release` | Release note covers user-visible deltas, compatibility notes, known limitations, and package/tag status. |
-| 2 | Align README, release notes, and language reference on beta 2 status | Rene | `rel1`, `must`, `docs` | Public docs agree on beta 2 versus post-tag beta 3 WIP status. |
+| 1 | Open beta 3 branch baseline after beta 2 tag | Rene | `rel1`, `must`, `docs`, `release` | VERSION, README, release index, install docs, examples, security policy, and beta 3 release note identify `develop` as beta 3 WIP while preserving beta 2 as the latest completed tag. |
+| 2 | Keep beta 3 release note aligned with Release 1 gates | Rene | `rel1`, `must`, `docs` | Beta 3 note carries high-level scope, timetable, package expectations, known limitations, and explicit WIP status until the tag exists. |
 | 3 | Define Release 1 scope tiers and final feature-freeze date | Adrian | `rel1`, `must`, `planning` | GitHub discussion records tiers, dates, and fallback policy. |
 | 4 | Lock Level B Release 1 language surface | Adrian | `rel1`, `must`, `level-b`, `language` | Syntax and stable library surface are frozen or explicitly listed as exceptions by 2026-07-03. |
 | 5 | Define Level B versus Level G language and library boundary | Adrian | `rel1`, `must`, `level-b`, `level-g` | Short design note states what each level owns for Release 1. |
@@ -285,10 +285,11 @@ Technical dependencies:
 
 Documentation dependencies:
 
-- Beta 2 release notes carry the beta 1 to beta 2 delta; keep final package
-  status in sync with the actual tag assets.
-- README, `docs/releases`, security policy, examples, and language reference
-  need to agree on beta 2 status.
+- Beta 2 release notes carry the historical beta 1 to beta 2 delta; keep them
+  aligned with the actual beta 2 tag assets.
+- Beta 3 release notes carry the current WIP scope and timetable; keep README,
+  `docs/releases`, security policy, examples, install docs, and language
+  reference aligned on beta 3 WIP versus completed beta 2 status.
 - `docs/ai-context/CREXX_LIBS.md` should describe `rxfnsc` as planned or
   reserved until a real Level C library directory exists.
 

@@ -18,7 +18,7 @@ releases.
 ## Release Line And Tag Discipline
 
 For the Release 1 beta line, use `develop` as the active mainline and the
-Release 1 line as the source for versioned release tags. At beta 2 time that
+Release 1 line as the source for versioned release tags. At beta 3 time that
 release line is `master`; if the project later renames or splits it, the same
 policy should apply to `release/1`.
 
@@ -27,15 +27,15 @@ Recommended beta publication sequence:
 1. Finalize `VERSION`, README, release notes, install docs, security notes, and
    packaging notes on `develop`.
 2. Open and merge a PR from `develop` to the Release 1 line.
-3. Tag the resulting Release 1 line commit, for example `v1.0.0-beta.2`.
+3. Tag the resulting Release 1 line commit, for example `v1.0.0-beta.3`.
 4. Let the tag-driven GitHub Actions workflow create the GitHub release and
    macOS/Linux/Windows CI assets.
 5. Run the Windows signing script against the explicit tag, not the implicit
    "latest release" target:
 
    ```sh
-   scripts/sign-latest-windows-release.sh --tag v1.0.0-beta.2 --dry-run
-   scripts/sign-latest-windows-release.sh --tag v1.0.0-beta.2
+   scripts/sign-latest-windows-release.sh --tag v1.0.0-beta.3 --dry-run
+   scripts/sign-latest-windows-release.sh --tag v1.0.0-beta.3
    ```
 
 Do not move a pushed release tag after assets have been published. If only the
@@ -124,10 +124,9 @@ creates command symlinks in `/usr/local/bin`.
 
 ## Windows Packages
 
-Beta 2 ships the Windows ZIP path, with the maintainer signing flow producing a
-signed ZIP after the CI asset exists. Do not add a new Windows installer format
-to the beta 2 release line. Target the first Windows click-through installer
-for beta 3.
+Beta 2 shipped the Windows ZIP path, with the maintainer signing flow producing
+a signed ZIP after the CI asset exists. Beta 3 targets the first Windows
+click-through installer while keeping the signed ZIP as the portable asset.
 
 Preferred simple beta 3 flow: add a signed NSIS `setup.exe` after the ZIP
 signing flow.
